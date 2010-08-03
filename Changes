@@ -4,3 +4,8 @@ DNSSEC support
 uint8 support
 base64 support (only for unpacking atm)
 Split of the type definition into dnstypes.go
+
+make should build the package
+
+make restest
+builds a small sample program
