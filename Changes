@@ -1,0 +1,6 @@
+Add resolver type and use the for querying
+IPv6 support
+DNSSEC support
+uint8 support
+base64 support (only for unpacking atm)
+Split of the type definition into dnstypes.go

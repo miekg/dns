@@ -1,0 +1,4 @@
+EDNS -- add EDNS0 support 
+DNSSEC - validation and the remaining records
+	    DS, RRSIG, NSEC, etc.
+Generic version of TryOneName
