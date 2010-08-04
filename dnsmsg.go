@@ -177,6 +177,29 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v", f.Type)
 			return len(msg), false
+		case *reflect.SliceValue:
+			switch f.Tag {
+			default:
+				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
+				return len(msg), false
+			case "ipv4":
+				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
+					return len(msg), false
+				}
+				msg[off]   = byte(fv.Elem(0).(*reflect.UintValue).Get())
+				msg[off+1] = byte(fv.Elem(1).(*reflect.UintValue).Get())
+				msg[off+2] = byte(fv.Elem(2).(*reflect.UintValue).Get())
+				msg[off+3] = byte(fv.Elem(3).(*reflect.UintValue).Get())
+				off += net.IPv4len
+			case "ipv6":
+				if fv.Len() > net.IPv6len || off+fv.Len() > len(msg) {
+					return len(msg), false
+				}
+				for j:=0; j<net.IPv6len; j++ {
+					msg[off] = byte(fv.Elem(j).(*reflect.UintValue).Get())
+					off++
+				}
+			}
 		case *reflect.StructValue:
 			off, ok = packStructValue(fv, msg, off)
 		case *reflect.UintValue:
