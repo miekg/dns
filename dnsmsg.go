@@ -166,9 +166,8 @@ Loop:
 }
 
 // TODO(rsc): Move into generic library?
-// Pack a reflect.StructValue into msg.  Struct members can only be uint16, uint32, string,
-// and other (often anonymous) structs.
-// IPV6 IPV4 still to do
+// Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
+// slices and other (often anonymous) structs.
 func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
 		f := val.Type().(*reflect.StructType).Field(i)
@@ -397,8 +396,6 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 
 // Generic struct printer.
 // Doesn't care about the string tag "domain-name",
-// but does look for an "ipv4" tag on uint32 variables,
-// printing them as IP addresses.
 func printStructValue(val *reflect.StructValue) string {
 	s := "{"
 	for i := 0; i < val.NumField(); i++ {
