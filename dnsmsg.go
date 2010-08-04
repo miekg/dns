@@ -412,7 +412,7 @@ func printStructValue(val *reflect.StructValue) string {
 		fval := val.Field(i)
 		if fv, ok := fval.(*reflect.StructValue); ok {
 			s += printStructValue(fv)
-		} else if fv, ok := fval.(*reflect.UintValue); ok && f.Tag == "ipv4" {
+		} else if fv, ok := fval.(*reflect.UintValue); ok && f.Tag == "ipv4" { // TODO ipv4 can go here
 			i := fv.Get()
 			s += net.IPv4(byte(i>>24), byte(i>>16), byte(i>>8), byte(i)).String()
 		} else {

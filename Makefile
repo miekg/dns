@@ -16,3 +16,6 @@ include $(GOROOT)/src/Make.pkg
 
 restest: restest.go
 	6g -I _obj restest.go && 6l -L _obj -o restest restest.6
+
+packtest: packtest.go
+	6g -I _obj packtest.go && 6l -L _obj -o packtest packtest.6
