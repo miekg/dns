@@ -7,29 +7,21 @@ import (
 )
 
 func main() {
-	res := new(dns.Resolver)
-	res.Servers = []string{"192.168.1.2"}
-	res.Timeout = 2
-	res.Attempts = 1
+	out := new(dns.Msg)
 
-	a := new(dns.RR_A)
-	a.A = net.ParseIP("192.168.1.2").To4()
+	r := new(dns.RR_AAAA)
+	r.AAAA = net.ParseIP("2001:7b8:206:1:200:39ff:fe59:b187").To16()
+//	r.AAAA = net.ParseIP("2003::53").To16()
+	r.Hdr.Name = "a.miek.nl"
+	r.Hdr.Rrtype = dns.TypeAAAA
+	r.Hdr.Class = dns.ClassINET
+	r.Hdr.Ttl = 3600
+	out.Answer = make([]dns.RR, 1)
+	out.Answer[0] = r
 
-	aaaa := new(dns.RR_AAAA)
-	aaaa.AAAA = net.ParseIP("2003::53").To16()
+	msg, _ := out.Pack()
 
-	fmt.Printf("%v\n", a)
-	fmt.Printf("%v\n", aaaa)
-
-//	msg, _ := res.Query("miek.nl.", dns.TypeTXT, dns.ClassINET)
-//	fmt.Printf("%v\n", msg)
-//
-//	msg, _ = res.Query("www.nlnetlabs.nl", dns.TypeAAAA, dns.ClassINET)
-//	fmt.Printf("%v\n", msg)
-//
-	msg, _ := res.Query("nlnetlabs.nl", dns.TypeDNSKEY, dns.ClassINET)
-	fmt.Printf("%v\n", msg)
-
-	msg, _ = res.Query("jelte.nlnetlabs.nl", dns.TypeDS, dns.ClassINET)
-	fmt.Printf("%v\n", msg)
+	in := new(dns.Msg)
+	in.Unpack(msg)
+	fmt.Printf("%v\n", in)
 }

@@ -503,11 +503,11 @@ func (h *MsgHdr) String() string {
 
 type Msg struct {
 	MsgHdr
-	question []Question
-	edns     []Edns
-	answer   []RR
-	ns       []RR
-	extra    []RR
+	Question []Question
+	Edns     []Edns
+	Answer   []RR
+	Ns       []RR
+	Extra    []RR
 }
 
 
@@ -534,10 +534,10 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	}
 
 	// Prepare variable sized arrays.
-	question := dns.question
-	answer := dns.answer
-	ns := dns.ns
-	extra := dns.extra
+	question := dns.Question
+	answer := dns.Answer
+	ns := dns.Ns
+	extra := dns.Extra
 
 	dh.Qdcount = uint16(len(question))
 	dh.Ancount = uint16(len(answer))
@@ -588,22 +588,22 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.rcode = int(dh.Bits & 0xF)
 
 	// Arrays.
-	dns.question = make([]Question, dh.Qdcount)
-	dns.answer = make([]RR, dh.Ancount)
-	dns.ns = make([]RR, dh.Nscount)
-	dns.extra = make([]RR, dh.Arcount)
+	dns.Question = make([]Question, dh.Qdcount)
+	dns.Answer = make([]RR, dh.Ancount)
+	dns.Ns = make([]RR, dh.Nscount)
+	dns.Extra = make([]RR, dh.Arcount)
 
-	for i := 0; i < len(dns.question); i++ {
-		off, ok = unpackStruct(&dns.question[i], msg, off)
+	for i := 0; i < len(dns.Question); i++ {
+		off, ok = unpackStruct(&dns.Question[i], msg, off)
 	}
-	for i := 0; i < len(dns.answer); i++ {
-		dns.answer[i], off, ok = unpackRR(msg, off)
+	for i := 0; i < len(dns.Answer); i++ {
+		dns.Answer[i], off, ok = unpackRR(msg, off)
 	}
-	for i := 0; i < len(dns.ns); i++ {
-		dns.ns[i], off, ok = unpackRR(msg, off)
+	for i := 0; i < len(dns.Ns); i++ {
+		dns.Ns[i], off, ok = unpackRR(msg, off)
 	}
-	for i := 0; i < len(dns.extra); i++ {
-		dns.extra[i], off, ok = unpackRR(msg, off)
+	for i := 0; i < len(dns.Extra); i++ {
+		dns.Extra[i], off, ok = unpackRR(msg, off)
 	}
 	if !ok {
 		return false
@@ -616,32 +616,32 @@ func (dns *Msg) Unpack(msg []byte) bool {
 
 func (dns *Msg) String() string {
 	s := dns.MsgHdr.String() + " "
-	s += "QUERY: " + strconv.Itoa(len(dns.question)) + ", "
-	s += "ANSWER: " + strconv.Itoa(len(dns.answer)) + ", "
-	s += "AUTHORITY: " + strconv.Itoa(len(dns.ns)) + ", "
-	s += "ADDITIONAL: " + strconv.Itoa(len(dns.extra)) + "\n"
-	if len(dns.question) > 0 {
+	s += "QUERY: " + strconv.Itoa(len(dns.Question)) + ", "
+	s += "ANSWER: " + strconv.Itoa(len(dns.Answer)) + ", "
+	s += "AUTHORITY: " + strconv.Itoa(len(dns.Ns)) + ", "
+	s += "ADDITIONAL: " + strconv.Itoa(len(dns.Extra)) + "\n"
+	if len(dns.Question) > 0 {
 		s += "\n;; QUESTION SECTION:\n"
-		for i := 0; i < len(dns.question); i++ {
-			s += dns.question[i].String() + "\n"
+		for i := 0; i < len(dns.Question); i++ {
+			s += dns.Question[i].String() + "\n"
 		}
 	}
-	if len(dns.answer) > 0 {
+	if len(dns.Answer) > 0 {
 		s += "\n;; ANSWER SECTION:\n"
-		for i := 0; i < len(dns.answer); i++ {
-			s += dns.answer[i].String() + "\n"
+		for i := 0; i < len(dns.Answer); i++ {
+			s += dns.Answer[i].String() + "\n"
 		}
 	}
-	if len(dns.ns) > 0 {
+	if len(dns.Ns) > 0 {
 		s += "\n;; AUTHORITY SECTION:\n"
-		for i := 0; i < len(dns.ns); i++ {
-			s += dns.ns[i].String() + "\n"
+		for i := 0; i < len(dns.Ns); i++ {
+			s += dns.Ns[i].String() + "\n"
 		}
 	}
-	if len(dns.extra) > 0 {
+	if len(dns.Extra) > 0 {
 		s += "\n;; ADDITIONAL SECTION:\n"
-		for i := 0; i < len(dns.extra); i++ {
-			s += dns.extra[i].String() + "\n"
+		for i := 0; i < len(dns.Extra); i++ {
+			s += dns.Extra[i].String() + "\n"
 		}
 	}
 	return s

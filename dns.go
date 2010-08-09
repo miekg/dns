@@ -60,7 +60,7 @@ func Exchange(res *Resolver, c net.Conn, name string, qtype uint16, qclass uint1
 	}
 	out := new(Msg)
 	out.id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
-	out.question = []Question{
+	out.Question = []Question{
 		Question{name, qtype, qclass},
 	}
 	out.recursion_desired = true
@@ -102,7 +102,7 @@ func Exchange(res *Resolver, c net.Conn, name string, qtype uint16, qclass uint1
 // Find answer for name in dns message.
 // On return, if err == nil, addrs != nil.
 func answer(name, server string, dns *Msg, qtype uint16) (addrs []RR, err os.Error) {
-	addrs = make([]RR, 0, len(dns.answer))
+	addrs = make([]RR, 0, len(dns.Answer))
 
 	if dns.rcode == RcodeNameError && dns.recursion_available {
 		return nil, &DnsError{Error: noSuchHost, Name: name}
@@ -123,8 +123,8 @@ func answer(name, server string, dns *Msg, qtype uint16) (addrs []RR, err os.Err
 Cname:
 	for cnameloop := 0; cnameloop < 10; cnameloop++ {
 		addrs = addrs[0:0]
-		for i := 0; i < len(dns.answer); i++ {
-			rr := dns.answer[i]
+		for i := 0; i < len(dns.Answer); i++ {
+			rr := dns.Answer[i]
 			h := rr.Header()
 			if h.Class == ClassINET && h.Name == name {
 				switch h.Rrtype {
