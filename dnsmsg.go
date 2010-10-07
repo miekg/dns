@@ -619,6 +619,9 @@ func (dns *Msg) Unpack(msg []byte) bool {
 }
 
 func (dns *Msg) String() string {
+	if dns == nil {
+		return "<nil> MsgHdr"
+	}
 	s := dns.MsgHdr.String() + " "
 	s += "QUERY: " + strconv.Itoa(len(dns.Question)) + ", "
 	s += "ANSWER: " + strconv.Itoa(len(dns.Answer)) + ", "
