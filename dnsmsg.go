@@ -480,6 +480,10 @@ type MsgHdr struct {
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
 func (h *MsgHdr) String() string {
+	if h == nil {
+		return "<nil> MsgHdr"
+	}
+
 	s := ";; ->>HEADER<<- opcode: " + opcode_str[h.opcode]
 	s += ", status: " + rcode_str[h.rcode]
 	s += ", id: " + strconv.Itoa(int(h.id)) + "\n"
