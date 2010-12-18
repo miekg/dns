@@ -43,6 +43,19 @@ func main() {
 		ch <- dns.DnsMsg{m, nil}
 		in = <-ch
 		fmt.Printf("%v\n", in.Dns)
+
+		m.Question[0] = dns.Question{"nl", dns.TypeDNSKEY, dns.ClassINET}
+		ch <- dns.DnsMsg{m, nil}
+		in = <-ch
+		fmt.Printf("%v\n", in.Dns)
+
+		m.Question[0] = dns.Question{"pa1ton.nl", dns.TypeDS, dns.ClassINET}
+		ch <- dns.DnsMsg{m, nil}
+		in = <-ch
+		fmt.Printf("%v\n", in.Dns)
+
+
+
 	}
 	ch <- dns.DnsMsg{nil, nil}
 
