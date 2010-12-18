@@ -28,6 +28,8 @@ func main() {
 	res.Timeout = 2
 	res.Attempts = 1
 
+	// Setup done, now for some real work
+
 	// ask something
 	msgch <- dns.MsgErr{m, nil}
 
@@ -38,7 +40,6 @@ func main() {
 	// qch <- true does not work yet
 
 	m.Question[0] = dns.Question{"a.miek.nl", dns.TypeTXT, dns.ClassINET}
-	// ask something
 	msgch <- dns.MsgErr{m, nil}
 	// wait for an reply
 	in = <-msgch
@@ -51,29 +52,5 @@ func main() {
 	in = <-msgch
 	fmt.Printf("%v\n", in.M)
 
-
-
-	time.Sleep(2.0e9)
-
-	/*
-		a := new(dns.RR_A)
-		a.A = net.ParseIP("192.168.1.2").To4()
-
-		aaaa := new(dns.RR_AAAA)
-		aaaa.AAAA = net.ParseIP("2003::53").To16()
-
-		fmt.Printf("%v\n", a)
-		fmt.Printf("%v\n", aaaa)
-
-	//	msg, _ := res.Query("miek.nl.", dns.TypeTXT, dns.ClassINET)
-	//
-	//	msg, _ = res.Query("www.nlnetlabs.nl", dns.TypeAAAA, dns.ClassINET)
-	//	fmt.Printf("%v\n", msg)
-	//
-		msg, _ := res.Query("nlnetlabs.nl", dns.TypeDNSKEY, dns.ClassINET)
-		fmt.Printf("%v\n", msg)
-
-		msg, _ = res.Query("jelte.nlnetlabs.nl", dns.TypeDS, dns.ClassINET)
-		fmt.Printf("%v\n", msg)
-	*/
+	time.Sleep(2.0e9) // wait for Go routine to do something
 }
