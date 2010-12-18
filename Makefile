@@ -7,7 +7,6 @@ include $(GOROOT)/src/Make.inc
 TARG=dns
 GOFILES=\
 	parse.go\
-	dns.go\
 	msg.go\
 	resolver.go \
 	types.go\

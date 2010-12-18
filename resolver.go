@@ -16,9 +16,9 @@ import (
 	"net"
 )
 
-type MsgErr struct {
-	M *Msg
-	E os.Error
+type DnsMsg struct {
+	Dns *Msg
+	Error os.Error
 }
 
 type Resolver struct {
@@ -35,22 +35,22 @@ type Resolver struct {
 
 // Start a new querier as a goroutine, return
 // the communication channel
-func NewQuerier(res *Resolver) (ch chan MsgErr) {
-	ch = make(chan MsgErr)
+func NewQuerier(res *Resolver) (ch chan DnsMsg) {
+	ch = make(chan DnsMsg)
 	go query(res, ch)
 	return
 }
 
 
 // do it
-func query(res *Resolver, msg chan MsgErr) {
+func query(res *Resolver, msg chan DnsMsg) {
 	var c net.Conn
 	var err os.Error
 	var in *Msg
 	for {
 		select {
 		case out := <-msg: //msg received
-			if out.M == nil {
+			if out.Dns == nil {
 				// nil message, quit the goroutine
 				return
 			}
@@ -58,10 +58,10 @@ func query(res *Resolver, msg chan MsgErr) {
 			var cerr os.Error
 			// Set an id
 			//if len(name) >= 256 {
-			out.M.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
-			sending, ok := out.M.Pack()
+			out.Dns.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
+			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- MsgErr{nil, nil} // todo error
+				msg <- DnsMsg{nil, nil} // todo error
 			}
 
 			for i := 0; i < len(res.Servers); i++ {
@@ -81,9 +81,9 @@ func query(res *Resolver, msg chan MsgErr) {
 				}
 			}
 			if err != nil {
-				msg <- MsgErr{nil, err}
+				msg <- DnsMsg{nil, err}
 			} else {
-				msg <- MsgErr{in, nil}
+				msg <- DnsMsg{in, nil}
 			}
 		}
 	}
