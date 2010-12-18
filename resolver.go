@@ -32,55 +32,54 @@ type Resolver struct {
 	Rotate   bool     // round robin among servers
 }
 
+
+// Start a new querier as a goroutine, return
+// the communication channel
+func NewQuerier(res *Resolver) (ch chan MsgErr) {
+	ch = make(chan MsgErr)
+	go query(res, ch)
+	return
+}
+
+
 // do it
-func Query(res *Resolver, msg chan MsgErr, quit chan bool) {
+func query(res *Resolver, msg chan MsgErr) {
 	var c net.Conn
 	var err os.Error
 	var in *Msg
 	for {
 		select {
-		case <-quit: // quit signal recevied
-			println("Quiting")
-			// send something back on the channel?
-			return
 		case out := <-msg: //msg received
+			if out.M == nil {
+				// nil message, quit the goroutine
+				return
+			}
+
 			var cerr os.Error
-			println("Getting a message")
 			// Set an id
 			//if len(name) >= 256 {
 			out.M.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
-			println("Setting the id", out.M.Id)
 			sending, ok := out.M.Pack()
 			if !ok {
-				println("error converting")
 				msg <- MsgErr{nil, nil} // todo error
 			}
-			println("here")
 
 			for i := 0; i < len(res.Servers); i++ {
-				println("here", i)
 				server := res.Servers[i] + ":53"
-				println(server)
 
-				println("before dial")
 				c, cerr = net.Dial("udp", "", server)
-				println("after dial")
 				if cerr != nil {
-					println("error sending")
 					err = cerr
 					continue
 				}
-				println("exchange")
 				in, err = exchange(c, sending, res.Attempts, res.Timeout)
 				// Check id in.id != out.id
 
 				c.Close()
 				if err != nil {
-					println("Err not nil")
 					continue
 				}
 			}
-			println("komt ik hier dan")
 			if err != nil {
 				msg <- MsgErr{nil, err}
 			} else {
@@ -88,7 +87,6 @@ func Query(res *Resolver, msg chan MsgErr, quit chan bool) {
 			}
 		}
 	}
-	println("Mag nooit hier komen")
 	return
 }
 
