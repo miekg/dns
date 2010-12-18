@@ -10,7 +10,6 @@ GOFILES=\
 	dns.go\
 	msg.go\
 	resolver.go \
-	config.go\
 	types.go\
 
 include $(GOROOT)/src/Make.pkg
