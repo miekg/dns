@@ -33,57 +33,59 @@ type Resolver struct {
 }
 
 // do it
-func (res *Resolver) Query(msg chan MsgErr, quit chan bool) {
+func Query(res *Resolver, msg chan MsgErr, quit chan bool) {
 	var c net.Conn
 	var err os.Error
 	var in *Msg
-	select {
-	case <-quit: // quit signal recevied
-		println("Quiting")
-		// send something back on the channel?
-		return
-	case out := <-msg: //msg received
-		var cerr os.Error
-		println("Getting a message")
-		// Set an id
-		//if len(name) >= 256 {
-		out.M.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
-		println("Setting the id", out.M.Id)
-		sending, ok := out.M.Pack()
-		if !ok {
-			println("error converting")
-			msg <- MsgErr{nil, nil} // todo error
-		}
-		println("here")
-
-		for i := 0; i < len(res.Servers); i++ {
-			println("here", i)
-			server := res.Servers[i] + ":53"
-			println(server)
-
-			println("before dial")
-			c, cerr = net.Dial("udp", "", server)
-			println("after dial")
-			if cerr != nil {
-				println("error sending")
-				err = cerr
-				continue
+	for {
+		select {
+		case <-quit: // quit signal recevied
+			println("Quiting")
+			// send something back on the channel?
+			return
+		case out := <-msg: //msg received
+			var cerr os.Error
+			println("Getting a message")
+			// Set an id
+			//if len(name) >= 256 {
+			out.M.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
+			println("Setting the id", out.M.Id)
+			sending, ok := out.M.Pack()
+			if !ok {
+				println("error converting")
+				msg <- MsgErr{nil, nil} // todo error
 			}
-			println("exchange")
-			in, err = exchange(c, sending, res.Attempts, res.Timeout)
-			// Check id in.id != out.id
+			println("here")
 
-			c.Close()
+			for i := 0; i < len(res.Servers); i++ {
+				println("here", i)
+				server := res.Servers[i] + ":53"
+				println(server)
+
+				println("before dial")
+				c, cerr = net.Dial("udp", "", server)
+				println("after dial")
+				if cerr != nil {
+					println("error sending")
+					err = cerr
+					continue
+				}
+				println("exchange")
+				in, err = exchange(c, sending, res.Attempts, res.Timeout)
+				// Check id in.id != out.id
+
+				c.Close()
+				if err != nil {
+					println("Err not nil")
+					continue
+				}
+			}
+			println("komt ik hier dan")
 			if err != nil {
-				println("Err not nil")
-				continue
+				msg <- MsgErr{nil, err}
+			} else {
+				msg <- MsgErr{in, nil}
 			}
-		}
-		println("komt ik hier dan")
-		if err != nil {
-			msg <- MsgErr{nil, err}
-		} else {
-			msg <- MsgErr{in, nil}
 		}
 	}
 	println("Mag nooit hier komen")
