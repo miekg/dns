@@ -40,7 +40,13 @@ func main() {
 	m.Question[0] = dns.Question{"a.miek.nl", dns.TypeTXT, dns.ClassINET}
 	// ask something
 	msgch <- dns.MsgErr{m, nil}
+	// wait for an reply
+	in = <-msgch
+	fmt.Printf("%v\n", in.M)
 
+	m.Question[0] = dns.Question{"miek.nl", dns.TypeTXT, dns.ClassINET}
+	// ask something
+	msgch <- dns.MsgErr{m, nil}
 	// wait for an reply
 	in = <-msgch
 	fmt.Printf("%v\n", in.M)
