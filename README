@@ -1,7 +1,10 @@
-Alternate aproach to DNS
+Alternative aproach to a DNS library
 
+Much more control as you prepare a dns packet and then call the resolver
+to send it. 
 
+The library is asynchronise (thanks to Go) from the get go.
 
-
-Net::DNS
-ldns
+* ldns
+* NSD
+* Net::DNS
