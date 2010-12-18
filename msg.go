@@ -185,7 +185,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
 					return len(msg), false
 				}
-				msg[off]   = byte(fv.Elem(0).(*reflect.UintValue).Get())
+				msg[off] = byte(fv.Elem(0).(*reflect.UintValue).Get())
 				msg[off+1] = byte(fv.Elem(1).(*reflect.UintValue).Get())
 				msg[off+2] = byte(fv.Elem(2).(*reflect.UintValue).Get())
 				msg[off+3] = byte(fv.Elem(3).(*reflect.UintValue).Get())
@@ -194,7 +194,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				if fv.Len() > net.IPv6len || off+fv.Len() > len(msg) {
 					return len(msg), false
 				}
-				for j:=0; j<net.IPv6len; j++ {
+				for j := 0; j < net.IPv6len; j++ {
 					msg[off] = byte(fv.Elem(j).(*reflect.UintValue).Get())
 					off++
 				}
@@ -345,8 +345,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				default:
 					consumed = 0 // TODO
 				}
-				s = hex.EncodeToString(msg[off:off+rdlength-consumed])
-				off += rdlength-consumed
+				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
+				off += rdlength - consumed
 			case "base64":
 				// Rest of the RR is base64 encoded value
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
@@ -364,7 +364,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg[off:off+rdlength-consumed])))
 				base64.StdEncoding.Encode(b64, msg[off:off+rdlength-consumed])
 				s = string(b64)
-				off += rdlength-consumed
+				off += rdlength - consumed
 			case "domain-name":
 				s, off, ok = unpackDomainName(msg, off)
 				if !ok {
@@ -467,14 +467,14 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 // A manually-unpacked version of (id, bits).
 // This is in its own struct for easy printing.
 type MsgHdr struct {
-	id                  uint16
-	response            bool
-	opcode              int
-	authoritative       bool
-	truncated           bool
-	recursion_desired   bool
-	recursion_available bool
-	rcode               int
+	Id                  uint16
+	Response            bool
+	Opcode              int
+	Authoritative       bool
+	Truncated           bool
+	Recursion_desired   bool
+	Recursion_available bool
+	Rcode               int
 }
 
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
@@ -484,21 +484,21 @@ func (h *MsgHdr) String() string {
 		return "<nil> MsgHdr"
 	}
 
-	s := ";; ->>HEADER<<- opcode: " + opcode_str[h.opcode]
-	s += ", status: " + rcode_str[h.rcode]
-	s += ", id: " + strconv.Itoa(int(h.id)) + "\n"
+	s := ";; ->>HEADER<<- opcode: " + opcode_str[h.Opcode]
+	s += ", status: " + rcode_str[h.Rcode]
+	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
 
 	s += ";; flags: "
-	if h.authoritative {
+	if h.Authoritative {
 		s += "aa "
 	}
-	if h.truncated {
+	if h.Truncated {
 		s += "tc "
 	}
-	if h.recursion_desired {
+	if h.Recursion_desired {
 		s += "rd "
 	}
-	if h.recursion_available {
+	if h.Recursion_available {
 		s += "ra "
 	}
 	s += ";"
@@ -519,21 +519,21 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header
 
 	// Convert convenient Msg into wire-like Header.
-	dh.Id = dns.id
-	dh.Bits = uint16(dns.opcode)<<11 | uint16(dns.rcode)
-	if dns.recursion_available {
+	dh.Id = dns.Id
+	dh.Bits = uint16(dns.Opcode)<<11 | uint16(dns.Rcode)
+	if dns.Recursion_available {
 		dh.Bits |= _RA
 	}
-	if dns.recursion_desired {
+	if dns.Recursion_desired {
 		dh.Bits |= _RD
 	}
-	if dns.truncated {
+	if dns.Truncated {
 		dh.Bits |= _TC
 	}
-	if dns.authoritative {
+	if dns.Authoritative {
 		dh.Bits |= _AA
 	}
-	if dns.response {
+	if dns.Response {
 		dh.Bits |= _QR
 	}
 
@@ -582,14 +582,14 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	if off, ok = unpackStruct(&dh, msg, off); !ok {
 		return false
 	}
-	dns.id = dh.Id
-	dns.response = (dh.Bits & _QR) != 0
-	dns.opcode = int(dh.Bits>>11) & 0xF
-	dns.authoritative = (dh.Bits & _AA) != 0
-	dns.truncated = (dh.Bits & _TC) != 0
-	dns.recursion_desired = (dh.Bits & _RD) != 0
-	dns.recursion_available = (dh.Bits & _RA) != 0
-	dns.rcode = int(dh.Bits & 0xF)
+	dns.Id = dh.Id
+	dns.Response = (dh.Bits & _QR) != 0
+	dns.Opcode = int(dh.Bits>>11) & 0xF
+	dns.Authoritative = (dh.Bits & _AA) != 0
+	dns.Truncated = (dh.Bits & _TC) != 0
+	dns.Recursion_desired = (dh.Bits & _RD) != 0
+	dns.Recursion_available = (dh.Bits & _RA) != 0
+	dns.Rcode = int(dh.Bits & 0xF)
 
 	// Arrays.
 	dns.Question = make([]Question, dh.Qdcount)

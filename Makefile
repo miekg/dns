@@ -2,15 +2,16 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-include $(GOROOT)/src/Make.$(GOARCH)
+include $(GOROOT)/src/Make.inc
 
 TARG=dns
 GOFILES=\
 	parse.go\
 	dns.go\
-	dnsmsg.go\
-	dnsconfig.go\
-	dnstypes.go\
+	msg.go\
+	resolver.go \
+	config.go\
+	types.go\
 
 include $(GOROOT)/src/Make.pkg
 
