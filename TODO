@@ -3,3 +3,4 @@ DNSSEC - validation and the remaining records
 	    DS, RRSIG, NSEC, etc.
 Generic version of TryOneName
 quotes in quotes in txt records
+fix os.Erros usage (extend or whatever)
