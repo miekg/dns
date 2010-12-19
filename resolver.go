@@ -16,6 +16,8 @@ import (
 	"net"
 )
 
+// For communicating with a resolver
+// A nil msg ends the resolver goroutine
 type DnsMsg struct {
 	Dns *Msg
 	Error os.Error
@@ -30,8 +32,8 @@ type Resolver struct {
 	Timeout  int      // seconds before giving up on packet
 	Attempts int      // lost packets before giving up on server
 	Rotate   bool     // round robin among servers
+	Mangle	 func([]byte) []byte // Mangle the packet
 }
-
 
 // Start a new querier as a goroutine, return
 // the communication channel
@@ -72,7 +74,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 					err = cerr
 					continue
 				}
-				in, err = exchange(c, sending, res.Attempts, res.Timeout)
+				in, err = exchange(c, sending, res)
 				// Check id in.id != out.id
 
 				c.Close()
@@ -94,14 +96,18 @@ func query(res *Resolver, msg chan DnsMsg) {
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchange(c net.Conn, m []byte, attempts, timeout int) (*Msg, os.Error) {
-	for attempt := 0; attempt < attempts; attempt++ {
+func exchange(c net.Conn, m []byte, r *Resolver) (*Msg, os.Error) {
+	if r.Mangle != nil {
+		m = r.Mangle(m)
+	}
+
+	for attempt := 0; attempt < r.Attempts; attempt++ {
 		n, err := c.Write(m)
 		if err != nil {
 			return nil, err
 		}
 
-		c.SetReadTimeout(int64(timeout) * 1e9) // nanoseconds
+		c.SetReadTimeout(int64(r.Timeout) * 1e9) // nanoseconds
 		// EDNS TODO
 		buf := make([]byte, 2000) // More than enough.
 		n, err = c.Read(buf)

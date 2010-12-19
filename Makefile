@@ -13,8 +13,14 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.pkg
 
-restest: restest.go
+p: restest manglertest packtest
+
+# too lazy to lookup how this works again in Makefiles
+restest: restest.go $(GOFILES)
 	6g -I _obj restest.go && 6l -L _obj -o restest restest.6
 
-packtest: packtest.go
+manglertest: manglertest.go $(GOFILES)
+	6g -I _obj manglertest.go && 6l -L _obj -o manglertest manglertest.6
+
+packtest: packtest.go $(GOFILES)
 	6g -I _obj packtest.go && 6l -L _obj -o packtest packtest.6
