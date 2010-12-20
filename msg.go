@@ -57,9 +57,11 @@ var opcode_str = map[int]string{
 // Map of strings for rcode
 var rcode_str = map[int]string{
 	0: "NOERROR",
-
-
+	1: "FORMERR",
+	2: "SERVFAIL",
 	3: "NXDOMAIN",
+	4: "NOTIMPL",
+	5: "REFUSED",
 }
 
 // Pack a domain name s into msg[off:].
@@ -237,7 +239,12 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				return len(msg), false
 			case "base64":
-				//TODO
+				b64len := base64.StdEncoding.DecodedLen(len(s))
+				_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
+				if err != nil {
+					return len(msg), false
+				}
+				off += b64len
 			case "domain-name":
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
@@ -338,6 +345,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			case "hex":
 				// Rest of the RR is hex encoded
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
+				// hoeft hier ook niet
 				var consumed int
 				switch val.Type().Name() {
 				case "RR_DS":
@@ -350,17 +358,21 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			case "base64":
 				// Rest of the RR is base64 encoded value
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
-				// Need to know how much of rdlength is already consumed
+				// Need to know how much of rdlength is already consumed, in this packet
 				var consumed int
-				// Can't I figure out via reflect how many bytes there are already consumed??
 				switch val.Type().Name() {
 				case "RR_DNSKEY":
 					consumed = 4 // Flags(2) + Protocol(1) + Algorithm(1)
-				case "RR_DS":
-					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
+				case "RR_RRSIG":
+					consumed = 18 // TypeCovered(2) + Algorithm(1) + Labels(1) +
+						      // OrigTTL(4) + SigExpir(4) + SigIncep(4) + KeyTag(2) + len(signername)
+					// Should already be set in the sequence of parsing (comes before)
+					// Work because of rfc4034, section 3.17
+					consumed += len(val.FieldByName("SignerName").(*reflect.StringValue).Get()) + 1
 				default:
 					consumed = 0 // TODO
 				}
+
 				b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg[off:off+rdlength-consumed])))
 				base64.StdEncoding.Encode(b64, msg[off:off+rdlength-consumed])
 				s = string(b64)
@@ -394,6 +406,7 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	return off, ok
 }
 
+// THIS can GO TODO
 // Generic struct printer.
 // Doesn't care about the string tag "domain-name",
 func printStructValue(val *reflect.StructValue) string {
@@ -432,6 +445,7 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	if !ok {
 		return len(msg), false
 	}
+	// TODO make this quicker?
 	// pack a third time; redo header with correct data length
 	rr.Header().Rdlength = uint16(off2 - off1)
 	packStruct(rr.Header(), msg, off)
@@ -454,10 +468,13 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	if !known {
 		return &h, end, true
 	}
+
 	rr = mk()
 	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
-		return &h, end, true
+		// added MG
+		// println("Hier gaat het dan fout, echt waar en was if off0", off0)
+		return &h, end, true // TIJDELIJK EVEN WEG
 	}
 	return rr, off, ok
 }
@@ -551,7 +568,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	// Could work harder to calculate message size,
 	// but this is far more than we need and not
 	// big enough to hurt the allocator.
-	msg = make([]byte, 2000)
+	msg = make([]byte, 4096)	// TODO, calculate REAL size
 
 	// Pack it in: header and then the pieces.
 	off := 0

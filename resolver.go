@@ -32,6 +32,7 @@ type Resolver struct {
 	Timeout  int      // seconds before giving up on packet
 	Attempts int      // lost packets before giving up on server
 	Rotate   bool     // round robin among servers
+	Tcp	 bool	  // use TCP
 	Mangle	 func([]byte) []byte // Mangle the packet
 }
 
@@ -67,9 +68,13 @@ func query(res *Resolver, msg chan DnsMsg) {
 			}
 
 			for i := 0; i < len(res.Servers); i++ {
+//				server := res.Servers[i] + ":" + res.Port
 				server := res.Servers[i] + ":53"
-
-				c, cerr = net.Dial("udp", "", server)
+				if res.Tcp == true {
+					c, cerr = net.Dial("tcp", "", server)
+				} else {
+					c, cerr = net.Dial("udp", "", server)
+				}
 				if cerr != nil {
 					err = cerr
 					continue

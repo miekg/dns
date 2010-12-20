@@ -85,6 +85,7 @@ const (
 	_RA = 1 << 7  // recursion available
 	// _AD = 1 << ? // authenticated data
 	// _CD = 1 << ? // checking disabled
+	// _DO = 1 << ? // dnssec ok
 )
 
 const (
@@ -146,7 +147,7 @@ func (h *RR_Header) String() string {
 	} else {
 		s = h.Name + "\t"
 	}
-	s = s + strconv.Itoa(int(h.Ttl)) + "\t" // why no strconv.Uint16??
+	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
 	s = s + class_str[h.Class] + "\t"
 	s = s + rr_str[h.Rrtype] + "\t"
 	return s
@@ -363,14 +364,32 @@ func (rr *RR_AAAA) String() string {
 
 // DNSSEC types
 type RR_RRSIG struct {
-	Hdr RR_Header
+	Hdr		RR_Header
+	TypeCovered	uint16
+	Algorithm	uint8
+	Labels		uint8
+	OrigTtl		uint32
+	Expiration	uint32
+	Inception	uint32
+	KeyTag		uint16
+	SignerName	string "domain-name"
+	Sig		string "base64"
 }
 
 func (rr *RR_RRSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 func (rr *RR_RRSIG) String() string {
-	return "BLAH"
+	return rr.Hdr.String() +
+		" " + rr_str[rr.TypeCovered] +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + strconv.Itoa(int(rr.Labels)) +
+		" " + strconv.Itoa(int(rr.OrigTtl)) +
+		" " + strconv.Itoa(int(rr.Expiration)) + // date calc! TODO
+		" " + strconv.Itoa(int(rr.Inception)) + // date calc! TODO
+		" " + strconv.Itoa(int(rr.KeyTag)) +
+		" " + rr.SignerName +
+		" " + rr.Sig
 }
 
 type RR_NSEC struct {
@@ -421,7 +440,7 @@ func (rr *RR_DNSKEY) String() string {
 	return rr.Hdr.String() +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
-		" " + alg_str[rr.Algorithm] +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PubKey // encoding/base64
 }
 

@@ -13,7 +13,7 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.pkg
 
-p: restest manglertest packtest
+p: restest manglertest packtest dnssectest
 
 # too lazy to lookup how this works again in Makefiles
 restest: restest.go $(GOFILES)
@@ -24,3 +24,6 @@ manglertest: manglertest.go $(GOFILES)
 
 packtest: packtest.go $(GOFILES)
 	6g -I _obj packtest.go && 6l -L _obj -o packtest packtest.6
+
+dnssectest: dnssectest.go $(GOFILES)
+	6g -I _obj dnssectest.go && 6l -L _obj -o dnssectest dnssectest.6
