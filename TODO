@@ -1,6 +1,7 @@
 EDNS -- add EDNS0 support 
 DNSSEC - validation and the remaining records
 	    DS, RRSIG, NSEC, etc.
+NSEC/NSEC3/NSEC3PARAM stuff
 Generic version of TryOneName
 quotes in quotes in txt records
 fix os.Erros usage (extend or whatever)
