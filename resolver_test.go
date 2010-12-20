@@ -3,6 +3,7 @@ package dns
 import (
 	"testing"
 	"time"
+	"fmt"
 )
 
 
@@ -27,6 +28,20 @@ func TestResolver(t *testing.T) {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	}
+	fmt.Printf("%v\n", in)
+
+	// ask something
+	m.Question[0] = Question{"www.nlnetlabs.nl", TypeRRSIG, ClassINET}
+	ch <- DnsMsg{m, nil}
+	in = <-ch
+
+	if in.Dns.Rcode != RcodeSuccess {
+		t.Log("Failed to get an valid answer")
+		t.Fail()
+	}
+	fmt.Printf("%v\n", in)
+
+
 	ch <- DnsMsg{nil, nil}
 	time.Sleep(1.0e9)
 }
