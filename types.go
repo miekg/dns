@@ -84,8 +84,10 @@ const (
 	_TC = 1 << 9  // truncated
 	_RD = 1 << 8  // recursion desired
 	_RA = 1 << 7  // recursion available
-	// _AD = 1 << ? // authenticated data
-	// _CD = 1 << ? // checking disabled
+	_Z  = 1 << 6  // Z
+	_AD = 1 << 5  // authticated data
+	_CD = 1 << 4  // checking disabled
+	// EDNS
 	// _DO = 1 << ? // dnssec ok
 )
 

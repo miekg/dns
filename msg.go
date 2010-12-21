@@ -491,6 +491,9 @@ type MsgHdr struct {
 	Truncated           bool
 	Recursion_desired   bool
 	Recursion_available bool
+	Z		    bool
+	Authenticated_data  bool
+	Checking_disabled   bool
 	Rcode               int
 }
 
@@ -506,6 +509,9 @@ func (h *MsgHdr) String() string {
 	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
 
 	s += ";; flags: "
+	if h.Response {
+		s += "qr "
+	}
 	if h.Authoritative {
 		s += "aa "
 	}
@@ -518,6 +524,16 @@ func (h *MsgHdr) String() string {
 	if h.Recursion_available {
 		s += "ra "
 	}
+	if h.Z {
+		s += "z "
+	}
+	if h.Authenticated_data {
+		s += "ad "
+	}
+	if h.Checking_disabled {
+		s += "cd "
+	}
+
 	s += ";"
 	return s
 }
@@ -538,20 +554,29 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
 	dh.Bits = uint16(dns.Opcode)<<11 | uint16(dns.Rcode)
-	if dns.Recursion_available {
-		dh.Bits |= _RA
-	}
-	if dns.Recursion_desired {
-		dh.Bits |= _RD
-	}
-	if dns.Truncated {
-		dh.Bits |= _TC
+	if dns.Response {
+		dh.Bits |= _QR
 	}
 	if dns.Authoritative {
 		dh.Bits |= _AA
 	}
-	if dns.Response {
-		dh.Bits |= _QR
+	if dns.Truncated {
+		dh.Bits |= _TC
+	}
+	if dns.Recursion_desired {
+		dh.Bits |= _RD
+	}
+	if dns.Recursion_available {
+		dh.Bits |= _RA
+	}
+	if dns.Z {
+		dh.Bits |= _Z
+	}
+	if dns.Authenticated_data {
+		dh.Bits |= _AD
+	}
+	if dns.Checking_disabled {
+		dh.Bits |= _CD
 	}
 
 	// Prepare variable sized arrays.

@@ -25,38 +25,13 @@ func main() {
 	m.MsgHdr.Recursion_desired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 
-	for i:=0; i< NLOOP; i++ {
-		// ask something
-		m.Question[0] = dns.Question{"miek.nl", dns.TypeSOA, dns.ClassINET}
-		ch <- dns.DnsMsg{m, nil}
+	m.Question[0] = dns.Question{"forfunsec.org", dns.TypeRRSIG, dns.ClassINET}
+	ch <- dns.DnsMsg{m, nil}
 
-		// wait for an reply
-		in := <-ch
-		fmt.Printf("%v\n", in.Dns)
+	// wait for an reply
+	in := <-ch
+	fmt.Printf("%v\n", in.Dns)
 
-		m.Question[0] = dns.Question{"a.miek.nl", dns.TypeTXT, dns.ClassINET}
-		ch <- dns.DnsMsg{m, nil}
-		in = <-ch
-		fmt.Printf("%v\n", in.Dns)
-
-		m.Question[0] = dns.Question{"miek.nl", dns.TypeTXT, dns.ClassINET}
-		ch <- dns.DnsMsg{m, nil}
-		in = <-ch
-		fmt.Printf("%v\n", in.Dns)
-
-		m.Question[0] = dns.Question{"nl", dns.TypeDNSKEY, dns.ClassINET}
-		ch <- dns.DnsMsg{m, nil}
-		in = <-ch
-		fmt.Printf("%v\n", in.Dns)
-
-		m.Question[0] = dns.Question{"pa1ton.nl", dns.TypeDS, dns.ClassINET}
-		ch <- dns.DnsMsg{m, nil}
-		in = <-ch
-		fmt.Printf("%v\n", in.Dns)
-
-
-
-	}
 	ch <- dns.DnsMsg{nil, nil}
 
 	time.Sleep(2.0e9) // wait for Go routine to do something

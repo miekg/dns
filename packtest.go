@@ -44,6 +44,4 @@ func main() {
 	msg, _ = out.Pack()
 	in.Unpack(msg)
 	fmt.Printf("%v\n", in)
-
-
 }

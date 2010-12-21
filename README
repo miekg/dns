@@ -5,6 +5,10 @@ to send it.
 
 The library is asynchronise (thanks to Go) from the get go.
 
+Implemented RFCS
+
+*  RFC2671, EDNS
+
 * ldns
 * NSD
 * Net::DNS

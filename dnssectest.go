@@ -60,6 +60,10 @@ func main() {
 	in = <-ch
 	fmt.Printf("%v\n", in.Dns)
 
+	m.Question[0] = dns.Question{"xxxx.nlnetlabs.nl", dns.TypeDNSKEY, dns.ClassINET}
+	ch <- dns.DnsMsg{m, nil}
+	in = <-ch
+	fmt.Printf("%v\n", in.Dns)
 
 	ch <- dns.DnsMsg{nil, nil}
 	time.Sleep(1.0e9) // wait for Go routine to do something
