@@ -1,0 +1,11 @@
+EDNS
+
+edns is just an rr in the additional section. So define it like that.
+However you can set all kind of stuff in the RR, which are not allowed
+for other RR's. 
+
+Create some helper function that use it. udp size, stuff like that
+version is always 0
+
+set_nsid rfc 
+set_do rfc3225.txt

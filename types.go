@@ -11,6 +11,7 @@ import (
 	"net"
 	"strconv"
 	"time"
+	"reflect"
 )
 
 // Packet formats
@@ -68,6 +69,10 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
+
+	// Edns0 options
+	EdnsNsidCode	    = 3
+	EdnsNsidLength	    = 1
 )
 
 // The wire format for the DNS packet header.
@@ -87,8 +92,8 @@ const (
 	_Z  = 1 << 6  // Z
 	_AD = 1 << 5  // authticated data
 	_CD = 1 << 4  // checking disabled
-	// EDNS
-	// _DO = 1 << ? // dnssec ok
+	// EDNS flag bits
+	_DO = 1 << 15 // dnssec ok
 )
 
 const (
@@ -110,16 +115,6 @@ type Question struct {
 	Qclass uint16
 }
 
-// Rcode needs some setting and getting work for _z and _version
-type Edns struct {
-	Name     string "domain-name"
-	Opt      uint16 // was type
-	UDPSize  uint16 // was class
-	Rcode    uint32 // was TTL
-	Rdlength uint16
-}
-
-
 func (q *Question) String() string {
 	// prefix with ; (as in dig)
 	s := ";" + q.Name + "\t"
@@ -127,6 +122,21 @@ func (q *Question) String() string {
 	s = s + rr_str[q.Qtype]
 	return s
 }
+
+/* 
+// EDNS extended RR.
+type EDNS0_Header struct {
+	Name		string "extended-name"
+	Opt		uint16 // was type
+	UDPSize		uint16 // was class
+	ExtendedRcode   uint8  // was TTL
+	Version		uint8  // was TTL
+//	Flags		uint16 // was TTL
+	Dnssec_ok	bool
+	Rdlength	uint16
+}
+*/
+
 
 // DNS responses (resource records).
 // There are many types of messages,
@@ -144,15 +154,23 @@ func (h *RR_Header) Header() *RR_Header {
 }
 
 func (h *RR_Header) String() string {
+	// 
+	r := reflect.NewValue(h).(*reflect.PtrValue).Elem().(*reflect.StructValue)
+	f := r.Type().(*reflect.StructType).Field(0).Tag
 	var s string
-	if len(h.Name) == 0 {
-		s = ".\t"
-	} else {
-		s = h.Name + "\t"
+	switch f {
+	default:
+		if len(h.Name) == 0 {
+			s = ".\t"
+		} else {
+			s = h.Name + "\t"
+		}
+		s = s + strconv.Itoa(int(h.Ttl)) + "\t"
+		s = s + class_str[h.Class] + "\t"
+		s = s + rr_str[h.Rrtype] + "\t"
+	case "edns":
+		// edns here
 	}
-	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-	s = s + class_str[h.Class] + "\t"
-	s = s + rr_str[h.Rrtype] + "\t"
 	return s
 }
 
@@ -161,7 +179,18 @@ type RR interface {
 	String() string
 }
 
-// Specific DNS RR formats for each query type.
+type RR_EDNS0 struct {
+	Hdr    RR_Header "edns"
+//	Option []Edns "edns" TODO
+}
+
+func (rr *RR_EDNS0) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_EDNS0) String() string {
+	return "BOE"
+}
 
 type RR_CNAME struct {
 	Hdr   RR_Header

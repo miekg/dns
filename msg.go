@@ -183,6 +183,8 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
+			case "edns":	// ends
+
 			case "ipv4":
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
 					return len(msg), false
@@ -491,7 +493,7 @@ type MsgHdr struct {
 	Truncated           bool
 	Recursion_desired   bool
 	Recursion_available bool
-	Z		    bool
+	Z		    bool		// or just zero??
 	Authenticated_data  bool
 	Checking_disabled   bool
 	Rcode               int
@@ -541,9 +543,9 @@ func (h *MsgHdr) String() string {
 type Msg struct {
 	MsgHdr
 	Question []Question
-	Edns     []Edns
 	Answer   []RR
 	Ns       []RR
+	// EDNS0 has to be put in this section
 	Extra    []RR
 }
 
