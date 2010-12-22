@@ -2,7 +2,6 @@ package dns
 
 import (
 	"testing"
-	"fmt"
 	"net"
 )
 
@@ -28,7 +27,6 @@ func TestPackUnpack(t *testing.T) {
 		t.Log("Failed to unpack msg with AAAA")
 		t.Fail()
 	}
-	fmt.Printf("%v\n", in)
 
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
@@ -42,7 +40,6 @@ func TestPackUnpack(t *testing.T) {
 
 	out.Answer[0] = key
 	msg, ok = out.Pack()
-//	fmt.Printf("%v\n", msg)
 	if ! ok {
 		t.Log("Failed to pack msg with DNSKEY")
 		t.Fail()
@@ -52,8 +49,6 @@ func TestPackUnpack(t *testing.T) {
 		t.Log("Failed to unpack msg with DNSKEY")
 		t.Fail()
 	}
-	fmt.Printf("%v\n", in)
-
 
 	sig := new(RR_RRSIG)
 	sig.Hdr.Name = "miek.nl."
@@ -70,9 +65,20 @@ func TestPackUnpack(t *testing.T) {
 	sig.SignerName = "miek.nl."
 	sig.Sig = "AwEAAaHIwpx3w4VHKi6i1LHnTaWeHCL154Jug0Rtc9ji5qwPXpBo6A5sRv7cSsPQKPIwxLpyCrbJ4mr2L0EPOdvP6z6YfljK2ZmTbogU9aSU2fiq/4wjxbdkLyoDVgtO+JsxNN4bjr4WcWhsmk1Hg93FV9ZpkWb0Tbad8DFqNDzr//kZ"
 
+	out.Answer[0] = sig
+	msg, ok = out.Pack()
+	if ! ok {
+		t.Log("Failed to pack msg with RRSIG")
+		t.Fail()
+	}
 
-        edns := new(RR_EDNS0)
-        edns.Hdr.Name = "miek.nl."      // must . be for edns
+	if ! in.Unpack(msg) {
+		t.Log("Failed to unpack msg with RRSIG")
+		t.Fail()
+	}
+
+        edns := new(RR_OPT)
+        edns.Hdr.Name = "."
         edns.Hdr.Rrtype = TypeOPT
         edns.Hdr.Class = ClassINET
         edns.Hdr.Ttl = 3600
@@ -80,19 +86,16 @@ func TestPackUnpack(t *testing.T) {
         edns.Option[0].Code = OptionCodeNSID
         edns.Option[0].Data = "lalalala"
 
-	out.Answer[0] = sig
-	out.Extra = make([]RR, 1)
-	out.Extra[0] = edns
+	out.Answer[0] = edns
 	msg, ok = out.Pack()
-//	fmt.Printf("%v\n", msg)
 	if ! ok {
-		t.Log("Failed to pack msg with RRSIG and EDNS")
+		t.Log("Failed to pack msg with OPT (EDNS)")
 		t.Fail()
 	}
 
 	if ! in.Unpack(msg) {
-		t.Log("Failed to unpack msg with RRSIG and EDNS")
+		t.Log("Failed to unpack msg with OPT (EDNS)")
 		t.Fail()
 	}
-	fmt.Printf("%v\n", in)
+
 }

@@ -183,9 +183,25 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
-			case "edns":	// ends
-
-			case "ipv4":
+			case "OPT":	// edns
+                                  for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
+                                        println(j) // TODO MG
+                                        element := val.Field(i).(*reflect.SliceValue).Elem(j)
+                                        code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
+                                        data := string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get())
+                                        // Option Code
+                                        msg[off] = byte(code >> 8)
+                                        msg[off+1] = byte(code)
+                                        // Length
+                                        msg[off+2] = byte(len(data) >> 8)
+                                        msg[off+3] = byte(len(data))
+				        off += 4
+                                        copy(msg[off:off+len(data)], []byte(data))
+                                        off += len(data) // +1??
+                                        println("data", data)
+                                        println("off", off)
+                                }
+			case "A":
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
 					return len(msg), false
 				}
@@ -194,7 +210,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				msg[off+2] = byte(fv.Elem(2).(*reflect.UintValue).Get())
 				msg[off+3] = byte(fv.Elem(3).(*reflect.UintValue).Get())
 				off += net.IPv4len
-			case "ipv6":
+			case "AAAA":
 				if fv.Len() > net.IPv6len || off+fv.Len() > len(msg) {
 					return len(msg), false
 				}
@@ -252,6 +268,9 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				if !ok {
 					return len(msg), false
 				}
+                        case "hex":
+                                // TODO need this for DS
+                                println("hex packing not implemented")
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -293,14 +312,14 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
-			case "ipv4":
+			case "A":
 				if off+net.IPv4len > len(msg) {
 					return len(msg), false
 				}
 				b := net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv4len
-			case "ipv6":
+			case "AAAA":
 				if off+net.IPv6len > len(msg) {
 					return len(msg), false
 				}
@@ -309,6 +328,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				b := net.IP(p)
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
+                        case "OPT":     // edns
+                                // do it here
 			}
 		case *reflect.StructValue:
 			off, ok = unpackStructValue(fv, msg, off)
@@ -347,12 +368,11 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			case "hex":
 				// Rest of the RR is hex encoded
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
-				// hoeft hier ook niet
 				var consumed int
 				switch val.Type().Name() {
 				case "RR_DS":
 					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
-				default:
+                                default:
 					consumed = 0 // TODO
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
@@ -468,7 +488,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// again inefficient but doesn't need to be fast.
 	mk, known := rr_mk[int(h.Rrtype)]
 	if !known {
-		return &h, end, true
+		return &h, end, true    // false, or unknown RR??
 	}
 
 	rr = mk()

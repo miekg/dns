@@ -1,8 +1,6 @@
 package dns
 
-// This is the base layer for ENDS, in practise
-// You'll only need to set updsize, do bit, and??
-
+// Implementation of EDNS0, RFC 2671
 const (
         OptionCodeLLQ   = 1
         OptionCodeUL    = 2
@@ -14,8 +12,7 @@ const (
 // Need PackOption I guess?? TODO
 type Option struct {
         Code    uint16
-//        Length  uint16
-        Data    string "hex" // len(data) is must be encode in packet
+        Data    string "hex"
 }
 
 // EDNS extended RR.
@@ -29,17 +26,17 @@ type EDNS0_Header struct {
         Rdlength      uint16 // length of data after the header
 }
 
-type RR_EDNS0 struct {
+type RR_OPT struct {
         Hdr     RR_Header       // this must become a EDNS0_Header
-        Option  []Option
+        Option  []Option "OPT"  // Tag is used in pack and unpack
 }
 
-func (rr *RR_EDNS0) Header() *RR_Header {
+func (rr *RR_OPT) Header() *RR_Header {
         return &rr.Hdr
 }
 
-func (rr *RR_EDNS0) String() string {
-        var s string
+func (rr *RR_OPT) String() string {
+        s := rr.Hdr.String()
         for _, o := range rr.Option {
                 switch o.Code {
                 case OptionCodeNSID:

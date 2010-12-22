@@ -327,7 +327,7 @@ func (rr *RR_SRV) String() string {
 
 type RR_A struct {
 	Hdr RR_Header
-	A   net.IP "ipv4"
+	A   net.IP "A"
 }
 
 func (rr *RR_A) Header() *RR_Header {
@@ -340,7 +340,7 @@ func (rr *RR_A) String() string {
 
 type RR_AAAA struct {
 	Hdr  RR_Header
-	AAAA net.IP "ipv6"
+	AAAA net.IP "AAAA"
 }
 
 func (rr *RR_AAAA) Header() *RR_Header {
@@ -489,6 +489,7 @@ var rr_mk = map[int]func() RR{
 	TypeSRV:        func() RR { return new(RR_SRV) },
 	TypeA:          func() RR { return new(RR_A) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
+	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
 	TypeNSEC:       func() RR { return new(RR_NSEC) },
@@ -513,6 +514,7 @@ var rr_str = map[uint16]string{
 	TypeSRV:        "SRV",
 	TypeA:          "A",
 	TypeAAAA:       "AAAA",
+        TypeOPT:        "OPT",
 	TypeDS:         "DS",
 	TypeRRSIG:      "RRSIG",
 	TypeNSEC:       "NSEC",
