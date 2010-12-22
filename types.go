@@ -69,10 +69,6 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
-
-	// Edns0 options
-	EdnsNsidCode	    = 3
-	EdnsNsidLength	    = 1
 )
 
 // The wire format for the DNS packet header.
@@ -92,8 +88,6 @@ const (
 	_Z  = 1 << 6  // Z
 	_AD = 1 << 5  // authticated data
 	_CD = 1 << 4  // checking disabled
-	// EDNS flag bits
-	_DO = 1 << 15 // dnssec ok
 )
 
 const (
@@ -122,21 +116,6 @@ func (q *Question) String() string {
 	s = s + rr_str[q.Qtype]
 	return s
 }
-
-/* 
-// EDNS extended RR.
-type EDNS0_Header struct {
-	Name		string "extended-name"
-	Opt		uint16 // was type
-	UDPSize		uint16 // was class
-	ExtendedRcode   uint8  // was TTL
-	Version		uint8  // was TTL
-//	Flags		uint16 // was TTL
-	Dnssec_ok	bool
-	Rdlength	uint16
-}
-*/
-
 
 // DNS responses (resource records).
 // There are many types of messages,
@@ -177,19 +156,6 @@ func (h *RR_Header) String() string {
 type RR interface {
 	Header() *RR_Header
 	String() string
-}
-
-type RR_EDNS0 struct {
-	Hdr    RR_Header "edns"
-//	Option []Edns "edns" TODO
-}
-
-func (rr *RR_EDNS0) Header() *RR_Header {
-	return &rr.Hdr
-}
-
-func (rr *RR_EDNS0) String() string {
-	return "BOE"
 }
 
 type RR_CNAME struct {
