@@ -1,0 +1,33 @@
+       // check with what kind of RR header we are dealing with
+        // I'm sitting on the start byte of the name, with off?
+        // ifso I can check the. From RFC 1035 4.1.4
+        //  The first two bits are ones.  This allows a pointer to be distinguished
+        //  from a label, since the label must begin with two zero bits because
+        //  labels are restricted to 63 octets or less.  (The 10 and 01 combinations
+        //  are reserved for future use.)
+        // EDNS takes 01
+        c := int(msg[off])
+        switch c & 0xC0 {
+        case 0x00,0xC0:
+               // normal name
+                // pack twice, once to find end of header
+                // and again to find end of packet.
+                // a bit inefficient but this doesn't need to be fast.
+                // off1 is end of header
+                // off2 is end of rr
+                off1, ok = packStruct(rr.Header(), msg, off)
+                off2, ok = packStruct(rr, msg, off)
+                if !ok {
+                        return len(msg), false
+                }   
+                // pack a third time; redo header with correct data length
+                rr.Header().Rdlength = uint16(off2 - off1)
+                packStruct(rr.Header(), msg, off)
+                return off2, true
+         case 0x40:
+                // EDNS0 header
+                return 0,true
+        }   
+        return 0, true  // BUG in Go
+}
+
