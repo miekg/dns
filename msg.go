@@ -73,6 +73,8 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 		s += "."
 	}
 
+        // How do I know I need to pack it into edns??
+
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
 	// There is also a trailing zero.
@@ -138,6 +140,17 @@ Loop:
 			}
 			s += string(msg[off:off+c]) + "."
 			off += c
+                case 0x40:
+                        // Need a check if a RR has this, because
+                        // we need to set RR_Heasder.Edns to true
+                        // edns extended name, does not matter for
+                        // the rest of the RR (which should be OPT)
+                        // but the parsing here (is for now) relatively simple
+                        // The name must be the root label aka 00
+                        // TODO check! MG
+                        s = ""
+                        off++
+                        break Loop
 		case 0xC0:
 			// pointer to somewhere else in msg.
 			// remember location after first ptr,
@@ -264,6 +277,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				}
 				off += b64len
 			case "domain-name":
+                                // looki if h.Edns is true, then we need to something else here
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
 					return len(msg), false
@@ -477,6 +491,7 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 // Resource record unpacker.
 func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// unpack just the header, to find the rr type and length
+        // check if we have an edns packet, and set h.Edns to true
 	var h RR_Header
 	off0 := off
 	if off, ok = unpackStruct(&h, msg, off); !ok {

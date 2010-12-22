@@ -9,20 +9,22 @@ const (
         _DO = 1 << 15  // dnssec ok
 )
 
-// Need PackOption I guess?? TODO
 type Option struct {
         Code    uint16
         Data    string "hex"
 }
 
 // EDNS extended RR.
+// If we are dealing with this, we might copy
+// the RR_Header over to this type and allow for
+// easy access
 type EDNS0_Header struct {
         Name          string "extended-name"
         Opt           uint16 // was type
         UDPSize       uint16 // was class
         ExtendedRcode uint8  // was TTL
         Version       uint8  // was TTL
-        Z             uint16 // was TTL (all flags should be put here
+        Z             uint16 // was TTL (all flags should be put here)
         Rdlength      uint16 // length of data after the header
 }
 

@@ -120,6 +120,7 @@ func (q *Question) String() string {
 // There are many types of messages,
 // but they all share the same header.
 type RR_Header struct {
+        Edns     bool   // true is this a edns header
 	Name     string "domain-name"
 	Rrtype   uint16
 	Class    uint16
