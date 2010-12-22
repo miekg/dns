@@ -1,8 +1,7 @@
 package dns
 
 // This is the base layer for ENDS, in practise
-// You'll only need to set updsize, do bit
-
+// You'll only need to set updsize, do bit, and??
 
 const (
         OptionCodeLLQ   = 1
@@ -13,7 +12,7 @@ const (
 )
 
 // Need PackOption I guess?? TODO
-type Edns0Option struct {
+type Option struct {
         Code    uint16
 //        Length  uint16
         Data    string "hex" // len(data) is must be encode in packet
@@ -32,7 +31,7 @@ type EDNS0_Header struct {
 
 type RR_EDNS0 struct {
         Hdr     RR_Header       // this must become a EDNS0_Header
-        Option  []Edns0Option
+        Option  []Option
 }
 
 func (rr *RR_EDNS0) Header() *RR_Header {

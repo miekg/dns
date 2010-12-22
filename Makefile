@@ -23,8 +23,5 @@ restest: restest.go $(GOFILES)
 manglertest: manglertest.go $(GOFILES)
 	6g -I _obj manglertest.go && 6l -L _obj -o manglertest manglertest.6
 
-packtest: packtest.go $(GOFILES)
-	6g -I _obj packtest.go && 6l -L _obj -o packtest packtest.6
-
 dnssectest: dnssectest.go $(GOFILES)
 	6g -I _obj dnssectest.go && 6l -L _obj -o dnssectest dnssectest.6

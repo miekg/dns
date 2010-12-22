@@ -11,7 +11,6 @@ import (
 	"net"
 	"strconv"
 	"time"
-	"reflect"
 )
 
 // Packet formats
@@ -133,23 +132,15 @@ func (h *RR_Header) Header() *RR_Header {
 }
 
 func (h *RR_Header) String() string {
-	// 
-	r := reflect.NewValue(h).(*reflect.PtrValue).Elem().(*reflect.StructValue)
-	f := r.Type().(*reflect.StructType).Field(0).Tag
 	var s string
-	switch f {
-	default:
-		if len(h.Name) == 0 {
-			s = ".\t"
-		} else {
-			s = h.Name + "\t"
-		}
-		s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-		s = s + class_str[h.Class] + "\t"
-		s = s + rr_str[h.Rrtype] + "\t"
-	case "edns":
-		// edns here
-	}
+        if len(h.Name) == 0 {
+                s = ".\t"
+        } else {
+                s = h.Name + "\t"
+        }
+        s = s + strconv.Itoa(int(h.Ttl)) + "\t"
+        s = s + class_str[h.Class] + "\t"
+        s = s + rr_str[h.Rrtype] + "\t"
 	return s
 }
 

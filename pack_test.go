@@ -70,16 +70,28 @@ func TestPackUnpack(t *testing.T) {
 	sig.SignerName = "miek.nl."
 	sig.Sig = "AwEAAaHIwpx3w4VHKi6i1LHnTaWeHCL154Jug0Rtc9ji5qwPXpBo6A5sRv7cSsPQKPIwxLpyCrbJ4mr2L0EPOdvP6z6YfljK2ZmTbogU9aSU2fiq/4wjxbdkLyoDVgtO+JsxNN4bjr4WcWhsmk1Hg93FV9ZpkWb0Tbad8DFqNDzr//kZ"
 
+
+        edns := new(RR_EDNS0)
+        edns.Hdr.Name = "miek.nl."      // must . be for edns
+        edns.Hdr.Rrtype = TypeOPT
+        edns.Hdr.Class = ClassINET
+        edns.Hdr.Ttl = 3600
+        edns.Option = make([]Option, 1)
+        edns.Option[0].Code = OptionCodeNSID
+        edns.Option[0].Data = "lalalala"
+
 	out.Answer[0] = sig
+	out.Extra = make([]RR, 1)
+	out.Extra[0] = edns
 	msg, ok = out.Pack()
 //	fmt.Printf("%v\n", msg)
 	if ! ok {
-		t.Log("Failed to pack msg with RRSIG")
+		t.Log("Failed to pack msg with RRSIG and EDNS")
 		t.Fail()
 	}
 
 	if ! in.Unpack(msg) {
-		t.Log("Failed to unpack msg with RRSIG")
+		t.Log("Failed to unpack msg with RRSIG and EDNS")
 		t.Fail()
 	}
 	fmt.Printf("%v\n", in)
