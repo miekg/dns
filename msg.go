@@ -438,32 +438,6 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	return off, ok
 }
 
-// THIS can GO TODO
-// Generic struct printer.
-// Doesn't care about the string tag "domain-name",
-func printStructValue(val *reflect.StructValue) string {
-	s := "{"
-	for i := 0; i < val.NumField(); i++ {
-		if i > 0 {
-			s += ", "
-		}
-		f := val.Type().(*reflect.StructType).Field(i)
-		if !f.Anonymous {
-			s += f.Name + "="
-		}
-		fval := val.Field(i)
-		if fv, ok := fval.(*reflect.StructValue); ok {
-			s += printStructValue(fv)
-		} else {
-			s += fmt.Sprint(fval.Interface())
-		}
-	}
-	s += "}"
-	return s
-}
-
-func PrintStruct(any interface{}) string { return printStructValue(structValue(any)) }
-
 // Resource record packer.
 func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	var off1 int
