@@ -120,7 +120,7 @@ func (q *Question) String() string {
 // There are many types of messages,
 // but they all share the same header.
 type RR_Header struct {
-        Edns     bool   // true is this a edns header
+	Edns     bool   // true is this a edns header
 	Name     string "domain-name"
 	Rrtype   uint16
 	Class    uint16
@@ -134,14 +134,19 @@ func (h *RR_Header) Header() *RR_Header {
 
 func (h *RR_Header) String() string {
 	var s string
-        if len(h.Name) == 0 {
-                s = ".\t"
-        } else {
-                s = h.Name + "\t"
-        }
-        s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-        s = s + class_str[h.Class] + "\t"
-        s = s + rr_str[h.Rrtype] + "\t"
+
+	if h.Edns {
+		s = ";"
+	}
+
+	if len(h.Name) == 0 {
+		s += ".\t"
+	} else {
+		s += h.Name + "\t"
+	}
+	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
+	s = s + class_str[h.Class] + "\t"
+	s = s + rr_str[h.Rrtype] + "\t"
 	return s
 }
 
@@ -354,16 +359,16 @@ func (rr *RR_AAAA) String() string {
 
 // DNSSEC types
 type RR_RRSIG struct {
-	Hdr		RR_Header
-	TypeCovered	uint16
-	Algorithm	uint8
-	Labels		uint8
-	OrigTtl		uint32
-	Expiration	uint32
-	Inception	uint32
-	KeyTag		uint16
-	SignerName	string "domain-name"
-	Sig		string "base64"
+	Hdr         RR_Header
+	TypeCovered uint16
+	Algorithm   uint8
+	Labels      uint8
+	OrigTtl     uint32
+	Expiration  uint32
+	Inception   uint32
+	KeyTag      uint16
+	SignerName  string "domain-name"
+	Sig         string "base64"
 }
 
 func (rr *RR_RRSIG) Header() *RR_Header {
@@ -376,8 +381,8 @@ func (rr *RR_RRSIG) Header() *RR_Header {
 // needs serial stuff
 // starts when 1970 has been 68 years ago??
 func intToDate(t uint32) string {
-// als meer dan 68 jaar geleden, dan 68 jaar bij bedrag optellen
-// TODO
+	// als meer dan 68 jaar geleden, dan 68 jaar bij bedrag optellen
+	// TODO
 	ti := time.SecondsToUTC(int64(t))
 	return ti.Format("20060102030405")
 }
@@ -389,9 +394,9 @@ func (rr *RR_RRSIG) String() string {
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.Itoa(int(rr.OrigTtl)) +
-//		" " + strconv.Itoa(int(rr.Expiration)) + // date calc! TODO
+		//		" " + strconv.Itoa(int(rr.Expiration)) + // date calc! TODO
 		" " + intToDate(rr.Expiration) +
-//		" " + strconv.Itoa(int(rr.Inception)) + // date calc! TODO
+		//		" " + strconv.Itoa(int(rr.Inception)) + // date calc! TODO
 		" " + intToDate(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
@@ -515,7 +520,7 @@ var rr_str = map[uint16]string{
 	TypeSRV:        "SRV",
 	TypeA:          "A",
 	TypeAAAA:       "AAAA",
-        TypeOPT:        "OPT",
+	TypeOPT:        "OPT",
 	TypeDS:         "DS",
 	TypeRRSIG:      "RRSIG",
 	TypeNSEC:       "NSEC",

@@ -73,13 +73,13 @@ func packDomainName(s string, msg []byte, off int, edns bool) (off1 int, ok bool
 		s += "."
 	}
 
-        if edns {
-                // packing for edns is actually easy
-                msg[0] = 0x40 // 01 111111
-                msg[1] = 0x00
-                off += 2
-                return off, true
-        }
+	if edns {
+		// packing for edns is actually easy
+		msg[0] = 0x40 // 01 111111
+		msg[1] = 0x00
+		off += 2
+		return off, true
+	}
 
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
@@ -146,19 +146,19 @@ Loop:
 			}
 			s += string(msg[off:off+c]) + "."
 			off += c
-                case 0x40:
-                        // Need a check if a RR has this, because
-                        // we need to set RR_Heasder.Edns to true
-                        // edns extended name, does not matter for
-                        // the rest of the RR (which should be OPT)
-                        // but the parsing here (is for now) relatively simple
-                        // The name must be the root label aka 00
-                        // TODO check! MG
-                        println("*** Seeing EDNS")
-                        edns = true
-                        s = ""
-                        off++
-                        break Loop
+		case 0x40:
+			// Need a check if a RR has this, because
+			// we need to set RR_Heasder.Edns to true
+			// edns extended name, does not matter for
+			// the rest of the RR (which should be OPT)
+			// but the parsing here (is for now) relatively simple
+			// The name must be the root label aka 00
+			// TODO check! MG
+			println("*** Seeing EDNS")
+			edns = true
+			s = ""
+			off++
+			break Loop
 		case 0xC0:
 			// pointer to somewhere else in msg.
 			// remember location after first ptr,
@@ -199,33 +199,33 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v\n", f.Type)
 			return len(msg), false
-                case *reflect.BoolValue:
-                        // Used internally for Edns, not present in the DNS
-                        continue;
+		case *reflect.BoolValue:
+			// Used internally for Edns, not present in the DNS
+			continue
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v\n", f.Tag)
 				return len(msg), false
-			case "OPT":	// edns
-                                        // Set the Hdr.Edns to true
-                                  for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
-                                        println(j) // TODO MG
-                                        element := val.Field(i).(*reflect.SliceValue).Elem(j)
-                                        code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
-                                        data := string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get())
-                                        // Option Code
-                                        msg[off] = byte(code >> 8)
-                                        msg[off+1] = byte(code)
-                                        // Length
-                                        msg[off+2] = byte(len(data) >> 8)
-                                        msg[off+3] = byte(len(data))
-				        off += 4
-                                        copy(msg[off:off+len(data)], []byte(data))
-                                        off += len(data) // +1??
-                                        println("data", data)
-                                        println("off", off)
-                                }
+			case "OPT": // edns
+				// Set the Hdr.Edns to true
+				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
+					println(j) // TODO MG
+					element := val.Field(i).(*reflect.SliceValue).Elem(j)
+					code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
+					data := string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get())
+					// Option Code
+					msg[off] = byte(code >> 8)
+					msg[off+1] = byte(code)
+					// Length
+					msg[off+2] = byte(len(data) >> 8)
+					msg[off+3] = byte(len(data))
+					off += 4
+					copy(msg[off:off+len(data)], []byte(data))
+					off += len(data) // +1??
+					println("data", data)
+					println("off", off)
+				}
 			case "A":
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
 					return len(msg), false
@@ -293,9 +293,9 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (
 				if !ok {
 					return len(msg), false
 				}
-                        case "hex":
-                                // TODO need this for DS
-                                println("hex packing not implemented")
+			case "hex":
+				// TODO need this for DS
+				println("hex packing not implemented")
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -332,9 +332,9 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v", f.Type)
 			return len(msg), false, false
-                case *reflect.BoolValue:
-                        // Used internally for Edns, not present in the DNS
-                        continue;
+		case *reflect.BoolValue:
+			// Used internally for Edns, not present in the DNS
+			continue
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -356,8 +356,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				b := net.IP(p)
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
-                        case "OPT":     // edns
-                                // do it here
+			case "OPT": // edns
+				// do it here
 			}
 		case *reflect.StructValue:
 			off, ok, edns = unpackStructValue(fv, msg, off)
@@ -400,7 +400,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				switch val.Type().Name() {
 				case "RR_DS":
 					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
-                                default:
+				default:
 					consumed = 0 // TODO
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
@@ -415,7 +415,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 4 // Flags(2) + Protocol(1) + Algorithm(1)
 				case "RR_RRSIG":
 					consumed = 18 // TypeCovered(2) + Algorithm(1) + Labels(1) +
-						      // OrigTTL(4) + SigExpir(4) + SigIncep(4) + KeyTag(2) + len(signername)
+					// OrigTTL(4) + SigExpir(4) + SigIncep(4) + KeyTag(2) + len(signername)
 					// Should already be set in the sequence of parsing (comes before)
 					// Work because of rfc4034, section 3.17
 					consumed += len(val.FieldByName("SignerName").(*reflect.StringValue).Get()) + 1
@@ -490,7 +490,7 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	// a bit inefficient but this doesn't need to be fast.
 	// off1 is end of header
 	// off2 is end of rr
-        edns := rr.Header().Edns
+	edns := rr.Header().Edns
 	off1, ok = packStruct(rr.Header(), msg, off, edns)
 	off2, ok = packStruct(rr, msg, off, edns)
 	if !ok {
@@ -506,25 +506,25 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 // Resource record unpacker.
 func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// unpack just the header, to find the rr type and length
-        // check if we have an edns packet, and set h.Edns to true
+	// check if we have an edns packet, and set h.Edns to true
 	var h RR_Header
-        var edns bool
+	var edns bool
 	off0 := off
 	if off, ok, edns = unpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
-        h.Edns = edns           // set Edns if found
+	h.Edns = edns // set Edns if found
 	end := off + int(h.Rdlength)
 
 	// make an rr of that type and re-unpack.
 	// again inefficient but doesn't need to be fast.
 	mk, known := rr_mk[int(h.Rrtype)]
 	if !known {
-		return &h, end, true    // false, or unknown RR??
+		return &h, end, true // false, or unknown RR??
 	}
 
 	rr = mk()
-	off, ok, _ = unpackStruct(rr, msg, off0)        // don't care about edns?
+	off, ok, _ = unpackStruct(rr, msg, off0) // don't care about edns?
 	if off != end {
 		// added MG
 		// println("Hier gaat het dan fout, echt waar en was if off0", off0)
@@ -545,7 +545,7 @@ type MsgHdr struct {
 	Truncated           bool
 	Recursion_desired   bool
 	Recursion_available bool
-	Z		    bool		// or just zero??
+	Z                   bool // or just zero??
 	Authenticated_data  bool
 	Checking_disabled   bool
 	Rcode               int
@@ -598,7 +598,7 @@ type Msg struct {
 	Answer   []RR
 	Ns       []RR
 	// EDNS0 has to be put in this section
-	Extra    []RR
+	Extra []RR
 }
 
 
@@ -647,7 +647,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	// Could work harder to calculate message size,
 	// but this is far more than we need and not
 	// big enough to hurt the allocator.
-	msg = make([]byte, 4096)	// TODO, calculate REAL size
+	msg = make([]byte, 4096) // TODO, calculate REAL size
 
 	// Pack it in: header and then the pieces.
 	off := 0
