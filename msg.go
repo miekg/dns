@@ -225,6 +225,9 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					msg[off] = byte(fv.Elem(j).(*reflect.UintValue).Get())
 					off++
 				}
+                        case "NSEC3":
+                        case "NSEC":
+                                // handle type bit maps
 			}
 		case *reflect.StructValue:
 			off, ok = packStructValue(fv, msg, off)

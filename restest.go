@@ -25,7 +25,7 @@ func main() {
 	m.MsgHdr.Recursion_desired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 
-	m.Question[0] = dns.Question{"forfunsec.org", dns.TypeRRSIG, dns.ClassINET}
+	m.Question[0] = dns.Question{"pa1ton.nl", dns.TypeDS, dns.ClassINET}
 	ch <- dns.DnsMsg{m, nil}
 
 	// wait for an reply

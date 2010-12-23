@@ -89,6 +89,8 @@ const (
 	_CD = 1 << 4  // checking disabled
 )
 
+// Why not use the official cryptstuff here too???
+// or at least map them
 const (
 	// DNSSEC algorithms
 	AlgRSAMD5    = 1
@@ -99,6 +101,11 @@ const (
 	AlgRSASHA256 = 8
 	AlgRSASHA512 = 10
 	AlgECCGOST   = 12
+)
+
+const (
+	HashSHA1   = 1 //?
+	HashSHA256 = 2 //?
 )
 
 // DNS queries.
@@ -134,8 +141,9 @@ func (h *RR_Header) Header() *RR_Header {
 func (h *RR_Header) String() string {
 	var s string
 
-        if h.Rrtype == TypeOPT {
+	if h.Rrtype == TypeOPT {
 		s = ";"
+		// and maybe other things
 	}
 
 	if len(h.Name) == 0 {
@@ -403,7 +411,9 @@ func (rr *RR_RRSIG) String() string {
 }
 
 type RR_NSEC struct {
-	Hdr RR_Header
+	Hdr        RR_Header
+	NextDomain string "domain-name"
+	TypeBitMap []byte "NSEC"
 }
 
 func (rr *RR_NSEC) Header() *RR_Header {
@@ -411,7 +421,7 @@ func (rr *RR_NSEC) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC) String() string {
-	return "BLAH"
+	return rr.Hdr.String() + "NSEC BLAH"
 }
 
 type RR_DS struct {
@@ -455,7 +465,15 @@ func (rr *RR_DNSKEY) String() string {
 }
 
 type RR_NSEC3 struct {
-	Hdr RR_Header
+	Hdr        RR_Header
+	Hash       uint8
+	Flags      uint8
+	Iterations uint16
+	SaltLength uint8
+	Salt       string "hex"
+	HashLength uint8
+	NextDomain string "domain-name"
+	TypeBitMap []byte "NSEC3"
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {
@@ -463,11 +481,16 @@ func (rr *RR_NSEC3) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC3) String() string {
-	return "BLAH"
+	return rr.Hdr.String() + "BLAH"
 }
 
 type RR_NSEC3PARAM struct {
-	Hdr RR_Header
+	Hdr        RR_Header
+	Hash       uint8
+	Flags      uint8
+	Iterations uint16
+	SaltLength uint8
+	Salt       string "hex"
 }
 
 func (rr *RR_NSEC3PARAM) Header() *RR_Header {
@@ -475,7 +498,7 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC3PARAM) String() string {
-	return "BLAH"
+	return rr.Hdr.String() + "BLAH"
 }
 
 // Map of constructors for each RR wire type.
