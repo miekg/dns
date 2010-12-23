@@ -17,7 +17,7 @@ func TestResolverEdns(t *testing.T) {
 	m := new(Msg)
 	m.MsgHdr.Recursion_desired = true //only set this bit
 	m.Question = make([]Question, 1)
-	m.Extra = make([]RR, 1)
+	m.Ns = make([]RR, 1)
 
 	// Add EDNS rr
 	edns := new(RR_OPT)
@@ -32,7 +32,7 @@ func TestResolverEdns(t *testing.T) {
 
 	// ask something
 	m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-	m.Extra[0] = edns
+	m.Ns[0] = edns
 
 	fmt.Printf("Sending: %v\n", m)
 

@@ -98,10 +98,10 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 			begin = i + 1
 		}
 	}
-        // Root label is special
-        if s == "." {
-                return off,true
-        }
+	// Root label is special
+	if s == "." {
+		return off, true
+	}
 	msg[off] = 0
 	off++
 	return off, true
@@ -204,9 +204,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					msg[off+3] = byte(len(data))
 					off += 4
 					copy(msg[off:off+len(data)], []byte(data))
-					off += len(data) // +1??
-					println("data", data)
-					println("off", off)
+					off += len(data) // +1?? MG TODO
 				}
 			case "A":
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
@@ -225,9 +223,9 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					msg[off] = byte(fv.Elem(j).(*reflect.UintValue).Get())
 					off++
 				}
-                        case "NSEC3":
-                        case "NSEC":
-                                // handle type bit maps
+			case "NSEC3":
+			case "NSEC":
+				// handle type bit maps
 			}
 		case *reflect.StructValue:
 			off, ok = packStructValue(fv, msg, off)
@@ -552,8 +550,7 @@ type Msg struct {
 	Question []Question
 	Answer   []RR
 	Ns       []RR
-	// EDNS0 has to be put in this section
-	Extra []RR
+	Extra    []RR
 }
 
 
