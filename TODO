@@ -1,9 +1,6 @@
-EDNS -- add EDNS0 support 
-DNSSEC - validation and the remaining records
-	    DS, RRSIG, NSEC, etc.
-NSEC/NSEC3/NSEC3PARAM stuff
-unknown RRs
+EDNS -- finish EDNS0 support 
+DNSSEC - validation and the remaining records, DS (encoding), NSEC and NSEC3
+unknown RRs - if I ever get around to make it
 
-Generic version of TryOneName
 quotes in quotes in txt records
 fix os.Erros usage (extend or whatever)
