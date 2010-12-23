@@ -3,6 +3,7 @@ IPv6 support
 DNSSEC support
 uint8 support
 base64 support (only for unpacking atm)
+hex support
 Split of the type definition into dnstypes.go
 
 make should build the package
