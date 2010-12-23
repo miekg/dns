@@ -413,7 +413,7 @@ func (rr *RR_RRSIG) String() string {
 type RR_NSEC struct {
 	Hdr        RR_Header
 	NextDomain string "domain-name"
-	TypeBitMap []byte "NSEC"
+	TypeBitMap []int  "NSEC"
 }
 
 func (rr *RR_NSEC) Header() *RR_Header {
@@ -473,7 +473,7 @@ type RR_NSEC3 struct {
 	Salt       string "hex"
 	HashLength uint8
 	NextDomain string "domain-name"
-	TypeBitMap []byte "NSEC3"
+	TypeBitMap []int  "NSEC3"       // &{TypeSOA,TypeDS,etc}
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {
