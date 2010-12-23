@@ -192,7 +192,6 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				return len(msg), false
 			case "OPT": // edns
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
-					println(j) // TODO MG
 					element := val.Field(i).(*reflect.SliceValue).Elem(j)
 					code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
 					data := string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get())
