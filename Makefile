@@ -14,7 +14,7 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.pkg
 
-p: restest manglertest ednstest dnssectest
+p: restest manglertest ednstest dnssectest ednstest2
 
 # too lazy to lookup how this works again in Makefiles
 restest: restest.go $(GOFILES)
@@ -22,6 +22,9 @@ restest: restest.go $(GOFILES)
 
 ednstest: ednstest.go $(GOFILES)
 	6g -I _obj ednstest.go && 6l -L _obj -o ednstest ednstest.6
+
+ednstest2: ednstest2.go $(GOFILES)
+	6g -I _obj ednstest2.go && 6l -L _obj -o ednstest2 ednstest2.6
 
 manglertest: manglertest.go $(GOFILES)
 	6g -I _obj manglertest.go && 6l -L _obj -o manglertest manglertest.6

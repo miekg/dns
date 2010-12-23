@@ -67,18 +67,10 @@ var rcode_str = map[int]string{
 // Pack a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots.  They end with a zero-length string.
-func packDomainName(s string, msg []byte, off int, edns bool) (off1 int, ok bool) {
+func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	if n := len(s); n == 0 || s[n-1] != '.' {
 		s += "."
-	}
-
-	if edns {
-		// packing for edns is actually easy
-		msg[0] = 0x40 // 01 111111
-		msg[1] = 0x00
-		off += 2
-		return off, true
 	}
 
 	// Each dot ends a segment of the name.
@@ -106,6 +98,10 @@ func packDomainName(s string, msg []byte, off int, edns bool) (off1 int, ok bool
 			begin = i + 1
 		}
 	}
+        // Root label is special
+        if s == "." {
+                return off,true
+        }
 	msg[off] = 0
 	off++
 	return off, true
@@ -124,13 +120,13 @@ func packDomainName(s string, msg []byte, off int, edns bool) (off1 int, ok bool
 // which is where the next record will start.
 // In theory, the pointers are only allowed to jump backward.
 // We let them jump anywhere and stop jumping after a while.
-func unpackDomainName(msg []byte, off int) (s string, off1 int, ok, edns bool) {
+func unpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
 	ptr := 0 // number of pointers followed
 Loop:
 	for {
 		if off >= len(msg) {
-			return "", len(msg), false, false
+			return "", len(msg), false
 		}
 		c := int(msg[off])
 		off++
@@ -142,23 +138,10 @@ Loop:
 			}
 			// literal string
 			if off+c > len(msg) {
-				return "", len(msg), false, false
+				return "", len(msg), false
 			}
 			s += string(msg[off:off+c]) + "."
 			off += c
-		case 0x40:
-			// Need a check if a RR has this, because
-			// we need to set RR_Heasder.Edns to true
-			// edns extended name, does not matter for
-			// the rest of the RR (which should be OPT)
-			// but the parsing here (is for now) relatively simple
-			// The name must be the root label aka 00
-			// TODO check! MG
-			println("*** Seeing EDNS")
-			edns = true
-			s = ""
-			off++
-			break Loop
 		case 0xC0:
 			// pointer to somewhere else in msg.
 			// remember location after first ptr,
@@ -166,7 +149,7 @@ Loop:
 			// also, don't follow too many pointers --
 			// maybe there's a loop.
 			if off >= len(msg) {
-				return "", len(msg), false, false
+				return "", len(msg), false
 			}
 			c1 := msg[off]
 			off++
@@ -174,24 +157,24 @@ Loop:
 				off1 = off
 			}
 			if ptr++; ptr > 10 {
-				return "", len(msg), false, false
+				return "", len(msg), false
 			}
 			off = (c^0xC0)<<8 | int(c1)
 		default:
 			// 0x80 and 0x40 are reserved
-			return "", len(msg), false, false
+			return "", len(msg), false
 		}
 	}
 	if ptr == 0 {
 		off1 = off
 	}
-	return s, off1, true, edns
+	return s, off1, true
 }
 
 // TODO(rsc): Move into generic library?
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
 // slices and other (often anonymous) structs.
-func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (off1 int, ok bool) {
+func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
 		f := val.Type().(*reflect.StructType).Field(i)
 		switch fv := val.Field(i).(type) {
@@ -208,7 +191,6 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v\n", f.Tag)
 				return len(msg), false
 			case "OPT": // edns
-				// Set the Hdr.Edns to true
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
 					println(j) // TODO MG
 					element := val.Field(i).(*reflect.SliceValue).Elem(j)
@@ -245,7 +227,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (
 				}
 			}
 		case *reflect.StructValue:
-			off, ok = packStructValue(fv, msg, off, edns)
+			off, ok = packStructValue(fv, msg, off)
 		case *reflect.UintValue:
 			i := fv.Get()
 			switch fv.Type().Kind() {
@@ -289,7 +271,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int, edns bool) (
 				}
 				off += b64len
 			case "domain-name":
-				off, ok = packDomainName(s, msg, off, edns)
+				off, ok = packDomainName(s, msg, off)
 				if !ok {
 					return len(msg), false
 				}
@@ -317,21 +299,21 @@ func structValue(any interface{}) *reflect.StructValue {
 	return reflect.NewValue(any).(*reflect.PtrValue).Elem().(*reflect.StructValue)
 }
 
-func packStruct(any interface{}, msg []byte, off int, edns bool) (off1 int, ok bool) {
-	off, ok = packStructValue(structValue(any), msg, off, edns)
+func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+	off, ok = packStructValue(structValue(any), msg, off)
 	return off, ok
 }
 
 // Unpack a reflect.StructValue from msg.
 // Same restrictions as packStructValue.
-func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, ok, edns bool) {
+func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
 		f := val.Type().(*reflect.StructType).Field(i)
 		switch fv := val.Field(i).(type) {
 		default:
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v", f.Type)
-			return len(msg), false, false
+			return len(msg), false
 		case *reflect.BoolValue:
 			// Used internally for Edns, not present in the DNS
 			continue
@@ -339,17 +321,17 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			switch f.Tag {
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
-				return len(msg), false, false
+				return len(msg), false
 			case "A":
 				if off+net.IPv4len > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				b := net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv4len
 			case "AAAA":
 				if off+net.IPv6len > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				p := make(net.IP, net.IPv6len)
 				copy(p, msg[off:off+net.IPv6len])
@@ -360,28 +342,28 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				// do it here
 			}
 		case *reflect.StructValue:
-			off, ok, edns = unpackStructValue(fv, msg, off)
+			off, ok = unpackStructValue(fv, msg, off)
 		case *reflect.UintValue:
 			switch fv.Type().Kind() {
 			default:
 				goto BadType
 			case reflect.Uint8:
 				if off+1 > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				i := uint8(msg[off])
 				fv.Set(uint64(i))
 				off++
 			case reflect.Uint16:
 				if off+2 > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				i := uint16(msg[off])<<8 | uint16(msg[off+1])
 				fv.Set(uint64(i))
 				off += 2
 			case reflect.Uint32:
 				if off+4 > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				i := uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])
 				fv.Set(uint64(i))
@@ -392,7 +374,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			switch f.Tag {
 			default:
 				fmt.Fprintf(os.Stderr, "net: dns: unknown string tag %v", f.Tag)
-				return len(msg), false, false
+				return len(msg), false
 			case "hex":
 				// Rest of the RR is hex encoded
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
@@ -428,13 +410,13 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				s = string(b64)
 				off += rdlength - consumed
 			case "domain-name":
-				s, off, ok, edns = unpackDomainName(msg, off)
+				s, off, ok = unpackDomainName(msg, off)
 				if !ok {
-					return len(msg), false, false
+					return len(msg), false
 				}
 			case "":
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
-					return len(msg), false, false
+					return len(msg), false
 				}
 				n := int(msg[off])
 				off++
@@ -448,12 +430,12 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			fv.Set(s)
 		}
 	}
-	return off, true, edns
+	return off, true
 }
 
-func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok, edns bool) {
-	off, ok, edns = unpackStructValue(structValue(any), msg, off)
-	return off, ok, edns
+func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+	off, ok = unpackStructValue(structValue(any), msg, off)
+	return off, ok
 }
 
 // THIS can GO TODO
@@ -490,30 +472,26 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	// a bit inefficient but this doesn't need to be fast.
 	// off1 is end of header
 	// off2 is end of rr
-	edns := rr.Header().Edns
-	off1, ok = packStruct(rr.Header(), msg, off, edns)
-	off2, ok = packStruct(rr, msg, off, edns)
+	off1, ok = packStruct(rr.Header(), msg, off)
+	off2, ok = packStruct(rr, msg, off)
 	if !ok {
 		return len(msg), false
 	}
 	// TODO make this quicker?
 	// pack a third time; redo header with correct data length
 	rr.Header().Rdlength = uint16(off2 - off1)
-	packStruct(rr.Header(), msg, off, edns)
+	packStruct(rr.Header(), msg, off)
 	return off2, true
 }
 
 // Resource record unpacker.
 func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// unpack just the header, to find the rr type and length
-	// check if we have an edns packet, and set h.Edns to true
 	var h RR_Header
-	var edns bool
 	off0 := off
-	if off, ok, edns = unpackStruct(&h, msg, off); !ok {
+	if off, ok = unpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
-	h.Edns = edns // set Edns if found
 	end := off + int(h.Rdlength)
 
 	// make an rr of that type and re-unpack.
@@ -524,7 +502,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	}
 
 	rr = mk()
-	off, ok, _ = unpackStruct(rr, msg, off0) // don't care about edns?
+	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
 		// added MG
 		// println("Hier gaat het dan fout, echt waar en was if off0", off0)
@@ -651,9 +629,9 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, ok = packStruct(&dh, msg, off, false)
+	off, ok = packStruct(&dh, msg, off)
 	for i := 0; i < len(question); i++ {
-		off, ok = packStruct(&question[i], msg, off, false)
+		off, ok = packStruct(&question[i], msg, off)
 	}
 	for i := 0; i < len(answer); i++ {
 		off, ok = packRR(answer[i], msg, off)
@@ -675,7 +653,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	var dh Header
 	off := 0
 	var ok bool
-	if off, ok, _ = unpackStruct(&dh, msg, off); !ok {
+	if off, ok = unpackStruct(&dh, msg, off); !ok {
 		return false
 	}
 	dns.Id = dh.Id
@@ -694,7 +672,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.Extra = make([]RR, dh.Arcount)
 
 	for i := 0; i < len(dns.Question); i++ {
-		off, ok, _ = unpackStruct(&dns.Question[i], msg, off)
+		off, ok = unpackStruct(&dns.Question[i], msg, off)
 	}
 	for i := 0; i < len(dns.Answer); i++ {
 		dns.Answer[i], off, ok = unpackRR(msg, off)

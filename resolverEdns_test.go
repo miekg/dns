@@ -26,7 +26,7 @@ func TestResolverEdns(t *testing.T) {
 	edns.Hdr.Rrtype = TypeOPT
 	edns.Hdr.Class = ClassINET
 	edns.Hdr.Ttl = 3600
-	// no options
+	// no options for now
 	//      edns.Option = make([]Option, 1)
 	//      edns.Option[0].Code = OptionCodeNSID
 	//      edns.Option[0].Data = "lalalala"
@@ -35,7 +35,7 @@ func TestResolverEdns(t *testing.T) {
 	m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 	m.Extra[0] = edns
 
-	fmt.Printf("%v\n", m)
+	fmt.Printf("Sending: %v\n", m)
 
 	ch <- DnsMsg{m, nil}
 	in := <-ch
@@ -44,7 +44,7 @@ func TestResolverEdns(t *testing.T) {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	}
-	fmt.Printf("%v\n", in)
+	fmt.Printf("Recv: %v\n", in.Dns)
 
 	ch <- DnsMsg{nil, nil}
 	time.Sleep(1.0e9)

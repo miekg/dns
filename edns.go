@@ -15,12 +15,10 @@ type Option struct {
 }
 
 // EDNS extended RR.
-// If we are dealing with this, we might copy
-// the RR_Header over to this type and allow for
-// easy access
+// Not used yet
 type EDNS0_Header struct {
 	Name          string "extended-name"
-	Opt           uint16 // was type
+	Opt           uint16 // was type, but is always TypeOPT
 	UDPSize       uint16 // was class
 	ExtendedRcode uint8  // was TTL
 	Version       uint8  // was TTL
