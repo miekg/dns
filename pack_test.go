@@ -3,6 +3,7 @@ package dns
 import (
 	"testing"
 	"net"
+        "fmt"
 )
 
 func TestPackUnpack(t *testing.T) {
@@ -78,6 +79,7 @@ func TestPackUnpack(t *testing.T) {
 	}
 
         edns := new(RR_OPT)
+        edns.Hdr.Edns = true
         edns.Hdr.Name = "."
         edns.Hdr.Rrtype = TypeOPT
         edns.Hdr.Class = ClassINET
@@ -86,16 +88,17 @@ func TestPackUnpack(t *testing.T) {
         edns.Option[0].Code = OptionCodeNSID
         edns.Option[0].Data = "lalalala"
 
-	out.Answer[0] = edns
-	msg, ok = out.Pack()
-	if ! ok {
-		t.Log("Failed to pack msg with OPT (EDNS)")
-		t.Fail()
-	}
+        _, ok = packRR(edns, msg, 0)
+        if !ok {
+                t.Log("Failed")
+                t.Fail()
+        }
+        fmt.Printf("%v\n", edns)
 
-	if ! in.Unpack(msg) {
-		t.Log("Failed to unpack msg with OPT (EDNS)")
-		t.Fail()
-	}
-
+        unpacked, _, ok := unpackRR(msg, 0)
+        if  !ok {
+                t.Log("Failed")
+                t.Fail()
+        }
+        fmt.Printf("%v\n", unpacked)
 }
