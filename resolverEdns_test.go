@@ -21,7 +21,6 @@ func TestResolverEdns(t *testing.T) {
 
 	// Add EDNS rr
 	edns := new(RR_OPT)
-	edns.Hdr.Edns = true // must be set for edns
 	edns.Hdr.Name = "."  // must . be for edns
 	edns.Hdr.Rrtype = TypeOPT
 	edns.Hdr.Class = ClassINET

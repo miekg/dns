@@ -79,7 +79,6 @@ func TestPackUnpack(t *testing.T) {
 	}
 
         edns := new(RR_OPT)
-        edns.Hdr.Edns = true
         edns.Hdr.Name = "."
         edns.Hdr.Rrtype = TypeOPT
         edns.Hdr.Class = ClassINET
