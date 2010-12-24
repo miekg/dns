@@ -2,8 +2,11 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-all: mx
+all: mx chaos
 
 # too lazy to lookup how this works again in Makefiles
 mx: mx.go
 	6g -I ../_obj mx.go && 6l -L ../_obj -o mx mx.6
+
+chaos: chaos.go
+	6g -I ../_obj chaos.go && 6l -L ../_obj -o chaos chaos.6
