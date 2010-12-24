@@ -2,7 +2,6 @@ package dns
 
 import (
 	"testing"
-	"time"
 )
 
 
@@ -41,5 +40,5 @@ func TestResolver(t *testing.T) {
 	}
 
 	ch <- DnsMsg{nil, nil}
-	time.Sleep(0.5e9)
+        <-ch
 }

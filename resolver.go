@@ -6,6 +6,7 @@
 // A dns resolver is to be run as a seperate goroutine. 
 // For every reply the resolver answers by sending the
 // received packet back on the channel.
+// TODO: resolverFromConf (/etc/resolv.conf) parsing??
 
 package dns
 
@@ -55,6 +56,8 @@ func query(res *Resolver, msg chan DnsMsg) {
 		case out := <-msg: //msg received
 			if out.Dns == nil {
 				// nil message, quit the goroutine
+                                msg <- DnsMsg{nil, nil}
+                                close(msg)
 				return
 			}
 

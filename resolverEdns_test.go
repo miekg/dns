@@ -2,7 +2,6 @@ package dns
 
 import (
 	"testing"
-	"time"
 )
 
 func TestResolverEdns(t *testing.T) {
@@ -42,5 +41,5 @@ func TestResolverEdns(t *testing.T) {
 		t.Fail()
 	}
 	ch <- DnsMsg{nil, nil}
-	time.Sleep(0.5e9)
+        <-ch
 }
