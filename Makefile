@@ -11,6 +11,7 @@ GOFILES=\
 	types.go\
 	dnssec.go\
 	edns.go \
+	strconv.go \
 
 include $(GOROOT)/src/Make.pkg
 
