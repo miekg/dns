@@ -3,7 +3,6 @@ package dns
 import (
 	"testing"
 	"time"
-	"fmt"
 )
 
 func TestResolverEdns(t *testing.T) {
@@ -34,17 +33,14 @@ func TestResolverEdns(t *testing.T) {
 	m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 	m.Ns[0] = edns
 
-	fmt.Printf("Sending: %v\n", m)
-
 	ch <- DnsMsg{m, nil}
 	in := <-ch
 
 	if in.Dns.Rcode != RcodeSuccess {
+                t.Logf("Recv: %v\n", in.Dns)
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	}
-	fmt.Printf("Recv: %v\n", in.Dns)
-
 	ch <- DnsMsg{nil, nil}
-	time.Sleep(1.0e9)
+	time.Sleep(0.5e9)
 }

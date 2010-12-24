@@ -3,7 +3,6 @@ package dns
 import (
 	"testing"
 	"net"
-        "fmt"
 )
 
 func TestPackUnpack(t *testing.T) {
@@ -89,15 +88,15 @@ func TestPackUnpack(t *testing.T) {
 
         _, ok = packRR(edns, msg, 0)
         if !ok {
+                t.Logf("%v\n", edns)
                 t.Log("Failed")
                 t.Fail()
         }
-        fmt.Printf("%v\n", edns)
 
         unpacked, _, ok := unpackRR(msg, 0)
         if  !ok {
+                t.Logf("%v\n", unpacked)
                 t.Log("Failed")
                 t.Fail()
         }
-        fmt.Printf("%v\n", unpacked)
 }

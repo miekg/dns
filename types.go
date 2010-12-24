@@ -10,7 +10,6 @@ package dns
 import (
 	"net"
 	"strconv"
-	"time"
 )
 
 // Packet formats
@@ -382,29 +381,14 @@ func (rr *RR_RRSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 
-// Also, I might need more of these helper function
-// where to put them if there are more
-// Define a new interface??
-// needs serial stuff
-// starts when 1970 has been 68 years ago??
-func intToDate(t uint32) string {
-	// als meer dan 68 jaar geleden, dan 68 jaar bij bedrag optellen
-	// TODO
-	ti := time.SecondsToUTC(int64(t))
-	return ti.Format("20060102030405")
-}
-
-
 func (rr *RR_RRSIG) String() string {
 	return rr.Hdr.String() +
 		" " + rr_str[rr.TypeCovered] +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.Itoa(int(rr.OrigTtl)) +
-		//		" " + strconv.Itoa(int(rr.Expiration)) + // date calc! TODO
-		" " + intToDate(rr.Expiration) +
-		//		" " + strconv.Itoa(int(rr.Inception)) + // date calc! TODO
-		" " + intToDate(rr.Inception) +
+		" " + timeToDate(rr.Expiration) +
+		" " + timeToDate(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
 		" " + rr.Sig
