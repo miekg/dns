@@ -1,8 +1,9 @@
 package dns
 
-import "time"
-
-// All DNSSEC verification 
+import (
+	"crypto/sha1"
+	"time"
+)
 
 const (
 	year68 = 2 << (32 - 1)
@@ -23,4 +24,21 @@ func timeToDate(t uint32) string {
 func validSignaturePeriod(start, end uint32) bool {
 	utc := time.UTC().Seconds() // maybe as parameter?? TODO MG
 	return int64(start) <= utc && utc <= int64(end)
+}
+
+// Convert an DNSKEY record to a DS record.
+func KeyToDS(k *RR_DNSKEY, hash int) *RR_DS {
+	switch hash {
+	case HashSHA1:
+		var _ = sha1.New()
+
+	case HashSHA256:
+
+	}
+	return nil
+}
+
+// Calculate the keytag of the DNSKEY
+func KeyTag(k *RR_DNSKEY) int {
+	return 0
 }

@@ -10,8 +10,9 @@ GOFILES=\
 	resolver.go \
 	types.go\
 	dnssec.go\
-	edns.go \
-	strconv.go \
+	edns.go\
+	server.go\
+	strconv.go\
 
 include $(GOROOT)/src/Make.pkg
 
