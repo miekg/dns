@@ -174,9 +174,6 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v\n", f.Type)
 			return len(msg), false
-		case *reflect.BoolValue:
-			// Used internally for Edns, not present in the DNS
-			continue
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -306,9 +303,6 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 		BadType:
 			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v", f.Type)
 			return len(msg), false
-		case *reflect.BoolValue:
-			// Used internally for Edns, not present in the DNS
-			continue
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -331,7 +325,18 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
 			case "OPT": // edns
-				// do it here
+                                // check rdlength, if more, then more options
+                                // TODO(mg) checking
+                                // for now: allow only 1. TODO(mg)
+                                /*
+                                opt := make([]Option, 1)
+                                opt[0].Code, off = unpackUint16(msg, off)
+                                length := uint16(msg[off])<<8 | uint16(msg[off+1])
+                                off += 2
+                                opt[0].Data = string(msg[off:off+int(length)])
+                                off += int(length)
+                                //opt 
+                                */
 			}
 		case *reflect.StructValue:
 			off, ok = unpackStructValue(fv, msg, off)
@@ -347,12 +352,12 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fv.Set(uint64(i))
 				off++
 			case reflect.Uint16:
+                                var i uint16
 				if off+2 > len(msg) {
 					return len(msg), false
 				}
-				i := uint16(msg[off])<<8 | uint16(msg[off+1])
+				i, off = unpackUint16(msg, off)
 				fv.Set(uint64(i))
-				off += 2
 			case reflect.Uint32:
 				if off+4 > len(msg) {
 					return len(msg), false
@@ -423,6 +428,13 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 		}
 	}
 	return off, true
+}
+
+// Helper function for unpacking
+func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
+        v = uint16(msg[off])<<8 | uint16(msg[off+1])
+        off1 = off+2
+        return
 }
 
 func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {

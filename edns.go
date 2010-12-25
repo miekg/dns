@@ -9,6 +9,7 @@ const (
 	_DO = 1 << 15 // dnssec ok
 )
 
+// An ENDS0 option rdata element.
 type Option struct {
 	Code uint16
 	Data string "hex"

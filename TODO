@@ -1,6 +1,8 @@
 EDNS -- finish EDNS0 support 
 DNSSEC - validation and the remaining records, DS (encoding), NSEC and NSEC3
 unknown RRs - if I ever get around to make it
+
+
 convience functions
 parsing from strings
 "miek.nl IN A 192.168.1.2" -> <correct Go type>

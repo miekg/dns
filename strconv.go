@@ -1,5 +1,7 @@
 package dns
 
+// use scanner or ebnf
+
 // Convert a string to an resource record. The string must fir on one line.
 // miek.nl. 3600 IN A 192.168.1.1 // ok
 // miek.nl. IN A 192.168.1.1      // ok, ttl may be omitted
