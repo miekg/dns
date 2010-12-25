@@ -1,10 +1,10 @@
 package dns
 
-// Implementation of EDNS0, RFC 2671
+// EDNS0 option codes
 const (
-	OptionCodeLLQ  = 1
-	OptionCodeUL   = 2
-	OptionCodeNSID = 3
+	OptionCodeLLQ  = 1      // Not used
+	OptionCodeUL   = 2      // Not used
+	OptionCodeNSID = 3      // NSID, RFC5001
 	// EDNS flag bits (put in Z section)
 	_DO = 1 << 15 // dnssec ok
 )

@@ -1,6 +1,7 @@
 package main
 
 // Print the MX records of a domain
+// (c) Miek Gieben - 2011
 import (
 	"dns"
         "os"

@@ -20,11 +20,8 @@ include $(GOROOT)/src/Make.pkg
 examples:
 	(cd examples; make)
 
-progs: manglertest dnssectest
+progs: dnssectest
 
 # too lazy to lookup how this works again in Makefiles
-manglertest: manglertest.go $(GOFILES)
-	6g -I _obj manglertest.go && 6l -L _obj -o manglertest manglertest.6
-
 dnssectest: dnssectest.go $(GOFILES)
 	6g -I _obj dnssectest.go && 6l -L _obj -o dnssectest dnssectest.6

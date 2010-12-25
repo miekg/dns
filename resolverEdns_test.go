@@ -21,8 +21,13 @@ func TestResolverEdns(t *testing.T) {
 	edns := new(RR_OPT)
 	edns.Hdr.Name = "."  // must . be for edns
 	edns.Hdr.Rrtype = TypeOPT
-	edns.Hdr.Class = ClassINET
-	edns.Hdr.Ttl = 3600
+        // You can handle an OTP RR as any other, but there
+        // are some convience functions
+        ends.UDPSize(4096, true)
+        edns.DoBit(true, true)
+//        edns.Nsid("mieks-server", true) 
+//	edns.Hdr.Class = ClassINET
+//	edns.Hdr.Ttl = 3600
 	// no options for now
 	//      edns.Option = make([]Option, 1)
 	//      edns.Option[0].Code = OptionCodeNSID
@@ -30,7 +35,7 @@ func TestResolverEdns(t *testing.T) {
 
 	// ask something
 	m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-	m.Ns[0] = edns
+	m.Extra[0] = edns
 
 	ch <- DnsMsg{m, nil}
 	in := <-ch
@@ -41,5 +46,5 @@ func TestResolverEdns(t *testing.T) {
 		t.Fail()
 	}
 	ch <- DnsMsg{nil, nil}
-        <-ch
+        <-ch    // wait for ch to close channel
 }

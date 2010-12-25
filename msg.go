@@ -4,8 +4,7 @@
 
 // DNS packet assembly.  See RFC 1035.
 //
-// This is intended to support name resolution during net.Dial.
-// It doesn't have to be blazing fast.
+// This is not (yet) optimized for speed.
 //
 // Rather than write the usual handful of routines to pack and
 // unpack every message that can appear on the wire, we use
@@ -13,13 +12,7 @@
 // use it.  Thus, if in the future we need to define new message
 // structs, no new pack/unpack/printing code needs to be written.
 //
-// The first half of this file defines the DNS message formats.
-// The second half implements the conversion to and from wire format.
-// A few of the structure elements have string tags to aid the
-// generic pack/unpack routines.
-//
-// TODO(miekg):
-
+// 
 package dns
 
 import (
@@ -171,7 +164,6 @@ Loop:
 	return s, off1, true
 }
 
-// TODO(rsc): Move into generic library?
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
 // slices and other (often anonymous) structs.
 func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, ok bool) {
@@ -503,6 +495,8 @@ type MsgHdr struct {
 	Rcode               int
 }
 
+// Convert a MsgHdr to a string, mimic the way dig displays 
+// headers:
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
 func (h *MsgHdr) String() string {
@@ -544,6 +538,7 @@ func (h *MsgHdr) String() string {
 	return s
 }
 
+// The layout of a DNS message.
 type Msg struct {
 	MsgHdr
 	Question []Question
@@ -598,7 +593,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	// Could work harder to calculate message size,
 	// but this is far more than we need and not
 	// big enough to hurt the allocator.
-	msg = make([]byte, 4096) // TODO, calculate REAL size
+	msg = make([]byte, defaultSize) // TODO, calculate REAL size
 
 	// Pack it in: header and then the pieces.
 	off := 0
@@ -665,6 +660,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	return true
 }
 
+// Convert a complete message to a string. Again use dig-like output
 func (dns *Msg) String() string {
 	if dns == nil {
 		return "<nil> MsgHdr"

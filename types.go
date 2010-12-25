@@ -1,10 +1,25 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+// Extended and bugfixes by Miek Gieben
 
-// DNS Resource Records Types.  See RFC 1035 and ...
+// Package dns implements a full featured interface to the DNS.
+// Supported RFCs include:
+// * 1034/1035
+// * 2671 - EDNS
+// * 4033/4034/4035 - DNSSEC + validation functions
+// * 1982 - Serial Arithmetic
+// * IP6 support
+// The package allow full control over what is send out to the DNS.
 //
-
+// DNS RR types definitions. See RFC 1035/.../4034 and many more.
+// To create quad-A record: "a.miek.nl" IN AAAA 2001:7b8:206:1:200:39ff:fe59:b187
+//
+// import "net" // for IP functions
+// r := new(RR_AAAA)
+// r.AAAA = net.ParseIP("2001:7b8:206:1:200:39ff:fe59:b187").To16()
+// r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeAAAA, Class: ClassINET, Ttl: 3600}
+//
 package dns
 
 import (
@@ -88,8 +103,7 @@ const (
 	_CD = 1 << 4  // checking disabled
 )
 
-// Why not use the official cryptstuff here too???
-// or at least map them
+// DNSSEC encryption algorithm codes.
 const (
 	// DNSSEC algorithms
 	AlgRSAMD5    = 1
@@ -102,6 +116,7 @@ const (
 	AlgECCGOST   = 12
 )
 
+// DNSSEC hashing codes.
 const (
 	HashSHA1   = 1 //?
 	HashSHA256 = 2 //?
@@ -457,7 +472,7 @@ type RR_NSEC3 struct {
 	Salt       string "hex"
 	HashLength uint8
 	NextDomain string "domain-name"
-	TypeBitMap []int  "NSEC3"       // &{TypeSOA,TypeDS,etc}
+	TypeBitMap []int  "NSEC3" // &{TypeSOA,TypeDS,etc}
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {
