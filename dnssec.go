@@ -6,6 +6,7 @@ import (
 )
 
 const (
+        // RFC1982 serial arithmetic
 	year68 = 2 << (32 - 1)
 )
 
@@ -21,7 +22,7 @@ func timeToDate(t uint32) string {
 }
 
 // Using RFC1982 calculate if a signature is valid
-func validSignaturePeriod(start, end uint32) bool {
+func ValidSignaturePeriod(start, end uint32) bool {
 	utc := time.UTC().Seconds() // maybe as parameter?? TODO MG
 	return int64(start) <= utc && utc <= int64(end)
 }
@@ -36,6 +37,13 @@ func KeyToDS(k *RR_DNSKEY, hash int) *RR_DS {
 
 	}
 	return nil
+}
+
+// Validate an rrset with the signature and key. Note the
+// signature validate period is NOT checked. Used 
+// ValidSignaturePeriod for that
+func Valid(rrset []RR, signature *RR_RRSIG, key *RR_DNSKEY) bool {
+
 }
 
 // Calculate the keytag of the DNSKEY
