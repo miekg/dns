@@ -1,5 +1,5 @@
 Todo:
-* parse RRs from strings
+* parse RRs from strings AToRR()
 * DNSSEC validation
 * Unknown RRs
 * fix os.Erros usage 
@@ -11,3 +11,4 @@ Tesing:
 Issues:
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
+* divide the code in multiple packages? dns, dnssec

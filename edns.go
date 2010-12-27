@@ -2,13 +2,17 @@
 // convience functions to operate on it.
 package dns
 
+import (
+	"strconv"
+)
+
 // EDNS0 option codes
 const (
-	OptionCodeLLQ  = 1      // Not used
-	OptionCodeUL   = 2      // Not used
-	OptionCodeNSID = 3      // NSID, RFC5001
+	OptionCodeLLQ  = 1 // Not used
+	OptionCodeUL   = 2 // Not used
+	OptionCodeNSID = 3 // NSID, RFC5001
 	// EDNS flag bits (put in Z section)
-	_DO = 1 << 7           // dnssec ok
+	_DO = 1 << 7 // dnssec ok
 )
 
 // An ENDS0 option rdata element.
@@ -30,12 +34,7 @@ This is the EDNS0 Header
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option  "OPT" // Tag is used in pack and unpack
-}
-
-// A ENDS packet must show differently. TODO
-func (h *RR_Header) ednsString() string {
-        return h.String()
+	Option []Option "OPT" // Tag is used in pack and unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -43,44 +42,55 @@ func (rr *RR_OPT) Header() *RR_Header {
 }
 
 func (rr *RR_OPT) String() string {
-	s := rr.Hdr.ednsString() // Hier misschien andere representatie
+	s := ";; EDNS: version " + strconv.Itoa(int(rr.Version(0, false))) + "; "
+	if rr.DoBit(false, false) {
+		s += "flags: do; "
+	} else {
+		s += "flags: ; "
+	}
+	s += "udp: " + strconv.Itoa(int(rr.UDPSize(0, false))) + ";"
+
 	for _, o := range rr.Option {
 		switch o.Code {
 		case OptionCodeNSID:
-			s += "NSID: " + o.Data
+			s += " nsid: " + o.Data + ";"
 		}
 	}
 	return s
 }
 
+// Set the version of edns, currently only 0 is there
+func (rr *RR_OPT) Version(v uint8, set bool) uint8 {
+	return 0
+}
+
 // when set is true, set the size otherwise get it
-func (rr *RR_OPT) UDPSize(size int, set bool) int {
-        // fiddle in rr.Hdr.Class should be set
-        if set {
-                rr.Hdr.Class = uint16(size)
-        }
-        return int(rr.Hdr.Class)
+func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
+	if set {
+		rr.Hdr.Class = size
+	}
+	return rr.Hdr.Class
 }
 
 // when set is true, set the Do bit, otherwise get it
 func (rr *RR_OPT) DoBit(do, set bool) bool {
-        // rr.TTL last 2 bytes, left most bit
-        // See line 239 in msg.go for TTL encoding
-        if set {
-                leftbyte := byte(rr.Hdr.Ttl >> 24)
-                leftbyte = leftbyte | _DO
-                rr.Hdr.Ttl = uint32(leftbyte<<24)
-                return true
-        } else {
-                // jaja TODO(MG)
-                leftbyte := byte(rr.Hdr.Ttl >> 24)
-                return leftbyte & _DO == 1
-        }
-        return true // dead code, bug in Go
+	// rr.TTL last 2 bytes, left most bit
+	// See line 239 in msg.go for TTL encoding
+	if set {
+		leftbyte := byte(rr.Hdr.Ttl >> 24)
+		leftbyte = leftbyte | _DO
+		rr.Hdr.Ttl = uint32(leftbyte << 24)
+		return true
+	} else {
+		// jaja?? TODO(MG)
+		leftbyte := byte(rr.Hdr.Ttl >> 24)
+		return leftbyte&_DO == 1
+	}
+	return true // dead code, bug in Go
 }
 
 // when set is true, set the nsid, otherwise get it
 func (rr *RR_OPT) Nsid(nsid string, set bool) string {
-        // RR.Option[0] to be set
-        return ""
+	// RR.Option[0] to be set
+	return ""
 }

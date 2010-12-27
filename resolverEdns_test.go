@@ -39,6 +39,8 @@ func TestResolverEdns(t *testing.T) {
 
 	ch <- DnsMsg{m, nil}
 	in := <-ch
+        t.Fail()
+        t.Log("%v\n", in.Dns)
 
 	if in.Dns.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")

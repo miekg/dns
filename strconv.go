@@ -8,7 +8,7 @@ package dns
 // miek.nl. A 192.168.1.1         // ok, ttl and class omitted
 // miek.nl. 3600 A 192.168.1.1    // ok, class omitted
 //          IN A 192.168.1.1      // not ok
-func AtoRR(s string) *RR {
+func ParseString(s string) *RR {
 	// up to first whitespace is domainname
 	// next word is:
 	// <number> -> TTL
