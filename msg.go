@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"net"
 	"strconv"
-        "strings"
 	"encoding/base64"
 	"encoding/hex"
 )
@@ -388,7 +387,6 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 0 // TODO
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
-                                s = strings.ToUpper(s)
 				off += rdlength - consumed
 			case "base64":
 				// Rest of the RR is base64 encoded value

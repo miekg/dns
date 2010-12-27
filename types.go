@@ -25,6 +25,7 @@ package dns
 import (
 	"net"
 	"strconv"
+        "strings"
 )
 
 // Packet formats
@@ -118,8 +119,9 @@ const (
 
 // DNSSEC hashing codes.
 const (
-	HashSHA1   = 1 //?
+	HashSHA1   = 1 //? Check the codepoints
 	HashSHA256 = 2 //?
+        HashGOST94 = 3 //? 
 )
 
 // DNS queries.
@@ -440,7 +442,7 @@ func (rr *RR_DS) String() string {
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
-		" " + rr.Digest
+		" " + strings.ToUpper(rr.Digest)
 }
 
 type RR_DNSKEY struct {
@@ -477,6 +479,7 @@ type RR_NSEC3 struct {
 
 func (rr *RR_NSEC3) Header() *RR_Header {
 	return &rr.Hdr
+        // Salt with strings.ToUpper()
 }
 
 func (rr *RR_NSEC3) String() string {
@@ -498,6 +501,7 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 
 func (rr *RR_NSEC3PARAM) String() string {
 	return rr.Hdr.String() + "BLAH"
+        // Salt with strings.ToUpper()
 }
 
 // Map of constructors for each RR wire type.
