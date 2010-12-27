@@ -8,7 +8,7 @@ const (
 	OptionCodeUL   = 2      // Not used
 	OptionCodeNSID = 3      // NSID, RFC5001
 	// EDNS flag bits (put in Z section)
-	_DO = 1 << 15 // dnssec ok
+	_DO = 1 << 7           // dnssec ok
 )
 
 // An ENDS0 option rdata element.
@@ -65,11 +65,16 @@ func (rr *RR_OPT) UDPSize(size int, set bool) int {
 // when set is true, set the Do bit, otherwise get it
 func (rr *RR_OPT) DoBit(do, set bool) bool {
         // rr.TTL last 2 bytes, left most bit
+        // See line 239 in msg.go for TTL encoding
         if set {
-                rr.Hdr.Ttl = 1
+                leftbyte := byte(rr.Hdr.Ttl >> 24)
+                leftbyte = leftbyte | _DO
+                rr.Hdr.Ttl = uint32(leftbyte<<24)
                 return true
         } else {
-                return true
+                // jaja TODO(MG)
+                leftbyte := byte(rr.Hdr.Ttl >> 24)
+                return leftbyte & _DO == 1
         }
         return true // dead code, bug in Go
 }

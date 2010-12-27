@@ -2,7 +2,6 @@ package main
 
 import (
 	"dns"
-	"time"
 	"fmt"
 )
 
@@ -65,5 +64,5 @@ func main() {
 	fmt.Printf("%v\n", in.Dns)
 
 	ch <- dns.DnsMsg{nil, nil}
-	time.Sleep(1.0e9) // wait for Go routine to do something
+        <-ch
 }

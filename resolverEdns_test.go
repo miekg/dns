@@ -2,7 +2,6 @@ package dns
 
 import (
 	"testing"
-        "fmt"
 )
 
 func TestResolverEdns(t *testing.T) {
@@ -45,7 +44,6 @@ func TestResolverEdns(t *testing.T) {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	}
-        fmt.Printf("recv: %v\n", in.Dns) // TODO remove print (MG)
 	ch <- DnsMsg{nil, nil}
         <-ch    // wait for ch to close channel
 }

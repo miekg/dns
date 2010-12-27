@@ -1,12 +1,13 @@
-EDNS -- finish EDNS0 support 
-DNSSEC - validation and the remaining records, DS (encoding), NSEC and NSEC3
-unknown RRs - if I ever get around to make it
+Todo:
+* parse RRs from strings
+* DNSSEC validation
+* Unknown RRs
+* fix os.Erros usage 
 
+Tesing:
+* EDNS0
+* Robustness
 
-convience functions
-parsing from strings
-"miek.nl IN A 192.168.1.2" -> <correct Go type>
-in msg.go, clean out the code and put it in helper functions
-
-quotes in quotes in txt records
-fix os.Erros usage (extend or whatever)
+Issues:
+* shortened ipv6 addresses are not parsed correctly
+* quoted quotes in txt records
