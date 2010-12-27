@@ -438,7 +438,7 @@ func (rr *RR_DS) Header() *RR_Header {
 func (rr *RR_DS) String() string {
 	return rr.Hdr.String() +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
-		" " + alg_str[rr.Algorithm] +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + rr.Digest
 }
@@ -550,7 +550,7 @@ var rr_str = map[uint16]string{
 	TypeNSEC3PARAM: "NSEC3PARAM",
 }
 
-// Map for algorithm names.
+// Map for algorithm names. 
 var alg_str = map[uint8]string{
 	AlgRSAMD5:    "RSAMD5",
 	AlgDH:        "DH",

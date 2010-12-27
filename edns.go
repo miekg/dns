@@ -1,3 +1,5 @@
+// EDNS0 OTP RR implementation. Define the OPT RR and some
+// convience functions to operate on it.
 package dns
 
 // EDNS0 option codes
@@ -15,9 +17,7 @@ type Option struct {
 	Data string "hex"
 }
 
-// EDNS extended RR.
-// Not used yet
-/* 
+/* EDNS extended RR.
 This is the EDNS0 Header
 	Name          string "domain-name"
 	Opt           uint16 // was type, but is always TypeOPT
@@ -29,8 +29,13 @@ This is the EDNS0 Header
 */
 
 type RR_OPT struct {
-	Hdr    RR_Header // this must become a EDNS0_Header
+	Hdr    RR_Header
 	Option []Option  "OPT" // Tag is used in pack and unpack
+}
+
+// A ENDS packet must show differently. TODO
+func (h *RR_Header) ednsString() string {
+        return h.String()
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -38,7 +43,7 @@ func (rr *RR_OPT) Header() *RR_Header {
 }
 
 func (rr *RR_OPT) String() string {
-	s := rr.Hdr.String() // Hier misschien andere representatie
+	s := rr.Hdr.ednsString() // Hier misschien andere representatie
 	for _, o := range rr.Option {
 		switch o.Code {
 		case OptionCodeNSID:
@@ -50,15 +55,27 @@ func (rr *RR_OPT) String() string {
 
 // when set is true, set the size otherwise get it
 func (rr *RR_OPT) UDPSize(size int, set bool) int {
-        return 0
+        // fiddle in rr.Hdr.Class should be set
+        if set {
+                rr.Hdr.Class = uint16(size)
+        }
+        return int(rr.Hdr.Class)
 }
 
 // when set is true, set the Do bit, otherwise get it
 func (rr *RR_OPT) DoBit(do, set bool) bool {
-        return true
+        // rr.TTL last 2 bytes, left most bit
+        if set {
+                rr.Hdr.Ttl = 1
+                return true
+        } else {
+                return true
+        }
+        return true // dead code, bug in Go
 }
 
 // when set is true, set the nsid, otherwise get it
 func (rr *RR_OPT) Nsid(nsid string, set bool) string {
+        // RR.Option[0] to be set
         return ""
 }

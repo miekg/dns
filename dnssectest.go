@@ -38,7 +38,6 @@ func main() {
 	res := new(dns.Resolver)
 	ch  := dns.NewQuerier(res)
 
-
 	// configure the resolver
 	res.Servers = []string{"192.168.1.2"}
 	res.Timeout = 2
@@ -50,7 +49,7 @@ func main() {
 	m.MsgHdr.Recursion_desired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 
-	m.Question[0] = dns.Question{"nlnetlabs.nl", dns.TypeDNSKEY, dns.ClassINET}
+	m.Question[0] = dns.Question{"miek.nl", dns.TypeDS, dns.ClassINET}
 	ch <- dns.DnsMsg{m, nil}
 	in := <-ch
 	fmt.Printf("%v\n", in.Dns)

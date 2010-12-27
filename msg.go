@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"net"
 	"strconv"
+        "strings"
 	"encoding/base64"
 	"encoding/hex"
 )
@@ -265,8 +266,12 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					return len(msg), false
 				}
 			case "hex":
-				// TODO need this for DS
-				println("hex packing not implemented")
+                                // There is no length encoded here, for DS at least
+                                h, e := hex.DecodeString(s)
+                                if e != nil {
+                                        return len(msg), false
+                                }
+                                copy(msg[off:off+hex.DecodedLen(len(s))], h)
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -373,7 +378,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fmt.Fprintf(os.Stderr, "net: dns: unknown string tag %v", f.Tag)
 				return len(msg), false
 			case "hex":
-				// Rest of the RR is hex encoded
+				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
 				var consumed int
 				switch val.Type().Name() {
@@ -383,6 +388,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 0 // TODO
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
+                                s = strings.ToUpper(s)
 				off += rdlength - consumed
 			case "base64":
 				// Rest of the RR is base64 encoded value

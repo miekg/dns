@@ -43,7 +43,7 @@ func KeyToDS(k *RR_DNSKEY, hash int) *RR_DS {
 // signature validate period is NOT checked. Used 
 // ValidSignaturePeriod for that
 func Valid(rrset []RR, signature *RR_RRSIG, key *RR_DNSKEY) bool {
-
+        return false
 }
 
 // Calculate the keytag of the DNSKEY
