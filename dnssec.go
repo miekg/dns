@@ -3,9 +3,9 @@ package dns
 import (
 	"crypto/sha1"
 	"crypto/sha256"
-        "encoding/hex"
+	"encoding/hex"
 	"time"
-        "io"
+	"io"
 )
 
 const (
@@ -13,76 +13,78 @@ const (
 	year68 = 2 << (32 - 1)
 )
 
+type RRset []RR
+
 // Convert an DNSKEY record to a DS record.
 func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
-        ds := new(RR_DS)
-        ds.Hdr.Name = k.Hdr.Name
-        ds.Hdr.Class = k.Hdr.Class
-        ds.Hdr.Ttl  = k.Hdr.Ttl
-        ds.Hdr.Rrtype = TypeDS
-        ds.KeyTag = k.KeyTag()
-        ds.Algorithm = k.Algorithm
-        ds.DigestType = uint8(hash)
+	ds := new(RR_DS)
+	ds.Hdr.Name = k.Hdr.Name
+	ds.Hdr.Class = k.Hdr.Class
+	ds.Hdr.Ttl = k.Hdr.Ttl
+	ds.Hdr.Rrtype = TypeDS
+	ds.KeyTag = k.KeyTag()
+	ds.Algorithm = k.Algorithm
+	ds.DigestType = uint8(hash)
 
-        // Generic function that gives back a buffer with the rdata?? TODO(MG)
-        // Find the rdata portion for the key (again)
-        // (keytag does this too)
-        buf := make([]byte, 4096)
-        off1, ok := packRR(k, buf, 0)
-        if !ok {
-                return nil
-        }
+	// Generic function that gives back a buffer with the rdata?? TODO(MG)
+	// Find the rdata portion for the key (again)
+	// (keytag does this too)
+	buf := make([]byte, 4096)
+	off1, ok := packRR(k, buf, 0)
+	if !ok {
+		return nil
+	}
 
-        start := off1 - int(k.Header().Rdlength)
-        end := start + int(k.Header().Rdlength)
-        // buf[start:end] is the rdata of the key
-        buf = buf[start:end]
-        // Now the owner name
-        owner := make([]byte, 255)
-        off1, ok = packDomainName(k.Hdr.Name, owner, 0)
-        if !ok {
-                return nil
-        }
-        owner = owner[:off1]
-        // digest buffer
-        digest := append(owner, buf...)
+	start := off1 - int(k.Header().Rdlength)
+	end := start + int(k.Header().Rdlength)
+	// buf[start:end] is the rdata of the key
+	buf = buf[start:end]
+	// Now the owner name
+	owner := make([]byte, 255)
+	off1, ok = packDomainName(k.Hdr.Name, owner, 0)
+	if !ok {
+		return nil
+	}
+	owner = owner[:off1]
+	// digest buffer
+	digest := append(owner, buf...)
 
-        /* 
-         * from RFC4034
-         * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
-         * "|" denotes concatenation
-         * DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
-        */
+	/* 
+	 * from RFC4034
+	 * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
+	 * "|" denotes concatenation
+	 * DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
+	 */
 
 	switch hash {
 	case HashSHA1:
 		s := sha1.New()
-                io.WriteString(s, string(digest))
-                ds.Digest = hex.EncodeToString(s.Sum())
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum())
 	case HashSHA256:
-                s := sha256.New()
-                io.WriteString(s, string(digest))
-                ds.Digest = hex.EncodeToString(s.Sum())
-        case HashGOST94:
+		s := sha256.New()
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum())
+	case HashGOST94:
 
-        default:
-                // wrong hash value
-                return nil
+	default:
+		// wrong hash value
+		return nil
 	}
 	return ds
 }
 
 // Calculate the keytag of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
-        var keytag int
+	var keytag int
 	switch k.Algorithm {
 	case AlgRSAMD5:
-                println("Keytag RSAMD5. Todo")
+		println("Keytag RSAMD5. Todo")
 		keytag = 0
 	default:
 		// Might encode header length too, so that
 		// we dont need to pack/unpack all the time
-                // Or a shadow structure, with the wiredata and header
+		// Or a shadow structure, with the wiredata and header
 		buf := make([]byte, 4096)
 		off1, ok := packRR(k, buf, 0)
 		if !ok {
@@ -93,7 +95,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		end := start + int(k.Header().Rdlength)
 		for i, v := range buf[start:end] {
 			if i&1 != 0 {
-				keytag += int(v)         // must be larger than uint32
+				keytag += int(v) // must be larger than uint32
 			} else {
 				keytag += int(v) << 8
 			}
@@ -106,21 +108,38 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
-func (s *RR_RRSIG) Secure(rrset []RR, k *RR_DNSKEY) bool {
-        println(len(rrset))
-        // Frist the easy checks
-        if s.KeyTag != k.KeyTag() {
-                return false
-        }
-        if s.Hdr.Class != k.Hdr.Class {
-                return false
-        }
-        if s.Algorithm != k.Algorithm {
-                return false
-        }
-        if s.SignerName != k.Hdr.Name {
-                return false
-        }
+func (s *RR_RRSIG) Secure(rrset RRset, k *RR_DNSKEY) bool {
+	// Frist the easy checks
+	if s.KeyTag != k.KeyTag() {
+		println(s.KeyTag)
+		println(k.KeyTag())
+		return false
+	}
+	if s.Hdr.Class != k.Hdr.Class {
+		println("Class")
+		return false
+	}
+	if s.Algorithm != k.Algorithm {
+		println("Class")
+		return false
+	}
+	if s.SignerName != k.Hdr.Name {
+		println(s.SignerName)
+		println(k.Hdr.Name)
+		return false
+	}
+	for _, r := range rrset {
+		if r.Header().Class != s.Hdr.Class {
+			return false
+		}
+                if r.Header().Rrtype != s.TypeCovered {
+                        return false
+                }
+                // Number of labels. TODO(mg) add helper functions
+	}
+        // 5.3.2.  Reconstructing the Signed Data
+        // signed_data = RRSIG_RDATA | RR(1) | RR(2)...
+
 	return true
 }
 
@@ -129,8 +148,8 @@ func (s *RR_RRSIG) PeriodOK() bool {
 	utc := time.UTC().Seconds()
 	modi := (int64(s.Inception) - utc) / year68
 	mode := (int64(s.Expiration) - utc) / year68
-        ti := int64(s.Inception) + (modi * year68)
-        te := int64(s.Expiration) + (mode * year68)
+	ti := int64(s.Inception) + (modi * year68)
+	te := int64(s.Expiration) + (mode * year68)
 	return ti <= utc && utc <= te
 }
 
@@ -145,3 +164,9 @@ func timeToDate(t uint32) string {
 	return ti.Format("20060102030405")
 }
 
+// Sort an rrset
+func (RRset) Sort() []RR {
+        return nil
+}
+
+// Nr of labels

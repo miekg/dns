@@ -29,7 +29,7 @@ func TestSecure(t *testing.T) {
 	sig.Sig = "kLq/5oFy3Sh5ZxPGFMCyHq8MtN6E17R1Ln9+bJ2Q76YYAxFE8Xlie33A1GFctH2uhzRzJKuP/JSjUkrvGk2rjBm32z9zXtZsKx/4yV0da2nLRm44NOmX6gsP4Yia8mdqPUajjkyLzAzU2bevtesJm0Z65AcmPdq3tUZODdRAcng="
 
 	key := new(RR_DNSKEY)
-	key.Hdr.Name = "miek.nl"
+	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 14400
@@ -38,6 +38,9 @@ func TestSecure(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PubKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-        if sig.Secure([]RR{soa}, key) {
+        // It should validate, at least this month dec 2010
+        if ! sig.Secure([]RR{soa}, key) {
+                t.Log("Failure to validate")
+                t.Fail()
         }
 }
