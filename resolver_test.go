@@ -10,8 +10,6 @@ func TestResolver(t *testing.T) {
 	ch := NewQuerier(res)
 
 	res.Servers = []string{"127.0.0.1"}
-	res.Timeout = 2
-	res.Attempts = 1
 
 	m := new(Msg)
 	m.MsgHdr.Recursion_desired = true //only set this bit

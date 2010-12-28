@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-all: mx chaos
+all: mx chaos dnssectest
 
 # too lazy to lookup how this works again in Makefiles
 mx: mx.go
@@ -10,3 +10,7 @@ mx: mx.go
 
 chaos: chaos.go
 	6g -I ../_obj chaos.go && 6l -L ../_obj -o chaos chaos.6
+
+dnssectest: dnssectest.go
+	6g -I ../_obj dnssectest.go && 6l -L ../_obj -o dnssectest dnssectest.6
+

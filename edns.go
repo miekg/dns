@@ -1,5 +1,3 @@
-// EDNS0 OTP RR implementation. Define the OPT RR and some
-// convience functions to operate on it.
 package dns
 
 import (
@@ -21,16 +19,17 @@ type Option struct {
 	Data string "hex"
 }
 
-/* EDNS extended RR.
-This is the EDNS0 Header
-	Name          string "domain-name"
-	Opt           uint16 // was type, but is always TypeOPT
-	UDPSize       uint16 // was class
-	ExtendedRcode uint8  // was TTL
-	Version       uint8  // was TTL
-	Z             uint16 // was TTL (all flags should be put here)
-	Rdlength      uint16 // length of data after the header
-*/
+/* 
+ * EDNS extended RR.
+ * This is the EDNS0 Header
+ * 	Name          string "domain-name"
+ * 	Opt           uint16 // was type, but is always TypeOPT
+ * 	UDPSize       uint16 // was class
+ * 	ExtendedRcode uint8  // was TTL
+ * 	Version       uint8  // was TTL
+ * 	Z             uint16 // was TTL (all flags should be put here)
+ * 	Rdlength      uint16 // length of data after the header
+ */
 
 type RR_OPT struct {
 	Hdr    RR_Header

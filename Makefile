@@ -18,15 +18,3 @@ include $(GOROOT)/src/Make.pkg
 
 examples:
 	(cd examples; make)
-
-progs: dnssectest keytest readtest
-
-# too lazy to lookup how this works again in Makefiles
-dnssectest: dnssectest.go $(GOFILES)
-	6g -I _obj dnssectest.go && 6l -L _obj -o dnssectest dnssectest.6
-
-keytest: keytest.go $(GOFILES)
-	6g -I _obj keytest.go && 6l -L _obj -o keytest keytest.6
-
-readtest: readtest.go $(GOFILES)
-	6g -I _obj readtest.go && 6l -L _obj -o readtest readtest.6

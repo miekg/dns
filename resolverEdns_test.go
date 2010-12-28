@@ -26,8 +26,6 @@ func TestResolverEdns(t *testing.T) {
         edns.UDPSize(4096, true)
         edns.DoBit(true, true)
 //        edns.Nsid("mieks-server", true) 
-//	edns.Hdr.Class = ClassINET
-//	edns.Hdr.Ttl = 3600
 	// no options for now
 	//      edns.Option = make([]Option, 1)
 	//      edns.Option[0].Code = OptionCodeNSID

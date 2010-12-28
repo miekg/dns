@@ -1,19 +1,14 @@
-Alternative aproach to a DNS library
-
-Much more control as you prepare a dns packet and then call the resolver
-to send it. 
-
-The library is asynchronise (thanks to Go) from the get go.
+Alternative (more granular) approach to a DNS library
 
 Implemented RFCS:
 
 * RFC2671, EDNS
 * RFC1034/1035
-* RFC4033/4034/4035 (todo: validation)
-* RFC5155 (NSEC)
+* RFC4033/4034/4035 
+* RFC5155 (NSEC3)
 
 
-Loosly based upon:
+Loosely based upon:
 * ldns
 * NSD
 * Net::DNS

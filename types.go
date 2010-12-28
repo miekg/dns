@@ -4,23 +4,19 @@
 // Extended and bugfixes by Miek Gieben
 
 // Package dns implements a full featured interface to the DNS.
-// Supported RFCs include:
+// Supported RFCs and features include:
 // * 1034/1035
 // * 2671 - EDNS
 // * 4033/4034/4035 - DNSSEC + validation functions
 // * 1982 - Serial Arithmetic
 // * IP6 support
-// The package allow full control over what is send out to the DNS.
+// The package allows full control over what is send out to the DNS.
 //
-// DNS RR types definitions. See RFC 1035/.../4034 and many more.
-// To create quad-A record: "a.miek.nl" IN AAAA 2001:7b8:206:1:200:39ff:fe59:b187
+// Basic usage pattern for creating new Resource Record:
 //
-// Basic usage pattern:
-//
-// import "net" // for IP functions
-// r := new(RR_AAAA)
-// r.AAAA = net.ParseIP("2001:7b8:206:1:200:39ff:fe59:b187").To16()
-// r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeAAAA, Class: ClassINET, Ttl: 3600}
+// r := new(RR_TXT)
+// r.TXT = "This is the content of the TXT record"
+// r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //
 package dns
 

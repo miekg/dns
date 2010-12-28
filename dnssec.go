@@ -2,6 +2,7 @@ package dns
 
 import (
 	"crypto/sha1"
+	"crypto/sha256"
         "encoding/hex"
 	"time"
         "io"
@@ -59,7 +60,9 @@ func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
                 io.WriteString(s, string(digest))
                 ds.Digest = hex.EncodeToString(s.Sum())
 	case HashSHA256:
-
+                s := sha256.New()
+                io.WriteString(s, string(digest))
+                ds.Digest = hex.EncodeToString(s.Sum())
         case HashGOST94:
 
         default:
@@ -69,7 +72,7 @@ func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
 	return ds
 }
 
-// Calculate the keytag of the DNSKEY
+// Calculate the keytag of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
         var keytag int
 	switch k.Algorithm {
@@ -101,11 +104,20 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 	return uint16(keytag)
 }
 
-// Validate an rrset with the signature and key. Note the
-// signature validate period is NOT checked. Used 
-// ValidSignaturePeriod for that
-func (s *RR_RRSIG) Valid(rrset []RR, key *RR_DNSKEY) bool {
+// Validate an rrset with the signature and key. This is the
+// cryptographic test, the validity period most be check separately.
+func (s *RR_RRSIG) Secure(rrset []RR, key *RR_DNSKEY) bool {
 	return false
+}
+
+// Using RFC1982 calculate if a signature period is valid
+func (s *RR_RRSIG) PeriodOK() bool {
+	utc := time.UTC().Seconds()
+	modi := (int64(s.Inception) - utc) / year68
+	mode := (int64(s.Expiration) - utc) / year68
+        ti := int64(s.Inception) + (modi * year68)
+        te := int64(s.Expiration) + (mode * year68)
+	return ti <= utc && utc <= te
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
@@ -119,9 +131,3 @@ func timeToDate(t uint32) string {
 	return ti.Format("20060102030405")
 }
 
-// Work on a signature RR_RRSIG
-// Using RFC1982 calculate if a signature is valid
-func ValidSignaturePeriod(start, end uint32) bool {
-	utc := time.UTC().Seconds() // maybe as parameter?? TODO MG
-	return int64(start) <= utc && utc <= int64(end)
-}

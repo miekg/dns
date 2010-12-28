@@ -7,21 +7,18 @@
 // For every reply the resolver answers by sending the
 // received packet (with a possible error) back on the channel.
 // 
-// Basic usage pattern:
+// Basic usage pattern for setting up a resolver:
 //
 //        res := new(Resolver)
-//        ch := NewQuerier(res)         // start new resolver
-//
+//        ch := NewQuerier(res)               // start new resolver
 //        res.Servers = []string{"127.0.0.1"} // set the nameserver
-//        res.Timeout = 2               // some optional extra config
-//        res.Attempts = 1
 //
-//        m := new(Msg)                 // prepare a new message
+//        m := new(Msg)                       // prepare a new message
 //        m.MsgHdr.Recursion_desired = true   // header bits
 //        m.Question = make([]Question, 1)    // 1 RR in question sec.
 //        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        ch <- DnsMsg{m, nil}         // send the query
-//        in := <-ch                   // wait for reply
+//        ch <- DnsMsg{m, nil}                // send the query
+//        in := <-ch                          // wait for reply
 //
 package dns
 
@@ -32,12 +29,9 @@ import (
 	"net"
 )
 
-const defaultSize = 4096
-
 // When communicating with a resolver, we use this structure
-// to send packets to it, when sending Error must be nil.
-// A resolver responds with a simular message and a possible
-// error.
+// to send packets to it, for sending Error must be nil.
+// A resolver responds with a reply packet and a possible error.
 // Sending a nil message instructs to resolver to stop.
 type DnsMsg struct {
 	Dns   *Msg
@@ -69,6 +63,17 @@ func query(res *Resolver, msg chan DnsMsg) {
 	var c net.Conn
 	var err os.Error
 	var in *Msg
+        var port string
+        if len(res.Servers) == 0 {
+                msg <- DnsMsg{nil, nil}
+                return
+        }
+        if res.Port == "" {
+                port = "53"
+        } else {
+                port = res.Port
+        }
+
 	for {
 		select {
 		case out := <-msg: //msg received
@@ -89,8 +94,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 			}
 
 			for i := 0; i < len(res.Servers); i++ {
-				//				server := res.Servers[i] + ":" + res.Port
-				server := res.Servers[i] + ":53"
+				server := res.Servers[i] + ":" + port
 				if res.Tcp == true {
 					c, cerr = net.Dial("tcp", "", server)
 				} else {
@@ -121,19 +125,30 @@ func query(res *Resolver, msg chan DnsMsg) {
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
 func exchange(c net.Conn, m []byte, r *Resolver) (*Msg, os.Error) {
+        var timeout int64
+        var attempts int
 	if r.Mangle != nil {
 		m = r.Mangle(m)
 	}
+        if r.Timeout == 0 {
+                timeout = 1
+        } else {
+                timeout = int64(r.Timeout)
+        }
+        if r.Attempts == 0 {
+                attempts = 1
+        } else {
+                attempts = r.Attempts
+        }
 
-	for attempt := 0; attempt < r.Attempts; attempt++ {
+	for a:= 0; a < attempts; a++ {
 		n, err := c.Write(m)
 		if err != nil {
 			return nil, err
 		}
 
-		c.SetReadTimeout(int64(r.Timeout) * 1e9) // nanoseconds
-		// EDNS TODO
-		buf := make([]byte, defaultSize) // More than enough.
+		c.SetReadTimeout(timeout * 1e9)         // nanoseconds
+		buf := make([]byte, defaultMsgSize)     // More than enough.
 		n, err = c.Read(buf)
 		if err != nil {
 			// More Go foo needed

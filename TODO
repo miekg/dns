@@ -1,9 +1,9 @@
 Todo:
-* parse RRs from strings AToRR()
 * DNSSEC validation
 * NSEC(3) secure denial of existence
 * Unknown RRs
 * fix os.Erros usage 
+* AXFR/IXFR support
 
 Tesing:
 * EDNS0
@@ -12,4 +12,4 @@ Tesing:
 Issues:
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
-* divide the code in multiple packages? dns, dnssec
+* divide the code in multiple packages? dns, dnssec?
