@@ -106,8 +106,18 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
-func (s *RR_RRSIG) Secure(rrset []RR, key *RR_DNSKEY) bool {
-	return false
+func (s *RR_RRSIG) Secure(rrset []RR, k *RR_DNSKEY) bool {
+        // Frist the easy checks
+        if s.KeyTag != k.KeyTag() {
+                return false
+        }
+        if s.Hdr.Class != k.Hdr.Class {
+                return false
+        }
+        if s.Algorithm != k.Algorithm {
+                return false
+        }
+	return true
 }
 
 // Using RFC1982 calculate if a signature period is valid

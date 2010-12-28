@@ -2,7 +2,7 @@ Todo:
 * DNSSEC validation
 * NSEC(3) secure denial of existence
 * Unknown RRs
-* fix os.Erros usage 
+* fix os.Erros usage, add DNSSEC related errors
 * AXFR/IXFR support
 
 Tesing:
