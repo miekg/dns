@@ -53,6 +53,10 @@ const (
 	// EDNS
 	TypeOPT = 41
 
+        // Old DNSSEC
+        TypeSIG        = 24
+        TypeKEY        = 25
+        TypeNXT        = 30
 	// DNSSEC
 	TypeDS         = 43
 	TypeRRSIG      = 46
@@ -117,9 +121,9 @@ const (
 
 // DNSSEC hashing codes.
 const (
-	HashSHA1   = 1 //? Check the codepoints
-	HashSHA256 = 2 //?
-        HashGOST94 = 3 //? 
+	HashSHA1   = iota
+	HashSHA256
+        HashGOST94
 )
 
 // DNS queries.
@@ -389,7 +393,7 @@ type RR_RRSIG struct {
 	Inception   uint32
 	KeyTag      uint16
 	SignerName  string "domain-name"
-	Sig         string "base64"
+	Signature   string "base64"
 }
 
 func (rr *RR_RRSIG) Header() *RR_Header {
@@ -406,7 +410,7 @@ func (rr *RR_RRSIG) String() string {
 		" " + timeToDate(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
-		" " + rr.Sig
+		" " + rr.Signature
 }
 
 type RR_NSEC struct {
