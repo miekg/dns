@@ -15,6 +15,8 @@
 // DNS RR types definitions. See RFC 1035/.../4034 and many more.
 // To create quad-A record: "a.miek.nl" IN AAAA 2001:7b8:206:1:200:39ff:fe59:b187
 //
+// Basic usage pattern:
+//
 // import "net" // for IP functions
 // r := new(RR_AAAA)
 // r.AAAA = net.ParseIP("2001:7b8:206:1:200:39ff:fe59:b187").To16()

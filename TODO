@@ -1,6 +1,7 @@
 Todo:
 * parse RRs from strings AToRR()
 * DNSSEC validation
+* NSEC(3) secure denial of existence
 * Unknown RRs
 * fix os.Erros usage 
 

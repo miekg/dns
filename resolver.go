@@ -6,7 +6,8 @@
 // A dns resolver is to be run as a seperate goroutine. 
 // For every reply the resolver answers by sending the
 // received packet (with a possible error) back on the channel.
-// A simple resolver can be setup with the following code:
+// 
+// Basic usage pattern:
 //
 //        res := new(Resolver)
 //        ch := NewQuerier(res)         // start new resolver
