@@ -4,6 +4,7 @@ Todo:
 * Unknown RRs
 * fix os.Erros usage, add DNSSEC related errors
 * AXFR/IXFR support
+* IDN
 
 Tesing:
 * EDNS0
