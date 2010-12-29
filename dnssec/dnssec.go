@@ -1,13 +1,15 @@
-package dns
+package dnssec
 
 import (
+        "dns"
 	"crypto/sha1"
 	"crypto/sha256"
-//        "crypto/rsa"
+	"crypto/rsa"
 	"encoding/hex"
-        "encoding/base64"
+	"encoding/base64"
 	"time"
 	"io"
+        "big"
 	"sort"
 	"strings"
 	"fmt" //tmp
@@ -94,15 +96,11 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		// Might encode header length too, so that
 		// we dont need to pack/unpack all the time
 		// Or a shadow structure, with the wiredata and header
-		buf := make([]byte, 4096)
-		off1, ok := packRR(k, buf, 0)
+		wire, ok := wireRdata(k)
 		if !ok {
 			return 0
 		}
-
-		start := off1 - int(k.Header().Rdlength)
-		end := start + int(k.Header().Rdlength)
-		for i, v := range buf[start:end] {
+		for i, v := range wire {
 			if i&1 != 0 {
 				keytag += int(v) // must be larger than uint32
 			} else {
@@ -150,25 +148,24 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	signeddata := make([]byte, 10240) // 10 Kb??
-	buf := make([]byte, 4096)
-	s1 := s           // does this copy??
-	s1.Signature = "" // Unset signature data
-	off, ok := packRR(s1, buf, 0)
+	// Copy the sig, except the rrsig data
+	// Can this be done easier? TODO(mg)
+	s1 := &RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
+	buf, ok := wireRdata(s1)
 	if !ok {
 		return false
 	}
-	start := off - int(s.Header().Rdlength)
-	end := start + int(s.Header().Rdlength)
-	fmt.Fprintf(os.Stderr, "start %d, end %d\n", start, end)
-        copy(signeddata, buf[start:end])
-        off = end - start
+	copy(signeddata, buf)
+	off := len(buf)
 	fmt.Fprintf(os.Stderr, "off %d\n", off)
 
 	for _, r := range rrset {
+		h := r.Header()
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		r.Header().Name = strings.ToLower(r.Header().Name)
+                name := h.Name
+		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
-		switch r.Header().Rrtype {
+		switch h.Rrtype {
 		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
 		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
 		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
@@ -179,31 +176,52 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 		}
 		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
 		// 6.2. Canonical RR Form. (5) - origTTL
-		r.Header().Ttl = s.OrigTtl
-
-		fmt.Fprintf(os.Stderr, "%v\n", r)
+                ttl := h.Ttl
+		h.Ttl = s.OrigTtl
 		off, ok = packRR(r, signeddata, off)
+                h.Ttl = ttl // restore the order in the universe
+                h.Name = name
 		if !ok {
 			println("Failure to pack")
 			return false
 		}
 	}
 	signeddata = signeddata[:off]
-	fmt.Fprintf(os.Stderr, "length %d", len(signeddata))
-        keybuf := make([]byte, 1024)
-        keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
-        base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
-        sigbuf := make([]byte, 1024)
-        sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
-        base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
+	keybuf := make([]byte, 1024)
+	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
+	base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
+	sigbuf := make([]byte, 1024)
+	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
+	base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
 
-        switch s.Algorithm {
-                case AlgRSASHA1:
+	switch s.Algorithm {
+	case AlgRSASHA1:
 
-                case AlgRSASHA256:
+	case AlgRSASHA256:
+                // RFC 3110, section 2. RSA Public KEY Resource Records
+                // Assume length is in the first byte!
+//                l := int(keybuf[0])
+                _E := int(keybuf[3]) <<16
+                _E += int(keybuf[2]) <<8
+                _E += int(keybuf[1])
+                pubkey := new(rsa.PublicKey)
+                pubkey.E = _E
+//               var modulus uint64
+//                buf := bytes.NewBuffer(keybuf[4:])
+//                binary.Read(buf, binary.BigEndian, &modulus)
+                pubkey.N = big.NewInt(0)
+                _, ok := pubkey.N.SetString(string(keybuf[4:]), 2)
+                if !ok {
+                        fmt.Fprintf(os.Stderr, "Ging niet goed\n")
+                }
+//                pubkey.N = big.NewInt(int64(modulus))
 
-
-        }
+//                for i,v := range keybuf[4:] {
+//                
+//                }
+//                l := int(keybuf[0])
+//                pubkey.E = keybuf[1:l] // First byte has the length
+	}
 
 	return true
 }

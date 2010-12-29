@@ -23,7 +23,7 @@ package dns
 import (
 	"net"
 	"strconv"
-        "strings"
+	"strings"
 )
 
 // Packet formats
@@ -53,10 +53,10 @@ const (
 	// EDNS
 	TypeOPT = 41
 
-        // Old DNSSEC
-        TypeSIG        = 24
-        TypeKEY        = 25
-        TypeNXT        = 30
+	// Old DNSSEC
+	TypeSIG = 24
+	TypeKEY = 25
+	TypeNXT = 30
 	// DNSSEC
 	TypeDS         = 43
 	TypeRRSIG      = 46
@@ -121,9 +121,9 @@ const (
 
 // DNSSEC hashing codes.
 const (
-	HashSHA1   = iota
+	HashSHA1 = iota
 	HashSHA256
-        HashGOST94
+	HashGOST94
 )
 
 // DNS queries.
@@ -481,7 +481,7 @@ type RR_NSEC3 struct {
 
 func (rr *RR_NSEC3) Header() *RR_Header {
 	return &rr.Hdr
-        // Salt with strings.ToUpper()
+	// Salt with strings.ToUpper()
 }
 
 func (rr *RR_NSEC3) String() string {
@@ -503,7 +503,7 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 
 func (rr *RR_NSEC3PARAM) String() string {
 	return rr.Hdr.String() + "BLAH"
-        // Salt with strings.ToUpper()
+	// Salt with strings.ToUpper()
 }
 
 // Map of constructors for each RR wire type.
@@ -565,4 +565,17 @@ var alg_str = map[uint8]string{
 	AlgRSASHA256: "RSASHA256",
 	AlgRSASHA512: "RSASHA512",
 	AlgECCGOST:   "ECC-GOST",
+}
+
+// Return the rdata of the RR in wireform.
+func wireRdata(r RR) ([]byte, bool) {
+	buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)
+	off1, ok := packRR(r, buf, 0)
+	if !ok {
+		return nil, false
+	}
+	start := off1 - int(r.Header().Rdlength)
+	end := start + int(r.Header().Rdlength)
+	buf = buf[start:end]
+	return buf, true
 }

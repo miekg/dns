@@ -1,4 +1,4 @@
-package dns
+package dnssec
 
 import (
 	"testing"

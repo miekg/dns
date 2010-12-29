@@ -1,13 +1,15 @@
-package dns
+package dnssec
 
 import (
 	"testing"
+        "fmt"
+        "os"
 )
 
 func TestSecure(t *testing.T) {
 // once this was valid
         soa := new(RR_SOA)
-	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+	soa.Hdr = RR_Header{"Miek.nl.", TypeSOA, ClassINET, 875, 0}
 	soa.Ns = "open.nlnetlabs.nl."
         soa.Mbox = "miekg.atoom.net."
         soa.Serial = 1293513905
@@ -38,9 +40,11 @@ func TestSecure(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PubKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
+        fmt.Fprintf(os.Stderr, "%v\n%v\n", sig, soa)
         // It should validate, at least this month dec 2010
         if ! sig.Verify([]RR{soa}, key) {
                 t.Log("Failure to validate")
                 t.Fail()
         }
+        fmt.Fprintf(os.Stderr, "%v\n%v\n", sig, soa)
 }

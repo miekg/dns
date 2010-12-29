@@ -11,10 +11,11 @@ Miek Gieben  -  2010
 
 Implemented RFCS:
 
-* RFC2671, EDNS
-* RFC1034/1035
-* RFC4033/4034/4035 
-* RFC5155 (NSEC3)
+* RFC 2671, EDNS
+* RFC 3110, RSA in DNS  
+* RFC 1034/1035
+* RFC 4033/4034/4035 
+* RFC 5155 (NSEC3)
 
 Loosely based upon:
 * ldns
