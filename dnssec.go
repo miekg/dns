@@ -199,28 +199,15 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 	case AlgRSASHA256:
                 // RFC 3110, section 2. RSA Public KEY Resource Records
                 // Assume length is in the first byte!
-//                l := int(keybuf[0])
                 _E := int(keybuf[3]) <<16
                 _E += int(keybuf[2]) <<8
                 _E += int(keybuf[1])
                 pubkey := new(rsa.PublicKey)
                 pubkey.E = _E
-//               var modulus uint64
-//                buf := bytes.NewBuffer(keybuf[4:])
-//                binary.Read(buf, binary.BigEndian, &modulus)
                 pubkey.N = big.NewInt(0)
-                _, ok := pubkey.N.SetString(string(keybuf[4:]), 2)
-                if !ok {
-                        fmt.Fprintf(os.Stderr, "Ging niet goed\n")
-                }
-//                pubkey.N = big.NewInt(int64(modulus))
-
-//                for i,v := range keybuf[4:] {
-//                
-//                }
-//                l := int(keybuf[0])
-//                pubkey.E = keybuf[1:l] // First byte has the length
-	}
+                pubkey.N.SetBytes(keybuf[4:])
+                fmt.Fprintf(os.Stderr, "%s\n", pubkey.N)
+        }
 
 	return true
 }

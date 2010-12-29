@@ -10,6 +10,7 @@ GOFILES=\
 	resolver.go \
 	types.go\
 	edns.go\
+	dnssec.go\
 
 include $(GOROOT)/src/Make.pkg
 
