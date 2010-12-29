@@ -1,7 +1,6 @@
-package dnssec
+package dns
 
 import (
-        "dns"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/rsa"
