@@ -189,9 +189,12 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 	keybuf := make([]byte, 1024)
 	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
 	base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
+        keybuf = keybuf[:keybuflen]
 	sigbuf := make([]byte, 1024)
 	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
 	base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
+        sigbuf = sigbuf[:sigbuflen]
+        fmt.Fprintf(os.Stderr, "len of sigbuf: %d\n", len(sigbuf))
 
 	switch s.Algorithm {
 	case AlgRSASHA1:
@@ -207,6 +210,13 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
                 pubkey.N = big.NewInt(0)
                 pubkey.N.SetBytes(keybuf[4:])
                 fmt.Fprintf(os.Stderr, "%s\n", pubkey.N)
+
+                err := rsa.VerifyPKCS1v15(pubkey, rsa.HashSHA256, signeddata, sigbuf)
+                if err == nil {
+                        fmt.Fprintf(os.Stderr, "NO SHIT!!\n")
+                } else {
+                        fmt.Fprintf(os.Stderr, "%v\n", err)
+                }
         }
 
 	return true
