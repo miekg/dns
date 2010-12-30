@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	var dnssec *bool = flag.Bool("dnssec", false, "Set DO flag; set bufsize to 4096")
+	var dnssec *bool = flag.Bool("dnssec", false, "Request DNSSEC records")
 	var port *string = flag.String("port", "53", "Set the query port")
 	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")

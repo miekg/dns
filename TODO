@@ -6,6 +6,8 @@ Todo:
 * IDN?
 * Unknown RRs?
 * query-time, server in string ouput of dns.Msg
+* Parsing from strings
+* Server support (signing, receiving queries)
 
 Issues:
 * Better sized buffers
