@@ -7,6 +7,7 @@ import (
 	"os"
 	"flag"
 	"fmt"
+        "strings"
 )
 
 var Usage = func() {
@@ -35,14 +36,14 @@ FLAGS:
 		}
 		// If it looks like a class, it is a class
 		for k, v := range dns.Class_str {
-			if v == flag.Arg(i) {
+			if v == strings.ToUpper(flag.Arg(i)) {
 				qclass = k
 				continue FLAGS
 			}
 		}
 		// And if it looks like type, it is a type
 		for k, v := range dns.Rr_str {
-			if v == flag.Arg(i) {
+			if v == strings.ToUpper(flag.Arg(i)) {
 				qtype = k
 				continue FLAGS
 			}
@@ -57,7 +58,7 @@ FLAGS:
 	qr := resolver.NewQuerier(r)
 	// @server may be a name, resolv that 
 	var err os.Error
-	_, addr, err := net.LookupHost(nameserver)
+	_, addr, err := net.LookupHost(string([]byte(nameserver)[1:]))  //chop off @
         if err == nil {
                 r.Servers = addr
         } else {
