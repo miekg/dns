@@ -146,17 +146,13 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 	sort.Sort(rrset)
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
-	signeddata := make([]byte, 10240) // 10 Kb??
 	// Copy the sig, except the rrsig data
 	// Can this be done easier? TODO(mg)
 	s1 := &dns.RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
-	buf, ok := dns.WireRdata(s1)
+	signeddata, ok := dns.WireRdata(s1)
 	if !ok {
 		return false
 	}
-	copy(signeddata, buf)
-	off := len(buf)
-	fmt.Fprintf(os.Stderr, "off %d\n", off)
 
 	for _, r := range rrset {
 		h := r.Header()
@@ -180,13 +176,13 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
                 wire, ok1 := dns.WireRR(r)
                 h.Ttl = ttl // restore the order in the universe
                 h.Name = name
-        wire = wire // fix this
 		if !ok1 {
 			println("Failure to pack")
 			return false
 		}
+                signeddata = append(signeddata, wire...)
 	}
-	signeddata = signeddata[:off]
+        fmt.Fprintf(os.Stderr, "lengthed signeddata %d\n", len(signeddata))
 	keybuf := make([]byte, 1024)
 	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
 	base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))

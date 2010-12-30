@@ -1,13 +1,13 @@
 Alternative (more granular) approach to a DNS library.
 
 Completely usable as a DNS client library. Most widely used Resource
-Records are supported. DNSSEC types are too (except NSEC/NSEC3). EDNS0
+Records are supported. DNSSEC types are too (except NSEC/NSEC3, for now). EDNS0
 is supported (see edns.go).
 
-Sample programs can be found in the examples directory.
+Sample programs can be found in the _examples directory.
 
 Have fun!
-Miek Gieben  -  2010
+Miek Gieben  -  2010, 2011
 
 Implemented RFCS:
 
