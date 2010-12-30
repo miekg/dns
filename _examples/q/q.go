@@ -1,8 +1,5 @@
 package main
-
-// TODO
-// error handling and dns errors should be displayed
-
+// a (simple) dig-like query tool in 99 lines of Go
 import (
 	"net"
 	"dns"
@@ -14,12 +11,13 @@ import (
 )
 
 func main() {
-	var dnssec *bool = flag.Bool("dnssec", false, "Set the DO (DNSSEC OK) bit and set the bufsize to 4096")
+	var dnssec *bool = flag.Bool("dnssec", false, "Set DO flag; set bufsize to 4096")
 	var port *string = flag.String("port", "53", "Set the query port")
 	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")
 	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
 	var rd *bool = flag.Bool("rd", true, "Unset RD flag in query")
+	var tcp *bool = flag.Bool("tcp", false, "TCP mode")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -59,6 +57,7 @@ FLAGS:
 	r := new(resolver.Resolver)
 	r.Timeout = 2
 	r.Port = *port
+	r.Tcp = *tcp
 	r.Attempts = 1
 
 	qr := resolver.NewQuerier(r)
