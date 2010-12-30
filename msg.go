@@ -267,12 +267,12 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					return len(msg), false
 				}
 			case "hex":
-                                // There is no length encoded here, for DS at least
-                                h, e := hex.DecodeString(s)
-                                if e != nil {
-                                        return len(msg), false
-                                }
-                                copy(msg[off:off+hex.DecodedLen(len(s))], h)
+				// There is no length encoded here, for DS at least
+				h, e := hex.DecodeString(s)
+				if e != nil {
+					return len(msg), false
+				}
+				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -331,18 +331,18 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
 			case "OPT": // edns
-                                // check rdlength, if more, then more options
-                                // TODO(mg) checking
-                                // for now: allow only 1. TODO(mg)
-                                /*
-                                opt := make([]Option, 1)
-                                opt[0].Code, off = unpackUint16(msg, off)
-                                length := uint16(msg[off])<<8 | uint16(msg[off+1])
-                                off += 2
-                                opt[0].Data = string(msg[off:off+int(length)])
-                                off += int(length)
-                                //opt 
-                                */
+				// check rdlength, if more, then more options
+				// TODO(mg) checking
+				// for now: allow only 1. TODO(mg)
+				/*
+				   opt := make([]Option, 1)
+				   opt[0].Code, off = unpackUint16(msg, off)
+				   length := uint16(msg[off])<<8 | uint16(msg[off+1])
+				   off += 2
+				   opt[0].Data = string(msg[off:off+int(length)])
+				   off += int(length)
+				   //opt 
+				*/
 			}
 		case *reflect.StructValue:
 			off, ok = unpackStructValue(fv, msg, off)
@@ -358,7 +358,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fv.Set(uint64(i))
 				off++
 			case reflect.Uint16:
-                                var i uint16
+				var i uint16
 				if off+2 > len(msg) {
 					return len(msg), false
 				}
@@ -438,9 +438,9 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 
 // Helper function for unpacking
 func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
-        v = uint16(msg[off])<<8 | uint16(msg[off+1])
-        off1 = off+2
-        return
+	v = uint16(msg[off])<<8 | uint16(msg[off+1])
+	off1 = off + 2
+	return
 }
 
 func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
@@ -462,9 +462,9 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 		return len(msg), false
 	}
 
-       // DEBUG TODO(mg)
-//       println("Header", off1)
-//       println("Rest", off2)
+	// DEBUG TODO(mg)
+	//       println("Header", off1)
+	//       println("Rest", off2)
 
 	// TODO make this quicker?
 	// pack a third time; redo header with correct data length
@@ -505,21 +505,20 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 // A manually-unpacked version of (id, bits).
 // This is in its own struct for easy printing.
 type MsgHdr struct {
-	Id                  uint16
-	Response            bool
-	Opcode              int
-	Authoritative       bool
-	Truncated           bool
-	Recursion_desired   bool
-	Recursion_available bool
-	Z                   bool // or just zero??
-	Authenticated_data  bool
-	Checking_disabled   bool
-	Rcode               int
+	Id                 uint16
+	Response           bool
+	Opcode             int
+	Authoritative      bool
+	Truncated          bool
+	RecursionDesired   bool
+	RecursionAvailable bool
+	Zero               bool
+	AuthenticatedData  bool
+	CheckingDisabled   bool
+	Rcode              int
 }
 
-// Convert a MsgHdr to a string, mimic the way dig displays 
-// headers:
+// Convert a MsgHdr to a string, mimic the way Dig displays headers:
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
 func (h *MsgHdr) String() string {
@@ -541,19 +540,19 @@ func (h *MsgHdr) String() string {
 	if h.Truncated {
 		s += "tc "
 	}
-	if h.Recursion_desired {
+	if h.RecursionDesired {
 		s += "rd "
 	}
-	if h.Recursion_available {
+	if h.RecursionAvailable {
 		s += "ra "
 	}
-	if h.Z {
+	if h.Zero { // Hmm
 		s += "z "
 	}
-	if h.Authenticated_data {
+	if h.AuthenticatedData {
 		s += "ad "
 	}
-	if h.Checking_disabled {
+	if h.CheckingDisabled {
 		s += "cd "
 	}
 
@@ -586,19 +585,19 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	if dns.Truncated {
 		dh.Bits |= _TC
 	}
-	if dns.Recursion_desired {
+	if dns.RecursionDesired {
 		dh.Bits |= _RD
 	}
-	if dns.Recursion_available {
+	if dns.RecursionAvailable {
 		dh.Bits |= _RA
 	}
-	if dns.Z {
+	if dns.Zero {
 		dh.Bits |= _Z
 	}
-	if dns.Authenticated_data {
+	if dns.AuthenticatedData {
 		dh.Bits |= _AD
 	}
-	if dns.Checking_disabled {
+	if dns.CheckingDisabled {
 		dh.Bits |= _CD
 	}
 
@@ -652,8 +651,8 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.Opcode = int(dh.Bits>>11) & 0xF
 	dns.Authoritative = (dh.Bits & _AA) != 0
 	dns.Truncated = (dh.Bits & _TC) != 0
-	dns.Recursion_desired = (dh.Bits & _RD) != 0
-	dns.Recursion_available = (dh.Bits & _RA) != 0
+	dns.RecursionDesired = (dh.Bits & _RD) != 0
+	dns.RecursionAvailable = (dh.Bits & _RA) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
 
 	// Arrays.
@@ -683,7 +682,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	return true
 }
 
-// Convert a complete message to a string. Again use dig-like output
+// Convert a complete message to a string, use dig-like output.
 func (dns *Msg) String() string {
 	if dns == nil {
 		return "<nil> MsgHdr"

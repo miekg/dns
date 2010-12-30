@@ -5,18 +5,13 @@
 
 // Package dns implements a full featured interface to the DNS.
 // Supported RFCs and features include:
+// * 1982 - Serial Arithmetic
 // * 1034/1035
 // * 2671 - EDNS
 // * 4033/4034/4035 - DNSSEC + validation functions
-// * 1982 - Serial Arithmetic
+// * 5011 - NSID
 // * IP6 support
 // The package allows full control over what is send out to the DNS.
-//
-// Basic usage pattern for creating new Resource Record:
-//
-// r := new(RR_TXT)
-// r.TXT = "This is the content of the TXT record"
-// r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //
 package dns
 
@@ -72,7 +67,7 @@ func (h *RR_Header) String() string {
 
 // Or expose the pack/unpack functions??
 
-// Return the rdata of the RR in wireform.
+// Return the wiredata of rdata portion of a RR.
 func WireRdata(r RR) ([]byte, bool) {
         buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)
         off1, ok := packRR(r, buf, 0)
@@ -85,7 +80,7 @@ func WireRdata(r RR) ([]byte, bool) {
         return buf, true
 }
 
-// Return the wiredata of a domainname (sans compressions)
+// Return the wiredata of a domainname (sans compressions).
 func WireDomainName(s string) ([]byte, bool) {
         buf := make([]byte, 255)
         off, ok := packDomainName(s, buf, 0)
@@ -96,6 +91,7 @@ func WireDomainName(s string) ([]byte, bool) {
         return buf, ok
 }
 
+// Return the wiredata of a complete Resource Record.
 func WireRR(r RR) ([]byte, bool) {
         buf := make([]byte, 4096)
         off, ok := packRR(r, buf, 0)

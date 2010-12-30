@@ -4,12 +4,11 @@ import (
 	"strconv"
 )
 
-// EDNS0 option codes
+// EDNS0 Options and Do bit
 const (
 	OptionCodeLLQ  = 1 // Not used
 	OptionCodeUL   = 2 // Not used
 	OptionCodeNSID = 3 // NSID, RFC5001
-	// EDNS flag bits (put in Z section)
 	_DO = 1 << 7 // dnssec ok
 )
 
@@ -58,12 +57,12 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
-// Set the version of edns, currently only 0 is there
+// Set the version of edns
 func (rr *RR_OPT) Version(v uint8, set bool) uint8 {
 	return 0
 }
 
-// when set is true, set the size otherwise get it
+// Set/Get the UDP buffer size
 func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
 	if set {
 		rr.Hdr.Class = size
@@ -71,7 +70,7 @@ func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
 	return rr.Hdr.Class
 }
 
-// when set is true, set the Do bit, otherwise get it
+// Set/Getthe DoBit 
 func (rr *RR_OPT) DoBit(do, set bool) bool {
 	// rr.TTL last 2 bytes, left most bit
 	// See line 239 in msg.go for TTL encoding

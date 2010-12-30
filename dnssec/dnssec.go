@@ -1,3 +1,5 @@
+// Package dnssec implements all client side DNSSEC function, like
+// validation, keytag/DS calculation.
 package dnssec
 
 import (

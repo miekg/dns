@@ -3,15 +3,6 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
 
-// Package dns implements a full featured interface to the DNS.
-// Supported RFCs and features include:
-// * 1034/1035
-// * 2671 - EDNS
-// * 4033/4034/4035 - DNSSEC + validation functions
-// * 1982 - Serial Arithmetic
-// * IP6 support
-// The package allows full control over what is send out to the DNS.
-//
 // Basic usage pattern for creating new Resource Record:
 //
 // r := new(RR_TXT)
