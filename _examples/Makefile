@@ -1,16 +1,11 @@
-# Copyright 2009 The Go Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style
-# license that can be found in the LICENSE file.
+all: 
+	gomake -C mx
+	gomake -C q
+	gomake -C chaos
+	gomake -C dnssectest
 
-all: mx chaos dnssectest
-
-# too lazy to lookup how this works again in Makefiles
-mx: mx.go
-	6g -I ../_obj mx.go && 6l -L ../_obj -o mx mx.6
-
-chaos: chaos.go
-	6g -I ../_obj chaos.go && 6l -L ../_obj -o chaos chaos.6
-
-dnssectest: dnssectest.go
-	6g -I ../_obj dnssectest.go && 6l -L ../_obj -o dnssectest dnssectest.6
-
+clean:
+	gomake -C mx clean
+	gomake -C q clean
+	gomake -C chaos clean
+	gomake -C dnssectest clean

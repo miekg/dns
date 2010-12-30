@@ -50,7 +50,7 @@ func main() {
 
 func addresses(qr chan resolver.DnsMsg, name string) []net.IP {
 	m := new(dns.Msg)
-	m.MsgHdr.Recursion_desired = true //only set this bit
+	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 	var ips []net.IP
 

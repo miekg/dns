@@ -65,10 +65,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 	var err os.Error
 	var in *dns.Msg
         var port string
-        if len(res.Servers) == 0 {
-                msg <- DnsMsg{nil, nil}
-                return
-        }
+        // len(res.Server) == 0 can be perfectly valid, when setting up the resolver
         if res.Port == "" {
                 port = "53"
         } else {
@@ -92,6 +89,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 			sending, ok := out.Dns.Pack()
 			if !ok {
 				msg <- DnsMsg{nil, nil} // todo error
+                                return
 			}
 
 			for i := 0; i < len(res.Servers); i++ {

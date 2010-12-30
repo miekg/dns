@@ -60,8 +60,8 @@ func (h *RR_Header) String() string {
                 s += h.Name + "\t"
         }
         s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-        s = s + class_str[h.Class] + "\t"
-        s = s + rr_str[h.Rrtype] + "\t"
+        s = s + Class_str[h.Class] + "\t"
+        s = s + Rr_str[h.Rrtype] + "\t"
         return s
 }
 

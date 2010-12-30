@@ -4,13 +4,9 @@ Todo:
 * Unknown RRs
 * fix os.Erros usage, add DNSSEC related errors
 * AXFR/IXFR support
-* IDN
-
-Tesing:
-* EDNS0
-* Robustness
+* IDN?
+* query-time, server in string ouput of dns.Msg
 
 Issues:
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
-* divide the code in multiple packages? dns, dnssec?

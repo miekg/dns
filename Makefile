@@ -27,5 +27,5 @@ dnstest:
 	gomake -C dnssec test
 	gomake -C resolver test
 
-ex:
+examples:
 	gomake -C _examples

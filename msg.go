@@ -36,7 +36,33 @@ const DefaultMsgSize = 4096
 // packing sequence.
 
 // Map of strings for each RR wire type.
-var class_str = map[uint16]string{
+var Rr_str = map[uint16]string{
+        TypeCNAME:      "CNAME",
+        TypeHINFO:      "HINFO",
+        TypeMB:         "MB",
+        TypeMG:         "MG",
+        TypeMINFO:      "MINFO",
+        TypeMR:         "MR",
+        TypeMX:         "MX",
+        TypeNS:         "NS",
+        TypePTR:        "PTR",
+        TypeSOA:        "SOA",
+        TypeTXT:        "TXT",
+        TypeSRV:        "SRV",
+        TypeA:          "A",
+        TypeAAAA:       "AAAA",
+        TypeOPT:        "OPT",
+        TypeDS:         "DS",
+        TypeRRSIG:      "RRSIG",
+        TypeNSEC:       "NSEC",
+        TypeDNSKEY:     "DNSKEY",
+        TypeNSEC3:      "NSEC3",
+        TypeNSEC3PARAM: "NSEC3PARAM",
+}
+
+
+// Map of strings for each RR wire type.
+var Class_str = map[uint16]string{
 	ClassINET:   "IN",
 	ClassCSNET:  "CS",
 	ClassCHAOS:  "CH",

@@ -47,7 +47,7 @@ func main() {
 	// Setup done, now for some real work
 	// Create a new message
 	m := new(dns.Msg)
-	m.MsgHdr.Recursion_desired = true //only set this bit
+	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 
 	m.Question[0] = dns.Question{"miek.nl", dns.TypeDS, dns.ClassINET}
