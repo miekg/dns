@@ -1,7 +1,8 @@
-package dns
+package resolver
 
 import (
 	"testing"
+        "dns"
 )
 
 func TestResolverEdns(t *testing.T) {
@@ -12,15 +13,15 @@ func TestResolverEdns(t *testing.T) {
 	res.Timeout = 2
 	res.Attempts = 1
 
-	m := new(Msg)
+	m := new(dns.Msg)
 	m.MsgHdr.Recursion_desired = true //only set this bit
-	m.Question = make([]Question, 1)
-	m.Extra = make([]RR, 1)
+	m.Question = make([]dns.Question, 1)
+	m.Extra = make([]dns.RR, 1)
 
 	// Add EDNS rr
-	edns := new(RR_OPT)
+	edns := new(dns.RR_OPT)
 	edns.Hdr.Name = "."  // must . be for edns
-	edns.Hdr.Rrtype = TypeOPT
+	edns.Hdr.Rrtype = dns.TypeOPT
         // You can handle an OTP RR as any other, but there
         // are some convience functions
         edns.UDPSize(4096, true)
@@ -32,7 +33,7 @@ func TestResolverEdns(t *testing.T) {
 	//      edns.Option[0].Data = "lalalala"
 
 	// ask something
-	m.Question[0] = Question{"nlnetlabs.nl", TypeSOA, ClassINET}
+	m.Question[0] = dns.Question{"nlnetlabs.nl", dns.TypeSOA, dns.ClassINET}
 	m.Extra[0] = edns
 
 	ch <- DnsMsg{m, nil}
@@ -40,7 +41,7 @@ func TestResolverEdns(t *testing.T) {
 ////        t.Fail()
   //      t.Log("%v\n", in.Dns)
 
-	if in.Dns.Rcode != RcodeSuccess {
+	if in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	}

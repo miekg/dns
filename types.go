@@ -24,6 +24,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Packet formats
@@ -106,26 +107,6 @@ const (
 	_CD = 1 << 4  // checking disabled
 )
 
-// DNSSEC encryption algorithm codes.
-const (
-	// DNSSEC algorithms
-	AlgRSAMD5    = 1
-	AlgDH        = 2
-	AlgDSA       = 3
-	AlgECC       = 4
-	AlgRSASHA1   = 5
-	AlgRSASHA256 = 8
-	AlgRSASHA512 = 10
-	AlgECCGOST   = 12
-)
-
-// DNSSEC hashing codes.
-const (
-	HashSHA1 = iota
-	HashSHA256
-	HashGOST94
-)
-
 // DNS queries.
 type Question struct {
 	Name   string "domain-name" // "domain-name" specifies encoding; see packers below
@@ -139,45 +120,6 @@ func (q *Question) String() string {
 	s = s + class_str[q.Qclass] + "\t"
 	s = s + rr_str[q.Qtype]
 	return s
-}
-
-// DNS responses (resource records).
-// There are many types of messages,
-// but they all share the same header.
-type RR_Header struct {
-	Name     string "domain-name"
-	Rrtype   uint16
-	Class    uint16
-	Ttl      uint32
-	Rdlength uint16 // length of data after header
-}
-
-func (h *RR_Header) Header() *RR_Header {
-	return h
-}
-
-func (h *RR_Header) String() string {
-	var s string
-
-	if h.Rrtype == TypeOPT {
-		s = ";"
-		// and maybe other things
-	}
-
-	if len(h.Name) == 0 {
-		s += ".\t"
-	} else {
-		s += h.Name + "\t"
-	}
-	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-	s = s + class_str[h.Class] + "\t"
-	s = s + rr_str[h.Rrtype] + "\t"
-	return s
-}
-
-type RR interface {
-	Header() *RR_Header
-	String() string
 }
 
 type RR_CNAME struct {
@@ -506,29 +448,40 @@ func (rr *RR_NSEC3PARAM) String() string {
 	// Salt with strings.ToUpper()
 }
 
+// Translate the RRSIG's incep. and expir. time to the correct date.
+// Taking into account serial arithmetic (RFC 1982)
+func timeToDate(t uint32) string {
+	utc := time.UTC().Seconds()
+	mod := (int64(t) - utc) / Year68
+
+	// If needed assume wrap around(s)
+	ti := time.SecondsToUTC(int64(t) + (mod * Year68)) // abs()? TODO
+	return ti.Format("20060102030405")
+}
+
 // Map of constructors for each RR wire type.
 var rr_mk = map[int]func() RR{
-	TypeCNAME:      func() RR { return new(RR_CNAME) },
-	TypeHINFO:      func() RR { return new(RR_HINFO) },
-	TypeMB:         func() RR { return new(RR_MB) },
-	TypeMG:         func() RR { return new(RR_MG) },
-	TypeMINFO:      func() RR { return new(RR_MINFO) },
-	TypeMR:         func() RR { return new(RR_MR) },
-	TypeMX:         func() RR { return new(RR_MX) },
-	TypeNS:         func() RR { return new(RR_NS) },
-	TypePTR:        func() RR { return new(RR_PTR) },
-	TypeSOA:        func() RR { return new(RR_SOA) },
-	TypeTXT:        func() RR { return new(RR_TXT) },
-	TypeSRV:        func() RR { return new(RR_SRV) },
-	TypeA:          func() RR { return new(RR_A) },
-	TypeAAAA:       func() RR { return new(RR_AAAA) },
-	TypeOPT:        func() RR { return new(RR_OPT) },
-	TypeDS:         func() RR { return new(RR_DS) },
-	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
-	TypeNSEC:       func() RR { return new(RR_NSEC) },
-	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
-	TypeNSEC3:      func() RR { return new(RR_NSEC3) },
-	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
+        TypeCNAME:      func() RR { return new(RR_CNAME) },
+        TypeHINFO:      func() RR { return new(RR_HINFO) },
+        TypeMB:         func() RR { return new(RR_MB) },
+        TypeMG:         func() RR { return new(RR_MG) },
+        TypeMINFO:      func() RR { return new(RR_MINFO) },
+        TypeMR:         func() RR { return new(RR_MR) },
+        TypeMX:         func() RR { return new(RR_MX) },
+        TypeNS:         func() RR { return new(RR_NS) },
+        TypePTR:        func() RR { return new(RR_PTR) },
+        TypeSOA:        func() RR { return new(RR_SOA) },
+        TypeTXT:        func() RR { return new(RR_TXT) },
+        TypeSRV:        func() RR { return new(RR_SRV) },
+        TypeA:          func() RR { return new(RR_A) },
+        TypeAAAA:       func() RR { return new(RR_AAAA) },
+        TypeOPT:        func() RR { return new(RR_OPT) },
+        TypeDS:         func() RR { return new(RR_DS) },
+        TypeRRSIG:      func() RR { return new(RR_RRSIG) },
+        TypeNSEC:       func() RR { return new(RR_NSEC) },
+        TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
+        TypeNSEC3:      func() RR { return new(RR_NSEC3) },
+        TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 }
 
 // Map of strings for each RR wire type.
@@ -554,28 +507,4 @@ var rr_str = map[uint16]string{
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM",
-}
-
-// Map for algorithm names. 
-var alg_str = map[uint8]string{
-	AlgRSAMD5:    "RSAMD5",
-	AlgDH:        "DH",
-	AlgDSA:       "DSA",
-	AlgRSASHA1:   "RSASHA1",
-	AlgRSASHA256: "RSASHA256",
-	AlgRSASHA512: "RSASHA512",
-	AlgECCGOST:   "ECC-GOST",
-}
-
-// Return the rdata of the RR in wireform.
-func wireRdata(r RR) ([]byte, bool) {
-	buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)
-	off1, ok := packRR(r, buf, 0)
-	if !ok {
-		return nil, false
-	}
-	start := off1 - int(r.Header().Rdlength)
-	end := start + int(r.Header().Rdlength)
-	buf = buf[start:end]
-	return buf, true
 }

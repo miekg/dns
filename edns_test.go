@@ -8,7 +8,7 @@ import (
 func TestEDNS_RR(t *testing.T) {
 	edns := new(RR_OPT)
 	edns.Hdr.Name = "." // must . be for edns
-	edns.Hdr.Rrtype = TypeOPT
+        edns.Hdr.Rrtype = TypeOPT
 	edns.Hdr.Class = ClassINET
 	edns.Hdr.Ttl = 3600
 	edns.Option = make([]Option, 1)

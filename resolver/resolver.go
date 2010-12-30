@@ -20,13 +20,14 @@
 //        ch <- DnsMsg{m, nil}                // send the query
 //        in := <-ch                          // wait for reply
 //
-package dns
+package resolver
 
 import (
 	"os"
 	"rand"
 	"time"
 	"net"
+        "dns"
 )
 
 // When communicating with a resolver, we use this structure
@@ -34,7 +35,7 @@ import (
 // A resolver responds with a reply packet and a possible error.
 // Sending a nil message instructs to resolver to stop.
 type DnsMsg struct {
-	Dns   *Msg
+	Dns   *dns.Msg
 	Error os.Error
 }
 
@@ -62,7 +63,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 	// TODO port number, error checking, robustness
 	var c net.Conn
 	var err os.Error
-	var in *Msg
+	var in *dns.Msg
         var port string
         if len(res.Servers) == 0 {
                 msg <- DnsMsg{nil, nil}
@@ -124,7 +125,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchange(c net.Conn, m []byte, r *Resolver) (*Msg, os.Error) {
+func exchange(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
         var timeout int64
         var attempts int
 	if r.Mangle != nil {
@@ -148,7 +149,7 @@ func exchange(c net.Conn, m []byte, r *Resolver) (*Msg, os.Error) {
 		}
 
 		c.SetReadTimeout(timeout * 1e9)         // nanoseconds
-		buf := make([]byte, defaultMsgSize)     // More than enough.
+		buf := make([]byte, dns.DefaultMsgSize) // More than enough.
 		n, err = c.Read(buf)
 		if err != nil {
 			// More Go foo needed
@@ -158,7 +159,7 @@ func exchange(c net.Conn, m []byte, r *Resolver) (*Msg, os.Error) {
 			return nil, err
 		}
 		buf = buf[0:n]
-		in := new(Msg)
+		in := new(dns.Msg)
 		if !in.Unpack(buf) {
 			continue
 		}

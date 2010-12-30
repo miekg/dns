@@ -25,7 +25,7 @@ import (
 	"encoding/hex"
 )
 
-const defaultMsgSize = 4096
+const DefaultMsgSize = 4096
 
 // Packing and unpacking.
 //
@@ -616,7 +616,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	// Could work harder to calculate message size,
 	// but this is far more than we need and not
 	// big enough to hurt the allocator.
-	msg = make([]byte, defaultMsgSize) // TODO, calculate REAL size
+	msg = make([]byte, DefaultMsgSize) // TODO, calculate REAL size
 
 	// Pack it in: header and then the pieces.
 	off := 0

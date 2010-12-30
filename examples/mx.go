@@ -4,13 +4,14 @@ package main
 // (c) Miek Gieben - 2011
 import (
 	"dns"
+        "dns/resolver"
         "os"
         "fmt"
 )
 
 func main() {
-	r := new(dns.Resolver)
-	qr := dns.NewQuerier(r)
+	r := new(resolver.Resolver)
+	qr := resolver.NewQuerier(r)
         r.Servers = []string{"127.0.0.1"}
         r.Timeout = 2
         r.Attempts = 1
@@ -25,7 +26,7 @@ func main() {
         m.Question = make([]dns.Question, 1)
         m.Question[0] = dns.Question{os.Args[1], dns.TypeMX, dns.ClassINET}
 
-        qr <- dns.DnsMsg{m, nil}
+        qr <- resolver.DnsMsg{m, nil}
         in := <-qr
 
         if in.Dns.Rcode != dns.RcodeSuccess {
@@ -38,6 +39,6 @@ func main() {
         }
 
         // Stop the resolver, send it a null mesg
-        qr <- dns.DnsMsg{nil, nil}
+        qr <- resolver.DnsMsg{nil, nil}
         <-qr
 }

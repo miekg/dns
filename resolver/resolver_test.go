@@ -1,7 +1,8 @@
-package dns
+package resolver
 
 import (
 	"testing"
+        "dns"
 )
 
 
@@ -11,27 +12,27 @@ func TestResolver(t *testing.T) {
 
 	res.Servers = []string{"127.0.0.1"}
 
-	m := new(Msg)
+	m := new(dns.Msg)
 	m.MsgHdr.Recursion_desired = true //only set this bit
-	m.Question = make([]Question, 1)
+	m.Question = make([]dns.Question, 1)
 
 	// ask something
-	m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+	m.Question[0] = dns.Question{"miek.nl", dns.TypeSOA, dns.ClassINET}
 	ch <- DnsMsg{m, nil}
 	in := <-ch
 
-	if in.Dns.Rcode != RcodeSuccess {
+	if in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	        t.Logf("%v\n", in)
 	}
 
 	// ask something
-	m.Question[0] = Question{"www.nlnetlabs.nl", TypeRRSIG, ClassINET}
+	m.Question[0] = dns.Question{"www.nlnetlabs.nl", dns.TypeRRSIG, dns.ClassINET}
 	ch <- DnsMsg{m, nil}
 	in = <-ch
 
-	if in.Dns.Rcode != RcodeSuccess {
+	if in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	        t.Logf("%v\n", in)

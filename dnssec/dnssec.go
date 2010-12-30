@@ -1,4 +1,4 @@
-package dns
+package dnssec
 
 import (
 	"crypto/sha1"
@@ -13,47 +13,46 @@ import (
 	"strings"
 	"fmt" //tmp
 	"os"  //tmp
+        "dns"
 )
 
+// DNSSEC encryption algorithm codes.
 const (
-	// RFC1982 serial arithmetic
-	year68 = 2 << (32 - 1)
+        // DNSSEC algorithms
+        AlgRSAMD5    = 1
+        AlgDH        = 2
+        AlgDSA       = 3
+        AlgECC       = 4
+        AlgRSASHA1   = 5
+        AlgRSASHA256 = 8
+        AlgRSASHA512 = 10
+        AlgECCGOST   = 12
 )
 
-// An RRset is just a bunch a RRs. No restrictions
-type RRset []RR
-
-func (r RRset) Len() int           { return len(r) }
-func (r RRset) Less(i, j int) bool { return r[i].Header().Name < r[j].Header().Name }
-func (r RRset) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+// DNSSEC hashing codes.
+const (
+        HashSHA1 = iota
+        HashSHA256
+        HashGOST94
+)
 
 // Convert an DNSKEY record to a DS record.
-func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
-	ds := new(RR_DS)
+func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
+	ds := new(dns.RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
 	ds.Hdr.Ttl = k.Hdr.Ttl
-	ds.Hdr.Rrtype = TypeDS
-	ds.KeyTag = k.KeyTag()
 	ds.Algorithm = k.Algorithm
 	ds.DigestType = uint8(hash)
+	ds.KeyTag = KeyTag(k)
 
-	// Generic function that gives back a buffer with the rdata?? TODO(MG)
-	// Find the rdata portion for the key (again)
-	// (keytag does this too)
-	buf := make([]byte, 4096)
-	off1, ok := packRR(k, buf, 0)
+	wire, ok := dns.WireRdata(k)
 	if !ok {
 		return nil
 	}
 
-	start := off1 - int(k.Header().Rdlength)
-	end := start + int(k.Header().Rdlength)
-	// buf[start:end] is the rdata of the key
-	buf = buf[start:end]
-	owner := make([]byte, 255)
-	off1, ok = packDomainName(k.Hdr.Name, owner, 0)
-	if !ok {
+	owner,ok1 := dns.WireDomainName(k.Hdr.Name)
+	if !ok1 {
 		return nil
 	}
 	/* 
@@ -62,9 +61,8 @@ func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
 	 * "|" denotes concatenation
 	 * DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
 	 */
-	owner = owner[:off1]
 	// digest buffer
-	digest := append(owner, buf...)
+	digest := append(owner, wire...)  // another copy TODO(mg)
 
 	switch hash {
 	case HashSHA1:
@@ -85,7 +83,7 @@ func (k *RR_DNSKEY) ToDS(hash int) *RR_DS {
 }
 
 // Calculate the keytag of the DNSKEY.
-func (k *RR_DNSKEY) KeyTag() uint16 {
+func KeyTag(k *dns.RR_DNSKEY) uint16 {
 	var keytag int
 	switch k.Algorithm {
 	case AlgRSAMD5:
@@ -95,7 +93,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		// Might encode header length too, so that
 		// we dont need to pack/unpack all the time
 		// Or a shadow structure, with the wiredata and header
-		wire, ok := wireRdata(k)
+		wire, ok := dns.WireRdata(k)
 		if !ok {
 			return 0
 		}
@@ -114,11 +112,11 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
-func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
+func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 	// Frist the easy checks
-	if s.KeyTag != k.KeyTag() {
+	if s.KeyTag != KeyTag(k) {
 		println(s.KeyTag)
-		println(k.KeyTag())
+		println(KeyTag(k))
 		return false
 	}
 	if s.Hdr.Class != k.Hdr.Class {
@@ -149,8 +147,8 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 	signeddata := make([]byte, 10240) // 10 Kb??
 	// Copy the sig, except the rrsig data
 	// Can this be done easier? TODO(mg)
-	s1 := &RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
-	buf, ok := wireRdata(s1)
+	s1 := &dns.RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
+	buf, ok := dns.WireRdata(s1)
 	if !ok {
 		return false
 	}
@@ -165,10 +163,10 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
 		switch h.Rrtype {
-		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
-		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
-		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
-		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
+		case dns.TypeNS, dns.TypeCNAME, dns.TypeSOA, dns.TypeMB, dns.TypeMG, dns.TypeMR, dns.TypePTR:
+		case dns.TypeHINFO, dns.TypeMINFO, dns.TypeMX /* dns.TypeRP, dns.TypeAFSDB, dns.TypeRT */ :
+		case dns.TypeSIG /* dns.TypePX, dns.TypeNXT /* dns.TypeNAPTR, dns.TypeKX */ :
+		case dns.TypeSRV, /* dns.TypeDNAME, dns.TypeA6 */ dns.TypeRRSIG, dns.TypeNSEC:
 			/* do something */
 			// lower case the strings rdata //
 
@@ -177,10 +175,11 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 		// 6.2. Canonical RR Form. (5) - origTTL
                 ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-		off, ok = packRR(r, signeddata, off)
+                wire, ok1 := dns.WireRR(r)
                 h.Ttl = ttl // restore the order in the universe
                 h.Name = name
-		if !ok {
+        wire = wire // fix this
+		if !ok1 {
 			println("Failure to pack")
 			return false
 		}
@@ -223,22 +222,22 @@ func (s *RR_RRSIG) Verify(rrset RRset, k *RR_DNSKEY) bool {
 }
 
 // Using RFC1982 calculate if a signature period is valid
-func (s *RR_RRSIG) PeriodOK() bool {
+func PeriodOK(s *dns.RR_RRSIG) bool {
 	utc := time.UTC().Seconds()
-	modi := (int64(s.Inception) - utc) / year68
-	mode := (int64(s.Expiration) - utc) / year68
-	ti := int64(s.Inception) + (modi * year68)
-	te := int64(s.Expiration) + (mode * year68)
+	modi := (int64(s.Inception) - utc) / dns.Year68
+	mode := (int64(s.Expiration) - utc) / dns.Year68
+	ti := int64(s.Inception) + (modi * dns.Year68)
+	te := int64(s.Expiration) + (mode * dns.Year68)
 	return ti <= utc && utc <= te
 }
 
-// Translate the RRSIG's incep. and expir. time to the correct date.
-// Taking into account serial arithmetic (RFC 1982)
-func timeToDate(t uint32) string {
-	utc := time.UTC().Seconds()
-	mod := (int64(t) - utc) / year68
-
-	// If needed assume wrap around(s)
-	ti := time.SecondsToUTC(int64(t) + (mod * year68)) // abs()? TODO
-	return ti.Format("20060102030405")
+// Map for algorithm names. 
+var alg_str = map[uint8]string{
+        AlgRSAMD5:    "RSAMD5",
+        AlgDH:        "DH",
+        AlgDSA:       "DSA",
+        AlgRSASHA1:   "RSASHA1",
+        AlgRSASHA256: "RSASHA256",
+        AlgRSASHA512: "RSASHA512",
+        AlgECCGOST:   "ECC-GOST",
 }
