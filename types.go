@@ -41,6 +41,7 @@ const (
 	TypeTXT   = 16
 	TypeAAAA  = 28
 	TypeSRV   = 33
+	TypeNAPTR = 35
 
 	// EDNS
 	TypeOPT = 41
@@ -289,6 +290,24 @@ func (rr *RR_SRV) String() string {
 		strconv.Itoa(int(rr.Port)) + " " + rr.Target
 }
 
+type RR_NAPTR struct {
+	Hdr         RR_Header
+	Order       uint16
+	Preference  uint16
+	Flags       string
+	Service     string
+	Regexp      string
+	Replacement string
+}
+
+func (rr *RR_NAPTR) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_NAPTR) String() string {
+	return rr.Hdr.String() + "TODO"
+}
+
 type RR_A struct {
 	Hdr RR_Header
 	A   net.IP "A"
@@ -452,25 +471,26 @@ func timeToDate(t uint32) string {
 
 // Map of constructors for each RR wire type.
 var rr_mk = map[int]func() RR{
-        TypeCNAME:      func() RR { return new(RR_CNAME) },
-        TypeHINFO:      func() RR { return new(RR_HINFO) },
-        TypeMB:         func() RR { return new(RR_MB) },
-        TypeMG:         func() RR { return new(RR_MG) },
-        TypeMINFO:      func() RR { return new(RR_MINFO) },
-        TypeMR:         func() RR { return new(RR_MR) },
-        TypeMX:         func() RR { return new(RR_MX) },
-        TypeNS:         func() RR { return new(RR_NS) },
-        TypePTR:        func() RR { return new(RR_PTR) },
-        TypeSOA:        func() RR { return new(RR_SOA) },
-        TypeTXT:        func() RR { return new(RR_TXT) },
-        TypeSRV:        func() RR { return new(RR_SRV) },
-        TypeA:          func() RR { return new(RR_A) },
-        TypeAAAA:       func() RR { return new(RR_AAAA) },
-        TypeOPT:        func() RR { return new(RR_OPT) },
-        TypeDS:         func() RR { return new(RR_DS) },
-        TypeRRSIG:      func() RR { return new(RR_RRSIG) },
-        TypeNSEC:       func() RR { return new(RR_NSEC) },
-        TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
-        TypeNSEC3:      func() RR { return new(RR_NSEC3) },
-        TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
+	TypeCNAME:      func() RR { return new(RR_CNAME) },
+	TypeHINFO:      func() RR { return new(RR_HINFO) },
+	TypeMB:         func() RR { return new(RR_MB) },
+	TypeMG:         func() RR { return new(RR_MG) },
+	TypeMINFO:      func() RR { return new(RR_MINFO) },
+	TypeMR:         func() RR { return new(RR_MR) },
+	TypeMX:         func() RR { return new(RR_MX) },
+	TypeNS:         func() RR { return new(RR_NS) },
+	TypePTR:        func() RR { return new(RR_PTR) },
+	TypeSOA:        func() RR { return new(RR_SOA) },
+	TypeTXT:        func() RR { return new(RR_TXT) },
+	TypeSRV:        func() RR { return new(RR_SRV) },
+	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
+	TypeA:          func() RR { return new(RR_A) },
+	TypeAAAA:       func() RR { return new(RR_AAAA) },
+	TypeOPT:        func() RR { return new(RR_OPT) },
+	TypeDS:         func() RR { return new(RR_DS) },
+	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
+	TypeNSEC:       func() RR { return new(RR_NSEC) },
+	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
+	TypeNSEC3:      func() RR { return new(RR_NSEC3) },
+	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 }
