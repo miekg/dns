@@ -17,6 +17,7 @@ include $(GOROOT)/src/Make.pkg
 all: package
 	gomake -C dnssec package
 	gomake -C resolver package
+#	gomake -C strconv package
 
 install: $(INSTALLFILES)
 	gomake -C dnssec install
