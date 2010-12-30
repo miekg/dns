@@ -88,8 +88,9 @@ func query(res *Resolver, msg chan DnsMsg) {
 			out.Dns.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
 			sending, ok := out.Dns.Pack()
 			if !ok {
+                        println("pack failed")
 				msg <- DnsMsg{nil, nil} // todo error
-                                return
+                                continue;
 			}
 
 			for i := 0; i < len(res.Servers); i++ {

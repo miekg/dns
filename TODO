@@ -8,5 +8,9 @@ Todo:
 * query-time, server in string ouput of dns.Msg
 
 Issues:
+* completely fix EDNS
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
+* Convience functions?
+    - for new(RR*)
+    - ...

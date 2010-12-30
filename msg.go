@@ -476,6 +476,10 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 
 // Resource record packer.
 func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
+        if rr == nil {
+                return len(msg), false
+        }
+
 	var off1 int
 	// pack twice, once to find end of header
 	// and again to find end of packet.
@@ -647,10 +651,10 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	off := 0
 	off, ok = packStruct(&dh, msg, off)
 	for i := 0; i < len(question); i++ {
-		off, ok = packStruct(&question[i], msg, off)
+                off, ok = packStruct(&question[i], msg, off)
 	}
 	for i := 0; i < len(answer); i++ {
-		off, ok = packRR(answer[i], msg, off)
+                off, ok = packRR(answer[i], msg, off)
 	}
 	for i := 0; i < len(ns); i++ {
 		off, ok = packRR(ns[i], msg, off)
@@ -661,7 +665,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	if !ok {
 		return nil, false
 	}
-	return msg[0:off], true
+	return msg[:off], true
 }
 
 func (dns *Msg) Unpack(msg []byte) bool {

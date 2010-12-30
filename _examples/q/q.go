@@ -1,5 +1,8 @@
 package main
 
+// TODO
+// error handling and dns errors should be displayed
+
 import (
 	"net"
 	"dns"
@@ -10,13 +13,13 @@ import (
         "strings"
 )
 
-var Usage = func() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Set the DO (DNSSEC OK) bit and set the bufsize to 4096")
+        flag.Usage = func() {
+                fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
+                flag.PrintDefaults()
+        }
+
 	nameserver := "127.0.0.1"       // Default nameserver
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
@@ -24,9 +27,6 @@ func main() {
 
 	flag.Parse()
 
-	if *dnssec {
-		/* */
-	}
 FLAGS:
 	for i := 0; i < flag.NArg(); i++ {
 		// If it starts with @ it is a nameserver
@@ -67,6 +67,15 @@ FLAGS:
 
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
+	if *dnssec {
+                opt := new(dns.RR_OPT)
+                opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
+                opt.Version(0, true)
+                opt.DoBit(true, true)
+                opt.UDPSize(4096, true)
+		m.Extra = make([]dns.RR, 1)
+                m.Extra[0] = opt
+	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		qr <- resolver.DnsMsg{m, nil}
