@@ -208,7 +208,14 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
                 pubkey.N.SetBytes(keybuf[4:])
                 fmt.Fprintf(os.Stderr, "%s\n", pubkey.N)
 
-                err := rsa.VerifyPKCS1v15(pubkey, rsa.HashSHA256, signeddata, sigbuf)
+        // Hash the signeddata
+        s := sha256.New()
+        io.WriteString(s, string(sigbuf))
+        sighash := s.Sum()
+
+
+
+                err := rsa.VerifyPKCS1v15(pubkey, rsa.HashSHA256, sighash, sigbuf)
                 if err == nil {
                         fmt.Fprintf(os.Stderr, "NO SHIT!!\n")
                 } else {
