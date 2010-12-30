@@ -8,6 +8,8 @@ Todo:
 * query-time, server in string ouput of dns.Msg
 
 Issues:
+* Better sized buffers
+* TC bit handling
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
 * Convience functions?

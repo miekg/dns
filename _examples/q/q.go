@@ -10,18 +10,22 @@ import (
 	"os"
 	"flag"
 	"fmt"
-        "strings"
+	"strings"
 )
 
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Set the DO (DNSSEC OK) bit and set the bufsize to 4096")
-        var port   *string = flag.String("port", "53", "Set the query port")
-        flag.Usage = func() {
-                fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
-                flag.PrintDefaults()
-        }
+	var port *string = flag.String("port", "53", "Set the query port")
+	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
+	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")
+	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
+	var rd *bool = flag.Bool("rd", true, "Unset RD flag in query")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 
-	nameserver := "@127.0.0.1"       // Default nameserver
+	nameserver := "@127.0.0.1"      // Default nameserver
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
 	var qname []string
@@ -53,31 +57,35 @@ FLAGS:
 		qname = append(qname, flag.Arg(i))
 	}
 	r := new(resolver.Resolver)
-        r.Timeout = 2
-        r.Port = *port
-        r.Attempts = 1
+	r.Timeout = 2
+	r.Port = *port
+	r.Attempts = 1
 
 	qr := resolver.NewQuerier(r)
 	// @server may be a name, resolv that 
 	var err os.Error
-        nameserver = string([]byte(nameserver)[1:]) // chop off @
+	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	_, addr, err := net.LookupHost(nameserver)
-        if err == nil {
-                r.Servers = addr
-        } else {
-                r.Servers = []string{nameserver}
-        }
+	if err == nil {
+		r.Servers = addr
+	} else {
+		r.Servers = []string{nameserver}
+	}
 
 	m := new(dns.Msg)
+	m.MsgHdr.Authoritative = *aa
+	m.MsgHdr.AuthenticatedData = *ad
+	m.MsgHdr.CheckingDisabled = *cd
+	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec {
-                opt := new(dns.RR_OPT)
-                opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
-                opt.Version(0, true)
-                opt.DoBit(true, true)
-                opt.UDPSize(4096, true)
+		opt := new(dns.RR_OPT)
+		opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
+		opt.Version(0, true)
+		opt.DoBit(true, true)
+		opt.UDPSize(4096, true)
 		m.Extra = make([]dns.RR, 1)
-                m.Extra[0] = opt
+		m.Extra[0] = opt
 	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
