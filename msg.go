@@ -52,6 +52,7 @@ var Rr_str = map[uint16]string{
         TypeNAPTR:      "NAPTR",
         TypeA:          "A",
         TypeAAAA:       "AAAA",
+        TypeLOC:        "LOC",
         TypeOPT:        "OPT",
         TypeDS:         "DS",
         TypeRRSIG:      "RRSIG",

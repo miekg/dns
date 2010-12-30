@@ -40,6 +40,7 @@ const (
 	TypeMX    = 15
 	TypeTXT   = 16
 	TypeAAAA  = 28
+        TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
 
@@ -334,6 +335,25 @@ func (rr *RR_AAAA) String() string {
 	return rr.Hdr.String() + rr.AAAA.String()
 }
 
+type RR_LOC struct {
+	Hdr  RR_Header
+        Version uint8
+        Size uint8
+        HorizPre uint8
+        VertPre uint8
+        Latitude uint32
+        Longitude uint32
+        Altitude uint32
+}
+
+func (rr *RR_LOC) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_LOC) String() string {
+	return rr.Hdr.String() + "TODO"
+}
+
 // DNSSEC types
 type RR_RRSIG struct {
 	Hdr         RR_Header
@@ -486,6 +506,7 @@ var rr_mk = map[int]func() RR{
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
 	TypeA:          func() RR { return new(RR_A) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
+        TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
