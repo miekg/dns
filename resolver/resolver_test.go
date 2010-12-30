@@ -13,7 +13,7 @@ func TestResolver(t *testing.T) {
 	res.Servers = []string{"127.0.0.1"}
 
 	m := new(dns.Msg)
-	m.MsgHdr.Recursion_desired = true //only set this bit
+	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 
 	// ask something

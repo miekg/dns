@@ -14,7 +14,7 @@ func TestResolverEdns(t *testing.T) {
 	res.Attempts = 1
 
 	m := new(dns.Msg)
-	m.MsgHdr.Recursion_desired = true //only set this bit
+	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 	m.Extra = make([]dns.RR, 1)
 
