@@ -15,12 +15,13 @@ import (
 
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Set the DO (DNSSEC OK) bit and set the bufsize to 4096")
+        var port   *string = flag.String("port", "53", "Set the query port")
         flag.Usage = func() {
                 fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
                 flag.PrintDefaults()
         }
 
-	nameserver := "127.0.0.1"       // Default nameserver
+	nameserver := "@127.0.0.1"       // Default nameserver
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
 	var qname []string
@@ -53,12 +54,14 @@ FLAGS:
 	}
 	r := new(resolver.Resolver)
         r.Timeout = 2
+        r.Port = *port
         r.Attempts = 1
 
 	qr := resolver.NewQuerier(r)
 	// @server may be a name, resolv that 
 	var err os.Error
-	_, addr, err := net.LookupHost(string([]byte(nameserver)[1:]))  //chop off @
+        nameserver = string([]byte(nameserver)[1:]) // chop off @
+	_, addr, err := net.LookupHost(nameserver)
         if err == nil {
                 r.Servers = addr
         } else {

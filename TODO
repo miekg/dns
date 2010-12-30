@@ -1,14 +1,13 @@
 Todo:
 * DNSSEC validation
 * NSEC(3) secure denial of existence
-* Unknown RRs
 * fix os.Erros usage, add DNSSEC related errors
 * AXFR/IXFR support
 * IDN?
+* Unknown RRs?
 * query-time, server in string ouput of dns.Msg
 
 Issues:
-* completely fix EDNS
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
 * Convience functions?

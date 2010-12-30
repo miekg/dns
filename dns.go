@@ -8,6 +8,7 @@
 // * 1982 - Serial Arithmetic
 // * 1034/1035
 // * 2671 - EDNS
+// * 3225 - DO bit (DNSSEC OK)
 // * 4033/4034/4035 - DNSSEC + validation functions
 // * 5011 - NSID
 // * IP6 support

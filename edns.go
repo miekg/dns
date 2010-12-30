@@ -6,10 +6,10 @@ import (
 
 // EDNS0 Options and Do bit
 const (
-	OptionCodeLLQ  = 1 // Not used
-	OptionCodeUL   = 2 // Not used
-	OptionCodeNSID = 3 // NSID, RFC5001
-	_DO = 1 << 7 // dnssec ok
+	OptionCodeLLQ  = 1      // Not used
+	OptionCodeUL   = 2      // Not used
+	OptionCodeNSID = 3      // NSID, RFC5001
+	_DO            = 1 << 7 // dnssec ok
 )
 
 // An ENDS0 option rdata element.
@@ -70,19 +70,29 @@ func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
 	return rr.Hdr.Class
 }
 
+
+/* from RFC 3225
+             +0 (MSB)                +1 (LSB)
+      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+   0: |   EXTENDED-RCODE      |       VERSION         |
+      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+   2: |DO|                    Z                       |
+      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+*/
+
 // Set/Get the DoBit 
 func (rr *RR_OPT) DoBit(do, set bool) bool {
-	// rr.TTL last 2 bytes, left most bit
-	// See line 239 in msg.go for TTL encoding
 	if set {
-		leftbyte := byte(rr.Hdr.Ttl >> 24)
-		leftbyte = leftbyte | _DO
-		rr.Hdr.Ttl = uint32(leftbyte << 24)
+		b1 := byte(rr.Hdr.Ttl >> 24)
+		b2 := byte(rr.Hdr.Ttl >> 16)
+		b3 := byte(rr.Hdr.Ttl >> 8)
+		b4 := byte(rr.Hdr.Ttl)
+		b3 |= _DO // Set it
+		rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 		return true
 	} else {
-		// jaja?? TODO(MG)
-		leftbyte := byte(rr.Hdr.Ttl >> 24)
-		return leftbyte&_DO == 1
+		b3 := byte(rr.Hdr.Ttl >> 8)
+		return b3&_DO == _DO
 	}
 	return true // dead code, bug in Go
 }
