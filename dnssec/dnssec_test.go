@@ -41,7 +41,7 @@ func TestSecure(t *testing.T) {
 	key.PubKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
         fmt.Fprintf(os.Stderr, "%v\n%v\n", sig, soa)
-        // It should validate, at least this month dec 2010
+        // It should validate. Period is checked seperately, so this will keep on working
         if ! Verify(sig, key, []dns.RR{soa}) {
                 t.Log("Failure to validate")
                 t.Fail()

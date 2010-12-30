@@ -70,7 +70,7 @@ func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
 	return rr.Hdr.Class
 }
 
-// Set/Getthe DoBit 
+// Set/Get the DoBit 
 func (rr *RR_OPT) DoBit(do, set bool) bool {
 	// rr.TTL last 2 bytes, left most bit
 	// See line 239 in msg.go for TTL encoding
