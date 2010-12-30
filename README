@@ -12,6 +12,7 @@ Miek Gieben  -  2010, 2011
 Implemented RFCS:
 
 * RFC 2671, EDNS
+* RRC 3225, DO bit
 * RFC 3110, RSA in DNS  
 * RFC 1034/1035
 * RFC 4033/4034/4035 
