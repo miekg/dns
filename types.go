@@ -60,6 +60,7 @@ const (
 	TypeNSEC3PARAM = 51
 
 	// valid Question.qtype only
+        TypeIXFR  = 251
 	TypeAXFR  = 252
 	TypeMAILB = 253
 	TypeMAILA = 254

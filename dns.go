@@ -6,13 +6,15 @@
 // Package dns implements a full featured interface to the DNS.
 // Supported RFCs and features include:
 // * 1982 - Serial Arithmetic
-// * 1034/1035
+// * 1034/1035 
 // * 1876 - LOC record (incomplete)
+// * 1995 - IXFR
 // * 2671 - EDNS
 // * 2915 - NAPTR record (incomplete)
 // * 3225 - DO bit (DNSSEC OK)
 // * 4033/4034/4035 - DNSSEC + validation functions
 // * 5011 - NSID
+// * 5936 - AXFR
 // * IP6 support
 // The package allows full control over what is send out to the DNS.
 //

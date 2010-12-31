@@ -2,16 +2,21 @@ Todo:
 * DNSSEC validation
 * NSEC(3) secure denial of existence
 * fix os.Erros usage, add DNSSEC related errors
-* AXFR/IXFR support
+* AXFR/IXFR support 
+* Notify support (send/receive)
+* TKEY -- RFC 2930
+* TSIG -- RFC 4635
 * IDN?
 * Unknown RRs?
 * query-time, server in string ouput of dns.Msg
 * Parsing from strings
 * Server support (signing, receiving queries)
+* Check the network order, it works now, but this is on Intel
 
 Issues:
 * Better sized buffers
 * TC bit handling
+* Fix TCP: should read 2 bytes of length
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
 * Convience functions?

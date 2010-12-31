@@ -4,4 +4,5 @@
 include $(GOROOT)/src/Make.inc
 TARG=q
 GOFILES=q.go
+DEPS=../../
 include $(GOROOT)/src/Make.cmd

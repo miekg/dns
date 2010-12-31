@@ -88,14 +88,14 @@ func query(res *Resolver, msg chan DnsMsg) {
 			out.Dns.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
 			sending, ok := out.Dns.Pack()
 			if !ok {
-                        println("pack failed")
+                                //println("pack failed")
 				msg <- DnsMsg{nil, nil} // todo error
                                 continue;
 			}
 
 			for i := 0; i < len(res.Servers); i++ {
 				server := res.Servers[i] + ":" + port
-				if res.Tcp == true {
+				if res.Tcp {
 					c, cerr = net.Dial("tcp", "", server)
 				} else {
 					c, cerr = net.Dial("udp", "", server)
@@ -104,8 +104,14 @@ func query(res *Resolver, msg chan DnsMsg) {
 					err = cerr
 					continue
 				}
-				in, err = exchange(c, sending, res)
+                                if res.Tcp {
+                                        in, err = exchange_tcp(c, sending, res)
+                                } else {
+                                        in, err = exchange_udp(c, sending, res)
+                                }
+
 				// Check id in.id != out.id
+                                // TODO(mg)
 
 				c.Close()
 				if err != nil {
@@ -124,7 +130,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchange(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
+func exchange_udp(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
         var timeout int64
         var attempts int
 	if r.Mangle != nil {
@@ -140,17 +146,19 @@ func exchange(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
         } else {
                 attempts = r.Attempts
         }
-
 	for a:= 0; a < attempts; a++ {
 		n, err := c.Write(m)
 		if err != nil {
+                        //println("error writing")
 			return nil, err
 		}
 
 		c.SetReadTimeout(timeout * 1e9)         // nanoseconds
-		buf := make([]byte, dns.DefaultMsgSize) // More than enough.
+		buf := make([]byte, dns.DefaultMsgSize) // More than enough???
 		n, err = c.Read(buf)
 		if err != nil {
+                        //println("error reading")
+                        //println(err.String())
 			// More Go foo needed
 			//if e, ok := err.(Error); ok && e.Timeout() {
 			//	continue
@@ -165,4 +173,70 @@ func exchange(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
 		return in, nil
 	}
 	return nil, nil // todo error
+}
+
+// Up to res.Attempts attempts.
+func exchange_tcp(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
+        var timeout int64
+        var attempts int
+        if r.Mangle != nil {
+                m = r.Mangle(m)
+        }
+        if r.Timeout == 0 {
+                timeout = 1
+        } else {
+                timeout = int64(r.Timeout)
+        }
+        if r.Attempts == 0 {
+                attempts = 1
+        } else {
+                attempts = r.Attempts
+        }
+
+        ls := make([]byte, 2) // sender length
+        lr := make([]byte, 2) // receiver length
+        var length uint16
+        ls[0] = byte(len(m) >> 8)
+        ls[1] = byte(len(m))
+        for a := 0; a < attempts; a++ {
+                // With DNS over TCP we first send the length
+                _, err := c.Write(ls)
+                if err != nil {
+                        return nil, err
+                }
+
+                // And then send the message
+                _, err = c.Write(m)
+                if err != nil {
+                        return nil, err
+                }
+
+                c.SetReadTimeout(timeout * 1e9) // nanoseconds
+                // The server replies with two bytes length
+                _, err = c.Read(lr)
+                if err != nil {
+                        return nil, err
+                }
+                length = uint16(lr[0])<<8 | uint16(lr[1])
+                // if length is 0??
+                // And then the message
+                buf := make([]byte, length)
+                _, err = c.Read(buf)
+                if err != nil {
+                        //println("error reading")
+                        //println(err.String())
+                        // More Go foo needed
+                        //if e, ok := err.(Error); ok && e.Timeout() {
+                        //      continue
+                        //} 
+                        return nil, err
+                }
+                in := new(dns.Msg)
+                if !in.Unpack(buf) {
+//                        println("unpacking went wrong")
+                        continue
+                }
+                return in, nil
+        }
+        return nil, nil // todo error
 }

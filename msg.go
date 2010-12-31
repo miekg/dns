@@ -60,6 +60,8 @@ var Rr_str = map[uint16]string{
         TypeDNSKEY:     "DNSKEY",
         TypeNSEC3:      "NSEC3",
         TypeNSEC3PARAM: "NSEC3PARAM",
+        TypeAXFR:       "AXFR",         // Not real RRs
+        TypeIXFR:       "IXFR",
 }
 
 
