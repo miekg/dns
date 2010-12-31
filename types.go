@@ -82,9 +82,9 @@ const (
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
         // Tsig errors
-        RcodeBadSig         = 16
-        RcodeBadKey         = 17
-        RcodeBadTime        = 18
+        TsigBadSig         = 16
+        TsigBadKey         = 17
+        TsigBadTime        = 18
 )
 
 // The wire format for the DNS packet header.
