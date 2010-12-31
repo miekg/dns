@@ -27,6 +27,31 @@ import (
 
 const DefaultMsgSize = 4096
 
+// A manually-unpacked version of (id, bits).
+// This is in its own struct for easy printing.
+type MsgHdr struct {
+	Id                 uint16
+	Response           bool
+	Opcode             int
+	Authoritative      bool
+	Truncated          bool
+	RecursionDesired   bool
+	RecursionAvailable bool
+	Zero               bool
+	AuthenticatedData  bool
+	CheckingDisabled   bool
+	Rcode              int
+}
+
+// The layout of a DNS message.
+type Msg struct {
+	MsgHdr
+	Question []Question
+	Answer   []RR
+	Ns       []RR
+	Extra    []RR
+}
+
 // Packing and unpacking.
 //
 // All the packers and unpackers take a (msg []byte, off int)
@@ -536,22 +561,6 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 
 // Usable representation of a DNS packet.
 
-// A manually-unpacked version of (id, bits).
-// This is in its own struct for easy printing.
-type MsgHdr struct {
-	Id                 uint16
-	Response           bool
-	Opcode             int
-	Authoritative      bool
-	Truncated          bool
-	RecursionDesired   bool
-	RecursionAvailable bool
-	Zero               bool
-	AuthenticatedData  bool
-	CheckingDisabled   bool
-	Rcode              int
-}
-
 // Convert a MsgHdr to a string, mimic the way Dig displays headers:
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
@@ -593,16 +602,6 @@ func (h *MsgHdr) String() string {
 	s += ";"
 	return s
 }
-
-// The layout of a DNS message.
-type Msg struct {
-	MsgHdr
-	Question []Question
-	Answer   []RR
-	Ns       []RR
-	Extra    []RR
-}
-
 
 func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header

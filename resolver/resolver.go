@@ -60,7 +60,7 @@ func NewQuerier(res *Resolver) (ch chan DnsMsg) {
 
 // The query function.
 func query(res *Resolver, msg chan DnsMsg) {
-	// TODO port number, error checking, robustness
+	// error checking, robustness
 	var c net.Conn
 	var err os.Error
 	var in *dns.Msg
@@ -138,6 +138,61 @@ func NewXfer(res *Resolver) (ch chan DnsMsg) {
 }
 
 func axfr(res *Resolver, msg chan DnsMsg) {
+        // open socket
+        // call exchange_tcp 
+        // check for soa
+        // repeat if no soa
+        // close channel
+        var port string
+        var err os.Error
+        var in *dns.Msg
+        if res.Port == "" {
+                port = "53"
+        } else {
+                port = res.Port
+        }
+        var sending []byte
+//			out.Dns.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
+//			sending, ok := out.Dns.Pack()
+        for i:=0; i<len(res.Servers); i++ {
+                server := res.Servers[i] + port
+                c, cerr := net.Dial("tcp", "", server)
+                if cerr != nil {
+                        err = cerr
+                        continue
+                }
+
+                first := true
+                for {
+
+                        in, cerr = exchange_tcp(c, sending, res)
+                        if cerr != nil {
+                                err = cerr
+                                continue
+                        }
+                        if first {
+                                if ! checkSOA(in, true) {
+                                        // SOA record not there...
+                                        return  // ?
+                                }
+                                first = !first
+                                // send in to message
+
+                                continue
+                        } else {
+                                if ! checkSOA(in, false) {
+                                        // Soa record not the last one
+                                        // return packet
+                                        // next
+                                } else {
+                                        // last one
+                                        // close channel
+                                }
+                        }
+                }
+        }
+        err = err
+
         return
 }
 
@@ -253,4 +308,18 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver) (*dns.Msg, os.Error) {
                 return in, nil
         }
         return nil, nil // todo error
+}
+
+// Check if he SOA record exists in the Answer section of 
+// the packet. If first is true the first RR must be a soa
+// if false, the last one should be a SOA
+func checkSOA(in *dns.Msg, first bool) bool {
+        if len(in.Answer) > 0 {
+                if first {
+                        return in.Answer[0].Header().Rrtype == dns.TypeSOA
+                } else {
+                        return in.Answer[len(in.Answer)].Header().Rrtype == dns.TypeSOA
+                }
+        }
+        return false
 }
