@@ -59,6 +59,7 @@ const (
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
 
+        TypeTSIG  = 250
 	// valid Question.qtype only
         TypeIXFR  = 251
 	TypeAXFR  = 252
@@ -80,6 +81,10 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
+        // Tsig errors
+        RcodeBadSig         = 16
+        RcodeBadKey         = 17
+        RcodeBadTime        = 18
 )
 
 // The wire format for the DNS packet header.
@@ -477,6 +482,26 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 func (rr *RR_NSEC3PARAM) String() string {
 	return rr.Hdr.String() + "BLAH"
 	// Salt with strings.ToUpper()
+}
+
+type RR_TSIG struct {
+        Hdr     RR_Header
+        Algoritim       string "domain-name"
+        TimeSigned      [3]uint16       // uint48 *sigh*
+        Fudge           uint16
+        MACSize         uint16
+        MAC             string
+        Error           uint16
+        OtherLen        uint16
+        OtherData       string
+}
+
+func (rr *RR_TSIG) Header() *RR_Header {
+        return &rr.Hdr
+}
+
+func (rr *RR_TSIG) String() string {
+        return rr.Hdr.String() + "TODO"
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.

@@ -10,6 +10,7 @@
 // * 1876 - LOC record (incomplete)
 // * 1995 - IXFR
 // * 2671 - EDNS
+// * 2845 - TSIG
 // * 2915 - NAPTR record (incomplete)
 // * 3225 - DO bit (DNSSEC OK)
 // * 4033/4034/4035 - DNSSEC + validation functions

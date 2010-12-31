@@ -58,13 +58,6 @@ func NewQuerier(res *Resolver) (ch chan DnsMsg) {
 	return
 }
 
-// Start a new xfr as a goroutine, return a channel.
-// Channel will be closed when the axfr is finished, until
-// that time new messages will appear on the channel
-func NewXfer(res *Resolver) (ch chan DnsMsg) {
-
-}
-
 // The query function.
 func query(res *Resolver, msg chan DnsMsg) {
 	// TODO port number, error checking, robustness
@@ -134,6 +127,20 @@ func query(res *Resolver, msg chan DnsMsg) {
 	}
 	return
 }
+
+// Start a new xfr as a goroutine, return a channel.
+// Channel will be closed when the axfr is finished, until
+// that time new messages will appear on the channel
+func NewXfer(res *Resolver) (ch chan DnsMsg) {
+        ch  = make(chan DnsMsg)
+        go axfr(res, ch)
+        return
+}
+
+func axfr(res *Resolver, msg chan DnsMsg) {
+        return
+}
+
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
