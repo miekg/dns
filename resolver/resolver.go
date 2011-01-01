@@ -97,7 +97,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 				} else {
 					c, cerr = net.Dial("udp", "", server)
 				}
-                                defer c.Close()
+				defer c.Close()
 				if cerr != nil {
 					err = cerr
 					continue
@@ -168,53 +168,53 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 					err = cerr
 					continue SERVER
 				}
-                                defer c.Close()
+				defer c.Close()
 
 				first := true
-                                // Start the AXFR
+				// Start the AXFR
 				for {
-                                        if first {
-					        in, cerr = exchange_tcp(c, sending, res, true)
-                                        } else {
-					        in, cerr = exchange_tcp(c, sending, res, false)
-                                        }
+					if first {
+						in, cerr = exchange_tcp(c, sending, res, true)
+					} else {
+						in, cerr = exchange_tcp(c, sending, res, false)
+					}
 
 					if cerr != nil {
-                                                // Failed to send, try the next
+						// Failed to send, try the next
 						err = cerr
 						continue SERVER
 					}
 					if first {
 						if !checkSOA(in, true) {
 							// SOA record not there...
-                                                        c.Close()
-                                                        continue SERVER
+							c.Close()
+							continue SERVER
 						}
 						first = !first
 					}
 
-                                        if !first {
+					if !first {
 						if !checkSOA(in, false) {
 							// Soa record not the last one
 							msg <- DnsMsg{in, nil}
-                                                        continue
+							continue
 							// next
 						} else {
-                                                        c.Close()
+							c.Close()
 							msg <- DnsMsg{in, nil}
-                                                        close(msg)
-                                                        return
+							close(msg)
+							return
 						}
 					}
 				}
-                                close(msg)
-                                return
+				close(msg)
+				return
 			}
-                        // With 1 successfull server, we dont get here, so
-                        // We've failed
-                        msg <- DnsMsg{nil, err} // TODO Err
-                        close(msg)
-                        return
+			// With 1 successfull server, we dont get here, so
+			// We've failed
+			msg <- DnsMsg{nil, err} // TODO Err
+			close(msg)
+			return
 		}
 	}
 	return
@@ -240,13 +240,13 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		attempts = r.Attempts
 	}
 	for a := 0; a < attempts; a++ {
-                if send {
-                        _, err := c.Write(m)
-                        if err != nil {
-                                //println("error writing")
-                                return nil, err
-                        }
-                }
+		if send {
+			_, err := c.Write(m)
+			if err != nil {
+				//println("error writing")
+				return nil, err
+			}
+		}
 
 		c.SetReadTimeout(timeout * 1e9)         // nanoseconds
 		buf := make([]byte, dns.DefaultMsgSize) // More than enough???
@@ -273,7 +273,7 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 // Up to res.Attempts attempts.
 func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
 	var timeout int64
-	var attempts int
+	var attempts, n int
 	if r.Mangle != nil {
 		m = r.Mangle(m)
 	}
@@ -294,20 +294,20 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 	ls[0] = byte(len(m) >> 8)
 	ls[1] = byte(len(m))
 	for a := 0; a < attempts; a++ {
-                // only send something when told so
-                if send {
-                        // With DNS over TCP we first send the length
-                        _, err := c.Write(ls)
-                        if err != nil {
-                                return nil, err
-                        }
+		// only send something when told so
+		if send {
+			// With DNS over TCP we first send the length
+			_, err := c.Write(ls)
+			if err != nil {
+				return nil, err
+			}
 
-                        // And then send the message
-                        _, err = c.Write(m)
-                        if err != nil {
-                                return nil, err
-                        }
-                }
+			// And then send the message
+			_, err = c.Write(m)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		c.SetReadTimeout(timeout * 1e9) // nanoseconds
 		// The server replies with two bytes length
@@ -319,15 +319,18 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		// if length is 0??
 		// And then the message
 		buf := make([]byte, length)
-		_, err = c.Read(buf)
+
+		n, err = c.Read(buf)
 		if err != nil {
-			//println("error reading")
-			//println(err.String())
-			// More Go foo needed
-			//if e, ok := err.(Error); ok && e.Timeout() {
-			//      continue
-			//} 
 			return nil, err
+		}
+		i := n
+		if i < int(length) {
+			n, err = c.Read(buf[i:])
+			if err != nil {
+				return nil, err
+			}
+			i += n
 		}
 		in := new(dns.Msg)
 		if !in.Unpack(buf) {

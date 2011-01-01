@@ -27,6 +27,20 @@ import (
 
 const Year68 = 2 << (32 - 1)
 
+type DNSError struct {
+	Error     string
+	Name      string
+	Server    string
+	IsTimeout bool
+}
+
+func (e *DNSError) String() string {
+        if e == nil {
+                return "<nil>"
+        }
+        return e.Error
+}
+
 type RR interface {
 	Header() *RR_Header
 	String() string
