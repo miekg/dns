@@ -8,4 +8,5 @@ TARG=dns/dnssec
 GOFILES=\
 	dnssec.go\
 
+DEPS=..
 include $(GOROOT)/src/Make.pkg

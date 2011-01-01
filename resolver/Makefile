@@ -8,4 +8,5 @@ TARG=dns/resolver
 GOFILES=\
 	resolver.go\
 
+DEPS=..
 include $(GOROOT)/src/Make.pkg

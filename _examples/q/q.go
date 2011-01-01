@@ -60,7 +60,7 @@ FLAGS:
 	r.Tcp = *tcp
 	r.Attempts = 1
 
-	qr := resolver.NewQuerier(r)
+	qr := r.NewQuerier()
 	// @server may be a name, resolv that 
 	var err os.Error
 	nameserver = string([]byte(nameserver)[1:]) // chop off @

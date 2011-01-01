@@ -13,7 +13,7 @@ import (
 
 func main() {
 	r := new(resolver.Resolver)
-	qr := resolver.NewQuerier(r)
+	qr := r.NewQuerier()
 	r.Servers = []string{"127.0.0.1"}
 	r.Timeout = 2
 	r.Attempts = 1

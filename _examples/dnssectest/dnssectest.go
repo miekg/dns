@@ -37,7 +37,7 @@ func main() {
 	fmt.Printf("%v", sig)
 
 	res := new(resolver.Resolver)
-	ch  := resolver.NewQuerier(res)
+	ch  := res.NewQuerier()
 
 	// configure the resolver
 	res.Servers = []string{"192.168.1.2"}
