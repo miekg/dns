@@ -20,7 +20,8 @@ Issues:
 * quoted quotes in txt records
 * Convience functions?
     - for new(RR*)
-    - ...
+    - nsupdate
+    - notify
 * query-time, server in string ouput of dns.Msg
    - DnsMsg when doing resolver querying
 
