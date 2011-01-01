@@ -1,7 +1,7 @@
 Todo:
 * fix os.Erros usage, add DNSSEC related errors
 * DNSSEC validation
-* NSEC(3) secure denial of existence
+* NSEC(3) secure denial of existence, support the type bitmap
 * Notify support (send/receive)
 * TKEY -- RFC 2930
 * TSIG -- RFC 4635

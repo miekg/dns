@@ -20,8 +20,8 @@ import (
 	"os"
 	"reflect"
 	"net"
-        "rand"
-        "time"
+	"rand"
+	"time"
 	"strconv"
 	"encoding/base64"
 	"encoding/hex"
@@ -64,33 +64,33 @@ type Msg struct {
 
 // Map of strings for each RR wire type.
 var Rr_str = map[uint16]string{
-        TypeCNAME:      "CNAME",
-        TypeHINFO:      "HINFO",
-        TypeMB:         "MB",
-        TypeMG:         "MG",
-        TypeMINFO:      "MINFO",
-        TypeMR:         "MR",
-        TypeMX:         "MX",
-        TypeNS:         "NS",
-        TypePTR:        "PTR",
-        TypeSOA:        "SOA",
-        TypeTXT:        "TXT",
-        TypeSRV:        "SRV",
-        TypeNAPTR:      "NAPTR",
-        TypeA:          "A",
-        TypeAAAA:       "AAAA",
-        TypeLOC:        "LOC",
-        TypeOPT:        "OPT",
-        TypeDS:         "DS",
-        TypeRRSIG:      "RRSIG",
-        TypeNSEC:       "NSEC",
-        TypeDNSKEY:     "DNSKEY",
-        TypeNSEC3:      "NSEC3",
-        TypeNSEC3PARAM: "NSEC3PARAM",
-        TypeTKEY:       "TKEY",
-        TypeTSIG:       "TSIG",
-        TypeAXFR:       "AXFR",         // Not real RRs
-        TypeIXFR:       "IXFR",
+	TypeCNAME:      "CNAME",
+	TypeHINFO:      "HINFO",
+	TypeMB:         "MB",
+	TypeMG:         "MG",
+	TypeMINFO:      "MINFO",
+	TypeMR:         "MR",
+	TypeMX:         "MX",
+	TypeNS:         "NS",
+	TypePTR:        "PTR",
+	TypeSOA:        "SOA",
+	TypeTXT:        "TXT",
+	TypeSRV:        "SRV",
+	TypeNAPTR:      "NAPTR",
+	TypeA:          "A",
+	TypeAAAA:       "AAAA",
+	TypeLOC:        "LOC",
+	TypeOPT:        "OPT",
+	TypeDS:         "DS",
+	TypeRRSIG:      "RRSIG",
+	TypeNSEC:       "NSEC",
+	TypeDNSKEY:     "DNSKEY",
+	TypeNSEC3:      "NSEC3",
+	TypeNSEC3PARAM: "NSEC3PARAM",
+	TypeTKEY:       "TKEY",
+	TypeTSIG:       "TSIG",
+	TypeAXFR:       "AXFR", // Not real RRs
+	TypeIXFR:       "IXFR",
 }
 
 
@@ -105,17 +105,21 @@ var Class_str = map[uint16]string{
 
 // Map of strings for opcodes.
 var opcode_str = map[int]string{
-	0: "QUERY",
+	OpcodeQuery:  "QUERY",
+	OpcodeIQuery: "IQUERY",
+	OpcodeStatus: "STATUS",
+	OpcodeNotify: "NOTIFY",
+	OpcodeUpdate: "UPDATE",
 }
 
 // Map of strings for rcode
 var rcode_str = map[int]string{
-	0: "NOERROR",
-	1: "FORMERR",
-	2: "SERVFAIL",
-	3: "NXDOMAIN",
-	4: "NOTIMPL",
-	5: "REFUSED",
+	RcodeSuccess:        "NOERROR",
+	RocdeFormatError:    "FORMERR",
+	RcodeServerFailure:  "SERVFAIL",
+	RcodeNameError:      "NXDOMAIN",
+	RcodeNotImplemented: "NOTIMPL",
+	RcodeRefused:        "REFUSED",
 }
 
 // Pack a domain name s into msg[off:].
@@ -509,9 +513,9 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 
 // Resource record packer.
 func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
-        if rr == nil {
-                return len(msg), false
-        }
+	if rr == nil {
+		return len(msg), false
+	}
 
 	var off1 int
 	// pack twice, once to find end of header
@@ -658,10 +662,10 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	off := 0
 	off, ok = packStruct(&dh, msg, off)
 	for i := 0; i < len(question); i++ {
-                off, ok = packStruct(&question[i], msg, off)
+		off, ok = packStruct(&question[i], msg, off)
 	}
 	for i := 0; i < len(answer); i++ {
-                off, ok = packRR(answer[i], msg, off)
+		off, ok = packRR(answer[i], msg, off)
 	}
 	for i := 0; i < len(ns); i++ {
 		off, ok = packRR(ns[i], msg, off)
@@ -758,5 +762,5 @@ func (dns *Msg) String() string {
 
 // Set an Msg Id to a random value
 func (m *Msg) SetId() {
-        m.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
+	m.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
 }

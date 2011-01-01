@@ -90,6 +90,14 @@ const (
 	TkeyBadMode = 19
 	TkeyBadName = 20
 	TKeyBadAlg  = 21
+
+	// Opcode
+	OpcodeQuery  = 0
+	OpcodeIQuery = 1
+	OpcodeStatus = 2
+	// There is no 3
+	OpcodeNotify = 4
+	OpcodeUpdate = 4
 )
 
 // The wire format for the DNS packet header.
