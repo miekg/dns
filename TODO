@@ -1,8 +1,7 @@
 Todo:
+* fix os.Erros usage, add DNSSEC related errors
 * DNSSEC validation
 * NSEC(3) secure denial of existence
-* fix os.Erros usage, add DNSSEC related errors
-* AXFR/IXFR support 
 * Notify support (send/receive)
 * TKEY -- RFC 2930
 * TSIG -- RFC 4635
@@ -16,7 +15,6 @@ Todo:
 Issues:
 * Better sized buffers
 * TC bit handling
-* Fix TCP: should read 2 bytes of length
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
 * Convience functions?
