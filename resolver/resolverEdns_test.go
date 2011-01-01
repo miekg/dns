@@ -7,7 +7,7 @@ import (
 
 func TestResolverEdns(t *testing.T) {
 	res := new(Resolver)
-	ch := NewQuerier(res)
+	ch := res.NewQuerier()
 
 	res.Servers = []string{"127.0.0.1"}
 	res.Timeout = 2

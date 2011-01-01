@@ -50,7 +50,7 @@ type Resolver struct {
 }
 
 // Start a new resolver as a goroutine, return the communication channel
-func NewQuerier(res *Resolver) (ch chan DnsMsg) {
+func (res *Resolver) NewQuerier() (ch chan DnsMsg) {
 	ch = make(chan DnsMsg)
 	go query(res, ch)
 	return
@@ -129,7 +129,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 // Start a new xfr as a goroutine, return a channel.
 // Channel will be closed when the axfr is finished, until
 // that time new messages will appear on the channel
-func NewXfer(res *Resolver) (ch chan DnsMsg) {
+func (res *Resolver) NewXfer() (ch chan DnsMsg) {
 	ch = make(chan DnsMsg)
 	go axfr(res, ch)
 	return

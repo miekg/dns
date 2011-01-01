@@ -9,7 +9,7 @@ import (
 
 func TestAXFR(t *testing.T) {
 	res := new(Resolver)
-	ch := NewXfer(res)
+	ch := res.NewXfer()
 
 	res.Servers = []string{"127.0.0.1"}
 	m := new(dns.Msg)

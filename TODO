@@ -7,7 +7,6 @@ Todo:
 * TSIG -- RFC 4635
 * IDN?
 * Unknown RRs?
-* query-time, server in string ouput of dns.Msg
 * Parsing from strings
 * Server support (signing, receiving queries)
 * Check the network order, it works now, but this is on Intel
@@ -21,3 +20,5 @@ Issues:
 * Convience functions?
     - for new(RR*)
     - ...
+* query-time, server in string ouput of dns.Msg
+   - DnsMsg when doing resolver querying
