@@ -6,6 +6,8 @@ is (see edns.go), UDP/TCP queries, AXFR (and IXFR probably too) supported.
 
 Sample programs can be found in the _examples directory.
 
+Installation is done by running: ./install
+
 Have fun!
 Miek Gieben  -  2010, 2011
 
