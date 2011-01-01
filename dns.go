@@ -9,6 +9,7 @@
 // * 1034/1035 
 // * 1876 - LOC record (incomplete)
 // * 1995 - IXFR
+// * 1996 - DNS notify
 // * 2671 - EDNS
 // * 2845 - TSIG
 // * 2915 - NAPTR record (incomplete)
@@ -17,6 +18,7 @@
 // * 5011 - NSID
 // * 5936 - AXFR
 // * IP6 support
+//
 // The package allows full control over what is send out to the DNS.
 //
 package dns
