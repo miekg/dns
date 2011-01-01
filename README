@@ -4,9 +4,10 @@ Completely usable as a DNS client library. Most widely used Resource
 Records are supported. DNSSEC types are too (except NSEC/NSEC3, for now). EDNS0
 is (see edns.go), UDP/TCP queries, AXFR (and IXFR probably too) supported.
 
-Sample programs can be found in the _examples directory.
-
 Installation is done by running: ./install
+
+Sample programs can be found in the _examples directory. They can 
+be build with: make examples
 
 Have fun!
 Miek Gieben  -  2010, 2011
