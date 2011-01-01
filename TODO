@@ -14,7 +14,6 @@ Todo:
 Issues:
 * Better sized buffers
 * Make the testsuite work with public DNS servers
-* TC bit handling
 * shortened ipv6 addresses are not parsed correctly
 * quoted quotes in txt records
 * Convience functions?

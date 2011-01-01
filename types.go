@@ -40,7 +40,7 @@ const (
 	TypeMX    = 15
 	TypeTXT   = 16
 	TypeAAAA  = 28
-        TypeLOC   = 29
+	TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
 
@@ -59,9 +59,10 @@ const (
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
 
-        TypeTSIG  = 250
+	TypeTKEY = 249
+	TypeTSIG = 250
 	// valid Question.qtype only
-        TypeIXFR  = 251
+	TypeIXFR  = 251
 	TypeAXFR  = 252
 	TypeMAILB = 253
 	TypeMAILA = 254
@@ -81,10 +82,14 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
-        // Tsig errors
-        TsigBadSig         = 16
-        TsigBadKey         = 17
-        TsigBadTime        = 18
+	// Tsig errors
+	TsigBadSig  = 16
+	TsigBadKey  = 17
+	TsigBadTime = 18
+	// Tkey errors
+	TkeyBadMode = 19
+	TkeyBadName = 20
+	TKeyBadAlg  = 21
 )
 
 // The wire format for the DNS packet header.
@@ -342,14 +347,14 @@ func (rr *RR_AAAA) String() string {
 }
 
 type RR_LOC struct {
-	Hdr  RR_Header
-        Version uint8
-        Size uint8
-        HorizPre uint8
-        VertPre uint8
-        Latitude uint32
-        Longitude uint32
-        Altitude uint32
+	Hdr       RR_Header
+	Version   uint8
+	Size      uint8
+	HorizPre  uint8
+	VertPre   uint8
+	Latitude  uint32
+	Longitude uint32
+	Altitude  uint32
 }
 
 func (rr *RR_LOC) Header() *RR_Header {
@@ -484,24 +489,45 @@ func (rr *RR_NSEC3PARAM) String() string {
 	// Salt with strings.ToUpper()
 }
 
+type RR_TKEY struct {
+	Hdr        RR_Header
+	Algoritim  string "domain-name"
+	Inception  uint32
+	Expiration uint32
+	Mode       uint16
+	Error      uint16
+	KeySize    uint16
+	Key        string
+	Otherlen   uint16
+	OtherData  string
+}
+
+func (rr *RR_TKEY) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_TKEY) String() string {
+	return rr.Hdr.String() + "BLAHBLAH"
+}
+
 type RR_TSIG struct {
-        Hdr     RR_Header
-        Algoritim       string "domain-name"
-        TimeSigned      [3]uint16       // uint48 *sigh*
-        Fudge           uint16
-        MACSize         uint16
-        MAC             string
-        Error           uint16
-        OtherLen        uint16
-        OtherData       string
+	Hdr        RR_Header
+	Algoritim  string    "domain-name"
+	TimeSigned [3]uint16 // uint48 *sigh*
+	Fudge      uint16
+	MACSize    uint16
+	MAC        string
+	Error      uint16
+	OtherLen   uint16
+	OtherData  string
 }
 
 func (rr *RR_TSIG) Header() *RR_Header {
-        return &rr.Hdr
+	return &rr.Hdr
 }
 
 func (rr *RR_TSIG) String() string {
-        return rr.Hdr.String() + "TODO"
+	return rr.Hdr.String() + "TODO"
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
@@ -532,7 +558,7 @@ var rr_mk = map[int]func() RR{
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
 	TypeA:          func() RR { return new(RR_A) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
-        TypeLOC:        func() RR { return new(RR_LOC) },
+	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
@@ -540,4 +566,6 @@ var rr_mk = map[int]func() RR{
 	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
 	TypeNSEC3:      func() RR { return new(RR_NSEC3) },
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
+	TypeTKEY:       func() RR { return new(RR_TKEY) },
+	TypeTSIG:       func() RR { return new(RR_TSIG) },
 }
