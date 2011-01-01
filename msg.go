@@ -115,7 +115,7 @@ var opcode_str = map[int]string{
 // Map of strings for rcode
 var rcode_str = map[int]string{
 	RcodeSuccess:        "NOERROR",
-	RocdeFormatError:    "FORMERR",
+	RcodeFormatError:    "FORMERR",
 	RcodeServerFailure:  "SERVFAIL",
 	RcodeNameError:      "NXDOMAIN",
 	RcodeNotImplemented: "NOTIMPL",

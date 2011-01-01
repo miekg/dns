@@ -97,7 +97,7 @@ const (
 	OpcodeStatus = 2
 	// There is no 3
 	OpcodeNotify = 4
-	OpcodeUpdate = 4
+	OpcodeUpdate = 5
 )
 
 // The wire format for the DNS packet header.
