@@ -91,8 +91,7 @@ func (rr *RR_OPT) DoBit(do, set bool) bool {
 		rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 		return true
 	} else {
-		b3 := byte(rr.Hdr.Ttl >> 8)
-		return b3&_DO == _DO
+		return byte(rr.Hdr.Ttl >> 8) &_DO == _DO
 	}
 	return true // dead code, bug in Go
 }
