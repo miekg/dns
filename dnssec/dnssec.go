@@ -1,6 +1,8 @@
 // Package dnssec implements all client side DNSSEC function, like
-// validation, keytag/DS calculation.
+// validation, keytag/DS calculation. 
 package dnssec
+
+// Put tsig and tkey stuff here too
 
 import (
 	"crypto/sha1"
@@ -147,12 +149,15 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
-	// Can this be done easier? TODO(mg)
 	s1 := &dns.RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
 	signeddata, ok := dns.WireRdata(s1)
 	if !ok {
 		return false
 	}
+        println("length of date s1", s1.Hdr.Rdlength)
+        println("length of signeddata buf", len(signeddata))
+
+fmt.Printf("PRE SIGNEDDATA BUF %v\n", signeddata)
 
 	for _, r := range rrset {
 		h := r.Header()
@@ -181,17 +186,24 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 			return false
 		}
                 signeddata = append(signeddata, wire...)
+                fmt.Printf("WIREBUF %v\n", wire)
+                fmt.Printf("SIGNEDDATA BUF %v\n", signeddata)
 	}
         fmt.Fprintf(os.Stderr, "lengthed signeddata %d\n", len(signeddata))
 	keybuf := make([]byte, 1024)
 	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
 	base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
         keybuf = keybuf[:keybuflen]
+
+        fmt.Printf("\n%d KEYBUF %v\n", keybuflen, keybuf)
+
 	sigbuf := make([]byte, 1024)
 	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
 	base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
-        sigbuf = sigbuf[:sigbuflen]
+        sigbuf = sigbuf[:sigbuflen-1]                                           // Why the -1 here, and not for the keybuf??
         fmt.Fprintf(os.Stderr, "len of sigbuf: %d\n", len(sigbuf))
+
+        fmt.Printf("\nSIGBUF %v\n", sigbuf)
 
 	switch s.Algorithm {
 	case AlgRSASHA1:
@@ -199,27 +211,29 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 	case AlgRSASHA256:
                 // RFC 3110, section 2. RSA Public KEY Resource Records
                 // Assume length is in the first byte!
+                // keybuf[1]
                 _E := int(keybuf[3]) <<16
                 _E += int(keybuf[2]) <<8
                 _E += int(keybuf[1])
+                println("_E", _E)
                 pubkey := new(rsa.PublicKey)
                 pubkey.E = _E
                 pubkey.N = big.NewInt(0)
                 pubkey.N.SetBytes(keybuf[4:])
-                fmt.Fprintf(os.Stderr, "%s\n", pubkey.N)
+                fmt.Fprintf(os.Stderr, "keybug len %d", len(keybuf[4:]))
+                fmt.Fprintf(os.Stderr, "PubKey %s\n", pubkey.N)
 
         // Hash the signeddata
         s := sha256.New()
-        io.WriteString(s, string(sigbuf))
+        io.WriteString(s, string(signeddata))
         sighash := s.Sum()
-
-
+        println("sig hash", len(sighash))
 
                 err := rsa.VerifyPKCS1v15(pubkey, rsa.HashSHA256, sighash, sigbuf)
                 if err == nil {
-                        fmt.Fprintf(os.Stderr, "NO SHIT!!\n")
+                        fmt.Fprintf(os.Stderr, "NO SHIT Sherlock!!\n")
                 } else {
-                        fmt.Fprintf(os.Stderr, "%v\n", err)
+                        fmt.Fprintf(os.Stderr, "*********** %v\n", err)
                 }
         }
 

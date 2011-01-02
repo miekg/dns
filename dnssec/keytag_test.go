@@ -7,7 +7,7 @@ import (
 
 func TestTag(t *testing.T) {
 	key := new(dns.RR_DNSKEY)
-	key.Hdr.Name = "miek.nl"
+	key.Hdr.Name = "miek.nl."
         key.Hdr.Rrtype = dns.TypeDNSKEY
 	key.Hdr.Class = dns.ClassINET
 	key.Hdr.Ttl = 3600

@@ -10,10 +10,10 @@ import (
 func TestSecure(t *testing.T) {
 // once this was valid
         soa := new(dns.RR_SOA)
-	soa.Hdr = dns.RR_Header{"Miek.nl.", dns.TypeSOA, dns.ClassINET, 875, 0}
+	soa.Hdr = dns.RR_Header{"miek.nl.", dns.TypeSOA, dns.ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
         soa.Mbox = "miekg.atoom.net."
-        soa.Serial = 1293513905
+        soa.Serial = 1293945905
         soa.Refresh = 14400
         soa.Retry = 3600
         soa.Expire = 604800
@@ -24,12 +24,13 @@ func TestSecure(t *testing.T) {
 	sig.TypeCovered = dns.TypeSOA
 	sig.Algorithm = AlgRSASHA256
 	sig.Labels = 2
-        sig.Expiration = 1296098705 // date '+%s' -d"2011-01-27 04:25:05
-        sig.Inception = 1293506705
+        // UTC LUL!
+        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
 	sig.OrigTtl = 14400
 	sig.KeyTag = 12051
 	sig.SignerName = "miek.nl."
-	sig.Signature = "kLq/5oFy3Sh5ZxPGFMCyHq8MtN6E17R1Ln9+bJ2Q76YYAxFE8Xlie33A1GFctH2uhzRzJKuP/JSjUkrvGk2rjBm32z9zXtZsKx/4yV0da2nLRm44NOmX6gsP4Yia8mdqPUajjkyLzAzU2bevtesJm0Z65AcmPdq3tUZODdRAcng="
+	sig.Signature = "oMCbslaAVIp/8kVtLSms3tDABpcPRUgHLrOR48OOplkYo+8TeEGWwkSwaz/MRo2fB4FxW0qj/hTlIjUGuACSd+b1wKdH5GvzRJc2pFmxtCbm55ygAh4EUL0F6U5cKtGJGSXxxg6UFCQ0doJCmiGFa78LolaUOXImJrk6AFrGa0M="
 
 	key := new(dns.RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
@@ -46,5 +47,4 @@ func TestSecure(t *testing.T) {
                 t.Log("Failure to validate")
                 t.Fail()
         }
-        fmt.Fprintf(os.Stderr, "%v\n%v\n", sig, soa)
 }
