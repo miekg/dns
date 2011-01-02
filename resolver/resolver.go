@@ -97,6 +97,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 				} else {
 					c, cerr = net.Dial("udp", "", server)
 				}
+				//need fix for non-reachable servers TODO(MG)
 				defer c.Close()
 				if cerr != nil {
 					err = cerr
