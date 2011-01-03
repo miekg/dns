@@ -1,14 +1,11 @@
 Todo:
 Short term:
-* fix os.Erros usage, add DNSSEC related errors
 * NSEC(3) secure denial of existence, support the type bitmap
 * TKEY -- RFC 2930 - validation
 * TSIG -- RFC 4635 - validation
-Long term:
 * Parsing from strings
 * Server support (signing, receiving queries)
 * Key generation
-* Unknown RRs?
 
 Issues:
 * Better sized buffers
