@@ -88,8 +88,12 @@ FLAGS:
 	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
+                m.SetId()
 		qr <- resolver.DnsMsg{m, nil}
 		in := <-qr
+                if m.Id != in.Dns.Id {
+                        fmt.Printf("Id mismatch\n")
+                }
 		if in.Dns != nil {
 			fmt.Printf("%v\n", in.Dns)
 		}

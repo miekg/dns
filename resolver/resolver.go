@@ -10,7 +10,7 @@
 // Basic usage pattern for setting up a resolver:
 //
 //        res := new(Resolver)
-//        ch := NewQuerier(res)               // start new resolver
+//        ch := res.NewQuerier()              // start new resolver
 //        res.Servers = []string{"127.0.0.1"} // set the nameserver
 //
 //        m := new(Msg)                       // prepare a new message
@@ -20,6 +20,8 @@
 //        ch <- DnsMsg{m, nil}                // send the query
 //        in := <-ch                          // wait for reply
 //
+// Note that message id checking is left to the caller
+//
 package resolver
 
 import (
@@ -27,6 +29,9 @@ import (
 	"net"
 	"dns"
 )
+
+const packErr = "Failed to pack message"
+const servErr = "No servers could be reached"
 
 // When communicating with a resolver, we use this structure
 // to send packets to it, for sending Error must be nil.
@@ -82,11 +87,13 @@ func query(res *Resolver, msg chan DnsMsg) {
 
 			var cerr os.Error
 			//if len(name) >= 256 {
-			out.Dns.SetId()
+                        if out.Dns.Id == 0 {
+                                // No Id sed, set it
+			        out.Dns.SetId()
+                        }
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				//println("pack failed")
-				msg <- DnsMsg{nil, nil} // todo error
+				msg <- DnsMsg{nil, &dns.Error{Error: packErr}}
 				continue
 			}
 
@@ -109,9 +116,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 					in, err = exchange_udp(c, sending, res, true)
 				}
 
-				// Check id in.id != out.id
-				// TODO(mg)
-
+				// Check id in.id != out.id, should be checked in the client!
 				c.Close()
 				if err != nil {
 					continue
@@ -159,7 +164,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 			out.Dns.SetId()
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- DnsMsg{nil, nil}
+				msg <- DnsMsg{nil, &dns.Error{Error: packErr}}
 			}
 		SERVER:
 			for i := 0; i < len(res.Servers); i++ {
@@ -211,6 +216,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 				close(msg)
 				return
 			}
+                        // TODO(mg) check in/out ID here
 			// With 1 successfull server, we dont get here, so
 			// We've failed
 			msg <- DnsMsg{nil, err} // TODO Err
@@ -244,7 +250,9 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		if send {
 			_, err := c.Write(m)
 			if err != nil {
-				//println("error writing")
+                                if e, ok := err.(net.Error); ok && e.Timeout() {
+                                        continue
+                                }
 				return nil, err
 			}
 		}
@@ -253,12 +261,10 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		buf := make([]byte, dns.DefaultMsgSize) // More than enough???
 		n, err := c.Read(buf)
 		if err != nil {
-			//println("error reading")
-			//println(err.String())
-			// More Go foo needed
-			//if e, ok := err.(Error); ok && e.Timeout() {
-			//	continue
-			//}
+                        // If timeout try the next
+                        if e, ok := err.(net.Error); ok && e.Timeout() {
+                                continue
+                        }
 			return nil, err
 		}
 		buf = buf[0:n]
@@ -268,7 +274,7 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		}
 		return in, nil
 	}
-	return nil, nil // todo error
+	return nil, &dns.Error{Error: servErr}
 }
 
 // Up to res.Attempts attempts.
@@ -300,12 +306,18 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 			// With DNS over TCP we first send the length
 			_, err := c.Write(ls)
 			if err != nil {
+                                if e, ok := err.(net.Error); ok && e.Timeout() {
+                                        continue
+                                }
 				return nil, err
 			}
 
 			// And then send the message
 			_, err = c.Write(m)
 			if err != nil {
+                                if e, ok := err.(net.Error); ok && e.Timeout() {
+                                        continue
+                                }
 				return nil, err
 			}
 		}
@@ -314,6 +326,9 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 		// The server replies with two bytes length
 		_, err := c.Read(lr)
 		if err != nil {
+                        if e, ok := err.(net.Error); ok && e.Timeout() {
+                                continue
+                        }
 			return nil, err
 		}
 		length = uint16(lr[0])<<8 | uint16(lr[1])
@@ -323,24 +338,29 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 
 		n, err = c.Read(buf)
 		if err != nil {
+                        if e, ok := err.(net.Error); ok && e.Timeout() {
+                                continue
+                        }
 			return nil, err
 		}
 		i := n
 		if i < int(length) {
 			n, err = c.Read(buf[i:])
 			if err != nil {
+                                if e, ok := err.(net.Error); ok && e.Timeout() {
+                                        continue
+                                }
 				return nil, err
 			}
 			i += n
 		}
 		in := new(dns.Msg)
 		if !in.Unpack(buf) {
-			//                        println("unpacking went wrong")
 			continue
 		}
 		return in, nil
 	}
-	return nil, nil // todo error
+	return nil, &dns.Error{Error: servErr}
 }
 
 // Check if he SOA record exists in the Answer section of 
