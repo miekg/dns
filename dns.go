@@ -29,11 +29,12 @@ import (
 
 const Year68 = 2 << (32 - 1)
 
+//&DNSError{Error: "name too long", Name: name}
+
 type DNSError struct {
 	Error     string
 	Name      string
 	Server    string
-	IsTimeout bool
 }
 
 func (e *DNSError) String() string {

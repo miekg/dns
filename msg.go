@@ -120,6 +120,11 @@ var rcode_str = map[int]string{
 	RcodeNameError:      "NXDOMAIN",
 	RcodeNotImplemented: "NOTIMPL",
 	RcodeRefused:        "REFUSED",
+	RcodeYXDomain:       "YXDOMAIN", // From RFC 2136
+	RcodeYXRrset:        "YXRRSET",
+	RcodeNXRrset:        "NXRRSET",
+	RcodeNotAuth:        "NOTAUTH",
+	RcodeNotZone:        "NOTZONE",
 }
 
 // Pack a domain name s into msg[off:].

@@ -82,6 +82,11 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
+        RcodeYXDomain       = 6
+        RcodeYXRrset        = 7
+        RcodeNXRrset        = 8
+        RcodeNotAuth        = 9
+        RcodeNotZone        = 10
 	// Tsig errors
 	TsigBadSig  = 16
 	TsigBadKey  = 17
