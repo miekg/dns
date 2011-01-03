@@ -91,12 +91,14 @@ FLAGS:
                 m.SetId()
 		qr <- resolver.DnsMsg{m, nil}
 		in := <-qr
-                if m.Id != in.Dns.Id {
-                        fmt.Printf("Id mismatch\n")
-                }
 		if in.Dns != nil {
+                        if m.Id != in.Dns.Id {
+                                fmt.Printf("Id mismatch\n")
+                        }
 			fmt.Printf("%v\n", in.Dns)
-		}
+		} else {
+                        fmt.Printf("%v\n", in.Error.String())
+                }
 	}
 	qr <- resolver.DnsMsg{nil, nil}
 	<-qr

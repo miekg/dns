@@ -104,8 +104,6 @@ func query(res *Resolver, msg chan DnsMsg) {
 				} else {
 					c, cerr = net.Dial("udp", "", server)
 				}
-				//need fix for non-reachable servers TODO(MG)
-				defer c.Close()
 				if cerr != nil {
 					err = cerr
 					continue
@@ -174,8 +172,6 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 					err = cerr
 					continue SERVER
 				}
-				defer c.Close()
-
 				first := true
 				// Start the AXFR
 				for {
@@ -188,8 +184,10 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 					if cerr != nil {
 						// Failed to send, try the next
 						err = cerr
+                                                c.Close()
 						continue SERVER
 					}
+                                        // if in.Dns.Id != out.Id // error
 					if first {
 						if !checkSOA(in, true) {
 							// SOA record not there...
@@ -213,13 +211,10 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 						}
 					}
 				}
-				close(msg)
+                                println("Should never be reached")
 				return
 			}
-                        // TODO(mg) check in/out ID here
-			// With 1 successfull server, we dont get here, so
-			// We've failed
-			msg <- DnsMsg{nil, err} // TODO Err
+			msg <- DnsMsg{nil, err}
 			close(msg)
 			return
 		}
@@ -332,8 +327,9 @@ func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 			return nil, err
 		}
 		length = uint16(lr[0])<<8 | uint16(lr[1])
-		// if length is 0??
-		// And then the message
+                if length == 0 {
+                        return nil, &dns.Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
+                }
 		buf := make([]byte, length)
 
 		n, err = c.Read(buf)
