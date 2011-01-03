@@ -17,7 +17,7 @@ func main() {
         r.Attempts = 1
 
         if len(os.Args) != 2 {
-                fmt.Printf("%s DOMAIN\n", os.Args[0])
+                fmt.Printf("%s DOMAIN\nIt using 127.0.0.1 as a nameserver\n", os.Args[0])
                 os.Exit(1)
         }
 
@@ -28,14 +28,17 @@ func main() {
 
         qr <- resolver.DnsMsg{m, nil}
         in := <-qr
-
-        if in.Dns.Rcode != dns.RcodeSuccess {
-                fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])
-                os.Exit(1)
-        }
-        // Stuff must be in the answer section
-        for _, a := range in.Dns.Answer {
-                fmt.Printf("%v\n", a)
+        if in.Dns != nil {
+                if in.Dns.Rcode != dns.RcodeSuccess {
+                        fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])
+                        os.Exit(1)
+                }
+                // Stuff must be in the answer section
+                for _, a := range in.Dns.Answer {
+                        fmt.Printf("%v\n", a)
+                }
+        } else {
+                fmt.Printf("*** error: %s\n", in.Error.String())
         }
 
         // Stop the resolver, send it a null mesg

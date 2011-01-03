@@ -58,6 +58,11 @@ func addresses(qr chan resolver.DnsMsg, name string) []net.IP {
 	qr <- resolver.DnsMsg{m, nil}
 	in := <-qr
 
+        if in.Dns == nil {
+                fmt.Printf("Nothing recevied: %s\n", in.Error.String())
+                return nil
+        }
+
 	if in.Dns.Rcode != dns.RcodeSuccess {
 		return nil
 	}
@@ -68,6 +73,11 @@ func addresses(qr chan resolver.DnsMsg, name string) []net.IP {
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeAAAA, dns.ClassINET}
 	qr <- resolver.DnsMsg{m, nil}
 	in = <-qr
+
+        if in.Dns == nil {
+                fmt.Printf("Nothing recevied: %s\n", in.Error.String())
+                return nil
+        }
 
 	if in.Dns.Rcode != dns.RcodeSuccess {
 		return nil
