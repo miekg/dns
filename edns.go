@@ -40,13 +40,13 @@ func (rr *RR_OPT) Header() *RR_Header {
 }
 
 func (rr *RR_OPT) String() string {
-	s := ";; EDNS: version " + strconv.Itoa(int(rr.Version(0, false))) + "; "
-	if rr.DoBit(false, false) {
+	s := ";; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
+	if rr.Do() {
 		s += "flags: do; "
 	} else {
 		s += "flags: ; "
 	}
-	s += "udp: " + strconv.Itoa(int(rr.UDPSize(0, false))) + ";"
+	s += "udp: " + strconv.Itoa(int(rr.UDPSize())) + ";"
 
 	for _, o := range rr.Option {
 		switch o.Code {
@@ -57,17 +57,24 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
+// Get the version
+func (rr *RR_OPT) Version() uint8 {
+        return 0
+}
+
 // Set the version of edns
-func (rr *RR_OPT) Version(v uint8, set bool) uint8 {
-	return 0
+func (rr *RR_OPT) SetVersion(v uint8) {
+	return
+}
+
+// Get the UDP buffer size 
+func (rr *RR_OPT) UDPSize() uint16 {
+	return rr.Hdr.Class
 }
 
 // Set/Get the UDP buffer size
-func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
-	if set {
-		rr.Hdr.Class = size
-	}
-	return rr.Hdr.Class
+func (rr *RR_OPT) SetUDPSize(size uint16) {
+	rr.Hdr.Class = size
 }
 
 
@@ -80,24 +87,28 @@ func (rr *RR_OPT) UDPSize(size uint16, set bool) uint16 {
       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
-// Set/Get the DoBit 
-func (rr *RR_OPT) DoBit(do, set bool) bool {
-	if set {
-		b1 := byte(rr.Hdr.Ttl >> 24)
-		b2 := byte(rr.Hdr.Ttl >> 16)
-		b3 := byte(rr.Hdr.Ttl >> 8)
-		b4 := byte(rr.Hdr.Ttl)
-		b3 |= _DO // Set it
-		rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
-		return true
-	} else {
-		return byte(rr.Hdr.Ttl >> 8) &_DO == _DO
-	}
-	return true // dead code, bug in Go
+// Get the do bit
+func (rr *RR_OPT) Do() bool {
+        return byte(rr.Hdr.Ttl >> 8) &_DO == _DO
 }
 
-// when set is true, set the nsid, otherwise get it
-func (rr *RR_OPT) Nsid(nsid string, set bool) string {
+// Set the do bit
+func (rr *RR_OPT) SetDo() {
+        b1 := byte(rr.Hdr.Ttl >> 24)
+        b2 := byte(rr.Hdr.Ttl >> 16)
+        b3 := byte(rr.Hdr.Ttl >> 8)
+        b4 := byte(rr.Hdr.Ttl)
+        b3 |= _DO // Set it
+        rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
+}
+
+// Return the NSID as hex string
+func (rr *RR_OPT) Nsid(nsid string) string {
 	// RR.Option[0] to be set
 	return ""
+}
+
+// Set the NSID
+func (rr *RR_OPT) SetNsid(nsid string) {
+
 }
