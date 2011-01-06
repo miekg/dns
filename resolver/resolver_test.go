@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"testing"
+        "fmt"
         "dns"
 )
 
@@ -36,7 +37,9 @@ func TestResolver(t *testing.T) {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	        t.Logf("%v\n", in)
-	}
+	} else {
+                fmt.Printf("%v\n", in.Dns)
+        }
 
 	ch <- DnsMsg{nil, nil}
         <-ch

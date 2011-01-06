@@ -253,7 +253,12 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
 					element := val.Field(i).(*reflect.SliceValue).Elem(j)
 					code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
-					data := string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get())
+                                        // for each code we should do something else
+                                        h, e := hex.DecodeString(string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get()))
+                                        if e != nil {
+                                                return len(msg), false
+                                        }
+                                        data := string(h)
 					// Option Code
 					msg[off] = byte(code >> 8)
 					msg[off+1] = byte(code)
@@ -398,19 +403,20 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				b := net.IP(p)
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
-			case "OPT": // edns
-				// check rdlength, if more, then more options
-				// TODO(mg) checking
-				// for now: allow only 1. TODO(mg)
-				/*
-				   opt := make([]Option, 1)
-				   opt[0].Code, off = unpackUint16(msg, off)
-				   length := uint16(msg[off])<<8 | uint16(msg[off+1])
-				   off += 2
-				   opt[0].Data = string(msg[off:off+int(length)])
-				   off += int(length)
-				   //opt 
-				*/
+			case "OPT": // EDNS
+                                if off + 2 > len(msg) {
+                                        // No room for anything else
+                                        break
+                                }
+				opt := make([]Option, 1)
+				opt[0].Code, off = unpackUint16(msg, off)
+				optlen, off1 := unpackUint16(msg, off)
+				if off1+int(optlen) > len(msg) {
+					return len(msg), false
+				}
+				opt[0].Data = hex.EncodeToString(msg[off1:off1+int(optlen)])
+                                fv.Set(reflect.NewValue(opt).(*reflect.SliceValue))
+                                off = off1 + int(optlen)
 			}
 		case *reflect.StructValue:
 			off, ok = unpackStructValue(fv, msg, off)

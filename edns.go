@@ -79,12 +79,12 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
 
 
 /* from RFC 3225
-             +0 (MSB)                +1 (LSB)
-      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-   0: |   EXTENDED-RCODE      |       VERSION         |
-      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-   2: |DO|                    Z                       |
-      +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+          +0 (MSB)                +1 (LSB)
+   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+0: |   EXTENDED-RCODE      |       VERSION         |
+   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+2: |DO|                    Z                       |
+   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
 // Get the do bit
@@ -103,12 +103,12 @@ func (rr *RR_OPT) SetDo() {
 }
 
 // Return the NSID as hex string
-func (rr *RR_OPT) Nsid(nsid string) string {
-	// RR.Option[0] to be set
-	return ""
+func (rr *RR_OPT) Nsid() string {
+	return "NSID: " + rr.Option[0].Data
 }
 
 // Set the NSID
 func (rr *RR_OPT) SetNsid(nsid string) {
-
+        rr.Option[0].Code = OptionCodeNSID
+        rr.Option[0].Data = nsid
 }

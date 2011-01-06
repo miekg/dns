@@ -2,7 +2,8 @@ package resolver
 
 import (
 	"testing"
-        "dns"
+	"dns"
+	"fmt"
 )
 
 func TestResolverEdns(t *testing.T) {
@@ -20,31 +21,30 @@ func TestResolverEdns(t *testing.T) {
 
 	// Add EDNS rr
 	edns := new(dns.RR_OPT)
-	edns.Hdr.Name = "."  // must . be for edns
+	edns.Hdr.Name = "." // must . be for edns
 	edns.Hdr.Rrtype = dns.TypeOPT
-        // You can handle an OTP RR as any other, but there
-        // are some convience functions
-        edns.UDPSize(4096, true)
-        edns.DoBit(true, true)
-//        edns.Nsid("mieks-server", true) 
-	// no options for now
-	//      edns.Option = make([]Option, 1)
-	//      edns.Option[0].Code = OptionCodeNSID
-	//      edns.Option[0].Data = "lalalala"
+	// You can handle an OTP RR as any other, but there
+	// are some convience functions
+	edns.SetUDPSize(4096)
+	edns.SetDo()
+	edns.Option = make([]dns.Option, 1)
+	edns.SetNsid("") // Empty to request it
 
 	// ask something
-	m.Question[0] = dns.Question{"nlnetlabs.nl", dns.TypeSOA, dns.ClassINET}
+	m.Question[0] = dns.Question{"miek.nl", dns.TypeA, dns.ClassINET}
 	m.Extra[0] = edns
 
 	ch <- DnsMsg{m, nil}
 	in := <-ch
-////        t.Fail()
-  //      t.Log("%v\n", in.Dns)
-
-	if in.Dns.Rcode != dns.RcodeSuccess {
-		t.Log("Failed to get an valid answer")
-		t.Fail()
+	if in.Dns != nil {
+		if in.Dns.Rcode != dns.RcodeSuccess {
+			t.Log("Failed to get an valid answer")
+			t.Fail()
+		}
+		fmt.Printf("%v\n", in.Dns)
+	} else {
+		fmt.Printf("Failed to get a good anwer")
 	}
 	ch <- DnsMsg{nil, nil}
-        <-ch    // wait for ch to close channel
+	<-ch // wait for ch to close channel
 }
