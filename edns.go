@@ -2,6 +2,7 @@ package dns
 
 import (
 	"strconv"
+        "encoding/hex"
 )
 
 // EDNS0 Options and Do bit
@@ -40,18 +41,26 @@ func (rr *RR_OPT) Header() *RR_Header {
 }
 
 func (rr *RR_OPT) String() string {
-	s := ";; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
+	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
 	if rr.Do() {
 		s += "flags: do; "
 	} else {
 		s += "flags: ; "
 	}
-	s += "udp: " + strconv.Itoa(int(rr.UDPSize())) + ";"
+	s += "udp: " + strconv.Itoa(int(rr.UDPSize()))
 
 	for _, o := range rr.Option {
 		switch o.Code {
 		case OptionCodeNSID:
-			s += " nsid: " + o.Data + ";"
+			s += "\n; NSID: " + o.Data
+                        h, e := hex.DecodeString(o.Data)
+                        var r string
+                        if e == nil {
+                                for _, c := range h {
+                                        r += " (" + string(c)  + ")"
+                                }
+                        s += " " + r
+                        }
 		}
 	}
 	return s
