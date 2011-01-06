@@ -31,8 +31,7 @@ func TestPackUnpack(t *testing.T) {
 	edns.Hdr.Class = ClassINET
 	edns.Hdr.Ttl = 3600
 	edns.Option = make([]Option, 1)
-	edns.Option[0].Code = OptionCodeNSID
-	edns.Option[0].Data = "lalalala"
+        edns.SetNsidToString("lalalala")
 
 	_, ok = packRR(edns, msg, 0)
 	if !ok {

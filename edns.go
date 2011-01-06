@@ -117,7 +117,12 @@ func (rr *RR_OPT) Nsid() string {
 }
 
 // Set the NSID
-func (rr *RR_OPT) SetNsid(nsid string) {
+func (rr *RR_OPT) SetNsidToHex(hexnsid string) {
         rr.Option[0].Code = OptionCodeNSID
-        rr.Option[0].Data = nsid
+        rr.Option[0].Data = hexnsid
+}
+
+func (rr *RR_OPT) SetNsidToString(nsid string) {
+        rr.Option[0].Code = OptionCodeNSID
+        rr.Option[0].Data = hex.EncodeToString([]byte(nsid))
 }
