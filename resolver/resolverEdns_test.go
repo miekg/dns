@@ -28,7 +28,7 @@ func TestResolverEdns(t *testing.T) {
 	edns.SetUDPSize(4096)
 	edns.SetDo()
 	edns.Option = make([]dns.Option, 1)
-	edns.SetNsid("") // Empty to request it
+	edns.SetNsidToHex("") // Empty to request it
 
 	// ask something
 	m.Question[0] = dns.Question{"miek.nl", dns.TypeA, dns.ClassINET}

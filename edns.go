@@ -57,9 +57,9 @@ func (rr *RR_OPT) String() string {
                         var r string
                         if e == nil {
                                 for _, c := range h {
-                                        r += " (" + string(c)  + ")"
+                                        r += "(" + string(c)  + ")"
                                 }
-                        s += " " + r
+                        s += "  " + r
                         }
 		}
 	}
@@ -115,6 +115,8 @@ func (rr *RR_OPT) SetDo() {
 func (rr *RR_OPT) Nsid() string {
 	return "NSID: " + rr.Option[0].Data
 }
+
+// Representation of NSID is in Hex
 
 // Set the NSID
 func (rr *RR_OPT) SetNsidToHex(hexnsid string) {
