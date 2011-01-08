@@ -1,18 +1,16 @@
 Todo:
 Short term:
-* Create example notify
 * NSEC(3) secure denial of existence, support the type bitmap
     - need base32 for Nsec3
 * TKEY -- RFC 2930 - validation
 * TSIG -- RFC 4635 - validation
 * Parsing from strings
-* Server support (signing, receiving queries)
+* Server support 
 * Key generation
+* Signature generation
 
 Issues:
 * Better sized buffers
-* DNSSEC validation - fix up the code and add other algs.
-    check the buffer sizes for the actual base64-decoded sizes
 * Check the network order, it works now, but this is on Intel
 * Make the testsuite work with public DNS servers
 * shortened ipv6 addresses are not parsed correctly (maby net issue)
@@ -20,7 +18,6 @@ Issues:
 * Convience functions?
     - for new(RR*)
     - nsupdate
-    - notify
 * query-time, server in string ouput of dns.Msg
    - DnsMsg when doing resolver querying
 
