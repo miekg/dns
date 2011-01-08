@@ -17,7 +17,6 @@ func TestResolverEdns(t *testing.T) {
 	m := new(dns.Msg)
 	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
-	m.Extra = make([]dns.RR, 1)
 
 	// Add EDNS rr
 	edns := new(dns.RR_OPT)
@@ -25,13 +24,14 @@ func TestResolverEdns(t *testing.T) {
 	edns.Hdr.Rrtype = dns.TypeOPT
 	// You can handle an OTP RR as any other, but there
 	// are some convience functions
-	edns.SetUDPSize(4096)
+	edns.SetUDPSize(2048)
 	edns.SetDo()
 	edns.Option = make([]dns.Option, 1)
 	edns.SetNsidToHex("") // Empty to request it
 
 	// ask something
-	m.Question[0] = dns.Question{"miek.nl", dns.TypeA, dns.ClassINET}
+	m.Question[0] = dns.Question{"powerdns.nl", dns.TypeDNSKEY, dns.ClassINET}
+	m.Extra = make([]dns.RR, 1)
 	m.Extra[0] = edns
 
 	ch <- DnsMsg{m, nil}

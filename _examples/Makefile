@@ -4,6 +4,7 @@ all:
 	gomake -C chaos
 	gomake -C dnssectest
 	gomake -C axfr
+	gomake -C notify
 	gomake -C zlutser
 
 clean:
@@ -12,4 +13,5 @@ clean:
 	gomake -C chaos clean
 	gomake -C dnssectest clean
 	gomake -C axfr clean
+	gomake -C notify clean
 	gomake -C zlutser clean

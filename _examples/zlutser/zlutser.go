@@ -81,9 +81,9 @@ FLAGS:
 	// set the do bit
 	opt := new(dns.RR_OPT)
 	opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
-	opt.Version(0, true)
-	opt.DoBit(true, true)
-	opt.UDPSize(4096, true)
+	opt.SetVersion(0)
+	opt.SetDo()
+	opt.SetUDPSize(4096)
 	m.Extra = make([]dns.RR, 1)
 	m.Extra[0] = opt
 

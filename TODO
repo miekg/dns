@@ -1,6 +1,8 @@
 Todo:
 Short term:
+* Create example notify
 * NSEC(3) secure denial of existence, support the type bitmap
+    - need base32 for Nsec3
 * TKEY -- RFC 2930 - validation
 * TSIG -- RFC 4635 - validation
 * Parsing from strings

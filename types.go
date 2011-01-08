@@ -460,7 +460,7 @@ func (rr *RR_DNSKEY) String() string {
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + rr.PubKey // encoding/base64
+		" " + rr.PubKey
 }
 
 type RR_NSEC3 struct {
