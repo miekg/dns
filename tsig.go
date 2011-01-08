@@ -30,9 +30,10 @@ type tsig_generation_fmt struct {
 }
 
 // Generate the HMAC for msg. The TSIG RR is modified
-// to include the MAC and MACSize
+// to include the MAC and MACSize. Note the the msg Id must
+// be set, otherwise the MAC is not correct
 func (rr *RR_TSIG) GenerateMAC(msg *Msg, secret string) bool {
-	buf := make([]byte, 2048) // TODO(mg) bufsize!
+	buf := make([]byte, 4096) // TODO(mg) bufsize!
 	tsigbuf := new(tsig_generation_fmt)
 
 	// Fill the struct and generate the wiredata
@@ -46,11 +47,19 @@ func (rr *RR_TSIG) GenerateMAC(msg *Msg, secret string) bool {
 	tsigbuf.OtherLen = rr.OtherLen
 	tsigbuf.OtherData = rr.OtherData
 	packStruct(tsigbuf, buf, 0)
+
+        msgbuf, ok := msg.Pack()
+        if !ok {
+                return false
+        }
+        buf = append(buf, msgbuf...)
+
 	//func NewMD5(key []byte) hash.Hash
 	hmac := hmac.NewMD5([]byte(secret))
 	io.WriteString(hmac, string(buf))
 	rr.MAC = string(hmac.Sum())
         rr.MACSize = uint16(len(rr.MAC))
+        rr.OrigId = msg.MsgHdr.Id
 
 	return true
 }

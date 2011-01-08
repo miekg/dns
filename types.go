@@ -543,7 +543,9 @@ func (rr *RR_TSIG) Header() *RR_Header {
 
 func (rr *RR_TSIG) String() string {
         // It has no presentation format
-	return ""
+	return rr.Hdr.String() +
+                " " + strconv.Itoa(int(rr.MACSize)) +
+                " " + rr.MAC
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
