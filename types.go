@@ -504,7 +504,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 
 type RR_TKEY struct {
 	Hdr        RR_Header
-	Algoritim  string "domain-name"
+	Algorithm  string "domain-name"
 	Inception  uint32
 	Expiration uint32
 	Mode       uint16
@@ -520,15 +520,17 @@ func (rr *RR_TKEY) Header() *RR_Header {
 }
 
 func (rr *RR_TKEY) String() string {
-	return rr.Hdr.String() + "BLAHBLAH"
+        // It has no presentation format
+        return ""
 }
 
 type RR_TSIG struct {
 	Hdr        RR_Header
-	Algoritim  string    "domain-name"
-	TimeSigned [3]uint16 // uint48 *sigh*
+	Algorithm  string    "domain-name"
+	TimeSigned [3]uint16
 	Fudge      uint16
 	MACSize    uint16
+        OrigId     uint16    // msg id
 	MAC        string
 	Error      uint16
 	OtherLen   uint16
@@ -540,7 +542,8 @@ func (rr *RR_TSIG) Header() *RR_Header {
 }
 
 func (rr *RR_TSIG) String() string {
-	return rr.Hdr.String() + "TODO"
+        // It has no presentation format
+	return ""
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.

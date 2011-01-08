@@ -22,6 +22,5 @@ Issues:
    - DnsMsg when doing resolver querying
 
 Port over from LDNS:
-* ldns-notify
 * ldns-rrsig
 * ldns-keygen - generate a key - more server side

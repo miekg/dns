@@ -540,10 +540,6 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 		return len(msg), false
 	}
 
-	// DEBUG TODO(mg)
-	//       println("Header", off1)
-	//       println("Rest", off2)
-
 	// TODO make this quicker?
 	// pack a third time; redo header with correct data length
 	rr.Header().Rdlength = uint16(off2 - off1)

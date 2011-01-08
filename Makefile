@@ -11,6 +11,8 @@ GOFILES=\
 	msg.go\
 	types.go\
 	edns.go\
+	tsig.go\
+
 
 include $(GOROOT)/src/Make.pkg
 
