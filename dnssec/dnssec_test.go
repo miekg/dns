@@ -46,5 +46,7 @@ func TestSecure(t *testing.T) {
         if ! Verify(sig, key, []dns.RR{soa}) {
                 t.Log("Failure to validate")
                 t.Fail()
+        } else {
+                println("It validates!!")
         }
 }

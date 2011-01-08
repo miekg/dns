@@ -1,43 +1,45 @@
 // Package dnssec implements all client side DNSSEC function, like
-// validation, keytag/DS calculation. 
+// validation, keytag and DS calculation. 
 package dnssec
 
 // Put tsig and tkey stuff here too
 
 import (
+	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/rsa"
 	"encoding/hex"
 	"encoding/base64"
+	"hash"
 	"time"
 	"io"
-        "big"
+	"big"
 	"sort"
 	"strings"
-	"fmt" //tmp
-	"os"  //tmp
-        "dns"
+	"os"
+	"dns"
 )
 
 // DNSSEC encryption algorithm codes.
 const (
-        // DNSSEC algorithms
-        AlgRSAMD5    = 1
-        AlgDH        = 2
-        AlgDSA       = 3
-        AlgECC       = 4
-        AlgRSASHA1   = 5
-        AlgRSASHA256 = 8
-        AlgRSASHA512 = 10
-        AlgECCGOST   = 12
+	// DNSSEC algorithms
+	AlgRSAMD5    = 1
+	AlgDH        = 2
+	AlgDSA       = 3
+	AlgECC       = 4
+	AlgRSASHA1   = 5
+	AlgRSASHA256 = 8
+	AlgRSASHA512 = 10
+	AlgECCGOST   = 12
 )
 
 // DNSSEC hashing codes.
 const (
-        HashSHA1 = iota
-        HashSHA256
-        HashGOST94
+	HashSHA1 = iota
+	HashSHA256
+	HashGOST94
 )
 
 // Convert an DNSKEY record to a DS record.
@@ -55,7 +57,7 @@ func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
 		return nil
 	}
 
-	owner,ok1 := dns.WireDomainName(k.Hdr.Name)
+	owner, ok1 := dns.WireDomainName(k.Hdr.Name)
 	if !ok1 {
 		return nil
 	}
@@ -66,7 +68,7 @@ func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
 	 * DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
 	 */
 	// digest buffer
-	digest := append(owner, wire...)  // another copy TODO(mg)
+	digest := append(owner, wire...) // another copy TODO(mg)
 
 	switch hash {
 	case HashSHA1:
@@ -154,15 +156,11 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 	if !ok {
 		return false
 	}
-        println("length of date s1", s1.Hdr.Rdlength)
-        println("length of signeddata buf", len(signeddata))
-
-fmt.Printf("PRE SIGNEDDATA BUF %v\n", signeddata)
 
 	for _, r := range rrset {
 		h := r.Header()
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-                name := h.Name
+		name := h.Name
 		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
 		switch h.Rrtype {
@@ -170,74 +168,66 @@ fmt.Printf("PRE SIGNEDDATA BUF %v\n", signeddata)
 		case dns.TypeHINFO, dns.TypeMINFO, dns.TypeMX /* dns.TypeRP, dns.TypeAFSDB, dns.TypeRT */ :
 		case dns.TypeSIG /* dns.TypePX, dns.TypeNXT /* dns.TypeNAPTR, dns.TypeKX */ :
 		case dns.TypeSRV, /* dns.TypeDNAME, dns.TypeA6 */ dns.TypeRRSIG, dns.TypeNSEC:
-			/* do something */
-			// lower case the strings rdata //
+			// lower case the domain rdata //
 
 		}
 		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
 		// 6.2. Canonical RR Form. (5) - origTTL
-                ttl := h.Ttl
+		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-                wire, ok1 := dns.WireRR(r)
-                h.Ttl = ttl // restore the order in the universe
-                h.Name = name
+		wire, ok1 := dns.WireRR(r)
+		h.Ttl = ttl // restore the order in the universe
+		h.Name = name
 		if !ok1 {
 			println("Failure to pack")
 			return false
 		}
-                signeddata = append(signeddata, wire...)
-                fmt.Printf("WIREBUF %v\n", wire)
-                fmt.Printf("SIGNEDDATA BUF %v\n", signeddata)
+		signeddata = append(signeddata, wire...)
 	}
-        fmt.Fprintf(os.Stderr, "lengthed signeddata %d\n", len(signeddata))
+
+	// Buffer holding the key data
 	keybuf := make([]byte, 1024)
 	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
-	base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
-        keybuf = keybuf[:keybuflen]
+	keybuflen, _ = base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
+	keybuf = keybuf[:keybuflen]
 
-        fmt.Printf("\n%d KEYBUF %v\n", keybuflen, keybuf)
-
+	// Buffer holding the signature
 	sigbuf := make([]byte, 1024)
 	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
-	base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
-        sigbuf = sigbuf[:sigbuflen-1]                                           // Why the -1 here, and not for the keybuf??
-        fmt.Fprintf(os.Stderr, "len of sigbuf: %d\n", len(sigbuf))
+	sigbuflen, _ = base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
+	sigbuf = sigbuf[:sigbuflen]
 
-        fmt.Printf("\nSIGBUF %v\n", sigbuf)
-
+	var err os.Error
 	switch s.Algorithm {
-	case AlgRSASHA1:
+	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
+		pubkey := rsaPubKey(keybuf)
+		// Setup the hash as defined for this alg.
+		var h hash.Hash
+		var ch rsa.PKCS1v15Hash
+		switch s.Algorithm {
+		case AlgRSAMD5:
+			h = md5.New()
+			ch = rsa.HashMD5
+		case AlgRSASHA1:
+			h = sha1.New()
+			ch = rsa.HashSHA1
+		case AlgRSASHA256:
+			h = sha256.New()
+			ch = rsa.HashSHA256
+		case AlgRSASHA512:
+			h = sha512.New()
+			ch = rsa.HashSHA512
+		}
+		io.WriteString(h, string(signeddata))
+		sighash := h.Sum()
+		err = rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
+	case AlgDH:
+	case AlgDSA:
+	case AlgECC:
+	case AlgECCGOST:
+	}
 
-	case AlgRSASHA256:
-                // RFC 3110, section 2. RSA Public KEY Resource Records
-                // Assume length is in the first byte!
-                // keybuf[1]
-                _E := int(keybuf[3]) <<16
-                _E += int(keybuf[2]) <<8
-                _E += int(keybuf[1])
-                println("_E", _E)
-                pubkey := new(rsa.PublicKey)
-                pubkey.E = _E
-                pubkey.N = big.NewInt(0)
-                pubkey.N.SetBytes(keybuf[4:])
-                fmt.Fprintf(os.Stderr, "keybug len %d", len(keybuf[4:]))
-                fmt.Fprintf(os.Stderr, "PubKey %s\n", pubkey.N)
-
-        // Hash the signeddata
-        s := sha256.New()
-        io.WriteString(s, string(signeddata))
-        sighash := s.Sum()
-        println("sig hash", len(sighash))
-
-                err := rsa.VerifyPKCS1v15(pubkey, rsa.HashSHA256, sighash, sigbuf)
-                if err == nil {
-                        fmt.Fprintf(os.Stderr, "NO SHIT Sherlock!!\n")
-                } else {
-                        fmt.Fprintf(os.Stderr, "*********** %v\n", err)
-                }
-        }
-
-	return true
+	return err == nil
 }
 
 // Using RFC1982 calculate if a signature period is valid
@@ -250,13 +240,35 @@ func PeriodOK(s *dns.RR_RRSIG) bool {
 	return ti <= utc && utc <= te
 }
 
-// Map for algorithm names. 
+// Extra the RSA public key from the buffer
+func rsaPubKey(keybuf []byte) *rsa.PublicKey {
+	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
+	// Length is in the 0th byte, unless its zero, then it
+	// it in bytes 1 and 2 and it a 16 bit number
+	explen := uint16(keybuf[0])
+	keyoff := 1
+	if explen == 0 {
+		explen = uint16(keybuf[1])<<8 | uint16(keybuf[2])
+		keyoff = 3
+	}
+	pubkey := new(rsa.PublicKey)
+	pubkey.N = big.NewInt(0)
+	shift := (explen - 1) * 8
+	for i := int(explen - 1); i >= 0; i-- {
+		pubkey.E += int(keybuf[keyoff+i]) << shift
+		shift -= 8
+	}
+	pubkey.N.SetBytes(keybuf[keyoff+int(explen):])
+	return pubkey
+}
+
+// Map for algorithm names.
 var alg_str = map[uint8]string{
-        AlgRSAMD5:    "RSAMD5",
-        AlgDH:        "DH",
-        AlgDSA:       "DSA",
-        AlgRSASHA1:   "RSASHA1",
-        AlgRSASHA256: "RSASHA256",
-        AlgRSASHA512: "RSASHA512",
-        AlgECCGOST:   "ECC-GOST",
+	AlgRSAMD5:    "RSAMD5",
+	AlgDH:        "DH",
+	AlgDSA:       "DSA",
+	AlgRSASHA1:   "RSASHA1",
+	AlgRSASHA256: "RSASHA256",
+	AlgRSASHA512: "RSASHA512",
+	AlgECCGOST:   "ECC-GOST",
 }

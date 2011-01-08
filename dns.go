@@ -5,14 +5,16 @@
 
 // Package dns implements a full featured interface to the DNS.
 // Supported RFCs and features include:
+// * 1034/1035  - DNS standard
 // * 1982 - Serial Arithmetic
-// * 1034/1035 
 // * 1876 - LOC record (incomplete)
 // * 1995 - IXFR
 // * 1996 - DNS notify
+// * 2537 - RSAMD5 DNS keys
 // * 2671 - EDNS
 // * 2845 - TSIG
 // * 2915 - NAPTR record (incomplete)
+// * 3110 - RSASHA1 DNS keys
 // * 3225 - DO bit (DNSSEC OK)
 // * 4033/4034/4035 - DNSSEC + validation functions
 // * 5011 - NSID
