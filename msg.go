@@ -244,28 +244,37 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 		BadType:
 			fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
 			return len(msg), false
-                case *reflect.ArrayValue:
+		case *reflect.ArrayValue:
 			switch f.Tag {
 			default:
 				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
-                        case "TSIG":
-                        }
+			case "TSIG":
+				// has a 3 byte inception time (check len?)
+				// need to do some shifting here
+				msg[off] = byte(fv.Elem(0).(*reflect.UintValue).Get() >> 8)
+				msg[off+1] = byte(fv.Elem(0).(*reflect.UintValue).Get())
+				msg[off+2] = byte(fv.Elem(1).(*reflect.UintValue).Get() >> 8)
+				msg[off+3] = byte(fv.Elem(1).(*reflect.UintValue).Get())
+				msg[off+4] = byte(fv.Elem(2).(*reflect.UintValue).Get() >> 8)
+				msg[off+5] = byte(fv.Elem(2).(*reflect.UintValue).Get())
+				off += 6
+			}
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
-				fmt.Fprintf(os.Stderr, ": dns: unknown IP tag %v\n", f.Tag)
+				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v\n", f.Tag)
 				return len(msg), false
 			case "OPT": // edns
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
 					element := val.Field(i).(*reflect.SliceValue).Elem(j)
 					code := uint16(element.(*reflect.StructValue).Field(0).(*reflect.UintValue).Get())
-                                        // for each code we should do something else
-                                        h, e := hex.DecodeString(string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get()))
-                                        if e != nil {
-                                                return len(msg), false
-                                        }
-                                        data := string(h)
+					// for each code we should do something else
+					h, e := hex.DecodeString(string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get()))
+					if e != nil {
+						return len(msg), false
+					}
+					data := string(h)
 					// Option Code
 					msg[off] = byte(code >> 8)
 					msg[off+1] = byte(code)
@@ -274,7 +283,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					msg[off+3] = byte(len(data))
 					off += 4
 					copy(msg[off:off+len(data)], []byte(data))
-					off += len(data) // +1?? MG TODO
+					off += len(data)
 				}
 			case "A":
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
@@ -394,8 +403,9 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			default:
 				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
-                        case "TSIG":
-                        }
+			case "TSIG":
+                                println("TODO")
+			}
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -418,19 +428,19 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				fv.Set(reflect.NewValue(b).(*reflect.SliceValue))
 				off += net.IPv6len
 			case "OPT": // EDNS
-                                if off + 2 > len(msg) {
-                                        // No room for anything else
-                                        break
-                                }
+				if off+2 > len(msg) {
+					// No room for anything else
+					break
+				}
 				opt := make([]Option, 1)
 				opt[0].Code, off = unpackUint16(msg, off)
 				optlen, off1 := unpackUint16(msg, off)
 				if off1+int(optlen) > len(msg) {
 					return len(msg), false
 				}
-				opt[0].Data = hex.EncodeToString(msg[off1:off1+int(optlen)])
-                                fv.Set(reflect.NewValue(opt).(*reflect.SliceValue))
-                                off = off1 + int(optlen)
+				opt[0].Data = hex.EncodeToString(msg[off1 : off1+int(optlen)])
+				fv.Set(reflect.NewValue(opt).(*reflect.SliceValue))
+				off = off1 + int(optlen)
 			}
 		case *reflect.StructValue:
 			off, ok = unpackStructValue(fv, msg, off)
