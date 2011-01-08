@@ -527,11 +527,11 @@ func (rr *RR_TKEY) String() string {
 type RR_TSIG struct {
 	Hdr        RR_Header
 	Algorithm  string    "domain-name"
-	TimeSigned [3]uint16
+	TimeSigned [3]uint16 "TSIG"
 	Fudge      uint16
 	MACSize    uint16
-        OrigId     uint16    // msg id
 	MAC        string
+        OrigId     uint16    // msg id
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string

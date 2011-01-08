@@ -242,12 +242,19 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 		switch fv := val.Field(i).(type) {
 		default:
 		BadType:
-			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v\n", f.Type)
+			fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
 			return len(msg), false
+                case *reflect.ArrayValue:
+			switch f.Tag {
+			default:
+				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
+				return len(msg), false
+                        case "TSIG":
+                        }
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
-				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v\n", f.Tag)
+				fmt.Fprintf(os.Stderr, ": dns: unknown IP tag %v\n", f.Tag)
 				return len(msg), false
 			case "OPT": // edns
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
@@ -380,12 +387,19 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 		switch fv := val.Field(i).(type) {
 		default:
 		BadType:
-			fmt.Fprintf(os.Stderr, "net: dns: unknown packing type %v", f.Type)
+			fmt.Fprintf(os.Stderr, "dns: unknown packing type %v", f.Type)
 			return len(msg), false
+		case *reflect.ArrayValue:
+			switch f.Tag {
+			default:
+				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
+				return len(msg), false
+                        case "TSIG":
+                        }
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
-				fmt.Fprintf(os.Stderr, "net: dns: unknown IP tag %v", f.Tag)
+				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
 				return len(msg), false
 			case "A":
 				if off+net.IPv4len > len(msg) {
@@ -450,7 +464,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			var s string
 			switch f.Tag {
 			default:
-				fmt.Fprintf(os.Stderr, "net: dns: unknown string tag %v", f.Tag)
+				fmt.Fprintf(os.Stderr, "dns: unknown string tag %v", f.Tag)
 				return len(msg), false
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?

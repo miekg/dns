@@ -2,8 +2,7 @@ Todo:
 Short term:
 * NSEC(3) secure denial of existence, support the type bitmap
     - need base32 for Nsec3
-* TKEY -- RFC 2930 - validation
-* TSIG -- RFC 4635 - validation
+* TSIG 
 * Parsing from strings
 * Server support 
 * Key generation
@@ -19,7 +18,8 @@ Issues:
     - for new(RR*)
     - nsupdate
 * query-time, server in string ouput of dns.Msg
-   - DnsMsg when doing resolver querying
+   - DnsMsg when doing resolver querying, extend msg...?
+   -- 
 
 Port over from LDNS:
 * ldns-rrsig
