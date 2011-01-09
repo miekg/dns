@@ -67,6 +67,7 @@ type tsig_generation_fmt struct {
 // Generate the HMAC for msg. The TSIG RR is modified
 // to include the MAC and MACSize. Note the the msg Id must
 // be set, otherwise the MAC is not correct
+// secret is encoded in base64 in BIND9
 func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 	buf := make([]byte, 4096) // TODO(mg) bufsize!
 	tsig := new(tsig_generation_fmt)

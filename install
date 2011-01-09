@@ -3,5 +3,4 @@
 # small wrapper to easy installment
 
 make
-make -C dnssec install
 make -C resolver install

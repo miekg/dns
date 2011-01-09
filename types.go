@@ -82,11 +82,11 @@ const (
 	RcodeNameError      = 3
 	RcodeNotImplemented = 4
 	RcodeRefused        = 5
-        RcodeYXDomain       = 6
-        RcodeYXRrset        = 7
-        RcodeNXRrset        = 8
-        RcodeNotAuth        = 9
-        RcodeNotZone        = 10
+	RcodeYXDomain       = 6
+	RcodeYXRrset        = 7
+	RcodeNXRrset        = 8
+	RcodeNotAuth        = 9
+	RcodeNotZone        = 10
 	// Tsig errors
 	TsigBadSig  = 16
 	TsigBadKey  = 17
@@ -411,8 +411,8 @@ func (rr *RR_RRSIG) String() string {
 
 type RR_NSEC struct {
 	Hdr        RR_Header
-	NextDomain string "domain-name"
-	TypeBitMap []int  "NSEC"
+	NextDomain string   "domain-name"
+	TypeBitMap []uint16 "NSEC"
 }
 
 func (rr *RR_NSEC) Header() *RR_Header {
@@ -420,7 +420,9 @@ func (rr *RR_NSEC) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC) String() string {
-	return rr.Hdr.String() + "NSEC BLAH"
+	return rr.Hdr.String() +
+		" " + rr.NextDomain +
+		" " + "bitmap"
 }
 
 type RR_DS struct {
@@ -471,8 +473,8 @@ type RR_NSEC3 struct {
 	SaltLength uint8
 	Salt       string "hex"
 	HashLength uint8
-	NextDomain string "domain-name"
-	TypeBitMap []int  "NSEC3" // &{TypeSOA,TypeDS,etc}
+	NextDomain string   "domain-name"
+	TypeBitMap []uint16 "NSEC"
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {
@@ -520,8 +522,8 @@ func (rr *RR_TKEY) Header() *RR_Header {
 }
 
 func (rr *RR_TKEY) String() string {
-        // It has no presentation format
-        return ""
+	// It has no presentation format
+	return ""
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
