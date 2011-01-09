@@ -420,9 +420,11 @@ func (rr *RR_NSEC) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC) String() string {
-	return rr.Hdr.String() +
-		" " + rr.NextDomain +
-		" " + "bitmap"
+        s := rr.Hdr.String() + " " + rr.NextDomain
+        for i:=0; i < len(rr.TypeBitMap); i++ {
+                s = s + " " + Rr_str[rr.TypeBitMap[i]]
+        }
+        return s
 }
 
 type RR_DS struct {
