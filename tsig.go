@@ -6,7 +6,9 @@ package dns
 import (
 	"crypto/hmac"
 	"strconv"
+	"strings"
 	"io"
+	"encoding/hex"
 )
 
 // Need to lookup the actual codes
@@ -17,7 +19,7 @@ const (
 
 type RR_TSIG struct {
 	Hdr        RR_Header
-	Algorithm  string   "domain-name"
+	Algorithm  string "domain-name"
 	TimeSigned uint64
 	Fudge      uint16
 	MACSize    uint16
@@ -33,12 +35,12 @@ func (rr *RR_TSIG) Header() *RR_Header {
 }
 
 func (rr *RR_TSIG) String() string {
-	// It has no presentation format
+	// It has no official presentation format
 	return rr.Hdr.String() +
 		" " + rr.Algorithm +
-		" " + "<timesigned>" +
+		" " + tsigTimeToDate(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
-		" " + "<MAC>" +
+		" " + strings.ToUpper(hex.EncodeToString([]byte(rr.MAC))) +
 		" " + strconv.Itoa(int(rr.OrigId)) +
 		" " + strconv.Itoa(int(rr.Error)) +
 		" " + rr.OtherData
@@ -53,7 +55,7 @@ type tsig_generation_fmt struct {
 	Class uint16
 	Ttl   uint32
 	// Rdata of the TSIG
-	Algorithm  string   "domain-name"
+	Algorithm  string "domain-name"
 	TimeSigned uint64
 	Fudge      uint16
 	// MACSize, MAC and OrigId excluded

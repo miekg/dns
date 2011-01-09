@@ -3,6 +3,7 @@ package dns
 import (
 	"testing"
         "fmt"
+	"time"
 )
 
 func TestTsig(t *testing.T) {
@@ -11,6 +12,8 @@ func TestTsig(t *testing.T) {
 	tsig.Hdr.Rrtype = TypeTSIG
 	tsig.Hdr.Class = ClassANY
 	tsig.Hdr.Ttl = 0
+	tsig.Fudge = 300
+	tsig.TimeSigned = uint64(time.Seconds())
 
         out := new(Msg)
         out.MsgHdr.RecursionDesired = true

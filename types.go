@@ -538,8 +538,9 @@ func timeToDate(t uint32) string {
 // Translate the TSIG time signed into a date. There is no
 // need for RFC1982 calculations as this date is 48 bits
 func tsigTimeToDate(t uint64) string {
-	// only use the lower 48 bits
-	return "TODO"
+	// only use the lower 48 bits, TODO(mg), check for 48 bit size
+	ti := time.SecondsToUTC(int64(t))
+	return ti.Format("20060102030405")
 }
 
 // Map of constructors for each RR wire type.

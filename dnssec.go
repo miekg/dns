@@ -1,5 +1,3 @@
-// Package dnssec implements all client side DNSSEC function, like
-// validation, keytag and DS calculation. 
 package dns
 
 import (
@@ -81,7 +79,6 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	if !ok {
 		return nil
 	}
-
 	owner, ok1 := WireDomainName(k.Hdr.Name)
 	if !ok1 {
 		return nil
@@ -113,6 +110,11 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
+// Generate the key material and return the private key part. Only
+// the key's algorithm field needs to be known
+func (k *RR_DNSKEY) Generate() *RR_DS {
+
+}
 
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.

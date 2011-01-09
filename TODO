@@ -10,11 +10,12 @@ Short term:
 
 Issues:
 * Separation between dnssec and dns is arbitrary, why is tsig.go of package dns?
+* escaped dots in domain names: \.
+* quoted quotes in txt records
 * Better sized buffers
 * Check the network order, it works now, but this is on Intel
 * Make the testsuite work with public DNS servers
 * shortened ipv6 addresses are not parsed correctly (maybe net issue)
-* quoted quotes in txt records
 * Convenience functions?
     - for new(RR*)
     - nsupdate
