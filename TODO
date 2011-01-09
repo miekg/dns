@@ -9,8 +9,7 @@ Short term:
 * Signature generation
 
 Issues:
-* Separation between dnssec and dns is arbitrary, why is tsig.go of package dns?
-* escaped dots in domain names: \.
+* escaped dots in names \.
 * quoted quotes in txt records
 * Better sized buffers
 * Check the network order, it works now, but this is on Intel
@@ -22,6 +21,7 @@ Issues:
 * query-time, server in string ouput of dns.Msg
    - DnsMsg when doing resolver querying, extend msg...?
    -- 
+* remove the dns.Wire*() functions
 
 Port over from LDNS:
 * ldns-rrsig

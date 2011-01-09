@@ -110,12 +110,6 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
-// Generate the key material and return the private key part. Only
-// the key's algorithm field needs to be known
-func (k *RR_DNSKEY) Generate() *RR_DS {
-
-}
-
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
