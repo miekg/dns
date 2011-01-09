@@ -442,40 +442,41 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				if off+blocks > len(msg) {
 					return len(msg), false
 				}
+                                // could be 16 bits encoded..
 				off += 2
 				for i := 0; i < blocks; i++ {
 					b := msg[off+i]
 					// Check the bits one by one, and set the type
-					if b&0x1 == 0x1 {
-						nsec[ni] = uint16(window*256 + i*8 + 7)
-						ni++
-					}
-					if b&0x2 == 0x2 {
-						nsec[ni] = uint16(window*256 + i*8 + 6)
-						ni++
-					}
-					if b&0x4 == 0x4 {
-						nsec[ni] = uint16(window*256 + i*8 + 5)
-						ni++
-					}
-					if b&0x8 == 0x8 {
-						nsec[ni] = uint16(window*256 + i*8 + 4)
-						ni++
-					}
-					if b&0x10 == 0x10 {
-						nsec[ni] = uint16(window*256 + i*8 + 3)
-						ni++
-					}
-					if b&0x20 == 0x20 {
-						nsec[ni] = uint16(window*256 + i*8 + 2)
+					if b&0x80 == 0x80 {
+						nsec[ni] = uint16(window*256 + i*8 + 0)
 						ni++
 					}
 					if b&0x40 == 0x40 {
 						nsec[ni] = uint16(window*256 + i*8 + 1)
 						ni++
 					}
-					if b&0x80 == 0x80 {
-						nsec[ni] = uint16(window*256 + i*8 + 0)
+					if b&0x20 == 0x20 {
+						nsec[ni] = uint16(window*256 + i*8 + 2)
+						ni++
+					}
+					if b&0x10 == 0x10 {
+						nsec[ni] = uint16(window*256 + i*8 + 3)
+						ni++
+					}
+					if b&0x8 == 0x8 {
+						nsec[ni] = uint16(window*256 + i*8 + 4)
+						ni++
+					}
+					if b&0x4 == 0x4 {
+						nsec[ni] = uint16(window*256 + i*8 + 5)
+						ni++
+					}
+					if b&0x2 == 0x2 {
+						nsec[ni] = uint16(window*256 + i*8 + 6)
+						ni++
+					}
+					if b&0x1 == 0x1 {
+						nsec[ni] = uint16(window*256 + i*8 + 7)
 						ni++
 					}
 				}
