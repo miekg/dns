@@ -422,6 +422,7 @@ func (rr *RR_NSEC) Header() *RR_Header {
 func (rr *RR_NSEC) String() string {
         s := rr.Hdr.String() + " " + rr.NextDomain
         for i:=0; i < len(rr.TypeBitMap); i++ {
+                // Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
                 s = s + " " + Rr_str[rr.TypeBitMap[i]]
         }
         return s
