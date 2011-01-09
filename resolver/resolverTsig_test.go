@@ -28,7 +28,7 @@ func TestResolverTsig(t *testing.T) {
         tsig.Hdr.Rrtype = dns.TypeTSIG
         tsig.Hdr.Class = dns.ClassANY
         tsig.Hdr.Ttl = 0
-        tsig.GenerateMAC(m, "geheim")
+        tsig.Generate(m, "geheim")
         // Add it to the msg
         m.Extra[0] = tsig
 

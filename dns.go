@@ -93,6 +93,9 @@ func (h *RR_Header) String() string {
 
 // Or expose the pack/unpack functions??
 
+// These were created for dnssec.go, but now that
+// this package is included again in dns, they are
+// not really needed
 // Return the wiredata of rdata portion of a RR.
 func WireRdata(r RR) ([]byte, bool) {
 	buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)
