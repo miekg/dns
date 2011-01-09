@@ -524,30 +524,6 @@ func (rr *RR_TKEY) String() string {
         return ""
 }
 
-type RR_TSIG struct {
-	Hdr        RR_Header
-	Algorithm  string    "domain-name"
-	TimeSigned [3]uint16 "TSIG"
-	Fudge      uint16
-	MACSize    uint16
-	MAC        string
-        OrigId     uint16    // msg id
-	Error      uint16
-	OtherLen   uint16
-	OtherData  string
-}
-
-func (rr *RR_TSIG) Header() *RR_Header {
-	return &rr.Hdr
-}
-
-func (rr *RR_TSIG) String() string {
-        // It has no presentation format
-	return rr.Hdr.String() +
-                " " + strconv.Itoa(int(rr.MACSize)) +
-                " " + rr.MAC
-}
-
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {

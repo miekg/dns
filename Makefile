@@ -12,18 +12,17 @@ GOFILES=\
 	types.go\
 	edns.go\
 	tsig.go\
+	dnssec.go\
 
 
 include $(GOROOT)/src/Make.pkg
 
 all: package
-	gomake -C dnssec package
 	gomake -C resolver package
 #	gomake -C strconv package
 
 dnstest:
 	gotest
-	gomake -C dnssec test
 	gomake -C resolver test
 #	gomake -C strconv test
 

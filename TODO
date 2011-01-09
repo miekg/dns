@@ -9,12 +9,13 @@ Short term:
 * Signature generation
 
 Issues:
+* Separation between dnssec and dns is arbitrary, why is tsig.go of package dns?
 * Better sized buffers
 * Check the network order, it works now, but this is on Intel
 * Make the testsuite work with public DNS servers
-* shortened ipv6 addresses are not parsed correctly (maby net issue)
+* shortened ipv6 addresses are not parsed correctly (maybe net issue)
 * quoted quotes in txt records
-* Convience functions?
+* Convenience functions?
     - for new(RR*)
     - nsupdate
 * query-time, server in string ouput of dns.Msg

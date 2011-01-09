@@ -22,7 +22,7 @@ func TestResolver(t *testing.T) {
 	ch <- DnsMsg{m, nil}
 	in := <-ch
 
-	if in.Dns.Rcode != dns.RcodeSuccess {
+	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	        t.Logf("%v\n", in)
@@ -33,7 +33,7 @@ func TestResolver(t *testing.T) {
 	ch <- DnsMsg{m, nil}
 	in = <-ch
 
-	if in.Dns.Rcode != dns.RcodeSuccess {
+	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
 	        t.Logf("%v\n", in)

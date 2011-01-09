@@ -1,6 +1,6 @@
 // Package dnssec implements all client side DNSSEC function, like
 // validation, keytag and DS calculation. 
-package dnssec
+package dns
 
 import (
 	"crypto/md5"
@@ -17,7 +17,6 @@ import (
 	"sort"
 	"strings"
 	"os"
-	"dns"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -40,22 +39,50 @@ const (
 	HashGOST94
 )
 
+// Calculate the keytag of the DNSKEY.
+func (k *RR_DNSKEY) KeyTag() uint16 {
+	var keytag int
+	switch k.Algorithm {
+	case AlgRSAMD5:
+		println("Keytag RSAMD5. Todo")
+		keytag = 0
+	default:
+		// Might encode header length too, so that
+		// we dont need to pack/unpack all the time
+		// Or a shadow structure, with the wiredata and header
+		wire, ok := WireRdata(k)
+		if !ok {
+			return 0
+		}
+		for i, v := range wire {
+			if i&1 != 0 {
+				keytag += int(v) // must be larger than uint32
+			} else {
+				keytag += int(v) << 8
+			}
+		}
+		keytag += (keytag >> 16) & 0xFFFF
+		keytag &= 0xFFFF
+	}
+	return uint16(keytag)
+}
+
 // Convert an DNSKEY record to a DS record.
-func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
-	ds := new(dns.RR_DS)
+func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
+	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
 	ds.Hdr.Ttl = k.Hdr.Ttl
 	ds.Algorithm = k.Algorithm
-	ds.DigestType = uint8(hash)
-	ds.KeyTag = KeyTag(k)
+	ds.DigestType = uint8(h)
+	ds.KeyTag = k.KeyTag()
 
-	wire, ok := dns.WireRdata(k)
+	wire, ok := WireRdata(k)
 	if !ok {
 		return nil
 	}
 
-	owner, ok1 := dns.WireDomainName(k.Hdr.Name)
+	owner, ok1 := WireDomainName(k.Hdr.Name)
 	if !ok1 {
 		return nil
 	}
@@ -68,7 +95,7 @@ func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
 	// digest buffer
 	digest := append(owner, wire...) // another copy TODO(mg)
 
-	switch hash {
+	switch h {
 	case HashSHA1:
 		s := sha1.New()
 		io.WriteString(s, string(digest))
@@ -86,41 +113,14 @@ func ToDS(k *dns.RR_DNSKEY, hash int) *dns.RR_DS {
 	return ds
 }
 
-// Calculate the keytag of the DNSKEY.
-func KeyTag(k *dns.RR_DNSKEY) uint16 {
-	var keytag int
-	switch k.Algorithm {
-	case AlgRSAMD5:
-		println("Keytag RSAMD5. Todo")
-		keytag = 0
-	default:
-		// Might encode header length too, so that
-		// we dont need to pack/unpack all the time
-		// Or a shadow structure, with the wiredata and header
-		wire, ok := dns.WireRdata(k)
-		if !ok {
-			return 0
-		}
-		for i, v := range wire {
-			if i&1 != 0 {
-				keytag += int(v) // must be larger than uint32
-			} else {
-				keytag += int(v) << 8
-			}
-		}
-		keytag += (keytag >> 16) & 0xFFFF
-		keytag &= 0xFFFF
-	}
-	return uint16(keytag)
-}
 
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
-func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
+func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	// Frist the easy checks
-	if s.KeyTag != KeyTag(k) {
+	if s.KeyTag != k.KeyTag() {
 		println(s.KeyTag)
-		println(KeyTag(k))
+		println(k.KeyTag())
 		return false
 	}
 	if s.Hdr.Class != k.Hdr.Class {
@@ -149,8 +149,8 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
-	s1 := &dns.RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
-	signeddata, ok := dns.WireRdata(s1)
+	s1 := &RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
+	signeddata, ok := WireRdata(s1)
 	if !ok {
 		return false
 	}
@@ -162,10 +162,10 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
 		switch h.Rrtype {
-		case dns.TypeNS, dns.TypeCNAME, dns.TypeSOA, dns.TypeMB, dns.TypeMG, dns.TypeMR, dns.TypePTR:
-		case dns.TypeHINFO, dns.TypeMINFO, dns.TypeMX /* dns.TypeRP, dns.TypeAFSDB, dns.TypeRT */ :
-		case dns.TypeSIG /* dns.TypePX, dns.TypeNXT /* dns.TypeNAPTR, dns.TypeKX */ :
-		case dns.TypeSRV, /* dns.TypeDNAME, dns.TypeA6 */ dns.TypeRRSIG, dns.TypeNSEC:
+		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
+		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
+		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
+		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
 			// lower case the domain rdata //
 
 		}
@@ -173,7 +173,7 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-		wire, ok1 := dns.WireRR(r)
+		wire, ok1 := WireRR(r)
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
@@ -229,12 +229,12 @@ func Verify(s *dns.RR_RRSIG, k *dns.RR_DNSKEY, rrset dns.RRset) bool {
 }
 
 // Using RFC1982 calculate if a signature period is valid
-func PeriodOK(s *dns.RR_RRSIG) bool {
+func (s *RR_RRSIG) PeriodOK() bool {
 	utc := time.UTC().Seconds()
-	modi := (int64(s.Inception) - utc) / dns.Year68
-	mode := (int64(s.Expiration) - utc) / dns.Year68
-	ti := int64(s.Inception) + (modi * dns.Year68)
-	te := int64(s.Expiration) + (mode * dns.Year68)
+	modi := (int64(s.Inception) - utc) / Year68
+	mode := (int64(s.Expiration) - utc) / Year68
+	ti := int64(s.Inception) + (modi * Year68)
+	te := int64(s.Expiration) + (mode * Year68)
 	return ti <= utc && utc <= te
 }
 
