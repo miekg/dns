@@ -244,22 +244,6 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 		BadType:
 			fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
 			return len(msg), false
-		case *reflect.ArrayValue:
-			switch f.Tag {
-			default:
-				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
-				return len(msg), false
-			case "TSIG":
-				// has a 3 byte inception time (check len?)
-				// need to do some shifting here
-				msg[off] = byte(fv.Elem(0).(*reflect.UintValue).Get() >> 8)
-				msg[off+1] = byte(fv.Elem(0).(*reflect.UintValue).Get())
-				msg[off+2] = byte(fv.Elem(1).(*reflect.UintValue).Get() >> 8)
-				msg[off+3] = byte(fv.Elem(1).(*reflect.UintValue).Get())
-				msg[off+4] = byte(fv.Elem(2).(*reflect.UintValue).Get() >> 8)
-				msg[off+5] = byte(fv.Elem(2).(*reflect.UintValue).Get())
-				off += 6
-			}
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -335,6 +319,18 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				msg[off+2] = byte(i >> 8)
 				msg[off+3] = byte(i)
 				off += 4
+			case reflect.Uint64:
+				// Only used in TSIG, where it stops as 48 bits, discard the upper 16
+				if off+6 > len(msg) {
+					return len(msg), false
+				}
+				msg[off] = byte(i >> 40)
+				msg[off+1] = byte(i >> 32)
+				msg[off+2] = byte(i >> 24)
+				msg[off+3] = byte(i >> 16)
+				msg[off+4] = byte(i >> 8)
+				msg[off+5] = byte(i)
+				off += 6
 			}
 		case *reflect.StringValue:
 			// There are multiple string encodings.
@@ -398,14 +394,6 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 		BadType:
 			fmt.Fprintf(os.Stderr, "dns: unknown packing type %v", f.Type)
 			return len(msg), false
-		case *reflect.ArrayValue:
-			switch f.Tag {
-			default:
-				fmt.Fprintf(os.Stderr, "dns: unknown IP tag %v", f.Tag)
-				return len(msg), false
-			case "TSIG":
-                                println("TODO")
-			}
 		case *reflect.SliceValue:
 			switch f.Tag {
 			default:
@@ -469,6 +457,16 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				i := uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])
 				fv.Set(uint64(i))
 				off += 4
+			case reflect.Uint64:
+				// This is *only* used in TSIG where the last 48 bits are occupied
+				// So for now, assume a uint48 (6 bytes)
+				if off+6 > len(msg) {
+					return len(msg), false
+				}
+				i := uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+					uint64(msg[off+4])<<8 | uint64(msg[off+4])
+				fv.Set(uint64(i))
+				off += 6
 			}
 		case *reflect.StringValue:
 			var s string

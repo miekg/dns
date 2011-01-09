@@ -17,12 +17,12 @@ const (
 
 type RR_TSIG struct {
 	Hdr        RR_Header
-	Algorithm  string    "domain-name"
-	TimeSigned [3]uint16 "TSIG"
+	Algorithm  string   "domain-name"
+	TimeSigned uint64
 	Fudge      uint16
 	MACSize    uint16
 	MAC        string
-        OrigId     uint16    // msg id
+	OrigId     uint16 // msg id
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string
@@ -33,12 +33,12 @@ func (rr *RR_TSIG) Header() *RR_Header {
 }
 
 func (rr *RR_TSIG) String() string {
-        // It has no presentation format
+	// It has no presentation format
 	return rr.Hdr.String() +
-                " " + rr.Algorithm +
+		" " + rr.Algorithm +
 		" " + "<timesigned>" +
 		" " + strconv.Itoa(int(rr.Fudge)) +
-                " " + "<MAC>" +
+		" " + "<MAC>" +
 		" " + strconv.Itoa(int(rr.OrigId)) +
 		" " + strconv.Itoa(int(rr.Error)) +
 		" " + rr.OtherData
@@ -53,8 +53,8 @@ type tsig_generation_fmt struct {
 	Class uint16
 	Ttl   uint32
 	// Rdata of the TSIG
-	Algorithm  string    "domain-name"
-	TimeSigned [3]uint16 "TSIG"
+	Algorithm  string   "domain-name"
+	TimeSigned uint64
 	Fudge      uint16
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
@@ -103,5 +103,8 @@ func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 // the TSIG record still attached (as the last rr in the Additional
 // section)
 func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
+	// copy the mesg, strip (and check) the tsig rr
+	// perform the opposite of Generate() and then 
+	// verify the mac
 	return false
 }
