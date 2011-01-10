@@ -342,6 +342,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				return len(msg), false
 			case "base64":
+                                // TODO(mg) use the Len as return from the conversion (not used right now)
 				b64len := base64.StdEncoding.DecodedLen(len(s))
 				_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
 				if err != nil {
@@ -558,7 +559,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				default:
 					consumed = 0 // TODO
 				}
-
+                                // TODO(mg) check return value of encoding
 				b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg[off:off+rdlength-consumed])))
 				base64.StdEncoding.Encode(b64, msg[off:off+rdlength-consumed])
 				s = string(b64)

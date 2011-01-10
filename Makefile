@@ -13,6 +13,7 @@ GOFILES=\
 	edns.go\
 	tsig.go\
 	dnssec.go\
+	keygen.go\
 
 
 include $(GOROOT)/src/Make.pkg

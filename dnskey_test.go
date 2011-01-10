@@ -5,6 +5,24 @@ import (
 	"fmt"
 )
 
+
+func TestKeyGen(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 3600
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = AlgRSASHA256
+        key.GenerateRSA(512)
+
+        fmt.Printf("%v\n", key)
+
+}
+
+
+/*
 func TestDnskey(t *testing.T) {
         return
 	// This key was generate with LDNS:
@@ -51,3 +69,4 @@ func TestDnskey(t *testing.T) {
         openssl := "135560614087352210480379313279722604826647214111257577861451621491284835543707521986085999189597017237768514876957888744370440811423088511394629855684615382349190289731989185193184712980579812986523080792122141528583964882610028199770199112837017606561901919812183422914622295620927795008308854924436086101591"
         println("OPENSSL key: what should be is: ",openssl)
 }
+*/

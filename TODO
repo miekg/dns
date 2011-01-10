@@ -2,9 +2,9 @@ Todo:
 Short term:
 * NSEC(3) secure denial of existence, support the type bitmap
     - need base32 for Nsec3
-* TSIG 
 * Parsing from strings
 * Server support 
+
 * Key generation
 * Signature generation
 
