@@ -482,11 +482,20 @@ type RR_NSEC3 struct {
 
 func (rr *RR_NSEC3) Header() *RR_Header {
 	return &rr.Hdr
-	// Salt with strings.ToUpper()
 }
 
 func (rr *RR_NSEC3) String() string {
-	return rr.Hdr.String() + "BLAH"
+        s := rr.Hdr.String()
+        s += " " + strconv.Itoa(int(rr.Hash)) +
+                " " + strconv.Itoa(int(rr.Flags)) +
+                " " + strconv.Itoa(int(rr.Iterations)) +
+                " " + strings.ToUpper(rr.Salt) +
+                " " + rr.NextDomain     // must base32?
+        for i:=0; i < len(rr.TypeBitMap); i++ {
+                // Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
+                s = s + " " + Rr_str[rr.TypeBitMap[i]]
+        }
+        return s
 }
 
 type RR_NSEC3PARAM struct {
