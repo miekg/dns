@@ -15,12 +15,20 @@ import (
         "fmt"
 )
 
-type Responder struct {
+type Server struct {
 	Addresses []string            // interfaces to use
 	Port      string              // what port to use
 	Timeout   int                 // seconds before giving up on packet
 	Tcp       bool                // use TCP
 	Mangle    func([]byte) []byte // mangle the packet, before sending
+}
+
+// Every nameserver must implement the Handler interface.
+type Responder interface {
+        // Receives the raw message content
+        ResponderUDP(c *net.UDPConn, raddr net.Addr, in []byte)
+        // Receives the raw message content
+        ResponderTCP(c *net.TCPConn, raddr net.Addr, in []byte)
 }
 
 // When communicating with a resolver, we use this structure
@@ -34,11 +42,15 @@ type DnsMsg struct {
 
 // This is a NAMESERVER
 // Communicate withit via a channel
-func (res *Responder) NewResponder() bool {
+// Interface UDPhandler - has function that gets called 
+// Interface TCPhandler - has function that gets called
+// NewResponder returns a channel, for communication (start/stop)
+// caN we use the channel for other stuff??
+func (res *Server) NewResponder(h Responder) (ch chan DnsMsg) {
 	var port string
 	if len(res.Addresses) == 0 {
 		// We cannot start responding with an addresss
-		return false
+		return nil
 	}
 	if res.Port == "" {
 		port = "53"
@@ -60,15 +72,14 @@ func (res *Responder) NewResponder() bool {
                 m = m[:n]
                 // If I don't pick off the remote addr, but do it in the Go routine
                 // I've created a race condition?? TODO(mg)
-                handlerUDP(res, c, raddr, m)
+                h.ResponderUDP(c, raddr, m)
 		c.Close()
 	}
-
-	return true
-
+	return nil
 }
 
-func handlerUDP(res *Responder, c *net.UDPConn, raddr net.Addr, in []byte) {
+// The raw packet
+func handlerUDP(c *net.UDPConn, raddr net.Addr, in []byte) {
 	// don't care what you've read, just blap a default, but put in the
 	// correct Id
         fmt.Printf("handlerUDP called!")
@@ -91,8 +102,4 @@ func handlerUDP(res *Responder, c *net.UDPConn, raddr net.Addr, in []byte) {
         m.Answer[0] = a
         out, _ := m.Pack()
         c.WriteTo(out, raddr)
-}
-
-func handlerTCP(res *Responder, c net.Conn, raddr net.Addr, in []byte) {
-
 }
