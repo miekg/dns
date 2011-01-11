@@ -41,6 +41,10 @@ type DnsMsg struct {
 	Dns   *dns.Msg
 	Error os.Error
 }
+// ^ prolly extend this so that servers can use this too. We need
+// to also encode some client side stuff in here, like client addr
+// I think that is the *only* thing we need.
+
 
 type Resolver struct {
 	Servers  []string            // servers to use
