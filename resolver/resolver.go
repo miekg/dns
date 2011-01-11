@@ -55,7 +55,7 @@ type Resolver struct {
 	Attempts int                 // lost packets before giving up on server
 	Rotate   bool                // round robin among servers
 	Tcp      bool                // use TCP
-	Mangle   func([]byte) []byte // Mangle the packet
+	Mangle   func([]byte) []byte // mangle the packet
 }
 
 // Start a new resolver as a goroutine, return the communication channel
@@ -68,10 +68,12 @@ func (res *Resolver) NewQuerier() (ch chan DnsMsg) {
 // The query function.
 func query(res *Resolver, msg chan DnsMsg) {
 	// error checking, robustness
-	var c net.Conn
-	var err os.Error
-	var in *dns.Msg
-	var port string
+	var (
+		c    net.Conn
+		err  os.Error
+		in   *dns.Msg
+		port string
+	)
 	// len(res.Server) == 0 can be perfectly valid, when setting up the resolver
 	if res.Port == "" {
 		port = "53"
@@ -91,10 +93,10 @@ func query(res *Resolver, msg chan DnsMsg) {
 
 			var cerr os.Error
 			//if len(name) >= 256 {
-                        if out.Dns.Id == 0 {
-                                // No Id sed, set it
-			        out.Dns.SetId()
-                        }
+			if out.Dns.Id == 0 {
+				// No Id sed, set it
+				out.Dns.SetId()
+			}
 			sending, ok := out.Dns.Pack()
 			if !ok {
 				msg <- DnsMsg{nil, &dns.Error{Error: packErr}}
@@ -113,9 +115,9 @@ func query(res *Resolver, msg chan DnsMsg) {
 					continue
 				}
 				if res.Tcp {
-					in, err = exchangeTcp(c, sending, res, true)
+					in, err = exchangeTCP(c, sending, res, true)
 				} else {
-					in, err = exchangeUdp(c, sending, res, true)
+					in, err = exchangeUDP(c, sending, res, true)
 				}
 
 				// Check id in.id != out.id, should be checked in the client!
@@ -180,18 +182,18 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 				// Start the AXFR
 				for {
 					if first {
-						in, cerr = exchangeTcp(c, sending, res, true)
+						in, cerr = exchangeTCP(c, sending, res, true)
 					} else {
-						in, cerr = exchangeTcp(c, sending, res, false)
+						in, cerr = exchangeTCP(c, sending, res, false)
 					}
 
 					if cerr != nil {
 						// Failed to send, try the next
 						err = cerr
-                                                c.Close()
+						c.Close()
 						continue SERVER
 					}
-                                        // if in.Dns.Id != out.Id // error
+					// if in.Dns.Id != out.Id // error
 					if first {
 						if !checkSOA(in, true) {
 							// SOA record not there...
@@ -215,7 +217,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 						}
 					}
 				}
-                                println("Should never be reached")
+				println("Should never be reached")
 				return
 			}
 			msg <- DnsMsg{nil, err}
@@ -226,10 +228,9 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 	return
 }
 
-
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchangeUdp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
 	var timeout int64
 	var attempts int
 	if r.Mangle != nil {
@@ -247,26 +248,24 @@ func exchangeUdp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	}
 	for a := 0; a < attempts; a++ {
 		if send {
-			_, err := c.Write(m)
+			err := sendUDP(c, m)
 			if err != nil {
-                                if e, ok := err.(net.Error); ok && e.Timeout() {
-                                        continue
-                                }
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					continue
+				}
 				return nil, err
 			}
 		}
 
-		c.SetReadTimeout(timeout * 1e9)         // nanoseconds
-		buf := make([]byte, dns.DefaultMsgSize) // More than enough???
-		n, err := c.Read(buf)
+		c.SetReadTimeout(timeout * 1e9) // nanoseconds
+		buf, err := recvUDP(c)
 		if err != nil {
-                        // If timeout try the next
-                        if e, ok := err.(net.Error); ok && e.Timeout() {
-                                continue
-                        }
+			if e, ok := err.(net.Error); ok && e.Timeout() {
+				continue
+			}
 			return nil, err
 		}
-		buf = buf[0:n]
+
 		in := new(dns.Msg)
 		if !in.Unpack(buf) {
 			continue
@@ -277,9 +276,9 @@ func exchangeUdp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 }
 
 // Up to res.Attempts attempts.
-func exchangeTcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
 	var timeout int64
-	var attempts, n int
+	var attempts int
 	if r.Mangle != nil {
 		m = r.Mangle(m)
 	}
@@ -294,65 +293,26 @@ func exchangeTcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 		attempts = r.Attempts
 	}
 
-	ls := make([]byte, 2) // sender length
-	lr := make([]byte, 2) // receiver length
-	var length uint16
-	ls[0] = byte(len(m) >> 8)
-	ls[1] = byte(len(m))
 	for a := 0; a < attempts; a++ {
 		// only send something when told so
 		if send {
-			// With DNS over TCP we first send the length
-			_, err := c.Write(ls)
+			err := sendTCP(c, m)
 			if err != nil {
-                                if e, ok := err.(net.Error); ok && e.Timeout() {
-                                        continue
-                                }
-				return nil, err
-			}
-
-			// And then send the message
-			_, err = c.Write(m)
-			if err != nil {
-                                if e, ok := err.(net.Error); ok && e.Timeout() {
-                                        continue
-                                }
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					continue
+				}
 				return nil, err
 			}
 		}
 
 		c.SetReadTimeout(timeout * 1e9) // nanoseconds
 		// The server replies with two bytes length
-		_, err := c.Read(lr)
+		buf, err := recvTCP(c)
 		if err != nil {
-                        if e, ok := err.(net.Error); ok && e.Timeout() {
-                                continue
-                        }
-			return nil, err
-		}
-		length = uint16(lr[0])<<8 | uint16(lr[1])
-                if length == 0 {
-                        return nil, &dns.Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
-                }
-		buf := make([]byte, length)
-
-		n, err = c.Read(buf)
-		if err != nil {
-                        if e, ok := err.(net.Error); ok && e.Timeout() {
-                                continue
-                        }
-			return nil, err
-		}
-		i := n
-		if i < int(length) {
-			n, err = c.Read(buf[i:])
-			if err != nil {
-                                if e, ok := err.(net.Error); ok && e.Timeout() {
-                                        continue
-                                }
-				return nil, err
+			if e, ok := err.(net.Error); ok && e.Timeout() {
+				continue
 			}
-			i += n
+			return nil, err
 		}
 		in := new(dns.Msg)
 		if !in.Unpack(buf) {
@@ -361,6 +321,69 @@ func exchangeTcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 		return in, nil
 	}
 	return nil, &dns.Error{Error: servErr}
+}
+
+
+func sendUDP(c net.Conn, m []byte) os.Error {
+        _, err := c.Write(m)
+        if err != nil {
+                return err
+        }
+        return nil
+}
+
+func recvUDP(c net.Conn) ([]byte, os.Error) {
+        m := make([]byte, dns.DefaultMsgSize) // More than enough???
+        n, err := c.Read(m)
+        if err != nil {
+                return nil, err
+        }
+        m = m[:n]
+        return m, nil
+}
+
+func sendTCP(c net.Conn, m []byte) os.Error {
+        l := make([]byte, 2)
+        l[0] = byte(len(m) >> 8)
+        l[1] = byte(len(m))
+        // First we send the length
+        _, err := c.Write(l)
+        if err != nil {
+                return err
+        }
+        // And the the message
+        _, err = c.Write(m)
+        if err != nil {
+                return err
+        }
+        return nil
+}
+
+func recvTCP(c net.Conn) ([]byte, os.Error) {
+        l := make([]byte, 2) // receiver length
+        // The server replies with two bytes length
+        _, err := c.Read(l)
+        if err != nil {
+                return nil,err
+        }
+        length := uint16(l[0])<<8 | uint16(l[1])
+        if length == 0 {
+                return nil, &dns.Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
+        }
+        m := make([]byte, length)
+        n, cerr := c.Read(m)
+        if cerr != nil {
+                return nil, cerr
+        }
+        i := n
+        if i < int(length) {
+                n, err = c.Read(m[i:])
+                if err != nil {
+                        return nil, err
+                }
+                i += n
+        }
+        return m, nil
 }
 
 // Check if he SOA record exists in the Answer section of 

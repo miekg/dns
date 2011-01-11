@@ -27,6 +27,8 @@ package dns
 
 import (
 	"strconv"
+        "os"
+        "net"
 )
 
 const Year68 = 2 << (32 - 1)
@@ -91,11 +93,54 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-// Or expose the pack/unpack functions??
+func SendTCP(c net.Conn, m []byte) os.Error {
+        l := make([]byte, 2)
+        l[0] = byte(len(m) >> 8)
+        l[1] = byte(len(m))
+        // First we send the length
+        _, err := c.Write(l)
+        if err != nil {
+                return err
+        }
+        // And the the message
+        _, err = c.Write(m)
+        if err != nil {
+                return err
+        }
+        return nil
+}
 
+func RecvTCP(c net.Conn) ([]byte, os.Error) {
+        l := make([]byte, 2) // receiver length
+        // The server replies with two bytes length
+        _, err := c.Read(l)
+        if err != nil {
+                return nil,err
+        }
+        length := uint16(l[0])<<8 | uint16(l[1])
+        if length == 0 {
+                return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
+        }
+        m := make([]byte, length)
+        n, cerr := c.Read(m)
+        if cerr != nil {
+                return nil, cerr
+        }
+        i := n
+        if i < int(length) {
+                n, err = c.Read(m[i:])
+                if err != nil {
+                        return nil, err
+                }
+                i += n
+        }
+        return m, nil
+}
+
+// Or expose the pack/unpack functions??
 // These were created for dnssec.go, but now that
-// this package is included again in dns, they are
-// not really needed
+// that package is included again in dns, they are
+// not really needed. These will be removed asap.
 // Return the wiredata of rdata portion of a RR.
 func WireRdata(r RR) ([]byte, bool) {
 	buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)

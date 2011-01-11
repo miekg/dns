@@ -20,11 +20,13 @@ include $(GOROOT)/src/Make.pkg
 
 all: package
 	gomake -C resolver package
+	gomake -C responder package
 #	gomake -C strconv package
 
 dnstest:
 	gotest
 	gomake -C resolver test
+	gomake -C responder test
 #	gomake -C strconv test
 
 _examples:
