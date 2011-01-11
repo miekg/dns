@@ -58,7 +58,9 @@ type Resolver struct {
 	Mangle   func([]byte) []byte // mangle the packet
 }
 
-// Start a new resolver as a goroutine, return the communication channel
+// Start a new resolver as a goroutine, return the communication channel.
+// Note the a limit amount of sanity checking is done. There is for instance
+// no query id matching.
 func (res *Resolver) NewQuerier() (ch chan DnsMsg) {
 	ch = make(chan DnsMsg)
 	go query(res, ch)

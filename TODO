@@ -5,6 +5,7 @@ Short term:
 * Server support 
 * Signature generation
 * Testsuite
+* Cleanup the code
 * use the responder idea from GRONG
     so we then have  dns/resolver  - asking
     and              dns/responder - answering
