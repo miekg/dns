@@ -5,7 +5,6 @@ all:
 	gomake -C dnssectest
 	gomake -C axfr
 	gomake -C notify
-	gomake -C zlutser
 
 clean:
 	gomake -C mx clean
@@ -14,4 +13,3 @@ clean:
 	gomake -C dnssectest clean
 	gomake -C axfr clean
 	gomake -C notify clean
-	gomake -C zlutser clean

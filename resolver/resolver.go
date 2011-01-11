@@ -113,9 +113,9 @@ func query(res *Resolver, msg chan DnsMsg) {
 					continue
 				}
 				if res.Tcp {
-					in, err = exchange_tcp(c, sending, res, true)
+					in, err = exchangeTcp(c, sending, res, true)
 				} else {
-					in, err = exchange_udp(c, sending, res, true)
+					in, err = exchangeUdp(c, sending, res, true)
 				}
 
 				// Check id in.id != out.id, should be checked in the client!
@@ -180,9 +180,9 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 				// Start the AXFR
 				for {
 					if first {
-						in, cerr = exchange_tcp(c, sending, res, true)
+						in, cerr = exchangeTcp(c, sending, res, true)
 					} else {
-						in, cerr = exchange_tcp(c, sending, res, false)
+						in, cerr = exchangeTcp(c, sending, res, false)
 					}
 
 					if cerr != nil {
@@ -229,7 +229,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeUdp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
 	var timeout int64
 	var attempts int
 	if r.Mangle != nil {
@@ -277,7 +277,7 @@ func exchange_udp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Er
 }
 
 // Up to res.Attempts attempts.
-func exchange_tcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeTcp(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
 	var timeout int64
 	var attempts, n int
 	if r.Mangle != nil {
