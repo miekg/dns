@@ -12,11 +12,13 @@ import (
 	"os"
 	"net"
 	"dns"
-        "fmt"
+	"fmt"
 )
+// Some helper function for sending tcp/udp queries, like those
+// in resolver.go, but then exported?
 
 type Server struct {
-	Addresses []string            // interfaces to use
+	Address string              // interface to use, for multiple interfaces, use multiple servers
 	Port      string              // what port to use
 	Timeout   int                 // seconds before giving up on packet
 	Tcp       bool                // use TCP
@@ -25,31 +27,20 @@ type Server struct {
 
 // Every nameserver must implement the Handler interface.
 type Responder interface {
-        // Receives the raw message content
-        ResponderUDP(c *net.UDPConn, raddr net.Addr, in []byte)
-        // Receives the raw message content
-        ResponderTCP(c *net.TCPConn, raddr net.Addr, in []byte)
-}
-
-// When communicating with a resolver, we use this structure
-// to send packets to it, for sending Error must be nil.
-// A resolver responds with a reply packet and a possible error.
-// Sending a nil message instructs to resolver to stop.
-type DnsMsg struct {
-	Dns   *dns.Msg
-	Error os.Error
+	// Receives the raw message content
+	ResponderUDP(c *net.UDPConn, raddr net.Addr, in []byte)
+	// Receives the raw message content
+	ResponderTCP(c *net.TCPConn, raddr net.Addr, in []byte)
 }
 
 // This is a NAMESERVER
-// Communicate withit via a channel
-// Interface UDPhandler - has function that gets called 
-// Interface TCPhandler - has function that gets called
+// Stop it by sending it true over the channel
 // NewResponder returns a channel, for communication (start/stop)
 // caN we use the channel for other stuff??
-func (res *Server) NewResponder(h Responder) (ch chan DnsMsg) {
+func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	var port string
-	if len(res.Addresses) == 0 {
-		// We cannot start responding with an addresss
+	if len(res.Address) == 0 {
+		// We cannot start responding without an addresss
 		return nil
 	}
 	if res.Port == "" {
@@ -57,49 +48,50 @@ func (res *Server) NewResponder(h Responder) (ch chan DnsMsg) {
 	} else {
 		port = res.Port
 	}
-	// TODO(mg) handle multiple addresses
 	switch res.Tcp {
 	case true:
-
+                /* Todo tcp conn. */
 	case false:
-		udpaddr, _ := net.ResolveUDPAddr(res.Addresses[0] + ":" + port)
+		udpaddr, _ := net.ResolveUDPAddr(res.Address + ":" + port)
 		c, _ := net.ListenUDP("udp", udpaddr)
-                m := make([]byte, 4096)
-                n, raddr, err := c.ReadFrom(m)
-                if err != nil {
-                        //continue
-                }
-                m = m[:n]
-                // If I don't pick off the remote addr, but do it in the Go routine
-                // I've created a race condition?? TODO(mg)
-                h.ResponderUDP(c, raddr, m)
-		c.Close()
+	foreverudp:
+		for {
+			select {
+			case <-ch:
+				c.Close()
+				break foreverudp
+			default:
+				m := make([]byte, 4096) // Can we take this out of this loop TODO(mg)
+				n, raddr, err := c.ReadFrom(m)
+				if err != nil {
+					//continue
+				}
+				m = m[:n]
+				go h.ResponderUDP(c, raddr, m)
+			}
+		}
 	}
 	return nil
 }
 
 // The raw packet
-func handlerUDP(c *net.UDPConn, raddr net.Addr, in []byte) {
-	// don't care what you've read, just blap a default, but put in the
-	// correct Id
-        fmt.Printf("handlerUDP called!")
-
-	inmsg := new(dns.Msg)
-	inmsg.Unpack(in)
-        fmt.Printf("%v\n", inmsg)
+func handlerUDP(c *net.UDPConn, raddr net.Addr, i []byte) {
+	in := new(dns.Msg)
+	in.Unpack(i)
+	fmt.Printf("%v\n", in)
 
 	m := new(dns.Msg)
-	m.MsgHdr.Id = inmsg.MsgHdr.Id
+	m.MsgHdr.Id = in.MsgHdr.Id // Copy the Id over
 	m.MsgHdr.Authoritative = true
-        m.MsgHdr.Response = true
+	m.MsgHdr.Response = true
 	m.MsgHdr.Rcode = dns.RcodeSuccess
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{"miek.nl.", dns.TypeTXT, dns.ClassINET}
 	m.Answer = make([]dns.RR, 1)
-        a := new(dns.RR_TXT)
-        a.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 3600}
-        a.Txt = "dit dan"
-        m.Answer[0] = a
-        out, _ := m.Pack()
-        c.WriteTo(out, raddr)
+	a := new(dns.RR_TXT)
+	a.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 3600}
+	a.Txt = "dit dan"
+	m.Answer[0] = a
+	out, _ := m.Pack()
+	c.WriteTo(out, raddr)
 }

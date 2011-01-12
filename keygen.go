@@ -21,7 +21,7 @@ func (r *RR_DNSKEY) GenerateRSA(bits int) (*rsa.PrivateKey, os.Error) {
         case AlgRSASHA1: fallthrough
         case AlgRSASHA256:
                 if bits < 512 || bits > 4096 {
-                        return nil, &Error{Error: "Size not in range [512..4096]"}
+                        //return nil, &Error{Error: "Size not in range [512..4096]"}
                 }
         case AlgRSASHA512:
                 if bits < 1024 || bits > 4096 {
