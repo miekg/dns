@@ -19,10 +19,10 @@ import (
 
 type Server struct {
 	Address string              // interface to use, for multiple interfaces, use multiple servers
-	Port      string              // what port to use
-	Timeout   int                 // seconds before giving up on packet
-	Tcp       bool                // use TCP
-	Mangle    func([]byte) []byte // mangle the packet, before sending
+	Port    string              // what port to use
+	Timeout int                 // seconds before giving up on packet
+	Tcp     bool                // use TCP
+	Mangle  func([]byte) []byte // mangle the packet, before sending
 }
 
 // Every nameserver must implement the Handler interface.
@@ -50,7 +50,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	}
 	switch res.Tcp {
 	case true:
-                /* Todo tcp conn. */
+		/* Todo tcp conn. */
 	case false:
 		udpaddr, _ := net.ResolveUDPAddr(res.Address + ":" + port)
 		c, _ := net.ListenUDP("udp", udpaddr)
@@ -58,6 +58,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 		for {
 			select {
 			case <-ch:
+				ch <- true // last echo
 				c.Close()
 				break foreverudp
 			default:
