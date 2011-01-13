@@ -34,7 +34,7 @@ func TestResolverEdns(t *testing.T) {
 	m.Extra = make([]dns.RR, 1)
 	m.Extra[0] = edns
 
-	ch <- DnsMsg{m, nil}
+	ch <- Msg{m, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
@@ -45,6 +45,6 @@ func TestResolverEdns(t *testing.T) {
 	} else {
 		fmt.Printf("Failed to get a good anwer")
 	}
-	ch <- DnsMsg{nil, nil}
+	ch <- Msg{nil, nil}
 	<-ch // wait for ch to close channel
 }

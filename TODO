@@ -2,17 +2,9 @@ Todo:
 Short term:
 * NSEC3 - need base32 for Nsec3
 * Parsing from strings
-* Server support 
 * Signature generation
 * Testsuite
 * Cleanup the code
-* use the responder idea from GRONG
-    so we then have  dns/resolver  - asking
-    and              dns/responder - answering
-
-For servers we might need client IP and stuff -- look how
-we need to encode this in the DnsMsg (which is the type of
-the channel we use to comm. with resolvers)
 
 Issues:
 * escaped dots in names \.

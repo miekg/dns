@@ -22,14 +22,14 @@ type Server struct {
 	Mangle  func([]byte) []byte // mangle the packet, before sending
 }
 
-type serverMsgUDP struct {
+type MsgUDP struct {
 	c    *net.UDPConn // connection
 	addr *net.UDPAddr // remote address
 	msg  []byte       // raw dns message
 	err  os.Error     // any errors
 }
 
-type serverMsgTCP struct {
+type MsgTCP struct {
 	c   *net.TCPConn // connection
 	msg []byte       // raw dns message
 	err os.Error     // any errors
@@ -60,7 +60,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	}
 	switch res.Tcp {
 	case true:
-		tch := make(chan serverMsgTCP)
+		tch := make(chan MsgTCP)
 		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
 		go listenerTCP(a, tch)
 	foreverTCP:
@@ -79,7 +79,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 		}
 
 	case false:
-		uch := make(chan serverMsgUDP)
+		uch := make(chan MsgUDP)
 		a, _ := net.ResolveUDPAddr(res.Address + ":" + port)
 		go listenerUDP(a, uch)
 	foreverUDP:
@@ -99,7 +99,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	return nil
 }
 
-func listenerUDP(a *net.UDPAddr, ch chan serverMsgUDP) {
+func listenerUDP(a *net.UDPAddr, ch chan MsgUDP) {
 	c, _ := net.ListenUDP("udp", a)
 	// check error TODO(mg)
 	for {
@@ -110,11 +110,11 @@ func listenerUDP(a *net.UDPAddr, ch chan serverMsgUDP) {
 		}
 		m = m[:n]
 		// if closed(ch) c.Close() TODO(mg)
-		ch <- serverMsgUDP{c, radd, m, nil}
+		ch <- MsgUDP{c, radd, m, nil}
 	}
 }
 
-func listenerTCP(a *net.TCPAddr, ch chan serverMsgTCP) {
+func listenerTCP(a *net.TCPAddr, ch chan MsgTCP) {
 	t, _ := net.ListenTCP("tcp", a)
 	for {
 		l := make([]byte, 2) // receiver length
@@ -147,7 +147,7 @@ func listenerTCP(a *net.TCPAddr, ch chan serverMsgTCP) {
 			}
 			i += n
 		}
-		ch <- serverMsgTCP{c, m, nil}
+		ch <- MsgTCP{c, m, nil}
 	}
 }
 

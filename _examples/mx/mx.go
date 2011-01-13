@@ -26,7 +26,7 @@ func main() {
         m.Question = make([]dns.Question, 1)
         m.Question[0] = dns.Question{os.Args[1], dns.TypeMX, dns.ClassINET}
 
-        qr <- resolver.DnsMsg{m, nil}
+        qr <- resolver.Msg{m, nil}
         in := <-qr
         if in.Dns != nil {
                 if in.Dns.Rcode != dns.RcodeSuccess {
@@ -42,6 +42,6 @@ func main() {
         }
 
         // Stop the resolver, send it a null mesg
-        qr <- resolver.DnsMsg{nil, nil}
+        qr <- resolver.Msg{nil, nil}
         <-qr
 }

@@ -19,7 +19,7 @@ func TestResolver(t *testing.T) {
 
 	// ask something
 	m.Question[0] = dns.Question{"miek.nl", dns.TypeSOA, dns.ClassINET}
-	ch <- DnsMsg{m, nil}
+	ch <- Msg{m, nil}
 	in := <-ch
 
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
@@ -30,7 +30,7 @@ func TestResolver(t *testing.T) {
 
 	// ask something
 	m.Question[0] = dns.Question{"www.nlnetlabs.nl", dns.TypeRRSIG, dns.ClassINET}
-	ch <- DnsMsg{m, nil}
+	ch <- Msg{m, nil}
 	in = <-ch
 
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
@@ -41,6 +41,6 @@ func TestResolver(t *testing.T) {
                 fmt.Printf("%v\n", in.Dns)
         }
 
-	ch <- DnsMsg{nil, nil}
+	ch <- Msg{nil, nil}
         <-ch
 }

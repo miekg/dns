@@ -89,7 +89,7 @@ FLAGS:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
                 m.SetId()
-		qr <- resolver.DnsMsg{m, nil}
+		qr <- resolver.Msg{m, nil}
 		in := <-qr
 		if in.Dns != nil {
                         if m.Id != in.Dns.Id {
@@ -100,6 +100,6 @@ FLAGS:
                         fmt.Printf("%v\n", in.Error.String())
                 }
 	}
-	qr <- resolver.DnsMsg{nil, nil}
+	qr <- resolver.Msg{nil, nil}
 	<-qr
 }

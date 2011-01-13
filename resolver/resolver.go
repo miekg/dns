@@ -17,7 +17,7 @@
 //        m.MsgHdr.Recursion_desired = true   // header bits
 //        m.Question = make([]Question, 1)    // 1 RR in question sec.
 //        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        ch <- DnsMsg{m, nil}                // send the query
+//        ch <- Msg{m, nil}                   // send the query
 //        in := <-ch                          // wait for reply
 //
 // Note that message id checking is left to the caller
@@ -37,7 +37,7 @@ const servErr = "No servers could be reached"
 // to send packets to it, for sending Error must be nil.
 // A resolver responds with a reply packet and a possible error.
 // Sending a nil message instructs to resolver to stop.
-type DnsMsg struct {
+type Msg struct {
 	Dns   *dns.Msg
 	Error os.Error
 }
@@ -61,14 +61,14 @@ type Resolver struct {
 // Start a new resolver as a goroutine, return the communication channel.
 // Note the a limit amount of sanity checking is done. There is for instance
 // no query id matching.
-func (res *Resolver) NewQuerier() (ch chan DnsMsg) {
-	ch = make(chan DnsMsg)
+func (res *Resolver) NewQuerier() (ch chan Msg) {
+	ch = make(chan Msg)
 	go query(res, ch)
 	return
 }
 
 // The query function.
-func query(res *Resolver, msg chan DnsMsg) {
+func query(res *Resolver, msg chan Msg) {
 	// error checking, robustness
 	var (
 		c    net.Conn
@@ -88,7 +88,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 		case out := <-msg: //msg received
 			if out.Dns == nil {
 				// nil message, quit the goroutine
-				msg <- DnsMsg{nil, nil}
+				msg <- Msg{nil, nil}
 				close(msg)
 				return
 			}
@@ -101,7 +101,7 @@ func query(res *Resolver, msg chan DnsMsg) {
 			}
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- DnsMsg{nil, &dns.Error{Error: packErr}}
+				msg <- Msg{nil, &dns.Error{Error: packErr}}
 				continue
 			}
 
@@ -129,9 +129,9 @@ func query(res *Resolver, msg chan DnsMsg) {
 				}
 			}
 			if err != nil {
-				msg <- DnsMsg{nil, err}
+				msg <- Msg{nil, err}
 			} else {
-				msg <- DnsMsg{in, nil}
+				msg <- Msg{in, nil}
 			}
 		}
 	}
@@ -141,13 +141,13 @@ func query(res *Resolver, msg chan DnsMsg) {
 // Start a new xfr as a goroutine, return a channel.
 // Channel will be closed when the axfr is finished, until
 // that time new messages will appear on the channel
-func (res *Resolver) NewXfer() (ch chan DnsMsg) {
-	ch = make(chan DnsMsg)
+func (res *Resolver) NewXfer() (ch chan Msg) {
+	ch = make(chan Msg)
 	go axfr(res, ch)
 	return
 }
 
-func axfr(res *Resolver, msg chan DnsMsg) {
+func axfr(res *Resolver, msg chan Msg) {
 	var port string
 	var err os.Error
 	var in *dns.Msg
@@ -162,7 +162,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 		case out := <-msg: // msg received
 			if out.Dns == nil {
 				// stop
-				msg <- DnsMsg{nil, nil}
+				msg <- Msg{nil, nil}
 				close(msg)
 				return
 			}
@@ -170,7 +170,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 			out.Dns.SetId()
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- DnsMsg{nil, &dns.Error{Error: packErr}}
+				msg <- Msg{nil, &dns.Error{Error: packErr}}
 			}
 		SERVER:
 			for i := 0; i < len(res.Servers); i++ {
@@ -208,12 +208,12 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 					if !first {
 						if !checkSOA(in, false) {
 							// Soa record not the last one
-							msg <- DnsMsg{in, nil}
+							msg <- Msg{in, nil}
 							continue
 							// next
 						} else {
 							c.Close()
-							msg <- DnsMsg{in, nil}
+							msg <- Msg{in, nil}
 							close(msg)
 							return
 						}
@@ -222,7 +222,7 @@ func axfr(res *Resolver, msg chan DnsMsg) {
 				println("Should never be reached")
 				return
 			}
-			msg <- DnsMsg{nil, err}
+			msg <- Msg{nil, err}
 			close(msg)
 			return
 		}

@@ -33,7 +33,7 @@ func TestResolverTsig(t *testing.T) {
         m.Extra[0] = tsig
 
 
-	ch <- DnsMsg{m, nil}
+	ch <- Msg{m, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
@@ -44,6 +44,6 @@ func TestResolverTsig(t *testing.T) {
 	} else {
 		fmt.Printf("Failed to get a good anwer")
 	}
-	ch <- DnsMsg{nil, nil}
+	ch <- Msg{nil, nil}
 	<-ch // wait for ch to close channel
 }

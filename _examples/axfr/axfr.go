@@ -15,7 +15,7 @@ func main() {
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{"atoom.net", dns.TypeAXFR, dns.ClassINET}
 
-        ch <- resolver.DnsMsg{m, nil}
+        ch <- resolver.Msg{m, nil}
 	for dm := range ch {
                 fmt.Printf("%v\n",dm.Dns)
         }

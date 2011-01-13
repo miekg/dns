@@ -16,7 +16,7 @@ func TestAXFR(t *testing.T) {
         m.Question[0] = dns.Question{"miek.nl", dns.TypeAXFR, dns.ClassINET}
 	//m.Question[0] = dns.Question{"atoom.net", dns.TypeAXFR, dns.ClassINET}
 
-        ch <- DnsMsg{m, nil}
+        ch <- Msg{m, nil}
 	for dm := range ch {
                 var _ = dm
                 /* fmt.Printf("%v\n",dm.Dns) */
