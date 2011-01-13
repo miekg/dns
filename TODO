@@ -3,6 +3,7 @@ Short term:
 * NSEC3 - need base32 for Nsec3
 * Parsing from strings
 * Signature generation
+* private key to privkey format 1.3
 * Testsuite
 * Cleanup the code
 
@@ -17,12 +18,11 @@ Issues:
     - for new(RR*)
     - nsupdate
 * query-time, server in string ouput of dns.Msg
-   - DnsMsg when doing resolver querying, extend msg...?
+   - resolver.Msg when doing resolver querying, extend msg...?
    -- 
-* remove the dns.Wire*() functions
-* Fix remaining records: LOC, NAPTR 'n stuff. Checkit
+* remove the dns.Wire*() functions and fixe dnssec.go to make it work
+* Fix remaining records: LOC, NAPTR 'n stuff. 
 
 Port over from LDNS:
 * ldns-rrsig
 * ldns-keygen - generate a key - more server side
-
