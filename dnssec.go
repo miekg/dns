@@ -110,6 +110,11 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
+// Sign rrset with k and return the signature RR.
+func (k *RR_DNSKEY) Sign(rrset RRset) (*RR_RRSIG) {
+        return nil
+}
+
 // Validate an rrset with the signature and key. This is the
 // cryptographic test, the validity period most be check separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
