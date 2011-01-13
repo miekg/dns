@@ -1,8 +1,9 @@
 Alternative (more granular) approach to a DNS library.
 
-Completely usable as a DNS client library. Most widely used Resource
+Completely usable as a DNS library. Most widely used Resource
 Records are supported. DNSSEC types are too (except NSEC3, for now). EDNS0
 is (see edns.go), UDP/TCP queries, TSIG, AXFR (and IXFR probably) too.
+Both client and server side programs are supported.
 
 Installation is done by running: ./install
 
