@@ -2,6 +2,7 @@ Todo:
 Short term:
 * NSEC3 - need base32 for Nsec3
 * Parsing from strings, going with goyacc and own lexer
+    -- develop this is own package, then fold back to dns package
 * private key to privkey format 1.3, io.Writer kind of stuff
 * Signature generation
 * Testsuite - make it slightly better
