@@ -12,10 +12,7 @@ import (
 	"os"
 	"net"
 	"dns"
-	"fmt"
 )
-// Some helper function for sending tcp/udp queries, like those
-// in resolver.go, but then exported?
 
 type Server struct {
 	Address string              // interface to use, for multiple interfaces, use multiple servers
@@ -25,12 +22,25 @@ type Server struct {
 	Mangle  func([]byte) []byte // mangle the packet, before sending
 }
 
+type serverMsgUDP struct {
+	c    *net.UDPConn // connection
+	addr *net.UDPAddr // remote address
+	msg  []byte       // raw dns message
+	err  os.Error     // any errors
+}
+
+type serverMsgTCP struct {
+	c   *net.TCPConn // connection
+	msg []byte       // raw dns message
+	err os.Error     // any errors
+}
+
 // Every nameserver must implement the Handler interface.
 type Responder interface {
 	// Receives the raw message content
-	ResponderUDP(c *net.UDPConn, raddr net.Addr, in []byte)
+	ResponderUDP(c *net.UDPConn, a *net.UDPAddr, in []byte)
 	// Receives the raw message content
-	ResponderTCP(c *net.TCPConn, raddr net.Addr, in []byte)
+	ResponderTCP(c *net.TCPConn, in []byte)
 }
 
 // This is a NAMESERVER
@@ -50,49 +60,120 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	}
 	switch res.Tcp {
 	case true:
-		/* Todo tcp conn. */
+                tch := make(chan serverMsgTCP)
+                a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
+                go listenerTCP(a, tch)
+        foreverTCP:
+		for {
+			select {
+			case <-ch:
+				ch <- true
+				break foreverTCP
+			case s := <-tch:
+				if s.err != nil {
+					//continue
+				}
+				go h.ResponderTCP(s.c, s.msg)
+			}
+		}
+
 	case false:
-		udpaddr, _ := net.ResolveUDPAddr(res.Address + ":" + port)
-		c, _ := net.ListenUDP("udp", udpaddr)
-	foreverudp:
+		uch := make(chan serverMsgUDP)
+		a, _ := net.ResolveUDPAddr(res.Address + ":" + port)
+		go listenerUDP(a, uch)
+	foreverUDP:
 		for {
 			select {
 			case <-ch:
 				ch <- true // last echo
-				c.Close()
-				break foreverudp
-			default:
-				m := make([]byte, 4096) // Can we take this out of this loop TODO(mg)
-				n, raddr, err := c.ReadFrom(m)
-				if err != nil {
+				break foreverUDP
+			case s := <-uch:
+				if s.err != nil {
 					//continue
 				}
-				m = m[:n]
-				go h.ResponderUDP(c, raddr, m)
+				go h.ResponderUDP(s.c, s.addr, s.msg)
 			}
 		}
 	}
 	return nil
 }
 
-// The raw packet
-func handlerUDP(c *net.UDPConn, raddr net.Addr, i []byte) {
-	in := new(dns.Msg)
-	in.Unpack(i)
-	fmt.Printf("%v\n", in)
+func listenerUDP(a *net.UDPAddr, ch chan serverMsgUDP) {
+	c, _ := net.ListenUDP("udp", a)
+	// check error TODO(mg)
+	for {
+		m := make([]byte, dns.DefaultMsgSize) // TODO(mg) out of this loop?
+		n, radd, err := c.ReadFromUDP(m)
+		if err != nil {
+			// hmm
+		}
+		m = m[:n]
+		// if closed(ch) c.Close() TODO(mg)
+		ch <- serverMsgUDP{c, radd, m, nil}
+	}
+}
 
-	m := new(dns.Msg)
-	m.MsgHdr.Id = in.MsgHdr.Id // Copy the Id over
-	m.MsgHdr.Authoritative = true
-	m.MsgHdr.Response = true
-	m.MsgHdr.Rcode = dns.RcodeSuccess
-	m.Question = make([]dns.Question, 1)
-	m.Question[0] = dns.Question{"miek.nl.", dns.TypeTXT, dns.ClassINET}
-	m.Answer = make([]dns.RR, 1)
-	a := new(dns.RR_TXT)
-	a.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 3600}
-	a.Txt = "dit dan"
-	m.Answer[0] = a
-	out, _ := m.Pack()
-	c.WriteTo(out, raddr)
+func listenerTCP(a *net.TCPAddr, ch chan serverMsgTCP) {
+	t, _ := net.ListenTCP("tcp", a)
+	for {
+		l := make([]byte, 2) // receiver length
+		c, err := t.AcceptTCP()
+		var _ = err // handle err TODO(mg)
+
+		n, cerr := c.Read(l)
+		if err != nil {
+			// Send err mesg
+		}
+		length := uint16(l[0])<<8 | uint16(l[1])
+		if length == 0 {
+			// Send err mesg
+			//return nil, &dns.Error{Error: "received nil msg length", Server: c.RemoteAddr(
+		}
+
+		m := make([]byte, length)
+
+		n, cerr = c.Read(m)
+		if cerr != nil {
+			//send msg  TODO(mg)
+			//return nil, cerr
+		}
+		i := n
+		if i < int(length) {
+			n, err = c.Read(m[i:])
+			if err != nil {
+				//send err
+				//return nil, err
+			}
+			i += n
+		}
+		ch <- serverMsgTCP{c, m, nil}
+	}
+}
+
+// Send a raw msg over a TCP connection
+func SendTCP(m []byte, c *net.TCPConn) os.Error {
+	l := make([]byte, 2)
+	l[0] = byte(len(m) >> 8)
+	l[1] = byte(len(m))
+	// First we send the length
+	_, err := c.Write(l)
+	if err != nil {
+		return err
+	}
+	// And the the message
+	_, err = c.Write(m)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// if we do tcp we should also provide an udp version
+// First the message TODO(mg)
+func SendUDP(m []byte, c *net.UDPConn, a *net.UDPAddr) os.Error {
+	_, err := c.WriteTo(m, a)
+	if err != nil {
+		return err
+	}
+	return nil
 }

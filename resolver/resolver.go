@@ -250,7 +250,7 @@ func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	}
 	for a := 0; a < attempts; a++ {
 		if send {
-			err := sendUDP(c, m)
+			err := sendUDP(m, c)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -298,7 +298,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	for a := 0; a < attempts; a++ {
 		// only send something when told so
 		if send {
-			err := sendTCP(c, m)
+			err := sendTCP(m,c)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -325,8 +325,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	return nil, &dns.Error{Error: servErr}
 }
 
-
-func sendUDP(c net.Conn, m []byte) os.Error {
+func sendUDP(m []byte,c net.Conn) os.Error {
         _, err := c.Write(m)
         if err != nil {
                 return err
@@ -344,7 +343,7 @@ func recvUDP(c net.Conn) ([]byte, os.Error) {
         return m, nil
 }
 
-func sendTCP(c net.Conn, m []byte) os.Error {
+func sendTCP(m []byte, c net.Conn) os.Error {
         l := make([]byte, 2)
         l[0] = byte(len(m) >> 8)
         l[1] = byte(len(m))
