@@ -1,10 +1,10 @@
 Todo:
 Short term:
 * NSEC3 - need base32 for Nsec3
-* Parsing from strings
+* Parsing from strings, going with goyacc and own lexer
+* private key to privkey format 1.3, io.Writer kind of stuff
 * Signature generation
-* private key to privkey format 1.3
-* Testsuite
+* Testsuite - make it slightly better
 * Cleanup the code
 
 Issues:
@@ -17,12 +17,11 @@ Issues:
 * Convenience functions?
     - for new(RR*)
     - nsupdate
+    - printing??
 * query-time, server in string ouput of dns.Msg
    - resolver.Msg when doing resolver querying, extend msg...?
-   -- 
 * remove the dns.Wire*() functions and fixe dnssec.go to make it work
-* Fix remaining records: LOC, NAPTR 'n stuff. 
+* Fix remaining records: LOC, NAPTR, ..., ...
 
 Port over from LDNS:
-* ldns-rrsig
-* ldns-keygen - generate a key - more server side
+* ldns-keygen
