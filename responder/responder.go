@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// DNS server
+// DNS server implementation
 
-// For every reply the resolver answers by sending the
-// received packet (with a possible error) back on the channel.
+// Package responder implements a DNS server
 package responder
 
 import (
@@ -15,33 +14,35 @@ import (
 )
 
 type Server struct {
-	Address string              // interface to use, for multiple interfaces, use multiple servers
-	Port    string              // what port to use
-	Timeout int                 // seconds before giving up on packet
-	Tcp     bool                // use TCP
-	Mangle  func([]byte) []byte // mangle the packet, before sending
+	Address string // interface to use, for multiple interfaces, use multiple servers
+	Port    string // what port to use
+	Timeout int    // seconds before giving up on packet
+	Tcp     bool   // use TCP
 }
 
-type Msg struct {
-	cu    *net.UDPConn // udp conn
-        ct    *net.TCPConn // tcp conn
+type msg struct {
+	cu   *net.UDPConn // udp conn
+	ct   *net.TCPConn // tcp conn
 	addr net.Addr     // remote address
 	msg  []byte       // raw dns message
 	err  os.Error     // any errors
 }
 
-// Every nameserver must implement the Handler interface.
+// Every nameserver implements the Responder interface. It defines
+// the kind of nameserver
 type Responder interface {
-	// Receives the raw message content
+	// Receives the raw message content and writes back 
+        // an udp response. An UDP connection needs a remote
+        // address to write to.
 	ResponderUDP(c *net.UDPConn, a net.Addr, in []byte)
-	// Receives the raw message content
+	// Receives the raw message content and writes back
+        // a tcp response. A TCP connection does need to
+        // know explicitly be told the remote address.
 	ResponderTCP(c *net.TCPConn, in []byte)
 }
 
-// This is a NAMESERVER
-// Stop it by sending it true over the channel
-// NewResponder returns a channel, for communication (start/stop)
-// caN we use the channel for other stuff??
+// Start a new responder. The returned channel is only used
+// to stop the responder.
 func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	var port string
 	if len(res.Address) == 0 {
@@ -55,7 +56,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	}
 	switch res.Tcp {
 	case true:
-		tch := make(chan Msg)
+		tch := make(chan msg)
 		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
 		go listenerTCP(a, tch)
 	foreverTCP:
@@ -74,7 +75,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 		}
 
 	case false:
-		uch := make(chan Msg)
+		uch := make(chan msg)
 		a, _ := net.ResolveUDPAddr(res.Address + ":" + port)
 		go listenerUDP(a, uch)
 	foreverUDP:
@@ -94,7 +95,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	return nil
 }
 
-func listenerUDP(a *net.UDPAddr, ch chan Msg) {
+func listenerUDP(a *net.UDPAddr, ch chan msg) {
 	c, _ := net.ListenUDP("udp", a)
 	// check error TODO(mg)
 	for {
@@ -105,11 +106,11 @@ func listenerUDP(a *net.UDPAddr, ch chan Msg) {
 		}
 		m = m[:n]
 		// if closed(ch) c.Close() TODO(mg)
-		ch <- Msg{cu: c, addr: radd, msg: m}
+		ch <- msg{cu: c, addr: radd, msg: m}
 	}
 }
 
-func listenerTCP(a *net.TCPAddr, ch chan Msg) {
+func listenerTCP(a *net.TCPAddr, ch chan msg) {
 	t, _ := net.ListenTCP("tcp", a)
 	for {
 		l := make([]byte, 2) // receiver length
@@ -142,11 +143,11 @@ func listenerTCP(a *net.TCPAddr, ch chan Msg) {
 			}
 			i += n
 		}
-		ch <- Msg{ct: c, msg: m}
+		ch <- msg{ct: c, msg: m}
 	}
 }
 
-// Send a raw msg over a TCP connection
+// Send a buffer on the TCP connection
 func SendTCP(m []byte, c *net.TCPConn) os.Error {
 	l := make([]byte, 2)
 	l[0] = byte(len(m) >> 8)
@@ -164,8 +165,8 @@ func SendTCP(m []byte, c *net.TCPConn) os.Error {
 	return nil
 }
 
-// if we do tcp we should also provide an udp version
-// First the message TODO(mg)
+// Small helper function to help sending UDP packets. Mostly
+// done for the symmetry. see SendTCP.
 func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
 	_, err := c.WriteTo(m, a)
 	if err != nil {
