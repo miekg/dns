@@ -60,14 +60,15 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	}
 	switch res.Tcp {
 	case true:
-                tch := make(chan serverMsgTCP)
-                a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
-                go listenerTCP(a, tch)
-        foreverTCP:
+		tch := make(chan serverMsgTCP)
+		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
+		go listenerTCP(a, tch)
+	foreverTCP:
 		for {
 			select {
 			case <-ch:
 				ch <- true
+				/* stop listening */
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
