@@ -148,18 +148,28 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
-// Sign rrset with k and return the signature RR. There
-// is no check if rrset is a proper (RFC 2181) RRSet
-func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
-	s := new(RR_RRSIG)
+// Sign an RRSet. The Signature needs to be filled in with
+// all the values: Inception, Expiration, KeyTag(?), SignerName
+// the rest is copied from the RRset. Return true when all ok.
+// The Signature data is filled by this method
+// There is no check if rrset is a proper (RFC 2181) RRSet
+func (s *RR_RRSIG) Sign(k *rsa.PrivateKey, rrset RRset) bool {
+        if k == nil {
+                return false
+        }
+
 	s.Hdr.Name = rrset[0].Header().Name
 	s.Hdr.Class = rrset[0].Header().Class
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
+	/* Check that these are there */
+        /* 
 	s.Inception = inception
 	s.Expiration = expiration
 	s.KeyTag = k.KeyTag()
 	s.SignerName = k.Hdr.Name
+	s.Algorithm = ??
+        */
 	s.Labels = uint8(labelCount(rrset[0].Header().Name))
 	s.TypeCovered = rrset[0].Header().Rrtype
 
@@ -177,7 +187,7 @@ func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
 	signdata := make([]byte, 4096)
 	n, ok := packStruct(sigwire, signdata, 0)
 	if !ok {
-		return nil
+		return false
 	}
 	signdata = signdata[:n]
 
@@ -205,14 +215,14 @@ func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
                 off, ok1 := packRR(r, wire, 0)
                 if !ok1 {
                         println("Failure to pack")
-                        return nil
+                        return false
                 }
                 wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
 			println("Failure to pack")
-			return nil
+			return false
 		}
 		signdata = append(signdata, wire...)
 	}
@@ -242,17 +252,20 @@ func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
                 // Need privakey representation in godns TODO(mg) see keygen.go
 		io.WriteString(h, string(signdata))
 		sighash := h.Sum()
-//                signature, err = rsa.SignPKCS1v15(rand.Reader, priv *PrivateKey, hash PKCS1v15Hash, hashed []byte) (s []byte, err os.Error)
-                signature, err = rsa.SignPKCS1v15(rand.Reader, nil /*priv*/, ch, sighash)
-                var _ = signature
-                var _ = err
+                signature, err = rsa.SignPKCS1v15(rand.Reader, k, ch, sighash)
+                if err != nil {
+                        return false
+                }
+                b64 := make([]byte, base64.StdEncoding.EncodedLen(len(signature)))
+                base64.StdEncoding.Encode(b64, signature)
+                s.Signature = string(b64)
 	case AlgDH:
 	case AlgDSA:
 	case AlgECC:
 	case AlgECCGOST:
 	}
 
-	return s
+	return true
 }
 
 // Validate an rrset with the signature and key. This is the
