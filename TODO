@@ -2,7 +2,7 @@ Todo:
 Short term:
 * NSEC3 - need base32 for Nsec3
 * Parsing from strings, going with goyacc and own lexer
-    -- develop this is own package, then fold back to dns package
+    -- develop this in its own package, then fold back to dns package?
 * private key to privkey format 1.3, io.Writer kind of stuff
 * Signature generation
 * Testsuite - make it slightly better
@@ -19,10 +19,6 @@ Issues:
     - for new(RR*)
     - nsupdate
     - printing??
-* query-time, server in string ouput of dns.Msg
+* query-time, server in string ouput of resolver.Msg
    - resolver.Msg when doing resolver querying, extend msg...?
-* remove the dns.Wire*() functions and fixe dnssec.go to make it work
 * Fix remaining records: LOC, NAPTR, ..., ...
-
-Port over from LDNS:
-* ldns-keygen
