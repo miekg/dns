@@ -40,12 +40,16 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if err != nil {
 			return nil, err
 		}
-		keybuf := make([]byte, 1)
+		keybuf := make([]byte, 2)
 
 		if priv.PublicKey.E < 256 {
-			keybuf[0] = uint8(priv.PublicKey.E)
+                        println(priv.PublicKey.E)
+                        keybuf[0] = 1
+			keybuf[1] = uint8(priv.PublicKey.E)
 		} else {
 			keybuf[0] = 0
+                        //keybuf[1] = part of length
+                        //keybuf[2] = rest of length
 			// keybuf[1]+[2] have the length
 			// keybuf[3:..3+lenght] have exponent
 			// not implemented

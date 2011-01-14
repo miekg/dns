@@ -4,7 +4,7 @@ Short term:
 * Parsing from strings, going with goyacc and own lexer
     -- develop this in its own package, then fold back to dns package?
 * private key to privkey format 1.3, io.Writer kind of stuff
-* Signature generation
+* Signature generation - needs testing
 * Testsuite - make it slightly better
 * Cleanup the code
 
