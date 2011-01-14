@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/rsa"
+        "crypto/rand"
 	"encoding/hex"
 	"encoding/base64"
 	"hash"
@@ -150,29 +151,108 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // Sign rrset with k and return the signature RR. There
 // is no check if rrset is a proper (RFC 2181) RRSet
 func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
-	sig := new(RR_RRSIG)
-	sig.Hdr.Name = rrset[0].Header().Name
-	sig.Hdr.Class = rrset[0].Header().Class
-	sig.Hdr.Rrtype = TypeRRSIG
-	sig.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
-	sig.Inception = inception
-	sig.Expiration = expiration
-	sig.KeyTag = k.KeyTag()
-	sig.SignerName = k.Hdr.Name
-	sig.Labels = uint8(labelCount(rrset[0].Header().Name))
-	sig.TypeCovered = rrset[0].Header().Rrtype
+	s := new(RR_RRSIG)
+	s.Hdr.Name = rrset[0].Header().Name
+	s.Hdr.Class = rrset[0].Header().Class
+	s.Hdr.Rrtype = TypeRRSIG
+	s.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
+	s.Inception = inception
+	s.Expiration = expiration
+	s.KeyTag = k.KeyTag()
+	s.SignerName = k.Hdr.Name
+	s.Labels = uint8(labelCount(rrset[0].Header().Name))
+	s.TypeCovered = rrset[0].Header().Rrtype
 
 	sigwire := new(rrsigWireFmt)
-	sigwire.TypeCovered = sig.TypeCovered
-	sigwire.Algorithm = sig.Algorithm
-	sigwire.Labels = sig.Labels
-	sigwire.OrigTtl = sig.OrigTtl
-	sigwire.Expiration = sig.Expiration
-	sigwire.Inception = sig.Inception
-	sigwire.KeyTag = sig.KeyTag
-	sigwire.SignerName = sig.SignerName
+	sigwire.TypeCovered = s.TypeCovered
+	sigwire.Algorithm = s.Algorithm
+	sigwire.Labels = s.Labels
+	sigwire.OrigTtl = s.OrigTtl
+	sigwire.Expiration = s.Expiration
+	sigwire.Inception = s.Inception
+	sigwire.KeyTag = s.KeyTag
+	sigwire.SignerName = s.SignerName
 
-	return nil
+	// Create the desired binary blob
+	signdata := make([]byte, 4096)
+	n, ok := packStruct(sigwire, signdata, 0)
+	if !ok {
+		return nil
+	}
+	signdata = signdata[:n]
+
+        // identical to Verify // TODO(mg) seperate function
+	for _, r := range rrset {
+		h := r.Header()
+		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
+		name := h.Name
+		h.Name = strings.ToLower(h.Name)
+		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
+		switch h.Rrtype {
+		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
+		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
+		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
+		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
+			// lower case the domain rdata //
+
+		}
+		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
+		// 6.2. Canonical RR Form. (5) - origTTL
+
+		ttl := h.Ttl
+		h.Ttl = s.OrigTtl
+                wire := make([]byte, 4096)
+                off, ok1 := packRR(r, wire, 0)
+                if !ok1 {
+                        println("Failure to pack")
+                        return nil
+                }
+                wire = wire[:off]
+		h.Ttl = ttl // restore the order in the universe
+		h.Name = name
+		if !ok1 {
+			println("Failure to pack")
+			return nil
+		}
+		signdata = append(signdata, wire...)
+	}
+
+        var signature []byte
+        var err os.Error
+	switch s.Algorithm {
+	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
+		//pubkey := k.pubKeyRSA() // Get the key, need privkey representation
+		// Setup the hash as defined for this alg.
+		var h hash.Hash
+		var ch rsa.PKCS1v15Hash
+		switch s.Algorithm {
+		case AlgRSAMD5:
+			h = md5.New()
+			ch = rsa.HashMD5
+		case AlgRSASHA1:
+			h = sha1.New()
+			ch = rsa.HashSHA1
+		case AlgRSASHA256:
+			h = sha256.New()
+			ch = rsa.HashSHA256
+		case AlgRSASHA512:
+			h = sha512.New()
+			ch = rsa.HashSHA512
+		}
+                // Need privakey representation in godns TODO(mg) see keygen.go
+		io.WriteString(h, string(signdata))
+		sighash := h.Sum()
+//                signature, err = rsa.SignPKCS1v15(rand.Reader, priv *PrivateKey, hash PKCS1v15Hash, hashed []byte) (s []byte, err os.Error)
+                signature, err = rsa.SignPKCS1v15(rand.Reader, nil /*priv*/, ch, sighash)
+                var _ = signature
+                var _ = err
+	case AlgDH:
+	case AlgDSA:
+	case AlgECC:
+	case AlgECCGOST:
+	}
+
+	return s
 }
 
 // Validate an rrset with the signature and key. This is the
