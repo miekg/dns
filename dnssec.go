@@ -37,6 +37,29 @@ const (
 	HashGOST94
 )
 
+// The RRSIG needs to be converted to wireformat with some of
+// the rdata (the signature) missing. Use this struct to easy
+// the conversion (and re-use the pack/unpack functions.
+type rrsigWireFmt struct {
+	TypeCovered uint16
+	Algorithm   uint8
+	Labels      uint8
+	OrigTtl     uint32
+	Expiration  uint32
+	Inception   uint32
+	KeyTag      uint16
+	SignerName  string "domain-name"
+	/* No Signature */
+}
+
+// Used for converting DNSKEY's rdata to wirefmt.
+type dnskeyWireFmt struct {
+	Flags     uint16
+	Protocol  uint8
+	Algorithm uint8
+	PubKey    string "base64"
+}
+
 // Calculate the keytag of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
@@ -45,13 +68,17 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		println("Keytag RSAMD5. Todo")
 		keytag = 0
 	default:
-		// Might encode header length too, so that
-		// we dont need to pack/unpack all the time
-		// Or a shadow structure, with the wiredata and header
-		wire, ok := WireRdata(k)
+                keywire := new(dnskeyWireFmt)
+                keywire.Flags = k.Flags
+                keywire.Protocol = k.Protocol
+                keywire.Algorithm = k.Algorithm
+                keywire.PubKey = k.PubKey
+                wire := make([]byte, 2048) // TODO(mg) lenght!
+                n, ok := packStruct(keywire, wire, 0)
 		if !ok {
 			return 0
 		}
+                wire = wire[:n]
 		for i, v := range wire {
 			if i&1 != 0 {
 				keytag += int(v) // must be larger than uint32
@@ -75,14 +102,24 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	ds.DigestType = uint8(h)
 	ds.KeyTag = k.KeyTag()
 
-	wire, ok := WireRdata(k)
-	if !ok {
-		return nil
-	}
-	owner, ok1 := WireDomainName(k.Hdr.Name)
+        keywire := new(dnskeyWireFmt)
+        keywire.Flags = k.Flags
+        keywire.Protocol = k.Protocol
+        keywire.Algorithm = k.Algorithm
+        keywire.PubKey = k.PubKey
+        wire := make([]byte, 2048) // TODO(mg) lenght!
+        n, ok := packStruct(keywire, wire, 0)
+        if !ok {
+                return nil
+        }
+        wire = wire[:n]
+
+        owner := make([]byte, 255)
+        off, ok1 := packDomainName(k.Hdr.Name, owner, 0)
 	if !ok1 {
 		return nil
 	}
+        owner = owner[:off]
 	/* 
 	 * from RFC4034
 	 * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
@@ -110,9 +147,32 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
-// Sign rrset with k and return the signature RR.
-func (k *RR_DNSKEY) Sign(rrset RRset) (*RR_RRSIG) {
-        return nil
+// Sign rrset with k and return the signature RR. There
+// is no check if rrset is a proper (RFC 2181) RRSet
+func (k *RR_DNSKEY) Sign(rrset RRset, expiration, inception uint32) *RR_RRSIG {
+	sig := new(RR_RRSIG)
+	sig.Hdr.Name = rrset[0].Header().Name
+	sig.Hdr.Class = rrset[0].Header().Class
+	sig.Hdr.Rrtype = TypeRRSIG
+	sig.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
+	sig.Inception = inception
+	sig.Expiration = expiration
+	sig.KeyTag = k.KeyTag()
+	sig.SignerName = k.Hdr.Name
+	sig.Labels = uint8(labelCount(rrset[0].Header().Name))
+	sig.TypeCovered = rrset[0].Header().Rrtype
+
+	sigwire := new(rrsigWireFmt)
+	sigwire.TypeCovered = sig.TypeCovered
+	sigwire.Algorithm = sig.Algorithm
+	sigwire.Labels = sig.Labels
+	sigwire.OrigTtl = sig.OrigTtl
+	sigwire.Expiration = sig.Expiration
+	sigwire.Inception = sig.Inception
+	sigwire.KeyTag = sig.KeyTag
+	sigwire.SignerName = sig.SignerName
+
+	return nil
 }
 
 // Validate an rrset with the signature and key. This is the
@@ -150,11 +210,22 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
-	s1 := &RR_RRSIG{s.Hdr, s.TypeCovered, s.Algorithm, s.Labels, s.OrigTtl, s.Expiration, s.Inception, s.KeyTag, s.SignerName, ""}
-	signeddata, ok := WireRdata(s1)
+	sigwire := new(rrsigWireFmt)
+	sigwire.TypeCovered = s.TypeCovered
+	sigwire.Algorithm = s.Algorithm
+	sigwire.Labels = s.Labels
+	sigwire.OrigTtl = s.OrigTtl
+	sigwire.Expiration = s.Expiration
+	sigwire.Inception = s.Inception
+	sigwire.KeyTag = s.KeyTag
+	sigwire.SignerName = s.SignerName
+	// Create the desired binary blob
+	signeddata := make([]byte, 4096)
+	n, ok := packStruct(sigwire, signeddata, 0)
 	if !ok {
 		return false
 	}
+	signeddata = signeddata[:n]
 
 	for _, r := range rrset {
 		h := r.Header()
@@ -172,9 +243,16 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		}
 		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
 		// 6.2. Canonical RR Form. (5) - origTTL
+
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-		wire, ok1 := WireRR(r)
+                wire := make([]byte, 4096)
+                off, ok1 := packRR(r, wire, 0)
+                if !ok1 {
+                        println("Failure to pack")
+                        return false
+                }
+                wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
@@ -184,22 +262,12 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		signeddata = append(signeddata, wire...)
 	}
 
-	// Buffer holding the key data
-	keybuf := make([]byte, 1024)
-	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
-	keybuflen, _ = base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
-	keybuf = keybuf[:keybuflen]
-
-	// Buffer holding the signature
-	sigbuf := make([]byte, 1024)
-	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
-	sigbuflen, _ = base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
-	sigbuf = sigbuf[:sigbuflen]
+	sigbuf := s.sigBuf() // Get the binary signature data
 
 	var err os.Error
 	switch s.Algorithm {
 	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
-		pubkey := rsaPubKey(keybuf)
+		pubkey := k.pubKeyRSA() // Get the key
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
 		var ch rsa.PKCS1v15Hash
@@ -239,8 +307,23 @@ func (s *RR_RRSIG) PeriodOK() bool {
 	return ti <= utc && utc <= te
 }
 
-// Extra the RSA public key from the buffer
-func rsaPubKey(keybuf []byte) *rsa.PublicKey {
+// Return the signatures base64 encodedig sigdata as a byte slice.
+func (s *RR_RRSIG) sigBuf() []byte {
+	sigbuf := make([]byte, 1024) // TODO(mg) length!
+	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
+	sigbuflen, _ = base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
+	sigbuf = sigbuf[:sigbuflen]
+	return sigbuf
+}
+
+// Extract the RSA public key from the Key record
+func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
+	// Buffer holding the key data
+	keybuf := make([]byte, 1024)
+	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
+	keybuflen, _ = base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
+	keybuf = keybuf[:keybuflen]
+
 	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
 	// Length is in the 0th byte, unless its zero, then it
 	// it in bytes 1 and 2 and its a 16 bit number

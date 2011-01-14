@@ -1,10 +1,21 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2011 Miek Gieben. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 // DNS server implementation
 
-// Package responder implements a DNS server
+// Package responder implements a DNS server. A nameserver needs to implement
+// the Responder interface:
+//
+// type myserv Server
+// func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
+// func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
+// su := new(Server)                    // create new sever
+// su.Address = "127.0.0.1"             // listen address
+// su.Port = "8053"                     // listen port
+// var us *myserv                       
+// uch :=make(chan bool)
+// go su.NewResponder(us, uch)          // start the responder
 package responder
 
 import (
@@ -13,6 +24,7 @@ import (
 	"dns"
 )
 
+// Options for a nameserver.
 type Server struct {
 	Address string // interface to use, for multiple interfaces, use multiple servers
 	Port    string // what port to use

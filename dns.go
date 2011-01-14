@@ -10,7 +10,9 @@
 // * 1876 - LOC record (incomplete)
 // * 1995 - IXFR
 // * 1996 - DNS notify
+// * 2181 - RRset definition
 // * 2537 - RSAMD5 DNS keys
+// * 2065 - DNSSEC (updated in later RFCs)
 // * 2671 - EDNS
 // * 2845 - TSIG
 // * 2915 - NAPTR record (incomplete)
@@ -27,24 +29,22 @@ package dns
 
 import (
 	"strconv"
-        "os"
-        "net"
 )
 
 const Year68 = 2 << (32 - 1)
 
 type Error struct {
-	Error     string
-	Name      string
-	Server    string
-        Timeout   bool
+	Error   string
+	Name    string
+	Server  string
+	Timeout bool
 }
 
 func (e *Error) String() string {
-        if e == nil {
-                return "<nil>"
-        }
-        return e.Error
+	if e == nil {
+		return "<nil>"
+	}
+	return e.Error
 }
 
 type RR interface {
@@ -93,85 +93,12 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-func SendTCP(c net.Conn, m []byte) os.Error {
-        l := make([]byte, 2)
-        l[0] = byte(len(m) >> 8)
-        l[1] = byte(len(m))
-        // First we send the length
-        _, err := c.Write(l)
-        if err != nil {
-                return err
-        }
-        // And the the message
-        _, err = c.Write(m)
-        if err != nil {
-                return err
-        }
-        return nil
-}
-
-func RecvTCP(c net.Conn) ([]byte, os.Error) {
-        l := make([]byte, 2) // receiver length
-        // The server replies with two bytes length
-        _, err := c.Read(l)
-        if err != nil {
-                return nil,err
-        }
-        length := uint16(l[0])<<8 | uint16(l[1])
-        if length == 0 {
-                return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
-        }
-        m := make([]byte, length)
-        n, cerr := c.Read(m)
-        if cerr != nil {
-                return nil, cerr
-        }
-        i := n
-        if i < int(length) {
-                n, err = c.Read(m[i:])
-                if err != nil {
-                        return nil, err
-                }
-                i += n
-        }
-        return m, nil
-}
-
-// Or expose the pack/unpack functions??
-// These were created for dnssec.go, but now that
-// that package is included again in dns, they are
-// not really needed. These will be removed asap.
-// Return the wiredata of rdata portion of a RR.
-func WireRdata(r RR) ([]byte, bool) {
-	buf := make([]byte, 4096) // Too large, need to FIX TODO(mg)
-	off1, ok := packRR(r, buf, 0)
-	if !ok {
-		return nil, false
+// Return number of labels in a dname
+func labelCount(a string) (c int) {
+	for _, v := range a {
+		if v == '.' {
+			c++
+		}
 	}
-	start := off1 - int(r.Header().Rdlength)
-	end := start + int(r.Header().Rdlength)
-	buf = buf[start:end]
-	return buf, true
-}
-
-// Return the wiredata of a domainname (sans compressions).
-func WireDomainName(s string) ([]byte, bool) {
-	buf := make([]byte, 255)
-	off, ok := packDomainName(s, buf, 0)
-	if !ok {
-		return nil, ok
-	}
-	buf = buf[:off]
-	return buf, ok
-}
-
-// Return the wiredata of a complete Resource Record.
-func WireRR(r RR) ([]byte, bool) {
-	buf := make([]byte, 4096)
-	off, ok := packRR(r, buf, 0)
-	if !ok {
-		return nil, false
-	}
-	buf = buf[:off]
-	return buf, ok
+	return
 }

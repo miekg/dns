@@ -49,7 +49,7 @@ func (rr *RR_TSIG) String() string {
 // The following values must be put in wireformat, so that
 // the MAC can be calculated
 // RFC 2845, section 3.4.2. TSIG Variables
-type tsig_generation_fmt struct {
+type tsigWireFmt struct {
 	// From RR_HEADER
 	Name  string "domain-name"
 	Class uint16
@@ -70,7 +70,7 @@ type tsig_generation_fmt struct {
 // secret is encoded in base64 in BIND9
 func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 	buf := make([]byte, 4096) // TODO(mg) bufsize!
-	tsig := new(tsig_generation_fmt)
+	tsig := new(tsigWireFmt)
 
 	// Fill the struct and generate the wiredata
 	tsig.Name = rr.Header().Name
