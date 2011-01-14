@@ -15,10 +15,8 @@ func TestKeyGen(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
-        key.GenerateRSA(512)
-
-        fmt.Printf("%v\n", key)
-
+        key.Generate(512)
+        fmt.Printf("Generated key: %v\n", key)
 }
 
 

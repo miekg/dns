@@ -3,6 +3,7 @@ package strconv
 import (
 	"unicode"
         conv "strconv"
+        "dns"
 )
 
 const (
@@ -70,4 +71,12 @@ func SecondsToString(val uint32) (str string) {
                 str += conv.Itoa(int(val))
         }
         return
+}
+
+// Read a string and convert it to the correct
+// Resource Record.
+func SetString(s string) dns.RR {
+
+        k := new(dns.RR_DNSKEY)
+        return k
 }

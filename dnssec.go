@@ -153,7 +153,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // the rest is copied from the RRset. Return true when all ok.
 // The Signature data is filled by this method
 // There is no check if rrset is a proper (RFC 2181) RRSet
-func (s *RR_RRSIG) Sign(k *rsa.PrivateKey, rrset RRset) bool {
+func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
         if k == nil {
                 return false
         }
@@ -252,13 +252,21 @@ func (s *RR_RRSIG) Sign(k *rsa.PrivateKey, rrset RRset) bool {
                 // Need privakey representation in godns TODO(mg) see keygen.go
 		io.WriteString(h, string(signdata))
 		sighash := h.Sum()
-                signature, err = rsa.SignPKCS1v15(rand.Reader, k, ch, sighash)
-                if err != nil {
+
+                // Get the key from the interface
+                switch p := k.(type) {
+                case *rsa.PrivateKey:
+                        signature, err = rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+                        if err != nil {
+                                return false
+                        }
+                        b64 := make([]byte, base64.StdEncoding.EncodedLen(len(signature)))
+                        base64.StdEncoding.Encode(b64, signature)
+                        s.Signature = string(b64)
+                default:
+                        // Not given the correct key
                         return false
                 }
-                b64 := make([]byte, base64.StdEncoding.EncodedLen(len(signature)))
-                base64.StdEncoding.Encode(b64, signature)
-                s.Signature = string(b64)
 	case AlgDH:
 	case AlgDSA:
 	case AlgECC:
