@@ -2,7 +2,6 @@ package dns
 
 import (
 	"testing"
-	"fmt"
 )
 
 
@@ -16,7 +15,6 @@ func TestKeyGen(t *testing.T) {
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
         key.Generate(512)
-        fmt.Printf("Generated key: %v\n", key)
 }
 
 

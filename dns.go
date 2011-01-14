@@ -93,8 +93,9 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-// Return number of labels in a dname
-func labelCount(a string) (c int) {
+// Return number of labels in a domain name
+// Make it fqdn?
+func LabelCount(a string) (c uint8) {
 	for _, v := range a {
 		if v == '.' {
 			c++

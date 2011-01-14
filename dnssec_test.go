@@ -23,7 +23,6 @@ func TestSecure(t *testing.T) {
 	sig.TypeCovered = TypeSOA
 	sig.Algorithm = AlgRSASHA256
 	sig.Labels = 2
-        // UTC LUL!
         sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
         sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
 	sig.OrigTtl = 14400

@@ -170,7 +170,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	s.SignerName = k.Hdr.Name
 	s.Algorithm = ??
         */
-	s.Labels = uint8(labelCount(rrset[0].Header().Name))
+	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
 
 	sigwire := new(rrsigWireFmt)
