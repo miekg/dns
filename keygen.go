@@ -42,7 +42,6 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		keybuf := make([]byte, 2)
 
 		if priv.PublicKey.E < 256 {
-                        println(priv.PublicKey.E)
                         keybuf[0] = 1
 			keybuf[1] = uint8(priv.PublicKey.E)
 		} else {
