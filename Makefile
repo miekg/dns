@@ -15,7 +15,10 @@ GOFILES=\
 	dnssec.go\
 	keygen.go\
 	string.go\
+	y.go\
 
+y.go:	dns.y
+	goyacc dns.y
 
 include $(GOROOT)/src/Make.pkg
 
