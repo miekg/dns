@@ -17,10 +17,11 @@ GOFILES=\
 	string.go\
 	y.go\
 
+include $(GOROOT)/src/Make.pkg
+
 y.go:	dns.y
 	goyacc dns.y
 
-include $(GOROOT)/src/Make.pkg
 
 all: package
 	gomake -C resolver package

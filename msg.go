@@ -86,13 +86,15 @@ var Rr_str = map[uint16]string{
 	TypeNSEC:       "NSEC",
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
-	TypeNSEC3PARAM: "NSEC3PARAM",
-	TypeTKEY:       "TKEY",
-	TypeTSIG:       "TSIG",
-	TypeAXFR:       "AXFR", // Not real RRs
-	TypeIXFR:       "IXFR",
+	TypeNSEC3PARAM: "NSEC3PARAM", // DNSSEC's bitch
+	TypeTKEY:       "TKEY",       // Meta RR
+	TypeTSIG:       "TSIG",       // Meta RR
+	TypeAXFR:       "AXFR",       // Meta RR
+	TypeIXFR:       "IXFR",       // Meta RR
 }
 
+// Reverse of Rr_str (needed for parsing)
+var Str_rr = reverse(Rr_str)
 
 // Map of strings for each RR wire type.
 var Class_str = map[uint16]string{
@@ -667,7 +669,14 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	return rr, off, ok
 }
 
-// Usable representation of a DNS packet.
+func reverse(m map[uint16]string) map[string]uint16 {
+        n := make(map[string]uint16)
+        for u, s := range m {
+                n[s] = u
+        }
+        return n
+}
+
 
 // Convert a MsgHdr to a string, mimic the way Dig displays headers:
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404

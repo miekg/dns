@@ -1,14 +1,20 @@
+// Copyright Miek Gieben 2011
+// Heavily influenced by the zone-parser from NSD
 
 %{ 
 
 package dns
+
+import (
+    "fmt"
+)
 
 // A yacc parser for DNS Resource Records contained in strings
 
 %}
 
 %union {
-    string  string
+    val     string
     rrtype  uint16
     class   uint16
     ttl     uint16
@@ -18,16 +24,16 @@ package dns
 /*
  * Types known to package dns
  */
-%token <rrtype> RR_A RR_NS RR_MX RR_CNAME RR_AAAA RR_DNSKEY RR_RRSIG RR_DS
+%token <rrtype> Y_A Y_NS 
 
 /*
  * Other elements of the Resource Records
  */
 %token <ttl>    TTL
 %token <class>  CLASS
-%token <string> STR
+%token <val>    VAL
 %%
-rr:     name TTL CLASS 
+rr:     name TTL CLASS rrtype
   {
   
   };
@@ -35,7 +41,20 @@ rr:     name TTL CLASS
 name:   label
     |   name '.' label
 
-label:  STR
+label:  VAL
+
+rrtype: 
+      /* All supported RR types */
+        Y_A
+    |   Y_NS
 %%
 
 type DnsLex int
+
+func (DnsLex) Lex(yylval *yySymType) int {
+
+    // yylval.rrtype = Str_rr($XX)  //give back TypeA, TypeNS
+    // return Y_A this should be the token, another map?
+
+    return 0
+}

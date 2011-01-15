@@ -1,4 +1,4 @@
-package strconv
+package dns
 
 import ( "testing")
 
