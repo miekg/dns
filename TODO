@@ -2,7 +2,7 @@ Todo:
 Short term:
 * NSEC3 - need base32 for Nsec3
 * Parsing from strings, going with goyacc and own lexer
-* Testsuite - make it slightly better
+* Testsuite - make it slightly better - put multiple tests inside 1 file
 * Cleanup the code
 
 Issues:
