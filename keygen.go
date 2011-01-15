@@ -67,7 +67,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 // of BIND9 (Private-key-format: v1.3). It needs some
 // info from the key (hashing, keytag), so its a method
 // of the RR_DNSKEY.
-func (r *RR_DNSKEY) PrivateKeyToString(p PrivateKey) (s string) {
+func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
         switch t := p.(type) {
         case *rsa.PrivateKey:
                 algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
