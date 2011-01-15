@@ -2,6 +2,7 @@ package dns
 
 import (
 	"testing"
+        "strings"
         "fmt"
         "os"
 )
@@ -204,6 +205,65 @@ func TestTag(t *testing.T) {
         if tag != 12051 {
                 t.Logf("%v\n", key)
                 t.Logf("Wrong key tag: %d\n", tag)
+                t.Fail()
+        }
+}
+
+func TestKeyGenRSA(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Name = "miek.nl."
+        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 3600
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = AlgRSASHA256
+        length := 2048
+        priv, _ := key.Generate(length)
+
+        soa := new(RR_SOA)
+        soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+        soa.Ns = "open.nlnetlabs.nl."
+        soa.Mbox = "miekg.atoom.net."
+        soa.Serial = 1293945905
+        soa.Refresh = 14400
+        soa.Retry = 3600
+        soa.Expire = 604800
+        soa.Minttl = 86400
+
+        sig := new(RR_RRSIG)
+        sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+        sig.TypeCovered = TypeSOA
+        sig.Algorithm = AlgRSASHA256
+        sig.Labels = 2
+        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
+        sig.OrigTtl = 14400
+        sig.KeyTag = key.KeyTag()
+        sig.SignerName = "miek.nl."
+
+        sig.Sign(priv, []RR{soa})
+
+        s := key.PrivateKeyString(priv)
+        fmt.Printf("%s\n", s)
+
+        fmt.Printf("%v\n", sig)
+}
+
+func TestKeyToDS(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Name = "miek.nl"
+        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 3600
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = AlgRSASHA256
+	key.PubKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
+
+        ds := key.ToDS(HashSHA1)
+        if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
+                t.Logf("Wrong DS digest for Sha1\n%v\n", ds)
                 t.Fail()
         }
 }
