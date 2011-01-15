@@ -286,10 +286,10 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					msg[off] = byte(fv.Elem(j).(*reflect.UintValue).Get())
 					off++
 				}
-			case "NSEC":    // NSEC/NSEC3
+			case "NSEC": // NSEC/NSEC3
 				for j := 0; j < val.Field(i).(*reflect.SliceValue).Len(); j++ {
-				         var _ = byte(fv.Elem(j).(*reflect.UintValue).Get())
-                                }
+					var _ = byte(fv.Elem(j).(*reflect.UintValue).Get())
+				}
 				// handle type bit maps
 			}
 		case *reflect.StructValue:
@@ -342,7 +342,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				return len(msg), false
 			case "base64":
-                                // TODO(mg) use the Len as return from the conversion (not used right now)
+				// TODO(mg) use the Len as return from the conversion (not used right now)
 				b64len := base64.StdEncoding.DecodedLen(len(s))
 				_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
 				if err != nil {
@@ -559,10 +559,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				default:
 					consumed = 0 // TODO
 				}
-                                // TODO(mg) check return value of encoding
-				b64 := make([]byte, base64.StdEncoding.EncodedLen(len(msg[off:off+rdlength-consumed])))
-				base64.StdEncoding.Encode(b64, msg[off:off+rdlength-consumed])
-				s = string(b64)
+				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
 			case "domain-name":
 				s, off, ok = unpackDomainName(msg, off)
@@ -598,6 +595,24 @@ func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
 func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	off, ok = unpackStructValue(structValue(any), msg, off)
 	return off, ok
+}
+
+func unpackBase64(b []byte) string {
+	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(b)))
+	base64.StdEncoding.Encode(b64, b)
+	return string(b64)
+}
+
+// Helper function for packing, mostly used in dnssec.go
+func packBase64(s []byte) ([]byte, os.Error) {
+	b64len := base64.StdEncoding.DecodedLen(len(s))
+	buf := make([]byte, b64len)
+	n, err := base64.StdEncoding.Decode(buf, []byte(s))
+	if err != nil {
+		return nil, err
+	}
+	buf = buf[:n]
+	return buf, nil
 }
 
 // Resource record packer.
@@ -696,6 +711,7 @@ func (h *MsgHdr) String() string {
 	return s
 }
 
+// Pack a msg: convert it to wire format.
 func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header
 
@@ -764,6 +780,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	return msg[:off], true
 }
 
+// Unpack a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) bool {
 	// Header.
 	var dh Header
@@ -808,7 +825,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	return true
 }
 
-// Convert a complete message to a string, use dig-like output.
+// Convert a complete message to a string using dig-like output.
 func (dns *Msg) String() string {
 	if dns == nil {
 		return "<nil> MsgHdr"

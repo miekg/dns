@@ -4,11 +4,10 @@ import (
 	"os"
 	"crypto/rsa"
 	"crypto/rand"
-	"encoding/base64"
 )
 
-// Empty interface so all crypty private key
-// can be grouped together
+// Empty interface that is used a wrapper around all possible
+// private key implementation from the crypto package.
 type PrivateKey interface{}
 
 // io.Reader
@@ -16,10 +15,10 @@ type PrivateKey interface{}
 // PrivateKeyFromString
 // PrivateKeyToDNSKEY
 
-// Generate a Key of the given bit size.
+// Generate a key of the given bit size.
 // The public part is directly put inside the DNSKEY record. 
 // The Algorithm in the key must be set as this will define
-// what kind of DNSKEY will be generated
+// what kind of DNSKEY will be generated.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 	switch r.Algorithm {
 	case AlgRSAMD5, AlgRSASHA1, AlgRSASHA256:
@@ -56,10 +55,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 			return nil, &Error{Error: "Exponent too large"}
 		}
 		keybuf = append(keybuf, priv.PublicKey.N.Bytes()...)
-
-		b64 := make([]byte, base64.StdEncoding.EncodedLen(len(keybuf)))
-		base64.StdEncoding.Encode(b64, keybuf)
-		r.PubKey = string(b64)
+		r.PubKey = unpackBase64(keybuf)
 		return priv, nil
 	}
 	return nil, nil // Dummy return

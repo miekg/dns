@@ -8,7 +8,6 @@ import (
 	"crypto/rsa"
         "crypto/rand"
 	"encoding/hex"
-	"encoding/base64"
 	"hash"
 	"time"
 	"io"
@@ -260,9 +259,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
                         if err != nil {
                                 return false
                         }
-                        b64 := make([]byte, base64.StdEncoding.EncodedLen(len(signature)))
-                        base64.StdEncoding.Encode(b64, signature)
-                        s.Signature = string(b64)
+                        s.Signature = unpackBase64(signature)
                 default:
                         // Not given the correct key
                         return false
@@ -410,20 +407,19 @@ func (s *RR_RRSIG) PeriodOK() bool {
 
 // Return the signatures base64 encodedig sigdata as a byte slice.
 func (s *RR_RRSIG) sigBuf() []byte {
-	sigbuf := make([]byte, 1024) // TODO(mg) length!
-	sigbuflen := base64.StdEncoding.DecodedLen(len(s.Signature))
-	sigbuflen, _ = base64.StdEncoding.Decode(sigbuf[0:sigbuflen], []byte(s.Signature))
-	sigbuf = sigbuf[:sigbuflen]
+        sigbuf, err := packBase64([]byte(s.Signature))
+        if err != nil {
+                return nil
+        }
 	return sigbuf
 }
 
 // Extract the RSA public key from the Key record
 func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
-	// Buffer holding the key data
-	keybuf := make([]byte, 1024)
-	keybuflen := base64.StdEncoding.DecodedLen(len(k.PubKey))
-	keybuflen, _ = base64.StdEncoding.Decode(keybuf[0:keybuflen], []byte(k.PubKey))
-	keybuf = keybuf[:keybuflen]
+        keybuf, err := packBase64([]byte(k.PubKey))
+        if err != nil {
+                return nil
+        }
 
 	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
 	// Length is in the 0th byte, unless its zero, then it
