@@ -7,6 +7,8 @@ include $(GOROOT)/src/Make.inc
 TARG=dns/resolver
 GOFILES=\
 	resolver.go\
+	parse.go\
+	config.go\
 
 DEPS=..
 include $(GOROOT)/src/Make.pkg

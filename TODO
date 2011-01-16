@@ -3,6 +3,7 @@ Todo:
 * Cleanup the code
 * Tsig testing
 * Private key file parsing, exponent 65536 does not work
+* Parsing from /etc/resolv.conf
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
