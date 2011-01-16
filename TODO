@@ -2,6 +2,9 @@ Todo:
 * NSEC3 - need base32 for Nsec3
 * Cleanup the code
 * Tsig testing
+* Private key file parsing, exponent 65536 does not work
+
+Longer term:
 * Parsing from strings, going with goyacc and own lexer
 
 Issues:
@@ -17,4 +20,5 @@ Issues:
     - printing??
 * query-time, server in string ouput of resolver.Msg
    - resolver.Msg when doing resolver querying, extend msg...?
+   - also for the server?
 * Fix remaining records: LOC, NAPTR, ..., ...

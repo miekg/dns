@@ -71,11 +71,3 @@ func SecondsToString(val uint32) (str string) {
         }
         return
 }
-
-// Read a string and convert it to the correct
-// Resource Record.
-func SetString(s string) RR {
-
-        k := new(RR_DNSKEY)
-        return k
-}

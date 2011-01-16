@@ -395,6 +395,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	return err == nil
 }
 
+// Beter name for this function
 // Using RFC1982 calculate if a signature period is valid
 func (s *RR_RRSIG) PeriodOK() bool {
 	utc := time.UTC().Seconds()

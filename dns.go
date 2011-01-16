@@ -59,6 +59,19 @@ func (r RRset) Len() int           { return len(r) }
 func (r RRset) Less(i, j int) bool { return r[i].Header().Name < r[j].Header().Name }
 func (r RRset) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
 
+// Check if the RRset is 2181 compliant
+func (r RRset) Ok() bool {
+	ttl := r[0].Header().Ttl
+	name := r[0].Header().Name
+	class := r[0].Header().Class
+	for _, rr := range r[1:] {
+		if rr.Header().Ttl != ttl { return false }
+		if rr.Header().Name != name { return false }
+		if rr.Header().Class != class { return false }
+	}
+	return true
+}
+
 // DNS resource records.
 // There are many types of messages,
 // but they all share the same header.
@@ -93,8 +106,7 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-// Return number of labels in a domain name
-// Make it fqdn?
+// Return the number of labels in a domain name
 func LabelCount(a string) (c uint8) {
 	for _, v := range a {
 		if v == '.' {
