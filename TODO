@@ -1,5 +1,4 @@
 Todo:
-Short term:
 * NSEC3 - need base32 for Nsec3
 * Cleanup the code
 * Tsig testing

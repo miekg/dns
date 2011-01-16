@@ -12,7 +12,7 @@ func TestConversion(t *testing.T) {
         println(StringToSeconds("2d"))
         println(StringToSeconds("1d1d"))
 */
-
+/*
         println(SecondsToString(604800))        // 1w
         println(SecondsToString(604799))        // 1w-1
         println(SecondsToString(86400))         // 1d
@@ -21,6 +21,7 @@ func TestConversion(t *testing.T) {
         println(SecondsToString(86))            // 1m26
         println(SecondsToString(60))            // 1m
         println(SecondsToString(59))            // 59
+        */
 }
 
 func TestPrivateKeyRead(t *testing.T) {
@@ -40,10 +41,7 @@ Created: 20101221142359
 Publish: 20101221142359
 Activate: 20101221142359`
 
-        a = a
-        b := "Private-key-format: v1.3"
-
         k := new(RR_DNSKEY)
-        p,_ := k.PrivateKeySetString(b)
+        p,_ := k.PrivateKeySetString(a)
         p = p
 }

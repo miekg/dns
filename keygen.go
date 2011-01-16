@@ -4,6 +4,8 @@ import (
 	"os"
         "big"
         "fmt"
+        "bufio"
+        "strings"
         "strconv"
 	"crypto/rsa"
 	"crypto/rand"
@@ -109,34 +111,43 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 
 // Read a private key file and create a public key and
 // return a private key
-func (r *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
         p := new(rsa.PrivateKey)
+        r := bufio.NewReader(strings.NewReader(s))
         var left, right string
+
+        line, _ := r.ReadBytes('\n')
+        fmt.Printf("%v\n", string(line))
         // Do we care about the order of things?
-        n, err := fmt.Sscanf(s, "%s %s\n", &left, &right)
-        n = n
-        err = err
-        switch left {
-        case "Private-key-format:":
-                if right != "v1.3" {
-                        return nil, &Error{Error: "v1.3 supported"}
+        for len(line) > 0 {
+                n, _ := fmt.Sscanf(string(line), "%s %s\n", &left, &right)
+                if n > 0 {
+                        switch left {
+                        case "Private-key-format:":
+                                if right != "v1.3" {
+                                        return nil, &Error{Error: "v1.3 supported"}
+                                }
+                        case "Algorithm:":
+                                // simple switch on the string
+                        case "Modulus:", "PrivateExponent:", "Prime1:", "Prime2:":
+                                v, err := packBase64([]byte(right))
+                                println(left, right)
+                                if err != nil {
+                                        return nil, err
+                                }
+                                if right == "Modulus:" { p.PublicKey.N.SetBytes(v) }
+                                if right == "PublicExponent:" { /* p.PublicKey.E */ }
+                                if right == "PrivateExponent:" { p.D.SetBytes(v) }
+                                if right == "Prime1:" { p.P.SetBytes(v) }
+                                if right == "Prime2:" { p.Q.SetBytes(v) }
+                        case "Exponent1:", "Exponent2:", "Coefficient:":
+                                /* not used in Go (yet) */
+                        default:
+                                println("ERR: ", left)
+                                return nil, &Error{Error: "Private key file not recognized"}
+                        }
                 }
-        case "Algorithm:":
-                // simple switch on the string
-        case "Modulus:":
-                modulus, err := packBase64([]byte(right))
-                if err != nil {
-                        return nil, err
-                }
-                p.PublicKey.N.SetBytes(modulus)
-        /*
-        case "PublicExponent":
-                publicExponent, err := packBase64([]byte(right))
-                if err != nil {
-                        return nil,err
-                }
-                t.PublicKey.E = int(publicExponent)
-        */
+                line, _ = r.ReadBytes('\n')
         }
         return p, nil
 }
