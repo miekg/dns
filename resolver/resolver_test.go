@@ -113,7 +113,6 @@ func TestResolverTsig(t *testing.T) {
         // Add it to the msg
         m.Extra[0] = tsig
 
-
 	ch <- Msg{m, nil}
 	in := <-ch
 	if in.Dns != nil {
@@ -144,4 +143,24 @@ func TestAXFR(t *testing.T) {
                 var _ = dm
                 /* fmt.Printf("%v\n",dm.Dns) */
         }
+        /* channel is closed by NewXfer() */
+}
+
+func TestFromFile(t *testing.T) {
+        res := new(Resolver)
+        res.FromFile("/etc/resolv.conf")
+	ch := res.NewQuerier()
+	m := new(dns.Msg)
+	m.Question = make([]dns.Question, 1)
+	m.Question[0] = dns.Question{"a.miek.nl", dns.TypeA, dns.ClassINET}
+
+	ch <- Msg{m, nil}
+	in := <-ch
+	if in.Dns != nil {
+		if in.Dns.Rcode != dns.RcodeSuccess {
+			t.Log("Failed to get an valid answer")
+			t.Fail()
+		}
+		fmt.Printf("%v\n", in.Dns)
+	}
 }
