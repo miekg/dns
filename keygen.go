@@ -2,8 +2,9 @@ package dns
 
 import (
 	"os"
-        "strconv"
         "big"
+        "fmt"
+        "strconv"
 	"crypto/rsa"
 	"crypto/rand"
 )
@@ -104,4 +105,38 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
                         "Coefficient: " + coefficient + "\n"
         }
         return
+}
+
+// Read a private key file and create a public key and
+// return a private key
+func (r *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
+        p := new(rsa.PrivateKey)
+        var left, right string
+        // Do we care about the order of things?
+        n, err := fmt.Sscanf(s, "%s %s\n", &left, &right)
+        n = n
+        err = err
+        switch left {
+        case "Private-key-format:":
+                if right != "v1.3" {
+                        return nil, &Error{Error: "v1.3 supported"}
+                }
+        case "Algorithm:":
+                // simple switch on the string
+        case "Modulus:":
+                modulus, err := packBase64([]byte(right))
+                if err != nil {
+                        return nil, err
+                }
+                p.PublicKey.N.SetBytes(modulus)
+        /*
+        case "PublicExponent":
+                publicExponent, err := packBase64([]byte(right))
+                if err != nil {
+                        return nil,err
+                }
+                t.PublicKey.E = int(publicExponent)
+        */
+        }
+        return p, nil
 }
