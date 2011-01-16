@@ -127,26 +127,34 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 					return nil, &Error{Error: "v1.3 supported"}
 				}
 			case "Algorithm:":
-				// simple switch on the string
+                                a, _ := strconv.Atoi(right)
+                                if a == 0 {
+                                        return nil, &Error{Error: "incorrect algorithm"}
+                                }
+				k.Algorithm = uint8(a)
+                                k.Protocol = 3
 			case "Modulus:", "PublicExponent:", "PrivateExponent:", "Prime1:", "Prime2:":
 				v, err := packBase64([]byte(right))
 				if err != nil {
 					return nil, err
 				}
-				if right == "Modulus:" {
+				if left == "Modulus:" {
                                         p.PublicKey.N = big.NewInt(0)
 					p.PublicKey.N.SetBytes(v)
 				}
-				if right == "PublicExponent:" { /* p.PublicKey.E */
+				if left == "PublicExponent:" { /* p.PublicKey.E */
                                         p.PublicKey.E = 3
 				}
-				if right == "PrivateExponent:" {
+				if left == "PrivateExponent:" {
+                                        p.D = big.NewInt(0)
 					p.D.SetBytes(v)
 				}
-				if right == "Prime1:" {
+				if left == "Prime1:" {
+                                        p.P = big.NewInt(0)
 					p.P.SetBytes(v)
 				}
-				if right == "Prime2:" {
+				if left == "Prime2:" {
+                                        p.Q = big.NewInt(0)
 					p.Q.SetBytes(v)
 				}
 			case "Exponent1:", "Exponent2:", "Coefficient:":
@@ -160,7 +168,7 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 		}
 		line, _ = r.ReadBytes('\n')
 	}
+        println(p.PublicKey.N)
         k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
-        k.Algorithm = AlgRSASHA1        // ANDERS!
 	return p, nil
 }
