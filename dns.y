@@ -51,45 +51,12 @@ rrtype:
 
 type DnsLex int
 
-func (DnsLex) Lex(yylval *yySymType) int {
+func (DnsLex) Lex(lval *yySymType) int {
 
     // yylval.rrtype = Str_rr($XX)  //give back TypeA, TypeNS
     // return Y_A this should be the token, another map?
 
-    return 0
-}
-
-
-func isSeparator(c byte) bool {
-	switch c {
-	case '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t':
-		return true
-	}
-	return false
-}
-
-func isSpace(c byte) bool {
-	switch c {
-	case ' ', '\t', '\r', '\n':
-		return true
-	}
-	return false
-}
-
-func isCtl(c byte) bool { return (0 <= c && c <= 31) || c == 127 }
-
-func isChar(c byte) bool { return 0 <= c && c <= 127 }
-
-func isAnyText(c byte) bool { return !isCtl(c) }
-
-func isQdText(c byte) bool { return isAnyText(c) && c != '"' }
-
-func isToken(c byte) bool { return isChar(c) && !isCtl(c) && !isSeparator(c) }
-
-// This is a best effort parse, so errors are not returned, instead not all of
-// the input string might be parsed. result is always non-nil.
-// must never begin with a string
-func scan(s string) (string, int) {
+//func scan(s string) (string, int) {
         if len(s) == 0 { 
                 println("a bit short")
         }

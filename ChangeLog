@@ -5,6 +5,5 @@ xx YYY 2011: 0.0.1 Miek Gieben <miek@miek.nl>
     * Private key file parsing from BIND9
     * TSIG
     * EDNS0
-    * Parsng from strings
     * Cherry picked GRONG for server side ideas
 
