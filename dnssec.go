@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/rsa"
-        "crypto/rand"
+	"crypto/rand"
 	"encoding/hex"
 	"hash"
 	"time"
@@ -68,17 +68,17 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		println("Keytag RSAMD5. Todo")
 		keytag = 0
 	default:
-                keywire := new(dnskeyWireFmt)
-                keywire.Flags = k.Flags
-                keywire.Protocol = k.Protocol
-                keywire.Algorithm = k.Algorithm
-                keywire.PubKey = k.PubKey
-                wire := make([]byte, 2048) // TODO(mg) lenght!
-                n, ok := packStruct(keywire, wire, 0)
+		keywire := new(dnskeyWireFmt)
+		keywire.Flags = k.Flags
+		keywire.Protocol = k.Protocol
+		keywire.Algorithm = k.Algorithm
+		keywire.PubKey = k.PubKey
+		wire := make([]byte, 2048) // TODO(mg) lenght!
+		n, ok := packStruct(keywire, wire, 0)
 		if !ok {
 			return 0
 		}
-                wire = wire[:n]
+		wire = wire[:n]
 		for i, v := range wire {
 			if i&1 != 0 {
 				keytag += int(v) // must be larger than uint32
@@ -102,24 +102,24 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	ds.DigestType = uint8(h)
 	ds.KeyTag = k.KeyTag()
 
-        keywire := new(dnskeyWireFmt)
-        keywire.Flags = k.Flags
-        keywire.Protocol = k.Protocol
-        keywire.Algorithm = k.Algorithm
-        keywire.PubKey = k.PubKey
-        wire := make([]byte, 2048) // TODO(mg) lenght!
-        n, ok := packStruct(keywire, wire, 0)
-        if !ok {
-                return nil
-        }
-        wire = wire[:n]
+	keywire := new(dnskeyWireFmt)
+	keywire.Flags = k.Flags
+	keywire.Protocol = k.Protocol
+	keywire.Algorithm = k.Algorithm
+	keywire.PubKey = k.PubKey
+	wire := make([]byte, 2048) // TODO(mg) lenght!
+	n, ok := packStruct(keywire, wire, 0)
+	if !ok {
+		return nil
+	}
+	wire = wire[:n]
 
-        owner := make([]byte, 255)
-        off, ok1 := packDomainName(k.Hdr.Name, owner, 0)
+	owner := make([]byte, 255)
+	off, ok1 := packDomainName(k.Hdr.Name, owner, 0)
 	if !ok1 {
 		return nil
 	}
-        owner = owner[:off]
+	owner = owner[:off]
 	/* 
 	 * from RFC4034
 	 * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
@@ -153,22 +153,22 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // The Signature data is filled by this method
 // There is no check if rrset is a proper (RFC 2181) RRSet
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
-        if k == nil {
-                return false
-        }
+	if k == nil {
+		return false
+	}
 
 	s.Hdr.Name = rrset[0].Header().Name
 	s.Hdr.Class = rrset[0].Header().Class
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
 	/* Check that these are there */
-        /* 
-	s.Inception = inception
-	s.Expiration = expiration
-	s.KeyTag = k.KeyTag()
-	s.SignerName = k.Hdr.Name
-	s.Algorithm = ??
-        */
+	/* 
+		s.Inception = inception
+		s.Expiration = expiration
+		s.KeyTag = k.KeyTag()
+		s.SignerName = k.Hdr.Name
+		s.Algorithm = ??
+	*/
 	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
 
@@ -190,7 +190,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	}
 	signdata = signdata[:n]
 
-        // identical to Verify // TODO(mg) seperate function
+	// identical to Verify // TODO(mg) seperate function
 	for _, r := range rrset {
 		h := r.Header()
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
@@ -210,13 +210,13 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-                wire := make([]byte, 4096)
-                off, ok1 := packRR(r, wire, 0)
-                if !ok1 {
-                        println("Failure to pack")
-                        return false
-                }
-                wire = wire[:off]
+		wire := make([]byte, 4096)
+		off, ok1 := packRR(r, wire, 0)
+		if !ok1 {
+			println("Failure to pack")
+			return false
+		}
+		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
@@ -226,8 +226,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		signdata = append(signdata, wire...)
 	}
 
-        var signature []byte
-        var err os.Error
+	var signature []byte
+	var err os.Error
 	switch s.Algorithm {
 	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
 		//pubkey := k.pubKeyRSA() // Get the key, need privkey representation
@@ -248,22 +248,22 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 			h = sha512.New()
 			ch = rsa.HashSHA512
 		}
-                // Need privakey representation in godns TODO(mg) see keygen.go
+		// Need privakey representation in godns TODO(mg) see keygen.go
 		io.WriteString(h, string(signdata))
 		sighash := h.Sum()
 
-                // Get the key from the interface
-                switch p := k.(type) {
-                case *rsa.PrivateKey:
-                        signature, err = rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
-                        if err != nil {
-                                return false
-                        }
-                        s.Signature = unpackBase64(signature)
-                default:
-                        // Not given the correct key
-                        return false
-                }
+		// Get the key from the interface
+		switch p := k.(type) {
+		case *rsa.PrivateKey:
+			signature, err = rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+			if err != nil {
+				return false
+			}
+			s.Signature = unpackBase64(signature)
+		default:
+			// Not given the correct key
+			return false
+		}
 	case AlgDH:
 	case AlgDSA:
 	case AlgECC:
@@ -344,13 +344,13 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-                wire := make([]byte, 4096)
-                off, ok1 := packRR(r, wire, 0)
-                if !ok1 {
-                        println("Failure to pack")
-                        return false
-                }
-                wire = wire[:off]
+		wire := make([]byte, 4096)
+		off, ok1 := packRR(r, wire, 0)
+		if !ok1 {
+			println("Failure to pack")
+			return false
+		}
+		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
@@ -407,19 +407,19 @@ func (s *RR_RRSIG) PeriodOK() bool {
 
 // Return the signatures base64 encodedig sigdata as a byte slice.
 func (s *RR_RRSIG) sigBuf() []byte {
-        sigbuf, err := packBase64([]byte(s.Signature))
-        if err != nil {
-                return nil
-        }
+	sigbuf, err := packBase64([]byte(s.Signature))
+	if err != nil {
+		return nil
+	}
 	return sigbuf
 }
 
 // Extract the RSA public key from the Key record
 func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
-        keybuf, err := packBase64([]byte(k.PubKey))
-        if err != nil {
-                return nil
-        }
+	keybuf, err := packBase64([]byte(k.PubKey))
+	if err != nil {
+		return nil
+	}
 
 	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
 	// Length is in the 0th byte, unless its zero, then it
@@ -439,6 +439,26 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 	}
 	pubkey.N.SetBytes(keybuf[keyoff+int(explen):])
 	return pubkey
+}
+
+// Set the public key (the value E and N)
+func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
+        println(_N)
+	buf := make([]byte, 2) // TODO(mg) length!
+	if _E < 256 {
+		buf[0] = 1
+		buf[1] = uint8(_E)
+	} else {
+                // length of _E? in bytes
+                // see keygen.go line 54
+                buf[0] = 0
+                //buf[1] = l1
+                //buf[2] = l2
+                // for length set _E
+        }
+        buf = append(buf, _N.Bytes()...)
+        k.PubKey = unpackBase64(buf)
+        return
 }
 
 // Map for algorithm names.

@@ -1,6 +1,6 @@
 package dns
 
-import ( "testing")
+import ( "testing"; "fmt")
 
 func TestConversion(t *testing.T) {
 /*
@@ -42,4 +42,5 @@ Activate: 20101221142359`
         k := new(RR_DNSKEY)
         p,_ := k.PrivateKeySetString(a)
         p = p
+        fmt.Printf("%v\n", k)
 }

@@ -134,9 +134,11 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 					return nil, err
 				}
 				if right == "Modulus:" {
+                                        p.PublicKey.N = big.NewInt(0)
 					p.PublicKey.N.SetBytes(v)
 				}
 				if right == "PublicExponent:" { /* p.PublicKey.E */
+                                        p.PublicKey.E = 3
 				}
 				if right == "PrivateExponent:" {
 					p.D.SetBytes(v)
@@ -158,5 +160,7 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 		}
 		line, _ = r.ReadBytes('\n')
 	}
+        k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
+        k.Algorithm = AlgRSASHA1        // ANDERS!
 	return p, nil
 }
