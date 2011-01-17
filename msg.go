@@ -273,6 +273,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					off += len(data)
 				}
 			case "A":
+                                // It must be a slice of 4
 				if fv.Len() > net.IPv4len || off+fv.Len() > len(msg) {
 					return len(msg), false
 				}

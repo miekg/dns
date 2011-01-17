@@ -98,9 +98,11 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
-					//continue
-				}
-				go h.ResponderUDP(s.cu, s.addr, s.msg)
+                                        println(s.err)
+					//continue?
+				} else {
+				        go h.ResponderUDP(s.cu, s.addr, s.msg)
+                                }
 			}
 		}
 	}
@@ -108,30 +110,40 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 }
 
 func listenerUDP(a *net.UDPAddr, ch chan msg) {
-	c, _ := net.ListenUDP("udp", a)
-	// check error TODO(mg)
+	c, err := net.ListenUDP("udp", a)
+        if err != nil {
+                ch <- msg{err: err}
+                return
+        }
 	for {
 		m := make([]byte, dns.DefaultMsgSize) // TODO(mg) out of this loop?
 		n, radd, err := c.ReadFromUDP(m)
 		if err != nil {
-			// hmm
+			ch <- msg{err: err}
+                        continue
 		}
 		m = m[:n]
-		// if closed(ch) c.Close() TODO(mg)
+		// if closed(ch) c.Close() TODO(mg)?? 
 		ch <- msg{cu: c, addr: radd, msg: m}
 	}
 }
 
 func listenerTCP(a *net.TCPAddr, ch chan msg) {
-	t, _ := net.ListenTCP("tcp", a)
+	t, err := net.ListenTCP("tcp", a)
+        if err != nil {
+                ch <- msg{err: err}
+                return
+        }
 	for {
 		l := make([]byte, 2) // receiver length
 		c, err := t.AcceptTCP()
-		var _ = err // handle err TODO(mg)
+		if err != nil {
+			ch <- msg{err: err}
+		}
 
 		n, cerr := c.Read(l)
-		if err != nil {
-			// Send err mesg
+		if cerr != nil {
+			ch <- msg{err: cerr}
 		}
 		length := uint16(l[0])<<8 | uint16(l[1])
 		if length == 0 {
