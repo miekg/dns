@@ -41,10 +41,6 @@ type Msg struct {
 	Dns   *dns.Msg
 	Error os.Error
 }
-// ^ prolly extend this so that servers can use this too. We need
-// to also encode some client side stuff in here, like client addr
-// I think that is the *only* thing we need.
-
 
 type Resolver struct {
 	Servers  []string            // servers to use
@@ -138,7 +134,7 @@ func query(res *Resolver, msg chan Msg) {
 	return
 }
 
-// Start a new xfr as a goroutine, return a channel.
+// Start a new xfr as a goroutine, return a channel of Msg.
 // Channel will be closed when the axfr is finished, until
 // that time new messages will appear on the channel
 func (res *Resolver) NewXfer() (ch chan Msg) {

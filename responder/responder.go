@@ -4,12 +4,15 @@
 
 // DNS server implementation
 
-// Package responder implements a DNS server. A nameserver needs to implement
-// the Responder interface:
+// Package responder implements a DNS server. Any nameserver needs to implement
+// the Responder interface to get things going.
+// 
+// Typical usage of the package:
 //
 // type myserv Server
 // func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
 // func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
+//
 // su := new(Server)                    // create new sever
 // su.Address = "127.0.0.1"             // listen address
 // su.Port = "8053"                     // listen port
@@ -44,17 +47,19 @@ type msg struct {
 // the kind of nameserver
 type Responder interface {
 	// Receives the raw message content and writes back 
-        // an udp response. An UDP connection needs a remote
-        // address to write to.
+        // an UDP response. An UDP connection needs a remote
+        // address to write to. ResponderUDP() must take care of sending
+        // any response back to the requestor.
 	ResponderUDP(c *net.UDPConn, a net.Addr, in []byte)
 	// Receives the raw message content and writes back
-        // a tcp response. A TCP connection does need to
-        // know explicitly be told the remote address.
+        // a TCP response. A TCP connection does need to
+        // know explicitly be told the remote address. ResponderTCP() must
+        // take care of sending back a response to the requestor.
 	ResponderTCP(c *net.TCPConn, in []byte)
 }
 
-// Start a new responder. The returned channel is only used
-// to stop the responder.
+// Start a new responder. The returned channel is only used to stop the responder.
+// Send 'true' to make it stop
 func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	var port string
 	if len(res.Address) == 0 {
@@ -109,6 +114,7 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	return nil
 }
 
+// Listen for UDP requests.
 func listenerUDP(a *net.UDPAddr, ch chan msg) {
 	c, err := net.ListenUDP("udp", a)
         if err != nil {
@@ -128,6 +134,7 @@ func listenerUDP(a *net.UDPAddr, ch chan msg) {
 	}
 }
 
+// Listen for TCP requests.
 func listenerTCP(a *net.TCPAddr, ch chan msg) {
 	t, err := net.ListenTCP("tcp", a)
         if err != nil {
@@ -171,7 +178,7 @@ func listenerTCP(a *net.TCPAddr, ch chan msg) {
 	}
 }
 
-// Send a buffer on the TCP connection
+// Send a buffer on the TCP connection.
 func SendTCP(m []byte, c *net.TCPConn) os.Error {
 	l := make([]byte, 2)
 	l[0] = byte(len(m) >> 8)
@@ -189,8 +196,8 @@ func SendTCP(m []byte, c *net.TCPConn) os.Error {
 	return nil
 }
 
-// Small helper function to help sending UDP packets. Mostly
-// done for the symmetry. see SendTCP.
+// Send a buffer to the remove address. Only here because
+// of the symmetry with SendTCP().
 func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
 	_, err := c.WriteTo(m, a)
 	if err != nil {

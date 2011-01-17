@@ -33,7 +33,7 @@ type Option struct {
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option "OPT" // Tag is used in pack and unpack
+	Option []Option "OPT" // Tag is used in Pack and Unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -66,12 +66,12 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
-// Get the version
+// Get the EDNS version (always 0 currently)
 func (rr *RR_OPT) Version() uint8 {
         return 0
 }
 
-// Set the version of edns
+// Set the version of EDNS
 func (rr *RR_OPT) SetVersion(v uint8) {
 	return
 }
@@ -81,7 +81,7 @@ func (rr *RR_OPT) UDPSize() uint16 {
 	return rr.Hdr.Class
 }
 
-// Set/Get the UDP buffer size
+// Set the UDP buffer size
 func (rr *RR_OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
@@ -116,15 +116,8 @@ func (rr *RR_OPT) Nsid() string {
 	return "NSID: " + rr.Option[0].Data
 }
 
-// Representation of NSID is in Hex
-
-// Set the NSID
-func (rr *RR_OPT) SetNsidToHex(hexnsid string) {
+// Set the NSID from a string which is represented as hex characters.
+func (rr *RR_OPT) SetNsid(hexnsid string) {
         rr.Option[0].Code = OptionCodeNSID
         rr.Option[0].Data = hexnsid
-}
-
-func (rr *RR_OPT) SetNsidToString(nsid string) {
-        rr.Option[0].Code = OptionCodeNSID
-        rr.Option[0].Data = hex.EncodeToString([]byte(nsid))
 }

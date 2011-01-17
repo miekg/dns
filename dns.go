@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
 
-// Package dns implements a full featured interface to the DNS.
 // Supported RFCs and features include:
 // * 1034/1035  - DNS standard
 // * 1982 - Serial Arithmetic
@@ -24,8 +23,10 @@
 // * 5011 - NSID 
 // * 5936 - AXFR
 // * IP6 support
-//
-// The package allows full control over what is send out to the DNS.
+
+// Package dns implements a full featured interface to the DNS.
+// The package allows full control over what is send out to the DNS. All RR types are converted
+// to Go types.
 //
 package dns
 
@@ -33,8 +34,10 @@ import (
 	"strconv"
 )
 
+// For RFC1982 (Serial Arithmetic) calculations.
 const Year68 = 2 << (32 - 1)
 
+// Error represents a DNS error
 type Error struct {
 	Error   string
 	Name    string
@@ -61,7 +64,7 @@ func (r RRset) Len() int           { return len(r) }
 func (r RRset) Less(i, j int) bool { return r[i].Header().Name < r[j].Header().Name }
 func (r RRset) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
 
-// Check if the RRset is 2181 compliant
+// Check if the RRset is RFC 2181 compliant
 func (r RRset) Ok() bool {
 	ttl := r[0].Header().Ttl
 	name := r[0].Header().Name

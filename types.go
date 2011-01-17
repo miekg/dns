@@ -6,8 +6,8 @@
 // Basic usage pattern for creating new Resource Record:
 //
 // r := new(RR_TXT)
-// r.TXT = "This is the content of the TXT record"
 // r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+// r.TXT = "This is the content of the TXT record"
 //
 package dns
 

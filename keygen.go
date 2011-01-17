@@ -12,7 +12,7 @@ import (
 )
 
 // Empty interface that is used a wrapper around all possible
-// private key implementation from the crypto package.
+// private key implementations from the crypto package.
 type PrivateKey interface{}
 
 // io.Reader
@@ -53,20 +53,14 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 }
 
 // Convert a PrivateKey to a string. This
-// string has the same format as the private-key-file
-// of BIND9 (Private-key-format: v1.3). It needs some
-// info from the key (hashing, keytag), so its a method
-// of the RR_DNSKEY.
+// string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
+// It needs some info from the key (hashing, keytag), so its a method of the RR_DNSKEY.
 func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
 		modulus := unpackBase64(t.PublicKey.N.Bytes())
 		e := big.NewInt(int64(t.PublicKey.E))
-		/*
-			pub := make([]byte, 1)
-			pub[0] = uint8(t.PublicKey.E) // Todo does not fit with binds 65537 exp!
-		*/
 		publicExponent := unpackBase64(e.Bytes())
 		privateExponent := unpackBase64(t.D.Bytes())
 		prime1 := unpackBase64(t.P.Bytes())
@@ -99,8 +93,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	return
 }
 
-// Read a private key file and create a public key and
-// return a private key
+// Read a private key (file) string and create a public key. Return a private key
 func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	r := bufio.NewReader(strings.NewReader(s))

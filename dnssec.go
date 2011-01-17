@@ -19,7 +19,6 @@ import (
 
 // DNSSEC encryption algorithm codes.
 const (
-	// DNSSEC algorithms
 	AlgRSAMD5    = 1
 	AlgDH        = 2
 	AlgDSA       = 3
@@ -58,6 +57,7 @@ type dnskeyWireFmt struct {
 	Protocol  uint8
 	Algorithm uint8
 	PubKey    string "base64"
+        /* Nothing is left out */
 }
 
 // Calculate the keytag of the DNSKEY.
@@ -139,19 +139,18 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
 	case HashGOST94:
-
+                /* I have no clue */
 	default:
-		// wrong hash value
 		return nil
 	}
 	return ds
 }
 
 // Sign an RRSet. The Signature needs to be filled in with
-// all the values: Inception, Expiration, KeyTag(?), SignerName
-// the rest is copied from the RRset. Return true when all ok.
-// The Signature data is filled by this method
-// There is no check if rrset is a proper (RFC 2181) RRSet
+// all the values: Inception, Expiration, KeyTag and SignerName
+// The rest is copied from the RRset. Return true when the signing went OK.
+// The Signature data is the RRSIG is filled by this method.
+// There is no check if rrset is a proper (RFC 2181) RRSet.
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
 		return false
@@ -161,14 +160,13 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	s.Hdr.Class = rrset[0].Header().Class
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
-	/* Check that these are there */
-	/* 
-		s.Inception = inception
-		s.Expiration = expiration
-		s.KeyTag = k.KeyTag()
-		s.SignerName = k.Hdr.Name
-		s.Algorithm = ??
-	*/
+
+        if s.KeyTag == 0 || len(s.SignerName) == 0 {
+                // Must be set
+                return false
+        }
+        // Algorithm is check below
+        // s.Inception and s.Expiration may be 0 (rollover etc.)
 	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
 
@@ -247,6 +245,9 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		case AlgRSASHA512:
 			h = sha512.New()
 			ch = rsa.HashSHA512
+                default:
+                        // Illegal Alg
+                        return false
 		}
 		// Need privakey representation in godns TODO(mg) see keygen.go
 		io.WriteString(h, string(signdata))
@@ -273,26 +274,20 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	return true
 }
 
-// Validate an rrset with the signature and key. This is the
-// cryptographic test, the validity period most be check separately.
+// Validate an rrset with the signature and key. This is only the
+// cryptographic test, the signature validity period most be check separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
-		println(s.KeyTag)
-		println(k.KeyTag())
 		return false
 	}
 	if s.Hdr.Class != k.Hdr.Class {
-		println("Class")
 		return false
 	}
 	if s.Algorithm != k.Algorithm {
-		println("Class")
 		return false
 	}
 	if s.SignerName != k.Hdr.Name {
-		println(s.SignerName)
-		println(k.Hdr.Name)
 		return false
 	}
 	for _, r := range rrset {
@@ -390,12 +385,13 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	case AlgDSA:
 	case AlgECC:
 	case AlgECCGOST:
+        default:
+                // Unknown Alg
+                return false
 	}
-
 	return err == nil
 }
 
-// Beter name for this function
 // Using RFC1982 calculate if a signature period is valid
 func (s *RR_RRSIG) PeriodOK() bool {
 	utc := time.UTC().Seconds()

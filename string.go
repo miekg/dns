@@ -12,8 +12,8 @@ const (
 	w = 7 * d
 )
 
-// Convert a Ttl to a value. Supported value 'm' for minutes, 'h' for hours
-// 'w' for week and 'd' for days. Stuff like '1d1d' is legal and return the value of '2d'
+// Convert a Ttl to a value. Supported values: 'm' for minutes, 'h' for hours
+// 'w' for week and 'd' for days. Stuff like '1d1d' is legal and returns the value of '2d'
 func StringToSeconds(ttl string) (sec uint32, ok bool) {
 	num := ""
 	for _, k := range ttl {
@@ -41,6 +41,7 @@ func StringToSeconds(ttl string) (sec uint32, ok bool) {
 	return
 }
 
+// Convert a value to a (string) Ttl. Reverse of StringToSeconds()
 func SecondsToString(val uint32) (str string) {
 	mod := val / w
 	if mod > 0 {

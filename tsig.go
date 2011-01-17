@@ -1,13 +1,12 @@
 package dns
 
-// Implementation of TSIG
-// Generation an Validation
+// Implementation of TSIG: generation and validation
 
 import (
-	"crypto/hmac"
+	"io"
 	"strconv"
 	"strings"
-	"io"
+	"crypto/hmac"
 	"encoding/hex"
 )
 
@@ -24,7 +23,7 @@ type RR_TSIG struct {
 	Fudge      uint16
 	MACSize    uint16
 	MAC        string
-	OrigId     uint16 // msg id
+	OrigId     uint16
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string
@@ -46,9 +45,8 @@ func (rr *RR_TSIG) String() string {
 		" " + rr.OtherData
 }
 
-// The following values must be put in wireformat, so that
-// the MAC can be calculated
-// RFC 2845, section 3.4.2. TSIG Variables
+// The following values must be put in wireformat, so that the MAC can be calculated.
+// RFC 2845, section 3.4.2. TSIG Variables.
 type tsigWireFmt struct {
 	// From RR_HEADER
 	Name  string "domain-name"
@@ -66,8 +64,8 @@ type tsigWireFmt struct {
 
 // Generate the HMAC for msg. The TSIG RR is modified
 // to include the MAC and MACSize. Note the the msg Id must
-// be set, otherwise the MAC is not correct
-// secret is encoded in base64 in BIND9
+// be set, otherwise the MAC is not correct.
+// The string 'secret' must be encoded in base64
 func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 	buf := make([]byte, 4096) // TODO(mg) bufsize!
 	tsig := new(tsigWireFmt)
@@ -104,7 +102,7 @@ func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 
 // Verify a TSIG. The msg should be the complete message with
 // the TSIG record still attached (as the last rr in the Additional
-// section)
+// section) TODO(mg)
 func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 
