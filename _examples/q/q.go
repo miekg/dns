@@ -55,11 +55,11 @@ FLAGS:
 		qname = append(qname, flag.Arg(i))
 	}
 	r := new(resolver.Resolver)
+        r.FromFile("/etc/resolv.conf")
 	r.Timeout = 2
 	r.Port = *port
 	r.Tcp = *tcp
 	r.Attempts = 1
-
 	qr := r.NewQuerier()
 	// @server may be a name, resolv that 
 	var err os.Error

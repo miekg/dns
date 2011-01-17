@@ -10,7 +10,7 @@ func main() {
 	res := new(resolver.Resolver)
 	ch := res.NewXfer()
 
-	res.Servers = []string{"127.0.0.1"}
+	res.FromFile("/etc/resolv.conf")
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{"atoom.net", dns.TypeAXFR, dns.ClassINET}

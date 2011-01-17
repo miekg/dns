@@ -12,12 +12,9 @@ import (
 func main() {
 	r := new(resolver.Resolver)
 	qr := r.NewQuerier()
-        r.Servers = []string{"127.0.0.1"}
-        r.Timeout = 2
-        r.Attempts = 1
-
+        r.FromFile("/etc/resolv.conf")
         if len(os.Args) != 2 {
-                fmt.Printf("%s DOMAIN\nIt using 127.0.0.1 as a nameserver\n", os.Args[0])
+                fmt.Printf("%s DOMAIN\n", os.Args[0])
                 os.Exit(1)
         }
 

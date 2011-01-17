@@ -14,9 +14,7 @@ import (
 func main() {
 	r := new(resolver.Resolver)
 	qr := r.NewQuerier()
-	r.Servers = []string{"127.0.0.1"}
-	r.Timeout = 2
-	r.Attempts = 1
+        r.FromFile("/etc/resolv.conf")
 	var in resolver.Msg
 
 	if len(os.Args) != 2 {
