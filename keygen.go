@@ -44,20 +44,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if err != nil {
 			return nil, err
 		}
-		keybuf := make([]byte, 2)
-
-		if priv.PublicKey.E < 256 {
-			keybuf[0] = 1
-			keybuf[1] = uint8(priv.PublicKey.E)
-		} else {
-			keybuf[0] = 0
-			//keybuf[1] = part of length
-			//keybuf[2] = rest of length
-			// keybuf[1]+[2] have the length
-			// keybuf[3:..3+lenght] have exponent
-			// not implemented
-			return nil, &Error{Error: "Exponent too large"}
-		}
+                keybuf := exponentToBuf(priv.PublicKey.E)
 		keybuf = append(keybuf, priv.PublicKey.N.Bytes()...)
 		r.PubKey = unpackBase64(keybuf)
 		return priv, nil
@@ -75,9 +62,12 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
 		modulus := unpackBase64(t.PublicKey.N.Bytes())
+                e := big.NewInt(int64(t.PublicKey.E))
+                /*
 		pub := make([]byte, 1)
 		pub[0] = uint8(t.PublicKey.E) // Todo does not fit with binds 65537 exp!
-		publicExponent := unpackBase64(pub)
+                */
+		publicExponent := unpackBase64(e.Bytes())
 		privateExponent := unpackBase64(t.D.Bytes())
 		prime1 := unpackBase64(t.P.Bytes())
 		prime2 := unpackBase64(t.Q.Bytes())
@@ -142,8 +132,8 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
                                         p.PublicKey.N = big.NewInt(0)
 					p.PublicKey.N.SetBytes(v)
 				}
-				if left == "PublicExponent:" { /* p.PublicKey.E */
-                                        p.PublicKey.E = 3
+				if left == "PublicExponent:" {
+                                        p.PublicKey.E, _ = strconv.Atoi(string(v))
 				}
 				if left == "PrivateExponent:" {
                                         p.D = big.NewInt(0)

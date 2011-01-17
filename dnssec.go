@@ -444,7 +444,14 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
-        println(_N)
+        buf := exponentToBuf(_E)
+        buf = append(buf, _N.Bytes()...)
+        k.PubKey = unpackBase64(buf)
+        return
+}
+
+// Set the public key (the value E and N)
+func exponentToBuf(_E int) []byte {
         var buf []byte
 	if _E < 256 {
 	        buf = make([]byte, 2)
@@ -458,9 +465,7 @@ func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
                 buf[2] = uint8(len(i.Bytes()))
                 buf = append(buf, i.Bytes()...)
         }
-        buf = append(buf, _N.Bytes()...)
-        k.PubKey = unpackBase64(buf)
-        return
+        return buf
 }
 
 // Map for algorithm names.
