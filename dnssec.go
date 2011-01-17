@@ -445,17 +445,18 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
         println(_N)
-	buf := make([]byte, 2) // TODO(mg) length!
+        var buf []byte
 	if _E < 256 {
+	        buf = make([]byte, 2)
 		buf[0] = 1
 		buf[1] = uint8(_E)
 	} else {
-                // length of _E? in bytes
-                // see keygen.go line 54
+	        buf = make([]byte, 3)
+                i := big.NewInt(int64(_E))
                 buf[0] = 0
-                //buf[1] = l1
-                //buf[2] = l2
-                // for length set _E
+                buf[1] = uint8(len(i.Bytes()) << 8)
+                buf[2] = uint8(len(i.Bytes()))
+                buf = append(buf, i.Bytes()...)
         }
         buf = append(buf, _N.Bytes()...)
         k.PubKey = unpackBase64(buf)
