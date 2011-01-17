@@ -5,6 +5,7 @@ all:
 	gomake -C axfr
 	gomake -C notify
 	gomake -C reflect
+	gomake -C rude
 
 clean:
 	gomake -C mx clean
@@ -13,3 +14,4 @@ clean:
 	gomake -C axfr clean
 	gomake -C notify clean
 	gomake -C reflect clean
+	gomake -C rude clean
