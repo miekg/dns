@@ -105,9 +105,8 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	r := bufio.NewReader(strings.NewReader(s))
 	var left, right string
-        // I think I'm doing too much work here TODO(mg)
 	line, _ := r.ReadBytes('\n')
-	// Do we care about the order of things?
+	// Do we care about the order of things? TODO(mg)
 	for len(line) > 0 {
 		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
 		if n > 0 {
@@ -154,7 +153,6 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 			case "Created:", "Publish:", "Activate:":
 				/* not used in Go (yet) */
 			default:
-				println("ERR:", left, "end")
 				return nil, &Error{Error: "Private key file not recognized"}
 			}
 		}

@@ -1,6 +1,6 @@
 package dns
 
-import ( "testing"; "fmt")
+import ( "testing"; "fmt"; "crypto/rsa")
 
 func TestConversion(t *testing.T) {
 /*
@@ -75,12 +75,16 @@ Activate: 20110109154937`
         k.Protocol = 3
         k.Flags = 256
         p, _ := k.PrivateKeySetString(a)
-        p = p
-        fmt.Printf("New key %v\n", k)
-        fmt.Printf("Keytag %d", k.KeyTag())
-
+        switch priv := p.(type) {
+        case *rsa.PrivateKey:
+                if 65537 != priv.PublicKey.E {
+                        t.Log("Exponenet should be 65537")
+                        t.Fail()
+                }
+        }
         if k.KeyTag() != 41946 {
                 t.Log("Keytag should be 41946")
                 t.Fail()
         }
+        fmt.Printf("%v\n", k)
 }

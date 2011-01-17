@@ -451,6 +451,7 @@ func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
 }
 
 // Set the public key (the value E and N)
+// RFC 3110: Section 2. RSA Public KEY Resource Records
 func exponentToBuf(_E int) []byte {
         var buf []byte
         i := big.NewInt(int64(_E))

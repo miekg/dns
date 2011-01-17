@@ -119,7 +119,6 @@ func TestSignVerify(t *testing.T) {
 		t.Log("Failure to sign the SOA record")
 		t.Fail()
 	}
-        fmt.Fprintf(os.Stderr, "%v\n%v\n%v\n", soa, key, sig)
 	if !sig.Verify(key, []RR{soa}) {
 		t.Log("Failure to validate")
 		t.Fail()
