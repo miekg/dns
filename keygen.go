@@ -122,7 +122,6 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
                                         return nil, &Error{Error: "incorrect algorithm"}
                                 }
 				k.Algorithm = uint8(a)
-                                k.Protocol = 3
 			case "Modulus:", "PublicExponent:", "PrivateExponent:", "Prime1:", "Prime2:":
 				v, err := packBase64([]byte(right))
 				if err != nil {
@@ -133,7 +132,10 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 					p.PublicKey.N.SetBytes(v)
 				}
 				if left == "PublicExponent:" {
-                                        p.PublicKey.E, _ = strconv.Atoi(string(v))
+                                        i := big.NewInt(0)
+                                        i.SetBytes(v)
+                                        // Int64 should be large enough
+                                        p.PublicKey.E = int(i.Int64())
 				}
 				if left == "PrivateExponent:" {
                                         p.D = big.NewInt(0)

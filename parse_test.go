@@ -24,7 +24,7 @@ func TestConversion(t *testing.T) {
         */
 }
 
-func TestPrivateKeyRead(t *testing.T) {
+func TestPrivateKeyRead1(t *testing.T) {
 a:=`Private-key-format: v1.3
 Algorithm: 5 (RSASHA1)
 Modulus: vyVjCzz87g3rg9vDj1NJ1tlFP7lEY2pEQLkWGXAFuZM6Fw/bNmEH/z3ybDfsJqx4QQ6YZXN8V2kbzY7oX+tExf6AMiMIcKYzEGwg5xBYFh33du4G+6kE/VzG906ubpaIEnrZOMTdGqE7OwptAqrqXe4uGXY99ZqNdqutOKQyIzs=
@@ -43,4 +43,44 @@ Activate: 20101221142359`
         p,_ := k.PrivateKeySetString(a)
         p = p
         fmt.Printf("%v\n", k)
+}
+
+func TestPrivateKeyRead2(t *testing.T) {
+        b:=`; This is a zone-signing key, keyid 41946, for miek.nl.
+; Created: 20110109154937 (Sun Jan  9 16:49:37 2011)
+; Publish: 20110109154937 (Sun Jan  9 16:49:37 2011)
+; Activate: 20110109154937 (Sun Jan  9 16:49:37 2011)
+miek.nl. IN DNSKEY 256 3 5 AwEAAeETsGZdYlTsHK8wc1yo9Zcj4dMEpPWRTYuTmGD3e4Qsk4/uyKf5jhsNZhp8no7GKHTEe7+K1prC4iXo3X5oQyDDmx76hDo5u6fblu/XaQw16wqMDQDPiURUKkzobJlmY6fYNKRz7A01J73V6qDMCvlk+8p+fb0a+LiJ2NJDACln`
+
+        b = b
+
+        a:=`Private-key-format: v1.3
+Algorithm: 5 (RSASHA1)
+Modulus: 4ROwZl1iVOwcrzBzXKj1lyPh0wSk9ZFNi5OYYPd7hCyTj+7Ip/mOGw1mGnyejsYodMR7v4rWmsLiJejdfmhDIMObHvqEOjm7p9uW79dpDDXrCowNAM+JRFQqTOhsmWZjp9g0pHPsDTUnvdXqoMwK+WT7yn59vRr4uInY0kMAKWc=
+PublicExponent: AQAB
+PrivateExponent: CYYAv8QRxhAbgpolN3V6tsNw6bHXnQBh7Jb5KpkuI8CTGdL7sIfRqHlfqZ0+REJEMfSiW89vFytJ0FrTDGcy99qesJujW/tlfsThRTwFSXdCNv0Df25CNNNeskMg3r86is8MmHJc+dAjN3P0ArAF2yZd9gS7C4TGKDDR3bZ9SYk=
+Prime1: 8EO3P0cYdR8FISxLaUVfVJVIVAWux7tptnqZlzAmomPGEipXr2bAYf637hAAoD8xEUXbI6FIkXUk5vIjxfUjRQ==
+Prime2: 79FWWF5PNh6ykof9NsrR2YRy/P30iLbzfSRVQrrYH15SEip5LUN15W/G7bg5Uyp8U/o3HXaaxhrj9LC330Uuuw==
+Exponent1: mtOIKoauBAtRSuc4UUYbAG6ShVKEJsFmhejLQNoOi2awJNSUXLtiDcQO0qINRTZzcCYL6RHtqY5LkWdIFjC54Q==
+Exponent2: ZpsiXly7d2Ra8ubMKA1PC8nniOb/IR9lvj01XX+jyIgKhUs23W7nmmrgqgUQQc0DtMpxmmGMhwYqUh7qDNUE0Q==
+Coefficient: 2wn6uW28qM6B68m1ADcLmzjwIQn9Xyc/JMydrJUSzwG7Fr08bc1aa1+K/K0pVy82vU5emDKdVXPP4+WtqXnUNA==
+Created: 20110109154937
+Publish: 20110109154937
+Activate: 20110109154937`
+
+        k := new(RR_DNSKEY)
+        k.Hdr.Rrtype = TypeDNSKEY
+        k.Hdr.Class = ClassINET
+        k.Hdr.Name = "miek.nl."
+        k.Protocol = 3
+        k.Flags = 256
+        p, _ := k.PrivateKeySetString(a)
+        p = p
+        fmt.Printf("New key %v\n", k)
+        fmt.Printf("Keytag %d", k.KeyTag())
+
+        if k.KeyTag() != 41946 {
+                t.Log("Keytag should be 41946")
+                t.Fail()
+        }
 }

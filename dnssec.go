@@ -453,18 +453,17 @@ func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
 // Set the public key (the value E and N)
 func exponentToBuf(_E int) []byte {
         var buf []byte
-	if _E < 256 {
-	        buf = make([]byte, 2)
-		buf[0] = 1
-		buf[1] = uint8(_E)
-	} else {
-	        buf = make([]byte, 3)
-                i := big.NewInt(int64(_E))
+        i := big.NewInt(int64(_E))
+        if len(i.Bytes()) < 256 {
+                buf = make([]byte, 1)
+                buf[0] = uint8(len(i.Bytes()))
+        } else {
+                buf = make([]byte, 3)
                 buf[0] = 0
-                buf[1] = uint8(len(i.Bytes()) << 8)
+                buf[1] = uint8(len(i.Bytes()) >> 8)
                 buf[2] = uint8(len(i.Bytes()))
-                buf = append(buf, i.Bytes()...)
         }
+        buf = append(buf, i.Bytes()...)
         return buf
 }
 
