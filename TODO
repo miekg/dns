@@ -19,6 +19,8 @@ Issues:
 * Make the testsuite work with public DNS servers
 * shortened ipv6 addresses are not parsed correctly (maybe net issue)
 * Convenience functions?
+    - NXDomain pkt
+    - FormErr pkt
     - for new(RR*)
     - nsupdate
     - printing??
