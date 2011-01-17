@@ -380,6 +380,7 @@ func (rr *RR_LOC) Header() *RR_Header {
 }
 
 func (rr *RR_LOC) String() string {
+        // Version is not shown
 	return rr.Hdr.String() + "TODO"
 }
 
