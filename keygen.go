@@ -44,7 +44,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if err != nil {
 			return nil, err
 		}
-                keybuf := exponentToBuf(priv.PublicKey.E)
+		keybuf := exponentToBuf(priv.PublicKey.E)
 		keybuf = append(keybuf, priv.PublicKey.N.Bytes()...)
 		r.PubKey = unpackBase64(keybuf)
 		return priv, nil
@@ -62,11 +62,11 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
 		modulus := unpackBase64(t.PublicKey.N.Bytes())
-                e := big.NewInt(int64(t.PublicKey.E))
-                /*
-		pub := make([]byte, 1)
-		pub[0] = uint8(t.PublicKey.E) // Todo does not fit with binds 65537 exp!
-                */
+		e := big.NewInt(int64(t.PublicKey.E))
+		/*
+			pub := make([]byte, 1)
+			pub[0] = uint8(t.PublicKey.E) // Todo does not fit with binds 65537 exp!
+		*/
 		publicExponent := unpackBase64(e.Bytes())
 		privateExponent := unpackBase64(t.D.Bytes())
 		prime1 := unpackBase64(t.P.Bytes())
@@ -116,10 +116,10 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 					return nil, &Error{Error: "v1.3 supported"}
 				}
 			case "Algorithm:":
-                                a, _ := strconv.Atoi(right)
-                                if a == 0 {
-                                        return nil, &Error{Error: "incorrect algorithm"}
-                                }
+				a, _ := strconv.Atoi(right)
+				if a == 0 {
+					return nil, &Error{Error: "incorrect algorithm"}
+				}
 				k.Algorithm = uint8(a)
 			case "Modulus:", "PublicExponent:", "PrivateExponent:", "Prime1:", "Prime2:":
 				v, err := packBase64([]byte(right))
@@ -127,25 +127,25 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 					return nil, err
 				}
 				if left == "Modulus:" {
-                                        p.PublicKey.N = big.NewInt(0)
+					p.PublicKey.N = big.NewInt(0)
 					p.PublicKey.N.SetBytes(v)
 				}
 				if left == "PublicExponent:" {
-                                        i := big.NewInt(0)
-                                        i.SetBytes(v)
-                                        // Int64 should be large enough
-                                        p.PublicKey.E = int(i.Int64())
+					i := big.NewInt(0)
+					i.SetBytes(v)
+					// Int64 should be large enough
+					p.PublicKey.E = int(i.Int64())
 				}
 				if left == "PrivateExponent:" {
-                                        p.D = big.NewInt(0)
+					p.D = big.NewInt(0)
 					p.D.SetBytes(v)
 				}
 				if left == "Prime1:" {
-                                        p.P = big.NewInt(0)
+					p.P = big.NewInt(0)
 					p.P.SetBytes(v)
 				}
 				if left == "Prime2:" {
-                                        p.Q = big.NewInt(0)
+					p.Q = big.NewInt(0)
 					p.Q.SetBytes(v)
 				}
 			case "Exponent1:", "Exponent2:", "Coefficient:":
@@ -158,6 +158,6 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 		}
 		line, _ = r.ReadBytes('\n')
 	}
-        k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
+	k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
 	return p, nil
 }

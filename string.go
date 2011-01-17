@@ -2,7 +2,7 @@ package dns
 
 import (
 	"unicode"
-        "strconv"
+	"strconv"
 )
 
 const (
@@ -30,44 +30,44 @@ func StringToSeconds(ttl string) (sec uint32, ok bool) {
 				sec += uint32(i) * d
 			case 'w':
 				sec += uint32(i) * w
-                        default:
-                                return
+			default:
+				return
 			}
 			num = ""
 		}
 	}
-        i, _ := strconv.Atoi(num)
-        sec += uint32(i)
-        return
+	i, _ := strconv.Atoi(num)
+	sec += uint32(i)
+	return
 }
 
 func SecondsToString(val uint32) (str string) {
-        mod := val / w
-        if mod > 0 {
-                str += strconv.Itoa(int(mod)) + "w"
-        }
-        val -= mod * w
+	mod := val / w
+	if mod > 0 {
+		str += strconv.Itoa(int(mod)) + "w"
+	}
+	val -= mod * w
 
-        mod = val / d
-        if mod > 0 {
-                str += strconv.Itoa(int(mod)) + "d"
-        }
-        val -= mod * d
+	mod = val / d
+	if mod > 0 {
+		str += strconv.Itoa(int(mod)) + "d"
+	}
+	val -= mod * d
 
-        mod = val / h
-        if mod > 0 {
-                str += strconv.Itoa(int(mod)) + "h"
-        }
-        val -= mod * h
+	mod = val / h
+	if mod > 0 {
+		str += strconv.Itoa(int(mod)) + "h"
+	}
+	val -= mod * h
 
-        mod = val / m
-        if mod > 0 {
-                str += strconv.Itoa(int(mod)) + "m"
-        }
-        val -= mod * m
+	mod = val / m
+	if mod > 0 {
+		str += strconv.Itoa(int(mod)) + "m"
+	}
+	val -= mod * m
 
-        if val > 0 {
-                str += strconv.Itoa(int(val))
-        }
-        return
+	if val > 0 {
+		str += strconv.Itoa(int(val))
+	}
+	return
 }

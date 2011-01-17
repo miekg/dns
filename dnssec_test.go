@@ -3,8 +3,6 @@ package dns
 import (
 	"testing"
         "strings"
-        "fmt"
-        "os"
 )
 
 func TestSecure(t *testing.T) {
@@ -39,13 +37,10 @@ func TestSecure(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PubKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-        fmt.Fprintf(os.Stderr, "%v\n%v\n", sig, soa)
         // It should validate. Period is checked seperately, so this will keep on working
         if ! sig.Verify(key, []RR{soa}) {
                 t.Log("Failure to validate")
                 t.Fail()
-        } else {
-                println("It validates!!")
         }
 }
 
@@ -100,7 +95,6 @@ func TestSignVerify(t *testing.T) {
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
 	privkey, _ := key.Generate(512)
-        fmt.Fprintf(os.Stderr, "Key tag: %d\n", key.KeyTag())
 
 	// Fill in the values of the Sig, before signing
 	sig := new(RR_RRSIG)
@@ -122,9 +116,7 @@ func TestSignVerify(t *testing.T) {
 	if !sig.Verify(key, []RR{soa}) {
 		t.Log("Failure to validate")
 		t.Fail()
-	} else {
-		println("It validates!!")
-	}
+        }
 }
 
 func TestKeyGen(t *testing.T) {
@@ -156,7 +148,6 @@ func TestDnskey(t *testing.T) {
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
 	key.PubKey = "AwEAAcELcuxHosJX3LjbR6EFzsqI3mKivwvO6Y5Kzt/OXYmLQUI8tnOrX9ilT/0qGraxoONayVX3A6bl1pG3h/xOxVEGcJGqbrZnhr2+4S9tW2GWQwevV+NhinE7v6MCCCheVCnAPh0KFb/u14ng3DQizP1spBU/NoAN31l678snBpZX"
-	fmt.Printf("%v\n", key)
 
 	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"Miek.nl.", TypeSOA, ClassINET, 875, 0}
@@ -244,11 +235,7 @@ func TestKeyGenRSA(t *testing.T) {
         sig.SignerName = "miek.nl."
 
         sig.Sign(priv, []RR{soa})
-
-        s := key.PrivateKeyString(priv)
-        fmt.Printf("%s\n", s)
-
-        fmt.Printf("%v\n", sig)
+        //s := key.PrivateKeyString(priv)
 }
 
 func TestKeyToDS(t *testing.T) {

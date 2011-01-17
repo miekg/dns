@@ -2,8 +2,7 @@ package resolver
 
 import (
 	"testing"
-        "fmt"
-        "dns"
+	"dns"
 )
 
 func TestResolver(t *testing.T) {
@@ -24,7 +23,7 @@ func TestResolver(t *testing.T) {
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
-	        t.Logf("%v\n", in)
+		t.Logf("%v\n", in)
 	}
 
 	// ask something
@@ -35,13 +34,11 @@ func TestResolver(t *testing.T) {
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
 		t.Log("Failed to get an valid answer")
 		t.Fail()
-	        t.Logf("%v\n", in)
-	} else {
-                fmt.Printf("%v\n", in.Dns)
-        }
+		t.Logf("%v\n", in)
+	}
 
 	ch <- Msg{nil, nil}
-        <-ch
+	<-ch
 }
 
 func TestResolverEdns(t *testing.T) {
@@ -76,12 +73,10 @@ func TestResolverEdns(t *testing.T) {
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
+			t.Logf("%v\n", in.Dns)
 			t.Log("Failed to get an valid answer")
 			t.Fail()
 		}
-		fmt.Printf("%v\n", in.Dns)
-	} else {
-		fmt.Printf("Failed to get a good anwer")
 	}
 	ch <- Msg{nil, nil}
 	<-ch // wait for ch to close channel
@@ -102,27 +97,25 @@ func TestResolverTsig(t *testing.T) {
 	// ask something
 	m.Question[0] = dns.Question{"powerdns.nl", dns.TypeDNSKEY, dns.ClassINET}
 	m.Extra = make([]dns.RR, 1)
-        m.SetId()
+	m.SetId()
 
-        tsig := new(dns.RR_TSIG)
-        tsig.Hdr.Name = "miek.nl"       // for tsig this is the key's name
-        tsig.Hdr.Rrtype = dns.TypeTSIG
-        tsig.Hdr.Class = dns.ClassANY
-        tsig.Hdr.Ttl = 0
-        tsig.Generate(m, "geheim")
-        // Add it to the msg
-        m.Extra[0] = tsig
+	tsig := new(dns.RR_TSIG)
+	tsig.Hdr.Name = "miek.nl" // for tsig this is the key's name
+	tsig.Hdr.Rrtype = dns.TypeTSIG
+	tsig.Hdr.Class = dns.ClassANY
+	tsig.Hdr.Ttl = 0
+	tsig.Generate(m, "geheim")
+	// Add it to the msg
+	m.Extra[0] = tsig
 
 	ch <- Msg{m, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
+			t.Logf("%v\n", in.Dns)
 			t.Log("Failed to get an valid answer")
 			t.Fail()
 		}
-		fmt.Printf("%v\n", in.Dns)
-	} else {
-		fmt.Printf("Failed to get a good anwer")
 	}
 	ch <- Msg{nil, nil}
 	<-ch // wait for ch to close channel
@@ -135,20 +128,20 @@ func TestAXFR(t *testing.T) {
 	res.Servers = []string{"127.0.0.1"}
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
-        m.Question[0] = dns.Question{"miek.nl", dns.TypeAXFR, dns.ClassINET}
+	m.Question[0] = dns.Question{"miek.nl", dns.TypeAXFR, dns.ClassINET}
 	//m.Question[0] = dns.Question{"atoom.net", dns.TypeAXFR, dns.ClassINET}
 
-        ch <- Msg{m, nil}
+	ch <- Msg{m, nil}
 	for dm := range ch {
-                var _ = dm
-                /* fmt.Printf("%v\n",dm.Dns) */
-        }
-        /* channel is closed by NewXfer() */
+		var _ = dm
+		/* fmt.Printf("%v\n",dm.Dns) */
+	}
+	/* channel is closed by NewXfer() */
 }
 
 func TestFromFile(t *testing.T) {
-        res := new(Resolver)
-        res.FromFile("/etc/resolv.conf")
+	res := new(Resolver)
+	res.FromFile("/etc/resolv.conf")
 	ch := res.NewQuerier()
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
@@ -161,6 +154,5 @@ func TestFromFile(t *testing.T) {
 			t.Log("Failed to get an valid answer")
 			t.Fail()
 		}
-		fmt.Printf("%v\n", in.Dns)
 	}
 }
