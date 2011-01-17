@@ -543,8 +543,10 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
                                 case "RR_SSHFP":
                                         consumed = 2 // Algorithm(1) + Type(1)
+                                case "RR_NSEC3PARAM":
+                                        consumed = 5 // Hash(1) + Flags(1) + Iterations(2) + SaltLength(1)
 				default:
-					consumed = 0 // TODO
+					consumed = 0 // return len(msg), false?
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
