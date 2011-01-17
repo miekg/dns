@@ -82,6 +82,7 @@ var Rr_str = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
+        TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
 	TypeNSEC:       "NSEC",
 	TypeDNSKEY:     "DNSKEY",
@@ -539,6 +540,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				switch val.Type().Name() {
 				case "RR_DS":
 					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
+                                case "RR_SSHFP":
+                                        consumed = 2 // Algorithm(1) + Type(1)
 				default:
 					consumed = 0 // TODO
 				}

@@ -168,7 +168,6 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 		}
 		line, _ = r.ReadBytes('\n')
 	}
-        println(p.PublicKey.N)
         k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
 	return p, nil
 }

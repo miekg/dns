@@ -1,6 +1,7 @@
 Todo:
 * NSEC3 - need base32 for Nsec3
 * Cleanup the code
+* Cleanup the API
 * Tsig testing
 * Private key file parsing, exponent 65536 does not work
 * Parsing from /etc/resolv.conf - clean up the code

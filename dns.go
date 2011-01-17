@@ -14,12 +14,14 @@
 // * 2537 - RSAMD5 DNS keys
 // * 2065 - DNSSEC (updated in later RFCs)
 // * 2671 - EDNS
+// * 2782 - SRV record
 // * 2845 - TSIG
-// * 2915 - NAPTR record (incomplete)
+// * 2915 - NAPTR record 
 // * 3110 - RSASHA1 DNS keys
 // * 3225 - DO bit (DNSSEC OK)
 // * 4033/4034/4035 - DNSSEC + validation functions
-// * 5011 - NSID
+// * 4255 - SSHFP record
+// * 5011 - NSID 
 // * 5936 - AXFR
 // * IP6 support
 //

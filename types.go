@@ -47,12 +47,11 @@ const (
 	// EDNS
 	TypeOPT = 41
 
-	// Old DNSSEC
-	TypeSIG = 24
-	TypeKEY = 25
-	TypeNXT = 30
-	// DNSSEC
+	TypeSIG        = 24
+	TypeKEY        = 25
+	TypeNXT        = 30
 	TypeDS         = 43
+	TypeSSHFP      = 44
 	TypeRRSIG      = 46
 	TypeNSEC       = 47
 	TypeDNSKEY     = 48
@@ -322,7 +321,7 @@ type RR_NAPTR struct {
 	Flags       string
 	Service     string
 	Regexp      string
-	Replacement string
+	Replacement string "domain-name"
 }
 
 func (rr *RR_NAPTR) Header() *RR_Header {
@@ -330,7 +329,13 @@ func (rr *RR_NAPTR) Header() *RR_Header {
 }
 
 func (rr *RR_NAPTR) String() string {
-	return rr.Hdr.String() + "TODO"
+	return rr.Hdr.String() + " " +
+		strconv.Itoa(int(rr.Order)) + " " +
+		strconv.Itoa(int(rr.Preference)) + " " +
+		"\"" + rr.Flags + "\" " +
+		"\"" + rr.Service + "\" " +
+		"\"" + rr.Regexp + "\" " +
+		rr.Replacement
 }
 
 type RR_A struct {
@@ -420,12 +425,12 @@ func (rr *RR_NSEC) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC) String() string {
-        s := rr.Hdr.String() + " " + rr.NextDomain
-        for i:=0; i < len(rr.TypeBitMap); i++ {
-                // Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
-                s = s + " " + Rr_str[rr.TypeBitMap[i]]
-        }
-        return s
+	s := rr.Hdr.String() + " " + rr.NextDomain
+	for i := 0; i < len(rr.TypeBitMap); i++ {
+		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
+		s = s + " " + Rr_str[rr.TypeBitMap[i]]
+	}
+	return s
 }
 
 type RR_DS struct {
@@ -446,6 +451,25 @@ func (rr *RR_DS) String() string {
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + strings.ToUpper(rr.Digest)
+}
+
+
+type RR_SSHFP struct {
+	Hdr         RR_Header
+	Algorithm   uint8
+	Type        uint8
+	FingerPrint string "hex"
+}
+
+func (rr *RR_SSHFP) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_SSHFP) String() string {
+	return rr.Hdr.String() +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + strconv.Itoa(int(rr.Type)) +
+		" " + strings.ToUpper(rr.FingerPrint)
 }
 
 type RR_DNSKEY struct {
@@ -485,17 +509,17 @@ func (rr *RR_NSEC3) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC3) String() string {
-        s := rr.Hdr.String()
-        s += " " + strconv.Itoa(int(rr.Hash)) +
-                " " + strconv.Itoa(int(rr.Flags)) +
-                " " + strconv.Itoa(int(rr.Iterations)) +
-                " " + strings.ToUpper(rr.Salt) +
-                " " + rr.NextDomain     // must base32?
-        for i:=0; i < len(rr.TypeBitMap); i++ {
-                // Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
-                s = s + " " + Rr_str[rr.TypeBitMap[i]]
-        }
-        return s
+	s := rr.Hdr.String()
+	s += " " + strconv.Itoa(int(rr.Hash)) +
+		" " + strconv.Itoa(int(rr.Flags)) +
+		" " + strconv.Itoa(int(rr.Iterations)) +
+		" " + strings.ToUpper(rr.Salt) +
+		" " + rr.NextDomain // must base32?
+	for i := 0; i < len(rr.TypeBitMap); i++ {
+		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
+		s = s + " " + Rr_str[rr.TypeBitMap[i]]
+	}
+	return s
 }
 
 type RR_NSEC3PARAM struct {
@@ -577,6 +601,7 @@ var rr_mk = map[int]func() RR{
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
+	TypeSSHFP:      func() RR { return new(RR_SSHFP) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
 	TypeNSEC:       func() RR { return new(RR_NSEC) },
 	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },

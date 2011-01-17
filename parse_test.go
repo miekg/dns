@@ -40,8 +40,7 @@ Publish: 20101221142359
 Activate: 20101221142359`
 
         k := new(RR_DNSKEY)
-        p,err := k.PrivateKeySetString(a)
-        println(err)
+        p,_ := k.PrivateKeySetString(a)
         p = p
         fmt.Printf("%v\n", k)
 }
