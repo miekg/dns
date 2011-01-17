@@ -329,7 +329,7 @@ func (rr *RR_NAPTR) Header() *RR_Header {
 }
 
 func (rr *RR_NAPTR) String() string {
-	return rr.Hdr.String() + " " +
+	return rr.Hdr.String() +
 		strconv.Itoa(int(rr.Order)) + " " +
 		strconv.Itoa(int(rr.Preference)) + " " +
 		"\"" + rr.Flags + "\" " +
@@ -402,8 +402,7 @@ func (rr *RR_RRSIG) Header() *RR_Header {
 }
 
 func (rr *RR_RRSIG) String() string {
-	return rr.Hdr.String() +
-		" " + Rr_str[rr.TypeCovered] +
+	return rr.Hdr.String() + Rr_str[rr.TypeCovered] +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.Itoa(int(rr.OrigTtl)) +
@@ -425,7 +424,7 @@ func (rr *RR_NSEC) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC) String() string {
-	s := rr.Hdr.String() + " " + rr.NextDomain
+	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
 		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
 		s = s + " " + Rr_str[rr.TypeBitMap[i]]
@@ -446,8 +445,7 @@ func (rr *RR_DS) Header() *RR_Header {
 }
 
 func (rr *RR_DS) String() string {
-	return rr.Hdr.String() +
-		" " + strconv.Itoa(int(rr.KeyTag)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + strings.ToUpper(rr.Digest)
@@ -466,8 +464,7 @@ func (rr *RR_SSHFP) Header() *RR_Header {
 }
 
 func (rr *RR_SSHFP) String() string {
-	return rr.Hdr.String() +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Type)) +
 		" " + strings.ToUpper(rr.FingerPrint)
 }
@@ -485,8 +482,7 @@ func (rr *RR_DNSKEY) Header() *RR_Header {
 }
 
 func (rr *RR_DNSKEY) String() string {
-	return rr.Hdr.String() +
-		" " + strconv.Itoa(int(rr.Flags)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PubKey
@@ -510,7 +506,7 @@ func (rr *RR_NSEC3) Header() *RR_Header {
 
 func (rr *RR_NSEC3) String() string {
 	s := rr.Hdr.String()
-	s += " " + strconv.Itoa(int(rr.Hash)) +
+	s += strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
 		" " + strings.ToUpper(rr.Salt) +
@@ -536,8 +532,12 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 }
 
 func (rr *RR_NSEC3PARAM) String() string {
-	return rr.Hdr.String() + "BLAH"
-	// Salt with strings.ToUpper()
+	s := rr.Hdr.String()
+        s += strconv.Itoa(int(rr.Hash)) +
+                " " + strconv.Itoa(int(rr.Flags)) +
+                " " + strconv.Itoa(int(rr.Iterations)) +
+                " " + strings.ToUpper(rr.Salt)
+        return s
 }
 
 type RR_TKEY struct {
