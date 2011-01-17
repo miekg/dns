@@ -1,5 +1,6 @@
 Todo:
 * NSEC3 - need base32 for Nsec3
+* Documentation 
 * Cleanup the code
 * Cleanup the API
 * Tsig testing
@@ -8,6 +9,7 @@ Todo:
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
+* Multi line output?
 
 Issues:
 * escaped dots in names \.

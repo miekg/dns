@@ -18,6 +18,7 @@ func main() {
 	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
 	var rd *bool = flag.Bool("rd", true, "Unset RD flag in query")
 	var tcp *bool = flag.Bool("tcp", false, "TCP mode")
+        var nsid *bool = flag.Bool("nsid", false, "Ask for the NSID")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -77,15 +78,21 @@ FLAGS:
 	m.MsgHdr.CheckingDisabled = *cd
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
-	if *dnssec {
+	if *dnssec || *nsid {
 		opt := new(dns.RR_OPT)
 		opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
 		opt.SetVersion(0)
 		opt.SetDo()
 		opt.SetUDPSize(4096)
+                if *nsid {
+                        opt.Option = make([]dns.Option, 1)
+                        opt.Option[0].Code = dns.OptionCodeNSID
+                        opt.Option[0].Data = ""
+                }
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
+
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
                 m.SetId()
