@@ -64,6 +64,9 @@ func TestResponder(t *testing.T) {
 	var ts *myserv
 	tch := make(chan bool)
 	go st.NewResponder(ts, tch)
-
-	time.Sleep(100 * 1e9)
+	time.Sleep(1 * 1e9)
+        uch<-true
+        tch<-true
+        <-uch
+        <-tch
 }

@@ -60,7 +60,7 @@ type Responder interface {
 
 // Start a new responder. The returned channel is only used to stop the responder.
 // Send 'true' to make it stop
-func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
+func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 	var port string
 	if len(res.Address) == 0 {
 		// We cannot start responding without an addresss
@@ -79,9 +79,9 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	foreverTCP:
 		for {
 			select {
-			case <-ch:
-				ch <- true
-				/* stop listening */
+			case <-stop:
+				stop <- true
+                                close(stop)
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
@@ -98,8 +98,9 @@ func (res *Server) NewResponder(h Responder, ch chan bool) os.Error {
 	foreverUDP:
 		for {
 			select {
-			case <-ch:
-				ch <- true // last echo
+			case <-stop:
+				stop <- true
+                                close(stop)
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
