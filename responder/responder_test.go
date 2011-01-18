@@ -83,6 +83,7 @@ func TestResponder(t *testing.T) {
 	<-tch
 }
 
+/*
 func TestReflectorResponder(t *testing.T) {
 	stop := make(chan bool)
 	s := new(Server)
@@ -104,3 +105,4 @@ func TestReflectorResponder(t *testing.T) {
 	<-stop
 	<-stoptcp
 }
+*/

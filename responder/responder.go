@@ -213,6 +213,7 @@ func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
 	return nil
 }
 
+/*
 // Basic implementation of a reflector nameserver which responds
 // to queries for A types and replies with the qname as the ownername
 // and querier's IP as the rdata
@@ -275,3 +276,7 @@ func makePkt(a net.Addr, i []byte) (*dns.Msg, bool) {
 // s    := new(Server)
 // go s.NewResponder(Reflector, stop)
 var Reflector *reflectServer
+
+What point is there to Export this?
+*/
+
