@@ -29,10 +29,10 @@ type server responder.Server
 func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
         inmsg := new(dns.Msg)
         if !inmsg.Unpack(in) {
-                // NXdomain 'n stuff
+                // FormErr
                 println("Unpacking failed")
         }
-        if inmsg.Hdr.Response == true {
+        if inmsg.MsgHdr.Response == true {
                 return  // Don't answer responses
         }
         m := new(dns.Msg)
@@ -71,7 +71,7 @@ func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
                 // NXdomain 'n stuff
                 println("Unpacking failed")
         }
-        if inmsg.Hdr.Response == true {
+        if inmsg.MsgHdr.Response == true {
                 return  // Don't answer responses
         }
         return // we are lazy and don't support tcp

@@ -128,7 +128,9 @@ func query(res *Resolver, msg chan Msg) {
 				}
                                 break
 			}
-                        meta.QLen = len(sending)
+                        if sending != nil {
+                                meta.QLen = len(sending)
+                        }
 			if err != nil {
 				msg <- Msg{nil, meta, err}
 			} else {

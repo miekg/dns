@@ -3,6 +3,7 @@ Todo:
 * Tsig testing
 * Private key file parsing use io.Reader (or the like)
 * Parsing from /etc/resolv.conf - clean up the code, use normal packages
+* IP6 testing
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer

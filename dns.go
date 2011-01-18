@@ -65,7 +65,9 @@ func (m *Meta) String() string {
 	s += "\n;; MSG SIZE  rcvd: " + strconv.Itoa(m.RLen) + ", sent: " + strconv.Itoa(m.QLen)
 	rf := float32(m.RLen)
 	qf := float32(m.QLen)
-	s += " (" + strconv.Ftoa32(rf/qf, 'f', 2) + ":1)"
+        if qf != 0 {
+	        s += " (" + strconv.Ftoa32(rf/qf, 'f', 2) + ":1)"
+        }
 	// WHEN??
 	return s
 }

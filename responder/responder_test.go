@@ -36,25 +36,25 @@ func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	inmsg := new(dns.Msg)
 	inmsg.Unpack(in)
-        if inmsg.MsgHdr.Response == true {
-                // Uh... answering to an response??
-                // dont think so
-                return
-        }
+	if inmsg.MsgHdr.Response == true {
+		// Uh... answering to an response??
+		// dont think so
+		return
+	}
 	out := createpkg(inmsg.MsgHdr.Id, false, a)
 	SendUDP(out, c, a)
-        // Meta.QLen/RLen/QueryStart/QueryEnd can be filled in at
-        // this point for logging purposses or anything else
+	// Meta.QLen/RLen/QueryStart/QueryEnd can be filled in at
+	// this point for logging purposses or anything else
 }
 
 func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) {
 	inmsg := new(dns.Msg)
 	inmsg.Unpack(in)
-        if inmsg.MsgHdr.Response == true {
-                // Uh... answering to an response??
-                // dont think so
-                return
-        }
+	if inmsg.MsgHdr.Response == true {
+		// Uh... answering to an response??
+		// dont think so
+		return
+	}
 	out := createpkg(inmsg.MsgHdr.Id, true, c.RemoteAddr())
 	SendTCP(out, c)
 }
@@ -77,8 +77,30 @@ func TestResponder(t *testing.T) {
 	tch := make(chan bool)
 	go st.NewResponder(ts, tch)
 	time.Sleep(1 * 1e9)
-        uch<-true
-        tch<-true
-        <-uch
-        <-tch
+	uch <- true
+	tch <- true
+	<-uch
+	<-tch
+}
+
+func TestReflectorResponder(t *testing.T) {
+	stop := make(chan bool)
+	s := new(Server)
+	s.Port = "8053"
+	s.Address = "127.0.0.1"
+
+	stoptcp := make(chan bool)
+	stcp := new(Server)
+	stcp.Port = "8053"
+	stcp.Address = "127.0.0.1"
+	stcp.Tcp = true
+
+	go stcp.NewResponder(Reflector, stoptcp)
+	go s.NewResponder(Reflector, stop)
+
+	time.Sleep(1 * 1e9)
+	stop <- true
+	stoptcp <- true
+	<-stop
+	<-stoptcp
 }

@@ -13,12 +13,12 @@
 // func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
 // func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
 //
-// su := new(Server)                    // create new sever
-// su.Address = "127.0.0.1"             // listen address
-// su.Port = "8053"                     // listen port
-// var us *myserv                       
-// uch :=make(chan bool)
-// go su.NewResponder(us, uch)          // start the responder
+// s := new(Server)             // create new sever
+// s.Address = "127.0.0.1"      // listen address
+// s.Port = "8053"              // listen port
+// var m *myserv                       
+// ch :=make(chan bool)
+// go s.NewResponder(m, ch)     // start the responder
 package responder
 
 import (
@@ -41,7 +41,6 @@ type msg struct {
 	addr net.Addr     // remote address
 	msg  []byte       // raw dns message
 	err  os.Error     // any errors
-        // Meta stuff
 }
 
 // Every nameserver implements the Responder interface. It defines
@@ -86,9 +85,13 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
-					//continue
-				}
-				go h.ResponderTCP(s.ct, s.msg)
+                                        // always fatal??
+                                        println(s.err.String())
+                                        close(stop)
+                                        return s.err
+				} else {
+				        go h.ResponderTCP(s.ct, s.msg)
+                                }
 			}
 		}
 
@@ -105,8 +108,10 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
-                                        println(s.err)
-					//continue?
+					//continue
+                                        println(s.err.String())
+                                        close(stop)
+                                        return s.err
 				} else {
 				        go h.ResponderUDP(s.cu, s.addr, s.msg)
                                 }
@@ -207,3 +212,66 @@ func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
 	}
 	return nil
 }
+
+// Basic implementation of a reflector nameserver which responds
+// to queries for A types and replies with the qname as the ownername
+// and querier's IP as the rdata
+type reflectServer Server
+func (s *reflectServer) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
+        o, ok := makePkt(a, in)
+        if ok {
+                out, ok1 := o.Pack()
+                if ok1 {
+                        SendUDP(out, c, a)
+                }
+        }
+}
+
+func (s *reflectServer) ResponderTCP(c *net.TCPConn, in []byte) {
+        o, ok := makePkt(c.RemoteAddr(), in)
+        if ok {
+                out, ok1 := o.Pack()
+                if ok1 {
+                        SendTCP(out, c)
+                }
+        }
+}
+
+func makePkt(a net.Addr, i []byte) (*dns.Msg, bool) {
+        msg := new(dns.Msg)
+        if !msg.Unpack(i) {
+                return nil, false
+        }
+        if msg.MsgHdr.Response == true {
+                return nil, false
+        }
+        m := new(dns.Msg)
+        m.MsgHdr.Id = msg.MsgHdr.Id
+        m.MsgHdr.Authoritative = true
+        m.MsgHdr.Response = true
+        m.MsgHdr.Opcode = dns.OpcodeQuery
+        m.MsgHdr.Rcode = dns.RcodeSuccess
+        m.Question = make([]dns.Question, 1)
+        m.Question[0] = msg.Question[0]
+        if msg.Question[0].Qtype != dns.TypeA {
+                // wrong question
+                m.MsgHdr.Rcode = dns.RcodeFormatError
+                return m ,true
+        }
+        m.Answer = make([]dns.RR, 1)
+        r := new(dns.RR_A)
+        r.Hdr = dns.RR_Header{Name: msg.Question[0].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+        ip, _ := net.ResolveUDPAddr(a.String())
+        r.A = ip.IP.To4()
+        m.Answer[0] = r
+        return m, true
+}
+
+// A simple nameserver implementation. It reponds to queries for the A record and replies
+// with the qname as the ownername and the rdata of the A record set to the senders address.
+//
+// Sample (udp) usage:
+// stop := make(chan bool)
+// s    := new(Server)
+// go s.NewResponder(Reflector, stop)
+var Reflector *reflectServer
