@@ -156,11 +156,9 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		return false
 	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.)
+        // the rest must be set
 	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
-		// Must be set
-		return false
 	}
-
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Name = rrset[0].Header().Name
 	s.Hdr.Class = rrset[0].Header().Class
