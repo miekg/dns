@@ -1,6 +1,7 @@
 package dns
 
 import (
+        "fmt"
 	"testing"
 	"crypto/rsa"
 )
@@ -73,6 +74,7 @@ Activate: 20110109154937`
 	k.Hdr.Rrtype = TypeDNSKEY
 	k.Hdr.Class = ClassINET
 	k.Hdr.Name = "miek.nl."
+        k.Hdr.Ttl = 3600
 	k.Protocol = 3
 	k.Flags = 256
 	p, _ := k.PrivateKeySetString(a)
@@ -88,4 +90,24 @@ Activate: 20110109154937`
 		t.Log("Keytag should be 41946")
 		t.Fail()
 	}
+
+        soa := new(RR_SOA)
+        soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+        soa.Ns = "open.nlnetlabs.nl."
+        soa.Mbox = "miekg.atoom.net."
+        soa.Serial = 1293945905
+        soa.Refresh = 14400
+        soa.Retry = 3600
+        soa.Expire = 604800
+        soa.Minttl = 86400
+
+        sig := new(RR_RRSIG)
+        sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
+        sig.KeyTag = k.KeyTag()
+        sig.SignerName = k.Hdr.Name
+
+        sig.Sign(p, []RR{soa})
+        fmt.Printf("%v\n%v\n%v\n", k, soa, sig)
 }

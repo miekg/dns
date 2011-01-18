@@ -147,7 +147,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 }
 
 // Sign an RRSet. The Signature needs to be filled in with
-// all the values: Inception, Expiration, KeyTag and SignerName
+// the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Return true when the signing went OK.
 // The Signature data is the RRSIG is filled by this method.
 // There is no check if rrset is a proper (RFC 2181) RRSet.
@@ -155,18 +155,17 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
 		return false
 	}
-
-	s.Hdr.Name = rrset[0].Header().Name
-	s.Hdr.Class = rrset[0].Header().Class
-	s.Hdr.Rrtype = TypeRRSIG
-	s.Hdr.Ttl = rrset[0].Header().Ttl // re-use TTL of RRset
-
-        if s.KeyTag == 0 || len(s.SignerName) == 0 {
+        // s.Inception and s.Expiration may be 0 (rollover etc.)
+        if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
                 // Must be set
                 return false
         }
-        // Algorithm is check below
-        // s.Inception and s.Expiration may be 0 (rollover etc.)
+
+	s.Hdr.Rrtype = TypeRRSIG
+	s.Hdr.Name = rrset[0].Header().Name
+	s.Hdr.Class = rrset[0].Header().Class
+	s.Hdr.Ttl = rrset[0].Header().Ttl
+        s.TypeCovered = rrset[0].Header().Rrtype
 	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
 
