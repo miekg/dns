@@ -107,6 +107,7 @@ Activate: 20110109154937`
         sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
         sig.KeyTag = k.KeyTag()
         sig.SignerName = k.Hdr.Name
+        sig.Algorithm = k.Algorithm
 
         sig.Sign(p, []RR{soa})
         fmt.Printf("%v\n%v\n%v\n", k, soa, sig)

@@ -57,7 +57,7 @@ type dnskeyWireFmt struct {
 	Protocol  uint8
 	Algorithm uint8
 	PubKey    string "base64"
-        /* Nothing is left out */
+	/* Nothing is left out */
 }
 
 // Calculate the keytag of the DNSKEY.
@@ -139,7 +139,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
 	case HashGOST94:
-                /* I have no clue */
+		/* I have no clue */
 	default:
 		return nil
 	}
@@ -155,17 +155,17 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
 		return false
 	}
-        // s.Inception and s.Expiration may be 0 (rollover etc.)
-        if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
-                // Must be set
-                return false
-        }
+	// s.Inception and s.Expiration may be 0 (rollover etc.)
+	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
+		// Must be set
+		return false
+	}
 
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Name = rrset[0].Header().Name
 	s.Hdr.Class = rrset[0].Header().Class
-	s.Hdr.Ttl = rrset[0].Header().Ttl
-        s.TypeCovered = rrset[0].Header().Rrtype
+	s.OrigTtl = rrset[0].Header().Ttl
+	s.TypeCovered = rrset[0].Header().Rrtype
 	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
 
@@ -244,9 +244,9 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		case AlgRSASHA512:
 			h = sha512.New()
 			ch = rsa.HashSHA512
-                default:
-                        // Illegal Alg
-                        return false
+		default:
+			// Illegal Alg
+			return false
 		}
 		// Need privakey representation in godns TODO(mg) see keygen.go
 		io.WriteString(h, string(signdata))
@@ -384,9 +384,9 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	case AlgDSA:
 	case AlgECC:
 	case AlgECCGOST:
-        default:
-                // Unknown Alg
-                return false
+	default:
+		// Unknown Alg
+		return false
 	}
 	return err == nil
 }
