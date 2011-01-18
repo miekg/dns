@@ -36,6 +36,11 @@ func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	inmsg := new(dns.Msg)
 	inmsg.Unpack(in)
+        if inmsg.MsgHdr.Response == true {
+                // Uh... answering to an response??
+                // dont think so
+                return
+        }
 	out := createpkg(inmsg.MsgHdr.Id, false, a)
 	SendUDP(out, c, a)
         // Meta.QLen/RLen/QueryStart/QueryEnd can be filled in at
@@ -45,6 +50,11 @@ func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) {
 	inmsg := new(dns.Msg)
 	inmsg.Unpack(in)
+        if inmsg.MsgHdr.Response == true {
+                // Uh... answering to an response??
+                // dont think so
+                return
+        }
 	out := createpkg(inmsg.MsgHdr.Id, true, c.RemoteAddr())
 	SendTCP(out, c)
 }

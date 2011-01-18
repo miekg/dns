@@ -25,6 +25,9 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 		// NXdomain 'n stuff
 		println("Unpacking failed")
 	}
+        if inmsg.MsgHdr.Response == true {
+                return // don't answer responses
+        }
 	m := new(dns.Msg)
 	m.MsgHdr.Id = inmsg.MsgHdr.Id
 	m.MsgHdr.Response = true
