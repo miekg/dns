@@ -26,14 +26,14 @@ import (
 
 type server responder.Server
 
-func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
+func reply(a net.Addr, in []byte, tcp bool) *dns.Msg {
         inmsg := new(dns.Msg)
         if !inmsg.Unpack(in) {
-                // FormErr
                 println("Unpacking failed")
+                return nil
         }
         if inmsg.MsgHdr.Response == true {
-                return  // Don't answer responses
+                return nil // Don't answer responses
         }
         m := new(dns.Msg)
         m.MsgHdr.Id = inmsg.MsgHdr.Id
@@ -53,28 +53,43 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 
         t := new(dns.RR_TXT)
         t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
-        t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
+        if tcp {
+                t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (tcp)"
+        } else {
+                t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
+        }
 
         m.Question[0] = inmsg.Question[0]
         m.Answer[0] = r
         m.Extra[0] = t
-        out, b := m.Pack()
-        if !b {
+
+        return m
+}
+
+func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
+        m := reply(a, in, false)
+        if m == nil {
+                return
+        }
+        out, ok := m.Pack()
+        if !ok {
                 println("Failed to pack")
+                return
         }
         responder.SendUDP(out, c, a)
 }
 
 func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
-        inmsg := new(dns.Msg)
-        if !inmsg.Unpack(in) {
-                // NXdomain 'n stuff
-                println("Unpacking failed")
+        m := reply(c.RemoteAddr(), in, true)
+        if m == nil {
+                return
         }
-        if inmsg.MsgHdr.Response == true {
-                return  // Don't answer responses
+        out, ok := m.Pack()
+        if !ok {
+                println("Failed to pack")
+                return
         }
-        return // we are lazy and don't support tcp
+        responder.SendTCP(out, c)
 }
 
 func main() {
@@ -85,6 +100,14 @@ func main() {
         ch := make(chan bool)
         go s.NewResponder(srv, ch)
 
+        t := new(responder.Server)
+        t.Address = "127.0.0.1"
+        t.Port = "8053"
+        t.Tcp = true
+        var srvt *server
+        cht := make(chan bool)
+        go t.NewResponder(srvt, cht)
+
 forever:
         for {
                 // Wait for a signal to stop
@@ -94,5 +117,4 @@ forever:
                         break forever
                 }
         }
-//        time.Sleep(100 * 1e9)
 }

@@ -36,8 +36,8 @@ type Server struct {
 }
 
 type msg struct {
-	cu   *net.UDPConn // udp conn
-	ct   *net.TCPConn // tcp conn
+	udp  *net.UDPConn // udp conn
+	tcp  *net.TCPConn // tcp conn
 	addr net.Addr     // remote address
 	msg  []byte       // raw dns message
 	err  os.Error     // any errors
@@ -47,14 +47,14 @@ type msg struct {
 // the kind of nameserver
 type Responder interface {
 	// Receives the raw message content and writes back 
-        // an UDP response. An UDP connection needs a remote
-        // address to write to. ResponderUDP() must take care of sending
-        // any response back to the requestor.
+	// an UDP response. An UDP connection needs a remote
+	// address to write to. ResponderUDP() must take care of sending
+	// any response back to the requestor.
 	ResponderUDP(c *net.UDPConn, a net.Addr, in []byte)
 	// Receives the raw message content and writes back
-        // a TCP response. A TCP connection does need to
-        // know explicitly be told the remote address. ResponderTCP() must
-        // take care of sending back a response to the requestor.
+	// a TCP response. A TCP connection does need to
+	// know explicitly be told the remote address. ResponderTCP() must
+	// take care of sending back a response to the requestor.
 	ResponderTCP(c *net.TCPConn, in []byte)
 }
 
@@ -74,24 +74,28 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 	switch res.Tcp {
 	case true:
 		tch := make(chan msg)
+		lch := make(chan *net.TCPListener)
 		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
-		go listenerTCP(a, tch)
+		go listenerTCP(a, tch, lch)
+		listener := <-lch
+		// if nil?? TODO(mg)
 	foreverTCP:
 		for {
 			select {
 			case <-stop:
 				stop <- true
-                                close(stop)
+				listener.Close()
+				close(stop)
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
-                                        // always fatal??
-                                        println(s.err.String())
-                                        close(stop)
-                                        return s.err
+					// always fatal??
+					println(s.err.String())
+					close(stop)
+					return s.err
 				} else {
-				        go h.ResponderTCP(s.ct, s.msg)
-                                }
+					go h.ResponderTCP(s.tcp, s.msg)
+				}
 			}
 		}
 
@@ -104,17 +108,17 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 			select {
 			case <-stop:
 				stop <- true
-                                close(stop)
+				close(stop)
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
 					//continue
-                                        println(s.err.String())
-                                        close(stop)
-                                        return s.err
+					println(s.err.String())
+					close(stop)
+					return s.err
 				} else {
-				        go h.ResponderUDP(s.cu, s.addr, s.msg)
-                                }
+					go h.ResponderUDP(s.udp, s.addr, s.msg)
+				}
 			}
 		}
 	}
@@ -124,30 +128,33 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 // Listen for UDP requests.
 func listenerUDP(a *net.UDPAddr, ch chan msg) {
 	c, err := net.ListenUDP("udp", a)
-        if err != nil {
-                ch <- msg{err: err}
-                return
-        }
+	if err != nil {
+		ch <- msg{err: err}
+		return
+	}
 	for {
 		m := make([]byte, dns.DefaultMsgSize) // TODO(mg) out of this loop?
 		n, radd, err := c.ReadFromUDP(m)
 		if err != nil {
 			ch <- msg{err: err}
-                        continue
+			continue
 		}
 		m = m[:n]
 		// if closed(ch) c.Close() TODO(mg)?? 
-		ch <- msg{cu: c, addr: radd, msg: m}
+		ch <- msg{udp: c, addr: radd, msg: m}
 	}
 }
 
 // Listen for TCP requests.
-func listenerTCP(a *net.TCPAddr, ch chan msg) {
+// How do I close this ?? TODO(mg)
+func listenerTCP(a *net.TCPAddr, ch chan msg, listen chan *net.TCPListener) {
 	t, err := net.ListenTCP("tcp", a)
-        if err != nil {
-                ch <- msg{err: err}
-                return
-        }
+	if err != nil {
+		ch <- msg{err: err}
+		listen <- nil
+		return
+	}
+	listen <- t // sent listener back (for closing it)
 	for {
 		l := make([]byte, 2) // receiver length
 		c, err := t.AcceptTCP()
@@ -181,7 +188,7 @@ func listenerTCP(a *net.TCPAddr, ch chan msg) {
 			}
 			i += n
 		}
-		ch <- msg{ct: c, msg: m}
+		ch <- msg{tcp: c, msg: m}
 	}
 }
 
@@ -279,4 +286,3 @@ var Reflector *reflectServer
 
 What point is there to Export this?
 */
-
