@@ -10,6 +10,7 @@ Longer term:
 * Multi line output?
 
 Issues:
+* make TCP UDP naming more inline of the net package i.e. prefix instead of postfix
 * escaped dots in names \.
 * quoted quotes in txt records
 * Better sized buffers
