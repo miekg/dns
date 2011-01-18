@@ -109,6 +109,6 @@ FLAGS:
                         fmt.Printf("%v\n", in.Error.String())
                 }
 	}
-	qr <- resolver.Msg{nil, nil, nil}
+	qr <- resolver.Msg{}
 	<-qr
 }

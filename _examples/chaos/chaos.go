@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// Stop the resolver, send it a null mesg
-	qr <- resolver.Msg{nil, nil, nil}
+	qr <- resolver.Msg{}
 	<-qr
 }
 
