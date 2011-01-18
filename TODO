@@ -20,7 +20,4 @@ Issues:
     - FormErr pkt
     - for new(RR*)
     - nsupdate
-* query-time, server in string ouput of resolver.Msg
-   - resolver.Msg when doing resolver querying, extend msg...?
-   - also for the server?
 * Fix remaining records: LOC and others
