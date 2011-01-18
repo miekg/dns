@@ -37,7 +37,7 @@ func TestResolver(t *testing.T) {
 		t.Logf("%v\n", in)
 	}
 
-	ch <- Msg{nil, nil, nil}
+	ch <- Msg{}
 	<-ch
 }
 
@@ -78,7 +78,7 @@ func TestResolverEdns(t *testing.T) {
 			t.Fail()
 		}
 	}
-	ch <- Msg{nil, nil, nil}
+	ch <- Msg{}
 	<-ch // wait for ch to close channel
 }
 
@@ -117,7 +117,7 @@ func TestResolverTsig(t *testing.T) {
 			t.Fail()
 		}
 	}
-	ch <- Msg{nil, nil, nil}
+	ch <- Msg{}
 	<-ch // wait for ch to close channel
 }
 

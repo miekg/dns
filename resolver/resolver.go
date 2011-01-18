@@ -87,7 +87,7 @@ func query(res *Resolver, msg chan Msg) {
 		case out := <-msg: //msg received
 			if out.Dns == nil {
 				// nil message, quit the goroutine
-				msg <- Msg{nil, nil, nil}
+				msg <- Msg{}
 				close(msg)
 				return
 			}
@@ -164,7 +164,7 @@ func axfr(res *Resolver, msg chan Msg) {
 		case out := <-msg: // msg received
 			if out.Dns == nil {
 				// stop
-				msg <- Msg{nil, nil, nil}
+				msg <- Msg{}
 				close(msg)
 				return
 			}
