@@ -38,6 +38,8 @@ func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	inmsg.Unpack(in)
 	out := createpkg(inmsg.MsgHdr.Id, false, a)
 	SendUDP(out, c, a)
+        // Meta.QLen/RLen/QueryStart/QueryEnd can be filled in at
+        // this point for logging purposses or anything else
 }
 
 func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) {
