@@ -18,10 +18,10 @@ package main
 
 import (
 	"net"
-        "time"
         "strconv"
 	"dns"
         "dns/responder"
+        "os/signal"
 )
 
 type server responder.Server
@@ -74,7 +74,14 @@ func main() {
         ch := make(chan bool)
         go s.NewResponder(srv, ch)
 
-        time.Sleep(100 * 1e9)
-
-
+forever:
+        for {
+                // Wait for a signal to stop
+                select {
+                case <-signal.Incoming:
+                        println("Signal received, stopping")
+                        break forever
+                }
+        }
+//        time.Sleep(100 * 1e9)
 }
