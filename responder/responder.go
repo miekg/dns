@@ -41,6 +41,7 @@ type msg struct {
 	addr net.Addr     // remote address
 	msg  []byte       // raw dns message
 	err  os.Error     // any errors
+        // Meta stuff
 }
 
 // Every nameserver implements the Responder interface. It defines

@@ -52,6 +52,24 @@ func (e *Error) String() string {
 	return e.Error
 }
 
+// Meta data when querying
+type Meta struct {
+        QLen    int             // query length in bytes
+        RLen    int             // reply length in bytes
+        QueryStart int64        // start of query in nanoseconds epoch
+        QueryEnd int64          // end of query in nanosecond epoch
+}
+
+func (m *Meta) String() string {
+        s := ";; Query time: " + strconv.Itoa(int(m.QueryEnd - m.QueryStart)) + " nsec"
+        s += "\n;; MSG SIZE  rcvd: " + strconv.Itoa(m.RLen) + ", sent: " + strconv.Itoa(m.QLen)
+        rf := float32(m.RLen)
+        qf := float32(m.QLen)
+        s += " (" + strconv.Ftoa32(rf/qf, 'f', 2) + ":1)"
+        // WHEN??
+        return s
+}
+
 type RR interface {
 	Header() *RR_Header
 	String() string

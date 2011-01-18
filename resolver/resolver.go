@@ -28,6 +28,7 @@ import (
 	"os"
 	"net"
 	"dns"
+        "time"
 )
 
 const packErr = "Failed to pack message"
@@ -39,6 +40,7 @@ const servErr = "No servers could be reached"
 // Sending a nil message instructs to resolver to stop.
 type Msg struct {
 	Dns   *dns.Msg
+        Meta  *dns.Meta
 	Error os.Error
 }
 
@@ -71,6 +73,7 @@ func query(res *Resolver, msg chan Msg) {
 		err  os.Error
 		in   *dns.Msg
 		port string
+                meta *dns.Meta
 	)
 	// len(res.Server) == 0 can be perfectly valid, when setting up the resolver
 	if res.Port == "" {
@@ -84,7 +87,7 @@ func query(res *Resolver, msg chan Msg) {
 		case out := <-msg: //msg received
 			if out.Dns == nil {
 				// nil message, quit the goroutine
-				msg <- Msg{nil, nil}
+				msg <- Msg{nil, nil, nil}
 				close(msg)
 				return
 			}
@@ -97,7 +100,7 @@ func query(res *Resolver, msg chan Msg) {
 			}
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- Msg{nil, &dns.Error{Error: packErr}}
+				msg <- Msg{nil, nil, &dns.Error{Error: packErr}}
 				continue
 			}
 
@@ -113,9 +116,9 @@ func query(res *Resolver, msg chan Msg) {
 					continue
 				}
 				if res.Tcp {
-					in, err = exchangeTCP(c, sending, res, true)
+					in, meta, err = exchangeTCP(c, sending, res, true)
 				} else {
-					in, err = exchangeUDP(c, sending, res, true)
+					in, meta, err = exchangeUDP(c, sending, res, true)
 				}
 
 				// Check id in.id != out.id, should be checked in the client!
@@ -123,11 +126,13 @@ func query(res *Resolver, msg chan Msg) {
 				if err != nil {
 					continue
 				}
+                                break
 			}
+                        meta.QLen = len(sending)
 			if err != nil {
-				msg <- Msg{nil, err}
+				msg <- Msg{nil, meta, err}
 			} else {
-				msg <- Msg{in, nil}
+				msg <- Msg{in, meta, nil}
 			}
 		}
 	}
@@ -146,6 +151,7 @@ func (res *Resolver) NewXfer() (ch chan Msg) {
 func axfr(res *Resolver, msg chan Msg) {
 	var port string
 	var err os.Error
+        meta := new(dns.Meta)
 	var in *dns.Msg
 	if res.Port == "" {
 		port = "53"
@@ -158,7 +164,7 @@ func axfr(res *Resolver, msg chan Msg) {
 		case out := <-msg: // msg received
 			if out.Dns == nil {
 				// stop
-				msg <- Msg{nil, nil}
+				msg <- Msg{nil, nil, nil}
 				close(msg)
 				return
 			}
@@ -166,8 +172,9 @@ func axfr(res *Resolver, msg chan Msg) {
 			out.Dns.SetId()
 			sending, ok := out.Dns.Pack()
 			if !ok {
-				msg <- Msg{nil, &dns.Error{Error: packErr}}
+				msg <- Msg{nil, nil, &dns.Error{Error: packErr}}
 			}
+                        meta.QLen = len(sending)
 		SERVER:
 			for i := 0; i < len(res.Servers); i++ {
 				server := res.Servers[i] + ":" + port
@@ -180,9 +187,9 @@ func axfr(res *Resolver, msg chan Msg) {
 				// Start the AXFR
 				for {
 					if first {
-						in, cerr = exchangeTCP(c, sending, res, true)
+						in, meta, cerr = exchangeTCP(c, sending, res, true)
 					} else {
-						in, cerr = exchangeTCP(c, sending, res, false)
+						in, meta, cerr = exchangeTCP(c, sending, res, false)
 					}
 
 					if cerr != nil {
@@ -204,12 +211,12 @@ func axfr(res *Resolver, msg chan Msg) {
 					if !first {
 						if !checkSOA(in, false) {
 							// Soa record not the last one
-							msg <- Msg{in, nil}
+							msg <- Msg{in, meta, nil}
 							continue
 							// next
 						} else {
 							c.Close()
-							msg <- Msg{in, nil}
+							msg <- Msg{in, meta, nil}
 							close(msg)
 							return
 						}
@@ -218,7 +225,7 @@ func axfr(res *Resolver, msg chan Msg) {
 				println("Should never be reached")
 				return
 			}
-			msg <- Msg{nil, err}
+			msg <- Msg{nil, meta, err}
 			close(msg)
 			return
 		}
@@ -228,9 +235,10 @@ func axfr(res *Resolver, msg chan Msg) {
 
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts.
-func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, *dns.Meta, os.Error) {
 	var timeout int64
 	var attempts int
+        meta := new(dns.Meta)
 	if r.Mangle != nil {
 		m = r.Mangle(m)
 	}
@@ -246,37 +254,41 @@ func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	}
 	for a := 0; a < attempts; a++ {
 		if send {
+                        meta.QueryStart = time.Nanoseconds()
 			err := sendUDP(m, c)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
 				}
-				return nil, err
+				return nil, meta, err
 			}
 		}
 
 		c.SetReadTimeout(timeout * 1e9) // nanoseconds
 		buf, err := recvUDP(c)
+                meta.QueryEnd = time.Nanoseconds()
 		if err != nil {
 			if e, ok := err.(net.Error); ok && e.Timeout() {
 				continue
 			}
-			return nil, err
+			return nil, meta, err
 		}
 
 		in := new(dns.Msg)
+                meta.RLen = len(buf)
 		if !in.Unpack(buf) {
 			continue
 		}
-		return in, nil
+		return in, meta, nil
 	}
-	return nil, &dns.Error{Error: servErr}
+	return nil, meta, &dns.Error{Error: servErr}
 }
 
 // Up to res.Attempts attempts.
-func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Error) {
+func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, *dns.Meta, os.Error) {
 	var timeout int64
 	var attempts int
+        meta := new(dns.Meta)
 	if r.Mangle != nil {
 		m = r.Mangle(m)
 	}
@@ -294,31 +306,34 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*dns.Msg, os.Err
 	for a := 0; a < attempts; a++ {
 		// only send something when told so
 		if send {
+                        meta.QueryStart = time.Nanoseconds()
 			err := sendTCP(m,c)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
 				}
-				return nil, err
+				return nil, meta, err
 			}
 		}
 
 		c.SetReadTimeout(timeout * 1e9) // nanoseconds
 		// The server replies with two bytes length
 		buf, err := recvTCP(c)
+                meta.QueryEnd = time.Nanoseconds()
 		if err != nil {
 			if e, ok := err.(net.Error); ok && e.Timeout() {
 				continue
 			}
-			return nil, err
+			return nil, meta, err
 		}
 		in := new(dns.Msg)
+                meta.RLen = len(buf)
 		if !in.Unpack(buf) {
 			continue
 		}
-		return in, nil
+		return in, meta, nil
 	}
-	return nil, &dns.Error{Error: servErr}
+	return nil, meta, &dns.Error{Error: servErr}
 }
 
 func sendUDP(m []byte,c net.Conn) os.Error {

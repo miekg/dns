@@ -38,17 +38,18 @@ FLAGS:
 			nameserver = flag.Arg(i)
 			continue FLAGS
 		}
-		// If it looks like a class, it is a class
-		for k, v := range dns.Class_str {
-			if v == strings.ToUpper(flag.Arg(i)) {
-				qclass = k
-				continue FLAGS
-			}
-		}
+                // First class, then type, to make ANY queries possible
 		// And if it looks like type, it is a type
 		for k, v := range dns.Rr_str {
 			if v == strings.ToUpper(flag.Arg(i)) {
 				qtype = k
+				continue FLAGS
+			}
+		}
+		// If it looks like a class, it is a class
+		for k, v := range dns.Class_str {
+			if v == strings.ToUpper(flag.Arg(i)) {
+				qclass = k
 				continue FLAGS
 			}
 		}
@@ -96,17 +97,18 @@ FLAGS:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
                 m.SetId()
-		qr <- resolver.Msg{m, nil}
+		qr <- resolver.Msg{m, nil, nil}
 		in := <-qr
 		if in.Dns != nil {
                         if m.Id != in.Dns.Id {
                                 fmt.Printf("Id mismatch\n")
                         }
 			fmt.Printf("%v\n", in.Dns)
+                        fmt.Printf("%s\n", in.Meta)
 		} else {
                         fmt.Printf("%v\n", in.Error.String())
                 }
 	}
-	qr <- resolver.Msg{nil, nil}
+	qr <- resolver.Msg{nil, nil, nil}
 	<-qr
 }

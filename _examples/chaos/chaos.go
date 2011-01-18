@@ -28,13 +28,13 @@ func main() {
 		// set the resolver to query the NS directly
 		r.Servers = []string{a.String()}
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		qr <- resolver.Msg{m, nil}
+		qr <- resolver.Msg{m, nil, nil}
 		in = <-qr
 		if in.Dns != nil && in.Dns.Answer != nil {
 			fmt.Printf("%v\n", in.Dns.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		qr <- resolver.Msg{m, nil}
+		qr <- resolver.Msg{m, nil, nil}
 		in = <-qr
 		if in.Dns != nil && in.Dns.Answer != nil {
 			fmt.Printf("%v\n", in.Dns.Answer[0])
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// Stop the resolver, send it a null mesg
-	qr <- resolver.Msg{nil, nil}
+	qr <- resolver.Msg{nil, nil, nil}
 	<-qr
 }
 
@@ -53,7 +53,7 @@ func addresses(qr chan resolver.Msg, name string) []net.IP {
 	var ips []net.IP
 
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeA, dns.ClassINET}
-	qr <- resolver.Msg{m, nil}
+	qr <- resolver.Msg{m, nil, nil}
 	in := <-qr
 
         if in.Dns == nil {
@@ -69,7 +69,7 @@ func addresses(qr chan resolver.Msg, name string) []net.IP {
 		ips = append(ips, a.(*dns.RR_A).A)
 	}
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeAAAA, dns.ClassINET}
-	qr <- resolver.Msg{m, nil}
+	qr <- resolver.Msg{m, nil, nil}
 	in = <-qr
 
         if in.Dns == nil {

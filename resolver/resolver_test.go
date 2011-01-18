@@ -17,7 +17,7 @@ func TestResolver(t *testing.T) {
 
 	// ask something
 	m.Question[0] = dns.Question{"miek.nl", dns.TypeSOA, dns.ClassINET}
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	in := <-ch
 
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
@@ -28,7 +28,7 @@ func TestResolver(t *testing.T) {
 
 	// ask something
 	m.Question[0] = dns.Question{"www.nlnetlabs.nl", dns.TypeRRSIG, dns.ClassINET}
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	in = <-ch
 
 	if in.Dns != nil && in.Dns.Rcode != dns.RcodeSuccess {
@@ -37,7 +37,7 @@ func TestResolver(t *testing.T) {
 		t.Logf("%v\n", in)
 	}
 
-	ch <- Msg{nil, nil}
+	ch <- Msg{nil, nil, nil}
 	<-ch
 }
 
@@ -62,14 +62,14 @@ func TestResolverEdns(t *testing.T) {
 	edns.SetUDPSize(2048)
 	edns.SetDo()
 	edns.Option = make([]dns.Option, 1)
-	edns.SetNsidToHex("") // Empty to request it
+	edns.SetNsid("") // Empty to request it
 
 	// ask something
 	m.Question[0] = dns.Question{"powerdns.nl", dns.TypeDNSKEY, dns.ClassINET}
 	m.Extra = make([]dns.RR, 1)
 	m.Extra[0] = edns
 
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
@@ -78,7 +78,7 @@ func TestResolverEdns(t *testing.T) {
 			t.Fail()
 		}
 	}
-	ch <- Msg{nil, nil}
+	ch <- Msg{nil, nil, nil}
 	<-ch // wait for ch to close channel
 }
 
@@ -108,7 +108,7 @@ func TestResolverTsig(t *testing.T) {
 	// Add it to the msg
 	m.Extra[0] = tsig
 
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {
@@ -117,7 +117,7 @@ func TestResolverTsig(t *testing.T) {
 			t.Fail()
 		}
 	}
-	ch <- Msg{nil, nil}
+	ch <- Msg{nil, nil, nil}
 	<-ch // wait for ch to close channel
 }
 
@@ -131,7 +131,7 @@ func TestAXFR(t *testing.T) {
 	m.Question[0] = dns.Question{"miek.nl", dns.TypeAXFR, dns.ClassINET}
 	//m.Question[0] = dns.Question{"atoom.net", dns.TypeAXFR, dns.ClassINET}
 
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	for dm := range ch {
 		var _ = dm
 		/* fmt.Printf("%v\n",dm.Dns) */
@@ -147,7 +147,7 @@ func TestFromFile(t *testing.T) {
 	m.Question = make([]dns.Question, 1)
 	m.Question[0] = dns.Question{"a.miek.nl", dns.TypeA, dns.ClassINET}
 
-	ch <- Msg{m, nil}
+	ch <- Msg{m, nil, nil}
 	in := <-ch
 	if in.Dns != nil {
 		if in.Dns.Rcode != dns.RcodeSuccess {

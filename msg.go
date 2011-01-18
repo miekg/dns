@@ -92,6 +92,7 @@ var Rr_str = map[uint16]string{
 	TypeTSIG:       "TSIG",       // Meta RR
 	TypeAXFR:       "AXFR",       // Meta RR
 	TypeIXFR:       "IXFR",       // Meta RR
+        TypeALL:        "ANY",        // Meta RR
 }
 
 // Reverse of Rr_str (needed for parsing)
