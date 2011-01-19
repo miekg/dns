@@ -21,6 +21,7 @@ import (
         "strconv"
 	"dns"
         "dns/responder"
+        "runtime"
         "os/signal"
 )
 
@@ -93,6 +94,8 @@ func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
 }
 
 func main() {
+        runtime.GOMAXPROCS(10)          // Be bold
+
         s := new(responder.Server)
         s.Address = "127.0.0.1"
         s.Port = "8053"
