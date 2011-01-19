@@ -18,7 +18,7 @@ func main() {
 	var in resolver.Msg
 
 	if len(os.Args) != 2 {
-		fmt.Printf("%s NAMESERVER\n", os.Args[0])
+		fmt.Printf("%s DOMAIN\n", os.Args[0])
 		os.Exit(1)
 	}
 

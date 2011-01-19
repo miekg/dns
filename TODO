@@ -1,11 +1,13 @@
 Todo:
-* NSEC3 - need base32 for Nsec3
+* NSEC and nsec3 closest encloser helper functions
+* wildcards
 * Tsig testing
 * Private key file parsing use io.Reader (or the like)
 * Parsing from /etc/resolv.conf - clean up the code, use normal packages
 * IP6 testing - in resolver and also in responder code
         extend Responder interface with ipv6?
-* Text impl of nameserver, with a small zone, 1 KSK and online  signing
+* Test impl of nameserver, with a small zone, 1 KSK and online  signing
+* NSEC3 - need base32 for Nsec3
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
