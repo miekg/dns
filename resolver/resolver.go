@@ -129,6 +129,10 @@ func query(res *Resolver, msg chan Msg) {
                                 break
 			}
                         if sending != nil {
+                                if meta == nil {
+                                        // Nothing sent, so no meta set
+                                        meta = new(dns.Meta)
+                                }
                                 meta.QLen = len(sending)
                         }
 			if err != nil {
