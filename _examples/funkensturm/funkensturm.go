@@ -9,12 +9,24 @@ import (
 	"net"
 	_ "fmt"
 	"dns"
-	"strconv"
+	_ "strconv"
 	"dns/resolver"
 	"dns/responder"
 	"runtime"
 	"os/signal"
 )
+
+// Strip the Addtional section of a pkt
+func stripExtra(m *dns.Msg) *dns.Msg {
+        m.Extra = []dns.RR{}
+        return m
+}
+
+// Strip the Authority section of a pkt
+func stripNs(m *dns.Msg) *dns.Msg {
+        m.Ns = []dns.RR{}
+        return m
+}
 
 type server responder.Server
 
@@ -24,42 +36,12 @@ func reply(a net.Addr, in []byte, tcp bool) *dns.Msg {
 		println("Unpacking failed")
 		return nil
 	}
-
-	// it's valid mesg, return it
-	return inmsg
-
 	if inmsg.MsgHdr.Response == true {
 		return nil // Don't answer responses
 	}
-	m := new(dns.Msg)
-	m.MsgHdr.Id = inmsg.MsgHdr.Id
-	m.MsgHdr.Authoritative = true
-	m.MsgHdr.Response = true
-	m.MsgHdr.Opcode = dns.OpcodeQuery
 
-	m.MsgHdr.Rcode = dns.RcodeSuccess
-	m.Question = make([]dns.Question, 1)
-	m.Answer = make([]dns.RR, 1)
-	m.Extra = make([]dns.RR, 1)
-
-	r := new(dns.RR_A)
-	r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-	ip, _ := net.ResolveUDPAddr(a.String()) // No general variant for both upd and tcp
-	r.A = ip.IP.To4()                       // To4 very important
-
-	t := new(dns.RR_TXT)
-	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
-	if tcp {
-		t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (tcp)"
-	} else {
-		t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
-	}
-
-	m.Question[0] = inmsg.Question[0]
-	m.Answer[0] = r
-	m.Extra[0] = t
-
-	return m
+	// it's valid mesg, return it
+	return inmsg
 }
 
 func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
@@ -71,11 +53,8 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 	qr <- resolver.Msg{m, nil, nil}
 	in := <-qr
 
-        // Okay, not strip the additional section
-        if len(in.Dns.Extra) > 0 {
-                println("Stripping additional section")
-                in.Dns.Extra = []dns.RR{}
-        }
+        in.Dns = stripExtra(in.Dns)
+//        in.Dns = stripNs(in.Dns)
 
 	// in may be nil
 	out, ok := in.Dns.Pack()
