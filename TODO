@@ -1,5 +1,6 @@
 Todo:
 * NSEC and nsec3 closest encloser helper functions
+* os.Error in Pack()/Unpack()
 * wildcards
 * Tsig testing
 * Private key file parsing use io.Reader (or the like)

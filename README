@@ -12,7 +12,7 @@ be build with: make examples (after the dns package has been installed)
 
 The major omission at the moment is parsing Resource Records from
 strings. (I.e. supporting the 1035 zone file format).
-Everything else should be present and working. If not, drop me an mail.
+Everything else should be present and working. If not, drop me an email.
 
 Have fun!
 Miek Gieben  -  2010, 2011 - miek@miek.nl
