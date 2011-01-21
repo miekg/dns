@@ -27,3 +27,11 @@ Issues:
     - FormErr pkt
     - for new(RR*)
     - nsupdate
+
+Funkensturm:
+* add some generic functions that can be used
+    matching functions should be go-like and just hook into the exported
+    field from package dns.
+    actions are defined in calling functions from funkensturm:
+        - sign(RRSET, privKEY), how do you specify WHAT gets signed
+            if rr.Header().Name == "miek.nl." -> sign header -> add sig
