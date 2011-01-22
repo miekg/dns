@@ -88,10 +88,11 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 
         // loop again for matching, but now with OUT, this is done
         // for some last minute packet changing. Note the boolean return
-        // code isn't used any more
+        // code isn't used any more, i.e No more actions are allowed
+        // anymore
         pkt1 = resultpkt
 	for _, m := range f.Matches {
-		pkt1, _ = m.Func(pkt1, IN)
+		pkt1, _ = m.Func(pkt1, OUT)
 	}
 
 	out, ok1 := pkt1.Pack()
@@ -103,6 +104,7 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 }
 
 func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
+        /* todo */
 }
 
 // Small helper function

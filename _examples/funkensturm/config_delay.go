@@ -3,7 +3,6 @@ package main
 // This is a transparant proxy config. All recevied pkt are just forwarded to the
 // nameserver, hardcoded to 127.0.0.1 and then return to the original querier
 import (
-        "fmt" 
 	"dns"
 	"dns/resolver"
 )
@@ -12,7 +11,6 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	// Matching criteria
         switch d {
         case IN:
-                fmt.Printf("%v\n", m)
                 // nothing
         case OUT:
                 // Note that when sending back only the mangling is important
