@@ -79,12 +79,13 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 	}
 
         // Loop through the Actions.Func* and do something with the
-        // packet. Note there can only be one return packet. Intermidate
-        // action function should return nil, to signal ... bla bla
+        // packet. Note there can only be one returned packet. 
+        // We use 'ok' to signal what the above match did, true or false
         var resultpkt *dns.Msg
 	for _, a := range f.Actions {
 		resultpkt, ok1 = a.Func(pkt1, ok)
 	}
+        // what to do with the bool??
 
         // loop again for matching, but now with OUT, this is done
         // for some last minute packet changing. Note the boolean return
@@ -95,6 +96,9 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 		pkt1, _ = m.Func(pkt1, OUT)
 	}
 
+        if pkt1 == nil {
+                return
+        }
 	out, ok1 := pkt1.Pack()
 	if !ok1 {
 		println("Failed to pack")

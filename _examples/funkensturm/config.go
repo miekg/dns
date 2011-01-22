@@ -3,7 +3,7 @@ package main
 // This is a transparant proxy config. All recevied pkt are just forwarded to the
 // nameserver, hardcoded to 127.0.0.1 and then return to the original querier
 import (
-        "fmt" 
+        "fmt"
 	"dns"
 	"dns/resolver"
 )
