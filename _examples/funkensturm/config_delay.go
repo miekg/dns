@@ -1,25 +1,20 @@
 package main
 
-// This is a transparant proxy config. All recevied pkt are just forwarded to the
-// nameserver, hardcoded to 127.0.0.1 and then return to the original querier
+// This proxy delays pkt that have the RD bit set.
+// NSECDELAY is now 1 * 1e9, which means 1 pkt/sec
 import (
 	"dns"
 	"time"
 	"dns/resolver"
 )
 
-const (
-        DELAY = 0.5 * 1e9        // half second
-)
+const NSECDELAY = 1 * 1e9 // 1 second, meaning 1 qps
+var previous int64        // previous tick
 
-var previous int64 // previous tick
-// Check the delay
-func checkDelay(nsecDelay int64) (ti int64, limitok bool) {
+func checkDelay() (ti int64, limitok bool) {
 	current := time.Nanoseconds()
 	tdiff := (current - previous)
-        println("tdiff", tdiff)
-        println("nsec", nsecDelay)
-	if tdiff < nsecDelay {
+	if tdiff < NSECDELAY {
 		// too often
 		return previous, false
 	}
@@ -28,13 +23,13 @@ func checkDelay(nsecDelay int64) (ti int64, limitok bool) {
 
 func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	// Matching criteria
+	var ok bool
 	switch d {
 	case IN:
-		// nothing
+		// only delay pkts with RD bit 
+		ok = m.MsgHdr.RecursionDesired == true
 	case OUT:
-		// Note that when sending back only the mangling is important
-		// the actual return code of these function isn't checked by
-		// funkensturm
+		// nothing
 	}
 
 	// Packet Mangling functions
@@ -44,30 +39,30 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	case OUT:
 		// nothing
 	}
-	return m, true
+	return m, ok
 }
 
-func delay(m *dns.Msg, ok bool) (*dns.Msg, bool) {
-        var ok1 bool
+func delay(m *dns.Msg, ok bool) *dns.Msg {
+	var ok1 bool
 	switch ok {
 	case true:
-                previous, ok1 = checkDelay(DELAY)
+		previous, ok1 = checkDelay()
 		if !ok1 {
-		        println("dropping: too often")
-                        time.Sleep(DELAY)
-                        return nil, false
+			println("Dropping: too often")
+			time.Sleep(NSECDELAY)
+			return nil
 		} else {
-		        println("Ok: continue")
-                        qr <- resolver.Msg{m, nil, nil}
-                        in := <-qr
-                        return in.Dns, true
+			println("Ok: continue")
+			qr <- resolver.Msg{m, nil, nil}
+			in := <-qr
+			return in.Dns
 		}
 	case false:
 		qr <- resolver.Msg{m, nil, nil}
 		in := <-qr
-		return in.Dns, true
+		return in.Dns
 	}
-	return nil, false
+	return nil
 }
 
 // Return the configration

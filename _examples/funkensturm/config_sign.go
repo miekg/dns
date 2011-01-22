@@ -1,7 +1,9 @@
 package main
 
-// This is a transparant proxy config. All recevied pkt are just forwarded to the
-// nameserver, hardcoded to 127.0.0.1 and then return to the original querier
+// This is a signing proxy. 
+// Lots of hardcoded stuff, but stuff in the
+// answer section is signed with a key
+// the RRSIG is added to the pkt
 import (
 	"dns"
 	"dns/resolver"
@@ -55,20 +57,15 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, true
 }
 
-func send(m *dns.Msg, ok bool) (*dns.Msg, bool) {
+func send(m *dns.Msg, ok bool) *dns.Msg {
 	switch ok {
 	case true, false:
 		qr <- resolver.Msg{m, nil, nil}
 		in := <-qr
-		return in.Dns, true
+		return in.Dns
 	}
-	return nil, false // Bug in Go, yes BUG IN GO
+	return nil
 }
-
-// qr is global and started by Funkensturm. If you
-// need 2 or more resolvers, you'll need to start
-// them yourself. This needs to be a global variable
-//var qr1 chan resolver.Msg
 
 var pubkey *dns.RR_DNSKEY
 var privkey dns.PrivateKey

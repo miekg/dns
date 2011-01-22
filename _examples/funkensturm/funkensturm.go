@@ -41,7 +41,7 @@ type Match struct {
 // An action is something that is done with a packet. Funkensturm
 // does not impose any restriction on what this can be.
 type Action struct {
-	Func func(*dns.Msg, bool) (*dns.Msg, bool)
+	Func func(*dns.Msg, bool) *dns.Msg
 }
 
 // A complete config for Funkensturm. All matches in the Matches slice are
@@ -83,9 +83,8 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
         // We use 'ok' to signal what the above match did, true or false
         var resultpkt *dns.Msg
 	for _, a := range f.Actions {
-		resultpkt, ok1 = a.Func(pkt1, ok)
+		resultpkt = a.Func(pkt1, ok)
 	}
-        // what to do with the bool??
 
         // loop again for matching, but now with OUT, this is done
         // for some last minute packet changing. Note the boolean return
