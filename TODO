@@ -35,3 +35,4 @@ Funkensturm:
     actions are defined in calling functions from funkensturm:
         - sign(RRSET, privKEY), how do you specify WHAT gets signed
             if rr.Header().Name == "miek.nl." -> sign header -> add sig
+* use exp/eval - to inteprete the config file??

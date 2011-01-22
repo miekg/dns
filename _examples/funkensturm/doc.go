@@ -1,6 +1,6 @@
 /*
 Funkensturm rewrites DNS packets in the broadest sense of the word.
-The features include delayed (re)sending of packets, (re)sending
+The rewritting can include delayed (re)sending of packets, (re)sending
 packets to multiple servers, rewriting the packet contents, for instance
 by signing a packet, or the other way around, stripping the signatures.
 
