@@ -9,6 +9,7 @@ Todo:
         extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * NSEC3 - need base32 for Nsec3
+* pkt log
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
@@ -36,3 +37,5 @@ Funkensturm:
         - sign(RRSET, privKEY), how do you specify WHAT gets signed
             if rr.Header().Name == "miek.nl." -> sign header -> add sig
 * use exp/eval - to inteprete the config file??
+* TCP how to handle stuff like AXFR
+* use package log

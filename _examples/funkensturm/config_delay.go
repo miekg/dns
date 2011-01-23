@@ -1,16 +1,20 @@
 package main
 
 // This proxy delays pkt that have the RD bit set.
-// NSECDELAY is now 1 * 1e9, which means 1 pkt/sec
+
 import (
+        "os"
 	"dns"
+        "fmt"
 	"time"
 	"dns/resolver"
 )
 
-const NSECDELAY = 1 * 1e9 // 1 second, meaning 1 qps
-var previous int64        // previous tick
+const NSECDELAY = 1 * 1e9 // 1 second, meaning 1 qps (smaller means higher qps)
 
+var previous int64 // previous tick
+
+// returns false if we hit the limit set by NSECDELAY
 func checkDelay() (ti int64, limitok bool) {
 	current := time.Nanoseconds()
 	tdiff := (current - previous)
@@ -21,6 +25,7 @@ func checkDelay() (ti int64, limitok bool) {
 	return current, true
 }
 
+// the only matching we do is on the RD bit
 func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	// Matching criteria
 	var ok bool
@@ -48,11 +53,11 @@ func delay(m *dns.Msg, ok bool) *dns.Msg {
 	case true:
 		previous, ok1 = checkDelay()
 		if !ok1 {
-			println("Dropping: too often")
+			fmt.Fprintf(os.Stderr, "Info: Dropping: too often")
 			time.Sleep(NSECDELAY)
 			return nil
 		} else {
-			println("Ok: continue")
+			fmt.Fprintf(os.Stderr, "Info: Dropping: too often")
 			qr <- resolver.Msg{m, nil, nil}
 			in := <-qr
 			return in.Dns

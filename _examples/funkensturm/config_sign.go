@@ -1,9 +1,9 @@
 package main
 
 // This is a signing proxy. 
-// Lots of hardcoded stuff, but stuff in the
-// answer section is signed with a key
-// the RRSIG is added to the pkt
+
+// Lots of hardcoded stuff. The first record in the answer section is
+// signed with the key. The RRSIG is added to the packet.
 import (
 	"dns"
 	"dns/resolver"
