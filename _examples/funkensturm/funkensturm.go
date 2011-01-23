@@ -114,10 +114,6 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		resultpkt = a.Func(pkt1, ok)
 	}
 
-	if resultpkt == nil {
-		return nil, &dns.Error{Error: "Action function returned nil packet"}
-	}
-
 	if *verbose {
 		fmt.Printf(">>>>>> ORIGINAL OUTGOING\n")
 		fmt.Printf("%v", resultpkt)
