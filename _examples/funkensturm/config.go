@@ -16,7 +16,7 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
                 // funkensturm
         }
 
-	// Packet Mangling functions
+	// Packet Mangling
 	switch d {
 	case IN:
 		// nothing
