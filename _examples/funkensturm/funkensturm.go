@@ -129,6 +129,11 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		pkt1, _ = m.Func(pkt1, OUT)
 	}
 
+        if pkt1 == nil {
+                // don't need to send something back
+                return nil, nil
+        }
+
 	if *verbose {
 		fmt.Printf(">>>>>> MODIFIED OUTGOING\n")
 		fmt.Printf("%v", pkt1)
