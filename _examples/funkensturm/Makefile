@@ -4,7 +4,7 @@
 include $(GOROOT)/src/Make.inc
 TARG=funkensturm
 GOFILES=funkensturm.go\
-	config.go\
+	config_delay.go\
 
 DEPS=../../
 include $(GOROOT)/src/Make.cmd

@@ -53,11 +53,11 @@ func delay(m *dns.Msg, ok bool) *dns.Msg {
 	case true:
 		previous, ok1 = checkDelay()
 		if !ok1 {
-			fmt.Fprintf(os.Stderr, "Info: Dropping: too often")
+			fmt.Fprintf(os.Stderr, "Info: Dropping: too often\n")
 			time.Sleep(NSECDELAY)
 			return nil
 		} else {
-			fmt.Fprintf(os.Stderr, "Info: Dropping: too often")
+			fmt.Fprintf(os.Stderr, "Info: Ok: let it through\n")
 			qr <- resolver.Msg{m, nil, nil}
 			in := <-qr
 			return in.Dns
