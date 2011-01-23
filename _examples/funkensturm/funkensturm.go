@@ -10,7 +10,7 @@ import (
 	"os"
 	"flag"
 	"net"
-	"log"
+	"fmt"
 	"dns"
 	"dns/resolver"
 	"dns/responder"
