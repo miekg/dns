@@ -1,7 +1,5 @@
 package main
 
-// This is a transparant proxy config. All recevied pkts are forwarded to the
-// nameserver, hardcoded to 127.0.0.1 and then returned to the original querier
 import (
 	"dns"
 	"dns/resolver"
@@ -38,21 +36,19 @@ func send(m *dns.Msg, ok bool) *dns.Msg {
 	return nil
 }
 
-// qr is global and started by Funkensturm. If you
-// need 2 or more resolvers, you'll need to start
-// them yourself. This needs to be a global variable
-//var qr1 chan resolver.Msg
-
 // Return the configration
 func funkensturm() *Funkensturm {
 	f := new(Funkensturm)
 
+        // Nothing to set up
 	f.Setup = func() bool { return true }
 
+        // 1 match function, use AND as op (doesn't matter in this case)
 	f.Matches = make([]Match, 1)
 	f.Matches[0].Op = AND
 	f.Matches[0].Func = match
 
+        // 1 action
 	f.Actions = make([]Action, 1)
 	f.Actions[0].Func = send
 	return f
