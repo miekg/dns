@@ -79,7 +79,8 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	}
 	if *verbose {
 		fmt.Printf(">>>>>> ORIGINAL INCOMING\n")
-		fmt.Printf("%v\n", pkt)
+		fmt.Printf("%v", pkt)
+		fmt.Printf("<<<<<< ORIGINAL INCOMING\n")
 	}
 	if pkt.MsgHdr.Response == true {
 		return nil, &dns.Error{Error: "Response bit set, not replying"}
@@ -101,7 +102,8 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	}
 	if *verbose {
 		fmt.Printf(">>>>>> MODIFIED INCOMING\n")
-		fmt.Printf("%v\n", pkt1)
+		fmt.Printf("%v", pkt1)
+		fmt.Printf("<<<<<< MODIFIED INCOMING\n")
 	}
 
 	// Loop through the Actions.Func* and do something with the
@@ -118,7 +120,8 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 
 	if *verbose {
 		fmt.Printf(">>>>>> ORIGINAL OUTGOING\n")
-		fmt.Printf("%v\n", resultpkt)
+		fmt.Printf("%v", resultpkt)
+		fmt.Printf("<<<<<< ORIGINAL OUTGOING\n")
 	}
 
 	// loop again for matching, but now with OUT, this is done
@@ -132,7 +135,8 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 
 	if *verbose {
 		fmt.Printf(">>>>>> MODIFIED OUTGOING\n")
-		fmt.Printf("%v\n", pkt1)
+		fmt.Printf("%v", pkt1)
+		fmt.Printf("<<<<<< MODIFIED OUTGOING\n")
 	}
 
 	out, ok1 := pkt1.Pack()
