@@ -3,7 +3,8 @@ package main
 // This is a signing proxy. 
 
 // Lots of hardcoded stuff. The first record in the answer section is
-// signed with the key. The RRSIG is added to the packet.
+// signed with the key for example.org. The RRSIG is added to the packet.
+// We could also use one 1 key for multiple domains.
 import (
 	"dns"
 	"dns/resolver"
@@ -11,9 +12,8 @@ import (
 )
 
 func sign(m *dns.Msg) *dns.Msg {
-        // Assume miek.nl, just for testing, example.com???
         sg := new(dns.RR_RRSIG)
-        sg.Hdr = dns.RR_Header{"miek.nl.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
+        sg.Hdr = dns.RR_Header{"www.example.org.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
         sg.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
         sg.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
         sg.KeyTag = pubkey.KeyTag()   // Get the keyfrom the Key
@@ -46,13 +46,15 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
                 // funkensturm
         }
 
-	// Packet Mangling functions
+	// Packet Mangling
 	switch d {
 	case IN:
 		// nothing
 	case OUT:
-                // On the way out sign the packet
-                m = sign(m) // keys are global
+                if m.Question[0].Name == "www.example.org." {
+                        // On the way out sign the packet
+                        m = sign(m) // keys are global
+                }
 	}
 	return m, true
 }
