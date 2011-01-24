@@ -18,10 +18,10 @@ import (
         "strings"
 )
 
-// Setup a responder takes takes care of the incoming queries.
+// Define a responder that takes care of the incoming queries.
 type server responder.Server
 
-// Setup a initial resolver for sending the queries somewhere else.
+// Define a slice of channels for the resolver for sending the queries somewhere else.
 var qr []chan resolver.Msg
 
 // The configuration of Funkensturm
@@ -33,15 +33,15 @@ var verbose *bool
 // Where does the packet come from? 
 // IN: initial packet received by the Responder
 // any modifications here will reflect what kind of
-// pkt is sent through. Normally there is no modification here.
+// pkt is sent through.
 // OUT: pkt as received back from a server. Modifications here will reflect
 // how the packet is send back to the original requester.
 const (
 	IN  = iota // set when receiving a packet
 	OUT        // set when sending a packet
 
-	OR  // chain match functions with logical or
-	AND // chain match functions with logical and
+	OR  // chain match functions with logical 'or'
+	AND // chain match functions with logical 'and'
 )
 
 // A Match function is used on a DNS packet and
@@ -67,7 +67,7 @@ type Action struct {
 //
 // The final outcome (does a packet match or not?) is calculated as follows:
 // true Match[0].Op Match[0].Func() Match[1].Op Match[1].Func() ...
-// The result of this macthing is given to the action function(s). They can then
+// The result of this matching is given to the action function(s). They can then
 // decide what to do with a packet in the 'true' and in the 'false' case.
 type Funkensturm struct {
 	Setup   func() bool // Inital setup (for extra resolvers, or loading keys, or ...)
@@ -75,7 +75,6 @@ type Funkensturm struct {
 	Actions []Action    // What to do with the packets
 }
 
-// No matter what, we refuse to answer request with the response bit set.
 func doFunkensturm(i []byte) ([]byte, os.Error) {
 	pkt := new(dns.Msg)
 	if !pkt.Unpack(i) {
@@ -86,6 +85,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		fmt.Printf("%v", pkt)
 		fmt.Printf("<<<<<< ORIGINAL INCOMING\n")
 	}
+        // No matter what, we refuse to answer requests with the response bit set.
 	if pkt.MsgHdr.Response == true {
 		return nil, &dns.Error{Error: "Response bit set, not replying"}
 	}
@@ -150,7 +150,6 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	}
 	// Some final byte changing function here? 
 	return out, nil
-
 }
 
 func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
@@ -191,7 +190,7 @@ func splitAddrPort(s string) (a, p string) {
 func main() {
 	var sserver *string = flag.String("sserver", "127.0.0.1:8053", "Set the listener address")
 	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es)")
-	verbose = flag.Bool("verbose", false, "Print packet as they flow through")       // verbose needs to be global
+	verbose = flag.Bool("verbose", false, "Print packet as it flows through")       // verbose needs to be global
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
@@ -207,7 +206,7 @@ func main() {
                 r := new(resolver.Resolver)
                 r.Servers = []string{addr}
                 r.Port = port
-                qr[i] = r.NewQuerier() // connect to global qr
+                qr[i] = r.NewQuerier() // connect to global qr[i
         }
 
 	f = funkensturm()
