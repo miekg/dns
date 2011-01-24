@@ -1,5 +1,5 @@
 /* 
- * Funkensturm
+ * Funkensturm, a versatile DNS proxy
  * Miek Gieben <miek@miek.nl> (c) 2011
  * GPLv2
  */
@@ -15,16 +15,20 @@ import (
 	"dns/resolver"
 	"dns/responder"
 	"os/signal"
+        "strings"
 )
 
 // Setup a responder takes takes care of the incoming queries.
 type server responder.Server
 
 // Setup a initial resolver for sending the queries somewhere else.
-var qr chan resolver.Msg
+var qr []chan resolver.Msg
 
 // The configuration of Funkensturm
 var f *Funkensturm
+
+// Verbose flag
+var verbose *bool
 
 // Where does the packet come from? 
 // IN: initial packet received by the Responder
@@ -175,20 +179,36 @@ func (s *server) ResponderTCP(c *net.TCPConn, i []byte) {
 	// nothing is send back
 }
 
-var verbose *bool
+// split 127.0.0.1:53 into components
+// TODO  IPv6
+func splitAddrPort(s string) (a, p string) {
+        items := strings.Split(s, ":", 2)
+        a = items[0]
+        p = items[1]
+        return
+}
 
 func main() {
-	var sserver *string = flag.String("sserver", "127.0.0.1", "Set the listener address")
-	var sport *string = flag.String("sport", "8053", "Set the listener port")
-	var rserver *string = flag.String("rserver", "127.0.0.1", "Remote server address")
-	// multiple rservers??
-	var rport *string = flag.String("rpost", "53", "Remote server port to forward queries to")
-	verbose = flag.Bool("verbose", false, "Print packet as the flow through")       // needs to be global
+	var sserver *string = flag.String("sserver", "127.0.0.1:8053", "Set the listener address")
+	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es)")
+	verbose = flag.Bool("verbose", false, "Print packet as they flow through")       // verbose needs to be global
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+        resolvers := strings.Split(*rserver, ",", -1)
+        qr = make([]chan resolver.Msg, len(resolvers))
+        for i, ra := range resolvers {
+                addr, port := splitAddrPort(ra)
+                // TODO error checking
+                // The resolver(s)
+                r := new(resolver.Resolver)
+                r.Servers = []string{addr}
+                r.Port = port
+                qr[i] = r.NewQuerier() // connect to global qr
+        }
 
 	f = funkensturm()
 	ok := f.Setup()
@@ -196,16 +216,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Setup failed")
 		return
 	}
-	// The resolver
-	r := new(resolver.Resolver)
-	r.Servers = []string{*rserver}
-	r.Port = *rport
-	qr = r.NewQuerier() // connect to global qr
 
 	// The responder
+        addr, port := splitAddrPort(*sserver)
 	s := new(responder.Server)
-	s.Address = *sserver
-	s.Port = *sport
+	s.Address = addr
+	s.Port = port
 	var srv *server
 	rs := make(chan bool)
 	go s.NewResponder(srv, rs)
@@ -219,8 +235,11 @@ forever:
 			break forever
 		}
 	}
-	rs <- true // shutdown responder and resolver
-	qr <- resolver.Msg{}
+	rs <- true // shutdown responder
 	<-rs // wait for confirmation
-	<-qr
+        // And the resolvers
+        for _, q := range qr {
+	        q <- resolver.Msg{}
+	        <-q
+        }
 }
