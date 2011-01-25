@@ -600,23 +600,26 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				}
 			case "fixed-size":
 				// We should already know how many bytes we can expect
-				// TODO(mg) pack variant
-                                println(val.Type().Name())
-                                println(f.Name) // MAC Otherdata, then get back the 
-                                //f := val.Type().(*reflect.StructType).Field(i)
-                                //FieldByName(MACSize), Othersize to get the stuff we need
-				var size int
-				//	consumed += len(val.FieldByName("SignerName").(*reflect.StringValue).Get()) + 1
-				switch val.Type().Name() {
-				case "RR_TSIG":
-					// tsig has MACSize
-					size = 16 // TODO(mg) other hashes
-				}
+				// TODO(mg) pack variant. Note that looks a bit like the EDNS0
+                                // Option parsing, maybe it should be merged.
+                                var size int
+                                switch val.Type().Name() {
+                                case "RR_TSIG":
+                                        switch f.Name {
+                                        case "MAC":
+                                                name := val.FieldByName("MACSize")
+                                                size = int(name.(*reflect.UintValue).Get())
+                                        case "OtherData":
+                                                name := val.FieldByName("OtherLen")
+                                                size = int(name.(*reflect.UintValue).Get())
+                                        }
+                                }
 				if off+size > len(msg) {
 					fmt.Fprintf(os.Stderr, "dns: failure unpacking fixed-size string")
 					return len(msg), false
 				}
 				s = string(msg[off : off+size])
+                                off+=size
 			case "":
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
 					fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
