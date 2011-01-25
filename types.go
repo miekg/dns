@@ -43,6 +43,7 @@ const (
 	TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
+        TypeDNAME = 39
 
 	// EDNS
 	TypeOPT = 41
@@ -338,6 +339,20 @@ func (rr *RR_NAPTR) String() string {
 		rr.Replacement
 }
 
+// RFC 2672
+type RR_DNAME struct {
+	Hdr         RR_Header
+	Target      string "domain-name"
+}
+
+func (rr *RR_DNAME) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_DNAME) String() string {
+	return rr.Hdr.String() + " " + rr.Target
+}
+
 type RR_A struct {
 	Hdr RR_Header
 	A   net.IP "A"
@@ -597,6 +612,7 @@ var rr_mk = map[int]func() RR{
 	TypeTXT:        func() RR { return new(RR_TXT) },
 	TypeSRV:        func() RR { return new(RR_SRV) },
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
+	TypeDNAME:      func() RR { return new(RR_DNAME) },
 	TypeA:          func() RR { return new(RR_A) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
 	TypeLOC:        func() RR { return new(RR_LOC) },
