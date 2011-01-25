@@ -4,6 +4,7 @@ package dns
 
 import (
 	"io"
+	"fmt"
 	"encoding/base64"
 	"strconv"
 	"strings"
@@ -36,7 +37,6 @@ func (rr *RR_TSIG) Header() *RR_Header {
 
 func (rr *RR_TSIG) String() string {
 	// It has no official presentation format
-	println("mac len: ", rr.MACSize)
 	return rr.Hdr.String() +
 		" " + rr.Algorithm +
 		" " + tsigTimeToDate(rr.TimeSigned) +
@@ -76,6 +76,7 @@ func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 		return false
 	}
 	rawsecret = rawsecret[:n]
+
 	buf, ok := tsigToBuf(rr, msg)
 	if !ok {
 		return false
@@ -103,19 +104,38 @@ func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	if err != nil {
 		return false
 	}
-        // kill the last rr - copy msg TODO(mg)
 	rawsecret = rawsecret[:n]
-	buf, ok := tsigToBuf(rr, msg)
+
+	msg2 := msg // TODO deep copy TODO(mg)
+	if len(msg2.Extra) < 1 {
+		// nothing in additional
+		return false
+	}
+	tsigrr := msg2.Extra[len(msg2.Extra)-1]
+	if tsigrr.Header().Rrtype != TypeTSIG {
+		// not a tsig RR
+		return false
+	}
+	msg2.MsgHdr.Id = rr.OrigId
+	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]
+	// TODO(mg)
+	fmt.Printf("%v\n", msg2)
+        // msg2
+        buf1, _ := msg2.Pack()
+
+	buf, ok := tsigToBuf(rr, msg2)
 	if !ok {
 		return false
 	}
+	hmac1 := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(hmac1, string(buf1))
+	fmt.Printf("%X\n", hmac1.Sum())
 
 	hmac := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(hmac, string(buf))
-	rr.MAC = string(hmac.Sum())
-	rr.MACSize = uint16(len(rr.MAC))
-	rr.OrigId = msg.MsgHdr.Id
-	return true
+	fmt.Printf("%X\n", hmac.Sum())
+
+	return false
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
@@ -136,7 +156,6 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 		return nil, false
 	}
 	buf = buf[:n]
-
 	msgbuf, ok := msg.Pack()
 	if !ok {
 		return nil, false
