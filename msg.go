@@ -77,6 +77,7 @@ var Rr_str = map[uint16]string{
 	TypeTXT:        "TXT",
 	TypeSRV:        "SRV",
 	TypeNAPTR:      "NAPTR",
+        TypeCERT:       "CERT",
         TypeDNAME:      "DNAME",
 	TypeA:          "A",
 	TypeAAAA:       "AAAA",

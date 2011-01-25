@@ -43,7 +43,8 @@ const (
 	TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
-        TypeDNAME = 39
+	TypeCERT  = 37
+	TypeDNAME = 39
 
 	// EDNS
 	TypeOPT = 41
@@ -339,10 +340,30 @@ func (rr *RR_NAPTR) String() string {
 		rr.Replacement
 }
 
+// RFC 4398
+type RR_CERT struct {
+	Hdr         RR_Header
+	Type        uint16
+	KeyTag      uint16
+	Algorithm   uint8
+	Certificate string "base64"
+}
+
+func (rr *RR_CERT) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_CERT) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Type)) +
+		" " + strconv.Itoa(int(rr.KeyTag)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + rr.Certificate
+}
+
 // RFC 2672
 type RR_DNAME struct {
-	Hdr         RR_Header
-	Target      string "domain-name"
+	Hdr    RR_Header
+	Target string "domain-name"
 }
 
 func (rr *RR_DNAME) Header() *RR_Header {
@@ -350,7 +371,7 @@ func (rr *RR_DNAME) Header() *RR_Header {
 }
 
 func (rr *RR_DNAME) String() string {
-	return rr.Hdr.String() + " " + rr.Target
+	return rr.Hdr.String() + rr.Target
 }
 
 type RR_A struct {
@@ -395,7 +416,7 @@ func (rr *RR_LOC) Header() *RR_Header {
 }
 
 func (rr *RR_LOC) String() string {
-        // Version is not shown
+	// Version is not shown
 	return rr.Hdr.String() + "TODO"
 }
 
@@ -490,7 +511,7 @@ type RR_DNSKEY struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PubKey    string "base64"
+	PublicKey    string "base64"
 }
 
 func (rr *RR_DNSKEY) Header() *RR_Header {
@@ -501,7 +522,7 @@ func (rr *RR_DNSKEY) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + rr.PubKey
+		" " + rr.PublicKey
 }
 
 type RR_NSEC3 struct {
@@ -549,11 +570,11 @@ func (rr *RR_NSEC3PARAM) Header() *RR_Header {
 
 func (rr *RR_NSEC3PARAM) String() string {
 	s := rr.Hdr.String()
-        s += strconv.Itoa(int(rr.Hash)) +
-                " " + strconv.Itoa(int(rr.Flags)) +
-                " " + strconv.Itoa(int(rr.Iterations)) +
-                " " + strings.ToUpper(rr.Salt)
-        return s
+	s += strconv.Itoa(int(rr.Hash)) +
+		" " + strconv.Itoa(int(rr.Flags)) +
+		" " + strconv.Itoa(int(rr.Iterations)) +
+		" " + strings.ToUpper(rr.Salt)
+	return s
 }
 
 type RR_TKEY struct {

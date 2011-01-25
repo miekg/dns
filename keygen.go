@@ -46,7 +46,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		}
 		keybuf := exponentToBuf(priv.PublicKey.E)
 		keybuf = append(keybuf, priv.PublicKey.N.Bytes()...)
-		r.PubKey = unpackBase64(keybuf)
+		r.PublicKey = unpackBase64(keybuf)
 		return priv, nil
 	}
 	return nil, nil // Dummy return
@@ -151,6 +151,6 @@ func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 		}
 		line, _ = r.ReadBytes('\n')
 	}
-	k.setPubKeyRSA(p.PublicKey.E, p.PublicKey.N)
+	k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N)
 	return p, nil
 }

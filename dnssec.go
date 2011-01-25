@@ -56,7 +56,7 @@ type dnskeyWireFmt struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PubKey    string "base64"
+	PublicKey    string "base64"
 	/* Nothing is left out */
 }
 
@@ -72,7 +72,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		keywire.Flags = k.Flags
 		keywire.Protocol = k.Protocol
 		keywire.Algorithm = k.Algorithm
-		keywire.PubKey = k.PubKey
+		keywire.PublicKey = k.PublicKey
 		wire := make([]byte, 2048) // TODO(mg) lenght!
 		n, ok := packStruct(keywire, wire, 0)
 		if !ok {
@@ -106,7 +106,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	keywire.Flags = k.Flags
 	keywire.Protocol = k.Protocol
 	keywire.Algorithm = k.Algorithm
-	keywire.PubKey = k.PubKey
+	keywire.PublicKey = k.PublicKey
 	wire := make([]byte, 2048) // TODO(mg) lenght!
 	n, ok := packStruct(keywire, wire, 0)
 	if !ok {
@@ -410,7 +410,7 @@ func (s *RR_RRSIG) sigBuf() []byte {
 
 // Extract the RSA public key from the Key record
 func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
-	keybuf, err := packBase64([]byte(k.PubKey))
+	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
 	}
@@ -436,10 +436,10 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 }
 
 // Set the public key (the value E and N)
-func (k *RR_DNSKEY) setPubKeyRSA(_E int, _N *big.Int) {
+func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) {
 	buf := exponentToBuf(_E)
 	buf = append(buf, _N.Bytes()...)
-	k.PubKey = unpackBase64(buf)
+	k.PublicKey = unpackBase64(buf)
 	return
 }
 
