@@ -379,6 +379,12 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					return len(msg), false
 				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
+				off += hex.DecodedLen(len(s))
+			case "fixed-sized":
+				// the size is already encoded in the RR, we can safely use the 
+				// length of string. String is RAW (not encoded in hex, nor base64)
+				copy(msg[off:off+len(s)], s)
+				off += len(s)
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -601,25 +607,25 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			case "fixed-size":
 				// We should already know how many bytes we can expect
 				// TODO(mg) pack variant. Note that looks a bit like the EDNS0
-                                // Option parsing, maybe it should be merged.
-                                var size int
-                                switch val.Type().Name() {
-                                case "RR_TSIG":
-                                        switch f.Name {
-                                        case "MAC":
-                                                name := val.FieldByName("MACSize")
-                                                size = int(name.(*reflect.UintValue).Get())
-                                        case "OtherData":
-                                                name := val.FieldByName("OtherLen")
-                                                size = int(name.(*reflect.UintValue).Get())
-                                        }
-                                }
+				// Option parsing, maybe it should be merged.
+				var size int
+				switch val.Type().Name() {
+				case "RR_TSIG":
+					switch f.Name {
+					case "MAC":
+						name := val.FieldByName("MACSize")
+						size = int(name.(*reflect.UintValue).Get())
+					case "OtherData":
+						name := val.FieldByName("OtherLen")
+						size = int(name.(*reflect.UintValue).Get())
+					}
+				}
 				if off+size > len(msg) {
 					fmt.Fprintf(os.Stderr, "dns: failure unpacking fixed-size string")
 					return len(msg), false
 				}
 				s = string(msg[off : off+size])
-                                off+=size
+				off += size
 			case "":
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
 					fmt.Fprintf(os.Stderr, "dns: failure unpacking string")

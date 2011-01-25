@@ -60,7 +60,7 @@ type tsigWireFmt struct {
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
 	OtherLen  uint16
-	OtherData string
+	OtherData string "fixed-size"
 }
 
 // Generate the HMAC for msg. The TSIG RR is modified
@@ -104,6 +104,7 @@ func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
 // Verify a TSIG. The msg should be the complete message with
 // the TSIG record still attached (as the last rr in the Additional
 // section) TODO(mg)
+// The secret is a base64 encoded string with a secret
 func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 
