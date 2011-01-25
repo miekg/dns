@@ -90,6 +90,7 @@ var Rr_str = map[uint16]string{
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM", // DNSSEC's bitch
+        TypeSPF:        "SPF",
 	TypeTKEY:       "TKEY",       // Meta RR
 	TypeTSIG:       "TSIG",       // Meta RR
 	TypeAXFR:       "AXFR",       // Meta RR

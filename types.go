@@ -54,11 +54,13 @@ const (
 	TypeNXT        = 30
 	TypeDS         = 43
 	TypeSSHFP      = 44
+	TypeIPSECKEY   = 45 // Not implemented
 	TypeRRSIG      = 46
 	TypeNSEC       = 47
 	TypeDNSKEY     = 48
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
+	TypeSPF        = 99
 
 	TypeTKEY = 249
 	TypeTSIG = 250
@@ -511,7 +513,7 @@ type RR_DNSKEY struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PublicKey    string "base64"
+	PublicKey string "base64"
 }
 
 func (rr *RR_DNSKEY) Header() *RR_Header {
@@ -575,6 +577,20 @@ func (rr *RR_NSEC3PARAM) String() string {
 		" " + strconv.Itoa(int(rr.Iterations)) +
 		" " + strings.ToUpper(rr.Salt)
 	return s
+}
+
+// RFC 4408
+type RR_SPF struct {
+	Hdr RR_Header
+	Txt string
+}
+
+func (rr *RR_SPF) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_SPF) String() string {
+	return rr.Hdr.String() + "\"" + rr.Txt + "\""
 }
 
 type RR_TKEY struct {
