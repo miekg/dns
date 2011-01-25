@@ -6,6 +6,7 @@
 
 package main
 
+/* TODO log package */
 import (
 	"os"
 	"flag"
@@ -228,6 +229,7 @@ func main() {
 forever:
 	for {
 		// Wait for a signal to stop
+                // TODO(mg) check for ^Z 
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
