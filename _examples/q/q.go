@@ -4,8 +4,8 @@ import (
 	"net"
 	"dns"
 	"dns/resolver"
-        "bytes"
-        "compress/gzip"
+//        "bytes"
+//        "compress/gzip"
 	"os"
 	"flag"
 	"fmt"
@@ -107,6 +107,7 @@ FLAGS:
                         }
 			fmt.Printf("%v\n", in.Dns)
                         fmt.Printf("%s\n", in.Meta)
+                        /*
                         // zip the message 
                         msgbuf, _ := in.Dns.Pack()
                         var zbuff bytes.Buffer
@@ -114,6 +115,7 @@ FLAGS:
                         w.Write(msgbuf)
                         w.Close()
                         fmt.Printf(";; Compressed: %d\n", zbuff.Len())
+                        */
 		} else {
                         fmt.Printf("%v\n", in.Error.String())
                 }
