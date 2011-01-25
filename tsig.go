@@ -4,6 +4,7 @@ package dns
 
 import (
 	"io"
+	"encoding/base64"
 	"strconv"
 	"strings"
 	"crypto/hmac"
@@ -68,32 +69,18 @@ type tsigWireFmt struct {
 // be set, otherwise the MAC is not correct.
 // The string 'secret' must be encoded in base64
 func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
-	buf := make([]byte, 4096) // TODO(mg) bufsize!
-	tsig := new(tsigWireFmt)
-
-	// Fill the struct and generate the wiredata
-	tsig.Name = rr.Header().Name
-	tsig.Class = rr.Header().Class
-	tsig.Ttl = rr.Header().Ttl
-	tsig.Algorithm = rr.Algorithm
-	tsig.TimeSigned = rr.TimeSigned
-	tsig.Fudge = rr.Fudge
-	tsig.Error = rr.Error
-	tsig.OtherLen = rr.OtherLen
-	tsig.OtherData = rr.OtherData
-	n, ok1 := packStruct(tsig, buf, 0)
-	if !ok1 {
+	b64len := base64.StdEncoding.DecodedLen(len(secret))
+	rawsecret := make([]byte, b64len)
+	n, err := base64.StdEncoding.Decode(rawsecret, []byte(secret))
+	if err != nil {
 		return false
 	}
-	buf = buf[:n]
-
-	msgbuf, ok := msg.Pack()
+	rawsecret = rawsecret[:n]
+	buf, ok := tsigToBuf(rr, msg)
 	if !ok {
 		return false
 	}
-	buf = append(buf, msgbuf...)
-
-	hmac := hmac.NewMD5([]byte(secret))
+	hmac := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(hmac, string(buf))
 	rr.MAC = string(hmac.Sum())
 	rr.MACSize = uint16(len(rr.MAC))
@@ -109,5 +96,51 @@ func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 
 	// verify the mac
-	return false
+
+	b64len := base64.StdEncoding.DecodedLen(len(secret))
+	rawsecret := make([]byte, b64len)
+	n, err := base64.StdEncoding.Decode(rawsecret, []byte(secret))
+	if err != nil {
+		return false
+	}
+        // kill the last rr - copy msg TODO(mg)
+	rawsecret = rawsecret[:n]
+	buf, ok := tsigToBuf(rr, msg)
+	if !ok {
+		return false
+	}
+
+	hmac := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(hmac, string(buf))
+	rr.MAC = string(hmac.Sum())
+	rr.MACSize = uint16(len(rr.MAC))
+	rr.OrigId = msg.MsgHdr.Id
+	return true
+}
+
+func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
+	// Fill the struct and generate the wiredata
+	buf := make([]byte, 4096) // TODO(mg) bufsize!
+	tsig := new(tsigWireFmt)
+	tsig.Name = rr.Header().Name
+	tsig.Class = rr.Header().Class
+	tsig.Ttl = rr.Header().Ttl
+	tsig.Algorithm = rr.Algorithm
+	tsig.TimeSigned = rr.TimeSigned
+	tsig.Fudge = rr.Fudge
+	tsig.Error = rr.Error
+	tsig.OtherLen = rr.OtherLen
+	tsig.OtherData = rr.OtherData
+	n, ok1 := packStruct(tsig, buf, 0)
+	if !ok1 {
+		return nil, false
+	}
+	buf = buf[:n]
+
+	msgbuf, ok := msg.Pack()
+	if !ok {
+		return nil, false
+	}
+	buf = append(buf, msgbuf...)
+	return buf, true
 }
