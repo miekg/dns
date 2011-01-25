@@ -22,11 +22,11 @@ type RR_TSIG struct {
 	TimeSigned uint64
 	Fudge      uint16
 	MACSize    uint16
-	MAC        string
+	MAC        string "fixed-size"
 	OrigId     uint16
 	Error      uint16
 	OtherLen   uint16
-	OtherData  string
+	OtherData  string "fixed-size"
 }
 
 func (rr *RR_TSIG) Header() *RR_Header {
@@ -35,6 +35,7 @@ func (rr *RR_TSIG) Header() *RR_Header {
 
 func (rr *RR_TSIG) String() string {
 	// It has no official presentation format
+	println("mac len: ", rr.MACSize)
 	return rr.Hdr.String() +
 		" " + rr.Algorithm +
 		" " + tsigTimeToDate(rr.TimeSigned) +
