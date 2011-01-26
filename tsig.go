@@ -4,7 +4,6 @@ package dns
 // RFC 2845 and RFC 4635
 import (
 	"io"
-	"fmt"
 	"strconv"
 	"strings"
 	"crypto/hmac"
@@ -69,53 +68,62 @@ type tsigWireFmt struct {
 // to include the MAC and MACSize. Note the the msg Id must
 // be set, otherwise the MAC is not correct.
 // The string 'secret' must be encoded in base64
-func (rr *RR_TSIG) Generate(msg *Msg, secret string) bool {
-	rawsecret := unpackBase64([]byte(secret))
-	buf, ok := tsigToBuf(rr, msg)
+func (m *Msg) GenerateTSIG(secret string, hash int) (*RR_TSIG, bool) {
+	rawsecret, err := packBase64([]byte(secret))
+        if err != nil {
+                return nil, false
+        }
+
+        t := new(RR_TSIG)
+	t.OrigId = m.MsgHdr.Id
+
+	buf, ok := tsigToBuf(t, m)
+	h := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(h, string(buf))
+
+	t.MAC = string(h.Sum())
+	t.MACSize = uint16(len(t.MAC))
 	if !ok {
-		return false
+		return nil, false
 	}
-	hmac := hmac.NewMD5([]byte(rawsecret))
-	io.WriteString(hmac, string(buf))
-	rr.MAC = string(hmac.Sum())
-	rr.MACSize = uint16(len(rr.MAC))
-	rr.OrigId = msg.MsgHdr.Id
-	return true
+	return t, true
 }
 
 // Verify a TSIG. The msg should be the complete message with
 // the TSIG record still attached (as the last rr in the Additional
 // section) TODO(mg)
 // The secret is a base64 encoded string with a secret
-func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
+func (m *Msg) VerifyTSIG(secret string) (*RR_TSIG, bool) {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 
 	// verify the mac
 	rawsecret, err := packBase64([]byte(secret))
         if err != nil {
-                return false
+                return nil, false
         }
 
-	msg2 := msg // TODO deep copy TODO(mg)
+	msg2 := m // TODO deep copy TODO(mg)
 	if len(msg2.Extra) < 1 {
 		// nothing in additional
-		return false
+		return nil, false
 	}
-	tsigrr := msg2.Extra[len(msg2.Extra)-1]
-	if tsigrr.Header().Rrtype != TypeTSIG {
-		// not a tsig RR
-		return false
-	}
-	msg2.MsgHdr.Id = rr.OrigId
-	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]     // Strip off the TSIG
-	// TODO(mg)
-	buf, ok := tsigToBuf(rr, msg2)
-	if !ok {
-		return false
-	}
-	h := hmac.NewMD5([]byte(rawsecret))
-	io.WriteString(h, string(buf))
-        return string(h.Sum()) == rr.MAC
+	rr := msg2.Extra[len(msg2.Extra)-1]
+        switch t := rr.(type) {
+        case *RR_TSIG:
+                if t.Header().Rrtype != TypeTSIG {
+                        return nil, false
+                }
+                msg2.MsgHdr.Id = t.OrigId
+                msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]     // Strip off the TSIG
+                buf, ok := tsigToBuf(t, msg2)
+                if !ok {
+                        return t, false
+                }
+                h := hmac.NewMD5([]byte(rawsecret))
+                io.WriteString(h, string(buf))
+                return t, string(h.Sum()) == t.MAC
+        }
+        return nil, false
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
@@ -142,6 +150,5 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 	}
         // First the pkg, then the tsig wire fmt
 	buf = append(msgbuf, buf...)
-        fmt.Printf("buf %v\n", buf)
 	return buf, true
 }
