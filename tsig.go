@@ -109,21 +109,19 @@ func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	msg2.MsgHdr.Id = rr.OrigId
 	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]     // Strip off the TSIG
 	// TODO(mg)
-	fmt.Printf("%v\n", msg2)
-        println()
-	fmt.Printf("%v\n", rr)
-
 	buf, ok := tsigToBuf(rr, msg2)
 	if !ok {
 		return false
 	}
-        fmt.Printf("Key bytes: %v\n", []byte(rawsecret))
-        fmt.Printf("Key %s\n", rawsecret)
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
+
+        bufhex := unpackBase64(h.Sum())
 	fmt.Printf("SUM: %v\n", h.Sum())
 	fmt.Printf("SUM: %X\n", h.Sum())
-	return false
+	fmt.Printf("SUM: %s %s\n", bufhex, rr.MAC)
+        return string(h.Sum()) == rr.MAC
+//	return false
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
