@@ -115,13 +115,7 @@ func (rr *RR_TSIG) Verify(msg *Msg, secret string) bool {
 	}
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-
-        bufhex := unpackBase64(h.Sum())
-	fmt.Printf("SUM: %v\n", h.Sum())
-	fmt.Printf("SUM: %X\n", h.Sum())
-	fmt.Printf("SUM: %s %s\n", bufhex, rr.MAC)
         return string(h.Sum()) == rr.MAC
-//	return false
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
