@@ -71,7 +71,7 @@ func TestTsig(t *testing.T) {
 	out.Question = make([]Question, 1)
 	out.Question[0] = Question{"miek.nl.", TypeSOA, ClassINET}
 
-	ok := tsig.Generate(out, "geheim")
+	ok := tsig.Generate(out, "awwLOtRfpGE+rRKF2+DEiw==")
 	if !ok {
 		t.Log("Failed")
 		t.Fail()

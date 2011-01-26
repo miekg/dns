@@ -68,13 +68,11 @@ type tsigWireFmt struct {
 // to include the MAC and MACSize. Note the the msg Id must
 // be set, otherwise the MAC is not correct.
 // The string 'secret' must be encoded in base64
-func (t *RR_TSIG) Generate(secret string) (*Msg, bool) {
+func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	rawsecret, err := packBase64([]byte(secret))
         if err != nil {
-                return nil, false
+                return false
         }
-
-        m := new(Msg)
 	t.OrigId = m.MsgHdr.Id
 
 	buf, ok := tsigToBuf(t, m)
@@ -84,9 +82,9 @@ func (t *RR_TSIG) Generate(secret string) (*Msg, bool) {
 	t.MAC = string(h.Sum())
 	t.MACSize = uint16(len(t.MAC))
 	if !ok {
-		return nil, false
+		return false
 	}
-	return m, true
+	return true
 }
 
 // Verify a TSIG. The msg should be the complete message with
