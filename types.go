@@ -90,14 +90,13 @@ const (
 	RcodeNXRrset        = 8
 	RcodeNotAuth        = 9
 	RcodeNotZone        = 10
-	// Tsig errors
-	TsigBadSig  = 16
-	TsigBadKey  = 17
-	TsigBadTime = 18
-	// Tkey errors
-	TkeyBadMode = 19
-	TkeyBadName = 20
-	TKeyBadAlg  = 21
+	RcodeBadSig         = 16 // TSIG
+	RcodeBadKey         = 17
+	RcodeBadTime        = 18
+	RcodeBadMode        = 19 // TKEY
+	RcodeBadName        = 20
+	RcodeBadAlg         = 21
+	RcodeBadTrunc       = 22 // TSIG
 
 	// Opcode
 	OpcodeQuery  = 0

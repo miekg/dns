@@ -344,7 +344,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				msg[off+3] = byte(i)
 				off += 4
 			case reflect.Uint64:
-				// Only used in TSIG, where it stops as 48 bits, discard the upper 16
+				// Only used in TSIG, where it stops at 48 bits, so we discard the upper 16
 				if off+6 > len(msg) {
 					fmt.Fprintf(os.Stderr, "dns: overflow packing uint64")
 					return len(msg), false
@@ -563,7 +563,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					return len(msg), false
 				}
 				i := uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-					uint64(msg[off+4])<<8 | uint64(msg[off+4])
+					uint64(msg[off+4])<<8 | uint64(msg[off+5])
 				fv.Set(uint64(i))
 				off += 6
 			}

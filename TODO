@@ -11,6 +11,7 @@ Todo:
 * NSEC3 - need base32 for Nsec3
 * pkt log
 * error when you cannot connect (responder)
+* Tsig function need to be methods on *dns.Msg (much more natural)
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
@@ -40,4 +41,3 @@ Funkensturm:
 * use exp/eval - to inteprete the config file??
 * TCP how to handle stuff like AXFR
 * use package log
-* setup multiple resolver qr[0] qr[1] and use those
