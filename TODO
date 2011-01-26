@@ -1,8 +1,7 @@
 Todo:
 * NSEC and nsec3 closest encloser helper functions
-* os.Error in Pack()/Unpack()
+* os.Error in Pack()/Unpack() or Log???
 * wildcards
-* Tsig testing
 * Private key file parsing use io.Reader (or the like)
 * Parsing from /etc/resolv.conf - clean up the code, use normal packages
 * IP6 testing - in resolver and also in responder code
