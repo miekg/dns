@@ -5,20 +5,21 @@
 // DNS server implementation
 
 // Package responder implements a DNS server. Any nameserver needs to implement
-// the Responder interface to get things going.
+// the Responder interface to get things going. Each incoming query is handled
+// in a seperate goroutine.
 // 
 // Typical usage of the package:
 //
-// type myserv Server
-// func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
-// func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
+//         type myserv Server
+//         func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
+//         func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
 //
-// s := new(Server)             // create new sever
-// s.Address = "127.0.0.1"      // listen address
-// s.Port = "8053"              // listen port
-// var m *myserv                       
-// ch :=make(chan bool)
-// go s.NewResponder(m, ch)     // start the responder
+//         s := new(Server)             // create new sever
+//         s.Address = "127.0.0.1"      // listen address
+//         s.Port = "8053"              // listen port
+//         var m *myserv                       
+//         ch :=make(chan bool)
+//         go s.NewResponder(m, ch)     // start the responder
 package responder
 
 import (
