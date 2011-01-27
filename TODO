@@ -2,7 +2,7 @@ Todo:
 * os.Error in Pack()/Unpack() or Log???
 * wildcards
 * Private key file parsing use io.Reader (or the like)
-    - NewReader, NewWriter
+    - NewReader, NewWriter?
 * Parsing from /etc/resolv.conf - clean up the code, use normal packages
 * IP6 testing - in resolver and also in responder code
         extend Responder interface with ipv6?
