@@ -72,7 +72,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		keywire.Protocol = k.Protocol
 		keywire.Algorithm = k.Algorithm
 		keywire.PublicKey = k.PublicKey
-		wire := make([]byte, dns.DefaultMsgSize)
+		wire := make([]byte, DefaultMsgSize)
 		n, ok := packStruct(keywire, wire, 0)
 		if !ok {
 			return 0
@@ -106,7 +106,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	keywire.Protocol = k.Protocol
 	keywire.Algorithm = k.Algorithm
 	keywire.PublicKey = k.PublicKey
-	wire := make([]byte, dns.DefaultMsgSize)
+	wire := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(keywire, wire, 0)
 	if !ok {
 		return nil
