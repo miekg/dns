@@ -118,10 +118,14 @@ forever:
                 case <-signal.Incoming:
                         println("Signal received, stopping")
                         ch <- true
-                        <-ch
                         cht <- true
-                        <-cht
                         break forever
+                case <-cht:
+                        // last message from tcp channel
+                case <-ch:
+                        // last message from udp channel
                 }
         }
+        close(cht)
+        close(ch)
 }

@@ -85,13 +85,12 @@ func (res *Server) NewResponder(h Responder, stop chan bool) {
 			case <-stop:
 				stop <- true
 				listener.Close()
-				close(stop)
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
 					// always fatal??
+                                        stop <- false
 					println(s.err.String())
-					close(stop)
 				} else {
 					go h.ResponderTCP(s.tcp, s.msg)
 				}
@@ -107,13 +106,12 @@ func (res *Server) NewResponder(h Responder, stop chan bool) {
 			select {
 			case <-stop:
 				stop <- true
-				close(stop)
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
 					//continue
+                                        stop <- false
 					println(s.err.String())
-					close(stop)
 				} else {
 					go h.ResponderUDP(s.udp, s.addr, s.msg)
 				}
