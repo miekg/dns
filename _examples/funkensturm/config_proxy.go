@@ -29,9 +29,12 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 func send(m *dns.Msg, ok bool) *dns.Msg {
 	switch ok {
 	case true, false:
-		qr[0] <- resolver.Msg{m, nil, nil}
-		in := <-qr[0]
-		return in.Dns
+                var in resolver.Msg
+                for _, r := range qr {
+                        r <- resolver.Msg{m, nil, nil}
+                        in = <-r
+                }
+                return in.Dns
 	}
 	return nil
 }

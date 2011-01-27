@@ -58,13 +58,20 @@ func delay(m *dns.Msg, ok bool) *dns.Msg {
 			return nil
 		} else {
 			fmt.Fprintf(os.Stderr, "Info: Ok: let it through\n")
-			qr[0] <- resolver.Msg{m, nil, nil}
-			in := <-qr[0]
+                        var in resolver.Msg
+                        for _, r := range qr {
+			        r <- resolver.Msg{m, nil, nil}
+			        in = <-r
+                        }
 			return in.Dns
 		}
 	case false:
-		qr[0] <- resolver.Msg{m, nil, nil}
-		in := <-qr[0]
+                var in resolver.Msg
+                for _, r := range qr {
+                        r <- resolver.Msg{m, nil, nil}
+                        in = <-r
+                }
+                return in.Dns
 		return in.Dns
 	}
 	return nil
