@@ -1,6 +1,7 @@
 package responder
 
 import (
+        "os"
 	"testing"
         "fmt"
 	"dns"
@@ -66,7 +67,7 @@ func TestResponder(t *testing.T) {
 	su.Address = "127.0.0.1"
 	su.Port = "8053"
 	var us *myserv
-	uch := make(chan bool)
+	uch := make(chan os.Error)
 	go su.NewResponder(us, uch)
 
 	/* tcp servertje */
@@ -75,23 +76,23 @@ func TestResponder(t *testing.T) {
 	st.Port = "8053"
 	st.Tcp = true
 	var ts *myserv
-	tch := make(chan bool)
+	tch := make(chan os.Error)
 	go st.NewResponder(ts, tch)
 	time.Sleep(1 * 1e9)
-	uch <- true
-	tch <- true
+	uch <- nil
+	tch <- nil
 	<-uch
 	<-tch
 }
 
 /*
 func TestReflectorResponder(t *testing.T) {
-	stop := make(chan bool)
+	stop := make(chan os.Error)
 	s := new(Server)
 	s.Port = "8053"
 	s.Address = "127.0.0.1"
 
-	stoptcp := make(chan bool)
+	stoptcp := make(chan os.Error)
 	stcp := new(Server)
 	stcp.Port = "8053"
 	stcp.Address = "127.0.0.1"
@@ -101,8 +102,8 @@ func TestReflectorResponder(t *testing.T) {
 	go s.NewResponder(Reflector, stop)
 
 	time.Sleep(1 * 1e9)
-	stop <- true
-	stoptcp <- true
+	stop <- nil
+	stoptcp <- nil
 	<-stop
 	<-stoptcp
 }
@@ -175,7 +176,7 @@ func TestResponderTsig(t *testing.T) {
 	su.Address = "127.0.0.1"
 	su.Port = "8053"
 	var us *servtsig
-	uch := make(chan bool)
+	uch := make(chan os.Error)
 	go su.NewResponder(us, uch)
 
 	/* tcp servertje */
@@ -184,11 +185,11 @@ func TestResponderTsig(t *testing.T) {
 	st.Port = "8053"
 	st.Tcp = true
 	var ts *servtsig
-	tch := make(chan bool)
+	tch := make(chan os.Error)
 	go st.NewResponder(ts, tch)
 	time.Sleep(1 * 1e9)
-	uch <- true
-	tch <- true
+	uch <- nil
+	tch <- nil
 	<-uch
 	<-tch
 }

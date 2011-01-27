@@ -223,7 +223,7 @@ func main() {
 	s.Address = addr
 	s.Port = port
 	var srv *server
-	rs := make(chan bool)
+	rs := make(chan os.Error)
 	go s.NewResponder(srv, rs)
 
 forever:
@@ -236,7 +236,7 @@ forever:
 			break forever
 		}
 	}
-	rs <- true // shutdown responder
+	rs <- nil // shutdown responder
 	<-rs // wait for confirmation
         // And the resolvers
         for _, q := range qr {

@@ -59,12 +59,12 @@ type Responder interface {
 	ResponderTCP(c *net.TCPConn, in []byte)
 }
 
-// Start a new responder. The returned channel is only used to stop the responder.
-// Send 'true' to make it stop
-func (res *Server) NewResponder(h Responder, stop chan bool) {
+// Start a new responder. The returned channel is used to stop the responder.
+// Send 'nil' to make it stop. It can also return error via the channel.
+func (res *Server) NewResponder(h Responder, stop chan os.Error) {
 	var port string
 	if len(res.Address) == 0 {
-		// We cannot start responding without an addresss
+                stop <- &dns.Error{Error: "No addresses"}
 		return
 	}
 	if res.Port == "" {
@@ -83,14 +83,12 @@ func (res *Server) NewResponder(h Responder, stop chan bool) {
 		for {
 			select {
 			case <-stop:
-				stop <- true
+				stop <- nil
 				listener.Close()
 				break foreverTCP
 			case s := <-tch:
 				if s.err != nil {
-					// always fatal??
-                                        stop <- false
-					println(s.err.String())
+                                        stop <- s.err
 				} else {
 					go h.ResponderTCP(s.tcp, s.msg)
 				}
@@ -105,13 +103,11 @@ func (res *Server) NewResponder(h Responder, stop chan bool) {
 		for {
 			select {
 			case <-stop:
-				stop <- true
+				stop <- nil
 				break foreverUDP
 			case s := <-uch:
 				if s.err != nil {
-					//continue
-                                        stop <- false
-					println(s.err.String())
+                                        stop <- s.err
 				} else {
 					go h.ResponderUDP(s.udp, s.addr, s.msg)
 				}

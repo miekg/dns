@@ -10,7 +10,8 @@
 package main
 
 import (
-        "net"
+	"os"
+	"net"
 	"dns"
 	"dns/responder"
 	"os/signal"
@@ -25,9 +26,9 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 		// NXdomain 'n stuff
 		println("Unpacking failed")
 	}
-        if inmsg.MsgHdr.Response == true {
-                return // don't answer responses
-        }
+	if inmsg.MsgHdr.Response == true {
+		return // don't answer responses
+	}
 	m := new(dns.Msg)
 	m.MsgHdr.Id = inmsg.MsgHdr.Id
 	m.MsgHdr.Response = true
@@ -52,7 +53,7 @@ func main() {
 	s.Address = "127.0.0.1"
 	s.Port = "8053"
 	var srv *server
-	ch := make(chan bool)
+	ch := make(chan os.Error)
 	go s.NewResponder(srv, ch)
 
 forever:
@@ -61,9 +62,13 @@ forever:
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
-			ch <- true
-                        <-ch
+			ch <- nil
+			<-ch
 			break forever
+		case e := <-cht:
+			println(e.String())
+		case e := <-ch:
+			println(e.String())
 		}
 	}
 }
