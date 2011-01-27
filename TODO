@@ -1,5 +1,4 @@
 Todo:
-* NSEC and nsec3 closest encloser helper functions
 * os.Error in Pack()/Unpack() or Log???
 * wildcards
 * Private key file parsing use io.Reader (or the like)
@@ -8,8 +7,9 @@ Todo:
         extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * NSEC3 - need base32 for Nsec3
-* pkt log
-* error when you cannot connect (responder)
+* NSEC and nsec3 closest encloser helper functions
+* package log
+* error when you cannot connect (responder), i.e. run multiple servers
 * Tsig generation for replies (request MAC)
 
 Longer term:
