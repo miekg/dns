@@ -121,7 +121,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 	// Fill the struct and generate the wiredata
-	buf := make([]byte, 4096) // TODO(mg) bufsize!
+	buf := make([]byte, DefaultMsgSize) // TODO(mg) bufsize!
 	tsig := new(tsigWireFmt)
 	tsig.Name = rr.Header().Name
 	tsig.Class = rr.Header().Class
