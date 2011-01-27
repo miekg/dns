@@ -20,6 +20,7 @@ import (
 	"os"
 	"net"
 	"dns"
+        "fmt"
 	"strconv"
 	"dns/responder"
 	"runtime"
@@ -73,6 +74,7 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	if m == nil {
 		return
 	}
+        fmt.Fprintf(os.Stderr, "%v\n", m)
 	out, ok := m.Pack()
 	if !ok {
 		println("Failed to pack")
@@ -86,6 +88,7 @@ func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
 	if m == nil {
 		return
 	}
+        fmt.Fprintf(os.Stderr, "%v\n", m)
 	out, ok := m.Pack()
 	if !ok {
 		println("Failed to pack")
