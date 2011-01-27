@@ -5,10 +5,10 @@ import (
         "encoding/hex"
 )
 
-// EDNS0 Options and Do bit
+// EDNS0 Options
 const (
-	OptionCodeLLQ  = 1      // Not used
-	OptionCodeUL   = 2      // Not used
+	OptionCodeLLQ  = 1      // not used
+	OptionCodeUL   = 2      // not used
 	OptionCodeNSID = 3      // NSID, RFC5001
 	_DO            = 1 << 7 // dnssec ok
 )
@@ -33,7 +33,7 @@ type Option struct {
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option "OPT" // Tag is used in Pack and Unpack
+	Option []Option "OPT" // tag is used in Pack and Unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -66,22 +66,22 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
-// Get the EDNS version (always 0 currently)
+// Get the EDNS version (always 0 currently).
 func (rr *RR_OPT) Version() uint8 {
         return 0
 }
 
-// Set the version of EDNS
+// Set the version of EDNS.
 func (rr *RR_OPT) SetVersion(v uint8) {
 	return
 }
 
-// Get the UDP buffer size 
+// Get the UDP buffer size.
 func (rr *RR_OPT) UDPSize() uint16 {
 	return rr.Hdr.Class
 }
 
-// Set the UDP buffer size
+// Set the UDP buffer size/
 func (rr *RR_OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
@@ -96,7 +96,7 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
-// Get the do bit
+// Get the DO bit.
 func (rr *RR_OPT) Do() bool {
         return byte(rr.Hdr.Ttl >> 8) &_DO == _DO
 }
@@ -111,7 +111,7 @@ func (rr *RR_OPT) SetDo() {
         rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// Return the NSID as hex string
+// Return the NSID as hex string.
 func (rr *RR_OPT) Nsid() string {
 	return "NSID: " + rr.Option[0].Data
 }
