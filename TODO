@@ -8,7 +8,6 @@ Todo:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * NSEC3 - need base32 for Nsec3
 * NSEC and nsec3 closest encloser helper functions
-* package log
 * Tsig generation for replies (request MAC)
 
 Longer term:
