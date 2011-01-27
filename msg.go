@@ -729,9 +729,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	rr = mk()
 	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
-		// added MG
-		// println("Hier gaat het dan fout, echt waar en was if off0", off0)
-		return &h, end, true // TIJDELIJK EVEN WEG
+		return &h, end, true
 	}
 	return rr, off, ok
 }
@@ -896,6 +894,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 		return false
 	}
 	if off != len(msg) {
+                // TODO(mg) remove eventually
 		println("extra bytes in dns packet", off, "<", len(msg))
 	}
 	return true

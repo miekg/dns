@@ -65,7 +65,6 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
 	case AlgRSAMD5:
-		println("Keytag RSAMD5. Todo")
 		keytag = 0
 	default:
 		keywire := new(dnskeyWireFmt)
@@ -208,14 +207,12 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0)
 		if !ok1 {
-			println("Failure to pack")
 			return false
 		}
 		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
-			println("Failure to pack")
 			return false
 		}
 		signdata = append(signdata, wire...)
@@ -339,14 +336,12 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0)
 		if !ok1 {
-			println("Failure to pack")
 			return false
 		}
 		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe
 		h.Name = name
 		if !ok1 {
-			println("Failure to pack")
 			return false
 		}
 		signeddata = append(signeddata, wire...)
