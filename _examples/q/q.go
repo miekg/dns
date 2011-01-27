@@ -86,7 +86,7 @@ FLAGS:
 		opt.Hdr = dns.RR_Header{Name: "", Rrtype: dns.TypeOPT}
 		opt.SetVersion(0)
 		opt.SetDo()
-		opt.SetUDPSize(4096)
+		opt.SetUDPSize(dns.DefaultMsgSize)
                 if *nsid {
                         opt.Option = make([]dns.Option, 1)
                         opt.Option[0].Code = dns.OptionCodeNSID
