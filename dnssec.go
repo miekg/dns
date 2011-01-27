@@ -148,8 +148,8 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 
 // Sign an RRSet. The Signature needs to be filled in with
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
-// The rest is copied from the RRset. Return true when the signing went OK.
-// The Signature data is the RRSIG is filled by this method.
+// The rest is copied from the RRset. Returns true when the signing went OK.
+// The Signature data in the RRSIG is filled by this method.
 // There is no check if rrset is a proper (RFC 2181) RRSet.
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
@@ -271,8 +271,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	return true
 }
 
-// Validate an rrset with the signature and key. This is only the
-// cryptographic test, the signature validity period most be check separately.
+// Validate an RRSet with the signature and key. This is only the
+// cryptographic test, the signature validity period most be checked separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
@@ -389,7 +389,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	return err == nil
 }
 
-// Using RFC1982 calculate if a signature period is valid
+// Use RFC1982 to calculate if a signature period is valid.
 func (s *RR_RRSIG) PeriodOK() bool {
 	utc := time.UTC().Seconds()
 	modi := (int64(s.Inception) - utc) / Year68

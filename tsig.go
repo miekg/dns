@@ -10,7 +10,7 @@ import (
 	"encoding/hex"
 )
 
-// Need to lookup the actual codes
+// HMAC hashing codes. These are transmitted as domain names.
 const (
 	HmacMD5    = "HMAC-MD5.SIG-ALG.REG.INT"
 	HmacSHA1   = "hmac-sha1"
@@ -34,8 +34,8 @@ func (rr *RR_TSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 
+// TSIG has no official presentation format, but this will suffice.
 func (rr *RR_TSIG) String() string {
-	// It has no official presentation format
 	return rr.Hdr.String() +
 		" " + rr.Algorithm +
 		" " + tsigTimeToDate(rr.TimeSigned) +
@@ -63,11 +63,11 @@ type tsigWireFmt struct {
 	OtherData string "fixed-size"
 }
 
-// Return the RR with the TSIG AND include it in the message
-// Generate the HMAC for msg. The TSIG RR is modified
+// Generate the HMAC for message. The TSIG RR is modified
 // to include the MAC and MACSize. Note the the msg Id must
-// be set, otherwise the MAC is not correct.
-// The string 'secret' must be encoded in base64
+// already be set, otherwise the MAC will not be correct when
+// the message is send.
+// The string 'secret' must be encoded in base64.
 func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	rawsecret, err := packBase64([]byte(secret))
         if err != nil {
@@ -87,10 +87,10 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	return true
 }
 
-// Verify a TSIG. The msg should be the complete message with
+// Verify a TSIG. The message should be the complete with
 // the TSIG record still attached (as the last rr in the Additional
-// section) TODO(mg)
-// The secret is a base64 encoded string with a secret
+// section). Return true on success.
+// The secret is a base64 encoded string with the secret.
 func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 

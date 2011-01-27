@@ -11,7 +11,7 @@ import (
 	"crypto/rand"
 )
 
-// Empty interface that is used a wrapper around all possible
+// Empty interface that is used as a wrapper around all possible
 // private key implementations from the crypto package.
 type PrivateKey interface{}
 
@@ -21,7 +21,7 @@ type PrivateKey interface{}
 // PrivateKeyToDNSKEY
 
 // Generate a key of the given bit size.
-// The public part is directly put inside the DNSKEY record. 
+// The public part is put inside the DNSKEY record. 
 // The Algorithm in the key must be set as this will define
 // what kind of DNSKEY will be generated.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
@@ -93,7 +93,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	return
 }
 
-// Read a private key (file) string and create a public key. Return a private key
+// Read a private key (file) string and create a public key. Return the private key.
 func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	r := bufio.NewReader(strings.NewReader(s))

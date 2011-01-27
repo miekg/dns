@@ -3,12 +3,14 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
 
+// Resource Records are types in Go. They are not stored in wire format.
 // Basic usage pattern for creating new Resource Record:
 //
-// r := new(RR_TXT)
-// r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-// r.TXT = "This is the content of the TXT record"
+//         r := new(RR_TXT)
+//         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+//         r.TXT = "This is the content of the TXT record"
 //
+
 package dns
 
 import (
@@ -20,7 +22,7 @@ import (
 
 // Packet formats
 
-// Wire constants.
+// Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
 	TypeA     = 1
@@ -361,7 +363,7 @@ func (rr *RR_CERT) String() string {
 		" " + rr.Certificate
 }
 
-// RFC 2672
+// See RFC 2672.
 type RR_DNAME struct {
 	Hdr    RR_Header
 	Target string "domain-name"
@@ -578,7 +580,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 	return s
 }
 
-// RFC 4408
+// See RFC 4408
 type RR_SPF struct {
 	Hdr RR_Header
 	Txt string

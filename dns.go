@@ -3,38 +3,25 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
 
-// Supported RFCs and features include:
-// * 1034/1035  - DNS standard
-// * 1982 - Serial Arithmetic
-// * 1876 - LOC record (incomplete)
-// * 1995 - IXFR
-// * 1996 - DNS notify
-// * 2181 - RRset definition
-// * 2537 - RSAMD5 DNS keys
-// * 2065 - DNSSEC (updated in later RFCs)
-// * 2671 - EDNS
-// * 2782 - SRV record
-// * 2845 - TSIG
-// * 2915 - NAPTR record 
-// * 3110 - RSASHA1 DNS keys
-// * 3225 - DO bit (DNSSEC OK)
-// * 4033/4034/4035 - DNSSEC + validation functions
-// * 4255 - SSHFP record
-// * 5011 - NSID 
-// * 5936 - AXFR
-// * IP6 support
-
 // Package dns implements a full featured interface to the DNS.
-// The package allows full control over what is send out to the DNS. All RR types are converted
-// to Go types.
+// The package allows full control over what is send out to the DNS. 
 //
+// Resource Records are types in Go. They are not stored in wire format.
+// Basic usage pattern for creating new Resource Record:
+//
+//         r := new(RR_TXT)
+//         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+//         r.TXT = "This is the content of the TXT record"
+// 
+// Convert from - Unpack() - and to - Pack() - wire format for
+// Msgs or Resource Records.
 package dns
 
 import (
 	"strconv"
 )
 
-// For RFC1982 (Serial Arithmetic) calculations.
+// For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 const Year68 = 2 << (32 - 1)
 
 // Error represents a DNS error
@@ -52,7 +39,7 @@ func (e *Error) String() string {
 	return e.Error
 }
 
-// Meta data when querying
+// Meta data for queries
 type Meta struct {
 	QLen       int   // query length in bytes
 	RLen       int   // reply length in bytes

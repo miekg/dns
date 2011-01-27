@@ -3,7 +3,7 @@
 
 %{ 
 
-package dns
+package parse
 
 import (
     "fmt"
@@ -24,7 +24,7 @@ import (
 /*
  * Types known to package dns
  */
-%token <rrtype> Y_A Y_NS 
+%token <rrtype> YA YNS 
 
 /*
  * Other elements of the Resource Records
@@ -45,8 +45,8 @@ label:  VAL
 
 rrtype: 
       /* All supported RR types */
-        Y_A
-    |   Y_NS
+        YA
+    |   YNS
 %%
 
 type DnsLex int

@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// DNS packet assembly.  See RFC 1035.
-//
 // This is not (yet) optimized for speed.
-//
-// Rather than write the usual handful of routines to pack and
-// unpack every message that can appear on the wire, we use
-// reflection to write a generic pack/unpack for structs and then
-// use it.  Thus, if in the future we need to define new message
-// structs, no new pack/unpack/printing code needs to be written.
-//
-// 
+
+// DNS packet assembly, see RFC 1035. Converting from - Unpack() -
+// and to - Pack() - wire format.
+// All the packers and unpackers take a (msg []byte, off int)
+// and return (off1 int, ok bool).  If they return ok==false, they
+// also return off1==len(msg), so that the next unpacker will
+// also fail.  This lets us avoid checks of ok until the end of a
+// packing sequence.
+
 package dns
 
 import (
@@ -27,6 +26,7 @@ import (
 	"encoding/hex"
 )
 
+// The size of the standard buffer.
 const DefaultMsgSize = 4096
 
 // A manually-unpacked version of (id, bits).
@@ -53,14 +53,6 @@ type Msg struct {
 	Ns       []RR
 	Extra    []RR
 }
-
-// Packing and unpacking.
-//
-// All the packers and unpackers take a (msg []byte, off int)
-// and return (off1 int, ok bool).  If they return ok==false, they
-// also return off1==len(msg), so that the next unpacker will
-// also fail.  This lets us avoid checks of ok until the end of a
-// packing sequence.
 
 // Map of strings for each RR wire type.
 var Rr_str = map[uint16]string{
@@ -89,7 +81,7 @@ var Rr_str = map[uint16]string{
 	TypeNSEC:       "NSEC",
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
-	TypeNSEC3PARAM: "NSEC3PARAM", // DNSSEC's bitch
+	TypeNSEC3PARAM: "NSEC3PARAM",
 	TypeSPF:        "SPF",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
@@ -98,10 +90,10 @@ var Rr_str = map[uint16]string{
 	TypeALL:        "ANY",  // Meta RR
 }
 
-// Reverse of Rr_str (needed for parsing)
+// Reverse of Rr_str (needed for string parsing).
 var Str_rr = reverse(Rr_str)
 
-// Map of strings for each RR wire type.
+// Map of strings for each CLASS wire type.
 var Class_str = map[uint16]string{
 	ClassINET:   "IN",
 	ClassCSNET:  "CS",
@@ -133,6 +125,12 @@ var rcode_str = map[int]string{
 	RcodeNotAuth:        "NOTAUTH",
 	RcodeNotZone:        "NOTZONE",
 }
+
+// Rather than write the usual handful of routines to pack and
+// unpack every message that can appear on the wire, we use
+// reflection to write a generic pack/unpack for structs and then
+// use it. Thus, if in the future we need to define new message
+// structs, no new pack/unpack/printing code needs to be written.
 
 // Pack a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
@@ -747,7 +745,6 @@ func reverse(m map[uint16]string) map[string]uint16 {
 	return n
 }
 
-
 // Convert a MsgHdr to a string, mimic the way Dig displays headers:
 //;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
@@ -904,7 +901,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	return true
 }
 
-// Convert a complete message to a string using dig-like output.
+// Convert a complete message to a string with dig-like output.
 func (dns *Msg) String() string {
 	if dns == nil {
 		return "<nil> MsgHdr"
@@ -941,7 +938,7 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Set an Msg Id to a random value
+// Set an Msg Id to a random value.
 func (m *Msg) SetId() {
 	m.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
 }

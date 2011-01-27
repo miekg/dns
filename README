@@ -1,9 +1,9 @@
 Alternative (more granular) approach to a DNS library.
 
 Completely usable DNS library. Most widely used Resource Records are
-supported (more to come). DNSSEC types too (except NSEC3, for now).
+supported. DNSSEC types too (except NSEC3, for now).
 EDNS0 is (see edns.go), UDP/TCP queries, TSIG, AXFR (and IXFR probably)
-too.  Both client and server side programming is supported.
+too. Both client and server side programming is supported.
 
 Installation is done by running: ./install
 
@@ -11,22 +11,36 @@ Sample programs can be found in the _examples directory. They can
 be build with: make examples (after the dns package has been installed)
 
 The major omission at the moment is parsing Resource Records from
-strings. (I.e. supporting the 1035 zone file format).
+strings. (i.e. supporting the RFC 1035 zone file format).
+Also the IPv6 support needs to be tested, both in dns/resolver and
+dns/responder.
 Everything else should be present and working. If not, drop me an email.
 
 Have fun!
 Miek Gieben  -  2010, 2011 - miek@miek.nl
 
-Implemented RFCS:
+Supported RFCs and features include:
 
-* RFC 1034/1035
-* RFC 2671, EDNS
-* RRC 3225, DO bit
-* RFC 3110, RSA in DNS  
-* RFC 4033/4034/4035 , DNSSEC
-* RFC 5001, NSID
-* RFC 5155, NSEC3 -- todo
-* And all that I forgot
+* 1034/1035  - DNS standard
+* 1982 - Serial Arithmetic
+* 1876 - LOC record (incomplete)
+* 1995 - IXFR
+* 1996 - DNS notify
+* 2181 - RRset definition
+* 2537 - RSAMD5 DNS keys
+* 2065 - DNSSEC (updated in later RFCs)
+* 2671 - EDNS
+* 2782 - SRV
+* 2845 - TSIG
+* 2915 - NAPTR
+* 3110 - RSASHA1 DNS keys
+* 3225 - DO bit (DNSSEC OK)
+* 4033/4034/4035 - DNSSEC + validation functions
+* 4255 - SSHFP
+* 4408 - SPF
+* 5001 - NSID 
+* 5155 - NSEC -- todo
+* 5936 - AXFR
 
 Loosely based upon:
 * ldns
