@@ -17,10 +17,8 @@ Longer term:
 * Multi line output?
 
 Issues:
-* make TCP UDP naming more in line with the net package i.e. prefix instead of postfix
 * escaped dots in names \.
 * quoted quotes in txt records
-* Better sized buffers
 * Check the network order, it works now, but this is on Intel
 * Make the testsuite work with public DNS servers
 * shortened ipv6 addresses are not parsed correctly (maybe net issue)
