@@ -16,6 +16,8 @@ import (
 type PrivateKey interface{}
 
 // io.Reader
+// NewWriter
+// NewReader
 // PrivateKeyToString
 // PrivateKeyFromString
 // PrivateKeyToDNSKEY
