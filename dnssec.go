@@ -178,7 +178,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	sigwire.SignerName = s.SignerName
 
 	// Create the desired binary blob
-	signdata := make([]byte, defaultMsgSize)
+	signdata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signdata, 0)
 	if !ok {
 		return false
@@ -205,7 +205,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-		wire := make([]byte, defaultMsgSize)
+		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0)
 		if !ok1 {
 			println("Failure to pack")
@@ -310,7 +310,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	sigwire.KeyTag = s.KeyTag
 	sigwire.SignerName = s.SignerName
 	// Create the desired binary blob
-	signeddata := make([]byte, defaultMsgSize)
+	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signeddata, 0)
 	if !ok {
 		return false
@@ -336,7 +336,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 
 		ttl := h.Ttl
 		h.Ttl = s.OrigTtl
-		wire := make([]byte, defaultMsgSize)
+		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0)
 		if !ok1 {
 			println("Failure to pack")
