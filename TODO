@@ -9,7 +9,6 @@ Todo:
 * NSEC3 - need base32 for Nsec3
 * NSEC and nsec3 closest encloser helper functions
 * package log
-* error when you cannot connect (responder), i.e. run multiple servers
 * Tsig generation for replies (request MAC)
 
 Longer term:

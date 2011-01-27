@@ -16,7 +16,7 @@ import (
 	"dns/resolver"
 	"dns/responder"
 	"os/signal"
-        "strings"
+	"strings"
 )
 
 // Define a responder that takes care of the incoming queries.
@@ -86,7 +86,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		fmt.Printf("%v", pkt)
 		fmt.Printf("<<<<<< ORIGINAL INCOMING\n")
 	}
-        // No matter what, we refuse to answer requests with the response bit set.
+	// No matter what, we refuse to answer requests with the response bit set.
 	if pkt.MsgHdr.Response == true {
 		return nil, &dns.Error{Error: "Response bit set, not replying"}
 	}
@@ -134,10 +134,10 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		pkt1, _ = m.Func(pkt1, OUT)
 	}
 
-        if pkt1 == nil {
-                // don't need to send something back
-                return nil, nil
-        }
+	if pkt1 == nil {
+		// don't need to send something back
+		return nil, nil
+	}
 
 	if *verbose {
 		fmt.Printf(">>>>>> MODIFIED OUTGOING\n")
@@ -182,33 +182,33 @@ func (s *server) ResponderTCP(c *net.TCPConn, i []byte) {
 // split 127.0.0.1:53 into components
 // TODO  IPv6
 func splitAddrPort(s string) (a, p string) {
-        items := strings.Split(s, ":", 2)
-        a = items[0]
-        p = items[1]
-        return
+	items := strings.Split(s, ":", 2)
+	a = items[0]
+	p = items[1]
+	return
 }
 
 func main() {
 	var sserver *string = flag.String("sserver", "127.0.0.1:8053", "Set the listener address")
 	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es)")
-	verbose = flag.Bool("verbose", false, "Print packet as it flows through")       // verbose needs to be global
+	verbose = flag.Bool("verbose", false, "Print packet as it flows through") // verbose needs to be global
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
-        resolvers := strings.Split(*rserver, ",", -1)
-        qr = make([]chan resolver.Msg, len(resolvers))
-        for i, ra := range resolvers {
-                addr, port := splitAddrPort(ra)
-                // TODO error checking
-                // The resolver(s)
-                r := new(resolver.Resolver)
-                r.Servers = []string{addr}
-                r.Port = port
-                qr[i] = r.NewQuerier() // connect to global qr[i
-        }
+	resolvers := strings.Split(*rserver, ",", -1)
+	qr = make([]chan resolver.Msg, len(resolvers))
+	for i, ra := range resolvers {
+		addr, port := splitAddrPort(ra)
+		// TODO error checking
+		// The resolver(s)
+		r := new(resolver.Resolver)
+		r.Servers = []string{addr}
+		r.Port = port
+		qr[i] = r.NewQuerier() // connect to global qr[i
+	}
 
 	f = funkensturm()
 	ok := f.Setup()
@@ -218,7 +218,7 @@ func main() {
 	}
 
 	// The responder
-        addr, port := splitAddrPort(*sserver)
+	addr, port := splitAddrPort(*sserver)
 	s := new(responder.Server)
 	s.Address = addr
 	s.Port = port
@@ -229,18 +229,22 @@ func main() {
 forever:
 	for {
 		// Wait for a signal to stop
-                // TODO(mg) check for ^Z 
+		// TODO(mg) check for ^Z 
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
+			rs <- nil // shutdown responder
 			break forever
+		case e := <-rs:
+			println(e.String())
 		}
 	}
-	rs <- nil // shutdown responder
-	<-rs // wait for confirmation
-        // And the resolvers
-        for _, q := range qr {
-	        q <- resolver.Msg{}
-	        <-q
-        }
+	<-rs
+	close(rs)
+
+	// And the resolvers
+	for _, q := range qr {
+		q <- resolver.Msg{}
+		<-q
+	}
 }

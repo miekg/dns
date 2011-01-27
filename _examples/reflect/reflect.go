@@ -129,6 +129,8 @@ forever:
 			println(e.String())
 		}
 	}
+        <-ch
+        <-cht
 	close(cht)
 	close(ch)
 }
