@@ -4,4 +4,5 @@
 include $(GOROOT)/src/Make.inc
 TARG=rude
 GOFILES=rude.go
+DEPS=../../
 include $(GOROOT)/src/Make.cmd

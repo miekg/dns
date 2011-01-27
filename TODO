@@ -10,7 +10,7 @@ Todo:
 * NSEC3 - need base32 for Nsec3
 * pkt log
 * error when you cannot connect (responder)
-* Tsig generation for replies
+* Tsig generation for replies (request MAC)
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
