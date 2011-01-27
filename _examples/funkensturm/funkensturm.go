@@ -229,7 +229,6 @@ func main() {
 forever:
 	for {
 		// Wait for a signal to stop
-		// TODO(mg) check for ^Z 
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
@@ -239,7 +238,6 @@ forever:
 			println(e.String())
 		}
 	}
-	<-rs
 	close(rs)
 
 	// And the resolvers

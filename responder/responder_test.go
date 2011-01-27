@@ -81,8 +81,6 @@ func TestResponder(t *testing.T) {
 	time.Sleep(1 * 1e9)
 	uch <- nil
 	tch <- nil
-	<-uch
-	<-tch
 }
 
 /*
@@ -104,8 +102,6 @@ func TestReflectorResponder(t *testing.T) {
 	time.Sleep(1 * 1e9)
 	stop <- nil
 	stoptcp <- nil
-	<-stop
-	<-stoptcp
 }
 */
 
@@ -190,6 +186,4 @@ func TestResponderTsig(t *testing.T) {
 	time.Sleep(1 * 1e9)
 	uch <- nil
 	tch <- nil
-	<-uch
-	<-tch
 }

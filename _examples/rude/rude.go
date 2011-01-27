@@ -63,7 +63,6 @@ forever:
 		case <-signal.Incoming:
 			println("Signal received, stopping")
 			ch <- nil
-			<-ch
 			break forever
 		case e := <-cht:
 			println(e.String())
@@ -71,4 +70,6 @@ forever:
 			println(e.String())
 		}
 	}
+        close(cht)
+        close(ch)
 }
