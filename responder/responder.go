@@ -61,11 +61,11 @@ type Responder interface {
 
 // Start a new responder. The returned channel is only used to stop the responder.
 // Send 'true' to make it stop
-func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
+func (res *Server) NewResponder(h Responder, stop chan bool) {
 	var port string
 	if len(res.Address) == 0 {
 		// We cannot start responding without an addresss
-		return nil
+		return
 	}
 	if res.Port == "" {
 		port = "53"
@@ -79,7 +79,6 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
 		go listenerTCP(a, tch, lch)
 		listener := <-lch
-		// if nil?? TODO(mg)
 	foreverTCP:
 		for {
 			select {
@@ -93,7 +92,6 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 					// always fatal??
 					println(s.err.String())
 					close(stop)
-					return s.err
 				} else {
 					go h.ResponderTCP(s.tcp, s.msg)
 				}
@@ -116,14 +114,13 @@ func (res *Server) NewResponder(h Responder, stop chan bool) os.Error {
 					//continue
 					println(s.err.String())
 					close(stop)
-					return s.err
 				} else {
 					go h.ResponderUDP(s.udp, s.addr, s.msg)
 				}
 			}
 		}
 	}
-	return nil
+	return
 }
 
 // Listen for UDP requests.
@@ -151,8 +148,8 @@ func listenerUDP(a *net.UDPAddr, ch chan msg) {
 func listenerTCP(a *net.TCPAddr, ch chan msg, listen chan *net.TCPListener) {
 	t, err := net.ListenTCP("tcp", a)
 	if err != nil {
-		ch <- msg{err: err}
 		listen <- nil
+		ch <- msg{err: err}
 		return
 	}
 	listen <- t // sent listener back (for closing it)

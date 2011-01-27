@@ -117,6 +117,10 @@ forever:
                 select {
                 case <-signal.Incoming:
                         println("Signal received, stopping")
+                        ch <- true
+                        <-ch
+                        cht <- true
+                        <-cht
                         break forever
                 }
         }

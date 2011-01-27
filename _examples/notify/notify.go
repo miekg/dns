@@ -26,15 +26,13 @@ func main() {
 	m.Question = make([]dns.Question, 1)
         m.Question[0] = dns.Question{"miek.nl", dns.TypeSOA, dns.ClassINET}
         m.MsgHdr.Opcode = dns.OpcodeNotify
-        qr <- resolver.Msg{m, nil}
+        qr <- resolver.Msg{m, nil, nil}
         in = <-qr
-//        if in.Dns != nil && in.Dns.Answer != nil {
         if in.Dns != nil {
-//                fmt.Printf("%v\n", in.Dns.Answer[0])
                 fmt.Printf("%v\n", in.Dns)
         }
 
 	// Stop the resolver, send it a null mesg
-	qr <- resolver.Msg{nil, nil}
+	qr <- resolver.Msg{}
 	<-qr
 }
