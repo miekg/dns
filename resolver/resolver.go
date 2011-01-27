@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // DNS resolver client: see RFC 1035.
-// A DNS resolver is to be run in a seperate goroutine. 
+// A DNS resolver is to be run in a goroutine. 
 // For every reply the resolver answers by sending the
 // received packet (with a possible error) back on a channel.
 // 
@@ -17,7 +17,7 @@
 //        m.MsgHdr.Recursion_desired = true             // header bits
 //        m.Question = make([]Question, 1)              // 1 RR in question sec.
 //        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        ch <- Msg{m, nil}                             // send the query
+//        ch <- Msg{m, nil, nil}                        // send the query
 //        in := <-ch                                    // wait for reply
 //
 // Note that message id checking is left to the caller.

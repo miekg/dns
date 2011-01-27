@@ -13,8 +13,6 @@
 //         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //         r.TXT = "This is the content of the TXT record"
 // 
-// Convert from - Unpack() - and to - Pack() - wire format for
-// Msgs or Resource Records.
 package dns
 
 import (
