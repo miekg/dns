@@ -3,24 +3,24 @@
 // license that can be found in the LICENSE file.
 
 // DNS resolver client: see RFC 1035.
-// A dns resolver is to be run as a seperate goroutine. 
+// A DNS resolver is to be run in a seperate goroutine. 
 // For every reply the resolver answers by sending the
-// received packet (with a possible error) back on the channel.
+// received packet (with a possible error) back on a channel.
 // 
 // Basic usage pattern for setting up a resolver:
 //
 //        res := new(Resolver)
-//        ch := res.NewQuerier()              // start new resolver
-//        res.Servers = []string{"127.0.0.1"} // set the nameserver
+//        ch := res.NewQuerier()                        // start new resolver
+//        res.Servers = []string{"127.0.0.1"}           // set the nameserver
 //
-//        m := new(Msg)                       // prepare a new message
-//        m.MsgHdr.Recursion_desired = true   // header bits
-//        m.Question = make([]Question, 1)    // 1 RR in question sec.
+//        m := new(Msg)                                 // prepare a new message
+//        m.MsgHdr.Recursion_desired = true             // header bits
+//        m.Question = make([]Question, 1)              // 1 RR in question sec.
 //        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        ch <- Msg{m, nil}                   // send the query
-//        in := <-ch                          // wait for reply
+//        ch <- Msg{m, nil}                             // send the query
+//        in := <-ch                                    // wait for reply
 //
-// Note that message id checking is left to the caller
+// Note that message id checking is left to the caller.
 //
 package resolver
 
@@ -35,9 +35,9 @@ const packErr = "Failed to pack message"
 const servErr = "No servers could be reached"
 
 // When communicating with a resolver, we use this structure
-// to send packets to it, for sending Error must be nil.
+// to send packets to it. When sending Error must be nil.
 // A resolver responds with a reply packet and a possible error.
-// Sending a nil message instructs to resolver to stop.
+// Sending an all nil message instructs to resolver to stop.
 type Msg struct {
 	Dns   *dns.Msg
         Meta  *dns.Meta
@@ -48,16 +48,16 @@ type Resolver struct {
 	Servers  []string            // servers to use
 	Search   []string            // suffixes to append to local name
 	Port     string              // what port to use
-	Ndots    int                 // number of dots in name to trigger absolute lookup
+	Ndots    int                 // number of dots in name to trigger absolute lookup -- TODO
 	Timeout  int                 // seconds before giving up on packet
 	Attempts int                 // lost packets before giving up on server
-	Rotate   bool                // round robin among servers
+	Rotate   bool                // round robin among servers -- TODO
 	Tcp      bool                // use TCP
 	Mangle   func([]byte) []byte // mangle the packet
 }
 
 // Start a new resolver as a goroutine, return the communication channel.
-// Note the a limit amount of sanity checking is done. There is for instance
+// Note a limited amount of sanity checking is done. There is for instance
 // no query id matching.
 func (res *Resolver) NewQuerier() (ch chan Msg) {
 	ch = make(chan Msg)
@@ -145,9 +145,9 @@ func query(res *Resolver, msg chan Msg) {
 	return
 }
 
-// Start a new xfr as a goroutine, return a channel of Msg.
-// Channel will be closed when the axfr is finished, until
-// that time new messages will appear on the channel
+// Start a new xfr as a goroutine, return a channel of Msgs.
+// The channel will be closed when the AXFR is finished, until
+// that time new messages will appear on the channel.
 func (res *Resolver) NewXfer() (ch chan Msg) {
 	ch = make(chan Msg)
 	go axfr(res, ch)
