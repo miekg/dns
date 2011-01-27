@@ -64,10 +64,6 @@ forever:
 			println("Signal received, stopping")
 			ch <- nil
 			break forever
-		case e := <-cht:
-			println(e.String())
-		case e := <-ch:
-			println(e.String())
 		}
 	}
         close(cht)

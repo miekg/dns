@@ -64,7 +64,7 @@ type Responder interface {
 func (res *Server) NewResponder(h Responder, stop chan os.Error) {
 	var port string
 	if len(res.Address) == 0 {
-                stop <- &dns.Error{Error: "No addresses"}
+                //stop <- &dns.Error{Error: "No addresses"}
 		return
 	}
 	if res.Port == "" {
@@ -79,16 +79,15 @@ func (res *Server) NewResponder(h Responder, stop chan os.Error) {
 		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
 		go listenerTCP(a, tch, lch)
 		listener := <-lch
-	foreverTCP:
+
 		for {
 			select {
 			case <-stop:
-				stop <- nil
 				listener.Close()
-				break foreverTCP
+				return
 			case s := <-tch:
 				if s.err != nil {
-                                        stop <- s.err
+                                        // stop <- s.err seperate error channel
 				} else {
 					go h.ResponderTCP(s.tcp, s.msg)
 				}
@@ -99,15 +98,14 @@ func (res *Server) NewResponder(h Responder, stop chan os.Error) {
 		uch := make(chan msg)
 		a, _ := net.ResolveUDPAddr(res.Address + ":" + port)
 		go listenerUDP(a, uch)
-	foreverUDP:
+
 		for {
 			select {
 			case <-stop:
-				stop <- nil
-				break foreverUDP
+                                return
 			case s := <-uch:
 				if s.err != nil {
-                                        stop <- s.err
+                                        //stop <- s.err // seperate error channel
 				} else {
 					go h.ResponderUDP(s.udp, s.addr, s.msg)
 				}

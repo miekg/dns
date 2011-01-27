@@ -234,8 +234,6 @@ forever:
 			println("Signal received, stopping")
 			rs <- nil // shutdown responder
 			break forever
-		case e := <-rs:
-			println(e.String())
 		}
 	}
 	close(rs)

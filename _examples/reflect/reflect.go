@@ -121,12 +121,6 @@ forever:
 			ch <- nil
 			cht <- nil
 			break forever
-		case e := <-cht:
-			// last message from tcp channel
-			println(e.String())
-		case e := <-ch:
-			// last message from udp channel
-			println(e.String())
 		}
 	}
 	close(cht)
