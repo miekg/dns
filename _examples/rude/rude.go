@@ -66,6 +66,5 @@ forever:
 			break forever
 		}
 	}
-        close(cht)
         close(ch)
 }

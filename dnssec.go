@@ -1,6 +1,7 @@
 package dns
 
 import (
+        "crypto"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -225,20 +226,20 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		//pubkey := k.pubKeyRSA() // Get the key, need privkey representation
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
-		var ch rsa.PKCS1v15Hash
+		var ch crypto.Hash
 		switch s.Algorithm {
 		case AlgRSAMD5:
 			h = md5.New()
-			ch = rsa.HashMD5
+			ch = crypto.MD5
 		case AlgRSASHA1:
 			h = sha1.New()
-			ch = rsa.HashSHA1
+			ch = crypto.SHA1
 		case AlgRSASHA256:
 			h = sha256.New()
-			ch = rsa.HashSHA256
+			ch = crypto.SHA256
 		case AlgRSASHA512:
 			h = sha512.New()
-			ch = rsa.HashSHA512
+			ch = crypto.SHA512
 		default:
 			// Illegal Alg
 			return false
@@ -355,20 +356,20 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		pubkey := k.pubKeyRSA() // Get the key
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
-		var ch rsa.PKCS1v15Hash
+		var ch crypto.Hash
 		switch s.Algorithm {
 		case AlgRSAMD5:
 			h = md5.New()
-			ch = rsa.HashMD5
+			ch = crypto.MD5
 		case AlgRSASHA1:
 			h = sha1.New()
-			ch = rsa.HashSHA1
+			ch = crypto.SHA1
 		case AlgRSASHA256:
 			h = sha256.New()
-			ch = rsa.HashSHA256
+			ch = crypto.SHA256
 		case AlgRSASHA512:
 			h = sha512.New()
-			ch = rsa.HashSHA512
+			ch = crypto.SHA512
 		}
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum()
