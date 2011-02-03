@@ -23,11 +23,11 @@ type RR_TSIG struct {
 	TimeSigned uint64
 	Fudge      uint16
 	MACSize    uint16
-	MAC        string "fixed-size"
+	MAC        string "size-hex"
 	OrigId     uint16
 	Error      uint16
 	OtherLen   uint16
-	OtherData  string "fixed-size"
+	OtherData  string "size-hex"
 }
 
 func (rr *RR_TSIG) Header() *RR_Header {
@@ -60,7 +60,7 @@ type tsigWireFmt struct {
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
 	OtherLen  uint16
-	OtherData string "fixed-size"
+	OtherData string "size-hex"
 }
 
 // Generate the HMAC for message. The TSIG RR is modified

@@ -15,7 +15,6 @@
 package dns
 
 import (
-//	"fmt"
 	"os"
 	"reflect"
 	"net"
@@ -23,6 +22,7 @@ import (
 	"time"
 	"strconv"
 	"encoding/base64"
+        "encoding/base32"
 	"encoding/hex"
 )
 
@@ -261,7 +261,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					// for each code we should do something else
 					h, e := hex.DecodeString(string(element.(*reflect.StructValue).Field(1).(*reflect.StringValue).Get()))
 					if e != nil {
-                                                //fmt.Fprintf(os.Stderr, "dns: failure packing OTP")
+						//fmt.Fprintf(os.Stderr, "dns: failure packing OTP")
 						return len(msg), false
 					}
 					data := string(h)
@@ -363,8 +363,23 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing string tag %v", f.Tag)
 				return len(msg), false
+                        case "base32":
+                                b32, err := packBase32([]byte(s))
+				if err != nil {
+					//fmt.Fprintf(os.Stderr, "dns: overflow packing base32")
+					return len(msg), false
+				}
+                                copy(msg[off:off+len(b32)], b32)
+                                off += len(b32)
 			case "base64":
-				// TODO(mg) use the Len as return from the conversion (not used right now)
+                                b64, err := packBase64([]byte(s))
+				if err != nil {
+					//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
+					return len(msg), false
+				}
+                                copy(msg[off:off+len(b64)], b64)
+                                off += len(b64)
+                                /*
 				b64len := base64.StdEncoding.DecodedLen(len(s))
 				_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
 				if err != nil {
@@ -372,12 +387,14 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					return len(msg), false
 				}
 				off += b64len
+                                */
 			case "domain-name":
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
 					return len(msg), false
 				}
+                        case "size-hex":
 			case "hex":
 				// There is no length encoded here, for DS at least
 				h, e := hex.DecodeString(s)
@@ -387,7 +404,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
-			case "fixed-size":
+			case "size":
 				// the size is already encoded in the RR, we can safely use the 
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
@@ -612,7 +629,43 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
 					return len(msg), false
 				}
-			case "fixed-size":
+                        case "size-base32":
+				var size int
+				switch val.Type().Name() {
+				case "RR_NSEC3":
+					switch f.Name {
+					case "NextDomain":
+						name := val.FieldByName("HashLength")
+						size = int(name.(*reflect.UintValue).Get())
+					}
+                                }
+				if off+size > len(msg) {
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-base32 string")
+					return len(msg), false
+				}
+				s = unpackBase32(msg[off : off+size])
+				off += size
+                        case "size-hex":
+                                // a "size" string, but a it must be encoded in hex in the string
+				var size int
+				switch val.Type().Name() {
+				case "RR_NSEC3":
+					switch f.Name {
+					case "Salt":
+						name := val.FieldByName("SaltLength")
+						size = int(name.(*reflect.UintValue).Get())
+					case "NextDomain":
+						name := val.FieldByName("HashLength")
+						size = int(name.(*reflect.UintValue).Get())
+					}
+                                }
+				if off+size > len(msg) {
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking hex-size string")
+					return len(msg), false
+				}
+				s = hex.EncodeToString(msg[off : off+size])
+				off += size
+			case "size":
 				// We should already know how many bytes we can expect
 				// TODO(mg) pack variant. Note that looks a bit like the EDNS0
 				// Option parsing, maybe it should be merged.
@@ -629,7 +682,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					}
 				}
 				if off+size > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking fixed-size string")
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size string")
 					return len(msg), false
 				}
 				s = string(msg[off : off+size])
@@ -666,6 +719,12 @@ func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	return off, ok
 }
 
+func unpackBase32(b []byte) string {
+	b32 := make([]byte, base32.HexEncoding.EncodedLen(len(b)))
+	base32.HexEncoding.Encode(b32, b)
+	return string(b32)
+}
+
 func unpackBase64(b []byte) string {
 	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(b)))
 	base64.StdEncoding.Encode(b64, b)
@@ -677,6 +736,18 @@ func packBase64(s []byte) ([]byte, os.Error) {
 	b64len := base64.StdEncoding.DecodedLen(len(s))
 	buf := make([]byte, b64len)
 	n, err := base64.StdEncoding.Decode(buf, []byte(s))
+	if err != nil {
+		return nil, err
+	}
+	buf = buf[:n]
+	return buf, nil
+}
+
+// Helper function for packing, mostly used in dnssec.go
+func packBase32(s []byte) ([]byte, os.Error) {
+	b32len := base32.HexEncoding.DecodedLen(len(s))
+	buf := make([]byte, b32len)
+	n, err := base32.HexEncoding.Decode(buf, []byte(s))
 	if err != nil {
 		return nil, err
 	}
@@ -699,6 +770,7 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	off1, ok = packStruct(rr.Header(), msg, off)
 	off2, ok = packStruct(rr, msg, off)
 	if !ok {
+		println("WAAA")
 		return len(msg), false
 	}
 
@@ -894,7 +966,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 		return false
 	}
 	if off != len(msg) {
-                // TODO(mg) remove eventually
+		// TODO(mg) remove eventually
 		println("extra bytes in dns packet", off, "<", len(msg))
 	}
 	return true

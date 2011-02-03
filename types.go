@@ -534,9 +534,9 @@ type RR_NSEC3 struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string "hex"
+	Salt       string "size-hex"
 	HashLength uint8
-	NextDomain string   "domain-name"
+	NextDomain string   "size-base32"
 	TypeBitMap []uint16 "NSEC"
 }
 
@@ -553,7 +553,7 @@ func (rr *RR_NSEC3) String() string {
 		" " + rr.NextDomain // must base32?
 	for i := 0; i < len(rr.TypeBitMap); i++ {
 		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
-		s = s + " " + Rr_str[rr.TypeBitMap[i]]
+		s += " " + Rr_str[rr.TypeBitMap[i]]
 	}
 	return s
 }
