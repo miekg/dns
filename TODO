@@ -1,6 +1,8 @@
 Todo:
+* responder rework, like the http package http.Handler
+  responder.HandlerTCP
 * os.Error in Pack()/Unpack() or Log???
-* wildcards
+* wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like)
     - NewReader, NewWriter?
 * Parsing from /etc/resolv.conf - clean up the code, use normal packages
@@ -10,8 +12,6 @@ Todo:
 * NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
 * pack/Unpack smaller
-* responder rework, like the http package http.Handler
-  responder.HandlerTCP
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
