@@ -7,9 +7,11 @@ Todo:
 * IP6 testing - in resolver and also in responder code
         extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
-* NSEC3 - need base32 for Nsec3
 * NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
+* pack/Unpack smaller
+* responder rework, like the http package http.Handler
+  responder.HandlerTCP
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
