@@ -1,7 +1,7 @@
 Todo:
 * responder rework, like the http package http.Handler
   responder.HandlerTCP
-* os.Error in Pack()/Unpack() or Log???
+* os.Error in Pack()/Unpack() or Log??? - again look at http
 * wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like)
     - NewReader, NewWriter?
