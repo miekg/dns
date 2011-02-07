@@ -13,6 +13,15 @@ Todo:
 * Tsig generation for replies (request MAC)
 * pack/Unpack smaller
 
+From http package:
+
+func HandleFunc(pattern string, handler func(ResponseWriter, *Request))
+HandleFunc registers the handler function for the given pattern
+in the DefaultServeMux.
+
+func ListenAndServe(addr string, handler Handler) os.Error
+
+
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
 * Multi line output?
