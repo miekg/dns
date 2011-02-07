@@ -6,25 +6,33 @@
 
 package resolver
 
-import ( "os"; "net" )
+import (
+	"os"
+        "bufio"
+        "strconv"
+        "strings"
+	"net"
+)
 
 // See resolv.conf(5) on a Linux machine.
 // TODO(rsc): Supposed to call uname() and chop the beginning
 // of the host name to get the default search domain.
 // We assume it's in resolv.conf anyway.
 func (r *Resolver) FromFile(conf string) os.Error {
-	file, err := open(conf)
+        file, err := os.Open(conf, os.O_RDONLY, 0)
+        defer file.Close()
 	if err != nil {
 		return err
 	}
+        b := bufio.NewReader(file)
 	r.Servers = make([]string, 3)[0:0] // small, but the standard limit
 	r.Search = make([]string, 0)
 	r.Ndots = 1
 	r.Timeout = 5
 	r.Attempts = 2
 	r.Rotate = false
-	for line, ok := file.readLine(); ok; line, ok = file.readLine() {
-		f := getFields(line)
+	for line, ok := b.ReadString('\n'); ok == nil; line, ok = b.ReadString('\n') {
+		f := strings.Fields(line)
 		if len(f) < 1 {
 			continue
 		}
@@ -66,20 +74,20 @@ func (r *Resolver) FromFile(conf string) os.Error {
 			for i := 1; i < len(f); i++ {
 				s := f[i]
 				switch {
-				case len(s) >= 6 && s[0:6] == "ndots:":
-					n, _, _ := dtoi(s, 6)
+				case len(s) >= 6 && s[:6] == "ndots:":
+					n, _ := strconv.Atoi(s[6:])
 					if n < 1 {
 						n = 1
 					}
 					r.Ndots = n
-				case len(s) >= 8 && s[0:8] == "timeout:":
-					n, _, _ := dtoi(s, 8)
+				case len(s) >= 8 && s[:8] == "timeout:":
+                                        n, _ := strconv.Atoi(s[8:])
 					if n < 1 {
 						n = 1
 					}
 					r.Timeout = n
-				case len(s) >= 8 && s[0:9] == "attempts:":
-					n, _, _ := dtoi(s, 9)
+				case len(s) >= 8 && s[:9] == "attempts:":
+                                        n, _ := strconv.Atoi(s[9:])
 					if n < 1 {
 						n = 1
 					}
@@ -90,6 +98,5 @@ func (r *Resolver) FromFile(conf string) os.Error {
 			}
 		}
 	}
-	file.close()
 	return nil
 }
