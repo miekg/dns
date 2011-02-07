@@ -5,7 +5,6 @@ Todo:
 * wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like)
     - NewReader, NewWriter?
-* Parsing from /etc/resolv.conf - clean up the code, use normal packages
 * IP6 testing - in resolver and also in responder code
         extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
