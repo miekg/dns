@@ -16,6 +16,8 @@ GOFILES=\
 	keygen.go\
 	string.go\
 	nsec3.go\
+	resolver.go\
+	config.go\
 #	y.go\
 
 include $(GOROOT)/src/Make.pkg

@@ -123,3 +123,17 @@ FLAGS:
 	qr <- resolver.Msg{}
 	<-qr
 }
+
+/*
+41 func (m *Meta) String() string {
+42         s := ";; Query time: " + strconv.Itoa(int(m.QueryEnd-m.QueryStart)) + " nsec"
+43         s += "\n;; MSG SIZE  rcvd: " + strconv.Itoa(m.RLen) + ", sent: " + strconv.Itoa(m.QLen)
+44         rf := float32(m.RLen)
+45         qf := float32(m.QLen)
+46         if qf != 0 {
+47                 s += " (" + strconv.Ftoa32(rf/qf, 'f', 2) + ":1)"
+48         }
+49         // WHEN??
+50         return s
+51 }
+*/
