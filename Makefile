@@ -18,6 +18,7 @@ GOFILES=\
 	nsec3.go\
 	resolver.go\
 	config.go\
+	responder.go
 #	y.go\
 
 include $(GOROOT)/src/Make.pkg
