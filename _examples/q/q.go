@@ -1,11 +1,8 @@
 package main
-// a (simple) dig-like query tool in 99 lines of Go
+
 import (
 	"net"
 	"dns"
-	"dns/resolver"
-//        "bytes"
-//        "compress/gzip"
 	"os"
 	"flag"
 	"fmt"
@@ -58,13 +55,12 @@ FLAGS:
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
-	r := new(resolver.Resolver)
+	r := new(dns.Resolver)
         r.FromFile("/etc/resolv.conf")
 	r.Timeout = 2
 	r.Port = *port
 	r.Tcp = *tcp
 	r.Attempts = 1
-	qr := r.NewQuerier()
 	// @server may be a name, resolv that 
 	var err os.Error
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
@@ -99,31 +95,17 @@ FLAGS:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
                 m.SetId()
-		qr <- resolver.Msg{m, nil, nil}
-		in := <-qr
-		if in.Dns != nil {
-                        if m.Id != in.Dns.Id {
+                in, err := r.Query(m)
+		if in != nil {
+                        if m.Id != in.Id {
                                 fmt.Printf("Id mismatch\n")
                         }
-			fmt.Printf("%v\n", in.Dns)
-                        fmt.Printf("%s\n", in.Meta)
-                        /*
-                        // zip the message 
-                        msgbuf, _ := in.Dns.Pack()
-                        var zbuff bytes.Buffer
-                        w, _ := gzip.NewWriterLevel(&zbuff, gzip.BestCompression)
-                        w.Write(msgbuf)
-                        w.Close()
-                        fmt.Printf(";; Compressed: %d\n", zbuff.Len())
-                        */
+			fmt.Printf("%v\n", in)
 		} else {
-                        fmt.Printf("%v\n", in.Error.String())
+                        fmt.Printf("%v\n", err.String())
                 }
 	}
-	qr <- resolver.Msg{}
-	<-qr
 }
-
 /*
 41 func (m *Meta) String() string {
 42         s := ";; Query time: " + strconv.Itoa(int(m.QueryEnd-m.QueryStart)) + " nsec"
