@@ -28,14 +28,6 @@ import (
 	"dns"
 )
 
-// Options for a nameserver.
-type Server struct {
-	Address string // interface to use, for multiple interfaces, use multiple servers
-	Port    string // what port to use
-	Timeout int    // seconds before giving up on packet
-	Tcp     bool   // use TCP
-}
-
 type msg struct {
 	udp  *net.UDPConn // udp conn
 	tcp  *net.TCPConn // tcp conn
@@ -44,142 +36,101 @@ type msg struct {
 	err  os.Error     // any errors
 }
 
-// Every nameserver implements the Responder interface. It defines
+// Every nameserver implements the Hander interface. It defines
 // the kind of nameserver
-type Responder interface {
+type Handler interface {
 	// Receives the raw message content and writes back 
 	// an UDP response. An UDP connection needs a remote
-	// address to write to. ResponderUDP() must take care of sending
+	// address to write to. ServeUDP() must take care of sending
 	// any response back to the requestor.
-	ResponderUDP(c *net.UDPConn, a net.Addr, in []byte)
+	ServeUDP(c *net.UDPConn, a net.Addr, in []byte)
 	// Receives the raw message content and writes back
 	// a TCP response. A TCP connection does need to
-	// know explicitly be told the remote address. ResponderTCP() must
+	// know explicitly be told the remote address. ServeTCP() must
 	// take care of sending back a response to the requestor.
-	ResponderTCP(c *net.TCPConn, in []byte)
+	ServeTCP(c *net.TCPConn, in []byte)
 }
 
-// Start a new responder. The returned channel is used to stop the responder.
-// Send 'nil' to make it stop. It can also return error via the channel.
-func (res *Server) NewResponder(h Responder, stop chan os.Error) {
-	var port string
-	if len(res.Address) == 0 {
-                //stop <- &dns.Error{Error: "No addresses"}
-		return
-	}
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
-	}
-	switch res.Tcp {
-	case true:
-		tch := make(chan msg)
-		lch := make(chan *net.TCPListener)
-		a, _ := net.ResolveTCPAddr(res.Address + ":" + port)
-		go listenerTCP(a, tch, lch)
-		listener := <-lch
-
-		for {
-			select {
-			case <-stop:
-				listener.Close()
-				return
-			case s := <-tch:
-				if s.err != nil {
-                                        // stop <- s.err seperate error channel
-				} else {
-					go h.ResponderTCP(s.tcp, s.msg)
-				}
-			}
-		}
-
-	case false:
-		uch := make(chan msg)
-		a, _ := net.ResolveUDPAddr(res.Address + ":" + port)
-		go listenerUDP(a, uch)
-
-		for {
-			select {
-			case <-stop:
-                                return
-			case s := <-uch:
-				if s.err != nil {
-                                        //stop <- s.err // seperate error channel
-				} else {
-					go h.ResponderUDP(s.udp, s.addr, s.msg)
-				}
-			}
-		}
-	}
-	return
-}
-
-// Listen for UDP requests.
-func listenerUDP(a *net.UDPAddr, ch chan msg) {
-	c, err := net.ListenUDP("udp", a)
-	if err != nil {
-		ch <- msg{err: err}
-		return
-	}
+func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
+        if handler == nil {
+                // handler == DefaultServer
+        }
 	for {
 		m := make([]byte, dns.DefaultMsgSize) // TODO(mg) out of this loop?
-		n, radd, err := c.ReadFromUDP(m)
+		n, radd, err := l.ReadFromUDP(m)
 		if err != nil {
-			ch <- msg{err: err}
-			continue
+			return err
 		}
 		m = m[:n]
-		// if closed(ch) c.Close() TODO(mg)?? 
-		ch <- msg{udp: c, addr: radd, msg: m}
+                go handler.ServeUDP(l, radd, m)
 	}
+        panic("not reached")
 }
 
-// Listen for TCP requests.
-// How do I close this ?? TODO(mg)
-func listenerTCP(a *net.TCPAddr, ch chan msg, listen chan *net.TCPListener) {
-	t, err := net.ListenTCP("tcp", a)
-	if err != nil {
-		listen <- nil
-		ch <- msg{err: err}
-		return
-	}
-	listen <- t // sent listener back (for closing it)
-	for {
-		l := make([]byte, 2) // receiver length
-		c, err := t.AcceptTCP()
+func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
+        if handler == nil {
+        //        handler = DefaultServer
+        }
+        for {
+		b := make([]byte, 2) // receiver length
+		c, err := l.AcceptTCP()
 		if err != nil {
-			ch <- msg{err: err}
+			return err
 		}
 
-		n, cerr := c.Read(l)
+		n, cerr := c.Read(b)
 		if cerr != nil {
-			ch <- msg{err: cerr}
+			return cerr
 		}
-		length := uint16(l[0])<<8 | uint16(l[1])
+		length := uint16(b[0])<<8 | uint16(b[1])
 		if length == 0 {
-			// Send err mesg
-			//return nil, &dns.Error{Error: "received nil msg length", Server: c.RemoteAddr(
+			return &dns.Error{Error: "received nil msg length"}
 		}
-
 		m := make([]byte, length)
 
 		n, cerr = c.Read(m)
 		if cerr != nil {
-			//send msg  TODO(mg)
-			//return nil, cerr
+                        return cerr
 		}
 		i := n
 		if i < int(length) {
 			n, err = c.Read(m[i:])
 			if err != nil {
-				//send err
-				//return nil, err
+				return err
 			}
 			i += n
 		}
-		ch <- msg{tcp: c, msg: m}
-	}
+                go handler.ServeTCP(c, m)
+        }
+        panic("not reached")
+}
+
+func ListenAndServeTCP(addr string, handler Handler) os.Error {
+        ta, err := net.ResolveTCPAddr(addr)
+        if err != nil {
+                return err
+        }
+        l, err := net.ListenTCP("tcp", ta)
+        if err != nil {
+                return err
+        }
+        err = ServeTCP(l, handler)
+        l.Close()
+        return err
+}
+
+func ListenAndServeUDP(addr string, handler Handler) os.Error {
+        ua, err := net.ResolveUDPAddr(addr)
+        if err != nil {
+                return err
+        }
+        l, err := net.ListenUDP("udp", ua)
+        if err != nil {
+                return err
+        }
+        err = ServeUDP(l, handler)
+        l.Close()
+        return err
 }
 
 // Send a buffer on the TCP connection.
@@ -209,70 +160,3 @@ func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
 	}
 	return nil
 }
-
-/*
-// Basic implementation of a reflector nameserver which responds
-// to queries for A types and replies with the qname as the ownername
-// and querier's IP as the rdata
-type reflectServer Server
-func (s *reflectServer) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
-        o, ok := makePkt(a, in)
-        if ok {
-                out, ok1 := o.Pack()
-                if ok1 {
-                        SendUDP(out, c, a)
-                }
-        }
-}
-
-func (s *reflectServer) ResponderTCP(c *net.TCPConn, in []byte) {
-        o, ok := makePkt(c.RemoteAddr(), in)
-        if ok {
-                out, ok1 := o.Pack()
-                if ok1 {
-                        SendTCP(out, c)
-                }
-        }
-}
-
-func makePkt(a net.Addr, i []byte) (*dns.Msg, bool) {
-        msg := new(dns.Msg)
-        if !msg.Unpack(i) {
-                return nil, false
-        }
-        if msg.MsgHdr.Response == true {
-                return nil, false
-        }
-        m := new(dns.Msg)
-        m.MsgHdr.Id = msg.MsgHdr.Id
-        m.MsgHdr.Authoritative = true
-        m.MsgHdr.Response = true
-        m.MsgHdr.Opcode = dns.OpcodeQuery
-        m.MsgHdr.Rcode = dns.RcodeSuccess
-        m.Question = make([]dns.Question, 1)
-        m.Question[0] = msg.Question[0]
-        if msg.Question[0].Qtype != dns.TypeA {
-                // wrong question
-                m.MsgHdr.Rcode = dns.RcodeFormatError
-                return m ,true
-        }
-        m.Answer = make([]dns.RR, 1)
-        r := new(dns.RR_A)
-        r.Hdr = dns.RR_Header{Name: msg.Question[0].Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-        ip, _ := net.ResolveUDPAddr(a.String())
-        r.A = ip.IP.To4()
-        m.Answer[0] = r
-        return m, true
-}
-
-// A simple nameserver implementation. It reponds to queries for the A record and replies
-// with the qname as the ownername and the rdata of the A record set to the senders address.
-//
-// Sample (udp) usage:
-// stop := make(chan bool)
-// s    := new(Server)
-// go s.NewResponder(Reflector, stop)
-var Reflector *reflectServer
-
-What point is there to Export this?
-*/
