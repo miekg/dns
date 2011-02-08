@@ -8,6 +8,7 @@ Todo:
 * Tsig generation for replies (request MAC)
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 * server: don't need the interfaces only functions
+* server: client must setup listener and give that to Serve
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
