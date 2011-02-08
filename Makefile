@@ -27,12 +27,10 @@ include $(GOROOT)/src/Make.pkg
 
 
 all: package
-	gomake -C resolver package
 	gomake -C responder package
 
 dnstest:
 	gotest
-	gomake -C resolver test
 	gomake -C responder test
 
 _examples:
