@@ -27,6 +27,11 @@ import (
 	"net"
 )
 
+type Server struct {
+        // timeout and other stuff
+        Timeout int
+}
+
 // Every nameserver implements the Hander interface. It defines
 // the kind of nameserver
 type Handler interface {

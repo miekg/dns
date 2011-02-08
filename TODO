@@ -1,25 +1,12 @@
 Todo:
-* responder rework, like the http package http.Handler
-  responder.HandlerTCP
-* os.Error in Pack()/Unpack() or Log??? - again look at http
 * wildcards, in sig gen, sig checking
-* Private key file parsing use io.Reader (or the like)
-    - NewReader, NewWriter?
+* Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * IP6 testing - in resolver and also in responder code
         extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
-* pack/Unpack smaller
-
-From http package:
-
-func HandleFunc(pattern string, handler func(ResponseWriter, *Request))
-HandleFunc registers the handler function for the given pattern
-in the DefaultServeMux.
-
-func ListenAndServe(addr string, handler Handler) os.Error
-
+* pack/Unpack smaller. EDNS 'n stuff can be folded in
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
@@ -41,6 +28,3 @@ Funkensturm:
 * use exp/eval - to inteprete the config file??
 * TCP how to handle stuff like AXFR
 * use package log
-
-log packet
-
