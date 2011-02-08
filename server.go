@@ -39,12 +39,12 @@ type Handler interface {
 	// an UDP response. An UDP connection needs a remote
 	// address to write to. ServeUDP() must take care of sending
 	// any response back to the requestor.
-	ServeUDP(c *net.UDPConn, a net.Addr, in []byte)
+	ReplyUDP(c *net.UDPConn, a net.Addr, in []byte)
 	// Receives the raw message content and writes back
 	// a TCP response. A TCP connection does need to
 	// know explicitly be told the remote address. ServeTCP() must
 	// take care of sending back a response to the requestor.
-	ServeTCP(c *net.TCPConn, in []byte)
+	ReplyTCP(c *net.TCPConn, in []byte)
 }
 
 func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
@@ -58,7 +58,7 @@ func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
 			return err
 		}
 		m = m[:n]
-                go handler.ServeUDP(l, radd, m)
+                go handler.ReplyUDP(l, radd, m)
 	}
         panic("not reached")
 }
@@ -96,7 +96,7 @@ func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
 			}
 			i += n
 		}
-                go handler.ServeTCP(c, m)
+                go handler.ReplyTCP(c, m)
         }
         panic("not reached")
 }

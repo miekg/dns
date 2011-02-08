@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type server Server
+type server int
 
 func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 	m := new(Msg)
@@ -32,7 +32,7 @@ func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 	return out
 }
 
-func (h *server) ServeUDP(c *net.UDPConn, a net.Addr, in []byte) {
+func (h *server) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	inmsg := new(Msg)
 	inmsg.Unpack(in)
 	if inmsg.MsgHdr.Response == true {
@@ -44,7 +44,7 @@ func (h *server) ServeUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	SendUDP(out, c, a)
 }
 
-func (h *server) ServeTCP(c *net.TCPConn, in []byte) {
+func (h *server) ReplyTCP(c *net.TCPConn, in []byte) {
 	inmsg := new(Msg)
 	inmsg.Unpack(in)
 	if inmsg.MsgHdr.Response == true {
@@ -55,10 +55,10 @@ func (h *server) ServeTCP(c *net.TCPConn, in []byte) {
 }
 
 func TestResponder(t *testing.T) {
-        var h server
-        go ListenAndServeTCP("127.0.0.1:8053", h.(Handler))
-        go ListenAndServeUDP("127.0.0.1:8053", h.(Handler))
-        time.Sleep(1 * 1e9)
+        var h *server
+        go ListenAndServeTCP("127.0.0.1:8053", h)
+        go ListenAndServeUDP("127.0.0.1:8053", h)
+        time.Sleep(20 * 1e9)
 }
 
 /*

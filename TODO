@@ -7,6 +7,7 @@ Todo:
 * NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
+* server: don't need the interfaces only functions
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
