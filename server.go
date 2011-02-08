@@ -20,21 +20,12 @@
 //         var m *myserv                       
 //         ch :=make(chan bool)
 //         go s.NewResponder(m, ch)     // start the responder
-package responder
+package dns
 
 import (
 	"os"
 	"net"
-	"dns"
 )
-
-type msg struct {
-	udp  *net.UDPConn // udp conn
-	tcp  *net.TCPConn // tcp conn
-	addr net.Addr     // remote address
-	msg  []byte       // raw dns message
-	err  os.Error     // any errors
-}
 
 // Every nameserver implements the Hander interface. It defines
 // the kind of nameserver
@@ -56,7 +47,7 @@ func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
                 // handler == DefaultServer
         }
 	for {
-		m := make([]byte, dns.DefaultMsgSize) // TODO(mg) out of this loop?
+		m := make([]byte, DefaultMsgSize) // TODO(mg) out of this loop?
 		n, radd, err := l.ReadFromUDP(m)
 		if err != nil {
 			return err
@@ -84,7 +75,7 @@ func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
 		}
 		length := uint16(b[0])<<8 | uint16(b[1])
 		if length == 0 {
-			return &dns.Error{Error: "received nil msg length"}
+			return &Error{Error: "received nil msg length"}
 		}
 		m := make([]byte, length)
 

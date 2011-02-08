@@ -18,21 +18,13 @@ GOFILES=\
 	nsec3.go\
 	resolver.go\
 	config.go\
-	responder.go
+	server.go
 #	y.go\
 
 include $(GOROOT)/src/Make.pkg
 
 #y.go:	dns.y
 #	goyacc dns.y
-
-
-all: package
-	gomake -C responder package
-
-dnstest:
-	gotest
-	gomake -C responder test
 
 _examples:
 	gomake -C _examples
