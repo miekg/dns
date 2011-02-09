@@ -10,16 +10,14 @@
 package main
 
 import (
-	"os"
 	"net"
 	"dns"
-	"dns/responder"
 	"os/signal"
 )
 
-type server responder.Server
+type server dns.Server
 
-func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
+func (s *server) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	inmsg := new(dns.Msg)
 	if !inmsg.Unpack(in) {
 		// FormError
@@ -41,20 +39,17 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	if !b {
 		println("Failed to pack")
 	}
-	responder.SendUDP(out, c, a)
+	dns.SendUDP(out, c, a)
 }
 
-func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
+func (s *server) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
 	return
 }
 
 func main() {
-	s := new(responder.Server)
-	s.Address = "127.0.0.1"
-	s.Port = "8053"
 	var srv *server
-	ch := make(chan os.Error)
-	go s.NewResponder(srv, ch)
+	ch := make(chan bool)
+	go dns.ListenAndServe("127.0.0.1:8053", srv, ch)
 
 forever:
 	for {
@@ -62,7 +57,7 @@ forever:
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
-			ch <- nil
+			ch <- true
 			break forever
 		}
 	}

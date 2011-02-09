@@ -133,6 +133,7 @@ func accepterTCP(l *net.TCPListener, ch chan *Request, quit chan bool) {
 	panic("not reached")
 }
 
+// Setup both the udp and tcp listener
 func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
 	ta, err := net.ResolveTCPAddr(addr)
 	if err != nil {
