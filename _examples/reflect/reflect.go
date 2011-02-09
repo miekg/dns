@@ -22,12 +22,11 @@ import (
 	"dns"
         "fmt"
 	"strconv"
-	"dns/responder"
 	"runtime"
 	"os/signal"
 )
 
-type server responder.Server
+type server dns.Server
 
 func reply(a net.Addr, in []byte, tcp bool) *dns.Msg {
 	inmsg := new(dns.Msg)
@@ -69,7 +68,7 @@ func reply(a net.Addr, in []byte, tcp bool) *dns.Msg {
 	return m
 }
 
-func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
+func (s *server) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	m := reply(a, in, false)
 	if m == nil {
 		return
@@ -80,10 +79,10 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) {
 		println("Failed to pack")
 		return
 	}
-	responder.SendUDP(out, c, a)
+	dns.SendUDP(out, c, a)
 }
 
-func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
+func (s *server) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
 	m := reply(c.RemoteAddr(), in, true)
 	if m == nil {
 		return
@@ -94,26 +93,15 @@ func (s *server) ResponderTCP(c *net.TCPConn, in []byte) {
 		println("Failed to pack")
 		return
 	}
-	responder.SendTCP(out, c)
+	dns.SendTCP(out, c, a)
 }
 
 func main() {
 	runtime.GOMAXPROCS(10) // Be bold
 
-	s := new(responder.Server)
-	s.Address = "127.0.0.1"
-	s.Port = "8053"
 	var srv *server
-	ch := make(chan os.Error)
-	go s.NewResponder(srv, ch)
-
-	t := new(responder.Server)
-	t.Address = "127.0.0.1"
-	t.Port = "8053"
-	t.Tcp = true
-	var srvt *server
-	cht := make(chan os.Error)
-	go t.NewResponder(srvt, cht)
+	ch := make(chan bool)
+        dns.ListenAndServe("127.0.0.1:8053", srv, ch)
 
 forever:
 	for {
@@ -121,11 +109,9 @@ forever:
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
-			ch <- nil
-			cht <- nil
+			ch <- true
 			break forever
 		}
 	}
-	close(cht)
 	close(ch)
 }

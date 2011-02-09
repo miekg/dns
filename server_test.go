@@ -44,21 +44,22 @@ func (h *server) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) {
 	SendUDP(out, c, a)
 }
 
-func (h *server) ReplyTCP(c *net.TCPConn, in []byte) {
+func (h *server) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
 	inmsg := new(Msg)
 	inmsg.Unpack(in)
 	if inmsg.MsgHdr.Response == true {
 		return
 	}
-	out := createpkg(inmsg.MsgHdr.Id, true, c.RemoteAddr())
-	SendTCP(out, c)
+	out := createpkg(inmsg.MsgHdr.Id, true, a)
+	SendTCP(out, c, a)
 }
 
 func TestResponder(t *testing.T) {
         var h *server
-        go ListenAndServeTCP("127.0.0.1:8053", h)
-        go ListenAndServeUDP("127.0.0.1:8053", h)
-        time.Sleep(1 * 1e9)
+        quit := make(chan bool)
+        go ListenAndServe("127.0.0.1:8053", h, quit)
+        time.Sleep(2 * 1e9)
+        quit <- true
 }
 
 /*

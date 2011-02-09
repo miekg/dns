@@ -1,6 +1,0 @@
-#!/bin/sh
-# small wrapper to ease installation
-make
-make -C resolver install
-make -C responder install
-make _examples

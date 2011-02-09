@@ -27,6 +27,8 @@ import (
 	"net"
 )
 
+type Server int                 // Doesn't really matter
+
 // Wrap request in this struct
 type Request struct {
 	Tcp     bool         // True for tcp, false for udp
@@ -174,7 +176,7 @@ func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
 }
 
 // Send a buffer on the TCP connection.
-func SendTCP(m []byte, c *net.TCPConn) os.Error {
+func SendTCP(m []byte, c *net.TCPConn, a net.Addr) os.Error {
 	l := make([]byte, 2)
 	l[0] = byte(len(m) >> 8)
 	l[1] = byte(len(m))
