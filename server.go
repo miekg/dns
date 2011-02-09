@@ -58,6 +58,7 @@ func accepterUDP(l *net.UDPConn, ch chan *Request, quit chan bool) {
 	for {
 		select {
 		case <-quit:
+                        println("quit")
 			return
 		default:
 			r := new(Request)
@@ -157,19 +158,22 @@ func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
         go accepterTCP(lt, rc, qt)
         go accepterUDP(lu, rc, qu)
 
-        select {
-        case <-q:
-                /* quit received, lets stop */
-                lt.Close()
-                lu.Close()
-                qt <- true
-                qu <- true
-        case r:=<-rc:
-                /* request recieved */
-                if r.Tcp {
-                        go handler.ReplyTCP(r.TCPConn, r.Addr, r.Buf)
-                } else {
-                        go handler.ReplyUDP(r.UDPConn, r.Addr, r.Buf)
+        for {
+                select {
+                case <-q:
+                        println("Closing")
+                        /* quit received, lets stop */
+                        lt.Close()
+                        lu.Close()
+                        qt <- true
+                        qu <- true
+                case r:=<-rc:
+                        /* request recieved */
+                        if r.Tcp {
+                                go handler.ReplyTCP(r.TCPConn, r.Addr, r.Buf)
+                        } else {
+                                go handler.ReplyUDP(r.UDPConn, r.Addr, r.Buf)
+                        }
                 }
         }
 	return err

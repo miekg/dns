@@ -101,7 +101,7 @@ func main() {
 
 	var srv *server
 	ch := make(chan bool)
-        dns.ListenAndServe("127.0.0.1:8053", srv, ch)
+        go dns.ListenAndServe("127.0.0.1:8053", srv, ch)
 
 forever:
 	for {
