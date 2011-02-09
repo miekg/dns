@@ -58,7 +58,6 @@ func accepterUDP(l *net.UDPConn, ch chan *Request, quit chan bool) {
 	for {
 		select {
 		case <-quit:
-                        println("quit")
 			return
 		default:
 			r := new(Request)
@@ -162,7 +161,6 @@ func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
         for {
                 select {
                 case <-q:
-                        println("Closing")
                         /* quit received, lets stop */
                         lt.Close()
                         lu.Close()
