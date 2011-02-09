@@ -58,7 +58,7 @@ func TestResponder(t *testing.T) {
         var h *server
         go ListenAndServeTCP("127.0.0.1:8053", h)
         go ListenAndServeUDP("127.0.0.1:8053", h)
-        time.Sleep(20 * 1e9)
+        time.Sleep(1 * 1e9)
 }
 
 /*

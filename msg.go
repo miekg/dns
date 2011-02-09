@@ -52,7 +52,6 @@ type Msg struct {
 	Answer   []RR
 	Ns       []RR
 	Extra    []RR
-//        Error    os.Error // Do I want this??
 }
 
 // Map of strings for each RR wire type.

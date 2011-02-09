@@ -53,7 +53,11 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
                 in   *Msg
 		port string
 	)
+        if len(res.Servers) == 0 {
+                return nil, &Error{Error: "No servers defined"}
+        }
 	// len(res.Server) == 0 can be perfectly valid, when setting up the resolver
+        // It is now
 	if res.Port == "" {
 		port = "53"
 	} else {
