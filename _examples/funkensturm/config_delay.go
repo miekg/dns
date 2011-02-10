@@ -7,7 +7,6 @@ import (
 	"dns"
         "fmt"
 	"time"
-	"dns/resolver"
 )
 
 const NSECDELAY = 1 * 1e9 // 1 second, meaning 1 qps (smaller means higher qps)
@@ -47,7 +46,7 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, ok
 }
 
-func delay(m *dns.Msg, ok bool) *dns.Msg {
+func delay(m *dns.Msg, ok bool) (out *dns.Msg) {
 	var ok1 bool
 	switch ok {
 	case true:
@@ -55,26 +54,21 @@ func delay(m *dns.Msg, ok bool) *dns.Msg {
 		if !ok1 {
 			fmt.Fprintf(os.Stderr, "Info: Dropping: too often\n")
 			time.Sleep(NSECDELAY)
-			return nil
+			return
 		} else {
 			fmt.Fprintf(os.Stderr, "Info: Ok: let it through\n")
-                        var in resolver.Msg
                         for _, r := range qr {
-			        r <- resolver.Msg{m, nil, nil}
-			        in = <-r
+			        out, _ = r.Query(m)
                         }
-			return in.Dns
+			return
 		}
 	case false:
-                var in resolver.Msg
                 for _, r := range qr {
-                        r <- resolver.Msg{m, nil, nil}
-                        in = <-r
+                        out, _ = r.Query(m)
                 }
-                return in.Dns
-		return in.Dns
+		return
 	}
-	return nil
+	return
 }
 
 // Return the configration

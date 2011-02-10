@@ -42,7 +42,7 @@ type Resolver struct {
 	Rotate   bool                // round robin among servers -- TODO
 	Tcp      bool                // use TCP
 	Mangle   func([]byte) []byte // mangle the packet
-        // rtt map[string]int server->int, smaller is faster 0, -1 is unreacheble
+	// rtt map[string]int server->int, smaller is faster 0, -1 is unreacheble
 }
 
 // Send a query using *res, q holds the question to be asked.
@@ -50,136 +50,136 @@ type Resolver struct {
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	var (
 		c    net.Conn
-                in   *Msg
+		in   *Msg
 		port string
 	)
-        if len(res.Servers) == 0 {
-                return nil, &Error{Error: "No servers defined"}
-        }
+	if len(res.Servers) == 0 {
+		return nil, &Error{Error: "No servers defined"}
+	}
 	// len(res.Server) == 0 can be perfectly valid, when setting up the resolver
-        // It is now
+	// It is now
 	if res.Port == "" {
 		port = "53"
 	} else {
 		port = res.Port
 	}
 
-        if q.Id == 0 {
-                // No Id sed, set it
-                q.SetId()
-        }
-        sending, ok := q.Pack()
-        if !ok {
-                return nil, &Error{Error: packErr}
-        }
+	if q.Id == 0 {
+		// No Id sed, set it
+		q.SetId()
+	}
+	sending, ok := q.Pack()
+	if !ok {
+		return nil, &Error{Error: packErr}
+	}
 
-        for i := 0; i < len(res.Servers); i++ {
-                server := res.Servers[i] + ":" + port
-                if res.Tcp {
-                        c, err = net.Dial("tcp", "", server)
-                } else {
-                        c, err = net.Dial("udp", "", server)
-                }
-                if err != nil {
-                        continue
-                }
-                if res.Tcp {
-                        in, err = exchangeTCP(c, sending, res, true)
-                } else {
-                        in, err = exchangeUDP(c, sending, res, true)
-                }
+	for i := 0; i < len(res.Servers); i++ {
+		server := res.Servers[i] + ":" + port
+		if res.Tcp {
+			c, err = net.Dial("tcp", "", server)
+		} else {
+			c, err = net.Dial("udp", "", server)
+		}
+		if err != nil {
+			continue
+		}
+		if res.Tcp {
+			in, err = exchangeTCP(c, sending, res, true)
+		} else {
+			in, err = exchangeUDP(c, sending, res, true)
+		}
 
-                // Check id in.id != out.id, should be checked in the client!
-                c.Close()
-                if err != nil {
-                        continue
-                }
-                break
-        }
-        if err != nil {
-                return nil, err
-        }
-        return in, nil
+		// Check id in.id != out.id, should be checked in the client!
+		c.Close()
+		if err != nil {
+			continue
+		}
+		break
+	}
+	if err != nil {
+		return nil, err
+	}
+	return in, nil
 }
 
 // q holds the inital query 
 // channel is closed by AXfr
 func (res *Resolver) Axfr(q *Msg, m chan *Msg) {
 	var port string
-        var err os.Error
-        var in *Msg
+	var err os.Error
+	var in *Msg
 	if res.Port == "" {
 		port = "53"
 	} else {
 		port = res.Port
 	}
 
-        var _ = err                     // TODO(mg)
+	var _ = err // TODO(mg)
 
-        if q.Id == 0 {
-                q.SetId()
-        }
-
-        sending, ok := q.Pack()
-        if !ok {
-	        m <- nil
-                return
+	if q.Id == 0 {
+		q.SetId()
 	}
 
-	SERVER:
-        for i := 0; i < len(res.Servers); i++ {
-                server := res.Servers[i] + ":" + port
-                c, cerr := net.Dial("tcp", "", server)
-                if cerr != nil {
-                        err = cerr
-                        continue SERVER
-                }
-                first := true
-                // Start the AXFR
-                for {
-                        if first {
-                                in, cerr = exchangeTCP(c, sending, res, true)
-                        } else {
-                                in, err = exchangeTCP(c, sending, res, false)
-                        }
+	sending, ok := q.Pack()
+	if !ok {
+		m <- nil
+		return
+	}
 
-                        if cerr != nil {
-                                // Failed to send, try the next
-                                err = cerr
-                                c.Close()
-                                continue SERVER
-                        }
-                        if in.Id != q.Id {
-                                m <- nil
-                                return
-                        }
+SERVER:
+	for i := 0; i < len(res.Servers); i++ {
+		server := res.Servers[i] + ":" + port
+		c, cerr := net.Dial("tcp", "", server)
+		if cerr != nil {
+			err = cerr
+			continue SERVER
+		}
+		first := true
+		// Start the AXFR
+		for {
+			if first {
+				in, cerr = exchangeTCP(c, sending, res, true)
+			} else {
+				in, err = exchangeTCP(c, sending, res, false)
+			}
 
-                        if first {
-                                if !checkSOA(in, true) {
-                                        c.Close()
-                                        continue SERVER
-                                }
-                                m <- in
-                                first = !first
-                        }
+			if cerr != nil {
+				// Failed to send, try the next
+				err = cerr
+				c.Close()
+				continue SERVER
+			}
+			if in.Id != q.Id {
+				m <- nil
+				return
+			}
 
-                        if !first {
-                                if !checkSOA(in, false) {
-                                        // Soa record not the last one
-                                        m <- in
-                                        continue
-                                } else {
-                                        c.Close()
-                                        m <- in
-                                        close(m)
-                                        return
-                                }
-                        }
-                }
-                println("Should never be reached")
-                return
-        }
-        close(m)
+			if first {
+				if !checkSOA(in, true) {
+					c.Close()
+					continue SERVER
+				}
+				m <- in
+				first = !first
+			}
+
+			if !first {
+				if !checkSOA(in, false) {
+					// Soa record not the last one
+					m <- in
+					continue
+				} else {
+					c.Close()
+					m <- in
+					close(m)
+					return
+				}
+			}
+		}
+		println("Should never be reached")
+		return
+	}
+	close(m)
 	return
 }
 
@@ -251,7 +251,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) 
 	for a := 0; a < attempts; a++ {
 		// only send something when told so
 		if send {
-			err := sendTCP(m,c)
+			err := sendTCP(m, c)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -278,66 +278,66 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) 
 	return nil, &Error{Error: servErr}
 }
 
-func sendUDP(m []byte,c net.Conn) os.Error {
-        _, err := c.Write(m)
-        if err != nil {
-                return err
-        }
-        return nil
+func sendUDP(m []byte, c net.Conn) os.Error {
+	_, err := c.Write(m)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func recvUDP(c net.Conn) ([]byte, os.Error) {
-        m := make([]byte, DefaultMsgSize) // More than enough???
-        n, err := c.Read(m)
-        if err != nil {
-                return nil, err
-        }
-        m = m[:n]
-        return m, nil
+	m := make([]byte, DefaultMsgSize) // More than enough???
+	n, err := c.Read(m)
+	if err != nil {
+		return nil, err
+	}
+	m = m[:n]
+	return m, nil
 }
 
 func sendTCP(m []byte, c net.Conn) os.Error {
-        l := make([]byte, 2)
-        l[0] = byte(len(m) >> 8)
-        l[1] = byte(len(m))
-        // First we send the length
-        _, err := c.Write(l)
-        if err != nil {
-                return err
-        }
-        // And the the message
-        _, err = c.Write(m)
-        if err != nil {
-                return err
-        }
-        return nil
+	l := make([]byte, 2)
+	l[0] = byte(len(m) >> 8)
+	l[1] = byte(len(m))
+	// First we send the length
+	_, err := c.Write(l)
+	if err != nil {
+		return err
+	}
+	// And the the message
+	_, err = c.Write(m)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func recvTCP(c net.Conn) ([]byte, os.Error) {
-        l := make([]byte, 2) // receiver length
-        // The server replies with two bytes length
-        _, err := c.Read(l)
-        if err != nil {
-                return nil,err
-        }
-        length := uint16(l[0])<<8 | uint16(l[1])
-        if length == 0 {
-                return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
-        }
-        m := make([]byte, length)
-        n, cerr := c.Read(m)
-        if cerr != nil {
-                return nil, cerr
-        }
-        i := n
-        if i < int(length) {
-                n, err = c.Read(m[i:])
-                if err != nil {
-                        return nil, err
-                }
-                i += n
-        }
-        return m, nil
+	l := make([]byte, 2) // receiver length
+	// The server replies with two bytes length
+	_, err := c.Read(l)
+	if err != nil {
+		return nil, err
+	}
+	length := uint16(l[0])<<8 | uint16(l[1])
+	if length == 0 {
+		return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
+	}
+	m := make([]byte, length)
+	n, cerr := c.Read(m)
+	if cerr != nil {
+		return nil, cerr
+	}
+	i := n
+	if i < int(length) {
+		n, err = c.Read(m[i:])
+		if err != nil {
+			return nil, err
+		}
+		i += n
+	}
+	return m, nil
 }
 
 // Check if he SOA record exists in the Answer section of 

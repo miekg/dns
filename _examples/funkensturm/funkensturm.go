@@ -21,7 +21,7 @@ import (
 type server dns.Server
 
 // Define a slice of channels for the resolver for sending the queries somewhere else.
-var qr []chan resolver.Msg
+var qr []*dns.Resolver
 
 // The configuration of Funkensturm
 var f *Funkensturm
@@ -151,7 +151,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	return out, nil
 }
 
-func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
+func (s *server) ReplyUDP(c *net.UDPConn, a net.Addr, i []byte) {
 	out, err := doFunkensturm(i)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -159,12 +159,12 @@ func (s *server) ResponderUDP(c *net.UDPConn, a net.Addr, i []byte) {
 	}
 
 	if out != nil {
-		responder.SendUDP(out, c, a)
+		dns.SendUDP(out, c, a)
 	}
 	// nothing is send back
 }
 
-func (s *server) ResponderTCP(c *net.TCPConn, i []byte) {
+func (s *server) ReplyTCP(c *net.TCPConn, a net.Addr, i []byte) {
 	out, err := doFunkensturm(i)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -172,7 +172,7 @@ func (s *server) ResponderTCP(c *net.TCPConn, i []byte) {
 	}
 
 	if out != nil {
-		responder.SendTCP(out, c)
+		dns.SendTCP(out, c, a)
 	}
 	// nothing is send back
 }
@@ -180,10 +180,10 @@ func (s *server) ResponderTCP(c *net.TCPConn, i []byte) {
 // split 127.0.0.1:53 into components
 // TODO  IPv6
 func splitAddrPort(s string) (a, p string) {
-	items := strings.Split(s, ":", 2)
-	a = items[0]
-	p = items[1]
-	return
+       items := strings.Split(s, ":", 2)
+       a = items[0]
+       p = items[1]
+       return
 }
 
 func main() {
@@ -197,15 +197,13 @@ func main() {
 	flag.Parse()
 
 	resolvers := strings.Split(*rserver, ",", -1)
-	qr = make([]chan resolver.Msg, len(resolvers))
+	qr = make([]*dns.Resolver, len(resolvers))
 	for i, ra := range resolvers {
 		addr, port := splitAddrPort(ra)
-		// TODO error checking
-		// The resolver(s)
-		r := new(resolver.Resolver)
+		r := new(dns.Resolver)
 		r.Servers = []string{addr}
 		r.Port = port
-		qr[i] = r.NewQuerier() // connect to global qr[i
+		qr[i] = r
 	}
 
 	f = funkensturm()
@@ -215,14 +213,10 @@ func main() {
 		return
 	}
 
-	// The responder
-	addr, port := splitAddrPort(*sserver)
-	s := new(responder.Server)
-	s.Address = addr
-	s.Port = port
+	// The server
 	var srv *server
-	rs := make(chan os.Error)
-	go s.NewResponder(srv, rs)
+	quit := make(chan bool)
+        go dns.ListenAndServe(*sserver, srv, quit)
 
 forever:
 	for {
@@ -230,15 +224,9 @@ forever:
 		select {
 		case <-signal.Incoming:
 			println("Signal received, stopping")
-			rs <- nil // shutdown responder
+			quit <- true
 			break forever
 		}
 	}
-	close(rs)
-
-	// And the resolvers
-	for _, q := range qr {
-		q <- resolver.Msg{}
-		<-q
-	}
+	close(quit)
 }

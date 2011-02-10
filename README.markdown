@@ -5,8 +5,8 @@ supported. DNSSEC types too.
 EDNS0 is (see edns.go), UDP/TCP queries, TSIG, AXFR (and IXFR probably)
 too. Both client and server side programming is supported.
 
-Sample programs can be found in the _examples directory. They can 
-be build with: make examples (after the dns package has been installed)
+Sample programs can be found in the `_examples` directory. They can 
+be build with: `make examples` (after the dns package has been installed)
 
 The major omission at the moment is parsing Resource Records from
 strings. (i.e. supporting the RFC 1035 zone file format).
@@ -15,9 +15,10 @@ Also the IPv6 support needs to be tested
 Everything else should be present and working. If not, drop me an email.
 
 Have fun!
+
 Miek Gieben  -  2010, 2011 - miek@miek.nl
 
-Supported RFCs and features include:
+## Supported RFCs and features include:
 
 * 1034/1035  - DNS standard
 * 1982 - Serial Arithmetic
@@ -37,11 +38,12 @@ Supported RFCs and features include:
 * 4255 - SSHFP
 * 4408 - SPF
 * 5001 - NSID 
-* 5155 - NSEC -- todo
+* 5155 - NSEC
 * 5936 - AXFR
 
-Loosely based upon:
-* ldns
-* NSD
-* Net::DNS
-* GRONG
+## Loosely based upon:
+
+* `ldns`
+* `NSD`
+* `Net::DNS`
+* `GRONG`

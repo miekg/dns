@@ -2,7 +2,6 @@ package main
 
 import (
 	"dns"
-	"dns/resolver"
 )
 
 func match(m *dns.Msg, d int) (*dns.Msg, bool) {
@@ -26,17 +25,15 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, true
 }
 
-func send(m *dns.Msg, ok bool) *dns.Msg {
+func send(m *dns.Msg, ok bool) (out *dns.Msg) {
 	switch ok {
 	case true, false:
-                var in resolver.Msg
                 for _, r := range qr {
-                        r <- resolver.Msg{m, nil, nil}
-                        in = <-r
+                        out, _ = r.Query(m)
                 }
-                return in.Dns
+                return
 	}
-	return nil
+	return
 }
 
 // Return the configration
