@@ -3,25 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // DNS resolver client: see RFC 1035.
-// A DNS resolver is to be run in a goroutine. 
-// For every reply the resolver answers by sending the
-// received packet (with a possible error) back on a channel.
-// 
-// Basic usage pattern for setting up a resolver:
-//
-//        res := new(Resolver)
-//        ch := res.NewQuerier()                        // start new resolver
-//        res.Servers = []string{"127.0.0.1"}           // set the nameserver
-//
-//        m := new(Msg)                                 // prepare a new message
-//        m.MsgHdr.Recursion_desired = true             // header bits
-//        m.Question = make([]Question, 1)              // 1 RR in question sec.
-//        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        ch <- Msg{m, nil, nil}                        // send the query
-//        in := <-ch                                    // wait for reply
-//
-// Note that message id checking is left to the caller.
-//
+
 package dns
 
 import (
@@ -45,8 +27,18 @@ type Resolver struct {
 	// rtt map[string]int server->int, smaller is faster 0, -1 is unreacheble
 }
 
-// Send a query using *res, q holds the question to be asked.
-// A new dns message with the answer is return and a possible error
+// Basic usage pattern for setting up a resolver:
+//
+//        res := new(Resolver)
+//        res.Servers = []string{"127.0.0.1"}           // set the nameserver
+//
+//        m := new(Msg)                                 // prepare a new message
+//        m.MsgHdr.Recursion_desired = true             // header bits
+//        m.Question = make([]Question, 1)              // 1 RR in question section
+//        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+//        in, err := res.Query(m)                       // Ask the question
+//
+// Note that message id checking is left to the caller.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	var (
 		c    net.Conn
@@ -102,8 +94,10 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-// q holds the inital query 
-// channel is closed by AXfr
+// Start an AXFR, q should contain a message with the question
+// for an AXFR ("miek.nl" ANY AXFR. All incoming axfr snippets
+// are returned on the channel m. The function closes the 
+// channel to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan *Msg) {
 	var port string
 	var err os.Error
@@ -176,7 +170,7 @@ SERVER:
 				}
 			}
 		}
-		println("Should never be reached")
+		panic("not reached")
 		return
 	}
 	close(m)
@@ -184,7 +178,8 @@ SERVER:
 }
 
 // Send a request on the connection and hope for a reply.
-// Up to res.Attempts attempts.
+// Up to res.Attempts attempts. If send is false, nothing
+// is send.
 func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) {
 	var timeout int64
 	var attempts int

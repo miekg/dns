@@ -4,22 +4,6 @@
 
 // DNS server implementation
 
-// Package responder implements a DNS server. Any nameserver needs to implement
-// the Responder interface to get things going. Each incoming query is handled
-// in a seperate goroutine.
-// 
-// Typical usage of the package:
-//
-//         type myserv Server
-//         func (s *myserv) ResponderUDP(c *net.UDPConn, a net.Addr, in []byte) { /* UDP reply */ }
-//         func (s *myserv) ResponderTCP(c *net.TCPConn, in []byte) { /* TCP reply */}
-//
-//         s := new(Server)             // create new sever
-//         s.Address = "127.0.0.1"      // listen address
-//         s.Port = "8053"              // listen port
-//         var m *myserv                       
-//         ch :=make(chan bool)
-//         go s.NewResponder(m, ch)     // start the responder
 package dns
 
 import (
@@ -132,7 +116,25 @@ func accepterTCP(l *net.TCPListener, ch chan *Request, quit chan bool) {
 	panic("not reached")
 }
 
-// Setup both the udp and tcp listener
+// This function implements a nameserver. It should be run as a goroutines.
+// The function itself starts two new goroutines (one for TCP and one for UDP)
+// and for each incoming message run the ReplyTCP or ReplyUCP again as a 
+// goroutine.
+// 
+// Typical usage of ListenAndServe:
+//
+//         type myserv dns.Server
+//         func (s *myserv) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) { 
+//              /* UDP reply */ 
+//         }
+//         func (s *myserv) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
+//              /* TCP reply */
+//         }
+//
+//         var m *myserv                       
+//         ch := make(chan bool)
+//         go dns.ListenAndServe("127.0.0.1:8053", m, ch)
+//         m <- true                    // stop the goroutine
 func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
 	ta, err := net.ResolveTCPAddr(addr)
 	if err != nil {
