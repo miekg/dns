@@ -74,15 +74,19 @@ type Funkensturm struct {
 	Actions []Action    // What to do with the packets
 }
 
+func verboseprint(i *dns.Msg, msg string) {
+	fmt.Printf(">>>>>> %s\n", msg)
+	fmt.Printf("%v", i)
+	fmt.Printf("<<<<<< %s\n\n", msg)
+}
+
 func doFunkensturm(i []byte) ([]byte, os.Error) {
 	pkt := new(dns.Msg)
 	if !pkt.Unpack(i) {
 		return nil, &dns.Error{Error: "Unpacking packet failed"}
 	}
 	if *verbose {
-		fmt.Printf(">>>>>> ORIGINAL INCOMING\n")
-		fmt.Printf("%v", pkt)
-		fmt.Printf("<<<<<< ORIGINAL INCOMING\n")
+		verboseprint(pkt, "ORIGINAL INCOMING")
 	}
 	// No matter what, we refuse to answer requests with the response bit set.
 	if pkt.MsgHdr.Response == true {
@@ -104,9 +108,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 		}
 	}
 	if *verbose {
-		fmt.Printf(">>>>>> MODIFIED INCOMING\n")
-		fmt.Printf("%v", pkt1)
-		fmt.Printf("<<<<<< MODIFIED INCOMING\n")
+		verboseprint(pkt1, "MODIFIED INCOMING")
 	}
 
 	// Loop through the Actions.Func* and do something with the
@@ -118,9 +120,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	}
 
 	if *verbose {
-		fmt.Printf(">>>>>> ORIGINAL OUTGOING\n")
-		fmt.Printf("%v", resultpkt)
-		fmt.Printf("<<<<<< ORIGINAL OUTGOING\n")
+		verboseprint(resultpkt, "ORIGINAL OUTGOING")
 	}
 
 	// loop again for matching, but now with OUT, this is done
@@ -138,9 +138,8 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	}
 
 	if *verbose {
-		fmt.Printf(">>>>>> MODIFIED OUTGOING\n")
-		fmt.Printf("%v", pkt1)
-		fmt.Printf("<<<<<< MODIFIED OUTGOING\n")
+		verboseprint(pkt1, "MODIFIED OUTGOING")
+		fmt.Printf("-----------------------------------\n\n")
 	}
 
 	out, ok1 := pkt1.Pack()
@@ -180,10 +179,10 @@ func (s *server) ReplyTCP(c *net.TCPConn, a net.Addr, i []byte) {
 // split 127.0.0.1:53 into components
 // TODO  IPv6
 func splitAddrPort(s string) (a, p string) {
-       items := strings.Split(s, ":", 2)
-       a = items[0]
-       p = items[1]
-       return
+	items := strings.Split(s, ":", 2)
+	a = items[0]
+	p = items[1]
+	return
 }
 
 func main() {
@@ -216,7 +215,7 @@ func main() {
 	// The server
 	var srv *server
 	quit := make(chan bool)
-        go dns.ListenAndServe(*sserver, srv, quit)
+	go dns.ListenAndServe(*sserver, srv, quit)
 
 forever:
 	for {
