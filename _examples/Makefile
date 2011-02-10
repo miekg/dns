@@ -2,10 +2,8 @@ EXAMPLES=mx \
 q \
 chaos \
 axfr \
-notify \
 reflect \
 rude \
-s \
 funkensturm \
 
 all: 
