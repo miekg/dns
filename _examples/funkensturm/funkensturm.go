@@ -13,14 +13,12 @@ import (
 	"net"
 	"fmt"
 	"dns"
-	"dns/resolver"
-	"dns/responder"
 	"os/signal"
 	"strings"
 )
 
 // Define a responder that takes care of the incoming queries.
-type server responder.Server
+type server dns.Server
 
 // Define a slice of channels for the resolver for sending the queries somewhere else.
 var qr []chan resolver.Msg
