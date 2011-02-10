@@ -6,7 +6,6 @@
 
 package main
 
-/* TODO log package */
 import (
 	"os"
 	"flag"
@@ -215,14 +214,17 @@ func main() {
 	// The server
 	var srv *server
 	quit := make(chan bool)
-	go dns.ListenAndServe(*sserver, srv, quit)
+        err  := make(chan os.Error)
+	go dns.ListenAndServe(*sserver, srv, quit, err)
 
 forever:
 	for {
 		// Wait for a signal to stop
 		select {
+                case e := <-err:
+                        fmt.Printf("Error received, stopping: %s\n", e.String())
 		case <-signal.Incoming:
-			println("Signal received, stopping")
+			fmt.Printf("Signal received, stopping")
 			quit <- true
 			break forever
 		}

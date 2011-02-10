@@ -3,6 +3,7 @@ package dns
 import (
 	"testing"
 	"net"
+        "os"
 	"time"
 )
 
@@ -57,7 +58,8 @@ func (h *server) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
 func TestResponder(t *testing.T) {
         var h *server
         quit := make(chan bool)
-        go ListenAndServe("127.0.0.1:8053", h, quit)
+        e    := make(chan os.Error)
+        go ListenAndServe("127.0.0.1:8053", h, quit, e)
         time.Sleep(2 * 1e9)
         quit <- true
 }

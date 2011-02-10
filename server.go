@@ -133,25 +133,30 @@ func accepterTCP(l *net.TCPListener, ch chan *Request, quit chan bool) {
 //
 //         var m *myserv                       
 //         ch := make(chan bool)
-//         go dns.ListenAndServe("127.0.0.1:8053", m, ch)
+//         e  := make(chan os.Error)
+//         go dns.ListenAndServe("127.0.0.1:8053", m, ch, e)
 //         m <- true                    // stop the goroutine
-func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
+func ListenAndServe(addr string, handler Handler, q chan bool, e chan os.Error) {
 	ta, err := net.ResolveTCPAddr(addr)
 	if err != nil {
-		return err
+                e <- err
+		return
 	}
 	lt, err := net.ListenTCP("tcp", ta)
 	if err != nil {
-		return err
+                e <- err
+		return
 	}
 
         ua, err := net.ResolveUDPAddr(addr)
         if err != nil {
-                return err
+                e <- err
+                return
         }
 	lu, err := net.ListenUDP("udp", ua)
         if err != nil {
-                return err
+                e <- err
+                return
         }
 
         rc := make(chan *Request)
@@ -177,7 +182,7 @@ func ListenAndServe(addr string, handler Handler, q chan bool) os.Error {
                         }
                 }
         }
-	return err
+	return
 }
 
 // Send a buffer on the TCP connection.

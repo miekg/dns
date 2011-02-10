@@ -101,12 +101,16 @@ func main() {
 
 	var srv *server
 	ch := make(chan bool)
-        go dns.ListenAndServe("127.0.0.1:8053", srv, ch)
+        e  := make(chan os.Error)
+        go dns.ListenAndServe("127.0.0.1:8053", srv, ch, e)
 
 forever:
 	for {
 		// Wait for a signal to stop
 		select {
+                case err := <-e:
+                        fmt.Printf("Error: %s\n", err.String())
+                        break forever
 		case <-signal.Incoming:
 			println("Signal received, stopping")
 			ch <- true
