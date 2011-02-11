@@ -38,80 +38,50 @@ type Handler interface {
 	ReplyTCP(c *net.TCPConn, a net.Addr, in []byte)
 }
 
-func accepterUDP(l *net.UDPConn, ch chan *Request, quit chan bool) {
+func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, []byte)) os.Error {
 	for {
-		select {
-		case <-quit:
-			return
-		default:
-			r := new(Request)
-			r.Tcp = false
-			m := make([]byte, DefaultMsgSize)
-			n, radd, err := l.ReadFromUDP(m)
-			if err != nil {
-				r.Error = err
-				ch <- r
-				continue
-			}
-			m = m[:n]
-			r.Buf = m
-			r.Addr = radd
-			r.UDPConn = l
-			ch <- r
-		}
+                m := make([]byte, DefaultMsgSize)
+                n, radd, e := l.ReadFromUDP(m)
+                if e != nil {
+                        continue
+                }
+                m = m[:n]
+                go f(l, radd, m)
 	}
 	panic("not reached")
 }
 
-func accepterTCP(l *net.TCPListener, ch chan *Request, quit chan bool) {
+func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, []byte)) os.Error {
         b := make([]byte, 2)
 	for {
-		select {
-		case <-quit:
-			return
-		default:
-			r := new(Request)
-			r.Tcp = true
-			c, err := l.AcceptTCP()
-			if err != nil {
-				r.Error = err
-				ch <- r
-				continue
-			}
-			n, cerr := c.Read(b)
-			if cerr != nil {
-				r.Error = cerr
-				ch <- r
-				continue
-			}
-
-			length := uint16(b[0])<<8 | uint16(b[1])
-			if length == 0 {
-				r.Error = &Error{Error: "received nil msg length"}
-				ch <- r
-			}
-			m := make([]byte, length)
-
-			n, cerr = c.Read(m)
-			if cerr != nil {
-				r.Error = cerr
-				ch <- r
-				continue
-			}
-			i := n
-			if i < int(length) {
-				n, err = c.Read(m[i:])
-				if err != nil {
-					r.Error = err
-					ch <- r
-				}
-				i += n
-			}
-			r.Buf = m
-			r.Addr = c.RemoteAddr()
-			r.TCPConn = c
-			ch <- r
+                c, e := l.AcceptTCP()
+	        if e != nil {
+                        return e
+                }
+		n, e := c.Read(b)
+		if e != nil {
+                        continue
 		}
+
+		length := uint16(b[0])<<8 | uint16(b[1])
+		if length == 0 {
+		        return &Error{Error: "received nil msg length"}
+		}
+                m := make([]byte, length)
+
+	        n, e = c.Read(m)
+		if e != nil {
+		        continue
+		}
+		i := n
+		if i < int(length) {
+		        n, e = c.Read(m[i:])
+		        if e != nil {
+                                continue
+			}
+			i += n
+		}
+                go f(c, c.RemoteAddr(), m)
 	}
 	panic("not reached")
 }
@@ -133,56 +103,32 @@ func accepterTCP(l *net.TCPListener, ch chan *Request, quit chan bool) {
 //
 //         var m *myserv                       
 //         ch := make(chan bool)
-//         e  := make(chan os.Error)
-//         go dns.ListenAndServe("127.0.0.1:8053", m, ch, e)
+//         dns.ListenAndServe("127.0.0.1:8053", m, ch)
 //         m <- true                    // stop the goroutine
-func ListenAndServe(addr string, handler Handler, q chan bool, e chan os.Error) {
-	ta, err := net.ResolveTCPAddr(addr)
+func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, []byte)) os.Error {
+	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
-                e <- err
-		return
+		return err
 	}
-	lt, err := net.ListenTCP("tcp", ta)
+	l, err := net.ListenTCP("tcp", a)
 	if err != nil {
-                e <- err
-		return
+		return err
 	}
+        err = ServeTCP(l, f)
+	return err
+}
 
-        ua, err := net.ResolveUDPAddr(addr)
-        if err != nil {
-                e <- err
-                return
-        }
-	lu, err := net.ListenUDP("udp", ua)
-        if err != nil {
-                e <- err
-                return
-        }
-
-        rc := make(chan *Request)
-        qt := make(chan bool)
-        qu := make(chan bool)
-        go accepterTCP(lt, rc, qt)
-        go accepterUDP(lu, rc, qu)
-
-        for {
-                select {
-                case <-q:
-                        /* quit received, lets stop */
-                        lt.Close()
-                        lu.Close()
-                        qt <- true
-                        qu <- true
-                case r:=<-rc:
-                        /* request recieved */
-                        if r.Tcp {
-                                go handler.ReplyTCP(r.TCPConn, r.Addr, r.Buf)
-                        } else {
-                                go handler.ReplyUDP(r.UDPConn, r.Addr, r.Buf)
-                        }
-                }
-        }
-	return
+func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, []byte)) os.Error {
+	a, err := net.ResolveUDPAddr(addr)
+	if err != nil {
+		return err
+	}
+	l, err := net.ListenUDP("tcp", a)
+	if err != nil {
+		return err
+	}
+        err = ServeUDP(l, f)
+	return err
 }
 
 // Send a buffer on the TCP connection.
