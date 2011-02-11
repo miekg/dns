@@ -39,7 +39,7 @@ const (
 
 // The RRSIG needs to be converted to wireformat with some of
 // the rdata (the signature) missing. Use this struct to easy
-// the conversion (and re-use the pack/unpack functions.
+// the conversion (and re-use the pack/unpack functions).
 type rrsigWireFmt struct {
 	TypeCovered uint16
 	Algorithm   uint8
