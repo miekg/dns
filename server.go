@@ -11,34 +11,7 @@ import (
 	"net"
 )
 
-type Server int                 // Doesn't really matter
-
-// Wrap request in this struct
-type Request struct {
-	Tcp     bool         // True for tcp, false for udp
-	Buf     []byte       // The received message
-	Addr    net.Addr     // Remote site
-	UDPConn *net.UDPConn // Connection for UDP
-	TCPConn *net.TCPConn // Connection for TCP
-	Error   os.Error     // Any errors that are found
-}
-
-// Every nameserver implements the Hander interface. It defines
-// the kind of nameserver
-type Handler interface {
-	// Receives the raw message content and writes back 
-	// an UDP response. An UDP connection needs a remote
-	// address to write to. ServeUDP() must take care of sending
-	// any response back to the requestor.
-	ReplyUDP(c *net.UDPConn, a net.Addr, in []byte)
-	// Receives the raw message content and writes back
-	// a TCP response. A TCP connection does need to
-	// know explicitly be told the remote address. ServeTCP() must
-	// take care of sending back a response to the requestor.
-	ReplyTCP(c *net.TCPConn, a net.Addr, in []byte)
-}
-
-func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, []byte)) os.Error {
+func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, *Msg)) os.Error {
 	for {
                 m := make([]byte, DefaultMsgSize)
                 n, radd, e := l.ReadFromUDP(m)
@@ -46,12 +19,16 @@ func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, []byte)) os.Error {
                         continue
                 }
                 m = m[:n]
-                go f(l, radd, m)
+                msg := new(Msg)
+                if ! msg.Unpack(m) {
+                        continue
+                }
+                go f(l, radd, msg)
 	}
 	panic("not reached")
 }
 
-func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, []byte)) os.Error {
+func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
         b := make([]byte, 2)
 	for {
                 c, e := l.AcceptTCP()
@@ -81,7 +58,11 @@ func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, []byte)) os.Err
 			}
 			i += n
 		}
-                go f(c, c.RemoteAddr(), m)
+                msg := new(Msg)
+                if ! msg.Unpack(m) {
+                        continue
+                }
+                go f(c, c.RemoteAddr(), msg)
 	}
 	panic("not reached")
 }
@@ -105,7 +86,7 @@ func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, []byte)) os.Err
 //         ch := make(chan bool)
 //         dns.ListenAndServe("127.0.0.1:8053", m, ch)
 //         m <- true                    // stop the goroutine
-func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, []byte)) os.Error {
+func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
 		return err
@@ -118,7 +99,7 @@ func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, []byte)) os.E
 	return err
 }
 
-func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, []byte)) os.Error {
+func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, *Msg)) os.Error {
 	a, err := net.ResolveUDPAddr(addr)
 	if err != nil {
 		return err

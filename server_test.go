@@ -3,11 +3,8 @@ package dns
 import (
 	"testing"
 	"net"
-        "os"
 	"time"
 )
-
-type server int
 
 func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 	m := new(Msg)
@@ -33,35 +30,27 @@ func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 	return out
 }
 
-func (h *server) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) {
-	inmsg := new(Msg)
-	inmsg.Unpack(in)
-	if inmsg.MsgHdr.Response == true {
+func replyUDP(c *net.UDPConn, a net.Addr, in *Msg) {
+	if in.MsgHdr.Response == true {
 		// Uh... answering to an response??
 		// dont think so
 		return
 	}
-	out := createpkg(inmsg.MsgHdr.Id, false, a)
+	out := createpkg(in.MsgHdr.Id, false, a)
 	SendUDP(out, c, a)
 }
 
-func (h *server) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
-	inmsg := new(Msg)
-	inmsg.Unpack(in)
-	if inmsg.MsgHdr.Response == true {
+func replyTCP(c *net.TCPConn, a net.Addr, in *Msg) {
+	if in.MsgHdr.Response == true {
 		return
 	}
-	out := createpkg(inmsg.MsgHdr.Id, true, a)
+	out := createpkg(in.MsgHdr.Id, true, a)
 	SendTCP(out, c, a)
 }
 
 func TestResponder(t *testing.T) {
-        var h *server
-        quit := make(chan bool)
-        e    := make(chan os.Error)
-        go ListenAndServe("127.0.0.1:8053", h, quit, e)
+//        ListenAndServeTCP("127.0.0.1:8053", replyTCP)
         time.Sleep(2 * 1e9)
-        quit <- true
 }
 
 /*
