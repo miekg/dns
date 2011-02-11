@@ -3,7 +3,6 @@ q \
 chaos \
 axfr \
 reflect \
-rude \
 funkensturm \
 
 all: 
