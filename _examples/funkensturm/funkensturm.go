@@ -16,9 +16,6 @@ import (
 	"strings"
 )
 
-// Define a responder that takes care of the incoming queries.
-type server dns.Server
-
 // Define a slice of channels for the resolver for sending the queries somewhere else.
 var qr []*dns.Resolver
 
@@ -79,11 +76,7 @@ func verboseprint(i *dns.Msg, msg string) {
 	fmt.Printf("<<<<<< %s\n\n", msg)
 }
 
-func doFunkensturm(i []byte) ([]byte, os.Error) {
-	pkt := new(dns.Msg)
-	if !pkt.Unpack(i) {
-		return nil, &dns.Error{Error: "Unpacking packet failed"}
-	}
+func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	if *verbose {
 		verboseprint(pkt, "ORIGINAL INCOMING")
 	}
@@ -149,7 +142,7 @@ func doFunkensturm(i []byte) ([]byte, os.Error) {
 	return out, nil
 }
 
-func (s *server) ReplyUDP(c *net.UDPConn, a net.Addr, i []byte) {
+func replyUDP(c *net.UDPConn, a net.Addr, i *dns.Msg) {
 	out, err := doFunkensturm(i)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -162,7 +155,7 @@ func (s *server) ReplyUDP(c *net.UDPConn, a net.Addr, i []byte) {
 	// nothing is send back
 }
 
-func (s *server) ReplyTCP(c *net.TCPConn, a net.Addr, i []byte) {
+func replyTCP(c *net.TCPConn, a net.Addr, i *dns.Msg) {
 	out, err := doFunkensturm(i)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -181,6 +174,34 @@ func splitAddrPort(s string) (a, p string) {
 	items := strings.Split(s, ":", 2)
 	a = items[0]
 	p = items[1]
+	return
+}
+
+func tcp(addr string, e chan os.Error) {
+	a, err := net.ResolveTCPAddr(addr)
+	if err != nil {
+		e <- err
+	}
+	l, err := net.ListenTCP("tcp", a)
+	if err != nil {
+		e <- err
+	}
+	err = dns.ServeTCP(l, replyTCP)
+	e <- err
+	return
+}
+
+func udp(addr string, e chan os.Error) {
+	a, err := net.ResolveUDPAddr(addr)
+	if err != nil {
+		e <- err
+	}
+	l, err := net.ListenUDP("udp", a)
+	if err != nil {
+		e <- err
+	}
+	err = dns.ServeUDP(l, replyUDP)
+	e <- err
 	return
 }
 
@@ -211,23 +232,20 @@ func main() {
 		return
 	}
 
-	// The server
-	var srv *server
-	quit := make(chan bool)
         err  := make(chan os.Error)
-	go dns.ListenAndServe(*sserver, srv, quit, err)
+        go udp(*sserver, err)
+	go tcp(*sserver, err)
 
 forever:
 	for {
-		// Wait for a signal to stop
 		select {
                 case e := <-err:
                         fmt.Printf("Error received, stopping: %s\n", e.String())
+                        break forever
 		case <-signal.Incoming:
 			fmt.Printf("Signal received, stopping")
-			quit <- true
 			break forever
 		}
 	}
-	close(quit)
+	close(err)
 }

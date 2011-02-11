@@ -87,7 +87,7 @@ func replyTCP(c *net.TCPConn, a net.Addr, in *dns.Msg) {
 	dns.SendTCP(out, c, a)
 }
 
-func trackTCP(addr string, e chan os.Error) {
+func tcp(addr string, e chan os.Error) {
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
 		e <- err
@@ -101,7 +101,7 @@ func trackTCP(addr string, e chan os.Error) {
 	return
 }
 
-func trackUDP(addr string, e chan os.Error) {
+func udp(addr string, e chan os.Error) {
 	a, err := net.ResolveUDPAddr(addr)
 	if err != nil {
 		e <- err
@@ -117,8 +117,8 @@ func trackUDP(addr string, e chan os.Error) {
 
 func main() {
 	e := make(chan os.Error)
-	go trackUDP("127.0.0.1:8053", e)
-	go trackTCP("127.0.0.1:8053", e)
+	go udp("127.0.0.1:8053", e)
+	go tcp("127.0.0.1:8053", e)
 
 forever:
 	for {
