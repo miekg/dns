@@ -67,25 +67,6 @@ func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, *Msg)) os.Error
 	panic("not reached")
 }
 
-// This function implements a nameserver. It should be run as a goroutines.
-// The function itself starts two new goroutines (one for TCP and one for UDP)
-// and for each incoming message run the ReplyTCP or ReplyUCP again as a 
-// goroutine.
-// 
-// Typical usage of ListenAndServe:
-//
-//         type myserv dns.Server
-//         func (s *myserv) ReplyUDP(c *net.UDPConn, a net.Addr, in []byte) { 
-//              /* UDP reply */ 
-//         }
-//         func (s *myserv) ReplyTCP(c *net.TCPConn, a net.Addr, in []byte) {
-//              /* TCP reply */
-//         }
-//
-//         var m *myserv                       
-//         ch := make(chan bool)
-//         dns.ListenAndServe("127.0.0.1:8053", m, ch)
-//         m <- true                    // stop the goroutine
 func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
@@ -104,7 +85,7 @@ func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, *Msg)) os.Err
 	if err != nil {
 		return err
 	}
-	l, err := net.ListenUDP("tcp", a)
+	l, err := net.ListenUDP("udp", a)
 	if err != nil {
 		return err
 	}

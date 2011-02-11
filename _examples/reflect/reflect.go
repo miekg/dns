@@ -18,12 +18,11 @@ package main
 
 import (
 	"os"
+	"os/signal"
 	"net"
 	"dns"
-        "fmt"
+	"fmt"
 	"strconv"
-	"runtime"
-	"os/signal"
 )
 
 func reply(a net.Addr, in *dns.Msg, tcp bool) *dns.Msg {
@@ -65,7 +64,7 @@ func replyUDP(c *net.UDPConn, a net.Addr, in *dns.Msg) {
 	if m == nil {
 		return
 	}
-        fmt.Fprintf(os.Stderr, "%v\n", m)
+	fmt.Fprintf(os.Stderr, "%v\n", m)
 	out, ok := m.Pack()
 	if !ok {
 		println("Failed to pack")
@@ -79,7 +78,7 @@ func replyTCP(c *net.TCPConn, a net.Addr, in *dns.Msg) {
 	if m == nil {
 		return
 	}
-        fmt.Fprintf(os.Stderr, "%v\n", m)
+	fmt.Fprintf(os.Stderr, "%v\n", m)
 	out, ok := m.Pack()
 	if !ok {
 		println("Failed to pack")
@@ -88,7 +87,50 @@ func replyTCP(c *net.TCPConn, a net.Addr, in *dns.Msg) {
 	dns.SendTCP(out, c, a)
 }
 
+func trackTCP(addr string, e chan os.Error) {
+	a, err := net.ResolveTCPAddr(addr)
+	if err != nil {
+		e <- err
+	}
+	l, err := net.ListenTCP("tcp", a)
+	if err != nil {
+		e <- err
+	}
+	err = dns.ServeTCP(l, replyTCP)
+	e <- err
+	return
+}
+
+func trackUDP(addr string, e chan os.Error) {
+	a, err := net.ResolveUDPAddr(addr)
+	if err != nil {
+		e <- err
+	}
+	l, err := net.ListenUDP("udp", a)
+	if err != nil {
+		e <- err
+	}
+	err = dns.ServeUDP(l, replyUDP)
+	e <- err
+	return
+}
 
 func main() {
-        dns.ListenAndServeUDP("127.0.0.1:8053", replyUDP)
+	e := make(chan os.Error)
+	go trackUDP("127.0.0.1:8053", e)
+	go trackTCP("127.0.0.1:8053", e)
+
+forever:
+	for {
+		// Wait for a signal to stop
+		select {
+		case err := <-e:
+			fmt.Printf("Error received, stopping: %s\n", err.String())
+			break forever
+		case <-signal.Incoming:
+			fmt.Printf("Signal received, stopping\n")
+			break forever
+		}
+	}
+	close(e)
 }
