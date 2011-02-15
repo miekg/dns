@@ -3,7 +3,7 @@
 
 %{ 
 
-package parse
+package dns
 
 import (
     "fmt"
