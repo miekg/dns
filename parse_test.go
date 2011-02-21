@@ -1,8 +1,8 @@
 package dns
 
 import (
-        "fmt"
-        "net"
+	"fmt"
+	"net"
 	"testing"
 	"crypto/rsa"
 )
@@ -75,7 +75,7 @@ Activate: 20110109154937`
 	k.Hdr.Rrtype = TypeDNSKEY
 	k.Hdr.Class = ClassINET
 	k.Hdr.Name = "miek.nl."
-        k.Hdr.Ttl = 3600
+	k.Hdr.Ttl = 3600
 	k.Protocol = 3
 	k.Flags = 256
 	p, _ := k.PrivateKeySetString(a)
@@ -92,47 +92,66 @@ Activate: 20110109154937`
 		t.Fail()
 	}
 
-        soa := new(RR_SOA)
-        soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
-        soa.Ns = "open.nlnetlabs.nl."
-        soa.Mbox = "miekg.atoom.net."
-        soa.Serial = 1293945905
-        soa.Refresh = 14400
-        soa.Retry = 3600
-        soa.Expire = 604800
-        soa.Minttl = 86400
+	soa := new(RR_SOA)
+	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+	soa.Ns = "open.nlnetlabs.nl."
+	soa.Mbox = "miekg.atoom.net."
+	soa.Serial = 1293945905
+	soa.Refresh = 14400
+	soa.Retry = 3600
+	soa.Expire = 604800
+	soa.Minttl = 86400
 
-        sig := new(RR_RRSIG)
-        sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
-        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
-        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
-        sig.KeyTag = k.KeyTag()
-        sig.SignerName = k.Hdr.Name
-        sig.Algorithm = k.Algorithm
+	sig := new(RR_RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.KeyTag = k.KeyTag()
+	sig.SignerName = k.Hdr.Name
+	sig.Algorithm = k.Algorithm
 
-        sig.Sign(p, []RR{soa})
-        fmt.Printf("%v\n%v\n%v\n", k, soa, sig)
+	sig.Sign(p, []RR{soa})
+	fmt.Printf("%v\n%v\n%v\n", k, soa, sig)
 }
 
 func TestA(t *testing.T) {
-        a := new(RR_A)
-        a.Hdr = RR_Header{"miek.nl.", TypeA, ClassINET, 14400, 0}
-        a.A = net.ParseIP("192.168.1.1")
-        str := a.String()
-        if str != "miek.nl.\t14400\tIN\tA\t192.168.1.1" {
-                t.Log(str)
-                t.Fail()
-        }
+	a := new(RR_A)
+	a.Hdr = RR_Header{"miek.nl.", TypeA, ClassINET, 14400, 0}
+	a.A = net.ParseIP("192.168.1.1")
+	str := a.String()
+	if str != "miek.nl.\t14400\tIN\tA\t192.168.1.1" {
+		t.Log(str)
+		t.Fail()
+	}
 }
 
 func TestQuadA(t *testing.T) {
-        a := new(RR_AAAA)
-        a.Hdr = RR_Header{"miek.nl.", TypeAAAA, ClassINET, 14400, 0}
-        a.AAAA = net.ParseIP("::1")
-        str := a.String()
-        if str != "miek.nl.\t14400\tIN\tAAAA\t::1" {
-                t.Log(str)
+	a := new(RR_AAAA)
+	a.Hdr = RR_Header{"miek.nl.", TypeAAAA, ClassINET, 14400, 0}
+	a.AAAA = net.ParseIP("::1")
+	str := a.String()
+	if str != "miek.nl.\t14400\tIN\tAAAA\t::1" {
+		t.Log(str)
+		t.Fail()
+	}
+}
+
+func TestDotInName(t *testing.T) {
+	buf := make([]byte, 20)
+	packDomainName("aa\\.bb.nl", buf, 0)
+        // index 3 must be a real dot
+        if buf[3] != '.' {
+                t.Log("Dot should be a real dot")
                 t.Fail()
         }
 
+        if buf[6] != 2 {
+                t.Log("This must have the value 2")
+                t.Fail()
+        }
+
+        dom, _, ok := unpackDomainName(buf, 0)
+        // printing it should yield the backspace again
+        println(dom)
+        println(ok)
 }

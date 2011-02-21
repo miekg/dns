@@ -22,7 +22,7 @@ import (
 	"time"
 	"strconv"
 	"encoding/base64"
-        "encoding/base32"
+	"encoding/base32"
 	"encoding/hex"
 )
 
@@ -76,14 +76,14 @@ var Rr_str = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
-        TypeIPSECKEY:   "IPSECKEY",
+	TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
 	TypeNSEC:       "NSEC",
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM",
-        TypeTALINK:     "TALINK",
+	TypeTALINK:     "TALINK",
 	TypeSPF:        "SPF",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
@@ -147,6 +147,7 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
+	// Except for escaped dots (\.), which are normal dots.
 	// There is also a trailing zero.
 	// Check that we have all the space we need.
 	tot := len(s) + 1
@@ -156,22 +157,32 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '.' {
-			if i-begin >= 1<<6 { // top two bits of length must be clear
-				return len(msg), false
-			}
-			msg[off] = byte(i - begin)
-			off++
-			for j := begin; j < i; j++ {
-				msg[off] = s[j]
-				off++
-			}
-			begin = i + 1
+        bs := []byte(s)
+        ls := len(bs)
+	for i := 0; i < ls; i++ {
+		if bs[i] == '\\' {
+                        for j := i; j < len(s)-1; j++ {
+                                bs[j] = bs[j+1]
+                        }
+                        ls--
+                        continue
+		}
+
+		if bs[i] == '.' {
+                        if i-begin >= 1<<6 { // top two bits of length must be clear
+                                return len(msg), false
+                        }
+                        msg[off] = byte(i - begin)
+                        off++
+                        for j := begin; j < i; j++ {
+                                msg[off] = bs[j]
+                                off++
+                        }
+                        begin = i + 1
 		}
 	}
 	// Root label is special
-	if s == "." {
+	if string(bs) == "." {
 		return off, true
 	}
 	msg[off] = 0
@@ -367,39 +378,39 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing string tag %v", f.Tag)
 				return len(msg), false
-                        case "base32":
-                                b32, err := packBase32([]byte(s))
+			case "base32":
+				b32, err := packBase32([]byte(s))
 				if err != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing base32")
 					return len(msg), false
 				}
-                                copy(msg[off:off+len(b32)], b32)
-                                off += len(b32)
+				copy(msg[off:off+len(b32)], b32)
+				off += len(b32)
 			case "base64":
-                                b64, err := packBase64([]byte(s))
+				b64, err := packBase64([]byte(s))
 				if err != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
 					return len(msg), false
 				}
-                                copy(msg[off:off+len(b64)], b64)
-                                off += len(b64)
-                                /*
-				b64len := base64.StdEncoding.DecodedLen(len(s))
-				_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
-				if err != nil {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
-					return len(msg), false
-				}
-				off += b64len
-                                */
+				copy(msg[off:off+len(b64)], b64)
+				off += len(b64)
+				/*
+					b64len := base64.StdEncoding.DecodedLen(len(s))
+					_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
+					if err != nil {
+						//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
+						return len(msg), false
+					}
+					off += b64len
+				*/
 			case "domain-name":
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
 					return len(msg), false
 				}
-                        case "size-hex":
-                                fallthrough;
+			case "size-hex":
+				fallthrough
 			case "hex":
 				// There is no length encoded here
 				h, e := hex.DecodeString(s)
@@ -604,8 +615,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 2 // Algorithm(1) + Type(1)
 				case "RR_NSEC3PARAM":
 					consumed = 5 // Hash(1) + Flags(1) + Iterations(2) + SaltLength(1)
-                                case "RR_RFC3597":
-                                        fallthrough; // Rest is the unknown data
+				case "RR_RFC3597":
+					fallthrough // Rest is the unknown data
 				default:
 					consumed = 0 // return len(msg), false?
 				}
@@ -636,7 +647,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
 					return len(msg), false
 				}
-                        case "size-base32":
+			case "size-base32":
 				var size int
 				switch val.Type().Name() {
 				case "RR_NSEC3":
@@ -645,15 +656,15 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 						name := val.FieldByName("HashLength")
 						size = int(name.(*reflect.UintValue).Get())
 					}
-                                }
+				}
 				if off+size > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-base32 string")
 					return len(msg), false
 				}
 				s = unpackBase32(msg[off : off+size])
 				off += size
-                        case "size-hex":
-                                // a "size" string, but a it must be encoded in hex in the string
+			case "size-hex":
+				// a "size" string, but a it must be encoded in hex in the string
 				var size int
 				switch val.Type().Name() {
 				case "RR_NSEC3":
@@ -665,7 +676,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 						name := val.FieldByName("HashLength")
 						size = int(name.(*reflect.UintValue).Get())
 					}
-                                }
+				}
 				if off+size > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking hex-size string")
 					return len(msg), false
@@ -800,11 +811,11 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// make an rr of that type and re-unpack.
 	// again inefficient but doesn't need to be fast.
 	mk, known := rr_mk[int(h.Rrtype)]
-        if !known {
-                rr = new(RR_RFC3597)
+	if !known {
+		rr = new(RR_RFC3597)
 	} else {
-                rr = mk()
-        }
+		rr = mk()
+	}
 	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, true
