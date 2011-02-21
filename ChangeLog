@@ -1,8 +1,9 @@
 xx YYY 2011: 0.0.1 Miek Gieben <miek@miek.nl>
     * Most known RRs supported
-    * DNSSEC (verify/signing)
+    * Unknown RRs (RFC3597) supported
+    * DNSSEC (verification and signing)
     * Key generation
     * Private key file parsing from BIND files
     * TSIG
     * EDNS0, NSID
-    * Cherry picked GRONG for server side ideas
+    * Server side support

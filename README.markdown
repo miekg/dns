@@ -10,7 +10,6 @@ be build with: `make examples` (after the dns package has been installed)
 
 The major omission at the moment is parsing Resource Records from
 strings. (i.e. supporting the RFC 1035 zone file format).
-Also the IPv6 support needs to be tested
 
 Everything else should be present and working. If not, drop me an email.
 
