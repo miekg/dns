@@ -62,6 +62,7 @@ const (
 	TypeDNSKEY     = 48
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
+	TypeTALINK     = 58
 	TypeSPF        = 99
 
 	TypeTKEY = 249
@@ -73,8 +74,8 @@ const (
 	TypeMAILA = 254
 	TypeALL   = 255
 
-        TypeTA    = 32768
-        TypeDLV   = 32769
+	TypeTA  = 32768
+	TypeDLV = 32769
 
 	// valid Question.qclass
 	ClassINET   = 1
@@ -532,6 +533,22 @@ func (rr *RR_TA) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
+
+type RR_TALINK struct {
+	Hdr          RR_Header
+	PreviousName string "domain"
+	NextName     string "domain"
+}
+
+func (rr *RR_TALINK) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_TALINK) String() string {
+	return rr.Hdr.String() +
+		" " + rr.PreviousName + " " + rr.NextName
+}
+
 type RR_SSHFP struct {
 	Hdr         RR_Header
 	Algorithm   uint8
@@ -696,6 +713,7 @@ var rr_mk = map[int]func() RR{
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
+	TypeTALINK:     func() RR { return new(RR_TALINK) },
 	TypeSSHFP:      func() RR { return new(RR_SSHFP) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
 	TypeNSEC:       func() RR { return new(RR_NSEC) },

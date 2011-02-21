@@ -82,6 +82,7 @@ var Rr_str = map[uint16]string{
 	TypeDNSKEY:     "DNSKEY",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM",
+        TypeTALINK:     "TALINK",
 	TypeSPF:        "SPF",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
