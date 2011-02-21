@@ -156,3 +156,10 @@ func TestDotInName(t *testing.T) {
                 t.Fail()
         }
 }
+
+func TestQuotedTxt(t *testing.T) {
+	x := new(RR_TXT)
+	x.Hdr = RR_Header{"miek.nl.", TypeTXT, ClassINET, 14400, 0}
+	x.Txt = "Hello, \"Goodbye\""
+        // TODO
+}
