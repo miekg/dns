@@ -42,8 +42,8 @@ func reply(a net.Addr, in *dns.Msg, tcp bool) *dns.Msg {
 
 	r := new(dns.RR_A)
 	r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-	ip, _ := net.ResolveUDPAddr(a.String()) // No general variant for both upd and tcp
-	r.A = ip.IP.To4()                       // To4 very important
+	ip, _ := net.ResolveUDPAddr(a.String())
+	r.A = ip.IP
 
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
@@ -118,7 +118,9 @@ func udp(addr string, e chan os.Error) {
 func main() {
 	e := make(chan os.Error)
 	go udp("127.0.0.1:8053", e)
+	go udp("[::1]:8053", e)
 	go tcp("127.0.0.1:8053", e)
+	go tcp("[::1]:8053", e)
 
 forever:
 	for {
