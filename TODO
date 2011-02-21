@@ -7,9 +7,11 @@ Todo:
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
 * NSEC and nsec3 closest encloser helper functions
-* pack/Unpack smaller. EDNS 'n stuff can be folded in
-* Test impl of nameserver, with a small zone, 1 KSK and online  signing
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
+* pack/Unpack smaller. EDNS 'n stuff can be folded in
+
+Examples:
+* Test impl of nameserver, with a small zone, 1 KSK and online  signing
