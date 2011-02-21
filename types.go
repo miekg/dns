@@ -73,6 +73,9 @@ const (
 	TypeMAILA = 254
 	TypeALL   = 255
 
+        TypeTA    = 32768
+        TypeDLV   = 32769
+
 	// valid Question.qclass
 	ClassINET   = 1
 	ClassCSNET  = 2
@@ -491,6 +494,43 @@ func (rr *RR_DS) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
+type RR_DLV struct {
+	Hdr        RR_Header
+	KeyTag     uint16
+	Algorithm  uint8
+	DigestType uint8
+	Digest     string "hex"
+}
+
+func (rr *RR_DLV) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_DLV) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + strconv.Itoa(int(rr.DigestType)) +
+		" " + strings.ToUpper(rr.Digest)
+}
+
+type RR_TA struct {
+	Hdr        RR_Header
+	KeyTag     uint16
+	Algorithm  uint8
+	DigestType uint8
+	Digest     string "hex"
+}
+
+func (rr *RR_TA) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_TA) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + strconv.Itoa(int(rr.DigestType)) +
+		" " + strings.ToUpper(rr.Digest)
+}
 
 type RR_SSHFP struct {
 	Hdr         RR_Header
@@ -664,4 +704,6 @@ var rr_mk = map[int]func() RR{
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 	TypeTKEY:       func() RR { return new(RR_TKEY) },
 	TypeTSIG:       func() RR { return new(RR_TSIG) },
+	TypeTA:         func() RR { return new(RR_TA) },
+	TypeDLV:        func() RR { return new(RR_DLV) },
 }

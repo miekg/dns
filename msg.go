@@ -88,6 +88,8 @@ var Rr_str = map[uint16]string{
 	TypeAXFR:       "AXFR", // Meta RR
 	TypeIXFR:       "IXFR", // Meta RR
 	TypeALL:        "ANY",  // Meta RR
+	TypeTA:         "TA",
+	TypeDLV:        "DLV",
 }
 
 // Reverse of Rr_str (needed for string parsing).
