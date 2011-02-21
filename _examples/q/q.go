@@ -52,6 +52,9 @@ FLAGS:
 				continue FLAGS
 			}
 		}
+                // If it starts with TYPExxx it is unknown rr
+                // TODO
+
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
