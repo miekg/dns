@@ -609,10 +609,13 @@ func (rr *RR_NSEC3) String() string {
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
 		" " + strings.ToUpper(rr.Salt) +
-		" " + rr.NextDomain // must base32?
+		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
-		s += " " + Rr_str[rr.TypeBitMap[i]]
+                if  _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
+		        s += " " + Rr_str[rr.TypeBitMap[i]]
+                } else {
+                        s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
+                }
 	}
 	return s
 }
