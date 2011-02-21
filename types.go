@@ -134,7 +134,7 @@ const (
 
 // DNS queries.
 type Question struct {
-	Name   string "domain-name" // "domain-name" specifies encoding; see packers below
+	Name   string "domain-name" // "domain-name" specifies encoding
 	Qtype  uint16
 	Qclass uint16
 }
@@ -470,8 +470,11 @@ func (rr *RR_NSEC) Header() *RR_Header {
 func (rr *RR_NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		// Check if map exists, otherwise "TYPE" + strcov.Itoa(int(rr.TypeBitMap[i]))
-		s = s + " " + Rr_str[rr.TypeBitMap[i]]
+                if  _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
+		        s += " " + Rr_str[rr.TypeBitMap[i]]
+                } else {
+                        s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
+                }
 	}
 	return s
 }
