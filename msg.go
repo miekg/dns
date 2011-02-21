@@ -76,6 +76,7 @@ var Rr_str = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
+        TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
 	TypeNSEC:       "NSEC",
@@ -820,14 +821,14 @@ func reverse(m map[uint16]string) map[string]uint16 {
 }
 
 // Convert a MsgHdr to a string, mimic the way Dig displays headers:
-//;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48404
+//;; opcode: QUERY, status: NOERROR, id: 48404
 //;; flags: qr aa rd ra;
 func (h *MsgHdr) String() string {
 	if h == nil {
 		return "<nil> MsgHdr"
 	}
 
-	s := ";; ->>HEADER<<- opcode: " + opcode_str[h.Opcode]
+	s := ";; opcode: " + opcode_str[h.Opcode]
 	s += ", status: " + rcode_str[h.Rcode]
 	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
 

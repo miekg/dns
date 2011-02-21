@@ -6,7 +6,6 @@ Todo:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
-* unknown records 
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 
 Longer term:

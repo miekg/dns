@@ -56,7 +56,7 @@ const (
 	TypeNXT        = 30
 	TypeDS         = 43
 	TypeSSHFP      = 44
-	TypeIPSECKEY   = 45 // Not implemented
+	TypeIPSECKEY   = 45 // No type implemented
 	TypeRRSIG      = 46
 	TypeNSEC       = 47
 	TypeDNSKEY     = 48
