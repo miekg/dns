@@ -14,7 +14,3 @@ Issues:
 * quoted quotes in txt records
 * Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
-
-Funkensturm:
-* TCP: how to handle stuff like AXFR
-* use package log
