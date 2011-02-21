@@ -138,7 +138,7 @@ func TestQuadA(t *testing.T) {
 
 func TestDotInName(t *testing.T) {
 	buf := make([]byte, 20)
-	packDomainName("aa\\.bb.nl", buf, 0)
+	packDomainName("aa\\.bb.nl.", buf, 0)
         // index 3 must be a real dot
         if buf[3] != '.' {
                 t.Log("Dot should be a real dot")
@@ -149,9 +149,10 @@ func TestDotInName(t *testing.T) {
                 t.Log("This must have the value 2")
                 t.Fail()
         }
-
-        dom, _, ok := unpackDomainName(buf, 0)
+        dom, _, _ := unpackDomainName(buf, 0)
         // printing it should yield the backspace again
-        println(dom)
-        println(ok)
+        if dom != "aa\\.bb.nl." {
+                t.Log("Dot should have been escaped: " + dom)
+                t.Fail()
+        }
 }

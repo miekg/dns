@@ -2,12 +2,10 @@ Todo:
 * wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Tsig generation for replies (request MAC)
-* nsupdate
-* escaped dots in names \.
+* nsupdate, it's there except for the names
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
-* Multi line output?
 * NSEC and nsec3 closest encloser helper functions
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing

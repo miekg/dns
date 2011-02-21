@@ -223,7 +223,15 @@ Loop:
 			if off+c > len(msg) {
 				return "", len(msg), false
 			}
-			s += string(msg[off:off+c]) + "."
+                        for j := off; j < off+c; j++ {
+                                if msg[j] == '.' {
+                                        // literal dot, escape it
+                                        s += "\\."
+                                } else {
+                                        s += string(msg[j])
+                                }
+                        }
+                        s += "."
 			off += c
 		case 0xC0:
 			// pointer to somewhere else in msg.
