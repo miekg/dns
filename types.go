@@ -533,7 +533,6 @@ func (rr *RR_TA) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-
 type RR_TALINK struct {
 	Hdr          RR_Header
 	PreviousName string "domain"
@@ -671,6 +670,22 @@ func (rr *RR_TKEY) Header() *RR_Header {
 func (rr *RR_TKEY) String() string {
 	// It has no presentation format
 	return ""
+}
+
+// Unknown RR representation
+type RR_RFC3597 struct {
+        Hdr     RR_Header
+        Rdata   string "hex"
+}
+
+func (rr *RR_RFC3597) Header() *RR_Header {
+        return &rr.Hdr
+}
+
+func (rr *RR_RFC3597) String() string {
+        s := rr.Hdr.String()
+        s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+        return s
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
