@@ -399,8 +399,9 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					return len(msg), false
 				}
                         case "size-hex":
+                                fallthrough;
 			case "hex":
-				// There is no length encoded here, for DS at least
+				// There is no length encoded here
 				h, e := hex.DecodeString(s)
 				if e != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
