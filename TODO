@@ -1,28 +1,22 @@
 Todo:
 * wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
-* Test impl of nameserver, with a small zone, 1 KSK and online  signing
 * Tsig generation for replies (request MAC)
+* nsupdate
+* escaped dots in names \.
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
 * Multi line output?
 * NSEC and nsec3 closest encloser helper functions
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
+* Test impl of nameserver, with a small zone, 1 KSK and online  signing
 
 Issues:
-* escaped dots in names \.
 * quoted quotes in txt records
-* Check the network order, it works now, but this is on Intel
+* Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
-* shortened ipv6 addresses are not parsed correctly (maybe net issue)
-* Convenience functions? Not sure if I want them??
-    - NXDomain pkt
-    - FormErr pkt
-    - for new(RR*)
-    - nsupdate
 
 Funkensturm:
-* use exp/eval - to inteprete the config file??
-* TCP how to handle stuff like AXFR
+* TCP: how to handle stuff like AXFR
 * use package log

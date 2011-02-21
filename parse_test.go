@@ -2,6 +2,7 @@ package dns
 
 import (
         "fmt"
+        "net"
 	"testing"
 	"crypto/rsa"
 )
@@ -111,4 +112,27 @@ Activate: 20110109154937`
 
         sig.Sign(p, []RR{soa})
         fmt.Printf("%v\n%v\n%v\n", k, soa, sig)
+}
+
+func TestA(t *testing.T) {
+        a := new(RR_A)
+        a.Hdr = RR_Header{"miek.nl.", TypeA, ClassINET, 14400, 0}
+        a.A = net.ParseIP("192.168.1.1")
+        str := a.String()
+        if str != "miek.nl.\t14400\tIN\tA\t192.168.1.1" {
+                t.Log(str)
+                t.Fail()
+        }
+}
+
+func TestQuadA(t *testing.T) {
+        a := new(RR_AAAA)
+        a.Hdr = RR_Header{"miek.nl.", TypeAAAA, ClassINET, 14400, 0}
+        a.AAAA = net.ParseIP("::1")
+        str := a.String()
+        if str != "miek.nl.\t14400\tIN\tAAAA\t::1" {
+                t.Log(str)
+                t.Fail()
+        }
+
 }
