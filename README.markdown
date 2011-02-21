@@ -34,6 +34,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 2915 - NAPTR
 * 3110 - RSASHA1 DNS keys
 * 3225 - DO bit (DNSSEC OK)
+* 3597 - Unkown RRs
 * 4033/4034/4035 - DNSSEC + validation functions
 * 4255 - SSHFP
 * 4408 - SPF
