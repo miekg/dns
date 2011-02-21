@@ -18,7 +18,6 @@ GOFILES=\
 	nsec3.go\
 	resolver.go\
 	config.go\
-	rfc3597.go\
 	server.go \
 #	y.go\
 

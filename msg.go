@@ -602,6 +602,8 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					consumed = 2 // Algorithm(1) + Type(1)
 				case "RR_NSEC3PARAM":
 					consumed = 5 // Hash(1) + Flags(1) + Iterations(2) + SaltLength(1)
+                                case "RR_RFC3597":
+                                        fallthrough; // Rest is the unknown data
 				default:
 					consumed = 0 // return len(msg), false?
 				}
@@ -773,7 +775,6 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	off1, ok = packStruct(rr.Header(), msg, off)
 	off2, ok = packStruct(rr, msg, off)
 	if !ok {
-		println("WAAA")
 		return len(msg), false
 	}
 
@@ -797,11 +798,11 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// make an rr of that type and re-unpack.
 	// again inefficient but doesn't need to be fast.
 	mk, known := rr_mk[int(h.Rrtype)]
-	if !known {
-		return &h, end, true // false, or unknown RR??
-	}
-
-	rr = mk()
+        if !known {
+                rr = new(RR_RFC3597)
+	} else {
+                rr = mk()
+        }
 	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, true

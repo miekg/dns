@@ -98,8 +98,18 @@ func (h *RR_Header) String() string {
 		s += h.Name + "\t"
 	}
 	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
-	s = s + Class_str[h.Class] + "\t"
-	s = s + Rr_str[h.Rrtype] + "\t"
+
+        if _, ok := Class_str[h.Class]; ok {
+	        s += Class_str[h.Class] + "\t"
+        } else {
+                s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
+        }
+
+        if _, ok := Rr_str[h.Rrtype]; ok {
+                s += Rr_str[h.Rrtype] + "\t"
+        } else {
+                s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
+        }
 	return s
 }
 
