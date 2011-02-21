@@ -1,15 +1,13 @@
 Todo:
 * wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
-* IP6 testing - in resolver and also in responder code
-        extend Responder interface with ipv6?
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
-* NSEC and nsec3 closest encloser helper functions
 * Tsig generation for replies (request MAC)
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
 * Multi line output?
+* NSEC and nsec3 closest encloser helper functions
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 
 Issues:
