@@ -90,6 +90,7 @@ var Rr_str = map[uint16]string{
 	TypeAXFR:       "AXFR", // Meta RR
 	TypeIXFR:       "IXFR", // Meta RR
 	TypeALL:        "ANY",  // Meta RR
+        TypeURI:        "URI",
 	TypeTA:         "TA",
 	TypeDLV:        "DLV",
 }

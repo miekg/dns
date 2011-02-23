@@ -74,6 +74,8 @@ const (
 	TypeMAILA = 254
 	TypeALL   = 255
 
+        TypeURI   = 256
+
 	TypeTA  = 32768
 	TypeDLV = 32769
 
@@ -694,6 +696,23 @@ func (rr *RR_RFC3597) String() string {
         return s
 }
 
+type RR_URI struct {
+	Hdr        RR_Header
+        Priority   uint16
+        Weight     uint16
+        Target     string
+}
+
+func (rr *RR_URI) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_URI) String() string {
+        return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
+                " " + strconv.Itoa(int(rr.Weight)) +
+                " " + rr.Target
+}
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {
@@ -743,6 +762,7 @@ var rr_mk = map[int]func() RR{
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 	TypeTKEY:       func() RR { return new(RR_TKEY) },
 	TypeTSIG:       func() RR { return new(RR_TSIG) },
+        TypeURI:        func() RR { return new(RR_URI) },
 	TypeTA:         func() RR { return new(RR_TA) },
 	TypeDLV:        func() RR { return new(RR_DLV) },
 }
