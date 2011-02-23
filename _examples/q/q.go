@@ -6,6 +6,7 @@ import (
 	"os"
 	"flag"
 	"fmt"
+        "strconv"
 	"strings"
 )
 
@@ -30,30 +31,36 @@ func main() {
 
 	flag.Parse()
 
-FLAGS:
+Flags:
 	for i := 0; i < flag.NArg(); i++ {
 		// If it starts with @ it is a nameserver
 		if flag.Arg(i)[0] == '@' {
 			nameserver = flag.Arg(i)
-			continue FLAGS
+			continue Flags
 		}
                 // First class, then type, to make ANY queries possible
 		// And if it looks like type, it is a type
 		for k, v := range dns.Rr_str {
 			if v == strings.ToUpper(flag.Arg(i)) {
 				qtype = k
-				continue FLAGS
+				continue Flags
 			}
 		}
 		// If it looks like a class, it is a class
 		for k, v := range dns.Class_str {
 			if v == strings.ToUpper(flag.Arg(i)) {
 				qclass = k
-				continue FLAGS
+				continue Flags
 			}
 		}
                 // If it starts with TYPExxx it is unknown rr
-                // TODO
+                if strings.HasPrefix(flag.Arg(i), "TYPE") {
+                        i, e := strconv.Atoi(string( []byte(flag.Arg(i))[4:]))
+                        if e == nil {
+                                qtype = uint16(i)
+                                continue Flags
+                        }
+                }
 
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
