@@ -3,6 +3,7 @@ Todo:
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Tsig generation for replies (request MAC)
 * nsupdate, it's there except for the names
+* IXFR
 
 Longer term:
 * Parsing from strings, going with goyacc and own lexer
