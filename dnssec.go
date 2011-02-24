@@ -155,17 +155,23 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
 		return false
 	}
-	// s.Inception and s.Expiration may be 0 (rollover etc.)
-        // the rest must be set
+	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
-	}
+                return false
+        }
+
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Name = rrset[0].Header().Name
 	s.Hdr.Class = rrset[0].Header().Class
 	s.OrigTtl = rrset[0].Header().Ttl
 	s.TypeCovered = rrset[0].Header().Rrtype
-	s.Labels = LabelCount(rrset[0].Header().Name)
 	s.TypeCovered = rrset[0].Header().Rrtype
+	s.Labels = LabelCount(rrset[0].Header().Name)
+        if strings.HasPrefix(rrset[0].Header().Name, "*") {
+                s.Labels--      // wildcards, remove from label count
+        }
+
+        sort.Sort(rrset)
 
 	sigwire := new(rrsigWireFmt)
 	sigwire.TypeCovered = s.TypeCovered
@@ -184,40 +190,11 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		return false
 	}
 	signdata = signdata[:n]
-
-	// identical to Verify // TODO(mg) seperate function
-	for _, r := range rrset {
-		h := r.Header()
-		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		name := h.Name
-		h.Name = strings.ToLower(h.Name)
-		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
-		switch h.Rrtype {
-		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
-		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
-		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
-		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
-			// lower case the domain rdata //
-
-		}
-		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
-		// 6.2. Canonical RR Form. (5) - origTTL
-
-		ttl := h.Ttl
-		h.Ttl = s.OrigTtl
-		wire := make([]byte, DefaultMsgSize)
-		off, ok1 := packRR(r, wire, 0)
-		if !ok1 {
-			return false
-		}
-		wire = wire[:off]
-		h.Ttl = ttl // restore the order in the universe
-		h.Name = name
-		if !ok1 {
-			return false
-		}
-		signdata = append(signdata, wire...)
-	}
+        wire := rawSignatureData(rrset, s)
+        if wire == nil {
+                return false
+        }
+	signdata = append(signdata, wire...)
 
 	var signature []byte
 	var err os.Error
@@ -292,7 +269,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		if r.Header().Rrtype != s.TypeCovered {
 			return false
 		}
-		// Number of labels. TODO(mg) add helper functions
+                //wildcards!
+                //if LabelCount(r.Header().Name) > s.Labels
 	}
 	sort.Sort(rrset)
 
@@ -314,39 +292,11 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		return false
 	}
 	signeddata = signeddata[:n]
-
-	for _, r := range rrset {
-		h := r.Header()
-		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		name := h.Name
-		h.Name = strings.ToLower(h.Name)
-		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
-		switch h.Rrtype {
-		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
-		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
-		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
-		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
-			// lower case the domain rdata //
-
-		}
-		// 6.2. Canonical RR Form. (4) - wildcards, don't understand
-		// 6.2. Canonical RR Form. (5) - origTTL
-
-		ttl := h.Ttl
-		h.Ttl = s.OrigTtl
-		wire := make([]byte, DefaultMsgSize)
-		off, ok1 := packRR(r, wire, 0)
-		if !ok1 {
-			return false
-		}
-		wire = wire[:off]
-		h.Ttl = ttl // restore the order in the universe
-		h.Name = name
-		if !ok1 {
-			return false
-		}
-		signeddata = append(signeddata, wire...)
-	}
+        wire := rawSignatureData(rrset, s)
+        if wire == nil {
+                return false
+        }
+        signeddata = append(signeddata, wire...)
 
 	sigbuf := s.sigBuf() // Get the binary signature data
 
@@ -455,6 +405,44 @@ func exponentToBuf(_E int) []byte {
 	}
 	buf = append(buf, i.Bytes()...)
 	return buf
+}
+
+// return a saw signature data 
+func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
+	for _, r := range rrset {
+		h := r.Header()
+		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
+		name := h.Name
+		h.Name = strings.ToLower(h.Name)
+		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
+		switch h.Rrtype {
+		case TypeNS, TypeCNAME, TypeSOA, TypeMB, TypeMG, TypeMR, TypePTR:
+		case TypeHINFO, TypeMINFO, TypeMX /* TypeRP, TypeAFSDB, TypeRT */ :
+		case TypeSIG /* TypePX, TypeNXT /* TypeNAPTR, TypeKX */ :
+		case TypeSRV, /* TypeDNAME, TypeA6 */ TypeRRSIG, TypeNSEC:
+			// lower case the domain rdata //
+
+		}
+		// 6.2. Canonical RR Form. (4) - wildcards
+                // dont have to do anything, except the above label count
+
+		// 6.2. Canonical RR Form. (5) - origTTL
+		ttl := h.Ttl
+		h.Ttl = s.OrigTtl
+		wire := make([]byte, DefaultMsgSize)
+		off, ok1 := packRR(r, wire, 0)
+		if !ok1 {
+			return nil
+		}
+		wire = wire[:off]
+		h.Ttl = ttl // restore the order in the universe
+		h.Name = name
+		if !ok1 {
+			return nil
+		}
+                buf = append(buf, wire...)
+        }
+        return
 }
 
 // Map for algorithm names.

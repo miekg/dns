@@ -6,7 +6,7 @@
 // Package dns implements a full featured interface to the DNS.
 // The package allows full control over what is send out to the DNS. 
 //
-// Resource Records are types in Go. They are not stored in wire format.
+// Resource Records are native types. They are not stored in wire format.
 // Basic usage pattern for creating new Resource Record:
 //
 //         r := new(RR_TXT)
@@ -115,10 +115,20 @@ func (h *RR_Header) String() string {
 
 // Return the number of labels in a domain name
 func LabelCount(a string) (c uint8) {
+        // walk the string and count the dots
+        // except when it is escaped
+        esc := false
 	for _, v := range a {
-		if v == '.' {
-			c++
-		}
+                switch v {
+                case '.':
+                        if esc {
+                                esc = !esc
+                                continue
+                        }
+                        c++
+                case '\\':
+                        esc = true
+                }
 	}
 	return
 }

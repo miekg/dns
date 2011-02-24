@@ -116,7 +116,7 @@ var opcode_str = map[int]string{
 	OpcodeUpdate: "UPDATE",
 }
 
-// Map of strings for rcode
+// Map of strings for rcodes.
 var rcode_str = map[int]string{
 	RcodeSuccess:        "NOERROR",
 	RcodeFormatError:    "FORMERR",

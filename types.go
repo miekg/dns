@@ -3,14 +3,6 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
 
-// Resource Records are types in Go. They are not stored in wire format.
-// Basic usage pattern for creating new Resource Record:
-//
-//         r := new(RR_TXT)
-//         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-//         r.TXT = "This is the content of the TXT record"
-//
-
 package dns
 
 import (
@@ -73,7 +65,7 @@ const (
 	TypeMAILB = 253
 	TypeMAILA = 254
 	TypeALL   = 255
-
+        // newly defined types
         TypeURI   = 256
 
 	TypeTA  = 32768
