@@ -424,7 +424,7 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 		}
 		// 6.2. Canonical RR Form. (4) - wildcards
-                // dont have to do anything, except the above label count
+                // dont have to do anything
 
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
@@ -435,7 +435,7 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 			return nil
 		}
 		wire = wire[:off]
-		h.Ttl = ttl // restore the order in the universe
+		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
 		h.Name = name
 		if !ok1 {
 			return nil
