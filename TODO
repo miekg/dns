@@ -1,13 +1,10 @@
 Todo:
-* wildcards, in sig gen, sig checking
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Tsig generation for replies (request MAC)
-* nsupdate, it's there except for the names
 * IXFR
-
-Longer term:
 * Parsing from strings, going with goyacc and own lexer
 * NSEC and nsec3 closest encloser helper functions
+* TKEY
 
 Issues:
 * Check the network order, it works now, but this is on Intel??

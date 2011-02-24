@@ -98,6 +98,89 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 // for an AXFR: "miek.nl" ANY AXFR. All incoming axfr snippets
 // are returned on the channel m. The function closes the 
 // channel to signal the end of the AXFR.
+func (res *Resolver) Ixfr(q *Msg, m chan *Msg) {
+	var port string
+	var err os.Error
+	var in *Msg
+	if res.Port == "" {
+		port = "53"
+	} else {
+		port = res.Port
+	}
+
+	var _ = err // TODO(mg)
+
+	if q.Id == 0 {
+		q.SetId()
+	}
+
+	sending, ok := q.Pack()
+	if !ok {
+		m <- nil
+		return
+	}
+
+Server:
+	for i := 0; i < len(res.Servers); i++ {
+		server := res.Servers[i] + ":" + port
+		c, cerr := net.Dial("tcp", "", server)
+		if cerr != nil {
+			err = cerr
+			continue Server
+		}
+		first := true
+		// Start the AXFR
+		for {
+			if first {
+				in, cerr = exchangeTCP(c, sending, res, true)
+			} else {
+				in, err = exchangeTCP(c, sending, res, false)
+			}
+
+			if cerr != nil {
+				// Failed to send, try the next
+				err = cerr
+				c.Close()
+				continue Server
+			}
+			if in.Id != q.Id {
+				m <- nil
+				return
+			}
+
+			if first {
+				if !checkSOA(in, true) {
+					c.Close()
+					continue Server
+				}
+				m <- in
+				first = !first
+			}
+
+			if !first {
+				if !checkSOA(in, false) {
+					// Soa record not the last one
+					m <- in
+					continue
+				} else {
+					c.Close()
+					m <- in
+					close(m)
+					return
+				}
+			}
+		}
+		panic("not reached")
+		return
+	}
+	close(m)
+	return
+}
+
+// Start an IXFR, q should contain a message with the question
+// for an IXFR: "miek.nl" ANY IXFR. All incoming ixfr snippets
+// are returned on the channel m. The function closes the 
+// channel to signal the end of the IXFR.
 func (res *Resolver) Axfr(q *Msg, m chan *Msg) {
 	var port string
 	var err os.Error
@@ -120,13 +203,13 @@ func (res *Resolver) Axfr(q *Msg, m chan *Msg) {
 		return
 	}
 
-SERVER:
+Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
 		c, cerr := net.Dial("tcp", "", server)
 		if cerr != nil {
 			err = cerr
-			continue SERVER
+			continue Server
 		}
 		first := true
 		// Start the AXFR
@@ -141,7 +224,7 @@ SERVER:
 				// Failed to send, try the next
 				err = cerr
 				c.Close()
-				continue SERVER
+				continue Server
 			}
 			if in.Id != q.Id {
 				m <- nil
@@ -151,7 +234,7 @@ SERVER:
 			if first {
 				if !checkSOA(in, true) {
 					c.Close()
-					continue SERVER
+					continue Server
 				}
 				m <- in
 				first = !first

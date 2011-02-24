@@ -16,6 +16,8 @@ func main() {
                 os.Exit(1)
         }
 
+        dns.Test()
+
         m := new(dns.Msg)
         m.MsgHdr.RecursionDesired = true //only set this bit
         m.Question = make([]dns.Question, 1)

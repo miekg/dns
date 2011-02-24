@@ -269,8 +269,6 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		if r.Header().Rrtype != s.TypeCovered {
 			return false
 		}
-		//wildcards!
-		//if LabelCount(r.Header().Name) > s.Labels
 	}
 	sort.Sort(rrset)
 
