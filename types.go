@@ -341,7 +341,7 @@ func (rr *RR_NAPTR) String() string {
 		rr.Replacement
 }
 
-// RFC 4398
+// See RFC 4398.
 type RR_CERT struct {
 	Hdr         RR_Header
 	Type        uint16

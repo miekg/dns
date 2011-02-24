@@ -113,7 +113,7 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-// Return the number of labels in a domain name
+// Return the number of labels in a domain name.
 func LabelCount(a string) (c uint8) {
         // walk the string and count the dots
         // except when it is escaped

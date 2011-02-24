@@ -6,7 +6,7 @@ import (
 	"os"
 	"flag"
 	"fmt"
-        "strconv"
+	"strconv"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ func main() {
 	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
 	var rd *bool = flag.Bool("rd", true, "Unset RD flag in query")
 	var tcp *bool = flag.Bool("tcp", false, "TCP mode")
-        var nsid *bool = flag.Bool("nsid", false, "Ask for the NSID")
+	var nsid *bool = flag.Bool("nsid", false, "Ask for the NSID")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -38,7 +38,7 @@ Flags:
 			nameserver = flag.Arg(i)
 			continue Flags
 		}
-                // First class, then type, to make ANY queries possible
+		// First class, then type, to make ANY queries possible
 		// And if it looks like type, it is a type
 		for k, v := range dns.Rr_str {
 			if v == strings.ToUpper(flag.Arg(i)) {
@@ -53,20 +53,20 @@ Flags:
 				continue Flags
 			}
 		}
-                // If it starts with TYPExxx it is unknown rr
-                if strings.HasPrefix(flag.Arg(i), "TYPE") {
-                        i, e := strconv.Atoi(string( []byte(flag.Arg(i))[4:]))
-                        if e == nil {
-                                qtype = uint16(i)
-                                continue Flags
-                        }
-                }
+		// If it starts with TYPExxx it is unknown rr
+		if strings.HasPrefix(flag.Arg(i), "TYPE") {
+			i, e := strconv.Atoi(string([]byte(flag.Arg(i))[4:]))
+			if e == nil {
+				qtype = uint16(i)
+				continue Flags
+			}
+		}
 
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
 	r := new(dns.Resolver)
-        r.FromFile("/etc/resolv.conf")
+	r.FromFile("/etc/resolv.conf")
 	r.Timeout = 2
 	r.Port = *port
 	r.Tcp = *tcp
@@ -93,27 +93,25 @@ Flags:
 		opt.SetVersion(0)
 		opt.SetDo()
 		opt.SetUDPSize(dns.DefaultMsgSize)
-                if *nsid {
-                        opt.Option = make([]dns.Option, 1)
-                        opt.Option[0].Code = dns.OptionCodeNSID
-                        opt.Option[0].Data = ""
-                }
+		if *nsid {
+			opt.SetNsid("")
+		}
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
 
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
-                m.SetId()
-                in, err := r.Query(m)
+		m.SetId()
+		in, err := r.Query(m)
 		if in != nil {
-                        if m.Id != in.Id {
-                                fmt.Printf("Id mismatch\n")
-                        }
+			if m.Id != in.Id {
+				fmt.Printf("Id mismatch\n")
+			}
 			fmt.Printf("%v\n", in)
 		} else {
-                        fmt.Printf("%v\n", err.String())
-                }
+			fmt.Printf("%v\n", err.String())
+		}
 	}
 }
 /*
