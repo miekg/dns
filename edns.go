@@ -2,7 +2,7 @@ package dns
 
 import (
 	"strconv"
-        "encoding/hex"
+	"encoding/hex"
 )
 
 // EDNS0 Options
@@ -61,14 +61,14 @@ func (rr *RR_OPT) String() string {
 		switch o.Code {
 		case OptionCodeNSID:
 			s += "\n; NSID: " + o.Data
-                        h, e := hex.DecodeString(o.Data)
-                        var r string
-                        if e == nil {
-                                for _, c := range h {
-                                        r += "(" + string(c)  + ")"
-                                }
-                        s += "  " + r
-                        }
+			h, e := hex.DecodeString(o.Data)
+			var r string
+			if e == nil {
+				for _, c := range h {
+					r += "(" + string(c) + ")"
+				}
+				s += "  " + r
+			}
 		}
 	}
 	return s
@@ -76,7 +76,7 @@ func (rr *RR_OPT) String() string {
 
 // Get the EDNS version (always 0 currently).
 func (rr *RR_OPT) Version() uint8 {
-        return 0
+	return 0
 }
 
 // Set the version of EDNS.
@@ -106,17 +106,17 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
 
 // Get the DO bit.
 func (rr *RR_OPT) Do() bool {
-        return byte(rr.Hdr.Ttl >> 8) &_DO == _DO
+	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
 }
 
-// Set the DO bit
+// Set the DO bit.
 func (rr *RR_OPT) SetDo() {
-        b1 := byte(rr.Hdr.Ttl >> 24)
-        b2 := byte(rr.Hdr.Ttl >> 16)
-        b3 := byte(rr.Hdr.Ttl >> 8)
-        b4 := byte(rr.Hdr.Ttl)
-        b3 |= _DO // Set it
-        rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
+	b1 := byte(rr.Hdr.Ttl >> 24)
+	b2 := byte(rr.Hdr.Ttl >> 16)
+	b3 := byte(rr.Hdr.Ttl >> 8)
+	b4 := byte(rr.Hdr.Ttl)
+	b3 |= _DO // Set it
+	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
 // Return the NSID as hex string.
@@ -126,7 +126,7 @@ func (rr *RR_OPT) Nsid() string {
 
 // Set the NSID from a string which is represented as hex characters.
 func (rr *RR_OPT) SetNsid(hexnsid string) {
-        rr.Option = make([]Option, 1)           // TODO(mg) check length first?
-        rr.Option[0].Code = OptionCodeNSID
-        rr.Option[0].Data = hexnsid
+	rr.Option = make([]Option, 1) // TODO(mg) check length first?
+	rr.Option[0].Code = OptionCodeNSID
+	rr.Option[0].Data = hexnsid
 }

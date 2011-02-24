@@ -99,36 +99,36 @@ func (h *RR_Header) String() string {
 	}
 	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
 
-        if _, ok := Class_str[h.Class]; ok {
-	        s += Class_str[h.Class] + "\t"
-        } else {
-                s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
-        }
+	if _, ok := Class_str[h.Class]; ok {
+		s += Class_str[h.Class] + "\t"
+	} else {
+		s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
+	}
 
-        if _, ok := Rr_str[h.Rrtype]; ok {
-                s += Rr_str[h.Rrtype] + "\t"
-        } else {
-                s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
-        }
+	if _, ok := Rr_str[h.Rrtype]; ok {
+		s += Rr_str[h.Rrtype] + "\t"
+	} else {
+		s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
+	}
 	return s
 }
 
 // Return the number of labels in a domain name.
 func LabelCount(a string) (c uint8) {
-        // walk the string and count the dots
-        // except when it is escaped
-        esc := false
+	// walk the string and count the dots
+	// except when it is escaped
+	esc := false
 	for _, v := range a {
-                switch v {
-                case '.':
-                        if esc {
-                                esc = !esc
-                                continue
-                        }
-                        c++
-                case '\\':
-                        esc = true
-                }
+		switch v {
+		case '.':
+			if esc {
+				esc = !esc
+				continue
+			}
+			c++
+		case '\\':
+			esc = true
+		}
 	}
 	return
 }

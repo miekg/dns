@@ -90,7 +90,7 @@ var Rr_str = map[uint16]string{
 	TypeAXFR:       "AXFR", // Meta RR
 	TypeIXFR:       "IXFR", // Meta RR
 	TypeALL:        "ANY",  // Meta RR
-        TypeURI:        "URI",
+	TypeURI:        "URI",
 	TypeTA:         "TA",
 	TypeDLV:        "DLV",
 }
@@ -158,28 +158,28 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
-        bs := []byte(s)
-        ls := len(bs)
+	bs := []byte(s)
+	ls := len(bs)
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
-                        for j := i; j < len(s)-1; j++ {
-                                bs[j] = bs[j+1]
-                        }
-                        ls--
-                        continue
+			for j := i; j < len(s)-1; j++ {
+				bs[j] = bs[j+1]
+			}
+			ls--
+			continue
 		}
 
 		if bs[i] == '.' {
-                        if i-begin >= 1<<6 { // top two bits of length must be clear
-                                return len(msg), false
-                        }
-                        msg[off] = byte(i - begin)
-                        off++
-                        for j := begin; j < i; j++ {
-                                msg[off] = bs[j]
-                                off++
-                        }
-                        begin = i + 1
+			if i-begin >= 1<<6 { // top two bits of length must be clear
+				return len(msg), false
+			}
+			msg[off] = byte(i - begin)
+			off++
+			for j := begin; j < i; j++ {
+				msg[off] = bs[j]
+				off++
+			}
+			begin = i + 1
 		}
 	}
 	// Root label is special
@@ -224,15 +224,15 @@ Loop:
 			if off+c > len(msg) {
 				return "", len(msg), false
 			}
-                        for j := off; j < off+c; j++ {
-                                if msg[j] == '.' {
-                                        // literal dot, escape it
-                                        s += "\\."
-                                } else {
-                                        s += string(msg[j])
-                                }
-                        }
-                        s += "."
+			for j := off; j < off+c; j++ {
+				if msg[j] == '.' {
+					// literal dot, escape it
+					s += "\\."
+				} else {
+					s += string(msg[j])
+				}
+			}
+			s += "."
 			off += c
 		case 0xC0:
 			// pointer to somewhere else in msg.

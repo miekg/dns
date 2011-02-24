@@ -1,7 +1,7 @@
 package dns
 
 import (
-        "crypto"
+	"crypto"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -57,7 +57,7 @@ type dnskeyWireFmt struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PublicKey    string "base64"
+	PublicKey string "base64"
 	/* Nothing is left out */
 }
 
@@ -157,8 +157,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
-                return false
-        }
+		return false
+	}
 
 	s.Hdr.Rrtype = TypeRRSIG
 	s.Hdr.Name = rrset[0].Header().Name
@@ -167,11 +167,11 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.Labels = LabelCount(rrset[0].Header().Name)
-        if strings.HasPrefix(rrset[0].Header().Name, "*") {
-                s.Labels--      // wildcards, remove from label count
-        }
+	if strings.HasPrefix(rrset[0].Header().Name, "*") {
+		s.Labels-- // wildcards, remove from label count
+	}
 
-        sort.Sort(rrset)
+	sort.Sort(rrset)
 
 	sigwire := new(rrsigWireFmt)
 	sigwire.TypeCovered = s.TypeCovered
@@ -190,10 +190,10 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		return false
 	}
 	signdata = signdata[:n]
-        wire := rawSignatureData(rrset, s)
-        if wire == nil {
-                return false
-        }
+	wire := rawSignatureData(rrset, s)
+	if wire == nil {
+		return false
+	}
 	signdata = append(signdata, wire...)
 
 	var signature []byte
@@ -269,8 +269,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		if r.Header().Rrtype != s.TypeCovered {
 			return false
 		}
-                //wildcards!
-                //if LabelCount(r.Header().Name) > s.Labels
+		//wildcards!
+		//if LabelCount(r.Header().Name) > s.Labels
 	}
 	sort.Sort(rrset)
 
@@ -292,11 +292,11 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		return false
 	}
 	signeddata = signeddata[:n]
-        wire := rawSignatureData(rrset, s)
-        if wire == nil {
-                return false
-        }
-        signeddata = append(signeddata, wire...)
+	wire := rawSignatureData(rrset, s)
+	if wire == nil {
+		return false
+	}
+	signeddata = append(signeddata, wire...)
 
 	sigbuf := s.sigBuf() // Get the binary signature data
 
@@ -424,7 +424,7 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 		}
 		// 6.2. Canonical RR Form. (4) - wildcards
-                // dont have to do anything
+		// dont have to do anything
 
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
@@ -440,9 +440,9 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 		if !ok1 {
 			return nil
 		}
-                buf = append(buf, wire...)
-        }
-        return
+		buf = append(buf, wire...)
+	}
+	return
 }
 
 // Map for algorithm names.

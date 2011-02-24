@@ -95,7 +95,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 }
 
 // Start an AXFR, q should contain a message with the question
-// for an AXFR ("miek.nl" ANY AXFR. All incoming axfr snippets
+// for an AXFR: "miek.nl" ANY AXFR. All incoming axfr snippets
 // are returned on the channel m. The function closes the 
 // channel to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan *Msg) {

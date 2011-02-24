@@ -65,8 +65,8 @@ const (
 	TypeMAILB = 253
 	TypeMAILA = 254
 	TypeALL   = 255
-        // newly defined types
-        TypeURI   = 256
+	// newly defined types
+	TypeURI = 256
 
 	TypeTA  = 32768
 	TypeDLV = 32769
@@ -464,11 +464,11 @@ func (rr *RR_NSEC) Header() *RR_Header {
 func (rr *RR_NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-                if  _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
-		        s += " " + Rr_str[rr.TypeBitMap[i]]
-                } else {
-                        s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
-                }
+		if _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
+			s += " " + Rr_str[rr.TypeBitMap[i]]
+		} else {
+			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
+		}
 	}
 	return s
 }
@@ -605,11 +605,11 @@ func (rr *RR_NSEC3) String() string {
 		" " + strings.ToUpper(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-                if  _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
-		        s += " " + Rr_str[rr.TypeBitMap[i]]
-                } else {
-                        s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
-                }
+		if _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
+			s += " " + Rr_str[rr.TypeBitMap[i]]
+		} else {
+			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
+		}
 	}
 	return s
 }
@@ -636,7 +636,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 	return s
 }
 
-// See RFC 4408
+// See RFC 4408.
 type RR_SPF struct {
 	Hdr RR_Header
 	Txt string
@@ -674,25 +674,25 @@ func (rr *RR_TKEY) String() string {
 
 // Unknown RR representation
 type RR_RFC3597 struct {
-        Hdr     RR_Header
-        Rdata   string "hex"
+	Hdr   RR_Header
+	Rdata string "hex"
 }
 
 func (rr *RR_RFC3597) Header() *RR_Header {
-        return &rr.Hdr
+	return &rr.Hdr
 }
 
 func (rr *RR_RFC3597) String() string {
-        s := rr.Hdr.String()
-        s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
-        return s
+	s := rr.Hdr.String()
+	s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+	return s
 }
 
 type RR_URI struct {
-	Hdr        RR_Header
-        Priority   uint16
-        Weight     uint16
-        Target     string
+	Hdr      RR_Header
+	Priority uint16
+	Weight   uint16
+	Target   string
 }
 
 func (rr *RR_URI) Header() *RR_Header {
@@ -700,9 +700,9 @@ func (rr *RR_URI) Header() *RR_Header {
 }
 
 func (rr *RR_URI) String() string {
-        return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
-                " " + strconv.Itoa(int(rr.Weight)) +
-                " " + rr.Target
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
+		" " + strconv.Itoa(int(rr.Weight)) +
+		" " + rr.Target
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
@@ -754,7 +754,7 @@ var rr_mk = map[int]func() RR{
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 	TypeTKEY:       func() RR { return new(RR_TKEY) },
 	TypeTSIG:       func() RR { return new(RR_TSIG) },
-        TypeURI:        func() RR { return new(RR_URI) },
+	TypeURI:        func() RR { return new(RR_URI) },
 	TypeTA:         func() RR { return new(RR_TA) },
 	TypeDLV:        func() RR { return new(RR_DLV) },
 }

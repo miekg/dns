@@ -2,27 +2,27 @@ package dns
 
 import (
 	"testing"
-        "strings"
+	"strings"
 )
 
 func TestSecure(t *testing.T) {
-        soa := new(RR_SOA)
+	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
-        soa.Mbox = "miekg.atoom.net."
-        soa.Serial = 1293945905
-        soa.Refresh = 14400
-        soa.Retry = 3600
-        soa.Expire = 604800
-        soa.Minttl = 86400
+	soa.Mbox = "miekg.atoom.net."
+	soa.Serial = 1293945905
+	soa.Refresh = 14400
+	soa.Retry = 3600
+	soa.Expire = 604800
+	soa.Minttl = 86400
 
 	sig := new(RR_RRSIG)
-        sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
 	sig.Algorithm = AlgRSASHA256
 	sig.Labels = 2
-        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
-        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
 	sig.OrigTtl = 14400
 	sig.KeyTag = 12051
 	sig.SignerName = "miek.nl."
@@ -37,11 +37,11 @@ func TestSecure(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-        // It should validate. Period is checked seperately, so this will keep on working
-        if ! sig.Verify(key, []RR{soa}) {
-                t.Log("Failure to validate")
-                t.Fail()
-        }
+	// It should validate. Period is checked seperately, so this will keep on working
+	if !sig.Verify(key, []RR{soa}) {
+		t.Log("Failure to validate")
+		t.Fail()
+	}
 }
 
 func TestSignature(t *testing.T) {
@@ -87,7 +87,7 @@ func TestSignVerify(t *testing.T) {
 
 	// With this key
 	key := new(RR_DNSKEY)
-        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 14400
@@ -116,7 +116,7 @@ func TestSignVerify(t *testing.T) {
 	if !sig.Verify(key, []RR{soa}) {
 		t.Log("Failure to validate")
 		t.Fail()
-        }
+	}
 }
 
 func TestKeyGen(t *testing.T) {
@@ -128,7 +128,7 @@ func TestKeyGen(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
-        key.Generate(512)
+	key.Generate(512)
 }
 
 
@@ -183,7 +183,7 @@ func TestDnskey(t *testing.T) {
 func TestTag(t *testing.T) {
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
-        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
@@ -191,57 +191,57 @@ func TestTag(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-        tag := key.KeyTag()
-        if tag != 12051 {
-                t.Logf("%v\n", key)
-                t.Logf("Wrong key tag: %d\n", tag)
-                t.Fail()
-        }
+	tag := key.KeyTag()
+	if tag != 12051 {
+		t.Logf("%v\n", key)
+		t.Logf("Wrong key tag: %d\n", tag)
+		t.Fail()
+	}
 }
 
 func TestKeyGenRSA(t *testing.T) {
 
-        return          // Tijdelijk uit TODO(mg)
+	return // Tijdelijk uit TODO(mg)
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
-        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
-        length := 2048
-        priv, _ := key.Generate(length)
+	length := 2048
+	priv, _ := key.Generate(length)
 
-        soa := new(RR_SOA)
-        soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
-        soa.Ns = "open.nlnetlabs.nl."
-        soa.Mbox = "miekg.atoom.net."
-        soa.Serial = 1293945905
-        soa.Refresh = 14400
-        soa.Retry = 3600
-        soa.Expire = 604800
-        soa.Minttl = 86400
+	soa := new(RR_SOA)
+	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+	soa.Ns = "open.nlnetlabs.nl."
+	soa.Mbox = "miekg.atoom.net."
+	soa.Serial = 1293945905
+	soa.Refresh = 14400
+	soa.Retry = 3600
+	soa.Expire = 604800
+	soa.Minttl = 86400
 
-        sig := new(RR_RRSIG)
-        sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
-        sig.TypeCovered = TypeSOA
-        sig.Algorithm = AlgRSASHA256
-        sig.Labels = 2
-        sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
-        sig.Inception = 1293942305 // date -u '+%s' -d"2011-01-02 04:25:05"
-        sig.OrigTtl = 14400
-        sig.KeyTag = key.KeyTag()
-        sig.SignerName = "miek.nl."
+	sig := new(RR_RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.TypeCovered = TypeSOA
+	sig.Algorithm = AlgRSASHA256
+	sig.Labels = 2
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.OrigTtl = 14400
+	sig.KeyTag = key.KeyTag()
+	sig.SignerName = "miek.nl."
 
-        sig.Sign(priv, []RR{soa})
-        //s := key.PrivateKeyString(priv)
+	sig.Sign(priv, []RR{soa})
+	//s := key.PrivateKeyString(priv)
 }
 
 func TestKeyToDS(t *testing.T) {
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl"
-        key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
@@ -249,9 +249,9 @@ func TestKeyToDS(t *testing.T) {
 	key.Algorithm = AlgRSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-        ds := key.ToDS(HashSHA1)
-        if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
-                t.Logf("Wrong DS digest for Sha1\n%v\n", ds)
-                t.Fail()
-        }
+	ds := key.ToDS(HashSHA1)
+	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
+		t.Logf("Wrong DS digest for Sha1\n%v\n", ds)
+		t.Fail()
+	}
 }
