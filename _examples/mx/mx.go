@@ -15,9 +15,6 @@ func main() {
                 fmt.Printf("%s DOMAIN\n", os.Args[0])
                 os.Exit(1)
         }
-
-        dns.Test()
-
         m := new(dns.Msg)
         m.MsgHdr.RecursionDesired = true //only set this bit
         m.Question = make([]dns.Question, 1)

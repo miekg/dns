@@ -120,13 +120,22 @@ func (res *Resolver) Ixfr(q *Msg, m chan RR) {
 		return
 	}
 
-        const (
-                FIRST = iota
-                SECOND
-                LAST
-        )
+	const (
+		FIRST = iota
+		SECOND
+		LAST
+	)
 
-        defer close(m)
+	defer close(m)
+
+        tAdd := new(RR_TXT)
+        tAdd.Hdr = RR_Header{Name: "miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+        tAdd.Txt = "Add"
+
+        tRem := new(RR_TXT)
+        tRem.Hdr = RR_Header{Name: "miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+        tRem.Txt = "Rem"
+
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
@@ -136,10 +145,10 @@ Server:
 			continue Server
 		}
 		state := FIRST
-                var serial uint32          // The first serial seen is the current server serial
-                var _ = serial
+		var serial uint32 // The first serial seen is the current server serial
+		var _ = serial
 
-                defer c.Close()
+		defer c.Close()
 		for {
 			if state == FIRST {
 				in, cerr = exchangeTCP(c, sending, res, true)
@@ -154,47 +163,51 @@ Server:
 				continue Server
 			}
 			if in.Id != q.Id {
-                                // Query ID mismatch
-                                c.Close()
+				// Query ID mismatch
+				c.Close()
 				return
 			}
 
 			if state == FIRST {
-                                // A single SOA RR signals "no changes"
-                                if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
-                                        c.Close()
-                                        return
-                                }
+				// A single SOA RR signals "no changes"
+				if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
+				        //sendFromMsg(in, m) // Do you need to send 1 reply?
+					c.Close()
+					return
+				}
 
-                                // But still check if the returned answer is ok
+				// But still check if the returned answer is ok
 				if !checkAxfrSOA(in, true) {
 					c.Close()
 					continue Server
 				}
-                                // This serial is important
-                                serial = in.Answer[0].(*RR_SOA).Serial
-				sendFromMsg(in, m)
+				// This serial is important
+				serial = in.Answer[0].(*RR_SOA).Serial
+				//sendFromMsg(in, m)
 				state = SECOND
 			}
 
-                        // Now we need to check each message for SOA records, to see what we need to do
+			// Now we need to check each message for SOA records, to see what we need to do
 			if state != FIRST {
-                                // If the last record in the IXFR contains the servers' SOA
-                                // we should quit
-
-//                                for _, r := range in.Answer {
-
-
-//                                }
-
-                                if !checkAxfrSOA(in, false) {
-                                        // Soa record not the last one
-                                        sendFromMsg(in, m)
-                                        continue
-                                } else{
-                                        sendFromMsg(in, m)
-                                        return
-                                }
+				// If the last record in the IXFR contains the servers' SOA
+				// we should quit
+				for k, r := range in.Answer {
+                                        if r.Header().Rrtype == TypeSOA {
+                                                se := r.(*RR_SOA).Serial
+                                                switch {
+                                                case se == serial:
+                                                        if k == len(in.Answer)-1 {
+                                                                // last rr is SOA with correct serial
+                                                                m <- r
+                                                                return
+                                                        }
+                                                        m <- tAdd
+                                                case se != serial:
+                                                        m <- tRem
+                                                }
+					}
+					m <- r
+				}
 			}
 		}
 		panic("not reached")
@@ -229,7 +242,7 @@ func (res *Resolver) Axfr(q *Msg, m chan RR) {
 		return
 	}
 
-        defer close(m)
+	defer close(m)
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
@@ -239,7 +252,7 @@ Server:
 			continue Server
 		}
 		first := true
-                defer c.Close() // TODO(mg): if not open?
+		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
 				in, cerr = exchangeTCP(c, sending, res, true)
@@ -250,17 +263,17 @@ Server:
 			if cerr != nil {
 				// Failed to send, try the next
 				err = cerr
-                                c.Close()
+				c.Close()
 				continue Server
 			}
 			if in.Id != q.Id {
-                                c.Close()
+				c.Close()
 				return
 			}
 
 			if first {
 				if !checkAxfrSOA(in, true) {
-                                        c.Close()
+					c.Close()
 					continue Server
 				}
 				sendFromMsg(in, m)
@@ -270,10 +283,10 @@ Server:
 			if !first {
 				if !checkAxfrSOA(in, false) {
 					// Soa record not the last one
-				        sendFromMsg(in, m)
+					sendFromMsg(in, m)
 					continue
 				} else {
-				        sendFromMsg(in, m)
+					sendFromMsg(in, m)
 					return
 				}
 			}
@@ -456,24 +469,9 @@ func checkAxfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// Same as Axfr one, but now also check the serial
-func checkIxfrSOA(in *Msg, first bool, serial uint32) bool {
-	if len(in.Answer) > 0 {
-		if first {
-			return in.Answer[0].Header().Rrtype == TypeSOA &&
-                                in.Answer[0].(*RR_SOA).Serial == serial
-		} else {
-			return in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA &&
-                                in.Answer[len(in.Answer)-1].(*RR_SOA).Serial == serial
-		}
-	}
-	return false
-}
-
-
 // Send the answer section to the channel
 func sendFromMsg(in *Msg, c chan RR) {
-        for _, r := range in.Answer {
-                c <- r
-        }
+	for _, r := range in.Answer {
+		c <- r
+	}
 }
