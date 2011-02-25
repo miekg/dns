@@ -1,11 +1,10 @@
 Todo:
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Tsig generation for replies (request MAC)
-* IXFR
 * Parsing from strings, going with goyacc and own lexer
-* NSEC and nsec3 closest encloser helper functions
 * TKEY
 * Large TXT records
+* IXFR - works, but needs more
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
