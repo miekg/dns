@@ -9,7 +9,7 @@ func main() {
 	res := new(dns.Resolver)
 	res.FromFile("/etc/resolv.conf")
 
-        ch := make(chan *dns.Msg)
+        ch := make(chan dns.RR)
 
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
