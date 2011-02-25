@@ -120,6 +120,12 @@ func (res *Resolver) Ixfr(q *Msg, m chan RR) {
 		return
 	}
 
+        const (
+                FIRST = iota
+                SECOND
+                LAST
+        )
+
         defer close(m)
 Server:
 	for i := 0; i < len(res.Servers); i++ {
@@ -129,13 +135,13 @@ Server:
 			err = cerr
 			continue Server
 		}
-		first := true
+		state := FIRST
                 var serial int          // The first serial seen is the current server serial
                 var _ = serial
 
                 defer c.Close()
 		for {
-			if first {
+			if state == FIRST {
 				in, cerr = exchangeTCP(c, sending, res, true)
 			} else {
 				in, err = exchangeTCP(c, sending, res, false)
@@ -153,7 +159,7 @@ Server:
 				return
 			}
 
-			if first {
+			if state == FIRST {
                                 // A single SOA RR signals "no changes"
                                 if len(in.Answer) == 1 && checkSOA(in, true) {
                                         c.Close()
@@ -168,12 +174,20 @@ Server:
                                 // This serial is important
                                 serial = int(in.Answer[0].(*RR_SOA).Serial)
 				sendFromMsg(in, m)
-				first = !first
+				state = SECOND
 			}
 
                         // Now we need to check each message for SOA records, to see what we need to do
-			if !first {
-                                
+			if state != FIRST {
+                                if !checkSOA(in, false) {
+                                        // Soa record not the last one
+                                        sendFromMsg(in, m)
+                                        continue
+                                } else{
+                                        c.Close()
+                                        sendFromMsg(in, m)
+                                        return
+                                }
 			}
 		}
 		panic("not reached")
