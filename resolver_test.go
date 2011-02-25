@@ -110,7 +110,7 @@ func TestAXFR(t *testing.T) {
 	m.Question = make([]Question, 1)
 	m.Question[0] = Question{"miek.nl", TypeAXFR, ClassINET}
 
-        ch := make(chan *Msg)
+        ch := make(chan RR)
         go res.Axfr(m, ch)
 	for x := range ch {
 		var _ = x
