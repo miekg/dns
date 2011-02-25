@@ -136,7 +136,7 @@ Server:
 			continue Server
 		}
 		state := FIRST
-                var serial int          // The first serial seen is the current server serial
+                var serial uint32          // The first serial seen is the current server serial
                 var _ = serial
 
                 defer c.Close()
@@ -161,30 +161,37 @@ Server:
 
 			if state == FIRST {
                                 // A single SOA RR signals "no changes"
-                                if len(in.Answer) == 1 && checkSOA(in, true) {
+                                if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
                                         c.Close()
                                         return
                                 }
 
                                 // But still check if the returned answer is ok
-				if !checkSOA(in, true) {
+				if !checkAxfrSOA(in, true) {
 					c.Close()
 					continue Server
 				}
                                 // This serial is important
-                                serial = int(in.Answer[0].(*RR_SOA).Serial)
+                                serial = in.Answer[0].(*RR_SOA).Serial
 				sendFromMsg(in, m)
 				state = SECOND
 			}
 
                         // Now we need to check each message for SOA records, to see what we need to do
 			if state != FIRST {
-                                if !checkSOA(in, false) {
+                                // If the last record in the IXFR contains the servers' SOA
+                                // we should quit
+
+//                                for _, r := range in.Answer {
+
+
+//                                }
+
+                                if !checkAxfrSOA(in, false) {
                                         // Soa record not the last one
                                         sendFromMsg(in, m)
                                         continue
                                 } else{
-                                        c.Close()
                                         sendFromMsg(in, m)
                                         return
                                 }
@@ -252,7 +259,7 @@ Server:
 			}
 
 			if first {
-				if !checkSOA(in, true) {
+				if !checkAxfrSOA(in, true) {
                                         c.Close()
 					continue Server
 				}
@@ -261,12 +268,11 @@ Server:
 			}
 
 			if !first {
-				if !checkSOA(in, false) {
+				if !checkAxfrSOA(in, false) {
 					// Soa record not the last one
 				        sendFromMsg(in, m)
 					continue
 				} else {
-                                        c.Close()
 				        sendFromMsg(in, m)
 					return
 				}
@@ -439,7 +445,7 @@ func recvTCP(c net.Conn) ([]byte, os.Error) {
 // Check if he SOA record exists in the Answer section of 
 // the packet. If first is true the first RR must be a soa
 // if false, the last one should be a SOA
-func checkSOA(in *Msg, first bool) bool {
+func checkAxfrSOA(in *Msg, first bool) bool {
 	if len(in.Answer) > 0 {
 		if first {
 			return in.Answer[0].Header().Rrtype == TypeSOA
@@ -449,6 +455,21 @@ func checkSOA(in *Msg, first bool) bool {
 	}
 	return false
 }
+
+// Same as Axfr one, but now also check the serial
+func checkIxfrSOA(in *Msg, first bool, serial uint32) bool {
+	if len(in.Answer) > 0 {
+		if first {
+			return in.Answer[0].Header().Rrtype == TypeSOA &&
+                                in.Answer[0].(*RR_SOA).Serial == serial
+		} else {
+			return in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA &&
+                                in.Answer[len(in.Answer)-1].(*RR_SOA).Serial == serial
+		}
+	}
+	return false
+}
+
 
 // Send the answer section to the channel
 func sendFromMsg(in *Msg, c chan RR) {
