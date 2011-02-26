@@ -9,16 +9,15 @@ import (
 
 func main() {
         var serial *int = flag.Int("serial", 0, "Perform an IXFR with the given serial")
-        zone := "tjeb.nl."
-
+        var nameserver *string = flag.String("ns", "127.0.0.1", "Query this nameserver")
         flag.Parse()
+        zone := flag.Arg(flag.NArg()-1)
 
 	res := new(dns.Resolver)
 	res.FromFile("/etc/resolv.conf")
-        res.Servers[0] = "open.nlnetlabs.nl"
+        res.Servers[0] = *nameserver
 
-        a := make(chan dns.RR)
-        d := make(chan dns.RR)
+        c := make(chan dns.Xfr)
 
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
@@ -29,24 +28,12 @@ func main() {
                 soa.Serial = uint32(*serial)
                 m.Ns = make([]dns.RR, 1)
                 m.Ns[0] = soa
-                go res.Ixfr(m, a, d)
-Loop:
-                for {
-                select {
-                case x := <-a:
-                        fmt.Printf("ADD: %v\n",x)
-                case x := <-d:
-                        fmt.Printf("REM: %v\n",x)
-                }
-                }
-//                if !closed(a) && !closed(d) {
- //                       goto Loop
-  //              }
+                go res.Ixfr(m, c)
         } else {
 	        m.Question[0] = dns.Question{zone, dns.TypeAXFR, dns.ClassINET}
-                go res.Axfr(m, a)
-                for x := range a {
-                        fmt.Printf("%v\n",x)
-                }
+                go res.Axfr(m, c)
+        }
+        for x := range c {
+                fmt.Printf("%v %v\n",x.Add, x.RR)
         }
 }

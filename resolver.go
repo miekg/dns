@@ -94,15 +94,22 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-// Start an IXFR, q should contain a message with the question
-// for an IXFR: "miek.nl" ANY IXFR. RR that should be added
-// are returned on the a channel, removed RRs go to the 
-// d channel.
-// Both channels are closed when the ifxr ends.
-func (res *Resolver) Ixfr(q *Msg, a, d chan RR) {
+// Xfr is used in communicating with *xfr functions. A pointer
+// to this structure is returned on the channel.
+type Xfr struct {
+	Add bool // true is to be added, otherwise false
+	RR
+}
+
+// Start an IXFR, q should contain a *Msg with the question
+// for an IXFR: "miek.nl" ANY IXFR. RRs that should be added
+// have Xfr.Add set to true otherwise it is false.
+// Channel m is closed when the IXFR ends.
+func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	var port string
 	var err os.Error
 	var in *Msg
+	var x Xfr
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -115,8 +122,7 @@ func (res *Resolver) Ixfr(q *Msg, a, d chan RR) {
 		q.SetId()
 	}
 
-	defer close(a)
-	defer close(d)
+	defer close(m)
 	sending, ok := q.Pack()
 	if !ok {
 		return
@@ -131,8 +137,8 @@ Server:
 			continue Server
 		}
 		first := true
-                add := false
 		var serial uint32 // The first serial seen is the current server serial
+		var _ = serial
 
 		defer c.Close()
 		for {
@@ -155,7 +161,6 @@ Server:
 			if first {
 				// A single SOA RR signals "no changes"
 				if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
-				        //sendFromMsg(in, m) // Do you need to send 1 reply?
 					return
 				}
 
@@ -166,42 +171,37 @@ Server:
 				}
 				// This serial is important
 				serial = in.Answer[0].(*RR_SOA).Serial
-				//sendFromMsg(in, m)
 				first = !first
 			}
 
 			// Now we need to check each message for SOA records, to see what we need to do
+			x.Add = true
 			if !first {
-				// If the last record in the IXFR contains the servers' SOA,  we should quit
 				for k, r := range in.Answer {
-                                        if r.Header().Rrtype == TypeSOA {
-                                                se := r.(*RR_SOA).Serial
-                                                switch {
-                                                case se == serial:
-                                                        if k == len(in.Answer)-1 {
-                                                                // last rr is SOA with correct serial
-                                                                //m <- r dont' send it
-                                                                return
-                                                        }
-                                                        add = true
-                                                        if k == 0 {
-                                                                // First SOA, skip
+					// If the last record in the IXFR contains the servers' SOA,  we should quit
+					if r.Header().Rrtype == TypeSOA {
+						switch {
+						case r.(*RR_SOA).Serial == serial:
+							if k == len(in.Answer)-1 {
+								// last rr is SOA with correct serial
+								//m <- r dont' send it
+								return
+							}
+							x.Add = true
+                                                        if k != 0 {
+                                                                // Intermediate SOA
                                                                 continue
                                                         }
-                                                        //a <- tAdd
-                                                case se != serial:
-                                                        add = false
-                                                        //a <- tRem
-                                                        continue;       // Don't need to see this SOA
-                                                }
+						case r.(*RR_SOA).Serial != serial:
+							x.Add = false
+							continue // Don't need to see this SOA
+						}
 					}
-                                        if add {
-					        a <- r
-                                        } else {
-                                                d <- r
-                                        }
+					x.RR = r
+					m <- x
 				}
 			}
+			return
 		}
 		panic("not reached")
 		return
@@ -211,10 +211,10 @@ Server:
 
 // Start an AXFR, q should contain a message with the question
 // for an AXFR: "miek.nl" ANY AXFR. The closing SOA isn't
-// returned over the channel, so the caller will receive
-// the as-is. 
+// returned over the channel, so the caller will receive 
+// the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
-func (res *Resolver) Axfr(q *Msg, m chan RR) {
+func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	var port string
 	var err os.Error
 	var in *Msg
@@ -256,6 +256,7 @@ Server:
 				// Failed to send, try the next
 				err = cerr
 				c.Close()
+				println("AGIAIN")
 				continue Server
 			}
 			if in.Id != q.Id {
@@ -268,17 +269,16 @@ Server:
 					c.Close()
 					continue Server
 				}
-				sendFromMsg(in, m)
 				first = !first
 			}
 
 			if !first {
 				if !checkAxfrSOA(in, false) {
 					// Soa record not the last one
-					sendFromMsg(in, m)
+					sendFromMsg(in, m, false)
 					continue
 				} else {
-					sendFromMsg(in, m)
+					sendFromMsg(in, m, true)
 					return
 				}
 			}
@@ -462,8 +462,13 @@ func checkAxfrSOA(in *Msg, first bool) bool {
 }
 
 // Send the answer section to the channel
-func sendFromMsg(in *Msg, c chan RR) {
-	for _, r := range in.Answer {
-		c <- r
+func sendFromMsg(in *Msg, c chan Xfr, nosoa bool) {
+	x := Xfr{Add: true}
+	for k, r := range in.Answer {
+		if nosoa && k == len(in.Answer)-1 {
+			continue
+		}
+		x.RR = r
+		c <- x
 	}
 }
