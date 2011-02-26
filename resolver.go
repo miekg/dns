@@ -95,10 +95,11 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 }
 
 // Start an IXFR, q should contain a message with the question
-// for an IXFR: "miek.nl" ANY IXFR. All incoming ixfr snippets
-// are returned on the channel m. The function closes the 
-// channel to signal the end of the IXFR.
-func (res *Resolver) Ixfr(q *Msg, m chan RR) {
+// for an IXFR: "miek.nl" ANY IXFR. RR that should be added
+// are returned on the a channel, removed RRs go to the 
+// d channel.
+// Both channels are closed when the ifxr ends.
+func (res *Resolver) Ixfr(q *Msg, a, d chan RR) {
 	var port string
 	var err os.Error
 	var in *Msg
@@ -114,27 +115,12 @@ func (res *Resolver) Ixfr(q *Msg, m chan RR) {
 		q.SetId()
 	}
 
+	defer close(a)
+	defer close(d)
 	sending, ok := q.Pack()
 	if !ok {
-		m <- nil
 		return
 	}
-
-	const (
-		FIRST = iota
-		SECOND
-		LAST
-	)
-
-	defer close(m)
-
-        tAdd := new(RR_TXT)
-        tAdd.Hdr = RR_Header{Name: "miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-        tAdd.Txt = "Add"
-
-        tRem := new(RR_TXT)
-        tRem.Hdr = RR_Header{Name: "miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-        tRem.Txt = "Rem"
 
 Server:
 	for i := 0; i < len(res.Servers); i++ {
@@ -144,13 +130,13 @@ Server:
 			err = cerr
 			continue Server
 		}
-		state := FIRST
+		first := true
+                add := false
 		var serial uint32 // The first serial seen is the current server serial
-		var _ = serial
 
 		defer c.Close()
 		for {
-			if state == FIRST {
+			if first {
 				in, cerr = exchangeTCP(c, sending, res, true)
 			} else {
 				in, err = exchangeTCP(c, sending, res, false)
@@ -163,16 +149,13 @@ Server:
 				continue Server
 			}
 			if in.Id != q.Id {
-				// Query ID mismatch
-				c.Close()
 				return
 			}
 
-			if state == FIRST {
+			if first {
 				// A single SOA RR signals "no changes"
 				if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
 				        //sendFromMsg(in, m) // Do you need to send 1 reply?
-					c.Close()
 					return
 				}
 
@@ -184,13 +167,12 @@ Server:
 				// This serial is important
 				serial = in.Answer[0].(*RR_SOA).Serial
 				//sendFromMsg(in, m)
-				state = SECOND
+				first = !first
 			}
 
 			// Now we need to check each message for SOA records, to see what we need to do
-			if state != FIRST {
-				// If the last record in the IXFR contains the servers' SOA
-				// we should quit
+			if !first {
+				// If the last record in the IXFR contains the servers' SOA,  we should quit
 				for k, r := range in.Answer {
                                         if r.Header().Rrtype == TypeSOA {
                                                 se := r.(*RR_SOA).Serial
@@ -198,15 +180,26 @@ Server:
                                                 case se == serial:
                                                         if k == len(in.Answer)-1 {
                                                                 // last rr is SOA with correct serial
-                                                                m <- r
+                                                                //m <- r dont' send it
                                                                 return
                                                         }
-                                                        m <- tAdd
+                                                        add = true
+                                                        if k == 0 {
+                                                                // First SOA, skip
+                                                                continue
+                                                        }
+                                                        //a <- tAdd
                                                 case se != serial:
-                                                        m <- tRem
+                                                        add = false
+                                                        //a <- tRem
+                                                        continue;       // Don't need to see this SOA
                                                 }
 					}
-					m <- r
+                                        if add {
+					        a <- r
+                                        } else {
+                                                d <- r
+                                        }
 				}
 			}
 		}
@@ -217,9 +210,10 @@ Server:
 }
 
 // Start an AXFR, q should contain a message with the question
-// for an AXFR: "miek.nl" ANY AXFR. All incoming axfr snippets
-// are returned on the channel m. The function closes the 
-// channel to signal the end of the AXFR.
+// for an AXFR: "miek.nl" ANY AXFR. The closing SOA isn't
+// returned over the channel, so the caller will receive
+// the as-is. 
+// The channel is closed to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan RR) {
 	var port string
 	var err os.Error
@@ -236,13 +230,11 @@ func (res *Resolver) Axfr(q *Msg, m chan RR) {
 		q.SetId()
 	}
 
+	defer close(m)
 	sending, ok := q.Pack()
 	if !ok {
-		m <- nil
 		return
 	}
-
-	defer close(m)
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port

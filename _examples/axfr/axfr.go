@@ -9,7 +9,6 @@ import (
 
 func main() {
         var serial *int = flag.Int("serial", 0, "Perform an IXFR with the given serial")
-        var onesoa *bool = flag.Bool("1soa", false, "Don't print the last SOA")
         zone := "tjeb.nl."
 
         flag.Parse()
@@ -18,7 +17,8 @@ func main() {
 	res.FromFile("/etc/resolv.conf")
         res.Servers[0] = "open.nlnetlabs.nl"
 
-        ch := make(chan dns.RR)
+        a := make(chan dns.RR)
+        d := make(chan dns.RR)
 
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
@@ -29,20 +29,24 @@ func main() {
                 soa.Serial = uint32(*serial)
                 m.Ns = make([]dns.RR, 1)
                 m.Ns[0] = soa
-                go res.Ixfr(m, ch)
+                go res.Ixfr(m, a, d)
+Loop:
+                for {
+                select {
+                case x := <-a:
+                        fmt.Printf("ADD: %v\n",x)
+                case x := <-d:
+                        fmt.Printf("REM: %v\n",x)
+                }
+                }
+//                if !closed(a) && !closed(d) {
+ //                       goto Loop
+  //              }
         } else {
 	        m.Question[0] = dns.Question{zone, dns.TypeAXFR, dns.ClassINET}
-                go res.Axfr(m, ch)
-        }
-
-        soa := false
-        for x := range ch {
-                if x.Header().Rrtype == dns.TypeSOA {
-                        if *onesoa && soa {
-                                continue
-                        }
-                        soa = true
+                go res.Axfr(m, a)
+                for x := range a {
+                        fmt.Printf("%v\n",x)
                 }
-                fmt.Printf("%v\n",x)
         }
 }
