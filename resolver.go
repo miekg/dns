@@ -94,8 +94,8 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-// Xfr is used in communicating with *xfr functions. A pointer
-// to this structure is returned on the channel.
+// Xfr is used in communicating with *xfr functions.
+// This structure is returned on the channel.
 type Xfr struct {
 	Add bool // true is to be added, otherwise false
 	RR
