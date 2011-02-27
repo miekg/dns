@@ -188,10 +188,10 @@ Server:
 								return
 							}
 							x.Add = true
-                                                        if k != 0 {
-                                                                // Intermediate SOA
-                                                                continue
-                                                        }
+							if k != 0 {
+								// Intermediate SOA
+								continue
+							}
 						case r.(*RR_SOA).Serial != serial:
 							x.Add = false
 							continue // Don't need to see this SOA
@@ -437,7 +437,7 @@ func recvTCP(c net.Conn) ([]byte, os.Error) {
 		return nil, cerr
 	}
 	i := n
-	if i < int(length) {
+	for i < int(length) {
 		n, err = c.Read(m[i:])
 		if err != nil {
 			return nil, err

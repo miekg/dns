@@ -99,15 +99,23 @@ func SendTCP(m []byte, c *net.TCPConn, a net.Addr) os.Error {
 	l[0] = byte(len(m) >> 8)
 	l[1] = byte(len(m))
 	// First we send the length
-	_, err := c.Write(l)
+	n, err := c.Write(l)
 	if err != nil {
 		return err
 	}
 	// And the the message
-	_, err = c.Write(m)
+	n, err = c.Write(m)
 	if err != nil {
 		return err
 	}
+        i := n
+        for i < len(m) {
+	        n, err = c.Write(m)
+                if err != nil {
+                        return err
+                }
+                i += n
+        }
 	return nil
 }
 
