@@ -1,9 +1,7 @@
 Todo:
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Tsig generation for replies (request MAC)
-* Large TXT records
-* Parsing from strings, going with goyacc and own lexer
-* TKEY
+* Parsing from strings, going with goyacc and .cz lexer
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
