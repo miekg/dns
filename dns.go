@@ -19,8 +19,11 @@ import (
 	"strconv"
 )
 
-// For RFC1982 (Serial Arithmetic) calculations in 32 bits.
-const Year68 = 2 << (32 - 1)
+const (
+	Year68         = 2 << (32 - 1) // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
+	DefaultMsgSize = 4096          // A standard default for larger than 512 packets.
+	MaxMsgSize     = 65536         // Largest possible DNS packet.
+)
 
 // Error represents a DNS error
 type Error struct {

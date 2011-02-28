@@ -26,9 +26,6 @@ import (
 	"encoding/hex"
 )
 
-// The size of the standard buffer.
-const DefaultMsgSize = 4096
-
 // A manually-unpacked version of (id, bits).
 // This is in its own struct for easy printing.
 type MsgHdr struct {

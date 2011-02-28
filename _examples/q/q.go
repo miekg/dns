@@ -96,6 +96,10 @@ Flags:
 		if *nsid {
 			opt.SetNsid("")
 		}
+                println("Setting ", *tcp, dns.MaxMsgSize-1)
+                if *tcp {
+                        opt.SetUDPSize(dns.MaxMsgSize-1)
+                }
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
