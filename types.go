@@ -287,7 +287,7 @@ func (rr *RR_SOA) String() string {
 
 type RR_TXT struct {
 	Hdr RR_Header
-	Txt string // not domain name
+	Txt string "txt"
 }
 
 func (rr *RR_TXT) Header() *RR_Header {

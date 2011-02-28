@@ -434,6 +434,10 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
 				off += len(s)
+                        case "txt":
+                                // Counted string: 1 byte length, but the string may be longer
+                                // than 255, in that case it should be multiple strings, for now:
+                                fallthrough
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -714,6 +718,25 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				}
 				s = string(msg[off : off+size])
 				off += size
+                        case "txt":
+                                // 1 or multiple txt pieces
+                        Txt:
+				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
+					return len(msg), false
+				}
+				n := int(msg[off])
+				off++
+				b := make([]byte, n)
+				for i := 0; i < n; i++ {
+					b[i] = msg[off+i]
+				}
+				off += n
+				s += string(b)
+                                if off < len(msg) {
+                                        // More to come
+                                        goto Txt
+                                }
 			case "":
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
