@@ -207,7 +207,7 @@ func udp(addr string, e chan os.Error) {
 
 func main() {
 	var sserver *string = flag.String("sserver", "127.0.0.1:8053", "Set the listener address")
-	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es)")
+	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es), seperate with commas")
 	verbose = flag.Bool("verbose", false, "Print packet as it flows through") // verbose needs to be global
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
