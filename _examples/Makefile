@@ -4,6 +4,7 @@ chaos \
 axfr \
 reflect \
 funkensturm \
+ns \
 
 all: 
 	for i in $(EXAMPLES); do gomake -C $$i; done
