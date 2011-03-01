@@ -82,7 +82,7 @@ func TestResolverTsig(t *testing.T) {
 	// ask something
 	m.Question[0] = Question{"powerdns.nl", TypeDNSKEY, ClassINET}
 	m.Extra = make([]RR, 1)
-	m.SetId()
+	m.Id = Id()
 
 	tsig := new(RR_TSIG)
 	tsig.Hdr.Name = "miek.nl" // for tsig this is the key's name

@@ -1055,7 +1055,8 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Set an Msg Id to a random value.
-func (m *Msg) SetId() {
-	m.Id = uint16(rand.Int()) ^ uint16(time.Nanoseconds())
+// Return a 16 bits random number to be used as
+// msg id
+func Id() uint16 {
+	return uint16(rand.Int()) ^ uint16(time.Nanoseconds())
 }

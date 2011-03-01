@@ -58,7 +58,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 
 	if q.Id == 0 {
 		// No Id sed, set it
-		q.SetId()
+                q.Id = Id()
 	}
 	sending, ok := q.Pack()
 	if !ok {
@@ -119,7 +119,7 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	var _ = err // TODO(mg)
 
 	if q.Id == 0 {
-		q.SetId()
+                q.Id = Id()
 	}
 
 	defer close(m)
@@ -227,7 +227,7 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	var _ = err // TODO(mg)
 
 	if q.Id == 0 {
-		q.SetId()
+		q.Id = Id()
 	}
 
 	defer close(m)

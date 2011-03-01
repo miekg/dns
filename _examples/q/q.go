@@ -12,6 +12,7 @@ import (
 
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Request DNSSEC records")
+	var short *bool = flag.Bool("short", false, "Abbriate long DNSKEY and RRSIG RRs")
 	var port *string = flag.String("port", "53", "Set the query port")
 	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")
@@ -102,11 +103,14 @@ Flags:
 
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
-		m.SetId()
+		m.Id = dns.Id()
 		in, err := r.Query(m)
 		if in != nil {
 			if m.Id != in.Id {
 				fmt.Printf("Id mismatch\n")
+			}
+			if *short {
+				in = shortMsg(in)
 			}
 			fmt.Printf("%v\n", in)
 		} else {
@@ -114,6 +118,31 @@ Flags:
 		}
 	}
 }
+
+// Walk trough message and short Key data and Sig data
+func shortMsg(in *dns.Msg) *dns.Msg {
+	for i := 0; i < len(in.Answer); i++ {
+		in.Answer[i] = shortRR(in.Answer[i])
+	}
+	for i := 0; i < len(in.Ns); i++ {
+		in.Ns[i] = shortRR(in.Ns[i])
+	}
+	for i := 0; i < len(in.Extra); i++ {
+		in.Extra[i] = shortRR(in.Extra[i])
+	}
+        return in
+}
+
+func shortRR(r dns.RR) dns.RR {
+	switch t := r.(type) {
+	case *dns.RR_DNSKEY:
+		t.PublicKey = "( ... )"
+	case *dns.RR_RRSIG:
+		t.Signature = "( ... )"
+	}
+	return r
+}
+
 /*
 41 func (m *Meta) String() string {
 42         s := ";; Query time: " + strconv.Itoa(int(m.QueryEnd-m.QueryStart)) + " nsec"
