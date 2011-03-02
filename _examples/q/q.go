@@ -139,6 +139,8 @@ func shortRR(r dns.RR) dns.RR {
 		t.PublicKey = "( ... )"
 	case *dns.RR_RRSIG:
 		t.Signature = "( ... )"
+        case *dns.RR_NSEC3:
+                t.Salt = "-"     // nobody cares
 	}
 	return r
 }
