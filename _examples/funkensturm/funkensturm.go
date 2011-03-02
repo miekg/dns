@@ -172,8 +172,10 @@ func replyTCP(c *net.TCPConn, a net.Addr, i *dns.Msg) {
 // TODO  IPv6
 func splitAddrPort(s string) (a, p string) {
 	items := strings.Split(s, ":", 2)
-	a = items[0]
-	p = items[1]
+        a = items[0]
+        if len(items) > 2 {
+                p = items[1]
+        }
 	return
 }
 
