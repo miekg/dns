@@ -16,6 +16,7 @@ package dns
 
 import (
 	"os"
+        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -329,6 +330,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					var _ = byte(fv.Elem(j).(*reflect.UintValue).Get())
 				}
 				// handle type bit maps
+                                // TODO(mg)
 			}
 		case *reflect.StructValue:
 			off, ok = packStructValue(fv, msg, off)
@@ -513,8 +515,9 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				off = off1 + int(optlen)
 			case "NSEC": // NSEC/NSEC3
 				if off+1 > len(msg) {
-					// there is none
-					break
+					fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
+                                        // TODO(MG) dit moet beter
+					return len(msg), false
 				}
 				// Fix multple windows TODO(mg)
 				nsec := make([]uint16, 256) // use append TODO(mg)
@@ -522,10 +525,19 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				window := int(msg[off])
 				blocks := int(msg[off+1])
 				if off+blocks > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
+					fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
 					return len(msg), false
 				}
+                                if blocks == 0 {
+                                        // Nothing encoded in this window
+                                        // Kinda lame to alloc above and to clear it here
+                                        nsec = nsec[:ni]
+				        fv.Set(reflect.NewValue(nsec).(*reflect.SliceValue))
+                                        break
+                                }
+
 				off += 2
+				fmt.Fprintf(os.Stderr, "dns: %d %d", window, blocks)
 				for j := 0; j < blocks; j++ {
 					b := msg[off+j]
 					// Check the bits one by one, and set the type
@@ -561,6 +573,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 						nsec[ni] = uint16(window*256 + j*8 + 7)
 						ni++
 					}
+                                        println("HALLO")
 				}
 				nsec = nsec[:ni]
 				fv.Set(reflect.NewValue(nsec).(*reflect.SliceValue))
