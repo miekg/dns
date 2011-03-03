@@ -37,6 +37,13 @@ const (
 	HashGOST94
 )
 
+// DNSKEY flags values.
+const (
+        KSK = 1
+        ZSK = 1 << 8
+        REVOKE = 1 << 7
+)
+
 // The RRSIG needs to be converted to wireformat with some of
 // the rdata (the signature) missing. Use this struct to easy
 // the conversion (and re-use the pack/unpack functions).
