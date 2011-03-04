@@ -3,6 +3,7 @@ Todo:
 * Tsig generation for replies (request MAC)
 * Parsing from strings, going with goyacc and .cz lexer
 * encoding NSEC3/NSEC bitmaps
+* Failed Xfr trigger nil error
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
