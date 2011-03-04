@@ -137,7 +137,11 @@ func (q *Question) String() string {
 	// prefix with ; (as in dig)
 	s := ";" + q.Name + "\t"
 	s = s + Class_str[q.Qclass] + "\t"
-	s = s + Rr_str[q.Qtype]
+        if _, ok := Rr_str[q.Qtype]; ok {
+                s += " " + Rr_str[q.Qtype]
+        } else {
+                s += " " + "TYPE" + strconv.Itoa(int(q.Qtype))
+        }
 	return s
 }
 
