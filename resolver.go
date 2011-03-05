@@ -9,6 +9,7 @@ package dns
 import (
 	"os"
 	"net"
+	"time"
 )
 
 const packErr = "Failed to pack message"
@@ -24,7 +25,7 @@ type Resolver struct {
 	Rotate   bool                // round robin among servers -- TODO
 	Tcp      bool                // use TCP
 	Mangle   func([]byte) []byte // mangle the packet
-	// rtt map[string]int server->int, smaller is faster 0, -1 is unreacheble
+	Rtt      map[string]int64    // Store round trip times
 }
 
 // Basic usage pattern for setting up a resolver:
@@ -48,8 +49,9 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	if len(res.Servers) == 0 {
 		return nil, &Error{Error: "No servers defined"}
 	}
-	// len(res.Server) == 0 can be perfectly valid, when setting up the resolver
-	// It is now
+        if res.Rtt == nil {
+                res.Rtt = make(map[string]int64)
+        }
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -58,7 +60,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 
 	if q.Id == 0 {
 		// No Id sed, set it
-                q.Id = Id()
+		q.Id = Id()
 	}
 	sending, ok := q.Pack()
 	if !ok {
@@ -67,6 +69,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
+		t := time.Nanoseconds()
 		if res.Tcp {
 			c, err = net.Dial("tcp", "", server)
 		} else {
@@ -80,6 +83,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 		} else {
 			in, err = exchangeUDP(c, sending, res, true)
 		}
+                res.Rtt[server] = time.Nanoseconds() - t
 
 		// Check id in.id != out.id, should be checked in the client!
 		c.Close()
@@ -119,7 +123,7 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	var _ = err // TODO(mg)
 
 	if q.Id == 0 {
-                q.Id = Id()
+		q.Id = Id()
 	}
 
 	defer close(m)
@@ -138,7 +142,6 @@ Server:
 		}
 		first := true
 		var serial uint32 // The first serial seen is the current server serial
-		var _ = serial
 
 		defer c.Close()
 		for {
