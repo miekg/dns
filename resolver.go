@@ -119,6 +119,9 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	} else {
 		port = res.Port
 	}
+        if res.Rtt == nil {
+                res.Rtt = make(map[string]int64)
+        }
 
 	var _ = err // TODO(mg)
 
@@ -226,6 +229,9 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	} else {
 		port = res.Port
 	}
+        if res.Rtt == nil {
+                res.Rtt = make(map[string]int64)
+        }
 
 	var _ = err // TODO(mg)
 
