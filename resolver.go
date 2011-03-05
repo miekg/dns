@@ -22,10 +22,11 @@ type Resolver struct {
 	Ndots    int                 // number of dots in name to trigger absolute lookup -- TODO
 	Timeout  int                 // seconds before giving up on packet
 	Attempts int                 // lost packets before giving up on server
-	Rotate   bool                // round robin among servers -- TODO
 	Tcp      bool                // use TCP
 	Mangle   func([]byte) []byte // mangle the packet
 	Rtt      map[string]int64    // Store round trip times
+        Rrb      int                 // Last used server (for round robin)
+
 }
 
 // Basic usage pattern for setting up a resolver:
