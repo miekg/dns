@@ -18,8 +18,8 @@ GOFILES=\
 	resolver.go\
 	config.go\
 	server.go \
+	nsec3.go \
 #	y.go\
-#	nsec3.go \
 
 include $(GOROOT)/src/Make.pkg
 
