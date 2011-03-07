@@ -112,7 +112,6 @@ type Xfr struct {
 // Channel m is closed when the IXFR ends.
 func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	var port string
-	var err os.Error
 	var in *Msg
 	var x Xfr
 	if res.Port == "" {
@@ -123,8 +122,6 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
         if res.Rtt == nil {
                 res.Rtt = make(map[string]int64)
         }
-
-	var _ = err // TODO(mg)
 
 	if q.Id == 0 {
 		q.Id = Id()
@@ -139,9 +136,8 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
-		c, cerr := net.Dial("tcp", "", server)
-		if cerr != nil {
-			err = cerr
+		c, err := net.Dial("tcp", "", server)
+		if err != nil {
 			continue Server
 		}
 		first := true
@@ -150,14 +146,13 @@ Server:
 		defer c.Close()
 		for {
 			if first {
-				in, cerr = exchangeTCP(c, sending, res, true)
+				in, err = exchangeTCP(c, sending, res, true)
 			} else {
 				in, err = exchangeTCP(c, sending, res, false)
 			}
 
-			if cerr != nil {
+			if err != nil {
 				// Failed to send, try the next
-				err = cerr
 				c.Close()
 				continue Server
 			}
@@ -223,7 +218,6 @@ Server:
 // The channel is closed to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	var port string
-	var err os.Error
 	var in *Msg
 	if res.Port == "" {
 		port = "53"
@@ -233,8 +227,6 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
         if res.Rtt == nil {
                 res.Rtt = make(map[string]int64)
         }
-
-	var _ = err // TODO(mg)
 
 	if q.Id == 0 {
 		q.Id = Id()
@@ -248,25 +240,22 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
-		c, cerr := net.Dial("tcp", "", server)
-		if cerr != nil {
-			err = cerr
+		c, err := net.Dial("tcp", "", server)
+		if err != nil {
 			continue Server
 		}
 		first := true
 		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
-				in, cerr = exchangeTCP(c, sending, res, true)
+				in, err = exchangeTCP(c, sending, res, true)
 			} else {
 				in, err = exchangeTCP(c, sending, res, false)
 			}
 
-			if cerr != nil {
+			if err != nil {
 				// Failed to send, try the next
-				err = cerr
 				c.Close()
-				println("AGIAIN")
 				continue Server
 			}
 			if in.Id != q.Id {
