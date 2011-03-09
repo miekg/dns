@@ -3,7 +3,6 @@ Todo:
 * Tsig generation for replies (request MAC)
 * Parsing from strings, going with goyacc and .cz lexer
 * encoding NSEC3/NSEC bitmaps, DEcoding works
-    nsec3 hashing of owner names
 * Failed Xfr triggers nil error?
 
 Issues:
