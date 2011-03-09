@@ -13,7 +13,6 @@ type saltWireFmt struct {
 
 // Hash a string/label according to RFC5155
 func Nsec3Hash(label string, ha int, iterations int, salt string) string {
-
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
@@ -28,7 +27,6 @@ func Nsec3Hash(label string, ha int, iterations int, salt string) string {
 		return ""
 	}
 	name = name[:off]
-
 	var s hash.Hash
 	switch ha {
 	case HashSHA1:
