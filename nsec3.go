@@ -22,28 +22,31 @@ func Nsec3Hash(label string, ha int, iterations int, salt string) string {
 		return ""
 	}
 	wire = wire[:n]
-	owner := make([]byte, 255)
-	off, ok1 := packDomainName(strings.ToLower(label), owner, 0)
+	name := make([]byte, 255)
+	off, ok1 := packDomainName(strings.ToLower(label), name, 0)
 	if !ok1 {
 		return ""
 	}
-	owner = owner[:off]
+	name = name[:off]
 
 	var s hash.Hash
 	switch ha {
 	case HashSHA1:
 		s = sha1.New()
+        default:
+                return ""
 	}
 
 	// k = 0
-	h := append(owner, wire...)
-	io.WriteString(s, string(h))
+	name = append(name, wire...)
+	io.WriteString(s, string(name))
 	nsec3 := s.Sum()
-
-	for k := 1; k < iterations; k++ {
-                h = append(nsec3, wire...)
-                io.WriteString(s, string(h))
+        // k > 0
+        for k := 0; k < iterations; k++ {
+                s.Reset()
+                nsec3 = append(nsec3, wire...)
+                io.WriteString(s, string(nsec3))
                 nsec3 = s.Sum()
-	}
+        }
 	return unpackBase32(nsec3)
 }
