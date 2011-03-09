@@ -19,7 +19,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 
 ## Supported RFCs and features include:
 
-* 1034/1035  - DNS standard
+* 103{4,5}  - DNS standard
 * 1982 - Serial Arithmetic
 * 1876 - LOC record (incomplete)
 * 1995 - IXFR
@@ -33,8 +33,9 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 2915 - NAPTR
 * 3110 - RSASHA1 DNS keys
 * 3225 - DO bit (DNSSEC OK)
+* 340{1,2,3} - NAPTR
 * 3597 - Unkown RRs
-* 4033/4034/4035 - DNSSEC + validation functions
+* 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP
 * 4408 - SPF
 * 5001 - NSID 
