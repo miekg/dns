@@ -12,7 +12,7 @@ type saltWireFmt struct {
 }
 
 // Hash a string/label according to RFC5155
-func HashNames(label string, ha int, iterations int, salt string) string {
+func HashName(label string, ha int, iterations int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
@@ -52,6 +52,6 @@ func HashNames(label string, ha int, iterations int, salt string) string {
 // Hash the ownername and the next owner name in
 // an NSEC3 record, use the parameters from the NSEC3 itself.
 func (nsec3 *RR_NSEC3) HashNames() {
-        nsec3.Header().Name = HashNames(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
-        nsec3.NextDomain = HashNames(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+        nsec3.Header().Name = HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+        nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
 }
