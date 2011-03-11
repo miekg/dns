@@ -1,7 +1,6 @@
 Todo:
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
-* Tsig generation for replies (request MAC)
-* Parsing from strings, going with goyacc and .cz lexer
+* Parsing from strings, going with goyacc and .cz lexer?
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * AXFR/IXFR with TSIG validation
 * Failed Xfr triggers nil error?
