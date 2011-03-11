@@ -12,7 +12,7 @@ import (
 
 // HMAC hashing codes. These are transmitted as domain names.
 const (
-	HmacMD5    = "HMAC-MD5.SIG-ALG.REG.INT"
+	HmacMD5    = "hmac-md5.sig-alg.reg.int"
 	HmacSHA1   = "hmac-sha1"
 	HmacSHA256 = "hmac-sha256"
 )
@@ -40,9 +40,11 @@ func (rr *RR_TSIG) String() string {
 		" " + rr.Algorithm +
 		" " + tsigTimeToDate(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
-		" " + strings.ToUpper(hex.EncodeToString([]byte(rr.MAC))) +
+		" " + strconv.Itoa(int(rr.MACSize)) +
+		" " + rr.MAC +
 		" " + strconv.Itoa(int(rr.OrigId)) +
 		" " + strconv.Itoa(int(rr.Error)) +
+		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
 }
 
@@ -79,8 +81,8 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
-	t.MAC = string(h.Sum())
-	t.MACSize = uint16(len(t.MAC))
+	t.MAC = strings.ToUpper(hex.EncodeToString(h.Sum()))
+	t.MACSize = uint16(len(h.Sum()))        // Needs to be "on-the-wire" size.
 	if !ok {
 		return false
 	}
@@ -116,7 +118,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
         }
         h := hmac.NewMD5([]byte(rawsecret))
         io.WriteString(h, string(buf))
-        return string(h.Sum()) == t.MAC
+        return strings.ToUpper(hex.EncodeToString(h.Sum())) == t.MAC
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {

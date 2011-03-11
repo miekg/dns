@@ -423,7 +423,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				// There is no length encoded here
 				h, e := hex.DecodeString(s)
 				if e != nil {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
+					//fmt.Fprintf(os.Stderr, "dns: overflow packing (size-)hex string")
 					return len(msg), false
 				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
@@ -698,7 +698,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					}
 				}
 				if off+size > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking hex-size string")
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
 					return len(msg), false
 				}
 				s = hex.EncodeToString(msg[off : off+size])
