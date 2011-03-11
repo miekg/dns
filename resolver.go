@@ -25,7 +25,7 @@ type Resolver struct {
 	Tcp      bool                // use TCP
 	Mangle   func([]byte) []byte // mangle the packet
 	Rtt      map[string]int64    // Store round trip times
-        Rrb      int                 // Last used server (for round robin)
+	Rrb      int                 // Last used server (for round robin)
 
 }
 
@@ -42,6 +42,7 @@ type Resolver struct {
 //
 // Note that message id checking is left to the caller.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
+	// Check if there is a TSIG appended, if so, check it
 	var (
 		c    net.Conn
 		in   *Msg
@@ -50,9 +51,9 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	if len(res.Servers) == 0 {
 		return nil, &Error{Error: "No servers defined"}
 	}
-        if res.Rtt == nil {
-                res.Rtt = make(map[string]int64)
-        }
+	if res.Rtt == nil {
+		res.Rtt = make(map[string]int64)
+	}
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -84,7 +85,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 		} else {
 			in, err = exchangeUDP(c, sending, res, true)
 		}
-                res.Rtt[server] = time.Nanoseconds() - t
+		res.Rtt[server] = time.Nanoseconds() - t
 
 		// Check id in.id != out.id, should be checked in the client!
 		c.Close()
@@ -104,6 +105,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 type Xfr struct {
 	Add bool // true is to be added, otherwise false
 	RR
+	Err os.Error
 }
 
 // Start an IXFR, q should contain a *Msg with the question
@@ -111,6 +113,7 @@ type Xfr struct {
 // have Xfr.Add set to true otherwise it is false.
 // Channel m is closed when the IXFR ends.
 func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
+	// TSIG 
 	var port string
 	var in *Msg
 	var x Xfr
@@ -119,9 +122,9 @@ func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	} else {
 		port = res.Port
 	}
-        if res.Rtt == nil {
-                res.Rtt = make(map[string]int64)
-        }
+	if res.Rtt == nil {
+		res.Rtt = make(map[string]int64)
+	}
 
 	if q.Id == 0 {
 		q.Id = Id()
@@ -224,9 +227,9 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	} else {
 		port = res.Port
 	}
-        if res.Rtt == nil {
-                res.Rtt = make(map[string]int64)
-        }
+	if res.Rtt == nil {
+		res.Rtt = make(map[string]int64)
+	}
 
 	if q.Id == 0 {
 		q.Id = Id()
@@ -237,6 +240,18 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	if !ok {
 		return
 	}
+
+/*
+        // Need the secret!
+        var tsig *RR_TSIG
+	// Check if there is a TSIG added
+	if len(q.Extra) > 0 {
+		lastrr := q.Extra[len(q.Extra)-1]
+                if lastrr.Header().Rrtype == TypeTSIG {
+                        tsig = lastrr.(*RR_TSIG)
+                }
+	}
+        */
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
