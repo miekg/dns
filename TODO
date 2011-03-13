@@ -4,6 +4,9 @@ Todo:
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * AXFR/IXFR with TSIG validation
 * Failed Xfr triggers nil error?
+* Use callback in IXFR/AXFR to make tsig happen (and other cool stuff in FunkenSturm)
+* A New for all type with some defaults filled in 
+* Take a good look at hash.Hash take over the digest sizes and names
 * HIP RR (needs list of domain names, need slice stuff for that)
 
 Issues:

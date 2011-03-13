@@ -219,7 +219,9 @@ Server:
 // returned over the channel, so the caller will receive 
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
-func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
+// f is a callback function called after every message has been
+// received.
+func (res *Resolver) Axfr(q *Msg, m chan Xfr, f func(*Msg) bool) {
 	var port string
 	var in *Msg
 	if res.Port == "" {

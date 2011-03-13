@@ -23,6 +23,7 @@ const (
 	Year68         = 2 << (32 - 1) // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	DefaultMsgSize = 4096          // A standard default for larger than 512 packets.
 	MaxMsgSize     = 65536         // Largest possible DNS packet.
+	DefaultTtl     = 3600          // Default Ttl, used in New() for instance.
 )
 
 // Error represents a DNS error
