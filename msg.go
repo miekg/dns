@@ -16,7 +16,7 @@ package dns
 
 import (
 	"os"
-//        "fmt"
+        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -698,9 +698,18 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 						name := val.FieldByName("HashLength")
 						size = int(name.(*reflect.UintValue).Get())
 					}
+                                case "RR_TSIG":
+                                        switch f.Name {
+                                        case "MAC":
+                                                name := val.FieldByName("MACSize")
+                                                size = int(name.(*reflect.UintValue).Get())
+                                        case "OtherData":
+                                                name := val.FieldByName("OtherLen")
+                                                size = int(name.(*reflect.UintValue).Get())
+                                        }
 				}
 				if off+size > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
+					fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
 					return len(msg), false
 				}
 				s = hex.EncodeToString(msg[off : off+size])
