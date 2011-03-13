@@ -75,6 +75,7 @@ var Rr_str = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
+        TypeDHCID:      "DHCID",
 	TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",

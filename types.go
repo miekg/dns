@@ -53,6 +53,7 @@ const (
 	TypeRRSIG      = 46
 	TypeNSEC       = 47
 	TypeDNSKEY     = 48
+        TypeDHCID      = 49
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
 	TypeTALINK     = 58
@@ -725,6 +726,19 @@ func (rr *RR_URI) String() string {
 		" " + rr.Target
 }
 
+type RR_DHCID struct {
+        Hdr     RR_Header
+        Digest  string "base64"
+}
+
+func (rr *RR_DHCID) Header() *RR_Header {
+        return &rr.Hdr
+}
+
+func (rr *RR_DHCID) String() string {
+        return rr.Hdr.String() + rr.Digest
+}
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {
@@ -774,6 +788,7 @@ var rr_mk = map[int]func() RR{
 	TypeNSEC:       func() RR { return new(RR_NSEC) },
 	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
 	TypeNSEC3:      func() RR { return new(RR_NSEC3) },
+        TypeDHCID:      func() RR { return new(RR_DHCID) },
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 	TypeTKEY:       func() RR { return new(RR_TKEY) },
 	TypeTSIG:       func() RR { return new(RR_TSIG) },
