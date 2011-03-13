@@ -37,6 +37,7 @@ const (
 	TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
+        TypeKX    = 36
 	TypeCERT  = 37
 	TypeDNAME = 39
 
@@ -515,6 +516,21 @@ func (rr *RR_DLV) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
+type RR_KX struct {
+        Hdr     RR_Header
+        Preference uint16
+        Exchanger string "domain-name"
+}
+
+func (rr *RR_KX) Header() *RR_Header {
+        return &rr.Hdr
+}
+
+func (rr *RR_KX) String() string {
+        return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+                " " + rr.Exchanger
+}
+
 type RR_TA struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -749,6 +765,9 @@ var rr_mk = map[int]func() RR{
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
+        TypeCERT:       func() RR { return new(RR_CERT) },
+        TypeKX:         func() RR { return new(RR_KX) },
+        TypeSPF:        func() RR { return new(RR_SPF) },
 	TypeTALINK:     func() RR { return new(RR_TALINK) },
 	TypeSSHFP:      func() RR { return new(RR_SSHFP) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
