@@ -219,9 +219,99 @@ Server:
 // returned over the channel, so the caller will receive 
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
-// f is a callback function called after every message has been
-// received.
-func (res *Resolver) Axfr(q *Msg, m chan Xfr, f func(*Msg) bool) {
+func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
+	var port string
+	var in *Msg
+	if res.Port == "" {
+		port = "53"
+	} else {
+		port = res.Port
+	}
+	if res.Rtt == nil {
+		res.Rtt = make(map[string]int64)
+	}
+
+	if q.Id == 0 {
+		q.Id = Id()
+	}
+
+	defer close(m)
+	sending, ok := q.Pack()
+	if !ok {
+		return
+	}
+
+        var tsig bool
+	// Check if there is a TSIG added to the request msg
+	if len(q.Extra) > 0 {
+                tsig = q.Extra[len(q.Extra)-1].Header().Rrtype == TypeTSIG
+	}
+
+Server:
+	for i := 0; i < len(res.Servers); i++ {
+		server := res.Servers[i] + ":" + port
+		c, err := net.Dial("tcp", "", server)
+		if err != nil {
+			continue Server
+		}
+		first := true
+		defer c.Close() // TODO(mg): if not open?
+		for {
+			if first {
+				in, err = exchangeTCP(c, sending, res, true)
+			} else {
+				in, err = exchangeTCP(c, sending, res, false)
+			}
+
+			if err != nil {
+				// Failed to send, try the next
+				c.Close()
+				continue Server
+			}
+			if in.Id != q.Id {
+				c.Close()
+				return
+			}
+
+                        if tsig && len(in.Extra) > 0 {          // What if not included?
+                                t := in.Extra[len(in.Extra)-1]
+                                println(t.String())
+                        }
+
+                        println(in.String())
+
+			if first {
+				if !checkAxfrSOA(in, true) {
+					c.Close()
+					continue Server
+				}
+				first = !first
+			}
+
+			if !first {
+				if !checkAxfrSOA(in, false) {
+					// Soa record not the last one
+					sendFromMsg(in, m, false)
+					continue
+				} else {
+					sendFromMsg(in, m, true)
+					return
+				}
+			}
+		}
+		panic("not reached")
+		return
+	}
+	return
+}
+
+
+// Start an AXFR, q should contain a message with the question
+// for an AXFR: "miek.nl" ANY AXFR. The closing SOA isn't
+// returned over the channel, so the caller will receive 
+// the zone as-is. Xfr.Add is always true.
+// The channel is closed to signal the end of the AXFR.
+func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 	var port string
 	var in *Msg
 	if res.Port == "" {
