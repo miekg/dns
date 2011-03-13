@@ -31,7 +31,7 @@ func main() {
                 go res.Ixfr(m, c)
         } else {
 	        m.Question[0] = dns.Question{zone, dns.TypeAXFR, dns.ClassINET}
-                go res.Axfr(m, c)
+                go res.Axfr(m, c, nil)
         }
         for x := range c {
                 fmt.Printf("%v %v\n",x.Add, x.RR)

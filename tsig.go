@@ -34,6 +34,13 @@ func (rr *RR_TSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 
+func (rr *RR_TSIG) Defaults() {
+        rr.Header().Ttl = 0
+        rr.Header().Class = ClassANY
+        rr.Header().Rrtype = TypeTSIG
+        rr.Fudge = 300
+}
+
 // TSIG has no official presentation format, but this will suffice.
 func (rr *RR_TSIG) String() string {
 	return rr.Hdr.String() +
