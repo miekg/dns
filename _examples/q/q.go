@@ -89,8 +89,8 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-                opt := dns.New(dns.TypeOPT)
-		opt.(*dns.RR_OPT).SetDo()
+                opt := new(dns.TypeOPT)
+		opt.SetDo()
 		if *nsid {
 			opt.(*dns.RR_OPT).SetNsid("")
 		}
