@@ -4,6 +4,7 @@ Todo:
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * AXFR/IXFR with TSIG validation
 * Failed Xfr triggers nil error?
+* HIP RR (needs list of domain names, need slice stuff for that)
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
