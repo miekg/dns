@@ -285,7 +285,7 @@ Server:
                                         if t.(*RR_TSIG).Verify(in, secret, reqmac) {
                                                 println("Validates")
                                         } else {
-                                                println("DOES NOT validates")
+                                                println("DOES NOT validate")
                                         }
                                 }
                         }

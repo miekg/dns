@@ -123,6 +123,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret, reqmac string) bool {
 	}
 	println(msg2.String())
 	msg2.MsgHdr.Id = t.OrigId
+	println(msg2.String())
 	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1] // Strip off the TSIG
 	buf, ok := tsigToBuf(t, msg2, reqmac)
 	if !ok {
@@ -134,18 +135,31 @@ func (t *RR_TSIG) Verify(m *Msg, secret, reqmac string) bool {
 	println("t.MAC", strings.ToUpper(t.MAC))
 	println("our MAC", strings.ToUpper(hex.EncodeToString(h.Sum())))
         println("req mac", reqmac)
-	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
+	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(reqmac)
 }
 
 func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
 	var mb []byte
         var buf []byte
+
+	if reqmac != "" {
+		m := new(macWireFmt)
+		m.MACSize = uint16(len(reqmac) / 2)
+		m.MAC = reqmac
+		mb = make([]byte, len(reqmac)) // reqmac should be twice as long
+		n, ok := packStruct(m, mb, 0)
+		if !ok {
+			return nil, false
+		}
+		mb = mb[:n]
+	}
+
 	tsigvar := make([]byte, DefaultMsgSize)
 	tsig := new(tsigWireFmt)
-	tsig.Name = rr.Header().Name
+	tsig.Name = strings.ToLower(rr.Header().Name)
 	tsig.Class = rr.Header().Class
 	tsig.Ttl = rr.Header().Ttl
-	tsig.Algorithm = rr.Algorithm
+	tsig.Algorithm = strings.ToLower(rr.Algorithm)
 	tsig.TimeSigned = rr.TimeSigned
 	tsig.Fudge = rr.Fudge
 	tsig.Error = rr.Error
@@ -161,21 +175,10 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
 		return nil, false
 	}
 	if reqmac != "" {
-		m := new(macWireFmt)
-		m.MAC = reqmac
-		m.MACSize = uint16(len(reqmac) / 2)
-		mb = make([]byte, len(reqmac)) // reqmac should be twice as long
-		n, ok := packStruct(m, mb, 0)
-		if !ok {
-			return nil, false
-		}
-		mb = mb[:n]
-	}
-	if mb == nil {
-		buf = append(msgbuf, tsigvar...)
-	} else {
                 x := append(mb, msgbuf...)
 		buf = append(x, tsigvar...)
+	} else {
+		buf = append(msgbuf, tsigvar...)
         }
 	return buf, true
 }
