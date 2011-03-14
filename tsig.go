@@ -12,9 +12,9 @@ import (
 
 // HMAC hashing codes. These are transmitted as domain names.
 const (
-	HmacMD5    = "hmac-md5.sig-alg.reg.int"
-	HmacSHA1   = "hmac-sha1"
-	HmacSHA256 = "hmac-sha256"
+	HmacMD5    = "hmac-md5.sig-alg.reg.int."
+	HmacSHA1   = "hmac-sha1."
+	HmacSHA256 = "hmac-sha256."
 )
 
 type RR_TSIG struct {
@@ -72,6 +72,11 @@ type tsigWireFmt struct {
 	OtherData string "size-hex"
 }
 
+// If we have the MAC use this type to convert it to wiredata
+type macWireFmt struct {
+        MAC string "size-hex"
+}
+
 // Generate the HMAC for message. The TSIG RR is modified
 // to include the MAC and MACSize. Note the the msg Id must
 // already be set, otherwise the MAC will not be correct when
@@ -109,7 +114,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
                 return false
         }
 
-	msg2 := m // TODO deep copy TODO(mg)
+	msg2 := m // Deep copy TODO(mg)
 	if len(msg2.Extra) < 1 {
 		// nothing in additional
 		return false
@@ -123,14 +128,19 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
         if !ok {
                 return false
         }
+
         h := hmac.NewMD5([]byte(rawsecret))
         io.WriteString(h, string(buf))
-        return strings.ToUpper(hex.EncodeToString(h.Sum())) == t.MAC
+        println(strings.ToUpper(t.MAC))
+        println(strings.ToUpper(hex.EncodeToString(h.Sum())))
+        return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
 }
 
+// INclude the MAC when verifying
 func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 	// Fill the struct and generate the wiredata
-	buf := make([]byte, DefaultMsgSize) // TODO(mg) bufsize!
+        var mb []byte
+	buf := make([]byte, DefaultMsgSize)
 	tsig := new(tsigWireFmt)
 	tsig.Name = rr.Header().Name
 	tsig.Class = rr.Header().Class
@@ -150,7 +160,21 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 	if !ok {
 		return nil, false
 	}
-        // First the pkg, then the tsig wire fmt
+        if rr.MAC != "" {
+                m := new(macWireFmt)
+                m.MAC = rr.MAC
+                mb = make([]byte, len(rr.MAC))  // t.MAC should be twice as long
+                n, ok := packStruct(m, mb, 0)
+                if !ok {
+                        return nil, false
+                }
+                mb = mb[:n]
+        }
+        // If there is a MAC included in the TSIG it should be added first
+        // otherwise just the pkg and then the TSIG wire fmt
 	buf = append(msgbuf, buf...)
+        if mb != nil {
+                buf = append(mb, buf...)
+        }
 	return buf, true
 }

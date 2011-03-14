@@ -275,10 +275,15 @@ Server:
 
                         if tsig && len(in.Extra) > 0 {          // What if not included?
                                 t := in.Extra[len(in.Extra)-1]
-                                println(t.String())
+                                switch t.(type) {
+                                case *RR_TSIG:
+                                        if t.(*RR_TSIG).Verify(in, secret) {
+                                                println("Validates")
+                                        } else {
+                                                println("DOES NOT validates")
+                                        }
+                                }
                         }
-
-                        println(in.String())
 
 			if first {
 				if !checkAxfrSOA(in, true) {
