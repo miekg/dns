@@ -35,11 +35,11 @@ func (rr *RR_TSIG) Header() *RR_Header {
 }
 
 func (rr *RR_TSIG) SetDefaults() {
-        rr.Header().Ttl = 0
-        rr.Header().Class = ClassANY
-        rr.Header().Rrtype = TypeTSIG
-        rr.Fudge = 300
-        rr.Algorithm = HmacMD5
+	rr.Header().Ttl = 0
+	rr.Header().Class = ClassANY
+	rr.Header().Rrtype = TypeTSIG
+	rr.Fudge = 300
+	rr.Algorithm = HmacMD5
 }
 
 // TSIG has no official presentation format, but this will suffice.
@@ -49,7 +49,7 @@ func (rr *RR_TSIG) String() string {
 		" " + tsigTimeToDate(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
 		" " + strconv.Itoa(int(rr.MACSize)) +
-		" " + rr.MAC +
+		" " + strings.ToUpper(rr.MAC) +
 		" " + strconv.Itoa(int(rr.OrigId)) +
 		" " + strconv.Itoa(int(rr.Error)) +
 		" " + strconv.Itoa(int(rr.OtherLen)) +
@@ -75,7 +75,8 @@ type tsigWireFmt struct {
 
 // If we have the MAC use this type to convert it to wiredata
 type macWireFmt struct {
-        MAC string "size-hex"
+	MACSize uint16
+	MAC     string "size-hex"
 }
 
 // Generate the HMAC for message. The TSIG RR is modified
@@ -85,17 +86,17 @@ type macWireFmt struct {
 // The string 'secret' must be encoded in base64.
 func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	rawsecret, err := packBase64([]byte(secret))
-        if err != nil {
-                return false
-        }
+	if err != nil {
+		return false
+	}
 	t.OrigId = m.MsgHdr.Id
 
 	buf, ok := tsigToBuf(t, m, "")
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
-	t.MAC = strings.ToUpper(hex.EncodeToString(h.Sum()))
-	t.MACSize = uint16(len(h.Sum()))        // Needs to be "on-the-wire" size.
+	t.MAC = hex.EncodeToString(h.Sum())
+	t.MACSize = uint16(len(h.Sum())) // Needs to be "on-the-wire" size.
 	if !ok {
 		return false
 	}
@@ -107,41 +108,39 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 // section). Return true on success.
 // The secret is a base64 encoded string with the secret.
 func (t *RR_TSIG) Verify(m *Msg, secret, reqmac string) bool {
-	// copy the mesg, strip (and check) the tsig rr
-	// perform the opposite of Generate() and then 
-	// verify the mac
 	rawsecret, err := packBase64([]byte(secret))
-        if err != nil {
-                return false
-        }
+	if err != nil {
+		return false
+	}
 
 	msg2 := m // Deep copy TODO(mg)
 	if len(msg2.Extra) < 1 {
 		// nothing in additional
 		return false
 	}
-        if t.Header().Rrtype != TypeTSIG {
-                return false
-        }
-        msg2.MsgHdr.Id = t.OrigId
-        msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]     // Strip off the TSIG
-        buf, ok := tsigToBuf(t, msg2, reqmac)
-        if !ok {
-                return false
-        }
+	if t.Header().Rrtype != TypeTSIG {
+		return false
+	}
+	println(msg2.String())
+	msg2.MsgHdr.Id = t.OrigId
+	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1] // Strip off the TSIG
+	buf, ok := tsigToBuf(t, msg2, reqmac)
+	if !ok {
+		return false
+	}
 
-        h := hmac.NewMD5([]byte(rawsecret))
-        io.WriteString(h, string(buf))
-        println(strings.ToUpper(t.MAC))
-        println(strings.ToUpper(hex.EncodeToString(h.Sum())))
-        return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
+	h := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(h, string(buf))
+	println("t.MAC", strings.ToUpper(t.MAC))
+	println("our MAC", strings.ToUpper(hex.EncodeToString(h.Sum())))
+        println("req mac", reqmac)
+	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
 }
 
-// INclude the MAC when verifying
 func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
-	// Fill the struct and generate the wiredata
-        var mb []byte
-	buf := make([]byte, DefaultMsgSize)
+	var mb []byte
+        var buf []byte
+	tsigvar := make([]byte, DefaultMsgSize)
 	tsig := new(tsigWireFmt)
 	tsig.Name = rr.Header().Name
 	tsig.Class = rr.Header().Class
@@ -152,29 +151,31 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
 	tsig.Error = rr.Error
 	tsig.OtherLen = rr.OtherLen
 	tsig.OtherData = rr.OtherData
-	n, ok1 := packStruct(tsig, buf, 0)
+	n, ok1 := packStruct(tsig, tsigvar, 0)
 	if !ok1 {
 		return nil, false
 	}
-	buf = buf[:n]
+	tsigvar = tsigvar[:n]
 	msgbuf, ok := msg.Pack()
 	if !ok {
 		return nil, false
 	}
-        if reqmac != "" {
-        println("REQ", reqmac)
-                m := new(macWireFmt)
-                m.MAC = reqmac
-                mb = make([]byte, len(reqmac))  // reqmac should be twice as long
-                n, ok := packStruct(m, mb, 0)
-                if !ok {
-                        return nil, false
-                }
-                mb = mb[:n]
-        }
-	buf = append(msgbuf, buf...)
-        if mb != nil {
-                buf = append(mb, buf...)
+	if reqmac != "" {
+		m := new(macWireFmt)
+		m.MAC = reqmac
+		m.MACSize = uint16(len(reqmac) / 2)
+		mb = make([]byte, len(reqmac)) // reqmac should be twice as long
+		n, ok := packStruct(m, mb, 0)
+		if !ok {
+			return nil, false
+		}
+		mb = mb[:n]
+	}
+	if mb == nil {
+		buf = append(msgbuf, tsigvar...)
+	} else {
+                x := append(mb, msgbuf...)
+		buf = append(x, tsigvar...)
         }
 	return buf, true
 }
