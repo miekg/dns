@@ -16,7 +16,7 @@ package dns
 
 import (
 	"os"
-        "fmt"
+//        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -404,15 +404,6 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
-				/*
-					b64len := base64.StdEncoding.DecodedLen(len(s))
-					_, err := base64.StdEncoding.Decode(msg[off:off+b64len], []byte(s))
-					if err != nil {
-						//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
-						return len(msg), false
-					}
-					off += b64len
-				*/
 			case "domain-name":
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
@@ -709,38 +700,17 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
                                         }
 				}
 				if off+size > len(msg) {
-					fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
 					return len(msg), false
 				}
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
-			case "size":
-				// We should already know how many bytes we can expect
-				// TODO(mg) pack variant. Note that looks a bit like the EDNS0
-				// Option parsing, maybe it should be merged.
-				var size int
-				switch val.Type().Name() {
-				case "RR_TSIG":
-					switch f.Name {
-					case "MAC":
-						name := val.FieldByName("MACSize")
-						size = int(name.(*reflect.UintValue).Get())
-					case "OtherData":
-						name := val.FieldByName("OtherLen")
-						size = int(name.(*reflect.UintValue).Get())
-					}
-				}
-				if off+size > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size string")
-					return len(msg), false
-				}
-				s = string(msg[off : off+size])
-				off += size
                         case "txt":
                                 // 1 or multiple txt pieces
+				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
                         Txt:
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking txt string")
 					return len(msg), false
 				}
 				n := int(msg[off])
@@ -751,7 +721,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				}
 				off += n
 				s += string(b)
-                                if off < len(msg) {
+                                if off < rdlength {
                                         // More to come
                                         goto Txt
                                 }
