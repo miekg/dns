@@ -60,10 +60,7 @@ func TestEDNS_RR(t *testing.T) {
 func TestTsig(t *testing.T) {
 	tsig := new(RR_TSIG)
 	tsig.Hdr.Name = "miek.nl." // for tsig this is the key's name
-	tsig.Hdr.Rrtype = TypeTSIG
-	tsig.Hdr.Class = ClassANY
-	tsig.Hdr.Ttl = 0
-	tsig.Fudge = 300
+        tsig.SetDefaults()
 	tsig.TimeSigned = uint64(time.Seconds())
 
 	out := new(Msg)
@@ -73,7 +70,7 @@ func TestTsig(t *testing.T) {
 
 	ok := tsig.Generate(out, "awwLOtRfpGE+rRKF2+DEiw==")
 	if !ok {
-		t.Log("Failed")
+		t.Log("Failed to generate TSIG record")
 		t.Fail()
 	}
 

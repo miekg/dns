@@ -242,10 +242,15 @@ func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
 	}
 
         var tsig bool
+        var reqmac string
 	// Check if there is a TSIG added to the request msg
 	if len(q.Extra) > 0 {
                 tsig = q.Extra[len(q.Extra)-1].Header().Rrtype == TypeTSIG
+                if tsig {
+                        reqmac = q.Extra[len(q.Extra)-1].(*RR_TSIG).MAC
+                }
 	}
+        println("REQMAC", reqmac)
 
 Server:
 	for i := 0; i < len(res.Servers); i++ {
@@ -277,7 +282,7 @@ Server:
                                 t := in.Extra[len(in.Extra)-1]
                                 switch t.(type) {
                                 case *RR_TSIG:
-                                        if t.(*RR_TSIG).Verify(in, secret) {
+                                        if t.(*RR_TSIG).Verify(in, secret, reqmac) {
                                                 println("Validates")
                                         } else {
                                                 println("DOES NOT validates")

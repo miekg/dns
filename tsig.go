@@ -39,6 +39,7 @@ func (rr *RR_TSIG) SetDefaults() {
         rr.Header().Class = ClassANY
         rr.Header().Rrtype = TypeTSIG
         rr.Fudge = 300
+        rr.Algorithm = HmacMD5
 }
 
 // TSIG has no official presentation format, but this will suffice.
@@ -89,7 +90,7 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
         }
 	t.OrigId = m.MsgHdr.Id
 
-	buf, ok := tsigToBuf(t, m)
+	buf, ok := tsigToBuf(t, m, "")
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
@@ -105,7 +106,7 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 // the TSIG record still attached (as the last rr in the Additional
 // section). Return true on success.
 // The secret is a base64 encoded string with the secret.
-func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
+func (t *RR_TSIG) Verify(m *Msg, secret, reqmac string) bool {
 	// copy the mesg, strip (and check) the tsig rr
 	// perform the opposite of Generate() and then 
 	// verify the mac
@@ -124,7 +125,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
         }
         msg2.MsgHdr.Id = t.OrigId
         msg2.Extra = msg2.Extra[:len(msg2.Extra)-1]     // Strip off the TSIG
-        buf, ok := tsigToBuf(t, msg2)
+        buf, ok := tsigToBuf(t, msg2, reqmac)
         if !ok {
                 return false
         }
@@ -137,7 +138,7 @@ func (t *RR_TSIG) Verify(m *Msg, secret string) bool {
 }
 
 // INclude the MAC when verifying
-func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
+func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
 	// Fill the struct and generate the wiredata
         var mb []byte
 	buf := make([]byte, DefaultMsgSize)
@@ -160,18 +161,17 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg) ([]byte, bool) {
 	if !ok {
 		return nil, false
 	}
-        if rr.MAC != "" {
+        if reqmac != "" {
+        println("REQ", reqmac)
                 m := new(macWireFmt)
-                m.MAC = rr.MAC
-                mb = make([]byte, len(rr.MAC))  // t.MAC should be twice as long
+                m.MAC = reqmac
+                mb = make([]byte, len(reqmac))  // reqmac should be twice as long
                 n, ok := packStruct(m, mb, 0)
                 if !ok {
                         return nil, false
                 }
                 mb = mb[:n]
         }
-        // If there is a MAC included in the TSIG it should be added first
-        // otherwise just the pkg and then the TSIG wire fmt
 	buf = append(msgbuf, buf...)
         if mb != nil {
                 buf = append(mb, buf...)
