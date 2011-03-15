@@ -14,6 +14,9 @@ import (
 
 const packErr = "Failed to pack message"
 const servErr = "No servers could be reached"
+const tsigKeyErr = ""
+const tsigTimeErr = ""
+const tsigErr = ""
 
 type Resolver struct {
 	Servers  []string            // servers to use
@@ -26,7 +29,6 @@ type Resolver struct {
 	Mangle   func([]byte) []byte // mangle the packet
 	Rtt      map[string]int64    // Store round trip times
 	Rrb      int                 // Last used server (for round robin)
-
 }
 
 // Basic usage pattern for setting up a resolver:
@@ -295,11 +297,11 @@ Server:
                                 t := in.Extra[len(in.Extra)-1]
                                 if t.Header().Rrtype == TypeTSIG {
                                         if t.(*RR_TSIG).Verify(inb, secret, reqmac, first) {
-                                                println("Validates!!!!!")
                                                 // Set the MAC for the next round.
                                                 reqmac = t.(*RR_TSIG).MAC
                                         } else {
-                                                println("DOES NOT validate :-(")
+                                                c.Close()
+                                                return
                                         }
                                 }
                         }

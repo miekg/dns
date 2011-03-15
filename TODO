@@ -2,8 +2,6 @@ Todo:
 * Private key file parsing use io.Reader (or the like) - NewReader, NewWriter?
 * Parsing from strings, going with goyacc and .cz lexer?
 * encoding NSEC3/NSEC bitmaps, DEcoding works
-* Use callback in IXFR/AXFR to make tsig happen (and other cool stuff in FunkenSturm)
-* Take a good look at hash.Hash take over the digest sizes and names
 * HIP RR (needs list of domain names, need slice stuff for that)
 
 Issues:
@@ -11,6 +9,8 @@ Issues:
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 * SetDefaults() for *all* types?
+
+* Refacter the IXFR/AXFR/TSIG code
 
 Examples:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
