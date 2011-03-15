@@ -16,7 +16,7 @@ package dns
 
 import (
 	"os"
-//        "fmt"
+	//        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -67,7 +67,7 @@ var Rr_str = map[uint16]string{
 	TypeTXT:        "TXT",
 	TypeSRV:        "SRV",
 	TypeNAPTR:      "NAPTR",
-        TypeKX:         "KX",
+	TypeKX:         "KX",
 	TypeCERT:       "CERT",
 	TypeDNAME:      "DNAME",
 	TypeA:          "A",
@@ -75,7 +75,7 @@ var Rr_str = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
-        TypeDHCID:      "DHCID",
+	TypeDHCID:      "DHCID",
 	TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
@@ -332,7 +332,7 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 					var _ = byte(fv.Elem(j).(*reflect.UintValue).Get())
 				}
 				// handle type bit maps
-                                // TODO(mg)
+				// TODO(mg)
 			}
 		case *reflect.StructValue:
 			off, ok = packStructValue(fv, msg, off)
@@ -426,10 +426,10 @@ func packStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int, o
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
 				off += len(s)
-                        case "txt":
-                                // Counted string: 1 byte length, but the string may be longer
-                                // than 255, in that case it should be multiple strings, for now:
-                                fallthrough
+			case "txt":
+				// Counted string: 1 byte length, but the string may be longer
+				// than 255, in that case it should be multiple strings, for now:
+				fallthrough
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > len(msg) {
@@ -520,13 +520,13 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
 					return len(msg), false
 				}
-                                if blocks == 0 {
-                                        // Nothing encoded in this window
-                                        // Kinda lame to alloc above and to clear it here
-                                        nsec = nsec[:ni]
-				        fv.Set(reflect.NewValue(nsec).(*reflect.SliceValue))
-                                        break
-                                }
+				if blocks == 0 {
+					// Nothing encoded in this window
+					// Kinda lame to alloc above and to clear it here
+					nsec = nsec[:ni]
+					fv.Set(reflect.NewValue(nsec).(*reflect.SliceValue))
+					break
+				}
 
 				off += 2
 				for j := 0; j < blocks; j++ {
@@ -689,15 +689,15 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 						name := val.FieldByName("HashLength")
 						size = int(name.(*reflect.UintValue).Get())
 					}
-                                case "RR_TSIG":
-                                        switch f.Name {
-                                        case "MAC":
-                                                name := val.FieldByName("MACSize")
-                                                size = int(name.(*reflect.UintValue).Get())
-                                        case "OtherData":
-                                                name := val.FieldByName("OtherLen")
-                                                size = int(name.(*reflect.UintValue).Get())
-                                        }
+				case "RR_TSIG":
+					switch f.Name {
+					case "MAC":
+						name := val.FieldByName("MACSize")
+						size = int(name.(*reflect.UintValue).Get())
+					case "OtherData":
+						name := val.FieldByName("OtherLen")
+						size = int(name.(*reflect.UintValue).Get())
+					}
 				}
 				if off+size > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
@@ -705,10 +705,10 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				}
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
-                        case "txt":
-                                // 1 or multiple txt pieces
+			case "txt":
+				// 1 or multiple txt pieces
 				rdlength := int(val.FieldByName("Hdr").(*reflect.StructValue).FieldByName("Rdlength").(*reflect.UintValue).Get())
-                        Txt:
+			Txt:
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking txt string")
 					return len(msg), false
@@ -721,10 +721,10 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 				}
 				off += n
 				s += string(b)
-                                if off < rdlength {
-                                        // More to come
-                                        goto Txt
-                                }
+				if off < rdlength {
+					// More to come
+					goto Txt
+				}
 			case "":
 				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
@@ -770,6 +770,10 @@ func unpackBase64(b []byte) string {
 }
 
 // Helper function for packing, mostly used in dnssec.go
+func packUint16(i uint16) (byte, byte) {
+        return byte(i >> 8), byte(i)
+}
+
 func packBase64(s []byte) ([]byte, os.Error) {
 	b64len := base64.StdEncoding.DecodedLen(len(s))
 	buf := make([]byte, b64len)
@@ -1022,25 +1026,32 @@ func (dns *Msg) String() string {
 	if len(dns.Question) > 0 {
 		s += "\n;; QUESTION SECTION:\n"
 		for i := 0; i < len(dns.Question); i++ {
-			s += dns.Question[i].String() + "\n"
+                        // Need check if it exists? TODO(mg)
+                        s += dns.Question[i].String() + "\n"
 		}
 	}
 	if len(dns.Answer) > 0 {
 		s += "\n;; ANSWER SECTION:\n"
 		for i := 0; i < len(dns.Answer); i++ {
-			s += dns.Answer[i].String() + "\n"
+			if dns.Answer[i] != nil {
+				s += dns.Answer[i].String() + "\n"
+			}
 		}
 	}
 	if len(dns.Ns) > 0 {
 		s += "\n;; AUTHORITY SECTION:\n"
 		for i := 0; i < len(dns.Ns); i++ {
-			s += dns.Ns[i].String() + "\n"
+			if dns.Ns[i] != nil {
+				s += dns.Ns[i].String() + "\n"
+			}
 		}
 	}
 	if len(dns.Extra) > 0 {
 		s += "\n;; ADDITIONAL SECTION:\n"
 		for i := 0; i < len(dns.Extra); i++ {
-			s += dns.Extra[i].String() + "\n"
+			if dns.Extra[i] != nil {
+				s += dns.Extra[i].String() + "\n"
+			}
 		}
 	}
 	return s

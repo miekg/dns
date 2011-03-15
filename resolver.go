@@ -45,9 +45,10 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	// Check if there is a TSIG appended, if so, check it
 	var (
 		c    net.Conn
-		in   *Msg
 		port string
+                inb  []byte
 	)
+        in := new(Msg)
 	if len(res.Servers) == 0 {
 		return nil, &Error{Error: "No servers defined"}
 	}
@@ -81,9 +82,12 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 			continue
 		}
 		if res.Tcp {
-			in, err = exchangeTCP(c, sending, res, true)
+			inb, err = exchangeTCP(c, sending, res, true)
+                        in.Unpack(inb)
+
 		} else {
-			in, err = exchangeUDP(c, sending, res, true)
+			inb, err = exchangeUDP(c, sending, res, true)
+                        in.Unpack(inb)
 		}
 		res.Rtt[server] = time.Nanoseconds() - t
 
@@ -114,9 +118,12 @@ type Xfr struct {
 // Channel m is closed when the IXFR ends.
 func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	// TSIG 
-	var port string
-	var in *Msg
-	var x Xfr
+	var (
+                port string
+	        x Xfr
+                inb []byte
+        )
+	in := new(Msg)
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -149,9 +156,11 @@ Server:
 		defer c.Close()
 		for {
 			if first {
-				in, err = exchangeTCP(c, sending, res, true)
+				inb, err = exchangeTCP(c, sending, res, true)
+                                in.Unpack(inb)
 			} else {
-				in, err = exchangeTCP(c, sending, res, false)
+				inb, err = exchangeTCP(c, sending, res, false)
+                                in.Unpack(inb)
 			}
 
 			if err != nil {
@@ -220,8 +229,11 @@ Server:
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
 func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
-	var port string
-	var in *Msg
+	var (
+                port string
+                inb []byte
+        )
+	in := new(Msg)
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -263,9 +275,17 @@ Server:
 		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
-				in, err = exchangeTCP(c, sending, res, true)
+				inb, err = exchangeTCP(c, sending, res, true)
+                                stripTSIG(inb)
+                                /*
+                                pt2 := new(Msg)
+                                pt2.Unpack(t2)
+                                //println("P", pt2.String())
+                                */
+                                in.Unpack(inb)
 			} else {
-				in, err = exchangeTCP(c, sending, res, false)
+				inb, err = exchangeTCP(c, sending, res, false)
+                                in.Unpack(inb)
 			}
 
 			if err != nil {
@@ -282,7 +302,7 @@ Server:
                                 t := in.Extra[len(in.Extra)-1]
                                 switch t.(type) {
                                 case *RR_TSIG:
-                                        if t.(*RR_TSIG).Verify(in, secret, reqmac) {
+                                        if t.(*RR_TSIG).Verify(inb, secret, reqmac) {
                                                 println("Validates")
                                         } else {
                                                 println("DOES NOT validate")
@@ -322,8 +342,11 @@ Server:
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
-	var port string
-	var in *Msg
+	var (
+                port string
+                inb []byte
+        )
+	in := new(Msg)
 	if res.Port == "" {
 		port = "53"
 	} else {
@@ -343,17 +366,6 @@ func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
 		return
 	}
 
-/*
-        // Need the secret!
-        var tsig *RR_TSIG
-	// Check if there is a TSIG added
-	if len(q.Extra) > 0 {
-		lastrr := q.Extra[len(q.Extra)-1]
-                if lastrr.Header().Rrtype == TypeTSIG {
-                        tsig = lastrr.(*RR_TSIG)
-                }
-	}
-        */
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
@@ -365,9 +377,11 @@ Server:
 		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
-				in, err = exchangeTCP(c, sending, res, true)
+				inb, err = exchangeTCP(c, sending, res, true)
+                                in.Unpack(inb)
 			} else {
-				in, err = exchangeTCP(c, sending, res, false)
+				inb, err = exchangeTCP(c, sending, res, false)
+                                in.Unpack(inb)
 			}
 
 			if err != nil {
@@ -408,7 +422,7 @@ Server:
 // Send a request on the connection and hope for a reply.
 // Up to res.Attempts attempts. If send is false, nothing
 // is send.
-func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) {
+func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error) {
 	var timeout int64
 	var attempts int
 	if r.Mangle != nil {
@@ -443,18 +457,13 @@ func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) 
 			}
 			return nil, err
 		}
-
-		in := new(Msg)
-		if !in.Unpack(buf) {
-			continue
-		}
-		return in, nil
+		return buf, nil
 	}
 	return nil, &Error{Error: servErr}
 }
 
 // Up to res.Attempts attempts.
-func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) {
+func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error) {
 	var timeout int64
 	var attempts int
 	if r.Mangle != nil {
@@ -484,7 +493,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) 
 		}
 
 		c.SetReadTimeout(timeout * 1e9) // nanoseconds
-		// The server replies with two bytes length
+		// The server replies with two bytes length.
 		buf, err := recvTCP(c)
 		if err != nil {
 			if e, ok := err.(net.Error); ok && e.Timeout() {
@@ -492,11 +501,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) (*Msg, os.Error) 
 			}
 			return nil, err
 		}
-		in := new(Msg)
-		if !in.Unpack(buf) {
-			continue
-		}
-		return in, nil
+		return buf, nil
 	}
 	return nil, &Error{Error: servErr}
 }
@@ -510,7 +515,7 @@ func sendUDP(m []byte, c net.Conn) os.Error {
 }
 
 func recvUDP(c net.Conn) ([]byte, os.Error) {
-	m := make([]byte, DefaultMsgSize) // More than enough???
+	m := make([]byte, DefaultMsgSize)
 	n, err := c.Read(m)
 	if err != nil {
 		return nil, err
@@ -537,8 +542,7 @@ func sendTCP(m []byte, c net.Conn) os.Error {
 }
 
 func recvTCP(c net.Conn) ([]byte, os.Error) {
-	l := make([]byte, 2) // receiver length
-	// The server replies with two bytes length
+	l := make([]byte, 2) // The server replies with two bytes length.
 	_, err := c.Read(l)
 	if err != nil {
 		return nil, err
