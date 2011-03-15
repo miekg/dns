@@ -73,10 +73,17 @@ type tsigWireFmt struct {
 	OtherData string "size-hex"
 }
 
-// If we have the MAC use this type to convert it to wiredata
+// If we have the MAC use this type to convert it to wiredata.
+// Section 3.4.3. Request MAC
 type macWireFmt struct {
 	MACSize uint16
 	MAC     string "size-hex"
+}
+
+// 3.3. Time values used in TSIG calculations
+type timerWireFmt struct {
+	TimeSigned uint64
+	Fudge      uint16
 }
 
 // Generate the HMAC for message. The TSIG RR is modified
@@ -92,13 +99,13 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	t.OrigId = m.MsgHdr.Id
 
 	msg, ok := m.Pack()
-        if !ok {
-                return false
-        }
-	buf, ok1 := tsigToBuf(t, msg, "")
-        if !ok1 {
-                return false
-        }
+	if !ok {
+		return false
+	}
+	buf, ok1 := tsigToBuf(t, msg, "", true)
+	if !ok1 {
+		return false
+	}
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
@@ -114,7 +121,7 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 // the TSIG record still attached (as the last rr in the Additional
 // section). Return true on success.
 // The secret is a base64 encoded string with the secret.
-func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string) bool {
+func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string, timers bool) bool {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return false
@@ -129,7 +136,7 @@ func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string) bool {
 	if !ok {
 		return false
 	}
-	buf, ok := tsigToBuf(t, stripped, reqmac)
+	buf, ok := tsigToBuf(t, stripped, reqmac, timers)
 	if !ok {
 		return false
 	}
@@ -140,10 +147,10 @@ func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string) bool {
 }
 
 // Create the buffer which we use for the MAC calculation.
-func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
+func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string, timers bool) ([]byte, bool) {
 	var (
-		macbuf  []byte
-		buf []byte
+		macbuf []byte
+		buf    []byte
 	)
 
 	if reqmac != "" {
@@ -159,21 +166,32 @@ func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
 	}
 
 	tsigvar := make([]byte, DefaultMsgSize)
-	tsig := new(tsigWireFmt)
-	tsig.Name = strings.ToLower(rr.Header().Name)
-	tsig.Class = rr.Header().Class
-	tsig.Ttl = rr.Header().Ttl
-	tsig.Algorithm = strings.ToLower(rr.Algorithm)
-	tsig.TimeSigned = rr.TimeSigned
-	tsig.Fudge = rr.Fudge
-	tsig.Error = rr.Error
-	tsig.OtherLen = rr.OtherLen
-	tsig.OtherData = rr.OtherData
-	n, ok1 := packStruct(tsig, tsigvar, 0)
-	if !ok1 {
-		return nil, false
+	if timers {
+		tsig := new(tsigWireFmt)
+		tsig.Name = strings.ToLower(rr.Header().Name)
+		tsig.Class = rr.Header().Class
+		tsig.Ttl = rr.Header().Ttl
+		tsig.Algorithm = strings.ToLower(rr.Algorithm)
+		tsig.TimeSigned = rr.TimeSigned
+		tsig.Fudge = rr.Fudge
+		tsig.Error = rr.Error
+		tsig.OtherLen = rr.OtherLen
+		tsig.OtherData = rr.OtherData
+		n, ok1 := packStruct(tsig, tsigvar, 0)
+		if !ok1 {
+			return nil, false
+		}
+		tsigvar = tsigvar[:n]
+	} else {
+		tsig := new(timerWireFmt)
+		tsig.TimeSigned = rr.TimeSigned
+		tsig.Fudge = rr.Fudge
+		n, ok1 := packStruct(tsig, tsigvar, 0)
+		if !ok1 {
+			return nil, false
+		}
+		tsigvar = tsigvar[:n]
 	}
-	tsigvar = tsigvar[:n]
 	if reqmac != "" {
 		x := append(macbuf, msg...)
 		buf = append(x, tsigvar...)

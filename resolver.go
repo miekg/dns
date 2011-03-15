@@ -293,12 +293,13 @@ Server:
 
                         if tsig && len(in.Extra) > 0 {          // What if not included?
                                 t := in.Extra[len(in.Extra)-1]
-                                switch t.(type) {
-                                case *RR_TSIG:
-                                        if t.(*RR_TSIG).Verify(inb, secret, reqmac) {
-                                                println("Validates")
+                                if t.Header().Rrtype == TypeTSIG {
+                                        if t.(*RR_TSIG).Verify(inb, secret, reqmac, first) {
+                                                println("Validates!!!!!")
+                                                // Set the MAC for the next round.
+                                                reqmac = t.(*RR_TSIG).MAC
                                         } else {
-                                                println("DOES NOT validate")
+                                                println("DOES NOT validate :-(")
                                         }
                                 }
                         }
