@@ -262,7 +262,6 @@ func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
                         reqmac = q.Extra[len(q.Extra)-1].(*RR_TSIG).MAC
                 }
 	}
-        println("REQMAC", reqmac)
 
 Server:
 	for i := 0; i < len(res.Servers); i++ {
@@ -276,12 +275,6 @@ Server:
 		for {
 			if first {
 				inb, err = exchangeTCP(c, sending, res, true)
-                                stripTSIG(inb)
-                                /*
-                                pt2 := new(Msg)
-                                pt2.Unpack(t2)
-                                //println("P", pt2.String())
-                                */
                                 in.Unpack(inb)
 			} else {
 				inb, err = exchangeTCP(c, sending, res, false)

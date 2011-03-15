@@ -91,8 +91,14 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	}
 	t.OrigId = m.MsgHdr.Id
 
-	msg, _ := m.Pack()
-	buf, ok := tsigToBuf(t, msg, "")
+	msg, ok := m.Pack()
+        if !ok {
+                return false
+        }
+	buf, ok1 := tsigToBuf(t, msg, "")
+        if !ok1 {
+                return false
+        }
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
@@ -130,15 +136,13 @@ func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string) bool {
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-	println("t.MAC", strings.ToUpper(t.MAC))
-	println("our MAC", strings.ToUpper(hex.EncodeToString(h.Sum())))
-	println("req mac", reqmac)
-	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(reqmac)
+	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
 }
 
+// Create the buffer which we use for the MAC calculation.
 func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
 	var (
-		mb  []byte
+		macbuf  []byte
 		buf []byte
 	)
 
@@ -146,12 +150,12 @@ func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
 		m := new(macWireFmt)
 		m.MACSize = uint16(len(reqmac) / 2)
 		m.MAC = reqmac
-		mb = make([]byte, len(reqmac)) // reqmac should be twice as long
-		n, ok := packStruct(m, mb, 0)
+		macbuf = make([]byte, len(reqmac)) // reqmac should be twice as long
+		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
 			return nil, false
 		}
-		mb = mb[:n]
+		macbuf = macbuf[:n]
 	}
 
 	tsigvar := make([]byte, DefaultMsgSize)
@@ -171,7 +175,7 @@ func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
 	}
 	tsigvar = tsigvar[:n]
 	if reqmac != "" {
-		x := append(mb, msg...)
+		x := append(macbuf, msg...)
 		buf = append(x, tsigvar...)
 	} else {
 		buf = append(msg, tsigvar...)
