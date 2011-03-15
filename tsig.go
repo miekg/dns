@@ -91,7 +91,8 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	}
 	t.OrigId = m.MsgHdr.Id
 
-	buf, ok := tsigToBuf(t, m, "")
+	msg, _ := m.Pack()
+	buf, ok := tsigToBuf(t, msg, "")
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
@@ -107,24 +108,22 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 // the TSIG record still attached (as the last rr in the Additional
 // section). Return true on success.
 // The secret is a base64 encoded string with the secret.
-func (t *RR_TSIG) Verify(m []byte, secret, reqmac string) bool {
+func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string) bool {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return false
 	}
 
-	msg2 := m // Deep copy TODO(mg)
-	if len(msg2.Extra) < 1 {
-		// nothing in additional
-		return false
-	}
 	if t.Header().Rrtype != TypeTSIG {
 		return false
 	}
 
-	msg2.MsgHdr.Id = t.OrigId
-	msg2.Extra = msg2.Extra[:len(msg2.Extra)-1] // Strip off the TSIG
-	buf, ok := tsigToBuf(t, msg2, reqmac)
+	// t.OrigId -- need to check
+	stripped, ok := stripTSIG(msg)
+	if !ok {
+		return false
+	}
+	buf, ok := tsigToBuf(t, stripped, reqmac)
 	if !ok {
 		return false
 	}
@@ -133,13 +132,15 @@ func (t *RR_TSIG) Verify(m []byte, secret, reqmac string) bool {
 	io.WriteString(h, string(buf))
 	println("t.MAC", strings.ToUpper(t.MAC))
 	println("our MAC", strings.ToUpper(hex.EncodeToString(h.Sum())))
-        println("req mac", reqmac)
+	println("req mac", reqmac)
 	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(reqmac)
 }
 
-func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
-	var mb []byte
-        var buf []byte
+func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string) ([]byte, bool) {
+	var (
+		mb  []byte
+		buf []byte
+	)
 
 	if reqmac != "" {
 		m := new(macWireFmt)
@@ -169,65 +170,61 @@ func tsigToBuf(rr *RR_TSIG, msg *Msg, reqmac string) ([]byte, bool) {
 		return nil, false
 	}
 	tsigvar = tsigvar[:n]
-	msgbuf, ok := msg.Pack()
-	if !ok {
-		return nil, false
-	}
 	if reqmac != "" {
-                x := append(mb, msgbuf...)
+		x := append(mb, msg...)
 		buf = append(x, tsigvar...)
 	} else {
-		buf = append(msgbuf, tsigvar...)
-        }
+		buf = append(msg, tsigvar...)
+	}
 	return buf, true
 }
 
 // Strip the TSIG from the pkt.
 func stripTSIG(orig []byte) ([]byte, bool) {
-        // Copied from msg.go's Unpack()
-        // Header.
-        var dh Header
-        dns := new(Msg)
-        msg := make([]byte, len(orig))
-        copy(msg, orig) // fhhh.. another copy
-        off := 0
-        tsigoff := 0
-        var ok bool
-        if off, ok = unpackStruct(&dh, msg, off); !ok {
-                return nil, false
-        }
-        if dh.Arcount == 0 {
-                // No records at all in the additional.
-                return nil, false
-        }
+	// Copied from msg.go's Unpack()
+	// Header.
+	var dh Header
+	dns := new(Msg)
+	msg := make([]byte, len(orig))
+	copy(msg, orig) // fhhh.. another copy
+	off := 0
+	tsigoff := 0
+	var ok bool
+	if off, ok = unpackStruct(&dh, msg, off); !ok {
+		return nil, false
+	}
+	if dh.Arcount == 0 {
+		// No records at all in the additional.
+		return nil, false
+	}
 
-        // Arrays.
-        dns.Question = make([]Question, dh.Qdcount)
-        dns.Answer = make([]RR, dh.Ancount)
-        dns.Ns = make([]RR, dh.Nscount)
-        dns.Extra = make([]RR, dh.Arcount)
+	// Arrays.
+	dns.Question = make([]Question, dh.Qdcount)
+	dns.Answer = make([]RR, dh.Ancount)
+	dns.Ns = make([]RR, dh.Nscount)
+	dns.Extra = make([]RR, dh.Arcount)
 
-        for i := 0; i < len(dns.Question); i++ {
-                off, ok = unpackStruct(&dns.Question[i], msg, off)
-        }
-        for i := 0; i < len(dns.Answer); i++ {
-                dns.Answer[i], off, ok = unpackRR(msg, off)
-        }
-        for i := 0; i < len(dns.Ns); i++ {
-                dns.Ns[i], off, ok = unpackRR(msg, off)
-        }
-        for i := 0; i < len(dns.Extra); i++ {
-                tsigoff = off
-                dns.Extra[i], off, ok = unpackRR(msg, off)
-                if dns.Extra[i].Header().Rrtype == TypeTSIG {
-                        // Adjust Arcount.
-                        arcount, _ := unpackUint16(msg, 10)
-                        msg[10], msg[11] = packUint16(arcount-1)
-                        break
-                }
-        }
-        if !ok {
-                return nil, false
-        }
-        return msg[:tsigoff], true
+	for i := 0; i < len(dns.Question); i++ {
+		off, ok = unpackStruct(&dns.Question[i], msg, off)
+	}
+	for i := 0; i < len(dns.Answer); i++ {
+		dns.Answer[i], off, ok = unpackRR(msg, off)
+	}
+	for i := 0; i < len(dns.Ns); i++ {
+		dns.Ns[i], off, ok = unpackRR(msg, off)
+	}
+	for i := 0; i < len(dns.Extra); i++ {
+		tsigoff = off
+		dns.Extra[i], off, ok = unpackRR(msg, off)
+		if dns.Extra[i].Header().Rrtype == TypeTSIG {
+			// Adjust Arcount.
+			arcount, _ := unpackUint16(msg, 10)
+			msg[10], msg[11] = packUint16(arcount - 1)
+			break
+		}
+	}
+	if !ok {
+		return nil, false
+	}
+	return msg[:tsigoff], true
 }
