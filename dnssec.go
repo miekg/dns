@@ -127,12 +127,11 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 		return nil
 	}
 	owner = owner[:off]
-	/* 
-	 * from RFC4034
-	 * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
-	 * "|" denotes concatenation
-	 * DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
-	 */
+	// RFC4034:
+	// digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
+	// "|" denotes concatenation
+	// DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
+
 	// digest buffer
 	digest := append(owner, wire...) // another copy TODO(mg)
 
