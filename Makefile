@@ -7,18 +7,19 @@ include $(GOROOT)/src/Make.inc
 
 TARG=dns
 GOFILES=\
-	dns.go\
-	msg.go\
-	types.go\
-	edns.go\
-	tsig.go\
-	dnssec.go\
-	keygen.go\
-	string.go\
-	resolver.go\
 	config.go\
-	server.go \
+	dns.go\
+	dnssec.go\
+	edns.go\
+	keygen.go\
+	msg.go\
+	notify.go\
 	nsec3.go \
+	resolver.go\
+	server.go \
+	string.go\
+	tsig.go\
+	types.go\
 #	y.go\
 
 include $(GOROOT)/src/Make.pkg

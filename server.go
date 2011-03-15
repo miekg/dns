@@ -11,58 +11,65 @@ import (
 	"net"
 )
 
+type Server struct {
+	ServeUDP func(*net.UDPConn, net.Addr, *Msg) os.Error
+	ServeTCP func(*net.TCPConn, net.Addr, *Msg) os.Error
+        /* notify stuff here? */
+        /* tsig here */
+}
+
 func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, *Msg)) os.Error {
 	for {
-                m := make([]byte, DefaultMsgSize)
-                n, radd, e := l.ReadFromUDP(m)
-                if e != nil {
-                        continue
-                }
-                m = m[:n]
-                msg := new(Msg)
-                if ! msg.Unpack(m) {
-                        continue
-                }
-                go f(l, radd, msg)
+		m := make([]byte, DefaultMsgSize)
+		n, radd, e := l.ReadFromUDP(m)
+		if e != nil {
+			continue
+		}
+		m = m[:n]
+		msg := new(Msg)
+		if !msg.Unpack(m) {
+			continue
+		}
+		go f(l, radd, msg)
 	}
 	panic("not reached")
 }
 
 func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
-        b := make([]byte, 2)
+	b := make([]byte, 2)
 	for {
-                c, e := l.AcceptTCP()
-	        if e != nil {
-                        return e
-                }
+		c, e := l.AcceptTCP()
+		if e != nil {
+			return e
+		}
 		n, e := c.Read(b)
 		if e != nil {
-                        continue
+			continue
 		}
 
 		length := uint16(b[0])<<8 | uint16(b[1])
 		if length == 0 {
-		        return &Error{Error: "received nil msg length"}
+			return &Error{Error: "received nil msg length"}
 		}
-                m := make([]byte, length)
+		m := make([]byte, length)
 
-	        n, e = c.Read(m)
+		n, e = c.Read(m)
 		if e != nil {
-		        continue
+			continue
 		}
 		i := n
 		if i < int(length) {
-		        n, e = c.Read(m[i:])
-		        if e != nil {
-                                continue
+			n, e = c.Read(m[i:])
+			if e != nil {
+				continue
 			}
 			i += n
 		}
-                msg := new(Msg)
-                if ! msg.Unpack(m) {
-                        continue
-                }
-                go f(c, c.RemoteAddr(), msg)
+		msg := new(Msg)
+		if !msg.Unpack(m) {
+			continue
+		}
+		go f(c, c.RemoteAddr(), msg)
 	}
 	panic("not reached")
 }
@@ -76,7 +83,7 @@ func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, *Msg)) os.Err
 	if err != nil {
 		return err
 	}
-        err = ServeTCP(l, f)
+	err = ServeTCP(l, f)
 	return err
 }
 
@@ -89,7 +96,7 @@ func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, *Msg)) os.Err
 	if err != nil {
 		return err
 	}
-        err = ServeUDP(l, f)
+	err = ServeUDP(l, f)
 	return err
 }
 
@@ -108,14 +115,14 @@ func SendTCP(m []byte, c *net.TCPConn, a net.Addr) os.Error {
 	if err != nil {
 		return err
 	}
-        i := n
-        for i < len(m) {
-	        n, err = c.Write(m)
-                if err != nil {
-                        return err
-                }
-                i += n
-        }
+	i := n
+	for i < len(m) {
+		n, err = c.Write(m)
+		if err != nil {
+			return err
+		}
+		i += n
+	}
 	return nil
 }
 

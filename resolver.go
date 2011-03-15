@@ -5,6 +5,7 @@
 // DNS resolver client: see RFC 1035.
 
 package dns
+// TODO: refacter this
 
 import (
 	"os"
@@ -29,6 +30,10 @@ type Resolver struct {
 	Mangle   func([]byte) []byte // mangle the packet
 	Rtt      map[string]int64    // Store round trip times
 	Rrb      int                 // Last used server (for round robin)
+}
+
+func (res *Resolver) QueryTSIG(q *Msg, secret *string) (d *Msg, err os.Error) {
+        return nil,nil
 }
 
 // Basic usage pattern for setting up a resolver:
