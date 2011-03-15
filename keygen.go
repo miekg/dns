@@ -15,13 +15,6 @@ import (
 // private key implementations from the crypto package.
 type PrivateKey interface{}
 
-// io.Reader
-// NewWriter
-// NewReader
-// PrivateKeyToString
-// PrivateKeyFromString
-// PrivateKeyToDNSKEY
-
 // Generate a key of the given bit size.
 // The public part is put inside the DNSKEY record. 
 // The Algorithm in the key must be set as this will define

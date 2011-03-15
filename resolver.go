@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-const packErr = "Failed to pack message"
-const servErr = "No servers could be reached"
-const tsigKeyErr = ""
-const tsigTimeErr = ""
-const tsigErr = ""
+const ErrPack = "Failed to pack message"
+const ErrServ = "No servers could be reached"
+const ErrTsigKey = ""
+const ErrTsigTime = ""
+const ErrTsig = ""
 
 type Resolver struct {
 	Servers  []string            // servers to use
@@ -69,7 +69,7 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	}
 	sending, ok := q.Pack()
 	if !ok {
-		return nil, &Error{Error: packErr}
+		return nil, &Error{Error: ErrPack}
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
@@ -455,7 +455,7 @@ func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error
 		}
 		return buf, nil
 	}
-	return nil, &Error{Error: servErr}
+	return nil, &Error{Error: ErrServ}
 }
 
 // Up to res.Attempts attempts.
@@ -499,7 +499,7 @@ func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error
 		}
 		return buf, nil
 	}
-	return nil, &Error{Error: servErr}
+	return nil, &Error{Error: ErrServ}
 }
 
 func sendUDP(m []byte, c net.Conn) os.Error {
