@@ -34,6 +34,7 @@ func (rr *RR_TSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 
+// move to defaults.go?
 func (rr *RR_TSIG) SetDefaults() {
 	rr.Header().Ttl = 0
 	rr.Header().Class = ClassANY

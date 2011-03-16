@@ -8,6 +8,7 @@ Issues:
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
 * SetDefaults() for *all* types?
+* Closing of tcp connections?
 
 * Refacter the IXFR/AXFR/TSIG code
 
