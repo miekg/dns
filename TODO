@@ -2,6 +2,8 @@ Todo:
 * Parsing from strings, going with goyacc and .cz lexer?
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * HIP RR (needs list of domain names, need slice stuff for that)
+* Resolver can see if you want ixfr or axfr from the msg no
+  need for seperate functions
 
 Issues:
 * Check the network order, it works now, but this is on Intel??
