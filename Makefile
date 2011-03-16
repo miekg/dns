@@ -7,6 +7,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=dns
 GOFILES=\
+	xfr.go\
 	config.go\
 	defaults.go\
 	dns.go\
