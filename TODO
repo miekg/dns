@@ -1,9 +1,20 @@
+Guidelines for the API:
+
+o symmetrical, client side stuff should be mirrored in the server stuff
+o clean, small API
+o fast data structures (rb-tree, when they come available)
+o api-use should lead to self documenting code
+o compression (only ownernames?)
+
+
+
 Todo:
 * Parsing from strings, going with goyacc and .cz lexer?
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * HIP RR (needs list of domain names, need slice stuff for that)
 * Resolver can see if you want ixfr or axfr from the msg no
   need for seperate functions
+* Is subdomain, is glue helper functions
 
 Issues:
 * Check the network order, it works now, but this is on Intel??

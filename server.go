@@ -11,6 +11,7 @@ import (
 	"net"
 )
 
+// Do I want this
 type Server struct {
 	ServeUDP func(*net.UDPConn, net.Addr, *Msg) os.Error
 	ServeTCP func(*net.TCPConn, net.Addr, *Msg) os.Error
