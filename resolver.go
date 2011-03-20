@@ -32,10 +32,6 @@ type Resolver struct {
 	Rrb      int                 // Last used server (for round robin)
 }
 
-func (res *Resolver) QueryTSIG(q *Msg, secret *string) (d *Msg, err os.Error) {
-        return nil,nil
-}
-
 // Basic usage pattern for setting up a resolver:
 //
 //        res := new(Resolver)
@@ -49,7 +45,6 @@ func (res *Resolver) QueryTSIG(q *Msg, secret *string) (d *Msg, err os.Error) {
 //
 // Note that message id checking is left to the caller.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
-	// Check if there is a TSIG appended, if so, check it
 	var (
 		c    net.Conn
 		port string
@@ -78,31 +73,28 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
+                d := new(Conn)
 		server := res.Servers[i] + ":" + port
 		t := time.Nanoseconds()
 		if res.Tcp {
 			c, err = net.Dial("tcp", "", server)
+                        d.TCP = c.(*net.TCPConn)
+                        d.Addr = d.TCP.RemoteAddr()
 		} else {
 			c, err = net.Dial("udp", "", server)
+                        d.UDP = c.(*net.UDPConn)
+                        d.Addr = d.UDP.RemoteAddr()
 		}
 		if err != nil {
 			continue
-		}
-		if res.Tcp {
-			inb, err = exchangeTCP(c, sending, res, true)
-                        in.Unpack(inb)
-
-		} else {
-			inb, err = exchangeUDP(c, sending, res, true)
-                        in.Unpack(inb)
-		}
+                }
+                inb, err = d.Exchange(sending, false)
+                if err != nil {
+                        continue
+                }
+                in.Unpack(inb)
 		res.Rtt[server] = time.Nanoseconds() - t
-
-		// Check id in.id != out.id, should be checked in the client!
 		c.Close()
-		if err != nil {
-			continue
-		}
 		break
 	}
 	if err != nil {
@@ -550,7 +542,7 @@ func recvTCP(c net.Conn) ([]byte, os.Error) {
 	}
 	length := uint16(l[0])<<8 | uint16(l[1])
 	if length == 0 {
-		return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr().String()}
+		return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr()}
 	}
 	m := make([]byte, length)
 	n, cerr := c.Read(m)
