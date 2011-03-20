@@ -45,54 +45,40 @@ type Resolver struct {
 //
 // Note that message id checking is left to the caller.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
-	var (
-		c    net.Conn
-		port string
-                inb  []byte
-	)
-        in := new(Msg)
-	if len(res.Servers) == 0 {
-		return nil, &Error{Error: "No servers defined"}
-	}
-	if res.Rtt == nil {
-		res.Rtt = make(map[string]int64)
-	}
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
+	var c net.Conn
+	var inb []byte
+	in := new(Msg)
+	port, err := check(res, q)
+	if err != nil {
+		return nil, err
 	}
 
-	if q.Id == 0 {
-		// No Id sed, set it
-		q.Id = Id()
-	}
 	sending, ok := q.Pack()
 	if !ok {
 		return nil, &Error{Error: ErrPack}
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
-                d := new(Conn)
+		d := new(Conn)
 		server := res.Servers[i] + ":" + port
 		t := time.Nanoseconds()
 		if res.Tcp {
 			c, err = net.Dial("tcp", "", server)
-                        d.TCP = c.(*net.TCPConn)
-                        d.Addr = d.TCP.RemoteAddr()
+			d.TCP = c.(*net.TCPConn)
+			d.Addr = d.TCP.RemoteAddr()
 		} else {
 			c, err = net.Dial("udp", "", server)
-                        d.UDP = c.(*net.UDPConn)
-                        d.Addr = d.UDP.RemoteAddr()
+			d.UDP = c.(*net.UDPConn)
+			d.Addr = d.UDP.RemoteAddr()
 		}
 		if err != nil {
 			continue
-                }
-                inb, err = d.Exchange(sending, false)
-                if err != nil {
-                        continue
-                }
-                in.Unpack(inb)
+		}
+		inb, err = d.Exchange(sending, false)
+		if err != nil {
+			continue
+		}
+		in.Unpack(inb)
 		res.Rtt[server] = time.Nanoseconds() - t
 		c.Close()
 		break
@@ -118,22 +104,13 @@ type Xfr struct {
 func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
 	// TSIG 
 	var (
-                port string
-	        x Xfr
-                inb []byte
-        )
+		x   Xfr
+		inb []byte
+	)
 	in := new(Msg)
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
-	}
-	if res.Rtt == nil {
-		res.Rtt = make(map[string]int64)
-	}
-
-	if q.Id == 0 {
-		q.Id = Id()
+	port, err := check(res, q)
+	if err != nil {
+		return
 	}
 
 	defer close(m)
@@ -149,36 +126,37 @@ Server:
 		if err != nil {
 			continue Server
 		}
-		first := true
 		var serial uint32 // The first serial seen is the current server serial
+                d := new(Conn)
+                d.TCP = c.(*net.TCPConn)
+                d.Addr = d.TCP.RemoteAddr()
 
+		first := true
 		defer c.Close()
 		for {
 			if first {
-				inb, err = exchangeTCP(c, sending, res, true)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, false)
 			} else {
-				inb, err = exchangeTCP(c, sending, res, false)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, true)
 			}
-
 			if err != nil {
-				// Failed to send, try the next
 				c.Close()
 				continue Server
 			}
+
+			in.Unpack(inb)  // error!
 			if in.Id != q.Id {
 				return
 			}
 
 			if first {
 				// A single SOA RR signals "no changes"
-				if len(in.Answer) == 1 && checkAxfrSOA(in, true) {
+				if len(in.Answer) == 1 && checkXfrSOA(in, true) {
 					return
 				}
 
 				// But still check if the returned answer is ok
-				if !checkAxfrSOA(in, true) {
+				if !checkXfrSOA(in, true) {
 					c.Close()
 					continue Server
 				}
@@ -228,22 +206,11 @@ Server:
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
 func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
-	var (
-                port string
-                inb []byte
-        )
+	var inb []byte
 	in := new(Msg)
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
-	}
-	if res.Rtt == nil {
-		res.Rtt = make(map[string]int64)
-	}
-
-	if q.Id == 0 {
-		q.Id = Id()
+	port, err := check(res, q)
+	if err != nil {
+		return
 	}
 
 	defer close(m)
@@ -252,14 +219,14 @@ func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
 		return
 	}
 
-        var tsig bool
-        var reqmac string
+	var tsig bool
+	var reqmac string
 	// Check if there is a TSIG added to the request msg
 	if len(q.Extra) > 0 {
-                tsig = q.Extra[len(q.Extra)-1].Header().Rrtype == TypeTSIG
-                if tsig {
-                        reqmac = q.Extra[len(q.Extra)-1].(*RR_TSIG).MAC
-                }
+		tsig = q.Extra[len(q.Extra)-1].Header().Rrtype == TypeTSIG
+		if tsig {
+			reqmac = q.Extra[len(q.Extra)-1].(*RR_TSIG).MAC
+		}
 	}
 
 Server:
@@ -269,42 +236,44 @@ Server:
 		if err != nil {
 			continue Server
 		}
+                d := new(Conn)
+                d.TCP = c.(*net.TCPConn)
+                d.Addr = d.TCP.RemoteAddr()
+
 		first := true
 		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
-				inb, err = exchangeTCP(c, sending, res, true)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, false)
 			} else {
-				inb, err = exchangeTCP(c, sending, res, false)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, true)
 			}
-
 			if err != nil {
-				// Failed to send, try the next
 				c.Close()
 				continue Server
 			}
+
+                        in.Unpack(inb)
 			if in.Id != q.Id {
 				c.Close()
 				return
 			}
 
-                        if tsig && len(in.Extra) > 0 {          // What if not included?
-                                t := in.Extra[len(in.Extra)-1]
-                                if t.Header().Rrtype == TypeTSIG {
-                                        if t.(*RR_TSIG).Verify(inb, secret, reqmac, first) {
-                                                // Set the MAC for the next round.
-                                                reqmac = t.(*RR_TSIG).MAC
-                                        } else {
-                                                c.Close()
-                                                return
-                                        }
-                                }
-                        }
+			if tsig && len(in.Extra) > 0 { // What if not included?
+				t := in.Extra[len(in.Extra)-1]
+				if t.Header().Rrtype == TypeTSIG {
+					if t.(*RR_TSIG).Verify(inb, secret, reqmac, first) {
+						// Set the MAC for the next round.
+						reqmac = t.(*RR_TSIG).MAC
+					} else {
+						c.Close()
+						return
+					}
+				}
+			}
 
 			if first {
-				if !checkAxfrSOA(in, true) {
+				if !checkXfrSOA(in, true) {
 					c.Close()
 					continue Server
 				}
@@ -312,12 +281,12 @@ Server:
 			}
 
 			if !first {
-				if !checkAxfrSOA(in, false) {
+				if !checkXfrSOA(in, false) {
 					// Soa record not the last one
-					sendFromMsg(in, m, false)
+					sendMsg(in, m, false)
 					continue
 				} else {
-					sendFromMsg(in, m, true)
+					sendMsg(in, m, true)
 					return
 				}
 			}
@@ -335,23 +304,12 @@ Server:
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
 func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
-	var (
-                port string
-                inb []byte
-        )
+	var inb []byte
+	port, err := check(res, q)
+	if err != nil {
+		return
+	}
 	in := new(Msg)
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
-	}
-	if res.Rtt == nil {
-		res.Rtt = make(map[string]int64)
-	}
-
-	if q.Id == 0 {
-		q.Id = Id()
-	}
 
 	defer close(m)
 	sending, ok := q.Pack()
@@ -366,29 +324,31 @@ Server:
 		if err != nil {
 			continue Server
 		}
+		d := new(Conn)
+		d.TCP = c.(*net.TCPConn)
+		d.Addr = d.TCP.RemoteAddr()
+
 		first := true
 		defer c.Close() // TODO(mg): if not open?
 		for {
 			if first {
-				inb, err = exchangeTCP(c, sending, res, true)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, false)
 			} else {
-				inb, err = exchangeTCP(c, sending, res, false)
-                                in.Unpack(inb)
+				inb, err = d.Exchange(sending, true)
 			}
-
 			if err != nil {
-				// Failed to send, try the next
 				c.Close()
 				continue Server
 			}
+                        if !in.Unpack(inb) {
+                                println("Failed to unpack")
+                        }
 			if in.Id != q.Id {
 				c.Close()
 				return
 			}
-
 			if first {
-				if !checkAxfrSOA(in, true) {
+				if !checkXfrSOA(in, true) {
 					c.Close()
 					continue Server
 				}
@@ -396,12 +356,12 @@ Server:
 			}
 
 			if !first {
-				if !checkAxfrSOA(in, false) {
+				if !checkXfrSOA(in, false) {
 					// Soa record not the last one
-					sendFromMsg(in, m, false)
+					sendMsg(in, m, false)
 					continue
 				} else {
-					sendFromMsg(in, m, true)
+					sendMsg(in, m, true)
 					return
 				}
 			}
@@ -412,158 +372,10 @@ Server:
 	return
 }
 
-// Send a request on the connection and hope for a reply.
-// Up to res.Attempts attempts. If send is false, nothing
-// is send.
-func exchangeUDP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error) {
-	var timeout int64
-	var attempts int
-	if r.Mangle != nil {
-		m = r.Mangle(m)
-	}
-	if r.Timeout == 0 {
-		timeout = 1
-	} else {
-		timeout = int64(r.Timeout)
-	}
-	if r.Attempts == 0 {
-		attempts = 1
-	} else {
-		attempts = r.Attempts
-	}
-	for a := 0; a < attempts; a++ {
-		if send {
-			err := sendUDP(m, c)
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return nil, err
-			}
-		}
-
-		c.SetReadTimeout(timeout * 1e9) // nanoseconds
-		buf, err := recvUDP(c)
-		if err != nil {
-			if e, ok := err.(net.Error); ok && e.Timeout() {
-				continue
-			}
-			return nil, err
-		}
-		return buf, nil
-	}
-	return nil, &Error{Error: ErrServ}
-}
-
-// Up to res.Attempts attempts.
-func exchangeTCP(c net.Conn, m []byte, r *Resolver, send bool) ([]byte, os.Error) {
-	var timeout int64
-	var attempts int
-	if r.Mangle != nil {
-		m = r.Mangle(m)
-	}
-	if r.Timeout == 0 {
-		timeout = 1
-	} else {
-		timeout = int64(r.Timeout)
-	}
-	if r.Attempts == 0 {
-		attempts = 1
-	} else {
-		attempts = r.Attempts
-	}
-
-	for a := 0; a < attempts; a++ {
-		// only send something when told so
-		if send {
-			err := sendTCP(m, c)
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return nil, err
-			}
-		}
-
-		c.SetReadTimeout(timeout * 1e9) // nanoseconds
-		// The server replies with two bytes length.
-		buf, err := recvTCP(c)
-		if err != nil {
-			if e, ok := err.(net.Error); ok && e.Timeout() {
-				continue
-			}
-			return nil, err
-		}
-		return buf, nil
-	}
-	return nil, &Error{Error: ErrServ}
-}
-
-func sendUDP(m []byte, c net.Conn) os.Error {
-	_, err := c.Write(m)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func recvUDP(c net.Conn) ([]byte, os.Error) {
-	m := make([]byte, DefaultMsgSize)
-	n, err := c.Read(m)
-	if err != nil {
-		return nil, err
-	}
-	m = m[:n]
-	return m, nil
-}
-
-func sendTCP(m []byte, c net.Conn) os.Error {
-	l := make([]byte, 2)
-	l[0] = byte(len(m) >> 8)
-	l[1] = byte(len(m))
-	// First we send the length
-	_, err := c.Write(l)
-	if err != nil {
-		return err
-	}
-	// And the the message
-	_, err = c.Write(m)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func recvTCP(c net.Conn) ([]byte, os.Error) {
-	l := make([]byte, 2) // The server replies with two bytes length.
-	_, err := c.Read(l)
-	if err != nil {
-		return nil, err
-	}
-	length := uint16(l[0])<<8 | uint16(l[1])
-	if length == 0 {
-		return nil, &Error{Error: "received nil msg length", Server: c.RemoteAddr()}
-	}
-	m := make([]byte, length)
-	n, cerr := c.Read(m)
-	if cerr != nil {
-		return nil, cerr
-	}
-	i := n
-	for i < int(length) {
-		n, err = c.Read(m[i:])
-		if err != nil {
-			return nil, err
-		}
-		i += n
-	}
-	return m, nil
-}
-
 // Check if he SOA record exists in the Answer section of 
 // the packet. If first is true the first RR must be a soa
 // if false, the last one should be a SOA
-func checkAxfrSOA(in *Msg, first bool) bool {
+func checkXfrSOA(in *Msg, first bool) bool {
 	if len(in.Answer) > 0 {
 		if first {
 			return in.Answer[0].Header().Rrtype == TypeSOA
@@ -575,7 +387,7 @@ func checkAxfrSOA(in *Msg, first bool) bool {
 }
 
 // Send the answer section to the channel
-func sendFromMsg(in *Msg, c chan Xfr, nosoa bool) {
+func sendMsg(in *Msg, c chan Xfr, nosoa bool) {
 	x := Xfr{Add: true}
 	for k, r := range in.Answer {
 		if nosoa && k == len(in.Answer)-1 {
@@ -584,4 +396,20 @@ func sendFromMsg(in *Msg, c chan Xfr, nosoa bool) {
 		x.RR = r
 		c <- x
 	}
+}
+
+// Some assorted checks on the resolver
+func check(res *Resolver, q *Msg) (port string, err os.Error) {
+	if res.Port == "" {
+		port = "53"
+	} else {
+		port = res.Port
+	}
+	if res.Rtt == nil {
+		res.Rtt = make(map[string]int64)
+	}
+	if q.Id == 0 {
+		q.Id = Id()
+	}
+	return
 }

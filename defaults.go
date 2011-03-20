@@ -37,5 +37,4 @@ func (dns *Msg) SetAxfr(z string, class uint16) {
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, class}
 }
-
 // IsIxfr/IsAxfr?

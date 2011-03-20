@@ -51,10 +51,15 @@ func (e *Error) String() string {
 type Conn struct {
 	// The current UDP connection.
 	UDP *net.UDPConn
+
 	// The current TCP connection.
 	TCP *net.TCPConn
+
 	// The remote side of the connection.
 	Addr net.Addr
+
+        // If TSIG is used, this holds all the information
+        Signature *Tsig
 
 	// Timeout in sec
 	Timeout int
@@ -69,16 +74,21 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	}
 	switch {
 	case d.UDP != nil:
-		n, err = d.UDP.Read(p)
+                var addr net.Addr
+		n, addr, err = d.UDP.ReadFromUDP(p)
 		if err != nil {
 			return n, err
 		}
+                d.Addr = addr
 	case d.TCP != nil:
-		n, err = d.TCP.Read(p[0:1])
+                if len(p) < 1 {
+                        return 0, &Error{Error: "Buffer too small to read"}
+                }
+		n, err = d.TCP.Read(p[0:2])
 		if err != nil || n != 2 {
 			return n, err
 		}
-		l, _ := unpackUint16(p[0:1], 0)
+		l, _ := unpackUint16(p[0:2], 0)
 		if l == 0 {
 			return 0, &Error{Error: "received nil msg length", Server: d.Addr}
 		}
@@ -182,17 +192,15 @@ func (d *Conn) SetTimeout() (err os.Error) {
 	return
 }
 
-// Fix those here...!
-// ReadTsig
-// WriteTsig
-
 func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {
 	var n int
-	n, err = d.Write(request)
-	if err != nil {
-		return nil, err
-	}
-	// Layer violation to safe memory. (Its okay then.)
+        if !nosend {
+                n, err = d.Write(request)
+                if err != nil {
+                        return nil, err
+                }
+        }
+	// Layer violation to save memory. Its okay then...
 	if d.UDP == nil {
 		reply = make([]byte, MaxMsgSize)
 	} else {

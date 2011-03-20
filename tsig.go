@@ -10,6 +10,19 @@ import (
 	"encoding/hex"
 )
 
+type Tsig struct {
+        // The name of the key.
+        Name string
+        Fudge uint16
+        TimeSigned uint64
+        Algorithm string
+        // Tsig secret encoded in base64.
+        Secret string
+        // MAC (if known)
+        MAC string
+}
+
+
 // HMAC hashing codes. These are transmitted as domain names.
 const (
 	HmacMD5    = "hmac-md5.sig-alg.reg.int."
@@ -34,7 +47,6 @@ func (rr *RR_TSIG) Header() *RR_Header {
 	return &rr.Hdr
 }
 
-// move to defaults.go?
 func (rr *RR_TSIG) SetDefaults() {
 	rr.Header().Ttl = 0
 	rr.Header().Class = ClassANY
