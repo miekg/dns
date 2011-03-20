@@ -59,7 +59,7 @@ type Conn struct {
 	Addr net.Addr
 
         // If TSIG is used, this holds all the information
-        Signature *Tsig
+        Tsig *Tsig
 
 	// Timeout in sec
 	Timeout int
@@ -108,6 +108,10 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 			i += n
 		}
 	}
+        if d.Tsig != nil {
+                // Check the TSIG that we should be read
+                d.Tsig.Verify(p)
+        }
 	return
 }
 

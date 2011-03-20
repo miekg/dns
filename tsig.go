@@ -10,6 +10,8 @@ import (
 	"encoding/hex"
 )
 
+// Structure used in Read/Write lowlevel functions
+// for TSIG generation and verification.
 type Tsig struct {
         // The name of the key.
         Name string
@@ -20,8 +22,11 @@ type Tsig struct {
         Secret string
         // MAC (if known)
         MAC string
+        // Request MAC
+        RequestMAC string
+        // Include the timers if true
+        Timers bool
 }
-
 
 // HMAC hashing codes. These are transmitted as domain names.
 const (
@@ -99,6 +104,29 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
+// In a message and out a new message with the tsig
+// added
+func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
+	rawsecret, err := packBase64([]byte(t.Secret))
+	if err != nil {
+		return nil, false
+	}
+	buf, ok := t.Buffer(msg)
+        if !ok {
+                return nil, false
+        }
+
+	h := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(h, string(buf))
+
+	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
+	if !ok {
+		return nil, false
+	}
+        // okay, create TSIG, add to message
+	return nil, true
+}
+
 // Generate the HMAC for message. The TSIG RR is modified
 // to include the MAC and MACSize. Note the the msg Id must
 // already be set, otherwise the MAC will not be correct when
@@ -130,6 +158,29 @@ func (t *RR_TSIG) Generate(m *Msg, secret string) bool {
 	return true
 }
 
+// Verify a TSIG on a message. All relevant data should
+// be set in the Tsig structure.
+func (t *Tsig) Verify(msg []byte) bool {
+	rawsecret, err := packBase64([]byte(t.Secret))
+	if err != nil {
+		return false
+	}
+        // Stipped the TSIG from the incoming msg
+	stripped, ok := stripTsig(msg)
+	if !ok {
+		return false
+	}
+
+	buf, ok := t.Buffer(stripped)
+	if !ok {
+		return false
+	}
+
+	h := hmac.NewMD5([]byte(rawsecret))
+	io.WriteString(h, string(buf))
+	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
+}
+
 // Verify a TSIG. The message should be the complete with
 // the TSIG record still attached (as the last rr in the Additional
 // section). Return true on success.
@@ -145,7 +196,7 @@ func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string, timers bool) bool {
 	}
 
 	// t.OrigId -- need to check
-	stripped, ok := stripTSIG(msg)
+	stripped, ok := stripTsig(msg)
 	if !ok {
 		return false
 	}
@@ -157,6 +208,61 @@ func (t *RR_TSIG) Verify(msg []byte, secret, reqmac string, timers bool) bool {
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC)
+}
+
+// Create a wiredata buffer for the MAC calculation
+func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
+	var (
+		macbuf []byte
+		buf    []byte
+	)
+
+        if t.RequestMAC != "" {
+		m := new(macWireFmt)
+		m.MACSize = uint16(len(t.RequestMAC) / 2)
+		m.MAC = t.RequestMAC
+		macbuf = make([]byte, len(t.RequestMAC)) // reqmac should be twice as long
+		n, ok := packStruct(m, macbuf, 0)
+		if !ok {
+			return nil, false
+		}
+		macbuf = macbuf[:n]
+	}
+
+	tsigvar := make([]byte, DefaultMsgSize)
+	if t.Timers {
+		tsig := new(tsigWireFmt)
+		tsig.Name = strings.ToLower(t.Name)
+		tsig.Class = ClassANY
+		tsig.Ttl = 0
+		tsig.Algorithm = strings.ToLower(t.Algorithm)
+		tsig.TimeSigned = t.TimeSigned
+		tsig.Fudge = t.Fudge
+		tsig.Error = 0
+		tsig.OtherLen = 0
+		tsig.OtherData = ""
+		n, ok1 := packStruct(tsig, tsigvar, 0)
+		if !ok1 {
+			return nil, false
+		}
+		tsigvar = tsigvar[:n]
+	} else {
+		tsig := new(timerWireFmt)
+		tsig.TimeSigned = t.TimeSigned
+		tsig.Fudge = t.Fudge
+		n, ok1 := packStruct(tsig, tsigvar, 0)
+		if !ok1 {
+			return nil, false
+		}
+		tsigvar = tsigvar[:n]
+	}
+        if t.RequestMAC != "" {
+		x := append(macbuf, msg...)
+		buf = append(x, tsigvar...)
+	} else {
+		buf = append(msg, tsigvar...)
+	}
+	return buf, true
 }
 
 // Create the buffer which we use for the MAC calculation.
@@ -215,7 +321,7 @@ func tsigToBuf(rr *RR_TSIG, msg []byte, reqmac string, timers bool) ([]byte, boo
 }
 
 // Strip the TSIG from the pkt.
-func stripTSIG(orig []byte) ([]byte, bool) {
+func stripTsig(orig []byte) ([]byte, bool) {
 	// Copied from msg.go's Unpack()
 	// Header.
 	var dh Header
