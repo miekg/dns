@@ -207,7 +207,9 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 		reply = make([]byte, DefaultMsgSize)
 	}
 	n, err = d.Read(reply)
+        println("READ ", n)
 	if err != nil {
+        println(err.String())
 		return nil, err
 	}
 	reply = reply[:n]

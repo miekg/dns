@@ -16,7 +16,7 @@ package dns
 
 import (
 	"os"
-	        "fmt"
+	//        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -210,7 +210,6 @@ func unpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 Loop:
 	for {
 		if off >= len(msg) {
-                        println(off, len(msg))
 			return "", len(msg), false
 		}
 		c := int(msg[off])
@@ -658,7 +657,7 @@ func unpackStructValue(val *reflect.StructValue, msg []byte, off int) (off1 int,
 			case "domain-name":
 				s, off, ok = unpackDomainName(msg, off)
 				if !ok {
-					fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
+					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
 					return len(msg), false
 				}
 			case "size-base32":
