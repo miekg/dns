@@ -41,10 +41,10 @@ type Resolver struct {
 //        m.MsgHdr.Recursion_desired = true             // header bits
 //        m.Question = make([]Question, 1)              // 1 RR in question section
 //        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        in, err := res.Query(m)                       // Ask the question
+//        in, err := res.Query(m, nil)                  // Ask the question
 //
 // Note that message id checking is left to the caller.
-func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
+func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	var c net.Conn
 	var inb []byte
 	in := new(Msg)

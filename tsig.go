@@ -4,28 +4,31 @@ package dns
 // RFC 2845 and RFC 4635
 import (
 	"io"
+        "time"
 	"strconv"
 	"strings"
 	"crypto/hmac"
 	"encoding/hex"
 )
 
+// Return os.Error with real tsig errors
+
 // Structure used in Read/Write lowlevel functions
 // for TSIG generation and verification.
 type Tsig struct {
-        // The name of the key.
-        Name string
-        Fudge uint16
-        TimeSigned uint64
-        Algorithm string
-        // Tsig secret encoded in base64.
-        Secret string
-        // MAC (if known)
-        MAC string
-        // Request MAC
-        RequestMAC string
-        // Include the timers if true
-        Timers bool
+	// The name of the key.
+	Name       string
+	Fudge      uint16
+	TimeSigned uint64
+	Algorithm  string
+	// Tsig secret encoded in base64.
+	Secret string
+	// MAC (if known)
+	MAC string
+	// Request MAC
+	RequestMAC string
+	// Only include the timers if true.
+	Timers bool
 }
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -104,18 +107,23 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// In a message and out a new message with the tsig
-// added
+// In a message and out a new message with the tsig added
 func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
 	rawsecret, err := packBase64([]byte(t.Secret))
 	if err != nil {
 		return nil, false
 	}
-	buf, ok := t.Buffer(msg)
-        if !ok {
-                return nil, false
+        if t.Fudge == 0 {
+                t.Fudge = 300
+        }
+        if t.TimeSigned == 0 {
+                t.TimeSigned = uint64(time.Seconds())
         }
 
+	buf, ok := t.Buffer(msg)
+	if !ok {
+		return nil, false
+	}
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
@@ -123,8 +131,22 @@ func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
 	if !ok {
 		return nil, false
 	}
-        // okay, create TSIG, add to message
-	return nil, true
+
+	// okay, create TSIG, add to message
+	rr := new(RR_TSIG)
+	rr.Hdr = RR_Header{Name: t.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
+        rr.Fudge = t.Fudge
+        rr.TimeSigned = t.TimeSigned
+        rr.Algorithm = t.Algorithm
+	rr.MAC = t.MAC
+	rr.MACSize = uint16(len(t.MAC) / 2)
+
+        q := new(Msg)
+        q.Unpack(msg)
+
+        q.Extra = append(q.Extra, rr)
+        send, ok := q.Pack()
+	return send, ok
 }
 
 // Generate the HMAC for message. The TSIG RR is modified
@@ -165,7 +187,7 @@ func (t *Tsig) Verify(msg []byte) bool {
 	if err != nil {
 		return false
 	}
-        // Stipped the TSIG from the incoming msg
+	// Stipped the TSIG from the incoming msg
 	stripped, ok := stripTsig(msg)
 	if !ok {
 		return false
@@ -217,7 +239,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		buf    []byte
 	)
 
-        if t.RequestMAC != "" {
+	if t.RequestMAC != "" {
 		m := new(macWireFmt)
 		m.MACSize = uint16(len(t.RequestMAC) / 2)
 		m.MAC = t.RequestMAC
@@ -256,7 +278,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		}
 		tsigvar = tsigvar[:n]
 	}
-        if t.RequestMAC != "" {
+	if t.RequestMAC != "" {
 		x := append(macbuf, msg...)
 		buf = append(x, tsigvar...)
 	} else {
