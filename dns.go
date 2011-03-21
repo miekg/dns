@@ -103,10 +103,11 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		for i < int(l) {
 			n, err = d.TCP.Read(p[i:])
 			if err != nil {
-				return 0, err
+				return i, err
 			}
 			i += n
 		}
+                n = i
 	}
         if d.Tsig != nil {
                 // Check the TSIG that we should be read
@@ -135,6 +136,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
                 q, ok = d.Tsig.Generate(p)
                 if !ok {
                         // dikke shit
+                        // Generate should return os.Error
                 }
         } else {
                 q = p
@@ -172,6 +174,19 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 				}
 				return n, err
 			}
+                        i := n
+                        if i < len(q) {
+			        n, err = d.TCP.Write(q)
+			        if err != nil {
+				        if e, ok := err.(net.Error); ok && e.Timeout() {
+                                                // We are half way in our write...
+					        continue
+				        }
+				        return n, err
+                                }
+                                i += n
+			}
+                        n = i
 		}
 	}
 	return

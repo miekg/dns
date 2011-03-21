@@ -78,7 +78,7 @@ func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		if err != nil {
 			continue
 		}
-		in.Unpack(inb)
+		in.Unpack(inb)  // Discard error.
 		res.Rtt[server] = time.Nanoseconds() - t
 		c.Close()
 		break
@@ -155,7 +155,7 @@ Server:
 				continue Server
 			}
 
-			in.Unpack(inb)  // error!
+			in.Unpack(inb)
 			if in.Id != q.Id {
 				return
 			}
@@ -254,10 +254,10 @@ Server:
 				c.Close()
 				continue Server
 			}
-
-                        in.Unpack(inb) // TODO(mg): error handling
+                        if !in.Unpack(inb) {
+                                return
+                        }
 			if in.Id != q.Id {
-				c.Close()
 				return
 			}
 
