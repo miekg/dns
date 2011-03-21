@@ -1,5 +1,14 @@
 package dns
 
+// Create a reply packet.
+func (dns *Msg) SetReply(id uint16) {
+        dns.MsgHdr.Id = id
+        dns.MsgHdr.Authoritative = true
+        dns.MsgHdr.Response = true
+        dns.MsgHdr.Opcode = OpcodeQuery
+        dns.MsgHdr.Rcode = RcodeSuccess
+}
+
 // Create a notify packet.
 func (dns *Msg) SetNotify(z string, class uint16) {
 	dns.MsgHdr.Opcode = OpcodeNotify

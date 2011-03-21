@@ -12,8 +12,9 @@ import (
 )
 
 // For both -> logging
+// Add tsig stuff as in resolver.go
 
-func ServeUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
+func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 	for {
 		m := make([]byte, DefaultMsgSize)
 		n, addr, e := l.ReadFromUDP(m)
@@ -25,6 +26,7 @@ func ServeUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
                 d := new(Conn)
                 d.UDP = l
                 d.Addr = addr
+                d.Port = addr.Port       // Why not the same as in dns.go, line 96
 
 		msg := new(Msg)
 		if !msg.Unpack(m) {
@@ -35,7 +37,7 @@ func ServeUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 	panic("not reached")
 }
 
-func ServeTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
+func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 	for {
 		c, e := l.AcceptTCP()
 		if e != nil {
@@ -44,8 +46,9 @@ func ServeTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
                 d := new(Conn)
                 d.TCP = c
                 d.Addr = c.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 
-                m := make([]byte, MaxMsgSize)  // This may start to hurt someday.
+                m := d.NewBuffer()
                 n, e := d.Read(m)
                 if e != nil {
                         continue
@@ -75,7 +78,7 @@ func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
 	if err != nil {
 		return err
 	}
-	err = ServeTCP(l, f)
+	err = HandleTCP(l, f)
 	return err
 }
 
@@ -88,6 +91,6 @@ func ListenAndServeUDP(addr string, f func(*Conn, *Msg)) os.Error {
 	if err != nil {
 		return err
 	}
-	err = ServeUDP(l, f)
+	err = HandleUDP(l, f)
 	return err
 }

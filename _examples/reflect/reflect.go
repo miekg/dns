@@ -18,99 +18,78 @@ package main
 
 import (
 	"os"
-	"os/signal"
 	"net"
 	"dns"
 	"fmt"
+	"os/signal"
 	"strconv"
 )
 
-func reply(a net.Addr, in *dns.Msg, tcp bool) *dns.Msg {
-	if in.MsgHdr.Response == true {
-		return nil // Don't answer responses
-	}
+func reply(c *dns.Conn, in *dns.Msg) []byte {
 	m := new(dns.Msg)
-	m.MsgHdr.Id = in.MsgHdr.Id
-	m.MsgHdr.Authoritative = true
-	m.MsgHdr.Response = true
-	m.MsgHdr.Opcode = dns.OpcodeQuery
+	m.SetReply(in.MsgHdr.Id)
 
-	m.MsgHdr.Rcode = dns.RcodeSuccess
 	m.Question = make([]dns.Question, 1)
 	m.Answer = make([]dns.RR, 1)
 	m.Extra = make([]dns.RR, 1)
 
-	r := new(dns.RR_A)
-	r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-	ip, _ := net.ResolveUDPAddr(a.String())
-	r.A = ip.IP
+	m.Question[0] = in.Question[0]
+
+        var ad net.IP
+        if c.UDP != nil {
+                ad = c.Addr.(*net.UDPAddr).IP
+        } else {
+                ad = c.Addr.(*net.TCPAddr).IP
+        }
+        if ad.To4() != nil {
+                r := new(dns.RR_A)
+                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+                if c.UDP != nil {
+                        r.A = c.Addr.(*net.UDPAddr).IP
+                } else {
+                        r.A = c.Addr.(*net.TCPAddr).IP
+                }
+                m.Answer[0] = r
+        } else {
+                r := new(dns.RR_AAAA)
+                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+                if c.UDP != nil {
+                        r.AAAA = c.Addr.(*net.UDPAddr).IP
+                } else {
+                        r.AAAA = c.Addr.(*net.TCPAddr).IP
+                }
+                m.Answer[0] = r
+        }
 
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
-	if tcp {
-		t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (tcp)"
+	if c.TCP != nil {
+		t.Txt = "Port: " + strconv.Itoa(c.Port) + " (tcp)"
 	} else {
-		t.Txt = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
+		t.Txt = "Port: " + strconv.Itoa(c.Port) + " (udp)"
 	}
-
-	m.Question[0] = in.Question[0]
-	m.Answer[0] = r
 	m.Extra[0] = t
-	return m
+
+	b, _ := m.Pack()
+        return b
 }
 
-func replyUDP(c *net.UDPConn, a net.Addr, in *dns.Msg) {
-	m := reply(a, in, false)
-	if m == nil {
-		return
+func handle(c *dns.Conn, in *dns.Msg) {
+	if in.MsgHdr.Response == true {
+		return      // We don't do responses
 	}
-	fmt.Fprintf(os.Stderr, "%v\n", m)
-	out, ok := m.Pack()
-	if !ok {
-		println("Failed to pack")
-		return
-	}
-	dns.SendUDP(out, c, a)
-}
-
-func replyTCP(c *net.TCPConn, a net.Addr, in *dns.Msg) {
-	m := reply(a, in, true)
-	if m == nil {
-		return
-	}
-	fmt.Fprintf(os.Stderr, "%v\n", m)
-	out, ok := m.Pack()
-	if !ok {
-		println("Failed to pack")
-		return
-	}
-	dns.SendTCP(out, c, a)
+	answer := reply(c, in)
+	c.Write(answer)
 }
 
 func tcp(addr string, e chan os.Error) {
-	a, err := net.ResolveTCPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenTCP("tcp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeTCP(l, replyTCP)
+	err := dns.ListenAndServeTCP(addr, handle)
 	e <- err
 	return
 }
 
 func udp(addr string, e chan os.Error) {
-	a, err := net.ResolveUDPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenUDP("udp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeUDP(l, replyUDP)
+        err := dns.ListenAndServeUDP(addr, handle)
 	e <- err
 	return
 }

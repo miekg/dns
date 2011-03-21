@@ -58,6 +58,9 @@ type Conn struct {
 	// The remote side of the connection.
 	Addr net.Addr
 
+        // The remote port number of the connection.
+        Port int
+
         // If TSIG is used, this holds all the information
         Tsig *Tsig
 
@@ -67,6 +70,20 @@ type Conn struct {
 	// Number of attempts to try
 	Attempts int
 }
+
+// Create a new buffer of the appropiate size.
+func (d *Conn) NewBuffer() []byte {
+        if d.TCP != nil {
+                b := make([]byte, MaxMsgSize)
+                return b
+        }
+        if d.UDP != nil {
+                b := make([]byte, DefaultMsgSize)
+                return b
+        }
+        return nil
+}
+
 
 func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
@@ -80,6 +97,7 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 			return n, err
 		}
                 d.Addr = addr
+                d.Port = addr.(*net.UDPAddr).Port
 	case d.TCP != nil:
                 if len(p) < 1 {
                         return 0, &Error{Error: "Buffer too small to read"}
@@ -88,6 +106,8 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		if err != nil || n != 2 {
 			return n, err
 		}
+                d.Addr = d.TCP.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 		l, _ := unpackUint16(p[0:2], 0)
 		if l == 0 {
 			return 0, &Error{Error: "received nil msg length", Server: d.Addr}
@@ -132,7 +152,6 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 		attempts = d.Attempts
 	}
 	d.SetTimeout()
-
         if d.Tsig != nil {
                 // Create a new buffer with the TSIG added.
                 q, err = d.Tsig.Generate(p)
@@ -233,11 +252,7 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
                 }
         }
 	// Layer violation to save memory. Its okay then...
-	if d.UDP == nil {
-		reply = make([]byte, MaxMsgSize)
-	} else {
-		reply = make([]byte, DefaultMsgSize)
-	}
+        reply = d.NewBuffer()
 	n, err = d.Read(reply)
 	if err != nil {
 		return nil, err

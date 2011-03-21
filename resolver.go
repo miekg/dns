@@ -43,7 +43,11 @@ type Resolver struct {
 //        in, err := res.Query(m, nil)                  // Ask the question
 //
 // Note that message id checking is left to the caller.
-func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
+func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
+        return res.QueryTsig(q, nil)
+}
+
+func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	var c net.Conn
 	var inb []byte
 	in := new(Msg)
@@ -88,7 +92,11 @@ func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-func (res *Resolver) Xfr(q *Msg, t *Tsig, m chan Xfr) {
+func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
+        res.XfrTsig(q, nil, m)
+}
+
+func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 	port, err := check(res, q)
 	if err != nil {
 		return

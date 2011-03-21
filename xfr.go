@@ -39,7 +39,7 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 	first := true
 	in := new(Msg)
 	for {
-		inb := make([]byte, MaxMsgSize)
+		inb := d.NewBuffer()
 		n, err := d.Read(inb)
 		if err != nil {
 			m <- Xfr{true, nil, err}
@@ -128,12 +128,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 	first := true
 	in := new(Msg)
 	for {
-		var inb []byte
-		if d.TCP != nil {
-			inb = make([]byte, MaxMsgSize)
-		} else {
-			inb = make([]byte, DefaultMsgSize)
-		}
+                inb := d.NewBuffer()
 		n, err := d.Read(inb)
 		if err != nil {
 			m <- Xfr{true, nil, err}

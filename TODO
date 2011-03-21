@@ -5,6 +5,8 @@ o clean, small API
 o fast data structures (rb-tree, when they come available)
 o api-use should lead to self documenting code
 o compression (only ownernames?)
+o Tsig will probably become an interface which has all configuration
+  stuff, but this will come later
 
 
 Todo:
