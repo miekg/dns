@@ -1,37 +1,177 @@
 package dns
 
-import (
-        "net"
-        )
-
 // Outgoing AXFR and IXFR implementations
+// error handling??
 
-// Read from m until it is closed. Group the RRs until
-// no space is left and send the messages.
-// How do I know the message still fits in 64 K???
-func AxfrTCP(c *net.TCPConn, a net.Addr, m chan Xfr) {
-        msg := new(Msg)
-        msg.Answer = make([]RR, 1000)
+// Msg tells use what to do
+func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
+        switch q.Question[0].Qtype {
+        case TypeAXFR:
+                d.axfrRead(q, m)
+        case TypeIXFR:
+                d.ixfrRead(q, m)
+        }
+}
+
+func (d *Conn) XfrWrite(q *Msg, m chan Xfr) {
+        switch q.Question[0].Qtype {
+        case TypeAXFR:
+                d.axfrWrite(q, m)
+        case TypeIXFR:
+//                d.ixfrWrite(q, m)
+        }
+}
+
+func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
+	defer close(m)
+	first := true
+	in := new(Msg)
+	for {
+		inb := make([]byte, MaxMsgSize)
+		n, err := d.Read(inb)
+		if err != nil {
+			return
+		}
+		inb = inb[:n]
+
+		if !in.Unpack(inb) {
+			return
+		}
+		if in.Id != q.Id {
+			return
+		}
+
+		if first {
+			if !checkXfrSOA(in, true) {
+				return
+			}
+			first = !first
+		}
+
+		if !first {
+			if !checkXfrSOA(in, false) {
+				// Soa record not the last one
+				sendMsg(in, m, false)
+				continue
+			} else {
+				sendMsg(in, m, true)
+				return
+			}
+			d.Tsig.TimersOnly = true // Subsequent envelopes use this
+		}
+	}
+	panic("not reached")
+	return
+}
+
+// Just send the zone
+func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
+	out := new(Msg)
+        out.Id = q.Id
+        out.Question = q.Question
+        out.Answer = make([]RR, 1000)
+        var soa *RR_SOA;
         i := 0
-        var soa *RR_SOA
-        for r := range m {
-                msg.Answer[i] = r.RR
+        for r := range m  {
+                out.Answer[i] = r.RR
                 if soa == nil {
                         if r.RR.Header().Rrtype != TypeSOA {
-                                // helegaar geen SOA
+                                return
                         } else {
                                 soa = r.RR.(*RR_SOA)
                         }
                 }
                 i++
                 if i > 1000 {
-                        // send it
-                        msg.Answer = msg.Answer[:0]
+                        // Send it
+                        send, _ := out.Pack()
+                        _, err := d.Write(send)
+                        if err != nil {
+                                /* ... */
+                        }
                         i = 0
+                        out.Answer = out.Answer[:0]
                 }
         }
-        // Last one, what if was 1000 send lonely soa?? No matter
-        // what, add the SOA and send the msg
-        msg.Answer[i] = soa
-        // send it
+        // Everything is send, only the closing soa is left.
+        out.Answer[i] = soa
+        send, _ := out.Pack()
+        _, err := d.Write(send)
+        if err != nil {
+                /* ... */
+        }
+}
+
+func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
+	defer close(m)
+	var serial uint32 // The first serial seen is the current server serial
+	var x Xfr
+	first := true
+	in := new(Msg)
+	for {
+		var inb []byte
+		if d.TCP != nil {
+			inb = make([]byte, MaxMsgSize)
+		} else {
+			inb = make([]byte, DefaultMsgSize)
+		}
+		n, err := d.Read(inb)
+		if err != nil {
+			return
+		}
+		inb = inb[:n]
+
+		if !in.Unpack(inb) {
+			return
+		}
+		if in.Id != q.Id {
+			return
+		}
+
+		if first {
+			// A single SOA RR signals "no changes"
+			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
+				return
+			}
+
+			// But still check if the returned answer is ok
+			if !checkXfrSOA(in, true) {
+				return
+			}
+			// This serial is important
+			serial = in.Answer[0].(*RR_SOA).Serial
+			first = !first
+		}
+
+		// Now we need to check each message for SOA records, to see what we need to do
+		x.Add = true
+		if !first {
+			d.Tsig.TimersOnly = true
+			for k, r := range in.Answer {
+				// If the last record in the IXFR contains the servers' SOA,  we should quit
+				if r.Header().Rrtype == TypeSOA {
+					switch {
+					case r.(*RR_SOA).Serial == serial:
+						if k == len(in.Answer)-1 {
+							// last rr is SOA with correct serial
+							//m <- r dont' send it
+							return
+						}
+						x.Add = true
+						if k != 0 {
+							// Intermediate SOA
+							continue
+						}
+					case r.(*RR_SOA).Serial != serial:
+						x.Add = false
+						continue // Don't need to see this SOA
+					}
+				}
+				x.RR = r
+				m <- x
+			}
+		}
+	}
+	panic("not reached")
+	return
 }

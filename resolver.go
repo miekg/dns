@@ -5,7 +5,6 @@
 // DNS resolver client: see RFC 1035.
 
 package dns
-// TODO: refacter this
 
 import (
 	"os"
@@ -270,6 +269,7 @@ Server:
 			}
 
 			if !first {
+                                d.Tsig.TimersOnly = true
 				if !checkXfrSOA(in, false) {
 					// Soa record not the last one
 					sendMsg(in, m, false)
@@ -278,7 +278,6 @@ Server:
 					sendMsg(in, m, true)
 					return
 				}
-                                d.Tsig.TimersOnly = true // 
 			}
 		}
 		panic("not reached")
