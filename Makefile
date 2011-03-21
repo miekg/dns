@@ -21,7 +21,6 @@ GOFILES=\
 	tsig.go\
 	types.go\
 	xfr.go\
-#	y.go\
 
 include $(GOROOT)/src/Make.pkg
 

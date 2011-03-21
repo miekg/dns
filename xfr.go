@@ -112,7 +112,7 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 		}
 		// TimersOnly foo
 	}
-	// Everything is send, only the closing soa is left.
+	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
 	send, _ := out.Pack()
 	_, err := d.Write(send)

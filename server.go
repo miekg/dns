@@ -62,6 +62,10 @@ func ServeTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 	panic("not reached")
 }
 
+// config functions Config
+// ListenAndServeTCPTsig
+// ListenAndServeUDPTsig
+
 func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
