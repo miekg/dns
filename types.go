@@ -739,6 +739,38 @@ func (rr *RR_DHCID) String() string {
         return rr.Hdr.String() + rr.Digest
 }
 
+// RFC 2845.
+type RR_TSIG struct {
+        Hdr        RR_Header
+        Algorithm  string "domain-name"
+        TimeSigned uint64
+        Fudge      uint16
+        MACSize    uint16
+        MAC        string "size-hex"
+        OrigId     uint16
+        Error      uint16
+        OtherLen   uint16
+        OtherData  string "size-hex"
+}
+
+func (rr *RR_TSIG) Header() *RR_Header {
+        return &rr.Hdr
+}
+
+// TSIG has no official presentation format, but this will suffice.
+func (rr *RR_TSIG) String() string {
+        return rr.Hdr.String() +
+                " " + rr.Algorithm +
+                " " + tsigTimeToDate(rr.TimeSigned) +
+                " " + strconv.Itoa(int(rr.Fudge)) +
+                " " + strconv.Itoa(int(rr.MACSize)) +
+                " " + strings.ToUpper(rr.MAC) +
+                " " + strconv.Itoa(int(rr.OrigId)) +
+                " " + strconv.Itoa(int(rr.Error)) +
+                " " + strconv.Itoa(int(rr.OtherLen)) +
+                " " + rr.OtherData
+}
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {

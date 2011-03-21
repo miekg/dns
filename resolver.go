@@ -102,7 +102,6 @@ type Xfr struct {
 // have Xfr.Add set to true otherwise it is false.
 // Channel m is closed when the IXFR ends.
 func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
-	// TSIG 
 	var (
 		x   Xfr
 		inb []byte
@@ -205,7 +204,7 @@ Server:
 // returned over the channel, so the caller will receive 
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
-func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
+func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, t *Tsig) {
 	var inb []byte
 	in := new(Msg)
 	port, err := check(res, q)
@@ -219,16 +218,6 @@ func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, secret string) {
 		return
 	}
 
-	var tsig bool
-	var reqmac string
-	// Check if there is a TSIG added to the request msg
-	if len(q.Extra) > 0 {
-		tsig = q.Extra[len(q.Extra)-1].Header().Rrtype == TypeTSIG
-		if tsig {
-			reqmac = q.Extra[len(q.Extra)-1].(*RR_TSIG).MAC
-		}
-	}
-
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
@@ -239,6 +228,7 @@ Server:
                 d := new(Conn)
                 d.TCP = c.(*net.TCPConn)
                 d.Addr = d.TCP.RemoteAddr()
+                d.Tsig = t
 
 		first := true
 		defer c.Close() // TODO(mg): if not open?
@@ -257,19 +247,6 @@ Server:
 			if in.Id != q.Id {
 				c.Close()
 				return
-			}
-
-			if tsig && len(in.Extra) > 0 { // What if not included?
-				t := in.Extra[len(in.Extra)-1]
-				if t.Header().Rrtype == TypeTSIG {
-					if t.(*RR_TSIG).Verify(inb, secret, reqmac, first) {
-						// Set the MAC for the next round.
-						reqmac = t.(*RR_TSIG).MAC
-					} else {
-						c.Close()
-						return
-					}
-				}
 			}
 
 			if first {

@@ -110,7 +110,7 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	}
         if d.Tsig != nil {
                 // Check the TSIG that we should be read
-                d.Tsig.Verify(p)
+                _, err = d.Tsig.Verify(p)
         }
 	return
 }
@@ -121,6 +121,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	}
 
 	var attempts int
+        var q []byte
 	if d.Attempts == 0 {
 		attempts = 1
 	} else {
@@ -128,10 +129,21 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	}
 	d.SetTimeout()
 
+        if d.Tsig != nil {
+                // Create a new buffer with the TSIG added.
+                var ok bool
+                q, ok = d.Tsig.Generate(p)
+                if !ok {
+                        // dikke shit
+                }
+        } else {
+                q = p
+        }
+
 	switch {
 	case d.UDP != nil:
 		for a := 0; a < attempts; a++ {
-			n, err = d.UDP.WriteTo(p, d.Addr)
+			n, err = d.UDP.WriteTo(q, d.Addr)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -142,7 +154,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	case d.TCP != nil:
 		for a := 0; a < attempts; a++ {
 			l := make([]byte, 2)
-			l[0], l[1] = packUint16(uint16(len(p)))
+			l[0], l[1] = packUint16(uint16(len(q)))
 			n, err = d.TCP.Write(l)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
@@ -153,7 +165,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 			if n != 2 {
 				return n, &Error{Error: "Write failure"}
 			}
-			n, err = d.TCP.Write(p)
+			n, err = d.TCP.Write(q)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
