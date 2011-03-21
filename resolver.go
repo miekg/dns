@@ -97,11 +97,23 @@ type Xfr struct {
 	Err os.Error
 }
 
+func (res *Resolver) Xfr(q *Msg, t *Tsig, m chan Xfr) {
+        switch q.Question[0].Qtype {
+        case TypeAXFR:
+                res.axfr(q, t, m)
+        case TypeIXFR:
+                res.ixfr(q, t, m)
+        default:
+                // wrong request
+                return
+        }
+}
+
 // Start an IXFR, q should contain a *Msg with the question
 // for an IXFR: "miek.nl" ANY IXFR. RRs that should be added
 // have Xfr.Add set to true otherwise it is false.
 // Channel m is closed when the IXFR ends.
-func (res *Resolver) Ixfr(q *Msg, m chan Xfr) {
+func (res *Resolver) ixfr(q *Msg, t *Tsig, m chan Xfr) {
 	var (
 		x   Xfr
 		inb []byte
@@ -204,7 +216,7 @@ Server:
 // returned over the channel, so the caller will receive 
 // the zone as-is. Xfr.Add is always true.
 // The channel is closed to signal the end of the AXFR.
-func (res *Resolver) AxfrTSIG(q *Msg, m chan Xfr, t *Tsig) {
+func (res *Resolver) axfr(q *Msg, t *Tsig, m chan Xfr) {
 	var inb []byte
 	in := new(Msg)
 	port, err := check(res, q)
@@ -243,7 +255,7 @@ Server:
 				continue Server
 			}
 
-                        in.Unpack(inb)
+                        in.Unpack(inb) // TODO(mg): error handling
 			if in.Id != q.Id {
 				c.Close()
 				return
@@ -266,81 +278,7 @@ Server:
 					sendMsg(in, m, true)
 					return
 				}
-			}
-		}
-		panic("not reached")
-		return
-	}
-	return
-}
-
-
-// Start an AXFR, q should contain a message with the question
-// for an AXFR: "miek.nl" ANY AXFR. The closing SOA isn't
-// returned over the channel, so the caller will receive 
-// the zone as-is. Xfr.Add is always true.
-// The channel is closed to signal the end of the AXFR.
-func (res *Resolver) Axfr(q *Msg, m chan Xfr) {
-	var inb []byte
-	port, err := check(res, q)
-	if err != nil {
-		return
-	}
-	in := new(Msg)
-
-	defer close(m)
-	sending, ok := q.Pack()
-	if !ok {
-		return
-	}
-
-Server:
-	for i := 0; i < len(res.Servers); i++ {
-		server := res.Servers[i] + ":" + port
-		c, err := net.Dial("tcp", "", server)
-		if err != nil {
-			continue Server
-		}
-		d := new(Conn)
-		d.TCP = c.(*net.TCPConn)
-		d.Addr = d.TCP.RemoteAddr()
-
-		first := true
-		defer c.Close() // TODO(mg): if not open?
-		for {
-			if first {
-				inb, err = d.Exchange(sending, false)
-			} else {
-				inb, err = d.Exchange(sending, true)
-			}
-			if err != nil {
-				c.Close()
-				continue Server
-			}
-                        if !in.Unpack(inb) {
-                                println("Failed to unpack")
-                        }
-			if in.Id != q.Id {
-				c.Close()
-				return
-			}
-			if first {
-				if !checkXfrSOA(in, true) {
-					c.Close()
-					continue Server
-				}
-				first = !first
-			}
-
-			if !first {
-				if !checkXfrSOA(in, false) {
-					// Soa record not the last one
-					sendMsg(in, m, false)
-					continue
-				} else {
-					sendMsg(in, m, true)
-					return
-				}
+                                d.Tsig.TimersOnly = true // 
 			}
 		}
 		panic("not reached")

@@ -28,7 +28,7 @@ type Tsig struct {
 	// Request MAC
 	RequestMAC string
 	// Only include the timers if true.
-	Timers bool
+	TimersOnly bool
 }
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -93,17 +93,18 @@ func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
 		return nil, false
 	}
 
-	// okay, create TSIG, add to message
+	// Create TSIG and add it to the message.
+        q := new(Msg)
+        q.Unpack(msg) // TODO(mg): error handling
+
 	rr := new(RR_TSIG)
 	rr.Hdr = RR_Header{Name: t.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
         rr.Fudge = t.Fudge
         rr.TimeSigned = t.TimeSigned
         rr.Algorithm = t.Algorithm
+        rr.OrigId = q.Id
 	rr.MAC = t.MAC
 	rr.MACSize = uint16(len(t.MAC) / 2)
-
-        q := new(Msg)
-        q.Unpack(msg)
 
         q.Extra = append(q.Extra, rr)
         send, ok := q.Pack()
@@ -153,7 +154,16 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 	}
 
 	tsigvar := make([]byte, DefaultMsgSize)
-	if t.Timers {
+	if t.TimersOnly {
+		tsig := new(timerWireFmt)
+		tsig.TimeSigned = t.TimeSigned
+		tsig.Fudge = t.Fudge
+		n, ok1 := packStruct(tsig, tsigvar, 0)
+		if !ok1 {
+			return nil, false
+		}
+		tsigvar = tsigvar[:n]
+	} else {
 		tsig := new(tsigWireFmt)
 		tsig.Name = strings.ToLower(t.Name)
 		tsig.Class = ClassANY
@@ -164,15 +174,6 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		tsig.Error = 0
 		tsig.OtherLen = 0
 		tsig.OtherData = ""
-		n, ok1 := packStruct(tsig, tsigvar, 0)
-		if !ok1 {
-			return nil, false
-		}
-		tsigvar = tsigvar[:n]
-	} else {
-		tsig := new(timerWireFmt)
-		tsig.TimeSigned = t.TimeSigned
-		tsig.Fudge = t.Fudge
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
 			return nil, false

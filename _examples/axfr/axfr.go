@@ -18,9 +18,9 @@ func main() {
         res.Servers[0] = *nameserver
 
         c := make(chan dns.Xfr)
-
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
+
         if *serial > 0 {
 	        m.Question[0] = dns.Question{zone, dns.TypeIXFR, dns.ClassINET}
                 soa := new(dns.RR_SOA)
@@ -28,11 +28,10 @@ func main() {
                 soa.Serial = uint32(*serial)
                 m.Ns = make([]dns.RR, 1)
                 m.Ns[0] = soa
-                go res.Ixfr(m, c)
         } else {
 	        m.Question[0] = dns.Question{zone, dns.TypeAXFR, dns.ClassINET}
-                go res.Axfr(m, c)
         }
+        go res.Xfr(m, nil, c)
         for x := range c {
                 fmt.Printf("%v %v\n",x.Add, x.RR)
         }
