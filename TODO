@@ -5,6 +5,7 @@ o clean, small API
 o fast data structures (rb-tree, when they come available)
 o api-use should lead to self documenting code
 o compression (only ownernames?)
+o Xfr, part of (d *Conn).Xfr(m, channel)
 
 
 
