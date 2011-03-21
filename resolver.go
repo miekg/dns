@@ -77,7 +77,7 @@ func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		if err != nil {
 			continue
 		}
-		in.Unpack(inb)  // Discard error.
+		in.Unpack(inb) // Discard error.
 		res.Rtt[server] = time.Nanoseconds() - t
 		c.Close()
 		break
@@ -97,33 +97,10 @@ type Xfr struct {
 }
 
 func (res *Resolver) Xfr(q *Msg, t *Tsig, m chan Xfr) {
-        switch q.Question[0].Qtype {
-        case TypeAXFR:
-                res.axfr(q, t, m)
-        case TypeIXFR:
-                res.ixfr(q, t, m)
-        default:
-                // wrong request
-                return
-        }
-}
-
-// Start an IXFR, q should contain a *Msg with the question
-// for an IXFR: "miek.nl" ANY IXFR. RRs that should be added
-// have Xfr.Add set to true otherwise it is false.
-// Channel m is closed when the IXFR ends.
-func (res *Resolver) ixfr(q *Msg, t *Tsig, m chan Xfr) {
-	var (
-		x   Xfr
-		inb []byte
-	)
-	in := new(Msg)
 	port, err := check(res, q)
 	if err != nil {
 		return
 	}
-
-	defer close(m)
 	sending, ok := q.Pack()
 	if !ok {
 		return
@@ -136,180 +113,18 @@ Server:
 		if err != nil {
 			continue Server
 		}
-		var serial uint32 // The first serial seen is the current server serial
-                d := new(Conn)
-                d.TCP = c.(*net.TCPConn)
-                d.Addr = d.TCP.RemoteAddr()
+		d := new(Conn)
+		d.TCP = c.(*net.TCPConn)
+		d.Addr = d.TCP.RemoteAddr()
+		d.Tsig = t
 
-		first := true
-		defer c.Close()
-		for {
-			if first {
-				inb, err = d.Exchange(sending, false)
-			} else {
-				inb, err = d.Exchange(sending, true)
-			}
-			if err != nil {
-				c.Close()
-				continue Server
-			}
-
-			in.Unpack(inb)
-			if in.Id != q.Id {
-				return
-			}
-
-			if first {
-				// A single SOA RR signals "no changes"
-				if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-					return
-				}
-
-				// But still check if the returned answer is ok
-				if !checkXfrSOA(in, true) {
-					c.Close()
-					continue Server
-				}
-				// This serial is important
-				serial = in.Answer[0].(*RR_SOA).Serial
-				first = !first
-			}
-
-			// Now we need to check each message for SOA records, to see what we need to do
-			x.Add = true
-			if !first {
-				for k, r := range in.Answer {
-					// If the last record in the IXFR contains the servers' SOA,  we should quit
-					if r.Header().Rrtype == TypeSOA {
-						switch {
-						case r.(*RR_SOA).Serial == serial:
-							if k == len(in.Answer)-1 {
-								// last rr is SOA with correct serial
-								//m <- r dont' send it
-								return
-							}
-							x.Add = true
-							if k != 0 {
-								// Intermediate SOA
-								continue
-							}
-						case r.(*RR_SOA).Serial != serial:
-							x.Add = false
-							continue // Don't need to see this SOA
-						}
-					}
-					x.RR = r
-					m <- x
-				}
-			}
-			return
-		}
-		panic("not reached")
-		return
+                _, err = d.Write(sending)
+                if err != nil {
+                        println(err.String())
+                }
+                d.XfrRead(q, m) // check
 	}
 	return
-}
-
-// Start an AXFR, q should contain a message with the question
-// for an AXFR: "miek.nl" ANY AXFR. The closing SOA isn't
-// returned over the channel, so the caller will receive 
-// the zone as-is. Xfr.Add is always true.
-// The channel is closed to signal the end of the AXFR.
-func (res *Resolver) axfr(q *Msg, t *Tsig, m chan Xfr) {
-	var inb []byte
-	in := new(Msg)
-	port, err := check(res, q)
-	if err != nil {
-		return
-	}
-
-	defer close(m)
-	sending, ok := q.Pack()
-	if !ok {
-		return
-	}
-
-Server:
-	for i := 0; i < len(res.Servers); i++ {
-		server := res.Servers[i] + ":" + port
-		c, err := net.Dial("tcp", "", server)
-		if err != nil {
-			continue Server
-		}
-                d := new(Conn)
-                d.TCP = c.(*net.TCPConn)
-                d.Addr = d.TCP.RemoteAddr()
-                d.Tsig = t
-
-		first := true
-		defer c.Close() // TODO(mg): if not open?
-		for {
-			if first {
-				inb, err = d.Exchange(sending, false)
-			} else {
-				inb, err = d.Exchange(sending, true)
-			}
-			if err != nil {
-				c.Close()
-				continue Server
-			}
-                        if !in.Unpack(inb) {
-                                return
-                        }
-			if in.Id != q.Id {
-				return
-			}
-
-			if first {
-				if !checkXfrSOA(in, true) {
-					c.Close()
-					continue Server
-				}
-				first = !first
-			}
-
-			if !first {
-                                d.Tsig.TimersOnly = true
-				if !checkXfrSOA(in, false) {
-					// Soa record not the last one
-					sendMsg(in, m, false)
-					continue
-				} else {
-					sendMsg(in, m, true)
-					return
-				}
-			}
-		}
-		panic("not reached")
-		return
-	}
-	return
-}
-
-// Check if he SOA record exists in the Answer section of 
-// the packet. If first is true the first RR must be a soa
-// if false, the last one should be a SOA
-func checkXfrSOA(in *Msg, first bool) bool {
-	if len(in.Answer) > 0 {
-		if first {
-			return in.Answer[0].Header().Rrtype == TypeSOA
-		} else {
-			return in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA
-		}
-	}
-	return false
-}
-
-// Send the answer section to the channel
-func sendMsg(in *Msg, c chan Xfr, nosoa bool) {
-	x := Xfr{Add: true}
-	for k, r := range in.Answer {
-		if nosoa && k == len(in.Answer)-1 {
-			continue
-		}
-		x.RR = r
-		c <- x
-	}
 }
 
 // Some assorted checks on the resolver

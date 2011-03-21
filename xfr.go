@@ -5,21 +5,21 @@ package dns
 
 // Msg tells use what to do
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
-        switch q.Question[0].Qtype {
-        case TypeAXFR:
-                d.axfrRead(q, m)
-        case TypeIXFR:
-                d.ixfrRead(q, m)
-        }
+	switch q.Question[0].Qtype {
+	case TypeAXFR:
+		d.axfrRead(q, m)
+	case TypeIXFR:
+		d.ixfrRead(q, m)
+	}
 }
 
 func (d *Conn) XfrWrite(q *Msg, m chan Xfr) {
-        switch q.Question[0].Qtype {
-        case TypeAXFR:
-                d.axfrWrite(q, m)
-        case TypeIXFR:
-//                d.ixfrWrite(q, m)
-        }
+	switch q.Question[0].Qtype {
+	case TypeAXFR:
+		d.axfrWrite(q, m)
+	case TypeIXFR:
+		//                d.ixfrWrite(q, m)
+	}
 }
 
 func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
@@ -49,6 +49,9 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 		}
 
 		if !first {
+                        if d.Tsig != nil {
+			        d.Tsig.TimersOnly = true // Subsequent envelopes use this
+                        }
 			if !checkXfrSOA(in, false) {
 				// Soa record not the last one
 				sendMsg(in, m, false)
@@ -57,7 +60,6 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 				sendMsg(in, m, true)
 				return
 			}
-			d.Tsig.TimersOnly = true // Subsequent envelopes use this
 		}
 	}
 	panic("not reached")
@@ -67,39 +69,40 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 // Just send the zone
 func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 	out := new(Msg)
-        out.Id = q.Id
-        out.Question = q.Question
-        out.Answer = make([]RR, 1000)
-        var soa *RR_SOA;
-        i := 0
-        for r := range m  {
-                out.Answer[i] = r.RR
-                if soa == nil {
-                        if r.RR.Header().Rrtype != TypeSOA {
-                                return
-                        } else {
-                                soa = r.RR.(*RR_SOA)
-                        }
-                }
-                i++
-                if i > 1000 {
-                        // Send it
-                        send, _ := out.Pack()
-                        _, err := d.Write(send)
-                        if err != nil {
-                                /* ... */
-                        }
-                        i = 0
-                        out.Answer = out.Answer[:0]
-                }
-        }
-        // Everything is send, only the closing soa is left.
-        out.Answer[i] = soa
-        send, _ := out.Pack()
-        _, err := d.Write(send)
-        if err != nil {
-                /* ... */
-        }
+	out.Id = q.Id
+	out.Question = q.Question
+	out.Answer = make([]RR, 1000)
+	var soa *RR_SOA
+	i := 0
+	for r := range m {
+		out.Answer[i] = r.RR
+		if soa == nil {
+			if r.RR.Header().Rrtype != TypeSOA {
+				return
+			} else {
+				soa = r.RR.(*RR_SOA)
+			}
+		}
+		i++
+		if i > 1000 {
+			// Send it
+			send, _ := out.Pack()
+			_, err := d.Write(send)
+			if err != nil {
+				/* ... */
+			}
+			i = 0
+			out.Answer = out.Answer[:0]
+		}
+		// TimersOnly foo
+	}
+	// Everything is send, only the closing soa is left.
+	out.Answer[i] = soa
+	send, _ := out.Pack()
+	_, err := d.Write(send)
+	if err != nil {
+		/* ... */
+	}
 }
 
 func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
@@ -146,7 +149,9 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 		// Now we need to check each message for SOA records, to see what we need to do
 		x.Add = true
 		if !first {
-			d.Tsig.TimersOnly = true
+                        if d.Tsig != nil {
+			        d.Tsig.TimersOnly = true
+                        }
 			for k, r := range in.Answer {
 				// If the last record in the IXFR contains the servers' SOA,  we should quit
 				if r.Header().Rrtype == TypeSOA {
@@ -174,4 +179,30 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 	}
 	panic("not reached")
 	return
+}
+
+// Check if he SOA record exists in the Answer section of 
+// the packet. If first is true the first RR must be a soa
+// if false, the last one should be a SOA
+func checkXfrSOA(in *Msg, first bool) bool {
+	if len(in.Answer) > 0 {
+		if first {
+			return in.Answer[0].Header().Rrtype == TypeSOA
+		} else {
+			return in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA
+		}
+	}
+	return false
+}
+
+// Send the answer section to the channel
+func sendMsg(in *Msg, c chan Xfr, nosoa bool) {
+	x := Xfr{Add: true}
+	for k, r := range in.Answer {
+		if nosoa && k == len(in.Answer)-1 {
+			continue
+		}
+		x.RR = r
+		c <- x
+	}
 }
