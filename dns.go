@@ -112,6 +112,9 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
         if d.Tsig != nil {
                 // Check the TSIG that we should be read
                 _, err = d.Tsig.Verify(p)
+                if err != nil {
+                        return
+                }
         }
 	return
 }
@@ -132,11 +135,9 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 
         if d.Tsig != nil {
                 // Create a new buffer with the TSIG added.
-                var ok bool
-                q, ok = d.Tsig.Generate(p)
-                if !ok {
-                        // dikke shit
-                        // Generate should return os.Error
+                q, err = d.Tsig.Generate(p)
+                if err != nil {
+                        return 0, err
                 }
         } else {
                 q = p

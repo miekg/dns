@@ -69,10 +69,10 @@ type timerWireFmt struct {
 }
 
 // In a message and out a new message with the tsig added
-func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
+func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	rawsecret, err := packBase64([]byte(t.Secret))
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
         if t.Fudge == 0 {
                 t.Fudge = 300
@@ -81,21 +81,19 @@ func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
                 t.TimeSigned = uint64(time.Seconds())
         }
 
-	buf, ok := t.Buffer(msg)
-	if !ok {
-		return nil, false
+	buf, err := t.Buffer(msg)
+	if err != nil {
+		return nil, err
 	}
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-
 	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
-	if !ok {
-		return nil, false
-	}
 
 	// Create TSIG and add it to the message.
         q := new(Msg)
-        q.Unpack(msg) // TODO(mg): error handling
+        if !q.Unpack(msg) {
+                return nil, &Error{Error: "Failed to unpack"}
+        }
 
 	rr := new(RR_TSIG)
 	rr.Hdr = RR_Header{Name: t.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
@@ -108,7 +106,10 @@ func (t *Tsig) Generate(msg []byte) ([]byte, bool) {
 
         q.Extra = append(q.Extra, rr)
         send, ok := q.Pack()
-	return send, ok
+        if !ok {
+                return send, &Error{Error: "Failed to pack"}
+        }
+	return send, nil
 }
 
 // Verify a TSIG on a message. All relevant data should
@@ -124,10 +125,13 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 		return false, &Error{Error: "Failed to strip tsig"}
 	}
 
-	buf, ok := t.Buffer(stripped)
-	if !ok {
-		return false, &Error{Error: "Failed to convert to raw buffer"}
+	buf,err := t.Buffer(stripped)
+	if err != nil {
+		return false, err
 	}
+
+        // Time needs to be checked */
+        // Generic time error
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
@@ -135,7 +139,7 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 }
 
 // Create a wiredata buffer for the MAC calculation
-func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
+func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 	var (
 		macbuf []byte
 		buf    []byte
@@ -148,7 +152,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		macbuf = make([]byte, len(t.RequestMAC)) // reqmac should be twice as long
 		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
-			return nil, false
+		        return nil, &Error{Error: "Failed to pack request mac"}
 		}
 		macbuf = macbuf[:n]
 	}
@@ -160,7 +164,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		tsig.Fudge = t.Fudge
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-			return nil, false
+		        return nil, &Error{Error: "Failed to pack timers"}
 		}
 		tsigvar = tsigvar[:n]
 	} else {
@@ -176,7 +180,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 		tsig.OtherData = ""
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-			return nil, false
+		        return nil, &Error{Error: "Failed to pack tsig variables"}
 		}
 		tsigvar = tsigvar[:n]
 	}
@@ -186,7 +190,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, bool) {
 	} else {
 		buf = append(msg, tsigvar...)
 	}
-	return buf, true
+	return buf, nil
 }
 
 // Strip the TSIG from the pkt.
