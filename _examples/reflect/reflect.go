@@ -33,31 +33,27 @@ func reply(c *dns.Conn, in *dns.Msg) []byte {
 	m.Answer = make([]dns.RR, 1)
 	m.Extra = make([]dns.RR, 1)
 
+        // Copy the question.
 	m.Question[0] = in.Question[0]
 
+        // Some foo to check if we are called trough ip6 or ip4.
+        // We add the correct reply RR.
         var ad net.IP
         if c.UDP != nil {
                 ad = c.Addr.(*net.UDPAddr).IP
         } else {
                 ad = c.Addr.(*net.TCPAddr).IP
         }
+
         if ad.To4() != nil {
                 r := new(dns.RR_A)
                 r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-                if c.UDP != nil {
-                        r.A = c.Addr.(*net.UDPAddr).IP
-                } else {
-                        r.A = c.Addr.(*net.TCPAddr).IP
-                }
+                r.A = ad
                 m.Answer[0] = r
         } else {
                 r := new(dns.RR_AAAA)
-                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-                if c.UDP != nil {
-                        r.AAAA = c.Addr.(*net.UDPAddr).IP
-                } else {
-                        r.AAAA = c.Addr.(*net.TCPAddr).IP
-                }
+                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
+                r.AAAA = ad
                 m.Answer[0] = r
         }
 
