@@ -88,14 +88,6 @@ func (res *Resolver) Query(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-// Xfr is used in communicating with *xfr functions.
-// This structure is returned on the channel.
-type Xfr struct {
-	Add bool // true is to be added, otherwise false
-	RR
-	Err os.Error
-}
-
 func (res *Resolver) Xfr(q *Msg, t *Tsig, m chan Xfr) {
 	port, err := check(res, q)
 	if err != nil {
@@ -120,7 +112,7 @@ Server:
 
                 _, err = d.Write(sending)
                 if err != nil {
-                        println(err.String())
+                        continue Server
                 }
                 d.XfrRead(q, m) // check
 	}

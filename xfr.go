@@ -1,7 +1,19 @@
 package dns
 
+import (
+	"os"
+)
+
 // Outgoing AXFR and IXFR implementations
 // error handling??
+
+// Xfr is used in communicating with *xfr functions.
+// This structure is returned on the channel.
+type Xfr struct {
+	Add bool // true is to be added, otherwise false
+	RR
+	Err os.Error
+}
 
 // Msg tells use what to do
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
@@ -30,28 +42,32 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 		inb := make([]byte, MaxMsgSize)
 		n, err := d.Read(inb)
 		if err != nil {
+			m <- Xfr{true, nil, err}
 			return
 		}
 		inb = inb[:n]
 
 		if !in.Unpack(inb) {
+			m <- Xfr{true, nil, &Error{Error: "Failed to unpack"}}
 			return
 		}
 		if in.Id != q.Id {
+			m <- Xfr{true, nil, &Error{Error: "Id mismatch"}}
 			return
 		}
 
 		if first {
 			if !checkXfrSOA(in, true) {
+				m <- Xfr{true, nil, &Error{Error: "SOA not first record"}}
 				return
 			}
 			first = !first
 		}
 
 		if !first {
-                        if d.Tsig != nil {
-			        d.Tsig.TimersOnly = true // Subsequent envelopes use this
-                        }
+			if d.Tsig != nil {
+				d.Tsig.TimersOnly = true // Subsequent envelopes use this
+			}
 			if !checkXfrSOA(in, false) {
 				// Soa record not the last one
 				sendMsg(in, m, false)
@@ -120,14 +136,17 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 		}
 		n, err := d.Read(inb)
 		if err != nil {
+			m <- Xfr{true, nil, err}
 			return
 		}
 		inb = inb[:n]
 
 		if !in.Unpack(inb) {
+			m <- Xfr{true, nil, &Error{Error: "Failed to unpack"}}
 			return
 		}
 		if in.Id != q.Id {
+			m <- Xfr{true, nil, &Error{Error: "Id mismatch"}}
 			return
 		}
 
@@ -139,6 +158,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 
 			// But still check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
+				m <- Xfr{true, nil, &Error{Error: "SOA not first record"}}
 				return
 			}
 			// This serial is important
@@ -149,9 +169,9 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 		// Now we need to check each message for SOA records, to see what we need to do
 		x.Add = true
 		if !first {
-                        if d.Tsig != nil {
-			        d.Tsig.TimersOnly = true
-                        }
+			if d.Tsig != nil {
+				d.Tsig.TimersOnly = true
+			}
 			for k, r := range in.Answer {
 				// If the last record in the IXFR contains the servers' SOA,  we should quit
 				if r.Header().Rrtype == TypeSOA {
