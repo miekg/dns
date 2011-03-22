@@ -32,7 +32,8 @@ const (
 
 // DNSSEC hashing codes.
 const (
-	HashSHA1 = iota
+        _ = iota
+	HashSHA1
 	HashSHA256
 	HashGOST94
 )
@@ -104,6 +105,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
+        ds.Hdr.Rrtype = TypeDS
 	ds.Hdr.Ttl = k.Hdr.Ttl
 	ds.Algorithm = k.Algorithm
 	ds.DigestType = uint8(h)

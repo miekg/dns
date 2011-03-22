@@ -36,7 +36,7 @@ func reply(c *dns.Conn, in *dns.Msg) []byte {
         // Copy the question.
 	m.Question[0] = in.Question[0]
 
-        // Some foo to check if we are called trough ip6 or ip4.
+        // Some foo to check if we are called through ip6 or ip4.
         // We add the correct reply RR.
         var ad net.IP
         if c.UDP != nil {
