@@ -15,7 +15,11 @@
 // 
 package dns
 
+// ErrShortWrite is defined in io, use that!
+
 import (
+	"os"
+	"net"
 	"strconv"
 )
 
@@ -30,7 +34,7 @@ const (
 type Error struct {
 	Error   string
 	Name    string
-	Server  string
+	Server  net.Addr
 	Timeout bool
 }
 
@@ -39,6 +43,222 @@ func (e *Error) String() string {
 		return "<nil>"
 	}
 	return e.Error
+}
+
+// A Conn is the lowest primative in this DNS library
+// A hold both the UDP and TCP connection, but only one
+// can be active at any one time.
+type Conn struct {
+	// The current UDP connection.
+	UDP *net.UDPConn
+
+	// The current TCP connection.
+	TCP *net.TCPConn
+
+	// The remote side of the connection.
+	Addr net.Addr
+
+        // The remote port number of the connection.
+        Port int
+
+        // If TSIG is used, this holds all the information
+        Tsig *Tsig
+
+	// Timeout in sec
+	Timeout int
+
+	// Number of attempts to try
+	Attempts int
+}
+
+// Create a new buffer of the appropiate size.
+func (d *Conn) NewBuffer() []byte {
+        if d.TCP != nil {
+                b := make([]byte, MaxMsgSize)
+                return b
+        }
+        if d.UDP != nil {
+                b := make([]byte, DefaultMsgSize)
+                return b
+        }
+        return nil
+}
+
+
+func (d *Conn) Read(p []byte) (n int, err os.Error) {
+	if d.UDP != nil && d.TCP != nil {
+		return 0, &Error{Error: "UDP and TCP or both non-nil"}
+	}
+	switch {
+	case d.UDP != nil:
+                var addr net.Addr
+		n, addr, err = d.UDP.ReadFromUDP(p)
+		if err != nil {
+			return n, err
+		}
+                d.Addr = addr
+                d.Port = addr.(*net.UDPAddr).Port
+	case d.TCP != nil:
+                if len(p) < 1 {
+                        return 0, &Error{Error: "Buffer too small to read"}
+                }
+		n, err = d.TCP.Read(p[0:2])
+		if err != nil || n != 2 {
+			return n, err
+		}
+                d.Addr = d.TCP.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+		l, _ := unpackUint16(p[0:2], 0)
+		if l == 0 {
+			return 0, &Error{Error: "received nil msg length", Server: d.Addr}
+		}
+		if int(l) > len(p) {
+			return int(l), &Error{Error: "Buffer too small to read"}
+		}
+		n, err = d.TCP.Read(p)
+		if err != nil {
+			return n, err
+		}
+		i := n
+		for i < int(l) {
+			n, err = d.TCP.Read(p[i:])
+			if err != nil {
+				return i, err
+			}
+			i += n
+		}
+                n = i
+	}
+        if d.Tsig != nil {
+                // Check the TSIG that we should be read
+                _, err = d.Tsig.Verify(p)
+                if err != nil {
+                        return
+                }
+        }
+	return
+}
+
+func (d *Conn) Write(p []byte) (n int, err os.Error) {
+	if d.UDP != nil && d.TCP != nil {
+		return 0, &Error{Error: "UDP and TCP or both non-nil"}
+	}
+
+	var attempts int
+        var q []byte
+	if d.Attempts == 0 {
+		attempts = 1
+	} else {
+		attempts = d.Attempts
+	}
+	d.SetTimeout()
+        if d.Tsig != nil {
+                // Create a new buffer with the TSIG added.
+                q, err = d.Tsig.Generate(p)
+                if err != nil {
+                        return 0, err
+                }
+        } else {
+                q = p
+        }
+
+	switch {
+	case d.UDP != nil:
+		for a := 0; a < attempts; a++ {
+			n, err = d.UDP.WriteTo(q, d.Addr)
+			if err != nil {
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					continue
+				}
+				return 0, err
+			}
+		}
+	case d.TCP != nil:
+		for a := 0; a < attempts; a++ {
+			l := make([]byte, 2)
+			l[0], l[1] = packUint16(uint16(len(q)))
+			n, err = d.TCP.Write(l)
+			if err != nil {
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					continue
+				}
+				return n, err
+			}
+			if n != 2 {
+				return n, &Error{Error: "Write failure"}
+			}
+			n, err = d.TCP.Write(q)
+			if err != nil {
+				if e, ok := err.(net.Error); ok && e.Timeout() {
+					continue
+				}
+				return n, err
+			}
+                        i := n
+                        if i < len(q) {
+			        n, err = d.TCP.Write(q)
+			        if err != nil {
+				        if e, ok := err.(net.Error); ok && e.Timeout() {
+                                                // We are half way in our write...
+					        continue
+				        }
+				        return n, err
+                                }
+                                i += n
+			}
+                        n = i
+		}
+	}
+	return
+}
+
+func (d *Conn) Close() (err os.Error) {
+	if d.UDP != nil && d.TCP != nil {
+		return &Error{Error: "UDP and TCP or both non-nil"}
+	}
+	switch {
+	case d.UDP != nil:
+		err = d.UDP.Close()
+	case d.TCP != nil:
+		err = d.TCP.Close()
+	}
+	return
+}
+
+func (d *Conn) SetTimeout() (err os.Error) {
+	var sec int64
+	if d.UDP != nil && d.TCP != nil {
+		return &Error{Error: "UDP and TCP or both non-nil"}
+	}
+	sec = int64(d.Timeout)
+	if sec == 0 {
+		sec = 1
+	}
+	if d.UDP != nil {
+		err = d.TCP.SetTimeout(sec * 1e9)
+	}
+	if d.TCP != nil {
+		err = d.TCP.SetTimeout(sec * 1e9)
+	}
+	return
+}
+
+func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {
+	var n int
+        if !nosend {
+                n, err = d.Write(request)
+                if err != nil {
+                        return nil, err
+                }
+        }
+	// Layer violation to save memory. Its okay then...
+        reply = d.NewBuffer()
+	n, err = d.Read(reply)
+	if err != nil {
+		return nil, err
+	}
+	reply = reply[:n]
+	return
 }
 
 

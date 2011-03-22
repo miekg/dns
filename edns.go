@@ -7,9 +7,10 @@ import (
 
 // EDNS0 Options
 const (
-	OptionCodeLLQ  = 1      // not used
-	OptionCodeUL   = 2      // not used
-	OptionCodeNSID = 3      // NSID, RFC5001
+	_              = iota
+	OptionCodeLLQ           // not used
+	OptionCodeUL            // not used
+	OptionCodeNSID          // NSID, RFC5001
 	_DO            = 1 << 7 // dnssec ok
 )
 

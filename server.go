@@ -11,70 +11,65 @@ import (
 	"net"
 )
 
-type Server struct {
-	ServeUDP func(*net.UDPConn, net.Addr, *Msg) os.Error
-	ServeTCP func(*net.TCPConn, net.Addr, *Msg) os.Error
-        /* notify stuff here? */
-        /* tsig here */
-}
+// For both -> logging
+// Add tsig stuff as in resolver.go
 
-func ServeUDP(l *net.UDPConn, f func(*net.UDPConn, net.Addr, *Msg)) os.Error {
+func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 	for {
 		m := make([]byte, DefaultMsgSize)
-		n, radd, e := l.ReadFromUDP(m)
+		n, addr, e := l.ReadFromUDP(m)
 		if e != nil {
 			continue
 		}
 		m = m[:n]
+
+                d := new(Conn)
+                d.UDP = l
+                d.Addr = addr
+                d.Port = addr.Port       // Why not the same as in dns.go, line 96
+
 		msg := new(Msg)
 		if !msg.Unpack(m) {
 			continue
 		}
-		go f(l, radd, msg)
+		go f(d, msg)
 	}
 	panic("not reached")
 }
 
-func ServeTCP(l *net.TCPListener, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
-	b := make([]byte, 2)
+func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 	for {
 		c, e := l.AcceptTCP()
 		if e != nil {
 			return e
 		}
-		n, e := c.Read(b)
-		if e != nil {
-			continue
-		}
+                d := new(Conn)
+                d.TCP = c
+                d.Addr = c.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 
-		length := uint16(b[0])<<8 | uint16(b[1])
-		if length == 0 {
-			return &Error{Error: "received nil msg length"}
-		}
-		m := make([]byte, length)
+                m := d.NewBuffer()
+                n, e := d.Read(m)
+                if e != nil {
+                        continue
+                }
+                m = m[:n]
 
-		n, e = c.Read(m)
-		if e != nil {
-			continue
-		}
-		i := n
-		if i < int(length) {
-			n, e = c.Read(m[i:])
-			if e != nil {
-				continue
-			}
-			i += n
-		}
 		msg := new(Msg)
 		if !msg.Unpack(m) {
+                        // Logging??
 			continue
 		}
-		go f(c, c.RemoteAddr(), msg)
+		go f(d, msg)
 	}
 	panic("not reached")
 }
 
-func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, *Msg)) os.Error {
+// config functions Config
+// ListenAndServeTCPTsig
+// ListenAndServeUDPTsig
+
+func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
 		return err
@@ -83,11 +78,11 @@ func ListenAndServeTCP(addr string, f func(*net.TCPConn, net.Addr, *Msg)) os.Err
 	if err != nil {
 		return err
 	}
-	err = ServeTCP(l, f)
+	err = HandleTCP(l, f)
 	return err
 }
 
-func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, *Msg)) os.Error {
+func ListenAndServeUDP(addr string, f func(*Conn, *Msg)) os.Error {
 	a, err := net.ResolveUDPAddr(addr)
 	if err != nil {
 		return err
@@ -96,42 +91,6 @@ func ListenAndServeUDP(addr string, f func(*net.UDPConn, net.Addr, *Msg)) os.Err
 	if err != nil {
 		return err
 	}
-	err = ServeUDP(l, f)
+	err = HandleUDP(l, f)
 	return err
-}
-
-// Send a buffer on the TCP connection.
-func SendTCP(m []byte, c *net.TCPConn, a net.Addr) os.Error {
-	l := make([]byte, 2)
-	l[0] = byte(len(m) >> 8)
-	l[1] = byte(len(m))
-	// First we send the length
-	n, err := c.Write(l)
-	if err != nil {
-		return err
-	}
-	// And the the message
-	n, err = c.Write(m)
-	if err != nil {
-		return err
-	}
-	i := n
-	for i < len(m) {
-		n, err = c.Write(m)
-		if err != nil {
-			return err
-		}
-		i += n
-	}
-	return nil
-}
-
-// Send a buffer to the remove address. Only here because
-// of the symmetry with SendTCP().
-func SendUDP(m []byte, c *net.UDPConn, a net.Addr) os.Error {
-	_, err := c.WriteTo(m, a)
-	if err != nil {
-		return err
-	}
-	return nil
 }

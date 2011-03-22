@@ -7,7 +7,6 @@ include $(GOROOT)/src/Make.inc
 
 TARG=dns
 GOFILES=\
-	xfr.go\
 	config.go\
 	defaults.go\
 	dns.go\
@@ -21,7 +20,7 @@ GOFILES=\
 	string.go\
 	tsig.go\
 	types.go\
-#	y.go\
+	xfr.go\
 
 include $(GOROOT)/src/Make.pkg
 

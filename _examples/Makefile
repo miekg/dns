@@ -4,7 +4,7 @@ chaos \
 axfr \
 reflect \
 funkensturm \
-ns \
+ds2key \
 
 all: 
 	for i in $(EXAMPLES); do gomake -C $$i; done

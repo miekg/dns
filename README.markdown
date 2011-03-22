@@ -38,6 +38,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP
 * 4408 - SPF
+* 4509 - SHA256 Hash in DS
 * 4635 - HMAC SHA TSIG
 * 5001 - NSID 
 * 5155 - NSEC
