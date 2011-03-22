@@ -5,12 +5,14 @@ o clean, small API
 o fast data structures (rb-tree, when they come available)
 o api-use should lead to self documenting code
 
+o zone structure -- only as rb-tree 
 o compression (only ownernames?)
 
+o Key2DS, also for offline keys -- need to parse them ofcourse
 
 o Closing of tcp connections?
 o Tsig will probably become an interface which has all configuration
-  stuff, but this will come later
+  stuff, but this will come later. Config which has Tsig function
 
 Todo:
 * Parsing from strings, going with goyacc and .cz lexer?
