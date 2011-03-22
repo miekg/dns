@@ -12,89 +12,41 @@ package main
 import (
         "os"
         "os/signal"
-        "net"
+//        "net"
 	"fmt"
 	"dns"
 )
 
-// Initiate an AXFR from the server. Everything is
-// hardcoded atm
-func doTransfer() []dns.Xfr {
-        res := new(dns.Resolver)
-        res.Servers[0] = "127.0.0.1:53"
+func reply(d *dns.Conn, i *dns.Msg) []byte {
+        return nil
+}
 
-        c := make(chan dns.Xfr)
-        m := new(dns.Msg)
-        m.SetAxfrRequest("miek.nl", dns.ClassINET)
-
-        go res.Axfr(m, c)
-        var ret []dns.Xfr
-        for x:= range c {
-                ret = append(ret, x)
+func handle(d *dns.Conn, i *dns.Msg) {
+        if i.MsgHdr.Response == true {
+                return
         }
-        return ret
+        answer := reply(d, i)
+        d.Write(answer)
 }
 
-func replyUDP(c *net.UDPConn, a net.Addr, i *dns.Msg) {
-        if i.IsNotify() {
-                //doNotifyReply()
-                doTransfer()
-                //if checkTransfer(rtf, key) {
-                        // Success
-                        // Notify remote end
-                        // send axfr
-                //}
-
+func listen(addr string, e chan os.Error, tcp string) {
+        switch tcp {
+        case "tcp":
+                err := dns.ListenAndServeTCP(addr, handle)
+                e <- err
+        case "udp":
+                err := dns.ListenAndServeUDP(addr, handle)
+                e <- err
         }
-        out, ok := i.Pack()
-        if ok {
-	        dns.SendUDP(out, c, a)
-        }
+        return
 }
-
-func replyTCP(c *net.TCPConn, a net.Addr, i *dns.Msg) {
-        out, ok := i.Pack()
-        if ok {
-	        dns.SendTCP(out, c, a)
-        }
-}
-
-func tcp(addr string, e chan os.Error) {
-	a, err := net.ResolveTCPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenTCP("tcp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeTCP(l, replyTCP)
-	e <- err
-	return
-}
-
-func udp(addr string, e chan os.Error) {
-	a, err := net.ResolveUDPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenUDP("udp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeUDP(l, replyUDP)
-	e <- err
-	return
-}
-
-// Step 1. Create server that sees an notify and
-// performs an AXFR.
-// Test with ldns-notify
 
 func main() {
 	err := make(chan os.Error)
-	go udp("127.0.0.1:8053", err)
-	go tcp("127.0.0.1:8053", err)
+	go listen("127.0.0.1:8053", err, "tcp")
+	go listen("[::1]:8053", err, "udp")
+	go listen("127.0.0.1:8053", err, "tcp")
+	go listen("[::1]:8053", err, "udp")
 
 forever:
 	for {

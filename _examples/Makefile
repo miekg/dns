@@ -4,6 +4,7 @@ chaos \
 axfr \
 reflect \
 funkensturm \
+xfrprx \
 ds2key \
 
 all: 
