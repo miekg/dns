@@ -1,6 +1,6 @@
 package main
 
-// Print the MX records of a domain
+// Print the DNSKEY records of a domain as DS records
 // (c) Miek Gieben - 2011
 import (
 	"dns"
