@@ -12,7 +12,9 @@ import (
 	"time"
 )
 
+// Todo(MG) put in dns.go
 const ErrPack = "Failed to pack message"
+const ErrUnpack = ""
 const ErrServ = "No servers could be reached"
 const ErrTsigKey = ""
 const ErrTsigTime = ""
@@ -31,22 +33,12 @@ type Resolver struct {
 	Rrb      int                 // Last used server (for round robin)
 }
 
-// Basic usage pattern for setting up a resolver:
-//
-//        res := new(Resolver)
-//        res.Servers = []string{"127.0.0.1"}           // set the nameserver
-//
-//        m := new(Msg)                                 // prepare a new message
-//        m.MsgHdr.Recursion_desired = true             // header bits
-//        m.Question = make([]Question, 1)              // 1 RR in question section
-//        m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//        in, err := res.Query(m, nil)                  // Ask the question
-//
-// Note that message id checking is left to the caller.
+// Send a query to the nameserver using the res.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
         return res.QueryTsig(q, nil)
 }
 
+// Send a query to the nameserver using res, but perform TSIG validation.
 func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	var c net.Conn
 	var inb []byte

@@ -7,12 +7,37 @@
 // The package allows full control over what is send out to the DNS. 
 //
 // Resource Records are native types. They are not stored in wire format.
-// Basic usage pattern for creating new Resource Record:
+// Basic usage pattern for creating a new Resource Record:
 //
 //         r := new(RR_TXT)
 //         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //         r.TXT = "This is the content of the TXT record"
 // 
+// The package dns supports normal querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
+// dynamic updates, notifies and DNSSEC validation/signing.
+//
+// Basic use pattern for creating a resolver:
+//
+//      res := new(Resolver)
+//      res.Servers = []string{"127.0.0.1"} 
+//      m := new(Msg)
+//      m.MsgHdr.Recursion_desired = true
+//      m.Question = make([]Question, 1)
+//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+//      in, err := res.Query(m)
+//
+// 
+// Basic use pattern for creating an UDP DNS server:
+//
+//      func handle(d *dns.Conn, i *dns.Msg) { /* handle request */ }
+//
+//      func listen(addr string, e chan os.Error) {
+//            err := dns.ListenAndServeUDP(addr, handle)
+//            e <- err
+//      }
+//      err := make(chan os.Error)
+//      go listen("127.0.0.1:8053", err)
+//
 package dns
 
 // ErrShortWrite is defined in io, use that!
@@ -27,7 +52,7 @@ const (
 	Year68         = 2 << (32 - 1) // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	DefaultMsgSize = 4096          // A standard default for larger than 512 packets.
 	MaxMsgSize     = 65536         // Largest possible DNS packet.
-	DefaultTtl     = 3600          // Default Ttl, used in New() for instance.
+	DefaultTtl     = 3600          // Default Ttl.
 )
 
 // Error represents a DNS error
@@ -45,9 +70,9 @@ func (e *Error) String() string {
 	return e.Error
 }
 
-// A Conn is the lowest primative in this DNS library
+// A Conn is the lowest primative in this dns package.
 // A Conn holds both the UDP and TCP connection, but only one
-// at any given time. 
+// can be active any given time. 
 type Conn struct {
 	// The current UDP connection.
 	UDP *net.UDPConn
@@ -289,7 +314,7 @@ func (d *Conn) SetTimeout() (err os.Error) {
 }
 
 // Exchange combines a Write and a Read.
-// First request is written to d and then it waits
+// First the request is written to d and then it waits
 // for a reply with Read. 
 // If nosend is true, the write is skipped.
 func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {

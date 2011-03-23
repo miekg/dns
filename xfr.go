@@ -15,7 +15,9 @@ type Xfr struct {
 	Err os.Error
 }
 
-// Msg tells use what to do
+// Perform an incoming Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed. If q's question
+// section contains an IXFR type an Ixfr is performed.
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
         // Send q first.
         err := d.WriteMsg(q)
@@ -30,6 +32,10 @@ func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
 	}
 }
 
+// Perform an outgoing Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed. If q's question
+// section contains an IXFR type an Ixfr is performed.
+// The message q is written to the connection in d.
 func (d *Conn) XfrWrite(q *Msg, m chan Xfr) {
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
