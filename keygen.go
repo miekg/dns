@@ -2,12 +2,13 @@ package dns
 
 import (
 	"os"
+        "io"
 	"big"
 	"fmt"
-	"bufio"
 	"strconv"
 	"crypto/rsa"
 	"crypto/rand"
+        "encoding/line"
 )
 
 // Empty interface that is used as a wrapper around all possible
@@ -88,12 +89,13 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) ReadPrivateKey(r bufio.Reader) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	var left, right string
-	line, _ := r.ReadBytes('\n')
+        r := line.NewReader(q, 300)
+	line, _, err := r.ReadLine()
 	// Do we care about the order of things? TODO(mg)
-	for len(line) > 0 {
+	for err != nil {
 		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
 		if n > 0 {
 			switch left {
@@ -142,7 +144,7 @@ func (k *RR_DNSKEY) ReadPrivateKey(r bufio.Reader) (PrivateKey, os.Error) {
 				return nil, &Error{Error: "Private key file not recognized"}
 			}
 		}
-		line, _ = r.ReadBytes('\n')
+		line, _, err = r.ReadLine()
 	}
 	k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N)
 	return p, nil

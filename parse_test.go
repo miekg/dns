@@ -3,6 +3,7 @@ package dns
 import (
 	"fmt"
 	"net"
+        "strings"
 	"testing"
 	"crypto/rsa"
 )
