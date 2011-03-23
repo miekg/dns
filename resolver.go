@@ -67,16 +67,20 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		t := time.Nanoseconds()
 		if res.Tcp {
 			c, err = net.Dial("tcp", "", server)
+                        if err != nil {
+                                continue
+                        }
 			d.TCP = c.(*net.TCPConn)
 			d.Addr = d.TCP.RemoteAddr()
 		} else {
 			c, err = net.Dial("udp", "", server)
+                        if err != nil {
+                                continue
+                        }
 			d.UDP = c.(*net.UDPConn)
 			d.Addr = d.UDP.RemoteAddr()
 		}
-		if err != nil {
-			continue
-		}
+
 		inb, err = d.Exchange(sending, false)
 		if err != nil {
 			continue

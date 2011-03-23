@@ -3,6 +3,7 @@
 # license that can be found in the LICENSE file.
 include $(GOROOT)/src/Make.inc
 TARG=xfrprx
-GOFILES=xfrprx.go
+GOFILES=xfrprx.go\
+	xfr.go
 DEPS=../../
 include $(GOROOT)/src/Make.cmd

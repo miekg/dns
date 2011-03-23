@@ -17,6 +17,11 @@ type Xfr struct {
 
 // Msg tells use what to do
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
+        // Send q first.
+        err := d.WriteMsg(q)
+        if err != nil {
+                return
+        }
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
 		d.axfrRead(q, m)

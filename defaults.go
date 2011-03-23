@@ -3,12 +3,14 @@ package dns
 // Everything is assumed in the ClassINET class
 
 // Create a reply packet.
-func (dns *Msg) SetReply(id uint16) {
-        dns.MsgHdr.Id = id
+func (dns *Msg) SetReply(request *Msg) {
+        dns.MsgHdr.Id = request.MsgHdr.Id
         dns.MsgHdr.Authoritative = true
         dns.MsgHdr.Response = true
         dns.MsgHdr.Opcode = OpcodeQuery
         dns.MsgHdr.Rcode = RcodeSuccess
+        dns.Question = make([]Question, 1)
+        dns.Question[0] = request.Question[0]
 }
 
 // IsReply?
@@ -23,11 +25,11 @@ func (dns *Msg) SetNotify(z string, class uint16) {
 }
 
 // Is a dns msg a valid notify packet?
-func (dns *Msg) IsNotify() bool {
-	ok := dns.MsgHdr.Opcode == OpcodeNotify
+func (dns *Msg) IsNotify() (ok bool) {
 	if len(dns.Question) == 0 {
-		ok = false
+		return false
 	}
+	ok = dns.MsgHdr.Opcode == OpcodeNotify
 	ok = ok && dns.Question[0].Qclass == ClassINET
 	ok = ok && dns.Question[0].Qtype == TypeSOA
 	return ok

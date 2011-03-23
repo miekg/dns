@@ -12,21 +12,15 @@ package main
 import (
         "os"
         "os/signal"
-//        "net"
 	"fmt"
 	"dns"
 )
-
-func reply(d *dns.Conn, i *dns.Msg) []byte {
-        return nil
-}
 
 func handle(d *dns.Conn, i *dns.Msg) {
         if i.MsgHdr.Response == true {
                 return
         }
-        answer := reply(d, i)
-        d.Write(answer)
+        handleNotify(d, i)
 }
 
 func listen(addr string, e chan os.Error, tcp string) {
@@ -44,8 +38,8 @@ func listen(addr string, e chan os.Error, tcp string) {
 func main() {
 	err := make(chan os.Error)
 	go listen("127.0.0.1:8053", err, "tcp")
-	go listen("[::1]:8053", err, "udp")
-	go listen("127.0.0.1:8053", err, "tcp")
+	go listen("[::1]:8053", err, "tcp")
+	go listen("127.0.0.1:8053", err, "udp")
 	go listen("[::1]:8053", err, "udp")
 
 forever:

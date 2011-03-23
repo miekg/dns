@@ -19,19 +19,13 @@ func main() {
 
         c := make(chan dns.Xfr)
 	m := new(dns.Msg)
-	m.Question = make([]dns.Question, 1)
 
         if *serial > 0 {
-	        m.Question[0] = dns.Question{zone, dns.TypeIXFR, dns.ClassINET}
-                soa := new(dns.RR_SOA)
-                soa.Hdr = dns.RR_Header{zone, dns.TypeSOA, dns.ClassINET, 14400, 0}
-                soa.Serial = uint32(*serial)
-                m.Ns = make([]dns.RR, 1)
-                m.Ns[0] = soa
+                m.SetIxfr(zone, uint32(*serial))
         } else {
-	        m.Question[0] = dns.Question{zone, dns.TypeAXFR, dns.ClassINET}
+                m.SetAxfr(zone)
         }
-        go res.Xfr(m, nil, c)
+        go res.Xfr(m, c)
         for x := range c {
                 fmt.Printf("%v %v\n",x.Add, x.RR)
         }

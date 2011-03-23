@@ -84,6 +84,34 @@ func (d *Conn) NewBuffer() []byte {
         return nil
 }
 
+func (d *Conn) ReadMsg(m *Msg) os.Error {
+        in := d.NewBuffer()
+        n, err := d.Read(in)
+        if err != nil {
+                return err
+        }
+        in = in[:n]
+        ok := m.Unpack(in)
+        if !ok {
+                return &Error{Error: "Failed to unpack"}
+        }
+        return nil
+}
+
+func (d *Conn) WriteMsg(m *Msg) os.Error {
+        out, ok := m.Pack()
+        if !ok {
+                return &Error{Error: "Failed to pack"}
+        }
+        n, err := d.Write(out)
+        if err != nil {
+                return err
+        }
+        if n != len(out) {
+                return &Error{Error: "Short write"}
+        }
+        return nil
+}
 
 func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
@@ -260,7 +288,6 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 	reply = reply[:n]
 	return
 }
-
 
 type RR interface {
 	Header() *RR_Header
