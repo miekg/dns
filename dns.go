@@ -46,8 +46,8 @@ func (e *Error) String() string {
 }
 
 // A Conn is the lowest primative in this DNS library
-// A hold both the UDP and TCP connection, but only one
-// can be active at any one time.
+// A Conn holds both the UDP and TCP connection, but only one
+// at any given time. 
 type Conn struct {
 	// The current UDP connection.
 	UDP *net.UDPConn
@@ -61,17 +61,20 @@ type Conn struct {
         // The remote port number of the connection.
         Port int
 
-        // If TSIG is used, this holds all the information
+        // If TSIG is used, this holds all the information.
         Tsig *Tsig
 
-	// Timeout in sec
+	// Timeout in sec before giving up on a connection.
 	Timeout int
 
-	// Number of attempts to try
+	// Number of attempts to try to Read/Write from/to a
+        // connection.
 	Attempts int
 }
 
-// Create a new buffer of the appropiate size.
+// Create a new buffer of the appropiate size. With
+// TCP the buffer is 64K, with UDP the returned buffer
+// has a length of 4K bytes.
 func (d *Conn) NewBuffer() []byte {
         if d.TCP != nil {
                 b := make([]byte, MaxMsgSize)
@@ -84,6 +87,8 @@ func (d *Conn) NewBuffer() []byte {
         return nil
 }
 
+// ReadMsg reads a dns message m from d.
+// Any errors of the underlaying Read call are returned.
 func (d *Conn) ReadMsg(m *Msg) os.Error {
         in := d.NewBuffer()
         n, err := d.Read(in)
@@ -98,6 +103,8 @@ func (d *Conn) ReadMsg(m *Msg) os.Error {
         return nil
 }
 
+// WriteMsg writes dns message m to d.
+// Any errors of the underlaying Write call are returned.
 func (d *Conn) WriteMsg(m *Msg) os.Error {
         out, ok := m.Pack()
         if !ok {
@@ -113,6 +120,9 @@ func (d *Conn) WriteMsg(m *Msg) os.Error {
         return nil
 }
 
+// Read implements the standard Read interface:
+// it reads from d. If there was an error
+// reading that error is returned; otherwise err is nil.
 func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
 		return 0, &Error{Error: "UDP and TCP or both non-nil"}
@@ -167,6 +177,9 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	return
 }
 
+// Write implements the standard Write interface:
+// It write data to d. If there was an error writing
+// that error is returned; otherwise err is nil
 func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
 		return 0, &Error{Error: "UDP and TCP or both non-nil"}
@@ -240,6 +253,8 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	return
 }
 
+// Close closes the connection in d. Possible
+// errors are returned in err; otherwise it is nil.
 func (d *Conn) Close() (err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
 		return &Error{Error: "UDP and TCP or both non-nil"}
@@ -253,6 +268,8 @@ func (d *Conn) Close() (err os.Error) {
 	return
 }
 
+// SetTimeout sets the timeout of the socket
+// that is contained in d.
 func (d *Conn) SetTimeout() (err os.Error) {
 	var sec int64
 	if d.UDP != nil && d.TCP != nil {
@@ -271,6 +288,10 @@ func (d *Conn) SetTimeout() (err os.Error) {
 	return
 }
 
+// Exchange combines a Write and a Read.
+// First request is written to d and then it waits
+// for a reply with Read. 
+// If nosend is true, the write is skipped.
 func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {
 	var n int
         if !nosend {
