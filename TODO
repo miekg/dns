@@ -10,7 +10,6 @@ o compression (only ownernames?)
 
 o Key2DS, also for offline keys -- need to parse them ofcourse
 
-o Closing of tcp connections?
 o Tsig will probably become an interface which has all configuration
   stuff, but this will come later. Config which has Tsig function
 

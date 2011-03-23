@@ -48,15 +48,10 @@ func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
                 d.Addr = c.RemoteAddr()
                 d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 
-                m := d.NewBuffer()
-                n, e := d.Read(m)
-                if e != nil {
-                        continue
-                }
-                m = m[:n]
-
 		msg := new(Msg)
-		if !msg.Unpack(m) {
+                err := d.ReadMsg(msg)
+
+		if err != nil {
                         // Logging??
 			continue
 		}

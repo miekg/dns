@@ -44,16 +44,9 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 	first := true
 	in := new(Msg)
 	for {
-		inb := d.NewBuffer()
-		n, err := d.Read(inb)
+                err := d.ReadMsg(in)
 		if err != nil {
 			m <- Xfr{true, nil, err}
-			return
-		}
-		inb = inb[:n]
-
-		if !in.Unpack(inb) {
-			m <- Xfr{true, nil, &Error{Error: "Failed to unpack"}}
 			return
 		}
 		if in.Id != q.Id {
@@ -135,16 +128,10 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 	first := true
 	in := new(Msg)
 	for {
-                inb := d.NewBuffer()
-		n, err := d.Read(inb)
+
+                err := d.ReadMsg(in)
 		if err != nil {
 			m <- Xfr{true, nil, err}
-			return
-		}
-		inb = inb[:n]
-
-		if !in.Unpack(inb) {
-			m <- Xfr{true, nil, &Error{Error: "Failed to unpack"}}
 			return
 		}
 		if in.Id != q.Id {

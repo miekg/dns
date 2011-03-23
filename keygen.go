@@ -5,7 +5,6 @@ import (
 	"big"
 	"fmt"
 	"bufio"
-	"strings"
 	"strconv"
 	"crypto/rsa"
 	"crypto/rand"
@@ -89,9 +88,8 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) PrivateKeySetString(s string) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) ReadPrivateKey(r bufio.Reader) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
-	r := bufio.NewReader(strings.NewReader(s))
 	var left, right string
 	line, _ := r.ReadBytes('\n')
 	// Do we care about the order of things? TODO(mg)

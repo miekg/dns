@@ -342,7 +342,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 }
 
 // Use RFC1982 to calculate if a signature period is valid.
-func (s *RR_RRSIG) PeriodOK() bool {
+func (s *RR_RRSIG) ValidityPeriod()  bool {
 	utc := time.UTC().Seconds()
 	modi := (int64(s.Inception) - utc) / Year68
 	mode := (int64(s.Expiration) - utc) / Year68

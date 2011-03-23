@@ -45,7 +45,7 @@ Publish: 20101221142359
 Activate: 20101221142359`
 
 	k := new(RR_DNSKEY)
-	p, _ := k.PrivateKeySetString(a)
+	p, _ := k.ReadPrivateKey(strings.NewReader(a))
 	p = p
 }
 
