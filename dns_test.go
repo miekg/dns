@@ -58,24 +58,16 @@ func TestEDNS_RR(t *testing.T) {
 }
 
 func TestTsig(t *testing.T) {
-	tsig := new(RR_TSIG)
-	tsig.Hdr.Name = "miek.nl." // for tsig this is the key's name
-        tsig.SetDefaults()
-	tsig.TimeSigned = uint64(time.Seconds())
+        tsig := new(Tsig)
+        tsig.Name = "axfr."
+        tsig.Algorithm = HmacMD5
+        tsig.Fudge = 300
+        tsig.TimeSigned = uint64(time.Seconds())
+        tsig.Secret = "so6ZGir4GPAqINNh9U5c3A=="
 
 	out := new(Msg)
 	out.MsgHdr.RecursionDesired = true
 	out.Question = make([]Question, 1)
 	out.Question[0] = Question{"miek.nl.", TypeSOA, ClassINET}
-
-	ok := tsig.Generate(out, "awwLOtRfpGE+rRKF2+DEiw==")
-	if !ok {
-		t.Log("Failed to generate TSIG record")
-		t.Fail()
-	}
-
-	// Having the TSIG record, it must now be added to the msg
-	// in the extra section
-	out.Extra = make([]RR, 1)
-	out.Extra[0] = tsig
+/* do something with it */
 }

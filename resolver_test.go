@@ -1,6 +1,7 @@
 package dns
 
 import (
+        "time"
 	"testing"
 )
 
@@ -84,16 +85,15 @@ func TestResolverTsig(t *testing.T) {
 	m.Extra = make([]RR, 1)
 	m.Id = Id()
 
-	tsig := new(RR_TSIG)
-	tsig.Hdr.Name = "miek.nl" // for tsig this is the key's name
-	tsig.Hdr.Rrtype = TypeTSIG
-	tsig.Hdr.Class = ClassANY
-	tsig.Hdr.Ttl = 0
-	tsig.Generate(m, "geheim")
-	// Add it to the msg
-	m.Extra[0] = tsig
 
-	in, _ := res.Query(m)
+        tsig := new(Tsig)
+        tsig.Name = "miek.nl."
+        tsig.Algorithm = HmacMD5
+        tsig.Fudge = 300
+        tsig.TimeSigned = uint64(time.Seconds())
+        tsig.Secret = "ZGZqc2tmZAo="
+
+	in, _ := res.QueryTsig(m,tsig)
 	if in != nil {
 		if in.Rcode != RcodeSuccess {
 			t.Logf("%v\n", in)
@@ -111,7 +111,7 @@ func TestAXFR(t *testing.T) {
 	m.Question[0] = Question{"miek.nl", TypeAXFR, ClassINET}
 
         ch := make(chan Xfr)
-        go res.Axfr(m, ch)
+        go res.Xfr(m, ch)
 	for x := range ch {
 		var _ = x
 		/* fmt.Printf("%v\n",dm.Dns) */

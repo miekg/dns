@@ -79,7 +79,7 @@ Activate: 20110109154937`
 	k.Hdr.Ttl = 3600
 	k.Protocol = 3
 	k.Flags = 256
-	p, _ := k.PrivateKeySetString(a)
+	p, _ := k.ReadPrivateKey(strings.NewReader(a))
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
 		if 65537 != priv.PublicKey.E {

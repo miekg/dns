@@ -2,11 +2,10 @@ package dns
 
 import (
 	"testing"
-	"net"
 	"time"
 )
 
-func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
+func createpkg(id uint16, tcp bool) *Msg {
 	m := new(Msg)
 	m.MsgHdr.Id = id
 	m.MsgHdr.Authoritative = true
@@ -26,26 +25,15 @@ func createpkg(id uint16, tcp bool, remove net.Addr) []byte {
 		t.Txt = "Dit is iets anders UDP"
 	}
 	m.Answer[0] = t
-	out, _ := m.Pack()
-	return out
+	return m
 }
 
-func replyUDP(c *net.UDPConn, a net.Addr, in *Msg) {
-	if in.MsgHdr.Response == true {
-		// Uh... answering to an response??
-		// dont think so
-		return
-	}
-	out := createpkg(in.MsgHdr.Id, false, a)
-	SendUDP(out, c, a)
-}
-
-func replyTCP(c *net.TCPConn, a net.Addr, in *Msg) {
+func handle(c *Conn, in *Msg) {
 	if in.MsgHdr.Response == true {
 		return
 	}
-	out := createpkg(in.MsgHdr.Id, true, a)
-	SendTCP(out, c, a)
+	out := createpkg(in.MsgHdr.Id, true)
+	c.WriteMsg(out)
 }
 
 func TestResponder(t *testing.T) {
