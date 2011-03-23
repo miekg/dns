@@ -75,6 +75,7 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
+// TODO(mg)
 // Get the EDNS version (always 0 currently).
 func (rr *RR_OPT) Version() uint8 {
 	return 0

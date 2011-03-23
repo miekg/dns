@@ -60,6 +60,9 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	if !ok {
 		return nil, &Error{Error: ErrPack}
 	}
+        if res.Mangle != nil {
+                sending = res.Mangle(sending)
+        }
 
 	for i := 0; i < len(res.Servers); i++ {
 		d := new(Conn)
@@ -81,6 +84,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 			d.Addr = d.UDP.RemoteAddr()
 		}
 
+                d.Tsig = tsig
 		inb, err = d.Exchange(sending, false)
 		if err != nil {
 			continue
