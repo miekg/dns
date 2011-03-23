@@ -64,5 +64,6 @@ func doXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
                 j++
         }
         Zone.size = j
+        d.Close()
         return nil, nil
 }
