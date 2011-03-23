@@ -93,6 +93,8 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 	out.Id = q.Id
 	out.Question = q.Question
 	out.Answer = make([]RR, 1001)
+        out.MsgHdr.Response = true
+        out.MsgHdr.Authoritative = true
 	var soa *RR_SOA
 	i := 0
 	for r := range m {
@@ -119,7 +121,7 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 	}
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
-        out.Answer = out.Answer[:i]
+        out.Answer = out.Answer[:i+1]
 	err := d.WriteMsg(out)
 	if err != nil {
 		println(err.String())
