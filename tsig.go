@@ -1,7 +1,5 @@
 package dns
 
-// Implementation of TSIG: generation and validation
-// RFC 2845 and RFC 4635
 import (
 	"io"
         "os"
@@ -11,15 +9,17 @@ import (
 	"encoding/hex"
 )
 
-// Return os.Error with real tsig errors
-
-// Structure used in Read/Write lowlevel functions
-// for TSIG generation and verification.
+// Structure used in Read/Write functions to
+// add or remove a TSIG on a dns message. See RFC 2845
+// and RFC 4635.
 type Tsig struct {
 	// The name of the key.
 	Name       string
+        // Fudge to take into account.
 	Fudge      uint16
+        // When is the TSIG created
 	TimeSigned uint64
+        // Which algorithm is used.
 	Algorithm  string
 	// Tsig secret encoded in base64.
 	Secret string
@@ -27,7 +27,7 @@ type Tsig struct {
 	MAC string
 	// Request MAC
 	RequestMAC string
-	// Only include the timers if true.
+	// Only include the timers in the MAC if set to true.
 	TimersOnly bool
 }
 
@@ -114,6 +114,8 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 
 // Verify a TSIG on a message. All relevant data should
 // be set in the Tsig structure.
+// If the signature does not validate err contains the
+// error. If the it validates...
 func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 	rawsecret, err := packBase64([]byte(t.Secret))
 	if err != nil {
@@ -138,7 +140,7 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC), nil
 }
 
-// Create a wiredata buffer for the MAC calculation
+// Create a wiredata buffer for the MAC calculation.
 func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 	var (
 		macbuf []byte
