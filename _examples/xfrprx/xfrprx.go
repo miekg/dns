@@ -16,11 +16,21 @@ import (
 	"dns"
 )
 
+// Static amount of RRs...
+type zone struct {
+        name string
+        rrs [10000]dns.RR
+        size int
+}
+
+var Zone zone
+
 func handle(d *dns.Conn, i *dns.Msg) {
         if i.MsgHdr.Response == true {
                 return
         }
         handleNotify(d, i)
+        handleXfr(d, i)
 }
 
 func listen(addr string, e chan os.Error, tcp string) {

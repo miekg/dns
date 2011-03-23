@@ -7,21 +7,39 @@ import (
         "fmt"
 )
 
+func handleXfr(d *dns.Conn, i *dns.Msg) {
+        if i.IsAxfr() {
+                fmt.Printf("Axfr request seen\n")
+                if i.Question[0].Name == Zone.name {
+                        fmt.Printf("Matching current zone\n")
+                        m := make(chan dns.Xfr)
+                        var x dns.Xfr
+
+                        go d.XfrWrite(i, m)
+                        for j := 0; j < Zone.size; j++ {
+                                x.Add = true
+                                x.RR = Zone.rrs[j]
+                                m <- x
+                        }
+                        close(m)
+                }
+        }
+}
+
 func handleNotify(d *dns.Conn, i *dns.Msg) {
         if i.IsNotify() {
                 fmt.Printf("Notify seen\n")
                 q := new(dns.Msg)
                 q.SetReply(i)
-                answer, ok := q.Pack()
-                if !ok {
+                err := d.WriteMsg(q)
+                if err != nil {
                         return
                 }
-                d.Write(answer)
-                doXfr(i)
+                doXfrIn(i)
         }
 }
 
-func doXfr(i *dns.Msg) ([]dns.RR, os.Error) {
+func doXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
         q := new(dns.Msg)
         q.SetAxfr(i.Question[0].Name)
 
@@ -38,8 +56,13 @@ func doXfr(i *dns.Msg) ([]dns.RR, os.Error) {
         d.TCP = c.(*net.TCPConn)
         d.Addr = d.TCP.RemoteAddr()
         go d.XfrRead(q, m)
+        Zone.name = i.Question[0].Name
+        j := 0
         for x := range m {
                 fmt.Printf("%v %v\n", x.Add, x.RR)
+                Zone.rrs[j] = x.RR
+                j++
         }
+        Zone.size = j
         return nil, nil
 }

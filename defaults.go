@@ -52,4 +52,23 @@ func (dns *Msg) SetAxfr(z string) {
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
-// IsIxfr/IsAxfr?
+
+func (dns *Msg) IsAxfr() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+	ok = dns.MsgHdr.Opcode == OpcodeQuery
+	ok = ok && dns.Question[0].Qclass == ClassINET
+	ok = ok && dns.Question[0].Qtype == TypeAXFR
+	return ok
+}
+
+func (dns *Msg) IsIxfr() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+	ok = dns.MsgHdr.Opcode == OpcodeQuery
+	ok = ok && dns.Question[0].Qclass == ClassINET
+	ok = ok && dns.Question[0].Qtype == TypeIXFR
+	return ok
+}

@@ -92,14 +92,14 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 	out := new(Msg)
 	out.Id = q.Id
 	out.Question = q.Question
-	out.Answer = make([]RR, 1000)
+	out.Answer = make([]RR, 1001)
 	var soa *RR_SOA
 	i := 0
 	for r := range m {
 		out.Answer[i] = r.RR
 		if soa == nil {
 			if r.RR.Header().Rrtype != TypeSOA {
-				return
+				/* ... */
 			} else {
 				soa = r.RR.(*RR_SOA)
 			}
@@ -107,22 +107,22 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 		i++
 		if i > 1000 {
 			// Send it
-			send, _ := out.Pack()
-			_, err := d.Write(send)
+			err := d.WriteMsg(out)
 			if err != nil {
 				/* ... */
 			}
 			i = 0
+                        // Gaat dit goed?
 			out.Answer = out.Answer[:0]
 		}
-		// TimersOnly foo
+		// TimersOnly foo for TSIG
 	}
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
-	send, _ := out.Pack()
-	_, err := d.Write(send)
+        out.Answer = out.Answer[:i]
+	err := d.WriteMsg(out)
 	if err != nil {
-		/* ... */
+		println(err.String())
 	}
 }
 
