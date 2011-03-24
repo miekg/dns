@@ -83,7 +83,7 @@ Activate: 20110109154937`
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
 		if 65537 != priv.PublicKey.E {
-			t.Log("Exponenet should be 65537")
+			t.Log("Exponenent should be 65537")
 			t.Fail()
 		}
 	}

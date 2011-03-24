@@ -27,6 +27,10 @@ func main() {
         }
         go res.Xfr(m, c)
         for x := range c {
-                fmt.Printf("%v %v\n",x.Add, x.RR)
+                if x.Err != nil {
+                        fmt.Printf("%v\n",x.Err)
+                } else {
+                        fmt.Printf("%v %v\n",x.Add, x.RR)
+                }
         }
 }
