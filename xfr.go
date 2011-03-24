@@ -73,7 +73,7 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 
 		if !first {
 			if d.Tsig != nil {
-				d.Tsig.TimersOnly = true // Subsequent envelopes use this
+				d.Tsig.TimersOnly = true // Subsequent envelopes use this.
 			}
 			if !checkXfrSOA(in, false) {
 				// Soa record not the last one

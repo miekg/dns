@@ -178,17 +178,17 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		if int(l) > len(p) {
 			return int(l), &Error{Error: "Buffer too small to read"}
 		}
-		n, err = d.TCP.Read(p)
+		n, err = d.TCP.Read(p[:l])
 		if err != nil {
 			return n, err
 		}
 		i := n
 		for i < int(l) {
-			n, err = d.TCP.Read(p[i:])
+			j, err := d.TCP.Read(p[i:l])
 			if err != nil {
 				return i, err
 			}
-			i += n
+			i += j
 		}
 		n = i
 	}
