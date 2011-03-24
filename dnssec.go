@@ -388,11 +388,17 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 }
 
 // Set the public key (the value E and N)
-func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) {
+func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
+        if _E == 0 {
+                return false
+        }
+        if _N == nil {
+                return false
+        }
 	buf := exponentToBuf(_E)
 	buf = append(buf, _N.Bytes()...)
 	k.PublicKey = unpackBase64(buf)
-	return
+	return true
 }
 
 // Set the public key (the value E and N)

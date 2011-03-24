@@ -94,8 +94,7 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 	var left, right string
         r := line.NewReader(q, 300)
 	line, _, err := r.ReadLine()
-	// Do we care about the order of things? TODO(mg)
-	for err != nil {
+	for err == nil {
 		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
 		if n > 0 {
 			switch left {
@@ -146,6 +145,8 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 		}
 		line, _, err = r.ReadLine()
 	}
-	k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N)
+	if ! k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N) {
+                return nil, &Error{Error: "Failed to set public key"}
+        }
 	return p, nil
 }
