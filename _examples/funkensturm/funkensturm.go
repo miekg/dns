@@ -9,7 +9,6 @@ package main
 import (
 	"os"
 	"flag"
-	"net"
 	"fmt"
 	"dns"
 	"os/signal"
@@ -142,30 +141,15 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	return out, nil
 }
 
-func replyUDP(c *net.UDPConn, a net.Addr, i *dns.Msg) {
+func reply(c *dns.Conn, i *dns.Msg) {
 	out, err := doFunkensturm(i)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
 		return
 	}
-
 	if out != nil {
-		dns.SendUDP(out, c, a)
+		c.Write(out)
 	}
-	// nothing is send back
-}
-
-func replyTCP(c *net.TCPConn, a net.Addr, i *dns.Msg) {
-	out, err := doFunkensturm(i)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
-		return
-	}
-
-	if out != nil {
-		dns.SendTCP(out, c, a)
-	}
-	// nothing is send back
 }
 
 // split 127.0.0.1:53 into components
@@ -180,29 +164,13 @@ func splitAddrPort(s string) (a, p string) {
 }
 
 func tcp(addr string, e chan os.Error) {
-	a, err := net.ResolveTCPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenTCP("tcp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeTCP(l, replyTCP)
+        err := dns.ListenAndServeTCP(addr, reply)
 	e <- err
 	return
 }
 
 func udp(addr string, e chan os.Error) {
-	a, err := net.ResolveUDPAddr(addr)
-	if err != nil {
-		e <- err
-	}
-	l, err := net.ListenUDP("udp", a)
-	if err != nil {
-		e <- err
-	}
-	err = dns.ServeUDP(l, replyUDP)
+        err := dns.ListenAndServeUDP(addr, reply)
 	e <- err
 	return
 }

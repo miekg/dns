@@ -5,7 +5,7 @@ axfr \
 reflect \
 funkensturm \
 xfrprx \
-ds2key \
+key2ds \
 
 all: 
 	for i in $(EXAMPLES); do gomake -C $$i; done

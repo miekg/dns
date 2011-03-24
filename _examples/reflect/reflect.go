@@ -27,35 +27,35 @@ import (
 
 func reply(c *dns.Conn, in *dns.Msg) []byte {
 	m := new(dns.Msg)
-	m.SetReply(in.MsgHdr.Id)
+	m.SetReply(in)
 
 	m.Question = make([]dns.Question, 1)
 	m.Answer = make([]dns.RR, 1)
 	m.Extra = make([]dns.RR, 1)
 
-        // Copy the question.
+	// Copy the question.
 	m.Question[0] = in.Question[0]
 
-        // Some foo to check if we are called through ip6 or ip4.
-        // We add the correct reply RR.
-        var ad net.IP
-        if c.UDP != nil {
-                ad = c.Addr.(*net.UDPAddr).IP
-        } else {
-                ad = c.Addr.(*net.TCPAddr).IP
-        }
+	// Some foo to check if we are called through ip6 or ip4.
+	// We add the correct reply RR.
+	var ad net.IP
+	if c.UDP != nil {
+		ad = c.Addr.(*net.UDPAddr).IP
+	} else {
+		ad = c.Addr.(*net.TCPAddr).IP
+	}
 
-        if ad.To4() != nil {
-                r := new(dns.RR_A)
-                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-                r.A = ad
-                m.Answer[0] = r
-        } else {
-                r := new(dns.RR_AAAA)
-                r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
-                r.AAAA = ad
-                m.Answer[0] = r
-        }
+	if ad.To4() != nil {
+		r := new(dns.RR_A)
+		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+		r.A = ad
+		m.Answer[0] = r
+	} else {
+		r := new(dns.RR_AAAA)
+		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
+		r.AAAA = ad
+		m.Answer[0] = r
+	}
 
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
@@ -67,12 +67,12 @@ func reply(c *dns.Conn, in *dns.Msg) []byte {
 	m.Extra[0] = t
 
 	b, _ := m.Pack()
-        return b
+	return b
 }
 
 func handle(c *dns.Conn, in *dns.Msg) {
 	if in.MsgHdr.Response == true {
-		return      // We don't do responses
+		return // We don't do responses
 	}
 	answer := reply(c, in)
 	c.Write(answer)
@@ -85,7 +85,7 @@ func tcp(addr string, e chan os.Error) {
 }
 
 func udp(addr string, e chan os.Error) {
-        err := dns.ListenAndServeUDP(addr, handle)
+	err := dns.ListenAndServeUDP(addr, handle)
 	e <- err
 	return
 }
