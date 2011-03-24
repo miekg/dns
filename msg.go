@@ -771,7 +771,7 @@ func unpackBase64(b []byte) string {
 
 // Helper function for packing, mostly used in dnssec.go
 func packUint16(i uint16) (byte, byte) {
-        return byte(i >> 8), byte(i)
+	return byte(i >> 8), byte(i)
 }
 
 func packBase64(s []byte) ([]byte, os.Error) {
@@ -1026,8 +1026,8 @@ func (dns *Msg) String() string {
 	if len(dns.Question) > 0 {
 		s += "\n;; QUESTION SECTION:\n"
 		for i := 0; i < len(dns.Question); i++ {
-                        // Need check if it exists? TODO(mg)
-                        s += dns.Question[i].String() + "\n"
+			// Need check if it exists? TODO(mg)
+			s += dns.Question[i].String() + "\n"
 		}
 	}
 	if len(dns.Answer) > 0 {
