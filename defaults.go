@@ -2,7 +2,7 @@ package dns
 
 // Everything is assumed in the ClassINET class
 
-// Create a reply packet.
+// Create a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Id = request.MsgHdr.Id
 	dns.MsgHdr.Authoritative = true
@@ -24,7 +24,7 @@ func (dns *Msg) SetNotify(z string, class uint16) {
 	dns.Question[0] = Question{z, TypeSOA, class}
 }
 
-// Is a dns msg a valid notify packet?
+// Is the message a valid notify packet?
 func (dns *Msg) IsNotify() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -53,6 +53,7 @@ func (dns *Msg) SetAxfr(z string) {
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
 
+// Is the message a valid axfr request packet?
 func (dns *Msg) IsAxfr() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -63,6 +64,7 @@ func (dns *Msg) IsAxfr() (ok bool) {
 	return ok
 }
 
+// Is the message a valid ixfr request packet?
 func (dns *Msg) IsIxfr() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
