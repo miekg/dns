@@ -6,14 +6,14 @@
 // Package dns implements a full featured interface to the DNS.
 // The package allows full control over what is send out to the DNS. 
 //
-// Resource Records are native types. They are not stored in wire format.
-// Basic usage pattern for creating a new Resource Record:
+// Resource records are native types. They are not stored in wire format.
+// Basic usage pattern for creating a new resource record:
 //
 //         r := new(RR_TXT)
 //         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //         r.TXT = "This is the content of the TXT record"
 // 
-// The package dns supports normal querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
+// The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
 // Basic use pattern for creating a resolver:
@@ -70,7 +70,7 @@ func (e *Error) String() string {
 	return e.Error
 }
 
-// A Conn is the lowest primative in this dns package.
+// A Conn is the lowest primative in the dns package.
 // A Conn holds both the UDP and TCP connection, but only one
 // can be active any given time. 
 type Conn struct {
