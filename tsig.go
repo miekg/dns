@@ -9,9 +9,18 @@ import (
 	"encoding/hex"
 )
 
-// Structure used in Read/Write functions to
+// The structure Tsig is used in Read/Write functions to
 // add or remove a TSIG on a dns message. See RFC 2845
 // and RFC 4635.
+// Basic use pattern of Tsig:
+//
+//      tsig := new(dns.Tsig)
+//      tsig.Name = "axfr."                      // The name of the key.
+//      tsig.Algorithm = dns.HmacMD5             // The HMAC to use.
+//      tsig.Fudge = 300                         // RFC recommends 300 here.
+//      tsig.TimeSigned = uint64(time.Seconds())      
+//      tsig.Secret = "so6ZGir4GPAqINNh9U5c3A==" // Secret encoded in base64.
+
 type Tsig struct {
 	// The name of the key.
 	Name string
@@ -68,7 +77,7 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// In a message and out a new message with the tsig added
+// Add a Tsig to add message.
 func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	rawsecret, err := packBase64([]byte(t.Secret))
 	if err != nil {
@@ -112,10 +121,9 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	return send, nil
 }
 
-// Verify a TSIG on a message. All relevant data should
-// be set in the Tsig structure.
+// Verify a TSIG on a message. 
 // If the signature does not validate err contains the
-// error. If the it validates...
+// error. If the it validates err is nil
 func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 	rawsecret, err := packBase64([]byte(t.Secret))
 	if err != nil {

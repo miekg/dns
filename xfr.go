@@ -8,9 +8,12 @@ import (
 // error handling??
 
 // Xfr is used in communicating with *xfr functions.
-// This structure is returned on the channel.
+// If Add is true the resource record in RR must be added to
+// the zone. If Add is false the resource record must be removed.
+// If err in non nil some error occurred and the transfer must
+// be considered to have failed.
 type Xfr struct {
-	Add bool // true is to be added, otherwise false
+	Add bool
 	RR
 	Err os.Error
 }

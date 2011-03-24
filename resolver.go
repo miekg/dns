@@ -92,10 +92,16 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	return in, nil
 }
 
+// Perform an incoming Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed. If q's question
+// section contains an IXFR type an Ixfr is performed.
 func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
 	res.XfrTsig(q, nil, m)
 }
 
+// Perform an incoming Ixfr or Axfr with Tsig validation. If the message 
+// q's question section contains an AXFR type an Axfr is performed. If q's question
+// section contains an IXFR type an Ixfr is performed.
 func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 	port, err := check(res, q)
 	if err != nil {
@@ -127,7 +133,6 @@ Server:
 	return
 }
 
-// Some assorted checks on the resolver
 func check(res *Resolver, q *Msg) (port string, err os.Error) {
 	if res.Port == "" {
 		port = "53"
