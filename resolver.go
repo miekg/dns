@@ -35,7 +35,7 @@ type Resolver struct {
 
 // Send a query to the nameserver using the res.
 func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
-        return res.QueryTsig(q, nil)
+	return res.QueryTsig(q, nil)
 }
 
 // Send a query to the nameserver using res, but perform TSIG validation.
@@ -52,9 +52,9 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	if !ok {
 		return nil, &Error{Error: ErrPack}
 	}
-        if res.Mangle != nil {
-                sending = res.Mangle(sending)
-        }
+	if res.Mangle != nil {
+		sending = res.Mangle(sending)
+	}
 
 	for i := 0; i < len(res.Servers); i++ {
 		d := new(Conn)
@@ -62,21 +62,21 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		t := time.Nanoseconds()
 		if res.Tcp {
 			c, err = net.Dial("tcp", "", server)
-                        if err != nil {
-                                continue
-                        }
+			if err != nil {
+				continue
+			}
 			d.TCP = c.(*net.TCPConn)
 			d.Addr = d.TCP.RemoteAddr()
 		} else {
 			c, err = net.Dial("udp", "", server)
-                        if err != nil {
-                                continue
-                        }
+			if err != nil {
+				continue
+			}
 			d.UDP = c.(*net.UDPConn)
 			d.Addr = d.UDP.RemoteAddr()
 		}
 
-                d.Tsig = tsig
+		d.Tsig = tsig
 		inb, err = d.Exchange(sending, false)
 		if err != nil {
 			continue
@@ -93,7 +93,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 }
 
 func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
-        res.XfrTsig(q, nil, m)
+	res.XfrTsig(q, nil, m)
 }
 
 func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
@@ -118,11 +118,11 @@ Server:
 		d.Addr = d.TCP.RemoteAddr()
 		d.Tsig = t
 
-                _, err = d.Write(sending)
-                if err != nil {
-                        continue Server
-                }
-                d.XfrRead(q, m) // check
+		_, err = d.Write(sending)
+		if err != nil {
+			continue Server
+		}
+		d.XfrRead(q, m) // check
 	}
 	return
 }

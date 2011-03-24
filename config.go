@@ -90,7 +90,7 @@ func (r *Resolver) FromFile(conf string) os.Error {
 					}
 					r.Attempts = n
 				case s == "rotate":
-                                        /* not imp */
+					/* not imp */
 				}
 			}
 		}

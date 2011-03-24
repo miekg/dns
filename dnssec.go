@@ -32,7 +32,7 @@ const (
 
 // DNSSEC hashing codes.
 const (
-        _ = iota
+	_ = iota
 	HashSHA1
 	HashSHA256
 	HashGOST94
@@ -40,9 +40,9 @@ const (
 
 // DNSKEY flags values.
 const (
-        KSK = 1
-        ZSK = 1 << 8
-        REVOKE = 1 << 7
+	KSK    = 1
+	ZSK    = 1 << 8
+	REVOKE = 1 << 7
 )
 
 // The RRSIG needs to be converted to wireformat with some of
@@ -105,7 +105,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
-        ds.Hdr.Rrtype = TypeDS
+	ds.Hdr.Rrtype = TypeDS
 	ds.Hdr.Ttl = k.Hdr.Ttl
 	ds.Algorithm = k.Algorithm
 	ds.DigestType = uint8(h)
@@ -342,7 +342,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 }
 
 // Use RFC1982 to calculate if a signature period is valid.
-func (s *RR_RRSIG) ValidityPeriod()  bool {
+func (s *RR_RRSIG) ValidityPeriod() bool {
 	utc := time.UTC().Seconds()
 	modi := (int64(s.Inception) - utc) / Year68
 	mode := (int64(s.Expiration) - utc) / Year68
@@ -389,12 +389,12 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
-        if _E == 0 {
-                return false
-        }
-        if _N == nil {
-                return false
-        }
+	if _E == 0 {
+		return false
+	}
+	if _N == nil {
+		return false
+	}
 	buf := exponentToBuf(_E)
 	buf = append(buf, _N.Bytes()...)
 	k.PublicKey = unpackBase64(buf)

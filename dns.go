@@ -83,17 +83,17 @@ type Conn struct {
 	// The remote side of the connection.
 	Addr net.Addr
 
-        // The remote port number of the connection.
-        Port int
+	// The remote port number of the connection.
+	Port int
 
-        // If TSIG is used, this holds all the information.
-        Tsig *Tsig
+	// If TSIG is used, this holds all the information.
+	Tsig *Tsig
 
 	// Timeout in sec before giving up on a connection.
 	Timeout int
 
 	// Number of attempts to try to Read/Write from/to a
-        // connection.
+	// connection.
 	Attempts int
 }
 
@@ -101,48 +101,48 @@ type Conn struct {
 // TCP the buffer is 64K, with UDP the returned buffer
 // has a length of 4K bytes.
 func (d *Conn) NewBuffer() []byte {
-        if d.TCP != nil {
-                b := make([]byte, MaxMsgSize)
-                return b
-        }
-        if d.UDP != nil {
-                b := make([]byte, DefaultMsgSize)
-                return b
-        }
-        return nil
+	if d.TCP != nil {
+		b := make([]byte, MaxMsgSize)
+		return b
+	}
+	if d.UDP != nil {
+		b := make([]byte, DefaultMsgSize)
+		return b
+	}
+	return nil
 }
 
 // ReadMsg reads a dns message m from d.
 // Any errors of the underlaying Read call are returned.
 func (d *Conn) ReadMsg(m *Msg) os.Error {
-        in := d.NewBuffer()
-        n, err := d.Read(in)
-        if err != nil {
-                return err
-        }
-        in = in[:n]
-        ok := m.Unpack(in)
-        if !ok {
-                return &Error{Error: "Failed to unpack"}
-        }
-        return nil
+	in := d.NewBuffer()
+	n, err := d.Read(in)
+	if err != nil {
+		return err
+	}
+	in = in[:n]
+	ok := m.Unpack(in)
+	if !ok {
+		return &Error{Error: "Failed to unpack"}
+	}
+	return nil
 }
 
 // WriteMsg writes dns message m to d.
 // Any errors of the underlaying Write call are returned.
 func (d *Conn) WriteMsg(m *Msg) os.Error {
-        out, ok := m.Pack()
-        if !ok {
-                return &Error{Error: "Failed to pack"}
-        }
-        n, err := d.Write(out)
-        if err != nil {
-                return err
-        }
-        if n != len(out) {
-                return &Error{Error: "Short write"}
-        }
-        return nil
+	out, ok := m.Pack()
+	if !ok {
+		return &Error{Error: "Failed to pack"}
+	}
+	n, err := d.Write(out)
+	if err != nil {
+		return err
+	}
+	if n != len(out) {
+		return &Error{Error: "Short write"}
+	}
+	return nil
 }
 
 // Read implements the standard Read interface:
@@ -154,23 +154,23 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	}
 	switch {
 	case d.UDP != nil:
-                var addr net.Addr
+		var addr net.Addr
 		n, addr, err = d.UDP.ReadFromUDP(p)
 		if err != nil {
 			return n, err
 		}
-                d.Addr = addr
-                d.Port = addr.(*net.UDPAddr).Port
+		d.Addr = addr
+		d.Port = addr.(*net.UDPAddr).Port
 	case d.TCP != nil:
-                if len(p) < 1 {
-                        return 0, &Error{Error: "Buffer too small to read"}
-                }
+		if len(p) < 1 {
+			return 0, &Error{Error: "Buffer too small to read"}
+		}
 		n, err = d.TCP.Read(p[0:2])
 		if err != nil || n != 2 {
 			return n, err
 		}
-                d.Addr = d.TCP.RemoteAddr()
-                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+		d.Addr = d.TCP.RemoteAddr()
+		d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 		l, _ := unpackUint16(p[0:2], 0)
 		if l == 0 {
 			return 0, &Error{Error: "received nil msg length", Server: d.Addr}
@@ -190,15 +190,15 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 			}
 			i += n
 		}
-                n = i
+		n = i
 	}
-        if d.Tsig != nil {
-                // Check the TSIG that we should be read
-                _, err = d.Tsig.Verify(p)
-                if err != nil {
-                        return
-                }
-        }
+	if d.Tsig != nil {
+		// Check the TSIG that we should be read
+		_, err = d.Tsig.Verify(p)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -211,22 +211,22 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	}
 
 	var attempts int
-        var q []byte
+	var q []byte
 	if d.Attempts == 0 {
 		attempts = 1
 	} else {
 		attempts = d.Attempts
 	}
 	d.SetTimeout()
-        if d.Tsig != nil {
-                // Create a new buffer with the TSIG added.
-                q, err = d.Tsig.Generate(p)
-                if err != nil {
-                        return 0, err
-                }
-        } else {
-                q = p
-        }
+	if d.Tsig != nil {
+		// Create a new buffer with the TSIG added.
+		q, err = d.Tsig.Generate(p)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		q = p
+	}
 
 	switch {
 	case d.UDP != nil:
@@ -260,19 +260,19 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 				}
 				return n, err
 			}
-                        i := n
-                        if i < len(q) {
-			        n, err = d.TCP.Write(q)
-			        if err != nil {
-				        if e, ok := err.(net.Error); ok && e.Timeout() {
-                                                // We are half way in our write...
-					        continue
-				        }
-				        return n, err
-                                }
-                                i += n
+			i := n
+			if i < len(q) {
+				n, err = d.TCP.Write(q)
+				if err != nil {
+					if e, ok := err.(net.Error); ok && e.Timeout() {
+						// We are half way in our write...
+						continue
+					}
+					return n, err
+				}
+				i += n
 			}
-                        n = i
+			n = i
 		}
 	}
 	return
@@ -319,14 +319,14 @@ func (d *Conn) SetTimeout() (err os.Error) {
 // If nosend is true, the write is skipped.
 func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {
 	var n int
-        if !nosend {
-                n, err = d.Write(request)
-                if err != nil {
-                        return nil, err
-                }
-        }
+	if !nosend {
+		n, err = d.Write(request)
+		if err != nil {
+			return nil, err
+		}
+	}
 	// Layer violation to save memory. Its okay then...
-        reply = d.NewBuffer()
+	reply = d.NewBuffer()
 	n, err = d.Read(reply)
 	if err != nil {
 		return nil, err

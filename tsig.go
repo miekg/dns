@@ -2,8 +2,8 @@ package dns
 
 import (
 	"io"
-        "os"
-        "time"
+	"os"
+	"time"
 	"strings"
 	"crypto/hmac"
 	"encoding/hex"
@@ -14,13 +14,13 @@ import (
 // and RFC 4635.
 type Tsig struct {
 	// The name of the key.
-	Name       string
-        // Fudge to take into account.
-	Fudge      uint16
-        // When is the TSIG created
+	Name string
+	// Fudge to take into account.
+	Fudge uint16
+	// When is the TSIG created
 	TimeSigned uint64
-        // Which algorithm is used.
-	Algorithm  string
+	// Which algorithm is used.
+	Algorithm string
 	// Tsig secret encoded in base64.
 	Secret string
 	// MAC (if known)
@@ -74,12 +74,12 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	if err != nil {
 		return nil, err
 	}
-        if t.Fudge == 0 {
-                t.Fudge = 300
-        }
-        if t.TimeSigned == 0 {
-                t.TimeSigned = uint64(time.Seconds())
-        }
+	if t.Fudge == 0 {
+		t.Fudge = 300
+	}
+	if t.TimeSigned == 0 {
+		t.TimeSigned = uint64(time.Seconds())
+	}
 
 	buf, err := t.Buffer(msg)
 	if err != nil {
@@ -90,25 +90,25 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
 
 	// Create TSIG and add it to the message.
-        q := new(Msg)
-        if !q.Unpack(msg) {
-                return nil, &Error{Error: "Failed to unpack"}
-        }
+	q := new(Msg)
+	if !q.Unpack(msg) {
+		return nil, &Error{Error: "Failed to unpack"}
+	}
 
 	rr := new(RR_TSIG)
 	rr.Hdr = RR_Header{Name: t.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
-        rr.Fudge = t.Fudge
-        rr.TimeSigned = t.TimeSigned
-        rr.Algorithm = t.Algorithm
-        rr.OrigId = q.Id
+	rr.Fudge = t.Fudge
+	rr.TimeSigned = t.TimeSigned
+	rr.Algorithm = t.Algorithm
+	rr.OrigId = q.Id
 	rr.MAC = t.MAC
 	rr.MACSize = uint16(len(t.MAC) / 2)
 
-        q.Extra = append(q.Extra, rr)
-        send, ok := q.Pack()
-        if !ok {
-                return send, &Error{Error: "Failed to pack"}
-        }
+	q.Extra = append(q.Extra, rr)
+	send, ok := q.Pack()
+	if !ok {
+		return send, &Error{Error: "Failed to pack"}
+	}
 	return send, nil
 }
 
@@ -127,13 +127,13 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 		return false, &Error{Error: "Failed to strip tsig"}
 	}
 
-	buf,err := t.Buffer(stripped)
+	buf, err := t.Buffer(stripped)
 	if err != nil {
 		return false, err
 	}
 
-        // Time needs to be checked */
-        // Generic time error
+	// Time needs to be checked */
+	// Generic time error
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
@@ -154,7 +154,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		macbuf = make([]byte, len(t.RequestMAC)) // reqmac should be twice as long
 		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
-		        return nil, &Error{Error: "Failed to pack request mac"}
+			return nil, &Error{Error: "Failed to pack request mac"}
 		}
 		macbuf = macbuf[:n]
 	}
@@ -166,7 +166,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		tsig.Fudge = t.Fudge
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-		        return nil, &Error{Error: "Failed to pack timers"}
+			return nil, &Error{Error: "Failed to pack timers"}
 		}
 		tsigvar = tsigvar[:n]
 	} else {
@@ -182,7 +182,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		tsig.OtherData = ""
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-		        return nil, &Error{Error: "Failed to pack tsig variables"}
+			return nil, &Error{Error: "Failed to pack tsig variables"}
 		}
 		tsigvar = tsigvar[:n]
 	}

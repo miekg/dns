@@ -13,8 +13,8 @@ import (
 
 // HandleUDP handles one UDP connection. It reads the incoming
 // message and then calls the function f.
-// The function f is executed
-// in a seperate goroutine at which point HandleUDP returns.
+// The function f is executed in a seperate goroutine at which point 
+// HandleUDP returns.
 func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 	for {
 		m := make([]byte, DefaultMsgSize)
@@ -24,10 +24,10 @@ func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 		}
 		m = m[:n]
 
-                d := new(Conn)
-                d.UDP = l
-                d.Addr = addr
-                d.Port = addr.Port       // Why not the same as in dns.go, line 96
+		d := new(Conn)
+		d.UDP = l
+		d.Addr = addr
+		d.Port = addr.Port
 
 		msg := new(Msg)
 		if !msg.Unpack(m) {
@@ -40,24 +40,24 @@ func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 
 // HandleTCP handles one TCP connection. It reads the incoming
 // message and then calls the function f.
-// The function f is executed
-// in a seperate goroutine at which point HandleTCP returns.
+// The function f is executed in a seperate goroutine at which point 
+// HandleTCP returns.
 func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 	for {
 		c, e := l.AcceptTCP()
 		if e != nil {
 			return e
 		}
-                d := new(Conn)
-                d.TCP = c
-                d.Addr = c.RemoteAddr()
-                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+		d := new(Conn)
+		d.TCP = c
+		d.Addr = c.RemoteAddr()
+		d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 
 		msg := new(Msg)
-                err := d.ReadMsg(msg)
+		err := d.ReadMsg(msg)
 
 		if err != nil {
-                        // Logging??
+			// Logging??
 			continue
 		}
 		go f(d, msg)
@@ -69,9 +69,9 @@ func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 // then calls HandleTCP with f to handle requests on incoming
 // connections. The function f may not be nil.
 func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
-        if f == nil {
-                return &Error{Error: "The handle function may not be nil"}
-        }
+	if f == nil {
+		return &Error{Error: "The handle function may not be nil"}
+	}
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {
 		return err
@@ -88,9 +88,9 @@ func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
 // then calls HandleUDP with f to handle requests on incoming
 // connections. The function f may not be nil.
 func ListenAndServeUDP(addr string, f func(*Conn, *Msg)) os.Error {
-        if f == nil {
-                return &Error{Error: "The handle function may not be nil"}
-        }
+	if f == nil {
+		return &Error{Error: "The handle function may not be nil"}
+	}
 	a, err := net.ResolveUDPAddr(addr)
 	if err != nil {
 		return err

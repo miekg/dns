@@ -4,13 +4,13 @@ package dns
 
 // Create a reply packet.
 func (dns *Msg) SetReply(request *Msg) {
-        dns.MsgHdr.Id = request.MsgHdr.Id
-        dns.MsgHdr.Authoritative = true
-        dns.MsgHdr.Response = true
-        dns.MsgHdr.Opcode = OpcodeQuery
-        dns.MsgHdr.Rcode = RcodeSuccess
-        dns.Question = make([]Question, 1)
-        dns.Question[0] = request.Question[0]
+	dns.MsgHdr.Id = request.MsgHdr.Id
+	dns.MsgHdr.Authoritative = true
+	dns.MsgHdr.Response = true
+	dns.MsgHdr.Opcode = OpcodeQuery
+	dns.MsgHdr.Rcode = RcodeSuccess
+	dns.Question = make([]Question, 1)
+	dns.Question[0] = request.Question[0]
 }
 
 // IsReply?
@@ -44,7 +44,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 	s.Serial = serial
 
 	dns.Question[0] = Question{z, TypeIXFR, ClassINET}
-        dns.Ns[0] = s
+	dns.Ns[0] = s
 }
 
 // Create a dns msg suitable for requesting an axfr.

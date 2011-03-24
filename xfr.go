@@ -19,11 +19,11 @@ type Xfr struct {
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
-        // Send q first.
-        err := d.WriteMsg(q)
-        if err != nil {
-                return
-        }
+	// Send q first.
+	err := d.WriteMsg(q)
+	if err != nil {
+		return
+	}
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
 		d.axfrRead(q, m)
@@ -50,7 +50,7 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 	first := true
 	in := new(Msg)
 	for {
-                err := d.ReadMsg(in)
+		err := d.ReadMsg(in)
 		if err != nil {
 			m <- Xfr{true, nil, err}
 			return
@@ -92,8 +92,8 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 	out.Id = q.Id
 	out.Question = q.Question
 	out.Answer = make([]RR, 1001)
-        out.MsgHdr.Response = true
-        out.MsgHdr.Authoritative = true
+	out.MsgHdr.Response = true
+	out.MsgHdr.Authoritative = true
 	var soa *RR_SOA
 	i := 0
 	for r := range m {
@@ -113,14 +113,14 @@ func (d *Conn) axfrWrite(q *Msg, m chan Xfr) {
 				/* ... */
 			}
 			i = 0
-                        // Gaat dit goed?
+			// Gaat dit goed?
 			out.Answer = out.Answer[:0]
 		}
 		// TimersOnly foo for TSIG
 	}
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
-        out.Answer = out.Answer[:i+1]
+	out.Answer = out.Answer[:i+1]
 	err := d.WriteMsg(out)
 	if err != nil {
 		println(err.String())
@@ -135,7 +135,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 	in := new(Msg)
 	for {
 
-                err := d.ReadMsg(in)
+		err := d.ReadMsg(in)
 		if err != nil {
 			m <- Xfr{true, nil, err}
 			return
