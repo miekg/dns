@@ -14,7 +14,9 @@ import (
 
 type Resolver struct {
 	Servers  []string            // servers to use
+	Search   []string            // suffixes to append to local name (not implemented)
 	Port     string              // what port to use
+	Ndots    int                 // number of dots in name to trigger absolute lookup (not implemented)
 	Timeout  int                 // seconds before giving up on packet
 	Attempts int                 // lost packets before giving up on server
 	Tcp      bool                // use TCP
@@ -95,15 +97,15 @@ func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
 func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 	port, err := check(res, q)
 	if err != nil {
-                close(m)
+		close(m)
 		return
 	}
 	sending, ok := q.Pack()
 	if !ok {
-                close(m)
+		close(m)
 		return
 	}
-        // No defer close(m) as m is closed in d.XfrRead()
+	// No defer close(m) as m is closed in d.XfrRead()
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
