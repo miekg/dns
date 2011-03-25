@@ -13,8 +13,6 @@ func (dns *Msg) SetReply(request *Msg) {
 	dns.Question[0] = request.Question[0]
 }
 
-// IsReply?
-
 // Create a notify packet.
 func (dns *Msg) SetNotify(z string, class uint16) {
 	dns.MsgHdr.Opcode = OpcodeNotify
@@ -22,6 +20,16 @@ func (dns *Msg) SetNotify(z string, class uint16) {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, class}
+}
+
+// Is the message a dynamic update packet?
+func (dns *Msg) IsUpdate() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+        ok = dns.MsgHdr.Opcode == OpcodeUpdate
+        ok = ok && dns.Question[0].Qtype == TypeSOA
+        return
 }
 
 // Is the message a valid notify packet?
