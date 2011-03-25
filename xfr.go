@@ -4,17 +4,16 @@ import (
 	"os"
 )
 
-// Outgoing AXFR and IXFR implementations
-// error handling??
-
-// Xfr is used in communicating with *xfr functions.
-// If Add is true the resource record in RR must be added to
-// the zone. If Add is false the resource record must be removed.
-// If err in non nil some error occurred and the transfer must
-// be considered to have failed.
+// Xfr is used in communicating with Xfr* functions.
 type Xfr struct {
+        // If Add is true the resource record in RR must be added to
+        // the zone. If Add is false the resource record must be removed.
+        // be considered to have failed.
 	Add bool
+        // The RR that should be added or removed.
 	RR
+        // If err in non nil some error occurred and the transfer must
+        // be considered to have faild.
 	Err os.Error
 }
 

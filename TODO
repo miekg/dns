@@ -1,9 +1,9 @@
-Guidelines for the API:
 
-o symmetrical, client side stuff should be mirrored in the server stuff
+Guidelines for the API:
+o symmetrical, client side should be mirrored in the server
 o clean, small API
 o fast data structures (rb-tree, when they come available)
-o api-use should lead to self documenting code
+o api-use should be self documenting
 
 o make questions fqdns -- add last dot
 o zone structure -- only as rb-tree 
@@ -24,7 +24,6 @@ Issues:
 * Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in
-* SetDefaults() for *all* types?
 
 Examples:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
