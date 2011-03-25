@@ -65,9 +65,38 @@ func TestTsig(t *testing.T) {
         tsig.TimeSigned = uint64(time.Seconds())
         tsig.Secret = "so6ZGir4GPAqINNh9U5c3A=="
 
-	out := new(Msg)
-	out.MsgHdr.RecursionDesired = true
-	out.Question = make([]Question, 1)
-	out.Question[0] = Question{"miek.nl.", TypeSOA, ClassINET}
-/* do something with it */
+        // Perform a TSIG from miek.nl
+        m := new(Msg)
+        m.Question = make([]Question, 1)
+        m.Question[0] = Question{"miek.nl.", TypeAXFR, ClassINET}
+        m.Id = Id()
+
+        res := new(Resolver)
+        res.FromFile("/etc/resolv.conf")
+        res.Servers = []string{"85.223.71.124"}
+        res.Tcp = true
+
+        c := make(chan Xfr)
+        go res.XfrTsig(m, tsig, c)
+        for x := range c {
+                if x.Err != nil {
+                        t.Logf("Failed Xfr from miek.nl %v\n", x.Err)
+                        t.Fail()
+                }
+        }
+
+        tsig.Secret = "ZGZqc2tmZAo="
+        // Do it again, must fail
+        c = make(chan Xfr) // Reopen the channel
+        go res.XfrTsig(m, tsig, c)
+        ok := false
+        for x := range c {
+                if x.Err != nil {
+                        ok = true
+                }
+        }
+        if ok == true {
+                t.Logf("AXFR with wrong secret should fail")
+                t.Fail()
+        }
 }
