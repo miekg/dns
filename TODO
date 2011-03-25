@@ -5,6 +5,7 @@ o clean, small API
 o fast data structures (rb-tree, when they come available)
 o api-use should lead to self documenting code
 
+o make questions fqdns -- add last dot
 o zone structure -- only as rb-tree 
 o compression (only ownernames?)
 

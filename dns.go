@@ -135,12 +135,9 @@ func (d *Conn) WriteMsg(m *Msg) os.Error {
 	if !ok {
 		return &Error{Error: "Failed to pack"}
 	}
-	n, err := d.Write(out)
+	_, err := d.Write(out)
 	if err != nil {
 		return err
-	}
-	if n != len(out) {
-		return &Error{Error: "Short write"}
 	}
 	return nil
 }
@@ -184,7 +181,7 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		}
 		i := n
 		for i < int(l) {
-			j, err := d.TCP.Read(p[i:l])
+			j, err := d.TCP.Read(p[i:int(l)])
 			if err != nil {
 				return i, err
 			}
@@ -262,15 +259,15 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 			}
 			i := n
 			if i < len(q) {
-				n, err = d.TCP.Write(q)
+				j, err := d.TCP.Write(q[i:len(q)])
 				if err != nil {
 					if e, ok := err.(net.Error); ok && e.Timeout() {
 						// We are half way in our write...
 						continue
 					}
-					return n, err
+					return i, err
 				}
-				i += n
+				i += j
 			}
 			n = i
 		}

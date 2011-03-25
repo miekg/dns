@@ -25,6 +25,8 @@ func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
 	// Send q first.
 	err := d.WriteMsg(q)
 	if err != nil {
+                m <- Xfr{true, nil, err}
+                close(m)
 		return
 	}
 	switch q.Question[0].Qtype {
@@ -32,6 +34,9 @@ func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
 		d.axfrRead(q, m)
 	case TypeIXFR:
 		d.ixfrRead(q, m)
+        default:
+                m <- Xfr{true, nil, &Error{Error: "Qtype not recognized"}}
+                close(m)
 	}
 }
 
@@ -45,6 +50,9 @@ func (d *Conn) XfrWrite(q *Msg, m chan Xfr) {
 		d.axfrWrite(q, m)
 	case TypeIXFR:
 		//                d.ixfrWrite(q, m)
+        default:
+                m <- Xfr{true, nil, &Error{Error: "Qtype not recognized"}}
+                close(m)
 	}
 }
 

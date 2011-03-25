@@ -105,13 +105,15 @@ func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
 func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 	port, err := check(res, q)
 	if err != nil {
+                close(m)
 		return
 	}
 	sending, ok := q.Pack()
 	if !ok {
+                close(m)
 		return
 	}
-
+        // No defer close(m) as m is closed in d.XfrRead()
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
