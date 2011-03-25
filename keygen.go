@@ -23,14 +23,14 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 	switch r.Algorithm {
 	case AlgRSAMD5, AlgRSASHA1, AlgRSASHA256:
 		if bits < 512 || bits > 4096 {
-			return nil, &Error{Error: "Size not in range [512..4096]"}
+			return nil, ErrKeySize
 		}
 	case AlgRSASHA512:
 		if bits < 1024 || bits > 4096 {
-			return nil, &Error{Error: "Size not in range [1024..4096]"}
+			return nil, ErrKeySize
 		}
 	default:
-		return nil, &Error{Error: "Algorithm not recognized"}
+		return nil, ErrAlg
 	}
 
 	switch r.Algorithm {
@@ -100,12 +100,12 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 			switch left {
 			case "Private-key-format:":
 				if right != "v1.3" {
-					return nil, &Error{Error: "v1.3 supported"}
+					return nil, ErrPrivKey
 				}
 			case "Algorithm:":
 				a, _ := strconv.Atoi(right)
 				if a == 0 {
-					return nil, &Error{Error: "incorrect algorithm"}
+					return nil, ErrAlg
 				}
 				k.Algorithm = uint8(a)
 			case "Modulus:", "PublicExponent:", "PrivateExponent:", "Prime1:", "Prime2:":
@@ -140,13 +140,13 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 			case "Created:", "Publish:", "Activate:":
 				/* not used in Go (yet) */
 			default:
-				return nil, &Error{Error: "Private key file not recognized"}
+				return nil, ErrKey
 			}
 		}
 		line, _, err = r.ReadLine()
 	}
 	if ! k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N) {
-                return nil, &Error{Error: "Failed to set public key"}
+                return nil, ErrKey
         }
 	return p, nil
 }

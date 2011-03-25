@@ -4,7 +4,7 @@
 // Extended and bugfixes by Miek Gieben
 
 // Package dns implements a full featured interface to the DNS.
-// The package allows full control over what is send out to the DNS. 
+// The package allows complete control over what is send out to the DNS. 
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
@@ -16,7 +16,8 @@
 // The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
-// Basic use pattern for creating a resolver:
+// Querying the DNS is done by using a Resolver structure. Basic use pattern for creating 
+// a resolver:
 //
 //      res := new(Resolver)
 //      res.Servers = []string{"127.0.0.1"} 
@@ -26,7 +27,7 @@
 //      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 //      in, err := res.Query(m)
 //
-// 
+// Server side programming is also supported.
 // Basic use pattern for creating an UDP DNS server:
 //
 //      func handle(d *dns.Conn, i *dns.Msg) { /* handle request */ }
@@ -40,9 +41,8 @@
 //
 package dns
 
-// ErrShortWrite is defined in io, use that!
-
 import (
+        "io"
 	"os"
 	"net"
 	"strconv"
@@ -123,7 +123,7 @@ func (d *Conn) ReadMsg(m *Msg) os.Error {
 	in = in[:n]
 	ok := m.Unpack(in)
 	if !ok {
-		return &Error{Error: "Failed to unpack"}
+                return ErrUnpack
 	}
 	return nil
 }
@@ -133,7 +133,7 @@ func (d *Conn) ReadMsg(m *Msg) os.Error {
 func (d *Conn) WriteMsg(m *Msg) os.Error {
 	out, ok := m.Pack()
 	if !ok {
-		return &Error{Error: "Failed to pack"}
+		return ErrPack
 	}
 	_, err := d.Write(out)
 	if err != nil {
@@ -147,7 +147,7 @@ func (d *Conn) WriteMsg(m *Msg) os.Error {
 // reading that error is returned; otherwise err is nil.
 func (d *Conn) Read(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
-		return 0, &Error{Error: "UDP and TCP or both non-nil"}
+		return 0, ErrConn
 	}
 	switch {
 	case d.UDP != nil:
@@ -160,7 +160,7 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		d.Port = addr.(*net.UDPAddr).Port
 	case d.TCP != nil:
 		if len(p) < 1 {
-			return 0, &Error{Error: "Buffer too small to read"}
+			return 0, io.ErrShortBuffer
 		}
 		n, err = d.TCP.Read(p[0:2])
 		if err != nil || n != 2 {
@@ -170,10 +170,10 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 		d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
 		l, _ := unpackUint16(p[0:2], 0)
 		if l == 0 {
-			return 0, &Error{Error: "received nil msg length", Server: d.Addr}
+			return 0, ErrShortRead
 		}
 		if int(l) > len(p) {
-			return int(l), &Error{Error: "Buffer too small to read"}
+			return int(l), io.ErrShortBuffer
 		}
 		n, err = d.TCP.Read(p[:l])
 		if err != nil {
@@ -204,7 +204,7 @@ func (d *Conn) Read(p []byte) (n int, err os.Error) {
 // that error is returned; otherwise err is nil
 func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
-		return 0, &Error{Error: "UDP and TCP or both non-nil"}
+		return 0, ErrConn
 	}
 
 	var attempts int
@@ -248,7 +248,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 				return n, err
 			}
 			if n != 2 {
-				return n, &Error{Error: "Write failure"}
+				return n, io.ErrShortWrite
 			}
 			n, err = d.TCP.Write(q)
 			if err != nil {
@@ -279,7 +279,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 // errors are returned in err; otherwise it is nil.
 func (d *Conn) Close() (err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
-		return &Error{Error: "UDP and TCP or both non-nil"}
+		return ErrConn
 	}
 	switch {
 	case d.UDP != nil:
@@ -295,7 +295,7 @@ func (d *Conn) Close() (err os.Error) {
 func (d *Conn) SetTimeout() (err os.Error) {
 	var sec int64
 	if d.UDP != nil && d.TCP != nil {
-		return &Error{Error: "UDP and TCP or both non-nil"}
+		return ErrConn
 	}
 	sec = int64(d.Timeout)
 	if sec == 0 {

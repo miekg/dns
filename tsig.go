@@ -101,7 +101,7 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	// Create TSIG and add it to the message.
 	q := new(Msg)
 	if !q.Unpack(msg) {
-		return nil, &Error{Error: "Failed to unpack"}
+		return nil, ErrUnpack
 	}
 
 	rr := new(RR_TSIG)
@@ -116,7 +116,7 @@ func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
 	q.Extra = append(q.Extra, rr)
 	send, ok := q.Pack()
 	if !ok {
-		return send, &Error{Error: "Failed to pack"}
+		return send, ErrPack
 	}
 	return send, nil
 }
@@ -132,7 +132,7 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 	// Stipped the TSIG from the incoming msg
 	stripped, ok := stripTsig(msg)
 	if !ok {
-		return false, &Error{Error: "Failed to strip tsig"}
+		return false, ErrSigGen
 	}
 
 	buf, err := t.Buffer(stripped)
@@ -162,7 +162,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		macbuf = make([]byte, len(t.RequestMAC)) // reqmac should be twice as long
 		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
-			return nil, &Error{Error: "Failed to pack request mac"}
+			return nil, ErrSigGen
 		}
 		macbuf = macbuf[:n]
 	}
@@ -174,7 +174,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		tsig.Fudge = t.Fudge
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-			return nil, &Error{Error: "Failed to pack timers"}
+			return nil, ErrSigGen
 		}
 		tsigvar = tsigvar[:n]
 	} else {
@@ -190,7 +190,7 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		tsig.OtherData = ""
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
-			return nil, &Error{Error: "Failed to pack tsig variables"}
+			return nil, ErrSigGen
 		}
 		tsigvar = tsigvar[:n]
 	}

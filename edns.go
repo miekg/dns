@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-// EDNS0 Options
+// EDNS0 Option codes.
 const (
 	_              = iota
 	OptionCodeLLQ           // not used

@@ -61,7 +61,7 @@ const (
 
 	TypeTKEY = 249
 	TypeTSIG = 250
-	// valid Question.qtype only
+	// valid Question.Qtype only
 	TypeIXFR  = 251
 	TypeAXFR  = 252
 	TypeMAILB = 253
@@ -73,7 +73,7 @@ const (
 	TypeTA  = 32768
 	TypeDLV = 32769
 
-	// valid Question.qclass
+	// valid Question.Qclass
 	ClassINET   = 1
 	ClassCSNET  = 2
 	ClassCHAOS  = 3

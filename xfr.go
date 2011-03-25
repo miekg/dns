@@ -35,7 +35,7 @@ func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
 	case TypeIXFR:
 		d.ixfrRead(q, m)
         default:
-                m <- Xfr{true, nil, &Error{Error: "Qtype not recognized"}}
+                m <- Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
                 close(m)
 	}
 }
@@ -51,7 +51,7 @@ func (d *Conn) XfrWrite(q *Msg, m chan Xfr) {
 	case TypeIXFR:
 		//                d.ixfrWrite(q, m)
         default:
-                m <- Xfr{true, nil, &Error{Error: "Qtype not recognized"}}
+                m <- Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
                 close(m)
 	}
 }
@@ -67,13 +67,13 @@ func (d *Conn) axfrRead(q *Msg, m chan Xfr) {
 			return
 		}
 		if in.Id != q.Id {
-			m <- Xfr{true, nil, &Error{Error: "Id mismatch"}}
+			m <- Xfr{true, nil, ErrId}
 			return
 		}
 
 		if first {
 			if !checkXfrSOA(in, true) {
-				m <- Xfr{true, nil, &Error{Error: "SOA not first record"}}
+				m <- Xfr{true, nil, ErrXfrSoa}
 				return
 			}
 			first = !first
@@ -152,7 +152,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 			return
 		}
 		if in.Id != q.Id {
-			m <- Xfr{true, nil, &Error{Error: "Id mismatch"}}
+			m <- Xfr{true, nil, ErrId}
 			return
 		}
 
@@ -164,7 +164,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan Xfr) {
 
 			// But still check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				m <- Xfr{true, nil, &Error{Error: "SOA not first record"}}
+				m <- Xfr{true, nil, ErrXfrSoa}
 				return
 			}
 			// This serial is important

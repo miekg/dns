@@ -27,6 +27,21 @@ import (
 	"encoding/hex"
 )
 
+var ErrUnpack os.Error = &Error{Error: "unpacking failed"}
+var ErrPack os.Error = &Error{Error: "packing failed"}
+var ErrId os.Error = &Error{Error: "id mismatch"}
+var ErrShortRead os.Error = &Error{Error: "short read"}
+var ErrConn os.Error = &Error{Error: "conn holds both UDP and TCP connection"}
+var ErrServ os.Error = &Error{Error: "no servers could be reached"}
+var ErrKey os.Error = &Error{Error: "bad key"}
+var ErrPrivKey os.Error = &Error{Error: "bad private key"}
+var ErrKeySize os.Error = &Error{Error: "bad key size"}
+var ErrAlg os.Error = &Error{Error: "bad algorithm"}
+var ErrTime os.Error = &Error{Error: "bad time"}
+var ErrSig os.Error = &Error{Error: "bad signature"}
+var ErrSigGen os.Error = &Error{Error: "bad signature generation"}
+var ErrXfrSoa os.Error = &Error{Error: "no SOA seen"}
+
 // A manually-unpacked version of (id, bits).
 // This is in its own struct for easy printing.
 type MsgHdr struct {

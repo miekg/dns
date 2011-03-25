@@ -12,14 +12,6 @@ import (
 	"time"
 )
 
-// Todo(MG) put in dns.go
-const ErrPack = "Failed to pack message"
-const ErrUnpack = ""
-const ErrServ = "No servers could be reached"
-const ErrTsigKey = ""
-const ErrTsigTime = ""
-const ErrTsig = ""
-
 type Resolver struct {
 	Servers  []string            // servers to use
 	Search   []string            // suffixes to append to local name
@@ -50,7 +42,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 
 	sending, ok := q.Pack()
 	if !ok {
-		return nil, &Error{Error: ErrPack}
+		return nil, ErrPack
 	}
 	if res.Mangle != nil {
 		sending = res.Mangle(sending)
