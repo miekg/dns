@@ -39,8 +39,10 @@ var (
 	ErrKeySize   os.Error = &Error{Error: "bad key size"}
 	ErrAlg       os.Error = &Error{Error: "bad algorithm"}
 	ErrTime      os.Error = &Error{Error: "bad time"}
+        ErrNoSig     os.Error = &Error{Error: "no signature found"}
 	ErrSig       os.Error = &Error{Error: "bad signature"}
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
+        ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
 )
 
