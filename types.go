@@ -78,6 +78,7 @@ const (
 	ClassCSNET  = 2
 	ClassCHAOS  = 3
 	ClassHESIOD = 4
+        ClassNONE   = 254
 	ClassANY    = 255
 
 	// Msg.rcode
