@@ -14,9 +14,7 @@ import (
 
 type Resolver struct {
 	Servers  []string            // servers to use
-	Search   []string            // suffixes to append to local name
 	Port     string              // what port to use
-	Ndots    int                 // number of dots in name to trigger absolute lookup -- TODO
 	Timeout  int                 // seconds before giving up on packet
 	Attempts int                 // lost packets before giving up on server
 	Tcp      bool                // use TCP
