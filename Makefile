@@ -24,9 +24,6 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.pkg
 
-#y.go:	dns.y
-#	goyacc dns.y
-
 _examples:
 	gomake -C _examples
 
