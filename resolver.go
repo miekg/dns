@@ -8,7 +8,6 @@ package dns
 
 import (
 	"os"
-	"net"
 	"time"
 )
 
@@ -103,13 +102,10 @@ func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
-		c, err := net.Dial("tcp", "", server)
+                d, err := Dial("tcp", "", server)
 		if err != nil {
 			continue Server
 		}
-		d := new(Conn)
-		d.TCP = c.(*net.TCPConn)
-		d.Addr = d.TCP.RemoteAddr()
 		d.Tsig = t
 
 		_, err = d.Write(sending)
