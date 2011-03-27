@@ -119,7 +119,8 @@ func Dial(n, laddr, raddr string) (*Conn, os.Error) {
         return d, nil
 }
 
-// Fill in a Conn from a TCPConn
+// Fill in a Conn from a TCPConn. If a is nil, the 
+// remote address in the connection is used.
 func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
         d.TCP = l
         d.UDP = nil
@@ -129,7 +130,8 @@ func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
         d.Port = d.Addr.(*net.TCPAddr).Port
 }
 
-// Fill in a Conn from a UDPConn
+// Fill in a Conn from a TCPConn. If a is nil, the 
+// remote address in the connection is used.
 func (d *Conn) SetUDPConn(l *net.UDPConn, a net.Addr) {
         d.TCP = nil
         d.UDP = l
