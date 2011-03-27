@@ -25,6 +25,7 @@ func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 		m = m[:n]
 
 		d := new(Conn)
+                // Use the remote addr as we got from ReadFromUDP
                 d.SetUDPConn(l, addr)
 
 		msg := new(Msg)
