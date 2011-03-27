@@ -25,9 +25,7 @@ func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 		m = m[:n]
 
 		d := new(Conn)
-		d.UDP = l
-		d.Addr = addr
-		d.Port = addr.Port
+                d.SetUDPConn(l, addr)
 
 		msg := new(Msg)
 		if !msg.Unpack(m) {
@@ -49,9 +47,7 @@ func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 			return e
 		}
 		d := new(Conn)
-		d.TCP = c
-		d.Addr = c.RemoteAddr()
-		d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+                d.SetTCPConn(c, nil)
 
 		msg := new(Msg)
 		err := d.ReadMsg(msg)

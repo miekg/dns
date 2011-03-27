@@ -32,7 +32,6 @@ func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
 
 // Send a query to the nameserver using res, but perform TSIG validation.
 func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
-	var c net.Conn
 	var inb []byte
 	in := new(Msg)
 	port, err := check(res, q)
@@ -49,25 +48,20 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
-		d := new(Conn)
+                var d *Conn
 		server := res.Servers[i] + ":" + port
 		t := time.Nanoseconds()
 		if res.Tcp {
-			c, err = net.Dial("tcp", "", server)
+			d, err = Dial("tcp", "", server)
 			if err != nil {
 				continue
 			}
-			d.TCP = c.(*net.TCPConn)
-			d.Addr = d.TCP.RemoteAddr()
 		} else {
-			c, err = net.Dial("udp", "", server)
+			d, err = Dial("udp", "", server)
 			if err != nil {
 				continue
 			}
-			d.UDP = c.(*net.UDPConn)
-			d.Addr = d.UDP.RemoteAddr()
 		}
-
 		d.Tsig = tsig
 		inb, err = d.Exchange(sending, false)
 		if err != nil {
@@ -75,7 +69,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		}
 		in.Unpack(inb) // Discard error.
 		res.Rtt[server] = time.Nanoseconds() - t
-		c.Close()
+                d.Close()
 		break
 	}
 	if err != nil {

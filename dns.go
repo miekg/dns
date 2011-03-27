@@ -97,6 +97,48 @@ type Conn struct {
 	Attempts int
 }
 
+// Dial connects to the remote address raddr on the network net.
+// If the string laddr is not empty, it is used as the local address
+// for the connection. Any errors are return in err otherwise err is nil.
+func Dial(n, laddr, raddr string) (*Conn, os.Error) {
+        d := new(Conn)
+        c, err := net.Dial(n, laddr, raddr)
+        if err != nil {
+                return nil, err
+        }
+        switch n {
+        case "tcp":
+                d.TCP = c.(*net.TCPConn)
+                d.Addr = d.TCP.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+        case "udp":
+                d.UDP = c.(*net.UDPConn)
+                d.Addr = d.UDP.RemoteAddr()
+                d.Port = d.UDP.RemoteAddr().(*net.UDPAddr).Port
+        }
+        return d, nil
+}
+
+// Fill in a Conn from a TCPConn
+func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
+        d.TCP = l
+        d.UDP = nil
+        if a == nil {
+                d.Addr = l.RemoteAddr()
+        }
+        d.Port = d.Addr.(*net.TCPAddr).Port
+}
+
+// Fill in a Conn from a UDPConn
+func (d *Conn) SetUDPConn(l *net.UDPConn, a net.Addr) {
+        d.TCP = nil
+        d.UDP = l
+        if a == nil {
+                d.Addr = l.RemoteAddr()
+        }
+        d.Port = d.Addr.(*net.UDPAddr).Port
+}
+
 // Create a new buffer of the appropiate size. With
 // TCP the buffer is 64K, with UDP the returned buffer
 // has a length of 4K bytes.
