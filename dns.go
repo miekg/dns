@@ -86,9 +86,6 @@ type Conn struct {
 	// The remote port number of open the connection.
 	Port int
 
-        // The remote addr which is going to be dialed.
-        RemoteAddr string
-
 	// If TSIG is used, this holds all the information.
         // If unused is must be nil.
 	Tsig *Tsig
@@ -99,6 +96,15 @@ type Conn struct {
 	// Number of attempts to try to Read/Write from/to a
 	// connection.
 	Attempts int
+
+        // The remote addr which is going to be dialed.
+        RemoteAddr string
+
+        // Mangle the packet before writing it be feeding
+        // it through this function.
+        Mangle func([]byte) []byte
+
+        // rtt times?
 }
 
 // Dial connects to the remote address raddr on the network net.
@@ -262,6 +268,11 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	} else {
 		attempts = d.Attempts
 	}
+        // Mangle before TSIG?
+        if d.Mangle != nil {
+                p = d.Mangle(p)
+        }
+
 	d.SetTimeout()
 	if d.Tsig != nil {
 		// Create a new buffer with the TSIG added.
