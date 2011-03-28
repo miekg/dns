@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// DNS server implementation
+// DNS server implementation.
 
 package dns
 
@@ -25,6 +25,7 @@ func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
 		m = m[:n]
 
 		d := new(Conn)
+                // Use the remote addr as we got from ReadFromUDP
                 d.SetUDPConn(l, addr)
 
 		msg := new(Msg)
@@ -66,7 +67,7 @@ func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
 // connections. The function f may not be nil.
 func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
 	if f == nil {
-		return &Error{Error: "The handle function may not be nil"}
+		return ErrHandle
 	}
 	a, err := net.ResolveTCPAddr(addr)
 	if err != nil {

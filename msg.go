@@ -44,6 +44,7 @@ var (
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
         ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
+        ErrHandle    os.Error = &Error{Error: "the handle is nill"}
 )
 
 // A manually-unpacked version of (id, bits).

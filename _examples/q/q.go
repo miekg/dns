@@ -89,10 +89,10 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-                opt := new(dns.RR_OPT)
+		opt := new(dns.RR_OPT)
 		opt.SetDo()
-                opt.SetVersion(0)
-                opt.SetUDPSize(dns.DefaultMsgSize)
+		opt.SetVersion(0)
+		opt.SetUDPSize(dns.DefaultMsgSize)
 		if *nsid {
 			opt.SetNsid("")
 		}
@@ -129,7 +129,7 @@ func shortMsg(in *dns.Msg) *dns.Msg {
 	for i := 0; i < len(in.Extra); i++ {
 		in.Extra[i] = shortRR(in.Extra[i])
 	}
-        return in
+	return in
 }
 
 func shortRR(r dns.RR) dns.RR {
@@ -138,8 +138,8 @@ func shortRR(r dns.RR) dns.RR {
 		t.PublicKey = "( ... )"
 	case *dns.RR_RRSIG:
 		t.Signature = "( ... )"
-        case *dns.RR_NSEC3:
-                t.Salt = "-"     // nobody cares
+	case *dns.RR_NSEC3:
+		t.Salt = "-" // nobody cares
 	}
 	return r
 }

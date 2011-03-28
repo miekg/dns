@@ -16,24 +16,30 @@
 // The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
-// Querying the DNS is done by using a Resolver structure. Basic use pattern for creating 
+// Querying the DNS is done by using the Conn structure. Basic use pattern for creating 
 // a resolver:
 //
-//      res := new(Resolver)
-//      res.Servers = []string{"127.0.0.1"} 
+//      func handle(d *Conn, m *Msg, q chan Query) { /* handle query */ }
+//
+//      in := make(chan Query)
+//      out := QueryAndServeUDP(in, handle)
+//      d := new(Conn)
+//      d.RemoteAddr = "8.8.8.8:53"
 //      m := new(Msg)
 //      m.MsgHdr.Recursion_desired = true
 //      m.Question = make([]Question, 1)
 //      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//      in, err := res.Query(m)
 //
-// Server side programming is also supported.
+//      in <- Query{Msg: m, Conn: d}    // Send query
+//      reply := <-out                  // Listen for replie(s)
+//
+// Server side programming is also supported also by using a Conn structure.
 // Basic use pattern for creating an UDP DNS server:
 //
-//      func handle(d *dns.Conn, i *dns.Msg) { /* handle request */ }
+//      func handle(d *Conn, m *Msg) { /* handle request */ }
 //
 //      func listen(addr string, e chan os.Error) {
-//            err := dns.ListenAndServeUDP(addr, handle)
+//            err := ListenAndServeUDP(addr, handle)
 //            e <- err
 //      }
 //      err := make(chan os.Error)
@@ -80,13 +86,14 @@ type Conn struct {
 	// The current TCP connection.
 	TCP *net.TCPConn
 
-	// The remote side of the connection.
+	// The remote side of open the connection.
 	Addr net.Addr
 
-	// The remote port number of the connection.
+	// The remote port number of open the connection.
 	Port int
 
 	// If TSIG is used, this holds all the information.
+        // If unused is must be nil.
 	Tsig *Tsig
 
 	// Timeout in sec before giving up on a connection.
@@ -95,6 +102,15 @@ type Conn struct {
 	// Number of attempts to try to Read/Write from/to a
 	// connection.
 	Attempts int
+
+        // The remote addr which is going to be dialed.
+        RemoteAddr string
+
+        // Mangle the packet before writing it be feeding
+        // it through this function.
+        Mangle func([]byte) []byte
+
+        // rtt times?
 }
 
 // Dial connects to the remote address raddr on the network net.
@@ -258,6 +274,11 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	} else {
 		attempts = d.Attempts
 	}
+        // Mangle before TSIG?
+        if d.Mangle != nil {
+                p = d.Mangle(p)
+        }
+
 	d.SetTimeout()
 	if d.Tsig != nil {
 		// Create a new buffer with the TSIG added.
@@ -366,7 +387,6 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 			return nil, err
 		}
 	}
-	// Layer violation to save memory. Its okay then...
 	reply = d.NewBuffer()
 	n, err = d.Read(reply)
 	if err != nil {

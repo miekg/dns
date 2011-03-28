@@ -12,6 +12,74 @@ import (
 	"time"
 )
 
+// Query is used to communicate with the Query* functions.
+type Query struct {
+	// The query message. 
+	Msg *Msg
+	// A Conn. Its only required to fill out Conn.RemoteAddr.
+	// The rest of the structure is filled in by the Query Functions.
+	Conn *Conn
+	// Any erros when querying are returned in Err. The caller
+	// should just set this to nil.
+	Err os.Error
+}
+
+// QueryUDP handles one query. It reads an incoming request from
+// the in channel. The function f is executed in a seperate
+// goroutine and performs the actual UDP query.
+func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	query("udp", in, out, f)
+}
+
+// QueryTCP handles one query. It reads an incoming request from
+// the in channel. The function f is executed in a seperate
+// goroutine and performas the actual TCP query.
+func QueryTCP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	query("tcp", in, out, f)
+}
+
+// helper function.
+func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	for {
+		select {
+		case q := <-in:
+			c, err := net.Dial(n, "", q.Conn.RemoteAddr)
+			if err != nil {
+				//out <- nil
+			}
+			if n == "tcp" {
+				q.Conn.SetTCPConn(c.(*net.TCPConn), nil)
+			} else {
+				q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
+			}
+			if f == nil {
+				out <- Query{Err: ErrHandle}
+			} else {
+				go f(q.Conn, q.Msg, out)
+			}
+		}
+	}
+	panic("not reached")
+}
+
+// QueryAndServeTCP listens for incoming requests on channel in and
+// then calls QueryTCP with f to the handle the request.
+// It returns a channel on which the response is returned.
+func QueryAndServeTCP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
+	out := make(chan Query)
+	go QueryTCP(in, out, f)
+	return out
+}
+
+// QueryAndServeUDP listens for incoming requests on channel in and
+// then calls QueryUDP with f to the handle the request.
+// It returns a channel on which the response is returned.
+func QueryAndServeUDP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
+	out := make(chan Query)
+	go QueryUDP(in, out, f)
+	return out
+}
+
 type Resolver struct {
 	Servers  []string            // servers to use
 	Search   []string            // suffixes to append to local name (not implemented)
@@ -48,7 +116,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
-                var d *Conn
+		var d *Conn
 		server := res.Servers[i] + ":" + port
 		t := time.Nanoseconds()
 		if res.Tcp {
@@ -69,7 +137,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		}
 		in.Unpack(inb) // Discard error.
 		res.Rtt[server] = time.Nanoseconds() - t
-                d.Close()
+		d.Close()
 		break
 	}
 	if err != nil {
@@ -103,13 +171,10 @@ func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
-		c, err := net.Dial("tcp", "", server)
+		d, err := Dial("tcp", "", server)
 		if err != nil {
 			continue Server
 		}
-		d := new(Conn)
-		d.TCP = c.(*net.TCPConn)
-		d.Addr = d.TCP.RemoteAddr()
 		d.Tsig = t
 
 		_, err = d.Write(sending)
