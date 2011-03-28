@@ -16,10 +16,10 @@ type Query struct {
 	// The query message. 
 	Msg *Msg
 	// A Conn. Its only required to fill out Conn.RemoteAddr.
-        // Optionally you may set Conn.Tsig.
-	// The rest of the structure is filled by the Query Functions.
+        // Optionally you may set Conn.Tsig if TSIG is required.
+	// The rest of the structure is filled by the Query functions.
 	Conn *Conn
-	// Any erros when querying are returned in Err. The caller
+	// Any error when querying is returned in Err. The caller
 	// should just set this to nil.
 	Err os.Error
         // Query time in here?
