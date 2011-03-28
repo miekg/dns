@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"dns"
 	"os"
 	"flag"
@@ -66,21 +65,12 @@ Flags:
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
-	r := new(dns.Resolver)
-	r.FromFile("/etc/resolv.conf")
-	r.Timeout = 2
-	r.Port = *port
-	r.Tcp = *tcp
-	r.Attempts = 1
-	// @server may be a name, resolv that 
-	var err os.Error
+
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
-	_, addr, err := net.LookupHost(nameserver)
-	if err == nil {
-		r.Servers = addr
-	} else {
-		r.Servers = []string{nameserver}
-	}
+
+        d := new(dns.Conn)
+        d.RemoteAddr = nameserver + ":" + *port
+        d.Attempts = 1
 
 	m := new(dns.Msg)
 	m.MsgHdr.Authoritative = *aa
@@ -99,6 +89,14 @@ Flags:
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
+
+        in := make(chan dns.Query)
+        var out chan dns.Query
+        if *tcp {
+                out = dns.QueryAndServerTCP(in, nil)
+        } else {
+                out = dns.QueryAndServerUDP(in, nil)
+        }
 
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
