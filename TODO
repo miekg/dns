@@ -3,7 +3,7 @@ o symmetrical, client side should be mirrored in the server
 o clean, small API
 o fast data structures (rb-tree, when they come available)
 o api-use should be self documenting
-o multiple queries in api
+o multiple queries in api. Xfr stuff
 
 o build simple: just query function, built on the cool stuff
 o make questions fqdns -- add last dot
