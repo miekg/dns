@@ -93,25 +93,28 @@ Flags:
         in := make(chan dns.Query)
         var out chan dns.Query
         if *tcp {
-                out = dns.QueryAndServerTCP(in, nil)
+                out = dns.QueryAndServeTCP(in, nil)
         } else {
-                out = dns.QueryAndServerUDP(in, nil)
+                out = dns.QueryAndServeUDP(in, nil)
         }
 
 	for _, v := range qname {
-		m.Question[0] = dns.Question{v, qtype, qclass}
+                m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
-		in, err := r.Query(m)
-		if in != nil {
-			if m.Id != in.Id {
+                in <- dns.Query{Msg: m, Conn: d}
+
+                r := <-out
+
+		if r.Msg != nil {
+			if r.Msg.Id != m.Id {
 				fmt.Printf("Id mismatch\n")
 			}
 			if *short {
-				in = shortMsg(in)
+				r.Msg = shortMsg(r.Msg)
 			}
-			fmt.Printf("%v\n", in)
+			fmt.Printf("%v", r.Msg)
 		} else {
-			fmt.Printf("%v\n", err.String())
+			fmt.Printf("%v\n", r.Err.String())
 		}
 	}
 }
@@ -141,17 +144,3 @@ func shortRR(r dns.RR) dns.RR {
 	}
 	return r
 }
-
-/*
-41 func (m *Meta) String() string {
-42         s := ";; Query time: " + strconv.Itoa(int(m.QueryEnd-m.QueryStart)) + " nsec"
-43         s += "\n;; MSG SIZE  rcvd: " + strconv.Itoa(m.RLen) + ", sent: " + strconv.Itoa(m.QLen)
-44         rf := float32(m.RLen)
-45         qf := float32(m.QLen)
-46         if qf != 0 {
-47                 s += " (" + strconv.Ftoa32(rf/qf, 'f', 2) + ":1)"
-48         }
-49         // WHEN??
-50         return s
-51 }
-*/
