@@ -12,23 +12,33 @@ import (
 	"time"
 )
 
+// Query is used to communicate with the Query* functions.
 type Query struct {
+        // The query message. 
 	Msg  *Msg
+        // A Conn. Its only required to fill out Conn.RemoteAddr.
+        // The rest of the structure is filled in by the Query Functions.
 	Conn *Conn
+        // Any erros when querying are returned in Err. The caller
+        // should just set this to nil.
 	Err  os.Error
 }
 
-// A query implementation that is asyn. and concurrent. Is also
-// completely mirrors the server side implementation
-
-func QueryTCP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
-	query("tcp", in, out, f)
-}
-
+// QueryUDP handles one query. It reads an incoming request from
+// the in channel. The function f is executed in a seperate
+// goroutine and performs the actual UDP query.
 func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	query("udp", in, out, f)
 }
 
+// QueryTCP handles one query. It reads an incoming request from
+// the in channel. The function f is executed in a seperate
+// goroutine and performas the actual TCP query.
+func QueryTCP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	query("tcp", in, out, f)
+}
+
+// helper function.
 func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	for {
 		select {
@@ -42,18 +52,28 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
                         } else {
                                 q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
                         }
-			go f(q.Conn, q.Msg, out)
+                        if f == nil {
+                                out <- Query{Err: ErrHandle}
+                        } else {
+			        go f(q.Conn, q.Msg, out)
+                        }
 		}
 	}
 	panic("not reached")
 }
 
+// QueryAndServeTCP listens for incoming requests on channel in and
+// then calls QueryTCP with f to the handle the request.
+// It returns a channel on which the response is returned.
 func QueryAndServeTCP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
 	out := make(chan Query)
 	go QueryTCP(in, out, f)
 	return out
 }
 
+// QueryAndServeUDP listens for incoming requests on channel in and
+// then calls QueryUDP with f to the handle the request.
+// It returns a channel on which the response is returned.
 func QueryAndServeUDP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
 	out := make(chan Query)
 	go QueryUDP(in, out, f)

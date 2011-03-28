@@ -80,13 +80,13 @@ type Conn struct {
 	// The current TCP connection.
 	TCP *net.TCPConn
 
-	// The remote side of the connection.
+	// The remote side of open the connection.
 	Addr net.Addr
 
-	// The remote port number of the connection.
+	// The remote port number of open the connection.
 	Port int
 
-        // Remove server (for resolver)
+        // The remote addr which is going to be dialed.
         RemoteAddr string
 
 	// If TSIG is used, this holds all the information.
