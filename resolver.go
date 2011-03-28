@@ -8,20 +8,20 @@ package dns
 
 import (
 	"os"
-        "net"
+	"net"
 	"time"
 )
 
 // Query is used to communicate with the Query* functions.
 type Query struct {
-        // The query message. 
-	Msg  *Msg
-        // A Conn. Its only required to fill out Conn.RemoteAddr.
-        // The rest of the structure is filled in by the Query Functions.
+	// The query message. 
+	Msg *Msg
+	// A Conn. Its only required to fill out Conn.RemoteAddr.
+	// The rest of the structure is filled in by the Query Functions.
 	Conn *Conn
-        // Any erros when querying are returned in Err. The caller
-        // should just set this to nil.
-	Err  os.Error
+	// Any erros when querying are returned in Err. The caller
+	// should just set this to nil.
+	Err os.Error
 }
 
 // QueryUDP handles one query. It reads an incoming request from
@@ -47,16 +47,16 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 			if err != nil {
 				//out <- nil
 			}
-                        if n == "tcp" {
-                                q.Conn.SetTCPConn(c.(*net.TCPConn), nil)
-                        } else {
-                                q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
-                        }
-                        if f == nil {
-                                out <- Query{Err: ErrHandle}
-                        } else {
-			        go f(q.Conn, q.Msg, out)
-                        }
+			if n == "tcp" {
+				q.Conn.SetTCPConn(c.(*net.TCPConn), nil)
+			} else {
+				q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
+			}
+			if f == nil {
+				out <- Query{Err: ErrHandle}
+			} else {
+				go f(q.Conn, q.Msg, out)
+			}
 		}
 	}
 	panic("not reached")
