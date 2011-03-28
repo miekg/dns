@@ -19,10 +19,8 @@
 // (Asynchronize) querying the DNS is done by using the Conn structure. 
 // Basic use pattern for creating such a resolver:
 //
-//      func handle(d *Conn, m *Msg, q chan Query) { /* handle query */ }
-//
 //      in := make(chan Query)
-//      out := QueryAndServeUDP(in, handle)
+//      out := QueryAndServeUDP(in, nil)        // nil means use QueryDefault
 //      d := new(Conn)
 //      d.RemoteAddr = "8.8.8.8:53"
 //

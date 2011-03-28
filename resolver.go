@@ -9,7 +9,6 @@ package dns
 import (
 	"os"
 	"net"
-	"time"
 )
 
 // Query is used to communicate with the Query* functions.
@@ -23,6 +22,7 @@ type Query struct {
 	// Any erros when querying are returned in Err. The caller
 	// should just set this to nil.
 	Err os.Error
+        // Query time in here?
 }
 
 // QueryUDP handles one query. It reads an incoming request from
@@ -54,13 +54,31 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 				q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
 			}
 			if f == nil {
-				out <- Query{Err: ErrHandle}
+				go QueryDefault(q.Conn, q.Msg, out)
 			} else {
 				go f(q.Conn, q.Msg, out)
 			}
 		}
 	}
 	panic("not reached")
+}
+
+// Default Handler when none is given.
+func QueryDefault(d *Conn, m *Msg, q chan Query) {
+        buf, ok := m.Pack()
+        if !ok {
+                q <- Query{nil, d, ErrPack}
+        }
+        ret, err := d.Exchange(buf, false)
+        if err != nil {
+                q <- Query{nil, d, err}
+        }
+        out := new(Msg)
+        if ok1 := out.Unpack(ret); !ok1 {
+                q <- Query{nil, d, ErrUnpack}
+        }
+        q <- Query{out, d, nil}
+        return
 }
 
 // QueryAndServeTCP listens for incoming requests on channel in and
@@ -81,33 +99,7 @@ func QueryAndServeUDP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query
 	return out
 }
 
-type Resolver struct {
-	Servers  []string            // servers to use
-	Search   []string            // suffixes to append to local name (not implemented)
-	Port     string              // what port to use
-	Ndots    int                 // number of dots in name to trigger absolute lookup (not implemented)
-	Timeout  int                 // seconds before giving up on packet
-	Attempts int                 // lost packets before giving up on server
-	Tcp      bool                // use TCP
-	Mangle   func([]byte) []byte // mangle the packet
-	Rtt      map[string]int64    // Store round trip times
-	Rrb      int                 // Last used server (for round robin)
-}
-
-// Send a query to the nameserver using res, but perform TSIG validation.
-func (res *Resolver) Query(q *Query) (d *Msg, err os.Error) {
-	var inb []byte
-	in := new(Msg)
-	port, err := check(res, q.Msg)
-	if err != nil {
-		return nil, err
-	}
-
-	sending, ok := q.Msg.Pack()
-	if !ok {
-		return nil, ErrPack
-	}
-
+/*      // alg for querying a list of servers, not sure if we going to keep it
 	for i := 0; i < len(res.Servers); i++ {
 		var d *Conn
 		server := res.Servers[i] + ":" + port
@@ -132,55 +124,4 @@ func (res *Resolver) Query(q *Query) (d *Msg, err os.Error) {
 		d.Close()
 		break
 	}
-	if err != nil {
-		return nil, err
-	}
-	return in, nil
-}
-
-// Perform an incoming Ixfr or Axfr with Tsig validation. If the message 
-// q's question section contains an AXFR type an Axfr is performed. If q's question
-// section contains an IXFR type an Ixfr is performed.
-func (res *Resolver) XfrTsig(q *Query, t *Tsig, m chan Xfr) {
-	port, err := check(res, q.Msg)
-	if err != nil {
-		close(m)
-		return
-	}
-	sending, ok := q.Msg.Pack()
-	if !ok {
-		close(m)
-		return
-	}
-	// No defer close(m) as m is closed in d.XfrRead()
-Server:
-	for i := 0; i < len(res.Servers); i++ {
-		server := res.Servers[i] + ":" + port
-		d, err := Dial("tcp", "", server)
-		if err != nil {
-			continue Server
-		}
-		_, err = d.Write(sending)
-		if err != nil {
-			continue Server
-		}
-                // dont use d, use d.Conn -- more cleansup
-		d.XfrRead(q.Msg, m) // check
-	}
-	return
-}
-
-func check(res *Resolver, q *Msg) (port string, err os.Error) {
-	if res.Port == "" {
-		port = "53"
-	} else {
-		port = res.Port
-	}
-	if res.Rtt == nil {
-		res.Rtt = make(map[string]int64)
-	}
-	if q.Id == 0 {
-		q.Id = Id()
-	}
-	return
-}
+*/

@@ -29,8 +29,7 @@ func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
                         return
                 }
         }
-
-	// Send q first.
+	// Send q now.
 	err := d.WriteMsg(q)
 	if err != nil {
                 m <- Xfr{true, nil, err}

@@ -4,6 +4,8 @@
 
 // Read system DNS config from /etc/resolv.conf
 
+// TODO: what to do with this code - we don't have a
+// structure to put it in
 package dns
 
 import (
