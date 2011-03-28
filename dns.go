@@ -16,8 +16,18 @@
 // The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
-// Querying the DNS is done by using the Conn structure. Basic use pattern for creating 
-// a resolver:
+// Use patter for simple querying:
+//      
+//      res := new(Resolver)
+//      res.Servers = []string{"127.0.0.1"}
+//      m := new(Msg)
+//      m.MsgHdr.Recursion_desired = true
+//      m.Question = make([]Question, 1)
+//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+//      in, err := res.Query(m)
+//
+// Asynchronize querying the DNS is done by using the Conn structure. 
+// Basic use pattern for creating such a resolver:
 //
 //      func handle(d *Conn, m *Msg, q chan Query) { /* handle query */ }
 //
@@ -25,12 +35,8 @@
 //      out := QueryAndServeUDP(in, handle)
 //      d := new(Conn)
 //      d.RemoteAddr = "8.8.8.8:53"
-//      m := new(Msg)
-//      m.MsgHdr.Recursion_desired = true
-//      m.Question = make([]Question, 1)
-//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 //
-//      in <- Query{Msg: m, Conn: d}    // Send query
+//      in <- Query{Msg: m, Conn: d}    // Send query using the above message
 //      reply := <-out                  // Listen for replie(s)
 //
 // Server side programming is also supported also by using a Conn structure.

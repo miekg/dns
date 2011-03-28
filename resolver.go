@@ -30,6 +30,7 @@ type Query struct {
 func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	query("udp", in, out, f)
 }
+// Shoudl the chan be *Query??
 
 // QueryTCP handles one query. It reads an incoming request from
 // the in channel. The function f is executed in a seperate
@@ -93,26 +94,18 @@ type Resolver struct {
 	Rrb      int                 // Last used server (for round robin)
 }
 
-// Send a query to the nameserver using the res.
-func (res *Resolver) Query(q *Msg) (d *Msg, err os.Error) {
-	return res.QueryTsig(q, nil)
-}
-
 // Send a query to the nameserver using res, but perform TSIG validation.
-func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
+func (res *Resolver) Query(q *Query) (d *Msg, err os.Error) {
 	var inb []byte
 	in := new(Msg)
-	port, err := check(res, q)
+	port, err := check(res, q.Msg)
 	if err != nil {
 		return nil, err
 	}
 
-	sending, ok := q.Pack()
+	sending, ok := q.Msg.Pack()
 	if !ok {
 		return nil, ErrPack
-	}
-	if res.Mangle != nil {
-		sending = res.Mangle(sending)
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
@@ -130,7 +123,6 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 				continue
 			}
 		}
-		d.Tsig = tsig
 		inb, err = d.Exchange(sending, false)
 		if err != nil {
 			continue
@@ -146,23 +138,16 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	return in, nil
 }
 
-// Perform an incoming Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed. If q's question
-// section contains an IXFR type an Ixfr is performed.
-func (res *Resolver) Xfr(q *Msg, m chan Xfr) {
-	res.XfrTsig(q, nil, m)
-}
-
 // Perform an incoming Ixfr or Axfr with Tsig validation. If the message 
 // q's question section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
-func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
-	port, err := check(res, q)
+func (res *Resolver) XfrTsig(q *Query, t *Tsig, m chan Xfr) {
+	port, err := check(res, q.Msg)
 	if err != nil {
 		close(m)
 		return
 	}
-	sending, ok := q.Pack()
+	sending, ok := q.Msg.Pack()
 	if !ok {
 		close(m)
 		return
@@ -175,13 +160,12 @@ Server:
 		if err != nil {
 			continue Server
 		}
-		d.Tsig = t
-
 		_, err = d.Write(sending)
 		if err != nil {
 			continue Server
 		}
-		d.XfrRead(q, m) // check
+                // dont use d, use d.Conn -- more cleansup
+		d.XfrRead(q.Msg, m) // check
 	}
 	return
 }
