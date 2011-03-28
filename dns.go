@@ -20,7 +20,7 @@
 // Basic use pattern for creating such a resolver:
 //
 //      in := make(chan Query)
-//      out := QueryAndServeUDP(in, nil)        // nil means use QueryDefault
+//      out := QueryAndServeUDP(in, nil)        // nil means use QueryDefault()
 //      d := new(Conn)
 //      d.RemoteAddr = "8.8.8.8:53"
 //
@@ -30,7 +30,7 @@
 //      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 //
 //      in <- Query{Msg: m, Conn: d}    // Send query using the above message
-//      reply := <-out                  // Listen for replie(s)
+//      reply := <-out                  // Listen for the reply
 //
 // Server side programming is also supported also by using a Conn structure.
 // Basic use pattern for creating an UDP DNS server:

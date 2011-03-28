@@ -10,7 +10,7 @@ import (
 
 func main() {
 	r := new(dns.Resolver)
-        r.FromFile("/etc/resolv.conf")
+        r.FromFile("/etc/resolv.conf") // Need to fix this a bit...
         if len(os.Args) != 2 {
                 fmt.Printf("%s DOMAIN\n", os.Args[0])
                 os.Exit(1)
