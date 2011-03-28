@@ -86,7 +86,11 @@ type Conn struct {
 	// The remote port number of the connection.
 	Port int
 
+        // Remove server (for resolver)
+        RemoteAddr string
+
 	// If TSIG is used, this holds all the information.
+        // If unused is must be nil.
 	Tsig *Tsig
 
 	// Timeout in sec before giving up on a connection.
@@ -366,7 +370,6 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 			return nil, err
 		}
 	}
-	// Layer violation to save memory. Its okay then...
 	reply = d.NewBuffer()
 	n, err = d.Read(reply)
 	if err != nil {

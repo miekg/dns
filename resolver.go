@@ -8,8 +8,57 @@ package dns
 
 import (
 	"os"
+        "net"
 	"time"
 )
+
+type Query struct {
+	Msg  *Msg
+	Conn *Conn
+	Err  os.Error
+}
+
+// A query implementation that is asyn. and concurrent. Is also
+// completely mirrors the server side implementation
+
+func QueryTCP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	query("tcp", in, out, f)
+}
+
+func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	query("udp", in, out, f)
+}
+
+func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+	for {
+		select {
+		case q := <-in:
+			c, err := net.Dial(n, "", q.Conn.RemoteAddr)
+			if err != nil {
+				//out <- nil
+			}
+                        if n == "tcp" {
+                                q.Conn.SetTCPConn(c.(*net.TCPConn), nil)
+                        } else {
+                                q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
+                        }
+			go f(q.Conn, q.Msg, out)
+		}
+	}
+	panic("not reached")
+}
+
+func QueryAndServeTCP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
+	out := make(chan Query)
+	go QueryTCP(in, out, f)
+	return out
+}
+
+func QueryAndServeUDP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
+	out := make(chan Query)
+	go QueryUDP(in, out, f)
+	return out
+}
 
 type Resolver struct {
 	Servers  []string            // servers to use
@@ -47,7 +96,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 	}
 
 	for i := 0; i < len(res.Servers); i++ {
-                var d *Conn
+		var d *Conn
 		server := res.Servers[i] + ":" + port
 		t := time.Nanoseconds()
 		if res.Tcp {
@@ -68,7 +117,7 @@ func (res *Resolver) QueryTsig(q *Msg, tsig *Tsig) (d *Msg, err os.Error) {
 		}
 		in.Unpack(inb) // Discard error.
 		res.Rtt[server] = time.Nanoseconds() - t
-                d.Close()
+		d.Close()
 		break
 	}
 	if err != nil {
@@ -102,7 +151,7 @@ func (res *Resolver) XfrTsig(q *Msg, t *Tsig, m chan Xfr) {
 Server:
 	for i := 0; i < len(res.Servers); i++ {
 		server := res.Servers[i] + ":" + port
-                d, err := Dial("tcp", "", server)
+		d, err := Dial("tcp", "", server)
 		if err != nil {
 			continue Server
 		}
