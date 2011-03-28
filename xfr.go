@@ -21,6 +21,15 @@ type Xfr struct {
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
 func (d *Conn) XfrRead(q *Msg, m chan Xfr) {
+        if d.TCP == nil && d.UDP == nil {
+                // No connection yet
+                if err := d.Dial("tcp"); err != nil {
+                        m <- Xfr{true, nil, err}
+                        close(m)
+                        return
+                }
+        }
+
 	// Send q first.
 	err := d.WriteMsg(q)
 	if err != nil {

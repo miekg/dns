@@ -17,7 +17,8 @@ type Query struct {
 	// The query message. 
 	Msg *Msg
 	// A Conn. Its only required to fill out Conn.RemoteAddr.
-	// The rest of the structure is filled in by the Query Functions.
+        // Optionally you may set Conn.Tsig.
+	// The rest of the structure is filled by the Query Functions.
 	Conn *Conn
 	// Any erros when querying are returned in Err. The caller
 	// should just set this to nil.
@@ -30,7 +31,6 @@ type Query struct {
 func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	query("udp", in, out, f)
 }
-// Shoudl the chan be *Query??
 
 // QueryTCP handles one query. It reads an incoming request from
 // the in channel. The function f is executed in a seperate
@@ -46,7 +46,7 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 		case q := <-in:
 			c, err := net.Dial(n, "", q.Conn.RemoteAddr)
 			if err != nil {
-				//out <- nil
+				out <- Query{Err: err}
 			}
 			if n == "tcp" {
 				q.Conn.SetTCPConn(c.(*net.TCPConn), nil)

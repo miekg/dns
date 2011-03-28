@@ -16,17 +16,7 @@
 // The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
-// Use patter for simple querying:
-//      
-//      res := new(Resolver)
-//      res.Servers = []string{"127.0.0.1"}
-//      m := new(Msg)
-//      m.MsgHdr.Recursion_desired = true
-//      m.Question = make([]Question, 1)
-//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//      in, err := res.Query(m)
-//
-// Asynchronize querying the DNS is done by using the Conn structure. 
+// (Asynchronize) querying the DNS is done by using the Conn structure. 
 // Basic use pattern for creating such a resolver:
 //
 //      func handle(d *Conn, m *Msg, q chan Query) { /* handle query */ }
@@ -35,6 +25,11 @@
 //      out := QueryAndServeUDP(in, handle)
 //      d := new(Conn)
 //      d.RemoteAddr = "8.8.8.8:53"
+//
+//      // Create message with the desired options.
+//      m.MsgHdr.Recursion_desired = true
+//      m.Question = make([]Question, 1)
+//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 //
 //      in <- Query{Msg: m, Conn: d}    // Send query using the above message
 //      reply := <-out                  // Listen for replie(s)
@@ -112,12 +107,33 @@ type Conn struct {
         // The remote addr which is going to be dialed.
         RemoteAddr string
 
+        // The local addr used for outgoing queries
+        LocalAddr  string
+
         // Mangle the packet before writing it be feeding
         // it through this function.
         Mangle func([]byte) []byte
-
-        // rtt times?
 }
+
+// Dial, with minimum filled out Conn (RemoteAddr and LocalAddr)
+func (d *Conn) Dial(n string) os.Error {
+        c, err := net.Dial(n, d.LocalAddr, d.RemoteAddr)
+        if err != nil {
+                return err
+        }
+        switch n {
+        case "tcp":
+                d.TCP = c.(*net.TCPConn)
+                d.Addr = d.TCP.RemoteAddr()
+                d.Port = d.TCP.RemoteAddr().(*net.TCPAddr).Port
+        case "udp":
+                d.UDP = c.(*net.UDPConn)
+                d.Addr = d.UDP.RemoteAddr()
+                d.Port = d.UDP.RemoteAddr().(*net.UDPAddr).Port
+        }
+        return nil
+}
+
 
 // Dial connects to the remote address raddr on the network net.
 // If the string laddr is not empty, it is used as the local address
@@ -148,6 +164,8 @@ func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
         d.UDP = nil
         if a == nil {
                 d.Addr = l.RemoteAddr()
+        } else {
+                d.Addr = a
         }
         d.Port = d.Addr.(*net.TCPAddr).Port
 }
@@ -159,6 +177,8 @@ func (d *Conn) SetUDPConn(l *net.UDPConn, a net.Addr) {
         d.UDP = l
         if a == nil {
                 d.Addr = l.RemoteAddr()
+        } else {
+                d.Addr = a
         }
         d.Port = d.Addr.(*net.UDPAddr).Port
 }
