@@ -9,9 +9,8 @@ import (
 )
 
 func main() {
-	r := new(dns.Resolver)
-        r.FromFile("/etc/resolv.conf")
-        if len(os.Args) != 2 {
+	c, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+        if len(os.Args) != 2 || err != nil {
                 fmt.Printf("%s DOMAIN\n", os.Args[0])
                 os.Exit(1)
         }
@@ -20,7 +19,10 @@ func main() {
         m.Question = make([]dns.Question, 1)
         m.Question[0] = dns.Question{os.Args[1], dns.TypeDNSKEY, dns.ClassINET}
 
-        in, err := r.Query(m)
+        d := new(dns.Conn)
+        d.RemoteAddr = c.Servers[0]
+        d.Dial("udp")
+        in, err := dns.QuerySimple(d, m)
         if in != nil {
                 if in.Rcode != dns.RcodeSuccess {
                         fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])

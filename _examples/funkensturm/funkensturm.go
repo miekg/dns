@@ -15,8 +15,10 @@ import (
 	"strings"
 )
 
-// Define a slice of conn for sending queries on
+// Define a slice of conn for sending queries
 var qr []*dns.Conn
+var in chan dns.Query
+var out chan dns.Query
 
 // The configuration of Funkensturm
 var f *Funkensturm

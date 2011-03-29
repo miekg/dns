@@ -3,9 +3,10 @@ q \
 chaos \
 axfr \
 reflect \
-funkensturm \
 xfrprx \
 key2ds \
+
+# funkensturm  -- need fix
 
 all: 
 	for i in $(EXAMPLES); do gomake -C $$i; done

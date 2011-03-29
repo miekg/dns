@@ -25,11 +25,11 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, true
 }
 
-func send(m *dns.Msg, ok bool) (out *dns.Msg) {
+func send(m *dns.Msg, ok bool) (o *dns.Msg) {
 	switch ok {
 	case true, false:
                 for _, r := range qr {
-                        out, _ = r.Query(m)
+                        in <- Query{Msg: m, Conn: r}
                 }
                 return
 	}
