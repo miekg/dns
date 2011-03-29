@@ -33,6 +33,7 @@ var (
 	ErrId        os.Error = &Error{Error: "id mismatch"}
 	ErrShortRead os.Error = &Error{Error: "short read"}
 	ErrConn      os.Error = &Error{Error: "conn holds both UDP and TCP connection"}
+	ErrConnEmpy  os.Error = &Error{Error: "conn has no connection"}
 	ErrServ      os.Error = &Error{Error: "no servers could be reached"}
 	ErrKey       os.Error = &Error{Error: "bad key"}
 	ErrPrivKey   os.Error = &Error{Error: "bad private key"}
@@ -44,7 +45,7 @@ var (
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
         ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
-        ErrHandle    os.Error = &Error{Error: "the handle is nill"}
+        ErrHandle    os.Error = &Error{Error: "handle is nill"}
 )
 
 // A manually-unpacked version of (id, bits).

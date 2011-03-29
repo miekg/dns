@@ -24,7 +24,9 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	nameserver := "@127.0.0.1"      // Default nameserver
+        // Need to think about it... Config
+        server, _ := dns.FromFile("/etc/resolv.conf")
+	nameserver := "@" + server[0]
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
 	var qname []string

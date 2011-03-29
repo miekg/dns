@@ -44,7 +44,7 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	for {
 		select {
 		case q := <-in:
-			c, err := net.Dial(n, "", q.Conn.RemoteAddr)
+			c, err := net.Dial(n, q.Conn.LocalAddr, q.Conn.RemoteAddr)
 			if err != nil {
 				out <- Query{Err: err}
 			}
@@ -87,6 +87,8 @@ func QuerySimple(d *Conn, m *Msg) (*Msg, os.Error) {
         if !ok {
                 return nil, ErrPack
         }
+        // Dialing should happen in the client
+
         ret, err := d.Exchange(buf, false)
         if err != nil {
                 return nil, err

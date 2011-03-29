@@ -16,21 +16,34 @@
 // The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
 // dynamic updates, notifies and DNSSEC validation/signing.
 //
+// A lot of functions take a dns message. Use pattern for creating one:
+//
+//      message := new(Msg)
+//
+//      // Create message with the desired options.
+//      message.MsgHdr.Recursion_desired = true
+//
+//      // Create room in for the question and set it.
+//      message.Question = make([]Question, 1)
+//      message.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+//
+// Basic use pattern for synchronize querying of the DNS:
+//
+//      dnsconn := new(Conn)
+//      dnsconn.RemoteAddr = "127.0.0.1:53"
+//      dnsconn.Dial("udp")             // "tcp" for tcp connection
+//      in, err := SimpleQuery(dnsconn, message)
+//
 // (Asynchronize) querying the DNS is done by using the Conn structure. 
 // Basic use pattern for creating such a resolver:
 //
 //      in := make(chan Query)
-//      out := QueryAndServeUDP(in, nil)        // nil means use QueryDefault()
-//      d := new(Conn)
-//      d.RemoteAddr = "8.8.8.8:53"
+//      out := QueryAndServeUDP(in, nil)      // nil means use QueryDefault()
+//      dnsconn := new(Conn)
+//      dnsconn.RemoteAddr = "8.8.8.8:53"
 //
-//      // Create message with the desired options.
-//      m.MsgHdr.Recursion_desired = true
-//      m.Question = make([]Question, 1)
-//      m.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
-//
-//      in <- Query{Msg: m, Conn: d}    // Send query using the above message
-//      reply := <-out                  // Listen for the reply
+//      in <- Query{Msg: message, Conn: dnscon}
+//      reply := <-out 
 //
 // Server side programming is also supported also by using a Conn structure.
 // Basic use pattern for creating an UDP DNS server:
@@ -298,7 +311,7 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	} else {
 		attempts = d.Attempts
 	}
-        // Mangle before TSIG?
+
         if d.Mangle != nil {
                 p = d.Mangle(p)
         }
