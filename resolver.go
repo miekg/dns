@@ -81,6 +81,23 @@ func QueryDefault(d *Conn, m *Msg, q chan Query) {
         return
 }
 
+// Simple query function that waits for and returns the reply.
+func QuerySimple(d *Conn, m *Msg) (*Msg, os.Error) {
+        buf, ok := m.Pack()
+        if !ok {
+                return nil, ErrPack
+        }
+        ret, err := d.Exchange(buf, false)
+        if err != nil {
+                return nil, err
+        }
+        o := new(Msg)
+        if ok := o.Unpack(ret); !ok {
+                return nil, ErrUnpack
+        }
+        return o, nil
+}
+
 // QueryAndServeTCP listens for incoming requests on channel in and
 // then calls QueryTCP with f to the handle the request.
 // It returns a channel on which the response is returned.
