@@ -22,6 +22,7 @@ func main() {
 	d.RemoteAddr = c.Servers[0]
 	d.Dial("udp")
 	for _, a := range addresses(d, os.Args[0]) {
+//                d.Close()     -- interesting
 		d.RemoteAddr = a
 		d.Dial("udp") // Redial TODO(mg)
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}

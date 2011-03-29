@@ -8,7 +8,6 @@ package dns
 
 import (
 	"os"
-	"net"
 )
 
 // Query is used to communicate with the Query* functions.
@@ -44,14 +43,9 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 	for {
 		select {
 		case q := <-in:
-			c, err := net.Dial(n, q.Conn.LocalAddr, q.Conn.RemoteAddr)
+			err := q.Conn.Dial(n)
 			if err != nil {
 				out <- Query{Err: err}
-			}
-			if n == "tcp" {
-				q.Conn.SetTCPConn(c.(*net.TCPConn), nil)
-			} else {
-				q.Conn.SetUDPConn(c.(*net.UDPConn), nil)
 			}
 			if f == nil {
 				go QueryDefault(q.Conn, q.Msg, out)
@@ -65,6 +59,7 @@ func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
 
 // Default Handler when none is given.
 func QueryDefault(d *Conn, m *Msg, q chan Query) {
+        defer d.Close()
         buf, ok := m.Pack()
         if !ok {
                 q <- Query{nil, d, ErrPack}

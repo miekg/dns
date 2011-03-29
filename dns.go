@@ -1,7 +1,7 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// Extended and bugfixes by Miek Gieben
+// Extended and bugfixes by Miek Gieben.
 
 // Package dns implements a full featured interface to the DNS.
 // The package allows complete control over what is send out to the DNS. 
@@ -16,7 +16,7 @@
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 //
-// A lot of functions take a dns message. Use pattern for creating one:
+// In the DNS messages are exchanged. Use pattern for creating one:
 //
 //      message := new(Msg)
 //      // Create message with the desired options.
@@ -31,6 +31,7 @@
 //      dnsconn.RemoteAddr = "127.0.0.1:53"
 //      dnsconn.Dial("udp")             // "tcp" for tcp connection.
 //      inmessage, err := SimpleQuery(dnsconn, message)
+//      dnsconn.Close()
 //
 // (Asynchronize) querying the DNS is also supported. The Query structure
 // is used for communicating with the Query* functions.
