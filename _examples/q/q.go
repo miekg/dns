@@ -25,8 +25,8 @@ func main() {
 	}
 
         // Need to think about it... Config
-        server, _ := dns.FromFile("/etc/resolv.conf")
-	nameserver := "@" + server[0]
+        c, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+	nameserver := "@" + c.Servers[0]
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
 	var qname []string
