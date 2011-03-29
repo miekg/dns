@@ -13,16 +13,14 @@
 //         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //         r.TXT = "This is the content of the TXT record"
 // 
-// The package dns supports querying, incoming/outgoing Axfr/Ixfr, TSIG, EDNS0,
-// dynamic updates, notifies and DNSSEC validation/signing.
+// The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
+// TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 //
 // A lot of functions take a dns message. Use pattern for creating one:
 //
 //      message := new(Msg)
-//
 //      // Create message with the desired options.
 //      message.MsgHdr.Recursion_desired = true
-//
 //      // Create room in for the question and set it.
 //      message.Question = make([]Question, 1)
 //      message.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
@@ -31,10 +29,11 @@
 //
 //      dnsconn := new(Conn)
 //      dnsconn.RemoteAddr = "127.0.0.1:53"
-//      dnsconn.Dial("udp")             // "tcp" for tcp connection
-//      in, err := SimpleQuery(dnsconn, message)
+//      dnsconn.Dial("udp")             // "tcp" for tcp connection.
+//      inmessage, err := SimpleQuery(dnsconn, message)
 //
-// (Asynchronize) querying the DNS is done by using the Conn structure. 
+// (Asynchronize) querying the DNS is also supported. The Query structure
+// is used for communicating with the Query* functions.
 // Basic use pattern for creating such a resolver:
 //
 //      in := make(chan Query)
