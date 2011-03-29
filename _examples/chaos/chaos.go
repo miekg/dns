@@ -20,11 +20,13 @@ func main() {
 	m.Question = make([]dns.Question, 1)
 	d := new(dns.Conn)
 	d.RemoteAddr = c.Servers[0]
-	d.Dial("udp")
 	for _, a := range addresses(d, os.Args[0]) {
-//                d.Close()     -- interesting
 		d.RemoteAddr = a
-		d.Dial("udp") // Redial TODO(mg)
+		if err := d.Dial("udp"); err != nil {
+			fmt.Printf("%v\n", err)
+			os.Exit(1)
+		}
+
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
 		in, _ := dns.QuerySimple(d, m)
 		if in != nil && in.Answer != nil {
@@ -43,6 +45,9 @@ func addresses(d *dns.Conn, name string) []string {
 	m.MsgHdr.RecursionDesired = true //only set this bit
 	m.Question = make([]dns.Question, 1)
 	var ips []string
+
+	d.Dial("udp")
+	defer d.Close()
 
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeA, dns.ClassINET}
 	in, err := dns.QuerySimple(d, m)
@@ -68,9 +73,8 @@ func addresses(d *dns.Conn, name string) []string {
 	if in.Rcode != dns.RcodeSuccess {
 		return ips
 	}
-	// Stuff must be in the answer section
 	for _, a := range in.Answer {
-		ips = append(ips, a.(*dns.RR_AAAA).AAAA.String()+":53")
+		ips = append(ips, "["+a.(*dns.RR_AAAA).AAAA.String()+"]:53")
 	}
 	return ips
 }

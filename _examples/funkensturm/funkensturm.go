@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-// Define a slice of channels for the resolver for sending the queries somewhere else.
-var qr []*dns.Resolver
+// Define a slice of conn for sending queries on
+var qr []*dns.Conn
 
 // The configuration of Funkensturm
 var f *Funkensturm
@@ -152,17 +152,6 @@ func reply(c *dns.Conn, i *dns.Msg) {
 	}
 }
 
-// split 127.0.0.1:53 into components
-// TODO  IPv6
-func splitAddrPort(s string) (a, p string) {
-	items := strings.Split(s, ":", 2)
-        a = items[0]
-        if len(items) > 2 {
-                p = items[1]
-        }
-	return
-}
-
 func tcp(addr string, e chan os.Error) {
         err := dns.ListenAndServeTCP(addr, reply)
 	e <- err
@@ -188,11 +177,9 @@ func main() {
 	resolvers := strings.Split(*rserver, ",", -1)
 	qr = make([]*dns.Resolver, len(resolvers))
 	for i, ra := range resolvers {
-		addr, port := splitAddrPort(ra)
-		r := new(dns.Resolver)
-		r.Servers = []string{addr}
-		r.Port = port
-		qr[i] = r
+		d := new(dns.Conn)
+		d.RemoteAddr = addr
+		qr[i] = d
 	}
 
 	f = funkensturm()
