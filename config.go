@@ -15,21 +15,32 @@ import (
 	"net"
 )
 
+// Wrap the contents of the /etc/resolv.conf.
+type ClientConfig struct {
+        Servers  []string            // servers to use
+        Search   []string            // suffixes to append to local name
+        Port     string              // what port to use
+        Ndots    int                 // number of dots in name to trigger absolute lookup
+        Timeout  int                 // seconds before giving up on packet
+        Attempts int                 // lost packets before giving up on server
+}
+
 // See resolv.conf(5) on a Linux machine.
 // Parse a /etc/resolv.conf like file. For only
 // only return the nameservers with :53 added as a slice.
-func FromFile(conf string) ([]string, os.Error) {
+func ClientConfigFromFile(conf string) (*ClientConfig, os.Error) {
 	file, err := os.Open(conf, os.O_RDONLY, 0)
 	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+        c := new(ClientConfig)
 	b := bufio.NewReader(file)
-	servers := make([]string, 3)[0:0] // small, but the standard limit
-	search := make([]string, 0)
-	ndots := 1; var _ = ndots
-	timeout := 5; var _ = timeout
-	attempts := 2; var _ = attempts
+	c.Servers = make([]string, 3)[0:0] // small, but the standard limit
+	c.Search = make([]string, 0)
+	c.Ndots = 1
+	c.Timeout = 5
+	c.Attempts = 2
 	for line, ok := b.ReadString('\n'); ok == nil; line, ok = b.ReadString('\n') {
 		f := strings.Fields(line)
 		if len(f) < 1 {
@@ -37,7 +48,7 @@ func FromFile(conf string) ([]string, os.Error) {
 		}
 		switch f[0] {
 		case "nameserver": // add one name server
-			a := servers
+			a := c.Servers
 			n := len(a)
 			if len(f) > 1 && n < cap(a) {
 				// One more check: make sure server name is
@@ -51,22 +62,22 @@ func FromFile(conf string) ([]string, os.Error) {
 				case 4:
 					a = a[0 : n+1]
 					a[n] = name + ":53"
-					servers = a
+					c.Servers = a
 				}
 			}
 
 		case "domain": // set search path to just this domain
 			if len(f) > 1 {
-				search = make([]string, 1)
-				search[0] = f[1]
+				c.Search = make([]string, 1)
+				c.Search[0] = f[1]
 			} else {
-				search = make([]string, 0)
+				c.Search = make([]string, 0)
 			}
 
 		case "search": // set search path to given servers
-			search = make([]string, len(f)-1)
-			for i := 0; i < len(search); i++ {
-				search[i] = f[i+1]
+			c.Search = make([]string, len(f)-1)
+			for i := 0; i < len(c.Search); i++ {
+				c.Search[i] = f[i+1]
 			}
 
 		case "options": // magic options
@@ -78,24 +89,24 @@ func FromFile(conf string) ([]string, os.Error) {
 					if n < 1 {
 						n = 1
 					}
-					ndots = n
+					c.Ndots = n
 				case len(s) >= 8 && s[:8] == "timeout:":
 					n, _ := strconv.Atoi(s[8:])
 					if n < 1 {
 						n = 1
 					}
-					timeout = n
+					c.Timeout = n
 				case len(s) >= 8 && s[:9] == "attempts:":
 					n, _ := strconv.Atoi(s[9:])
 					if n < 1 {
 						n = 1
 					}
-					attempts = n
+					c.Attempts = n
 				case s == "rotate":
 					/* not imp */
 				}
 			}
 		}
 	}
-	return servers, nil
+	return c, nil
 }

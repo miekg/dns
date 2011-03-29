@@ -14,8 +14,9 @@ func main() {
                 os.Exit(1)
         }
 	d := new(dns.Conn)
-        ser, err := dns.FromFile("/etc/resolv.conf")
-        d.RemoteAddr = ser[0]
+        c, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+        // Errorchecking
+        d.RemoteAddr = c.Servers[0]
 
         m := new(dns.Msg)
         m.Id = dns.Id()
