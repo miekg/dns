@@ -38,7 +38,7 @@ type Query struct {
 
 // Initialize the QueryRequest and QueryReply channels. This
 // is only required when async. queries are wanted.
-func QueryInitChannels() {
+func InitQueryChannels() {
 	QueryRequest = make(chan *Query)
 	QueryReply = make(chan *Query)
 }

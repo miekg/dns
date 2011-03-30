@@ -79,7 +79,7 @@ Flags:
 		go query("udp", err)
 	}
 
-	dns.QueryInitChannels()
+	dns.InitQueryChannels()
 	// Start the querier in a closure
 	go func() {
 		for _, v := range qname {

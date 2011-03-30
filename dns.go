@@ -42,7 +42,7 @@
 //              err := QueryAndServeUDP(qhandle)
 //              e <- err
 //      }
-//      QueryInitChannels()
+//      InitQueryChannels()
 //      err := make(chan os.Error)
 //      go query(err)
 //
@@ -103,35 +103,35 @@ type Conn struct {
 	// The current TCP connection.
 	TCP *net.TCPConn
 
-	// The remote side of open the connection.
+	// The remote side of the open connection.
 	Addr net.Addr
 
-	// The remote port number of open the connection.
+	// The remote port number of the open connection.
 	Port int
 
 	// If TSIG is used, this holds all the information.
-        // If unused is must be nil.
+        // If unused it must be nil.
 	Tsig *Tsig
 
-	// Timeout in sec before giving up on a connection.
+	// Timeout in seconds before giving up on a connection.
 	Timeout int
 
-	// Number of attempts to try to Read/Write from/to a
-	// connection.
+	// Number of attempts to try to Read/Write from/to a connection.
 	Attempts int
 
-        // The remote addr which is going to be dialed.
+        // The remote addr which is going to be dialed (and queried).
         RemoteAddr string
 
-        // The local addr used for outgoing queries
+        // The local addr used for outgoing queries.
         LocalAddr  string
 
-        // Mangle the packet before writing it be feeding
-        // it through this function.
+        // Mangle the packet before writing by feeding it through this function.
         Mangle func([]byte) []byte
 }
 
-// Dial, with minimum filled out Conn (RemoteAddr and LocalAddr)
+// Dial the remote side with a minimum filled out Conn. Only
+// Conn.RemoteAddr is absolutely needed.
+// The string n is used to select the transport and it either "udp" or "tcp".
 func (d *Conn) Dial(n string) os.Error {
         c, err := net.Dial(n, d.LocalAddr, d.RemoteAddr)
         if err != nil {
@@ -173,8 +173,8 @@ func Dial(n, laddr, raddr string) (*Conn, os.Error) {
         return d, nil
 }
 
-// Fill in a Conn from a TCPConn. If a is nil, the 
-// remote address in the connection is used.
+// Fill in a Conn from a TCPConn. If a is nil, the remote address in the 
+// connection is used.
 func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
         d.TCP = l
         d.UDP = nil
@@ -186,8 +186,8 @@ func (d *Conn) SetTCPConn(l *net.TCPConn, a net.Addr) {
         d.Port = d.Addr.(*net.TCPAddr).Port
 }
 
-// Fill in a Conn from a TCPConn. If a is nil, the 
-// remote address in the connection is used.
+// Fill in a Conn from a TCPConn. If a is nil, the remote address in the 
+// connection is used.
 func (d *Conn) SetUDPConn(l *net.UDPConn, a net.Addr) {
         d.TCP = nil
         d.UDP = l
@@ -382,8 +382,8 @@ func (d *Conn) Write(p []byte) (n int, err os.Error) {
 	return
 }
 
-// Close closes the connection in d. Possible
-// errors are returned in err; otherwise it is nil.
+// Close closes the connection in d. Possible errors are returned in 
+// err; otherwise it is nil.
 func (d *Conn) Close() (err os.Error) {
 	if d.UDP != nil && d.TCP != nil {
 		return ErrConn
@@ -397,14 +397,12 @@ func (d *Conn) Close() (err os.Error) {
 	return
 }
 
-// SetTimeout sets the timeout of the socket
-// that is contained in d.
+// SetTimeout sets the timeout of the socket that is contained in d.
 func (d *Conn) SetTimeout() (err os.Error) {
-	var sec int64
 	if d.UDP != nil && d.TCP != nil {
 		return ErrConn
 	}
-	sec = int64(d.Timeout)
+	sec := int64(d.Timeout)
 	if sec == 0 {
 		sec = 1
 	}
@@ -418,8 +416,7 @@ func (d *Conn) SetTimeout() (err os.Error) {
 }
 
 // Exchange combines a Write and a Read.
-// First the request is written to d and then it waits
-// for a reply with Read. 
+// First the request is written to d and then it waits for a reply.
 // If nosend is true, the write is skipped.
 func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error) {
 	var n int
@@ -438,9 +435,8 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 	return
 }
 
-// ExchangeMsg combines a WriteMSg and a ReadMsg.
-// First the request is written to d and then it waits
-// for a reply with ReadMsg. 
+// ExchangeMsg combines a WriteMsg and a ReadMsg.
+// First the request is written to d and then it waits for a reply.
 // If nosend is true, the write is skipped.
 func (d *Conn) ExchangeMsg(request *Msg, nosend bool) (reply *Msg, err os.Error) {
 	if !nosend {
@@ -533,7 +529,8 @@ func (h *RR_Header) String() string {
 }
 
 // Return the number of labels in a domain name.
-func LabelCount(a string) (c uint8) {
+// Need to add these kind of function in a structured way. TODO(mg)
+func labelCount(a string) (c uint8) {
 	// walk the string and count the dots
 	// except when it is escaped
 	esc := false

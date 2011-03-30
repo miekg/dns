@@ -26,8 +26,8 @@ type ClientConfig struct {
 }
 
 // See resolv.conf(5) on a Linux machine.
-// Parse a /etc/resolv.conf like file. For only
-// only return the nameservers with :53 added as a slice.
+// Parse a /etc/resolv.conf like file and return a filled out ClientConfig. Note
+// that all nameservers will have the port number appendend (:53)
 func ClientConfigFromFile(conf string) (*ClientConfig, os.Error) {
 	file, err := os.Open(conf, os.O_RDONLY, 0)
 	defer file.Close()
