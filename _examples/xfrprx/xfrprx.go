@@ -74,6 +74,7 @@ func main() {
 	err := make(chan os.Error)
 
 	// Outgoing queries
+        dns.QueryInitChannels()
 	go query(err, "tcp")
         go query(err, "udp")
 

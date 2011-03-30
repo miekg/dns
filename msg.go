@@ -45,7 +45,8 @@ var (
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
         ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
-        ErrHandle    os.Error = &Error{Error: "handle is nill"}
+        ErrHandle    os.Error = &Error{Error: "handle is nil"}
+        ErrChan      os.Error = &Error{Error: "channel is nil"}
 )
 
 // A manually-unpacked version of (id, bits).

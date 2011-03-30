@@ -18,29 +18,36 @@ var QueryReply chan Query
 // Query is used to communicate with the Query* functions.
 type Query struct {
 	// The query message. 
-	Msg *Msg
+	Query *Msg
+        // The reply message.
+        Reply *Msg
 	// A Conn. Its only required to fill out Conn.RemoteAddr.
 	// Optionally you may set Conn.Tsig if TSIG is required.
 	// The rest of the structure is filled by the Query functions.
 	Conn *Conn
-        //
-        Err os.Error
+	//
+	Err os.Error
 }
+
+// Initialize the QueryRequest and QueryReply
+// channels.
+func QueryInitChannels() {
+	QueryRequest = make(chan Query)
+	QueryReply = make(chan Query)
+}
+
 
 // QueryAndServeTCP listens for incoming requests on channel in and
 // then calls f.
 // The function f is executed in a seperate goroutine and performs the actual
 // TCP query.
 func QueryAndServeTCP(f func(*Conn, *Msg)) os.Error {
-        if f == nil {
-                return ErrHandle
-        }
-        if QueryReply == nil {
-                QueryReply = make(chan Query)
-        }
-        if QueryRequest == nil {
-                QueryRequest = make(chan Query)
-        }
+	if f == nil {
+		return ErrHandle
+	}
+	if QueryReply == nil || QueryRequest == nil {
+		return ErrChan
+	}
 	query("tcp", f)
 	return nil
 }
@@ -50,52 +57,37 @@ func QueryAndServeTCP(f func(*Conn, *Msg)) os.Error {
 // The function f is executed in a seperate goroutine and performs the actual
 // UDP query.
 func QueryAndServeUDP(f func(*Conn, *Msg)) os.Error {
-        if f == nil {
-                return ErrHandle
-        }
-        if QueryReply == nil {
-                QueryReply = make(chan Query)
-                println("Creating channel reply")
-        }
-        if QueryRequest == nil {
-                QueryRequest = make(chan Query)
-                println("Creating channel request")
-        }
+	if f == nil {
+		return ErrHandle
+	}
+	if QueryReply == nil || QueryRequest == nil {
+		return ErrChan
+	}
 	query("udp", f)
 	return nil
 }
 
 func query(n string, f func(*Conn, *Msg)) {
-        println("in query")
 	for {
 		select {
 		case q := <-QueryRequest:
-                        println("recveived request")
 			err := q.Conn.Dial(n)
 			if err != nil {
 				QueryReply <- Query{Err: err}
 			}
-			go f(q.Conn, q.Msg)
+			go f(q.Conn, q.Query)
 		}
 	}
 	panic("not reached")
 }
 
 // Simple query function that waits for and returns the reply.
-func QuerySimple(d *Conn, m *Msg) (*Msg, os.Error) {
-	buf, ok := m.Pack()
-	if !ok {
-		return nil, ErrPack
-	}
-	// Dialing should happen in the client
-
-	ret, err := d.Exchange(buf, false)
-	if err != nil {
-		return nil, err
-	}
-	o := new(Msg)
-	if ok := o.Unpack(ret); !ok {
-		return nil, ErrUnpack
-	}
-	return o, nil
+func QuerySimple(n string, d *Conn, m *Msg) (*Msg, os.Error) {
+        err := d.Dial(n)
+        if err != nil {
+                return nil, err
+        }
+        o, err := d.ExchangeMsg(m, false)
+        d.Close()
+	return o, err
 }

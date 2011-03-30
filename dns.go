@@ -16,12 +16,13 @@
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 //
+// The patterns described here are cumulative: earlier declared variables
+// are reused.
 // In the DNS messages are exchanged. Use pattern for creating one:
 //
 //      message := new(Msg)
-//      // Create message with the desired options.
+//      // Set the desired options.
 //      message.MsgHdr.Recursion_desired = true
-//      // Create room in for the question and set it.
 //      message.Question = make([]Question, 1)
 //      message.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
 //
@@ -29,32 +30,36 @@
 //
 //      dnsconn := new(Conn)
 //      dnsconn.RemoteAddr = "127.0.0.1:53"
-//      dnsconn.Dial("udp")             // "tcp" for tcp connection.
-//      inmessage, err := SimpleQuery(dnsconn, message)
-//      dnsconn.Close()
+//      inmessage, err := SimpleQuery("udp", dnsconn, message)  // or "tcp".
 //
-// (Asynchronize) querying the DNS is also supported. The Query structure
+// (Asynchronized) querying the DNS is supported. The Query structure
 // is used for communicating with the Query* functions.
 // Basic use pattern for creating such a resolver:
 //
-//      in := make(chan Query)
-//      out := QueryAndServeUDP(in, nil)      // nil means use QueryDefault()
-//      dnsconn := new(Conn)
-//      dnsconn.RemoteAddr = "8.8.8.8:53"
+//      func qhandle(*Conn, *Msg) { /* handle query */ }
+//      
+//      func query(e chan os.Error) {
+//              err := QueryAndServeUDP(qhandle)
+//              e <- err
+//      }
+//      QueryInitChannels()
+//      err := make(chan os.Error)
+//      go query(err)
 //
-//      in <- Query{Msg: message, Conn: dnscon}
-//      reply := <-out 
+//      QueryRequest <- Query{Query: message, Conn: dnsconn}
+//      /* ... later ... */
+//      reply := <-QueryReply
 //
 // Server side programming is also supported also by using a Conn structure.
 // Basic use pattern for creating an UDP DNS server:
 //
-//      func handle(*Conn, *Msg, ...interface{}) { /* handle request */ }
+//      func handle(*Conn, *Msg) { /* handle request */ }
 //
 //      func listen(addr string, e chan os.Error) {
 //            err := ListenAndServeUDP(addr, handle)
 //            e <- err
 //      }
-//      err := make(chan os.Error)
+//
 //      go listen("127.0.0.1:8053", err)
 //
 package dns
