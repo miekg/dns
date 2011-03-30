@@ -60,7 +60,7 @@ func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	case TypeIXFR:
 		//                d.ixfrWrite(q, m)
         default:
-                e <- &Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
+                e <- &Error{Error: "Xfr Qtype not recognized"}
                 close(m)
 	}
 }
@@ -149,6 +149,7 @@ func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
 	out.Answer = out.Answer[:i+1]
+        println("Sending", out.String())
 	err := d.WriteMsg(out)
 	if err != nil {
 		e <- err
@@ -240,8 +241,8 @@ func checkXfrSOA(in *Msg, first bool) bool {
 
 // Send the answer section to the channel
 func sendMsg(in *Msg, c chan *Xfr, nosoa bool) {
-	x := &Xfr{Add: true}
 	for k, r := range in.Answer {
+	        x := &Xfr{Add: true}
 		if nosoa && k == len(in.Answer)-1 {
 			continue
 		}

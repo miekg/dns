@@ -13,15 +13,13 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 			fmt.Printf("Matchies current zone\n")
                         if !Zone.correct {
                                 fmt.Printf("Zone was not deemed correct\n")
-                                // Deny it
-                                d.Close()
                                 return nil
+                        } else {
+                                fmt.Printf("Zone was correct\n")
                         }
 
 			m := make(chan *dns.Xfr)
 			e := make(chan os.Error)
-			defer close(m)
-			defer close(e)
 			go d.XfrWrite(i, m, e)
 			for j := 0; j < Zone.size; j++ {
 				select {
@@ -30,7 +28,10 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 					return err
 				}
 			}
-		}
+			close(m)
+		} else {
+                        fmt.Printf("No matching zone found\n")
+                }
 	}
 	return nil
 }
@@ -70,19 +71,22 @@ func handleXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
 	Zone.name = i.Question[0].Name
 	j := 0
 	for x := range m {
-		fmt.Printf("%v %v\n", x.Add, x.RR)
 		Zone.rrs[j] = x.RR
 		j++
 	}
+        fmt.Printf("Success retrieved %s\n", Zone.name)
 	Zone.size = j
 	return nil, nil
 }
 
-func sendNotify(addr, zone string) {
+func handleNotifyOut(addr string) {
+        if Zone.name == "" || !Zone.correct {
+                return
+        }
         d := new(dns.Conn)
         d.RemoteAddr = addr
         m := new(dns.Msg)
-        m.SetNotify(zone)
-        println("Sending notifies: zone is ok")
+        m.SetNotify(Zone.name)
+        fmt.Printf("Sending notifies: zone is ok\n")
         dns.QueryRequest <- &dns.Query{Conn: d, Query: m}
 }

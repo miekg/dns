@@ -33,13 +33,12 @@ func handle(d *dns.Conn, i *dns.Msg) {
 		return
 	}
 	handleNotify(d, i)
-
-        if Zone.name != "" {
-                // We have received something, assume ok for now
-                Zone.correct = true
-                sendNotify("127.0.0.1:53", Zone.name)
-        }
+//        handleNotifyOut("127.0.0.1:53") // 
 	handleXfrOut(d, i)
+        if Zone.name != "" {
+                // We have transfered a zone and can check it. For now assume ok.
+                Zone.correct = true
+        }
 }
 
 func qhandle(d *dns.Conn, i *dns.Msg) {
