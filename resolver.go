@@ -10,37 +10,42 @@ import (
 	"os"
 )
 
-// Request a query by sending to this channel.
-var QueryRequest chan Query // *Query
-// Listen for replies on this channel.
-var QueryReply chan Query
+// These channels are global so that all parts of the application
+// can send queries (or even pick them up)
+var (
+        // Request an async query by sending to this channel.
+        QueryRequest chan Query
+        // Listen for replies to previously sent queries on this channel.
+        QueryReply chan Query
+)
 
 // Query is used to communicate with the Query* functions.
 type Query struct {
-	// The query message. 
+	// The query message which is to be send.
 	Query *Msg
-        // The reply message.
+
+        // Any reply message that came back from the wire.
         Reply *Msg
-	// A Conn. Its only required to fill out Conn.RemoteAddr.
+
+	// It is only required to fill out Conn.RemoteAddr.
 	// Optionally you may set Conn.Tsig if TSIG is required.
 	// The rest of the structure is filled by the Query functions.
 	Conn *Conn
-	//
+
+	// If there are any errors there Err is not nil
 	Err os.Error
 }
 
-// Initialize the QueryRequest and QueryReply
-// channels.
+// Initialize the QueryRequest and QueryReply channels. This
+// is only required when async. queries are wanted.
 func QueryInitChannels() {
 	QueryRequest = make(chan Query)
 	QueryReply = make(chan Query)
 }
 
-
-// QueryAndServeTCP listens for incoming requests on channel in and
-// then calls f.
+// QueryAndServeTCP listens for incoming requests on channel in and then calls f.
 // The function f is executed in a seperate goroutine and performs the actual
-// TCP query.
+// TCP query and should return the result on the QueryReply channel.
 func QueryAndServeTCP(f func(*Conn, *Msg)) os.Error {
 	if f == nil {
 		return ErrHandle
@@ -52,10 +57,9 @@ func QueryAndServeTCP(f func(*Conn, *Msg)) os.Error {
 	return nil
 }
 
-// QueryAndServeUDP listens for incoming requests on channel in and
-// then calls f.
+// QueryAndServeUDP listens for incoming requests on channel in and then calls f.
 // The function f is executed in a seperate goroutine and performs the actual
-// UDP query.
+// UDP query and should return the result on the QueryReply channel.
 func QueryAndServeUDP(f func(*Conn, *Msg)) os.Error {
 	if f == nil {
 		return ErrHandle
