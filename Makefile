@@ -17,7 +17,6 @@ GOFILES=\
 	nsec3.go \
 	resolver.go\
 	server.go \
-	string.go\
 	tsig.go\
 	types.go\
 	xfr.go\
