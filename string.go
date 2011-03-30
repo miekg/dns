@@ -14,7 +14,7 @@ const (
 
 // Convert a Ttl to a value. Supported values: 'm' for minutes, 'h' for hours
 // 'w' for week and 'd' for days, '1d1d' is legal and returns the value of '2d'.
-func StringToSeconds(ttl string) (sec uint32, ok bool) {
+func stringToSeconds(ttl string) (sec uint32, ok bool) {
 	num := ""
 	for _, k := range ttl {
 		if unicode.IsDigit(k) {
@@ -42,7 +42,7 @@ func StringToSeconds(ttl string) (sec uint32, ok bool) {
 }
 
 // Convert a value to a (string) Ttl. Reverse of StringToSeconds()
-func SecondsToString(val uint32) (str string) {
+func secondsToString(val uint32) (str string) {
 	mod := val / w
 	if mod > 0 {
 		str += strconv.Itoa(int(mod)) + "w"
