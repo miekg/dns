@@ -1,6 +1,7 @@
 package dns
 
-// Everything is assumed in the ClassINET class
+// Everything is assumed in the ClassINET class. If
+// you need other classes you are on your own.
 
 // Create a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {

@@ -10,132 +10,92 @@ import (
 	"os"
 )
 
+// Request a query by sending to this channel.
+var QueryRequest chan Query // *Query
+// Listen for replies on this channel.
+var QueryReply chan Query
+
 // Query is used to communicate with the Query* functions.
 type Query struct {
 	// The query message. 
 	Msg *Msg
 	// A Conn. Its only required to fill out Conn.RemoteAddr.
-        // Optionally you may set Conn.Tsig if TSIG is required.
+	// Optionally you may set Conn.Tsig if TSIG is required.
 	// The rest of the structure is filled by the Query functions.
 	Conn *Conn
-	// Any error when querying is returned in Err. The caller
-	// should just set this to nil.
-	Err os.Error
-        // Query time in here?
+        //
+        Err os.Error
 }
 
-// QueryUDP handles one query. It reads an incoming request from
-// the in channel. The function f is executed in a seperate
-// goroutine and performs the actual UDP query.
-func QueryUDP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
-	query("udp", in, out, f)
+// QueryAndServeTCP listens for incoming requests on channel in and
+// then calls f.
+// The function f is executed in a seperate goroutine and performs the actual
+// TCP query.
+func QueryAndServeTCP(f func(*Conn, *Msg)) os.Error {
+        if f == nil {
+                return ErrHandle
+        }
+        if QueryReply == nil {
+                QueryReply = make(chan Query)
+        }
+        if QueryRequest == nil {
+                QueryRequest = make(chan Query)
+        }
+	query("tcp", f)
+	return nil
 }
 
-// QueryTCP handles one query. It reads an incoming request from
-// the in channel. The function f is executed in a seperate
-// goroutine and performas the actual TCP query.
-func QueryTCP(in, out chan Query, f func(*Conn, *Msg, chan Query)) {
-	query("tcp", in, out, f)
+// QueryAndServeUDP listens for incoming requests on channel in and
+// then calls f.
+// The function f is executed in a seperate goroutine and performs the actual
+// UDP query.
+func QueryAndServeUDP(f func(*Conn, *Msg)) os.Error {
+        if f == nil {
+                return ErrHandle
+        }
+        if QueryReply == nil {
+                QueryReply = make(chan Query)
+                println("Creating channel reply")
+        }
+        if QueryRequest == nil {
+                QueryRequest = make(chan Query)
+                println("Creating channel request")
+        }
+	query("udp", f)
+	return nil
 }
 
-// helper function.
-func query(n string, in, out chan Query, f func(*Conn, *Msg, chan Query)) {
+func query(n string, f func(*Conn, *Msg)) {
+        println("in query")
 	for {
 		select {
-		case q := <-in:
+		case q := <-QueryRequest:
+                        println("recveived request")
 			err := q.Conn.Dial(n)
 			if err != nil {
-				out <- Query{Err: err}
+				QueryReply <- Query{Err: err}
 			}
-			if f == nil {
-				go QueryDefault(q.Conn, q.Msg, out)
-			} else {
-				go f(q.Conn, q.Msg, out)
-			}
+			go f(q.Conn, q.Msg)
 		}
 	}
 	panic("not reached")
 }
 
-// Default Handler when none is given.
-func QueryDefault(d *Conn, m *Msg, q chan Query) {
-        defer d.Close()
-        buf, ok := m.Pack()
-        if !ok {
-                q <- Query{nil, d, ErrPack}
-        }
-        ret, err := d.Exchange(buf, false)
-        if err != nil {
-                q <- Query{nil, d, err}
-        }
-        out := new(Msg)
-        if ok1 := out.Unpack(ret); !ok1 {
-                q <- Query{nil, d, ErrUnpack}
-        }
-        q <- Query{out, d, nil}
-        return
-}
-
 // Simple query function that waits for and returns the reply.
 func QuerySimple(d *Conn, m *Msg) (*Msg, os.Error) {
-        buf, ok := m.Pack()
-        if !ok {
-                return nil, ErrPack
-        }
-        // Dialing should happen in the client
-
-        ret, err := d.Exchange(buf, false)
-        if err != nil {
-                return nil, err
-        }
-        o := new(Msg)
-        if ok := o.Unpack(ret); !ok {
-                return nil, ErrUnpack
-        }
-        return o, nil
-}
-
-// QueryAndServeTCP listens for incoming requests on channel in and
-// then calls QueryTCP with f to the handle the request.
-// It returns a channel on which the response is returned.
-func QueryAndServeTCP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
-	out := make(chan Query)
-	go QueryTCP(in, out, f)
-	return out
-}
-
-// QueryAndServeUDP listens for incoming requests on channel in and
-// then calls QueryUDP with f to the handle the request.
-// It returns a channel on which the response is returned.
-func QueryAndServeUDP(in chan Query, f func(*Conn, *Msg, chan Query)) chan Query {
-	out := make(chan Query)
-	go QueryUDP(in, out, f)
-	return out
-}
-
-/*      // alg for querying a list of servers, not sure if we going to keep it
-	for i := 0; i < len(res.Servers); i++ {
-		var d *Conn
-		server := res.Servers[i] + ":" + port
-		t := time.Nanoseconds()
-		if res.Tcp {
-			d, err = Dial("tcp", "", server)
-			if err != nil {
-				continue
-			}
-		} else {
-			d, err = Dial("udp", "", server)
-			if err != nil {
-				continue
-			}
-		}
-		inb, err = d.Exchange(sending, false)
-		if err != nil {
-			continue
-		}
-		in.Unpack(inb) // Discard error.
-		res.Rtt[server] = time.Nanoseconds() - t
-		d.Close()
-		break
+	buf, ok := m.Pack()
+	if !ok {
+		return nil, ErrPack
 	}
-*/
+	// Dialing should happen in the client
+
+	ret, err := d.Exchange(buf, false)
+	if err != nil {
+		return nil, err
+	}
+	o := new(Msg)
+	if ok := o.Unpack(ret); !ok {
+		return nil, ErrUnpack
+	}
+	return o, nil
+}

@@ -16,8 +16,10 @@ Todo:
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * HIP RR (needs list of domain names, need slice stuff for that)
 * Is subdomain, is glue helper functions for this kind of stuff
+* Make QuerySimple even simpler??
 
 Issues:
+* FunkenSturm is kaput.
 * Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in

@@ -12,7 +12,7 @@ import (
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Request DNSSEC records")
 	var short *bool = flag.Bool("short", false, "Abbriate long DNSKEY and RRSIG RRs")
-	var port *string = flag.String("port", "53", "Set the query port")
+	//var port *string = flag.String("port", "53", "Set the query port")
 	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")
 	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
@@ -24,8 +24,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-        // Need to think about it... Config
-        c, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+	// Need to think about it... Config
+	c, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	nameserver := "@" + c.Servers[0]
 	qtype := uint16(dns.TypeA)      // Default qtype
 	qclass := uint16(dns.ClassINET) // Default qclass
@@ -70,9 +70,11 @@ Flags:
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 
-        d := new(dns.Conn)
-        d.RemoteAddr = nameserver + ":" + *port
-        d.Attempts = 1
+	// Port stuff does not work
+	d := new(dns.Conn)
+	//	d.RemoteAddr = nameserver + ":" + *port
+	d.RemoteAddr = nameserver // works with /etc/resolv.conf
+	d.Attempts = 1
 
 	m := new(dns.Msg)
 	m.MsgHdr.Authoritative = *aa
@@ -92,33 +94,63 @@ Flags:
 		m.Extra[0] = opt
 	}
 
-        in := make(chan dns.Query)
-        var out chan dns.Query
-        if *tcp {
-                out = dns.QueryAndServeTCP(in, nil)
-        } else {
-                out = dns.QueryAndServeUDP(in, nil)
-        }
+	err := make(chan os.Error)
+	if *tcp {
+		go query(err, "tcp")
+	} else {
+		go query(err, "udp")
+	}
 
-	for _, v := range qname {
-                m.Question[0] = dns.Question{v, qtype, qclass}
-		m.Id = dns.Id()
-                in <- dns.Query{Msg: m, Conn: d}
+	dns.QueryReply = make(chan dns.Query)
+	dns.QueryRequest = make(chan dns.Query)
+	// Start the quering in a closure
+	go func() {
+		for _, v := range qname {
+			m.Question[0] = dns.Question{v, qtype, qclass}
+			m.Id = dns.Id()
+			dns.QueryRequest <- dns.Query{Msg: m, Conn: d}
+			println("querying")
+		}
+	}()
 
-                r := <-out
-
-		if r.Msg != nil {
-			if r.Msg.Id != m.Id {
-				fmt.Printf("Id mismatch\n")
+        i :=0
+	for {
+		select {
+		case r := <-dns.QueryReply:
+			if r.Msg != nil {
+				if r.Msg.Id != m.Id {
+					fmt.Printf("Id mismatch\n")
+				}
+				if *short {
+					r.Msg = shortMsg(r.Msg)
+				}
+				fmt.Printf("%v", r.Msg)
+			} else {
+				fmt.Printf("%v\n", r.Err.String())
 			}
-			if *short {
-				r.Msg = shortMsg(r.Msg)
-			}
-			fmt.Printf("%v", r.Msg)
-		} else {
-			fmt.Printf("%v\n", r.Err.String())
+                default:
+                        
 		}
 	}
+}
+
+func query(e chan os.Error, tcp string) {
+	switch tcp {
+	case "tcp":
+		err := dns.QueryAndServeTCP(qhandle)
+		e <- err
+	case "udp":
+		err := dns.QueryAndServeUDP(qhandle)
+		e <- err
+	}
+	return
+}
+
+// reply checking 'n stuff
+func qhandle(d *dns.Conn, i *dns.Msg) {
+	o, err := d.ExchangeMsg(i, false)
+	dns.QueryReply <- dns.Query{Msg: o, Conn: d, Err: err}
+	return
 }
 
 // Walk trough message and short Key data and Sig data

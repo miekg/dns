@@ -48,7 +48,7 @@
 // Server side programming is also supported also by using a Conn structure.
 // Basic use pattern for creating an UDP DNS server:
 //
-//      func handle(d *Conn, m *Msg) { /* handle request */ }
+//      func handle(*Conn, *Msg, ...interface{}) { /* handle request */ }
 //
 //      func listen(addr string, e chan os.Error) {
 //            err := ListenAndServeUDP(addr, handle)
@@ -431,6 +431,25 @@ func (d *Conn) Exchange(request []byte, nosend bool) (reply []byte, err os.Error
 	}
 	reply = reply[:n]
 	return
+}
+
+// ExchangeMsg combines a WriteMSg and a ReadMsg.
+// First the request is written to d and then it waits
+// for a reply with ReadMsg. 
+// If nosend is true, the write is skipped.
+func (d *Conn) ExchangeMsg(request *Msg, nosend bool) (reply *Msg, err os.Error) {
+	if !nosend {
+		err = d.WriteMsg(request)
+		if err != nil {
+			return nil, err
+		}
+	}
+        reply = new(Msg)
+	err = d.ReadMsg(reply)
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
 }
 
 type RR interface {
