@@ -8,9 +8,9 @@ import (
 
 func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 	if i.IsAxfr() {
-		fmt.Printf("Axfr request seen\n")
+		fmt.Printf("Incoming Axfr request seen\n")
 		if i.Question[0].Name == Zone.name {
-			fmt.Printf("Matching current zone\n")
+			fmt.Printf("Matchies current zone\n")
                         if !Zone.correct {
                                 fmt.Printf("Zone was not deemed correct\n")
                                 // Deny it
@@ -37,7 +37,7 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 
 func handleNotify(d *dns.Conn, i *dns.Msg) os.Error {
 	if i.IsNotify() {
-		fmt.Printf("Notify seen\n")
+		fmt.Printf("Incoming notify seen\n")
 		q := new(dns.Msg)
 		q.SetReply(i)
 		err := d.WriteMsg(q)
@@ -83,5 +83,6 @@ func sendNotify(addr, zone string) {
         d.RemoteAddr = addr
         m := new(dns.Msg)
         m.SetNotify(zone)
+        println("Sending notifies: zone is ok")
         dns.QueryRequest <- &dns.Query{Conn: d, Query: m}
 }

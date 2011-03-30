@@ -93,10 +93,10 @@ forever:
 			fmt.Printf("Error received, stopping: %s\n", e.String())
 			break forever
 		case <-signal.Incoming:
-			fmt.Printf("Signal received, stopping")
+			fmt.Printf("Signal received, stopping\n")
 			break forever
                 case q := <-dns.QueryReply:
-                        fmt.Printf("Query received: %v\n", q)
+                        fmt.Printf("Query received:\n%v\n", q.Reply)
 		}
 	}
 	close(err)
