@@ -16,6 +16,7 @@ type Xfr struct {
         // be considered to have faild.
 	Err os.Error
 }
+// todo maybe add the SOA serial too?
 
 // Perform an incoming Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If q's question
@@ -50,15 +51,16 @@ func (d *Conn) XfrRead(q *Msg, m chan *Xfr) {
 // Perform an outgoing Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
-// The message q is written to the connection in d.
-func (d *Conn) XfrWrite(q *Msg, m chan *Xfr) {
+// The actual records to send are given on the channel m. And errors
+// during transport are return on channel e.
+func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
-		d.axfrWrite(q, m)
+		d.axfrWrite(q, m, e)
 	case TypeIXFR:
 		//                d.ixfrWrite(q, m)
         default:
-                m <- &Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
+                e <- &Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
                 close(m)
 	}
 }
@@ -105,20 +107,22 @@ func (d *Conn) axfrRead(q *Msg, m chan *Xfr) {
 }
 
 // Just send the zone
-func (d *Conn) axfrWrite(q *Msg, m chan *Xfr) {
+func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	out := new(Msg)
 	out.Id = q.Id
 	out.Question = q.Question
-	out.Answer = make([]RR, 1001)
+	out.Answer = make([]RR, 1001) // TODO(mg) look at this number
 	out.MsgHdr.Response = true
 	out.MsgHdr.Authoritative = true
+        first := true
 	var soa *RR_SOA
 	i := 0
 	for r := range m {
 		out.Answer[i] = r.RR
 		if soa == nil {
 			if r.RR.Header().Rrtype != TypeSOA {
-				/* ... */
+				e <- ErrXfrSoa
+                                return
 			} else {
 				soa = r.RR.(*RR_SOA)
 			}
@@ -128,20 +132,26 @@ func (d *Conn) axfrWrite(q *Msg, m chan *Xfr) {
 			// Send it
 			err := d.WriteMsg(out)
 			if err != nil {
-				/* ... */
+				e <- err
+                                return
 			}
 			i = 0
 			// Gaat dit goed?
 			out.Answer = out.Answer[:0]
+                        if first {
+                                if d.Tsig != nil {
+                                        d.Tsig.TimersOnly = true
+                                }
+                                first = !first
+                        }
 		}
-		// TimersOnly foo for TSIG
 	}
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
 	out.Answer = out.Answer[:i+1]
 	err := d.WriteMsg(out)
 	if err != nil {
-		println(err.String())
+		e <- err
 	}
 }
 
