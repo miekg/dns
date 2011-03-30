@@ -87,7 +87,7 @@ func query(n string, f func(*Conn, *Msg)) {
 
 // QuerySimple performs a query and waits for the reply before
 // returning.
-func SimpleQuery(n string, d *Conn, m *Msg) (*Msg, os.Error) {
+func QuerySimple(n string, d *Conn, m *Msg) (*Msg, os.Error) {
         err := d.Dial(n)
         if err != nil {
                 return nil, err
