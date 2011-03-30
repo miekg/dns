@@ -37,7 +37,7 @@ func handle(d *dns.Conn, i *dns.Msg) {
 	handleXfrOut(d, i)
         if Zone.name != "" {
                 // We have transfered a zone and can check it. For now assume ok.
-                Zone.correct = true
+                Zone.correct = false
         }
 }
 

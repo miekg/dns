@@ -13,6 +13,7 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 			fmt.Printf("Matchies current zone\n")
                         if !Zone.correct {
                                 fmt.Printf("Zone was not deemed correct\n")
+                                d.WriteMsg(i)
                                 return nil
                         } else {
                                 fmt.Printf("Zone was correct\n")
@@ -31,6 +32,7 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 			close(m)
 		} else {
                         fmt.Printf("No matching zone found\n")
+                        d.WriteMsg(i)
                 }
 	}
 	return nil

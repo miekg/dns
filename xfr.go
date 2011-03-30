@@ -149,7 +149,6 @@ func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	// Everything is sent, only the closing soa is left.
 	out.Answer[i] = soa
 	out.Answer = out.Answer[:i+1]
-        println("Sending", out.String())
 	err := d.WriteMsg(out)
 	if err != nil {
 		e <- err
