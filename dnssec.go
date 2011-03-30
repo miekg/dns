@@ -158,7 +158,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Returns true when the signing went OK.
 // The Signature data in the RRSIG is filled by this method.
-// There is no check if rrset is a proper (RFC 2181) RRSet.
+// There is no check if RRSet is a proper (RFC 2181) RRSet.
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
 		return false

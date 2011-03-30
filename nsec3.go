@@ -11,8 +11,8 @@ type saltWireFmt struct {
 	Salt string "size-hex"
 }
 
-// Hash a string/label according to RFC5155
-func HashName(label string, ha int, iterations int, salt string) string {
+// Hash a string/label according to RFC5155.
+func hashName(label string, ha int, iterations int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
@@ -49,9 +49,10 @@ func HashName(label string, ha int, iterations int, salt string) string {
 	return unpackBase32(nsec3)
 }
 
-// Hash the ownername and the next owner name in
-// an NSEC3 record, use the parameters from the NSEC3 itself.
+// Hash the ownername and the next owner name in an NSEC3 record according
+// to RFC 5155.
+// Use the parameters from the NSEC3 itself.
 func (nsec3 *RR_NSEC3) HashNames() {
-	nsec3.Header().Name = HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
-	nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+	nsec3.Header().Name = hashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+	nsec3.NextDomain = hashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
 }

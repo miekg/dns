@@ -11,7 +11,7 @@ import (
 )
 
 // These channels are global so that all parts of the application
-// can send queries (or even pick them up)
+// can send queries (or even pick them up).
 var (
         // Request an async query by sending to this channel.
         QueryRequest chan *Query
@@ -85,8 +85,9 @@ func query(n string, f func(*Conn, *Msg)) {
 	panic("not reached")
 }
 
-// Simple query function that waits for and returns the reply.
-func QuerySimple(n string, d *Conn, m *Msg) (*Msg, os.Error) {
+// QuerySimple performs a query and waits for the reply before
+// returning.
+func SimpleQuery(n string, d *Conn, m *Msg) (*Msg, os.Error) {
         err := d.Dial(n)
         if err != nil {
                 return nil, err
