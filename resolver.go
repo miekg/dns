@@ -14,9 +14,9 @@ import (
 // can send queries (or even pick them up)
 var (
         // Request an async query by sending to this channel.
-        QueryRequest chan Query
+        QueryRequest chan *Query
         // Listen for replies to previously sent queries on this channel.
-        QueryReply chan Query
+        QueryReply chan *Query
 )
 
 // Query is used to communicate with the Query* functions.
@@ -39,8 +39,8 @@ type Query struct {
 // Initialize the QueryRequest and QueryReply channels. This
 // is only required when async. queries are wanted.
 func QueryInitChannels() {
-	QueryRequest = make(chan Query)
-	QueryReply = make(chan Query)
+	QueryRequest = make(chan *Query)
+	QueryReply = make(chan *Query)
 }
 
 // QueryAndServeTCP listens for incoming requests on channel in and then calls f.
@@ -77,7 +77,7 @@ func query(n string, f func(*Conn, *Msg)) {
 		case q := <-QueryRequest:
 			err := q.Conn.Dial(n)
 			if err != nil {
-				QueryReply <- Query{Err: err}
+				QueryReply <- &Query{Err: err}
 			}
 			go f(q.Conn, q.Query)
 		}
