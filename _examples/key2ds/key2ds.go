@@ -21,8 +21,7 @@ func main() {
 
         d := new(dns.Conn)
         d.RemoteAddr = c.Servers[0]
-        d.Dial("udp")
-        in, err := dns.QuerySimple(d, m)
+        in, err := dns.QuerySimple("udp", d, m)
         if in != nil {
                 if in.Rcode != dns.RcodeSuccess {
                         fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])
@@ -33,8 +32,10 @@ func main() {
                         // Foreach key would need to provide a DS records, both sha1 and sha256
                         if key, ok := k.(*dns.RR_DNSKEY); ok {
                                 ds := key.ToDS(dns.HashSHA1)
+                                ds.Hdr.Ttl = 0
                                 fmt.Printf("%v\n", ds)
                                 ds = key.ToDS(dns.HashSHA256)
+                                ds.Hdr.Ttl = 0
                                 fmt.Printf("%v\n", ds)
                         }
                 }

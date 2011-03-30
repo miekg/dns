@@ -12,7 +12,7 @@ func main() {
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
-	c := make(chan dns.Xfr)
+	c := make(chan *dns.Xfr)
 	d := new(dns.Conn)
 	m := new(dns.Msg)
 

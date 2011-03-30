@@ -84,7 +84,7 @@ Flags:
 	go func() {
 		for _, v := range qname {
                         d, m := newConnMsg(v, nameserver, c.Attempts, qtype, qclass, *aa, *ad, *cd, *rd, *dnssec, *nsid)
-			dns.QueryRequest <- dns.Query{Query: m, Conn: d}
+			dns.QueryRequest <- &dns.Query{Query: m, Conn: d}
 		}
 	}()
 
@@ -130,7 +130,7 @@ func query(tcp string, e chan os.Error) {
 // reply checking 'n stuff
 func qhandle(d *dns.Conn, i *dns.Msg) {
 	o, err := d.ExchangeMsg(i, false)
-	dns.QueryReply <- dns.Query{Query: i, Reply: o, Conn: d, Err: err}
+	dns.QueryReply <- &dns.Query{Query: i, Reply: o, Conn: d, Err: err}
         d.Close()
 	return
 }

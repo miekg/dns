@@ -28,12 +28,12 @@ func main() {
 		}
 
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, _ := dns.QuerySimple(d, m)
+		in, _ := dns.QuerySimple("udp", d, m)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, _ = dns.QuerySimple(d, m)
+		in, _ = dns.QuerySimple("udp", d, m)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
@@ -46,11 +46,8 @@ func addresses(d *dns.Conn, name string) []string {
 	m.Question = make([]dns.Question, 1)
 	var ips []string
 
-	d.Dial("udp")
-	defer d.Close()
-
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeA, dns.ClassINET}
-	in, err := dns.QuerySimple(d, m)
+	in, err := dns.QuerySimple("udp", d, m)
 	if in == nil {
 		fmt.Printf("Nothing recevied: %s\n", err.String())
 		return nil
@@ -64,7 +61,7 @@ func addresses(d *dns.Conn, name string) []string {
 		ips = append(ips, a.(*dns.RR_A).A.String()+":53")
 	}
 	m.Question[0] = dns.Question{os.Args[1], dns.TypeAAAA, dns.ClassINET}
-	in, err = dns.QuerySimple(d, m)
+	in, err = dns.QuerySimple("udp", d, m)
 	if in == nil {
 		fmt.Printf("Nothing recevied: %s\n", err.String())
 		return ips
