@@ -6,11 +6,18 @@ import (
 	"fmt"
 )
 
-func handleXfr(d *dns.Conn, i *dns.Msg) os.Error {
+func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 	if i.IsAxfr() {
 		fmt.Printf("Axfr request seen\n")
 		if i.Question[0].Name == Zone.name {
 			fmt.Printf("Matching current zone\n")
+                        if !Zone.correct {
+                                fmt.Printf("Zone was not deemed correct\n")
+                                // Deny it
+                                d.Close()
+                                return nil
+                        }
+
 			m := make(chan *dns.Xfr)
 			e := make(chan os.Error)
 			defer close(m)
@@ -37,12 +44,12 @@ func handleNotify(d *dns.Conn, i *dns.Msg) os.Error {
 		if err != nil {
 			return err
 		}
-		doXfrIn(i)
+		handleXfrIn(i)
 	}
         return nil
 }
 
-func doXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
+func handleXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
 	q := new(dns.Msg)
 	q.SetAxfr(i.Question[0].Name)
 
@@ -69,4 +76,12 @@ func doXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
 	}
 	Zone.size = j
 	return nil, nil
+}
+
+func sendNotify(addr, zone string) {
+        d := new(dns.Conn)
+        d.RemoteAddr = addr
+        m := new(dns.Msg)
+        m.SetNotify(zone)
+        dns.QueryRequest <- &dns.Query{Conn: d, Query: m}
 }

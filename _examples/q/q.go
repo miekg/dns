@@ -124,7 +124,6 @@ func query(tcp string, e chan os.Error) {
 		err := dns.QueryAndServeUDP(qhandle)
 		e <- err
 	}
-	return
 }
 
 // reply checking 'n stuff
@@ -132,7 +131,6 @@ func qhandle(d *dns.Conn, i *dns.Msg) {
 	o, err := d.ExchangeMsg(i, false)
 	dns.QueryReply <- &dns.Query{Query: i, Reply: o, Conn: d, Err: err}
         d.Close()
-	return
 }
 
 func newConnMsg(qname, nameserver string, attempts int, qtype, qclass uint16, aa, ad, cd, rd, dnssec, nsid bool) (*dns.Conn, *dns.Msg) {

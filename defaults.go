@@ -15,12 +15,12 @@ func (dns *Msg) SetReply(request *Msg) {
 }
 
 // Create a notify packet.
-func (dns *Msg) SetNotify(z string, class uint16) {
+func (dns *Msg) SetNotify(z string) {
 	dns.MsgHdr.Opcode = OpcodeNotify
 	dns.MsgHdr.Authoritative = true
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
-	dns.Question[0] = Question{z, TypeSOA, class}
+	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
 // Is the message a dynamic update packet?

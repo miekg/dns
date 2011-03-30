@@ -23,27 +23,29 @@ type zone struct {
 	name string
 	rrs  [10000]dns.RR
 	size int
+        correct bool
 }
 
 var Zone zone
 
 func handle(d *dns.Conn, i *dns.Msg) {
-/* send response here, how ??? */
 	if i.MsgHdr.Response == true {
 		return
 	}
 	handleNotify(d, i)
-	handleXfr(d, i)
+
+        if Zone.name != "" {
+                // We have received something, assume ok for now
+                Zone.correct = true
+                sendNotify("127.0.0.1:53", Zone.name)
+        }
+	handleXfrOut(d, i)
 }
 
 func qhandle(d *dns.Conn, i *dns.Msg) {
-        // We should send i to d.RemoteAddr
-        // simpleQuery here
-
-        // what do we do with the reply
-        ///handle HERE!!?? Need globals or stuff in d...
-
-        //        in/out channel must be accessible
+        o, err := d.ExchangeMsg(i, false)
+        dns.QueryReply <- &dns.Query{Query: i, Reply: o, Conn: d, Err: err}
+        d.Close()
 }
 
 func listen(addr string, e chan os.Error, tcp string) {
@@ -94,10 +96,8 @@ forever:
 			fmt.Printf("Signal received, stopping")
 			break forever
                 case q := <-dns.QueryReply:
-                        var _ = q
-                        /* ... */
+                        fmt.Printf("Query received: %v\n", q)
 		}
 	}
 	close(err)
-
 }
