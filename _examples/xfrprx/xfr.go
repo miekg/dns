@@ -10,7 +10,7 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 	if i.IsAxfr() {
 		fmt.Printf("Incoming Axfr request seen\n")
 		if i.Question[0].Name == Zone.name {
-			fmt.Printf("Matchies current zone\n")
+			fmt.Printf("Matches current zone\n")
                         if !Zone.correct {
                                 fmt.Printf("Zone was not deemed correct\n")
                                 if err := d.WriteMsg(i); err != nil {

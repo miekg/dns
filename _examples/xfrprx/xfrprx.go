@@ -41,7 +41,7 @@ func handle(d *dns.Conn, i *dns.Msg) {
         }
         if Zone.name != "" {
                 // We have transfered a zone and can check it. For now assume ok.
-                Zone.correct = true
+                Zone.correct = false
         }
 }
 
@@ -72,7 +72,7 @@ func main() {
 
 	// Outgoing queries
         dns.InitQueryChannels()
-	go query("tcp" err)
+	go query("tcp", err)
         go query("udp", err)
 
 	// Incoming queries
