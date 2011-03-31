@@ -13,7 +13,9 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 			fmt.Printf("Matchies current zone\n")
                         if !Zone.correct {
                                 fmt.Printf("Zone was not deemed correct\n")
-                                d.WriteMsg(i)
+                                if err := d.WriteMsg(i); err != nil {
+                                        return err
+                                }
                                 return nil
                         } else {
                                 fmt.Printf("Zone was correct\n")
@@ -32,7 +34,9 @@ func handleXfrOut(d *dns.Conn, i *dns.Msg) os.Error {
 			close(m)
 		} else {
                         fmt.Printf("No matching zone found\n")
-                        d.WriteMsg(i)
+                        if err := d.WriteMsg(i); err != nil {
+                                return err
+                        }
                 }
 	}
 	return nil
@@ -47,12 +51,15 @@ func handleNotify(d *dns.Conn, i *dns.Msg) os.Error {
 		if err != nil {
 			return err
 		}
-		handleXfrIn(i)
+		err = handleXfrIn(i)
+                if err != nil {
+                        return err
+                }
 	}
         return nil
 }
 
-func handleXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
+func handleXfrIn(i *dns.Msg) os.Error {
 	q := new(dns.Msg)
 	q.SetAxfr(i.Question[0].Name)
 
@@ -63,7 +70,7 @@ func handleXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
 	d.RemoteAddr = "127.0.0.1:53"
 	err := d.Dial("tcp")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer d.Close()
 
@@ -78,7 +85,7 @@ func handleXfrIn(i *dns.Msg) ([]dns.RR, os.Error) {
 	}
         fmt.Printf("Success retrieved %s\n", Zone.name)
 	Zone.size = j
-	return nil, nil
+	return nil
 }
 
 func handleNotifyOut(addr string) {

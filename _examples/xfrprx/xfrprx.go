@@ -32,12 +32,16 @@ func handle(d *dns.Conn, i *dns.Msg) {
 	if i.MsgHdr.Response == true {
 		return
 	}
-	handleNotify(d, i)
+	if err := handleNotify(d, i); err != nil {
+                fmt.Printf("err %v\n", err)
+        }
 //        handleNotifyOut("127.0.0.1:53") // 
-	handleXfrOut(d, i)
+	if err := handleXfrOut(d, i); err != nil {
+                fmt.Printf("err %v\n", err)
+        }
         if Zone.name != "" {
                 // We have transfered a zone and can check it. For now assume ok.
-                Zone.correct = false
+                Zone.correct = true
         }
 }
 
