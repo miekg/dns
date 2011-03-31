@@ -45,7 +45,7 @@ func handle(d *dns.Conn, i *dns.Msg) {
         }
 }
 
-func listen(addr string, e chan os.Error, tcp string) {
+func listen(tcp string, addr string, e chan os.Error) {
 	switch tcp {
 	case "tcp":
 		err := dns.ListenAndServeTCP(addr, handle)
@@ -54,10 +54,9 @@ func listen(addr string, e chan os.Error, tcp string) {
 		err := dns.ListenAndServeUDP(addr, handle)
 		e <- err
 	}
-	return
 }
 
-func query(e chan os.Error, tcp string) {
+func query(tcp string, e chan os.Error) {
         switch tcp {
         case "tcp":
                 err := dns.QueryAndServeTCP(dns.HandleQuery)
@@ -66,7 +65,6 @@ func query(e chan os.Error, tcp string) {
                 err := dns.QueryAndServeUDP(dns.HandleQuery)
                 e <- err
         }
-        return
 }
 
 func main() {
@@ -74,14 +72,14 @@ func main() {
 
 	// Outgoing queries
         dns.InitQueryChannels()
-	go query(err, "tcp")
-        go query(err, "udp")
+	go query("tcp" err)
+        go query("udp", err)
 
 	// Incoming queries
-	go listen("127.0.0.1:8053", err, "tcp")
-	go listen("[::1]:8053", err, "tcp")
-	go listen("127.0.0.1:8053", err, "udp")
-	go listen("[::1]:8053", err, "udp")
+	go listen("tcp", "127.0.0.1:8053", err)
+	go listen("tcp", "[::1]:8053", err)
+	go listen("udp", "127.0.0.1:8053", err)
+	go listen("udp", "[::1]:8053", err)
 
 forever:
 	for {
