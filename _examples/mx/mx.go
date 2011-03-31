@@ -30,7 +30,7 @@ func main() {
                 os.Exit(1)
         }
 
-        in, err := dns.QuerySimple("udp", d, m)
+        in, err := dns.SimpleQuery("udp", d, m)
         if in != nil {
                 if in.Rcode != dns.RcodeSuccess {
                         fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])

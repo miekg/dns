@@ -21,7 +21,7 @@ func main() {
 
         d := new(dns.Conn)
         d.RemoteAddr = c.Servers[0]
-        in, err := dns.QuerySimple("udp", d, m)
+        in, err := dns.SimpleQuery("udp", d, m)
         if in != nil {
                 if in.Rcode != dns.RcodeSuccess {
                         fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])

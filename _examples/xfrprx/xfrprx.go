@@ -41,12 +41,6 @@ func handle(d *dns.Conn, i *dns.Msg) {
         }
 }
 
-func qhandle(d *dns.Conn, i *dns.Msg) {
-        o, err := d.ExchangeMsg(i, false)
-        dns.QueryReply <- &dns.Query{Query: i, Reply: o, Conn: d, Err: err}
-        d.Close()
-}
-
 func listen(addr string, e chan os.Error, tcp string) {
 	switch tcp {
 	case "tcp":
@@ -62,10 +56,10 @@ func listen(addr string, e chan os.Error, tcp string) {
 func query(e chan os.Error, tcp string) {
         switch tcp {
         case "tcp":
-                err := dns.QueryAndServeTCP(qhandle)
+                err := dns.QueryAndServeTCP(dns.HandleQuery)
                 e <- err
         case "udp":
-                err := dns.QueryAndServeUDP(qhandle)
+                err := dns.QueryAndServeUDP(dns.HandleQuery)
                 e <- err
         }
         return

@@ -13,10 +13,10 @@ import (
 // These channels are global so that all parts of the application
 // can send queries (or even pick them up).
 var (
-        // Request an async query by sending to this channel.
-        QueryRequest chan *Query
-        // Listen for replies to previously sent queries on this channel.
-        QueryReply chan *Query
+	// Request an async query by sending to this channel.
+	QueryRequest chan *Query
+	// Listen for replies to previously sent queries on this channel.
+	QueryReply chan *Query
 )
 
 // Query is used to communicate with the Query* functions.
@@ -24,8 +24,8 @@ type Query struct {
 	// The query message which is to be send.
 	Query *Msg
 
-        // Any reply message that came back from the wire.
-        Reply *Msg
+	// Any reply message that came back from the wire.
+	Reply *Msg
 
 	// It is only required to fill out Conn.RemoteAddr.
 	// Optionally you may set Conn.Tsig if TSIG is required.
@@ -85,14 +85,23 @@ func query(n string, f func(*Conn, *Msg)) {
 	panic("not reached")
 }
 
-// QuerySimple performs a query and waits for the reply before
+// SimpleQuery performs a query and waits for the reply before
 // returning.
-func QuerySimple(n string, d *Conn, m *Msg) (*Msg, os.Error) {
-        err := d.Dial(n)
-        if err != nil {
-                return nil, err
-        }
-        o, err := d.ExchangeMsg(m, false)
-        d.Close()
+func SimpleQuery(n string, d *Conn, m *Msg) (*Msg, os.Error) {
+	err := d.Dial(n)
+	if err != nil {
+		return nil, err
+	}
+	o, err := d.ExchangeMsg(m, false)
+	d.Close()
 	return o, err
+}
+
+// HandleQuery can be used as a default query handler. It
+// fires of the querie, wait for a response and sends the
+// response back on the QueryReply channel. HandleQuery closes d.
+func HandleQuery(d *Conn, i *Msg) {
+        o, e := d.ExchangeMsg(i, false)
+        QueryReply <- &Query{Query: i, Reply: o, Conn: d, Err: e}
+        d.Close()
 }

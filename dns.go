@@ -33,10 +33,12 @@
 //      inmessage, err := SimpleQuery("udp", dnsconn, message)  // or "tcp".
 //
 // (Asynchronized) querying the DNS is supported. The Query structure
-// is used for communicating with the Query* functions.
+// is used for communicating with the QueryRequest (for sending) and
+// QueryReply (for receiving) channels. The channels are globally
+// declared in the dns package.
 // Basic use pattern for creating such a resolver:
 //
-//      func qhandle(*Conn, *Msg) { /* handle query */ }
+//      func qhandle(*Conn, *Msg) { /* handle request */ }
 //      
 //      func query(e chan os.Error) {
 //              err := QueryAndServeUDP(qhandle)
