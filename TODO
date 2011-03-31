@@ -1,4 +1,9 @@
-
+Issues:
+* FunkenSturm is kaput.
+* Check the network order, it works now, but this is on Intel??
+* Make the testsuite work with public DNS servers
+* pack/Unpack smaller. EDNS 'n stuff can be folded in
+* Compression. Take stuff from Jan Mercl
 o Tsig will probably become an interface which has all configuration
   stuff, but this will come later. Config which has Tsig function
 
@@ -7,17 +12,7 @@ Todo:
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * HIP RR (needs list of domain names, need slice stuff for that)
 * Is subdomain, is glue helper functions for this kind of stuff
-* Make QuerySimple even simpler??
-* Think about who closes who d.Close() and where
 * Cleanups
-
-Issues:
-* FunkenSturm is kaput.
-* Check closing of sockets d.Close()
-* Check the network order, it works now, but this is on Intel??
-* Make the testsuite work with public DNS servers
-* pack/Unpack smaller. EDNS 'n stuff can be folded in
-* Compression. Take stuff from Jan Mercl
 
 Examples:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
