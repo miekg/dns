@@ -11,6 +11,10 @@ import (
 	"net"
 )
 
+type Handler interface {
+        ServeDNS(w ResponseWriter, r *Msg)
+}
+
 // Handle register the handler the given pattern
 // in the DefaultServeMux. The documentation for
 // ServeMux explains how patters are matched.
@@ -18,7 +22,28 @@ func Handle(pattern string, handler Hander) {
 
 }
 
-type S
+// ServeMux is an DNS request multiplexer. It matches the
+// zone name of each incoming request against a list of 
+// registered patterns add calls the handler for the pattern
+// that most closely matches the zone name.
+type ServeMux struct {
+        m map[string]Handler
+}
+
+func NewServeMux() *ServeMux {
+
+}
+
+func (mux *ServeMux) Handle(pattern string, handler Handler) {
+
+}
+
+// ServeDNS dispatches the request to the handler whose
+// pattern most closely matches the request message.
+func (mux *ServeMux) ServeDNS(w ReponseWriter, request *Msg) {
+
+
+}
 
 // HandleUDP handles one UDP connection. It reads the incoming
 // message and then calls the function f.
@@ -107,4 +132,34 @@ func ListenAndServeUDP(addr string, f func(*Conn, *Msg)) os.Error {
 	}
 	err = HandleUDP(l, f)
 	return err
+}
+
+func zoneMatch(pattern, zone string) bool {
+        if len(patter) == 0 {
+                return false
+        }
+        n := len(pattern)
+        return zone[:n] == pattern
+}
+
+func (mux *ServeMux) match(zone string) Handler {
+        var h Handler
+        var n = 0
+        for k, v := range mux.m {
+                if !zoneMatch(k, zone) {
+                        continue
+                }
+                if h == nil || len(k) > n {
+                        n = len(k)
+                        h = v
+                }
+        }
+        return h
+}
+
+func (mux *ServeMux) Handle(pattern string, handler Handler) {
+        if pattern == "" {
+                panic("dns: invalid pattern " + pattern)
+        }
+        mux.m[pattern] = handler
 }

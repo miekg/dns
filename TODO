@@ -17,3 +17,41 @@ Todo:
 
 Examples:
 * Test impl of nameserver, with a small zone, 1 KSK and online  signing
+
+ListenAndServer(addr, Handler, map[string]string, tsig secrets)
+
+    add tis record to mesag when sending -> tsig will be calculated
+        up to the aolloer .Msg TsigGenerate
+
+    handler Handler === interface that 
+   
+   Hanlder interface {
+   ServeDNS
+
+   QueryDNS
+}
+
+ResponseWriter
+    UsingTsig()     domain/ip/key
+    UsingTCP()
+
+    RemoteAddr string
+
+    Write(byte) n os.Error
+
+
+125 // Create new connection from rwc.
+126 func newConn(rwc net.Conn, handler Handler) (c *conn, err os.Error) {
+127         c = new(conn)
+128         c.remoteAddr = rwc.RemoteAddr().String()
+129         c.handler = handler
+130         c.rwc = rwc
+131         _, c.usingTLS = rwc.(*tls.Conn)
+132         br := bufio.NewReader(rwc)
+133         bw := bufio.NewWriter(rwc)
+134         c.buf = bufio.NewReadWriter(br, bw)
+135         return c, nil
+
+func HelloServer(w dns.ResponseWriter, req *dns.Msg)
+
+dns.HandleFunc("zonename", HelloServer)
