@@ -11,6 +11,15 @@ import (
 	"net"
 )
 
+// Handle register the handler the given pattern
+// in the DefaultServeMux. The documentation for
+// ServeMux explains how patters are matched.
+func Handle(pattern string, handler Hander) {
+
+}
+
+type S
+
 // HandleUDP handles one UDP connection. It reads the incoming
 // message and then calls the function f.
 // The function f is executed in a seperate goroutine at which point 
