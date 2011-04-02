@@ -95,6 +95,7 @@ func (e *Error) String() string {
 	return e.Error
 }
 
+// OLD
 // A Conn is the lowest primative in the dns package.
 // A Conn holds both the UDP and TCP connection, but only one
 // can be active any given time. 
