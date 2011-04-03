@@ -88,57 +88,6 @@ func NotFoundHandler() Handler { return HandlerFunc(NotFound) }
 */
 
 
-// HandleUDP handles one UDP connection. It reads the incoming
-// message and then calls the function f.
-// The function f is executed in a seperate goroutine at which point 
-// HandleUDP returns.
-func HandleUDP(l *net.UDPConn, f func(*Conn, *Msg)) os.Error {
-	for {
-		m := make([]byte, DefaultMsgSize)
-		n, addr, e := l.ReadFromUDP(m)
-		if e != nil {
-			continue
-		}
-		m = m[:n]
-
-		d := new(Conn)
-		// Use the remote addr as we got from ReadFromUDP
-		d.SetUDPConn(l, addr)
-
-		msg := new(Msg)
-		if !msg.Unpack(m) {
-			continue
-		}
-		go f(d, msg)
-	}
-	panic("not reached")
-}
-
-// HandleTCP handles one TCP connection. It reads the incoming
-// message and then calls the function f.
-// The function f is executed in a seperate goroutine at which point 
-// HandleTCP returns.
-func HandleTCP(l *net.TCPListener, f func(*Conn, *Msg)) os.Error {
-	for {
-		c, e := l.AcceptTCP()
-		if e != nil {
-			return e
-		}
-		d := new(Conn)
-		d.SetTCPConn(c, nil)
-
-		msg := new(Msg)
-		err := d.ReadMsg(msg)
-
-		if err != nil {
-			// Logging??
-			continue
-		}
-		go f(d, msg)
-	}
-	panic("not reached")
-}
-
 func ListenAndServe(addr string, network string, handler Handler) os.Error {
 	server := &Server{Addr: addr, Network: network, Handler: handler}
 	return server.ListenAndServe()
@@ -150,7 +99,9 @@ func zoneMatch(pattern, zone string) bool {
 		return false
 	}
 	n := len(pattern)
-	return zone[:n] == pattern
+        var _ = n
+        // better matching from the right TODO(mg)
+	return true
 }
 
 func (mux *ServeMux) match(zone string) Handler {
@@ -184,6 +135,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Ms
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	h := mux.match(request.Question[0].Name)
 	if h == nil {
+                panic("No hander found")
 		//                h = NotFoundHandler()
 	}
 	h.ServeDNS(w, request)
@@ -335,8 +287,8 @@ func (srv *Server) ServeUDP(l *net.UDPConn) os.Error {
 	panic("not reached")
 }
 
-func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (c *conn, err os.Error) {
-	c = new(conn)
+func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (*conn, os.Error) {
+	c := new(conn)
 	c.handler = handler
 	c._TCP = t
 	c._UDP = u
@@ -348,7 +300,7 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 	if u != nil {
 		c.port = a.(*net.UDPAddr).Port
 	}
-	return c, err
+	return c, nil
 }
 
 
@@ -366,19 +318,25 @@ func (c *conn) close() {
 
 // Serve a new connection.
 func (c *conn) serve() {
-        // Request has been read in ServeUDP or ServeTCP
-        w := new(response)
-        w.conn = c
-        w.xfr = false
-        req := new(Msg)
-        if !req.Unpack(c.request) {
-                return
+        for {
+                // Request has been read in ServeUDP or ServeTCP
+                w := new(response)
+                w.conn = c
+                w.xfr = false
+                req := new(Msg)
+                if !req.Unpack(c.request) {
+                        break
+                }
+                w.req = req
+                c.handler.ServeDNS(w, w.req) // this does the writing back to the client
+                if c.hijacked {
+                        return
+                }
+                break           // TODO(mg) Why is this a loop anyway
         }
-	c.handler.ServeDNS(w, w.req) // this does the writing back to the client
-        if c.hijacked {
-                return
+        if c._TCP != nil {
+                c.close() // Listen and Serve is closed then
         }
-        c.close()
 }
 
 
