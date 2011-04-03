@@ -351,7 +351,7 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
                 // TODO(mg) len(data) > 64K
                 l := make([]byte, 2)
                 l[0], l[1] = packUint16(uint16(len(data)))
-                n, err = w.conn._TCP.Write(data)
+                n, err = w.conn._TCP.Write(l)
                 if err != nil {
                         return n, err
                 }
