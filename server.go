@@ -78,20 +78,20 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 
 // Helper handlers
 
-// Error replies to the request with the specified error msg TODO(mg)
-/* 
-func Error(w ResponseWriter) {  }
+func Refused(w ResponseWriter, r *Msg) {
+        m := new(Msg)
+        m.SetReply(r)
+        m.MsgHdr.Rcode = RcodeRefused
+        buf, _ := m.Pack()
+        w.Write(buf)
+}
 
-func NotFound(w ResponseWriter, r *Msg) {
-
-func NotFoundHandler() Handler { return HandlerFunc(NotFound) }
-*/
-
+// RefusedHandler return a REFUSED answer
+func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 func ListenAndServe(addr string, network string, handler Handler) os.Error {
 	server := &Server{Addr: addr, Network: network, Handler: handler}
 	return server.ListenAndServe()
-
 }
 
 func zoneMatch(pattern, zone string) bool {
@@ -135,8 +135,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Ms
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	h := mux.match(request.Question[0].Name)
 	if h == nil {
-                panic("No hander found")
-		//                h = NotFoundHandler()
+		h = RefusedHandler()
 	}
 	h.ServeDNS(w, request)
 }
