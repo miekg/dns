@@ -376,16 +376,10 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
 }
 
 // Acl implements the ResponseWriter.Acl
-func (w *response) Acl() map[string]bool {
-        return w.conn.acl
-}
-
+func (w *response) Acl() map[string]bool { return w.conn.acl }
 
 // Tsig implements the ResponseWriter.Tsig
-func (w *response) Tsig() map[string]string {
-        return w.conn.tsig
-}
+func (w *response) Tsig() map[string]string { return w.conn.tsig }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
 func (w *response) RemoteAddr() string { return w.conn.remoteAddr.String() }
-
