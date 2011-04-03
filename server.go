@@ -7,7 +7,7 @@
 package dns
 
 import (
-        "io"
+//        "io"
 	"os"
 	"net"
 )
@@ -16,8 +16,9 @@ type Handler interface {
         ServeDNS(w ResponseWriter, r *Msg)
 }
 
-// You can ofcourse make YOUR OWN RESPONSE WRITTER that
-// uses TSIG an other cool stuff
+// TODO(mg): fit axfr responses in here too
+// A ResponseWriter interface is used by an DNS handler to
+// construct an DNS response.
 type ResponseWriter interface {
         // RemoteAddr returns the address of the client that sent the current request
         RemoteAddr() string
@@ -34,15 +35,18 @@ type ResponseWriter interface {
 
 type conn struct {
         remoteAddr net.Addr             // address of remote side (sans port)
+        port int                        // port of the remote side
         handler Handler                 // request handler
         request  []byte                 // bytes read
-        connUDP *net.UDPConn
-        connTCP *net.TCPConn
+        _UDP *net.UDPConn            // i/o connection if UDP was used
+        _TCP *net.TCPConn            // i/o connection if TCP was used
+        hijacked bool                   // connection has been hijacked by hander TODO(mg)
 }
 
 type response struct {
         conn *conn
         req *Msg
+        xfr  bool                       // {i/a}xfr was requested
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -139,44 +143,6 @@ func ListenAndServe(addr string, network string, handler Handler) os.Error {
 
 }
 
-// ListenAndServerTCP listens on the TCP network address addr and
-// then calls HandleTCP with f to handle requests on incoming
-// connections. The function f may not be nil.
-func ListenAndServeTCP(addr string, f func(*Conn, *Msg)) os.Error {
-	if f == nil {
-		return ErrHandle
-	}
-	a, err := net.ResolveTCPAddr(addr)
-	if err != nil {
-		return err
-	}
-	l, err := net.ListenTCP("tcp", a)
-	if err != nil {
-		return err
-	}
-	err = HandleTCP(l, f)
-	return err
-}
-
-// ListenAndServerUDP listens on the UDP network address addr and
-// then calls HandleUDP with f to handle requests on incoming
-// connections. The function f may not be nil.
-func ListenAndServeUDP(addr string, f func(*Conn, *Msg)) os.Error {
-	if f == nil {
-		return &Error{Error: "The handle function may not be nil"}
-	}
-	a, err := net.ResolveUDPAddr(addr)
-	if err != nil {
-		return err
-	}
-	l, err := net.ListenUDP("udp", a)
-	if err != nil {
-		return err
-	}
-	err = HandleUDP(l, f)
-	return err
-}
-
 func zoneMatch(pattern, zone string) bool {
         if len(pattern) == 0 {
                 return false
@@ -230,13 +196,22 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
         DefaultServeMux.HandleFunc(pattern, handler)
 }
 
-// Serve accepts incoming DNS request on the listener l,
+// Serve accepts incoming DNS request on the TCP listener l,
 // creating a new service thread for each.  The service threads
 // read requests and then call handler to reply to them.
 // Handler is typically nil, in which case the DefaultServeMux is used.
-func Serve(l net.Listener, handler Handler) os.Error {
-        srv := &Server{Handler: handler}
-        return srv.Serve(l)
+func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
+        srv := &Server{Handler: handler, Network: "tcp"}
+        return srv.ServeTCP(l)
+}
+
+// Serve accepts incoming DNS request on the UDP Conn l,
+// creating a new service thread for each.  The service threads
+// read requests and then call handler to reply to them.
+// Handler is typically nil, in which case the DefaultServeMux is used.
+func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
+        srv := &Server{Handler: handler, Network: "udp"}
+        return srv.ServeUDP(l)
 }
 
 // A Server defines parameters for running an HTTP server.
@@ -285,6 +260,7 @@ func (srv *Server) ServeTCP(l *net.TCPListener) os.Error {
         if handler == nil {
                 handler = DefaultServeMux
         }
+        forever:
         for {
                 rw, e := l.AcceptTCP()
                 if e != nil {
@@ -296,9 +272,30 @@ func (srv *Server) ServeTCP(l *net.TCPListener) os.Error {
                 if srv.WriteTimeout != 0 {
                         rw.SetWriteTimeout(srv.WriteTimeout)
                 }
-                m := read /* read and set the buffer */ 
-                d, err := newConn(rw, nil, rw.RemoteAddr(), nil, handler)
-                d.ReadReqest()
+                l := make([]byte, 2)
+                n, err := rw.Read(l)
+                if err != nil || n != 2 {
+                        continue
+                }
+                length, _ := unpackUint16(l, 0)
+                if length == 0 {
+                        continue
+                }
+                m := make([]byte, int(length))
+                n, err = rw.Read(m[:int(length)])
+                if err != nil {
+                        continue
+                }
+                i := n
+                for i < int(length) {
+                        j, err := rw.Read(m[i:int(length)])
+                        if err != nil {
+                                continue forever
+                        }
+                        i += j
+                }
+                n = i
+                d, err := newConn(rw, nil, rw.RemoteAddr(), m, handler)
                 if err != nil {
                         continue
                 }
@@ -315,19 +312,19 @@ func (srv *Server) ServeUDP(l *net.UDPConn) os.Error {
         }
         for {
                 m := make([]byte, DefaultMsgSize)
-                c, a, e := l.ReadFromUDP()
+                n, a, e := l.ReadFromUDP(m)
                 if e != nil {
                         return e
                 }
                 m = m[:n]
 
                 if srv.ReadTimeout != 0 {
-                        rw.SetReadTimeout(srv.ReadTimeout)
+                        l.SetReadTimeout(srv.ReadTimeout)
                 }
                 if srv.WriteTimeout != 0 {
-                        rw.SetWriteTimeout(srv.WriteTimeout)
+                        l.SetWriteTimeout(srv.WriteTimeout)
                 }
-                d, err := newConn(rw, nil, addr, m, handler)
+                d, err := newConn(nil, l, a, m, handler)
                 if err != nil {
                         continue
                 }
@@ -339,19 +336,45 @@ func (srv *Server) ServeUDP(l *net.UDPConn) os.Error {
 func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (c *conn, err os.Error) {
         c = new(conn)
         c.handler = handler
-        c.TCPconn = t
-        c.UDPconn = u
-        c.RemoteAddr = a
+        c._TCP = t
+        c._UDP = u
+        c.remoteAddr = a
+        c.request = buf
+        if t != nil {
+                c.port = a.(*net.TCPAddr).Port
+        }
+        if u != nil {
+                c.port = a.(*net.UDPAddr).Port
+        }
         return c, err
 }
 
+
+// Close the connection.
+func (c *conn) close() {
+        switch {
+        case c._UDP != nil:
+                c._UDP.Close()
+                c._UDP = nil
+        case c._TCP != nil:
+                c._TCP.Close()
+                c._TCP = nil
+        }
+}
+
+// Serve a new connection.
 func (c *conn) serve() {
         // c.ReadRequest
 
         // c.Handler.ServeDNS(w, w.req) // this does the writing
 }
 
-func (c *conn) ReadRequest() (w *response, err os.Error) {
+
+func (c *conn) readRequest() (w *response, err os.Error) {
+        
+
+
+
         w = new(response)
         return w, nil
 }
