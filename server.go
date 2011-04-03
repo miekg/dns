@@ -82,6 +82,7 @@ func Refused(w ResponseWriter, r *Msg) {
         m := new(Msg)
         m.SetReply(r)
         m.MsgHdr.Rcode = RcodeRefused
+        m.MsgHdr.Authoritative = false
         buf, _ := m.Pack()
         w.Write(buf)
 }
