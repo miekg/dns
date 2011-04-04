@@ -21,6 +21,30 @@ import (
 //      tsig.TimeSigned = uint64(time.Seconds())      
 //      tsig.Secret = "so6ZGir4GPAqINNh9U5c3A==" // Secret encoded in base64.
 
+type TsigWriter struct {
+        secrets map[string]string
+        w       io.Writer
+        name    string
+        fudge   uint16
+        algorithm string
+        timersOnly bool
+}
+
+// NewTsigWriter creates a new writer that implements TSIG, secrets
+// should contain a mapping from key names to secrets. A message
+// should be written with the TSIG record appends. Tsig
+func NewTsigWriter(w io.Writer, secrets map[string]string) *TsigWriter {
+        t := new(TsigWriter)
+        t.secrets = secrets
+        return t
+}
+
+func (t *TsigWriter) Write(p []byte) (int, os.Error) {
+        return 0, nil
+
+}
+
+
 type Tsig struct {
 	// The name of the key.
 	Name string

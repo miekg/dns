@@ -14,9 +14,11 @@ import (
 
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
+	// IP based ACL mapping. The contains the string representation
+	// of the IP address and a boolean saying it may connect (true) or not.
 }
 
-// TODO(mg): fit axfr responses in here too
+// TODO(mg): fit axfr responses in here too???
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
@@ -24,13 +26,6 @@ type ResponseWriter interface {
 	RemoteAddr() string
 
 	Write([]byte) (int, os.Error)
-
-	// IP based ACL mapping. The contains the string representation
-	// of the IP address and a boolean saying it may connect (true) or not.
-	Acl() map[string]bool
-
-	// Tsig secrets. Its a mapping of key names to secrets.
-	Tsig() map[string]string
 }
 
 type conn struct {
@@ -41,14 +36,11 @@ type conn struct {
 	_UDP       *net.UDPConn // i/o connection if UDP was used
 	_TCP       *net.TCPConn // i/o connection if TCP was used
 	hijacked   bool         // connection has been hijacked by hander TODO(mg)
-        tsig       map[string]string    // tsig secrets
-        acl        map[string]bool      // ip acl list
 }
 
 type response struct {
 	conn *conn
 	req  *Msg
-	xfr  bool // {i/a}xfr was requested
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -322,7 +314,6 @@ func (c *conn) serve() {
                 // Request has been read in ServeUDP or ServeTCP
                 w := new(response)
                 w.conn = c
-                w.xfr = false
                 req := new(Msg)
                 if !req.Unpack(c.request) {
                         break
@@ -374,12 +365,6 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
         }
         return n, nil
 }
-
-// Acl implements the ResponseWriter.Acl
-func (w *response) Acl() map[string]bool { return w.conn.acl }
-
-// Tsig implements the ResponseWriter.Tsig
-func (w *response) Tsig() map[string]string { return w.conn.tsig }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
 func (w *response) RemoteAddr() string { return w.conn.remoteAddr.String() }
