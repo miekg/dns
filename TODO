@@ -10,6 +10,9 @@ o Tsig will probably become an interface which has all configuration
 
 responseWriter with tsig/axfr/ixfr
 requestWriter 
+TsigReader
+
+XfrWriter ??? XfrReader???
 
 Todo:
 * Parsing from strings, going with goyacc and .cz lexer?
