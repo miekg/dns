@@ -87,14 +87,24 @@ func ListenAndServe(addr string, network string, handler Handler) os.Error {
 	return server.ListenAndServe()
 }
 
-func zoneMatch(pattern, zone string) bool {
+func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
-		return false
+		return
 	}
-	n := len(pattern)
-        var _ = n
-        // better matching from the right TODO(mg)
-	return true
+        i:=0
+        for {
+                ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
+                i++
+
+                if !ok {
+                        break
+                }
+                if len(pattern)-1-i < 0 || len(zone)-1-i < 0{
+                        break
+                }
+
+        }
+	return
 }
 
 func (mux *ServeMux) match(zone string) Handler {
@@ -116,7 +126,11 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m[pattern] = handler
+        if pattern[len(pattern)-1] != '.' {             // no ending .
+	        mux.m[pattern + "."] = handler
+        } else {
+	        mux.m[pattern]= handler
+        }
 }
 
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
