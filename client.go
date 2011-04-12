@@ -10,7 +10,7 @@ package dns
 // This completely mirrors server.go impl.
 import (
 	"os"
-//        "net"
+	"net"
 )
 
 type QueryHandler interface {
@@ -21,13 +21,12 @@ type QueryHandler interface {
 // A RequestWriter interface is used by an DNS query handler to
 // construct an DNS request.
 type RequestWriter interface {
-	RemoteAddr() string
+	RemoteAddr() string     // moet het channel zijn...!
 
 	Write([]byte) (int, os.Error)
 }
 
-/*
-type conn struct {
+type qconn struct {
 	remoteAddr net.Addr  // address of remote side (sans port)
 	port       int       // port of the remote side, needed TODO(mg)
 	handler    Handler   // request handler
@@ -36,11 +35,10 @@ type conn struct {
 	hijacked   bool      // connection has been hijacked by hander TODO(mg)
 }
 
-type response struct {
-	conn *conn
+type reply struct {
+	conn *qconn
 	req  *Msg
 }
-*/
 
 // QueryMux is an DNS request multiplexer. It matches the
 // zone name of each incoming request against a list of 
@@ -113,6 +111,7 @@ func (mux *QueryMux) QueryDNS(w RequestWriter, request *Msg) {
 type Client struct {
 	Network      string       // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Attempts     int          // number of attempts
+	Retry        bool         // retry with TCP
 	Handler      QueryHandler // handler to invoke, dns.DefaultQueryMux if nil
 	ReadTimeout  int64        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64        // the net.Conn.SetWriteTimeout value for new connections
