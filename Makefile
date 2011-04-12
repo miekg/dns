@@ -8,6 +8,7 @@ include $(GOROOT)/src/Make.inc
 TARG=dns
 GOFILES=\
 	clientconfig.go\
+	client.go\
 	config.go\
 	defaults.go\
 	dns.go\
@@ -16,7 +17,6 @@ GOFILES=\
 	keygen.go\
 	msg.go\
 	nsec3.go \
-	resolver.go\
 	server.go \
 	tsig.go\
 	types.go\

@@ -18,7 +18,6 @@ type Handler interface {
 	// of the IP address and a boolean saying it may connect (true) or not.
 }
 
-// TODO(mg): fit axfr responses in here too???
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
@@ -156,6 +155,15 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
+// A Server defines parameters for running an DNS server.
+type Server struct {
+	Addr         string  // address to listen on, ":dns" if empty
+	Network      string  // if "tcp" it will invoke a TCP listener, otherwise an UDP one
+	Handler      Handler // handler to invoke, dns.DefaultServeMux if nil
+	ReadTimeout  int64   // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
+}
+
 // Serve accepts incoming DNS request on the TCP listener l,
 // creating a new service thread for each.  The service threads
 // read requests and then call handler to reply to them.
@@ -172,15 +180,6 @@ func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
 func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
 	srv := &Server{Handler: handler, Network: "udp"}
 	return srv.ServeUDP(l)
-}
-
-// A Server defines parameters for running an HTTP server.
-type Server struct {
-	Addr         string  // address to listen on, ":dns" if empty
-	Network      string  // If "tcp" it will invoke a TCP listener, otherwise an UDP one
-	Handler      Handler // handler to invoke, http.DefaultServeMux if nil
-	ReadTimeout  int64   // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
 }
 
 // Fixes for udp/tcp
