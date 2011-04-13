@@ -17,7 +17,6 @@ type QueryHandler interface {
 	QueryDNS(w RequestWriter, q *Msg)
 }
 
-
 // A RequestWriter interface is used by an DNS query handler to
 // construct an DNS request.
 type RequestWriter interface {
@@ -53,6 +52,11 @@ func NewQueryMux() *QueryMux { return &QueryMux{make(map[string]QueryHandler)} }
 
 // DefaultQueryMux is the default QueryMux used by Query.
 var DefaultQueryMux = NewQueryMux()
+
+func newQueryChan() chan *Msg { return make(chan *Msg) }
+
+// Default channel to use for the resolver
+var DefaultQueryChan = newQueryChan()
 
 // The HandlerQueryFunc type is an adapter to allow the use of
 // ordinary functions as DNS query handlers.  If f is a function
