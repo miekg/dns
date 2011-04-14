@@ -14,6 +14,12 @@ func (dns *Msg) SetReply(request *Msg) {
 	dns.Question[0] = request.Question[0]
 }
 
+func (dns *Msg) SetQuestion(z string, t uint16) {
+        dns.MsgHdr.Id = Id()
+	dns.Question = make([]Question, 1)
+	dns.Question[0] = Question{z, t, ClassINET}
+}
+
 // Create a notify packet.
 func (dns *Msg) SetNotify(z string) {
 	dns.MsgHdr.Opcode = OpcodeNotify
