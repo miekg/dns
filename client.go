@@ -10,7 +10,7 @@ package dns
 // This completely mirrors server.go impl.
 import (
 	"os"
-	"net"
+	//	"net"
 )
 
 type QueryHandler interface {
@@ -20,23 +20,13 @@ type QueryHandler interface {
 // A RequestWriter interface is used by an DNS query handler to
 // construct an DNS request.
 type RequestWriter interface {
-	RemoteAddr() string     // moet het channel zijn...!
-
-	Write([]byte) (int, os.Error)
+	Write(*Msg)
 }
 
-type qconn struct {
-	remoteAddr net.Addr  // address of remote side (sans port)
-	port       int       // port of the remote side, needed TODO(mg)
-	handler    Handler   // request handler
-	request    []byte    //  the request
-	w          chan *Msg //
-	hijacked   bool      // connection has been hijacked by hander TODO(mg)
-}
-
+// hijacked connections...?
 type reply struct {
-	conn *qconn
-	req  *Msg
+	Client *Client
+	req    *Msg
 }
 
 // QueryMux is an DNS request multiplexer. It matches the
@@ -56,17 +46,22 @@ var DefaultQueryMux = NewQueryMux()
 func newQueryChan() chan *Msg { return make(chan *Msg) }
 
 // Default channel to use for the resolver
+var DefaultReplyChan = newQueryChan()
 var DefaultQueryChan = newQueryChan()
 
 // The HandlerQueryFunc type is an adapter to allow the use of
 // ordinary functions as DNS query handlers.  If f is a function
 // with the appropriate signature, HandlerQueryFunc(f) is a
-// QeuryHandler object that calls f.
+// QueryHandler object that calls f.
 type HandlerQueryFunc func(RequestWriter, *Msg)
 
 // QueryDNS calls f(w, reg)
 func (f HandlerQueryFunc) QueryDNS(w RequestWriter, r *Msg) {
-	f(w, r)
+	go f(w, r)
+}
+
+func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
+	DefaultQueryMux.HandleQueryFunc(pattern, handler)
 }
 
 // Helper handlers
@@ -116,6 +111,8 @@ type Client struct {
 	Network      string       // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Attempts     int          // number of attempts
 	Retry        bool         // retry with TCP
+	ChannelQuery chan *Msg    // read DNS request from this channel
+	ChannelReply chan *Msg    // read DNS request from this channel
 	Handler      QueryHandler // handler to invoke, dns.DefaultQueryMux if nil
 	ReadTimeout  int64        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64        // the net.Conn.SetWriteTimeout value for new connections
@@ -127,20 +124,52 @@ type Client struct {
 // creating a new service thread for each.  The service threads
 // read requests and then call handler to reply to them.
 // Handler is typically nil, in which case the DefaultServeMux is used.
-func Query(w chan *Msg, handler QueryHandler) os.Error {
-	clnt := &Client{Handler: handler}
-	return clnt.Query(w)
+func Query(c chan *Msg, handler QueryHandler) os.Error {
+	client := &Client{ChannelQuery: c, Handler: handler}
+	return client.Query()
 }
 
-func (clnt *Client) Query(w chan *Msg) os.Error {
-	handler := clnt.Handler
+func (c *Client) Query() os.Error {
+	handler := c.Handler
 	if handler == nil {
 		handler = DefaultQueryMux
+	}
+forever:
+	for {
+		select {
+		case in := <-c.ChannelQuery:
+			w := new(reply)
+			w.Client = c
+			w.req = in
+			handler.QueryDNS(w, w.req)
+		}
 	}
 	return nil
 }
 
-func (clnt *Client) ListenAndQuery(w chan *Msg) os.Error {
-	/* ... */
-	return nil
+func (c *Client) ListenAndQuery() os.Error {
+	if c.ChannelQuery == nil {
+		c.ChannelQuery = DefaultQueryChan
+	}
+	if c.ChannelReply == nil {
+		c.ChannelReply = DefaultReplyChan
+	}
+	return c.Query()
+}
+
+func (c *Client) Do(m *Msg, addr string) {
+	// addr !!!
+	if c.ChannelQuery == nil {
+		DefaultQueryChan <- m
+	}
+}
+
+func ListenAndQuery(c chan *Msg, handler QueryHandler) {
+	client := &Client{ChannelQuery: c, Handler: handler}
+	go client.ListenAndQuery()
+}
+
+func (w *reply) Write(m *Msg) {
+	// Write to the channel
+	w.Client.ChannelReply <- m
 }
