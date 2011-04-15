@@ -21,7 +21,7 @@ type QueryHandler interface {
 // construct an DNS request.
 type RequestWriter interface {
 	WriteMessages([]*Msg)
-        WriteMessage(*Msg)
+        Write(*Msg)
 }
 
 // hijacked connections...?
@@ -171,12 +171,13 @@ func ListenAndQuery(c chan *Msg, handler QueryHandler) {
 	go client.ListenAndQuery()
 }
 
-func (w *reply) WriteMessage(m *Msg) {
+func (w *reply) Write(m *Msg) {
 	// Write to the channel
-	w.Client.ChannelReply <- []*Msg{m}
+	w.Client.ChannelReply <- []*Msg{w.req, m}
 }
 
 func (w *reply) WriteMessages(m []*Msg) {
 	// Write to the channel
-	w.Client.ChannelReply <- m
+        m1 := append([]*Msg{w.req}, m...)       // Really the way?
+	w.Client.ChannelReply <- m1
 }
