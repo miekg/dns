@@ -20,7 +20,8 @@ type QueryHandler interface {
 // A RequestWriter interface is used by an DNS query handler to
 // construct an DNS request.
 type RequestWriter interface {
-	Write(*Msg)
+	WriteMessages([]*Msg)
+        WriteMessage(*Msg)
 }
 
 // hijacked connections...?
@@ -43,10 +44,11 @@ func NewQueryMux() *QueryMux { return &QueryMux{make(map[string]QueryHandler)} }
 // DefaultQueryMux is the default QueryMux used by Query.
 var DefaultQueryMux = NewQueryMux()
 
+func newQueryChanSlice() chan []*Msg { return make(chan []*Msg) }
 func newQueryChan() chan *Msg { return make(chan *Msg) }
 
 // Default channel to use for the resolver
-var DefaultReplyChan = newQueryChan()
+var DefaultReplyChan = newQueryChanSlice()
 var DefaultQueryChan = newQueryChan()
 
 // The HandlerQueryFunc type is an adapter to allow the use of
@@ -112,7 +114,7 @@ type Client struct {
 	Attempts     int          // number of attempts
 	Retry        bool         // retry with TCP
 	ChannelQuery chan *Msg    // read DNS request from this channel
-	ChannelReply chan *Msg    // read DNS request from this channel
+	ChannelReply chan []*Msg    // read DNS request from this channel
 	Handler      QueryHandler // handler to invoke, dns.DefaultQueryMux if nil
 	ReadTimeout  int64        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64        // the net.Conn.SetWriteTimeout value for new connections
@@ -169,7 +171,12 @@ func ListenAndQuery(c chan *Msg, handler QueryHandler) {
 	go client.ListenAndQuery()
 }
 
-func (w *reply) Write(m *Msg) {
+func (w *reply) WriteMessage(m *Msg) {
+	// Write to the channel
+	w.Client.ChannelReply <- []*Msg{m}
+}
+
+func (w *reply) WriteMessages(m []*Msg) {
 	// Write to the channel
 	w.Client.ChannelReply <- m
 }
