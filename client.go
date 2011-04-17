@@ -120,6 +120,7 @@ type Client struct {
 	Handler      QueryHandler // handler to invoke, dns.DefaultQueryMux if nil
 	ReadTimeout  int64        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64        // the net.Conn.SetWriteTimeout value for new connections
+	conn         net.Conn     // current net work connection
 }
 
 // Query accepts incoming DNS request,
@@ -189,8 +190,40 @@ func (w *reply) WriteMessages(m []*Msg) {
 	w.Client.ChannelReply <- m1
 }
 
-func (c *Client) Read() {
+func (c *Client) Read() (*Msg, os.Error) {
+        if c.conn == nil {
+                panic("no connection")
+        }
+        var p []byte
+        var m *Msg
+        switch c.Net {
+        case "tcp":
 
+        case "udp":
+                p = make([]byte, DefaultMsgSize)
+                n, err := c.read(p)
+                if err != nil {
+                        return nil, err
+                }
+                p = p[:n]
+                if ok := m.Unpack(p); !ok {
+                        return nil, ErrUnpack
+                }
+        }
+        return m, nil
+}
+
+func (c *Client) read(p []byte) (n int, err os.Error) {
+	switch c.Net {
+	case "tcp":
+
+	case "udp":
+		n, _, err = c.conn.(*net.UDPConn).ReadFromUDP(p)
+		if err != nil {
+			return n, err
+		}
+	}
+	return
 }
 
 func (c *Client) Write(m *Msg) os.Error {
@@ -214,6 +247,7 @@ func (c *Client) write(p []byte) (n int, err os.Error) {
 	if c.Attempts == 0 {
 		panic("client attempts 0")
 	}
+        c.conn = conn
 	switch c.Net {
 	case "tcp":
 		if len(p) < 2 {
