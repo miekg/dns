@@ -20,7 +20,8 @@ GOFILES=\
 	server.go \
 	tsig.go\
 	types.go\
-	xfr.go\
+
+#	xfr.go\
 
 include $(GOROOT)/src/Make.pkg
 
