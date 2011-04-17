@@ -16,53 +16,17 @@
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 //
-// The patterns described here are cumulative: earlier declared variables
-// are reused.
 // In the DNS messages are exchanged. Use pattern for creating one:
 //
-//      message := new(Msg)
+//      m := new(Msg)
+//      m.SetQuestion("miek.nl.", dns.TypeMX)
 //      // Set the desired options.
-//      message.MsgHdr.Recursion_desired = true
-//      message.Question = make([]Question, 1)
-//      message.Question[0] = Question{"miek.nl", TypeSOA, ClassINET}
+//      m.MsgHdr.RecursionDesired = true
 //
 // Basic use pattern for synchronize querying of the DNS:
 //
-//      dnsconn := new(Conn)
-//      dnsconn.RemoteAddr = "127.0.0.1:53"
-//      inmessage, err := SimpleQuery("udp", dnsconn, message)  // or "tcp".
-//
-// (Asynchronized) querying the DNS is supported. The Query structure
-// is used for communicating with the QueryRequest (for sending) and
-// QueryReply (for receiving) channels. The channels are globally
-// declared in the dns package.
-// Basic use pattern for creating such a resolver:
-//
-//      func qhandle(*Conn, *Msg) { /* handle request */ }
-//      
-//      func query(e chan os.Error) {
-//              err := QueryAndServeUDP(qhandle)
-//              e <- err
-//      }
-//      InitQueryChannels()
-//      err := make(chan os.Error)
-//      go query(err)
-//
-//      QueryRequest <- Query{Query: message, Conn: dnsconn}
-//      /* ... later ... */
-//      reply := <-QueryReply
-//
-// Server side programming is also supported also by using a Conn structure.
-// Basic use pattern for creating an UDP DNS server:
-//
-//      func handle(*Conn, *Msg) { /* handle request */ }
-//
-//      func listen(addr string, e chan os.Error) {
-//            err := ListenAndServeUDP(addr, handle)
-//            e <- err
-//      }
-//
-//      go listen("127.0.0.1:8053", err)
+//      c := dns.NewClient()
+//      in := c.Exchange(m, "127.0.0.1:53")
 //
 package dns
 
