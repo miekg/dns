@@ -47,7 +47,7 @@ func (dns *Msg) IsNotify() (ok bool) {
 	ok = dns.MsgHdr.Opcode == OpcodeNotify
 	ok = ok && dns.Question[0].Qclass == ClassINET
 	ok = ok && dns.Question[0].Qtype == TypeSOA
-	return ok
+	return
 }
 
 // Create a dns msg suitable for requesting an ixfr.
@@ -78,7 +78,7 @@ func (dns *Msg) IsAxfr() (ok bool) {
 	ok = dns.MsgHdr.Opcode == OpcodeQuery
 	ok = ok && dns.Question[0].Qclass == ClassINET
 	ok = ok && dns.Question[0].Qtype == TypeAXFR
-	return ok
+	return
 }
 
 // Is the message a valid ixfr request packet?
@@ -89,5 +89,22 @@ func (dns *Msg) IsIxfr() (ok bool) {
 	ok = dns.MsgHdr.Opcode == OpcodeQuery
 	ok = ok && dns.Question[0].Qclass == ClassINET
 	ok = ok && dns.Question[0].Qtype == TypeIXFR
-	return ok
+	return
+}
+
+// Has a message a TSIG record as the last record?
+func (dns *Msg) IsTsig() (ok bool) {
+        if len(dns.Extra) > 0 {
+                return dns.Extra[0].Header().Rrtype == TypeTSIG
+        }
+        return
+}
+
+func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
+        t := new(RR_TSIG)
+        t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
+        t.Algorithm = algo
+        t.Fudge = fudge
+        t.TimeSigned = timesigned
+        dns.Extra = append(dns.Extra, t)
 }

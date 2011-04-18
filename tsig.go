@@ -21,49 +21,6 @@ import (
 //      tsig.TimeSigned = uint64(time.Seconds())      
 //      tsig.Secret = "so6ZGir4GPAqINNh9U5c3A==" // Secret encoded in base64.
 
-type TsigWriter struct {
-        secrets map[string]string
-        w       io.Writer
-        name    string
-        fudge   uint16
-        algorithm string
-        timersOnly bool
-}
-
-// NewTsigWriter creates a new writer that implements TSIG, secrets
-// should contain a mapping from key names to secrets. A message
-// should be written with the TSIG record appends. Tsig
-func NewTsigWriter(w io.Writer, secrets map[string]string) *TsigWriter {
-        t := new(TsigWriter)
-        t.secrets = secrets
-        return t
-}
-
-func (t *TsigWriter) Write(p []byte) (int, os.Error) {
-        return 0, nil
-
-}
-
-
-type Tsig struct {
-	// The name of the key.
-	Name string
-	// Fudge to take into account.
-	Fudge uint16
-	// When is the TSIG created
-	TimeSigned uint64
-	// Which algorithm is used.
-	Algorithm string
-	// Tsig secret encoded in base64.
-	Secret string
-	// MAC (if known)
-	MAC string
-	// Request MAC
-	RequestMAC string
-	// Only include the timers in the MAC if set to true.
-	TimersOnly bool
-}
-
 // HMAC hashing codes. These are transmitted as domain names.
 const (
 	HmacMD5    = "hmac-md5.sig-alg.reg.int."
@@ -101,50 +58,42 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// Add a Tsig to add message.
-func (t *Tsig) Generate(msg []byte) ([]byte, os.Error) {
-	rawsecret, err := packBase64([]byte(t.Secret))
+// Add a Tsig to an message. // Must return the mac
+func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
+        if !m.IsTsig() {
+                panic("TSIG not last RR in additional")
+        }
+	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return nil, err
-	}
-	if t.Fudge == 0 {
-		t.Fudge = 300
-	}
-	if t.TimeSigned == 0 {
-		t.TimeSigned = uint64(time.Seconds())
 	}
 
-	buf, err := t.Buffer(msg)
+        rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
+        m.Extra = m.Extra[0:len(m.Extra)-1]     // kill the TSIG from the msg
+	buf, err := tsigBuffer(m, rr, timersOnly)
 	if err != nil {
 		return nil, err
 	}
+
+	t := new(RR_TSIG)
+
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
 
-	// Create TSIG and add it to the message.
-	q := new(Msg)
-	if !q.Unpack(msg) {
-		return nil, ErrUnpack
-	}
+	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
+	t.Fudge = t.Fudge
+	t.TimeSigned = t.TimeSigned
+	t.Algorithm = t.Algorithm
+	t.OrigId = m.MsgHdr.Id
+	t.MAC = t.MAC
+	t.MACSize = uint16(len(t.MAC) / 2)
 
-	rr := new(RR_TSIG)
-	rr.Hdr = RR_Header{Name: t.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
-	rr.Fudge = t.Fudge
-	rr.TimeSigned = t.TimeSigned
-	rr.Algorithm = t.Algorithm
-	rr.OrigId = q.Id
-	rr.MAC = t.MAC
-	rr.MACSize = uint16(len(t.MAC) / 2)
-
-	q.Extra = append(q.Extra, rr)
-	send, ok := q.Pack()
-	if !ok {
-		return send, ErrPack
-	}
-	return send, nil
+	m.Extra = append(m.Extra, t)
+        return m, nil
 }
 
+/*
 // Verify a TSIG on a message. 
 // If the signature does not validate err contains the
 // error. If the it validates err is nil
@@ -164,25 +113,32 @@ func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
 		return false, err
 	}
 
-	// Time needs to be checked */
+	// Time needs to be checked
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC), nil
 }
+*/
 
 // Create a wiredata buffer for the MAC calculation.
-func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
+func tsigBuffer(msg *Msg, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) {
 	var (
 		macbuf []byte
 		buf    []byte
 	)
+        if rr.TimeSigned == 0 {
+                rr.TimeSigned = uint64(time.Seconds())
+        }
+        if rr.Fudge == 0 {
+                rr.Fudge = 300
+        }
 
-	if t.RequestMAC != "" {
+	if rr.MAC != "" {
 		m := new(macWireFmt)
-		m.MACSize = uint16(len(t.RequestMAC) / 2)
-		m.MAC = t.RequestMAC
-		macbuf = make([]byte, len(t.RequestMAC)) // reqmac should be twice as long
+		m.MACSize = uint16(len(rr.MAC) / 2)
+		m.MAC = rr.MAC
+		macbuf = make([]byte, len(rr.MAC)) // reqmac should be twice as long
 		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
 			return nil, ErrSigGen
@@ -191,10 +147,10 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 	}
 
 	tsigvar := make([]byte, DefaultMsgSize)
-	if t.TimersOnly {
+	if timersOnly {
 		tsig := new(timerWireFmt)
-		tsig.TimeSigned = t.TimeSigned
-		tsig.Fudge = t.Fudge
+		tsig.TimeSigned = rr.TimeSigned
+		tsig.Fudge = rr.Fudge
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
 			return nil, ErrSigGen
@@ -202,12 +158,12 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		tsigvar = tsigvar[:n]
 	} else {
 		tsig := new(tsigWireFmt)
-		tsig.Name = strings.ToLower(t.Name)
+		tsig.Name = strings.ToLower(rr.Hdr.Name)
 		tsig.Class = ClassANY
 		tsig.Ttl = 0
-		tsig.Algorithm = strings.ToLower(t.Algorithm)
-		tsig.TimeSigned = t.TimeSigned
-		tsig.Fudge = t.Fudge
+		tsig.Algorithm = strings.ToLower(rr.Algorithm)
+		tsig.TimeSigned = rr.TimeSigned
+		tsig.Fudge = rr.Fudge
 		tsig.Error = 0
 		tsig.OtherLen = 0
 		tsig.OtherData = ""
@@ -217,15 +173,17 @@ func (t *Tsig) Buffer(msg []byte) ([]byte, os.Error) {
 		}
 		tsigvar = tsigvar[:n]
 	}
-	if t.RequestMAC != "" {
-		x := append(macbuf, msg...)
+	if rr.MAC != "" {
+                msgbuf, _ := msg.Pack()
+		x := append(macbuf, msgbuf...)
 		buf = append(x, tsigvar...)
 	} else {
-		buf = append(msg, tsigvar...)
+                msgbuf, _ := msg.Pack()
+		buf = append(msgbuf, tsigvar...)
 	}
 	return buf, nil
 }
-
+/*
 // Strip the TSIG from the pkt.
 func (t *Tsig) stripTsig(orig []byte) ([]byte, os.Error) {
 	// Copied from msg.go's Unpack()
@@ -292,3 +250,4 @@ func (t *Tsig) stripTsig(orig []byte) ([]byte, os.Error) {
 	}
 	return msg[:tsigoff], nil
 }
+*/

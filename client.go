@@ -28,10 +28,11 @@ type RequestWriter interface {
 
 // hijacked connections...?
 type reply struct {
-	client *Client
-	addr   string
-	req    *Msg
-	conn   net.Conn
+	client         *Client
+	addr           string
+	req            *Msg
+	conn           net.Conn
+	tsigTimersOnly bool
 }
 
 type Request struct {
@@ -118,14 +119,15 @@ func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 
 // TODO add: LocalAddr
 type Client struct {
-	Net          string        // if "tcp" a TCP query will be initiated, otherwise an UDP one
-	Addr         string        // address to call
-	Attempts     int           // number of attempts
-	Retry        bool          // retry with TCP
-	ChannelQuery chan *Request // read DNS request from this channel
-	ChannelReply chan []*Msg   // read DNS request from this channel
-	ReadTimeout  int64         // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout int64         // the net.Conn.SetWriteTimeout value for new connections
+	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one
+	Addr         string            // address to call
+	Attempts     int               // number of attempts
+	Retry        bool              // retry with TCP
+	ChannelQuery chan *Request     // read DNS request from this channel
+	ChannelReply chan []*Msg       // read DNS request from this channel
+	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
+	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
 func NewClient() *Client {
@@ -234,15 +236,15 @@ func (w *reply) Receive() (*Msg, os.Error) {
 		p = make([]byte, MaxMsgSize)
 	case "udp":
 		p = make([]byte, DefaultMsgSize)
-        }
-        n, err := w.readClient(p)
-        if err != nil {
-                return nil, err
-        }
-        p = p[:n]
-        if ok := m.Unpack(p); !ok {
-                return nil, ErrUnpack
-        }
+	}
+	n, err := w.readClient(p)
+	if err != nil {
+		return nil, err
+	}
+	p = p[:n]
+	if ok := m.Unpack(p); !ok {
+		return nil, ErrUnpack
+	}
 	return m, nil
 }
 
@@ -253,32 +255,32 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	switch w.Client().Net {
 	case "tcp":
 		if len(p) < 1 {
-                        return 0, io.ErrShortBuffer
-                }
-                n, err = w.conn.(*net.TCPConn).Read(p[0:2])
-                if err != nil || n != 2 {
-                        return n, err
-                }
-                l, _ := unpackUint16(p[0:2], 0)
-                if l == 0 {
-                        return 0, ErrShortRead
-                }
-                if int(l) > len(p) {
-                        return int(l), io.ErrShortBuffer
-                }
-                n, err = w.conn.(*net.TCPConn).Read(p[:l])
-                if err != nil {
-                        return n, err
-                }
-                i := n
-                for i < int(l) {
-                        j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
-                        if err != nil {
-                                return i, err
-                        }
-                        i += j
-                }
-                n = i
+			return 0, io.ErrShortBuffer
+		}
+		n, err = w.conn.(*net.TCPConn).Read(p[0:2])
+		if err != nil || n != 2 {
+			return n, err
+		}
+		l, _ := unpackUint16(p[0:2], 0)
+		if l == 0 {
+			return 0, ErrShortRead
+		}
+		if int(l) > len(p) {
+			return int(l), io.ErrShortBuffer
+		}
+		n, err = w.conn.(*net.TCPConn).Read(p[:l])
+		if err != nil {
+			return n, err
+		}
+		i := n
+		for i < int(l) {
+			j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
+			if err != nil {
+				return i, err
+			}
+			i += j
+		}
+		n = i
 	case "udp":
 		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
 		if err != nil {
@@ -288,7 +290,15 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	return
 }
 
+// Send a msg to the address specified in w.
+// If the message m contains a TSIG record the transaction
+// signature is calculated.
 func (w *reply) Send(m *Msg) os.Error {
+	if m.IsTsig() {
+		// Do tsig
+
+	}
+
 	out, ok := m.Pack()
 	if !ok {
 		return ErrPack

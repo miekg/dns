@@ -8,31 +8,31 @@ import (
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
 func (c *Client) XfrReceive(q *Msg, a string) ([]*Msg, os.Error) {
-        w := new(reply)
-        w.client = c
-        w.addr = a
-        w.req = q       // is this needed??
+	w := new(reply)
+	w.client = c
+	w.addr = a
+	w.req = q // is this needed TODO(mg)
 
 	if err := w.Send(q); err != nil {
-                return nil, err
-        }
-        // conn should be set now
+		return nil, err
+	}
+	// conn should be set now
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
 		return w.axfrReceive()
 	case TypeIXFR:
-	//	return w.ixfrReceive()
+		//	return w.ixfrReceive()
 	}
-        panic("not reached")
-        return nil, nil
+	panic("not reached")
+	return nil, nil
 }
 
 func (w *reply) axfrReceive() ([]*Msg, os.Error) {
-	axfr := make([]*Msg, 0)           // use append ALL the time?
-        first := true
+	axfr := make([]*Msg, 0) // use append ALL the time?
+	first := true
 	for {
 		in, err := w.Receive()
-                axfr = append(axfr, in)
+		axfr = append(axfr, in)
 		if err != nil {
 			return axfr, err
 		}
@@ -45,9 +45,7 @@ func (w *reply) axfrReceive() ([]*Msg, os.Error) {
 		}
 
 		if !first {
-			//if d.Tsig != nil {
-			//	d.Tsig.TimersOnly = true // Subsequent envelopes use this.
-			//}
+			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if !checkXfrSOA(in, false) {
 				// Soa record not the last one
 				continue

@@ -9,7 +9,6 @@ TARG=dns
 GOFILES=\
 	clientconfig.go\
 	client.go\
-	config.go\
 	defaults.go\
 	dns.go\
 	dnssec.go\

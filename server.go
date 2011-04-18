@@ -70,19 +70,19 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 // Helper handlers
 
 func Refused(w ResponseWriter, r *Msg) {
-        m := new(Msg)
-        m.SetReply(r)
-        m.MsgHdr.Rcode = RcodeRefused
-        m.MsgHdr.Authoritative = false
-        buf, _ := m.Pack()
-        w.Write(buf)
+	m := new(Msg)
+	m.SetReply(r)
+	m.MsgHdr.Rcode = RcodeRefused
+	m.MsgHdr.Authoritative = false
+	buf, _ := m.Pack()
+	w.Write(buf)
 }
 
 // RefusedHandler return a REFUSED answer
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 func ListenAndServe(addr string, network string, handler Handler) os.Error {
-	server := &Server{Addr: addr, Network: network, Handler: handler}
+	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
 }
 
@@ -90,19 +90,19 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
 	}
-        i:=0
-        for {
-                ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
-                i++
+	i := 0
+	for {
+		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
+		i++
 
-                if !ok {
-                        break
-                }
-                if len(pattern)-1-i < 0 || len(zone)-1-i < 0{
-                        break
-                }
+		if !ok {
+			break
+		}
+		if len(pattern)-1-i < 0 || len(zone)-1-i < 0 {
+			break
+		}
 
-        }
+	}
 	return
 }
 
@@ -125,11 +125,11 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-        if pattern[len(pattern)-1] != '.' {             // no ending .
-	        mux.m[pattern + "."] = handler
-        } else {
-	        mux.m[pattern]= handler
-        }
+	if pattern[len(pattern)-1] != '.' { // no ending .
+		mux.m[pattern+"."] = handler
+	} else {
+		mux.m[pattern] = handler
+	}
 }
 
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
@@ -158,7 +158,7 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 // A Server defines parameters for running an DNS server.
 type Server struct {
 	Addr         string  // address to listen on, ":dns" if empty
-	Network      string  // if "tcp" it will invoke a TCP listener, otherwise an UDP one
+	Net          string  // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler // handler to invoke, dns.DefaultServeMux if nil
 	ReadTimeout  int64   // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
@@ -169,7 +169,7 @@ type Server struct {
 // read requests and then call handler to reply to them.
 // Handler is typically nil, in which case the DefaultServeMux is used.
 func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
-	srv := &Server{Handler: handler, Network: "tcp"}
+	srv := &Server{Handler: handler, Net: "tcp"}
 	return srv.ServeTCP(l)
 }
 
@@ -178,7 +178,7 @@ func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
 // read requests and then call handler to reply to them.
 // Handler is typically nil, in which case the DefaultServeMux is used.
 func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
-	srv := &Server{Handler: handler, Network: "udp"}
+	srv := &Server{Handler: handler, Net: "udp"}
 	return srv.ServeUDP(l)
 }
 
@@ -188,7 +188,7 @@ func (srv *Server) ListenAndServe() os.Error {
 	if addr == "" {
 		addr = ":domain"
 	}
-	switch srv.Network {
+	switch srv.Net {
 	case "tcp":
 		a, e := net.ResolveTCPAddr(addr)
 		if e != nil {
@@ -323,60 +323,60 @@ func (c *conn) close() {
 
 // Serve a new connection.
 func (c *conn) serve() {
-        for {
-                // Request has been read in ServeUDP or ServeTCP
-                w := new(response)
-                w.conn = c
-                req := new(Msg)
-                if !req.Unpack(c.request) {
-                        break
-                }
-                w.req = req
-                c.handler.ServeDNS(w, w.req) // this does the writing back to the client
-                if c.hijacked {
-                        return
-                }
-                break           // TODO(mg) Why is this a loop anyway
-        }
-        if c._TCP != nil {
-                c.close() // Listen and Serve is closed then
-        }
+	for {
+		// Request has been read in ServeUDP or ServeTCP
+		w := new(response)
+		w.conn = c
+		req := new(Msg)
+		if !req.Unpack(c.request) {
+			break
+		}
+		w.req = req
+		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
+		if c.hijacked {
+			return
+		}
+		break // TODO(mg) Why is this a loop anyway
+	}
+	if c._TCP != nil {
+		c.close() // Listen and Serve is closed then
+	}
 }
 
 
 func (w *response) Write(data []byte) (n int, err os.Error) {
-        switch {
-        case w.conn._UDP != nil:
-                n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
-                if err != nil {
-                        return 0, err
-                }
-        case w.conn._TCP != nil:
-                // TODO(mg) len(data) > 64K
-                l := make([]byte, 2)
-                l[0], l[1] = packUint16(uint16(len(data)))
-                n, err = w.conn._TCP.Write(l)
-                if err != nil {
-                        return n, err
-                }
-                if n != 2 {
-                        return n, io.ErrShortWrite
-                }
-                n, err = w.conn._TCP.Write(data)
-                if err != nil {
-                        return n, err
-                }
-                i := n
-                if i < len(data) {
-                        j, err := w.conn._TCP.Write(data[i:len(data)])
-                        if err != nil {
-                                return i, err
-                        }
-                        i += j
-                }
-                n = i
-        }
-        return n, nil
+	switch {
+	case w.conn._UDP != nil:
+		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
+		if err != nil {
+			return 0, err
+		}
+	case w.conn._TCP != nil:
+		// TODO(mg) len(data) > 64K
+		l := make([]byte, 2)
+		l[0], l[1] = packUint16(uint16(len(data)))
+		n, err = w.conn._TCP.Write(l)
+		if err != nil {
+			return n, err
+		}
+		if n != 2 {
+			return n, io.ErrShortWrite
+		}
+		n, err = w.conn._TCP.Write(data)
+		if err != nil {
+			return n, err
+		}
+		i := n
+		if i < len(data) {
+			j, err := w.conn._TCP.Write(data[i:len(data)])
+			if err != nil {
+				return i, err
+			}
+			i += j
+		}
+		n = i
+	}
+	return n, nil
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
