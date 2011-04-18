@@ -7,7 +7,6 @@ package dns
 // setup for server - a HANDLER function that gets run
 // when the query returns.
 
-// This completely mirrors server.go impl.
 import (
 	"os"
 	"io"
@@ -23,8 +22,8 @@ type QueryHandler interface {
 type RequestWriter interface {
 	WriteMessages([]*Msg)
 	Write(*Msg)
-	WriteClient(*Msg) os.Error
-	ReadClient() (*Msg, os.Error)
+	Send(*Msg) os.Error
+	Receive() (*Msg, os.Error)
 }
 
 // hijacked connections...?
@@ -117,6 +116,7 @@ func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 	h.QueryDNS(w, r)
 }
 
+// TODO add: LocalAddr
 type Client struct {
 	Net          string        // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Addr         string        // address to call
@@ -176,7 +176,8 @@ func (w *reply) Write(m *Msg) {
 	w.Client().ChannelReply <- []*Msg{w.req, m}
 }
 
-// async querie
+// Do performs an asynchronize query. The result is returned on the
+// channel set in the c.
 func (c *Client) Do(m *Msg, a string) {
 	if c.ChannelQuery == nil {
 		DefaultQueryChan <- &Request{Client: c, Addr: a, Request: m}
@@ -185,30 +186,30 @@ func (c *Client) Do(m *Msg, a string) {
 	}
 }
 
-// A synchronize query
+// A sync query
 func (c *Client) Exchange(m *Msg, a string) *Msg {
-        w := new(reply)
-        w.client = c
-        w.addr = a
+	w := new(reply)
+	w.client = c
+	w.addr = a
 	out, ok := m.Pack()
 	if !ok {
-	        //
+		//
 	}
-        _, err := w.writeClient(out)
-        if err != nil {
-                return nil
-        }
+	_, err := w.writeClient(out)
+	if err != nil {
+		return nil
+	}
 
-        // udp / tcp
-        p := make([]byte, DefaultMsgSize)
-        n, err := w.readClient(p)
-        if err != nil {
-                return nil
-        }
-        p = p[:n]
-        if ok := m.Unpack(p); !ok {
-                return nil
-        }
+	// udp / tcp
+	p := make([]byte, DefaultMsgSize)
+	n, err := w.readClient(p)
+	if err != nil {
+		return nil
+	}
+	p = p[:n]
+	if ok := m.Unpack(p); !ok {
+		return nil
+	}
 	return m
 }
 
@@ -225,7 +226,7 @@ func (w *reply) Request() *Msg {
 	return w.req
 }
 
-func (w *reply) ReadClient() (*Msg, os.Error) {
+func (w *reply) Receive() (*Msg, os.Error) {
 	var p []byte
 	m := new(Msg)
 	switch w.Client().Net {
@@ -261,7 +262,7 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	return
 }
 
-func (w *reply) WriteClient(m *Msg) os.Error {
+func (w *reply) Send(m *Msg) os.Error {
 	out, ok := m.Pack()
 	if !ok {
 		return ErrPack
