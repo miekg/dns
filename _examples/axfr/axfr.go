@@ -12,18 +12,19 @@ func main() {
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
-	c := make(chan *dns.Xfr)
-	d := new(dns.Conn)
-	m := new(dns.Msg)
-
-	d.RemoteAddr = *nameserver
+        // only UDP works atm
+        client := dns.NewClient()
+        m := new(dns.Msg)
 	if *serial > 0 {
 		m.SetIxfr(zone, uint32(*serial))
 	} else {
 		m.SetAxfr(zone)
 	}
-	go d.XfrRead(m, c)
-	for x := range c {
-		fmt.Printf("%v %v %v\n", x.Add, x.RR, x.Err)
+        axfr, err := client.XfrReceive(m, *nameserver)
+        if err != nil {
+                println(err.String())
+        }
+        for _, v := range axfr {
+		fmt.Printf("%v\n", v)
 	}
 }

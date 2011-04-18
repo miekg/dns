@@ -252,7 +252,33 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	}
 	switch w.Client().Net {
 	case "tcp":
-		// 
+		if len(p) < 1 {
+                        return 0, io.ErrShortBuffer
+                }
+                n, err = w.conn.(*net.TCPConn).Read(p[0:2])
+                if err != nil || n != 2 {
+                        return n, err
+                }
+                l, _ := unpackUint16(p[0:2], 0)
+                if l == 0 {
+                        return 0, ErrShortRead
+                }
+                if int(l) > len(p) {
+                        return int(l), io.ErrShortBuffer
+                }
+                n, err = w.conn.(*net.TCPConn).Read(p[:l])
+                if err != nil {
+                        return n, err
+                }
+                i := n
+                for i < int(l) {
+                        j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
+                        if err != nil {
+                                return i, err
+                        }
+                        i += j
+                }
+                n = i
 	case "udp":
 		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
 		if err != nil {

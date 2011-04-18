@@ -28,10 +28,11 @@ func (c *Client) XfrReceive(q *Msg, a string) ([]*Msg, os.Error) {
 }
 
 func (w *reply) axfrReceive() ([]*Msg, os.Error) {
-	axfr := make([]*Msg, 1)           // use append ALL the time?
+	axfr := make([]*Msg, 0)           // use append ALL the time?
         first := true
 	for {
 		in, err := w.Receive()
+                axfr = append(axfr, in)
 		if err != nil {
 			return axfr, err
 		}
@@ -49,10 +50,8 @@ func (w *reply) axfrReceive() ([]*Msg, os.Error) {
 			//}
 			if !checkXfrSOA(in, false) {
 				// Soa record not the last one
-				axfr = append(axfr, in)
 				continue
 			} else {
-				axfr = append(axfr, in)
 				return axfr, nil
 			}
 		}

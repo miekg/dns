@@ -52,6 +52,7 @@ func (dns *Msg) IsNotify() (ok bool) {
 
 // Create a dns msg suitable for requesting an ixfr.
 func (dns *Msg) SetIxfr(z string, serial uint32) {
+        dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
 	s := new(RR_SOA)
@@ -64,6 +65,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 
 // Create a dns msg suitable for requesting an axfr.
 func (dns *Msg) SetAxfr(z string) {
+        dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
