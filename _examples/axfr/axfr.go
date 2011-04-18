@@ -14,12 +14,14 @@ func main() {
 
         // only UDP works atm
         client := dns.NewClient()
+        client.Net = "tcp"
         m := new(dns.Msg)
 	if *serial > 0 {
 		m.SetIxfr(zone, uint32(*serial))
 	} else {
 		m.SetAxfr(zone)
 	}
+        fmt.Printf("%v\n", m)
         axfr, err := client.XfrReceive(m, *nameserver)
         if err != nil {
                 println(err.String())
