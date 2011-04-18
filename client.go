@@ -231,18 +231,18 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	m := new(Msg)
 	switch w.Client().Net {
 	case "tcp":
-		//
+		p = make([]byte, MaxMsgSize)
 	case "udp":
 		p = make([]byte, DefaultMsgSize)
-		n, err := w.readClient(p)
-		if err != nil {
-			return nil, err
-		}
-		p = p[:n]
-		if ok := m.Unpack(p); !ok {
-			return nil, ErrUnpack
-		}
-	}
+        }
+        n, err := w.readClient(p)
+        if err != nil {
+                return nil, err
+        }
+        p = p[:n]
+        if ok := m.Unpack(p); !ok {
+                return nil, ErrUnpack
+        }
 	return m, nil
 }
 
