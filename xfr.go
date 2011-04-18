@@ -4,49 +4,63 @@ import (
 	"os"
 )
 
-// Xfr is used in communicating with Xfr* functions.
-type Xfr struct {
-        // If Add is true the resource record in RR must be added to
-        // the zone. If Add is false the resource record must be removed.
-        // be considered to have failed.
-	Add bool
-        // The RR that should be added or removed.
-	RR
-        // If err in non nil some error occurred and the transfer must
-        // be considered to have faild.
-	Err os.Error
-}
-// todo maybe add the SOA serial too?
-
 // Perform an incoming Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
-func (d *Conn) XfrRead(q *Msg, m chan *Xfr) {
-        if d.TCP == nil && d.UDP == nil {
-                // No connection yet
-                if err := d.Dial("tcp"); err != nil {
-                        m <- &Xfr{true, nil, err}
-                        close(m)
-                        return
-                }
+func (c *Client) XfrReceive(q *Msg, a string) ([]*Msg, os.Error) {
+        w := new(reply)
+        w.client = c
+        w.addr = a
+        w.req = q       // is this needed??
+
+	if err := w.Send(q); err != nil {
+                return nil, err
         }
-	// Send q now.
-	err := d.WriteMsg(q)
-	if err != nil {
-                m <- &Xfr{true, nil, err}
-                close(m)
-		return
-	}
+        // conn should be set now
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
-		d.axfrRead(q, m)
+		return w.axfrReceive()
 	case TypeIXFR:
-		d.ixfrRead(q, m)
-        default:
-                m <- &Xfr{true, nil, &Error{Error: "Xfr Qtype not recognized"}}
-                close(m)
+	//	return w.ixfrReceive()
 	}
+        panic("not reached")
+        return nil, nil
 }
+
+func (w *reply) axfrReceive() ([]*Msg, os.Error) {
+	axfr := make([]*Msg, 1)           // use append ALL the time?
+        first := true
+	for {
+		in, err := w.Receive()
+		if err != nil {
+			return axfr, err
+		}
+
+		if first {
+			if !checkXfrSOA(in, true) {
+				return axfr, ErrXfrSoa
+			}
+			first = !first
+		}
+
+		if !first {
+			//if d.Tsig != nil {
+			//	d.Tsig.TimersOnly = true // Subsequent envelopes use this.
+			//}
+			if !checkXfrSOA(in, false) {
+				// Soa record not the last one
+				axfr = append(axfr, in)
+				continue
+			} else {
+				axfr = append(axfr, in)
+				return axfr, nil
+			}
+		}
+	}
+	panic("not reached")
+	return nil, nil
+}
+/*
 
 // Perform an outgoing Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If q's question
@@ -63,47 +77,6 @@ func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
                 e <- &Error{Error: "Xfr Qtype not recognized"}
                 close(m)
 	}
-}
-
-func (d *Conn) axfrRead(q *Msg, m chan *Xfr) {
-	defer close(m)
-	first := true
-	in := new(Msg)
-	for {
-		err := d.ReadMsg(in)
-		if err != nil {
-			m <- &Xfr{true, nil, err}
-			return
-		}
-		if in.Id != q.Id {
-			m <- &Xfr{true, nil, ErrId}
-			return
-		}
-
-		if first {
-			if !checkXfrSOA(in, true) {
-				m <- &Xfr{true, nil, ErrXfrSoa}
-				return
-			}
-			first = !first
-		}
-
-		if !first {
-			if d.Tsig != nil {
-				d.Tsig.TimersOnly = true // Subsequent envelopes use this.
-			}
-			if !checkXfrSOA(in, false) {
-				// Soa record not the last one
-				sendMsg(in, m, false)
-				continue
-			} else {
-				sendMsg(in, m, true)
-				return
-			}
-		}
-	}
-	panic("not reached")
-	return
 }
 
 // Just send the zone
@@ -155,7 +128,7 @@ func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	}
 }
 
-func (d *Conn) ixfrRead(q *Msg, m chan *Xfr) {
+func (d *Conn) ixfrReceive(q *Msg, m chan *Xfr) {
 	defer close(m)
 	var serial uint32 // The first serial seen is the current server serial
 	var x *Xfr
@@ -223,6 +196,7 @@ func (d *Conn) ixfrRead(q *Msg, m chan *Xfr) {
 	panic("not reached")
 	return
 }
+*/
 
 // Check if he SOA record exists in the Answer section of 
 // the packet. If first is true the first RR must be a soa
@@ -236,16 +210,4 @@ func checkXfrSOA(in *Msg, first bool) bool {
 		}
 	}
 	return false
-}
-
-// Send the answer section to the channel
-func sendMsg(in *Msg, c chan *Xfr, nosoa bool) {
-	for k, r := range in.Answer {
-	        x := &Xfr{Add: true}
-		if nosoa && k == len(in.Answer)-1 {
-			continue
-		}
-		x.RR = r
-		c <- x
-	}
 }
