@@ -12,7 +12,6 @@ func main() {
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
-        // only UDP works atm
         client := dns.NewClient()
         client.Net = "tcp"
         m := new(dns.Msg)
@@ -21,7 +20,6 @@ func main() {
 	} else {
 		m.SetAxfr(zone)
 	}
-        fmt.Printf("%v\n", m)
         axfr, err := client.XfrReceive(m, *nameserver)
         if err != nil {
                 println(err.String())
