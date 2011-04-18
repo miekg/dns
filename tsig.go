@@ -14,12 +14,6 @@ import (
 // and RFC 4635.
 // Basic use pattern of Tsig:
 //
-//      tsig := new(dns.Tsig)
-//      tsig.Name = "axfr."                      // The name of the key.
-//      tsig.Algorithm = dns.HmacMD5             // The HMAC to use.
-//      tsig.Fudge = 300                         // RFC recommends 300 here.
-//      tsig.TimeSigned = uint64(time.Seconds())      
-//      tsig.Secret = "so6ZGir4GPAqINNh9U5c3A==" // Secret encoded in base64.
 
 // HMAC hashing codes. These are transmitted as domain names.
 const (
@@ -79,15 +73,15 @@ func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
+
 	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
+	t.MACSize = uint16(len(t.MAC) / 2)
 
 	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
-	t.Fudge = t.Fudge
-	t.TimeSigned = t.TimeSigned
-	t.Algorithm = t.Algorithm
+	t.Fudge = rr.Fudge
+	t.TimeSigned = rr.TimeSigned
+	t.Algorithm = rr.Algorithm
 	t.OrigId = m.MsgHdr.Id
-	t.MAC = t.MAC
-	t.MACSize = uint16(len(t.MAC) / 2)
 
 	m.Extra = append(m.Extra, t)
         return m, nil

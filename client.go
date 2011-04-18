@@ -295,8 +295,9 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 // signature is calculated.
 func (w *reply) Send(m *Msg) os.Error {
 	if m.IsTsig() {
-		// Do tsig
-
+                secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+                // hoeft er niet te zijn...
+		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigTimersOnly)
 	}
 
 	out, ok := m.Pack()
