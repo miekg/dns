@@ -247,6 +247,7 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	}
         // Tsig
         if m.IsTsig() {
+                println("DOING TSIG")
                 secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
                 _, ok := w.Client().TsigSecret[secret]
                 if !ok {
@@ -254,7 +255,10 @@ func (w *reply) Receive() (*Msg, os.Error) {
                 }
                 ok, err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigTimersOnly)
                 if !ok {
+                        println("TSIG DID NOT VALIDATED")
                         return m, err
+                } else {
+                        println("TSIG VALIDATED")
                 }
         }
 	return m, nil
