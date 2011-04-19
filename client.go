@@ -245,6 +245,18 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	if ok := m.Unpack(p); !ok {
 		return nil, ErrUnpack
 	}
+        // Tsig
+        if m.IsTsig() {
+                secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+                _, ok := w.Client().TsigSecret[secret]
+                if !ok {
+                        return m, ErrNoSig
+                }
+                ok, err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigTimersOnly)
+                if !ok {
+                        return m, err
+                }
+        }
 	return m, nil
 }
 
@@ -296,7 +308,10 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 func (w *reply) Send(m *Msg) os.Error {
 	if m.IsTsig() {
                 secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-                // hoeft er niet te zijn...
+                _, ok := w.Client().TsigSecret[secret]
+                if !ok {
+                        return ErrNoSig
+                }
 		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigTimersOnly)
 	}
 

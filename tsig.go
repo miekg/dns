@@ -64,7 +64,8 @@ func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
 
         rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
         m.Extra = m.Extra[0:len(m.Extra)-1]     // kill the TSIG from the msg
-	buf, err := tsigBuffer(m, rr, timersOnly)
+        mbuf, _ := m.Pack()
+	buf, err := tsigBuffer(mbuf, rr, timersOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -87,36 +88,50 @@ func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
         return m, nil
 }
 
-/*
 // Verify a TSIG on a message. 
 // If the signature does not validate err contains the
 // error. If the it validates err is nil
-func (t *Tsig) Verify(msg []byte) (bool, os.Error) {
-	rawsecret, err := packBase64([]byte(t.Secret))
+func TsigVerify(msg []byte, secret string, timersOnly bool) (bool, os.Error) {
+	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return false, err
 	}
 	// Stipped the TSIG from the incoming msg
-	stripped, err := t.stripTsig(msg)
+	stripped, tsig, err := stripTsig(msg)
 	if err != nil {
 		return false, err
 	}
 
-	buf, err := t.Buffer(stripped)
+	buf, err := tsigBuffer(stripped, tsig, timersOnly)
 	if err != nil {
 		return false, err
 	}
+                        /*
+                        if t.Name != "" {
+                                if t.Name != dns.Extra[i].Header().Name {
+                                        return nil, ErrKey
+                                }
+                        }
+                        if t.Algorithm != "" {
+                                if t.Algorithm != dns.Extra[i].(*RR_TSIG).Algorithm {
+                                        return nil, ErrAlg
+                                }
+                        }
+                        ti := uint64(time.Seconds()) - dns.Extra[i].(*RR_TSIG).TimeSigned
+                        if uint64(dns.Extra[i].(*RR_TSIG).Fudge) < ti {
+                                return nil, ErrTime
+                        }
+                        */
 
 	// Time needs to be checked
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(t.MAC), nil
+	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(tsig.MAC), nil
 }
-*/
 
 // Create a wiredata buffer for the MAC calculation.
-func tsigBuffer(msg *Msg, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) {
+func tsigBuffer(msgbuf []byte, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) {
 	var (
 		macbuf []byte
 		buf    []byte
@@ -168,36 +183,33 @@ func tsigBuffer(msg *Msg, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) {
 		tsigvar = tsigvar[:n]
 	}
 	if rr.MAC != "" {
-                msgbuf, _ := msg.Pack()
 		x := append(macbuf, msgbuf...)
 		buf = append(x, tsigvar...)
 	} else {
-                msgbuf, _ := msg.Pack()
 		buf = append(msgbuf, tsigvar...)
 	}
 	return buf, nil
 }
-/*
-// Strip the TSIG from the pkt.
-func (t *Tsig) stripTsig(orig []byte) ([]byte, os.Error) {
+
+// Strip the TSIG from the raw message
+func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
 	// Copied from msg.go's Unpack()
 	// Header.
 	var dh Header
 	dns := new(Msg)
-	msg := make([]byte, len(orig))
-	copy(msg, orig) // fhhh.. another copy TODO(mg)?
+        rr  := new(RR_TSIG)
 	off := 0
 	tsigoff := 0
 	var ok bool
 	if off, ok = unpackStruct(&dh, msg, off); !ok {
-		return nil, ErrUnpack
+		return nil, nil, ErrUnpack
 	}
 	if dh.Arcount == 0 {
-		return nil, ErrNoSig
+		return nil, nil, ErrNoSig
 	}
         // Rcode, see msg.go Unpack()
         if int(dh.Bits & 0xF) == RcodeNotAuth {
-                return nil, ErrAuth
+                return nil, nil, ErrAuth
         }
 
 	// Arrays.
@@ -219,20 +231,7 @@ func (t *Tsig) stripTsig(orig []byte) ([]byte, os.Error) {
 		tsigoff = off
 		dns.Extra[i], off, ok = unpackRR(msg, off)
 		if dns.Extra[i].Header().Rrtype == TypeTSIG {
-                        if t.Name != "" {
-                                if t.Name != dns.Extra[i].Header().Name {
-                                        return nil, ErrKey
-                                }
-                        }
-                        if t.Algorithm != "" {
-                                if t.Algorithm != dns.Extra[i].(*RR_TSIG).Algorithm {
-                                        return nil, ErrAlg
-                                }
-                        }
-                        ti := uint64(time.Seconds()) - dns.Extra[i].(*RR_TSIG).TimeSigned
-                        if uint64(dns.Extra[i].(*RR_TSIG).Fudge) < ti {
-                                return nil, ErrTime
-                        }
+                        rr = dns.Extra[i].(*RR_TSIG)
 			// Adjust Arcount.
 			arcount, _ := unpackUint16(msg, 10)
 			msg[10], msg[11] = packUint16(arcount - 1)
@@ -240,8 +239,10 @@ func (t *Tsig) stripTsig(orig []byte) ([]byte, os.Error) {
 		}
 	}
 	if !ok {
-		return nil, ErrUnpack
+		return nil, nil, ErrUnpack
 	}
-	return msg[:tsigoff], nil
+        if rr == nil {
+		return nil, nil, ErrNoSig
+        }
+	return msg[:tsigoff], rr, nil
 }
-*/
