@@ -32,6 +32,7 @@ type reply struct {
 	addr           string
 	req            *Msg
 	conn           net.Conn
+	tsigRequestMAC string
 	tsigTimersOnly bool
 }
 
@@ -245,22 +246,18 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	if ok := m.Unpack(p); !ok {
 		return nil, ErrUnpack
 	}
-        // Tsig
-        if m.IsTsig() {
-                println("DOING TSIG")
-                secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-                _, ok := w.Client().TsigSecret[secret]
-                if !ok {
-                        return m, ErrNoSig
-                }
-                ok, err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigTimersOnly)
-                if !ok {
-                        println("TSIG DID NOT VALIDATED")
-                        return m, err
-                } else {
-                        println("TSIG VALIDATED")
-                }
-        }
+	// Tsig
+	if m.IsTsig() {
+		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+		_, ok := w.Client().TsigSecret[secret]
+		if !ok {
+			return m, ErrNoSig
+		}
+		ok, err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
+		if !ok {
+			return m, err
+		}
+	}
 	return m, nil
 }
 
@@ -311,14 +308,14 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 // signature is calculated.
 func (w *reply) Send(m *Msg) os.Error {
 	if m.IsTsig() {
-                secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-                _, ok := w.Client().TsigSecret[secret]
-                if !ok {
-                        return ErrNoSig
-                }
-		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigTimersOnly)
+		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+		_, ok := w.Client().TsigSecret[secret]
+		if !ok {
+			return ErrNoSig
+		}
+		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
+                w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC        // Safe the requestMAC
 	}
-
 	out, ok := m.Pack()
 	if !ok {
 		return ErrPack

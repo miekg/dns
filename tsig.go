@@ -53,19 +53,19 @@ type timerWireFmt struct {
 }
 
 // Add a Tsig to an message. // Must return the mac
-func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
-        if !m.IsTsig() {
-                panic("TSIG not last RR in additional")
-        }
+func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.Error) {
+	if !m.IsTsig() {
+		panic("TSIG not last RR in additional")
+	}
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return nil, err
 	}
 
-        rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
-        m.Extra = m.Extra[0:len(m.Extra)-1]     // kill the TSIG from the msg
-        mbuf, _ := m.Pack()
-	buf, err := tsigBuffer(mbuf, rr, timersOnly)
+	rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
+	m.Extra = m.Extra[0 : len(m.Extra)-1] // kill the TSIG from the msg
+	mbuf, _ := m.Pack()
+	buf, err := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -85,43 +85,43 @@ func TsigGenerate(m *Msg, secret string, timersOnly bool) (*Msg, os.Error) {
 	t.OrigId = m.MsgHdr.Id
 
 	m.Extra = append(m.Extra, t)
-        return m, nil
+	return m, nil
 }
 
 // Verify a TSIG on a message. 
 // If the signature does not validate err contains the
 // error. If the it validates err is nil
-func TsigVerify(msg []byte, secret string, timersOnly bool) (bool, os.Error) {
+func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) (bool, os.Error) {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return false, err
 	}
-	// Stipped the TSIG from the incoming msg
+	// Srtip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
 	if err != nil {
 		return false, err
 	}
 
-	buf, err := tsigBuffer(stripped, tsig, timersOnly)
+	buf, err := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
 	if err != nil {
 		return false, err
 	}
-                        /*
-                        if t.Name != "" {
-                                if t.Name != dns.Extra[i].Header().Name {
-                                        return nil, ErrKey
-                                }
-                        }
-                        if t.Algorithm != "" {
-                                if t.Algorithm != dns.Extra[i].(*RR_TSIG).Algorithm {
-                                        return nil, ErrAlg
-                                }
-                        }
-                        ti := uint64(time.Seconds()) - dns.Extra[i].(*RR_TSIG).TimeSigned
-                        if uint64(dns.Extra[i].(*RR_TSIG).Fudge) < ti {
-                                return nil, ErrTime
-                        }
-                        */
+	/*
+	   if t.Name != "" {
+	           if t.Name != dns.Extra[i].Header().Name {
+	                   return nil, ErrKey
+	           }
+	   }
+	   if t.Algorithm != "" {
+	           if t.Algorithm != dns.Extra[i].(*RR_TSIG).Algorithm {
+	                   return nil, ErrAlg
+	           }
+	   }
+	   ti := uint64(time.Seconds()) - dns.Extra[i].(*RR_TSIG).TimeSigned
+	   if uint64(dns.Extra[i].(*RR_TSIG).Fudge) < ti {
+	           return nil, ErrTime
+	   }
+	*/
 
 	// Time needs to be checked
 
@@ -131,23 +131,23 @@ func TsigVerify(msg []byte, secret string, timersOnly bool) (bool, os.Error) {
 }
 
 // Create a wiredata buffer for the MAC calculation.
-func tsigBuffer(msgbuf []byte, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) {
+func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) ([]byte, os.Error) {
 	var (
 		macbuf []byte
 		buf    []byte
 	)
-        if rr.TimeSigned == 0 {
-                rr.TimeSigned = uint64(time.Seconds())
-        }
-        if rr.Fudge == 0 {
-                rr.Fudge = 300
-        }
+	if rr.TimeSigned == 0 {
+		rr.TimeSigned = uint64(time.Seconds())
+	}
+	if rr.Fudge == 0 {
+		rr.Fudge = 300
+	}
 
-	if rr.MAC != "" {
+	if requestMAC != "" {
 		m := new(macWireFmt)
-		m.MACSize = uint16(len(rr.MAC) / 2)
-		m.MAC = rr.MAC
-		macbuf = make([]byte, len(rr.MAC)) // reqmac should be twice as long
+		m.MACSize = uint16(len(requestMAC) / 2)
+		m.MAC = requestMAC
+		macbuf = make([]byte, len(requestMAC)) // reqmac should be twice as long
 		n, ok := packStruct(m, macbuf, 0)
 		if !ok {
 			return nil, ErrSigGen
@@ -169,13 +169,13 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, timersOnly bool) ([]byte, os.Error) 
 		tsig := new(tsigWireFmt)
 		tsig.Name = strings.ToLower(rr.Hdr.Name)
 		tsig.Class = ClassANY
-		tsig.Ttl = 0
+		tsig.Ttl = rr.Hdr.Ttl
 		tsig.Algorithm = strings.ToLower(rr.Algorithm)
 		tsig.TimeSigned = rr.TimeSigned
 		tsig.Fudge = rr.Fudge
-		tsig.Error = 0
-		tsig.OtherLen = 0
-		tsig.OtherData = ""
+		tsig.Error = rr.Error
+		tsig.OtherLen = rr.OtherLen
+		tsig.OtherData = rr.OtherData
 		n, ok1 := packStruct(tsig, tsigvar, 0)
 		if !ok1 {
 			return nil, ErrSigGen
@@ -197,7 +197,7 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
 	// Header.
 	var dh Header
 	dns := new(Msg)
-        rr  := new(RR_TSIG)
+	rr := new(RR_TSIG)
 	off := 0
 	tsigoff := 0
 	var ok bool
@@ -207,10 +207,10 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
 	if dh.Arcount == 0 {
 		return nil, nil, ErrNoSig
 	}
-        // Rcode, see msg.go Unpack()
-        if int(dh.Bits & 0xF) == RcodeNotAuth {
-                return nil, nil, ErrAuth
-        }
+	// Rcode, see msg.go Unpack()
+	if int(dh.Bits&0xF) == RcodeNotAuth {
+		return nil, nil, ErrAuth
+	}
 
 	// Arrays.
 	dns.Question = make([]Question, dh.Qdcount)
@@ -231,7 +231,7 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
 		tsigoff = off
 		dns.Extra[i], off, ok = unpackRR(msg, off)
 		if dns.Extra[i].Header().Rrtype == TypeTSIG {
-                        rr = dns.Extra[i].(*RR_TSIG)
+			rr = dns.Extra[i].(*RR_TSIG)
 			// Adjust Arcount.
 			arcount, _ := unpackUint16(msg, 10)
 			msg[10], msg[11] = packUint16(arcount - 1)
@@ -241,8 +241,8 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
 	if !ok {
 		return nil, nil, ErrUnpack
 	}
-        if rr == nil {
+	if rr == nil {
 		return nil, nil, ErrNoSig
-        }
+	}
 	return msg[:tsigoff], rr, nil
 }
