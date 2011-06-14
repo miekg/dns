@@ -17,24 +17,24 @@ import (
 
 // Wrap the contents of the /etc/resolv.conf.
 type ClientConfig struct {
-        Servers  []string            // servers to use
-        Search   []string            // suffixes to append to local name
-        Port     string              // what port to use
-        Ndots    int                 // number of dots in name to trigger absolute lookup
-        Timeout  int                 // seconds before giving up on packet
-        Attempts int                 // lost packets before giving up on server
+	Servers  []string // servers to use
+	Search   []string // suffixes to append to local name
+	Port     string   // what port to use
+	Ndots    int      // number of dots in name to trigger absolute lookup
+	Timeout  int      // seconds before giving up on packet
+	Attempts int      // lost packets before giving up on server
 }
 
 // See resolv.conf(5) on a Linux machine.
 // Parse a /etc/resolv.conf like file and return a filled out ClientConfig. Note
 // that all nameservers will have the port number appendend (:53)
 func ClientConfigFromFile(conf string) (*ClientConfig, os.Error) {
-	file, err := os.Open(conf, os.O_RDONLY, 0)
+	file, err := os.Open(conf)
 	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
-        c := new(ClientConfig)
+	c := new(ClientConfig)
 	b := bufio.NewReader(file)
 	c.Servers = make([]string, 3)[0:0] // small, but the standard limit
 	c.Search = make([]string, 0)

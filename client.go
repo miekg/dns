@@ -149,7 +149,7 @@ func (q *Query) Query() os.Error {
 	if handler == nil {
 		handler = DefaultQueryMux
 	}
-forever:
+//forever:
 	for {
 		select {
 		case in := <-q.ChannelQuery:
@@ -314,7 +314,7 @@ func (w *reply) Send(m *Msg) os.Error {
 			return ErrNoSig
 		}
 		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-                w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC        // Safe the requestMAC
+		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Safe the requestMAC
 	}
 	out, ok := m.Pack()
 	if !ok {
@@ -336,7 +336,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		panic("c.Net empty")
 	}
 
-	conn, err := net.Dial(c.Net, "", w.addr)
+	conn, err := net.Dial(c.Net, w.addr)
 	if err != nil {
 		return 0, err
 	}
