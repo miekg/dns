@@ -179,7 +179,7 @@ func (w *reply) Write(m *Msg) {
 	w.Client().ChannelReply <- []*Msg{w.req, m}
 }
 
-// Do performs an asynchronize query. The result is returned on the
+// Do performs an async query. The result is returned on the
 // channel set in the c.
 func (c *Client) Do(m *Msg, a string) {
 	if c.ChannelQuery == nil {

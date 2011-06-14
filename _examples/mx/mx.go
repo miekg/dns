@@ -1,5 +1,4 @@
 package main
-
 // Print the MX records of a domain
 // (c) Miek Gieben - 2011
 import (
@@ -13,34 +12,28 @@ func main() {
                 fmt.Printf("%s DOMAIN\n", os.Args[0])
                 os.Exit(1)
         }
-	d := new(dns.Conn)
-        c, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-        // Errorchecking
-        d.RemoteAddr = c.Servers[0]
+
+        // Error checking
+        config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+        c := dns.NewClient()
 
         m := new(dns.Msg)
-        m.Id = dns.Id()
+        m.SetQuestion(os.Args[1], dns.TypeMX)
         m.MsgHdr.RecursionDesired = true
-        m.Question = make([]dns.Question, 1)
-        m.Question[0] = dns.Question{os.Args[1], dns.TypeMX, dns.ClassINET}
 
-        err = d.Dial("udp")
-        if err != nil {
-                fmt.Printf("*** error: %s\n", err.String())
+        // Simple sync query, nothing fancy
+        r := c.Exchange(m, config.Servers[0])
+
+        if r == nil {
                 os.Exit(1)
         }
 
-        in, err := dns.SimpleQuery("udp", d, m)
-        if in != nil {
-                if in.Rcode != dns.RcodeSuccess {
-                        fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])
-                        os.Exit(1)
-                }
-                // Stuff must be in the answer section
-                for _, a := range in.Answer {
-                        fmt.Printf("%v\n", a)
-                }
-        } else {
-                fmt.Printf("*** error: %s\n", err.String())
+        if r.Rcode != dns.RcodeSuccess {
+                fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])
+                os.Exit(1)
+        }
+        // Stuff must be in the answer section
+        for _, a := range r.Answer {
+                fmt.Printf("%v\n", a)
         }
 }
