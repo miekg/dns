@@ -14,6 +14,7 @@ func (dns *Msg) SetReply(request *Msg) {
 	dns.Question[0] = request.Question[0]
 }
 
+// Create a question packet.
 func (dns *Msg) SetQuestion(z string, t uint16) {
         dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
