@@ -190,7 +190,7 @@ func (srv *Server) ListenAndServe() os.Error {
 	}
 	switch srv.Net {
 	case "tcp":
-		a, e := net.ResolveTCPAddr(addr)
+		a, e := net.ResolveTCPAddr("tcp",addr)
 		if e != nil {
 			return e
 		}
@@ -200,7 +200,7 @@ func (srv *Server) ListenAndServe() os.Error {
 		}
 		return srv.ServeTCP(l)
 	case "udp":
-		a, e := net.ResolveUDPAddr(addr)
+		a, e := net.ResolveUDPAddr("udp",addr)
 		if e != nil {
 			return e
 		}

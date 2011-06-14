@@ -58,17 +58,17 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		e := big.NewInt(int64(t.PublicKey.E))
 		publicExponent := unpackBase64(e.Bytes())
 		privateExponent := unpackBase64(t.D.Bytes())
-		prime1 := unpackBase64(t.P.Bytes())
-		prime2 := unpackBase64(t.Q.Bytes())
+		prime1 := unpackBase64(t.Primes[0].Bytes())
+		prime2 := unpackBase64(t.Primes[1].Bytes())
 		// Calculate Exponent1/2 and Coefficient as per: http://en.wikipedia.org/wiki/RSA#Using_the_Chinese_remainder_algorithm
 		// and from: http://code.google.com/p/go/issues/detail?id=987
 		one := big.NewInt(1)
 		minusone := big.NewInt(-1)
-		p_1 := big.NewInt(0).Sub(t.P, one)
-		q_1 := big.NewInt(0).Sub(t.Q, one)
+		p_1 := big.NewInt(0).Sub(t.Primes[0], one)
+		q_1 := big.NewInt(0).Sub(t.Primes[1], one)
 		exp1 := big.NewInt(0).Mod(t.D, p_1)
 		exp2 := big.NewInt(0).Mod(t.D, q_1)
-		coeff := big.NewInt(0).Exp(t.Q, minusone, t.P)
+		coeff := big.NewInt(0).Exp(t.Primes[1], minusone, t.Primes[0])
 
 		exponent1 := unpackBase64(exp1.Bytes())
 		exponent2 := unpackBase64(exp2.Bytes())
@@ -91,6 +91,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 // Read a private key (file) string and create a public key. Return the private key.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
+	p.Primes = []*big.Int{nil,nil}
 	var left, right string
         r := line.NewReader(q, 300)
 	line, _, err := r.ReadLine()
@@ -128,12 +129,12 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 					p.D.SetBytes(v)
 				}
 				if left == "Prime1:" {
-					p.P = big.NewInt(0)
-					p.P.SetBytes(v)
+					p.Primes[0] = big.NewInt(0)
+					p.Primes[0].SetBytes(v)
 				}
 				if left == "Prime2:" {
-					p.Q = big.NewInt(0)
-					p.Q.SetBytes(v)
+					p.Primes[1] = big.NewInt(0)
+					p.Primes[1].SetBytes(v)
 				}
 			case "Exponent1:", "Exponent2:", "Coefficient:":
 				/* not used in Go (yet) */
