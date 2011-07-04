@@ -3,7 +3,8 @@
 Completely usable DNS library. Most widely used Resource Records are
 supported. DNSSEC types too.
 EDNS0 is (see edns.go), UDP/TCP queries, TSIG, AXFR (and IXFR probably)
-too. Both client and server side programming is supported.
+too. Both client and server side programming is supported. Asynchronous
+client queries are also supported.
 
 Sample programs can be found in the `_examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
