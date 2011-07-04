@@ -98,11 +98,7 @@ func (mux *QueryMux) Handle(pattern string, handler QueryHandler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	if pattern[len(pattern)-1] != '.' { // no ending .
-		mux.m[pattern+"."] = handler
-	} else {
-		mux.m[pattern] = handler
-	}
+	mux.m[pattern] = handler
 }
 
 func (mux *QueryMux) HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
@@ -112,8 +108,7 @@ func (mux *QueryMux) HandleQueryFunc(pattern string, handler func(RequestWriter,
 func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 	h := mux.match(r.Question[0].Name)
 	if h == nil {
-		//                h = RefusedHandler()
-		// something else
+                panic("dns: no handler found for " + r.Question[0].Name)
 	}
 	h.QueryDNS(w, r)
 }
@@ -170,6 +165,10 @@ func (q *Query) ListenAndQuery() os.Error {
 	return q.Query()
 }
 
+
+// Start listener for firing off the queries. If
+// c is nil DefaultQueryChan is used. If handler is nil
+// DefaultQueryMux is used.
 func ListenAndQuery(c chan *Request, handler QueryHandler) {
 	q := &Query{ChannelQuery: c, Handler: handler}
 	go q.ListenAndQuery()

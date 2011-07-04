@@ -90,6 +90,12 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
 	}
+	if pattern[len(pattern)-1] != '.' {
+		pattern += "."
+	}
+	if zone[len(zone)-1] != '.' {
+		zone += "."
+	}
 	i := 0
 	for {
 		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
@@ -125,11 +131,11 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	if pattern[len(pattern)-1] != '.' { // no ending .
-		mux.m[pattern+"."] = handler
-	} else {
-		mux.m[pattern] = handler
-	}
+	// Should this go
+	//if pattern[len(pattern)-1] != '.' { // no ending .
+	//	mux.m[pattern+"."] = handler
+	//} else {
+	mux.m[pattern] = handler
 }
 
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
@@ -190,7 +196,7 @@ func (srv *Server) ListenAndServe() os.Error {
 	}
 	switch srv.Net {
 	case "tcp":
-		a, e := net.ResolveTCPAddr("tcp",addr)
+		a, e := net.ResolveTCPAddr("tcp", addr)
 		if e != nil {
 			return e
 		}
@@ -200,7 +206,7 @@ func (srv *Server) ListenAndServe() os.Error {
 		}
 		return srv.ServeTCP(l)
 	case "udp":
-		a, e := net.ResolveUDPAddr("udp",addr)
+		a, e := net.ResolveUDPAddr("udp", addr)
 		if e != nil {
 			return e
 		}

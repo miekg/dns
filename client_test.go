@@ -17,10 +17,43 @@ func TestClientSync(t *testing.T) {
 		t.Logf("%v\n", r)
 	}
 }
-// TestClientAsync
+
+
+func helloMiek(w RequestWriter, r *Msg) {
+        w.Send(r)
+        reply, _ := w.Receive()
+        w.Write(reply)
+}
+
+func TestClientASync(t *testing.T) {
+        HandleQueryFunc("miek.nl", helloMiek) // All queries for miek.nl will be handled by HelloMiek
+        ListenAndQuery(nil, nil)
+
+	m := new(Msg)
+        m.SetQuestion("miek.nl", TypeSOA)
+
+                println("SENDING")
+        c := NewClient()
+                println("SENDING II")
+        c.Do(m, "85.223.71.124:53")
+
+                println("REPLY")
+forever:
+        for {
+                select {
+                case n := <-DefaultReplyChan:
+                println("REPLY")
+                        if n[1] != nil && n[1].Rcode != RcodeSuccess {
+                                t.Log("Failed to get an valid answer")
+                                t.Fail()
+                                t.Logf("%v\n", n[1])
+                        }
+                        break forever
+                }
+        }
+}
+
 // TestClientEDNS
-
-
 /*
 func TestResolverEdns(t *testing.T) {
 
