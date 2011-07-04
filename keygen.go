@@ -5,10 +5,10 @@ import (
         "io"
 	"big"
 	"fmt"
+        "bufio"
 	"strconv"
 	"crypto/rsa"
 	"crypto/rand"
-        "encoding/line"
 )
 
 // Empty interface that is used as a wrapper around all possible
@@ -93,7 +93,7 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	p.Primes = []*big.Int{nil,nil}
 	var left, right string
-        r := line.NewReader(q, 300)
+        r := bufio.NewReader(q)
 	line, _, err := r.ReadLine()
 	for err == nil {
 		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
