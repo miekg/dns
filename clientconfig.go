@@ -15,7 +15,7 @@ import (
 	"net"
 )
 
-// Wrap the contents of the /etc/resolv.conf.
+// Wraps the contents of the /etc/resolv.conf.
 type ClientConfig struct {
 	Servers  []string // servers to use
 	Search   []string // suffixes to append to local name
@@ -27,7 +27,7 @@ type ClientConfig struct {
 
 // See resolv.conf(5) on a Linux machine.
 // Parse a /etc/resolv.conf like file and return a filled out ClientConfig. Note
-// that all nameservers will have the port number appendend (:53)
+// that all nameservers will have the default port number appended (:53)
 func ClientConfigFromFile(conf string) (*ClientConfig, os.Error) {
 	file, err := os.Open(conf)
 	defer file.Close()

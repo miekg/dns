@@ -31,10 +31,10 @@
 //      m1.Question[0] = Question{"miek.nl", TypeDNSKEY, ClassINET}
 //
 //
-// Basic use pattern for synchronize querying of the DNS using
-// UDP as the protocol.
+// Basic use pattern for synchronize querying of the DNS
 //
 //      c := dns.NewClient()
+//      // c.Net = "tcp" // If you want to use TCP
 //      in := c.Exchange(m, "127.0.0.1:53")
 //
 package dns
