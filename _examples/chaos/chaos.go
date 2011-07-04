@@ -10,66 +10,65 @@ import (
 )
 
 func main() {
-	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	if len(os.Args) != 2 {
-		fmt.Printf("%s DOMAIN\n", os.Args[0])
+		fmt.Printf("%s NAMESERVER\n", os.Args[0])
 		os.Exit(1)
 	}
+	conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 
 	m := new(dns.Msg)
-        m.SetQuestion(
 	m.Question = make([]dns.Question, 1)
-	for _, a := range addresses(config, os.Args[0]) {
-		d.RemoteAddr = a
-		if err := d.Dial("udp"); err != nil {
-			fmt.Printf("%v\n", err)
-			os.Exit(1)
-		}
+        c := dns.NewClient()
 
+        // Todo: in parallel
+        addr := addresses(conf, c, os.Args[0])
+        if len(addr) == 0 {
+                fmt.Printf("No address found for %s\n", os.Args[1])
+                os.Exit(1)
+        }
+	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, _ := dns.SimpleQuery("udp", d, m)
+		in := c.Exchange(m, a)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, _ = dns.SimpleQuery("udp", d, m)
+		in = c.Exchange(m, a)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 	}
 }
 
-func addresses(config *dns.ClientConfig, name string) []string {
+func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 	m := new(dns.Msg)
-        m.SetQuestion(os.Args[1], dns.TypeA)
-	m.MsgHdr.RecursionDesired = true //only set this bit
+        m.SetQuestion(os.Args[1], dns.TypeA)     // Allocates space
 	var ips []string
 
-	in, err := dns.SimpleQuery("udp", d, m)
-	if in == nil {
-		fmt.Printf("Nothing recevied: %s\n", err.String())
+	r := c.Exchange(m, conf.Servers[0])
+	if r == nil {
+		fmt.Printf("Nothing recevied for %s\n", name)
 		return nil
 	}
-
-	if in.Rcode != dns.RcodeSuccess {
+	if r.Rcode != dns.RcodeSuccess {
 		return nil
 	}
-	// Stuff must be in the answer section
-	for _, a := range in.Answer {
+	for _, a := range r.Answer {
 		ips = append(ips, a.(*dns.RR_A).A.String()+":53")
 	}
-	m.Question[0] = dns.Question{os.Args[1], dns.TypeAAAA, dns.ClassINET}
-	in, err = dns.SimpleQuery("udp", d, m)
-	if in == nil {
-		fmt.Printf("Nothing recevied: %s\n", err.String())
-		return ips
-	}
 
-	if in.Rcode != dns.RcodeSuccess {
+        m.SetQuestion(os.Args[1], dns.TypeAAAA)
+	r = c.Exchange(m, conf.Servers[0])
+	if r == nil {
+		fmt.Printf("Nothing recevied for %s\n", name)
 		return ips
 	}
-	for _, a := range in.Answer {
+	if r.Rcode != dns.RcodeSuccess {
+		return ips
+	}
+	for _, a := range r.Answer {
 		ips = append(ips, "["+a.(*dns.RR_AAAA).AAAA.String()+"]:53")
 	}
+
 	return ips
 }

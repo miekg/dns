@@ -211,10 +211,11 @@ func (c *Client) Exchange(m *Msg, a string) *Msg {
 		return nil
 	}
 	p = p[:n]
-	if ok := m.Unpack(p); !ok {
+        r := new(Msg)
+	if ok := r.Unpack(p); !ok {
 		return nil
 	}
-	return m
+	return r
 }
 
 func (w *reply) WriteMessages(m []*Msg) {

@@ -9,7 +9,6 @@ func TestClientSync(t *testing.T) {
         m.SetQuestion("miek.nl", TypeSOA)
 
         c := NewClient()
-        c.Net = "udp"
         r := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
