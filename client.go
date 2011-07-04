@@ -189,7 +189,8 @@ func (c *Client) Do(m *Msg, a string) {
 	}
 }
 
-// A sync query
+// Perform an synchronize query. Send the message m to the address
+// contained in a
 func (c *Client) Exchange(m *Msg, a string) *Msg {
 	w := new(reply)
 	w.client = c

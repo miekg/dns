@@ -100,7 +100,7 @@ func TestSignVerify(t *testing.T) {
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = soa.Hdr.Rrtype
-	sig.Labels = LabelCount(soa.Hdr.Name)
+	sig.Labels = labelCount(soa.Hdr.Name)
 	sig.OrigTtl = soa.Hdr.Ttl
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
