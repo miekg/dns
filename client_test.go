@@ -27,7 +27,7 @@ func helloMiek(w RequestWriter, r *Msg) {
 
 func TestClientASync(t *testing.T) {
         HandleQueryFunc("miek.nl", helloMiek) // All queries for miek.nl will be handled by HelloMiek
-        ListenAndQuery(nil, nil)
+        ListenAndQuery(nil, nil)        // Detect if this isn't running
 
 	m := new(Msg)
         m.SetQuestion("miek.nl", TypeSOA)

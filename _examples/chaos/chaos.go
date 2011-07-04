@@ -40,35 +40,46 @@ func main() {
 	}
 }
 
+func qhandler(w dns.RequestWriter, m *dns.Msg) {
+        w.Send(m)
+        r, _ := w.Receive()
+        w.Write(r)
+}
+
 func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
-	m := new(dns.Msg)
-        m.SetQuestion(os.Args[1], dns.TypeA)     // Allocates space
+        dns.HandleQueryFunc(os.Args[1], qhandler)
+        dns.ListenAndQuery(nil, nil)
+
+	m4 := new(dns.Msg)
+        m4.SetQuestion(os.Args[1], dns.TypeA)
+	m6 := new(dns.Msg)
+        m6.SetQuestion(os.Args[1], dns.TypeAAAA)
+        c.Do(m4, conf.Servers[0])       // Also 1 and 2 (and merge the results??
+        c.Do(m6, conf.Servers[0])
+
 	var ips []string
-
-	r := c.Exchange(m, conf.Servers[0])
-	if r == nil {
-		fmt.Printf("Nothing recevied for %s\n", name)
-		return nil
-	}
-	if r.Rcode != dns.RcodeSuccess {
-		return nil
-	}
-	for _, a := range r.Answer {
-		ips = append(ips, a.(*dns.RR_A).A.String()+":53")
-	}
-
-        m.SetQuestion(os.Args[1], dns.TypeAAAA)
-	r = c.Exchange(m, conf.Servers[0])
-	if r == nil {
-		fmt.Printf("Nothing recevied for %s\n", name)
-		return ips
-	}
-	if r.Rcode != dns.RcodeSuccess {
-		return ips
-	}
-	for _, a := range r.Answer {
-		ips = append(ips, "["+a.(*dns.RR_AAAA).AAAA.String()+"]:53")
-	}
-
+        i := 2  // two outstanding queries
+forever:
+        for {
+                select {
+                case r := <-dns.DefaultReplyChan:
+                        if r[1] !=nil && r[1].Rcode == dns.RcodeSuccess {
+                                for _, aa := range r[1].Answer {
+                                        switch aa.(type) {
+                                        case *dns.RR_A:
+                                                ips = append(ips, aa.(*dns.RR_A).A.String()+":53")
+                                        case *dns.RR_AAAA:
+                                                ips = append(ips, "[" + aa.(*dns.RR_AAAA).AAAA.String()+"]:53")
+                                        }
+                                }
+                        } else {
+		                fmt.Printf("Nothing recevied for %s\n", name)
+                        }
+                        i--
+                        if i == 0 {
+                                break forever
+                        }
+                }
+        }
 	return ips
 }

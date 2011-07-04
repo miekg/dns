@@ -1,12 +1,12 @@
 EXAMPLES=mx \
-q \
 chaos \
-axfr \
-reflect \
-xfrprx \
 key2ds \
-
-# funkensturm  -- need fix
+axfr
+# these need to be fixed
+#q \
+#reflect \
+#xfrprx \
+#funkensturm
 
 all: 
 	for i in $(EXAMPLES); do gomake -C $$i; done
