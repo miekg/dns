@@ -32,17 +32,13 @@ func TestClientASync(t *testing.T) {
 	m := new(Msg)
         m.SetQuestion("miek.nl", TypeSOA)
 
-                println("SENDING")
         c := NewClient()
-                println("SENDING II")
         c.Do(m, "85.223.71.124:53")
 
-                println("REPLY")
 forever:
         for {
                 select {
                 case n := <-DefaultReplyChan:
-                println("REPLY")
                         if n[1] != nil && n[1].Rcode != RcodeSuccess {
                                 t.Log("Failed to get an valid answer")
                                 t.Fail()
