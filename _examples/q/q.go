@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+func q(w dns.RequestWriter, m *dns.Msg) {
+        w.Send(m)
+        r, _ := w.Receive()
+        w.Write(r)
+}
+
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "Request DNSSEC records")
 	var short *bool = flag.Bool("short", false, "Abbriate long DNSKEY and RRSIG RRs")
@@ -24,9 +30,9 @@ func main() {
 	}
 
 	// Need to think about it... Config
-	c, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-	nameserver := "@" + c.Servers[0]
-	qtype := uint16(dns.TypeA)      // Default qtype
+	conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+	nameserver := "@" + conf.Servers[0]
+	qtype := uint16(0)
 	qclass := uint16(dns.ClassINET) // Default qclass
 	var qname []string
 
@@ -66,98 +72,71 @@ Flags:
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
+        if len(qname) == 0 {
+                qname = make([]string, 1)
+                qname[0] = "."
+                qtype = dns.TypeNS
+        }
+        if qtype == 0 {
+                qtype = dns.TypeA
+        }
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	if !strings.HasSuffix(nameserver, ":53") {
 		nameserver += ":53"
 	}
+        // ipv6 todo
 
-	err := make(chan os.Error)
+        dns.HandleQueryFunc(".", q)
+        dns.ListenAndQuery(nil, nil)
+        c := dns.NewClient()
 	if *tcp {
-		go query("tcp", err)
-	} else {
-		go query("udp", err)
+		c.Net = "tcp"
 	}
-
-	dns.InitQueryChannels()
-	// Start the querier in a closure
-	go func() {
-		for _, v := range qname {
-                        d, m := newConnMsg(v, nameserver, c.Attempts, qtype, qclass, *aa, *ad, *cd, *rd, *dnssec, *nsid)
-			dns.QueryRequest <- &dns.Query{Query: m, Conn: d}
-		}
-	}()
-
-	i := 0
-forever:
-	for {
-		select {
-		case r := <-dns.QueryReply:
-			if r.Reply != nil {
-				if r.Query.Id != r.Reply.Id {
-					fmt.Printf("Id mismatch\n")
-				}
-				if *short {
-					r.Reply = shortMsg(r.Reply)
-				}
-				fmt.Printf("%v", r.Reply)
-			} else {
-				fmt.Printf("%v\n", r.Err.String())
-			}
-			i++
-			if i == len(qname) {
-				break forever
-			}
-		case e := <-err:
-			fmt.Printf("%v", e.String())
-			break forever
-		}
-	}
-}
-
-func query(tcp string, e chan os.Error) {
-	switch tcp {
-	case "tcp":
-		err := dns.QueryAndServeTCP(qhandle)
-		e <- err
-	case "udp":
-		err := dns.QueryAndServeUDP(qhandle)
-		e <- err
-	}
-}
-
-// reply checking 'n stuff
-func qhandle(d *dns.Conn, i *dns.Msg) {
-	o, err := d.ExchangeMsg(i, false)
-	dns.QueryReply <- &dns.Query{Query: i, Reply: o, Conn: d, Err: err}
-        d.Close()
-}
-
-func newConnMsg(qname, nameserver string, attempts int, qtype, qclass uint16, aa, ad, cd, rd, dnssec, nsid bool) (*dns.Conn, *dns.Msg) {
-	d := new(dns.Conn)
-	d.RemoteAddr = nameserver
-	d.Attempts = attempts
 
 	m := new(dns.Msg)
-	m.MsgHdr.Authoritative = aa
-	m.MsgHdr.AuthenticatedData = ad
-	m.MsgHdr.CheckingDisabled = cd
-	m.MsgHdr.RecursionDesired = rd
+	m.MsgHdr.Authoritative = *aa
+	m.MsgHdr.AuthenticatedData = *ad
+	m.MsgHdr.CheckingDisabled = *cd
+	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
-	if dnssec || nsid {
+	if *dnssec || *nsid {
 		opt := new(dns.RR_OPT)
 		opt.SetDo()
 		opt.SetVersion(0)
 		opt.SetUDPSize(dns.DefaultMsgSize)
-		if nsid {
+		if *nsid {
 			opt.SetNsid("")
 		}
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
-	m.Question[0] = dns.Question{qname, qtype, qclass}
-	m.Id = dns.Id()
-        return d, m
+        for _, v := range qname {
+	        m.Question[0] = dns.Question{v, qtype, qclass}
+	        m.Id = dns.Id()
+                c.Do(m, nameserver)
+        }
+
+	i := 0
+forever:
+	for {
+		select {
+		case r := <-dns.DefaultReplyChan:
+			if r[1] != nil {
+				if r[0].Id != r[1].Id {
+					fmt.Printf("Id mismatch\n")
+				}
+				if *short {
+					r[1] = shortMsg(r[1])
+				}
+				fmt.Printf("%v", r[1])
+			}
+			i++
+			if i == len(qname) {
+				break forever
+			}
+		}
+	}
 }
 
 // Walk trough message and short Key data and Sig data
