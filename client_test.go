@@ -24,14 +24,7 @@ func TestClientSync(t *testing.T) {
 
 /*
 func TestResolverEdns(t *testing.T) {
-	res := new(Resolver)
-	res.Servers = []string{"127.0.0.1"}
-	res.Timeout = 2
-	res.Attempts = 1
 
-	m := new(Msg)
-	m.MsgHdr.RecursionDesired = true //only set this bit
-	m.Question = make([]Question, 1)
 
 	// Add EDNS rr
 	edns := new(RR_OPT)

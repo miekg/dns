@@ -38,6 +38,7 @@ func ClientConfigFromFile(conf string) (*ClientConfig, os.Error) {
 	b := bufio.NewReader(file)
 	c.Servers = make([]string, 3)[0:0] // small, but the standard limit
 	c.Search = make([]string, 0)
+        c.Port = "53"
 	c.Ndots = 1
 	c.Timeout = 5
 	c.Attempts = 2
