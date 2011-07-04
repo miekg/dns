@@ -19,11 +19,20 @@
 // In the DNS messages are exchanged. Use pattern for creating one:
 //
 //      m := new(Msg)
-//      m.SetQuestion("miek.nl.", dns.TypeMX)
-//      // Set the desired options.
-//      m.MsgHdr.RecursionDesired = true
+//      m.SetQuestion("miek.nl.", TypeMX)
 //
-// Basic use pattern for synchronize querying of the DNS:
+//
+// Or slightly more verbose and flexible
+//
+//      m1 := new(Msg)
+//      m1.MsgHdr.Id = Id()
+//      m1.MsgHdr.RecursionDesired = false
+//      m1.Question = make([]Question, 1)
+//      m1.Question[0] = Question{"miek.nl", TypeDNSKEY, ClassINET}
+//
+//
+// Basic use pattern for synchronize querying of the DNS using
+// UDP as the protocol.
 //
 //      c := dns.NewClient()
 //      in := c.Exchange(m, "127.0.0.1:53")

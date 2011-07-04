@@ -17,6 +17,7 @@ func (dns *Msg) SetReply(request *Msg) {
 // Create a question packet.
 func (dns *Msg) SetQuestion(z string, t uint16) {
         dns.MsgHdr.Id = Id()
+        dns.MsgHdr.RecursionDesired = true
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, t, ClassINET}
 }
