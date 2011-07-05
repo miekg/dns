@@ -25,26 +25,23 @@ import (
 	"strconv"
 )
 
-func reply(c *dns.Conn, in *dns.Msg) []byte {
-	m := new(dns.Msg)
-	m.SetReply(in)
-
-	m.Question = make([]dns.Question, 1)
+func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
+        m := new(dns.Msg)
+        m.SetReply(r)
+        m.Extra = make([]dns.RR, 1)
 	m.Answer = make([]dns.RR, 1)
-	m.Extra = make([]dns.RR, 1)
-
-	// Copy the question.
-	m.Question[0] = in.Question[0]
-
-	// Some foo to check if we are called through ip6 or ip4.
-	// We add the correct reply RR.
+        fmt.Printf("%v\n", w.conn)
+        /* Can't see how the packet came in, v6, v2, udp 
 	var ad net.IP
 	if c.UDP != nil {
 		ad = c.Addr.(*net.UDPAddr).IP
 	} else {
 		ad = c.Addr.(*net.TCPAddr).IP
 	}
+        */
+}
 
+/*
 	if ad.To4() != nil {
 		r := new(dns.RR_A)
 		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
@@ -69,45 +66,12 @@ func reply(c *dns.Conn, in *dns.Msg) []byte {
 	b, _ := m.Pack()
 	return b
 }
-
-func handle(c *dns.Conn, in *dns.Msg) {
-	if in.MsgHdr.Response == true {
-		return // We don't do responses
-	}
-	answer := reply(c, in)
-	c.Write(answer)
-}
-
-func tcp(addr string, e chan os.Error) {
-	err := dns.ListenAndServeTCP(addr, handle)
-	e <- err
-	return
-}
-
-func udp(addr string, e chan os.Error) {
-	err := dns.ListenAndServeUDP(addr, handle)
-	e <- err
-	return
-}
+*/
 
 func main() {
-	e := make(chan os.Error)
-	go udp("127.0.0.1:8053", e)
-	go udp("[::1]:8053", e)
-	go tcp("127.0.0.1:8053", e)
-	go tcp("[::1]:8053", e)
-
-forever:
-	for {
-		// Wait for a signal to stop
-		select {
-		case err := <-e:
-			fmt.Printf("Error received, stopping: %s\n", err.String())
-			break forever
-		case <-signal.Incoming:
-			fmt.Printf("Signal received, stopping\n")
-			break forever
-		}
-	}
-	close(e)
+        dns.HandleFunc(".", handleReflect)
+        err := dns.ListenAndServe(":8053", "udp", nil)
+        if err != nil {
+                fmt.Printf("Failed to setup the server")
+        }
 }
