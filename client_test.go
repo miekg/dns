@@ -94,7 +94,7 @@ func TestClientTsigAXFR(t *testing.T) {
         c.Net = "tcp"
         c.TsigSecret = secrets
 
-        _, err := c.XfrReceive(m, "85.223.71.124:53")
+        c.XfrReceive(m, "85.223.71.124:53")
         /*
         if err != nil {
                 t.Log("%s\n", err.String())
