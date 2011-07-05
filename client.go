@@ -190,7 +190,7 @@ func (c *Client) Do(m *Msg, a string) {
 }
 
 // Perform an synchronous query. Send the message m to the address
-// contained in a
+// contained in a and wait for an reply.
 func (c *Client) Exchange(m *Msg, a string) *Msg {
 	w := new(reply)
 	w.client = c
