@@ -20,7 +20,6 @@ func main() {
 	m.Question = make([]dns.Question, 1)
         c := dns.NewClient()
 
-        // Todo: in parallel
         addr := addresses(conf, c, os.Args[1])
         if len(addr) == 0 {
                 fmt.Printf("No address found for %s\n", os.Args[1])
