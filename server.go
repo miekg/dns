@@ -21,10 +21,8 @@ type Handler interface {
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
-	// RemoteAddr returns the address of the client that sent the current request
-	RemoteAddr() string
-        // RemoteTransport return "udp" or "tcp" depending on the transport used
-        RemoteTransport() string
+	// RemoteAddr returns the net.Addr of the client that sent the current request
+	RemoteAddr() net.Addr
 
         // Write a reply back
 	Write([]byte) (int, os.Error)
@@ -351,6 +349,7 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
 	case w.conn._UDP != nil:
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
+                        println(err.String())
 			return 0, err
 		}
 	case w.conn._TCP != nil:
@@ -382,12 +381,4 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
-func (w *response) RemoteAddr() string { return w.conn.remoteAddr.String() }
-
-// RemoteTransport implements the ResponseWriter.RemoteTransport method
-func (w *response) RemoteTransport() string {
-        if w.conn._UDP != nil {
-                return "udp"
-        }
-        return "tcp"
-}
+func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
