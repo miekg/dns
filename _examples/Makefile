@@ -2,9 +2,9 @@ EXAMPLES=mx \
 chaos \
 key2ds \
 axfr \
+reflect \
 q
 # these need to be fixed
-#reflect \
 #xfrprx \
 #funkensturm
 
