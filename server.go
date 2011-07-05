@@ -21,10 +21,9 @@ type Handler interface {
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
-	// RemoteAddr returns the net.Addr of the client that sent the current request
+	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-
-        // Write a reply back
+        // Write a reply back to the client.
 	Write([]byte) (int, os.Error)
 }
 
@@ -62,13 +61,12 @@ var DefaultServeMux = NewServeMux()
 // Handler object that calls f.
 type HandlerFunc func(ResponseWriter, *Msg)
 
-// ServerDNS calls f(w, reg)
+// ServerDNS calls f(w, r)
 func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
 // Helper handlers
-
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetReply(r)

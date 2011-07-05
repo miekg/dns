@@ -22,7 +22,7 @@
 //      m.SetQuestion("miek.nl.", TypeMX)
 //
 //
-// Or slightly more verbose and flexible
+// Or slightly more verbose and flexible:
 //
 //      m1 := new(Msg)
 //      m1.MsgHdr.Id = Id()
@@ -31,7 +31,7 @@
 //      m1.Question[0] = Question{"miek.nl", TypeDNSKEY, ClassINET}
 //
 //
-// Basic use pattern for synchronize querying of the DNS
+// Basic use pattern for synchronous querying of the DNS
 //
 //      c := dns.NewClient()
 //      // c.Net = "tcp" // If you want to use TCP
@@ -48,7 +48,7 @@ const (
 	Year68         = 2 << (32 - 1) // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	DefaultMsgSize = 4096          // A standard default for larger than 512 packets.
 	MaxMsgSize     = 65536         // Largest possible DNS packet.
-	DefaultTTL     = 3600          // Default Ttl.
+	DefaultTTL     = 3600          // Default TTL.
 )
 
 // Error represents a DNS error
@@ -65,7 +65,6 @@ func (e *Error) String() string {
 	}
 	return e.Error
 }
-
 
 type RR interface {
 	Header() *RR_Header

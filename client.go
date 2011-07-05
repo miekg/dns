@@ -59,7 +59,7 @@ var DefaultQueryMux = NewQueryMux()
 func newQueryChanSlice() chan []*Msg { return make(chan []*Msg) }
 func newQueryChan() chan *Request    { return make(chan *Request) }
 
-// Default channel to use for the resolver
+// Default channels to use for the resolver
 var DefaultReplyChan = newQueryChanSlice()
 var DefaultQueryChan = newQueryChan()
 
@@ -126,6 +126,7 @@ type Client struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
+// Create a new client, with some default values filled in.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
