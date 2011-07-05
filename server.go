@@ -170,47 +170,29 @@ type Server struct {
 	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
 }
 
-// Serve accepts incoming DNS request on the TCP listener l,
-// creating a new service thread for each.  The service threads
-// read requests and then call handler to reply to them.
-// Handler is typically nil, in which case the DefaultServeMux is used.
-func ServeTCP(l *net.TCPListener, handler Handler) os.Error {
-	srv := &Server{Handler: handler, Net: "tcp"}
-	return srv.ServeTCP(l)
-}
-
-// Serve accepts incoming DNS request on the UDP Conn l,
-// creating a new service thread for each.  The service threads
-// read requests and then call handler to reply to them.
-// Handler is typically nil, in which case the DefaultServeMux is used.
-func ServeUDP(l *net.UDPConn, handler Handler) os.Error {
-	srv := &Server{Handler: handler, Net: "udp"}
-	return srv.ServeUDP(l)
-}
-
-// Fixes for udp/tcp
+// ...
 func (srv *Server) ListenAndServe() os.Error {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
 	}
 	switch srv.Net {
-	case "tcp":
-		a, e := net.ResolveTCPAddr("tcp", addr)
+	case "tcp", "tcp4", "tcp6":
+		a, e := net.ResolveTCPAddr(srv.Net, addr)
 		if e != nil {
 			return e
 		}
-		l, e := net.ListenTCP("tcp", a)
+		l, e := net.ListenTCP(srv.Net, a)
 		if e != nil {
 			return e
 		}
 		return srv.ServeTCP(l)
-	case "udp":
-		a, e := net.ResolveUDPAddr("udp", addr)
+	case "udp", "udp4", "udp6":
+		a, e := net.ResolveUDPAddr(srv.Net, addr)
 		if e != nil {
 			return e
 		}
-		l, e := net.ListenUDP("udp", a)
+		l, e := net.ListenUDP(srv.Net, a)
 		if e != nil {
 			return e
 		}

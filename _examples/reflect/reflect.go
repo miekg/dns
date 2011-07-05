@@ -68,20 +68,19 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	w.Write(b)
 }
 
+func serve(net string) {
+        err := dns.ListenAndServe(":8053", net, nil)
+        if err != nil {
+                fmt.Printf("Failed to setup the " + net + " server: %s", err.String())
+        }
+}
+
 func main() {
 	dns.HandleFunc(".", handleReflect)
-        go func() {
-                err := dns.ListenAndServe(":8053", "udp", nil)
-                if err != nil {
-                        fmt.Printf("Failed to setup the udp server")
-                }
-        }()
-        go func() {
-                err := dns.ListenAndServe(":8053", "tcp", nil)
-                if err != nil {
-                        fmt.Printf("Failed to setup the tcp server")
-                }
-        }()
+        go serve("udp4")
+        go serve("udp6")
+        go serve("tcp4")
+        go serve("tcp6")
 forever:
         for {
                 select {
