@@ -6,10 +6,10 @@ import (
 
 func TestClientSync(t *testing.T) {
 	m := new(Msg)
-        m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl", TypeSOA)
 
-        c := NewClient()
-        r := c.Exchange(m, "85.223.71.124:53")
+	c := NewClient()
+	r := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -20,33 +20,33 @@ func TestClientSync(t *testing.T) {
 
 
 func helloMiek(w RequestWriter, r *Msg) {
-        w.Send(r)
-        reply, _ := w.Receive()
-        w.Write(reply)
+	w.Send(r)
+	reply, _ := w.Receive()
+	w.Write(reply)
 }
 
 func TestClientASync(t *testing.T) {
-        HandleQueryFunc("miek.nl", helloMiek) // All queries for miek.nl will be handled by HelloMiek
-        ListenAndQuery(nil, nil)        // Detect if this isn't running
+	HandleQueryFunc("miek.nl", helloMiek) // All queries for miek.nl will be handled by HelloMiek
+	ListenAndQuery(nil, nil)              // Detect if this isn't running
 
 	m := new(Msg)
-        m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl", TypeSOA)
 
-        c := NewClient()
-        c.Do(m, "85.223.71.124:53")
+	c := NewClient()
+	c.Do(m, "85.223.71.124:53")
 
 forever:
-        for {
-                select {
-                case n := <-DefaultReplyChan:
-                        if n[1] != nil && n[1].Rcode != RcodeSuccess {
-                                t.Log("Failed to get an valid answer")
-                                t.Fail()
-                                t.Logf("%v\n", n[1])
-                        }
-                        break forever
-                }
-        }
+	for {
+		select {
+		case n := <-DefaultReplyChan:
+			if n[1] != nil && n[1].Rcode != RcodeSuccess {
+				t.Log("Failed to get an valid answer")
+				t.Fail()
+				t.Logf("%v\n", n[1])
+			}
+			break forever
+		}
+	}
 }
 
 // TestClientEDNS

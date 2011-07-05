@@ -24,6 +24,8 @@ import (
 	"strconv"
 )
 
+var dom = "whoami.miek.nl"
+
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetReply(r)
@@ -49,16 +51,16 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	if v4 {
 		rr = new(dns.RR_A)
-                rr.(*dns.RR_A).Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+                rr.(*dns.RR_A).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
 		rr.(*dns.RR_A).A = a
 	} else {
 		rr = new(dns.RR_AAAA)
-                rr.(*dns.RR_AAAA).Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
+                rr.(*dns.RR_AAAA).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
 		rr.(*dns.RR_AAAA).AAAA = a
 	}
 
 	t := new(dns.RR_TXT)
-	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
+	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 	t.Txt = str
 	m.Extra[0] = t
 	m.Answer[0] = rr
@@ -71,7 +73,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 func serve(net string) {
         err := dns.ListenAndServe(":8053", net, nil)
         if err != nil {
-                fmt.Printf("Failed to setup the " + net + " server: %s", err.String())
+                fmt.Printf("Failed to setup the " + net + " server: %s\n", err.String())
         }
 }
 
@@ -85,7 +87,7 @@ forever:
         for {
                 select {
                 case <-signal.Incoming:
-                        fmt.Printf("Signal received, stopping")
+                        fmt.Printf("Signal received, stopping\n")
                         break forever
                 }
         }
