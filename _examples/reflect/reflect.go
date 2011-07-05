@@ -17,61 +17,49 @@
 package main
 
 import (
-	"os"
 	"net"
 	"dns"
 	"fmt"
-	"os/signal"
-	"strconv"
+	//	"os"
+	//	"os/signal"
+//	"strconv"
 )
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
-        m := new(dns.Msg)
-        m.SetReply(r)
-        m.Extra = make([]dns.RR, 1)
-	m.Answer = make([]dns.RR, 1)
-        fmt.Printf("%v\n", w.conn)
-        /* Can't see how the packet came in, v6, v2, udp 
-	var ad net.IP
-	if c.UDP != nil {
-		ad = c.Addr.(*net.UDPAddr).IP
-	} else {
-		ad = c.Addr.(*net.TCPAddr).IP
-	}
-        */
-}
+	m := new(dns.Msg)
+	m.SetReply(r)
+	m.Extra = make([]dns.RR, 1)
+//	m.Answer = make([]dns.RR, 1)
 
-/*
-	if ad.To4() != nil {
-		r := new(dns.RR_A)
-		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-		r.A = ad
-		m.Answer[0] = r
-	} else {
-		r := new(dns.RR_AAAA)
-		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
-		r.AAAA = ad
-		m.Answer[0] = r
-	}
+        println(w.RemoteAddr())
+	ad := net.ParseIP(w.RemoteAddr())
+        println(ad.String())
+//	if ad.To4() != nil {
+//		rr := new(dns.RR_A)
+//		rr.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+//		rr.A = ad
+//		m.Answer[0] = rr
+//	} else {
+//		r := new(dns.RR_AAAA)
+//		r.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
+//		r.AAAA = ad
+//		m.Answer[0] = r
+//	}
 
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: "whoami.miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
-	if c.TCP != nil {
-		t.Txt = "Port: " + strconv.Itoa(c.Port) + " (tcp)"
-	} else {
-		t.Txt = "Port: " + strconv.Itoa(c.Port) + " (udp)"
-	}
+//	t.Txt = "Port: " + strconv.Itoa(w.RemotePort()) + " (" + w.RemoteTransport() + ")"
+	t.Txt = "Port: " + " (" + w.RemoteTransport() + ")"
 	m.Extra[0] = t
 
 	b, _ := m.Pack()
-	return b
+	w.Write(b)
 }
-*/
 
 func main() {
-        dns.HandleFunc(".", handleReflect)
-        err := dns.ListenAndServe(":8053", "udp", nil)
-        if err != nil {
-                fmt.Printf("Failed to setup the server")
-        }
+	dns.HandleFunc(".", handleReflect)
+	err := dns.ListenAndServe(":8053", "udp", nil)
+	if err != nil {
+		fmt.Printf("Failed to setup the server")
+	}
 }

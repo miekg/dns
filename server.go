@@ -23,13 +23,15 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the address of the client that sent the current request
 	RemoteAddr() string
+        // RemoteTransport return "udp" or "tcp" depending on the transport used
+        RemoteTransport() string
 
+        // Write a reply back
 	Write([]byte) (int, os.Error)
 }
 
 type conn struct {
 	remoteAddr net.Addr     // address of remote side (sans port)
-	port       int          // port of the remote side, needed TODO(mg)
 	handler    Handler      // request handler
 	request    []byte       // bytes read
 	_UDP       *net.UDPConn // i/o connection if UDP was used
@@ -305,12 +307,6 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 	c._UDP = u
 	c.remoteAddr = a
 	c.request = buf
-	if t != nil {
-		c.port = a.(*net.TCPAddr).Port
-	}
-	if u != nil {
-		c.port = a.(*net.UDPAddr).Port
-	}
 	return c, nil
 }
 
@@ -387,3 +383,11 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
 func (w *response) RemoteAddr() string { return w.conn.remoteAddr.String() }
+
+// RemoteTransport implements the ResponseWriter.RemoteTransport method
+func (w *response) RemoteTransport() string {
+        if w.conn._UDP != nil {
+                return "udp"
+        }
+        return "tcp"
+}
