@@ -234,9 +234,9 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	var p []byte
 	m := new(Msg)
 	switch w.Client().Net {
-	case "tcp":
+	case "tcp", "tcp4", "tcp6":
 		p = make([]byte, MaxMsgSize)
-	case "udp":
+	case "udp", "udp4", "udp6":
 		p = make([]byte, DefaultMsgSize)
 	}
 	n, err := w.readClient(p)
@@ -267,7 +267,7 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 		panic("no connection")
 	}
 	switch w.Client().Net {
-	case "tcp":
+	case "tcp", "tcp4", "tcp6":
 		if len(p) < 1 {
 			return 0, io.ErrShortBuffer
 		}
@@ -295,7 +295,7 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 			i += j
 		}
 		n = i
-	case "udp":
+	case "udp", "udp4", "udp6":
 		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
 		if err != nil {
 			return n, err
@@ -343,7 +343,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 	}
 	w.conn = conn
 	switch c.Net {
-	case "tcp":
+	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
 			return 0, io.ErrShortBuffer
 		}
@@ -381,7 +381,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 			}
 			n = i
 		}
-	case "udp":
+	case "udp", "udp4", "udp6":
 		for a := 0; a < c.Attempts; a++ {
 			n, err = conn.(*net.UDPConn).WriteTo(p, conn.RemoteAddr())
 			if err != nil {
