@@ -16,8 +16,8 @@ func (dns *Msg) SetReply(request *Msg) {
 
 // Create a question packet.
 func (dns *Msg) SetQuestion(z string, t uint16) {
-        dns.MsgHdr.Id = Id()
-        dns.MsgHdr.RecursionDesired = true
+	dns.MsgHdr.Id = Id()
+	dns.MsgHdr.RecursionDesired = true
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, t, ClassINET}
 }
@@ -36,9 +36,9 @@ func (dns *Msg) IsUpdate() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
 	}
-        ok = dns.MsgHdr.Opcode == OpcodeUpdate
-        ok = ok && dns.Question[0].Qtype == TypeSOA
-        return
+	ok = dns.MsgHdr.Opcode == OpcodeUpdate
+	ok = ok && dns.Question[0].Qtype == TypeSOA
+	return
 }
 
 // Is the message a valid notify packet?
@@ -54,7 +54,7 @@ func (dns *Msg) IsNotify() (ok bool) {
 
 // Create a dns msg suitable for requesting an ixfr.
 func (dns *Msg) SetIxfr(z string, serial uint32) {
-        dns.MsgHdr.Id = Id()
+	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
 	s := new(RR_SOA)
@@ -67,7 +67,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 
 // Create a dns msg suitable for requesting an axfr.
 func (dns *Msg) SetAxfr(z string) {
-        dns.MsgHdr.Id = Id()
+	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
@@ -96,17 +96,17 @@ func (dns *Msg) IsIxfr() (ok bool) {
 
 // Has a message a TSIG record as the last record?
 func (dns *Msg) IsTsig() (ok bool) {
-        if len(dns.Extra) > 0 {
-                return dns.Extra[0].Header().Rrtype == TypeTSIG
-        }
-        return
+	if len(dns.Extra) > 0 {
+		return dns.Extra[0].Header().Rrtype == TypeTSIG
+	}
+	return
 }
 
 func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
-        t := new(RR_TSIG)
-        t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
-        t.Algorithm = algo
-        t.Fudge = fudge
-        t.TimeSigned = timesigned
-        dns.Extra = append(dns.Extra, t)
+	t := new(RR_TSIG)
+	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
+	t.Algorithm = algo
+	t.Fudge = fudge
+	t.TimeSigned = timesigned
+	dns.Extra = append(dns.Extra, t)
 }

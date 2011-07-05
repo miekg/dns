@@ -2,6 +2,7 @@ package dns
 
 import (
 	"testing"
+        "time"
 )
 
 func TestClientSync(t *testing.T) {
@@ -81,53 +82,23 @@ func TestResolverEdns(t *testing.T) {
 }
 */
 
-/*
-func TestResolverTsig(t *testing.T) {
-	res := new(Resolver)
-	res.Servers = []string{"127.0.0.1"}
-	res.Timeout = 2
-	res.Attempts = 1
-
+func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
-	m.MsgHdr.RecursionDesired = true //only set this bit
-	m.Question = make([]Question, 1)
+	m.SetAxfr("miek.nl")
 
-	// ask something
-	m.Question[0] = Question{"powerdns.nl", TypeDNSKEY, ClassINET}
-	m.Extra = make([]RR, 1)
-	m.Id = Id()
+        m.SetTsig("axfr", HmacMD5, 300, uint64(time.Seconds()))
+        secrets := make(map[string]string)
+        secrets["axfr"] = "so6ZGir4GPAqINNh9U5c3A=="
 
+        c := NewClient()
+        c.Net = "tcp"
+        c.TsigSecret = secrets
 
-        tsig := new(Tsig)
-        tsig.Name = "miek.nl."
-        tsig.Algorithm = HmacMD5
-        tsig.Fudge = 300
-        tsig.TimeSigned = uint64(time.Seconds())
-        tsig.Secret = "ZGZqc2tmZAo="
-
-	in, _ := res.QueryTsig(m,tsig)
-	if in != nil {
-		if in.Rcode != RcodeSuccess {
-			t.Logf("%v\n", in)
-			t.Log("Failed to get an valid answer")
-		//	t.Fail()
-		}
-	}
+        _, err := c.XfrReceive(m, "85.223.71.124:53")
+        /*
+        if err != nil {
+                t.Log("%s\n", err.String())
+                t.Fail()
+        }
+        */
 }
-
-func TestAXFR(t *testing.T) {
-	res := new(Resolver)
-	res.Servers = []string{"127.0.0.1"}
-	m := new(Msg)
-	m.Question = make([]Question, 1)
-	m.Question[0] = Question{"miek.nl", TypeAXFR, ClassINET}
-
-        ch := make(chan Xfr)
-        go res.Xfr(m, ch)
-	for x := range ch {
-		var _ = x
-		// fmt.Printf("%v\n",dm.Dns)
-	}
-	// channel is closed by Axfr() 
-}
-*/
