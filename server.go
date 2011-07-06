@@ -160,12 +160,14 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 }
 
 // A Server defines parameters for running an DNS server.
+// Note how much it starts to look like 'Client struct'
 type Server struct {
 	Addr         string  // address to listen on, ":dns" if empty
 	Net          string  // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler // handler to invoke, dns.DefaultServeMux if nil
 	ReadTimeout  int64   // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
+        TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
 // ...
