@@ -7,6 +7,7 @@ package main
 // We could also use one 1 key for multiple domains.
 import (
 	"dns"
+        "strings"
         "crypto/rsa"
 )
 
@@ -58,15 +59,11 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, true
 }
 
-func send(m *dns.Msg, ok bool) (out *dns.Msg) {
-	switch ok {
-	case true, false:
-                for _, r := range qr {
-                        out, _ = r.Query(m)
-                }
-                return
-	}
-	return
+func send(m *dns.Msg, ok bool) (o *dns.Msg) {
+        for _, c := range qr {
+                o = c.Client.Exchange(m, c.Addr)
+        }
+        return
 }
 
 var pubkey *dns.RR_DNSKEY
@@ -87,7 +84,7 @@ Created: 20110122104659
 Publish: 20110122104659
 Activate: 20110122104659`
         pubkey = new(dns.RR_DNSKEY)
-        privkey, _ = pubkey.PrivateKeySetString(privdata)
+        privkey, _ = pubkey.ReadPrivateKey(strings.NewReader(privdata))
         pubkey.Hdr = dns.RR_Header{"miek.nl.", dns.TypeDNSKEY, dns.ClassINET, 3600, 0}
         pubkey.Protocol = 3
         pubkey.Flags = 256
