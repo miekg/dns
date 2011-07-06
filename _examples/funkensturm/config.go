@@ -27,7 +27,8 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 
 func send(m *dns.Msg, ok bool) (o *dns.Msg) {
         for _, c := range qr {
-                o = c.Exchange(m, c.Addr)
+        println("Sending to ", c.Addr)
+                o = c.Client.Exchange(m, c.Addr)
         }
         return
 }
@@ -35,9 +36,7 @@ func send(m *dns.Msg, ok bool) (o *dns.Msg) {
 // Return the configration
 func funkensturm() *Funkensturm {
 	f := new(Funkensturm)
-
-        // Nothing to set up
-	f.Setup = func() bool { return true }
+	f.Setup = func() bool { return true }   // no setup
 
         // 1 match function, use AND as op (doesn't matter in this case)
 	f.Matches = make([]Match, 1)

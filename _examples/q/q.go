@@ -16,14 +16,14 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 }
 
 func main() {
-	var dnssec *bool = flag.Bool("dnssec", false, "Request DNSSEC records")
-	var short *bool = flag.Bool("short", false, "Abbriate long DNSKEY and RRSIG RRs")
-	var aa *bool = flag.Bool("aa", false, "Set AA flag in query")
-	var ad *bool = flag.Bool("ad", false, "Set AD flag in query")
-	var cd *bool = flag.Bool("cd", false, "Set CD flag in query")
-	var rd *bool = flag.Bool("rd", true, "Unset RD flag in query")
+	var dnssec *bool = flag.Bool("dnssec", false, "request DNSSEC records")
+	var short *bool = flag.Bool("short", false, "abbriate long DNSKEY and RRSIG RRs")
+	var aa *bool = flag.Bool("aa", false, "set AA flag in query")
+	var ad *bool = flag.Bool("ad", false, "set AD flag in query")
+	var cd *bool = flag.Bool("cd", false, "set CD flag in query")
+	var rd *bool = flag.Bool("rd", true, "unset RD flag in query")
 	var tcp *bool = flag.Bool("tcp", false, "TCP mode")
-	var nsid *bool = flag.Bool("nsid", false, "Ask for the NSID")
+	var nsid *bool = flag.Bool("nsid", false, "ask for NSID")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server(:port)] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()

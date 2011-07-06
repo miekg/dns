@@ -26,3 +26,22 @@ func TestServing(t *testing.T) {
 	}()
 	time.Sleep(1e9)
 }
+
+func BenchmarkServing(b *testing.B) {
+        b.StopTimer()
+        // Again start a server
+	HandleFunc("miek.nl.", HelloServer)
+	go func() {
+	        ListenAndServe("127.0.0.1:8053", "udp", nil)
+	}()
+
+        c := NewClient()
+        m := new(Msg)
+        m.SetQuestion("miek.nl", TypeSOA)
+
+        b.StartTimer()
+        for i := 0; i < b.N; i++ {
+                c.Exchange(m, "127.0.0.1:8053")
+                print(i, " ")
+        }
+}

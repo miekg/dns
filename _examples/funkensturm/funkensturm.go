@@ -8,23 +8,25 @@ package main
 
 import (
 	"os"
+        "log"
 	"flag"
 	"fmt"
 	"dns"
 	"os/signal"
 	"strings"
+        "runtime/pprof"
 )
 
-// Define a slice of conn for sending queries
-var qr []*dns.Client
-var in chan dns.Query
-var out chan dns.Query
-
-// The configuration of Funkensturm
+var qr []*Funk
 var f *Funkensturm
-
-// Verbose flag
 var verbose *bool
+
+// A small wrapper to keep the address together
+// with a client.
+type Funk struct {
+        Client *dns.Client
+        Addr string
+}
 
 // Where does the packet come from? 
 // IN: initial packet received by the Responder
@@ -71,15 +73,16 @@ type Funkensturm struct {
 	Actions []Action    // What to do with the packets
 }
 
-func verboseprint(i *dns.Msg, msg string) {
-	fmt.Printf(">>>>>> %s\n", msg)
-	fmt.Printf("%v", i)
-	fmt.Printf("<<<<<< %s\n\n", msg)
+func verboseprint(i *dns.Msg, indent string) {
+        for _, line := range strings.Split(i.String(), "\n", -1) {
+                fmt.Printf("%s%s\n", indent, line)
+        }
+        fmt.Println()
 }
 
 func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	if *verbose {
-		verboseprint(pkt, "ORIGINAL INCOMING")
+		verboseprint(pkt, "> ")
 	}
 	// No matter what, we refuse to answer requests with the response bit set.
 	if pkt.MsgHdr.Response == true {
@@ -92,6 +95,7 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	ok, ok1 := true, true
 	pkt1 := pkt
 	for _, m := range f.Matches {
+                println("*match functions")
 		pkt1, ok1 = m.Func(pkt1, IN)
 		switch m.Op {
 		case AND:
@@ -100,8 +104,8 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 			ok = ok || ok1
 		}
 	}
-	if *verbose {
-		verboseprint(pkt1, "MODIFIED INCOMING")
+	if *verbose { //modified
+		verboseprint(pkt1, ">> ")
 	}
 
 	// Loop through the Actions.Func* and do something with the
@@ -112,8 +116,8 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 		resultpkt = a.Func(pkt1, ok)
 	}
 
-	if *verbose {
-		verboseprint(resultpkt, "ORIGINAL OUTGOING")
+	if *verbose {    //orignal out
+		verboseprint(resultpkt, "< ")
 	}
 
 	// loop again for matching, but now with OUT, this is done
@@ -130,9 +134,8 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 		return nil, nil
 	}
 
-	if *verbose {
-		verboseprint(pkt1, "MODIFIED OUTGOING")
-		fmt.Printf("-----------------------------------\n\n")
+	if *verbose {   // modified out
+		verboseprint(pkt1, "<< ")
 	}
 
 	out, ok1 := pkt1.Pack()
@@ -144,6 +147,7 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 }
 
 func serve(w dns.ResponseWriter, req *dns.Msg) {
+        println("In serve")
         out, err := doFunkensturm(req)
         if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -162,21 +166,31 @@ func listenAndServe(add, net string) {
 }
 
 func main() {
-	var sserver *string = flag.String("sserver", "127.0.0.1:8053", "Set the listener address")
-	var rserver *string = flag.String("rserver", "127.0.0.1:53", "Remote server address(es), seperate with commas")
-	verbose = flag.Bool("verbose", false, "Print packet as it flows through") // verbose needs to be global
+	sserver := flag.String("sserver", "127.0.0.1:8053", "set the listener address")
+	rserver := flag.String("rserver", "127.0.0.1:53", "remote server address(es), seperate with commas")
+        cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+        if *cpuprofile != "" {
+                println("* profiling *")
+                f, err := os.Create(*cpuprofile)
+                if err != nil {
+                    log.Fatal(err)
+                }
+                pprof.StartCPUProfile(f)
+                defer pprof.StopCPUProfile()
+        }
 
 	clients := strings.Split(*rserver, ",", -1)
-	qr = make([]*dns.Client, len(clients))
+	qr = make([]*Funk, len(clients))
 	for i, ra := range clients {
-		c := dns.NewClient()
-		c.Addr = ra
-		qr[i] = c
+                qr[i] = new(Funk)
+                qr[i].Client = dns.NewClient()
+		qr[i].Addr = ra
 	}
 
 	f = funkensturm()

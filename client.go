@@ -113,7 +113,6 @@ func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 	h.QueryDNS(w, r)
 }
 
-// TODO add: LocalAddr
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Attempts     int               // number of attempts
@@ -123,6 +122,7 @@ type Client struct {
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
+        // LocalAddr string            // Local address to use
 }
 
 // Create a new client, with some default values filled in.
