@@ -116,7 +116,6 @@ func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 // TODO add: LocalAddr
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one
-	Addr         string            // address to call
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
 	ChannelQuery chan *Request     // read DNS request from this channel
