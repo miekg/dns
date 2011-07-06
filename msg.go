@@ -126,6 +126,7 @@ var Class_str = map[uint16]string{
 	ClassCSNET:  "CS",
 	ClassCHAOS:  "CH",
 	ClassHESIOD: "HS",
+        ClassNONE:   "NONE",
 	ClassANY:    "ANY",
 }
 
