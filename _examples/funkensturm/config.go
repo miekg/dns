@@ -27,7 +27,6 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 
 func send(m *dns.Msg, ok bool) (o *dns.Msg) {
         for _, c := range qr {
-        println("Sending to ", c.Addr)
                 o = c.Client.Exchange(m, c.Addr)
         }
         return

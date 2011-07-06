@@ -95,7 +95,6 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	ok, ok1 := true, true
 	pkt1 := pkt
 	for _, m := range f.Matches {
-                println("*match functions")
 		pkt1, ok1 = m.Func(pkt1, IN)
 		switch m.Op {
 		case AND:
@@ -147,7 +146,6 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 }
 
 func serve(w dns.ResponseWriter, req *dns.Msg) {
-        println("In serve")
         out, err := doFunkensturm(req)
         if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
@@ -176,7 +174,6 @@ func main() {
 	}
 	flag.Parse()
         if *cpuprofile != "" {
-                println("* profiling *")
                 f, err := os.Create(*cpuprofile)
                 if err != nil {
                     log.Fatal(err)
