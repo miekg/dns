@@ -16,7 +16,7 @@ import (
 )
 
 // Define a slice of conn for sending queries
-var qr []*dns.Conn
+var qr []*dns.Client
 var in chan dns.Query
 var out chan dns.Query
 
@@ -143,27 +143,22 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	return out, nil
 }
 
-func reply(c *dns.Conn, i *dns.Msg) {
-	out, err := doFunkensturm(i)
-	if err != nil {
+func serve(w dns.ResponseWriter, req *dns.Msg) {
+        out, err := doFunkensturm(req)
+        if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
 		return
-	}
-	if out != nil {
-		c.Write(out)
-	}
+        }
+        if out != nil {
+                w.Write(out)
+        }
 }
 
-func tcp(addr string, e chan os.Error) {
-        err := dns.ListenAndServeTCP(addr, reply)
-	e <- err
-	return
-}
-
-func udp(addr string, e chan os.Error) {
-        err := dns.ListenAndServeUDP(addr, reply)
-	e <- err
-	return
+func listenAndServe(add, net string) {
+        err := dns.ListenAndServe(add, net, nil)
+        if err != nil {
+                fmt.Printf("Failed to setup: " + net + " " + add + "\n")
+        }
 }
 
 func main() {
@@ -176,12 +171,12 @@ func main() {
 	}
 	flag.Parse()
 
-	resolvers := strings.Split(*rserver, ",", -1)
-	qr = make([]*dns.Resolver, len(resolvers))
-	for i, ra := range resolvers {
-		d := new(dns.Conn)
-		d.RemoteAddr = addr
-		qr[i] = d
+	clients := strings.Split(*rserver, ",", -1)
+	qr = make([]*dns.Client, len(clients))
+	for i, ra := range clients {
+		c := dns.NewClient()
+		c.Addr = ra
+		qr[i] = c
 	}
 
 	f = funkensturm()
@@ -191,20 +186,16 @@ func main() {
 		return
 	}
 
-        err  := make(chan os.Error)
-        go udp(*sserver, err)
-	go tcp(*sserver, err)
+        dns.HandleFunc(".", serve)
+        go listenAndServe(*sserver, "tcp")
+        go listenAndServe(*sserver, "udp")
 
 forever:
 	for {
-		select {
-                case e := <-err:
-                        fmt.Printf("Error received, stopping: %s\n", e.String())
-                        break forever
+                select {
 		case <-signal.Incoming:
-			fmt.Printf("Signal received, stopping")
+			fmt.Printf("Signal received, stopping\n")
 			break forever
 		}
 	}
-	close(err)
 }
