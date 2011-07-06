@@ -4,9 +4,6 @@ Issues:
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in???
 * Compression. Take stuff from Jan Mercl
-o Tsig will probably become an interface which has all configuration
-  stuff, but this will come later. Config which has Tsig function
-  -- get TSIG working in xfrprx and see how that impact the package.
 
 XfrWriter 
 

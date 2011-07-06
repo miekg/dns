@@ -19,7 +19,6 @@ func TestClientSync(t *testing.T) {
 	}
 }
 
-
 func helloMiek(w RequestWriter, r *Msg) {
 	w.Send(r)
 	reply, _ := w.Receive()
@@ -50,12 +49,10 @@ forever:
 	}
 }
 
-// TestClientEDNS
-/*
-func TestResolverEdns(t *testing.T) {
+func TestClientEDNS0(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeDNSKEY)
 
-
-	// Add EDNS rr
 	edns := new(RR_OPT)
 	edns.Hdr.Name = "." // must . be for edns
 	edns.Hdr.Rrtype = TypeOPT
@@ -66,21 +63,18 @@ func TestResolverEdns(t *testing.T) {
 	edns.Option = make([]Option, 1)
 	edns.SetNsid("") // Empty to request it
 
-	// ask something
-	m.Question[0] = Question{"powerdns.nl", TypeDNSKEY, ClassINET}
 	m.Extra = make([]RR, 1)
 	m.Extra[0] = edns
 
-	in, _ := res.Query(m)
-	if in != nil {
-		if in.Rcode != RcodeSuccess {
-			t.Logf("%v\n", in)
-			t.Log("Failed to get an valid answer")
-			t.Fail()
-		}
+	c := NewClient()
+	r := c.Exchange(m, "85.223.71.124:53")
+
+	if r != nil && r.Rcode != RcodeSuccess {
+		t.Log("Failed to get an valid answer")
+		t.Fail()
+		t.Logf("%v\n", r)
 	}
 }
-*/
 
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
