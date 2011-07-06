@@ -46,7 +46,7 @@ func match(m *dns.Msg, d int) (*dns.Msg, bool) {
 	return m, ok
 }
 
-func delay(m *dns.Msg, ok bool) (out *dns.Msg) {
+func delay(m *dns.Msg, ok bool) (o *dns.Msg) {
 	var ok1 bool
 	switch ok {
 	case true:
@@ -57,14 +57,14 @@ func delay(m *dns.Msg, ok bool) (out *dns.Msg) {
 			return
 		} else {
 			fmt.Fprintf(os.Stderr, "Info: Ok: let it through\n")
-                        for _, r := range qr {
-			        out, _ = r.Query(m)
+                        for _, c := range qr {
+			        o = c.Client.Exchange(m, c.Addr)
                         }
 			return
 		}
 	case false:
-                for _, r := range qr {
-                        out, _ = r.Query(m)
+                for _, c := range qr {
+		        o = c.Client.Exchange(m, c.Addr)
                 }
 		return
 	}
@@ -74,7 +74,6 @@ func delay(m *dns.Msg, ok bool) (out *dns.Msg) {
 // Return the configration
 func funkensturm() *Funkensturm {
 	f := new(Funkensturm)
-
 	f.Setup = func() bool { previous = time.Nanoseconds(); return true }
 
 	f.Matches = make([]Match, 1)
