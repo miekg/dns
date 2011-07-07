@@ -28,6 +28,8 @@ const (
 	AlgRSASHA256 = 8
 	AlgRSASHA512 = 10
 	AlgECCGOST   = 12
+        // AlgECDSAP256SHA256 = 13
+        // AlgECDSAP384SHA384 = 14
 )
 
 // DNSSEC hashing codes.
@@ -394,10 +396,7 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
-	if _E == 0 {
-		return false
-	}
-	if _N == nil {
+	if _E == 0 || _N == nil {
 		return false
 	}
 	buf := exponentToBuf(_E)
@@ -406,7 +405,7 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 	return true
 }
 
-// Set the public key (the value E and N)
+// Set the public key (the values E and N) for RSA
 // RFC 3110: Section 2. RSA Public KEY Resource Records
 func exponentToBuf(_E int) []byte {
 	var buf []byte

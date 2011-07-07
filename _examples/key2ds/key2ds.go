@@ -43,10 +43,10 @@ func main() {
                 // Foreach key would need to provide a DS records, both sha1 and sha256
                 if key, ok := k.(*dns.RR_DNSKEY); ok {
                         ds := key.ToDS(dns.HashSHA1)
-                        ds.Hdr.Ttl = 0
                         fmt.Printf("%v\n", ds)
                         ds = key.ToDS(dns.HashSHA256)
-                        ds.Hdr.Ttl = 0
+                        fmt.Printf("%v\n", ds)
+                        ds = key.ToDS(dns.HashSHA384)
                         fmt.Printf("%v\n", ds)
                 }
         }
