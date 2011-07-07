@@ -33,9 +33,10 @@ const (
 // DNSSEC hashing codes.
 const (
 	_ = iota
-	HashSHA1
-	HashSHA256
-	HashGOST94
+	HashSHA1        // RFC 4034
+	HashSHA256      // RFC 4509 
+	HashGOST94      // RFC 5933
+        HashSHA384      // Experimental
 )
 
 // DNSKEY flags values.
@@ -144,6 +145,10 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 		ds.Digest = hex.EncodeToString(s.Sum())
 	case HashSHA256:
 		s := sha256.New()
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum())
+        case HashSHA384:
+                s := sha512.New384()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
 	case HashGOST94:
