@@ -258,6 +258,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	case AlgDSA:
 	case AlgECC:
 	case AlgECCGOST:
+        case AlgECDSAP256SHA256:
+        case AlgECDSAP384SHA384:
 	}
 
 	return true
