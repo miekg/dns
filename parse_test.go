@@ -79,6 +79,7 @@ Activate: 20110109154937`
 	k.Hdr.Ttl = 3600
 	k.Protocol = 3
 	k.Flags = 256
+        k.Algorithm = RSASHA1
 	p, _ := k.ReadPrivateKey(strings.NewReader(a))
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:

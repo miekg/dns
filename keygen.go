@@ -5,6 +5,7 @@ import (
         "io"
 	"big"
 	"fmt"
+        "strings"
         "bufio"
 	"strconv"
 	"crypto/rsa"
@@ -113,23 +114,23 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
         r := bufio.NewReader(q)
 	line, _, err := r.ReadLine()
-        var left, right string
+private:
 	for err == nil {
-		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
-		if n > 0 {
-			switch left {
-			case "Private-key-format:":
-				if right != "v1.2" || right != "v1.3" {
-					return nil, ErrPrivKey
-				}
-			case "Algorithm:":
-				a, _ := strconv.Atoi(right)
-				if a == 0 {
-					return nil, ErrAlg
-				}
-				k.Algorithm = uint8(a)
-                                break
+                str := strings.Split(string(line), ": ", 2)
+                switch str[0] {
+                case "Private-key-format":
+                        if str[1] != "v1.2" && str[1] != "v1.3" {
+                                return nil, ErrPrivKey
                         }
+                case "Algorithm":
+                        // 5 (RSASHA1) for instance
+                        a := strings.Split(str[1], " ", 2)
+                        alg, _ := strconv.Atoi(a[0])
+                        if alg == 0 {
+                                return nil, ErrAlg
+                        }
+                        k.Algorithm = uint8(alg)
+                        break private
                 }
 		line, _, err = r.ReadLine()
         }
@@ -146,47 +147,41 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 func (k *RR_DNSKEY) readPrivateKeyRSA(r *bufio.Reader) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	p.Primes = []*big.Int{nil,nil}
-	var left, right string
 	line, _, err := r.ReadLine()
 	for err == nil {
-		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
-		if n > 0 {
-			switch left {
-			case "Modulus:", "PublicExponent:", "PrivateExponent:", "Prime1:", "Prime2:":
-				v, err := packBase64([]byte(right))
-				if err != nil {
-					return nil, err
-				}
-				if left == "Modulus:" {
-					p.PublicKey.N = big.NewInt(0)
-					p.PublicKey.N.SetBytes(v)
-				}
-				if left == "PublicExponent:" {
-					i := big.NewInt(0)
-					i.SetBytes(v)
-					// Int64 should be large enough
-					p.PublicKey.E = int(i.Int64())
-				}
-				if left == "PrivateExponent:" {
-					p.D = big.NewInt(0)
-					p.D.SetBytes(v)
-				}
-				if left == "Prime1:" {
-					p.Primes[0] = big.NewInt(0)
-					p.Primes[0].SetBytes(v)
-				}
-				if left == "Prime2:" {
-					p.Primes[1] = big.NewInt(0)
-					p.Primes[1].SetBytes(v)
-				}
-			case "Exponent1:", "Exponent2:", "Coefficient:":
-				/* not used in Go (yet) */
-			case "Created:", "Publish:", "Activate:":
-				/* not used in Go (yet) */
-			default:
-				return nil, ErrKey
-			}
-		}
+                str := strings.Split(string(line), ": ", 2)
+                switch str[0] {
+                case "Modulus", "PublicExponent", "PrivateExponent", "Prime1", "Prime2":
+                        v, err := packBase64([]byte(str[1]))
+                        if err != nil {
+                                return nil, err
+                        }
+                        switch str[0] {
+                        case "Modulus":
+                                p.PublicKey.N = big.NewInt(0)
+                                p.PublicKey.N.SetBytes(v)
+                        case "PublicExponent":
+                                i := big.NewInt(0)
+                                i.SetBytes(v)
+                                // Int64 should be large enough
+                                p.PublicKey.E = int(i.Int64())
+                        case "PrivateExponent":
+                                p.D = big.NewInt(0)
+                                p.D.SetBytes(v)
+                        case "Prime1":
+                                p.Primes[0] = big.NewInt(0)
+                                p.Primes[0].SetBytes(v)
+                        case "Prime2":
+                                p.Primes[1] = big.NewInt(0)
+                                p.Primes[1].SetBytes(v)
+                        }
+                case "Exponent1", "Exponent2", "Coefficient":
+                        // not used in Go (yet)
+                case "Created", "Publish", "Activate":
+                        // not used in Go (yet)
+                default:
+                        return nil, ErrKey
+                }
 		line, _, err = r.ReadLine()
 	}
 	if ! k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N) {
