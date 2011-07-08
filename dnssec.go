@@ -213,55 +213,49 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	}
 	signdata = append(signdata, wire...)
 
-	var signature []byte
-	var err os.Error
-	switch s.Algorithm {
-	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
-		//pubkey := k.pubKeyRSA() // Get the key, need privkey representation
-		// Setup the hash as defined for this alg.
-		var h hash.Hash
-		var ch crypto.Hash
-		switch s.Algorithm {
-		case AlgRSAMD5:
-			h = md5.New()
+        var sighash []byte
+        var h hash.Hash
+	var ch crypto.Hash      // Only need for RSA
+        switch s.Algorithm {
+                case AlgRSAMD5:
+                        h = md5.New()
 			ch = crypto.MD5
-		case AlgRSASHA1:
-			h = sha1.New()
+	        case AlgRSASHA1:
+                        h = sha1.New()
 			ch = crypto.SHA1
-		case AlgRSASHA256:
-			h = sha256.New()
+                case AlgRSASHA256, AlgECDSAP256SHA256:
+                        h = sha256.New()
 			ch = crypto.SHA256
-		case AlgRSASHA512:
-			h = sha512.New()
+                case AlgECDSAP384SHA384:
+                        h = sha512.New384()
+                case AlgRSASHA512:
+                        h = sha512.New()
 			ch = crypto.SHA512
-		default:
-			// Illegal Alg
-			return false
-		}
-		// Need privakey representation in godns TODO(mg) see keygen.go
-		io.WriteString(h, string(signdata))
-		sighash := h.Sum()
+                default:
+                        return false            // Illegal alg
+        }
+        io.WriteString(h, string(signdata))
+        sighash = h.Sum()
 
-		// Get the key from the interface
-		switch p := k.(type) {
-		case *rsa.PrivateKey:
-			signature, err = rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
-			if err != nil {
-				return false
-			}
-			s.Signature = unpackBase64(signature)
-		default:
-			// Not given the correct key
-			return false
-		}
-	case AlgDH:
-	case AlgDSA:
-	case AlgECC:
-	case AlgECCGOST:
-        case AlgECDSAP256SHA256:
-        case AlgECDSAP384SHA384:
-	}
-
+        switch p := k.(type) {
+        case *rsa.PrivateKey:
+                signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+                if err != nil {
+                        return false
+                }
+                s.Signature = unpackBase64(signature)
+        case *ecdsa.PrivateKey:
+                r1, s1, err := ecdsa.Sign(rand.Reader, p, sighash)
+                if err != nil {
+                        return false
+                }
+                signature := r1.Bytes()
+                signature = append(signature, s1.Bytes()...)
+                s.Signature =unpackBase64(signature)
+        default:
+                // Not given the correct key
+                return false
+        }
 	return true
 }
 
@@ -431,11 +425,11 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 }
 
 // Set the public key for Elliptic Curves
-func (k *RR_DNSKEY) setPublicKeyCurve(c *elliptic.Curve, _X, _Y *big.Int) bool {
+func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
         if _X == nil || _Y == nil {
                 return false
         }
-        buf := curveToBuf(c, _X, _Y)
+        buf := curveToBuf(_X, _Y)
         k.PublicKey = unpackBase64(buf)
         return true
 }
@@ -460,8 +454,9 @@ func exponentToBuf(_E int) []byte {
 
 // Set the public key for X and Y for Curve
 // Experimental
-func curveToBuf(c *elliptic.Curve, _X, _Y *big.Int) []byte {
-        buf := c.Marshal(_X, _Y)
+func curveToBuf(_X, _Y *big.Int) []byte {
+        buf := _X.Bytes()
+        buf = append(buf, _Y.Bytes()...)
         return buf
 }
 
