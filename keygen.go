@@ -8,6 +8,8 @@ import (
         "bufio"
 	"strconv"
 	"crypto/rsa"
+        "crypto/ecdsa"
+        "crypto/elliptic"
 	"crypto/rand"
 )
 
@@ -29,8 +31,6 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
 		}
-	default:
-		return nil, ErrAlg
 	}
 
 	switch r.Algorithm {
@@ -39,10 +39,24 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if err != nil {
 			return nil, err
 		}
-		keybuf := exponentToBuf(priv.PublicKey.E)
-		keybuf = append(keybuf, priv.PublicKey.N.Bytes()...)
-		r.PublicKey = unpackBase64(keybuf)
+                r.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
 		return priv, nil
+        case AlgECDSAP256SHA256, AlgECDSAP384SHA384:
+                var c *elliptic.Curve
+                switch r.Algorithm {
+                case AlgECDSAP256SHA256:
+                        c = elliptic.P256()
+                case AlgECDSAP384SHA384:
+                        c = elliptic.P384()
+                }
+                priv, err := ecdsa.GenerateKey(c, rand.Reader)
+                if err != nil {
+                        return nil, err
+                }
+                r.setPublicKeyCurve(priv.PublicKey.X, priv.PublicKey.Y)
+                return priv, nil
+	default:
+		return nil, ErrAlg
 	}
 	return nil, nil // Dummy return
 }

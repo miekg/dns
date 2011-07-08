@@ -28,8 +28,8 @@ const (
 	AlgRSASHA256 = 8
 	AlgRSASHA512 = 10
 	AlgECCGOST   = 12
-        // AlgECDSAP256SHA256 = 13
-        // AlgECDSAP384SHA384 = 14
+        AlgECDSAP256SHA256 = 13
+        AlgECDSAP384SHA384 = 14
 )
 
 // DNSSEC hashing codes.
@@ -405,6 +405,16 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 	return true
 }
 
+// Set the public key for Elliptic Curves
+func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
+        if _X == nil || _Y == nil {
+                return false
+        }
+        buf := curveToBuf(_X, _Y)
+        k.PublicKey = unpackBase64(buf)
+        return true
+}
+
 // Set the public key (the values E and N) for RSA
 // RFC 3110: Section 2. RSA Public KEY Resource Records
 func exponentToBuf(_E int) []byte {
@@ -421,6 +431,14 @@ func exponentToBuf(_E int) []byte {
 	}
 	buf = append(buf, i.Bytes()...)
 	return buf
+}
+
+// Set the public key for X and Y for Curve
+// Experimental
+func curveToBuf(_X, _Y *big.Int) []byte {
+        buf := _X.Bytes()
+        buf = append(buf, _Y.Bytes()...)
+        return buf
 }
 
 // return a saw signature data 
@@ -470,4 +488,6 @@ var alg_str = map[uint8]string{
 	AlgRSASHA256: "RSASHA256",
 	AlgRSASHA512: "RSASHA512",
 	AlgECCGOST:   "ECC-GOST",
+        AlgECDSAP256SHA256: "ECDSAP256SHA256",
+        AlgECDSAP384SHA384: "ECDSAP384SHA384",
 }

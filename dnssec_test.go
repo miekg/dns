@@ -1,6 +1,7 @@
 package dns
 
 import (
+        "fmt"
 	"testing"
 	"strings"
 )
@@ -100,7 +101,7 @@ func TestSignVerify(t *testing.T) {
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = soa.Hdr.Rrtype
-	sig.Labels = labelCount(soa.Hdr.Name)
+	sig.Labels = LabelCount(soa.Hdr.Name)
 	sig.OrigTtl = soa.Hdr.Ttl
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
@@ -119,7 +120,7 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
-func TestKeyGen(t *testing.T) {
+func TestKeyGenRSA(t *testing.T) {
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
@@ -128,9 +129,22 @@ func TestKeyGen(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = AlgRSASHA256
-	key.Generate(512)
+	key.Generate(1024)
+        fmt.Printf("%v\n", key)
 }
 
+func TestKeyGenCurve(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 3600
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = AlgECDSAP256SHA256
+	key.Generate(0)
+        fmt.Printf("%v\n", key)
+}
 
 /*
 func TestDnskey(t *testing.T) {
@@ -199,7 +213,7 @@ func TestTag(t *testing.T) {
 	}
 }
 
-func TestKeyGenRSA(t *testing.T) {
+func TestKeyRSA(t *testing.T) {
 
 	return // Tijdelijk uit TODO(mg)
 	key := new(RR_DNSKEY)
