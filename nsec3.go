@@ -29,7 +29,7 @@ func hashName(label string, ha int, iterations int, salt string) string {
 	name = name[:off]
 	var s hash.Hash
 	switch ha {
-	case HashSHA1:
+	case SHA1:
 		s = sha1.New()
 	default:
 		return ""

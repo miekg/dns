@@ -22,25 +22,25 @@ import (
 
 // DNSSEC encryption algorithm codes.
 const (
-	AlgRSAMD5    = 1
-	AlgDH        = 2
-	AlgDSA       = 3
-	AlgECC       = 4
-	AlgRSASHA1   = 5
-	AlgRSASHA256 = 8
-	AlgRSASHA512 = 10
-	AlgECCGOST   = 12
-        AlgECDSAP256SHA256 = 13
-        AlgECDSAP384SHA384 = 14
+	RSAMD5    = 1
+	DH        = 2
+	DSA       = 3
+	ECC       = 4
+	RSASHA1   = 5
+	RSASHA256 = 8
+	RSASHA512 = 10
+	ECCGOST   = 12
+        ECDSAP256SHA256 = 13
+        ECDSAP384SHA384 = 14
 )
 
 // DNSSEC hashing codes.
 const (
 	_ = iota
-	HashSHA1        // RFC 4034
-	HashSHA256      // RFC 4509 
-	HashGOST94      // RFC 5933
-        HashSHA384      // Experimental
+	SHA1        // RFC 4034
+	SHA256      // RFC 4509 
+	GOST94      // RFC 5933
+        SHA384      // Experimental
 )
 
 // DNSKEY flags values.
@@ -78,7 +78,7 @@ type dnskeyWireFmt struct {
 func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
-	case AlgRSAMD5:
+	case RSAMD5:
 		keytag = 0
 	default:
 		keywire := new(dnskeyWireFmt)
@@ -143,19 +143,19 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	digest := append(owner, wire...) // another copy TODO(mg)
 
 	switch h {
-	case HashSHA1:
+	case SHA1:
 		s := sha1.New()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
-	case HashSHA256:
+	case SHA256:
 		s := sha256.New()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
-        case HashSHA384:
+        case SHA384:
                 s := sha512.New384()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
-	case HashGOST94:
+	case GOST94:
 		/* I have no clue */
 	default:
 		return nil
@@ -217,18 +217,18 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
         var h hash.Hash
 	var ch crypto.Hash      // Only need for RSA
         switch s.Algorithm {
-                case AlgRSAMD5:
+                case RSAMD5:
                         h = md5.New()
 			ch = crypto.MD5
-	        case AlgRSASHA1:
+	        case RSASHA1:
                         h = sha1.New()
 			ch = crypto.SHA1
-                case AlgRSASHA256, AlgECDSAP256SHA256:
+                case RSASHA256, ECDSAP256SHA256:
                         h = sha256.New()
 			ch = crypto.SHA256
-                case AlgECDSAP384SHA384:
+                case ECDSAP384SHA384:
                         h = sha512.New384()
-                case AlgRSASHA512:
+                case RSASHA512:
                         h = sha512.New()
 			ch = crypto.SHA512
                 default:
@@ -313,32 +313,32 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 
 	var err os.Error
 	switch s.Algorithm {
-	case AlgRSASHA1, AlgRSASHA256, AlgRSASHA512, AlgRSAMD5:
+	case RSASHA1, RSASHA256, RSASHA512, RSAMD5:
 		pubkey := k.pubKeyRSA() // Get the key
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
 		var ch crypto.Hash
 		switch s.Algorithm {
-		case AlgRSAMD5:
+		case RSAMD5:
 			h = md5.New()
 			ch = crypto.MD5
-		case AlgRSASHA1:
+		case RSASHA1:
 			h = sha1.New()
 			ch = crypto.SHA1
-		case AlgRSASHA256:
+		case RSASHA256:
 			h = sha256.New()
 			ch = crypto.SHA256
-		case AlgRSASHA512:
+		case RSASHA512:
 			h = sha512.New()
 			ch = crypto.SHA512
 		}
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum()
 		err = rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
-	case AlgDH:
-	case AlgDSA:
-	case AlgECC:
-	case AlgECCGOST:
+	case DH:
+	case DSA:
+	case ECC:
+	case ECCGOST:
 	default:
 		// Unknown Alg
 		return false
@@ -400,9 +400,9 @@ func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
         }
         var c *elliptic.Curve
         switch k.Algorithm {
-        case AlgECDSAP256SHA256:
+        case ECDSAP256SHA256:
                 c = elliptic.P256()
-        case AlgECDSAP384SHA384:
+        case ECDSAP384SHA384:
                 c = elliptic.P384()
         }
         x, y := c.Unmarshal(keybuf)
@@ -500,13 +500,13 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 // Map for algorithm names.
 var alg_str = map[uint8]string{
-	AlgRSAMD5:    "RSAMD5",
-	AlgDH:        "DH",
-	AlgDSA:       "DSA",
-	AlgRSASHA1:   "RSASHA1",
-	AlgRSASHA256: "RSASHA256",
-	AlgRSASHA512: "RSASHA512",
-	AlgECCGOST:   "ECC-GOST",
-        AlgECDSAP256SHA256: "ECDSAP256SHA256",
-        AlgECDSAP384SHA384: "ECDSAP384SHA384",
+	RSAMD5:    "RSAMD5",
+	DH:        "DH",
+	DSA:       "DSA",
+	RSASHA1:   "RSASHA1",
+	RSASHA256: "RSASHA256",
+	RSASHA512: "RSASHA512",
+	ECCGOST:   "ECC-GOST",
+        ECDSAP256SHA256: "ECDSAP256SHA256",
+        ECDSAP384SHA384: "ECDSAP384SHA384",
 }
