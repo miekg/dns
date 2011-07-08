@@ -5,13 +5,13 @@ import (
 )
 
 func TestPackNsec3(t *testing.T) {
-	nsec3 := hashName("dnsex.nl", HashSHA1, 0, "DEAD")
+	nsec3 := hashName("dnsex.nl", SHA1, 0, "DEAD")
 	if nsec3 != "ROCCJAE8BJJU7HN6T7NG3TNM8ACRS87J" {
 		t.Logf("%v\n", nsec3)
 		t.Fail()
 	}
 
-	nsec3 = hashName("a.b.c.example.org", HashSHA1, 2, "DEAD")
+	nsec3 = hashName("a.b.c.example.org", SHA1, 2, "DEAD")
 	if nsec3 != "6LQ07OAHBTOOEU2R9ANI2AT70K5O0RCG" {
 		t.Logf("%v\n", nsec3)
 		t.Fail()

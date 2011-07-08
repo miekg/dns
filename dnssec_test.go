@@ -20,7 +20,7 @@ func TestSecure(t *testing.T) {
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
-	sig.Algorithm = AlgRSASHA256
+	sig.Algorithm = RSASHA256
 	sig.Labels = 2
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
@@ -35,7 +35,7 @@ func TestSecure(t *testing.T) {
 	key.Hdr.Ttl = 14400
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
 	// It should validate. Period is checked seperately, so this will keep on working
@@ -51,7 +51,7 @@ func TestSignature(t *testing.T) {
 	sig.Hdr.Class = ClassINET
 	sig.Hdr.Ttl = 3600
 	sig.TypeCovered = TypeDNSKEY
-	sig.Algorithm = AlgRSASHA1
+	sig.Algorithm = RSASHA1
 	sig.Labels = 2
 	sig.OrigTtl = 4000
 	sig.Expiration = 1000 //Thu Jan  1 02:06:40 CET 1970
@@ -94,7 +94,7 @@ func TestSignVerify(t *testing.T) {
 	key.Hdr.Ttl = 14400
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	privkey, _ := key.Generate(512)
 
 	// Fill in the values of the Sig, before signing
@@ -107,7 +107,7 @@ func TestSignVerify(t *testing.T) {
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
 	sig.KeyTag = key.KeyTag()   // Get the keyfrom the Key
 	sig.SignerName = key.Hdr.Name
-	sig.Algorithm = AlgRSASHA256
+	sig.Algorithm = RSASHA256
 
 	// zal wel goed zijn
 	if !sig.Sign(privkey, []RR{soa}) {
@@ -128,7 +128,7 @@ func TestKeyGenRSA(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	key.Generate(1024)
         fmt.Printf("%v\n", key)
 }
@@ -141,7 +141,7 @@ func TestKeyGenCurve(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgECDSAP256SHA256
+	key.Algorithm = ECDSAP256SHA256
 	key.Generate(0)
         fmt.Printf("%v\n", key)
 }
@@ -160,7 +160,7 @@ func TestDnskey(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	key.PublicKey = "AwEAAcELcuxHosJX3LjbR6EFzsqI3mKivwvO6Y5Kzt/OXYmLQUI8tnOrX9ilT/0qGraxoONayVX3A6bl1pG3h/xOxVEGcJGqbrZnhr2+4S9tW2GWQwevV+NhinE7v6MCCCheVCnAPh0KFb/u14ng3DQizP1spBU/NoAN31l678snBpZX"
 
 	soa := new(RR_SOA)
@@ -176,7 +176,7 @@ func TestDnskey(t *testing.T) {
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
-	sig.Algorithm = AlgRSASHA256
+	sig.Algorithm = RSASHA256
 	sig.Labels = 2
 	sig.Expiration = 1296098705 // date '+%s' -d"2011-01-27 04:25:05
 	sig.Inception = 1293506705
@@ -202,7 +202,7 @@ func TestTag(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
 	tag := key.KeyTag()
@@ -223,7 +223,7 @@ func TestKeyRSA(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	length := 2048
 	priv, _ := key.Generate(length)
 
@@ -240,7 +240,7 @@ func TestKeyRSA(t *testing.T) {
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
-	sig.Algorithm = AlgRSASHA256
+	sig.Algorithm = RSASHA256
 	sig.Labels = 2
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
@@ -260,10 +260,10 @@ func TestKeyToDS(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = AlgRSASHA256
+	key.Algorithm = RSASHA256
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
-	ds := key.ToDS(HashSHA1)
+	ds := key.ToDS(SHA1)
 	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
 		t.Logf("Wrong DS digest for Sha1\n%v\n", ds)
 		t.Fail()
