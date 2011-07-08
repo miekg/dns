@@ -53,7 +53,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
                 if err != nil {
                         return nil, err
                 }
-                r.setPublicKeyCurve(priv.PublicKey.X, priv.PublicKey.Y)
+                r.setPublicKeyCurve(c, priv.PublicKey.X, priv.PublicKey.Y)
                 return priv, nil
 	default:
 		return nil, ErrAlg

@@ -6,6 +6,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+        "crypto/ecdsa"
+        "crypto/elliptic"
 	"crypto/rsa"
 	"crypto/rand"
 	"encoding/hex"
@@ -394,6 +396,27 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 	return pubkey
 }
 
+// Extract the Curve public key from the Key record
+func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
+        keybuf, err := packBase64([]byte(k.PublicKey))
+        if err != nil {
+                return nil
+        }
+        var c *elliptic.Curve
+        switch k.Algorithm {
+        case AlgECDSAP256SHA256:
+                c = elliptic.P256()
+        case AlgECDSAP384SHA384:
+                c = elliptic.P384()
+        }
+        x, y := c.Unmarshal(keybuf)
+        pubkey := new(ecdsa.PublicKey)
+        pubkey.X = x
+        pubkey.Y = y
+        pubkey.Curve = c
+        return pubkey
+}
+
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 	if _E == 0 || _N == nil {
@@ -406,11 +429,11 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 }
 
 // Set the public key for Elliptic Curves
-func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
+func (k *RR_DNSKEY) setPublicKeyCurve(c *elliptic.Curve, _X, _Y *big.Int) bool {
         if _X == nil || _Y == nil {
                 return false
         }
-        buf := curveToBuf(_X, _Y)
+        buf := curveToBuf(c, _X, _Y)
         k.PublicKey = unpackBase64(buf)
         return true
 }
@@ -435,9 +458,8 @@ func exponentToBuf(_E int) []byte {
 
 // Set the public key for X and Y for Curve
 // Experimental
-func curveToBuf(_X, _Y *big.Int) []byte {
-        buf := _X.Bytes()
-        buf = append(buf, _Y.Bytes()...)
+func curveToBuf(c *elliptic.Curve, _X, _Y *big.Int) []byte {
+        buf := c.Marshal(_X, _Y)
         return buf
 }
 
