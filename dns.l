@@ -2,7 +2,7 @@
         import "fmt"
 
         var debug = true
-        var lastOwner = string
+        var lastOwner string
     
 CHAR    [A-Za-z0-9/+=a.{}]
 BLANK   [ \t]
@@ -22,21 +22,21 @@ BLANK   [ \t]
 
 <INITIAL>^{CHAR}+   { 
                         YOUT("qname")
-                        yylval = yytext
-                        lastOwner = yylval
+                        yylval.val = yytext
+                        lastOwner = yylval.val
                         BEGIN(classttl)
                         return QNAME
                     }
 <INITIAL>^{BLANK}+           {
                         YOUT("qname.")
                         // Return qname TOK, and fix yytext
-                        yylval = lastOwner
+                        yylval.val = lastOwner
                         BEGIN(classttl)
                         return QNAME
                     }
 
 <classttl>{CHAR}+   {
-                        yylval = yytext
+                        yylval.val = yytext
                         switch yycheckit(yytext) {
                         case 0:
                             YOUT("{qtype:" + yytext + "}")
@@ -56,7 +56,7 @@ BLANK   [ \t]
 
 <rest>{CHAR}+       {
                         YOUT("str")
-                        yylval = yytext
+                        yylval.val = yytext
                         return STR
                     }
 <rest>{BLANK}+      {
@@ -90,8 +90,7 @@ func YOUT(s string) {
 type yyLex int
 
 func (yyLex) Lex(yylval *yySymType) int {
-    yylex()   
-    return 0
+    return yylex()   
 }
 
 func (yyLex) Error(s string) {
