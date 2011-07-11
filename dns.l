@@ -1,54 +1,70 @@
     package main
 
     import "fmt"
-
+    
 CHAR    [A-Za-z0-9/+=a.{}]
-WS      [ \t]
+BLANK   [ \t]
 
-%x qclass qtype rdata
+%s classttl rest
 %%
+<*>;.*\n            {
+                        // Comments aren't interesting
+                        YOUT("NL\n")
+                        BEGIN(INITIAL)
+                    }
+<*>%$               {
+                        // Empty lines
+                        YOUT("\n")
+                        BEGIN(INITIAL)
+                    }
 
-^{CHAR}+            { 
+<INITIAL>^{CHAR}+            { 
                         YOUT("qname")
-                        BEGIN(qclass)
+                        BEGIN(classttl)
                     }
-WS                      YOUT(" ")
-<qclass>WS              YOUT(" ")
-<qtype>WS               YOUT(" ")
-<rdata>WS               YOUT(" ")
-;.*\n               {
-                        YOUT("comment\n")
-                        BEGIN(INITIAL)
+<INITIAL>^{BLANK}+           {
+                        YOUT("qname.")
+                        // Return qname TOK, and fix yytext
+                        BEGIN(classttl)
                     }
-<qclass>;.*\n       {
-                        YOUT("comment\n")
-                        BEGIN(INITIAL)
+
+<classttl>{CHAR}+   {
+                        switch yycheckit(yytext) {
+                        case 0:
+                            YOUT("{qtype:" + yytext + "}")
+                            BEGIN(rest)
+                        case 1:
+                            YOUT("qclass")
+                        case 2:
+                            YOUT("ttl")
+                        }
                     }
-<qtype>;.*\n        {
-                        YOUT("comment\n")
-                        BEGIN(INITIAL)
+<classttl>{BLANK}+  {
+                        YOUT(".")
                     }
-<rdata>;.*\n        {
-                        YOUT("comment\n")
+
+<rest>{CHAR}+       {
+                        YOUT("str")
+                    }
+<rest>{BLANK}+      {
+                        YOUT(".")
+                    }
+<rest>\n            {
+                        YOUT("NL\n")
                         BEGIN(INITIAL)
                     }
 
-<qclass>{CHAR}+     {
-                        YOUT("qclass/ttl")
-                        BEGIN(qtype)
-                    }
-<qtype>{CHAR}+      {
-                        YOUT("qtype")
-                        BEGIN(rdata)
-                    }
-<rdata>{CHAR}+      {
-                        YOUT("rdata")
-                    }
-<rdata>\n           {
-                        YOUT("END\n\n")
-                        BEGIN(INITIAL)
-                    }
 %%
+
+func yycheckit(s string) int {
+    if s == "IN" {
+        return 1
+    }
+    if s[0] >= '0' && s[0] <= '9' {
+        return 2
+    }
+    return 0
+}
 
 
 func YOUT(s string) {
