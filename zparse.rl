@@ -29,7 +29,7 @@ func zparse(data string) (r RR, err os.Error) {
                 action qname    { hdr.Name = data[mark:p] }
                 action qclass   { hdr.Class = Str_class[data[mark:p]] }
 
-                action defTtl { fmt.Printf("defttl {%s}\n", data[mark:p]) }
+                action defTtl { /* fmt.Printf("defttl {%s}\n", data[mark:p]) */ }
                 action setTtl { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 
                 action rdata_a {
@@ -60,7 +60,6 @@ func zparse(data string) (r RR, err os.Error) {
                 );
 
                 rr = lhs rhs;
-            
                 main := rr+;
 
                 write init;
