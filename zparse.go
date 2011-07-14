@@ -1,6 +1,6 @@
 
 // line 1 "zparse.rl"
-package main
+package dns
 
 import (
     "os"
@@ -20,7 +20,7 @@ var z_en_main int = 0
 
 
 func zparse(data string) (res int, err os.Error) {
-        cs, p, pe := 0, 0, len(data)
+        cs, p, pe, eof := 0, 0, len(data), len(data)
 
         
 // line 27 "zparse.go"
@@ -332,8 +332,4 @@ case 9:
                 }
         }
         return 0 ,nil
-}
-
-func main() {
-
 }

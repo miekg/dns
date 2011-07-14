@@ -11,7 +11,7 @@ import (
 }%%
 
 func zparse(data string) (res int, err os.Error) {
-        cs, p, pe := 0, 0, len(data)
+        cs, p, pe, eof := 0, 0, len(data), len(data)
 
         %%{
                 action out    { fmt.Printf("%s\n", data) }
