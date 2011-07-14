@@ -8,28 +8,6 @@ import (
 	"crypto/rsa"
 )
 
-func TestConversion(t *testing.T) {
-	/*
-	   println(StringToSeconds("6w8d50"))
-	   println(StringToSeconds("50"))
-	   println(StringToSeconds("1m1m"))
-	   println(StringToSeconds("1w"))
-	   println(StringToSeconds("1d"))
-	   println(StringToSeconds("2d"))
-	   println(StringToSeconds("1d1d"))
-	*/
-	/*
-	   println(SecondsToString(604800))        // 1w
-	   println(SecondsToString(604799))        // 1w-1
-	   println(SecondsToString(86400))         // 1d
-	   println(SecondsToString(86401))         // 1d+1
-	   println(SecondsToString(86399))         // 1d-1
-	   println(SecondsToString(86))            // 1m26
-	   println(SecondsToString(60))            // 1m
-	   println(SecondsToString(59))            // 59
-	*/
-}
-
 func TestPrivateKeyRead1(t *testing.T) {
 	a := `Private-key-format: v1.3
 Algorithm: 5 (RSASHA1)
@@ -161,6 +139,8 @@ func TestDotInName(t *testing.T) {
 
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
-        rr, _ := zparse("miek.nl.    3600    IN      A   127.0.0.1")
+        rr, _ := zparse("miek.nl.    3600    IN    A   127.0.0.1")
+        fmt.Printf("Seen a:\n%v\n", rr)
+        rr, _ = zparse("miek.nl.     3600    IN    MX   10      elektron.atoom.net.")
         fmt.Printf("Seen a:\n%v\n", rr)
 }

@@ -31,5 +31,5 @@ examples:
 	gomake -C _examples
 
 # yes, hardcoded path, yes ugly, yes deal with it
-zparse.go: zparse.rl
+zparse.go: zparse.rl types.rl
 	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
