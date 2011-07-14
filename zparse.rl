@@ -1,8 +1,13 @@
 package dns
 
+// Parse RRs
+// With the thankful help of gdnsd and the Go examples for Ragel 
+
 import (
     "os"
     "fmt"
+    "net"
+    "strconv"
 )
 
 %%{
@@ -10,22 +15,44 @@ import (
         write data;
 }%%
 
-func zparse(data string) (res int, err os.Error) {
-        cs, p, pe, eof := 0, 0, len(data), len(data)
+func zparse(data string) (rr RR, err os.Error) {
+        cs, p, pe := 0, 0, len(data)
+        mark := 0
+        eof := len(data)
+        hdr := new(RR_Header)
 
         %%{
-                action out    { fmt.Printf("%s\n", data[p:pe]) }
-                action defTtl { fmt.Printf("%s\n", data[p:pe]) }
-                action setTtl { fmt.Printf("%s\n", data[p:pe]) }
+                action mark   { mark = p }
+                action rdata_out    { fmt.Printf("rdata {%s}\n", data[mark:p]) }
+                action qname_out    { fmt.Printf("qname {%s}\n", data[mark:p]); hdr.Name = data[mark:p] }
+                action qclass_out    { fmt.Printf("qclass {%s}\n", data[mark:p]) }
+                action qtype_out { 
+                    fmt.Printf("qtype {%s}\n", data[mark:p])
+                }
 
-                qtype = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i);
-                ttl = digit+;
-                blank = [ \t]+;
-                qname = any+;
+                action defTtl { fmt.Printf("defttl {%s}\n", data[mark:p]) }
+                action setTtl { 
+                    fmt.Printf("ttl {%s}\n", data[mark:p])
+                    ttl, _ :=  strconv.Atoi(data[mark:p])
+                    hdr.Ttl = uint32(ttl)
+                }
 
-                # RDATA definition
-                rdata_a = any+;
-                rdata_dnskey = any+;
+                action rdata_a {
+                    r := new(RR_A)
+                    r.Hdr = *hdr
+                    r.Hdr.Rrtype = TypeA
+                    r.A = net.ParseIP(data[mark:p])
+                }
+
+
+                qtype = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qtype_out;
+                ttl = digit+ >mark;
+                blank = [ \t]+ %mark;
+                qname = [a-zA-Z0-9.\\]+ %qname_out;
+
+                # RDATA definitions
+                rdata_a = any+ $1 %0 %rdata_a;
+                rdata_dnskey = [a-z0-9.\\]+;
 
                 lhs = qname? blank %defTtl (
                       (ttl %setTtl blank (qtype blank)?)
@@ -34,8 +61,8 @@ func zparse(data string) (res int, err os.Error) {
 
                 # RR definitions
                 rhs = (
-                      ('A'i         blank   rdata_a) %out
-                    | ('DNSKEY'i    blank   rdata_dnskey) %out
+                      ('A'i %qtype_out         blank   rdata_a)
+                    | ('DNSKEY'i %qtype_out    blank   rdata_dnskey)
                 );
 
                 rr = lhs rhs;
@@ -49,10 +76,10 @@ func zparse(data string) (res int, err os.Error) {
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
-                        return 0, os.ErrorString("unexpected eof")
+                        return nil, os.ErrorString("unexpected eof")
                 } else {
-                        return 0, os.ErrorString(fmt.Sprintf("error at position %d", p))
+                        return nil, os.ErrorString(fmt.Sprintf("error at position %d", p))
                 }
         }
-        return 0 ,nil
+        return rr ,nil
 }
