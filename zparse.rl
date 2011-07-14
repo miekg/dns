@@ -15,14 +15,14 @@ import (
         write data;
 }%%
 
-func zparse(data string) (r RR, err os.Error) {
+func Zparse(data string) (r RR, err os.Error) {
         cs, p, pe, eof := 0, 0, len(data), len(data)
         j := 0; j = j // Needed for compile.
         k := 0; k = k // "
         mark := 0
         hdr := new(RR_Header)
-        txt := make([]string, 10)
-        num := make([]int, 10)
+        txt := make([]string, 7)
+        num := make([]int, 7)
 
         %%{
                 action mark      { mark = p }
@@ -46,15 +46,15 @@ func zparse(data string) (r RR, err os.Error) {
 
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 ttl         = digit+ >mark;
-                blank       = [ \t]+ %mark;
+                b           = [ \t]+ %mark;
                 qname       = [a-zA-Z0-9.\\]+ %qname;
-                textblank   = [a-zA-Z0-9.\\ ]+ $1 %0 %textblank;
-                text        = [a-zA-Z0-9.\\]+ $1 %0 %text;
-                number      = [0-9]+ $1 %0 %number;
+                tb          = [a-zA-Z0-9.\\ ]+ $1 %0 %textblank;
+                t           = [a-zA-Z0-9.\\]+ $1 %0 %text;
+                n           = [0-9]+ $1 %0 %number;
 
-                lhs = qname? blank %defTtl (
-                      (ttl %setTtl blank (qclass blank)?)
-                    | (qclass blank (ttl %setTtl blank)?)
+                lhs = qname? b %defTtl (
+                      (ttl %setTtl b (qclass b)?)
+                    | (qclass b (ttl %setTtl b)?)
                 )?;
 
                 # RDATA definitions
@@ -62,11 +62,14 @@ func zparse(data string) (r RR, err os.Error) {
 
                 # RR definitions
                 rhs = (
-                      ('A'i         %qtype blank text) %rdata_a
-                    | ('NS'i        %qtype blank text) %rdata_ns
-                    | ('CNAME'i     %qtype blank text) %rdata_cname
-                    | ('SOA'i       %qtype blank text blank text blank number blank number blank number blank number blank number) %rdata_soa
-                    | ('MX'i        %qtype blank number blank text) %rdata_mx
+                      ('A'i         %qtype b t) %rdata_a
+                    | ('NS'i        %qtype b t) %rdata_ns
+                    | ('CNAME'i     %qtype b t) %rdata_cname
+                    | ('SOA'i       %qtype b tb t b n b n b n b n b n) %rdata_soa
+                    | ('MX'i        %qtype b n b t) %rdata_mx
+                    | ('DS'i        %qtype b n b n b n b tb) %rdata_ds
+                    | ('DNSKEY'i    %qtype b n b n b n b tb) %rdata_dnskey
+                    | ('RRSIG'i     %qtype b n b n b n b n b n b n b n b t b tb) %rdata_rrsig
                 );
 
                 rr = lhs rhs;
