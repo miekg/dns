@@ -14,9 +14,9 @@ func zparse(data string) (res int, err os.Error) {
         cs, p, pe, eof := 0, 0, len(data), len(data)
 
         %%{
-                action out    { fmt.Printf("%s\n", data) }
-                action defTtl { fmt.Printf("%s\n", data) }
-                action setTtl { fmt.Printf("%s\n", data) }
+                action out    { fmt.Printf("%s\n", data[p:pe]) }
+                action defTtl { fmt.Printf("%s\n", data[p:pe]) }
+                action setTtl { fmt.Printf("%s\n", data[p:pe]) }
 
                 qtype = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i);
                 ttl = digit+;

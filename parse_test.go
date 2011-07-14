@@ -159,9 +159,8 @@ func TestDotInName(t *testing.T) {
         }
 }
 
-func TestQuotedTxt(t *testing.T) {
-	x := new(RR_TXT)
-	x.Hdr = RR_Header{"miek.nl.", TypeTXT, ClassINET, 14400, 0}
-	x.Txt = "Hello, \"Goodbye\""
-        // TODO
+// New style (Ragel) parsing
+func TestParse(t *testing.T) {
+        zparse("miek.nl.    3600    IN      A   127.0.0.1")
 }
+
