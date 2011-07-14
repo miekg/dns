@@ -161,6 +161,6 @@ func TestDotInName(t *testing.T) {
 
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
-        zparse("miek.nl.    3600    IN      A   127.0.0.1")
+        rr, _ := zparse("miek.nl.    3600    IN      A   127.0.0.1")
+        fmt.Printf("Seen a:\n%v\n", rr)
 }
-

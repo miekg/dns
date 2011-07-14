@@ -15,7 +15,7 @@ import (
         write data;
 }%%
 
-func zparse(data string) (rr RR, err os.Error) {
+func zparse(data string) (r RR, err os.Error) {
         cs, p, pe := 0, 0, len(data)
         mark := 0
         eof := len(data)
@@ -24,8 +24,15 @@ func zparse(data string) (rr RR, err os.Error) {
         %%{
                 action mark   { mark = p }
                 action rdata_out    { fmt.Printf("rdata {%s}\n", data[mark:p]) }
-                action qname_out    { fmt.Printf("qname {%s}\n", data[mark:p]); hdr.Name = data[mark:p] }
-                action qclass_out    { fmt.Printf("qclass {%s}\n", data[mark:p]) }
+                action qname_out { 
+                    fmt.Printf("qname {%s}\n", data[mark:p])
+                    hdr.Name = data[mark:p] 
+                }
+                action qclass_out { 
+                    fmt.Printf("qclass {%s}\n", data[mark:p])
+                    hdr.Class = Str_class[data[mark:p]]
+                    println(hdr.Class)
+                }
                 action qtype_out { 
                     fmt.Printf("qtype {%s}\n", data[mark:p])
                 }
@@ -38,14 +45,15 @@ func zparse(data string) (rr RR, err os.Error) {
                 }
 
                 action rdata_a {
-                    r := new(RR_A)
-                    r.Hdr = *hdr
-                    r.Hdr.Rrtype = TypeA
-                    r.A = net.ParseIP(data[mark:p])
+                    r = new(RR_A)
+                    r.(*RR_A).Hdr = *hdr
+                    r.(*RR_A).Hdr.Rrtype = TypeA
+                    r.(*RR_A).A = net.ParseIP(data[mark:p])
+                    println("Setting")
                 }
 
 
-                qtype = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qtype_out;
+                qtype = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass_out;
                 ttl = digit+ >mark;
                 blank = [ \t]+ %mark;
                 qname = [a-zA-Z0-9.\\]+ %qname_out;
@@ -81,5 +89,5 @@ func zparse(data string) (rr RR, err os.Error) {
                         return nil, os.ErrorString(fmt.Sprintf("error at position %d", p))
                 }
         }
-        return rr ,nil
+        return r ,nil
 }
