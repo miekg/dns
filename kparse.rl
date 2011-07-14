@@ -1,1 +1,4 @@
-# parse priv key files an' stuff
+{%%
+    machine k;
+    write data;
+}%%
