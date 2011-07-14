@@ -28,3 +28,7 @@ _examples:
 
 examples:
 	gomake -C _examples
+
+# yes, hardcoded path, yes ugly, yes deal with it
+zparse.go: zparse.rl
+	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
