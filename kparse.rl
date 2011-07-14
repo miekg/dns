@@ -1,4 +1,1 @@
-{%%
-    machine k;
-    write data;
-}%%
+package dns
