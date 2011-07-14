@@ -1,4 +1,4 @@
-package main
+package dns
 
 import (
     "os"
@@ -39,6 +39,8 @@ func zparse(data string) (res int, err os.Error) {
                 );
 
                 rr = lhs rhs;
+            
+                main := rr+;
 
                 write init;
                 write exec;
@@ -53,8 +55,4 @@ func zparse(data string) (res int, err os.Error) {
                 }
         }
         return 0 ,nil
-}
-
-func main() {
-
 }
