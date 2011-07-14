@@ -58,19 +58,16 @@ case 1:
 st0:
 cs = 0;
 	goto _out;
-tr35:
-// line 27 "zparse.rl"
-	{ 
-                    fmt.Printf("qname {%s}\n", data[mark:p])
-                    hdr.Name = data[mark:p] 
-                }
+tr34:
+// line 29 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
 	goto st2
 st2:
 	p++
 	if p == pe { goto _test_eof2 }
 	fallthrough
 case 2:
-// line 74 "zparse.go"
+// line 71 "zparse.go"
 	switch data[p] {
 		case 9: goto st2
 		case 32: goto st2
@@ -90,9 +87,9 @@ case 2:
 	if 48 <= data[p] && data[p] <= 57 { goto tr3 }
 	goto st0
 tr3:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st3
 st3:
@@ -100,7 +97,7 @@ st3:
 	if p == pe { goto _test_eof3 }
 	fallthrough
 case 3:
-// line 104 "zparse.go"
+// line 101 "zparse.go"
 	switch data[p] {
 		case 9: goto tr10
 		case 32: goto tr10
@@ -108,19 +105,15 @@ case 3:
 	if 48 <= data[p] && data[p] <= 57 { goto st3 }
 	goto st0
 tr10:
-// line 41 "zparse.rl"
-	{ 
-                    fmt.Printf("ttl {%s}\n", data[mark:p])
-                    ttl, _ :=  strconv.Atoi(data[mark:p])
-                    hdr.Ttl = uint32(ttl)
-                }
+// line 33 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st4
 st4:
 	p++
 	if p == pe { goto _test_eof4 }
 	fallthrough
 case 4:
-// line 124 "zparse.go"
+// line 117 "zparse.go"
 	switch data[p] {
 		case 9: goto st4
 		case 32: goto st4
@@ -139,7 +132,7 @@ case 4:
 	}
 	goto st0
 tr13:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st5
 st5:
@@ -147,33 +140,26 @@ st5:
 	if p == pe { goto _test_eof5 }
 	fallthrough
 case 5:
-// line 151 "zparse.go"
+// line 144 "zparse.go"
 	switch data[p] {
-		case 9: goto tr19
-		case 32: goto tr19
+		case 9: goto st6
+		case 32: goto st6
 		case 78: goto st7
 		case 110: goto st7
 	}
 	goto st0
-tr19:
-// line 36 "zparse.rl"
-	{ 
-                    fmt.Printf("qtype {%s}\n", data[mark:p])
-                }
-	goto st6
 st6:
 	p++
 	if p == pe { goto _test_eof6 }
 	fallthrough
 case 6:
-// line 170 "zparse.go"
 	switch data[p] {
 		case 9: goto tr22
 		case 32: goto tr22
 	}
 	goto tr21
 tr21:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st36
 st36:
@@ -181,10 +167,10 @@ st36:
 	if p == pe { goto _test_eof36 }
 	fallthrough
 case 36:
-// line 185 "zparse.go"
+// line 171 "zparse.go"
 	goto st36
 tr22:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st37
 st37:
@@ -192,7 +178,7 @@ st37:
 	if p == pe { goto _test_eof37 }
 	fallthrough
 case 37:
-// line 196 "zparse.go"
+// line 182 "zparse.go"
 	switch data[p] {
 		case 9: goto tr22
 		case 32: goto tr22
@@ -218,28 +204,20 @@ case 8:
 		case 32: goto tr24
 	}
 	goto st0
-tr43:
-// line 41 "zparse.rl"
-	{ 
-                    fmt.Printf("ttl {%s}\n", data[mark:p])
-                    ttl, _ :=  strconv.Atoi(data[mark:p])
-                    hdr.Ttl = uint32(ttl)
-                }
+tr42:
+// line 33 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st9
 tr24:
-// line 31 "zparse.rl"
-	{ 
-                    fmt.Printf("qclass {%s}\n", data[mark:p])
-                    hdr.Class = Str_class[data[mark:p]]
-                    println(hdr.Class)
-                }
+// line 30 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st9
 st9:
 	p++
 	if p == pe { goto _test_eof9 }
 	fallthrough
 case 9:
-// line 243 "zparse.go"
+// line 221 "zparse.go"
 	switch data[p] {
 		case 9: goto st9
 		case 32: goto st9
@@ -250,7 +228,7 @@ case 9:
 	}
 	goto st0
 tr26:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st10
 st10:
@@ -258,20 +236,20 @@ st10:
 	if p == pe { goto _test_eof10 }
 	fallthrough
 case 10:
-// line 262 "zparse.go"
+// line 240 "zparse.go"
 	switch data[p] {
-		case 9: goto tr19
-		case 32: goto tr19
+		case 9: goto st6
+		case 32: goto st6
 	}
 	goto st0
 tr6:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st11
 tr15:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -279,7 +257,7 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 283 "zparse.go"
+// line 261 "zparse.go"
 	switch data[p] {
 		case 78: goto st12
 		case 110: goto st12
@@ -331,36 +309,29 @@ st16:
 	fallthrough
 case 16:
 	switch data[p] {
-		case 9: goto tr32
-		case 32: goto tr32
+		case 9: goto st17
+		case 32: goto st17
 	}
 	goto st0
-tr32:
-// line 36 "zparse.rl"
-	{ 
-                    fmt.Printf("qtype {%s}\n", data[mark:p])
-                }
-	goto st17
 st17:
 	p++
 	if p == pe { goto _test_eof17 }
 	fallthrough
 case 17:
-// line 350 "zparse.go"
 	switch data[p] {
 		case 9: goto st17
 		case 32: goto st17
-		case 46: goto tr34
-		case 92: goto tr34
+		case 46: goto tr33
+		case 92: goto tr33
 	}
 	if data[p] > 57 {
-		if 97 <= data[p] && data[p] <= 122 { goto tr34 }
+		if 97 <= data[p] && data[p] <= 122 { goto tr33 }
 	} else if data[p] >= 48 {
-		goto tr34
+		goto tr33
 	}
 	goto st0
-tr34:
-// line 25 "zparse.rl"
+tr33:
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st38
 st38:
@@ -368,7 +339,7 @@ st38:
 	if p == pe { goto _test_eof38 }
 	fallthrough
 case 38:
-// line 372 "zparse.go"
+// line 343 "zparse.go"
 	switch data[p] {
 		case 9: goto st2
 		case 32: goto st2
@@ -389,8 +360,8 @@ st39:
 	fallthrough
 case 39:
 	switch data[p] {
-		case 9: goto tr35
-		case 32: goto tr35
+		case 9: goto tr34
+		case 32: goto tr34
 		case 46: goto st39
 		case 92: goto st39
 	}
@@ -408,8 +379,8 @@ st18:
 	fallthrough
 case 18:
 	switch data[p] {
-		case 9: goto tr35
-		case 32: goto tr35
+		case 9: goto tr34
+		case 32: goto tr34
 		case 46: goto st18
 		case 92: goto st18
 	}
@@ -422,7 +393,7 @@ case 18:
 	}
 	goto st0
 tr14:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st19
 st19:
@@ -430,7 +401,7 @@ st19:
 	if p == pe { goto _test_eof19 }
 	fallthrough
 case 19:
-// line 434 "zparse.go"
+// line 405 "zparse.go"
 	switch data[p] {
 		case 72: goto st8
 		case 83: goto st8
@@ -439,7 +410,7 @@ case 19:
 	}
 	goto st0
 tr16:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st20
 st20:
@@ -447,14 +418,14 @@ st20:
 	if p == pe { goto _test_eof20 }
 	fallthrough
 case 20:
-// line 451 "zparse.go"
+// line 422 "zparse.go"
 	switch data[p] {
 		case 83: goto st8
 		case 115: goto st8
 	}
 	goto st0
 tr17:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st21
 st21:
@@ -462,14 +433,14 @@ st21:
 	if p == pe { goto _test_eof21 }
 	fallthrough
 case 21:
-// line 466 "zparse.go"
+// line 437 "zparse.go"
 	switch data[p] {
 		case 78: goto st8
 		case 110: goto st8
 	}
 	goto st0
 tr18:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st22
 st22:
@@ -477,7 +448,7 @@ st22:
 	if p == pe { goto _test_eof22 }
 	fallthrough
 case 22:
-// line 481 "zparse.go"
+// line 452 "zparse.go"
 	switch data[p] {
 		case 79: goto st23
 		case 111: goto st23
@@ -504,9 +475,9 @@ case 24:
 	}
 	goto st0
 tr4:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st25
 st25:
@@ -514,10 +485,10 @@ st25:
 	if p == pe { goto _test_eof25 }
 	fallthrough
 case 25:
-// line 518 "zparse.go"
+// line 489 "zparse.go"
 	switch data[p] {
-		case 9: goto tr19
-		case 32: goto tr19
+		case 9: goto st6
+		case 32: goto st6
 		case 78: goto st26
 		case 110: goto st26
 	}
@@ -538,24 +509,20 @@ st27:
 	fallthrough
 case 27:
 	switch data[p] {
-		case 9: goto tr40
-		case 32: goto tr40
+		case 9: goto tr39
+		case 32: goto tr39
 	}
 	goto st0
-tr40:
-// line 31 "zparse.rl"
-	{ 
-                    fmt.Printf("qclass {%s}\n", data[mark:p])
-                    hdr.Class = Str_class[data[mark:p]]
-                    println(hdr.Class)
-                }
+tr39:
+// line 30 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st28
 st28:
 	p++
 	if p == pe { goto _test_eof28 }
 	fallthrough
 case 28:
-// line 559 "zparse.go"
+// line 526 "zparse.go"
 	switch data[p] {
 		case 9: goto st28
 		case 32: goto st28
@@ -564,10 +531,10 @@ case 28:
 		case 97: goto tr26
 		case 100: goto tr15
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr42 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr41 }
 	goto st0
-tr42:
-// line 25 "zparse.rl"
+tr41:
+// line 28 "zparse.rl"
 	{ mark = p }
 	goto st29
 st29:
@@ -575,17 +542,17 @@ st29:
 	if p == pe { goto _test_eof29 }
 	fallthrough
 case 29:
-// line 579 "zparse.go"
+// line 546 "zparse.go"
 	switch data[p] {
-		case 9: goto tr43
-		case 32: goto tr43
+		case 9: goto tr42
+		case 32: goto tr42
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st29 }
 	goto st0
 tr5:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st30
 st30:
@@ -593,7 +560,7 @@ st30:
 	if p == pe { goto _test_eof30 }
 	fallthrough
 case 30:
-// line 597 "zparse.go"
+// line 564 "zparse.go"
 	switch data[p] {
 		case 72: goto st27
 		case 83: goto st27
@@ -602,9 +569,9 @@ case 30:
 	}
 	goto st0
 tr7:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st31
 st31:
@@ -612,16 +579,16 @@ st31:
 	if p == pe { goto _test_eof31 }
 	fallthrough
 case 31:
-// line 616 "zparse.go"
+// line 583 "zparse.go"
 	switch data[p] {
 		case 83: goto st27
 		case 115: goto st27
 	}
 	goto st0
 tr8:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st32
 st32:
@@ -629,16 +596,16 @@ st32:
 	if p == pe { goto _test_eof32 }
 	fallthrough
 case 32:
-// line 633 "zparse.go"
+// line 600 "zparse.go"
 	switch data[p] {
 		case 78: goto st27
 		case 110: goto st27
 	}
 	goto st0
 tr9:
-// line 25 "zparse.rl"
+// line 28 "zparse.rl"
 	{ mark = p }
-// line 40 "zparse.rl"
+// line 32 "zparse.rl"
 	{ fmt.Printf("defttl {%s}\n", data[mark:p]) }
 	goto st33
 st33:
@@ -646,7 +613,7 @@ st33:
 	if p == pe { goto _test_eof33 }
 	fallthrough
 case 33:
-// line 650 "zparse.go"
+// line 617 "zparse.go"
 	switch data[p] {
 		case 79: goto st34
 		case 111: goto st34
@@ -716,23 +683,22 @@ case 35:
 	if p == eof {
 	switch cs {
 	case 36, 37:
-// line 47 "zparse.rl"
+// line 35 "zparse.rl"
 	{
                     r = new(RR_A)
                     r.(*RR_A).Hdr = *hdr
                     r.(*RR_A).Hdr.Rrtype = TypeA
                     r.(*RR_A).A = net.ParseIP(data[mark:p])
-                    println("Setting")
                 }
 	break
-// line 729 "zparse.go"
+// line 695 "zparse.go"
 	}
 	}
 
 	_out: {}
 	}
 
-// line 82 "zparse.rl"
+// line 68 "zparse.rl"
 
 
         if cs < z_first_final {
