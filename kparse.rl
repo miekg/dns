@@ -36,9 +36,9 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                     | ('Created'i)
                     | ('Publish'i)
                     | ('Activate'i)
-                );
+                ) %setKey;
                 
-                value = any+;
+                value = any+ %setValue;
 
                 line = key /: ?/ value;
                 main := line+;
@@ -57,5 +57,5 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                         return nil, nil
                 }
         }
-        return r ,nil
+        return
 }
