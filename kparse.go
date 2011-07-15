@@ -6,66 +6,66 @@ package dns
 
 import (
     "os"
-    "fmt"
     "strings"
 )
 
 
-// line 15 "kparse.go"
-var k_start int = 75
-var k_first_final int = 75
+// line 14 "kparse.go"
+var k_start int = 84
+var k_first_final int = 84
 var k_error int = 0
 
-var k_en_main int = 75
+var k_en_main int = 84
 
 
-// line 14 "kparse.rl"
+// line 13 "kparse.rl"
 
 
 func Kparse(data string) (m map[string]string, err os.Error) {
         cs, p, pe := 0, 0, len(data)
         mark := 0
         k := ""
-//        k=k
         m = make(map[string]string)
 
         
-// line 34 "kparse.go"
+// line 32 "kparse.go"
 	cs = k_start
 
-// line 37 "kparse.go"
+// line 35 "kparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
 	case -666: // i am a hack D:
 tr12:
-// line 26 "kparse.rl"
-	{ m[k] = data[mark:p]; fmt.Printf("value {%s}\n", data[mark:p]) }
-	goto st75
-st75:
+// line 24 "kparse.rl"
+	{ m[k] = data[mark:p] }
+	goto st84
+st84:
 	p++
-	if p == pe { goto _test_eof75 }
+	if p == pe { goto _test_eof84 }
 	fallthrough
-case 75:
-// line 51 "kparse.go"
+case 84:
+// line 49 "kparse.go"
 	switch data[p] {
-		case 65: goto tr72
-		case 67: goto tr73
-		case 69: goto tr74
-		case 77: goto tr75
-		case 80: goto tr76
-		case 97: goto tr72
-		case 99: goto tr73
-		case 101: goto tr74
-		case 109: goto tr75
-		case 112: goto tr76
+		case 65: goto tr80
+		case 67: goto tr81
+		case 69: goto tr82
+		case 71: goto tr83
+		case 77: goto tr84
+		case 80: goto tr85
+		case 97: goto tr80
+		case 99: goto tr81
+		case 101: goto tr82
+		case 103: goto tr83
+		case 109: goto tr84
+		case 112: goto tr85
 	}
 	goto st0
 st0:
 cs = 0;
 	goto _out;
-tr72:
-// line 24 "kparse.rl"
+tr80:
+// line 22 "kparse.rl"
 	{ mark = p }
 	goto st1
 st1:
@@ -149,8 +149,8 @@ case 8:
 	if data[p] == 58 { goto tr9 }
 	goto st0
 tr9:
-// line 25 "kparse.rl"
-	{ k = strings.ToLower(data[mark:p]); fmt.Printf("key {%s}\n", k) }
+// line 23 "kparse.rl"
+	{ k = strings.ToLower(data[mark:p]) }
 	goto st9
 st9:
 	p++
@@ -184,7 +184,7 @@ case 10:
 	}
 	goto st0
 tr11:
-// line 24 "kparse.rl"
+// line 22 "kparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -282,8 +282,8 @@ case 18:
 		case 109: goto st8
 	}
 	goto st0
-tr73:
-// line 24 "kparse.rl"
+tr81:
+// line 22 "kparse.rl"
 	{ mark = p }
 	goto st19
 st19:
@@ -439,8 +439,8 @@ case 33:
 		case 100: goto st8
 	}
 	goto st0
-tr74:
-// line 24 "kparse.rl"
+tr82:
+// line 22 "kparse.rl"
 	{ mark = p }
 	goto st34
 st34:
@@ -521,8 +521,8 @@ st41:
 case 41:
 	if 49 <= data[p] && data[p] <= 50 { goto st8 }
 	goto st0
-tr75:
-// line 24 "kparse.rl"
+tr83:
+// line 22 "kparse.rl"
 	{ mark = p }
 	goto st42
 st42:
@@ -542,8 +542,8 @@ st43:
 	fallthrough
 case 43:
 	switch data[p] {
-		case 68: goto st44
-		case 100: goto st44
+		case 83: goto st44
+		case 115: goto st44
 	}
 	goto st0
 st44:
@@ -552,8 +552,8 @@ st44:
 	fallthrough
 case 44:
 	switch data[p] {
-		case 85: goto st45
-		case 117: goto st45
+		case 84: goto st45
+		case 116: goto st45
 	}
 	goto st0
 st45:
@@ -562,8 +562,8 @@ st45:
 	fallthrough
 case 45:
 	switch data[p] {
-		case 76: goto st46
-		case 108: goto st46
+		case 65: goto st46
+		case 97: goto st46
 	}
 	goto st0
 st46:
@@ -572,8 +572,8 @@ st46:
 	fallthrough
 case 46:
 	switch data[p] {
-		case 85: goto st47
-		case 117: goto st47
+		case 83: goto st47
+		case 115: goto st47
 	}
 	goto st0
 st47:
@@ -582,35 +582,30 @@ st47:
 	fallthrough
 case 47:
 	switch data[p] {
-		case 83: goto st8
-		case 115: goto st8
+		case 78: goto st48
+		case 110: goto st48
 	}
 	goto st0
-tr76:
-// line 24 "kparse.rl"
-	{ mark = p }
-	goto st48
 st48:
 	p++
 	if p == pe { goto _test_eof48 }
 	fallthrough
 case 48:
-// line 599 "kparse.go"
-	switch data[p] {
-		case 82: goto st49
-		case 85: goto st69
-		case 114: goto st49
-		case 117: goto st69
-	}
+	if data[p] == 49 { goto st8 }
 	goto st0
+tr84:
+// line 22 "kparse.rl"
+	{ mark = p }
+	goto st49
 st49:
 	p++
 	if p == pe { goto _test_eof49 }
 	fallthrough
 case 49:
+// line 606 "kparse.go"
 	switch data[p] {
-		case 73: goto st50
-		case 105: goto st50
+		case 79: goto st50
+		case 111: goto st50
 	}
 	goto st0
 st50:
@@ -619,10 +614,8 @@ st50:
 	fallthrough
 case 50:
 	switch data[p] {
-		case 77: goto st51
-		case 86: goto st52
-		case 109: goto st51
-		case 118: goto st52
+		case 68: goto st51
+		case 100: goto st51
 	}
 	goto st0
 st51:
@@ -631,8 +624,8 @@ st51:
 	fallthrough
 case 51:
 	switch data[p] {
-		case 69: goto st41
-		case 101: goto st41
+		case 85: goto st52
+		case 117: goto st52
 	}
 	goto st0
 st52:
@@ -641,8 +634,8 @@ st52:
 	fallthrough
 case 52:
 	switch data[p] {
-		case 65: goto st53
-		case 97: goto st53
+		case 76: goto st53
+		case 108: goto st53
 	}
 	goto st0
 st53:
@@ -651,8 +644,8 @@ st53:
 	fallthrough
 case 53:
 	switch data[p] {
-		case 84: goto st54
-		case 116: goto st54
+		case 85: goto st54
+		case 117: goto st54
 	}
 	goto st0
 st54:
@@ -661,19 +654,25 @@ st54:
 	fallthrough
 case 54:
 	switch data[p] {
-		case 69: goto st55
-		case 101: goto st55
+		case 83: goto st8
+		case 115: goto st8
 	}
 	goto st0
+tr85:
+// line 22 "kparse.rl"
+	{ mark = p }
+	goto st55
 st55:
 	p++
 	if p == pe { goto _test_eof55 }
 	fallthrough
 case 55:
+// line 671 "kparse.go"
 	switch data[p] {
-		case 45: goto st56
-		case 69: goto st65
-		case 101: goto st65
+		case 82: goto st56
+		case 85: goto st78
+		case 114: goto st56
+		case 117: goto st78
 	}
 	goto st0
 st56:
@@ -682,8 +681,8 @@ st56:
 	fallthrough
 case 56:
 	switch data[p] {
-		case 75: goto st57
-		case 107: goto st57
+		case 73: goto st57
+		case 105: goto st57
 	}
 	goto st0
 st57:
@@ -692,8 +691,10 @@ st57:
 	fallthrough
 case 57:
 	switch data[p] {
-		case 69: goto st58
-		case 101: goto st58
+		case 77: goto st58
+		case 86: goto st59
+		case 109: goto st58
+		case 118: goto st59
 	}
 	goto st0
 st58:
@@ -702,8 +703,8 @@ st58:
 	fallthrough
 case 58:
 	switch data[p] {
-		case 89: goto st59
-		case 121: goto st59
+		case 69: goto st41
+		case 101: goto st41
 	}
 	goto st0
 st59:
@@ -711,7 +712,10 @@ st59:
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-	if data[p] == 45 { goto st60 }
+	switch data[p] {
+		case 65: goto st60
+		case 97: goto st60
+	}
 	goto st0
 st60:
 	p++
@@ -719,8 +723,8 @@ st60:
 	fallthrough
 case 60:
 	switch data[p] {
-		case 70: goto st61
-		case 102: goto st61
+		case 84: goto st61
+		case 116: goto st61
 	}
 	goto st0
 st61:
@@ -729,8 +733,8 @@ st61:
 	fallthrough
 case 61:
 	switch data[p] {
-		case 79: goto st62
-		case 111: goto st62
+		case 69: goto st62
+		case 101: goto st62
 	}
 	goto st0
 st62:
@@ -739,8 +743,11 @@ st62:
 	fallthrough
 case 62:
 	switch data[p] {
-		case 82: goto st63
-		case 114: goto st63
+		case 45: goto st63
+		case 69: goto st72
+		case 75: goto st76
+		case 101: goto st72
+		case 107: goto st76
 	}
 	goto st0
 st63:
@@ -749,8 +756,8 @@ st63:
 	fallthrough
 case 63:
 	switch data[p] {
-		case 77: goto st64
-		case 109: goto st64
+		case 75: goto st64
+		case 107: goto st64
 	}
 	goto st0
 st64:
@@ -759,8 +766,8 @@ st64:
 	fallthrough
 case 64:
 	switch data[p] {
-		case 65: goto st28
-		case 97: goto st28
+		case 69: goto st65
+		case 101: goto st65
 	}
 	goto st0
 st65:
@@ -769,8 +776,8 @@ st65:
 	fallthrough
 case 65:
 	switch data[p] {
-		case 88: goto st66
-		case 120: goto st66
+		case 89: goto st66
+		case 121: goto st66
 	}
 	goto st0
 st66:
@@ -778,10 +785,7 @@ st66:
 	if p == pe { goto _test_eof66 }
 	fallthrough
 case 66:
-	switch data[p] {
-		case 80: goto st67
-		case 112: goto st67
-	}
+	if data[p] == 45 { goto st67 }
 	goto st0
 st67:
 	p++
@@ -789,8 +793,8 @@ st67:
 	fallthrough
 case 67:
 	switch data[p] {
-		case 79: goto st68
-		case 111: goto st68
+		case 70: goto st68
+		case 102: goto st68
 	}
 	goto st0
 st68:
@@ -799,8 +803,8 @@ st68:
 	fallthrough
 case 68:
 	switch data[p] {
-		case 78: goto st26
-		case 110: goto st26
+		case 79: goto st69
+		case 111: goto st69
 	}
 	goto st0
 st69:
@@ -809,8 +813,8 @@ st69:
 	fallthrough
 case 69:
 	switch data[p] {
-		case 66: goto st70
-		case 98: goto st70
+		case 82: goto st70
+		case 114: goto st70
 	}
 	goto st0
 st70:
@@ -819,8 +823,8 @@ st70:
 	fallthrough
 case 70:
 	switch data[p] {
-		case 76: goto st71
-		case 108: goto st71
+		case 77: goto st71
+		case 109: goto st71
 	}
 	goto st0
 st71:
@@ -829,8 +833,8 @@ st71:
 	fallthrough
 case 71:
 	switch data[p] {
-		case 73: goto st72
-		case 105: goto st72
+		case 65: goto st28
+		case 97: goto st28
 	}
 	goto st0
 st72:
@@ -839,10 +843,8 @@ st72:
 	fallthrough
 case 72:
 	switch data[p] {
-		case 67: goto st73
-		case 83: goto st74
-		case 99: goto st73
-		case 115: goto st74
+		case 88: goto st73
+		case 120: goto st73
 	}
 	goto st0
 st73:
@@ -851,8 +853,8 @@ st73:
 	fallthrough
 case 73:
 	switch data[p] {
-		case 69: goto st65
-		case 101: goto st65
+		case 80: goto st74
+		case 112: goto st74
 	}
 	goto st0
 st74:
@@ -861,12 +863,104 @@ st74:
 	fallthrough
 case 74:
 	switch data[p] {
+		case 79: goto st75
+		case 111: goto st75
+	}
+	goto st0
+st75:
+	p++
+	if p == pe { goto _test_eof75 }
+	fallthrough
+case 75:
+	switch data[p] {
+		case 78: goto st26
+		case 110: goto st26
+	}
+	goto st0
+st76:
+	p++
+	if p == pe { goto _test_eof76 }
+	fallthrough
+case 76:
+	switch data[p] {
+		case 69: goto st77
+		case 101: goto st77
+	}
+	goto st0
+st77:
+	p++
+	if p == pe { goto _test_eof77 }
+	fallthrough
+case 77:
+	switch data[p] {
+		case 89: goto st8
+		case 121: goto st8
+	}
+	goto st0
+st78:
+	p++
+	if p == pe { goto _test_eof78 }
+	fallthrough
+case 78:
+	switch data[p] {
+		case 66: goto st79
+		case 98: goto st79
+	}
+	goto st0
+st79:
+	p++
+	if p == pe { goto _test_eof79 }
+	fallthrough
+case 79:
+	switch data[p] {
+		case 76: goto st80
+		case 108: goto st80
+	}
+	goto st0
+st80:
+	p++
+	if p == pe { goto _test_eof80 }
+	fallthrough
+case 80:
+	switch data[p] {
+		case 73: goto st81
+		case 105: goto st81
+	}
+	goto st0
+st81:
+	p++
+	if p == pe { goto _test_eof81 }
+	fallthrough
+case 81:
+	switch data[p] {
+		case 67: goto st82
+		case 83: goto st83
+		case 99: goto st82
+		case 115: goto st83
+	}
+	goto st0
+st82:
+	p++
+	if p == pe { goto _test_eof82 }
+	fallthrough
+case 82:
+	switch data[p] {
+		case 69: goto st72
+		case 101: goto st72
+	}
+	goto st0
+st83:
+	p++
+	if p == pe { goto _test_eof83 }
+	fallthrough
+case 83:
+	switch data[p] {
 		case 72: goto st8
 		case 104: goto st8
 	}
 	goto st0
 	}
-	_test_eof75: cs = 75; goto _test_eof; 
+	_test_eof84: cs = 84; goto _test_eof; 
 	_test_eof1: cs = 1; goto _test_eof; 
 	_test_eof2: cs = 2; goto _test_eof; 
 	_test_eof3: cs = 3; goto _test_eof; 
@@ -941,6 +1035,15 @@ case 74:
 	_test_eof72: cs = 72; goto _test_eof; 
 	_test_eof73: cs = 73; goto _test_eof; 
 	_test_eof74: cs = 74; goto _test_eof; 
+	_test_eof75: cs = 75; goto _test_eof; 
+	_test_eof76: cs = 76; goto _test_eof; 
+	_test_eof77: cs = 77; goto _test_eof; 
+	_test_eof78: cs = 78; goto _test_eof; 
+	_test_eof79: cs = 79; goto _test_eof; 
+	_test_eof80: cs = 80; goto _test_eof; 
+	_test_eof81: cs = 81; goto _test_eof; 
+	_test_eof82: cs = 82; goto _test_eof; 
+	_test_eof83: cs = 83; goto _test_eof; 
 
 	_test_eof: {}
 	_out: {}

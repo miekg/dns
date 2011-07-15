@@ -4,7 +4,6 @@ package dns
 
 import (
     "os"
-    "fmt"
     "strings"
 )
 
@@ -21,8 +20,8 @@ func Kparse(data string) (m map[string]string, err os.Error) {
 
         %%{
                 action mark      { mark = p }
-                action setKey    { k = strings.ToLower(data[mark:p]); fmt.Printf("key {%s}\n", k) }
-                action setValue  { m[k] = data[mark:p]; fmt.Printf("value {%s}\n", data[mark:p]) }
+                action setKey    { k = strings.ToLower(data[mark:p]) }
+                action setValue  { m[k] = data[mark:p] }
 
                 base64 = [a-zA-Z0-9.\\/+=() ]+ >mark;
 
@@ -31,7 +30,7 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                     | ('Algorithm'i)
                     | ('Modulus'i)
                     | ('PublicExponent'i)
-                    | ('PrivateExponent'i)
+                    | ('PrivateExponent'i)      # RSA, RFC ....?
                     | ('GostAsn1'i)             # GOST, RFC 5933
                     | ('PrivateKey'i)           # ECDSA, RFC xxxx (TBA)
                     | ('Prime1'i)

@@ -137,6 +137,7 @@ func TestDotInName(t *testing.T) {
         }
 }
 
+// Make this a decend test case. For now, good enough
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
         rr, _ := Zparse("miek.nl.    3600    IN    A   127.0.0.1")
