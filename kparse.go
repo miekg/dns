@@ -26,7 +26,7 @@ func Kparse(data string) (m map[string]string, err os.Error) {
         cs, p, pe := 0, 0, len(data)
         mark := 0
         k := ""
-        k=k
+//        k=k
         m = make(map[string]string)
 
         

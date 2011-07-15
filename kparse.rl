@@ -17,7 +17,6 @@ func Kparse(data string) (m map[string]string, err os.Error) {
         cs, p, pe := 0, 0, len(data)
         mark := 0
         k := ""
-        k=k
         m = make(map[string]string)
 
         %%{
@@ -33,6 +32,8 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                     | ('Modulus'i)
                     | ('PublicExponent'i)
                     | ('PrivateExponent'i)
+                    | ('GostAsn1'i)             # GOST, RFC 5933
+                    | ('PrivateKey'i)           # ECDSA, RFC xxxx (TBA)
                     | ('Prime1'i)
                     | ('Prime2'i)
                     | ('Exponent1'i)
