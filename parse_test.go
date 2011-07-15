@@ -139,8 +139,16 @@ func TestDotInName(t *testing.T) {
 
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
-        rr, _ := zparse("miek.nl.    3600    IN    A   127.0.0.1")
+        rr, _ := Zparse("miek.nl.    3600    IN    A   127.0.0.1")
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = zparse("miek.nl.     3600    IN    MX   10      elektron.atoom.net.")
+        rr, _ = Zparse("miek.nl.     3600    IN    MX   10      elektron.atoom.net.")
+        fmt.Printf("Seen a:\n%v\n", rr)
+        rr, _ = Zparse("nlnetlabs.nl. 3175 IN DNSKEY  256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh");
+        fmt.Printf("Seen a:\n%v\n", rr)
+        rr, _ = Zparse("miek.nl.    IN    A   127.0.0.1")
+        fmt.Printf("Seen a:\n%v\n", rr)
+        rr, _ = Zparse("miek.nl.    IN 3600   A   127.0.0.1")
+        fmt.Printf("Seen a:\n%v\n", rr)
+        rr, _ = Zparse("miek.nl.    A   127.0.0.1")
         fmt.Printf("Seen a:\n%v\n", rr)
 }
