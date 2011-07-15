@@ -1,22 +1,20 @@
 # Alternative (more granular) approach to a DNS library.
 
 Completely usable DNS library. Most widely used Resource Records are
-supported including the DNSSEC types.
+supported including DNSSEC types.
 
 Feaures:
 
-* EDNS0 is (see edns.go)
+* EDNS0 (see edns.go)
 * UDP/TCP queries, IPv4 and IPv6
 * TSIG
 * AXFR (and IXFR probably)
-* Client and server side programming (mimicing the http package)
+* Client and server side programming (mimicking the http package)
 * Asynchronous queries (client/server)
+* RFC 1035 zone file parsing (work in progress)
 
 Sample programs can be found in the `_examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
-
-The major omission at the moment is parsing Resource Records from
-strings. (i.e. supporting the RFC 1035 zone file format).
 
 Everything else should be present and working. If not, drop me an email.
 
