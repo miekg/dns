@@ -5,11 +5,14 @@ package dns
 
 import (
     "os"
+    "io"
     "net"
+    "bufio"
     "strconv"
 )
 
 const _RDATAMAX = 7
+const _IOBUF = 65365
 
 // Save up tokens, after we've seen the entire rdata
 // we can use this.
@@ -59,7 +62,18 @@ func (to *token) reset() {
         write data;
 }%%
 
-func Zparse(data string) (r RR, err os.Error) {
+// only works for short io.Readers as we put the whole thing
+// in a string -- needs to be extended for large files (sliding window).
+func Zparse(q io.Reader) (rr RR, err os.Error) {
+        r := bufio.NewReader(q)
+        buf := make([]byte, _IOBUF) 
+        n, err := r.Read(buf)
+        if err != nil {
+            return nil, err
+        }
+        buf = buf[:n]
+
+        data := string(buf)
         cs, p, pe, eof := 0, 0, len(data), len(data)
         mark := 0
         hdr := new(RR_Header)
@@ -81,7 +95,7 @@ func Zparse(data string) (r RR, err os.Error) {
                     if ! known {
                         // ...
                     }
-                    r = mk()
+                    rr = mk()
                     hdr.Rrtype = i
                 }
 
@@ -132,5 +146,5 @@ func Zparse(data string) (r RR, err os.Error) {
                         return nil, nil
                 }
         }
-        return r ,nil
+        return rr, nil
 }

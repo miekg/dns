@@ -67,10 +67,11 @@ Activate: 20110109154937`
 		}
 	}
 	if k.KeyTag() != 41946 {
-		t.Logf("%v\n", k)
+		t.Logf("%d %v\n", k.KeyTag(), k)
 		t.Log("Keytag should be 41946")
 		t.Fail()
 	}
+        println(k.String())
 
 	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
@@ -140,17 +141,17 @@ func TestDotInName(t *testing.T) {
 // Make this a decend test case. For now, good enough
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
-        rr, _ := Zparse("miek.nl.    3600    IN    A   127.0.0.1")
+        rr, _ := Zparse(strings.NewReader("miek.nl.    3600    IN    A   127.0.0.1"))
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse("miek.nl.     3600    IN    MX   10      elektron.atoom.net.")
+        rr, _ = Zparse(strings.NewReader("miek.nl.     3600    IN    MX   10      elektron.atoom.net."))
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse("nlnetlabs.nl. 3175 IN DNSKEY  256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh");
+        rr, _ = Zparse(strings.NewReader("nlnetlabs.nl. 3175 IN DNSKEY  256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh"))
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse("miek.nl.    IN    A   127.0.0.1")
+        rr, _ = Zparse(strings.NewReader("miek.nl.    IN    A   127.0.0.1"))
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse("miek.nl.    IN 3600   A   127.0.0.1")
+        rr, _ = Zparse(strings.NewReader("miek.nl.    IN 3600   A   127.0.0.1"))
         fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse("miek.nl.    A   127.0.0.1")
+        rr, _ = Zparse(strings.NewReader("miek.nl.    A   127.0.0.1"))
         fmt.Printf("Seen a:\n%v\n", rr)
 }
 
@@ -171,6 +172,6 @@ Activate: 20110302104537
 `
         m, _ := Kparse(strings.NewReader(a))
         for k, v := range m {
-                fmt.Printf("%s = %s\n", k, v)
+                fmt.Printf("{%s}={%s}\n", k, v)
         }
 }

@@ -14,6 +14,9 @@ import (
         write data;
 }%%
 
+// Parse a private key file as defined in XXX.
+// A map[string]string is returned with the values. All the keys
+// are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
 func Kparse(q io.Reader) (m map[string]string, err os.Error) {
         r := bufio.NewReader(q)
 
@@ -28,11 +31,12 @@ func Kparse(q io.Reader) (m map[string]string, err os.Error) {
                 action mark      { mark = p }
                 action setKey    { k = strings.ToLower(data[mark:p]) }
                 action setValue  { m[k] = data[mark:p] }
-                action setAlg    { m[k] = data[mark:p-1] }
+                action setAlg    { m[k] = strings.ToUpper(data[mark:p-1]) }
 
                 bl = [ \t]+;
                 base64any = [a-zA-Z0-9.\\/+=() ]+ >mark;
                 algorithm = ( 'RSASHA1'i | 'RSASHA256'i ) >mark;
+                comment = /^;/;
 
                 key = (
                       ('Private-key-format'i)
@@ -54,7 +58,7 @@ func Kparse(q io.Reader) (m map[string]string, err os.Error) {
                 
                 value = ( base64any %setValue | digit+ bl '(' algorithm ')' %setAlg );
 
-                line = key ': ' value;
+                line = ( key ': ' value | comment );
                 main := ( line '\n' )*;
 
                 write init;
