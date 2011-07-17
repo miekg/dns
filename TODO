@@ -1,14 +1,10 @@
 Issues:
-* FunkenSturm is kaput.
 * Check the network order, it works now, but this is on Intel??
 * Make the testsuite work with public DNS servers
 * pack/Unpack smaller. EDNS 'n stuff can be folded in???
 * Compression. Take stuff from Jan Mercl
 
-XfrWriter 
-
 Todo:
-* Parsing from strings, going with goyacc and .cz lexer?
 * encoding NSEC3/NSEC bitmaps, DEcoding works
 * HIP RR (needs list of domain names, need slice stuff for that)
 * Is subdomain, is glue helper functions for this kind of stuff
