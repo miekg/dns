@@ -4,6 +4,8 @@ package dns
 
 import (
     "os"
+    "io"
+    "bufio"
     "strings"
 )
 
@@ -12,11 +14,15 @@ import (
         write data;
 }%%
 
-func Kparse(data string) (m map[string]string, err os.Error) {
-        cs, p, pe := 0, 0, len(data)
-        mark := 0
-        k := ""
+func Kparse(q io.Reader) (m map[string]string, err os.Error) {
+        r := bufio.NewReader(q)
+
         m = make(map[string]string)
+        k := ""
+        data, err := r.ReadString('\n')
+        for err == nil {
+            cs, p, pe := 0, 0, len(data)
+            mark := 0
 
         %%{
                 action mark      { mark = p }
@@ -51,7 +57,10 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                 write init;
                 write exec;
         }%%
+            data, err = r.ReadString('\n')
+        }
 
+        /*
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
@@ -64,5 +73,6 @@ func Kparse(data string) (m map[string]string, err os.Error) {
                         return nil, nil
                 }
         }
+        */
         return m, nil
 }

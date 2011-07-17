@@ -155,7 +155,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseK(t *testing.T) {
-        m, _ := Kparse(`Private-key-format: v1.3
+        a := `Private-key-format: v1.3
 Algorithm: 5 (RSASHA1)
 Modulus: v7yUY0LEmAtLythV6voScdW4iRAOCF2N217APNTcblHs9sxspVG8fYxrulDJhx6hqpZlCKtKPvZ649Z8/FCczL25wLKUD4W4f1xKMhw9/g+ol926keT1foQFiPGsItjinX/IHCDIEhEm1m0Cozdx4AfZai8QkPqtO064ejkCW4k=
 PublicExponent: AQAB
@@ -168,7 +168,8 @@ Coefficient: 8+7ZN/JgByqv0NfULiFKTjtyegUcijRuyij7yNxYbCBneDvZGxJwKNi4YYXWx743pcA
 Created: 20110302104537
 Publish: 20110302104537
 Activate: 20110302104537
-`)
+`
+        m, _ := Kparse(strings.NewReader(a))
         for k, v := range m {
                 fmt.Printf("%s = %s\n", k, v)
         }

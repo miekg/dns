@@ -6,11 +6,13 @@ package dns
 
 import (
     "os"
+    "io"
+    "bufio"
     "strings"
 )
 
 
-// line 14 "kparse.go"
+// line 16 "kparse.go"
 var k_start int = 84
 var k_first_final int = 84
 var k_error int = 0
@@ -18,26 +20,30 @@ var k_error int = 0
 var k_en_main int = 84
 
 
-// line 13 "kparse.rl"
+// line 15 "kparse.rl"
 
 
-func Kparse(data string) (m map[string]string, err os.Error) {
-        cs, p, pe := 0, 0, len(data)
-        mark := 0
-        k := ""
+func Kparse(q io.Reader) (m map[string]string, err os.Error) {
+        r := bufio.NewReader(q)
+
         m = make(map[string]string)
+        k := ""
+        data, err := r.ReadString('\n')
+        for err == nil {
+            cs, p, pe := 0, 0, len(data)
+            mark := 0
 
         
-// line 32 "kparse.go"
+// line 38 "kparse.go"
 	cs = k_start
 
-// line 35 "kparse.go"
+// line 41 "kparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
 	case -666: // i am a hack D:
 tr12:
-// line 24 "kparse.rl"
+// line 30 "kparse.rl"
 	{ m[k] = data[mark:p] }
 	goto st84
 st84:
@@ -45,7 +51,7 @@ st84:
 	if p == pe { goto _test_eof84 }
 	fallthrough
 case 84:
-// line 49 "kparse.go"
+// line 55 "kparse.go"
 	switch data[p] {
 		case 65: goto tr80
 		case 67: goto tr81
@@ -65,7 +71,7 @@ st0:
 cs = 0;
 	goto _out;
 tr80:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st1
 st1:
@@ -73,7 +79,7 @@ st1:
 	if p == pe { goto _test_eof1 }
 	fallthrough
 case 1:
-// line 77 "kparse.go"
+// line 83 "kparse.go"
 	switch data[p] {
 		case 67: goto st2
 		case 76: goto st12
@@ -149,7 +155,7 @@ case 8:
 	if data[p] == 58 { goto tr9 }
 	goto st0
 tr9:
-// line 23 "kparse.rl"
+// line 29 "kparse.rl"
 	{ k = strings.ToLower(data[mark:p]) }
 	goto st9
 st9:
@@ -157,7 +163,7 @@ st9:
 	if p == pe { goto _test_eof9 }
 	fallthrough
 case 9:
-// line 161 "kparse.go"
+// line 167 "kparse.go"
 	if data[p] == 32 { goto st10 }
 	goto st0
 st10:
@@ -184,7 +190,7 @@ case 10:
 	}
 	goto st0
 tr11:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -192,7 +198,7 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 196 "kparse.go"
+// line 202 "kparse.go"
 	switch data[p] {
 		case 10: goto tr12
 		case 32: goto st11
@@ -283,7 +289,7 @@ case 18:
 	}
 	goto st0
 tr81:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st19
 st19:
@@ -291,7 +297,7 @@ st19:
 	if p == pe { goto _test_eof19 }
 	fallthrough
 case 19:
-// line 295 "kparse.go"
+// line 301 "kparse.go"
 	switch data[p] {
 		case 79: goto st20
 		case 82: goto st29
@@ -440,7 +446,7 @@ case 33:
 	}
 	goto st0
 tr82:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st34
 st34:
@@ -448,7 +454,7 @@ st34:
 	if p == pe { goto _test_eof34 }
 	fallthrough
 case 34:
-// line 452 "kparse.go"
+// line 458 "kparse.go"
 	switch data[p] {
 		case 88: goto st35
 		case 120: goto st35
@@ -522,7 +528,7 @@ case 41:
 	if 49 <= data[p] && data[p] <= 50 { goto st8 }
 	goto st0
 tr83:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st42
 st42:
@@ -530,7 +536,7 @@ st42:
 	if p == pe { goto _test_eof42 }
 	fallthrough
 case 42:
-// line 534 "kparse.go"
+// line 540 "kparse.go"
 	switch data[p] {
 		case 79: goto st43
 		case 111: goto st43
@@ -594,7 +600,7 @@ case 48:
 	if data[p] == 49 { goto st8 }
 	goto st0
 tr84:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st49
 st49:
@@ -602,7 +608,7 @@ st49:
 	if p == pe { goto _test_eof49 }
 	fallthrough
 case 49:
-// line 606 "kparse.go"
+// line 612 "kparse.go"
 	switch data[p] {
 		case 79: goto st50
 		case 111: goto st50
@@ -659,7 +665,7 @@ case 54:
 	}
 	goto st0
 tr85:
-// line 22 "kparse.rl"
+// line 28 "kparse.rl"
 	{ mark = p }
 	goto st55
 st55:
@@ -667,7 +673,7 @@ st55:
 	if p == pe { goto _test_eof55 }
 	fallthrough
 case 55:
-// line 671 "kparse.go"
+// line 677 "kparse.go"
 	switch data[p] {
 		case 82: goto st56
 		case 85: goto st78
@@ -1049,9 +1055,12 @@ case 83:
 	_out: {}
 	}
 
-// line 53 "kparse.rl"
+// line 59 "kparse.rl"
 
+            data, err = r.ReadString('\n')
+        }
 
+        /*
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
@@ -1064,5 +1073,6 @@ case 83:
                         return nil, nil
                 }
         }
+        */
         return m, nil
 }
