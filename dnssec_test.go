@@ -1,7 +1,6 @@
 package dns
 
 import (
-        "fmt"
 	"testing"
 	"strings"
 )
@@ -109,7 +108,6 @@ func TestSignVerify(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 	sig.Algorithm = RSASHA256
 
-	// zal wel goed zijn
 	if !sig.Sign(privkey, []RR{soa}) {
 		t.Log("Failure to sign the SOA record")
 		t.Fail()
@@ -120,30 +118,25 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
-func TestKeyGenRSA(t *testing.T) {
-	key := new(RR_DNSKEY)
-	key.Hdr.Name = "miek.nl."
-	key.Hdr.Rrtype = TypeDNSKEY
-	key.Hdr.Class = ClassINET
-	key.Hdr.Ttl = 3600
-	key.Flags = 256
-	key.Protocol = 3
-	key.Algorithm = RSASHA256
-	key.Generate(1024)
-        fmt.Printf("%v\n", key)
-}
+func TestKeyGen(t *testing.T) {
+        algs := []uint8{RSASHA256, ECDSAP256SHA256}
+        bits := []int{1024, 256}
 
-func TestKeyGenCurve(t *testing.T) {
+        i := 0
 	key := new(RR_DNSKEY)
-	key.Hdr.Name = "miek.nl."
+	key.Hdr.Name = "keygen.miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = ECDSAP256SHA256
-	key.Generate(0)
-        fmt.Printf("%v\n", key)
+        for _, v := range algs {
+                key.Algorithm = v
+                key.Generate(bits[i])
+                i++
+                t.Logf("%s\n", key)
+        }
+        //Really hard to figure out what to check here... Parse it back to a proper key?
 }
 
 /*
@@ -207,8 +200,7 @@ func TestTag(t *testing.T) {
 
 	tag := key.KeyTag()
 	if tag != 12051 {
-		t.Logf("%v\n", key)
-		t.Logf("Wrong key tag: %d\n", tag)
+		t.Logf("Wrong key tag: %d for key %v\n", tag, key)
 		t.Fail()
 	}
 }

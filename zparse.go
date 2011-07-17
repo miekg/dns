@@ -117,11 +117,11 @@ st0:
 cs = 0;
 	goto _out;
 tr158:
-// line 84 "zparse.rl"
+// line 85 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st2
 tr170:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
@@ -130,7 +130,7 @@ tr170:
         }
 	goto st2
 tr172:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 12 "types.rl"
 	{
@@ -139,7 +139,7 @@ tr172:
         }
 	goto st2
 tr174:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 38 "types.rl"
 	{
@@ -151,7 +151,7 @@ tr174:
         }
 	goto st2
 tr176:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 31 "types.rl"
 	{
@@ -163,7 +163,7 @@ tr176:
         }
 	goto st2
 tr178:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 26 "types.rl"
 	{
@@ -173,7 +173,7 @@ tr178:
         }
 	goto st2
 tr180:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 8 "types.rl"
 	{
@@ -182,7 +182,7 @@ tr180:
         }
 	goto st2
 tr182:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 45 "types.rl"
 	{
@@ -199,7 +199,7 @@ tr182:
         }
 	goto st2
 tr184:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 16 "types.rl"
 	{
@@ -244,9 +244,9 @@ case 2:
 	if 48 <= data[p] && data[p] <= 57 { goto tr3 }
 	goto st0
 tr3:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st3
 st3:
@@ -262,7 +262,7 @@ case 3:
 	if 48 <= data[p] && data[p] <= 57 { goto st3 }
 	goto st0
 tr13:
-// line 87 "zparse.rl"
+// line 88 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st4
 st4:
@@ -295,7 +295,7 @@ case 4:
 	}
 	goto st0
 tr16:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st5
 st5:
@@ -312,7 +312,7 @@ case 5:
 	}
 	goto st0
 tr25:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -345,7 +345,7 @@ case 6:
 	}
 	goto st0
 tr28:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st102
 st102:
@@ -390,11 +390,11 @@ case 8:
 	}
 	goto st0
 tr166:
-// line 87 "zparse.rl"
+// line 88 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st9
 tr30:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st9
 st9:
@@ -423,7 +423,7 @@ case 9:
 	}
 	goto st0
 tr32:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st10
 st10:
@@ -438,7 +438,7 @@ case 10:
 	}
 	goto st0
 tr33:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -493,7 +493,7 @@ case 15:
 	}
 	goto st0
 tr39:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -526,7 +526,7 @@ case 16:
 	}
 	goto st0
 tr41:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st103
 st103:
@@ -551,13 +551,13 @@ case 103:
 	}
 	goto st0
 tr6:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st17
 tr18:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st17
 st17:
@@ -624,7 +624,7 @@ case 22:
 	}
 	goto st0
 tr48:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -648,7 +648,7 @@ case 23:
 	if 48 <= data[p] && data[p] <= 57 { goto tr50 }
 	goto st0
 tr50:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st24
 st24:
@@ -664,7 +664,7 @@ case 24:
 	if 48 <= data[p] && data[p] <= 57 { goto st24 }
 	goto st0
 tr51:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st25
 st25:
@@ -680,7 +680,7 @@ case 25:
 	if 48 <= data[p] && data[p] <= 57 { goto tr54 }
 	goto st0
 tr54:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st26
 st26:
@@ -696,7 +696,7 @@ case 26:
 	if 48 <= data[p] && data[p] <= 57 { goto st26 }
 	goto st0
 tr55:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st27
 st27:
@@ -712,7 +712,7 @@ case 27:
 	if 48 <= data[p] && data[p] <= 57 { goto tr58 }
 	goto st0
 tr58:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st28
 st28:
@@ -728,7 +728,7 @@ case 28:
 	if 48 <= data[p] && data[p] <= 57 { goto st28 }
 	goto st0
 tr59:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st29
 st29:
@@ -753,7 +753,7 @@ case 29:
 	}
 	goto st0
 tr62:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st104
 st104:
@@ -788,7 +788,7 @@ case 30:
 	}
 	goto st0
 tr63:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -812,7 +812,7 @@ case 31:
 	if 48 <= data[p] && data[p] <= 57 { goto tr65 }
 	goto st0
 tr65:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st32
 st32:
@@ -828,7 +828,7 @@ case 32:
 	if 48 <= data[p] && data[p] <= 57 { goto st32 }
 	goto st0
 tr66:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st33
 st33:
@@ -844,7 +844,7 @@ case 33:
 	if 48 <= data[p] && data[p] <= 57 { goto tr69 }
 	goto st0
 tr69:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st34
 st34:
@@ -860,7 +860,7 @@ case 34:
 	if 48 <= data[p] && data[p] <= 57 { goto st34 }
 	goto st0
 tr70:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st35
 st35:
@@ -876,7 +876,7 @@ case 35:
 	if 48 <= data[p] && data[p] <= 57 { goto tr73 }
 	goto st0
 tr73:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st36
 st36:
@@ -892,7 +892,7 @@ case 36:
 	if 48 <= data[p] && data[p] <= 57 { goto st36 }
 	goto st0
 tr74:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st37
 st37:
@@ -917,7 +917,7 @@ case 37:
 	}
 	goto st0
 tr77:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st105
 st105:
@@ -942,13 +942,13 @@ case 105:
 	}
 	goto st0
 tr9:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st38
 tr21:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st38
 st38:
@@ -973,7 +973,7 @@ case 39:
 	}
 	goto st0
 tr79:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -997,7 +997,7 @@ case 40:
 	if 48 <= data[p] && data[p] <= 57 { goto tr81 }
 	goto st0
 tr81:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st41
 st41:
@@ -1013,7 +1013,7 @@ case 41:
 	if 48 <= data[p] && data[p] <= 57 { goto st41 }
 	goto st0
 tr82:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st42
 st42:
@@ -1038,7 +1038,7 @@ case 42:
 	}
 	goto st0
 tr85:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st106
 st106:
@@ -1063,7 +1063,7 @@ case 106:
 	}
 	goto st0
 tr34:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st43
 st43:
@@ -1088,7 +1088,7 @@ case 44:
 	}
 	goto st0
 tr87:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1121,7 +1121,7 @@ case 45:
 	}
 	goto st0
 tr89:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st107
 st107:
@@ -1146,13 +1146,13 @@ case 107:
 	}
 	goto st0
 tr11:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st46
 tr23:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st46
 st46:
@@ -1207,7 +1207,7 @@ case 50:
 	}
 	goto st0
 tr94:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1231,7 +1231,7 @@ case 51:
 	if 48 <= data[p] && data[p] <= 57 { goto tr96 }
 	goto st0
 tr96:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st52
 st52:
@@ -1247,7 +1247,7 @@ case 52:
 	if 48 <= data[p] && data[p] <= 57 { goto st52 }
 	goto st0
 tr97:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st53
 st53:
@@ -1263,7 +1263,7 @@ case 53:
 	if 48 <= data[p] && data[p] <= 57 { goto tr100 }
 	goto st0
 tr100:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st54
 st54:
@@ -1279,7 +1279,7 @@ case 54:
 	if 48 <= data[p] && data[p] <= 57 { goto st54 }
 	goto st0
 tr101:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st55
 st55:
@@ -1295,7 +1295,7 @@ case 55:
 	if 48 <= data[p] && data[p] <= 57 { goto tr104 }
 	goto st0
 tr104:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st56
 st56:
@@ -1311,7 +1311,7 @@ case 56:
 	if 48 <= data[p] && data[p] <= 57 { goto st56 }
 	goto st0
 tr105:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st57
 st57:
@@ -1327,7 +1327,7 @@ case 57:
 	if 48 <= data[p] && data[p] <= 57 { goto tr108 }
 	goto st0
 tr108:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st58
 st58:
@@ -1343,7 +1343,7 @@ case 58:
 	if 48 <= data[p] && data[p] <= 57 { goto st58 }
 	goto st0
 tr109:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st59
 st59:
@@ -1359,7 +1359,7 @@ case 59:
 	if 48 <= data[p] && data[p] <= 57 { goto tr112 }
 	goto st0
 tr112:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st60
 st60:
@@ -1375,7 +1375,7 @@ case 60:
 	if 48 <= data[p] && data[p] <= 57 { goto st60 }
 	goto st0
 tr113:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st61
 st61:
@@ -1391,7 +1391,7 @@ case 61:
 	if 48 <= data[p] && data[p] <= 57 { goto tr116 }
 	goto st0
 tr116:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st62
 st62:
@@ -1407,7 +1407,7 @@ case 62:
 	if 48 <= data[p] && data[p] <= 57 { goto st62 }
 	goto st0
 tr117:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st63
 st63:
@@ -1423,7 +1423,7 @@ case 63:
 	if 48 <= data[p] && data[p] <= 57 { goto tr120 }
 	goto st0
 tr120:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st64
 st64:
@@ -1439,7 +1439,7 @@ case 64:
 	if 48 <= data[p] && data[p] <= 57 { goto st64 }
 	goto st0
 tr121:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st65
 st65:
@@ -1464,7 +1464,7 @@ case 65:
 	}
 	goto st0
 tr124:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st66
 st66:
@@ -1489,7 +1489,7 @@ case 66:
 	}
 	goto st0
 tr125:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st67
 st67:
@@ -1514,7 +1514,7 @@ case 67:
 	}
 	goto st0
 tr128:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st108
 st108:
@@ -1539,13 +1539,13 @@ case 108:
 	}
 	goto st0
 tr12:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st68
 tr24:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st68
 st68:
@@ -1580,7 +1580,7 @@ case 70:
 	}
 	goto st0
 tr131:
-// line 92 "zparse.rl"
+// line 93 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1613,7 +1613,7 @@ case 71:
 	}
 	goto st0
 tr133:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st72
 st72:
@@ -1638,7 +1638,7 @@ case 72:
 	}
 	goto st0
 tr134:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st73
 st73:
@@ -1663,7 +1663,7 @@ case 73:
 	}
 	goto st0
 tr137:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st74
 st74:
@@ -1688,7 +1688,7 @@ case 74:
 	}
 	goto st0
 tr138:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st75
 st75:
@@ -1704,7 +1704,7 @@ case 75:
 	if 48 <= data[p] && data[p] <= 57 { goto tr141 }
 	goto st0
 tr141:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st76
 st76:
@@ -1720,7 +1720,7 @@ case 76:
 	if 48 <= data[p] && data[p] <= 57 { goto st76 }
 	goto st0
 tr142:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st77
 st77:
@@ -1736,7 +1736,7 @@ case 77:
 	if 48 <= data[p] && data[p] <= 57 { goto tr145 }
 	goto st0
 tr145:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st78
 st78:
@@ -1752,7 +1752,7 @@ case 78:
 	if 48 <= data[p] && data[p] <= 57 { goto st78 }
 	goto st0
 tr146:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st79
 st79:
@@ -1768,7 +1768,7 @@ case 79:
 	if 48 <= data[p] && data[p] <= 57 { goto tr149 }
 	goto st0
 tr149:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st80
 st80:
@@ -1784,7 +1784,7 @@ case 80:
 	if 48 <= data[p] && data[p] <= 57 { goto st80 }
 	goto st0
 tr150:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st81
 st81:
@@ -1800,7 +1800,7 @@ case 81:
 	if 48 <= data[p] && data[p] <= 57 { goto tr153 }
 	goto st0
 tr153:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st82
 st82:
@@ -1816,7 +1816,7 @@ case 82:
 	if 48 <= data[p] && data[p] <= 57 { goto st82 }
 	goto st0
 tr154:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st83
 st83:
@@ -1832,7 +1832,7 @@ case 83:
 	if 48 <= data[p] && data[p] <= 57 { goto tr157 }
 	goto st0
 tr157:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st109
 st109:
@@ -1856,7 +1856,7 @@ case 109:
 	}
 	goto st0
 tr185:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 16 "types.rl"
 	{
@@ -1891,7 +1891,7 @@ case 84:
 	}
 	goto st0
 tr17:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st85
 st85:
@@ -1910,7 +1910,7 @@ case 85:
 	}
 	goto st0
 tr19:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st86
 st86:
@@ -1925,7 +1925,7 @@ case 86:
 	}
 	goto st0
 tr20:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st87
 st87:
@@ -1940,7 +1940,7 @@ case 87:
 	}
 	goto st0
 tr22:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st88
 st88:
@@ -1977,9 +1977,9 @@ case 90:
 	}
 	goto st0
 tr4:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st91
 st91:
@@ -2016,7 +2016,7 @@ case 93:
 	}
 	goto st0
 tr163:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st94
 st94:
@@ -2046,7 +2046,7 @@ case 94:
 	if 48 <= data[p] && data[p] <= 57 { goto tr165 }
 	goto st0
 tr165:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
 	goto st95
 st95:
@@ -2062,9 +2062,9 @@ case 95:
 	if 48 <= data[p] && data[p] <= 57 { goto st95 }
 	goto st0
 tr5:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st96
 st96:
@@ -2083,9 +2083,9 @@ case 96:
 	}
 	goto st0
 tr7:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st97
 st97:
@@ -2100,9 +2100,9 @@ case 97:
 	}
 	goto st0
 tr8:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st98
 st98:
@@ -2117,9 +2117,9 @@ case 98:
 	}
 	goto st0
 tr10:
-// line 83 "zparse.rl"
+// line 84 "zparse.rl"
 	{ mark = p }
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ /* ... */ }
 	goto st99
 st99:
@@ -2269,7 +2269,7 @@ case 101:
 	if p == eof {
 	switch cs {
 	case 109:
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 16 "types.rl"
 	{
@@ -2284,7 +2284,7 @@ case 101:
         }
 	break
 	case 102:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
@@ -2293,7 +2293,7 @@ case 101:
         }
 	break
 	case 107:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 8 "types.rl"
 	{
@@ -2302,7 +2302,7 @@ case 101:
         }
 	break
 	case 103:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 12 "types.rl"
 	{
@@ -2311,7 +2311,7 @@ case 101:
         }
 	break
 	case 106:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 26 "types.rl"
 	{
@@ -2321,7 +2321,7 @@ case 101:
         }
 	break
 	case 105:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 31 "types.rl"
 	{
@@ -2333,7 +2333,7 @@ case 101:
         }
 	break
 	case 104:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 38 "types.rl"
 	{
@@ -2345,7 +2345,7 @@ case 101:
         }
 	break
 	case 108:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 45 "types.rl"
 	{
@@ -2368,7 +2368,7 @@ case 101:
 	_out: {}
 	}
 
-// line 137 "zparse.rl"
+// line 139 "zparse.rl"
 
 
         if cs < z_first_final {

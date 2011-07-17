@@ -340,7 +340,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	case ECC:
 	case ECCGOST:
 	default:
-		// Unknown Alg
+		// Unknown alg
 		return false
 	}
 	return err == nil

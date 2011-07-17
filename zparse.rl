@@ -80,6 +80,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
         tok := newToken()
 
         %%{
+                # can't do comments yet
                 action mark      { mark = p }
                 action qname     { hdr.Name = data[mark:p] }
                 action qclass    { hdr.Class = Str_class[data[mark:p]] }
@@ -108,6 +109,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
 #                t           = [a-zA-Z0-9.\\]+ $1 %0 %text;
                 t           = [a-zA-Z0-9.\\/+=]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
+                comment     = /^;/;
 
                 lhs = qname? bl %defTtl (
                       (ttl %setTtl bl (qclass bl)?)

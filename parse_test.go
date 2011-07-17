@@ -1,77 +1,51 @@
 package dns
 
 import (
-	"fmt"
 	"net"
         "strings"
 	"testing"
 	"crypto/rsa"
 )
 
-func TestPrivateKeyRead1(t *testing.T) {
-	a := `Private-key-format: v1.3
+func TestSign(t *testing.T) {
+	pub := "miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ"
+
+	priv := `Private-key-format: v1.3
 Algorithm: 5 (RSASHA1)
-Modulus: vyVjCzz87g3rg9vDj1NJ1tlFP7lEY2pEQLkWGXAFuZM6Fw/bNmEH/z3ybDfsJqx4QQ6YZXN8V2kbzY7oX+tExf6AMiMIcKYzEGwg5xBYFh33du4G+6kE/VzG906ubpaIEnrZOMTdGqE7OwptAqrqXe4uGXY99ZqNdqutOKQyIzs=
+Modulus: v7yUY0LEmAtLythV6voScdW4iRAOCF2N217APNTcblHs9sxspVG8fYxrulDJhx6hqpZlCKtKPvZ649Z8/FCczL25wLKUD4W4f1xKMhw9/g+ol926keT1foQFiPGsItjinX/IHCDIEhEm1m0Cozdx4AfZai8QkPqtO064ejkCW4k=
 PublicExponent: AQAB
-PrivateExponent: PFg/RoMAjt8SJVSyDoOK4itBs3Z34rLfzVchZPJ6vDWAt1soJ6jGb4xNBmE5SpRUeqVy80RcUvQ59NFTB0UtNo/zAXhC1RfKiFCNRFTyV3k6a9CMLPAU9g4peW91lw87HXnYALTC9bTiTAoMU3vKvNx80F5qfK7qY/N28S1PMeE=
-Prime1: +vPWyp37iUa7/LbhejOX/KdkhfwECUCdJF0uEePjaBCSf85xceEBzU89JFk9dCojtVqcI8xLKnRKRixg07Rc+Q==
-Prime2: wv2aVWr13Cq2vRkKiHlqqP9vihGuDN/kWfmXb7slJH3s2i9+yI7vepAlow9SY8lNHOqXibEaAFsP3aj5OAAS0w==
-Exponent1: sChCenBzhWV1yGvH0zQsWFpYogTKAISuyjvufvhtRTt82uJbmAjObwRUcxOBo+2Aq2kzeZ2Klf6TtLaqMXHGYQ==
-Exponent2: hXiKeAWrHXWveGj3qMtTkzKl6uCHPxDSgjQy0KxNlFkOE5uHMUmF62NYH/GQ9/UG79A0wm+T2MJ8bcIINaj3OQ==
-Coefficient: xzZBvs2/IT7+iRQdn9I4slRTg9ryIecx7oKEKYTOEeyL2qq7rfY/FwZGy3EqyA/3lrkfFLx76qOeqAmCTUaU4w==
-Created: 20101221142359
-Publish: 20101221142359
-Activate: 20101221142359`
+PrivateExponent: YPwEmwjk5HuiROKU4xzHQ6l1hG8Iiha4cKRG3P5W2b66/EN/GUh07ZSf0UiYB67o257jUDVEgwCuPJz776zfApcCB4oGV+YDyEu7Hp/rL8KcSN0la0k2r9scKwxTp4BTJT23zyBFXsV/1wRDK1A5NxsHPDMYi2SoK63Enm/1ptk=
+Prime1: /wjOG+fD0ybNoSRn7nQ79udGeR1b0YhUA5mNjDx/x2fxtIXzygYk0Rhx9QFfDy6LOBvz92gbNQlzCLz3DJt5hw==
+Prime2: wHZsJ8OGhkp5p3mrJFZXMDc2mbYusDVTA+t+iRPdS797Tj0pjvU2HN4vTnTj8KBQp6hmnY7dLp9Y1qserySGbw==
+Exponent1: N0A7FsSRIg+IAN8YPQqlawoTtG1t1OkJ+nWrurPootScApX6iMvn8fyvw3p2k51rv84efnzpWAYiC8SUaQDNxQ==
+Exponent2: SvuYRaGyvo0zemE3oS+WRm2scxR8eiA8WJGeOc+obwOKCcBgeZblXzfdHGcEC1KaOcetOwNW/vwMA46lpLzJNw==
+Coefficient: 8+7ZN/JgByqv0NfULiFKTjtyegUcijRuyij7yNxYbCBneDvZGxJwKNi4YYXWx743pcAj4Oi4Oh86gcmxLs+hGw==
+Created: 20110302104537
+Publish: 20110302104537
+Activate: 20110302104537`
 
 	k := new(RR_DNSKEY)
-	p, _ := k.ReadPrivateKey(strings.NewReader(a))
-	p = p
-}
-
-func TestPrivateKeyRead2(t *testing.T) {
-	/*        b:=`; This is a zone-signing key, keyid 41946, for miek.nl.
-	; Created: 20110109154937 (Sun Jan  9 16:49:37 2011)
-	; Publish: 20110109154937 (Sun Jan  9 16:49:37 2011)
-	; Activate: 20110109154937 (Sun Jan  9 16:49:37 2011)
-	miek.nl. IN DNSKEY 256 3 5 AwEAAeETsGZdYlTsHK8wc1yo9Zcj4dMEpPWRTYuTmGD3e4Qsk4/uyKf5jhsNZhp8no7GKHTEe7+K1prC4iXo3X5oQyDDmx76hDo5u6fblu/XaQw16wqMDQDPiURUKkzobJlmY6fYNKRz7A01J73V6qDMCvlk+8p+fb0a+LiJ2NJDACln`
-	*/
-
-	a := `Private-key-format: v1.3
-Algorithm: 5 (RSASHA1)
-Modulus: 4ROwZl1iVOwcrzBzXKj1lyPh0wSk9ZFNi5OYYPd7hCyTj+7Ip/mOGw1mGnyejsYodMR7v4rWmsLiJejdfmhDIMObHvqEOjm7p9uW79dpDDXrCowNAM+JRFQqTOhsmWZjp9g0pHPsDTUnvdXqoMwK+WT7yn59vRr4uInY0kMAKWc=
-PublicExponent: AQAB
-PrivateExponent: CYYAv8QRxhAbgpolN3V6tsNw6bHXnQBh7Jb5KpkuI8CTGdL7sIfRqHlfqZ0+REJEMfSiW89vFytJ0FrTDGcy99qesJujW/tlfsThRTwFSXdCNv0Df25CNNNeskMg3r86is8MmHJc+dAjN3P0ArAF2yZd9gS7C4TGKDDR3bZ9SYk=
-Prime1: 8EO3P0cYdR8FISxLaUVfVJVIVAWux7tptnqZlzAmomPGEipXr2bAYf637hAAoD8xEUXbI6FIkXUk5vIjxfUjRQ==
-Prime2: 79FWWF5PNh6ykof9NsrR2YRy/P30iLbzfSRVQrrYH15SEip5LUN15W/G7bg5Uyp8U/o3HXaaxhrj9LC330Uuuw==
-Exponent1: mtOIKoauBAtRSuc4UUYbAG6ShVKEJsFmhejLQNoOi2awJNSUXLtiDcQO0qINRTZzcCYL6RHtqY5LkWdIFjC54Q==
-Exponent2: ZpsiXly7d2Ra8ubMKA1PC8nniOb/IR9lvj01XX+jyIgKhUs23W7nmmrgqgUQQc0DtMpxmmGMhwYqUh7qDNUE0Q==
-Coefficient: 2wn6uW28qM6B68m1ADcLmzjwIQn9Xyc/JMydrJUSzwG7Fr08bc1aa1+K/K0pVy82vU5emDKdVXPP4+WtqXnUNA==
-Created: 20110109154937
-Publish: 20110109154937
-Activate: 20110109154937`
-
-	k := new(RR_DNSKEY)
-	k.Hdr.Rrtype = TypeDNSKEY
-	k.Hdr.Class = ClassINET
-	k.Hdr.Name = "miek.nl."
-	k.Hdr.Ttl = 3600
-	k.Protocol = 3
-	k.Flags = 256
-        k.Algorithm = RSASHA1
-	p, _ := k.ReadPrivateKey(strings.NewReader(a))
+        k.Read(strings.NewReader(pub))
+	p, err := k.ReadPrivateKey(strings.NewReader(priv))
+        if err != nil {
+                t.Logf("%v\n", err)
+                t.Fail()
+        }
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
 		if 65537 != priv.PublicKey.E {
 			t.Log("Exponenent should be 65537")
 			t.Fail()
 		}
+        default:
+                t.Logf("We should have read an RSA key: %v", priv)
+                t.Fail()
 	}
-	if k.KeyTag() != 41946 {
+	if k.KeyTag() != 37350 {
 		t.Logf("%d %v\n", k.KeyTag(), k)
-		t.Log("Keytag should be 41946")
+		t.Log("Keytag should be 37350")
 		t.Fail()
 	}
-        println(k.String())
 
 	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
@@ -92,7 +66,11 @@ Activate: 20110109154937`
 	sig.Algorithm = k.Algorithm
 
 	sig.Sign(p, []RR{soa})
-	fmt.Printf("%v\n%v\n%v\n", k, soa, sig)
+        if sig.Signature != "D5zsobpQcmMmYsUMLxCVEtgAdCvTu8V/IEeP4EyLBjqPJmjt96bwM9kqihsccofA5LIJ7DN91qkCORjWSTwNhzCv7bMyr2o5vBZElrlpnRzlvsFIoAZCD9xg6ZY7ZyzUJmU6IcTwG4v3xEYajcpbJJiyaw/RqR90MuRdKPiBzSo=" {
+                t.Log("Signature is not correct")
+                t.Logf("%v\n", sig)
+                t.Fail()
+        }
 }
 
 func TestA(t *testing.T) {
@@ -141,37 +119,22 @@ func TestDotInName(t *testing.T) {
 // Make this a decend test case. For now, good enough
 // New style (Ragel) parsing
 func TestParse(t *testing.T) {
-        rr, _ := Zparse(strings.NewReader("miek.nl.    3600    IN    A   127.0.0.1"))
-        fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse(strings.NewReader("miek.nl.     3600    IN    MX   10      elektron.atoom.net."))
-        fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse(strings.NewReader("nlnetlabs.nl. 3175 IN DNSKEY  256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh"))
-        fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse(strings.NewReader("miek.nl.    IN    A   127.0.0.1"))
-        fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse(strings.NewReader("miek.nl.    IN 3600   A   127.0.0.1"))
-        fmt.Printf("Seen a:\n%v\n", rr)
-        rr, _ = Zparse(strings.NewReader("miek.nl.    A   127.0.0.1"))
-        fmt.Printf("Seen a:\n%v\n", rr)
-}
-
-func TestParseK(t *testing.T) {
-        a := `Private-key-format: v1.3
-Algorithm: 5 (RSASHA1)
-Modulus: v7yUY0LEmAtLythV6voScdW4iRAOCF2N217APNTcblHs9sxspVG8fYxrulDJhx6hqpZlCKtKPvZ649Z8/FCczL25wLKUD4W4f1xKMhw9/g+ol926keT1foQFiPGsItjinX/IHCDIEhEm1m0Cozdx4AfZai8QkPqtO064ejkCW4k=
-PublicExponent: AQAB
-PrivateExponent: YPwEmwjk5HuiROKU4xzHQ6l1hG8Iiha4cKRG3P5W2b66/EN/GUh07ZSf0UiYB67o257jUDVEgwCuPJz776zfApcCB4oGV+YDyEu7Hp/rL8KcSN0la0k2r9scKwxTp4BTJT23zyBFXsV/1wRDK1A5NxsHPDMYi2SoK63Enm/1ptk=
-Prime1: /wjOG+fD0ybNoSRn7nQ79udGeR1b0YhUA5mNjDx/x2fxtIXzygYk0Rhx9QFfDy6LOBvz92gbNQlzCLz3DJt5hw==
-Prime2: wHZsJ8OGhkp5p3mrJFZXMDc2mbYusDVTA+t+iRPdS797Tj0pjvU2HN4vTnTj8KBQp6hmnY7dLp9Y1qserySGbw==
-Exponent1: N0A7FsSRIg+IAN8YPQqlawoTtG1t1OkJ+nWrurPootScApX6iMvn8fyvw3p2k51rv84efnzpWAYiC8SUaQDNxQ==
-Exponent2: SvuYRaGyvo0zemE3oS+WRm2scxR8eiA8WJGeOc+obwOKCcBgeZblXzfdHGcEC1KaOcetOwNW/vwMA46lpLzJNw==
-Coefficient: 8+7ZN/JgByqv0NfULiFKTjtyegUcijRuyij7yNxYbCBneDvZGxJwKNi4YYXWx743pcAj4Oi4Oh86gcmxLs+hGw==
-Created: 20110302104537
-Publish: 20110302104537
-Activate: 20110302104537
-`
-        m, _ := Kparse(strings.NewReader(a))
-        for k, v := range m {
-                fmt.Printf("{%s}={%s}\n", k, v)
+        tests := map[string]string{
+                "miek.nl. 3600 IN A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+                "miek.nl. 3600 IN MX 10 elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
+                "miek.nl. IN 3600 A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+                "miek.nl. A 127.0.0.1":         "miek.nl.\t0\tCLASS0\tA\t127.0.0.1",
+                "miek.nl. IN A 127.0.0.1":      "miek.nl.\t0\tIN\tA\t127.0.0.1",
+                "miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":
+                        "miek.nl.\t0\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
+                "nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh":
+                        "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
+                }
+        for test, result := range tests {
+                r, _ := Zparse(strings.NewReader(test))
+                if r.String() != result {
+                        t.Logf("\"%s\" should be equal to\n\"%s\"\n", r, result)
+                        t.Fail()
+                }
         }
 }
