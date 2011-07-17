@@ -4,9 +4,6 @@ import (
 	"os"
         "io"
 	"big"
-	"fmt"
-        "strings"
-        "bufio"
 	"strconv"
 	"crypto/rsa"
         "crypto/ecdsa"
@@ -34,8 +31,12 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
 		}
-        case ECDSAP256SHA256, ECDSAP384SHA384:
-                if bits != 0 {
+        case ECDSAP256SHA256:
+                if bits != 256 {
+                        return nil, ErrKeySize
+                }
+        case ECDSAP384SHA384:
+                if bits != 384 {
                         return nil, ErrKeySize
                 }
 	}
@@ -112,68 +113,50 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 }
 
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
-        r := bufio.NewReader(q)
-	line, _, err := r.ReadLine()
-private:
-	for err == nil {
-                str := strings.Split(string(line), ": ", 2)
-                switch str[0] {
-                case "Private-key-format":
-                        if str[1] != "v1.2" && str[1] != "v1.3" {
-                                return nil, ErrPrivKey
-                        }
-                case "Algorithm":
-                        // 5 (RSASHA1) for instance
-                        a := strings.Split(str[1], " ", 2)
-                        alg, _ := strconv.Atoi(a[0])
-                        if alg == 0 {
-                                return nil, ErrAlg
-                        }
-                        k.Algorithm = uint8(alg)
-                        break private
-                }
-		line, _, err = r.ReadLine()
+        kv, _ := Kparse(q)
+        if _, ok := kv["private-key-format"]; !ok {
+                return nil, ErrPrivKey
         }
-        switch k.Algorithm {
-        case RSAMD5, RSASHA1, RSASHA256, RSASHA512:
-                return k.readPrivateKeyRSA(r)
-        case ECDSAP256SHA256, ECDSAP384SHA384:
-                return k.readPrivateKeyECDSA(r)
+        if kv["private-key-format"] != "v1.2" || kv["private-key-format"] != "v1.3" {
+                return nil, ErrPrivKey
+        }
+        switch kv["algorithm"] {
+        case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
+                return k.readPrivateKeyRSA(kv)
+        case "ECDSAP256SHA256", "ECDSAP384SHA384":
+                return k.readPrivateKeyECDSA(kv)
         }
 	return nil, ErrKey
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) readPrivateKeyRSA(r *bufio.Reader) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
 	p.Primes = []*big.Int{nil,nil}
-	line, _, err := r.ReadLine()
-	for err == nil {
-                str := strings.Split(string(line), ": ", 2)
-                switch str[0] {
+        for k, v := range kv {
+                switch k {
                 case "Modulus", "PublicExponent", "PrivateExponent", "Prime1", "Prime2":
-                        v, err := packBase64([]byte(str[1]))
+                        v1, err := packBase64([]byte(v))
                         if err != nil {
                                 return nil, err
                         }
-                        switch str[0] {
+                        switch k {
                         case "Modulus":
                                 p.PublicKey.N = big.NewInt(0)
-                                p.PublicKey.N.SetBytes(v)
+                                p.PublicKey.N.SetBytes(v1)
                         case "PublicExponent":
                                 i := big.NewInt(0)
-                                i.SetBytes(v)
-                                // Int64 should be large enough
-                                p.PublicKey.E = int(i.Int64())
+                                i.SetBytes(v1)
+                                p.PublicKey.E = int(i.Int64()) // int64 should be large enough
                         case "PrivateExponent":
                                 p.D = big.NewInt(0)
-                                p.D.SetBytes(v)
+                                p.D.SetBytes(v1)
                         case "Prime1":
                                 p.Primes[0] = big.NewInt(0)
-                                p.Primes[0].SetBytes(v)
+                                p.Primes[0].SetBytes(v1)
                         case "Prime2":
                                 p.Primes[1] = big.NewInt(0)
-                                p.Primes[1].SetBytes(v)
+                                p.Primes[1].SetBytes(v1)
                         }
                 case "Exponent1", "Exponent2", "Coefficient":
                         // not used in Go (yet)
@@ -182,7 +165,6 @@ func (k *RR_DNSKEY) readPrivateKeyRSA(r *bufio.Reader) (PrivateKey, os.Error) {
                 default:
                         return nil, ErrKey
                 }
-		line, _, err = r.ReadLine()
 	}
 	if ! k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N) {
                 return nil, ErrKey
@@ -190,30 +172,23 @@ func (k *RR_DNSKEY) readPrivateKeyRSA(r *bufio.Reader) (PrivateKey, os.Error) {
 	return p, nil
 }
 
-// Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) readPrivateKeyECDSA(r *bufio.Reader) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) readPrivateKeyECDSA(kv map[string]string) (PrivateKey, os.Error) {
 	p := new(ecdsa.PrivateKey)
 	p.D = big.NewInt(0)
-	var left, right string
-	line, _, err := r.ReadLine()
-	for err == nil {
-		n, _ := fmt.Sscanf(string(line), "%s %s+\n", &left, &right)
-		if n > 0 {
-			switch left {
-			case "PrivateKey:":
-				v, err := packBase64([]byte(right))
-				if err != nil {
-					return nil, err
-				}
-                                p.D.SetBytes(v)
-			case "Created:", "Publish:", "Activate:":
-				/* not used in Go (yet) */
-			default:
-				return nil, ErrKey
-			}
-		}
-		line, _, err = r.ReadLine()
-	}
+        for k, v := range kv {
+                switch k {
+                case "PrivateKey:":
+                        v1, err := packBase64([]byte(v))
+                        if err != nil {
+                                return nil, err
+                        }
+                        p.D.SetBytes(v1)
+                case "Created:", "Publish:", "Activate:":
+                        /* not used in Go (yet) */
+                default:
+                        return nil, ErrKey
+                }
+        }
 	//if ! k.setPublicKeyRSA(p.PublicKey.E, p.PublicKey.N) {
         //        return nil, ErrKey
         //}

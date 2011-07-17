@@ -28,8 +28,11 @@ func Kparse(q io.Reader) (m map[string]string, err os.Error) {
                 action mark      { mark = p }
                 action setKey    { k = strings.ToLower(data[mark:p]) }
                 action setValue  { m[k] = data[mark:p] }
+                action setAlg    { m[k] = data[mark:p-1] }
 
-                base64 = [a-zA-Z0-9.\\/+=() ]+ >mark;
+                bl = [ \t]+;
+                base64any = [a-zA-Z0-9.\\/+=() ]+ >mark;
+                algorithm = ( 'RSASHA1'i | 'RSASHA256'i ) >mark;
 
                 key = (
                       ('Private-key-format'i)
@@ -49,7 +52,7 @@ func Kparse(q io.Reader) (m map[string]string, err os.Error) {
                     | ('Activate'i)
                 ) >mark %setKey;
                 
-                value = base64 %setValue;
+                value = ( base64any %setValue | digit+ bl '(' algorithm ')' %setAlg );
 
                 line = key ': ' value;
                 main := ( line '\n' )*;
