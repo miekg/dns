@@ -131,7 +131,11 @@ func TestParse(t *testing.T) {
                         "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
                 }
         for test, result := range tests {
-                r, _ := Zparse(strings.NewReader(test))
+                r, err := Zparse(strings.NewReader(test))
+                if err != nil || r == nil{
+                        t.Logf("Error of nil r %v %s\n", err, test)
+                        t.Fail()
+                }
                 if r.String() != result {
                         t.Logf("\"%s\" should be equal to\n\"%s\"\n", r, result)
                         t.Fail()
@@ -139,9 +143,18 @@ func TestParse(t *testing.T) {
         }
 }
 
-// 
 func TestSetString(t *testing.T) {
         a := new(RR_A)
         a.SetString("miek.nl. IN A 127.0.0.1")
-        println(a.String())
+        t.Log(a.String())
+        b := new(RR_AAAA)
+        b.SetString("miek.nl. IN AAAA ::1")
+        t.Log(b.String())
+        c := new(RR_MX)
+        c.SetString("miek.nl. IN MX 10 miek.nl.")
+        t.Log(c.String())
+        d := new(RR_NS)
+        d.SetString("miek.nl. IN NS ns1.miek.nl")
+        t.Log(d.String())
+        t.Fail()
 }

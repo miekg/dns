@@ -582,6 +582,27 @@ func (rr *RR_RRSIG) String() string {
 		" " + rr.Signature
 }
 
+func (rr *RR_RRSIG) SetString(s string) (*RR_RRSIG, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_RRSIG); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_RRSIG).Hdr
+        rr.TypeCovered   = p.(*RR_RRSIG).TypeCovered
+        rr.Algorithm   = p.(*RR_RRSIG).Algorithm
+        rr.Labels   = p.(*RR_RRSIG).Labels
+        rr.OrigTtl   = p.(*RR_RRSIG).OrigTtl
+        rr.Expiration   = p.(*RR_RRSIG).Expiration
+        rr.Inception   = p.(*RR_RRSIG).Inception
+        rr.KeyTag   = p.(*RR_RRSIG).KeyTag
+        rr.SignerName   = p.(*RR_RRSIG).SignerName
+        rr.Signature   = p.(*RR_RRSIG).Signature
+        return rr, true
+}
+
 type RR_NSEC struct {
 	Hdr        RR_Header
 	NextDomain string   "domain-name"
@@ -725,6 +746,22 @@ func (rr *RR_DNSKEY) String() string {
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
+}
+
+func (rr *RR_DNSKEY) SetString(s string) (*RR_DNSKEY, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_DNSKEY); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_DNSKEY).Hdr
+        rr.Flags   = p.(*RR_DNSKEY).Flags
+        rr.Protocol   = p.(*RR_DNSKEY).Protocol
+        rr.Algorithm   = p.(*RR_DNSKEY).Algorithm
+        rr.PublicKey   = p.(*RR_DNSKEY).PublicKey
+        return rr, true
 }
 
 type RR_NSEC3 struct {

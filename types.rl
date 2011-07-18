@@ -5,6 +5,10 @@
             rr.(*RR_A).Hdr = *hdr
             rr.(*RR_A).A = net.ParseIP(data[mark:p])
         }
+        action rdata_aaaa {
+            rr.(*RR_AAAA).Hdr = *hdr
+            rr.(*RR_AAAA).AAAA = net.ParseIP(data[mark:p])
+        }
         action rdata_ns {
             rr.(*RR_NS).Hdr = *hdr
             rr.(*RR_NS).Ns = tok.T[0]

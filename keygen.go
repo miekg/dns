@@ -112,6 +112,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	return
 }
 
+// Do I want Read/SetString or both???
 func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
         r, e := Zparse(q)
         if e != nil || r == nil {

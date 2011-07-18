@@ -122,6 +122,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                 # RR definitions
                 rhs = (
                        ('A'i         %qtype bl t) %rdata_a
+                     | ('AAAA'i      %qtype bl t) %rdata_aaaa
                      | ('NS'i        %qtype bl t) %rdata_ns
                      | ('CNAME'i     %qtype bl t) %rdata_cname
                      | ('SOA'i       %qtype bl t bl t bl n bl n bl n bl n bl n) %rdata_soa
