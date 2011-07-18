@@ -161,6 +161,19 @@ func (rr *RR_CNAME) String() string {
 	return rr.Hdr.String() + rr.Cname
 }
 
+func (rr *RR_CNAME) SetString(s string) (*RR_CNAME, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_CNAME); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_CNAME).Hdr
+        rr.Cname   = p.(*RR_CNAME).Cname
+        return rr, true
+}
+
 type RR_HINFO struct {
 	Hdr RR_Header
 	Cpu string
@@ -175,6 +188,20 @@ func (rr *RR_HINFO) String() string {
 	return rr.Hdr.String() + rr.Cpu + " " + rr.Os
 }
 
+func (rr *RR_HINFO) SetString(s string) (*RR_HINFO, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_HINFO); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_HINFO).Hdr
+        rr.Cpu   = p.(*RR_HINFO).Cpu
+        rr.Os   = p.(*RR_HINFO).Os
+        return rr, true
+}
+
 type RR_MB struct {
 	Hdr RR_Header
 	Mb  string "domain-name"
@@ -186,6 +213,19 @@ func (rr *RR_MB) Header() *RR_Header {
 
 func (rr *RR_MB) String() string {
 	return rr.Hdr.String() + rr.Mb
+}
+
+func (rr *RR_MB) SetString(s string) (*RR_MB, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_MB); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_MB).Hdr
+        rr.Mb   = p.(*RR_MB).Mb
+        return rr, true
 }
 
 type RR_MG struct {
@@ -242,6 +282,20 @@ func (rr *RR_MX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Pref)) + " " + rr.Mx
 }
 
+func (rr *RR_MX) SetString(s string) (*RR_MX, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_MX); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_MX).Hdr
+        rr.Pref = p.(*RR_MX).Pref
+        rr.Mx   = p.(*RR_MX).Mx
+        return rr, true
+}
+
 type RR_NS struct {
 	Hdr RR_Header
 	Ns  string "domain-name"
@@ -253,6 +307,19 @@ func (rr *RR_NS) Header() *RR_Header {
 
 func (rr *RR_NS) String() string {
 	return rr.Hdr.String() + rr.Ns
+}
+
+func (rr *RR_NS) SetString(s string) (*RR_NS, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_NS); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_NS).Hdr
+        rr.Ns   = p.(*RR_NS).Ns
+        return rr, true
 }
 
 type RR_PTR struct {
@@ -292,6 +359,24 @@ func (rr *RR_SOA) String() string {
 		" " + strconv.Itoa(int(rr.Minttl))
 }
 
+func (rr *RR_SOA) SetString(s string) (*RR_SOA, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_SOA); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_SOA).Hdr
+        rr.Ns   = p.(*RR_SOA).Ns
+        rr.Mbox   = p.(*RR_SOA).Mbox
+        rr.Refresh   = p.(*RR_SOA).Refresh
+        rr.Retry   = p.(*RR_SOA).Retry
+        rr.Expire   = p.(*RR_SOA).Expire
+        rr.Minttl   = p.(*RR_SOA).Minttl
+        return rr, true
+}
+
 type RR_TXT struct {
 	Hdr RR_Header
 	Txt string "txt"
@@ -303,6 +388,19 @@ func (rr *RR_TXT) Header() *RR_Header {
 
 func (rr *RR_TXT) String() string {
 	return rr.Hdr.String() + "\"" + rr.Txt + "\""
+}
+
+func (rr *RR_TXT) SetString(s string) (*RR_TXT, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_TXT); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_TXT).Hdr
+        rr.Txt   = p.(*RR_TXT).Txt
+        return rr, true
 }
 
 type RR_SRV struct {
@@ -395,6 +493,19 @@ func (rr *RR_A) String() string {
 	return rr.Hdr.String() + rr.A.String()
 }
 
+func (rr *RR_A) SetString(s string) (*RR_A, bool) {
+        p := parse(s)
+        if p == nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_A); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_A).Hdr
+        rr.A   = p.(*RR_A).A
+        return rr, true
+}
+
 type RR_AAAA struct {
 	Hdr  RR_Header
 	AAAA net.IP "AAAA"
@@ -406,6 +517,19 @@ func (rr *RR_AAAA) Header() *RR_Header {
 
 func (rr *RR_AAAA) String() string {
 	return rr.Hdr.String() + rr.AAAA.String()
+}
+
+func (rr *RR_AAAA) SetString(s string) (*RR_AAAA, bool) {
+        p := parse(s)
+        if p != nil {
+                return nil, false
+        }
+        if _, ok := p.(*RR_AAAA); !ok {
+                return nil, false
+        }
+        rr.Hdr = p.(*RR_AAAA).Hdr
+        rr.AAAA = p.(*RR_AAAA).AAAA
+        return rr, true
 }
 
 type RR_LOC struct {
@@ -789,6 +913,15 @@ func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
 	ti := time.SecondsToUTC(int64(t))
 	return ti.Format("20060102030405")
+}
+
+// Helper function for parsing from strings
+func parse(s string) RR {
+        rr, err := Zparse(strings.NewReader(s))
+        if err != nil {
+                return nil
+        }
+        return rr
 }
 
 // Map of constructors for each RR wire type.

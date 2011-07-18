@@ -138,3 +138,10 @@ func TestParse(t *testing.T) {
                 }
         }
 }
+
+// 
+func TestSetString(t *testing.T) {
+        a := new(RR_A)
+        a.SetString("miek.nl. IN A 127.0.0.1")
+        println(a.String())
+}

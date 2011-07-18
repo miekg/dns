@@ -9,7 +9,6 @@ import (
     "os"
     "io"
     "net"
-    "bufio"
     "strconv"
 )
 
@@ -60,7 +59,7 @@ func (to *token) reset() {
 }
 
 
-// line 64 "zparse.go"
+// line 63 "zparse.go"
 var z_start int = 1
 var z_first_final int = 102
 var z_error int = 0
@@ -68,15 +67,16 @@ var z_error int = 0
 var z_en_main int = 1
 
 
-// line 63 "zparse.rl"
+// line 62 "zparse.rl"
 
 
+// SetString
+// All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
 func Zparse(q io.Reader) (rr RR, err os.Error) {
-        r := bufio.NewReader(q)
         buf := make([]byte, _IOBUF) 
-        n, err := r.Read(buf)
+        n, err := q.Read(buf)
         if err != nil {
             return nil, err
         }
