@@ -121,12 +121,11 @@ func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
         if _, ok := r.(*RR_DNSKEY); !ok {
                 panic("did not read a DNSKEY")
         }
-        k1 := r.(*RR_DNSKEY)
-        k.Hdr = k1.Hdr
-        k.Flags = k1.Flags
-        k.Protocol = k1.Protocol
-        k.Algorithm = k1.Algorithm
-        k.PublicKey = k1.PublicKey
+        k.Hdr = r.(*RR_DNSKEY).Hdr
+        k.Flags = r.(*RR_DNSKEY).Flags
+        k.Protocol = r.(*RR_DNSKEY).Protocol
+        k.Algorithm = r.(*RR_DNSKEY).Algorithm
+        k.PublicKey = r.(*RR_DNSKEY).PublicKey
         return nil
 }
 
