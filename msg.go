@@ -488,7 +488,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		f := val.Type().Field(i)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
-		BadType:
 			//fmt.Fprintf(os.Stderr, "dns: unknown unpacking type %v", f.Type)
 			return len(msg), false
 		case reflect.Slice:
