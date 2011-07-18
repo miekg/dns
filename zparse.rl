@@ -116,10 +116,10 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                     | (qclass bl (ttl %setTtl bl)?)
                 )?;
 
-                # RDATA definitions
+                # RDATA definitions.
                 include "types.rl";
 
-                # RR definitions
+                # RR definitions.
                 rhs = (
                        ('A'i         %qtype bl t) %rdata_a
                      | ('AAAA'i      %qtype bl t) %rdata_aaaa

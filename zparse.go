@@ -126,7 +126,7 @@ tr176:
 // line 4 "types.rl"
 	{
             rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(data[mark:p])
+            rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
 	goto st2
 tr178:
@@ -135,7 +135,7 @@ tr178:
 // line 8 "types.rl"
 	{
             rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(data[mark:p])
+            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
 	goto st2
 tr180:
@@ -2397,7 +2397,7 @@ case 105:
 // line 4 "types.rl"
 	{
             rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(data[mark:p])
+            rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
 	break
 	case 107:
@@ -2406,7 +2406,7 @@ case 105:
 // line 8 "types.rl"
 	{
             rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(data[mark:p])
+            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
 	break
 	case 112:

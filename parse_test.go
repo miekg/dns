@@ -146,15 +146,26 @@ func TestParse(t *testing.T) {
 func TestSetString(t *testing.T) {
         a := new(RR_A)
         a.SetString("miek.nl. IN A 127.0.0.1")
-        t.Log(a.String())
+        if a.String() != "miek.nl.\t0\tIN\tA\t127.0.0.1" {
+                t.Log(a.String())
+                t.Fail()
+        }
         b := new(RR_AAAA)
         b.SetString("miek.nl. IN AAAA ::1")
-        t.Log(b.String())
+        if b.String() != "miek.nl.\t0\tIN\tAAAA\t::1" {
+                t.Log(b.String())
+                t.Fail()
+        }
         c := new(RR_MX)
         c.SetString("miek.nl. IN MX 10 miek.nl.")
-        t.Log(c.String())
+        if c.String() != "miek.nl.\t0\tIN\tMX\t10 miek.nl." {
+                t.Log(c.String())
+                t.Fail()
+        }
         d := new(RR_NS)
         d.SetString("miek.nl. IN NS ns1.miek.nl")
-        t.Log(d.String())
-        t.Fail()
+        if d.String() != "miek.nl.\t0\tIN\tNS\tns1.miek.nl" {
+                t.Log(d.String())
+                t.Fail()
+        }
 }

@@ -3,11 +3,11 @@
 
         action rdata_a {
             rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(data[mark:p])
+            rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
         action rdata_aaaa {
             rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(data[mark:p])
+            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
         action rdata_ns {
             rr.(*RR_NS).Hdr = *hdr
