@@ -147,25 +147,25 @@ func TestSetString(t *testing.T) {
         a := new(RR_A)
         a.SetString("miek.nl. IN A 127.0.0.1")
         if a.String() != "miek.nl.\t0\tIN\tA\t127.0.0.1" {
-                t.Log(a.String())
+                t.Log(a.String(), "miek.nl. IN A 127.0.0.1")
                 t.Fail()
         }
         b := new(RR_AAAA)
         b.SetString("miek.nl. IN AAAA ::1")
         if b.String() != "miek.nl.\t0\tIN\tAAAA\t::1" {
-                t.Log(b.String())
+                t.Log(b.String(), "miek.nl. IN AAAA ::1")
                 t.Fail()
         }
         c := new(RR_MX)
         c.SetString("miek.nl. IN MX 10 miek.nl.")
         if c.String() != "miek.nl.\t0\tIN\tMX\t10 miek.nl." {
-                t.Log(c.String())
+                t.Log(c.String(), "miek.nl. IN MX 10 miek.nl.")
                 t.Fail()
         }
         d := new(RR_NS)
         d.SetString("miek.nl. IN NS ns1.miek.nl")
         if d.String() != "miek.nl.\t0\tIN\tNS\tns1.miek.nl" {
-                t.Log(d.String())
+                t.Log(d.String(), "miek.nl. IN NS ns1.miek.nl")
                 t.Fail()
         }
 }

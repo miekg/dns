@@ -521,7 +521,7 @@ func (rr *RR_AAAA) String() string {
 
 func (rr *RR_AAAA) SetString(s string) (*RR_AAAA, bool) {
         p := parse(s)
-        if p != nil {
+        if p == nil {
                 return nil, false
         }
         if _, ok := p.(*RR_AAAA); !ok {

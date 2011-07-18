@@ -69,6 +69,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
         buf := make([]byte, _IOBUF) 
         n, err := q.Read(buf)
         if err != nil {
+            println("RETURNING HERE\n")
             return nil, err
         }
         buf = buf[:n]
@@ -94,7 +95,8 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
                     if ! known {
-                        // ...
+                        println("Unknown type seen: " + data[mark:p])
+                        // panic?
                     }
                     rr = mk()
                     hdr.Rrtype = i
@@ -103,11 +105,11 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 ttl         = digit+ >mark;
                 bl          = [ \t]+ %mark;
-                qname       = [a-zA-Z0-9.\\]+ %qname;
-                # If I use this in the definitions at the end, things break...
-                tb          = [a-zA-Z0-9.\\ ]+ $1 %0 %textblank;
-#                t           = [a-zA-Z0-9.\\]+ $1 %0 %text;
-                t           = [a-zA-Z0-9.\\/+=]+ $1 %0 %text;
+                qname       = [a-zA-Z0-9.\\_]+ %qname;
+                # If I use this in the definitions at the end, things break.
+                # 6l seems to hang when compiling the resulting .go file...
+                tb          = [ a-zA-Z0-9.\\/+=:]+ $1 %0 %textblank;
+                t           = [a-zA-Z0-9.\\/+=:]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
                 comment     = /^;/;
 
@@ -142,11 +144,11 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
-                        //return nil, os.ErrorString("unexpected eof")
-                        return nil, nil
+                        println("unexpected eof")
+                        return rr, nil
                 } else {
-                        //return nil, os.ErrorString(fmt.Sprintf("error at position %d", p))
-                        return nil, nil
+                        println("error at position ", p)
+                        return rr, nil
                 }
         }
         return rr, nil
