@@ -65,23 +65,24 @@ func (to *token) reset() {
 // All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
-func Zparse(q io.Reader) (rr RR, err os.Error) {
+func Zparse(q io.Reader) (z *Zone, err os.Error) {
         buf := make([]byte, _IOBUF) 
         n, err := q.Read(buf)
         if err != nil {
-            println("RETURNING HERE\n")
             return nil, err
         }
         buf = buf[:n]
+        z = new(Zone)
 
         data := string(buf)
         cs, p, pe, eof := 0, 0, len(data), len(data)
         mark := 0
         hdr := new(RR_Header)
         tok := newToken()
+        var rr RR
 
         %%{
-                # can't do comments yet
+                # can't do comments yet TODO
                 action mark      { mark = p }
                 action qname     { hdr.Name = data[mark:p] }
                 action qclass    { hdr.Class = Str_class[data[mark:p]] }
@@ -90,6 +91,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                 action number    { tok.pushInt(data[mark:p]) }
                 action text      { tok.pushString(data[mark:p]) }
                 action textblank { tok.pushString(data[mark:p]) }
+                action set       { z.Push(rr); tok.reset(); println("setting") }
 
                 action qtype    { 
                     i := Str_rr[data[mark:p]]
@@ -105,11 +107,12 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 ttl         = digit+ >mark;
                 bl          = [ \t]+ %mark;
-                qname       = [a-zA-Z0-9.\\_]+ %qname;
+                qname       = [\-a-zA-Z0-9.\\_]+ %qname;
                 # If I use this in the definitions at the end, things break.
                 # 6l seems to hang when compiling the resulting .go file...
-                tb          = [ a-zA-Z0-9.\\/+=:]+ $1 %0 %textblank;
-                t           = [a-zA-Z0-9.\\/+=:]+ $1 %0 %text;
+                # tb is WITH the space
+                tb          = [\-a-zA-Z0-9.\\/+=: ]+ $1 %0 %textblank;
+                t           = [\-a-zA-Z0-9.\\/+=:]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
                 comment     = /^;/;
 
@@ -132,7 +135,7 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                      | ('DS'i        %qtype bl n bl n bl n bl t) %rdata_ds
                      | ('DNSKEY'i    %qtype bl n bl n bl n bl t) %rdata_dnskey
                      | ('RRSIG'i     %qtype bl n bl n bl n bl n bl n bl n bl n bl t bl t) %rdata_rrsig
-                );
+                ) %set;
 
                 rr = lhs rhs;
                 main := rr+;
@@ -145,11 +148,11 @@ func Zparse(q io.Reader) (rr RR, err os.Error) {
                 // No clue what I'm doing what so ever
                 if p == pe {
                         println("unexpected eof")
-                        return rr, nil
+                        return z, nil
                 } else {
                         println("error at position ", p)
-                        return rr, nil
+                        return z, nil
                 }
         }
-        return rr, nil
+        return z, nil
 }

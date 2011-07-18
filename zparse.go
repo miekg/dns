@@ -74,26 +74,27 @@ var z_en_main int = 1
 // All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
-func Zparse(q io.Reader) (rr RR, err os.Error) {
+func Zparse(q io.Reader) (z *Zone, err os.Error) {
         buf := make([]byte, _IOBUF) 
         n, err := q.Read(buf)
         if err != nil {
-            println("RETURNING HERE\n")
             return nil, err
         }
         buf = buf[:n]
+        z = new(Zone)
 
         data := string(buf)
         cs, p, pe, eof := 0, 0, len(data), len(data)
         mark := 0
         hdr := new(RR_Header)
         tok := newToken()
+        var rr RR
 
         
-// line 94 "zparse.go"
+// line 95 "zparse.go"
 	cs = z_start
 
-// line 97 "zparse.go"
+// line 98 "zparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
@@ -103,14 +104,17 @@ case 1:
 	switch data[p] {
 		case 9: goto st2
 		case 32: goto st2
-		case 46: goto st7
 		case 92: goto st7
 		case 95: goto st7
 	}
-	if data[p] < 65 {
-		if 48 <= data[p] && data[p] <= 57 { goto st7 }
-	} else if data[p] > 90 {
-		if 97 <= data[p] && data[p] <= 122 { goto st7 }
+	if data[p] < 48 {
+		if 45 <= data[p] && data[p] <= 46 { goto st7 }
+	} else if data[p] > 57 {
+		if data[p] > 90 {
+			if 97 <= data[p] && data[p] <= 122 { goto st7 }
+		} else if data[p] >= 65 {
+			goto st7
+		}
 	} else {
 		goto st7
 	}
@@ -119,38 +123,44 @@ st0:
 cs = 0;
 	goto _out;
 tr30:
-// line 86 "zparse.rl"
+// line 87 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st2
 tr176:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
             rr.(*RR_A).Hdr = *hdr
             rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr179:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 8 "types.rl"
 	{
             rr.(*RR_AAAA).Hdr = *hdr
             rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr182:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 16 "types.rl"
 	{
             rr.(*RR_CNAME).Hdr = *hdr
             rr.(*RR_CNAME).Cname = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr185:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 42 "types.rl"
 	{
@@ -160,9 +170,11 @@ tr185:
             rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
             rr.(*RR_DNSKEY).PublicKey = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr188:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 35 "types.rl"
 	{
@@ -172,9 +184,11 @@ tr188:
             rr.(*RR_DS).DigestType = uint8(tok.N[2])
             rr.(*RR_DS).Digest = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr191:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 30 "types.rl"
 	{
@@ -182,18 +196,22 @@ tr191:
             rr.(*RR_MX).Pref = uint16(tok.N[0])
             rr.(*RR_MX).Mx = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr194:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 12 "types.rl"
 	{
             rr.(*RR_NS).Hdr = *hdr
             rr.(*RR_NS).Ns = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr197:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 49 "types.rl"
 	{
@@ -208,9 +226,11 @@ tr197:
             rr.(*RR_RRSIG).SignerName = tok.T[0]
             rr.(*RR_RRSIG).Signature = tok.T[1]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 tr200:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 20 "types.rl"
 	{
@@ -223,13 +243,15 @@ tr200:
             rr.(*RR_SOA).Expire = uint32(tok.N[3])
             rr.(*RR_SOA).Minttl = uint32(tok.N[4])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st2
 st2:
 	p++
 	if p == pe { goto _test_eof2 }
 	fallthrough
 case 2:
-// line 233 "zparse.go"
+// line 255 "zparse.go"
 	switch data[p] {
 		case 9: goto st2
 		case 32: goto st2
@@ -255,9 +277,9 @@ case 2:
 	if 48 <= data[p] && data[p] <= 57 { goto tr3 }
 	goto st0
 tr3:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st3
 st3:
@@ -265,7 +287,7 @@ st3:
 	if p == pe { goto _test_eof3 }
 	fallthrough
 case 3:
-// line 269 "zparse.go"
+// line 291 "zparse.go"
 	switch data[p] {
 		case 9: goto tr13
 		case 32: goto tr13
@@ -273,7 +295,7 @@ case 3:
 	if 48 <= data[p] && data[p] <= 57 { goto st3 }
 	goto st0
 tr13:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st4
 st4:
@@ -281,7 +303,7 @@ st4:
 	if p == pe { goto _test_eof4 }
 	fallthrough
 case 4:
-// line 285 "zparse.go"
+// line 307 "zparse.go"
 	switch data[p] {
 		case 9: goto st4
 		case 32: goto st4
@@ -306,7 +328,7 @@ case 4:
 	}
 	goto st0
 tr16:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st5
 st5:
@@ -314,7 +336,7 @@ st5:
 	if p == pe { goto _test_eof5 }
 	fallthrough
 case 5:
-// line 318 "zparse.go"
+// line 340 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -325,7 +347,7 @@ case 5:
 	}
 	goto st0
 tr25:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -342,7 +364,7 @@ st6:
 	if p == pe { goto _test_eof6 }
 	fallthrough
 case 6:
-// line 346 "zparse.go"
+// line 368 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 32: goto st6
@@ -351,7 +373,7 @@ case 6:
 		case 92: goto tr29
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr29 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr29 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr29 }
 	} else {
@@ -359,7 +381,7 @@ case 6:
 	}
 	goto st0
 tr29:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st106
 st106:
@@ -367,7 +389,7 @@ st106:
 	if p == pe { goto _test_eof106 }
 	fallthrough
 case 106:
-// line 371 "zparse.go"
+// line 393 "zparse.go"
 	switch data[p] {
 		case 9: goto tr176
 		case 32: goto tr176
@@ -377,7 +399,7 @@ case 106:
 		case 95: goto tr178
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st106 }
+		if 45 <= data[p] && data[p] <= 58 { goto st106 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st106 }
 	} else {
@@ -385,34 +407,40 @@ case 106:
 	}
 	goto st0
 tr178:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
             rr.(*RR_A).Hdr = *hdr
             rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr181:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 8 "types.rl"
 	{
             rr.(*RR_AAAA).Hdr = *hdr
             rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr184:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 16 "types.rl"
 	{
             rr.(*RR_CNAME).Hdr = *hdr
             rr.(*RR_CNAME).Cname = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr187:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 42 "types.rl"
 	{
@@ -422,9 +450,11 @@ tr187:
             rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
             rr.(*RR_DNSKEY).PublicKey = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr190:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 35 "types.rl"
 	{
@@ -434,9 +464,11 @@ tr190:
             rr.(*RR_DS).DigestType = uint8(tok.N[2])
             rr.(*RR_DS).Digest = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr193:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 30 "types.rl"
 	{
@@ -444,18 +476,22 @@ tr193:
             rr.(*RR_MX).Pref = uint16(tok.N[0])
             rr.(*RR_MX).Mx = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr196:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 12 "types.rl"
 	{
             rr.(*RR_NS).Hdr = *hdr
             rr.(*RR_NS).Ns = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr199:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 49 "types.rl"
 	{
@@ -470,9 +506,11 @@ tr199:
             rr.(*RR_RRSIG).SignerName = tok.T[0]
             rr.(*RR_RRSIG).Signature = tok.T[1]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 tr201:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 20 "types.rl"
 	{
@@ -485,24 +523,29 @@ tr201:
             rr.(*RR_SOA).Expire = uint32(tok.N[3])
             rr.(*RR_SOA).Minttl = uint32(tok.N[4])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st7
 st7:
 	p++
 	if p == pe { goto _test_eof7 }
 	fallthrough
 case 7:
-// line 495 "zparse.go"
+// line 535 "zparse.go"
 	switch data[p] {
 		case 9: goto tr30
 		case 32: goto tr30
-		case 46: goto st7
 		case 92: goto st7
 		case 95: goto st7
 	}
-	if data[p] < 65 {
-		if 48 <= data[p] && data[p] <= 57 { goto st7 }
-	} else if data[p] > 90 {
-		if 97 <= data[p] && data[p] <= 122 { goto st7 }
+	if data[p] < 48 {
+		if 45 <= data[p] && data[p] <= 46 { goto st7 }
+	} else if data[p] > 57 {
+		if data[p] > 90 {
+			if 97 <= data[p] && data[p] <= 122 { goto st7 }
+		} else if data[p] >= 65 {
+			goto st7
+		}
 	} else {
 		goto st7
 	}
@@ -538,7 +581,7 @@ case 10:
 	}
 	goto st0
 tr33:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -555,7 +598,7 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 559 "zparse.go"
+// line 602 "zparse.go"
 	switch data[p] {
 		case 9: goto st11
 		case 32: goto st11
@@ -564,7 +607,7 @@ case 11:
 		case 92: goto tr35
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr35 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr35 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr35 }
 	} else {
@@ -572,7 +615,7 @@ case 11:
 	}
 	goto st0
 tr35:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st107
 st107:
@@ -580,7 +623,7 @@ st107:
 	if p == pe { goto _test_eof107 }
 	fallthrough
 case 107:
-// line 584 "zparse.go"
+// line 627 "zparse.go"
 	switch data[p] {
 		case 9: goto tr179
 		case 32: goto tr179
@@ -590,7 +633,7 @@ case 107:
 		case 95: goto tr181
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st107 }
+		if 45 <= data[p] && data[p] <= 58 { goto st107 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st107 }
 	} else {
@@ -618,11 +661,11 @@ case 13:
 	}
 	goto st0
 tr172:
-// line 89 "zparse.rl"
+// line 90 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st14
 tr37:
-// line 87 "zparse.rl"
+// line 88 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st14
 st14:
@@ -630,7 +673,7 @@ st14:
 	if p == pe { goto _test_eof14 }
 	fallthrough
 case 14:
-// line 634 "zparse.go"
+// line 677 "zparse.go"
 	switch data[p] {
 		case 9: goto st14
 		case 32: goto st14
@@ -651,7 +694,7 @@ case 14:
 	}
 	goto st0
 tr39:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st15
 st15:
@@ -659,7 +702,7 @@ st15:
 	if p == pe { goto _test_eof15 }
 	fallthrough
 case 15:
-// line 663 "zparse.go"
+// line 706 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -668,7 +711,7 @@ case 15:
 	}
 	goto st0
 tr40:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st16
 st16:
@@ -676,7 +719,7 @@ st16:
 	if p == pe { goto _test_eof16 }
 	fallthrough
 case 16:
-// line 680 "zparse.go"
+// line 723 "zparse.go"
 	switch data[p] {
 		case 78: goto st17
 		case 110: goto st17
@@ -723,7 +766,7 @@ case 20:
 	}
 	goto st0
 tr46:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -740,7 +783,7 @@ st21:
 	if p == pe { goto _test_eof21 }
 	fallthrough
 case 21:
-// line 744 "zparse.go"
+// line 787 "zparse.go"
 	switch data[p] {
 		case 9: goto st21
 		case 32: goto st21
@@ -749,7 +792,7 @@ case 21:
 		case 92: goto tr48
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr48 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr48 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr48 }
 	} else {
@@ -757,7 +800,7 @@ case 21:
 	}
 	goto st0
 tr48:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st108
 st108:
@@ -765,7 +808,7 @@ st108:
 	if p == pe { goto _test_eof108 }
 	fallthrough
 case 108:
-// line 769 "zparse.go"
+// line 812 "zparse.go"
 	switch data[p] {
 		case 9: goto tr182
 		case 32: goto tr182
@@ -775,7 +818,7 @@ case 108:
 		case 95: goto tr184
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st108 }
+		if 45 <= data[p] && data[p] <= 58 { goto st108 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st108 }
 	} else {
@@ -783,13 +826,13 @@ case 108:
 	}
 	goto st0
 tr6:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st22
 tr18:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st22
 st22:
@@ -797,7 +840,7 @@ st22:
 	if p == pe { goto _test_eof22 }
 	fallthrough
 case 22:
-// line 801 "zparse.go"
+// line 844 "zparse.go"
 	switch data[p] {
 		case 78: goto st23
 		case 83: goto st35
@@ -856,7 +899,7 @@ case 27:
 	}
 	goto st0
 tr55:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -873,7 +916,7 @@ st28:
 	if p == pe { goto _test_eof28 }
 	fallthrough
 case 28:
-// line 877 "zparse.go"
+// line 920 "zparse.go"
 	switch data[p] {
 		case 9: goto st28
 		case 32: goto st28
@@ -881,7 +924,7 @@ case 28:
 	if 48 <= data[p] && data[p] <= 57 { goto tr57 }
 	goto st0
 tr57:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st29
 st29:
@@ -889,7 +932,7 @@ st29:
 	if p == pe { goto _test_eof29 }
 	fallthrough
 case 29:
-// line 893 "zparse.go"
+// line 936 "zparse.go"
 	switch data[p] {
 		case 9: goto tr58
 		case 32: goto tr58
@@ -897,7 +940,7 @@ case 29:
 	if 48 <= data[p] && data[p] <= 57 { goto st29 }
 	goto st0
 tr58:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st30
 st30:
@@ -905,7 +948,7 @@ st30:
 	if p == pe { goto _test_eof30 }
 	fallthrough
 case 30:
-// line 909 "zparse.go"
+// line 952 "zparse.go"
 	switch data[p] {
 		case 9: goto st30
 		case 32: goto st30
@@ -913,7 +956,7 @@ case 30:
 	if 48 <= data[p] && data[p] <= 57 { goto tr61 }
 	goto st0
 tr61:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st31
 st31:
@@ -921,7 +964,7 @@ st31:
 	if p == pe { goto _test_eof31 }
 	fallthrough
 case 31:
-// line 925 "zparse.go"
+// line 968 "zparse.go"
 	switch data[p] {
 		case 9: goto tr62
 		case 32: goto tr62
@@ -929,7 +972,7 @@ case 31:
 	if 48 <= data[p] && data[p] <= 57 { goto st31 }
 	goto st0
 tr62:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st32
 st32:
@@ -937,7 +980,7 @@ st32:
 	if p == pe { goto _test_eof32 }
 	fallthrough
 case 32:
-// line 941 "zparse.go"
+// line 984 "zparse.go"
 	switch data[p] {
 		case 9: goto st32
 		case 32: goto st32
@@ -945,7 +988,7 @@ case 32:
 	if 48 <= data[p] && data[p] <= 57 { goto tr65 }
 	goto st0
 tr65:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st33
 st33:
@@ -953,7 +996,7 @@ st33:
 	if p == pe { goto _test_eof33 }
 	fallthrough
 case 33:
-// line 957 "zparse.go"
+// line 1000 "zparse.go"
 	switch data[p] {
 		case 9: goto tr66
 		case 32: goto tr66
@@ -961,7 +1004,7 @@ case 33:
 	if 48 <= data[p] && data[p] <= 57 { goto st33 }
 	goto st0
 tr66:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st34
 st34:
@@ -969,7 +1012,7 @@ st34:
 	if p == pe { goto _test_eof34 }
 	fallthrough
 case 34:
-// line 973 "zparse.go"
+// line 1016 "zparse.go"
 	switch data[p] {
 		case 9: goto st34
 		case 32: goto st34
@@ -978,7 +1021,7 @@ case 34:
 		case 92: goto tr69
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr69 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr69 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr69 }
 	} else {
@@ -986,7 +1029,7 @@ case 34:
 	}
 	goto st0
 tr69:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st109
 st109:
@@ -994,7 +1037,7 @@ st109:
 	if p == pe { goto _test_eof109 }
 	fallthrough
 case 109:
-// line 998 "zparse.go"
+// line 1041 "zparse.go"
 	switch data[p] {
 		case 9: goto tr185
 		case 32: goto tr185
@@ -1004,7 +1047,7 @@ case 109:
 		case 95: goto tr187
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st109 }
+		if 45 <= data[p] && data[p] <= 58 { goto st109 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st109 }
 	} else {
@@ -1022,7 +1065,7 @@ case 35:
 	}
 	goto st0
 tr70:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1039,7 +1082,7 @@ st36:
 	if p == pe { goto _test_eof36 }
 	fallthrough
 case 36:
-// line 1043 "zparse.go"
+// line 1086 "zparse.go"
 	switch data[p] {
 		case 9: goto st36
 		case 32: goto st36
@@ -1047,7 +1090,7 @@ case 36:
 	if 48 <= data[p] && data[p] <= 57 { goto tr72 }
 	goto st0
 tr72:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st37
 st37:
@@ -1055,7 +1098,7 @@ st37:
 	if p == pe { goto _test_eof37 }
 	fallthrough
 case 37:
-// line 1059 "zparse.go"
+// line 1102 "zparse.go"
 	switch data[p] {
 		case 9: goto tr73
 		case 32: goto tr73
@@ -1063,7 +1106,7 @@ case 37:
 	if 48 <= data[p] && data[p] <= 57 { goto st37 }
 	goto st0
 tr73:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st38
 st38:
@@ -1071,7 +1114,7 @@ st38:
 	if p == pe { goto _test_eof38 }
 	fallthrough
 case 38:
-// line 1075 "zparse.go"
+// line 1118 "zparse.go"
 	switch data[p] {
 		case 9: goto st38
 		case 32: goto st38
@@ -1079,7 +1122,7 @@ case 38:
 	if 48 <= data[p] && data[p] <= 57 { goto tr76 }
 	goto st0
 tr76:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st39
 st39:
@@ -1087,7 +1130,7 @@ st39:
 	if p == pe { goto _test_eof39 }
 	fallthrough
 case 39:
-// line 1091 "zparse.go"
+// line 1134 "zparse.go"
 	switch data[p] {
 		case 9: goto tr77
 		case 32: goto tr77
@@ -1095,7 +1138,7 @@ case 39:
 	if 48 <= data[p] && data[p] <= 57 { goto st39 }
 	goto st0
 tr77:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st40
 st40:
@@ -1103,7 +1146,7 @@ st40:
 	if p == pe { goto _test_eof40 }
 	fallthrough
 case 40:
-// line 1107 "zparse.go"
+// line 1150 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
 		case 32: goto st40
@@ -1111,7 +1154,7 @@ case 40:
 	if 48 <= data[p] && data[p] <= 57 { goto tr80 }
 	goto st0
 tr80:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st41
 st41:
@@ -1119,7 +1162,7 @@ st41:
 	if p == pe { goto _test_eof41 }
 	fallthrough
 case 41:
-// line 1123 "zparse.go"
+// line 1166 "zparse.go"
 	switch data[p] {
 		case 9: goto tr81
 		case 32: goto tr81
@@ -1127,7 +1170,7 @@ case 41:
 	if 48 <= data[p] && data[p] <= 57 { goto st41 }
 	goto st0
 tr81:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st42
 st42:
@@ -1135,7 +1178,7 @@ st42:
 	if p == pe { goto _test_eof42 }
 	fallthrough
 case 42:
-// line 1139 "zparse.go"
+// line 1182 "zparse.go"
 	switch data[p] {
 		case 9: goto st42
 		case 32: goto st42
@@ -1144,7 +1187,7 @@ case 42:
 		case 92: goto tr84
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr84 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr84 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr84 }
 	} else {
@@ -1152,7 +1195,7 @@ case 42:
 	}
 	goto st0
 tr84:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st110
 st110:
@@ -1160,7 +1203,7 @@ st110:
 	if p == pe { goto _test_eof110 }
 	fallthrough
 case 110:
-// line 1164 "zparse.go"
+// line 1207 "zparse.go"
 	switch data[p] {
 		case 9: goto tr188
 		case 32: goto tr188
@@ -1170,7 +1213,7 @@ case 110:
 		case 95: goto tr190
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st110 }
+		if 45 <= data[p] && data[p] <= 58 { goto st110 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st110 }
 	} else {
@@ -1178,13 +1221,13 @@ case 110:
 	}
 	goto st0
 tr9:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st43
 tr21:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st43
 st43:
@@ -1192,7 +1235,7 @@ st43:
 	if p == pe { goto _test_eof43 }
 	fallthrough
 case 43:
-// line 1196 "zparse.go"
+// line 1239 "zparse.go"
 	switch data[p] {
 		case 88: goto st44
 		case 120: goto st44
@@ -1209,7 +1252,7 @@ case 44:
 	}
 	goto st0
 tr86:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1226,7 +1269,7 @@ st45:
 	if p == pe { goto _test_eof45 }
 	fallthrough
 case 45:
-// line 1230 "zparse.go"
+// line 1273 "zparse.go"
 	switch data[p] {
 		case 9: goto st45
 		case 32: goto st45
@@ -1234,7 +1277,7 @@ case 45:
 	if 48 <= data[p] && data[p] <= 57 { goto tr88 }
 	goto st0
 tr88:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st46
 st46:
@@ -1242,7 +1285,7 @@ st46:
 	if p == pe { goto _test_eof46 }
 	fallthrough
 case 46:
-// line 1246 "zparse.go"
+// line 1289 "zparse.go"
 	switch data[p] {
 		case 9: goto tr89
 		case 32: goto tr89
@@ -1250,7 +1293,7 @@ case 46:
 	if 48 <= data[p] && data[p] <= 57 { goto st46 }
 	goto st0
 tr89:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st47
 st47:
@@ -1258,7 +1301,7 @@ st47:
 	if p == pe { goto _test_eof47 }
 	fallthrough
 case 47:
-// line 1262 "zparse.go"
+// line 1305 "zparse.go"
 	switch data[p] {
 		case 9: goto st47
 		case 32: goto st47
@@ -1267,7 +1310,7 @@ case 47:
 		case 92: goto tr92
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr92 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr92 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr92 }
 	} else {
@@ -1275,7 +1318,7 @@ case 47:
 	}
 	goto st0
 tr92:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st111
 st111:
@@ -1283,7 +1326,7 @@ st111:
 	if p == pe { goto _test_eof111 }
 	fallthrough
 case 111:
-// line 1287 "zparse.go"
+// line 1330 "zparse.go"
 	switch data[p] {
 		case 9: goto tr191
 		case 32: goto tr191
@@ -1293,7 +1336,7 @@ case 111:
 		case 95: goto tr193
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st111 }
+		if 45 <= data[p] && data[p] <= 58 { goto st111 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st111 }
 	} else {
@@ -1301,7 +1344,7 @@ case 111:
 	}
 	goto st0
 tr41:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st48
 st48:
@@ -1309,7 +1352,7 @@ st48:
 	if p == pe { goto _test_eof48 }
 	fallthrough
 case 48:
-// line 1313 "zparse.go"
+// line 1356 "zparse.go"
 	switch data[p] {
 		case 83: goto st49
 		case 115: goto st49
@@ -1326,7 +1369,7 @@ case 49:
 	}
 	goto st0
 tr94:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1343,7 +1386,7 @@ st50:
 	if p == pe { goto _test_eof50 }
 	fallthrough
 case 50:
-// line 1347 "zparse.go"
+// line 1390 "zparse.go"
 	switch data[p] {
 		case 9: goto st50
 		case 32: goto st50
@@ -1352,7 +1395,7 @@ case 50:
 		case 92: goto tr96
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr96 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr96 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr96 }
 	} else {
@@ -1360,7 +1403,7 @@ case 50:
 	}
 	goto st0
 tr96:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st112
 st112:
@@ -1368,7 +1411,7 @@ st112:
 	if p == pe { goto _test_eof112 }
 	fallthrough
 case 112:
-// line 1372 "zparse.go"
+// line 1415 "zparse.go"
 	switch data[p] {
 		case 9: goto tr194
 		case 32: goto tr194
@@ -1378,7 +1421,7 @@ case 112:
 		case 95: goto tr196
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st112 }
+		if 45 <= data[p] && data[p] <= 58 { goto st112 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st112 }
 	} else {
@@ -1386,13 +1429,13 @@ case 112:
 	}
 	goto st0
 tr11:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st51
 tr23:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st51
 st51:
@@ -1400,7 +1443,7 @@ st51:
 	if p == pe { goto _test_eof51 }
 	fallthrough
 case 51:
-// line 1404 "zparse.go"
+// line 1447 "zparse.go"
 	switch data[p] {
 		case 82: goto st52
 		case 114: goto st52
@@ -1447,7 +1490,7 @@ case 55:
 	}
 	goto st0
 tr101:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1464,7 +1507,7 @@ st56:
 	if p == pe { goto _test_eof56 }
 	fallthrough
 case 56:
-// line 1468 "zparse.go"
+// line 1511 "zparse.go"
 	switch data[p] {
 		case 9: goto st56
 		case 32: goto st56
@@ -1472,7 +1515,7 @@ case 56:
 	if 48 <= data[p] && data[p] <= 57 { goto tr103 }
 	goto st0
 tr103:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st57
 st57:
@@ -1480,7 +1523,7 @@ st57:
 	if p == pe { goto _test_eof57 }
 	fallthrough
 case 57:
-// line 1484 "zparse.go"
+// line 1527 "zparse.go"
 	switch data[p] {
 		case 9: goto tr104
 		case 32: goto tr104
@@ -1488,7 +1531,7 @@ case 57:
 	if 48 <= data[p] && data[p] <= 57 { goto st57 }
 	goto st0
 tr104:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st58
 st58:
@@ -1496,7 +1539,7 @@ st58:
 	if p == pe { goto _test_eof58 }
 	fallthrough
 case 58:
-// line 1500 "zparse.go"
+// line 1543 "zparse.go"
 	switch data[p] {
 		case 9: goto st58
 		case 32: goto st58
@@ -1504,7 +1547,7 @@ case 58:
 	if 48 <= data[p] && data[p] <= 57 { goto tr107 }
 	goto st0
 tr107:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st59
 st59:
@@ -1512,7 +1555,7 @@ st59:
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-// line 1516 "zparse.go"
+// line 1559 "zparse.go"
 	switch data[p] {
 		case 9: goto tr108
 		case 32: goto tr108
@@ -1520,7 +1563,7 @@ case 59:
 	if 48 <= data[p] && data[p] <= 57 { goto st59 }
 	goto st0
 tr108:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st60
 st60:
@@ -1528,7 +1571,7 @@ st60:
 	if p == pe { goto _test_eof60 }
 	fallthrough
 case 60:
-// line 1532 "zparse.go"
+// line 1575 "zparse.go"
 	switch data[p] {
 		case 9: goto st60
 		case 32: goto st60
@@ -1536,7 +1579,7 @@ case 60:
 	if 48 <= data[p] && data[p] <= 57 { goto tr111 }
 	goto st0
 tr111:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st61
 st61:
@@ -1544,7 +1587,7 @@ st61:
 	if p == pe { goto _test_eof61 }
 	fallthrough
 case 61:
-// line 1548 "zparse.go"
+// line 1591 "zparse.go"
 	switch data[p] {
 		case 9: goto tr112
 		case 32: goto tr112
@@ -1552,7 +1595,7 @@ case 61:
 	if 48 <= data[p] && data[p] <= 57 { goto st61 }
 	goto st0
 tr112:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st62
 st62:
@@ -1560,7 +1603,7 @@ st62:
 	if p == pe { goto _test_eof62 }
 	fallthrough
 case 62:
-// line 1564 "zparse.go"
+// line 1607 "zparse.go"
 	switch data[p] {
 		case 9: goto st62
 		case 32: goto st62
@@ -1568,7 +1611,7 @@ case 62:
 	if 48 <= data[p] && data[p] <= 57 { goto tr115 }
 	goto st0
 tr115:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st63
 st63:
@@ -1576,7 +1619,7 @@ st63:
 	if p == pe { goto _test_eof63 }
 	fallthrough
 case 63:
-// line 1580 "zparse.go"
+// line 1623 "zparse.go"
 	switch data[p] {
 		case 9: goto tr116
 		case 32: goto tr116
@@ -1584,7 +1627,7 @@ case 63:
 	if 48 <= data[p] && data[p] <= 57 { goto st63 }
 	goto st0
 tr116:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st64
 st64:
@@ -1592,7 +1635,7 @@ st64:
 	if p == pe { goto _test_eof64 }
 	fallthrough
 case 64:
-// line 1596 "zparse.go"
+// line 1639 "zparse.go"
 	switch data[p] {
 		case 9: goto st64
 		case 32: goto st64
@@ -1600,7 +1643,7 @@ case 64:
 	if 48 <= data[p] && data[p] <= 57 { goto tr119 }
 	goto st0
 tr119:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st65
 st65:
@@ -1608,7 +1651,7 @@ st65:
 	if p == pe { goto _test_eof65 }
 	fallthrough
 case 65:
-// line 1612 "zparse.go"
+// line 1655 "zparse.go"
 	switch data[p] {
 		case 9: goto tr120
 		case 32: goto tr120
@@ -1616,7 +1659,7 @@ case 65:
 	if 48 <= data[p] && data[p] <= 57 { goto st65 }
 	goto st0
 tr120:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st66
 st66:
@@ -1624,7 +1667,7 @@ st66:
 	if p == pe { goto _test_eof66 }
 	fallthrough
 case 66:
-// line 1628 "zparse.go"
+// line 1671 "zparse.go"
 	switch data[p] {
 		case 9: goto st66
 		case 32: goto st66
@@ -1632,7 +1675,7 @@ case 66:
 	if 48 <= data[p] && data[p] <= 57 { goto tr123 }
 	goto st0
 tr123:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st67
 st67:
@@ -1640,7 +1683,7 @@ st67:
 	if p == pe { goto _test_eof67 }
 	fallthrough
 case 67:
-// line 1644 "zparse.go"
+// line 1687 "zparse.go"
 	switch data[p] {
 		case 9: goto tr124
 		case 32: goto tr124
@@ -1648,7 +1691,7 @@ case 67:
 	if 48 <= data[p] && data[p] <= 57 { goto st67 }
 	goto st0
 tr124:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st68
 st68:
@@ -1656,7 +1699,7 @@ st68:
 	if p == pe { goto _test_eof68 }
 	fallthrough
 case 68:
-// line 1660 "zparse.go"
+// line 1703 "zparse.go"
 	switch data[p] {
 		case 9: goto st68
 		case 32: goto st68
@@ -1664,7 +1707,7 @@ case 68:
 	if 48 <= data[p] && data[p] <= 57 { goto tr127 }
 	goto st0
 tr127:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st69
 st69:
@@ -1672,7 +1715,7 @@ st69:
 	if p == pe { goto _test_eof69 }
 	fallthrough
 case 69:
-// line 1676 "zparse.go"
+// line 1719 "zparse.go"
 	switch data[p] {
 		case 9: goto tr128
 		case 32: goto tr128
@@ -1680,7 +1723,7 @@ case 69:
 	if 48 <= data[p] && data[p] <= 57 { goto st69 }
 	goto st0
 tr128:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st70
 st70:
@@ -1688,7 +1731,7 @@ st70:
 	if p == pe { goto _test_eof70 }
 	fallthrough
 case 70:
-// line 1692 "zparse.go"
+// line 1735 "zparse.go"
 	switch data[p] {
 		case 9: goto st70
 		case 32: goto st70
@@ -1697,7 +1740,7 @@ case 70:
 		case 92: goto tr131
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr131 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr131 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr131 }
 	} else {
@@ -1705,7 +1748,7 @@ case 70:
 	}
 	goto st0
 tr131:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st71
 st71:
@@ -1713,7 +1756,7 @@ st71:
 	if p == pe { goto _test_eof71 }
 	fallthrough
 case 71:
-// line 1717 "zparse.go"
+// line 1760 "zparse.go"
 	switch data[p] {
 		case 9: goto tr132
 		case 32: goto tr132
@@ -1722,7 +1765,7 @@ case 71:
 		case 92: goto st71
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st71 }
+		if 45 <= data[p] && data[p] <= 58 { goto st71 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st71 }
 	} else {
@@ -1730,7 +1773,7 @@ case 71:
 	}
 	goto st0
 tr132:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st72
 st72:
@@ -1738,7 +1781,7 @@ st72:
 	if p == pe { goto _test_eof72 }
 	fallthrough
 case 72:
-// line 1742 "zparse.go"
+// line 1785 "zparse.go"
 	switch data[p] {
 		case 9: goto st72
 		case 32: goto st72
@@ -1747,7 +1790,7 @@ case 72:
 		case 92: goto tr135
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr135 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr135 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr135 }
 	} else {
@@ -1755,7 +1798,7 @@ case 72:
 	}
 	goto st0
 tr135:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st113
 st113:
@@ -1763,7 +1806,7 @@ st113:
 	if p == pe { goto _test_eof113 }
 	fallthrough
 case 113:
-// line 1767 "zparse.go"
+// line 1810 "zparse.go"
 	switch data[p] {
 		case 9: goto tr197
 		case 32: goto tr197
@@ -1773,7 +1816,7 @@ case 113:
 		case 95: goto tr199
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st113 }
+		if 45 <= data[p] && data[p] <= 58 { goto st113 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st113 }
 	} else {
@@ -1781,13 +1824,13 @@ case 113:
 	}
 	goto st0
 tr12:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st73
 tr24:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st73
 st73:
@@ -1795,7 +1838,7 @@ st73:
 	if p == pe { goto _test_eof73 }
 	fallthrough
 case 73:
-// line 1799 "zparse.go"
+// line 1842 "zparse.go"
 	switch data[p] {
 		case 79: goto st74
 		case 111: goto st74
@@ -1822,7 +1865,7 @@ case 75:
 	}
 	goto st0
 tr138:
-// line 94 "zparse.rl"
+// line 96 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1839,7 +1882,7 @@ st76:
 	if p == pe { goto _test_eof76 }
 	fallthrough
 case 76:
-// line 1843 "zparse.go"
+// line 1886 "zparse.go"
 	switch data[p] {
 		case 9: goto st76
 		case 32: goto st76
@@ -1848,7 +1891,7 @@ case 76:
 		case 92: goto tr140
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr140 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr140 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr140 }
 	} else {
@@ -1856,7 +1899,7 @@ case 76:
 	}
 	goto st0
 tr140:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st77
 st77:
@@ -1864,7 +1907,7 @@ st77:
 	if p == pe { goto _test_eof77 }
 	fallthrough
 case 77:
-// line 1868 "zparse.go"
+// line 1911 "zparse.go"
 	switch data[p] {
 		case 9: goto tr141
 		case 32: goto tr141
@@ -1873,7 +1916,7 @@ case 77:
 		case 92: goto st77
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st77 }
+		if 45 <= data[p] && data[p] <= 58 { goto st77 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st77 }
 	} else {
@@ -1881,7 +1924,7 @@ case 77:
 	}
 	goto st0
 tr141:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st78
 st78:
@@ -1889,7 +1932,7 @@ st78:
 	if p == pe { goto _test_eof78 }
 	fallthrough
 case 78:
-// line 1893 "zparse.go"
+// line 1936 "zparse.go"
 	switch data[p] {
 		case 9: goto st78
 		case 32: goto st78
@@ -1898,7 +1941,7 @@ case 78:
 		case 92: goto tr144
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto tr144 }
+		if 45 <= data[p] && data[p] <= 58 { goto tr144 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto tr144 }
 	} else {
@@ -1906,7 +1949,7 @@ case 78:
 	}
 	goto st0
 tr144:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st79
 st79:
@@ -1914,7 +1957,7 @@ st79:
 	if p == pe { goto _test_eof79 }
 	fallthrough
 case 79:
-// line 1918 "zparse.go"
+// line 1961 "zparse.go"
 	switch data[p] {
 		case 9: goto tr145
 		case 32: goto tr145
@@ -1923,7 +1966,7 @@ case 79:
 		case 92: goto st79
 	}
 	if data[p] < 65 {
-		if 46 <= data[p] && data[p] <= 58 { goto st79 }
+		if 45 <= data[p] && data[p] <= 58 { goto st79 }
 	} else if data[p] > 90 {
 		if 97 <= data[p] && data[p] <= 122 { goto st79 }
 	} else {
@@ -1931,7 +1974,7 @@ case 79:
 	}
 	goto st0
 tr145:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st80
 st80:
@@ -1939,7 +1982,7 @@ st80:
 	if p == pe { goto _test_eof80 }
 	fallthrough
 case 80:
-// line 1943 "zparse.go"
+// line 1986 "zparse.go"
 	switch data[p] {
 		case 9: goto st80
 		case 32: goto st80
@@ -1947,7 +1990,7 @@ case 80:
 	if 48 <= data[p] && data[p] <= 57 { goto tr148 }
 	goto st0
 tr148:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st81
 st81:
@@ -1955,7 +1998,7 @@ st81:
 	if p == pe { goto _test_eof81 }
 	fallthrough
 case 81:
-// line 1959 "zparse.go"
+// line 2002 "zparse.go"
 	switch data[p] {
 		case 9: goto tr149
 		case 32: goto tr149
@@ -1963,7 +2006,7 @@ case 81:
 	if 48 <= data[p] && data[p] <= 57 { goto st81 }
 	goto st0
 tr149:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st82
 st82:
@@ -1971,7 +2014,7 @@ st82:
 	if p == pe { goto _test_eof82 }
 	fallthrough
 case 82:
-// line 1975 "zparse.go"
+// line 2018 "zparse.go"
 	switch data[p] {
 		case 9: goto st82
 		case 32: goto st82
@@ -1979,7 +2022,7 @@ case 82:
 	if 48 <= data[p] && data[p] <= 57 { goto tr152 }
 	goto st0
 tr152:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st83
 st83:
@@ -1987,7 +2030,7 @@ st83:
 	if p == pe { goto _test_eof83 }
 	fallthrough
 case 83:
-// line 1991 "zparse.go"
+// line 2034 "zparse.go"
 	switch data[p] {
 		case 9: goto tr153
 		case 32: goto tr153
@@ -1995,7 +2038,7 @@ case 83:
 	if 48 <= data[p] && data[p] <= 57 { goto st83 }
 	goto st0
 tr153:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st84
 st84:
@@ -2003,7 +2046,7 @@ st84:
 	if p == pe { goto _test_eof84 }
 	fallthrough
 case 84:
-// line 2007 "zparse.go"
+// line 2050 "zparse.go"
 	switch data[p] {
 		case 9: goto st84
 		case 32: goto st84
@@ -2011,7 +2054,7 @@ case 84:
 	if 48 <= data[p] && data[p] <= 57 { goto tr156 }
 	goto st0
 tr156:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st85
 st85:
@@ -2019,7 +2062,7 @@ st85:
 	if p == pe { goto _test_eof85 }
 	fallthrough
 case 85:
-// line 2023 "zparse.go"
+// line 2066 "zparse.go"
 	switch data[p] {
 		case 9: goto tr157
 		case 32: goto tr157
@@ -2027,7 +2070,7 @@ case 85:
 	if 48 <= data[p] && data[p] <= 57 { goto st85 }
 	goto st0
 tr157:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st86
 st86:
@@ -2035,7 +2078,7 @@ st86:
 	if p == pe { goto _test_eof86 }
 	fallthrough
 case 86:
-// line 2039 "zparse.go"
+// line 2082 "zparse.go"
 	switch data[p] {
 		case 9: goto st86
 		case 32: goto st86
@@ -2043,7 +2086,7 @@ case 86:
 	if 48 <= data[p] && data[p] <= 57 { goto tr160 }
 	goto st0
 tr160:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st87
 st87:
@@ -2051,7 +2094,7 @@ st87:
 	if p == pe { goto _test_eof87 }
 	fallthrough
 case 87:
-// line 2055 "zparse.go"
+// line 2098 "zparse.go"
 	switch data[p] {
 		case 9: goto tr161
 		case 32: goto tr161
@@ -2059,7 +2102,7 @@ case 87:
 	if 48 <= data[p] && data[p] <= 57 { goto st87 }
 	goto st0
 tr161:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st88
 st88:
@@ -2067,7 +2110,7 @@ st88:
 	if p == pe { goto _test_eof88 }
 	fallthrough
 case 88:
-// line 2071 "zparse.go"
+// line 2114 "zparse.go"
 	switch data[p] {
 		case 9: goto st88
 		case 32: goto st88
@@ -2075,7 +2118,7 @@ case 88:
 	if 48 <= data[p] && data[p] <= 57 { goto tr164 }
 	goto st0
 tr164:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st114
 st114:
@@ -2083,24 +2126,27 @@ st114:
 	if p == pe { goto _test_eof114 }
 	fallthrough
 case 114:
-// line 2087 "zparse.go"
+// line 2130 "zparse.go"
 	switch data[p] {
 		case 9: goto tr200
 		case 32: goto tr200
-		case 46: goto tr201
 		case 92: goto tr201
 		case 95: goto tr201
 	}
-	if data[p] < 65 {
-		if 48 <= data[p] && data[p] <= 57 { goto st114 }
-	} else if data[p] > 90 {
-		if 97 <= data[p] && data[p] <= 122 { goto tr201 }
+	if data[p] < 48 {
+		if 45 <= data[p] && data[p] <= 46 { goto tr201 }
+	} else if data[p] > 57 {
+		if data[p] > 90 {
+			if 97 <= data[p] && data[p] <= 122 { goto tr201 }
+		} else if data[p] >= 65 {
+			goto tr201
+		}
 	} else {
-		goto tr201
+		goto st114
 	}
 	goto st0
 tr17:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st89
 st89:
@@ -2108,7 +2154,7 @@ st89:
 	if p == pe { goto _test_eof89 }
 	fallthrough
 case 89:
-// line 2112 "zparse.go"
+// line 2158 "zparse.go"
 	switch data[p] {
 		case 72: goto st13
 		case 78: goto st17
@@ -2119,7 +2165,7 @@ case 89:
 	}
 	goto st0
 tr19:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st90
 st90:
@@ -2127,14 +2173,14 @@ st90:
 	if p == pe { goto _test_eof90 }
 	fallthrough
 case 90:
-// line 2131 "zparse.go"
+// line 2177 "zparse.go"
 	switch data[p] {
 		case 83: goto st13
 		case 115: goto st13
 	}
 	goto st0
 tr20:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st91
 st91:
@@ -2142,14 +2188,14 @@ st91:
 	if p == pe { goto _test_eof91 }
 	fallthrough
 case 91:
-// line 2146 "zparse.go"
+// line 2192 "zparse.go"
 	switch data[p] {
 		case 78: goto st13
 		case 110: goto st13
 	}
 	goto st0
 tr22:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st92
 st92:
@@ -2157,7 +2203,7 @@ st92:
 	if p == pe { goto _test_eof92 }
 	fallthrough
 case 92:
-// line 2161 "zparse.go"
+// line 2207 "zparse.go"
 	switch data[p] {
 		case 79: goto st93
 		case 83: goto st49
@@ -2186,9 +2232,9 @@ case 94:
 	}
 	goto st0
 tr4:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st95
 st95:
@@ -2196,7 +2242,7 @@ st95:
 	if p == pe { goto _test_eof95 }
 	fallthrough
 case 95:
-// line 2200 "zparse.go"
+// line 2246 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -2227,7 +2273,7 @@ case 97:
 	}
 	goto st0
 tr169:
-// line 87 "zparse.rl"
+// line 88 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st98
 st98:
@@ -2235,7 +2281,7 @@ st98:
 	if p == pe { goto _test_eof98 }
 	fallthrough
 case 98:
-// line 2239 "zparse.go"
+// line 2285 "zparse.go"
 	switch data[p] {
 		case 9: goto st98
 		case 32: goto st98
@@ -2257,7 +2303,7 @@ case 98:
 	if 48 <= data[p] && data[p] <= 57 { goto tr171 }
 	goto st0
 tr171:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
 	goto st99
 st99:
@@ -2265,7 +2311,7 @@ st99:
 	if p == pe { goto _test_eof99 }
 	fallthrough
 case 99:
-// line 2269 "zparse.go"
+// line 2315 "zparse.go"
 	switch data[p] {
 		case 9: goto tr172
 		case 32: goto tr172
@@ -2273,9 +2319,9 @@ case 99:
 	if 48 <= data[p] && data[p] <= 57 { goto st99 }
 	goto st0
 tr5:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st100
 st100:
@@ -2283,7 +2329,7 @@ st100:
 	if p == pe { goto _test_eof100 }
 	fallthrough
 case 100:
-// line 2287 "zparse.go"
+// line 2333 "zparse.go"
 	switch data[p] {
 		case 72: goto st97
 		case 78: goto st17
@@ -2294,9 +2340,9 @@ case 100:
 	}
 	goto st0
 tr7:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st101
 st101:
@@ -2304,16 +2350,16 @@ st101:
 	if p == pe { goto _test_eof101 }
 	fallthrough
 case 101:
-// line 2308 "zparse.go"
+// line 2354 "zparse.go"
 	switch data[p] {
 		case 83: goto st97
 		case 115: goto st97
 	}
 	goto st0
 tr8:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st102
 st102:
@@ -2321,16 +2367,16 @@ st102:
 	if p == pe { goto _test_eof102 }
 	fallthrough
 case 102:
-// line 2325 "zparse.go"
+// line 2371 "zparse.go"
 	switch data[p] {
 		case 78: goto st97
 		case 110: goto st97
 	}
 	goto st0
 tr10:
-// line 85 "zparse.rl"
+// line 86 "zparse.rl"
 	{ mark = p }
-// line 88 "zparse.rl"
+// line 89 "zparse.rl"
 	{ /* ... */ }
 	goto st103
 st103:
@@ -2338,7 +2384,7 @@ st103:
 	if p == pe { goto _test_eof103 }
 	fallthrough
 case 103:
-// line 2342 "zparse.go"
+// line 2388 "zparse.go"
 	switch data[p] {
 		case 79: goto st104
 		case 83: goto st49
@@ -2485,7 +2531,7 @@ case 105:
 	if p == eof {
 	switch cs {
 	case 114:
-// line 90 "zparse.rl"
+// line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 // line 20 "types.rl"
 	{
@@ -2498,45 +2544,55 @@ case 105:
             rr.(*RR_SOA).Expire = uint32(tok.N[3])
             rr.(*RR_SOA).Minttl = uint32(tok.N[4])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 106:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
             rr.(*RR_A).Hdr = *hdr
             rr.(*RR_A).A = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 107:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 8 "types.rl"
 	{
             rr.(*RR_AAAA).Hdr = *hdr
             rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 112:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 12 "types.rl"
 	{
             rr.(*RR_NS).Hdr = *hdr
             rr.(*RR_NS).Ns = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 108:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 16 "types.rl"
 	{
             rr.(*RR_CNAME).Hdr = *hdr
             rr.(*RR_CNAME).Cname = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 111:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 30 "types.rl"
 	{
@@ -2544,9 +2600,11 @@ case 105:
             rr.(*RR_MX).Pref = uint16(tok.N[0])
             rr.(*RR_MX).Mx = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 110:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 35 "types.rl"
 	{
@@ -2556,9 +2614,11 @@ case 105:
             rr.(*RR_DS).DigestType = uint8(tok.N[2])
             rr.(*RR_DS).Digest = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 109:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 42 "types.rl"
 	{
@@ -2568,9 +2628,11 @@ case 105:
             rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
             rr.(*RR_DNSKEY).PublicKey = tok.T[0]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
 	case 113:
-// line 91 "zparse.rl"
+// line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 49 "types.rl"
 	{
@@ -2585,26 +2647,28 @@ case 105:
             rr.(*RR_RRSIG).SignerName = tok.T[0]
             rr.(*RR_RRSIG).Signature = tok.T[1]
         }
+// line 94 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("setting") }
 	break
-// line 2590 "zparse.go"
+// line 2654 "zparse.go"
 	}
 	}
 
 	_out: {}
 	}
 
-// line 142 "zparse.rl"
+// line 145 "zparse.rl"
 
 
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
                         println("unexpected eof")
-                        return rr, nil
+                        return z, nil
                 } else {
                         println("error at position ", p)
-                        return rr, nil
+                        return z, nil
                 }
         }
-        return rr, nil
+        return z, nil
 }

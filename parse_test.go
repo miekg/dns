@@ -131,11 +131,12 @@ func TestParse(t *testing.T) {
                         "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
                 }
         for test, result := range tests {
-                r, err := Zparse(strings.NewReader(test))
-                if err != nil || r == nil{
+                z, err := Zparse(strings.NewReader(test))
+                if err != nil || z == nil{
                         t.Logf("Error of nil r %v %s\n", err, test)
                         t.Fail()
                 }
+                r := z.Pop().(RR)
                 if r.String() != result {
                         t.Logf("\"%s\" should be equal to\n\"%s\"\n", r, result)
                         t.Fail()

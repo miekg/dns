@@ -14,14 +14,16 @@ GOFILES=\
 	dnssec.go\
 	edns.go\
 	keygen.go\
+	kparse.go\
 	msg.go\
 	nsec3.go \
 	server.go \
 	tsig.go\
 	types.go\
-	zparse.go\
-	kparse.go\
 	xfr.go\
+	zone.go\
+	zparse.go\
+
 
 include $(GOROOT)/src/Make.pkg
 

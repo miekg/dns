@@ -7,9 +7,9 @@ package dns
 
 import (
 	"net"
+	"time"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Packet formats
@@ -954,11 +954,11 @@ func tsigTimeToDate(t uint64) string {
 
 // Helper function for parsing from strings
 func parse(s string) RR {
-        rr, err := Zparse(strings.NewReader(s))
+        z, err := Zparse(strings.NewReader(s))
         if err != nil {
                 return nil
         }
-        return rr
+        return z.Pop().(RR)
 }
 
 // Map of constructors for each RR wire type.
