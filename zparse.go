@@ -1722,7 +1722,7 @@ tr55:
 	{ lines++ }
 	goto st8
 tr47:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1735,7 +1735,7 @@ tr47:
                 }
 	goto st8
 tr48:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1750,7 +1750,7 @@ tr48:
 	{ lines++ }
 	goto st8
 tr49:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -1765,7 +1765,7 @@ tr49:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st8
 tr50:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3437,7 +3437,7 @@ case 12:
 	if data[p] == 10 { goto tr74 }
 	goto st12
 tr51:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3504,7 +3504,7 @@ tr83:
 	{ lines++ }
 	goto st17
 tr77:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3517,7 +3517,7 @@ tr77:
                 }
 	goto st17
 tr78:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3532,7 +3532,7 @@ tr78:
 	{ lines++ }
 	goto st17
 tr79:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3547,7 +3547,7 @@ tr79:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st17
 tr80:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3616,7 +3616,7 @@ case 18:
 	}
 	goto st0
 tr81:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3854,7 +3854,7 @@ tr118:
 	{ lines++ }
 	goto st30
 tr112:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3867,7 +3867,7 @@ tr112:
                 }
 	goto st30
 tr113:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3882,7 +3882,7 @@ tr113:
 	{ lines++ }
 	goto st30
 tr114:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3897,7 +3897,7 @@ tr114:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st30
 tr115:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -3966,7 +3966,7 @@ case 31:
 	}
 	goto st0
 tr116:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4076,7 +4076,7 @@ tr141:
 	{ lines++ }
 	goto st39
 tr135:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4089,7 +4089,7 @@ tr135:
                 }
 	goto st39
 tr136:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4104,7 +4104,7 @@ tr136:
 	{ lines++ }
 	goto st39
 tr137:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4119,7 +4119,7 @@ tr137:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st39
 tr138:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4434,7 +4434,7 @@ case 49:
 	if data[p] == 10 { goto tr153 }
 	goto st49
 tr139:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4481,7 +4481,7 @@ tr194:
 	{ lines++ }
 	goto st52
 tr188:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4494,7 +4494,7 @@ tr188:
                 }
 	goto st52
 tr189:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4509,7 +4509,7 @@ tr189:
 	{ lines++ }
 	goto st52
 tr190:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4524,7 +4524,7 @@ tr190:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st52
 tr191:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4839,7 +4839,7 @@ case 62:
 	if data[p] == 10 { goto tr206 }
 	goto st62
 tr192:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4907,7 +4907,7 @@ tr248:
 	{ lines++ }
 	goto st66
 tr242:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4920,7 +4920,7 @@ tr242:
                 }
 	goto st66
 tr243:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4935,7 +4935,7 @@ tr243:
 	{ lines++ }
 	goto st66
 tr244:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -4950,7 +4950,7 @@ tr244:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st66
 tr245:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5101,7 +5101,7 @@ case 70:
 	if data[p] == 10 { goto tr260 }
 	goto st70
 tr246:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5163,7 +5163,7 @@ tr278:
 	{ lines++ }
 	goto st74
 tr272:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5176,7 +5176,7 @@ tr272:
                 }
 	goto st74
 tr273:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5191,7 +5191,7 @@ tr273:
 	{ lines++ }
 	goto st74
 tr274:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5206,7 +5206,7 @@ tr274:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st74
 tr275:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5275,7 +5275,7 @@ case 75:
 	}
 	goto st0
 tr276:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5373,7 +5373,7 @@ tr299:
 	{ lines++ }
 	goto st82
 tr293:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5386,7 +5386,7 @@ tr293:
                 }
 	goto st82
 tr294:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5401,7 +5401,7 @@ tr294:
 	{ lines++ }
 	goto st82
 tr295:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -5416,7 +5416,7 @@ tr295:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st82
 tr296:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6159,7 +6159,7 @@ case 107:
 	if data[p] == 10 { goto tr311 }
 	goto st107
 tr297:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6237,7 +6237,7 @@ tr414:
 	{ lines++ }
 	goto st112
 tr408:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6250,7 +6250,7 @@ tr408:
                 }
 	goto st112
 tr409:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6265,7 +6265,7 @@ tr409:
 	{ lines++ }
 	goto st112
 tr410:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6280,7 +6280,7 @@ tr410:
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st112
 tr411:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -6859,7 +6859,7 @@ case 131:
 	if data[p] == 10 { goto tr426 }
 	goto st131
 tr412:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -7323,7 +7323,7 @@ tr534:
 tr526:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -7340,7 +7340,7 @@ tr527:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -7357,7 +7357,7 @@ tr528:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -7374,7 +7374,7 @@ tr529:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8167,7 +8167,7 @@ tr575:
 tr569:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8184,7 +8184,7 @@ tr570:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8201,7 +8201,7 @@ tr571:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8218,7 +8218,7 @@ tr572:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8420,7 +8420,7 @@ case 165:
 tr573:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8484,7 +8484,7 @@ tr607:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st168
 tr597:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8507,7 +8507,7 @@ tr597:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr599:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8532,7 +8532,7 @@ tr599:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr600:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8557,7 +8557,7 @@ tr600:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr871:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8581,7 +8581,7 @@ tr871:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr873:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8607,7 +8607,7 @@ tr873:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr874:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8633,7 +8633,7 @@ tr874:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr923:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8656,7 +8656,7 @@ tr923:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr925:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8681,7 +8681,7 @@ tr925:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr926:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8706,7 +8706,7 @@ tr926:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr975:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8729,7 +8729,7 @@ tr975:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr977:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8754,7 +8754,7 @@ tr977:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr978:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8779,7 +8779,7 @@ tr978:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr1678:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8810,7 +8810,7 @@ tr1678:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr1680:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8843,7 +8843,7 @@ tr1680:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr1681:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8876,7 +8876,7 @@ tr1681:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr2294:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8899,7 +8899,7 @@ tr2294:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr2296:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8924,7 +8924,7 @@ tr2296:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr2297:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8949,7 +8949,7 @@ tr2297:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3710:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -8975,7 +8975,7 @@ tr3710:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3712:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9003,7 +9003,7 @@ tr3712:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3713:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9031,7 +9031,7 @@ tr3713:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3854:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9057,7 +9057,7 @@ tr3854:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3856:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9085,7 +9085,7 @@ tr3856:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st168
 tr3857:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9148,7 +9148,7 @@ tr879:
 	{ lines++ }
 	goto st1723
 tr598:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9173,7 +9173,7 @@ tr598:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr872:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9199,7 +9199,7 @@ tr872:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr924:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9224,7 +9224,7 @@ tr924:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr976:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9249,7 +9249,7 @@ tr976:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr1679:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9282,7 +9282,7 @@ tr1679:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr2295:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9307,7 +9307,7 @@ tr2295:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr3711:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9335,7 +9335,7 @@ tr3711:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1723
 tr3855:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9401,7 +9401,7 @@ tr612:
 tr628:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9428,7 +9428,7 @@ tr630:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9455,7 +9455,7 @@ tr631:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9480,7 +9480,7 @@ tr631:
 tr671:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9507,7 +9507,7 @@ tr673:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9534,7 +9534,7 @@ tr674:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9559,7 +9559,7 @@ tr674:
 tr719:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9586,7 +9586,7 @@ tr721:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9613,7 +9613,7 @@ tr722:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9638,7 +9638,7 @@ tr722:
 tr1833:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9665,7 +9665,7 @@ tr1835:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9692,7 +9692,7 @@ tr1836:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9717,7 +9717,7 @@ tr1836:
 tr3981:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9745,7 +9745,7 @@ tr3983:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9773,7 +9773,7 @@ tr3984:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9859,7 +9859,7 @@ tr629:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9886,7 +9886,7 @@ tr672:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9913,7 +9913,7 @@ tr720:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9940,7 +9940,7 @@ tr1834:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -9967,7 +9967,7 @@ tr3982:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10117,7 +10117,7 @@ tr613:
 tr632:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10142,7 +10142,7 @@ tr632:
 tr675:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10167,7 +10167,7 @@ tr675:
 tr723:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10192,7 +10192,7 @@ tr723:
 tr1837:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10217,7 +10217,7 @@ tr1837:
 tr3985:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10390,7 +10390,7 @@ tr637:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10417,7 +10417,7 @@ tr639:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10444,7 +10444,7 @@ tr640:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10461,7 +10461,7 @@ tr640:
 tr680:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10488,7 +10488,7 @@ tr682:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10515,7 +10515,7 @@ tr683:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10540,7 +10540,7 @@ tr683:
 tr728:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10567,7 +10567,7 @@ tr730:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10594,7 +10594,7 @@ tr731:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10619,7 +10619,7 @@ tr731:
 tr1842:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10646,7 +10646,7 @@ tr1844:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10673,7 +10673,7 @@ tr1845:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10698,7 +10698,7 @@ tr1845:
 tr3990:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10726,7 +10726,7 @@ tr3992:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10754,7 +10754,7 @@ tr3993:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10848,7 +10848,7 @@ tr638:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10867,7 +10867,7 @@ tr681:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10894,7 +10894,7 @@ tr729:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10921,7 +10921,7 @@ tr1843:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -10948,7 +10948,7 @@ tr3991:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11106,7 +11106,7 @@ tr641:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11123,7 +11123,7 @@ tr641:
 tr684:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11148,7 +11148,7 @@ tr684:
 tr732:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11173,7 +11173,7 @@ tr732:
 tr1846:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11198,7 +11198,7 @@ tr1846:
 tr3994:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11581,7 +11581,7 @@ tr2230:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11608,7 +11608,7 @@ tr2232:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11635,7 +11635,7 @@ tr2233:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11660,7 +11660,7 @@ tr695:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11687,7 +11687,7 @@ tr697:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11714,7 +11714,7 @@ tr698:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11731,7 +11731,7 @@ tr698:
 tr743:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11758,7 +11758,7 @@ tr745:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11785,7 +11785,7 @@ tr746:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11818,7 +11818,7 @@ tr1857:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11845,7 +11845,7 @@ tr1859:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11872,7 +11872,7 @@ tr1860:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11889,7 +11889,7 @@ tr1860:
 tr4005:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11917,7 +11917,7 @@ tr4007:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -11945,7 +11945,7 @@ tr4008:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12039,7 +12039,7 @@ tr2231:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12066,7 +12066,7 @@ tr696:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12085,7 +12085,7 @@ tr744:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12120,7 +12120,7 @@ tr1858:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12139,7 +12139,7 @@ tr4006:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12297,7 +12297,7 @@ tr2234:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12322,7 +12322,7 @@ tr699:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12339,7 +12339,7 @@ tr699:
 tr747:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12372,7 +12372,7 @@ tr1861:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12389,7 +12389,7 @@ tr1861:
 tr4009:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12953,7 +12953,7 @@ tr2241:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -12980,7 +12980,7 @@ tr2243:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13007,7 +13007,7 @@ tr2244:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13032,7 +13032,7 @@ tr2431:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13059,7 +13059,7 @@ tr2433:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13086,7 +13086,7 @@ tr2434:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13111,7 +13111,7 @@ tr754:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13138,7 +13138,7 @@ tr756:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13165,7 +13165,7 @@ tr757:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13190,7 +13190,7 @@ tr1868:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13217,7 +13217,7 @@ tr1870:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13244,7 +13244,7 @@ tr1871:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13270,7 +13270,7 @@ tr4016:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13298,7 +13298,7 @@ tr4018:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13326,7 +13326,7 @@ tr4019:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13397,7 +13397,7 @@ tr2242:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13424,7 +13424,7 @@ tr2432:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13451,7 +13451,7 @@ tr755:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13478,7 +13478,7 @@ tr1869:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13506,7 +13506,7 @@ tr4017:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13863,7 +13863,7 @@ tr2245:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13888,7 +13888,7 @@ tr2435:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13913,7 +13913,7 @@ tr758:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13938,7 +13938,7 @@ tr1872:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -13964,7 +13964,7 @@ tr4020:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14186,7 +14186,7 @@ tr802:
 tr796:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14203,7 +14203,7 @@ tr797:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14220,7 +14220,7 @@ tr798:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14237,7 +14237,7 @@ tr799:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14398,7 +14398,7 @@ case 230:
 tr800:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14460,7 +14460,7 @@ tr823:
 tr817:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14477,7 +14477,7 @@ tr818:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14494,7 +14494,7 @@ tr819:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14511,7 +14511,7 @@ tr820:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14672,7 +14672,7 @@ case 236:
 tr821:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14854,7 +14854,7 @@ tr846:
 tr840:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14871,7 +14871,7 @@ tr841:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14888,7 +14888,7 @@ tr842:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -14905,7 +14905,7 @@ tr843:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15110,7 +15110,7 @@ tr608:
 	{ mark = p }
 	goto st247
 tr601:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15133,7 +15133,7 @@ tr601:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr875:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15157,7 +15157,7 @@ tr875:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr927:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15180,7 +15180,7 @@ tr927:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr979:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15203,7 +15203,7 @@ tr979:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr1682:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15234,7 +15234,7 @@ tr1682:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr2298:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15257,7 +15257,7 @@ tr2298:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr3714:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15283,7 +15283,7 @@ tr3714:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st247
 tr3858:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15401,7 +15401,7 @@ tr890:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st251
 tr5332:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15424,7 +15424,7 @@ tr5332:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr5334:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15449,7 +15449,7 @@ tr5334:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr5335:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15474,7 +15474,7 @@ tr5335:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr882:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15498,7 +15498,7 @@ tr882:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr884:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15524,7 +15524,7 @@ tr884:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr885:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15550,7 +15550,7 @@ tr885:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr932:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15573,7 +15573,7 @@ tr932:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr934:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15598,7 +15598,7 @@ tr934:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr935:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15623,7 +15623,7 @@ tr935:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr984:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15646,7 +15646,7 @@ tr984:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr986:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15671,7 +15671,7 @@ tr986:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr987:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15696,7 +15696,7 @@ tr987:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr1686:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15727,7 +15727,7 @@ tr1686:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr1688:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15760,7 +15760,7 @@ tr1688:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr1689:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15801,7 +15801,7 @@ tr2303:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15824,7 +15824,7 @@ tr2305:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15849,7 +15849,7 @@ tr2306:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15866,7 +15866,7 @@ tr2306:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3719:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15892,7 +15892,7 @@ tr3719:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3721:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15920,7 +15920,7 @@ tr3721:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3722:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15948,7 +15948,7 @@ tr3722:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3863:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -15974,7 +15974,7 @@ tr3863:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3865:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16002,7 +16002,7 @@ tr3865:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st251
 tr3866:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16065,7 +16065,7 @@ tr893:
 	{ lines++ }
 	goto st1728
 tr5333:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16090,7 +16090,7 @@ tr5333:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr883:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16116,7 +16116,7 @@ tr883:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr933:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16141,7 +16141,7 @@ tr933:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr985:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16166,7 +16166,7 @@ tr985:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr1687:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16207,7 +16207,7 @@ tr2304:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16224,7 +16224,7 @@ tr2304:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr3720:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16252,7 +16252,7 @@ tr3720:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1728
 tr3864:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16312,7 +16312,7 @@ tr891:
 	{ mark = p }
 	goto st252
 tr5336:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16335,7 +16335,7 @@ tr5336:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr886:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16359,7 +16359,7 @@ tr886:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr936:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16382,7 +16382,7 @@ tr936:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr988:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16405,7 +16405,7 @@ tr988:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr1690:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16444,7 +16444,7 @@ tr2307:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16459,7 +16459,7 @@ tr2307:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr3723:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -16485,7 +16485,7 @@ tr3723:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st252
 tr3867:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17096,7 +17096,7 @@ case 256:
 tr530:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17216,7 +17216,7 @@ tr913:
 tr907:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17233,7 +17233,7 @@ tr908:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17250,7 +17250,7 @@ tr909:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17267,7 +17267,7 @@ tr910:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -17366,7 +17366,7 @@ case 262:
 tr911:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18061,7 +18061,7 @@ tr955:
 tr949:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18078,7 +18078,7 @@ tr950:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18095,7 +18095,7 @@ tr951:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18112,7 +18112,7 @@ tr952:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18211,7 +18211,7 @@ case 275:
 tr953:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18623,7 +18623,7 @@ tr1009:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st289
 tr2627:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18646,7 +18646,7 @@ tr2627:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr2629:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18671,7 +18671,7 @@ tr2629:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr2630:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18696,7 +18696,7 @@ tr2630:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1772:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18720,7 +18720,7 @@ tr1772:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1774:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18746,7 +18746,7 @@ tr1774:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1775:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18780,7 +18780,7 @@ tr1001:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18803,7 +18803,7 @@ tr1003:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18828,7 +18828,7 @@ tr1004:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18845,7 +18845,7 @@ tr1004:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1695:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18876,7 +18876,7 @@ tr1695:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1697:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18909,7 +18909,7 @@ tr1697:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr1698:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18950,7 +18950,7 @@ tr2318:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18973,7 +18973,7 @@ tr2320:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -18998,7 +18998,7 @@ tr2321:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19023,7 +19023,7 @@ tr2481:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19046,7 +19046,7 @@ tr2483:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19071,7 +19071,7 @@ tr2484:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19088,7 +19088,7 @@ tr2484:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3734:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19114,7 +19114,7 @@ tr3734:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3736:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19142,7 +19142,7 @@ tr3736:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3737:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19170,7 +19170,7 @@ tr3737:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3878:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19196,7 +19196,7 @@ tr3878:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3880:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19224,7 +19224,7 @@ tr3880:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st289
 tr3881:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19287,7 +19287,7 @@ tr1012:
 	{ lines++ }
 	goto st1731
 tr2628:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19312,7 +19312,7 @@ tr2628:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1731
 tr1773:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19346,7 +19346,7 @@ tr1002:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19363,7 +19363,7 @@ tr1002:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1731
 tr1696:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19404,7 +19404,7 @@ tr2319:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19429,7 +19429,7 @@ tr2482:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19446,7 +19446,7 @@ tr2482:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1731
 tr3735:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19474,7 +19474,7 @@ tr3735:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1731
 tr3879:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19534,7 +19534,7 @@ tr1010:
 	{ mark = p }
 	goto st290
 tr2631:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19557,7 +19557,7 @@ tr2631:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st290
 tr1776:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19589,7 +19589,7 @@ tr1005:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19604,7 +19604,7 @@ tr1005:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st290
 tr1699:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19643,7 +19643,7 @@ tr2322:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19666,7 +19666,7 @@ tr2485:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19681,7 +19681,7 @@ tr2485:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st290
 tr3738:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19707,7 +19707,7 @@ tr3738:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st290
 tr3882:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19920,7 +19920,7 @@ tr1019:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19943,7 +19943,7 @@ tr1021:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19968,7 +19968,7 @@ tr1022:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -19985,7 +19985,7 @@ tr1022:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr1706:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20016,7 +20016,7 @@ tr1706:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr1708:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20049,7 +20049,7 @@ tr1708:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr1709:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20091,7 +20091,7 @@ tr1783:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20115,7 +20115,7 @@ tr1785:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20141,7 +20141,7 @@ tr1786:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20166,7 +20166,7 @@ tr2329:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20189,7 +20189,7 @@ tr2331:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20214,7 +20214,7 @@ tr2332:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20239,7 +20239,7 @@ tr2492:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20262,7 +20262,7 @@ tr2494:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20287,7 +20287,7 @@ tr2495:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20312,7 +20312,7 @@ tr2638:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20335,7 +20335,7 @@ tr2640:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20360,7 +20360,7 @@ tr2641:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20377,7 +20377,7 @@ tr2641:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr3745:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20403,7 +20403,7 @@ tr3745:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr3747:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20431,7 +20431,7 @@ tr3747:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st297
 tr3748:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20470,7 +20470,7 @@ tr3889:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20496,7 +20496,7 @@ tr3891:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20524,7 +20524,7 @@ tr3892:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20575,7 +20575,7 @@ tr1020:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20592,7 +20592,7 @@ tr1020:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1732
 tr1707:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20634,7 +20634,7 @@ tr1784:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20659,7 +20659,7 @@ tr2330:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20684,7 +20684,7 @@ tr2493:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20709,7 +20709,7 @@ tr2639:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20726,7 +20726,7 @@ tr2639:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1732
 tr3746:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20765,7 +20765,7 @@ tr3890:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20854,7 +20854,7 @@ tr1023:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20869,7 +20869,7 @@ tr1023:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st299
 tr1710:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20909,7 +20909,7 @@ tr1787:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20932,7 +20932,7 @@ tr2333:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20955,7 +20955,7 @@ tr2496:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20978,7 +20978,7 @@ tr2642:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -20993,7 +20993,7 @@ tr2642:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st299
 tr3749:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21030,7 +21030,7 @@ tr3893:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21093,7 +21093,7 @@ tr1037:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21116,7 +21116,7 @@ tr1039:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21141,7 +21141,7 @@ tr1040:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21158,7 +21158,7 @@ tr1040:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr1711:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21189,7 +21189,7 @@ tr1711:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr1713:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21222,7 +21222,7 @@ tr1713:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr1714:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21264,7 +21264,7 @@ tr1788:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21288,7 +21288,7 @@ tr1790:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21314,7 +21314,7 @@ tr1791:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21339,7 +21339,7 @@ tr2334:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21362,7 +21362,7 @@ tr2336:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21387,7 +21387,7 @@ tr2337:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21412,7 +21412,7 @@ tr2497:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21435,7 +21435,7 @@ tr2499:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21460,7 +21460,7 @@ tr2500:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21485,7 +21485,7 @@ tr2643:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21508,7 +21508,7 @@ tr2645:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21533,7 +21533,7 @@ tr2646:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21550,7 +21550,7 @@ tr2646:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3750:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21576,7 +21576,7 @@ tr3750:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3752:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21604,7 +21604,7 @@ tr3752:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3753:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21632,7 +21632,7 @@ tr3753:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3894:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21658,7 +21658,7 @@ tr3894:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3896:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21686,7 +21686,7 @@ tr3896:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st301
 tr3897:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21748,7 +21748,7 @@ tr1038:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21765,7 +21765,7 @@ tr1038:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1733
 tr1712:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21807,7 +21807,7 @@ tr1789:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21832,7 +21832,7 @@ tr2335:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21857,7 +21857,7 @@ tr2498:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21882,7 +21882,7 @@ tr2644:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21899,7 +21899,7 @@ tr2644:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1733
 tr3751:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -21927,7 +21927,7 @@ tr3751:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1733
 tr3895:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22001,7 +22001,7 @@ tr2246:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22028,7 +22028,7 @@ tr2248:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22055,7 +22055,7 @@ tr2249:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22080,7 +22080,7 @@ tr2436:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22107,7 +22107,7 @@ tr2438:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22134,7 +22134,7 @@ tr2439:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22159,7 +22159,7 @@ tr5325:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22186,7 +22186,7 @@ tr5327:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22213,7 +22213,7 @@ tr5328:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22238,7 +22238,7 @@ tr1873:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22265,7 +22265,7 @@ tr1875:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22292,7 +22292,7 @@ tr1876:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22318,7 +22318,7 @@ tr4021:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22346,7 +22346,7 @@ tr4023:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22374,7 +22374,7 @@ tr4024:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22445,7 +22445,7 @@ tr2247:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22472,7 +22472,7 @@ tr2437:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22499,7 +22499,7 @@ tr5326:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22526,7 +22526,7 @@ tr1874:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22554,7 +22554,7 @@ tr4022:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22911,7 +22911,7 @@ tr2250:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22936,7 +22936,7 @@ tr2440:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22961,7 +22961,7 @@ tr5329:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -22986,7 +22986,7 @@ tr1877:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23012,7 +23012,7 @@ tr4025:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23303,7 +23303,7 @@ tr1089:
 tr1083:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23320,7 +23320,7 @@ tr1084:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23337,7 +23337,7 @@ tr1085:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23354,7 +23354,7 @@ tr1086:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23515,7 +23515,7 @@ case 321:
 tr1087:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23646,7 +23646,7 @@ tr1113:
 tr1107:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23663,7 +23663,7 @@ tr1108:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23680,7 +23680,7 @@ tr1109:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23697,7 +23697,7 @@ tr1110:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23938,7 +23938,7 @@ tr1155:
 	{ lines++ }
 	goto st331
 tr1147:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23953,7 +23953,7 @@ tr1147:
 	{ tok.pushString(data[mark:p]) }
 	goto st331
 tr1148:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23970,7 +23970,7 @@ tr1148:
 	{ tok.pushString(data[mark:p]) }
 	goto st331
 tr1149:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -23987,7 +23987,7 @@ tr1149:
 	{ tok.pushString(data[mark:p]) }
 	goto st331
 tr1150:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -25791,7 +25791,7 @@ case 346:
 	if data[p] == 10 { goto tr1220 }
 	goto st346
 tr1151:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -25902,7 +25902,7 @@ tr1229:
 	{ lines++ }
 	goto st351
 tr1223:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -25917,7 +25917,7 @@ tr1223:
 	{ tok.pushString(data[mark:p]) }
 	goto st351
 tr1224:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -25934,7 +25934,7 @@ tr1224:
 	{ tok.pushString(data[mark:p]) }
 	goto st351
 tr1225:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -25951,7 +25951,7 @@ tr1225:
 	{ tok.pushString(data[mark:p]) }
 	goto st351
 tr1226:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26032,7 +26032,7 @@ case 352:
 	}
 	goto st0
 tr1227:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26376,7 +26376,7 @@ tr1261:
 	{ lines++ }
 	goto st363
 tr1255:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26391,7 +26391,7 @@ tr1255:
 	{ tok.pushString(data[mark:p]) }
 	goto st363
 tr1256:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26408,7 +26408,7 @@ tr1256:
 	{ tok.pushString(data[mark:p]) }
 	goto st363
 tr1257:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26425,7 +26425,7 @@ tr1257:
 	{ tok.pushString(data[mark:p]) }
 	goto st363
 tr1258:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26506,7 +26506,7 @@ case 364:
 	}
 	goto st0
 tr1259:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26710,7 +26710,7 @@ tr1284:
 tr1278:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26727,7 +26727,7 @@ tr1279:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26744,7 +26744,7 @@ tr1280:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -26761,7 +26761,7 @@ tr1281:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -27858,7 +27858,7 @@ case 389:
 tr1282:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -27917,7 +27917,7 @@ tr1370:
 tr1364:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -27934,7 +27934,7 @@ tr1365:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -27951,7 +27951,7 @@ tr1366:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -27968,7 +27968,7 @@ tr1367:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -28293,7 +28293,7 @@ case 402:
 tr1368:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -28451,7 +28451,7 @@ tr1424:
 tr1418:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -28468,7 +28468,7 @@ tr1419:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -28485,7 +28485,7 @@ tr1420:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -28502,7 +28502,7 @@ tr1421:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29242,7 +29242,7 @@ case 423:
 tr1422:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29384,7 +29384,7 @@ tr1499:
 	{ lines++ }
 	goto st429
 tr1493:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29399,7 +29399,7 @@ tr1493:
 	{ tok.pushString(data[mark:p]) }
 	goto st429
 tr1494:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29416,7 +29416,7 @@ tr1494:
 	{ tok.pushString(data[mark:p]) }
 	goto st429
 tr1495:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29433,7 +29433,7 @@ tr1495:
 	{ tok.pushString(data[mark:p]) }
 	goto st429
 tr1496:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29514,7 +29514,7 @@ case 430:
 	}
 	goto st0
 tr1497:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29690,7 +29690,7 @@ tr1520:
 tr1514:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29707,7 +29707,7 @@ tr1515:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29724,7 +29724,7 @@ tr1516:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -29741,7 +29741,7 @@ tr1517:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30622,7 +30622,7 @@ tr1630:
 	{ lines++ }
 	goto st455
 tr1622:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30637,7 +30637,7 @@ tr1622:
 	{ tok.pushString(data[mark:p]) }
 	goto st455
 tr1623:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30654,7 +30654,7 @@ tr1623:
 	{ tok.pushString(data[mark:p]) }
 	goto st455
 tr1624:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30671,7 +30671,7 @@ tr1624:
 	{ tok.pushString(data[mark:p]) }
 	goto st455
 tr1625:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30742,7 +30742,7 @@ case 456:
 	}
 	goto st0
 tr1626:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30853,7 +30853,7 @@ tr1649:
 	{ lines++ }
 	goto st461
 tr1643:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30868,7 +30868,7 @@ tr1643:
 	{ tok.pushString(data[mark:p]) }
 	goto st461
 tr1644:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30885,7 +30885,7 @@ tr1644:
 	{ tok.pushString(data[mark:p]) }
 	goto st461
 tr1645:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30902,7 +30902,7 @@ tr1645:
 	{ tok.pushString(data[mark:p]) }
 	goto st461
 tr1646:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -30973,7 +30973,7 @@ case 462:
 	}
 	goto st0
 tr1647:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31578,7 +31578,7 @@ tr1041:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31593,7 +31593,7 @@ tr1041:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st484
 tr1715:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31633,7 +31633,7 @@ tr1792:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31656,7 +31656,7 @@ tr2338:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31679,7 +31679,7 @@ tr2501:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31702,7 +31702,7 @@ tr2647:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31717,7 +31717,7 @@ tr2647:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st484
 tr3754:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31743,7 +31743,7 @@ tr3754:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st484
 tr3898:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31840,7 +31840,7 @@ tr1727:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st487
 tr1794:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31864,7 +31864,7 @@ tr1794:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr1796:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31890,7 +31890,7 @@ tr1796:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr1797:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31924,7 +31924,7 @@ tr2927:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31947,7 +31947,7 @@ tr2929:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31972,7 +31972,7 @@ tr2930:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -31989,7 +31989,7 @@ tr2930:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr1719:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32020,7 +32020,7 @@ tr1719:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr1721:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32053,7 +32053,7 @@ tr1721:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr1722:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32094,7 +32094,7 @@ tr2340:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32117,7 +32117,7 @@ tr2342:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32142,7 +32142,7 @@ tr2343:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32167,7 +32167,7 @@ tr2503:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32190,7 +32190,7 @@ tr2505:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32215,7 +32215,7 @@ tr2506:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32240,7 +32240,7 @@ tr2649:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32263,7 +32263,7 @@ tr2651:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32288,7 +32288,7 @@ tr2652:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32305,7 +32305,7 @@ tr2652:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3756:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32331,7 +32331,7 @@ tr3756:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3758:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32359,7 +32359,7 @@ tr3758:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3759:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32387,7 +32387,7 @@ tr3759:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3900:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32413,7 +32413,7 @@ tr3900:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3902:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32441,7 +32441,7 @@ tr3902:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st487
 tr3903:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32495,7 +32495,7 @@ tr1800:
 	{ lines++ }
 	goto st1743
 tr1795:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32529,7 +32529,7 @@ tr2928:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32546,7 +32546,7 @@ tr2928:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1743
 tr1720:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32587,7 +32587,7 @@ tr2341:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32612,7 +32612,7 @@ tr2504:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32637,7 +32637,7 @@ tr2650:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32654,7 +32654,7 @@ tr2650:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1743
 tr3757:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32682,7 +32682,7 @@ tr3757:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1743
 tr3901:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32756,7 +32756,7 @@ tr2252:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32783,7 +32783,7 @@ tr2254:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32810,7 +32810,7 @@ tr2255:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32835,7 +32835,7 @@ tr2442:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32862,7 +32862,7 @@ tr2444:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32889,7 +32889,7 @@ tr2445:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32914,7 +32914,7 @@ tr2582:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32941,7 +32941,7 @@ tr2584:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32968,7 +32968,7 @@ tr2585:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -32993,7 +32993,7 @@ tr1879:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33020,7 +33020,7 @@ tr1881:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33047,7 +33047,7 @@ tr1882:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33064,7 +33064,7 @@ tr1882:
 tr4027:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33092,7 +33092,7 @@ tr4029:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33120,7 +33120,7 @@ tr4030:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33200,7 +33200,7 @@ tr2253:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33227,7 +33227,7 @@ tr2443:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33254,7 +33254,7 @@ tr2583:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33281,7 +33281,7 @@ tr1880:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -33300,7 +33300,7 @@ tr4028:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34136,7 +34136,7 @@ tr1728:
 	{ mark = p }
 	goto st512
 tr1798:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34168,7 +34168,7 @@ tr2931:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34183,7 +34183,7 @@ tr2931:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st512
 tr1723:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34222,7 +34222,7 @@ tr2344:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34245,7 +34245,7 @@ tr2507:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34268,7 +34268,7 @@ tr2653:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34283,7 +34283,7 @@ tr2653:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st512
 tr3760:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34309,7 +34309,7 @@ tr3760:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st512
 tr3904:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34462,7 +34462,7 @@ tr1812:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st517
 tr2657:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34485,7 +34485,7 @@ tr2657:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr2659:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34510,7 +34510,7 @@ tr2659:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr2660:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34535,7 +34535,7 @@ tr2660:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr1804:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34559,7 +34559,7 @@ tr1804:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr1806:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34585,7 +34585,7 @@ tr1806:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr1807:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34611,7 +34611,7 @@ tr1807:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr2935:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34634,7 +34634,7 @@ tr2935:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr2937:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34659,7 +34659,7 @@ tr2937:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr2938:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34684,7 +34684,7 @@ tr2938:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3584:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34715,7 +34715,7 @@ tr3584:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3586:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34748,7 +34748,7 @@ tr3586:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3587:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34789,7 +34789,7 @@ tr2348:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34812,7 +34812,7 @@ tr2350:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34837,7 +34837,7 @@ tr2351:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34862,7 +34862,7 @@ tr2511:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34885,7 +34885,7 @@ tr2513:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34910,7 +34910,7 @@ tr2514:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34927,7 +34927,7 @@ tr2514:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3764:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34953,7 +34953,7 @@ tr3764:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3766:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -34981,7 +34981,7 @@ tr3766:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3767:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35009,7 +35009,7 @@ tr3767:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3908:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35035,7 +35035,7 @@ tr3908:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3910:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35063,7 +35063,7 @@ tr3910:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st517
 tr3911:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35126,7 +35126,7 @@ tr2354:
 	{ lines++ }
 	goto st1745
 tr2658:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35151,7 +35151,7 @@ tr2658:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1745
 tr1805:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35177,7 +35177,7 @@ tr1805:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1745
 tr2936:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35202,7 +35202,7 @@ tr2936:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1745
 tr3585:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35243,7 +35243,7 @@ tr2349:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35268,7 +35268,7 @@ tr2512:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35285,7 +35285,7 @@ tr2512:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1745
 tr3765:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35313,7 +35313,7 @@ tr3765:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1745
 tr3909:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35387,7 +35387,7 @@ tr2260:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35414,7 +35414,7 @@ tr2262:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35441,7 +35441,7 @@ tr2263:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35466,7 +35466,7 @@ tr2450:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35493,7 +35493,7 @@ tr2452:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35520,7 +35520,7 @@ tr2453:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35537,7 +35537,7 @@ tr2453:
 tr2590:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35564,7 +35564,7 @@ tr2592:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35591,7 +35591,7 @@ tr2593:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35616,7 +35616,7 @@ tr2593:
 tr1889:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35643,7 +35643,7 @@ tr1891:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35670,7 +35670,7 @@ tr1892:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35695,7 +35695,7 @@ tr1892:
 tr4035:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35723,7 +35723,7 @@ tr4037:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35751,7 +35751,7 @@ tr4038:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35845,7 +35845,7 @@ tr2261:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35872,7 +35872,7 @@ tr2451:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35891,7 +35891,7 @@ tr2591:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35918,7 +35918,7 @@ tr1890:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -35945,7 +35945,7 @@ tr4036:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36103,7 +36103,7 @@ tr2264:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36128,7 +36128,7 @@ tr2454:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36145,7 +36145,7 @@ tr2454:
 tr2594:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36170,7 +36170,7 @@ tr2594:
 tr1893:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36195,7 +36195,7 @@ tr1893:
 tr4039:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36917,7 +36917,7 @@ tr2256:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36942,7 +36942,7 @@ tr2446:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36967,7 +36967,7 @@ tr2586:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -36992,7 +36992,7 @@ tr1883:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37009,7 +37009,7 @@ tr1883:
 tr4031:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37332,7 +37332,7 @@ tr2269:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37359,7 +37359,7 @@ tr2271:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37386,7 +37386,7 @@ tr2272:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37411,7 +37411,7 @@ tr2459:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37438,7 +37438,7 @@ tr2461:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37465,7 +37465,7 @@ tr2462:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37490,7 +37490,7 @@ tr2599:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37517,7 +37517,7 @@ tr2601:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37544,7 +37544,7 @@ tr2602:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37569,7 +37569,7 @@ tr1898:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37596,7 +37596,7 @@ tr1900:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37623,7 +37623,7 @@ tr1901:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37649,7 +37649,7 @@ tr4044:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37677,7 +37677,7 @@ tr4046:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37705,7 +37705,7 @@ tr4047:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37776,7 +37776,7 @@ tr2270:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37803,7 +37803,7 @@ tr2460:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37830,7 +37830,7 @@ tr2600:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37857,7 +37857,7 @@ tr1899:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -37885,7 +37885,7 @@ tr4045:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38242,7 +38242,7 @@ tr2273:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38267,7 +38267,7 @@ tr2463:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38292,7 +38292,7 @@ tr2603:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38317,7 +38317,7 @@ tr1902:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38343,7 +38343,7 @@ tr4048:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38476,7 +38476,7 @@ tr2276:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38503,7 +38503,7 @@ tr2278:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38530,7 +38530,7 @@ tr2279:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38555,7 +38555,7 @@ tr2466:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38582,7 +38582,7 @@ tr2468:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38609,7 +38609,7 @@ tr2469:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38634,7 +38634,7 @@ tr2606:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38661,7 +38661,7 @@ tr2608:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38688,7 +38688,7 @@ tr2609:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38713,7 +38713,7 @@ tr1935:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38740,7 +38740,7 @@ tr1937:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38767,7 +38767,7 @@ tr1938:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38784,7 +38784,7 @@ tr1938:
 tr4051:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38812,7 +38812,7 @@ tr4053:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38840,7 +38840,7 @@ tr4054:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38934,7 +38934,7 @@ tr2277:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38961,7 +38961,7 @@ tr2467:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -38988,7 +38988,7 @@ tr2607:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -39015,7 +39015,7 @@ tr1936:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -39034,7 +39034,7 @@ tr4052:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -40028,7 +40028,7 @@ tr2011:
 	{ lines++ }
 	goto st589
 tr2005:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -40043,7 +40043,7 @@ tr2005:
 	{ tok.pushString(data[mark:p]) }
 	goto st589
 tr2006:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -40060,7 +40060,7 @@ tr2006:
 	{ tok.pushString(data[mark:p]) }
 	goto st589
 tr2007:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -40077,7 +40077,7 @@ tr2007:
 	{ tok.pushString(data[mark:p]) }
 	goto st589
 tr2008:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41198,7 +41198,7 @@ case 610:
 	if data[p] == 10 { goto tr2023 }
 	goto st610
 tr2009:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41273,7 +41273,7 @@ tr2280:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41298,7 +41298,7 @@ tr2470:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41323,7 +41323,7 @@ tr2610:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41348,7 +41348,7 @@ tr1939:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41365,7 +41365,7 @@ tr1939:
 tr4055:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41449,7 +41449,7 @@ tr2117:
 tr2109:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41468,7 +41468,7 @@ tr2110:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41487,7 +41487,7 @@ tr2111:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -41506,7 +41506,7 @@ tr2112:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42816,7 +42816,7 @@ case 630:
 tr2113:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42882,7 +42882,7 @@ tr2204:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st633
 tr3114:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42905,7 +42905,7 @@ tr3114:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr3116:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42930,7 +42930,7 @@ tr3116:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr3117:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42955,7 +42955,7 @@ tr3117:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr5215:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -42978,7 +42978,7 @@ tr5215:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr5217:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43003,7 +43003,7 @@ tr5217:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr5218:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43028,7 +43028,7 @@ tr5218:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr3369:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43051,7 +43051,7 @@ tr3369:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr3371:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43076,7 +43076,7 @@ tr3371:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr3372:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43101,7 +43101,7 @@ tr3372:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr2194:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43124,7 +43124,7 @@ tr2194:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr2196:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43149,7 +43149,7 @@ tr2196:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st633
 tr2197:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43214,7 +43214,7 @@ tr2398:
 	{ lines++ }
 	goto st1754
 tr3115:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43239,7 +43239,7 @@ tr3115:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1754
 tr5216:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43264,7 +43264,7 @@ tr5216:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1754
 tr3370:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -43289,7 +43289,7 @@ tr3370:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1754
 tr2195:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45616,7 +45616,7 @@ tr1813:
 	{ mark = p }
 	goto st695
 tr2661:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45639,7 +45639,7 @@ tr2661:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st695
 tr1808:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45663,7 +45663,7 @@ tr1808:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st695
 tr2939:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45686,7 +45686,7 @@ tr2939:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st695
 tr3588:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45725,7 +45725,7 @@ tr2352:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45748,7 +45748,7 @@ tr2515:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45763,7 +45763,7 @@ tr2515:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st695
 tr3768:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45789,7 +45789,7 @@ tr3768:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st695
 tr3912:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45974,7 +45974,7 @@ tr2944:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -45997,7 +45997,7 @@ tr2946:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46022,7 +46022,7 @@ tr2947:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46039,7 +46039,7 @@ tr2947:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st701
 tr3593:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46070,7 +46070,7 @@ tr3593:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st701
 tr3595:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46103,7 +46103,7 @@ tr3595:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st701
 tr3596:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46145,7 +46145,7 @@ tr2858:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46169,7 +46169,7 @@ tr2860:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46195,7 +46195,7 @@ tr2861:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46220,7 +46220,7 @@ tr2359:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46243,7 +46243,7 @@ tr2361:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46268,7 +46268,7 @@ tr2362:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46293,7 +46293,7 @@ tr2520:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46316,7 +46316,7 @@ tr2522:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46341,7 +46341,7 @@ tr2523:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46366,7 +46366,7 @@ tr2666:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46389,7 +46389,7 @@ tr2668:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46414,7 +46414,7 @@ tr2669:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46442,7 +46442,7 @@ tr3773:
             x.Algorithm = uint8(tok.N[2])
             x.PublicKey = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46468,7 +46468,7 @@ tr3775:
             x.Algorithm = uint8(tok.N[2])
             x.PublicKey = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46496,7 +46496,7 @@ tr3776:
             x.Algorithm = uint8(tok.N[2])
             x.PublicKey = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46524,7 +46524,7 @@ tr3917:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46550,7 +46550,7 @@ tr3919:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46578,7 +46578,7 @@ tr3920:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46629,7 +46629,7 @@ tr2945:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46646,7 +46646,7 @@ tr2945:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1757
 tr3594:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46688,7 +46688,7 @@ tr2859:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46713,7 +46713,7 @@ tr2360:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46738,7 +46738,7 @@ tr2521:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46763,7 +46763,7 @@ tr2667:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46791,7 +46791,7 @@ tr3774:
             x.Algorithm = uint8(tok.N[2])
             x.PublicKey = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46819,7 +46819,7 @@ tr3918:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46908,7 +46908,7 @@ tr2948:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46923,7 +46923,7 @@ tr2948:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st703
 tr3597:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46963,7 +46963,7 @@ tr2862:
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -46986,7 +46986,7 @@ tr2363:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47009,7 +47009,7 @@ tr2524:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47032,7 +47032,7 @@ tr2670:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47058,7 +47058,7 @@ tr3777:
             x.Algorithm = uint8(tok.N[2])
             x.PublicKey = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47084,7 +47084,7 @@ tr3921:
             x.DigestType = uint8(tok.N[2])
             x.Digest = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47198,7 +47198,7 @@ tr2387:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st707
 tr2865:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47222,7 +47222,7 @@ tr2865:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr2867:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47248,7 +47248,7 @@ tr2867:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr2868:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47282,7 +47282,7 @@ tr2951:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47305,7 +47305,7 @@ tr2953:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47330,7 +47330,7 @@ tr2954:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47347,7 +47347,7 @@ tr2954:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3600:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47378,7 +47378,7 @@ tr3600:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3602:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47411,7 +47411,7 @@ tr3602:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3603:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47452,7 +47452,7 @@ tr2379:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47475,7 +47475,7 @@ tr2381:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47500,7 +47500,7 @@ tr2382:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47525,7 +47525,7 @@ tr2527:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47548,7 +47548,7 @@ tr2529:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47573,7 +47573,7 @@ tr2530:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47598,7 +47598,7 @@ tr2673:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47621,7 +47621,7 @@ tr2675:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47646,7 +47646,7 @@ tr2676:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47663,7 +47663,7 @@ tr2676:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3780:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47689,7 +47689,7 @@ tr3780:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3782:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47717,7 +47717,7 @@ tr3782:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3783:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47745,7 +47745,7 @@ tr3783:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3924:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47771,7 +47771,7 @@ tr3924:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3926:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47799,7 +47799,7 @@ tr3926:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st707
 tr3927:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47862,7 +47862,7 @@ tr2390:
 	{ lines++ }
 	goto st1758
 tr2866:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47896,7 +47896,7 @@ tr2952:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47913,7 +47913,7 @@ tr2952:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1758
 tr3601:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47954,7 +47954,7 @@ tr2380:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -47979,7 +47979,7 @@ tr2528:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48004,7 +48004,7 @@ tr2674:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48021,7 +48021,7 @@ tr2674:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1758
 tr3781:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48049,7 +48049,7 @@ tr3781:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1758
 tr3925:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48109,7 +48109,7 @@ tr2388:
 	{ mark = p }
 	goto st708
 tr2869:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48141,7 +48141,7 @@ tr2955:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48156,7 +48156,7 @@ tr2955:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st708
 tr3604:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48195,7 +48195,7 @@ tr2383:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48218,7 +48218,7 @@ tr2531:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48241,7 +48241,7 @@ tr2677:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48256,7 +48256,7 @@ tr2677:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st708
 tr3784:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48282,7 +48282,7 @@ tr3784:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st708
 tr3928:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48356,7 +48356,7 @@ tr2205:
 	{ mark = p }
 	goto st710
 tr3118:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48379,7 +48379,7 @@ tr3118:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st710
 tr5219:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48402,7 +48402,7 @@ tr5219:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st710
 tr3373:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48425,7 +48425,7 @@ tr3373:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st710
 tr2198:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48540,7 +48540,7 @@ tr2409:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st714
 tr3123:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48563,7 +48563,7 @@ tr3123:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr3125:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48588,7 +48588,7 @@ tr3125:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr3126:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48613,7 +48613,7 @@ tr3126:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr5224:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48636,7 +48636,7 @@ tr5224:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr5226:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48661,7 +48661,7 @@ tr5226:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr5227:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48686,7 +48686,7 @@ tr5227:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr3378:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48709,7 +48709,7 @@ tr3378:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr3380:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48734,7 +48734,7 @@ tr3380:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st714
 tr3381:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48767,7 +48767,7 @@ tr2401:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48790,7 +48790,7 @@ tr2403:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48815,7 +48815,7 @@ tr2404:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48872,7 +48872,7 @@ tr2539:
 	{ lines++ }
 	goto st1759
 tr3124:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48897,7 +48897,7 @@ tr3124:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1759
 tr5225:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48922,7 +48922,7 @@ tr5225:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1759
 tr3379:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -48955,7 +48955,7 @@ tr2402:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -50732,7 +50732,7 @@ tr2410:
 	{ mark = p }
 	goto st771
 tr3127:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -50755,7 +50755,7 @@ tr3127:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st771
 tr5228:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -50778,7 +50778,7 @@ tr5228:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st771
 tr3382:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -50809,7 +50809,7 @@ tr2405:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51435,7 +51435,7 @@ tr2565:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st781
 tr3138:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51458,7 +51458,7 @@ tr3138:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st781
 tr3140:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51483,7 +51483,7 @@ tr3140:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st781
 tr3141:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51516,7 +51516,7 @@ tr3393:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51539,7 +51539,7 @@ tr3395:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51564,7 +51564,7 @@ tr3396:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51589,7 +51589,7 @@ tr2557:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51612,7 +51612,7 @@ tr2559:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51637,7 +51637,7 @@ tr2560:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51662,7 +51662,7 @@ tr5239:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51685,7 +51685,7 @@ tr5241:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51710,7 +51710,7 @@ tr5242:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51767,7 +51767,7 @@ tr2685:
 	{ lines++ }
 	goto st1762
 tr3139:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51800,7 +51800,7 @@ tr3394:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51825,7 +51825,7 @@ tr2558:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -51850,7 +51850,7 @@ tr5240:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53443,7 +53443,7 @@ tr2566:
 	{ mark = p }
 	goto st832
 tr3142:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53474,7 +53474,7 @@ tr3397:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53497,7 +53497,7 @@ tr2561:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53520,7 +53520,7 @@ tr5243:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53722,7 +53722,7 @@ tr3404:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53745,7 +53745,7 @@ tr2692:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53768,7 +53768,7 @@ tr5250:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53791,7 +53791,7 @@ tr3149:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53816,7 +53816,7 @@ tr2694:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53841,7 +53841,7 @@ tr2695:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53866,7 +53866,7 @@ tr3151:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53891,7 +53891,7 @@ tr3152:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53916,7 +53916,7 @@ tr3406:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53941,7 +53941,7 @@ tr3407:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53966,7 +53966,7 @@ tr5252:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -53991,7 +53991,7 @@ tr5253:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54042,7 +54042,7 @@ tr2693:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54067,7 +54067,7 @@ tr3150:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54092,7 +54092,7 @@ tr3405:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54117,7 +54117,7 @@ tr5251:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54708,7 +54708,7 @@ tr3408:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54731,7 +54731,7 @@ tr2696:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54754,7 +54754,7 @@ tr5254:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54777,7 +54777,7 @@ tr3153:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54840,7 +54840,7 @@ tr3409:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54863,7 +54863,7 @@ tr2752:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54886,7 +54886,7 @@ tr5255:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54909,7 +54909,7 @@ tr3154:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54934,7 +54934,7 @@ tr2754:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54959,7 +54959,7 @@ tr2755:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -54984,7 +54984,7 @@ tr3156:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55009,7 +55009,7 @@ tr3157:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55034,7 +55034,7 @@ tr3411:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55059,7 +55059,7 @@ tr3412:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55084,7 +55084,7 @@ tr5257:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55109,7 +55109,7 @@ tr5258:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55160,7 +55160,7 @@ tr2753:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55185,7 +55185,7 @@ tr3155:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55210,7 +55210,7 @@ tr3410:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55235,7 +55235,7 @@ tr5256:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55826,7 +55826,7 @@ tr3413:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55849,7 +55849,7 @@ tr2756:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55872,7 +55872,7 @@ tr5259:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -55895,7 +55895,7 @@ tr3158:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56057,7 +56057,7 @@ tr3415:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56080,7 +56080,7 @@ tr2813:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56103,7 +56103,7 @@ tr5261:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56126,7 +56126,7 @@ tr3160:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56151,7 +56151,7 @@ tr2815:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56176,7 +56176,7 @@ tr2816:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56201,7 +56201,7 @@ tr3162:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56226,7 +56226,7 @@ tr3163:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56251,7 +56251,7 @@ tr3417:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56276,7 +56276,7 @@ tr3418:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56301,7 +56301,7 @@ tr5263:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56326,7 +56326,7 @@ tr5264:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56377,7 +56377,7 @@ tr2814:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56402,7 +56402,7 @@ tr3161:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56427,7 +56427,7 @@ tr3416:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -56452,7 +56452,7 @@ tr5262:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57604,7 +57604,7 @@ tr3419:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57627,7 +57627,7 @@ tr2817:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57650,7 +57650,7 @@ tr5265:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57673,7 +57673,7 @@ tr3164:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57815,7 +57815,7 @@ tr2904:
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st904
 tr3168:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57838,7 +57838,7 @@ tr3168:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st904
 tr3170:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57863,7 +57863,7 @@ tr3170:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st904
 tr3171:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57888,7 +57888,7 @@ tr3171:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st904
 tr3423:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57911,7 +57911,7 @@ tr3423:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st904
 tr3425:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57936,7 +57936,7 @@ tr3425:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st904
 tr3426:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57969,7 +57969,7 @@ tr2896:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -57992,7 +57992,7 @@ tr2898:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58017,7 +58017,7 @@ tr2899:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58042,7 +58042,7 @@ tr5269:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58065,7 +58065,7 @@ tr5271:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58090,7 +58090,7 @@ tr5272:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58147,7 +58147,7 @@ tr2963:
 	{ lines++ }
 	goto st1771
 tr3169:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58172,7 +58172,7 @@ tr3169:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st1771
 tr3424:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58205,7 +58205,7 @@ tr2897:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58230,7 +58230,7 @@ tr5270:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58973,7 +58973,7 @@ tr2905:
 	{ mark = p }
 	goto st926
 tr3172:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -58996,7 +58996,7 @@ tr3172:
 	{ z.Push(rr); tok.reset(); println("setting") }
 	goto st926
 tr3427:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59027,7 +59027,7 @@ tr2900:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59050,7 +59050,7 @@ tr5273:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59224,7 +59224,7 @@ tr3432:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59247,7 +59247,7 @@ tr2968:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59270,7 +59270,7 @@ tr5278:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59293,7 +59293,7 @@ tr3177:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59318,7 +59318,7 @@ tr2970:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59343,7 +59343,7 @@ tr2971:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59368,7 +59368,7 @@ tr3179:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59393,7 +59393,7 @@ tr3180:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59418,7 +59418,7 @@ tr3434:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59443,7 +59443,7 @@ tr3435:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59468,7 +59468,7 @@ tr5280:
         }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59493,7 +59493,7 @@ tr5281:
         }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59544,7 +59544,7 @@ tr2969:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59569,7 +59569,7 @@ tr3178:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59594,7 +59594,7 @@ tr3433:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -59619,7 +59619,7 @@ tr5279:
         }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60210,7 +60210,7 @@ tr3436:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60233,7 +60233,7 @@ tr2972:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60256,7 +60256,7 @@ tr5282:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60279,7 +60279,7 @@ tr3181:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60401,7 +60401,7 @@ tr3439:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60424,7 +60424,7 @@ tr3441:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60449,7 +60449,7 @@ tr3442:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60474,7 +60474,7 @@ tr3030:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60497,7 +60497,7 @@ tr3032:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60522,7 +60522,7 @@ tr3033:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60547,7 +60547,7 @@ tr5285:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60570,7 +60570,7 @@ tr5287:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60595,7 +60595,7 @@ tr5288:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60620,7 +60620,7 @@ tr3184:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60643,7 +60643,7 @@ tr3186:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60668,7 +60668,7 @@ tr3187:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60733,7 +60733,7 @@ tr3440:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60758,7 +60758,7 @@ tr3031:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60783,7 +60783,7 @@ tr5286:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -60808,7 +60808,7 @@ tr3185:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -61524,7 +61524,7 @@ tr3087:
 tr3081:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -61543,7 +61543,7 @@ tr3082:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -61562,7 +61562,7 @@ tr3083:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -61581,7 +61581,7 @@ tr3084:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -61711,7 +61711,7 @@ case 966:
 tr3085:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62685,7 +62685,7 @@ tr3443:
             x.Hdr = *hdr
             x.Ns = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62708,7 +62708,7 @@ tr3034:
             x.Hdr = *hdr
             x.A = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62731,7 +62731,7 @@ tr5289:
             x.Hdr = *hdr
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62754,7 +62754,7 @@ tr3188:
             x.Hdr = *hdr
             x.Cname = tok.T[0]
         }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62974,7 +62974,7 @@ tr3197:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -62993,7 +62993,7 @@ tr3198:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63012,7 +63012,7 @@ tr3199:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63031,7 +63031,7 @@ tr3200:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63444,7 +63444,7 @@ tr3201:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63508,7 +63508,7 @@ tr3250:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63527,7 +63527,7 @@ tr3251:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63546,7 +63546,7 @@ tr3252:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63565,7 +63565,7 @@ tr3253:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -63978,7 +63978,7 @@ tr3254:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64150,7 +64150,7 @@ tr3304:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64169,7 +64169,7 @@ tr3305:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64188,7 +64188,7 @@ tr3306:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64207,7 +64207,7 @@ tr3307:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64456,7 +64456,7 @@ tr3308:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64614,7 +64614,7 @@ tr3342:
 tr3336:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64633,7 +64633,7 @@ tr3337:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64652,7 +64652,7 @@ tr3338:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64671,7 +64671,7 @@ tr3339:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -64801,7 +64801,7 @@ case 1050:
 tr3340:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -65929,7 +65929,7 @@ tr3448:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -65948,7 +65948,7 @@ tr3449:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -65967,7 +65967,7 @@ tr3450:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -65986,7 +65986,7 @@ tr3451:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68213,7 +68213,7 @@ tr3634:
 	{ lines++ }
 	goto st1142
 tr3628:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68228,7 +68228,7 @@ tr3628:
 	{ tok.pushString(data[mark:p]) }
 	goto st1142
 tr3629:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68245,7 +68245,7 @@ tr3629:
 	{ tok.pushString(data[mark:p]) }
 	goto st1142
 tr3630:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68262,7 +68262,7 @@ tr3630:
 	{ tok.pushString(data[mark:p]) }
 	goto st1142
 tr3631:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68333,7 +68333,7 @@ case 1143:
 	}
 	goto st0
 tr3632:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68535,7 +68535,7 @@ tr3657:
 	{ lines++ }
 	goto st1151
 tr3651:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68550,7 +68550,7 @@ tr3651:
 	{ tok.pushString(data[mark:p]) }
 	goto st1151
 tr3652:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68567,7 +68567,7 @@ tr3652:
 	{ tok.pushString(data[mark:p]) }
 	goto st1151
 tr3653:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -68584,7 +68584,7 @@ tr3653:
 	{ tok.pushString(data[mark:p]) }
 	goto st1151
 tr3654:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -70209,7 +70209,7 @@ case 1197:
 	if data[p] == 10 { goto tr3794 }
 	goto st1197
 tr3655:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -70268,7 +70268,7 @@ tr3801:
 	{ lines++ }
 	goto st1200
 tr3795:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -70283,7 +70283,7 @@ tr3795:
 	{ tok.pushString(data[mark:p]) }
 	goto st1200
 tr3796:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -70300,7 +70300,7 @@ tr3796:
 	{ tok.pushString(data[mark:p]) }
 	goto st1200
 tr3797:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -70317,7 +70317,7 @@ tr3797:
 	{ tok.pushString(data[mark:p]) }
 	goto st1200
 tr3798:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -71942,7 +71942,7 @@ case 1246:
 	if data[p] == 10 { goto tr3938 }
 	goto st1246
 tr3799:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -72104,7 +72104,7 @@ tr3946:
 	{ lines++ }
 	goto st1252
 tr3940:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -72119,7 +72119,7 @@ tr3940:
 	{ tok.pushString(data[mark:p]) }
 	goto st1252
 tr3941:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -72136,7 +72136,7 @@ tr3941:
 	{ tok.pushString(data[mark:p]) }
 	goto st1252
 tr3942:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -72153,7 +72153,7 @@ tr3942:
 	{ tok.pushString(data[mark:p]) }
 	goto st1252
 tr3943:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73672,7 +73672,7 @@ case 1293:
 	if data[p] == 10 { goto tr4057 }
 	goto st1293
 tr3944:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73818,7 +73818,7 @@ tr4067:
 	{ lines++ }
 	goto st1299
 tr4061:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73833,7 +73833,7 @@ tr4061:
 	{ tok.pushString(data[mark:p]) }
 	goto st1299
 tr4062:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73850,7 +73850,7 @@ tr4062:
 	{ tok.pushString(data[mark:p]) }
 	goto st1299
 tr4063:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73867,7 +73867,7 @@ tr4063:
 	{ tok.pushString(data[mark:p]) }
 	goto st1299
 tr4064:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -73938,7 +73938,7 @@ case 1300:
 	}
 	goto st0
 tr4065:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74112,7 +74112,7 @@ tr4088:
 	{ lines++ }
 	goto st1307
 tr4082:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74127,7 +74127,7 @@ tr4082:
 	{ tok.pushString(data[mark:p]) }
 	goto st1307
 tr4083:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74144,7 +74144,7 @@ tr4083:
 	{ tok.pushString(data[mark:p]) }
 	goto st1307
 tr4084:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74161,7 +74161,7 @@ tr4084:
 	{ tok.pushString(data[mark:p]) }
 	goto st1307
 tr4085:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74856,7 +74856,7 @@ case 1319:
 	if data[p] == 10 { goto tr4141 }
 	goto st1319
 tr4086:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74978,7 +74978,7 @@ tr4150:
 	{ lines++ }
 	goto st1324
 tr4144:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -74993,7 +74993,7 @@ tr4144:
 	{ tok.pushString(data[mark:p]) }
 	goto st1324
 tr4145:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75010,7 +75010,7 @@ tr4145:
 	{ tok.pushString(data[mark:p]) }
 	goto st1324
 tr4146:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75027,7 +75027,7 @@ tr4146:
 	{ tok.pushString(data[mark:p]) }
 	goto st1324
 tr4147:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75687,7 +75687,7 @@ tr4198:
 tr4190:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75706,7 +75706,7 @@ tr4191:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75725,7 +75725,7 @@ tr4192:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75744,7 +75744,7 @@ tr4193:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75809,7 +75809,7 @@ case 1334:
 tr4194:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75931,7 +75931,7 @@ tr4210:
 tr4204:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75950,7 +75950,7 @@ tr4205:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75969,7 +75969,7 @@ tr4206:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -75988,7 +75988,7 @@ tr4207:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76053,7 +76053,7 @@ case 1339:
 tr4208:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76300,7 +76300,7 @@ tr4230:
 tr4224:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76319,7 +76319,7 @@ tr4225:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76338,7 +76338,7 @@ tr4226:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76357,7 +76357,7 @@ tr4227:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76422,7 +76422,7 @@ case 1348:
 tr4228:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76642,7 +76642,7 @@ tr4240:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76661,7 +76661,7 @@ tr4241:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76680,7 +76680,7 @@ tr4242:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76699,7 +76699,7 @@ tr4243:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76750,7 +76750,7 @@ tr4244:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76814,7 +76814,7 @@ tr4250:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76833,7 +76833,7 @@ tr4251:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76852,7 +76852,7 @@ tr4252:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76871,7 +76871,7 @@ tr4253:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -76922,7 +76922,7 @@ tr4254:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77094,7 +77094,7 @@ tr4261:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77113,7 +77113,7 @@ tr4262:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77132,7 +77132,7 @@ tr4263:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77151,7 +77151,7 @@ tr4264:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77202,7 +77202,7 @@ tr4265:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77360,7 +77360,7 @@ tr4280:
 tr4274:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77379,7 +77379,7 @@ tr4275:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77398,7 +77398,7 @@ tr4276:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77417,7 +77417,7 @@ tr4277:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77482,7 +77482,7 @@ case 1371:
 tr4278:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77671,7 +77671,7 @@ tr4288:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77690,7 +77690,7 @@ tr4289:
 	{ lines++ }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77709,7 +77709,7 @@ tr4290:
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77728,7 +77728,7 @@ tr4291:
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77779,7 +77779,7 @@ tr4292:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77906,7 +77906,7 @@ tr4306:
 tr4300:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77925,7 +77925,7 @@ tr4301:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77944,7 +77944,7 @@ tr4302:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -77963,7 +77963,7 @@ tr4303:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78178,7 +78178,7 @@ case 1386:
 tr4304:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78248,7 +78248,7 @@ tr4329:
 	{ lines++ }
 	goto st1389
 tr4321:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78263,7 +78263,7 @@ tr4321:
 	{ tok.pushString(data[mark:p]) }
 	goto st1389
 tr4322:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78280,7 +78280,7 @@ tr4322:
 	{ tok.pushString(data[mark:p]) }
 	goto st1389
 tr4323:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78297,7 +78297,7 @@ tr4323:
 	{ tok.pushString(data[mark:p]) }
 	goto st1389
 tr4324:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78339,7 +78339,7 @@ case 1389:
 	}
 	goto st0
 tr4325:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78450,7 +78450,7 @@ tr4341:
 	{ lines++ }
 	goto st1394
 tr4335:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78465,7 +78465,7 @@ tr4335:
 	{ tok.pushString(data[mark:p]) }
 	goto st1394
 tr4336:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78482,7 +78482,7 @@ tr4336:
 	{ tok.pushString(data[mark:p]) }
 	goto st1394
 tr4337:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78499,7 +78499,7 @@ tr4337:
 	{ tok.pushString(data[mark:p]) }
 	goto st1394
 tr4338:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -78570,7 +78570,7 @@ case 1395:
 	}
 	goto st0
 tr4339:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79021,7 +79021,7 @@ tr4383:
 	{ lines++ }
 	goto st1410
 tr4377:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79036,7 +79036,7 @@ tr4377:
 	{ tok.pushString(data[mark:p]) }
 	goto st1410
 tr4378:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79053,7 +79053,7 @@ tr4378:
 	{ tok.pushString(data[mark:p]) }
 	goto st1410
 tr4379:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79070,7 +79070,7 @@ tr4379:
 	{ tok.pushString(data[mark:p]) }
 	goto st1410
 tr4380:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79112,7 +79112,7 @@ case 1410:
 	}
 	goto st0
 tr4381:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79312,7 +79312,7 @@ tr4399:
 tr4393:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79329,7 +79329,7 @@ tr4394:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79346,7 +79346,7 @@ tr4395:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79363,7 +79363,7 @@ tr4396:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79514,7 +79514,7 @@ case 1421:
 tr4397:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79573,7 +79573,7 @@ tr4421:
 tr4415:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79590,7 +79590,7 @@ tr4416:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79607,7 +79607,7 @@ tr4417:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79624,7 +79624,7 @@ tr4418:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79775,7 +79775,7 @@ case 1427:
 tr4419:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79933,7 +79933,7 @@ tr4444:
 tr4438:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79950,7 +79950,7 @@ tr4439:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79967,7 +79967,7 @@ tr4440:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -79984,7 +79984,7 @@ tr4441:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80149,7 +80149,7 @@ case 1436:
 tr4442:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80293,7 +80293,7 @@ tr4469:
 	{ lines++ }
 	goto st1442
 tr4463:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80308,7 +80308,7 @@ tr4463:
 	{ tok.pushString(data[mark:p]) }
 	goto st1442
 tr4464:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80325,7 +80325,7 @@ tr4464:
 	{ tok.pushString(data[mark:p]) }
 	goto st1442
 tr4465:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80342,7 +80342,7 @@ tr4465:
 	{ tok.pushString(data[mark:p]) }
 	goto st1442
 tr4466:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80384,7 +80384,7 @@ case 1442:
 	}
 	goto st0
 tr4467:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80556,7 +80556,7 @@ tr4483:
 tr4477:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80573,7 +80573,7 @@ tr4478:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80590,7 +80590,7 @@ tr4479:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80607,7 +80607,7 @@ tr4480:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80758,7 +80758,7 @@ case 1452:
 tr4481:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80874,7 +80874,7 @@ tr4507:
 	{ lines++ }
 	goto st1457
 tr4501:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80889,7 +80889,7 @@ tr4501:
 	{ tok.pushString(data[mark:p]) }
 	goto st1457
 tr4502:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80906,7 +80906,7 @@ tr4502:
 	{ tok.pushString(data[mark:p]) }
 	goto st1457
 tr4503:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -80923,7 +80923,7 @@ tr4503:
 	{ tok.pushString(data[mark:p]) }
 	goto st1457
 tr4504:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81442,7 +81442,7 @@ case 1473:
 	if data[p] == 10 { goto tr4519 }
 	goto st1473
 tr4505:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81497,7 +81497,7 @@ case 1475:
 	if data[p] == 10 { goto tr4579 }
 	goto st1475
 tr4148:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81704,7 +81704,7 @@ tr3452:
 	{ hdr.Name = data[mark:p] }
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81831,7 +81831,7 @@ tr4598:
 tr4592:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81850,7 +81850,7 @@ tr4593:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81869,7 +81869,7 @@ tr4594:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -81888,7 +81888,7 @@ tr4595:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -82093,7 +82093,7 @@ case 1492:
 tr4596:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -82163,7 +82163,7 @@ tr4631:
 	{ lines++ }
 	goto st1495
 tr4623:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -82178,7 +82178,7 @@ tr4623:
 	{ tok.pushString(data[mark:p]) }
 	goto st1495
 tr4624:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -82195,7 +82195,7 @@ tr4624:
 	{ tok.pushString(data[mark:p]) }
 	goto st1495
 tr4625:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -82212,7 +82212,7 @@ tr4625:
 	{ tok.pushString(data[mark:p]) }
 	goto st1495
 tr4626:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83207,7 +83207,7 @@ case 1510:
 	if data[p] == 10 { goto tr4696 }
 	goto st1510
 tr4627:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83318,7 +83318,7 @@ tr4705:
 	{ lines++ }
 	goto st1515
 tr4699:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83333,7 +83333,7 @@ tr4699:
 	{ tok.pushString(data[mark:p]) }
 	goto st1515
 tr4700:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83350,7 +83350,7 @@ tr4700:
 	{ tok.pushString(data[mark:p]) }
 	goto st1515
 tr4701:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83367,7 +83367,7 @@ tr4701:
 	{ tok.pushString(data[mark:p]) }
 	goto st1515
 tr4702:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83448,7 +83448,7 @@ case 1516:
 	}
 	goto st0
 tr4703:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83902,7 +83902,7 @@ tr4749:
 	{ lines++ }
 	goto st1530
 tr4743:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83917,7 +83917,7 @@ tr4743:
 	{ tok.pushString(data[mark:p]) }
 	goto st1530
 tr4744:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83934,7 +83934,7 @@ tr4744:
 	{ tok.pushString(data[mark:p]) }
 	goto st1530
 tr4745:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -83951,7 +83951,7 @@ tr4745:
 	{ tok.pushString(data[mark:p]) }
 	goto st1530
 tr4746:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -84032,7 +84032,7 @@ case 1531:
 	}
 	goto st0
 tr4747:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -84232,7 +84232,7 @@ tr4772:
 tr4766:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -84249,7 +84249,7 @@ tr4767:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -84266,7 +84266,7 @@ tr4768:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -84283,7 +84283,7 @@ tr4769:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85412,7 +85412,7 @@ case 1558:
 tr4770:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85471,7 +85471,7 @@ tr4865:
 tr4859:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85488,7 +85488,7 @@ tr4860:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85505,7 +85505,7 @@ tr4861:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85522,7 +85522,7 @@ tr4862:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -85885,7 +85885,7 @@ case 1571:
 tr4863:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -86043,7 +86043,7 @@ tr4919:
 tr4913:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -86060,7 +86060,7 @@ tr4914:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -86077,7 +86077,7 @@ tr4915:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -86094,7 +86094,7 @@ tr4916:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -86872,7 +86872,7 @@ case 1592:
 tr4917:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87016,7 +87016,7 @@ tr4994:
 	{ lines++ }
 	goto st1598
 tr4988:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87031,7 +87031,7 @@ tr4988:
 	{ tok.pushString(data[mark:p]) }
 	goto st1598
 tr4989:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87048,7 +87048,7 @@ tr4989:
 	{ tok.pushString(data[mark:p]) }
 	goto st1598
 tr4990:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87065,7 +87065,7 @@ tr4990:
 	{ tok.pushString(data[mark:p]) }
 	goto st1598
 tr4991:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87146,7 +87146,7 @@ case 1599:
 	}
 	goto st0
 tr4992:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87318,7 +87318,7 @@ tr5015:
 tr5009:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87335,7 +87335,7 @@ tr5010:
 	{ tok.pushString(data[mark:p]) }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87352,7 +87352,7 @@ tr5011:
 	{ tok.pushString(data[mark:p]) }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -87369,7 +87369,7 @@ tr5012:
 	{ tok.pushString(data[mark:p]) }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88370,7 +88370,7 @@ case 1628:
 tr5013:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88486,7 +88486,7 @@ tr5122:
 	{ lines++ }
 	goto st1633
 tr5116:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88501,7 +88501,7 @@ tr5116:
 	{ tok.pushString(data[mark:p]) }
 	goto st1633
 tr5117:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88518,7 +88518,7 @@ tr5117:
 	{ tok.pushString(data[mark:p]) }
 	goto st1633
 tr5118:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88535,7 +88535,7 @@ tr5118:
 	{ tok.pushString(data[mark:p]) }
 	goto st1633
 tr5119:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -88992,7 +88992,7 @@ case 1646:
 	if data[p] == 10 { goto tr5134 }
 	goto st1646
 tr5120:
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -89150,7 +89150,7 @@ tr5195:
 tr5189:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -89169,7 +89169,7 @@ tr5190:
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
 	{ lines++ }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -89188,7 +89188,7 @@ tr5191:
 	{ hdr.Name = data[mark:p] }
 // line 98 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -89207,7 +89207,7 @@ tr5192:
 	{ hdr.Name = data[mark:p] }
 // line 99 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -89308,7 +89308,7 @@ case 1653:
 tr5193:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -90771,7 +90771,7 @@ case 1707:
 tr1518:
 // line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -90794,7 +90794,7 @@ case 1708:
 tr1111:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -90849,7 +90849,7 @@ case 1710:
 tr844:
 // line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 117 "zparse.rl"
+// line 102 "zparse.rl"
 	{ 
                     i := Str_rr[data[mark:p]]
                     mk, known := rr_mk[int(i)]
@@ -92862,6 +92862,8 @@ case 1718:
 // line 164 "zparse.rl"
 
 
+/*
+    This part needs work
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
@@ -92872,5 +92874,6 @@ case 1718:
                         return z, nil
                 }
         }
+*/
         return z, nil
 }
