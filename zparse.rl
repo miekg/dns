@@ -99,6 +99,16 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 action closeBrace { if !brace { println("Brace already closed")}; brace = false }
                 action brace      { brace }
                 action linecount  { lines++ }
+                action qtype      { 
+                    i := Str_rr[data[mark:p]]
+                    mk, known := rr_mk[int(i)]
+                    if ! known {
+                        println("Unknown type seen: " + data[mark:p])
+                        // panic?
+                    }
+                    rr = mk()
+                    hdr.Rrtype = i
+                }
 
                 # Newlines
                 nl = [\n]+ $linecount;
@@ -114,16 +124,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                     | (comment? nl)+ when brace
                 )+ %mark;
 
-                action qtype    { 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 ttl         = digit+ >mark;
@@ -154,15 +154,17 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                      | ('DS'i        %qtype bl n bl n bl n bl t) %rdata_ds
                      | ('DNSKEY'i    %qtype bl n bl n bl n bl t) %rdata_dnskey
                      | ('RRSIG'i     %qtype bl n bl n bl n bl n bl n bl n bl n bl t bl t) %rdata_rrsig
-                ) %set;
+                );
 
-                rr = lhs rhs;
+                rr = lhs rhs %set;
                 main := (rr? bl? ((comment? nl) when !brace))*;
 
                 write init;
                 write exec;
         }%%
 
+/*
+    This part needs work
         if cs < z_first_final {
                 // No clue what I'm doing what so ever
                 if p == pe {
@@ -173,5 +175,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                         return z, nil
                 }
         }
+*/
         return z, nil
 }
