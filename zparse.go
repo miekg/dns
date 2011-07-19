@@ -131,8 +131,9 @@ tr176:
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
-            rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(tok.T[0])
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.A = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -140,10 +141,11 @@ tr176:
 tr179:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 8 "types.rl"
+// line 9 "types.rl"
 	{
-            rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.AAAA = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -151,10 +153,11 @@ tr179:
 tr182:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 16 "types.rl"
+// line 19 "types.rl"
 	{
-            rr.(*RR_CNAME).Hdr = *hdr
-            rr.(*RR_CNAME).Cname = tok.T[0]
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Cname = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -162,13 +165,14 @@ tr182:
 tr185:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 42 "types.rl"
+// line 49 "types.rl"
 	{
-            rr.(*RR_DNSKEY).Hdr = *hdr;
-            rr.(*RR_DNSKEY).Flags = uint16(tok.N[0])
-            rr.(*RR_DNSKEY).Protocol = uint8(tok.N[1])
-            rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
-            rr.(*RR_DNSKEY).PublicKey = tok.T[0]
+            x := rr.(*RR_DNSKEY)
+            x.Hdr = *hdr;
+            x.Flags = uint16(tok.N[0])
+            x.Protocol = uint8(tok.N[1])
+            x.Algorithm = uint8(tok.N[2])
+            x.PublicKey = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -176,13 +180,14 @@ tr185:
 tr188:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 41 "types.rl"
 	{
-            rr.(*RR_DS).Hdr = *hdr;
-            rr.(*RR_DS).KeyTag = uint16(tok.N[0])
-            rr.(*RR_DS).Algorithm = uint8(tok.N[1])
-            rr.(*RR_DS).DigestType = uint8(tok.N[2])
-            rr.(*RR_DS).Digest = tok.T[0]
+            x := rr.(*RR_DS)
+            x.Hdr = *hdr;
+            x.KeyTag = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.DigestType = uint8(tok.N[2])
+            x.Digest = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -190,11 +195,12 @@ tr188:
 tr191:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 30 "types.rl"
+// line 35 "types.rl"
 	{
-            rr.(*RR_MX).Hdr = *hdr;
-            rr.(*RR_MX).Pref = uint16(tok.N[0])
-            rr.(*RR_MX).Mx = tok.T[0]
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -202,10 +208,11 @@ tr191:
 tr194:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 12 "types.rl"
+// line 14 "types.rl"
 	{
-            rr.(*RR_NS).Hdr = *hdr
-            rr.(*RR_NS).Ns = tok.T[0]
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -213,18 +220,19 @@ tr194:
 tr197:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 49 "types.rl"
+// line 57 "types.rl"
 	{
-            rr.(*RR_RRSIG).Hdr = *hdr;
-            rr.(*RR_RRSIG).TypeCovered = uint16(tok.N[0])
-            rr.(*RR_RRSIG).Algorithm = uint8(tok.N[1])
-            rr.(*RR_RRSIG).Labels = uint8(tok.N[2])
-            rr.(*RR_RRSIG).OrigTtl = uint32(tok.N[3])
-            rr.(*RR_RRSIG).Expiration = uint32(tok.N[4])
-            rr.(*RR_RRSIG).Inception = uint32(tok.N[5])
-            rr.(*RR_RRSIG).KeyTag = uint16(tok.N[6])
-            rr.(*RR_RRSIG).SignerName = tok.T[0]
-            rr.(*RR_RRSIG).Signature = tok.T[1]
+            x := rr.(*RR_RRSIG)
+            x.Hdr = *hdr;
+            x.TypeCovered = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.Labels = uint8(tok.N[2])
+            x.OrigTtl = uint32(tok.N[3])
+            x.Expiration = uint32(tok.N[4])
+            x.Inception = uint32(tok.N[5])
+            x.KeyTag = uint16(tok.N[6])
+            x.SignerName = tok.T[0]
+            x.Signature = tok.T[1]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -232,16 +240,17 @@ tr197:
 tr200:
 // line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 20 "types.rl"
+// line 24 "types.rl"
 	{
-            rr.(*RR_SOA).Hdr = *hdr
-            rr.(*RR_SOA).Ns = tok.T[0]
-            rr.(*RR_SOA).Mbox = tok.T[1]
-            rr.(*RR_SOA).Serial = uint32(tok.N[0])
-            rr.(*RR_SOA).Refresh = uint32(tok.N[1])
-            rr.(*RR_SOA).Retry = uint32(tok.N[2])
-            rr.(*RR_SOA).Expire = uint32(tok.N[3])
-            rr.(*RR_SOA).Minttl = uint32(tok.N[4])
+            x := rr.(*RR_SOA)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
+            x.Mbox = tok.T[1]
+            x.Serial = uint32(tok.N[0])
+            x.Refresh = uint32(tok.N[1])
+            x.Retry = uint32(tok.N[2])
+            x.Expire = uint32(tok.N[3])
+            x.Minttl = uint32(tok.N[4])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -251,7 +260,7 @@ st2:
 	if p == pe { goto _test_eof2 }
 	fallthrough
 case 2:
-// line 255 "zparse.go"
+// line 264 "zparse.go"
 	switch data[p] {
 		case 9: goto st2
 		case 32: goto st2
@@ -287,7 +296,7 @@ st3:
 	if p == pe { goto _test_eof3 }
 	fallthrough
 case 3:
-// line 291 "zparse.go"
+// line 300 "zparse.go"
 	switch data[p] {
 		case 9: goto tr13
 		case 32: goto tr13
@@ -303,7 +312,7 @@ st4:
 	if p == pe { goto _test_eof4 }
 	fallthrough
 case 4:
-// line 307 "zparse.go"
+// line 316 "zparse.go"
 	switch data[p] {
 		case 9: goto st4
 		case 32: goto st4
@@ -336,7 +345,7 @@ st5:
 	if p == pe { goto _test_eof5 }
 	fallthrough
 case 5:
-// line 340 "zparse.go"
+// line 349 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -364,7 +373,7 @@ st6:
 	if p == pe { goto _test_eof6 }
 	fallthrough
 case 6:
-// line 368 "zparse.go"
+// line 377 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 32: goto st6
@@ -389,7 +398,7 @@ st106:
 	if p == pe { goto _test_eof106 }
 	fallthrough
 case 106:
-// line 393 "zparse.go"
+// line 402 "zparse.go"
 	switch data[p] {
 		case 9: goto tr176
 		case 32: goto tr176
@@ -411,8 +420,9 @@ tr178:
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
-            rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(tok.T[0])
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.A = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -420,10 +430,11 @@ tr178:
 tr181:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 8 "types.rl"
+// line 9 "types.rl"
 	{
-            rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.AAAA = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -431,10 +442,11 @@ tr181:
 tr184:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 16 "types.rl"
+// line 19 "types.rl"
 	{
-            rr.(*RR_CNAME).Hdr = *hdr
-            rr.(*RR_CNAME).Cname = tok.T[0]
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Cname = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -442,13 +454,14 @@ tr184:
 tr187:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 42 "types.rl"
+// line 49 "types.rl"
 	{
-            rr.(*RR_DNSKEY).Hdr = *hdr;
-            rr.(*RR_DNSKEY).Flags = uint16(tok.N[0])
-            rr.(*RR_DNSKEY).Protocol = uint8(tok.N[1])
-            rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
-            rr.(*RR_DNSKEY).PublicKey = tok.T[0]
+            x := rr.(*RR_DNSKEY)
+            x.Hdr = *hdr;
+            x.Flags = uint16(tok.N[0])
+            x.Protocol = uint8(tok.N[1])
+            x.Algorithm = uint8(tok.N[2])
+            x.PublicKey = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -456,13 +469,14 @@ tr187:
 tr190:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 41 "types.rl"
 	{
-            rr.(*RR_DS).Hdr = *hdr;
-            rr.(*RR_DS).KeyTag = uint16(tok.N[0])
-            rr.(*RR_DS).Algorithm = uint8(tok.N[1])
-            rr.(*RR_DS).DigestType = uint8(tok.N[2])
-            rr.(*RR_DS).Digest = tok.T[0]
+            x := rr.(*RR_DS)
+            x.Hdr = *hdr;
+            x.KeyTag = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.DigestType = uint8(tok.N[2])
+            x.Digest = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -470,11 +484,12 @@ tr190:
 tr193:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 30 "types.rl"
+// line 35 "types.rl"
 	{
-            rr.(*RR_MX).Hdr = *hdr;
-            rr.(*RR_MX).Pref = uint16(tok.N[0])
-            rr.(*RR_MX).Mx = tok.T[0]
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -482,10 +497,11 @@ tr193:
 tr196:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 12 "types.rl"
+// line 14 "types.rl"
 	{
-            rr.(*RR_NS).Hdr = *hdr
-            rr.(*RR_NS).Ns = tok.T[0]
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -493,18 +509,19 @@ tr196:
 tr199:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 49 "types.rl"
+// line 57 "types.rl"
 	{
-            rr.(*RR_RRSIG).Hdr = *hdr;
-            rr.(*RR_RRSIG).TypeCovered = uint16(tok.N[0])
-            rr.(*RR_RRSIG).Algorithm = uint8(tok.N[1])
-            rr.(*RR_RRSIG).Labels = uint8(tok.N[2])
-            rr.(*RR_RRSIG).OrigTtl = uint32(tok.N[3])
-            rr.(*RR_RRSIG).Expiration = uint32(tok.N[4])
-            rr.(*RR_RRSIG).Inception = uint32(tok.N[5])
-            rr.(*RR_RRSIG).KeyTag = uint16(tok.N[6])
-            rr.(*RR_RRSIG).SignerName = tok.T[0]
-            rr.(*RR_RRSIG).Signature = tok.T[1]
+            x := rr.(*RR_RRSIG)
+            x.Hdr = *hdr;
+            x.TypeCovered = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.Labels = uint8(tok.N[2])
+            x.OrigTtl = uint32(tok.N[3])
+            x.Expiration = uint32(tok.N[4])
+            x.Inception = uint32(tok.N[5])
+            x.KeyTag = uint16(tok.N[6])
+            x.SignerName = tok.T[0]
+            x.Signature = tok.T[1]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -512,16 +529,17 @@ tr199:
 tr201:
 // line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 20 "types.rl"
+// line 24 "types.rl"
 	{
-            rr.(*RR_SOA).Hdr = *hdr
-            rr.(*RR_SOA).Ns = tok.T[0]
-            rr.(*RR_SOA).Mbox = tok.T[1]
-            rr.(*RR_SOA).Serial = uint32(tok.N[0])
-            rr.(*RR_SOA).Refresh = uint32(tok.N[1])
-            rr.(*RR_SOA).Retry = uint32(tok.N[2])
-            rr.(*RR_SOA).Expire = uint32(tok.N[3])
-            rr.(*RR_SOA).Minttl = uint32(tok.N[4])
+            x := rr.(*RR_SOA)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
+            x.Mbox = tok.T[1]
+            x.Serial = uint32(tok.N[0])
+            x.Refresh = uint32(tok.N[1])
+            x.Retry = uint32(tok.N[2])
+            x.Expire = uint32(tok.N[3])
+            x.Minttl = uint32(tok.N[4])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -531,7 +549,7 @@ st7:
 	if p == pe { goto _test_eof7 }
 	fallthrough
 case 7:
-// line 535 "zparse.go"
+// line 553 "zparse.go"
 	switch data[p] {
 		case 9: goto tr30
 		case 32: goto tr30
@@ -598,7 +616,7 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 602 "zparse.go"
+// line 620 "zparse.go"
 	switch data[p] {
 		case 9: goto st11
 		case 32: goto st11
@@ -623,7 +641,7 @@ st107:
 	if p == pe { goto _test_eof107 }
 	fallthrough
 case 107:
-// line 627 "zparse.go"
+// line 645 "zparse.go"
 	switch data[p] {
 		case 9: goto tr179
 		case 32: goto tr179
@@ -673,7 +691,7 @@ st14:
 	if p == pe { goto _test_eof14 }
 	fallthrough
 case 14:
-// line 677 "zparse.go"
+// line 695 "zparse.go"
 	switch data[p] {
 		case 9: goto st14
 		case 32: goto st14
@@ -702,7 +720,7 @@ st15:
 	if p == pe { goto _test_eof15 }
 	fallthrough
 case 15:
-// line 706 "zparse.go"
+// line 724 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -719,7 +737,7 @@ st16:
 	if p == pe { goto _test_eof16 }
 	fallthrough
 case 16:
-// line 723 "zparse.go"
+// line 741 "zparse.go"
 	switch data[p] {
 		case 78: goto st17
 		case 110: goto st17
@@ -783,7 +801,7 @@ st21:
 	if p == pe { goto _test_eof21 }
 	fallthrough
 case 21:
-// line 787 "zparse.go"
+// line 805 "zparse.go"
 	switch data[p] {
 		case 9: goto st21
 		case 32: goto st21
@@ -808,7 +826,7 @@ st108:
 	if p == pe { goto _test_eof108 }
 	fallthrough
 case 108:
-// line 812 "zparse.go"
+// line 830 "zparse.go"
 	switch data[p] {
 		case 9: goto tr182
 		case 32: goto tr182
@@ -840,7 +858,7 @@ st22:
 	if p == pe { goto _test_eof22 }
 	fallthrough
 case 22:
-// line 844 "zparse.go"
+// line 862 "zparse.go"
 	switch data[p] {
 		case 78: goto st23
 		case 83: goto st35
@@ -916,7 +934,7 @@ st28:
 	if p == pe { goto _test_eof28 }
 	fallthrough
 case 28:
-// line 920 "zparse.go"
+// line 938 "zparse.go"
 	switch data[p] {
 		case 9: goto st28
 		case 32: goto st28
@@ -932,7 +950,7 @@ st29:
 	if p == pe { goto _test_eof29 }
 	fallthrough
 case 29:
-// line 936 "zparse.go"
+// line 954 "zparse.go"
 	switch data[p] {
 		case 9: goto tr58
 		case 32: goto tr58
@@ -948,7 +966,7 @@ st30:
 	if p == pe { goto _test_eof30 }
 	fallthrough
 case 30:
-// line 952 "zparse.go"
+// line 970 "zparse.go"
 	switch data[p] {
 		case 9: goto st30
 		case 32: goto st30
@@ -964,7 +982,7 @@ st31:
 	if p == pe { goto _test_eof31 }
 	fallthrough
 case 31:
-// line 968 "zparse.go"
+// line 986 "zparse.go"
 	switch data[p] {
 		case 9: goto tr62
 		case 32: goto tr62
@@ -980,7 +998,7 @@ st32:
 	if p == pe { goto _test_eof32 }
 	fallthrough
 case 32:
-// line 984 "zparse.go"
+// line 1002 "zparse.go"
 	switch data[p] {
 		case 9: goto st32
 		case 32: goto st32
@@ -996,7 +1014,7 @@ st33:
 	if p == pe { goto _test_eof33 }
 	fallthrough
 case 33:
-// line 1000 "zparse.go"
+// line 1018 "zparse.go"
 	switch data[p] {
 		case 9: goto tr66
 		case 32: goto tr66
@@ -1012,7 +1030,7 @@ st34:
 	if p == pe { goto _test_eof34 }
 	fallthrough
 case 34:
-// line 1016 "zparse.go"
+// line 1034 "zparse.go"
 	switch data[p] {
 		case 9: goto st34
 		case 32: goto st34
@@ -1037,7 +1055,7 @@ st109:
 	if p == pe { goto _test_eof109 }
 	fallthrough
 case 109:
-// line 1041 "zparse.go"
+// line 1059 "zparse.go"
 	switch data[p] {
 		case 9: goto tr185
 		case 32: goto tr185
@@ -1082,7 +1100,7 @@ st36:
 	if p == pe { goto _test_eof36 }
 	fallthrough
 case 36:
-// line 1086 "zparse.go"
+// line 1104 "zparse.go"
 	switch data[p] {
 		case 9: goto st36
 		case 32: goto st36
@@ -1098,7 +1116,7 @@ st37:
 	if p == pe { goto _test_eof37 }
 	fallthrough
 case 37:
-// line 1102 "zparse.go"
+// line 1120 "zparse.go"
 	switch data[p] {
 		case 9: goto tr73
 		case 32: goto tr73
@@ -1114,7 +1132,7 @@ st38:
 	if p == pe { goto _test_eof38 }
 	fallthrough
 case 38:
-// line 1118 "zparse.go"
+// line 1136 "zparse.go"
 	switch data[p] {
 		case 9: goto st38
 		case 32: goto st38
@@ -1130,7 +1148,7 @@ st39:
 	if p == pe { goto _test_eof39 }
 	fallthrough
 case 39:
-// line 1134 "zparse.go"
+// line 1152 "zparse.go"
 	switch data[p] {
 		case 9: goto tr77
 		case 32: goto tr77
@@ -1146,7 +1164,7 @@ st40:
 	if p == pe { goto _test_eof40 }
 	fallthrough
 case 40:
-// line 1150 "zparse.go"
+// line 1168 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
 		case 32: goto st40
@@ -1162,7 +1180,7 @@ st41:
 	if p == pe { goto _test_eof41 }
 	fallthrough
 case 41:
-// line 1166 "zparse.go"
+// line 1184 "zparse.go"
 	switch data[p] {
 		case 9: goto tr81
 		case 32: goto tr81
@@ -1178,7 +1196,7 @@ st42:
 	if p == pe { goto _test_eof42 }
 	fallthrough
 case 42:
-// line 1182 "zparse.go"
+// line 1200 "zparse.go"
 	switch data[p] {
 		case 9: goto st42
 		case 32: goto st42
@@ -1203,7 +1221,7 @@ st110:
 	if p == pe { goto _test_eof110 }
 	fallthrough
 case 110:
-// line 1207 "zparse.go"
+// line 1225 "zparse.go"
 	switch data[p] {
 		case 9: goto tr188
 		case 32: goto tr188
@@ -1235,7 +1253,7 @@ st43:
 	if p == pe { goto _test_eof43 }
 	fallthrough
 case 43:
-// line 1239 "zparse.go"
+// line 1257 "zparse.go"
 	switch data[p] {
 		case 88: goto st44
 		case 120: goto st44
@@ -1269,7 +1287,7 @@ st45:
 	if p == pe { goto _test_eof45 }
 	fallthrough
 case 45:
-// line 1273 "zparse.go"
+// line 1291 "zparse.go"
 	switch data[p] {
 		case 9: goto st45
 		case 32: goto st45
@@ -1285,7 +1303,7 @@ st46:
 	if p == pe { goto _test_eof46 }
 	fallthrough
 case 46:
-// line 1289 "zparse.go"
+// line 1307 "zparse.go"
 	switch data[p] {
 		case 9: goto tr89
 		case 32: goto tr89
@@ -1301,7 +1319,7 @@ st47:
 	if p == pe { goto _test_eof47 }
 	fallthrough
 case 47:
-// line 1305 "zparse.go"
+// line 1323 "zparse.go"
 	switch data[p] {
 		case 9: goto st47
 		case 32: goto st47
@@ -1326,7 +1344,7 @@ st111:
 	if p == pe { goto _test_eof111 }
 	fallthrough
 case 111:
-// line 1330 "zparse.go"
+// line 1348 "zparse.go"
 	switch data[p] {
 		case 9: goto tr191
 		case 32: goto tr191
@@ -1352,7 +1370,7 @@ st48:
 	if p == pe { goto _test_eof48 }
 	fallthrough
 case 48:
-// line 1356 "zparse.go"
+// line 1374 "zparse.go"
 	switch data[p] {
 		case 83: goto st49
 		case 115: goto st49
@@ -1386,7 +1404,7 @@ st50:
 	if p == pe { goto _test_eof50 }
 	fallthrough
 case 50:
-// line 1390 "zparse.go"
+// line 1408 "zparse.go"
 	switch data[p] {
 		case 9: goto st50
 		case 32: goto st50
@@ -1411,7 +1429,7 @@ st112:
 	if p == pe { goto _test_eof112 }
 	fallthrough
 case 112:
-// line 1415 "zparse.go"
+// line 1433 "zparse.go"
 	switch data[p] {
 		case 9: goto tr194
 		case 32: goto tr194
@@ -1443,7 +1461,7 @@ st51:
 	if p == pe { goto _test_eof51 }
 	fallthrough
 case 51:
-// line 1447 "zparse.go"
+// line 1465 "zparse.go"
 	switch data[p] {
 		case 82: goto st52
 		case 114: goto st52
@@ -1507,7 +1525,7 @@ st56:
 	if p == pe { goto _test_eof56 }
 	fallthrough
 case 56:
-// line 1511 "zparse.go"
+// line 1529 "zparse.go"
 	switch data[p] {
 		case 9: goto st56
 		case 32: goto st56
@@ -1523,7 +1541,7 @@ st57:
 	if p == pe { goto _test_eof57 }
 	fallthrough
 case 57:
-// line 1527 "zparse.go"
+// line 1545 "zparse.go"
 	switch data[p] {
 		case 9: goto tr104
 		case 32: goto tr104
@@ -1539,7 +1557,7 @@ st58:
 	if p == pe { goto _test_eof58 }
 	fallthrough
 case 58:
-// line 1543 "zparse.go"
+// line 1561 "zparse.go"
 	switch data[p] {
 		case 9: goto st58
 		case 32: goto st58
@@ -1555,7 +1573,7 @@ st59:
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-// line 1559 "zparse.go"
+// line 1577 "zparse.go"
 	switch data[p] {
 		case 9: goto tr108
 		case 32: goto tr108
@@ -1571,7 +1589,7 @@ st60:
 	if p == pe { goto _test_eof60 }
 	fallthrough
 case 60:
-// line 1575 "zparse.go"
+// line 1593 "zparse.go"
 	switch data[p] {
 		case 9: goto st60
 		case 32: goto st60
@@ -1587,7 +1605,7 @@ st61:
 	if p == pe { goto _test_eof61 }
 	fallthrough
 case 61:
-// line 1591 "zparse.go"
+// line 1609 "zparse.go"
 	switch data[p] {
 		case 9: goto tr112
 		case 32: goto tr112
@@ -1603,7 +1621,7 @@ st62:
 	if p == pe { goto _test_eof62 }
 	fallthrough
 case 62:
-// line 1607 "zparse.go"
+// line 1625 "zparse.go"
 	switch data[p] {
 		case 9: goto st62
 		case 32: goto st62
@@ -1619,7 +1637,7 @@ st63:
 	if p == pe { goto _test_eof63 }
 	fallthrough
 case 63:
-// line 1623 "zparse.go"
+// line 1641 "zparse.go"
 	switch data[p] {
 		case 9: goto tr116
 		case 32: goto tr116
@@ -1635,7 +1653,7 @@ st64:
 	if p == pe { goto _test_eof64 }
 	fallthrough
 case 64:
-// line 1639 "zparse.go"
+// line 1657 "zparse.go"
 	switch data[p] {
 		case 9: goto st64
 		case 32: goto st64
@@ -1651,7 +1669,7 @@ st65:
 	if p == pe { goto _test_eof65 }
 	fallthrough
 case 65:
-// line 1655 "zparse.go"
+// line 1673 "zparse.go"
 	switch data[p] {
 		case 9: goto tr120
 		case 32: goto tr120
@@ -1667,7 +1685,7 @@ st66:
 	if p == pe { goto _test_eof66 }
 	fallthrough
 case 66:
-// line 1671 "zparse.go"
+// line 1689 "zparse.go"
 	switch data[p] {
 		case 9: goto st66
 		case 32: goto st66
@@ -1683,7 +1701,7 @@ st67:
 	if p == pe { goto _test_eof67 }
 	fallthrough
 case 67:
-// line 1687 "zparse.go"
+// line 1705 "zparse.go"
 	switch data[p] {
 		case 9: goto tr124
 		case 32: goto tr124
@@ -1699,7 +1717,7 @@ st68:
 	if p == pe { goto _test_eof68 }
 	fallthrough
 case 68:
-// line 1703 "zparse.go"
+// line 1721 "zparse.go"
 	switch data[p] {
 		case 9: goto st68
 		case 32: goto st68
@@ -1715,7 +1733,7 @@ st69:
 	if p == pe { goto _test_eof69 }
 	fallthrough
 case 69:
-// line 1719 "zparse.go"
+// line 1737 "zparse.go"
 	switch data[p] {
 		case 9: goto tr128
 		case 32: goto tr128
@@ -1731,7 +1749,7 @@ st70:
 	if p == pe { goto _test_eof70 }
 	fallthrough
 case 70:
-// line 1735 "zparse.go"
+// line 1753 "zparse.go"
 	switch data[p] {
 		case 9: goto st70
 		case 32: goto st70
@@ -1756,7 +1774,7 @@ st71:
 	if p == pe { goto _test_eof71 }
 	fallthrough
 case 71:
-// line 1760 "zparse.go"
+// line 1778 "zparse.go"
 	switch data[p] {
 		case 9: goto tr132
 		case 32: goto tr132
@@ -1781,7 +1799,7 @@ st72:
 	if p == pe { goto _test_eof72 }
 	fallthrough
 case 72:
-// line 1785 "zparse.go"
+// line 1803 "zparse.go"
 	switch data[p] {
 		case 9: goto st72
 		case 32: goto st72
@@ -1806,7 +1824,7 @@ st113:
 	if p == pe { goto _test_eof113 }
 	fallthrough
 case 113:
-// line 1810 "zparse.go"
+// line 1828 "zparse.go"
 	switch data[p] {
 		case 9: goto tr197
 		case 32: goto tr197
@@ -1838,7 +1856,7 @@ st73:
 	if p == pe { goto _test_eof73 }
 	fallthrough
 case 73:
-// line 1842 "zparse.go"
+// line 1860 "zparse.go"
 	switch data[p] {
 		case 79: goto st74
 		case 111: goto st74
@@ -1882,7 +1900,7 @@ st76:
 	if p == pe { goto _test_eof76 }
 	fallthrough
 case 76:
-// line 1886 "zparse.go"
+// line 1904 "zparse.go"
 	switch data[p] {
 		case 9: goto st76
 		case 32: goto st76
@@ -1907,7 +1925,7 @@ st77:
 	if p == pe { goto _test_eof77 }
 	fallthrough
 case 77:
-// line 1911 "zparse.go"
+// line 1929 "zparse.go"
 	switch data[p] {
 		case 9: goto tr141
 		case 32: goto tr141
@@ -1932,7 +1950,7 @@ st78:
 	if p == pe { goto _test_eof78 }
 	fallthrough
 case 78:
-// line 1936 "zparse.go"
+// line 1954 "zparse.go"
 	switch data[p] {
 		case 9: goto st78
 		case 32: goto st78
@@ -1957,7 +1975,7 @@ st79:
 	if p == pe { goto _test_eof79 }
 	fallthrough
 case 79:
-// line 1961 "zparse.go"
+// line 1979 "zparse.go"
 	switch data[p] {
 		case 9: goto tr145
 		case 32: goto tr145
@@ -1982,7 +2000,7 @@ st80:
 	if p == pe { goto _test_eof80 }
 	fallthrough
 case 80:
-// line 1986 "zparse.go"
+// line 2004 "zparse.go"
 	switch data[p] {
 		case 9: goto st80
 		case 32: goto st80
@@ -1998,7 +2016,7 @@ st81:
 	if p == pe { goto _test_eof81 }
 	fallthrough
 case 81:
-// line 2002 "zparse.go"
+// line 2020 "zparse.go"
 	switch data[p] {
 		case 9: goto tr149
 		case 32: goto tr149
@@ -2014,7 +2032,7 @@ st82:
 	if p == pe { goto _test_eof82 }
 	fallthrough
 case 82:
-// line 2018 "zparse.go"
+// line 2036 "zparse.go"
 	switch data[p] {
 		case 9: goto st82
 		case 32: goto st82
@@ -2030,7 +2048,7 @@ st83:
 	if p == pe { goto _test_eof83 }
 	fallthrough
 case 83:
-// line 2034 "zparse.go"
+// line 2052 "zparse.go"
 	switch data[p] {
 		case 9: goto tr153
 		case 32: goto tr153
@@ -2046,7 +2064,7 @@ st84:
 	if p == pe { goto _test_eof84 }
 	fallthrough
 case 84:
-// line 2050 "zparse.go"
+// line 2068 "zparse.go"
 	switch data[p] {
 		case 9: goto st84
 		case 32: goto st84
@@ -2062,7 +2080,7 @@ st85:
 	if p == pe { goto _test_eof85 }
 	fallthrough
 case 85:
-// line 2066 "zparse.go"
+// line 2084 "zparse.go"
 	switch data[p] {
 		case 9: goto tr157
 		case 32: goto tr157
@@ -2078,7 +2096,7 @@ st86:
 	if p == pe { goto _test_eof86 }
 	fallthrough
 case 86:
-// line 2082 "zparse.go"
+// line 2100 "zparse.go"
 	switch data[p] {
 		case 9: goto st86
 		case 32: goto st86
@@ -2094,7 +2112,7 @@ st87:
 	if p == pe { goto _test_eof87 }
 	fallthrough
 case 87:
-// line 2098 "zparse.go"
+// line 2116 "zparse.go"
 	switch data[p] {
 		case 9: goto tr161
 		case 32: goto tr161
@@ -2110,7 +2128,7 @@ st88:
 	if p == pe { goto _test_eof88 }
 	fallthrough
 case 88:
-// line 2114 "zparse.go"
+// line 2132 "zparse.go"
 	switch data[p] {
 		case 9: goto st88
 		case 32: goto st88
@@ -2126,7 +2144,7 @@ st114:
 	if p == pe { goto _test_eof114 }
 	fallthrough
 case 114:
-// line 2130 "zparse.go"
+// line 2148 "zparse.go"
 	switch data[p] {
 		case 9: goto tr200
 		case 32: goto tr200
@@ -2154,7 +2172,7 @@ st89:
 	if p == pe { goto _test_eof89 }
 	fallthrough
 case 89:
-// line 2158 "zparse.go"
+// line 2176 "zparse.go"
 	switch data[p] {
 		case 72: goto st13
 		case 78: goto st17
@@ -2173,7 +2191,7 @@ st90:
 	if p == pe { goto _test_eof90 }
 	fallthrough
 case 90:
-// line 2177 "zparse.go"
+// line 2195 "zparse.go"
 	switch data[p] {
 		case 83: goto st13
 		case 115: goto st13
@@ -2188,7 +2206,7 @@ st91:
 	if p == pe { goto _test_eof91 }
 	fallthrough
 case 91:
-// line 2192 "zparse.go"
+// line 2210 "zparse.go"
 	switch data[p] {
 		case 78: goto st13
 		case 110: goto st13
@@ -2203,7 +2221,7 @@ st92:
 	if p == pe { goto _test_eof92 }
 	fallthrough
 case 92:
-// line 2207 "zparse.go"
+// line 2225 "zparse.go"
 	switch data[p] {
 		case 79: goto st93
 		case 83: goto st49
@@ -2242,7 +2260,7 @@ st95:
 	if p == pe { goto _test_eof95 }
 	fallthrough
 case 95:
-// line 2246 "zparse.go"
+// line 2264 "zparse.go"
 	switch data[p] {
 		case 9: goto tr25
 		case 32: goto tr25
@@ -2281,7 +2299,7 @@ st98:
 	if p == pe { goto _test_eof98 }
 	fallthrough
 case 98:
-// line 2285 "zparse.go"
+// line 2303 "zparse.go"
 	switch data[p] {
 		case 9: goto st98
 		case 32: goto st98
@@ -2311,7 +2329,7 @@ st99:
 	if p == pe { goto _test_eof99 }
 	fallthrough
 case 99:
-// line 2315 "zparse.go"
+// line 2333 "zparse.go"
 	switch data[p] {
 		case 9: goto tr172
 		case 32: goto tr172
@@ -2329,7 +2347,7 @@ st100:
 	if p == pe { goto _test_eof100 }
 	fallthrough
 case 100:
-// line 2333 "zparse.go"
+// line 2351 "zparse.go"
 	switch data[p] {
 		case 72: goto st97
 		case 78: goto st17
@@ -2350,7 +2368,7 @@ st101:
 	if p == pe { goto _test_eof101 }
 	fallthrough
 case 101:
-// line 2354 "zparse.go"
+// line 2372 "zparse.go"
 	switch data[p] {
 		case 83: goto st97
 		case 115: goto st97
@@ -2367,7 +2385,7 @@ st102:
 	if p == pe { goto _test_eof102 }
 	fallthrough
 case 102:
-// line 2371 "zparse.go"
+// line 2389 "zparse.go"
 	switch data[p] {
 		case 78: goto st97
 		case 110: goto st97
@@ -2384,7 +2402,7 @@ st103:
 	if p == pe { goto _test_eof103 }
 	fallthrough
 case 103:
-// line 2388 "zparse.go"
+// line 2406 "zparse.go"
 	switch data[p] {
 		case 79: goto st104
 		case 83: goto st49
@@ -2533,16 +2551,17 @@ case 105:
 	case 114:
 // line 91 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 20 "types.rl"
+// line 24 "types.rl"
 	{
-            rr.(*RR_SOA).Hdr = *hdr
-            rr.(*RR_SOA).Ns = tok.T[0]
-            rr.(*RR_SOA).Mbox = tok.T[1]
-            rr.(*RR_SOA).Serial = uint32(tok.N[0])
-            rr.(*RR_SOA).Refresh = uint32(tok.N[1])
-            rr.(*RR_SOA).Retry = uint32(tok.N[2])
-            rr.(*RR_SOA).Expire = uint32(tok.N[3])
-            rr.(*RR_SOA).Minttl = uint32(tok.N[4])
+            x := rr.(*RR_SOA)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
+            x.Mbox = tok.T[1]
+            x.Serial = uint32(tok.N[0])
+            x.Refresh = uint32(tok.N[1])
+            x.Retry = uint32(tok.N[2])
+            x.Expire = uint32(tok.N[3])
+            x.Minttl = uint32(tok.N[4])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2552,8 +2571,9 @@ case 105:
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
-            rr.(*RR_A).Hdr = *hdr
-            rr.(*RR_A).A = net.ParseIP(tok.T[0])
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.A = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2561,10 +2581,11 @@ case 105:
 	case 107:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 8 "types.rl"
+// line 9 "types.rl"
 	{
-            rr.(*RR_AAAA).Hdr = *hdr
-            rr.(*RR_AAAA).AAAA = net.ParseIP(tok.T[0])
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.AAAA = net.ParseIP(tok.T[0])
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2572,10 +2593,11 @@ case 105:
 	case 112:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 12 "types.rl"
+// line 14 "types.rl"
 	{
-            rr.(*RR_NS).Hdr = *hdr
-            rr.(*RR_NS).Ns = tok.T[0]
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Ns = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2583,10 +2605,11 @@ case 105:
 	case 108:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 16 "types.rl"
+// line 19 "types.rl"
 	{
-            rr.(*RR_CNAME).Hdr = *hdr
-            rr.(*RR_CNAME).Cname = tok.T[0]
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Cname = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2594,11 +2617,12 @@ case 105:
 	case 111:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 30 "types.rl"
+// line 35 "types.rl"
 	{
-            rr.(*RR_MX).Hdr = *hdr;
-            rr.(*RR_MX).Pref = uint16(tok.N[0])
-            rr.(*RR_MX).Mx = tok.T[0]
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2606,13 +2630,14 @@ case 105:
 	case 110:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 41 "types.rl"
 	{
-            rr.(*RR_DS).Hdr = *hdr;
-            rr.(*RR_DS).KeyTag = uint16(tok.N[0])
-            rr.(*RR_DS).Algorithm = uint8(tok.N[1])
-            rr.(*RR_DS).DigestType = uint8(tok.N[2])
-            rr.(*RR_DS).Digest = tok.T[0]
+            x := rr.(*RR_DS)
+            x.Hdr = *hdr;
+            x.KeyTag = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.DigestType = uint8(tok.N[2])
+            x.Digest = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2620,13 +2645,14 @@ case 105:
 	case 109:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 42 "types.rl"
+// line 49 "types.rl"
 	{
-            rr.(*RR_DNSKEY).Hdr = *hdr;
-            rr.(*RR_DNSKEY).Flags = uint16(tok.N[0])
-            rr.(*RR_DNSKEY).Protocol = uint8(tok.N[1])
-            rr.(*RR_DNSKEY).Algorithm = uint8(tok.N[2])
-            rr.(*RR_DNSKEY).PublicKey = tok.T[0]
+            x := rr.(*RR_DNSKEY)
+            x.Hdr = *hdr;
+            x.Flags = uint16(tok.N[0])
+            x.Protocol = uint8(tok.N[1])
+            x.Algorithm = uint8(tok.N[2])
+            x.PublicKey = tok.T[0]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
@@ -2634,23 +2660,24 @@ case 105:
 	case 113:
 // line 92 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 49 "types.rl"
+// line 57 "types.rl"
 	{
-            rr.(*RR_RRSIG).Hdr = *hdr;
-            rr.(*RR_RRSIG).TypeCovered = uint16(tok.N[0])
-            rr.(*RR_RRSIG).Algorithm = uint8(tok.N[1])
-            rr.(*RR_RRSIG).Labels = uint8(tok.N[2])
-            rr.(*RR_RRSIG).OrigTtl = uint32(tok.N[3])
-            rr.(*RR_RRSIG).Expiration = uint32(tok.N[4])
-            rr.(*RR_RRSIG).Inception = uint32(tok.N[5])
-            rr.(*RR_RRSIG).KeyTag = uint16(tok.N[6])
-            rr.(*RR_RRSIG).SignerName = tok.T[0]
-            rr.(*RR_RRSIG).Signature = tok.T[1]
+            x := rr.(*RR_RRSIG)
+            x.Hdr = *hdr;
+            x.TypeCovered = uint16(tok.N[0])
+            x.Algorithm = uint8(tok.N[1])
+            x.Labels = uint8(tok.N[2])
+            x.OrigTtl = uint32(tok.N[3])
+            x.Expiration = uint32(tok.N[4])
+            x.Inception = uint32(tok.N[5])
+            x.KeyTag = uint16(tok.N[6])
+            x.SignerName = tok.T[0]
+            x.Signature = tok.T[1]
         }
 // line 94 "zparse.rl"
 	{ z.Push(rr); tok.reset(); println("setting") }
 	break
-// line 2654 "zparse.go"
+// line 2681 "zparse.go"
 	}
 	}
 
