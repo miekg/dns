@@ -1,7 +1,8 @@
 package dns
 
 // Parse RRs
-// With the thankful help of gdnsd and the Go examples for Ragel 
+// With the thankful help of gdnsd and the Go examples for Ragel.
+// 
 
 import (
     "os"
@@ -75,23 +76,43 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         z = new(Zone)
 
         data := string(buf)
-        cs, p, pe, eof := 0, 0, len(data), len(data)
+//        cs, p, pe, eof := 0, 0, len(data), len(data)
+        cs, p, pe := 0, 0, len(data)
+        brace := false
+        lines := 0
         mark := 0
         hdr := new(RR_Header)
         tok := newToken()
         var rr RR
 
         %%{
-                # can't do comments yet TODO
-                action mark      { mark = p }
-                action qname     { hdr.Name = data[mark:p] }
-                action qclass    { hdr.Class = Str_class[data[mark:p]] }
-                action defTtl    { /* ... */ }
-                action setTtl    { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-                action number    { tok.pushInt(data[mark:p]) }
-                action text      { tok.pushString(data[mark:p]) }
-                action textblank { tok.pushString(data[mark:p]) }
-                action set       { z.Push(rr); tok.reset(); println("setting") }
+                action mark       { mark = p }
+                action qname      { hdr.Name = data[mark:p] }
+                action qclass     { hdr.Class = Str_class[data[mark:p]] }
+                action defTtl     { /* ... */ }
+                action setTtl     { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+                action number     { tok.pushInt(data[mark:p]) }
+                action text       { tok.pushString(data[mark:p]) }
+                action textblank  { tok.pushString(data[mark:p]) }
+                action set        { z.Push(rr); tok.reset(); println("setting") }
+                action openBrace  { if brace { println("Brace already open")} ; brace = true }
+                action closeBrace { if !brace { println("Brace already closed")}; brace = false }
+                action brace      { brace }
+                action linecount  { lines++ }
+
+                # Newlines
+                nl = [\n]+ $linecount;
+
+                # Comments, entire line. Shorter comments are handled in the 
+                # 'bl' definition below.
+                comment = ';' [^\n]*;
+
+                bl = (
+                    [ \t]+
+                    | '(' $openBrace
+                    | ')' $closeBrace
+                    | (comment? nl)+ when brace
+                )+ %mark;
 
                 action qtype    { 
                     i := Str_rr[data[mark:p]]
@@ -106,7 +127,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 ttl         = digit+ >mark;
-                bl          = [ \t]+ %mark;
                 qname       = [\-a-zA-Z0-9.\\_]+ %qname;
                 # If I use this in the definitions at the end, things break.
                 # 6l seems to hang when compiling the resulting .go file...
@@ -114,7 +134,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 tb          = [\-a-zA-Z0-9.\\/+=: ]+ $1 %0 %textblank;
                 t           = [\-a-zA-Z0-9.\\/+=:]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
-                comment     = /^;/;
 
                 lhs = qname? bl %defTtl (
                       (ttl %setTtl bl (qclass bl)?)
@@ -138,7 +157,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 ) %set;
 
                 rr = lhs rhs;
-                main := rr+;
+                main := (rr? bl? ((comment? nl) when !brace))*;
 
                 write init;
                 write exec;
