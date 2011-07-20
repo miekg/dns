@@ -32,7 +32,7 @@ func (z *Zone) Len() int {
 
 func (z *Zone) String() string {
         for i:=0; i < z.Len(); i++ {
-                println(z.At(i).String())
+                print(z.At(i).String())
         }
         return ""
 }
