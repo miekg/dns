@@ -23,6 +23,7 @@ GOFILES=\
 	xfr.go\
 	zone.go\
 	zparse.go\
+#	test.go\
 
 
 include $(GOROOT)/src/Make.pkg

@@ -76,8 +76,8 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         z = new(Zone)
 
         data := string(buf)
-//        cs, p, pe, eof := 0, 0, len(data), len(data)
         cs, p, pe := 0, 0, len(data)
+        eof := len(data)
         brace := false
         lines := 0
         mark := 0
@@ -93,8 +93,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 action setTtl     { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
                 action number     { tok.pushInt(data[mark:p]) }
                 action text       { tok.pushString(data[mark:p]) }
-                action textblank  { tok.pushString(data[mark:p]) }
-                action set        { z.Push(rr); tok.reset(); println("setting") }
+                action set        { z.Push(rr); tok.reset() }
                 action openBrace  { if brace { println("Brace already open")} ; brace = true }
                 action closeBrace { if !brace { println("Brace already closed")}; brace = false }
                 action brace      { brace }
@@ -124,15 +123,15 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                     | (comment? nl)+ when brace
                 )+ %mark;
 
-
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
+                chars       = [^; \t"\n\\)(];
                 ttl         = digit+ >mark;
-                qname       = [\-a-zA-Z0-9.\\_]+ %qname;
+                qname       = chars+ %qname;
                 # If I use this in the definitions at the end, things break.
                 # 6l seems to hang when compiling the resulting .go file...
                 # tb is WITH the space
-                tb          = [\-a-zA-Z0-9.\\/+=: ]+ $1 %0 %textblank;
-                t           = [\-a-zA-Z0-9.\\/+=:]+ $1 %0 %text;
+                tb          = (chars | ' ')+ $1 %0 %text;
+                t           = chars+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
 
                 lhs = qname? bl %defTtl (
@@ -149,11 +148,11 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                      | ('AAAA'i      %qtype bl t) %rdata_aaaa
                      | ('NS'i        %qtype bl t) %rdata_ns
                      | ('CNAME'i     %qtype bl t) %rdata_cname
-                     | ('SOA'i       %qtype bl t bl t bl n bl n bl n bl n bl n) %rdata_soa
+#                     | ('SOA'i       %qtype bl t bl t bl n bl n bl n bl n bl n) %rdata_soa
                      | ('MX'i        %qtype bl n bl t) %rdata_mx
-                     | ('DS'i        %qtype bl n bl n bl n bl t) %rdata_ds
-                     | ('DNSKEY'i    %qtype bl n bl n bl n bl t) %rdata_dnskey
-                     | ('RRSIG'i     %qtype bl n bl n bl n bl n bl n bl n bl n bl t bl t) %rdata_rrsig
+#                     | ('DS'i        %qtype bl n bl n bl n bl tb) %rdata_ds
+#                     | ('DNSKEY'i    %qtype bl n bl n bl n bl tb) %rdata_dnskey
+#                     | ('RRSIG'i     %qtype bl n bl n bl n bl n bl n bl n bl n bl t bl tb) %rdata_rrsig
                 );
 
                 rr = lhs rhs %set;
@@ -162,19 +161,18 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 write init;
                 write exec;
         }%%
-
-/*
-    This part needs work
-        if cs < z_first_final {
-                // No clue what I'm doing what so ever
-                if p == pe {
-                        println("unexpected eof")
-                        return z, nil
-                } else {
-                        println("error at position ", p)
-                        return z, nil
+        
+        if eof > -1 {
+                if cs < z_first_final {
+                        // No clue what I'm doing what so ever
+                        if p == pe {
+                                println("unexpected eof")
+                                return z, nil
+                        } else {
+                                println("error at position ", p)
+                                return z, nil
+                        }
                 }
         }
-*/
         return z, nil
 }
