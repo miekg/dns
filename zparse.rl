@@ -207,7 +207,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 nl = [\n]+ $linecount;
 
                 # Comments, entire line. Shorter comments are handled in the 
-                # 'bl' definition below.
+                # 'bl' definition below. TODO
                 comment = ';' [^\n]*;
 
                 bl = (
@@ -220,12 +220,14 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 #                chars       = [^; \t"\n\\)(];
                 ws          = [ \t]+;
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
-                qname       = [a-zA-Z0-9_\-.]+ %qname;
-                t           = [a-zA-Z0-9_\-.:]+ $1 %0 %text;
+                qname       = [a-zA-Z0-9_\-.\+=/]+ %qname;
+                t           = [a-zA-Z0-9_\-.:\+=/]+ $1 %0 %text;
+                # now if I use this, I get an assertion failure in Ragel ... :-)
                 tb          = [a-zA-Z0-9_\-.: ]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
                 ttl         = digit+ >mark;
 
+                # Not even sure this works okay
                 lhs = qname? bl %defTtl (
                       (ttl %setTtl bl (qclass bl)?)
                     | (qclass bl (ttl %setTtl bl)?)
@@ -237,9 +239,11 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                     lhs 'CNAME'i    bl t nl      => { rr = rdata_cname(*hdr, tok); set(rr, z, tok); };
                     lhs 'AAAA'i     bl t nl      => { rr = rdata_aaaa(*hdr, tok); set(rr, z, tok); };
                     lhs 'MX'i       bl n bl t nl => { rr = rdata_mx(*hdr, tok); set(rr, z, tok); };
-                    lhs 'SOA'i      bl t bl t bl n bl n bl n bl n bl n nl => { rr = rdata_soa(*hdr, tok); set(rr, z, tok); };
+                    lhs 'SOA'i      bl t bl t bl n bl n bl n bl n bl n nl           => { rr = rdata_soa(*hdr, tok); set(rr, z, tok); };
+                    lhs 'DS'i       bl n bl n bl n bl t nl                          => { rr = rdata_ds(*hdr, tok); set(rr, z, tok); };
+                    lhs 'DNSKEY'i   bl n bl n bl n bl t nl                          => { rr = rdata_dnskey(*hdr, tok); set(rr, z, tok); };
+                    lhs 'RRSIG'i    bl n bl n bl n bl n bl n bl n bl n bl t bl t nl => { rr = rdata_rrsig(*hdr, tok); set(rr, z, tok); };
                 *|;
-#                main := (rr? bl? ((comment? nl) when !brace))*;
 
                 write init;
                 write exec;
