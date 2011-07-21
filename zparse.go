@@ -86,7 +86,13 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
         data := string(buf)
         cs, p, pe := 0, 0, len(data)
+        ts, te, act := 0, 0, 0
+//        top := 0
+//        stack := make([]int, 100)
         eof := len(data)
+        // keep Go happy
+        ts = ts; te = te; act = act
+
         brace := false
         lines := 0
         mark := 0
@@ -95,10 +101,10 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         var rr RR
 
         
-// line 99 "zparse.go"
+// line 105 "zparse.go"
 	cs = z_start
 
-// line 102 "zparse.go"
+// line 108 "zparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
@@ -107,11 +113,11 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 case 324:
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr72
+		case 10: goto tr67
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
+		case 40: goto tr57
+		case 41: goto tr58
 		case 59: goto st13
 		case 92: goto st0
 	}
@@ -133,97 +139,97 @@ case 1:
 	}
 	goto st1
 tr1:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st2
 tr2:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st2
 tr4:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st2
 tr5:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st2
 tr8:
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st2
 tr9:
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st2
 tr10:
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st2
-tr65:
-// line 90 "zparse.rl"
+tr60:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st2
-tr66:
-// line 90 "zparse.rl"
+tr61:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st2
-tr67:
-// line 90 "zparse.rl"
+tr62:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+	goto st2
+tr63:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+	goto st2
+tr100:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-	goto st2
-tr68:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-	goto st2
-tr105:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st2
-tr106:
-// line 90 "zparse.rl"
+tr101:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-	goto st2
-tr107:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st2
-tr108:
-// line 90 "zparse.rl"
+tr102:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+	goto st2
+tr103:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st2
 st2:
@@ -231,7 +237,7 @@ st2:
 	if p == pe { goto _test_eof2 }
 	fallthrough
 case 2:
-// line 235 "zparse.go"
+// line 241 "zparse.go"
 	switch data[p] {
 		case 9: goto st2
 		case 10: goto tr8
@@ -258,9 +264,9 @@ st0:
 cs = 0;
 	goto _out;
 tr11:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st3
 st3:
@@ -268,7 +274,7 @@ st3:
 	if p == pe { goto _test_eof3 }
 	fallthrough
 case 3:
-// line 272 "zparse.go"
+// line 278 "zparse.go"
 	switch data[p] {
 		case 9: goto tr19
 		case 10: goto tr20
@@ -280,37 +286,37 @@ case 3:
 	if 48 <= data[p] && data[p] <= 57 { goto st3 }
 	goto st0
 tr26:
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st4
 tr27:
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st4
 tr28:
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st4
 tr19:
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st4
 tr20:
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st4
 tr21:
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st4
 tr22:
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st4
 st4:
@@ -318,7 +324,7 @@ st4:
 	if p == pe { goto _test_eof4 }
 	fallthrough
 case 4:
-// line 322 "zparse.go"
+// line 328 "zparse.go"
 	switch data[p] {
 		case 9: goto st4
 		case 10: goto tr26
@@ -341,7 +347,7 @@ case 4:
 	}
 	goto st0
 tr24:
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st5
 st5:
@@ -349,11 +355,11 @@ st5:
 	if p == pe { goto _test_eof5 }
 	fallthrough
 case 5:
-// line 353 "zparse.go"
+// line 359 "zparse.go"
 	if data[p] == 10 { goto tr26 }
 	goto st5
 tr30:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st6
 st6:
@@ -361,88 +367,30 @@ st6:
 	if p == pe { goto _test_eof6 }
 	fallthrough
 case 6:
-// line 365 "zparse.go"
+// line 371 "zparse.go"
 	switch data[p] {
-		case 9: goto tr36
+		case 9: goto st7
 		case 10: goto tr37
-		case 32: goto tr36
+		case 32: goto st7
 		case 40: goto tr38
 		case 41: goto tr39
-		case 59: goto tr40
+		case 59: goto st191
 		case 65: goto st192
 		case 78: goto st323
 		case 97: goto st192
 		case 110: goto st323
 	}
 	goto st0
-tr45:
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st7
-tr46:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st7
-tr47:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st7
-tr36:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st7
 tr37:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st7
 tr38:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st7
 tr39:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st7
 st7:
@@ -450,20 +398,20 @@ st7:
 	if p == pe { goto _test_eof7 }
 	fallthrough
 case 7:
-// line 454 "zparse.go"
+// line 402 "zparse.go"
 	switch data[p] {
 		case 9: goto st7
-		case 10: goto tr45
+		case 10: goto tr37
 		case 32: goto st7
 		case 34: goto st0
-		case 40: goto tr46
-		case 41: goto tr47
+		case 40: goto tr38
+		case 41: goto tr39
 		case 59: goto st191
 		case 92: goto st0
 	}
 	goto tr43
 tr43:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st8
 st8:
@@ -471,227 +419,257 @@ st8:
 	if p == pe { goto _test_eof8 }
 	fallthrough
 case 8:
-// line 475 "zparse.go"
+// line 423 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 92: goto st0
 	}
 	goto st8
-tr57:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st9
-tr58:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st9
-tr50:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st9
 tr52:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st9
 tr53:
-// line 95 "zparse.rl"
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st9
+tr45:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st9
-tr132:
-// line 95 "zparse.rl"
+tr47:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 4 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
+            rr = new(RR_A)
+            x := rr.(*RR_A)
             x.Hdr = *hdr
-            x.Cname = tok.T[0]
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st9
-tr134:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 97 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st9
-tr135:
-// line 95 "zparse.rl"
+tr48:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st9
+tr127:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st9
-tr206:
-// line 95 "zparse.rl"
+tr129:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 25 "types.rl"
 	{
-            x := rr.(*RR_AAAA)
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
             x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st9
-tr208:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 97 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st9
-tr209:
-// line 95 "zparse.rl"
+tr130:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 25 "types.rl"
 	{
-            x := rr.(*RR_AAAA)
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
             x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 98 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st9
-tr334:
-// line 95 "zparse.rl"
+tr201:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st9
+tr203:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st9
+tr204:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st9
+tr329:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st9
-tr336:
-// line 95 "zparse.rl"
+tr331:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 97 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st9
-tr337:
-// line 95 "zparse.rl"
+tr332:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 98 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st9
-tr487:
-// line 95 "zparse.rl"
+tr482:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st9
-tr489:
-// line 95 "zparse.rl"
+tr484:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 97 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st9
-tr490:
-// line 95 "zparse.rl"
+tr485:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 98 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st9
 st9:
@@ -699,95 +677,105 @@ st9:
 	if p == pe { goto _test_eof9 }
 	fallthrough
 case 9:
-// line 703 "zparse.go"
+// line 681 "zparse.go"
 	switch data[p] {
 		case 9: goto st9
-		case 10: goto tr56
+		case 10: goto tr51
 		case 32: goto st9
-		case 40: goto tr57
-		case 41: goto tr58
-		case 59: goto tr59
+		case 40: goto tr52
+		case 41: goto tr53
+		case 59: goto tr54
 	}
 	goto st0
-tr138:
-// line 100 "zparse.rl"
+tr133:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
-tr51:
-// line 95 "zparse.rl"
+tr46:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 100 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
-tr56:
-// line 100 "zparse.rl"
+tr51:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st325
-tr133:
-// line 95 "zparse.rl"
+tr128:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 100 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
-tr207:
-// line 95 "zparse.rl"
+tr202:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 100 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
-tr335:
-// line 95 "zparse.rl"
+tr330:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 100 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
-tr488:
-// line 95 "zparse.rl"
+tr483:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-// line 100 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st325
 st325:
@@ -795,639 +783,711 @@ st325:
 	if p == pe { goto _test_eof325 }
 	fallthrough
 case 325:
-// line 799 "zparse.go"
+// line 787 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
 		case 92: goto st0
 	}
 	goto st1
-tr62:
-// line 97 "zparse.rl"
+tr57:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st10
-tr63:
-// line 98 "zparse.rl"
+tr58:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st10
-tr160:
-// line 90 "zparse.rl"
+tr155:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr162:
-// line 90 "zparse.rl"
+tr157:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr163:
-// line 90 "zparse.rl"
+tr158:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr170:
-// line 90 "zparse.rl"
+tr165:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr172:
-// line 90 "zparse.rl"
+tr167:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr173:
-// line 90 "zparse.rl"
+tr168:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr207:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr209:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr210:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr212:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr214:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr215:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr217:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr219:
-// line 90 "zparse.rl"
+tr235:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr220:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr240:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr242:
-// line 90 "zparse.rl"
+tr237:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr243:
-// line 90 "zparse.rl"
+tr238:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr255:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr257:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr258:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr260:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr262:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 tr263:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr265:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr267:
-// line 90 "zparse.rl"
+tr283:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr268:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr288:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr290:
-// line 90 "zparse.rl"
+tr285:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr286:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr488:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr490:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr491:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr505:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr507:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr508:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr528:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 18 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr291:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr493:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr495:
-// line 90 "zparse.rl"
+tr530:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr531:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st10
+tr792:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr496:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr510:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr512:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr513:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr533:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr535:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr536:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st10
-tr817:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr819:
-// line 90 "zparse.rl"
+tr794:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
-tr820:
-// line 90 "zparse.rl"
+tr795:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st10
 st10:
 	p++
 	if p == pe { goto _test_eof10 }
 	fallthrough
 case 10:
-// line 1424 "zparse.go"
+// line 1484 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
 		case 65: goto tr13
 		case 67: goto tr14
 		case 72: goto tr15
@@ -1443,262 +1503,286 @@ case 10:
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto tr11 }
 	goto st0
-tr72:
-// line 100 "zparse.rl"
+tr67:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st326
-tr61:
-// line 100 "zparse.rl"
+tr56:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st326
-tr161:
-// line 90 "zparse.rl"
+tr156:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr171:
-// line 90 "zparse.rl"
+tr166:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st326
+tr208:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
 tr213:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st326
-tr218:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr241:
-// line 90 "zparse.rl"
+tr236:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st326
+tr256:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
 tr261:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st326
-tr266:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr289:
-// line 90 "zparse.rl"
+tr284:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr494:
-// line 90 "zparse.rl"
+tr489:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr511:
-// line 90 "zparse.rl"
+tr506:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr534:
-// line 90 "zparse.rl"
+tr529:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
-tr818:
-// line 90 "zparse.rl"
+tr793:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st326
 st326:
 	p++
 	if p == pe { goto _test_eof326 }
 	fallthrough
 case 326:
-// line 1670 "zparse.go"
+// line 1754 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
-		case 65: goto tr904
-		case 67: goto tr905
-		case 72: goto tr906
-		case 73: goto tr907
-		case 77: goto tr908
-		case 78: goto tr909
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
+		case 65: goto tr879
+		case 67: goto tr880
+		case 72: goto tr881
+		case 73: goto tr882
+		case 77: goto tr883
+		case 78: goto tr884
 		case 92: goto st0
-		case 97: goto tr904
-		case 99: goto tr905
-		case 104: goto tr906
-		case 105: goto tr907
-		case 109: goto tr908
-		case 110: goto tr909
+		case 97: goto tr879
+		case 99: goto tr880
+		case 104: goto tr881
+		case 105: goto tr882
+		case 109: goto tr883
+		case 110: goto tr884
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr903 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr878 }
 	goto st1
-tr903:
-// line 89 "zparse.rl"
+tr878:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st11
-tr941:
-// line 89 "zparse.rl"
+tr916:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -1706,33 +1790,33 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 1710 "zparse.go"
+// line 1794 "zparse.go"
 	switch data[p] {
-		case 9: goto tr65
-		case 10: goto tr66
-		case 32: goto tr65
+		case 9: goto tr60
+		case 10: goto tr61
+		case 32: goto tr60
 		case 34: goto st0
-		case 40: goto tr67
-		case 41: goto tr68
-		case 59: goto tr70
+		case 40: goto tr62
+		case 41: goto tr63
+		case 59: goto tr65
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st11 }
 	goto st1
 tr6:
-// line 90 "zparse.rl"
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st12
-tr70:
-// line 90 "zparse.rl"
+tr65:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st12
-tr109:
-// line 90 "zparse.rl"
+tr104:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st12
 st12:
@@ -1740,213 +1824,237 @@ st12:
 	if p == pe { goto _test_eof12 }
 	fallthrough
 case 12:
-// line 1744 "zparse.go"
+// line 1828 "zparse.go"
 	if data[p] == 10 { goto tr8 }
 	goto st12
-tr64:
-// line 89 "zparse.rl"
+tr59:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st13
-tr164:
-// line 90 "zparse.rl"
+tr159:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr175:
-// line 90 "zparse.rl"
+tr170:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr216:
-// line 90 "zparse.rl"
+tr211:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr222:
-// line 90 "zparse.rl"
+tr217:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr244:
-// line 90 "zparse.rl"
+tr239:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr264:
-// line 90 "zparse.rl"
+tr259:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr270:
-// line 90 "zparse.rl"
+tr265:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr292:
-// line 90 "zparse.rl"
+tr287:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr497:
-// line 90 "zparse.rl"
+tr492:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr515:
-// line 90 "zparse.rl"
+tr510:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr537:
-// line 90 "zparse.rl"
+tr532:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
-tr821:
-// line 90 "zparse.rl"
+tr796:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 91 "zparse.rl"
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st13
 st13:
 	p++
 	if p == pe { goto _test_eof13 }
 	fallthrough
 case 13:
-// line 1940 "zparse.go"
-	if data[p] == 10 { goto tr72 }
+// line 2048 "zparse.go"
+	if data[p] == 10 { goto tr67 }
 	goto st13
-tr904:
-// line 89 "zparse.rl"
+tr879:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st14
-tr910:
-// line 89 "zparse.rl"
+tr885:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st14
 st14:
@@ -1954,15 +2062,15 @@ st14:
 	if p == pe { goto _test_eof14 }
 	fallthrough
 case 14:
-// line 1958 "zparse.go"
+// line 2066 "zparse.go"
 	switch data[p] {
-		case 9: goto tr73
-		case 10: goto tr74
-		case 32: goto tr73
+		case 9: goto tr68
+		case 10: goto tr69
+		case 32: goto tr68
 		case 34: goto st0
-		case 40: goto tr75
-		case 41: goto tr76
-		case 59: goto tr77
+		case 40: goto tr70
+		case 41: goto tr71
+		case 59: goto tr72
 		case 65: goto st93
 		case 78: goto st322
 		case 92: goto st0
@@ -1970,118 +2078,74 @@ case 14:
 		case 110: goto st322
 	}
 	goto st1
-tr81:
-// line 100 "zparse.rl"
+tr68:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+	goto st15
+tr69:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st15
-tr82:
-// line 97 "zparse.rl"
+tr70:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st15
-tr83:
-// line 98 "zparse.rl"
+tr71:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st15
-tr73:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st15
-tr74:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st15
-tr75:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st15
 tr76:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 106 "zparse.rl"
+	{ lines++ }
+	goto st15
+tr77:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st15
+tr78:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st15
 st15:
 	p++
 	if p == pe { goto _test_eof15 }
 	fallthrough
 case 15:
-// line 2057 "zparse.go"
+// line 2121 "zparse.go"
 	switch data[p] {
 		case 9: goto st15
-		case 10: goto tr81
+		case 10: goto tr76
 		case 32: goto st15
 		case 34: goto st0
-		case 40: goto tr82
-		case 41: goto tr83
+		case 40: goto tr77
+		case 41: goto tr78
 		case 59: goto st92
-		case 65: goto tr86
-		case 67: goto tr87
-		case 72: goto tr88
-		case 73: goto tr89
-		case 77: goto tr90
-		case 78: goto tr91
+		case 65: goto tr81
+		case 67: goto tr82
+		case 72: goto tr83
+		case 73: goto tr84
+		case 77: goto tr85
+		case 78: goto tr86
 		case 92: goto st0
-		case 97: goto tr86
-		case 99: goto tr87
-		case 104: goto tr88
-		case 105: goto tr89
-		case 109: goto tr90
-		case 110: goto tr91
+		case 97: goto tr81
+		case 99: goto tr82
+		case 104: goto tr83
+		case 105: goto tr84
+		case 109: goto tr85
+		case 110: goto tr86
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr84 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr79 }
 	goto tr43
-tr84:
-// line 89 "zparse.rl"
+tr79:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st16
 st16:
@@ -2089,273 +2153,303 @@ st16:
 	if p == pe { goto _test_eof16 }
 	fallthrough
 case 16:
-// line 2093 "zparse.go"
+// line 2157 "zparse.go"
 	switch data[p] {
-		case 9: goto tr92
-		case 10: goto tr93
-		case 32: goto tr92
+		case 9: goto tr87
+		case 10: goto tr88
+		case 32: goto tr87
 		case 34: goto st0
-		case 40: goto tr94
-		case 41: goto tr95
-		case 59: goto tr97
+		case 40: goto tr89
+		case 41: goto tr90
+		case 59: goto tr92
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st16 }
 	goto st8
-tr100:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st17
-tr101:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st17
-tr92:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st17
-tr94:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st17
 tr95:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st17
+tr96:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st17
+tr87:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr139:
-// line 93 "zparse.rl"
+tr89:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st17
-tr141:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 4 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
+            rr = new(RR_A)
+            x := rr.(*RR_A)
             x.Hdr = *hdr
-            x.Cname = tok.T[0]
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr142:
-// line 93 "zparse.rl"
+tr90:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st17
+tr134:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr339:
-// line 93 "zparse.rl"
+tr136:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st17
+tr137:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st17
+tr334:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr341:
-// line 93 "zparse.rl"
+tr336:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr342:
-// line 93 "zparse.rl"
+tr337:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr395:
-// line 93 "zparse.rl"
+tr390:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr397:
-// line 93 "zparse.rl"
+tr392:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr398:
-// line 93 "zparse.rl"
+tr393:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr561:
-// line 93 "zparse.rl"
+tr556:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr563:
-// line 93 "zparse.rl"
+tr558:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
-tr564:
-// line 93 "zparse.rl"
+tr559:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st17
 st17:
 	p++
 	if p == pe { goto _test_eof17 }
 	fallthrough
 case 17:
-// line 2352 "zparse.go"
+// line 2446 "zparse.go"
 	switch data[p] {
 		case 9: goto st17
-		case 10: goto tr99
+		case 10: goto tr94
 		case 32: goto st17
-		case 40: goto tr100
-		case 41: goto tr101
-		case 59: goto tr102
+		case 40: goto tr95
+		case 41: goto tr96
+		case 59: goto tr97
 		case 65: goto tr30
 		case 67: goto tr31
 		case 72: goto tr32
@@ -2370,134 +2464,144 @@ case 17:
 		case 110: goto tr35
 	}
 	goto st0
-tr146:
-// line 100 "zparse.rl"
+tr141:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st327
-tr99:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st327
-tr93:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+tr94:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st327
+tr88:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st327
-tr140:
-// line 93 "zparse.rl"
+tr135:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st327
-tr340:
-// line 93 "zparse.rl"
+tr335:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st327
-tr396:
-// line 93 "zparse.rl"
+tr391:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st327
-tr562:
-// line 93 "zparse.rl"
+tr557:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st327
 st327:
 	p++
 	if p == pe { goto _test_eof327 }
 	fallthrough
 case 327:
-// line 2470 "zparse.go"
+// line 2574 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
-		case 65: goto tr910
-		case 67: goto tr911
-		case 72: goto tr912
-		case 73: goto tr913
-		case 77: goto tr914
-		case 78: goto tr915
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
+		case 65: goto tr885
+		case 67: goto tr886
+		case 72: goto tr887
+		case 73: goto tr888
+		case 77: goto tr889
+		case 78: goto tr890
 		case 92: goto st0
-		case 97: goto tr910
-		case 99: goto tr911
-		case 104: goto tr912
-		case 105: goto tr913
-		case 109: goto tr914
-		case 110: goto tr915
+		case 97: goto tr885
+		case 99: goto tr886
+		case 104: goto tr887
+		case 105: goto tr888
+		case 109: goto tr889
+		case 110: goto tr890
 	}
 	goto st1
-tr905:
-// line 89 "zparse.rl"
+tr880:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st18
-tr911:
-// line 89 "zparse.rl"
+tr886:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st18
 st18:
@@ -2505,7 +2609,7 @@ st18:
 	if p == pe { goto _test_eof18 }
 	fallthrough
 case 18:
-// line 2509 "zparse.go"
+// line 2613 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -2529,13 +2633,13 @@ st19:
 	fallthrough
 case 19:
 	switch data[p] {
-		case 9: goto tr105
-		case 10: goto tr106
-		case 32: goto tr105
+		case 9: goto tr100
+		case 10: goto tr101
+		case 32: goto tr100
 		case 34: goto st0
-		case 40: goto tr107
-		case 41: goto tr108
-		case 59: goto tr109
+		case 40: goto tr102
+		case 41: goto tr103
+		case 59: goto tr104
 		case 92: goto st0
 	}
 	goto st1
@@ -2599,126 +2703,82 @@ st23:
 	fallthrough
 case 23:
 	switch data[p] {
-		case 9: goto tr113
-		case 10: goto tr114
-		case 32: goto tr113
+		case 9: goto tr108
+		case 10: goto tr109
+		case 32: goto tr108
 		case 34: goto st0
-		case 40: goto tr115
-		case 41: goto tr116
-		case 59: goto tr117
+		case 40: goto tr110
+		case 41: goto tr111
+		case 59: goto tr112
 		case 92: goto st0
 	}
 	goto st1
-tr120:
-// line 100 "zparse.rl"
+tr108:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+	goto st24
+tr109:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st24
-tr121:
-// line 97 "zparse.rl"
+tr110:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st24
-tr122:
-// line 98 "zparse.rl"
+tr111:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st24
-tr113:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st24
-tr114:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st24
 tr115:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 106 "zparse.rl"
+	{ lines++ }
 	goto st24
 tr116:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st24
+tr117:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st24
 st24:
 	p++
 	if p == pe { goto _test_eof24 }
 	fallthrough
 case 24:
-// line 2696 "zparse.go"
+// line 2756 "zparse.go"
 	switch data[p] {
 		case 9: goto st24
-		case 10: goto tr120
+		case 10: goto tr115
 		case 32: goto st24
 		case 34: goto st0
-		case 40: goto tr121
-		case 41: goto tr122
+		case 40: goto tr116
+		case 41: goto tr117
 		case 59: goto st29
-		case 65: goto tr125
-		case 67: goto tr126
-		case 72: goto tr127
-		case 73: goto tr128
-		case 77: goto tr129
-		case 78: goto tr130
+		case 65: goto tr120
+		case 67: goto tr121
+		case 72: goto tr122
+		case 73: goto tr123
+		case 77: goto tr124
+		case 78: goto tr125
 		case 92: goto st0
-		case 97: goto tr125
-		case 99: goto tr126
-		case 104: goto tr127
-		case 105: goto tr128
-		case 109: goto tr129
-		case 110: goto tr130
+		case 97: goto tr120
+		case 99: goto tr121
+		case 104: goto tr122
+		case 105: goto tr123
+		case 109: goto tr124
+		case 110: goto tr125
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr123 }
-	goto tr118
-tr118:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr118 }
+	goto tr113
+tr113:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st25
 st25:
@@ -2726,95 +2786,105 @@ st25:
 	if p == pe { goto _test_eof25 }
 	fallthrough
 case 25:
-// line 2730 "zparse.go"
+// line 2790 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 92: goto st0
 	}
 	goto st25
-tr59:
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st26
 tr54:
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st26
+tr49:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st26
-tr136:
-// line 95 "zparse.rl"
+tr131:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st26
-tr210:
-// line 95 "zparse.rl"
+tr205:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st26
-tr338:
-// line 95 "zparse.rl"
+tr333:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st26
-tr491:
-// line 95 "zparse.rl"
+tr486:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st26
 st26:
 	p++
 	if p == pe { goto _test_eof26 }
 	fallthrough
 case 26:
-// line 2812 "zparse.go"
-	if data[p] == 10 { goto tr138 }
+// line 2882 "zparse.go"
+	if data[p] == 10 { goto tr133 }
 	goto st26
-tr123:
-// line 89 "zparse.rl"
+tr118:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st27
 st27:
@@ -2822,129 +2892,128 @@ st27:
 	if p == pe { goto _test_eof27 }
 	fallthrough
 case 27:
-// line 2826 "zparse.go"
+// line 2896 "zparse.go"
 	switch data[p] {
-		case 9: goto tr139
-		case 10: goto tr140
-		case 32: goto tr139
+		case 9: goto tr134
+		case 10: goto tr135
+		case 32: goto tr134
 		case 34: goto st0
-		case 40: goto tr141
-		case 41: goto tr142
-		case 59: goto tr144
+		case 40: goto tr136
+		case 41: goto tr137
+		case 59: goto tr139
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st27 }
 	goto st25
-tr102:
-// line 89 "zparse.rl"
+tr97:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st28
-tr97:
-// line 93 "zparse.rl"
+tr92:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st28
-tr144:
-// line 93 "zparse.rl"
+tr139:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st28
-tr344:
-// line 93 "zparse.rl"
+tr339:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st28
-tr400:
-// line 93 "zparse.rl"
+tr395:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st28
-tr566:
-// line 93 "zparse.rl"
+tr561:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st28
 st28:
 	p++
 	if p == pe { goto _test_eof28 }
 	fallthrough
 case 28:
-// line 2919 "zparse.go"
-	if data[p] == 10 { goto tr146 }
+// line 2999 "zparse.go"
+	if data[p] == 10 { goto tr141 }
 	goto st28
-tr117:
-// line 90 "zparse.rl"
+tr112:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st29
 st29:
 	p++
 	if p == pe { goto _test_eof29 }
 	fallthrough
 case 29:
-// line 2942 "zparse.go"
-	if data[p] == 10 { goto tr120 }
+// line 3011 "zparse.go"
+	if data[p] == 10 { goto tr115 }
 	goto st29
-tr125:
-// line 89 "zparse.rl"
+tr120:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st30
 st30:
@@ -2952,15 +3021,15 @@ st30:
 	if p == pe { goto _test_eof30 }
 	fallthrough
 case 30:
-// line 2956 "zparse.go"
+// line 3025 "zparse.go"
 	switch data[p] {
-		case 9: goto tr147
-		case 10: goto tr148
-		case 32: goto tr147
+		case 9: goto tr142
+		case 10: goto tr143
+		case 32: goto tr142
 		case 34: goto st0
-		case 40: goto tr149
-		case 41: goto tr150
-		case 59: goto tr151
+		case 40: goto tr144
+		case 41: goto tr145
+		case 59: goto tr146
 		case 65: goto st311
 		case 78: goto st314
 		case 92: goto st0
@@ -2968,554 +3037,374 @@ case 30:
 		case 110: goto st314
 	}
 	goto st25
-tr156:
-// line 97 "zparse.rl"
+tr151:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st31
-tr157:
-// line 98 "zparse.rl"
+tr152:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st31
-tr147:
+tr820:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr149:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr150:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr345:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr347:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr348:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr401:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr403:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr404:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr567:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr569:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr570:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr845:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st31
-tr847:
+tr142:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr144:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st31
-tr848:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr145:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr396:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr340:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr342:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr343:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr398:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr399:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr562:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr564:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr565:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr822:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st31
+tr823:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st31
 st31:
 	p++
 	if p == pe { goto _test_eof31 }
 	fallthrough
 case 31:
-// line 3353 "zparse.go"
+// line 3287 "zparse.go"
 	switch data[p] {
 		case 9: goto st31
-		case 10: goto tr155
+		case 10: goto tr150
 		case 32: goto st31
 		case 34: goto st0
-		case 40: goto tr156
-		case 41: goto tr157
-		case 59: goto tr158
+		case 40: goto tr151
+		case 41: goto tr152
+		case 59: goto tr153
 		case 92: goto st0
 	}
 	goto tr43
-tr353:
-// line 100 "zparse.rl"
+tr348:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st328
-tr155:
-// line 100 "zparse.rl"
+tr150:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st328
-tr148:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr143:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st328
-tr346:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr341:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st328
-tr402:
+tr397:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st328
-tr568:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st328
+tr563:
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st328
-tr846:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr821:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st328
 st328:
 	p++
 	if p == pe { goto _test_eof328 }
 	fallthrough
 case 328:
-// line 3506 "zparse.go"
+// line 3395 "zparse.go"
 	switch data[p] {
 		case 9: goto st33
-		case 10: goto tr166
+		case 10: goto tr161
 		case 32: goto st33
 		case 34: goto st0
-		case 40: goto tr167
-		case 41: goto tr168
-		case 59: goto tr169
+		case 40: goto tr162
+		case 41: goto tr163
+		case 59: goto tr164
 		case 92: goto st0
 	}
-	goto tr916
-tr916:
-// line 89 "zparse.rl"
+	goto tr891
+tr891:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st32
 st32:
@@ -3523,524 +3412,380 @@ st32:
 	if p == pe { goto _test_eof32 }
 	fallthrough
 case 32:
-// line 3527 "zparse.go"
+// line 3416 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 92: goto st0
 	}
 	goto st32
-tr167:
-// line 97 "zparse.rl"
+tr162:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st33
-tr168:
-// line 98 "zparse.rl"
+tr163:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st33
-tr178:
-// line 90 "zparse.rl"
+tr173:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr180:
-// line 90 "zparse.rl"
+tr175:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr181:
-// line 90 "zparse.rl"
+tr176:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr225:
-// line 90 "zparse.rl"
+tr220:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr227:
-// line 90 "zparse.rl"
+tr222:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr228:
-// line 90 "zparse.rl"
+tr223:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr273:
-// line 90 "zparse.rl"
+tr268:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr275:
-// line 90 "zparse.rl"
+tr270:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr276:
-// line 90 "zparse.rl"
+tr271:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr518:
-// line 90 "zparse.rl"
+tr513:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr520:
-// line 90 "zparse.rl"
+tr515:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
-tr521:
-// line 90 "zparse.rl"
+tr516:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st33
 st33:
 	p++
 	if p == pe { goto _test_eof33 }
 	fallthrough
 case 33:
-// line 3868 "zparse.go"
+// line 3649 "zparse.go"
 	switch data[p] {
 		case 9: goto st33
-		case 10: goto tr166
+		case 10: goto tr161
 		case 32: goto st33
 		case 34: goto st0
-		case 40: goto tr167
-		case 41: goto tr168
-		case 59: goto tr169
-		case 65: goto tr86
-		case 67: goto tr87
-		case 72: goto tr88
-		case 73: goto tr89
-		case 77: goto tr90
-		case 78: goto tr91
+		case 40: goto tr162
+		case 41: goto tr163
+		case 59: goto tr164
+		case 65: goto tr81
+		case 67: goto tr82
+		case 72: goto tr83
+		case 73: goto tr84
+		case 77: goto tr85
+		case 78: goto tr86
 		case 92: goto st0
-		case 97: goto tr86
-		case 99: goto tr87
-		case 104: goto tr88
-		case 105: goto tr89
-		case 109: goto tr90
-		case 110: goto tr91
+		case 97: goto tr81
+		case 99: goto tr82
+		case 104: goto tr83
+		case 105: goto tr84
+		case 109: goto tr85
+		case 110: goto tr86
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr84 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr79 }
 	goto tr43
-tr177:
-// line 100 "zparse.rl"
+tr172:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st329
-tr166:
-// line 100 "zparse.rl"
+tr161:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st329
-tr179:
-// line 90 "zparse.rl"
+tr174:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st329
-tr226:
-// line 90 "zparse.rl"
+tr221:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st329
-tr274:
-// line 90 "zparse.rl"
+tr269:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st329
-tr519:
-// line 90 "zparse.rl"
+tr514:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st329
 st329:
 	p++
 	if p == pe { goto _test_eof329 }
 	fallthrough
 case 329:
-// line 4016 "zparse.go"
+// line 3761 "zparse.go"
 	switch data[p] {
 		case 9: goto st33
-		case 10: goto tr166
+		case 10: goto tr161
 		case 32: goto st33
 		case 34: goto st0
-		case 40: goto tr167
-		case 41: goto tr168
-		case 59: goto tr169
-		case 65: goto tr918
-		case 67: goto tr919
-		case 72: goto tr920
-		case 73: goto tr921
-		case 77: goto tr922
-		case 78: goto tr923
+		case 40: goto tr162
+		case 41: goto tr163
+		case 59: goto tr164
+		case 65: goto tr893
+		case 67: goto tr894
+		case 72: goto tr895
+		case 73: goto tr896
+		case 77: goto tr897
+		case 78: goto tr898
 		case 92: goto st0
-		case 97: goto tr918
-		case 99: goto tr919
-		case 104: goto tr920
-		case 105: goto tr921
-		case 109: goto tr922
-		case 110: goto tr923
+		case 97: goto tr893
+		case 99: goto tr894
+		case 104: goto tr895
+		case 105: goto tr896
+		case 109: goto tr897
+		case 110: goto tr898
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr917 }
-	goto tr916
-tr917:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr892 }
+	goto tr891
+tr892:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st34
 st34:
@@ -4048,135 +3793,99 @@ st34:
 	if p == pe { goto _test_eof34 }
 	fallthrough
 case 34:
-// line 4052 "zparse.go"
+// line 3797 "zparse.go"
 	switch data[p] {
-		case 9: goto tr170
-		case 10: goto tr171
-		case 32: goto tr170
+		case 9: goto tr165
+		case 10: goto tr166
+		case 32: goto tr165
 		case 34: goto st0
-		case 40: goto tr172
-		case 41: goto tr173
-		case 59: goto tr175
+		case 40: goto tr167
+		case 41: goto tr168
+		case 59: goto tr170
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st34 }
 	goto st32
-tr169:
-// line 89 "zparse.rl"
+tr164:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st35
-tr182:
-// line 90 "zparse.rl"
+tr177:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st35
-tr229:
-// line 90 "zparse.rl"
+tr224:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st35
-tr277:
-// line 90 "zparse.rl"
+tr272:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st35
-tr522:
-// line 90 "zparse.rl"
+tr517:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st35
 st35:
 	p++
 	if p == pe { goto _test_eof35 }
 	fallthrough
 case 35:
-// line 4174 "zparse.go"
-	if data[p] == 10 { goto tr177 }
+// line 3883 "zparse.go"
+	if data[p] == 10 { goto tr172 }
 	goto st35
-tr918:
-// line 89 "zparse.rl"
+tr893:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st36
 st36:
@@ -4184,15 +3893,15 @@ st36:
 	if p == pe { goto _test_eof36 }
 	fallthrough
 case 36:
-// line 4188 "zparse.go"
+// line 3897 "zparse.go"
 	switch data[p] {
-		case 9: goto tr178
-		case 10: goto tr179
-		case 32: goto tr178
+		case 9: goto tr173
+		case 10: goto tr174
+		case 32: goto tr173
 		case 34: goto st0
-		case 40: goto tr180
-		case 41: goto tr181
-		case 59: goto tr182
+		case 40: goto tr175
+		case 41: goto tr176
+		case 59: goto tr177
 		case 65: goto st37
 		case 78: goto st277
 		case 92: goto st0
@@ -4206,13 +3915,13 @@ st37:
 	fallthrough
 case 37:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 65: goto st38
 		case 92: goto st0
 		case 97: goto st38
@@ -4224,13 +3933,13 @@ st38:
 	fallthrough
 case 38:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 65: goto st39
 		case 92: goto st0
 		case 97: goto st39
@@ -4242,372 +3951,264 @@ st39:
 	fallthrough
 case 39:
 	switch data[p] {
-		case 9: goto tr187
-		case 10: goto tr188
-		case 32: goto tr187
+		case 9: goto tr182
+		case 10: goto tr183
+		case 32: goto tr182
 		case 34: goto st0
-		case 40: goto tr189
-		case 41: goto tr190
-		case 59: goto tr191
+		case 40: goto tr184
+		case 41: goto tr185
+		case 59: goto tr186
 		case 92: goto st0
 	}
 	goto st32
-tr195:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st40
-tr196:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st40
-tr187:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
-tr189:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
 tr190:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st40
+tr191:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st40
+tr182:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
-tr234:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
+tr184:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
-tr236:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr185:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr229:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
-tr237:
-// line 90 "zparse.rl"
+tr231:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
-tr282:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
+tr232:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
-tr284:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
-tr285:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr277:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
-tr527:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
+tr279:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st40
-tr529:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 25 "types.rl"
 	{
-            x := rr.(*RR_NS)
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
             x.Hdr = *hdr
-            x.Ns = tok.T[0]
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
-tr530:
-// line 90 "zparse.rl"
+tr280:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr522:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr524:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st40
+tr525:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st40
 st40:
 	p++
 	if p == pe { goto _test_eof40 }
 	fallthrough
 case 40:
-// line 4585 "zparse.go"
+// line 4186 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
-		case 10: goto tr194
+		case 10: goto tr189
 		case 32: goto st40
 		case 34: goto st0
-		case 40: goto tr195
-		case 41: goto tr196
-		case 59: goto tr198
-		case 65: goto tr199
-		case 67: goto tr200
-		case 72: goto tr201
-		case 73: goto tr202
-		case 77: goto tr203
-		case 78: goto tr204
+		case 40: goto tr190
+		case 41: goto tr191
+		case 59: goto tr193
+		case 65: goto tr194
+		case 67: goto tr195
+		case 72: goto tr196
+		case 73: goto tr197
+		case 77: goto tr198
+		case 78: goto tr199
 		case 92: goto st0
-		case 97: goto tr199
-		case 99: goto tr200
-		case 104: goto tr201
-		case 105: goto tr202
-		case 109: goto tr203
-		case 110: goto tr204
+		case 97: goto tr194
+		case 99: goto tr195
+		case 104: goto tr196
+		case 105: goto tr197
+		case 109: goto tr198
+		case 110: goto tr199
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr197 }
-	goto tr192
-tr192:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr192 }
+	goto tr187
+tr187:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st41
 st41:
@@ -4615,168 +4216,132 @@ st41:
 	if p == pe { goto _test_eof41 }
 	fallthrough
 case 41:
-// line 4619 "zparse.go"
+// line 4220 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 92: goto st0
 	}
 	goto st41
-tr224:
-// line 100 "zparse.rl"
+tr219:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st330
-tr194:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st330
-tr188:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+tr189:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st330
+tr183:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st330
-tr235:
-// line 90 "zparse.rl"
+tr230:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st330
-tr283:
-// line 90 "zparse.rl"
+tr278:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st330
-tr528:
-// line 90 "zparse.rl"
+tr523:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st330
 st330:
 	p++
 	if p == pe { goto _test_eof330 }
 	fallthrough
 case 330:
-// line 4754 "zparse.go"
+// line 4319 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
-		case 10: goto tr194
+		case 10: goto tr189
 		case 32: goto st40
 		case 34: goto st0
-		case 40: goto tr195
-		case 41: goto tr196
-		case 59: goto tr198
-		case 65: goto tr926
-		case 67: goto tr927
-		case 72: goto tr928
-		case 73: goto tr929
-		case 77: goto tr930
-		case 78: goto tr931
+		case 40: goto tr190
+		case 41: goto tr191
+		case 59: goto tr193
+		case 65: goto tr901
+		case 67: goto tr902
+		case 72: goto tr903
+		case 73: goto tr904
+		case 77: goto tr905
+		case 78: goto tr906
 		case 92: goto st0
-		case 97: goto tr926
-		case 99: goto tr927
-		case 104: goto tr928
-		case 105: goto tr929
-		case 109: goto tr930
-		case 110: goto tr931
+		case 97: goto tr901
+		case 99: goto tr902
+		case 104: goto tr903
+		case 105: goto tr904
+		case 109: goto tr905
+		case 110: goto tr906
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr925 }
-	goto tr924
-tr924:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr900 }
+	goto tr899
+tr899:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st42
 st42:
@@ -4784,22 +4349,22 @@ st42:
 	if p == pe { goto _test_eof42 }
 	fallthrough
 case 42:
-// line 4788 "zparse.go"
+// line 4353 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 92: goto st0
 	}
 	goto st42
-tr925:
-// line 89 "zparse.rl"
+tr900:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st43
 st43:
@@ -4807,135 +4372,99 @@ st43:
 	if p == pe { goto _test_eof43 }
 	fallthrough
 case 43:
-// line 4811 "zparse.go"
+// line 4376 "zparse.go"
 	switch data[p] {
-		case 9: goto tr217
-		case 10: goto tr218
-		case 32: goto tr217
+		case 9: goto tr212
+		case 10: goto tr213
+		case 32: goto tr212
 		case 34: goto st0
-		case 40: goto tr219
-		case 41: goto tr220
-		case 59: goto tr222
+		case 40: goto tr214
+		case 41: goto tr215
+		case 59: goto tr217
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st43 }
 	goto st42
-tr198:
-// line 89 "zparse.rl"
+tr193:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st44
-tr191:
-// line 90 "zparse.rl"
+tr186:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st44
-tr238:
-// line 90 "zparse.rl"
+tr233:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st44
-tr286:
-// line 90 "zparse.rl"
+tr281:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st44
-tr531:
-// line 90 "zparse.rl"
+tr526:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st44
 st44:
 	p++
 	if p == pe { goto _test_eof44 }
 	fallthrough
 case 44:
-// line 4933 "zparse.go"
-	if data[p] == 10 { goto tr224 }
+// line 4462 "zparse.go"
+	if data[p] == 10 { goto tr219 }
 	goto st44
-tr926:
-// line 89 "zparse.rl"
+tr901:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st45
 st45:
@@ -4943,15 +4472,15 @@ st45:
 	if p == pe { goto _test_eof45 }
 	fallthrough
 case 45:
-// line 4947 "zparse.go"
+// line 4476 "zparse.go"
 	switch data[p] {
-		case 9: goto tr225
-		case 10: goto tr226
-		case 32: goto tr225
+		case 9: goto tr220
+		case 10: goto tr221
+		case 32: goto tr220
 		case 34: goto st0
-		case 40: goto tr227
-		case 41: goto tr228
-		case 59: goto tr229
+		case 40: goto tr222
+		case 41: goto tr223
+		case 59: goto tr224
 		case 65: goto st46
 		case 78: goto st49
 		case 92: goto st0
@@ -4965,13 +4494,13 @@ st46:
 	fallthrough
 case 46:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 65: goto st47
 		case 92: goto st0
 		case 97: goto st47
@@ -4983,13 +4512,13 @@ st47:
 	fallthrough
 case 47:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 65: goto st48
 		case 92: goto st0
 		case 97: goto st48
@@ -5001,13 +4530,13 @@ st48:
 	fallthrough
 case 48:
 	switch data[p] {
-		case 9: goto tr234
-		case 10: goto tr235
-		case 32: goto tr234
+		case 9: goto tr229
+		case 10: goto tr230
+		case 32: goto tr229
 		case 34: goto st0
-		case 40: goto tr236
-		case 41: goto tr237
-		case 59: goto tr238
+		case 40: goto tr231
+		case 41: goto tr232
+		case 59: goto tr233
 		case 92: goto st0
 	}
 	goto st42
@@ -5017,13 +4546,13 @@ st49:
 	fallthrough
 case 49:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 89: goto st50
 		case 92: goto st0
 		case 121: goto st50
@@ -5035,20 +4564,20 @@ st50:
 	fallthrough
 case 50:
 	switch data[p] {
-		case 9: goto tr240
-		case 10: goto tr241
-		case 32: goto tr240
+		case 9: goto tr235
+		case 10: goto tr236
+		case 32: goto tr235
 		case 34: goto st0
-		case 40: goto tr242
-		case 41: goto tr243
-		case 59: goto tr244
+		case 40: goto tr237
+		case 41: goto tr238
+		case 59: goto tr239
 		case 92: goto st0
 	}
 	goto st42
-tr927:
-// line 89 "zparse.rl"
+tr902:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st51
 st51:
@@ -5056,15 +4585,15 @@ st51:
 	if p == pe { goto _test_eof51 }
 	fallthrough
 case 51:
-// line 5060 "zparse.go"
+// line 4589 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 72: goto st50
 		case 78: goto st52
 		case 83: goto st50
@@ -5080,13 +4609,13 @@ st52:
 	fallthrough
 case 52:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 65: goto st53
 		case 92: goto st0
 		case 97: goto st53
@@ -5098,13 +4627,13 @@ st53:
 	fallthrough
 case 53:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 77: goto st54
 		case 92: goto st0
 		case 109: goto st54
@@ -5116,13 +4645,13 @@ st54:
 	fallthrough
 case 54:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 69: goto st55
 		case 92: goto st0
 		case 101: goto st55
@@ -5134,520 +4663,376 @@ st55:
 	fallthrough
 case 55:
 	switch data[p] {
-		case 9: goto tr249
-		case 10: goto tr250
-		case 32: goto tr249
+		case 9: goto tr244
+		case 10: goto tr245
+		case 32: goto tr244
 		case 34: goto st0
-		case 40: goto tr251
-		case 41: goto tr252
-		case 59: goto tr253
+		case 40: goto tr246
+		case 41: goto tr247
+		case 59: goto tr248
 		case 92: goto st0
 	}
 	goto st42
-tr256:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st56
-tr257:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st56
-tr826:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
-tr828:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
-tr829:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
-tr249:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
 tr251:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st56
 tr252:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st56
+tr801:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr803:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr804:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr244:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st56
-tr297:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
+tr246:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
-tr299:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 11 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
             x.Hdr = *hdr
-            x.Cname = tok.T[0]
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st56
-tr300:
-// line 90 "zparse.rl"
+tr247:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr292:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st56
-tr542:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+tr294:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st56
-tr544:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st56
-tr545:
-// line 90 "zparse.rl"
+tr295:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr537:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr539:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st56
+tr540:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st56
 st56:
 	p++
 	if p == pe { goto _test_eof56 }
 	fallthrough
 case 56:
-// line 5477 "zparse.go"
+// line 4898 "zparse.go"
 	switch data[p] {
 		case 9: goto st56
-		case 10: goto tr255
+		case 10: goto tr250
 		case 32: goto st56
 		case 34: goto st0
-		case 40: goto tr256
-		case 41: goto tr257
-		case 59: goto tr258
-		case 65: goto tr125
-		case 67: goto tr126
-		case 72: goto tr127
-		case 73: goto tr128
-		case 77: goto tr129
-		case 78: goto tr130
+		case 40: goto tr251
+		case 41: goto tr252
+		case 59: goto tr253
+		case 65: goto tr120
+		case 67: goto tr121
+		case 72: goto tr122
+		case 73: goto tr123
+		case 77: goto tr124
+		case 78: goto tr125
 		case 92: goto st0
-		case 97: goto tr125
-		case 99: goto tr126
-		case 104: goto tr127
-		case 105: goto tr128
-		case 109: goto tr129
-		case 110: goto tr130
+		case 97: goto tr120
+		case 99: goto tr121
+		case 104: goto tr122
+		case 105: goto tr123
+		case 109: goto tr124
+		case 110: goto tr125
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr123 }
-	goto tr118
-tr272:
-// line 100 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr118 }
+	goto tr113
+tr267:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st331
-tr255:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st331
-tr827:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+tr250:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st331
+tr802:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st331
-tr250:
-// line 90 "zparse.rl"
+tr245:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st331
-tr298:
-// line 90 "zparse.rl"
+tr293:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st331
-tr543:
-// line 90 "zparse.rl"
+tr538:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st331
 st331:
 	p++
 	if p == pe { goto _test_eof331 }
 	fallthrough
 case 331:
-// line 5625 "zparse.go"
+// line 5010 "zparse.go"
 	switch data[p] {
 		case 9: goto st56
-		case 10: goto tr255
+		case 10: goto tr250
 		case 32: goto st56
 		case 34: goto st0
-		case 40: goto tr256
-		case 41: goto tr257
-		case 59: goto tr258
-		case 65: goto tr934
-		case 67: goto tr935
-		case 72: goto tr936
-		case 73: goto tr937
-		case 77: goto tr938
-		case 78: goto tr939
+		case 40: goto tr251
+		case 41: goto tr252
+		case 59: goto tr253
+		case 65: goto tr909
+		case 67: goto tr910
+		case 72: goto tr911
+		case 73: goto tr912
+		case 77: goto tr913
+		case 78: goto tr914
 		case 92: goto st0
-		case 97: goto tr934
-		case 99: goto tr935
-		case 104: goto tr936
-		case 105: goto tr937
-		case 109: goto tr938
-		case 110: goto tr939
+		case 97: goto tr909
+		case 99: goto tr910
+		case 104: goto tr911
+		case 105: goto tr912
+		case 109: goto tr913
+		case 110: goto tr914
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr933 }
-	goto tr932
-tr932:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr908 }
+	goto tr907
+tr907:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st57
 st57:
@@ -5655,22 +5040,22 @@ st57:
 	if p == pe { goto _test_eof57 }
 	fallthrough
 case 57:
-// line 5659 "zparse.go"
+// line 5044 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 92: goto st0
 	}
 	goto st57
-tr933:
-// line 89 "zparse.rl"
+tr908:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st58
 st58:
@@ -5678,135 +5063,99 @@ st58:
 	if p == pe { goto _test_eof58 }
 	fallthrough
 case 58:
-// line 5682 "zparse.go"
+// line 5067 "zparse.go"
 	switch data[p] {
-		case 9: goto tr265
-		case 10: goto tr266
-		case 32: goto tr265
+		case 9: goto tr260
+		case 10: goto tr261
+		case 32: goto tr260
 		case 34: goto st0
-		case 40: goto tr267
-		case 41: goto tr268
-		case 59: goto tr270
+		case 40: goto tr262
+		case 41: goto tr263
+		case 59: goto tr265
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st58 }
 	goto st57
-tr258:
-// line 89 "zparse.rl"
+tr253:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st59
-tr830:
-// line 90 "zparse.rl"
+tr805:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st59
-tr253:
-// line 90 "zparse.rl"
+tr248:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st59
-tr301:
-// line 90 "zparse.rl"
+tr296:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st59
-tr546:
-// line 90 "zparse.rl"
+tr541:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st59
 st59:
 	p++
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-// line 5804 "zparse.go"
-	if data[p] == 10 { goto tr272 }
+// line 5153 "zparse.go"
+	if data[p] == 10 { goto tr267 }
 	goto st59
-tr934:
-// line 89 "zparse.rl"
+tr909:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st60
 st60:
@@ -5814,15 +5163,15 @@ st60:
 	if p == pe { goto _test_eof60 }
 	fallthrough
 case 60:
-// line 5818 "zparse.go"
+// line 5167 "zparse.go"
 	switch data[p] {
-		case 9: goto tr273
-		case 10: goto tr274
-		case 32: goto tr273
+		case 9: goto tr268
+		case 10: goto tr269
+		case 32: goto tr268
 		case 34: goto st0
-		case 40: goto tr275
-		case 41: goto tr276
-		case 59: goto tr277
+		case 40: goto tr270
+		case 41: goto tr271
+		case 59: goto tr272
 		case 65: goto st61
 		case 78: goto st64
 		case 92: goto st0
@@ -5836,13 +5185,13 @@ st61:
 	fallthrough
 case 61:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 65: goto st62
 		case 92: goto st0
 		case 97: goto st62
@@ -5854,13 +5203,13 @@ st62:
 	fallthrough
 case 62:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 65: goto st63
 		case 92: goto st0
 		case 97: goto st63
@@ -5872,13 +5221,13 @@ st63:
 	fallthrough
 case 63:
 	switch data[p] {
-		case 9: goto tr282
-		case 10: goto tr283
-		case 32: goto tr282
+		case 9: goto tr277
+		case 10: goto tr278
+		case 32: goto tr277
 		case 34: goto st0
-		case 40: goto tr284
-		case 41: goto tr285
-		case 59: goto tr286
+		case 40: goto tr279
+		case 41: goto tr280
+		case 59: goto tr281
 		case 92: goto st0
 	}
 	goto st57
@@ -5888,13 +5237,13 @@ st64:
 	fallthrough
 case 64:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 89: goto st65
 		case 92: goto st0
 		case 121: goto st65
@@ -5906,20 +5255,20 @@ st65:
 	fallthrough
 case 65:
 	switch data[p] {
-		case 9: goto tr288
-		case 10: goto tr289
-		case 32: goto tr288
+		case 9: goto tr283
+		case 10: goto tr284
+		case 32: goto tr283
 		case 34: goto st0
-		case 40: goto tr290
-		case 41: goto tr291
-		case 59: goto tr292
+		case 40: goto tr285
+		case 41: goto tr286
+		case 59: goto tr287
 		case 92: goto st0
 	}
 	goto st57
-tr935:
-// line 89 "zparse.rl"
+tr910:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st66
 st66:
@@ -5927,15 +5276,15 @@ st66:
 	if p == pe { goto _test_eof66 }
 	fallthrough
 case 66:
-// line 5931 "zparse.go"
+// line 5280 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 72: goto st65
 		case 78: goto st67
 		case 83: goto st65
@@ -5951,13 +5300,13 @@ st67:
 	fallthrough
 case 67:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 65: goto st68
 		case 92: goto st0
 		case 97: goto st68
@@ -5969,13 +5318,13 @@ st68:
 	fallthrough
 case 68:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 77: goto st69
 		case 92: goto st0
 		case 109: goto st69
@@ -5987,13 +5336,13 @@ st69:
 	fallthrough
 case 69:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 69: goto st70
 		case 92: goto st0
 		case 101: goto st70
@@ -6005,20 +5354,20 @@ st70:
 	fallthrough
 case 70:
 	switch data[p] {
-		case 9: goto tr297
-		case 10: goto tr298
-		case 32: goto tr297
+		case 9: goto tr292
+		case 10: goto tr293
+		case 32: goto tr292
 		case 34: goto st0
-		case 40: goto tr299
-		case 41: goto tr300
-		case 59: goto tr301
+		case 40: goto tr294
+		case 41: goto tr295
+		case 59: goto tr296
 		case 92: goto st0
 	}
 	goto st57
-tr936:
-// line 89 "zparse.rl"
+tr911:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st71
 st71:
@@ -6026,24 +5375,24 @@ st71:
 	if p == pe { goto _test_eof71 }
 	fallthrough
 case 71:
-// line 6030 "zparse.go"
+// line 5379 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 83: goto st65
 		case 92: goto st0
 		case 115: goto st65
 	}
 	goto st57
-tr937:
-// line 89 "zparse.rl"
+tr912:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st72
 st72:
@@ -6051,24 +5400,24 @@ st72:
 	if p == pe { goto _test_eof72 }
 	fallthrough
 case 72:
-// line 6055 "zparse.go"
+// line 5404 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 78: goto st65
 		case 92: goto st0
 		case 110: goto st65
 	}
 	goto st57
-tr938:
-// line 89 "zparse.rl"
+tr913:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st73
 st73:
@@ -6076,15 +5425,15 @@ st73:
 	if p == pe { goto _test_eof73 }
 	fallthrough
 case 73:
-// line 6080 "zparse.go"
+// line 5429 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 88: goto st74
 		case 92: goto st0
 		case 120: goto st74
@@ -6096,353 +5445,245 @@ st74:
 	fallthrough
 case 74:
 	switch data[p] {
-		case 9: goto tr303
-		case 10: goto tr304
-		case 32: goto tr303
+		case 9: goto tr298
+		case 10: goto tr299
+		case 32: goto tr298
 		case 34: goto st0
-		case 40: goto tr305
-		case 41: goto tr306
-		case 59: goto tr307
+		case 40: goto tr300
+		case 41: goto tr301
+		case 59: goto tr302
 		case 92: goto st0
 	}
 	goto st57
-tr310:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st75
-tr311:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st75
-tr832:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr834:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr835:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr803:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr805:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr806:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr303:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
 tr305:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st75
 tr306:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st75
+tr807:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr809:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr810:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr778:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr780:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr781:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr298:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st75
-tr548:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+tr300:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st75
-tr550:
-// line 90 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st75
-tr551:
-// line 90 "zparse.rl"
+tr301:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr543:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr545:
 // line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st75
+tr546:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st75
 st75:
 	p++
 	if p == pe { goto _test_eof75 }
 	fallthrough
 case 75:
-// line 6439 "zparse.go"
+// line 5680 "zparse.go"
 	switch data[p] {
 		case 9: goto st75
-		case 10: goto tr309
+		case 10: goto tr304
 		case 32: goto st75
-		case 40: goto tr310
-		case 41: goto tr311
-		case 59: goto tr313
+		case 40: goto tr305
+		case 41: goto tr306
+		case 59: goto tr308
 		case 65: goto tr13
 		case 67: goto tr14
 		case 72: goto tr15
@@ -6456,160 +5697,124 @@ case 75:
 		case 109: goto tr17
 		case 110: goto tr18
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr312 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr307 }
 	goto st0
-tr458:
-// line 100 "zparse.rl"
+tr453:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st332
-tr309:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st332
-tr833:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+tr304:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st332
+tr808:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st332
-tr804:
-// line 90 "zparse.rl"
+tr779:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st332
-tr304:
-// line 90 "zparse.rl"
+tr299:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st332
-tr549:
-// line 90 "zparse.rl"
+tr544:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st332
 st332:
 	p++
 	if p == pe { goto _test_eof332 }
 	fallthrough
 case 332:
-// line 6585 "zparse.go"
+// line 5790 "zparse.go"
 	switch data[p] {
 		case 9: goto st75
-		case 10: goto tr309
+		case 10: goto tr304
 		case 32: goto st75
 		case 34: goto st0
-		case 40: goto tr310
-		case 41: goto tr311
-		case 59: goto tr313
-		case 65: goto tr904
-		case 67: goto tr905
-		case 72: goto tr906
-		case 73: goto tr907
-		case 77: goto tr908
-		case 78: goto tr909
+		case 40: goto tr305
+		case 41: goto tr306
+		case 59: goto tr308
+		case 65: goto tr879
+		case 67: goto tr880
+		case 72: goto tr881
+		case 73: goto tr882
+		case 77: goto tr883
+		case 78: goto tr884
 		case 92: goto st0
-		case 97: goto tr904
-		case 99: goto tr905
-		case 104: goto tr906
-		case 105: goto tr907
-		case 109: goto tr908
-		case 110: goto tr909
+		case 97: goto tr879
+		case 99: goto tr880
+		case 104: goto tr881
+		case 105: goto tr882
+		case 109: goto tr883
+		case 110: goto tr884
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr940 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr915 }
 	goto st1
-tr940:
-// line 89 "zparse.rl"
+tr915:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st76
 st76:
@@ -6617,97 +5822,97 @@ st76:
 	if p == pe { goto _test_eof76 }
 	fallthrough
 case 76:
-// line 6621 "zparse.go"
+// line 5826 "zparse.go"
 	switch data[p] {
-		case 9: goto tr314
-		case 10: goto tr315
-		case 32: goto tr314
+		case 9: goto tr309
+		case 10: goto tr310
+		case 32: goto tr309
 		case 34: goto st0
-		case 40: goto tr316
-		case 41: goto tr317
-		case 59: goto tr319
+		case 40: goto tr311
+		case 41: goto tr312
+		case 59: goto tr314
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st76 }
 	goto st1
-tr322:
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st77
-tr323:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st77
-tr324:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st77
-tr314:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st77
-tr315:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st77
-tr316:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st77
 tr317:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 106 "zparse.rl"
+	{ lines++ }
+	goto st77
+tr318:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st77
+tr319:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
 	goto st77
-tr451:
-// line 90 "zparse.rl"
+tr309:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 94 "zparse.rl"
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st77
-tr452:
-// line 90 "zparse.rl"
+tr310:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st77
+tr311:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st77
+tr312:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st77
+tr446:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st77
+tr447:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 94 "zparse.rl"
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st77
-tr453:
-// line 90 "zparse.rl"
+tr448:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 94 "zparse.rl"
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st77
-tr454:
-// line 90 "zparse.rl"
+tr449:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 94 "zparse.rl"
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st77
 st77:
@@ -6715,33 +5920,33 @@ st77:
 	if p == pe { goto _test_eof77 }
 	fallthrough
 case 77:
-// line 6719 "zparse.go"
+// line 5924 "zparse.go"
 	switch data[p] {
 		case 9: goto st77
-		case 10: goto tr322
+		case 10: goto tr317
 		case 32: goto st77
 		case 34: goto st0
-		case 40: goto tr323
-		case 41: goto tr324
+		case 40: goto tr318
+		case 41: goto tr319
 		case 59: goto st80
-		case 65: goto tr327
-		case 67: goto tr328
-		case 72: goto tr329
-		case 73: goto tr330
-		case 77: goto tr331
-		case 78: goto tr332
+		case 65: goto tr322
+		case 67: goto tr323
+		case 72: goto tr324
+		case 73: goto tr325
+		case 77: goto tr326
+		case 78: goto tr327
 		case 92: goto st0
-		case 97: goto tr327
-		case 99: goto tr328
-		case 104: goto tr329
-		case 105: goto tr330
-		case 109: goto tr331
-		case 110: goto tr332
+		case 97: goto tr322
+		case 99: goto tr323
+		case 104: goto tr324
+		case 105: goto tr325
+		case 109: goto tr326
+		case 110: goto tr327
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr325 }
-	goto tr320
-tr320:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr320 }
+	goto tr315
+tr315:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st78
 st78:
@@ -6749,22 +5954,22 @@ st78:
 	if p == pe { goto _test_eof78 }
 	fallthrough
 case 78:
-// line 6753 "zparse.go"
+// line 5958 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 92: goto st0
 	}
 	goto st78
-tr325:
-// line 89 "zparse.rl"
+tr320:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st79
 st79:
@@ -6772,201 +5977,7 @@ st79:
 	if p == pe { goto _test_eof79 }
 	fallthrough
 case 79:
-// line 6776 "zparse.go"
-	switch data[p] {
-		case 9: goto tr339
-		case 10: goto tr340
-		case 32: goto tr339
-		case 34: goto st0
-		case 40: goto tr341
-		case 41: goto tr342
-		case 59: goto tr344
-		case 92: goto st0
-	}
-	if 48 <= data[p] && data[p] <= 57 { goto st79 }
-	goto st78
-tr319:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st80
-tr456:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st80
-st80:
-	p++
-	if p == pe { goto _test_eof80 }
-	fallthrough
-case 80:
-// line 6808 "zparse.go"
-	if data[p] == 10 { goto tr322 }
-	goto st80
-tr327:
-// line 89 "zparse.rl"
-	{ mark = p }
-// line 92 "zparse.rl"
-	{ /* ... */ }
-	goto st81
-st81:
-	p++
-	if p == pe { goto _test_eof81 }
-	fallthrough
-case 81:
-// line 6822 "zparse.go"
-	switch data[p] {
-		case 9: goto tr345
-		case 10: goto tr346
-		case 32: goto tr345
-		case 34: goto st0
-		case 40: goto tr347
-		case 41: goto tr348
-		case 59: goto tr349
-		case 65: goto st83
-		case 78: goto st88
-		case 92: goto st0
-		case 97: goto st83
-		case 110: goto st88
-	}
-	goto st78
-tr158:
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st82
-tr151:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st82
-tr349:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st82
-tr405:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st82
-tr571:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st82
-tr849:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st82
-st82:
-	p++
-	if p == pe { goto _test_eof82 }
-	fallthrough
-case 82:
-// line 6963 "zparse.go"
-	if data[p] == 10 { goto tr353 }
-	goto st82
-st83:
-	p++
-	if p == pe { goto _test_eof83 }
-	fallthrough
-case 83:
+// line 5981 "zparse.go"
 	switch data[p] {
 		case 9: goto tr334
 		case 10: goto tr335
@@ -6974,7 +5985,156 @@ case 83:
 		case 34: goto st0
 		case 40: goto tr336
 		case 41: goto tr337
-		case 59: goto tr338
+		case 59: goto tr339
+		case 92: goto st0
+	}
+	if 48 <= data[p] && data[p] <= 57 { goto st79 }
+	goto st78
+tr314:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st80
+tr451:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st80
+st80:
+	p++
+	if p == pe { goto _test_eof80 }
+	fallthrough
+case 80:
+// line 6013 "zparse.go"
+	if data[p] == 10 { goto tr317 }
+	goto st80
+tr322:
+// line 95 "zparse.rl"
+	{ mark = p }
+// line 98 "zparse.rl"
+	{ /* ... */ }
+	goto st81
+st81:
+	p++
+	if p == pe { goto _test_eof81 }
+	fallthrough
+case 81:
+// line 6027 "zparse.go"
+	switch data[p] {
+		case 9: goto tr340
+		case 10: goto tr341
+		case 32: goto tr340
+		case 34: goto st0
+		case 40: goto tr342
+		case 41: goto tr343
+		case 59: goto tr344
+		case 65: goto st83
+		case 78: goto st88
+		case 92: goto st0
+		case 97: goto st83
+		case 110: goto st88
+	}
+	goto st78
+tr153:
+// line 95 "zparse.rl"
+	{ mark = p }
+	goto st82
+tr824:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st82
+tr146:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st82
+tr400:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st82
+tr344:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st82
+tr566:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st82
+st82:
+	p++
+	if p == pe { goto _test_eof82 }
+	fallthrough
+case 82:
+// line 6123 "zparse.go"
+	if data[p] == 10 { goto tr348 }
+	goto st82
+st83:
+	p++
+	if p == pe { goto _test_eof83 }
+	fallthrough
+case 83:
+	switch data[p] {
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
+		case 34: goto st0
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 65: goto st84
 		case 92: goto st0
 		case 97: goto st84
@@ -6986,13 +6146,13 @@ st84:
 	fallthrough
 case 84:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 65: goto st85
 		case 92: goto st0
 		case 97: goto st85
@@ -7004,689 +6164,464 @@ st85:
 	fallthrough
 case 85:
 	switch data[p] {
-		case 9: goto tr356
-		case 10: goto tr357
-		case 32: goto tr356
+		case 9: goto tr351
+		case 10: goto tr352
+		case 32: goto tr351
 		case 34: goto st0
-		case 40: goto tr358
-		case 41: goto tr359
-		case 59: goto tr360
+		case 40: goto tr353
+		case 41: goto tr354
+		case 59: goto tr355
 		case 92: goto st0
 	}
 	goto st78
-tr363:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st86
-tr364:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st86
-tr890:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr892:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr893:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr356:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
 tr358:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st86
 tr359:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st86
+tr829:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr865:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr867:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr868:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr405:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr351:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st86
-tr410:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr412:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+tr353:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr413:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr354:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr576:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 45 "types.rl"
 	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st86
-tr578:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+tr407:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr579:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr408:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr571:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st86
-tr854:
-// line 95 "zparse.rl"
+tr573:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr574:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st86
+tr831:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st86
-tr856:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st86
-tr857:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+tr832:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st86
 st86:
 	p++
 	if p == pe { goto _test_eof86 }
 	fallthrough
 case 86:
-// line 7399 "zparse.go"
+// line 6424 "zparse.go"
 	switch data[p] {
 		case 9: goto st86
-		case 10: goto tr362
+		case 10: goto tr357
 		case 32: goto st86
 		case 34: goto st0
-		case 40: goto tr363
-		case 41: goto tr364
-		case 59: goto tr365
+		case 40: goto tr358
+		case 41: goto tr359
+		case 59: goto tr360
 		case 92: goto st0
 	}
-	goto tr192
-tr367:
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st333
+	goto tr187
 tr362:
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st333
-tr891:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st333
 tr357:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st333
+tr866:
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st333
+tr352:
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st333
-tr411:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr406:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st333
-tr577:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr572:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st333
-tr855:
-// line 95 "zparse.rl"
+tr830:
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st333
 st333:
 	p++
 	if p == pe { goto _test_eof333 }
 	fallthrough
 case 333:
-// line 7552 "zparse.go"
+// line 6532 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
-		case 10: goto tr194
+		case 10: goto tr189
 		case 32: goto st40
 		case 34: goto st0
-		case 40: goto tr195
-		case 41: goto tr196
-		case 59: goto tr198
+		case 40: goto tr190
+		case 41: goto tr191
+		case 59: goto tr193
 		case 92: goto st0
 	}
-	goto tr924
-tr365:
-// line 89 "zparse.rl"
+	goto tr899
+tr360:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st87
-tr894:
+tr833:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st87
-tr360:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st87
-tr414:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st87
-tr580:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st87
-tr858:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st87
+tr869:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st87
+tr409:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st87
+tr355:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st87
+tr575:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st87
 st87:
 	p++
 	if p == pe { goto _test_eof87 }
 	fallthrough
 case 87:
-// line 7689 "zparse.go"
-	if data[p] == 10 { goto tr367 }
+// line 6624 "zparse.go"
+	if data[p] == 10 { goto tr362 }
 	goto st87
 st88:
 	p++
@@ -7694,13 +6629,13 @@ st88:
 	fallthrough
 case 88:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 89: goto st89
 		case 92: goto st0
 		case 121: goto st89
@@ -7712,400 +6647,440 @@ st89:
 	fallthrough
 case 89:
 	switch data[p] {
-		case 9: goto tr369
-		case 10: goto tr370
-		case 32: goto tr369
+		case 9: goto tr364
+		case 10: goto tr365
+		case 32: goto tr364
 		case 34: goto st0
-		case 40: goto tr371
-		case 41: goto tr372
-		case 59: goto tr373
+		case 40: goto tr366
+		case 41: goto tr367
+		case 59: goto tr368
 		case 92: goto st0
 	}
 	goto st78
-tr376:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st90
-tr377:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st90
-tr369:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st90
 tr371:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st90
 tr372:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st90
+tr364:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr416:
-// line 91 "zparse.rl"
+tr366:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr367:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr411:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr418:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr413:
 // line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr419:
-// line 91 "zparse.rl"
+tr414:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr582:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st90
-tr584:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr577:
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr585:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st90
-tr775:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st90
-tr777:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr579:
 // line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 18 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
             x.Hdr = *hdr
-            x.Cname = tok.T[0]
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr778:
-// line 91 "zparse.rl"
+tr580:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr750:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr860:
-// line 91 "zparse.rl"
+tr752:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr753:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr835:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
-tr862:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr837:
 // line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st90
-tr863:
-// line 91 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st90
+tr838:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st90
 st90:
 	p++
 	if p == pe { goto _test_eof90 }
 	fallthrough
 case 90:
-// line 7972 "zparse.go"
+// line 6937 "zparse.go"
 	switch data[p] {
 		case 9: goto st90
-		case 10: goto tr375
+		case 10: goto tr370
 		case 32: goto st90
-		case 40: goto tr376
-		case 41: goto tr377
-		case 59: goto tr379
-		case 65: goto tr380
-		case 67: goto tr381
+		case 40: goto tr371
+		case 41: goto tr372
+		case 59: goto tr374
+		case 65: goto tr375
+		case 67: goto tr376
 		case 77: goto tr34
-		case 78: goto tr382
-		case 97: goto tr380
-		case 99: goto tr381
+		case 78: goto tr377
+		case 97: goto tr375
+		case 99: goto tr376
 		case 109: goto tr34
-		case 110: goto tr382
+		case 110: goto tr377
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr378 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr373 }
 	goto st0
-tr422:
-// line 100 "zparse.rl"
+tr417:
+// line 106 "zparse.rl"
 	{ lines++ }
-	goto st334
-tr375:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
 	goto st334
 tr370:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st334
+tr365:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st334
-tr417:
-// line 91 "zparse.rl"
+tr412:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st334
-tr583:
-// line 91 "zparse.rl"
+tr578:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st334
-tr776:
-// line 91 "zparse.rl"
+tr751:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st334
-tr861:
-// line 91 "zparse.rl"
+tr836:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st334
 st334:
 	p++
 	if p == pe { goto _test_eof334 }
 	fallthrough
 case 334:
-// line 8087 "zparse.go"
+// line 7062 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
-		case 65: goto tr942
-		case 67: goto tr943
-		case 77: goto tr914
-		case 78: goto tr944
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
+		case 65: goto tr917
+		case 67: goto tr918
+		case 77: goto tr889
+		case 78: goto tr919
 		case 92: goto st0
-		case 97: goto tr942
-		case 99: goto tr943
-		case 109: goto tr914
-		case 110: goto tr944
+		case 97: goto tr917
+		case 99: goto tr918
+		case 109: goto tr889
+		case 110: goto tr919
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr941 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr916 }
 	goto st1
-tr942:
-// line 89 "zparse.rl"
+tr917:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st91
 st91:
@@ -8113,42 +7088,31 @@ st91:
 	if p == pe { goto _test_eof91 }
 	fallthrough
 case 91:
-// line 8117 "zparse.go"
+// line 7092 "zparse.go"
 	switch data[p] {
-		case 9: goto tr73
-		case 10: goto tr74
-		case 32: goto tr73
+		case 9: goto tr68
+		case 10: goto tr69
+		case 32: goto tr68
 		case 34: goto st0
-		case 40: goto tr75
-		case 41: goto tr76
-		case 59: goto tr77
+		case 40: goto tr70
+		case 41: goto tr71
+		case 59: goto tr72
 		case 65: goto st93
 		case 92: goto st0
 		case 97: goto st93
 	}
 	goto st1
-tr77:
-// line 90 "zparse.rl"
+tr72:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st92
 st92:
 	p++
 	if p == pe { goto _test_eof92 }
 	fallthrough
 case 92:
-// line 8151 "zparse.go"
-	if data[p] == 10 { goto tr81 }
+// line 7115 "zparse.go"
+	if data[p] == 10 { goto tr76 }
 	goto st92
 st93:
 	p++
@@ -8192,128 +7156,84 @@ st95:
 	fallthrough
 case 95:
 	switch data[p] {
-		case 9: goto tr385
-		case 10: goto tr386
-		case 32: goto tr385
+		case 9: goto tr380
+		case 10: goto tr381
+		case 32: goto tr380
 		case 34: goto st0
-		case 40: goto tr387
-		case 41: goto tr388
-		case 59: goto tr389
+		case 40: goto tr382
+		case 41: goto tr383
+		case 59: goto tr384
 		case 92: goto st0
 	}
 	goto st1
-tr391:
-// line 100 "zparse.rl"
+tr380:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+	goto st96
+tr381:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st96
-tr392:
-// line 97 "zparse.rl"
+tr382:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st96
-tr393:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st96
-tr385:
-// line 90 "zparse.rl"
+tr383:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st96
 tr386:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st96
 tr387:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st96
 tr388:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st96
 st96:
 	p++
 	if p == pe { goto _test_eof96 }
 	fallthrough
 case 96:
-// line 8289 "zparse.go"
+// line 7209 "zparse.go"
 	switch data[p] {
 		case 9: goto st96
-		case 10: goto tr391
+		case 10: goto tr386
 		case 32: goto st96
 		case 34: goto st0
-		case 40: goto tr392
-		case 41: goto tr393
+		case 40: goto tr387
+		case 41: goto tr388
 		case 59: goto st98
-		case 65: goto tr199
-		case 67: goto tr200
-		case 72: goto tr201
-		case 73: goto tr202
-		case 77: goto tr203
-		case 78: goto tr204
+		case 65: goto tr194
+		case 67: goto tr195
+		case 72: goto tr196
+		case 73: goto tr197
+		case 77: goto tr198
+		case 78: goto tr199
 		case 92: goto st0
-		case 97: goto tr199
-		case 99: goto tr200
-		case 104: goto tr201
-		case 105: goto tr202
-		case 109: goto tr203
-		case 110: goto tr204
+		case 97: goto tr194
+		case 99: goto tr195
+		case 104: goto tr196
+		case 105: goto tr197
+		case 109: goto tr198
+		case 110: goto tr199
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr197 }
-	goto tr192
-tr197:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr192 }
+	goto tr187
+tr192:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st97
 st97:
@@ -8321,46 +7241,35 @@ st97:
 	if p == pe { goto _test_eof97 }
 	fallthrough
 case 97:
-// line 8325 "zparse.go"
+// line 7245 "zparse.go"
 	switch data[p] {
-		case 9: goto tr395
-		case 10: goto tr396
-		case 32: goto tr395
+		case 9: goto tr390
+		case 10: goto tr391
+		case 32: goto tr390
 		case 34: goto st0
-		case 40: goto tr397
-		case 41: goto tr398
-		case 59: goto tr400
+		case 40: goto tr392
+		case 41: goto tr393
+		case 59: goto tr395
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st97 }
 	goto st41
-tr389:
-// line 90 "zparse.rl"
+tr384:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st98
 st98:
 	p++
 	if p == pe { goto _test_eof98 }
 	fallthrough
 case 98:
-// line 8358 "zparse.go"
-	if data[p] == 10 { goto tr391 }
+// line 7267 "zparse.go"
+	if data[p] == 10 { goto tr386 }
 	goto st98
-tr199:
-// line 89 "zparse.rl"
+tr194:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st99
 st99:
@@ -8368,15 +7277,15 @@ st99:
 	if p == pe { goto _test_eof99 }
 	fallthrough
 case 99:
-// line 8372 "zparse.go"
+// line 7281 "zparse.go"
 	switch data[p] {
-		case 9: goto tr401
-		case 10: goto tr402
-		case 32: goto tr401
+		case 9: goto tr396
+		case 10: goto tr397
+		case 32: goto tr396
 		case 34: goto st0
-		case 40: goto tr403
-		case 41: goto tr404
-		case 59: goto tr405
+		case 40: goto tr398
+		case 41: goto tr399
+		case 59: goto tr400
 		case 65: goto st100
 		case 78: goto st103
 		case 92: goto st0
@@ -8390,13 +7299,13 @@ st100:
 	fallthrough
 case 100:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 65: goto st101
 		case 92: goto st0
 		case 97: goto st101
@@ -8408,13 +7317,13 @@ st101:
 	fallthrough
 case 101:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 65: goto st102
 		case 92: goto st0
 		case 97: goto st102
@@ -8426,13 +7335,13 @@ st102:
 	fallthrough
 case 102:
 	switch data[p] {
-		case 9: goto tr410
-		case 10: goto tr411
-		case 32: goto tr410
+		case 9: goto tr405
+		case 10: goto tr406
+		case 32: goto tr405
 		case 34: goto st0
-		case 40: goto tr412
-		case 41: goto tr413
-		case 59: goto tr414
+		case 40: goto tr407
+		case 41: goto tr408
+		case 59: goto tr409
 		case 92: goto st0
 	}
 	goto st41
@@ -8442,13 +7351,13 @@ st103:
 	fallthrough
 case 103:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 89: goto st104
 		case 92: goto st0
 		case 121: goto st104
@@ -8460,103 +7369,113 @@ st104:
 	fallthrough
 case 104:
 	switch data[p] {
-		case 9: goto tr416
-		case 10: goto tr417
-		case 32: goto tr416
+		case 9: goto tr411
+		case 10: goto tr412
+		case 32: goto tr411
 		case 34: goto st0
-		case 40: goto tr418
-		case 41: goto tr419
-		case 59: goto tr420
+		case 40: goto tr413
+		case 41: goto tr414
+		case 59: goto tr415
 		case 92: goto st0
 	}
 	goto st41
-tr379:
-// line 89 "zparse.rl"
+tr374:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st105
-tr373:
-// line 91 "zparse.rl"
+tr368:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st105
-tr420:
-// line 91 "zparse.rl"
+tr415:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st105
-tr586:
-// line 91 "zparse.rl"
+tr581:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st105
-tr779:
-// line 91 "zparse.rl"
+tr754:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st105
-tr864:
-// line 91 "zparse.rl"
+tr839:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st105
 st105:
 	p++
 	if p == pe { goto _test_eof105 }
 	fallthrough
 case 105:
-// line 8554 "zparse.go"
-	if data[p] == 10 { goto tr422 }
+// line 7473 "zparse.go"
+	if data[p] == 10 { goto tr417 }
 	goto st105
-tr200:
-// line 89 "zparse.rl"
+tr195:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st106
 st106:
@@ -8564,15 +7483,15 @@ st106:
 	if p == pe { goto _test_eof106 }
 	fallthrough
 case 106:
-// line 8568 "zparse.go"
+// line 7487 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 72: goto st104
 		case 78: goto st107
 		case 83: goto st104
@@ -8588,13 +7507,13 @@ st107:
 	fallthrough
 case 107:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 65: goto st108
 		case 92: goto st0
 		case 97: goto st108
@@ -8606,13 +7525,13 @@ st108:
 	fallthrough
 case 108:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 77: goto st109
 		case 92: goto st0
 		case 109: goto st109
@@ -8624,13 +7543,13 @@ st109:
 	fallthrough
 case 109:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 69: goto st110
 		case 92: goto st0
 		case 101: goto st110
@@ -8642,694 +7561,469 @@ st110:
 	fallthrough
 case 110:
 	switch data[p] {
-		case 9: goto tr427
-		case 10: goto tr428
-		case 32: goto tr427
+		case 9: goto tr422
+		case 10: goto tr423
+		case 32: goto tr422
 		case 34: goto st0
-		case 40: goto tr429
-		case 41: goto tr430
-		case 59: goto tr431
+		case 40: goto tr424
+		case 41: goto tr425
+		case 59: goto tr426
 		case 92: goto st0
 	}
 	goto st41
-tr434:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st111
-tr435:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st111
-tr783:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr785:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr786:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr717:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr719:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr720:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr427:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
 tr429:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st111
 tr430:
-// line 95 "zparse.rl"
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st111
+tr844:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr758:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr760:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr761:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr422:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st111
-tr591:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
+tr692:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st111
-tr593:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+tr694:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr594:
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr695:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr424:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr425:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr586:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st111
-tr869:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
+tr588:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st111
-tr871:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
+// line 18 "types.rl"
 	{
-            x := rr.(*RR_A)
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
             x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st111
-tr872:
-// line 95 "zparse.rl"
+tr589:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr846:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st111
+tr847:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st111
 st111:
 	p++
 	if p == pe { goto _test_eof111 }
 	fallthrough
 case 111:
-// line 9037 "zparse.go"
+// line 7821 "zparse.go"
 	switch data[p] {
 		case 9: goto st111
-		case 10: goto tr433
+		case 10: goto tr428
 		case 32: goto st111
 		case 34: goto st0
-		case 40: goto tr434
-		case 41: goto tr435
-		case 59: goto tr436
+		case 40: goto tr429
+		case 41: goto tr430
+		case 59: goto tr431
 		case 92: goto st0
 	}
-	goto tr118
-tr438:
-// line 100 "zparse.rl"
+	goto tr113
+tr433:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st335
-tr433:
-// line 100 "zparse.rl"
+tr428:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st335
-tr784:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr759:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st335
-tr718:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr693:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st335
-tr428:
-// line 95 "zparse.rl"
+tr423:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st335
-tr592:
-// line 95 "zparse.rl"
+tr587:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st335
-tr870:
-// line 95 "zparse.rl"
+tr845:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st335
 st335:
 	p++
 	if p == pe { goto _test_eof335 }
 	fallthrough
 case 335:
-// line 9190 "zparse.go"
+// line 7929 "zparse.go"
 	switch data[p] {
 		case 9: goto st56
-		case 10: goto tr255
+		case 10: goto tr250
 		case 32: goto st56
 		case 34: goto st0
-		case 40: goto tr256
-		case 41: goto tr257
-		case 59: goto tr258
+		case 40: goto tr251
+		case 41: goto tr252
+		case 59: goto tr253
 		case 92: goto st0
 	}
-	goto tr932
-tr436:
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st112
-tr787:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st112
-tr721:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st112
+	goto tr907
 tr431:
 // line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ mark = p }
 	goto st112
-tr595:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
+tr848:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st112
-tr873:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st112
+tr762:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st112
+tr426:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st112
+tr696:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st112
+tr590:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st112
 st112:
 	p++
 	if p == pe { goto _test_eof112 }
 	fallthrough
 case 112:
-// line 9327 "zparse.go"
-	if data[p] == 10 { goto tr438 }
+// line 8021 "zparse.go"
+	if data[p] == 10 { goto tr433 }
 	goto st112
-tr201:
-// line 89 "zparse.rl"
+tr196:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st113
 st113:
@@ -9337,24 +8031,24 @@ st113:
 	if p == pe { goto _test_eof113 }
 	fallthrough
 case 113:
-// line 9341 "zparse.go"
+// line 8035 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 83: goto st104
 		case 92: goto st0
 		case 115: goto st104
 	}
 	goto st41
-tr202:
-// line 89 "zparse.rl"
+tr197:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st114
 st114:
@@ -9362,24 +8056,24 @@ st114:
 	if p == pe { goto _test_eof114 }
 	fallthrough
 case 114:
-// line 9366 "zparse.go"
+// line 8060 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 78: goto st104
 		case 92: goto st0
 		case 110: goto st104
 	}
 	goto st41
-tr203:
-// line 89 "zparse.rl"
+tr198:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st115
 st115:
@@ -9387,15 +8081,15 @@ st115:
 	if p == pe { goto _test_eof115 }
 	fallthrough
 case 115:
-// line 9391 "zparse.go"
+// line 8085 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 88: goto st116
 		case 92: goto st0
 		case 120: goto st116
@@ -9407,564 +8101,384 @@ st116:
 	fallthrough
 case 116:
 	switch data[p] {
-		case 9: goto tr440
-		case 10: goto tr441
-		case 32: goto tr440
+		case 9: goto tr435
+		case 10: goto tr436
+		case 32: goto tr435
 		case 34: goto st0
-		case 40: goto tr442
-		case 41: goto tr443
-		case 59: goto tr444
+		case 40: goto tr437
+		case 41: goto tr438
+		case 59: goto tr439
 		case 92: goto st0
 	}
 	goto st41
-tr447:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st117
-tr448:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st117
-tr723:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr725:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr726:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr440:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
 tr442:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st117
 tr443:
-// line 95 "zparse.rl"
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st117
+tr850:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr764:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr435:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr597:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
+tr698:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr599:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+tr700:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr600:
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr701:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr437:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr438:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr592:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr789:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
+tr594:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr791:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 18 "types.rl"
 	{
-            x := rr.(*RR_CNAME)
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
             x.Hdr = *hdr
-            x.Cname = tok.T[0]
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr792:
-// line 95 "zparse.rl"
+tr595:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr766:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr875:
-// line 95 "zparse.rl"
+tr767:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st117
+tr852:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st117
-tr877:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
-tr878:
-// line 95 "zparse.rl"
+tr853:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st117
 st117:
 	p++
 	if p == pe { goto _test_eof117 }
 	fallthrough
 case 117:
-// line 9802 "zparse.go"
+// line 8361 "zparse.go"
 	switch data[p] {
 		case 9: goto st117
-		case 10: goto tr446
+		case 10: goto tr441
 		case 32: goto st117
-		case 40: goto tr447
-		case 41: goto tr448
-		case 59: goto tr450
+		case 40: goto tr442
+		case 41: goto tr443
+		case 59: goto tr445
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr449 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr444 }
 	goto st0
-tr471:
-// line 100 "zparse.rl"
+tr466:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st336
-tr446:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st336
-tr724:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr441:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st336
+tr699:
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st336
-tr441:
-// line 95 "zparse.rl"
+tr436:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st336
-tr598:
-// line 95 "zparse.rl"
+tr593:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st336
-tr790:
-// line 95 "zparse.rl"
+tr765:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st336
-tr876:
-// line 95 "zparse.rl"
+tr851:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st336
 st336:
 	p++
 	if p == pe { goto _test_eof336 }
 	fallthrough
 case 336:
-// line 9954 "zparse.go"
+// line 8468 "zparse.go"
 	switch data[p] {
 		case 9: goto st75
-		case 10: goto tr309
+		case 10: goto tr304
 		case 32: goto st75
 		case 34: goto st0
-		case 40: goto tr310
-		case 41: goto tr311
-		case 59: goto tr313
+		case 40: goto tr305
+		case 41: goto tr306
+		case 59: goto tr308
 		case 92: goto st0
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr945 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr920 }
 	goto st1
-tr945:
-// line 89 "zparse.rl"
+tr920:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st118
 st118:
@@ -9972,133 +8486,97 @@ st118:
 	if p == pe { goto _test_eof118 }
 	fallthrough
 case 118:
-// line 9976 "zparse.go"
+// line 8490 "zparse.go"
 	switch data[p] {
-		case 9: goto tr451
-		case 10: goto tr452
-		case 32: goto tr451
+		case 9: goto tr446
+		case 10: goto tr447
+		case 32: goto tr446
 		case 34: goto st0
-		case 40: goto tr453
-		case 41: goto tr454
-		case 59: goto tr456
+		case 40: goto tr448
+		case 41: goto tr449
+		case 59: goto tr451
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st118 }
 	goto st1
-tr313:
-// line 89 "zparse.rl"
+tr308:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st119
-tr836:
-// line 90 "zparse.rl"
+tr811:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st119
-tr807:
-// line 90 "zparse.rl"
+tr782:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st119
-tr307:
-// line 90 "zparse.rl"
+tr302:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st119
-tr552:
-// line 90 "zparse.rl"
+tr547:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st119
 st119:
 	p++
 	if p == pe { goto _test_eof119 }
 	fallthrough
 case 119:
-// line 10098 "zparse.go"
-	if data[p] == 10 { goto tr458 }
+// line 8576 "zparse.go"
+	if data[p] == 10 { goto tr453 }
 	goto st119
-tr449:
-// line 89 "zparse.rl"
+tr444:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st120
 st120:
@@ -10106,49 +8584,49 @@ st120:
 	if p == pe { goto _test_eof120 }
 	fallthrough
 case 120:
-// line 10110 "zparse.go"
+// line 8588 "zparse.go"
 	switch data[p] {
-		case 9: goto tr459
-		case 10: goto tr460
-		case 32: goto tr459
-		case 40: goto tr461
-		case 41: goto tr462
-		case 59: goto tr464
+		case 9: goto tr454
+		case 10: goto tr455
+		case 32: goto tr454
+		case 40: goto tr456
+		case 41: goto tr457
+		case 59: goto tr459
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st120 }
 	goto st0
-tr466:
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st121
-tr467:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st121
-tr468:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st121
-tr459:
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st121
-tr460:
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st121
 tr461:
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
+// line 106 "zparse.rl"
+	{ lines++ }
 	goto st121
 tr462:
-// line 94 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st121
+tr463:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st121
+tr454:
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 98 "zparse.rl"
+	goto st121
+tr455:
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+// line 106 "zparse.rl"
+	{ lines++ }
+	goto st121
+tr456:
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st121
+tr457:
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st121
 st121:
@@ -10156,20 +8634,20 @@ st121:
 	if p == pe { goto _test_eof121 }
 	fallthrough
 case 121:
-// line 10160 "zparse.go"
+// line 8638 "zparse.go"
 	switch data[p] {
 		case 9: goto st121
-		case 10: goto tr466
+		case 10: goto tr461
 		case 32: goto st121
 		case 34: goto st0
-		case 40: goto tr467
-		case 41: goto tr468
+		case 40: goto tr462
+		case 41: goto tr463
 		case 59: goto st122
 		case 92: goto st0
 	}
-	goto tr320
-tr464:
-// line 94 "zparse.rl"
+	goto tr315
+tr459:
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st122
 st122:
@@ -10177,141 +8655,96 @@ st122:
 	if p == pe { goto _test_eof122 }
 	fallthrough
 case 122:
-// line 10181 "zparse.go"
-	if data[p] == 10 { goto tr466 }
+// line 8659 "zparse.go"
+	if data[p] == 10 { goto tr461 }
 	goto st122
-tr450:
-// line 89 "zparse.rl"
+tr445:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st123
-tr727:
+tr854:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st123
-tr444:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st123
-tr601:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st123
-tr793:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st123
-tr879:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st123
+tr768:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st123
+tr439:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st123
+tr702:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st123
+tr596:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st123
 st123:
 	p++
 	if p == pe { goto _test_eof123 }
 	fallthrough
 case 123:
-// line 10309 "zparse.go"
-	if data[p] == 10 { goto tr471 }
+// line 8742 "zparse.go"
+	if data[p] == 10 { goto tr466 }
 	goto st123
-tr204:
-// line 89 "zparse.rl"
+tr199:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st124
 st124:
@@ -10319,15 +8752,15 @@ st124:
 	if p == pe { goto _test_eof124 }
 	fallthrough
 case 124:
-// line 10323 "zparse.go"
+// line 8756 "zparse.go"
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 79: goto st125
 		case 83: goto st127
 		case 92: goto st0
@@ -10341,13 +8774,13 @@ st125:
 	fallthrough
 case 125:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 78: goto st126
 		case 92: goto st0
 		case 110: goto st126
@@ -10359,13 +8792,13 @@ st126:
 	fallthrough
 case 126:
 	switch data[p] {
-		case 9: goto tr206
-		case 10: goto tr207
-		case 32: goto tr206
+		case 9: goto tr201
+		case 10: goto tr202
+		case 32: goto tr201
 		case 34: goto st0
-		case 40: goto tr208
-		case 41: goto tr209
-		case 59: goto tr210
+		case 40: goto tr203
+		case 41: goto tr204
+		case 59: goto tr205
 		case 69: goto st104
 		case 92: goto st0
 		case 101: goto st104
@@ -10377,411 +8810,276 @@ st127:
 	fallthrough
 case 127:
 	switch data[p] {
-		case 9: goto tr475
-		case 10: goto tr476
-		case 32: goto tr475
+		case 9: goto tr470
+		case 10: goto tr471
+		case 32: goto tr470
 		case 34: goto st0
-		case 40: goto tr477
-		case 41: goto tr478
-		case 59: goto tr479
+		case 40: goto tr472
+		case 41: goto tr473
+		case 59: goto tr474
 		case 92: goto st0
 	}
 	goto st41
-tr483:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st128
-tr484:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st128
-tr797:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr799:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr800:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr731:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr733:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr734:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr475:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr477:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
 tr478:
-// line 95 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st128
+tr479:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+	goto st128
+tr858:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 4 "types.rl"
 	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr772:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr774:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr775:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr470:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st128
-tr605:
+tr706:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 45 "types.rl"
 	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st128
-tr607:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+tr708:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr608:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr709:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr883:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
-	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
-        }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st128
-tr885:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 4 "types.rl"
+// line 45 "types.rl"
 	{
-            x := rr.(*RR_A)
-            x.Hdr = *hdr
-            x.A = net.ParseIP(tok.T[0])
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr472:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st128
-tr886:
-// line 95 "zparse.rl"
+tr473:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr600:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr602:
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr603:
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr860:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st128
+tr861:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 4 "types.rl"
+	{
+            rr = new(RR_A)
+            x := rr.(*RR_A)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
+            x.A = net.ParseIP(tok.T[0])
+        }
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st128
 st128:
 	p++
 	if p == pe { goto _test_eof128 }
 	fallthrough
 case 128:
-// line 10772 "zparse.go"
+// line 9070 "zparse.go"
 	switch data[p] {
 		case 9: goto st128
-		case 10: goto tr482
+		case 10: goto tr477
 		case 32: goto st128
 		case 34: goto st0
-		case 40: goto tr483
-		case 41: goto tr484
-		case 59: goto tr485
+		case 40: goto tr478
+		case 41: goto tr479
+		case 59: goto tr480
 		case 92: goto st0
 	}
-	goto tr480
-tr480:
-// line 89 "zparse.rl"
+	goto tr475
+tr475:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st129
 st129:
@@ -10789,173 +9087,128 @@ st129:
 	if p == pe { goto _test_eof129 }
 	fallthrough
 case 129:
-// line 10793 "zparse.go"
+// line 9091 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 92: goto st0
 	}
 	goto st129
-tr611:
-// line 100 "zparse.rl"
+tr606:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st337
-tr482:
-// line 100 "zparse.rl"
+tr477:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st337
-tr798:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr773:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st337
-tr732:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr707:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st337
-tr476:
-// line 95 "zparse.rl"
+tr471:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st337
-tr606:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+tr601:
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st337
-tr884:
-// line 95 "zparse.rl"
+tr859:
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st337
 st337:
 	p++
 	if p == pe { goto _test_eof337 }
 	fallthrough
 case 337:
-// line 10946 "zparse.go"
+// line 9199 "zparse.go"
 	switch data[p] {
 		case 9: goto st131
-		case 10: goto tr499
+		case 10: goto tr494
 		case 32: goto st131
 		case 34: goto st0
-		case 40: goto tr500
-		case 41: goto tr501
-		case 59: goto tr503
+		case 40: goto tr495
+		case 41: goto tr496
+		case 59: goto tr498
 		case 92: goto st0
 	}
-	goto tr946
-tr946:
-// line 89 "zparse.rl"
+	goto tr921
+tr921:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st130
 st130:
@@ -10963,524 +9216,380 @@ st130:
 	if p == pe { goto _test_eof130 }
 	fallthrough
 case 130:
-// line 10967 "zparse.go"
+// line 9220 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 92: goto st0
 	}
 	goto st130
-tr500:
-// line 97 "zparse.rl"
+tr495:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st131
-tr501:
-// line 98 "zparse.rl"
+tr496:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st131
-tr840:
-// line 90 "zparse.rl"
+tr815:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr842:
-// line 90 "zparse.rl"
+tr817:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr843:
-// line 90 "zparse.rl"
+tr818:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr811:
-// line 90 "zparse.rl"
+tr786:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr813:
-// line 90 "zparse.rl"
+tr788:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr814:
-// line 90 "zparse.rl"
+tr789:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr768:
-// line 90 "zparse.rl"
+tr743:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr770:
-// line 90 "zparse.rl"
+tr745:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr771:
-// line 90 "zparse.rl"
+tr746:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr556:
-// line 90 "zparse.rl"
+tr551:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr558:
-// line 90 "zparse.rl"
+tr553:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
-tr559:
-// line 90 "zparse.rl"
+tr554:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st131
 st131:
 	p++
 	if p == pe { goto _test_eof131 }
 	fallthrough
 case 131:
-// line 11308 "zparse.go"
+// line 9453 "zparse.go"
 	switch data[p] {
 		case 9: goto st131
-		case 10: goto tr499
+		case 10: goto tr494
 		case 32: goto st131
 		case 34: goto st0
-		case 40: goto tr500
-		case 41: goto tr501
-		case 59: goto tr503
-		case 65: goto tr504
-		case 67: goto tr505
-		case 72: goto tr506
-		case 73: goto tr507
-		case 77: goto tr508
-		case 78: goto tr509
+		case 40: goto tr495
+		case 41: goto tr496
+		case 59: goto tr498
+		case 65: goto tr499
+		case 67: goto tr500
+		case 72: goto tr501
+		case 73: goto tr502
+		case 77: goto tr503
+		case 78: goto tr504
 		case 92: goto st0
-		case 97: goto tr504
-		case 99: goto tr505
-		case 104: goto tr506
-		case 105: goto tr507
-		case 109: goto tr508
-		case 110: goto tr509
+		case 97: goto tr499
+		case 99: goto tr500
+		case 104: goto tr501
+		case 105: goto tr502
+		case 109: goto tr503
+		case 110: goto tr504
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr502 }
-	goto tr480
-tr517:
-// line 100 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr497 }
+	goto tr475
+tr512:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st338
-tr499:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
-	goto st338
-tr841:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+tr494:
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st338
+tr816:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st338
-tr812:
-// line 90 "zparse.rl"
+tr787:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st338
-tr769:
-// line 90 "zparse.rl"
+tr744:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st338
-tr557:
-// line 90 "zparse.rl"
+tr552:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st338
 st338:
 	p++
 	if p == pe { goto _test_eof338 }
 	fallthrough
 case 338:
-// line 11456 "zparse.go"
+// line 9565 "zparse.go"
 	switch data[p] {
 		case 9: goto st131
-		case 10: goto tr499
+		case 10: goto tr494
 		case 32: goto st131
 		case 34: goto st0
-		case 40: goto tr500
-		case 41: goto tr501
-		case 59: goto tr503
-		case 65: goto tr948
-		case 67: goto tr949
-		case 72: goto tr950
-		case 73: goto tr951
-		case 77: goto tr952
-		case 78: goto tr953
+		case 40: goto tr495
+		case 41: goto tr496
+		case 59: goto tr498
+		case 65: goto tr923
+		case 67: goto tr924
+		case 72: goto tr925
+		case 73: goto tr926
+		case 77: goto tr927
+		case 78: goto tr928
 		case 92: goto st0
-		case 97: goto tr948
-		case 99: goto tr949
-		case 104: goto tr950
-		case 105: goto tr951
-		case 109: goto tr952
-		case 110: goto tr953
+		case 97: goto tr923
+		case 99: goto tr924
+		case 104: goto tr925
+		case 105: goto tr926
+		case 109: goto tr927
+		case 110: goto tr928
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr947 }
-	goto tr946
-tr947:
-// line 89 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr922 }
+	goto tr921
+tr922:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st132
 st132:
@@ -11488,135 +9597,99 @@ st132:
 	if p == pe { goto _test_eof132 }
 	fallthrough
 case 132:
-// line 11492 "zparse.go"
+// line 9601 "zparse.go"
 	switch data[p] {
-		case 9: goto tr510
-		case 10: goto tr511
-		case 32: goto tr510
+		case 9: goto tr505
+		case 10: goto tr506
+		case 32: goto tr505
 		case 34: goto st0
-		case 40: goto tr512
-		case 41: goto tr513
-		case 59: goto tr515
+		case 40: goto tr507
+		case 41: goto tr508
+		case 59: goto tr510
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st132 }
 	goto st130
-tr503:
-// line 89 "zparse.rl"
+tr498:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st133
-tr844:
-// line 90 "zparse.rl"
+tr819:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st133
-tr815:
-// line 90 "zparse.rl"
+tr790:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
+// line 11 "types.rl"
 	{
+            rr = new(RR_AAAA)
             x := rr.(*RR_AAAA)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
             x.AAAA = net.ParseIP(tok.T[0])
         }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st133
-tr772:
-// line 90 "zparse.rl"
+tr747:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
+// line 25 "types.rl"
 	{
+            rr = new(RR_CNAME)
             x := rr.(*RR_CNAME)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
             x.Cname = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st133
-tr560:
-// line 90 "zparse.rl"
+tr555:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
+// line 18 "types.rl"
 	{
+            rr = new(RR_NS)
             x := rr.(*RR_NS)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
             x.Ns = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st133
 st133:
 	p++
 	if p == pe { goto _test_eof133 }
 	fallthrough
 case 133:
-// line 11614 "zparse.go"
-	if data[p] == 10 { goto tr517 }
+// line 9687 "zparse.go"
+	if data[p] == 10 { goto tr512 }
 	goto st133
-tr948:
-// line 89 "zparse.rl"
+tr923:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st134
 st134:
@@ -11624,15 +9697,15 @@ st134:
 	if p == pe { goto _test_eof134 }
 	fallthrough
 case 134:
-// line 11628 "zparse.go"
+// line 9701 "zparse.go"
 	switch data[p] {
-		case 9: goto tr518
-		case 10: goto tr519
-		case 32: goto tr518
+		case 9: goto tr513
+		case 10: goto tr514
+		case 32: goto tr513
 		case 34: goto st0
-		case 40: goto tr520
-		case 41: goto tr521
-		case 59: goto tr522
+		case 40: goto tr515
+		case 41: goto tr516
+		case 59: goto tr517
 		case 65: goto st135
 		case 78: goto st138
 		case 92: goto st0
@@ -11646,13 +9719,13 @@ st135:
 	fallthrough
 case 135:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 65: goto st136
 		case 92: goto st0
 		case 97: goto st136
@@ -11664,13 +9737,13 @@ st136:
 	fallthrough
 case 136:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 65: goto st137
 		case 92: goto st0
 		case 97: goto st137
@@ -11682,13 +9755,13 @@ st137:
 	fallthrough
 case 137:
 	switch data[p] {
-		case 9: goto tr527
-		case 10: goto tr528
-		case 32: goto tr527
+		case 9: goto tr522
+		case 10: goto tr523
+		case 32: goto tr522
 		case 34: goto st0
-		case 40: goto tr529
-		case 41: goto tr530
-		case 59: goto tr531
+		case 40: goto tr524
+		case 41: goto tr525
+		case 59: goto tr526
 		case 92: goto st0
 	}
 	goto st130
@@ -11698,13 +9771,13 @@ st138:
 	fallthrough
 case 138:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 89: goto st139
 		case 92: goto st0
 		case 121: goto st139
@@ -11716,20 +9789,20 @@ st139:
 	fallthrough
 case 139:
 	switch data[p] {
-		case 9: goto tr533
-		case 10: goto tr534
-		case 32: goto tr533
+		case 9: goto tr528
+		case 10: goto tr529
+		case 32: goto tr528
 		case 34: goto st0
-		case 40: goto tr535
-		case 41: goto tr536
-		case 59: goto tr537
+		case 40: goto tr530
+		case 41: goto tr531
+		case 59: goto tr532
 		case 92: goto st0
 	}
 	goto st130
-tr949:
-// line 89 "zparse.rl"
+tr924:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st140
 st140:
@@ -11737,15 +9810,15 @@ st140:
 	if p == pe { goto _test_eof140 }
 	fallthrough
 case 140:
-// line 11741 "zparse.go"
+// line 9814 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 72: goto st139
 		case 78: goto st141
 		case 83: goto st139
@@ -11761,13 +9834,13 @@ st141:
 	fallthrough
 case 141:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 65: goto st142
 		case 92: goto st0
 		case 97: goto st142
@@ -11779,13 +9852,13 @@ st142:
 	fallthrough
 case 142:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 77: goto st143
 		case 92: goto st0
 		case 109: goto st143
@@ -11797,13 +9870,13 @@ st143:
 	fallthrough
 case 143:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 69: goto st144
 		case 92: goto st0
 		case 101: goto st144
@@ -11815,20 +9888,20 @@ st144:
 	fallthrough
 case 144:
 	switch data[p] {
-		case 9: goto tr542
-		case 10: goto tr543
-		case 32: goto tr542
+		case 9: goto tr537
+		case 10: goto tr538
+		case 32: goto tr537
 		case 34: goto st0
-		case 40: goto tr544
-		case 41: goto tr545
-		case 59: goto tr546
+		case 40: goto tr539
+		case 41: goto tr540
+		case 59: goto tr541
 		case 92: goto st0
 	}
 	goto st130
-tr950:
-// line 89 "zparse.rl"
+tr925:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st145
 st145:
@@ -11836,24 +9909,24 @@ st145:
 	if p == pe { goto _test_eof145 }
 	fallthrough
 case 145:
-// line 11840 "zparse.go"
+// line 9913 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 83: goto st139
 		case 92: goto st0
 		case 115: goto st139
 	}
 	goto st130
-tr951:
-// line 89 "zparse.rl"
+tr926:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st146
 st146:
@@ -11861,24 +9934,24 @@ st146:
 	if p == pe { goto _test_eof146 }
 	fallthrough
 case 146:
-// line 11865 "zparse.go"
+// line 9938 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 78: goto st139
 		case 92: goto st0
 		case 110: goto st139
 	}
 	goto st130
-tr952:
-// line 89 "zparse.rl"
+tr927:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st147
 st147:
@@ -11886,15 +9959,15 @@ st147:
 	if p == pe { goto _test_eof147 }
 	fallthrough
 case 147:
-// line 11890 "zparse.go"
+// line 9963 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 88: goto st148
 		case 92: goto st0
 		case 120: goto st148
@@ -11906,20 +9979,20 @@ st148:
 	fallthrough
 case 148:
 	switch data[p] {
-		case 9: goto tr548
-		case 10: goto tr549
-		case 32: goto tr548
+		case 9: goto tr543
+		case 10: goto tr544
+		case 32: goto tr543
 		case 34: goto st0
-		case 40: goto tr550
-		case 41: goto tr551
-		case 59: goto tr552
+		case 40: goto tr545
+		case 41: goto tr546
+		case 59: goto tr547
 		case 92: goto st0
 	}
 	goto st130
-tr953:
-// line 89 "zparse.rl"
+tr928:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st149
 st149:
@@ -11927,15 +10000,15 @@ st149:
 	if p == pe { goto _test_eof149 }
 	fallthrough
 case 149:
-// line 11931 "zparse.go"
+// line 10004 "zparse.go"
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 79: goto st150
 		case 83: goto st152
 		case 92: goto st0
@@ -11949,13 +10022,13 @@ st150:
 	fallthrough
 case 150:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 78: goto st151
 		case 92: goto st0
 		case 110: goto st151
@@ -11967,13 +10040,13 @@ st151:
 	fallthrough
 case 151:
 	switch data[p] {
-		case 9: goto tr493
-		case 10: goto tr494
-		case 32: goto tr493
+		case 9: goto tr488
+		case 10: goto tr489
+		case 32: goto tr488
 		case 34: goto st0
-		case 40: goto tr495
-		case 41: goto tr496
-		case 59: goto tr497
+		case 40: goto tr490
+		case 41: goto tr491
+		case 59: goto tr492
 		case 69: goto st139
 		case 92: goto st0
 		case 101: goto st139
@@ -11985,20 +10058,20 @@ st152:
 	fallthrough
 case 152:
 	switch data[p] {
-		case 9: goto tr556
-		case 10: goto tr557
-		case 32: goto tr556
+		case 9: goto tr551
+		case 10: goto tr552
+		case 32: goto tr551
 		case 34: goto st0
-		case 40: goto tr558
-		case 41: goto tr559
-		case 59: goto tr560
+		case 40: goto tr553
+		case 41: goto tr554
+		case 59: goto tr555
 		case 92: goto st0
 	}
 	goto st130
-tr502:
-// line 89 "zparse.rl"
+tr497:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st153
 st153:
@@ -12006,23 +10079,23 @@ st153:
 	if p == pe { goto _test_eof153 }
 	fallthrough
 case 153:
-// line 12010 "zparse.go"
+// line 10083 "zparse.go"
 	switch data[p] {
-		case 9: goto tr561
-		case 10: goto tr562
-		case 32: goto tr561
+		case 9: goto tr556
+		case 10: goto tr557
+		case 32: goto tr556
 		case 34: goto st0
-		case 40: goto tr563
-		case 41: goto tr564
-		case 59: goto tr566
+		case 40: goto tr558
+		case 41: goto tr559
+		case 59: goto tr561
 		case 92: goto st0
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st153 }
 	goto st129
-tr504:
-// line 89 "zparse.rl"
+tr499:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st154
 st154:
@@ -12030,15 +10103,15 @@ st154:
 	if p == pe { goto _test_eof154 }
 	fallthrough
 case 154:
-// line 12034 "zparse.go"
+// line 10107 "zparse.go"
 	switch data[p] {
-		case 9: goto tr567
-		case 10: goto tr568
-		case 32: goto tr567
+		case 9: goto tr562
+		case 10: goto tr563
+		case 32: goto tr562
 		case 34: goto st0
-		case 40: goto tr569
-		case 41: goto tr570
-		case 59: goto tr571
+		case 40: goto tr564
+		case 41: goto tr565
+		case 59: goto tr566
 		case 65: goto st155
 		case 78: goto st158
 		case 92: goto st0
@@ -12052,13 +10125,13 @@ st155:
 	fallthrough
 case 155:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 65: goto st156
 		case 92: goto st0
 		case 97: goto st156
@@ -12070,13 +10143,13 @@ st156:
 	fallthrough
 case 156:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 65: goto st157
 		case 92: goto st0
 		case 97: goto st157
@@ -12088,13 +10161,13 @@ st157:
 	fallthrough
 case 157:
 	switch data[p] {
-		case 9: goto tr576
-		case 10: goto tr577
-		case 32: goto tr576
+		case 9: goto tr571
+		case 10: goto tr572
+		case 32: goto tr571
 		case 34: goto st0
-		case 40: goto tr578
-		case 41: goto tr579
-		case 59: goto tr580
+		case 40: goto tr573
+		case 41: goto tr574
+		case 59: goto tr575
 		case 92: goto st0
 	}
 	goto st129
@@ -12104,13 +10177,13 @@ st158:
 	fallthrough
 case 158:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 89: goto st159
 		case 92: goto st0
 		case 121: goto st159
@@ -12122,20 +10195,20 @@ st159:
 	fallthrough
 case 159:
 	switch data[p] {
-		case 9: goto tr582
-		case 10: goto tr583
-		case 32: goto tr582
+		case 9: goto tr577
+		case 10: goto tr578
+		case 32: goto tr577
 		case 34: goto st0
-		case 40: goto tr584
-		case 41: goto tr585
-		case 59: goto tr586
+		case 40: goto tr579
+		case 41: goto tr580
+		case 59: goto tr581
 		case 92: goto st0
 	}
 	goto st129
-tr505:
-// line 89 "zparse.rl"
+tr500:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st160
 st160:
@@ -12143,15 +10216,15 @@ st160:
 	if p == pe { goto _test_eof160 }
 	fallthrough
 case 160:
-// line 12147 "zparse.go"
+// line 10220 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 72: goto st159
 		case 78: goto st161
 		case 83: goto st159
@@ -12167,13 +10240,13 @@ st161:
 	fallthrough
 case 161:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 65: goto st162
 		case 92: goto st0
 		case 97: goto st162
@@ -12185,13 +10258,13 @@ st162:
 	fallthrough
 case 162:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 77: goto st163
 		case 92: goto st0
 		case 109: goto st163
@@ -12203,13 +10276,13 @@ st163:
 	fallthrough
 case 163:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 69: goto st164
 		case 92: goto st0
 		case 101: goto st164
@@ -12221,20 +10294,20 @@ st164:
 	fallthrough
 case 164:
 	switch data[p] {
-		case 9: goto tr591
-		case 10: goto tr592
-		case 32: goto tr591
+		case 9: goto tr586
+		case 10: goto tr587
+		case 32: goto tr586
 		case 34: goto st0
-		case 40: goto tr593
-		case 41: goto tr594
-		case 59: goto tr595
+		case 40: goto tr588
+		case 41: goto tr589
+		case 59: goto tr590
 		case 92: goto st0
 	}
 	goto st129
-tr506:
-// line 89 "zparse.rl"
+tr501:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st165
 st165:
@@ -12242,24 +10315,24 @@ st165:
 	if p == pe { goto _test_eof165 }
 	fallthrough
 case 165:
-// line 12246 "zparse.go"
+// line 10319 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 83: goto st159
 		case 92: goto st0
 		case 115: goto st159
 	}
 	goto st129
-tr507:
-// line 89 "zparse.rl"
+tr502:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st166
 st166:
@@ -12267,24 +10340,24 @@ st166:
 	if p == pe { goto _test_eof166 }
 	fallthrough
 case 166:
-// line 12271 "zparse.go"
+// line 10344 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 78: goto st159
 		case 92: goto st0
 		case 110: goto st159
 	}
 	goto st129
-tr508:
-// line 89 "zparse.rl"
+tr503:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st167
 st167:
@@ -12292,15 +10365,15 @@ st167:
 	if p == pe { goto _test_eof167 }
 	fallthrough
 case 167:
-// line 12296 "zparse.go"
+// line 10369 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 88: goto st168
 		case 92: goto st0
 		case 120: goto st168
@@ -12312,20 +10385,20 @@ st168:
 	fallthrough
 case 168:
 	switch data[p] {
-		case 9: goto tr597
-		case 10: goto tr598
-		case 32: goto tr597
+		case 9: goto tr592
+		case 10: goto tr593
+		case 32: goto tr592
 		case 34: goto st0
-		case 40: goto tr599
-		case 41: goto tr600
-		case 59: goto tr601
+		case 40: goto tr594
+		case 41: goto tr595
+		case 59: goto tr596
 		case 92: goto st0
 	}
 	goto st129
-tr509:
-// line 89 "zparse.rl"
+tr504:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st169
 st169:
@@ -12333,15 +10406,15 @@ st169:
 	if p == pe { goto _test_eof169 }
 	fallthrough
 case 169:
-// line 12337 "zparse.go"
+// line 10410 "zparse.go"
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 79: goto st170
 		case 83: goto st172
 		case 92: goto st0
@@ -12355,13 +10428,13 @@ st170:
 	fallthrough
 case 170:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 78: goto st171
 		case 92: goto st0
 		case 110: goto st171
@@ -12373,13 +10446,13 @@ st171:
 	fallthrough
 case 171:
 	switch data[p] {
-		case 9: goto tr487
-		case 10: goto tr488
-		case 32: goto tr487
+		case 9: goto tr482
+		case 10: goto tr483
+		case 32: goto tr482
 		case 34: goto st0
-		case 40: goto tr489
-		case 41: goto tr490
-		case 59: goto tr491
+		case 40: goto tr484
+		case 41: goto tr485
+		case 59: goto tr486
 		case 69: goto st159
 		case 92: goto st0
 		case 101: goto st159
@@ -12391,146 +10464,101 @@ st172:
 	fallthrough
 case 172:
 	switch data[p] {
-		case 9: goto tr605
-		case 10: goto tr606
-		case 32: goto tr605
+		case 9: goto tr600
+		case 10: goto tr601
+		case 32: goto tr600
 		case 34: goto st0
-		case 40: goto tr607
-		case 41: goto tr608
-		case 59: goto tr609
+		case 40: goto tr602
+		case 41: goto tr603
+		case 59: goto tr604
 		case 92: goto st0
 	}
 	goto st129
-tr485:
-// line 89 "zparse.rl"
+tr480:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st173
-tr801:
+tr862:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 19 "types.rl"
-	{
-            x := rr.(*RR_CNAME)
-            x.Hdr = *hdr
-            x.Cname = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st173
-tr735:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st173
-tr479:
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 9 "types.rl"
-	{
-            x := rr.(*RR_AAAA)
-            x.Hdr = *hdr
-            x.AAAA = net.ParseIP(tok.T[0])
-        }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st173
-tr609:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 14 "types.rl"
-	{
-            x := rr.(*RR_NS)
-            x.Hdr = *hdr
-            x.Ns = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st173
-tr887:
-// line 95 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 // line 4 "types.rl"
 	{
+            rr = new(RR_A)
             x := rr.(*RR_A)
             x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeA
             x.A = net.ParseIP(tok.T[0])
         }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st173
+tr776:
 // line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+	{ tok.pushString(data[mark:p]) }
+// line 25 "types.rl"
+	{
+            rr = new(RR_CNAME)
+            x := rr.(*RR_CNAME)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeCNAME
+            x.Cname = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st173
+tr474:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 11 "types.rl"
+	{
+            rr = new(RR_AAAA)
+            x := rr.(*RR_AAAA)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeAAAA
+            x.AAAA = net.ParseIP(tok.T[0])
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st173
+tr710:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st173
+tr604:
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 18 "types.rl"
+	{
+            rr = new(RR_NS)
+            x := rr.(*RR_NS)
+            x.Hdr = *hdr
+            x.Hdr.Rrtype = TypeNS
+            x.Ns = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st173
 st173:
 	p++
 	if p == pe { goto _test_eof173 }
 	fallthrough
 case 173:
-// line 12530 "zparse.go"
-	if data[p] == 10 { goto tr611 }
+// line 10558 "zparse.go"
+	if data[p] == 10 { goto tr606 }
 	goto st173
-tr943:
-// line 89 "zparse.rl"
+tr918:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st174
 st174:
@@ -12538,7 +10566,7 @@ st174:
 	if p == pe { goto _test_eof174 }
 	fallthrough
 case 174:
-// line 12542 "zparse.go"
+// line 10570 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -12552,14 +10580,14 @@ case 174:
 		case 110: goto st20
 	}
 	goto st1
-tr908:
-// line 89 "zparse.rl"
+tr883:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st175
-tr914:
-// line 89 "zparse.rl"
+tr889:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st175
 st175:
@@ -12567,7 +10595,7 @@ st175:
 	if p == pe { goto _test_eof175 }
 	fallthrough
 case 175:
-// line 12571 "zparse.go"
+// line 10599 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -12587,106 +10615,62 @@ st176:
 	fallthrough
 case 176:
 	switch data[p] {
-		case 9: goto tr613
-		case 10: goto tr614
-		case 32: goto tr613
+		case 9: goto tr608
+		case 10: goto tr609
+		case 32: goto tr608
 		case 34: goto st0
-		case 40: goto tr615
-		case 41: goto tr616
-		case 59: goto tr617
+		case 40: goto tr610
+		case 41: goto tr611
+		case 59: goto tr612
 		case 92: goto st0
 	}
 	goto st1
-tr619:
-// line 100 "zparse.rl"
+tr608:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+	goto st177
+tr609:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st177
-tr620:
-// line 97 "zparse.rl"
+tr610:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st177
-tr621:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st177
-tr613:
-// line 90 "zparse.rl"
+tr611:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st177
 tr614:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st177
 tr615:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st177
 tr616:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st177
 st177:
 	p++
 	if p == pe { goto _test_eof177 }
 	fallthrough
 case 177:
-// line 12684 "zparse.go"
+// line 10668 "zparse.go"
 	switch data[p] {
 		case 9: goto st177
-		case 10: goto tr619
+		case 10: goto tr614
 		case 32: goto st177
-		case 40: goto tr620
-		case 41: goto tr621
+		case 40: goto tr615
+		case 41: goto tr616
 		case 59: goto st225
 		case 65: goto tr13
 		case 67: goto tr14
@@ -12701,12 +10685,12 @@ case 177:
 		case 109: goto tr17
 		case 110: goto tr18
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr312 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr307 }
 	goto st0
-tr312:
-// line 89 "zparse.rl"
+tr307:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st178
 st178:
@@ -12714,57 +10698,57 @@ st178:
 	if p == pe { goto _test_eof178 }
 	fallthrough
 case 178:
-// line 12718 "zparse.go"
+// line 10702 "zparse.go"
 	switch data[p] {
-		case 9: goto tr623
-		case 10: goto tr624
-		case 32: goto tr623
-		case 40: goto tr625
-		case 41: goto tr626
-		case 59: goto tr628
+		case 9: goto tr618
+		case 10: goto tr619
+		case 32: goto tr618
+		case 40: goto tr620
+		case 41: goto tr621
+		case 59: goto tr623
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st178 }
 	goto st0
-tr630:
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st179
-tr631:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st179
-tr632:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st179
-tr623:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st179
-tr624:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
-	goto st179
 tr625:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-// line 94 "zparse.rl"
-	{ tok.pushInt(data[mark:p]) }
+// line 106 "zparse.rl"
+	{ lines++ }
 	goto st179
 tr626:
-// line 93 "zparse.rl"
-	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+	goto st179
+tr627:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 94 "zparse.rl"
+	goto st179
+tr618:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st179
+tr619:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st179
+tr620:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 100 "zparse.rl"
+	{ tok.pushInt(data[mark:p]) }
+	goto st179
+tr621:
+// line 99 "zparse.rl"
+	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st179
 st179:
@@ -12772,34 +10756,34 @@ st179:
 	if p == pe { goto _test_eof179 }
 	fallthrough
 case 179:
-// line 12776 "zparse.go"
+// line 10760 "zparse.go"
 	switch data[p] {
 		case 9: goto st179
-		case 10: goto tr630
+		case 10: goto tr625
 		case 32: goto st179
 		case 34: goto st0
-		case 40: goto tr631
-		case 41: goto tr632
+		case 40: goto tr626
+		case 41: goto tr627
 		case 59: goto st180
-		case 65: goto tr634
-		case 67: goto tr635
-		case 72: goto tr636
-		case 73: goto tr637
-		case 77: goto tr638
-		case 78: goto tr639
+		case 65: goto tr629
+		case 67: goto tr630
+		case 72: goto tr631
+		case 73: goto tr632
+		case 77: goto tr633
+		case 78: goto tr634
 		case 92: goto st0
-		case 97: goto tr634
-		case 99: goto tr635
-		case 104: goto tr636
-		case 105: goto tr637
-		case 109: goto tr638
-		case 110: goto tr639
+		case 97: goto tr629
+		case 99: goto tr630
+		case 104: goto tr631
+		case 105: goto tr632
+		case 109: goto tr633
+		case 110: goto tr634
 	}
-	goto tr320
-tr628:
-// line 93 "zparse.rl"
+	goto tr315
+tr623:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 94 "zparse.rl"
+// line 100 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st180
 st180:
@@ -12807,11 +10791,11 @@ st180:
 	if p == pe { goto _test_eof180 }
 	fallthrough
 case 180:
-// line 12811 "zparse.go"
-	if data[p] == 10 { goto tr630 }
+// line 10795 "zparse.go"
+	if data[p] == 10 { goto tr625 }
 	goto st180
-tr634:
-// line 89 "zparse.rl"
+tr629:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st181
 st181:
@@ -12819,15 +10803,15 @@ st181:
 	if p == pe { goto _test_eof181 }
 	fallthrough
 case 181:
-// line 12823 "zparse.go"
+// line 10807 "zparse.go"
 	switch data[p] {
-		case 9: goto tr345
-		case 10: goto tr346
-		case 32: goto tr345
+		case 9: goto tr340
+		case 10: goto tr341
+		case 32: goto tr340
 		case 34: goto st0
-		case 40: goto tr347
-		case 41: goto tr348
-		case 59: goto tr349
+		case 40: goto tr342
+		case 41: goto tr343
+		case 59: goto tr344
 		case 65: goto st83
 		case 78: goto st182
 		case 92: goto st0
@@ -12841,13 +10825,13 @@ st182:
 	fallthrough
 case 182:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 89: goto st183
 		case 92: goto st0
 		case 121: goto st183
@@ -12859,150 +10843,158 @@ st183:
 	fallthrough
 case 183:
 	switch data[p] {
-		case 9: goto tr642
-		case 10: goto tr643
-		case 32: goto tr642
+		case 9: goto tr637
+		case 10: goto tr638
+		case 32: goto tr637
 		case 34: goto st0
-		case 40: goto tr644
-		case 41: goto tr645
-		case 59: goto tr646
+		case 40: goto tr639
+		case 41: goto tr640
+		case 59: goto tr641
 		case 92: goto st0
 	}
 	goto st78
-tr649:
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st184
-tr650:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st184
-tr642:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
-	goto st184
 tr644:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 95 "zparse.rl"
-	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
-	{
-            x := rr.(*RR_MX)
-            x.Hdr = *hdr;
-            x.Pref = uint16(tok.N[0])
-            x.Mx = tok.T[0]
-        }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
 	goto st184
 tr645:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 95 "zparse.rl"
+	goto st184
+tr637:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st184
+tr639:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 103 "zparse.rl"
+	{ if brace { println("Brace already open")} ; brace = true }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
+	goto st184
+tr640:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
+// line 101 "zparse.rl"
+	{ tok.pushString(data[mark:p]) }
+// line 45 "types.rl"
+	{
+            rr = new(RR_MX)
+            x := rr.(*RR_MX)
+            x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
+            x.Pref = uint16(tok.N[0])
+            x.Mx = tok.T[0]
+        }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st184
 st184:
 	p++
 	if p == pe { goto _test_eof184 }
 	fallthrough
 case 184:
-// line 12935 "zparse.go"
+// line 10925 "zparse.go"
 	switch data[p] {
 		case 9: goto st184
-		case 10: goto tr648
+		case 10: goto tr643
 		case 32: goto st184
-		case 40: goto tr649
-		case 41: goto tr650
-		case 59: goto tr651
-		case 65: goto tr380
-		case 67: goto tr381
+		case 40: goto tr644
+		case 41: goto tr645
+		case 59: goto tr646
+		case 65: goto tr375
+		case 67: goto tr376
 		case 77: goto tr34
-		case 78: goto tr382
-		case 97: goto tr380
-		case 99: goto tr381
+		case 78: goto tr377
+		case 97: goto tr375
+		case 99: goto tr376
 		case 109: goto tr34
-		case 110: goto tr382
+		case 110: goto tr377
 	}
 	goto st0
-tr664:
-// line 100 "zparse.rl"
+tr659:
+// line 106 "zparse.rl"
 	{ lines++ }
-	goto st339
-tr648:
-// line 100 "zparse.rl"
-	{ lines++ }
-// line 89 "zparse.rl"
-	{ mark = p }
 	goto st339
 tr643:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 // line 95 "zparse.rl"
+	{ mark = p }
+	goto st339
+tr638:
+// line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 106 "zparse.rl"
+	{ lines++ }
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st339
 st339:
 	p++
 	if p == pe { goto _test_eof339 }
 	fallthrough
 case 339:
-// line 12985 "zparse.go"
+// line 10977 "zparse.go"
 	switch data[p] {
 		case 9: goto st10
-		case 10: goto tr61
+		case 10: goto tr56
 		case 32: goto st10
 		case 34: goto st0
-		case 40: goto tr62
-		case 41: goto tr63
-		case 59: goto tr64
-		case 65: goto tr942
-		case 67: goto tr943
-		case 77: goto tr914
-		case 78: goto tr944
+		case 40: goto tr57
+		case 41: goto tr58
+		case 59: goto tr59
+		case 65: goto tr917
+		case 67: goto tr918
+		case 77: goto tr889
+		case 78: goto tr919
 		case 92: goto st0
-		case 97: goto tr942
-		case 99: goto tr943
-		case 109: goto tr914
-		case 110: goto tr944
+		case 97: goto tr917
+		case 99: goto tr918
+		case 109: goto tr889
+		case 110: goto tr919
 	}
 	goto st1
-tr944:
-// line 89 "zparse.rl"
+tr919:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st185
 st185:
@@ -13010,7 +11002,7 @@ st185:
 	if p == pe { goto _test_eof185 }
 	fallthrough
 case 185:
-// line 13014 "zparse.go"
+// line 11006 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -13030,176 +11022,123 @@ st186:
 	fallthrough
 case 186:
 	switch data[p] {
-		case 9: goto tr653
-		case 10: goto tr654
-		case 32: goto tr653
+		case 9: goto tr648
+		case 10: goto tr649
+		case 32: goto tr648
 		case 34: goto st0
-		case 40: goto tr655
-		case 41: goto tr656
-		case 59: goto tr657
+		case 40: goto tr650
+		case 41: goto tr651
+		case 59: goto tr652
 		case 92: goto st0
 	}
 	goto st1
-tr659:
-// line 100 "zparse.rl"
+tr648:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+	goto st187
+tr649:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st187
-tr660:
-// line 97 "zparse.rl"
+tr650:
+// line 96 "zparse.rl"
+	{ hdr.Name = data[mark:p] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st187
-tr661:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st187
-tr653:
-// line 90 "zparse.rl"
+tr651:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
+// line 104 "zparse.rl"
+	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st187
 tr654:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st187
 tr655:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st187
 tr656:
-// line 90 "zparse.rl"
-	{ hdr.Name = data[mark:p] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st187
 st187:
 	p++
 	if p == pe { goto _test_eof187 }
 	fallthrough
 case 187:
-// line 13127 "zparse.go"
+// line 11075 "zparse.go"
 	switch data[p] {
 		case 9: goto st187
-		case 10: goto tr659
+		case 10: goto tr654
 		case 32: goto st187
 		case 34: goto st0
-		case 40: goto tr660
-		case 41: goto tr661
+		case 40: goto tr655
+		case 41: goto tr656
 		case 59: goto st188
-		case 65: goto tr504
-		case 67: goto tr505
-		case 72: goto tr506
-		case 73: goto tr507
-		case 77: goto tr508
-		case 78: goto tr509
+		case 65: goto tr499
+		case 67: goto tr500
+		case 72: goto tr501
+		case 73: goto tr502
+		case 77: goto tr503
+		case 78: goto tr504
 		case 92: goto st0
-		case 97: goto tr504
-		case 99: goto tr505
-		case 104: goto tr506
-		case 105: goto tr507
-		case 109: goto tr508
-		case 110: goto tr509
+		case 97: goto tr499
+		case 99: goto tr500
+		case 104: goto tr501
+		case 105: goto tr502
+		case 109: goto tr503
+		case 110: goto tr504
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr502 }
-	goto tr480
-tr657:
-// line 90 "zparse.rl"
+	if 48 <= data[p] && data[p] <= 57 { goto tr497 }
+	goto tr475
+tr652:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st188
 st188:
 	p++
 	if p == pe { goto _test_eof188 }
 	fallthrough
 case 188:
-// line 13172 "zparse.go"
-	if data[p] == 10 { goto tr659 }
+// line 11109 "zparse.go"
+	if data[p] == 10 { goto tr654 }
 	goto st188
-tr651:
-// line 89 "zparse.rl"
+tr646:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st189
-tr646:
-// line 91 "zparse.rl"
+tr641:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 95 "zparse.rl"
+// line 101 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 35 "types.rl"
+// line 45 "types.rl"
 	{
+            rr = new(RR_MX)
             x := rr.(*RR_MX)
             x.Hdr = *hdr;
+            x.Hdr.Rrtype = TypeMX
             x.Pref = uint16(tok.N[0])
             x.Mx = tok.T[0]
         }
-// line 96 "zparse.rl"
-	{ z.Push(rr); tok.reset() }
+// line 102 "zparse.rl"
+	{ z.Push(rr); tok.reset(); println("Setting") }
 	goto st189
 st189:
 	p++
 	if p == pe { goto _test_eof189 }
 	fallthrough
 case 189:
-// line 13199 "zparse.go"
-	if data[p] == 10 { goto tr664 }
+// line 11138 "zparse.go"
+	if data[p] == 10 { goto tr659 }
 	goto st189
-tr380:
-// line 89 "zparse.rl"
+tr375:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st190
 st190:
@@ -13207,38 +11146,24 @@ st190:
 	if p == pe { goto _test_eof190 }
 	fallthrough
 case 190:
-// line 13211 "zparse.go"
+// line 11150 "zparse.go"
 	switch data[p] {
-		case 9: goto tr36
+		case 9: goto st7
 		case 10: goto tr37
-		case 32: goto tr36
+		case 32: goto st7
 		case 40: goto tr38
 		case 41: goto tr39
-		case 59: goto tr40
+		case 59: goto st191
 		case 65: goto st192
 		case 97: goto st192
 	}
 	goto st0
-tr40:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st191
 st191:
 	p++
 	if p == pe { goto _test_eof191 }
 	fallthrough
 case 191:
-// line 13241 "zparse.go"
-	if data[p] == 10 { goto tr45 }
+	if data[p] == 10 { goto tr37 }
 	goto st191
 st192:
 	p++
@@ -13266,82 +11191,24 @@ st194:
 	fallthrough
 case 194:
 	switch data[p] {
-		case 9: goto tr667
-		case 10: goto tr668
-		case 32: goto tr667
-		case 40: goto tr669
-		case 41: goto tr670
-		case 59: goto tr671
+		case 9: goto st195
+		case 10: goto tr663
+		case 32: goto st195
+		case 40: goto tr664
+		case 41: goto tr665
+		case 59: goto st196
 	}
 	goto st0
-tr673:
-// line 100 "zparse.rl"
+tr663:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st195
-tr674:
-// line 97 "zparse.rl"
+tr664:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st195
-tr675:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st195
-tr667:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st195
-tr668:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st195
-tr669:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st195
-tr670:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+tr665:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st195
 st195:
@@ -13349,41 +11216,27 @@ st195:
 	if p == pe { goto _test_eof195 }
 	fallthrough
 case 195:
-// line 13353 "zparse.go"
+// line 11220 "zparse.go"
 	switch data[p] {
 		case 9: goto st195
-		case 10: goto tr673
+		case 10: goto tr663
 		case 32: goto st195
 		case 34: goto st0
-		case 40: goto tr674
-		case 41: goto tr675
+		case 40: goto tr664
+		case 41: goto tr665
 		case 59: goto st196
 		case 92: goto st0
 	}
-	goto tr192
-tr671:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st196
+	goto tr187
 st196:
 	p++
 	if p == pe { goto _test_eof196 }
 	fallthrough
 case 196:
-// line 13383 "zparse.go"
-	if data[p] == 10 { goto tr673 }
+	if data[p] == 10 { goto tr663 }
 	goto st196
-tr381:
-// line 89 "zparse.rl"
+tr376:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st197
 st197:
@@ -13391,7 +11244,7 @@ st197:
 	if p == pe { goto _test_eof197 }
 	fallthrough
 case 197:
-// line 13395 "zparse.go"
+// line 11248 "zparse.go"
 	switch data[p] {
 		case 78: goto st198
 		case 110: goto st198
@@ -13433,82 +11286,24 @@ st201:
 	fallthrough
 case 201:
 	switch data[p] {
-		case 9: goto tr681
-		case 10: goto tr682
-		case 32: goto tr681
-		case 40: goto tr683
-		case 41: goto tr684
-		case 59: goto tr685
+		case 9: goto st202
+		case 10: goto tr672
+		case 32: goto st202
+		case 40: goto tr673
+		case 41: goto tr674
+		case 59: goto st203
 	}
 	goto st0
-tr687:
-// line 100 "zparse.rl"
+tr672:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st202
-tr688:
-// line 97 "zparse.rl"
+tr673:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st202
-tr689:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st202
-tr681:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st202
-tr682:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st202
-tr683:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st202
-tr684:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+tr674:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st202
 st202:
@@ -13516,47 +11311,33 @@ st202:
 	if p == pe { goto _test_eof202 }
 	fallthrough
 case 202:
-// line 13520 "zparse.go"
+// line 11315 "zparse.go"
 	switch data[p] {
 		case 9: goto st202
-		case 10: goto tr687
+		case 10: goto tr672
 		case 32: goto st202
 		case 34: goto st0
-		case 40: goto tr688
-		case 41: goto tr689
+		case 40: goto tr673
+		case 41: goto tr674
 		case 59: goto st203
 		case 92: goto st0
 	}
-	goto tr118
-tr685:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st203
+	goto tr113
 st203:
 	p++
 	if p == pe { goto _test_eof203 }
 	fallthrough
 case 203:
-// line 13550 "zparse.go"
-	if data[p] == 10 { goto tr687 }
+	if data[p] == 10 { goto tr672 }
 	goto st203
 tr17:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st204
 tr34:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st204
 st204:
@@ -13564,7 +11345,7 @@ st204:
 	if p == pe { goto _test_eof204 }
 	fallthrough
 case 204:
-// line 13568 "zparse.go"
+// line 11349 "zparse.go"
 	switch data[p] {
 		case 88: goto st205
 		case 120: goto st205
@@ -13576,82 +11357,24 @@ st205:
 	fallthrough
 case 205:
 	switch data[p] {
-		case 9: goto tr692
-		case 10: goto tr693
-		case 32: goto tr692
-		case 40: goto tr694
-		case 41: goto tr695
-		case 59: goto tr696
+		case 9: goto st206
+		case 10: goto tr678
+		case 32: goto st206
+		case 40: goto tr679
+		case 41: goto tr680
+		case 59: goto st207
 	}
 	goto st0
-tr698:
-// line 100 "zparse.rl"
+tr678:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st206
-tr699:
-// line 97 "zparse.rl"
+tr679:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st206
-tr700:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st206
-tr692:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st206
-tr693:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st206
-tr694:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st206
-tr695:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+tr680:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st206
 st206:
@@ -13659,40 +11382,26 @@ st206:
 	if p == pe { goto _test_eof206 }
 	fallthrough
 case 206:
-// line 13663 "zparse.go"
+// line 11386 "zparse.go"
 	switch data[p] {
 		case 9: goto st206
-		case 10: goto tr698
+		case 10: goto tr678
 		case 32: goto st206
-		case 40: goto tr699
-		case 41: goto tr700
+		case 40: goto tr679
+		case 41: goto tr680
 		case 59: goto st207
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr449 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr444 }
 	goto st0
-tr696:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st207
 st207:
 	p++
 	if p == pe { goto _test_eof207 }
 	fallthrough
 case 207:
-// line 13692 "zparse.go"
-	if data[p] == 10 { goto tr698 }
+	if data[p] == 10 { goto tr678 }
 	goto st207
-tr382:
-// line 89 "zparse.rl"
+tr377:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st208
 st208:
@@ -13700,7 +11409,7 @@ st208:
 	if p == pe { goto _test_eof208 }
 	fallthrough
 case 208:
-// line 13704 "zparse.go"
+// line 11413 "zparse.go"
 	switch data[p] {
 		case 83: goto st209
 		case 115: goto st209
@@ -13712,82 +11421,24 @@ st209:
 	fallthrough
 case 209:
 	switch data[p] {
-		case 9: goto tr703
-		case 10: goto tr704
-		case 32: goto tr703
-		case 40: goto tr705
-		case 41: goto tr706
-		case 59: goto tr707
+		case 9: goto st210
+		case 10: goto tr684
+		case 32: goto st210
+		case 40: goto tr685
+		case 41: goto tr686
+		case 59: goto st211
 	}
 	goto st0
-tr709:
-// line 100 "zparse.rl"
+tr684:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st210
-tr710:
-// line 97 "zparse.rl"
+tr685:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st210
-tr711:
-// line 98 "zparse.rl"
-	{ if !brace { println("Brace already closed")}; brace = false }
-	goto st210
-tr703:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st210
-tr704:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 100 "zparse.rl"
-	{ lines++ }
-	goto st210
-tr705:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 97 "zparse.rl"
-	{ if brace { println("Brace already open")} ; brace = true }
-	goto st210
-tr706:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-// line 98 "zparse.rl"
+tr686:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st210
 st210:
@@ -13795,41 +11446,27 @@ st210:
 	if p == pe { goto _test_eof210 }
 	fallthrough
 case 210:
-// line 13799 "zparse.go"
+// line 11450 "zparse.go"
 	switch data[p] {
 		case 9: goto st210
-		case 10: goto tr709
+		case 10: goto tr684
 		case 32: goto st210
 		case 34: goto st0
-		case 40: goto tr710
-		case 41: goto tr711
+		case 40: goto tr685
+		case 41: goto tr686
 		case 59: goto st211
 		case 92: goto st0
 	}
-	goto tr480
-tr707:
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
-	goto st211
+	goto tr475
 st211:
 	p++
 	if p == pe { goto _test_eof211 }
 	fallthrough
 case 211:
-// line 13829 "zparse.go"
-	if data[p] == 10 { goto tr709 }
+	if data[p] == 10 { goto tr684 }
 	goto st211
-tr635:
-// line 89 "zparse.rl"
+tr630:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st212
 st212:
@@ -13837,15 +11474,15 @@ st212:
 	if p == pe { goto _test_eof212 }
 	fallthrough
 case 212:
-// line 13841 "zparse.go"
+// line 11478 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 72: goto st183
 		case 78: goto st213
 		case 83: goto st183
@@ -13861,13 +11498,13 @@ st213:
 	fallthrough
 case 213:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 65: goto st214
 		case 92: goto st0
 		case 97: goto st214
@@ -13879,13 +11516,13 @@ st214:
 	fallthrough
 case 214:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 77: goto st215
 		case 92: goto st0
 		case 109: goto st215
@@ -13897,13 +11534,13 @@ st215:
 	fallthrough
 case 215:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 69: goto st216
 		case 92: goto st0
 		case 101: goto st216
@@ -13915,18 +11552,18 @@ st216:
 	fallthrough
 case 216:
 	switch data[p] {
-		case 9: goto tr717
-		case 10: goto tr718
-		case 32: goto tr717
+		case 9: goto tr692
+		case 10: goto tr693
+		case 32: goto tr692
 		case 34: goto st0
-		case 40: goto tr719
-		case 41: goto tr720
-		case 59: goto tr721
+		case 40: goto tr694
+		case 41: goto tr695
+		case 59: goto tr696
 		case 92: goto st0
 	}
 	goto st78
-tr636:
-// line 89 "zparse.rl"
+tr631:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st217
 st217:
@@ -13934,22 +11571,22 @@ st217:
 	if p == pe { goto _test_eof217 }
 	fallthrough
 case 217:
-// line 13938 "zparse.go"
+// line 11575 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 83: goto st183
 		case 92: goto st0
 		case 115: goto st183
 	}
 	goto st78
-tr637:
-// line 89 "zparse.rl"
+tr632:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st218
 st218:
@@ -13957,28 +11594,28 @@ st218:
 	if p == pe { goto _test_eof218 }
 	fallthrough
 case 218:
-// line 13961 "zparse.go"
+// line 11598 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 78: goto st183
 		case 92: goto st0
 		case 110: goto st183
 	}
 	goto st78
-tr331:
-// line 89 "zparse.rl"
+tr326:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st219
-tr638:
-// line 89 "zparse.rl"
+tr633:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st219
 st219:
@@ -13986,15 +11623,15 @@ st219:
 	if p == pe { goto _test_eof219 }
 	fallthrough
 case 219:
-// line 13990 "zparse.go"
+// line 11627 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 88: goto st220
 		case 92: goto st0
 		case 120: goto st220
@@ -14006,18 +11643,18 @@ st220:
 	fallthrough
 case 220:
 	switch data[p] {
-		case 9: goto tr723
-		case 10: goto tr724
-		case 32: goto tr723
+		case 9: goto tr698
+		case 10: goto tr699
+		case 32: goto tr698
 		case 34: goto st0
-		case 40: goto tr725
-		case 41: goto tr726
-		case 59: goto tr727
+		case 40: goto tr700
+		case 41: goto tr701
+		case 59: goto tr702
 		case 92: goto st0
 	}
 	goto st78
-tr639:
-// line 89 "zparse.rl"
+tr634:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st221
 st221:
@@ -14025,15 +11662,15 @@ st221:
 	if p == pe { goto _test_eof221 }
 	fallthrough
 case 221:
-// line 14029 "zparse.go"
+// line 11666 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 79: goto st222
 		case 83: goto st224
 		case 92: goto st0
@@ -14047,13 +11684,13 @@ st222:
 	fallthrough
 case 222:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 78: goto st223
 		case 92: goto st0
 		case 110: goto st223
@@ -14065,13 +11702,13 @@ st223:
 	fallthrough
 case 223:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 69: goto st183
 		case 92: goto st0
 		case 101: goto st183
@@ -14083,43 +11720,32 @@ st224:
 	fallthrough
 case 224:
 	switch data[p] {
-		case 9: goto tr731
-		case 10: goto tr732
-		case 32: goto tr731
+		case 9: goto tr706
+		case 10: goto tr707
+		case 32: goto tr706
 		case 34: goto st0
-		case 40: goto tr733
-		case 41: goto tr734
-		case 59: goto tr735
+		case 40: goto tr708
+		case 41: goto tr709
+		case 59: goto tr710
 		case 92: goto st0
 	}
 	goto st78
-tr617:
-// line 90 "zparse.rl"
+tr612:
+// line 96 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 101 "zparse.rl"
-	{ 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 	goto st225
 st225:
 	p++
 	if p == pe { goto _test_eof225 }
 	fallthrough
 case 225:
-// line 14117 "zparse.go"
-	if data[p] == 10 { goto tr619 }
+// line 11743 "zparse.go"
+	if data[p] == 10 { goto tr614 }
 	goto st225
 tr13:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st226
 st226:
@@ -14127,14 +11753,14 @@ st226:
 	if p == pe { goto _test_eof226 }
 	fallthrough
 case 226:
-// line 14131 "zparse.go"
+// line 11757 "zparse.go"
 	switch data[p] {
-		case 9: goto tr36
+		case 9: goto st7
 		case 10: goto tr37
-		case 32: goto tr36
+		case 32: goto st7
 		case 40: goto tr38
 		case 41: goto tr39
-		case 59: goto tr40
+		case 59: goto st191
 		case 65: goto st192
 		case 78: goto st227
 		case 97: goto st192
@@ -14157,46 +11783,46 @@ st228:
 	fallthrough
 case 228:
 	switch data[p] {
-		case 9: goto tr738
-		case 10: goto tr739
-		case 32: goto tr738
-		case 40: goto tr740
-		case 41: goto tr741
-		case 59: goto tr742
+		case 9: goto tr713
+		case 10: goto tr714
+		case 32: goto tr713
+		case 40: goto tr715
+		case 41: goto tr716
+		case 59: goto tr717
 	}
 	goto st0
-tr744:
-// line 100 "zparse.rl"
+tr719:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st229
-tr745:
-// line 97 "zparse.rl"
+tr720:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st229
-tr746:
-// line 98 "zparse.rl"
+tr721:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st229
-tr738:
-// line 91 "zparse.rl"
+tr713:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st229
-tr739:
-// line 91 "zparse.rl"
+tr714:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st229
-tr740:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr715:
 // line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st229
-tr741:
-// line 91 "zparse.rl"
+tr716:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st229
 st229:
@@ -14204,27 +11830,27 @@ st229:
 	if p == pe { goto _test_eof229 }
 	fallthrough
 case 229:
-// line 14208 "zparse.go"
+// line 11834 "zparse.go"
 	switch data[p] {
 		case 9: goto st229
-		case 10: goto tr744
+		case 10: goto tr719
 		case 32: goto st229
-		case 40: goto tr745
-		case 41: goto tr746
+		case 40: goto tr720
+		case 41: goto tr721
 		case 59: goto st233
-		case 65: goto tr380
-		case 67: goto tr381
+		case 65: goto tr375
+		case 67: goto tr376
 		case 77: goto tr34
-		case 78: goto tr382
-		case 97: goto tr380
-		case 99: goto tr381
+		case 78: goto tr377
+		case 97: goto tr375
+		case 99: goto tr376
 		case 109: goto tr34
-		case 110: goto tr382
+		case 110: goto tr377
 	}
-	if 48 <= data[p] && data[p] <= 57 { goto tr378 }
+	if 48 <= data[p] && data[p] <= 57 { goto tr373 }
 	goto st0
-tr378:
-// line 89 "zparse.rl"
+tr373:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st230
 st230:
@@ -14232,71 +11858,71 @@ st230:
 	if p == pe { goto _test_eof230 }
 	fallthrough
 case 230:
-// line 14236 "zparse.go"
+// line 11862 "zparse.go"
 	switch data[p] {
-		case 9: goto tr748
-		case 10: goto tr749
-		case 32: goto tr748
-		case 40: goto tr750
-		case 41: goto tr751
-		case 59: goto tr753
+		case 9: goto tr723
+		case 10: goto tr724
+		case 32: goto tr723
+		case 40: goto tr725
+		case 41: goto tr726
+		case 59: goto tr728
 	}
 	if 48 <= data[p] && data[p] <= 57 { goto st230 }
 	goto st0
-tr755:
-// line 100 "zparse.rl"
+tr730:
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st231
-tr756:
-// line 97 "zparse.rl"
+tr731:
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st231
-tr757:
-// line 98 "zparse.rl"
+tr732:
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st231
-tr748:
-// line 93 "zparse.rl"
+tr723:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st231
-tr749:
-// line 93 "zparse.rl"
+tr724:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st231
-tr750:
-// line 93 "zparse.rl"
+tr725:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 97 "zparse.rl"
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st231
-tr751:
-// line 93 "zparse.rl"
+tr726:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st231
-tr896:
-// line 91 "zparse.rl"
+tr871:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st231
-tr897:
-// line 91 "zparse.rl"
+tr872:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 100 "zparse.rl"
+// line 106 "zparse.rl"
 	{ lines++ }
 	goto st231
-tr898:
-// line 91 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+tr873:
 // line 97 "zparse.rl"
+	{ hdr.Class = Str_class[data[mark:p]] }
+// line 103 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st231
-tr899:
-// line 91 "zparse.rl"
+tr874:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 98 "zparse.rl"
+// line 104 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st231
 st231:
@@ -14304,30 +11930,30 @@ st231:
 	if p == pe { goto _test_eof231 }
 	fallthrough
 case 231:
-// line 14308 "zparse.go"
+// line 11934 "zparse.go"
 	switch data[p] {
 		case 9: goto st231
-		case 10: goto tr755
+		case 10: goto tr730
 		case 32: goto st231
-		case 40: goto tr756
-		case 41: goto tr757
+		case 40: goto tr731
+		case 41: goto tr732
 		case 59: goto st232
-		case 65: goto tr380
-		case 67: goto tr381
+		case 65: goto tr375
+		case 67: goto tr376
 		case 77: goto tr34
-		case 78: goto tr382
-		case 97: goto tr380
-		case 99: goto tr381
+		case 78: goto tr377
+		case 97: goto tr375
+		case 99: goto tr376
 		case 109: goto tr34
-		case 110: goto tr382
+		case 110: goto tr377
 	}
 	goto st0
-tr753:
-// line 93 "zparse.rl"
+tr728:
+// line 99 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st232
-tr900:
-// line 91 "zparse.rl"
+tr875:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st232
 st232:
@@ -14335,11 +11961,11 @@ st232:
 	if p == pe { goto _test_eof232 }
 	fallthrough
 case 232:
-// line 14339 "zparse.go"
-	if data[p] == 10 { goto tr755 }
+// line 11965 "zparse.go"
+	if data[p] == 10 { goto tr730 }
 	goto st232
-tr742:
-// line 91 "zparse.rl"
+tr717:
+// line 97 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st233
 st233:
@@ -14347,13 +11973,13 @@ st233:
 	if p == pe { goto _test_eof233 }
 	fallthrough
 case 233:
-// line 14351 "zparse.go"
-	if data[p] == 10 { goto tr744 }
+// line 11977 "zparse.go"
+	if data[p] == 10 { goto tr719 }
 	goto st233
 tr14:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st234
 st234:
@@ -14361,7 +11987,7 @@ st234:
 	if p == pe { goto _test_eof234 }
 	fallthrough
 case 234:
-// line 14365 "zparse.go"
+// line 11991 "zparse.go"
 	switch data[p] {
 		case 72: goto st228
 		case 78: goto st198
@@ -14372,9 +11998,9 @@ case 234:
 	}
 	goto st0
 tr15:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st235
 st235:
@@ -14382,16 +12008,16 @@ st235:
 	if p == pe { goto _test_eof235 }
 	fallthrough
 case 235:
-// line 14386 "zparse.go"
+// line 12012 "zparse.go"
 	switch data[p] {
 		case 83: goto st228
 		case 115: goto st228
 	}
 	goto st0
 tr16:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st236
 st236:
@@ -14399,16 +12025,16 @@ st236:
 	if p == pe { goto _test_eof236 }
 	fallthrough
 case 236:
-// line 14403 "zparse.go"
+// line 12029 "zparse.go"
 	switch data[p] {
 		case 78: goto st228
 		case 110: goto st228
 	}
 	goto st0
 tr18:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st237
 st237:
@@ -14416,7 +12042,7 @@ st237:
 	if p == pe { goto _test_eof237 }
 	fallthrough
 case 237:
-// line 14420 "zparse.go"
+// line 12046 "zparse.go"
 	switch data[p] {
 		case 79: goto st238
 		case 83: goto st209
@@ -14444,10 +12070,10 @@ case 239:
 		case 101: goto st228
 	}
 	goto st0
-tr328:
-// line 89 "zparse.rl"
+tr323:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st240
 st240:
@@ -14455,15 +12081,15 @@ st240:
 	if p == pe { goto _test_eof240 }
 	fallthrough
 case 240:
-// line 14459 "zparse.go"
+// line 12085 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 72: goto st89
 		case 78: goto st213
 		case 83: goto st89
@@ -14473,10 +12099,10 @@ case 240:
 		case 115: goto st89
 	}
 	goto st78
-tr329:
-// line 89 "zparse.rl"
+tr324:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st241
 st241:
@@ -14484,24 +12110,24 @@ st241:
 	if p == pe { goto _test_eof241 }
 	fallthrough
 case 241:
-// line 14488 "zparse.go"
+// line 12114 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 83: goto st89
 		case 92: goto st0
 		case 115: goto st89
 	}
 	goto st78
-tr330:
-// line 89 "zparse.rl"
+tr325:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st242
 st242:
@@ -14509,24 +12135,24 @@ st242:
 	if p == pe { goto _test_eof242 }
 	fallthrough
 case 242:
-// line 14513 "zparse.go"
+// line 12139 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 78: goto st89
 		case 92: goto st0
 		case 110: goto st89
 	}
 	goto st78
-tr332:
-// line 89 "zparse.rl"
+tr327:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st243
 st243:
@@ -14534,15 +12160,15 @@ st243:
 	if p == pe { goto _test_eof243 }
 	fallthrough
 case 243:
-// line 14538 "zparse.go"
+// line 12164 "zparse.go"
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 79: goto st244
 		case 83: goto st224
 		case 92: goto st0
@@ -14556,13 +12182,13 @@ st244:
 	fallthrough
 case 244:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 78: goto st245
 		case 92: goto st0
 		case 110: goto st245
@@ -14574,26 +12200,26 @@ st245:
 	fallthrough
 case 245:
 	switch data[p] {
-		case 9: goto tr334
-		case 10: goto tr335
-		case 32: goto tr334
+		case 9: goto tr329
+		case 10: goto tr330
+		case 32: goto tr329
 		case 34: goto st0
-		case 40: goto tr336
-		case 41: goto tr337
-		case 59: goto tr338
+		case 40: goto tr331
+		case 41: goto tr332
+		case 59: goto tr333
 		case 69: goto st89
 		case 92: goto st0
 		case 101: goto st89
 	}
 	goto st78
-tr906:
-// line 89 "zparse.rl"
+tr881:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st246
-tr912:
-// line 89 "zparse.rl"
+tr887:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st246
 st246:
@@ -14601,7 +12227,7 @@ st246:
 	if p == pe { goto _test_eof246 }
 	fallthrough
 case 246:
-// line 14605 "zparse.go"
+// line 12231 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -14615,14 +12241,14 @@ case 246:
 		case 115: goto st19
 	}
 	goto st1
-tr907:
-// line 89 "zparse.rl"
+tr882:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st247
-tr913:
-// line 89 "zparse.rl"
+tr888:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st247
 st247:
@@ -14630,7 +12256,7 @@ st247:
 	if p == pe { goto _test_eof247 }
 	fallthrough
 case 247:
-// line 14634 "zparse.go"
+// line 12260 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -14644,14 +12270,14 @@ case 247:
 		case 110: goto st19
 	}
 	goto st1
-tr909:
-// line 89 "zparse.rl"
+tr884:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st248
-tr915:
-// line 89 "zparse.rl"
+tr890:
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st248
 st248:
@@ -14659,7 +12285,7 @@ st248:
 	if p == pe { goto _test_eof248 }
 	fallthrough
 case 248:
-// line 14663 "zparse.go"
+// line 12289 "zparse.go"
 	switch data[p] {
 		case 9: goto tr1
 		case 10: goto tr2
@@ -14711,10 +12337,10 @@ case 250:
 		case 101: goto st19
 	}
 	goto st1
-tr939:
-// line 89 "zparse.rl"
+tr914:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st251
 st251:
@@ -14722,15 +12348,15 @@ st251:
 	if p == pe { goto _test_eof251 }
 	fallthrough
 case 251:
-// line 14726 "zparse.go"
+// line 12352 "zparse.go"
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 79: goto st252
 		case 83: goto st254
 		case 92: goto st0
@@ -14744,13 +12370,13 @@ st252:
 	fallthrough
 case 252:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 78: goto st253
 		case 92: goto st0
 		case 110: goto st253
@@ -14762,13 +12388,13 @@ st253:
 	fallthrough
 case 253:
 	switch data[p] {
-		case 9: goto tr260
-		case 10: goto tr261
-		case 32: goto tr260
+		case 9: goto tr255
+		case 10: goto tr256
+		case 32: goto tr255
 		case 34: goto st0
-		case 40: goto tr262
-		case 41: goto tr263
-		case 59: goto tr264
+		case 40: goto tr257
+		case 41: goto tr258
+		case 59: goto tr259
 		case 69: goto st65
 		case 92: goto st0
 		case 101: goto st65
@@ -14780,20 +12406,20 @@ st254:
 	fallthrough
 case 254:
 	switch data[p] {
-		case 9: goto tr768
-		case 10: goto tr769
-		case 32: goto tr768
+		case 9: goto tr743
+		case 10: goto tr744
+		case 32: goto tr743
 		case 34: goto st0
-		case 40: goto tr770
-		case 41: goto tr771
-		case 59: goto tr772
+		case 40: goto tr745
+		case 41: goto tr746
+		case 59: goto tr747
 		case 92: goto st0
 	}
 	goto st57
-tr126:
-// line 89 "zparse.rl"
+tr121:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st255
 st255:
@@ -14801,15 +12427,15 @@ st255:
 	if p == pe { goto _test_eof255 }
 	fallthrough
 case 255:
-// line 14805 "zparse.go"
+// line 12431 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 72: goto st256
 		case 78: goto st257
 		case 83: goto st256
@@ -14825,13 +12451,13 @@ st256:
 	fallthrough
 case 256:
 	switch data[p] {
-		case 9: goto tr775
-		case 10: goto tr776
-		case 32: goto tr775
+		case 9: goto tr750
+		case 10: goto tr751
+		case 32: goto tr750
 		case 34: goto st0
-		case 40: goto tr777
-		case 41: goto tr778
-		case 59: goto tr779
+		case 40: goto tr752
+		case 41: goto tr753
+		case 59: goto tr754
 		case 92: goto st0
 	}
 	goto st25
@@ -14841,13 +12467,13 @@ st257:
 	fallthrough
 case 257:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 65: goto st258
 		case 92: goto st0
 		case 97: goto st258
@@ -14859,13 +12485,13 @@ st258:
 	fallthrough
 case 258:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 77: goto st259
 		case 92: goto st0
 		case 109: goto st259
@@ -14877,13 +12503,13 @@ st259:
 	fallthrough
 case 259:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 69: goto st260
 		case 92: goto st0
 		case 101: goto st260
@@ -14895,20 +12521,20 @@ st260:
 	fallthrough
 case 260:
 	switch data[p] {
-		case 9: goto tr783
-		case 10: goto tr784
-		case 32: goto tr783
+		case 9: goto tr758
+		case 10: goto tr759
+		case 32: goto tr758
 		case 34: goto st0
-		case 40: goto tr785
-		case 41: goto tr786
-		case 59: goto tr787
+		case 40: goto tr760
+		case 41: goto tr761
+		case 59: goto tr762
 		case 92: goto st0
 	}
 	goto st25
-tr127:
-// line 89 "zparse.rl"
+tr122:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st261
 st261:
@@ -14916,24 +12542,24 @@ st261:
 	if p == pe { goto _test_eof261 }
 	fallthrough
 case 261:
-// line 14920 "zparse.go"
+// line 12546 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 83: goto st256
 		case 92: goto st0
 		case 115: goto st256
 	}
 	goto st25
-tr128:
-// line 89 "zparse.rl"
+tr123:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st262
 st262:
@@ -14941,24 +12567,24 @@ st262:
 	if p == pe { goto _test_eof262 }
 	fallthrough
 case 262:
-// line 14945 "zparse.go"
+// line 12571 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 78: goto st256
 		case 92: goto st0
 		case 110: goto st256
 	}
 	goto st25
-tr129:
-// line 89 "zparse.rl"
+tr124:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st263
 st263:
@@ -14966,15 +12592,15 @@ st263:
 	if p == pe { goto _test_eof263 }
 	fallthrough
 case 263:
-// line 14970 "zparse.go"
+// line 12596 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 88: goto st264
 		case 92: goto st0
 		case 120: goto st264
@@ -14986,20 +12612,20 @@ st264:
 	fallthrough
 case 264:
 	switch data[p] {
-		case 9: goto tr789
-		case 10: goto tr790
-		case 32: goto tr789
+		case 9: goto tr764
+		case 10: goto tr765
+		case 32: goto tr764
 		case 34: goto st0
-		case 40: goto tr791
-		case 41: goto tr792
-		case 59: goto tr793
+		case 40: goto tr766
+		case 41: goto tr767
+		case 59: goto tr768
 		case 92: goto st0
 	}
 	goto st25
-tr130:
-// line 89 "zparse.rl"
+tr125:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st265
 st265:
@@ -15007,15 +12633,15 @@ st265:
 	if p == pe { goto _test_eof265 }
 	fallthrough
 case 265:
-// line 15011 "zparse.go"
+// line 12637 "zparse.go"
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 79: goto st266
 		case 83: goto st268
 		case 92: goto st0
@@ -15029,13 +12655,13 @@ st266:
 	fallthrough
 case 266:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 78: goto st267
 		case 92: goto st0
 		case 110: goto st267
@@ -15047,13 +12673,13 @@ st267:
 	fallthrough
 case 267:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 69: goto st256
 		case 92: goto st0
 		case 101: goto st256
@@ -15065,20 +12691,20 @@ st268:
 	fallthrough
 case 268:
 	switch data[p] {
-		case 9: goto tr797
-		case 10: goto tr798
-		case 32: goto tr797
+		case 9: goto tr772
+		case 10: goto tr773
+		case 32: goto tr772
 		case 34: goto st0
-		case 40: goto tr799
-		case 41: goto tr800
-		case 59: goto tr801
+		case 40: goto tr774
+		case 41: goto tr775
+		case 59: goto tr776
 		case 92: goto st0
 	}
 	goto st25
-tr928:
-// line 89 "zparse.rl"
+tr903:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st269
 st269:
@@ -15086,24 +12712,24 @@ st269:
 	if p == pe { goto _test_eof269 }
 	fallthrough
 case 269:
-// line 15090 "zparse.go"
+// line 12716 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 83: goto st50
 		case 92: goto st0
 		case 115: goto st50
 	}
 	goto st42
-tr929:
-// line 89 "zparse.rl"
+tr904:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st270
 st270:
@@ -15111,24 +12737,24 @@ st270:
 	if p == pe { goto _test_eof270 }
 	fallthrough
 case 270:
-// line 15115 "zparse.go"
+// line 12741 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 78: goto st50
 		case 92: goto st0
 		case 110: goto st50
 	}
 	goto st42
-tr930:
-// line 89 "zparse.rl"
+tr905:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st271
 st271:
@@ -15136,15 +12762,15 @@ st271:
 	if p == pe { goto _test_eof271 }
 	fallthrough
 case 271:
-// line 15140 "zparse.go"
+// line 12766 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 88: goto st272
 		case 92: goto st0
 		case 120: goto st272
@@ -15156,20 +12782,20 @@ st272:
 	fallthrough
 case 272:
 	switch data[p] {
-		case 9: goto tr803
-		case 10: goto tr804
-		case 32: goto tr803
+		case 9: goto tr778
+		case 10: goto tr779
+		case 32: goto tr778
 		case 34: goto st0
-		case 40: goto tr805
-		case 41: goto tr806
-		case 59: goto tr807
+		case 40: goto tr780
+		case 41: goto tr781
+		case 59: goto tr782
 		case 92: goto st0
 	}
 	goto st42
-tr931:
-// line 89 "zparse.rl"
+tr906:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st273
 st273:
@@ -15177,15 +12803,15 @@ st273:
 	if p == pe { goto _test_eof273 }
 	fallthrough
 case 273:
-// line 15181 "zparse.go"
+// line 12807 "zparse.go"
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 79: goto st274
 		case 83: goto st276
 		case 92: goto st0
@@ -15199,13 +12825,13 @@ st274:
 	fallthrough
 case 274:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 78: goto st275
 		case 92: goto st0
 		case 110: goto st275
@@ -15217,13 +12843,13 @@ st275:
 	fallthrough
 case 275:
 	switch data[p] {
-		case 9: goto tr212
-		case 10: goto tr213
-		case 32: goto tr212
+		case 9: goto tr207
+		case 10: goto tr208
+		case 32: goto tr207
 		case 34: goto st0
-		case 40: goto tr214
-		case 41: goto tr215
-		case 59: goto tr216
+		case 40: goto tr209
+		case 41: goto tr210
+		case 59: goto tr211
 		case 69: goto st50
 		case 92: goto st0
 		case 101: goto st50
@@ -15235,13 +12861,13 @@ st276:
 	fallthrough
 case 276:
 	switch data[p] {
-		case 9: goto tr811
-		case 10: goto tr812
-		case 32: goto tr811
+		case 9: goto tr786
+		case 10: goto tr787
+		case 32: goto tr786
 		case 34: goto st0
-		case 40: goto tr813
-		case 41: goto tr814
-		case 59: goto tr815
+		case 40: goto tr788
+		case 41: goto tr789
+		case 59: goto tr790
 		case 92: goto st0
 	}
 	goto st42
@@ -15251,13 +12877,13 @@ st277:
 	fallthrough
 case 277:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 89: goto st278
 		case 92: goto st0
 		case 121: goto st278
@@ -15269,20 +12895,20 @@ st278:
 	fallthrough
 case 278:
 	switch data[p] {
-		case 9: goto tr817
-		case 10: goto tr818
-		case 32: goto tr817
+		case 9: goto tr792
+		case 10: goto tr793
+		case 32: goto tr792
 		case 34: goto st0
-		case 40: goto tr819
-		case 41: goto tr820
-		case 59: goto tr821
+		case 40: goto tr794
+		case 41: goto tr795
+		case 59: goto tr796
 		case 92: goto st0
 	}
 	goto st32
-tr919:
-// line 89 "zparse.rl"
+tr894:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st279
 st279:
@@ -15290,15 +12916,15 @@ st279:
 	if p == pe { goto _test_eof279 }
 	fallthrough
 case 279:
-// line 15294 "zparse.go"
+// line 12920 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 72: goto st278
 		case 78: goto st280
 		case 83: goto st278
@@ -15314,13 +12940,13 @@ st280:
 	fallthrough
 case 280:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 65: goto st281
 		case 92: goto st0
 		case 97: goto st281
@@ -15332,13 +12958,13 @@ st281:
 	fallthrough
 case 281:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 77: goto st282
 		case 92: goto st0
 		case 109: goto st282
@@ -15350,13 +12976,13 @@ st282:
 	fallthrough
 case 282:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 69: goto st283
 		case 92: goto st0
 		case 101: goto st283
@@ -15368,20 +12994,20 @@ st283:
 	fallthrough
 case 283:
 	switch data[p] {
-		case 9: goto tr826
-		case 10: goto tr827
-		case 32: goto tr826
+		case 9: goto tr801
+		case 10: goto tr802
+		case 32: goto tr801
 		case 34: goto st0
-		case 40: goto tr828
-		case 41: goto tr829
-		case 59: goto tr830
+		case 40: goto tr803
+		case 41: goto tr804
+		case 59: goto tr805
 		case 92: goto st0
 	}
 	goto st32
-tr920:
-// line 89 "zparse.rl"
+tr895:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st284
 st284:
@@ -15389,24 +13015,24 @@ st284:
 	if p == pe { goto _test_eof284 }
 	fallthrough
 case 284:
-// line 15393 "zparse.go"
+// line 13019 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 83: goto st278
 		case 92: goto st0
 		case 115: goto st278
 	}
 	goto st32
-tr921:
-// line 89 "zparse.rl"
+tr896:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st285
 st285:
@@ -15414,24 +13040,24 @@ st285:
 	if p == pe { goto _test_eof285 }
 	fallthrough
 case 285:
-// line 15418 "zparse.go"
+// line 13044 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 78: goto st278
 		case 92: goto st0
 		case 110: goto st278
 	}
 	goto st32
-tr922:
-// line 89 "zparse.rl"
+tr897:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st286
 st286:
@@ -15439,15 +13065,15 @@ st286:
 	if p == pe { goto _test_eof286 }
 	fallthrough
 case 286:
-// line 15443 "zparse.go"
+// line 13069 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 88: goto st287
 		case 92: goto st0
 		case 120: goto st287
@@ -15459,20 +13085,20 @@ st287:
 	fallthrough
 case 287:
 	switch data[p] {
-		case 9: goto tr832
-		case 10: goto tr833
-		case 32: goto tr832
+		case 9: goto tr807
+		case 10: goto tr808
+		case 32: goto tr807
 		case 34: goto st0
-		case 40: goto tr834
-		case 41: goto tr835
-		case 59: goto tr836
+		case 40: goto tr809
+		case 41: goto tr810
+		case 59: goto tr811
 		case 92: goto st0
 	}
 	goto st32
-tr923:
-// line 89 "zparse.rl"
+tr898:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st288
 st288:
@@ -15480,15 +13106,15 @@ st288:
 	if p == pe { goto _test_eof288 }
 	fallthrough
 case 288:
-// line 15484 "zparse.go"
+// line 13110 "zparse.go"
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 79: goto st289
 		case 83: goto st291
 		case 92: goto st0
@@ -15502,13 +13128,13 @@ st289:
 	fallthrough
 case 289:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 78: goto st290
 		case 92: goto st0
 		case 110: goto st290
@@ -15520,13 +13146,13 @@ st290:
 	fallthrough
 case 290:
 	switch data[p] {
-		case 9: goto tr160
-		case 10: goto tr161
-		case 32: goto tr160
+		case 9: goto tr155
+		case 10: goto tr156
+		case 32: goto tr155
 		case 34: goto st0
-		case 40: goto tr162
-		case 41: goto tr163
-		case 59: goto tr164
+		case 40: goto tr157
+		case 41: goto tr158
+		case 59: goto tr159
 		case 69: goto st278
 		case 92: goto st0
 		case 101: goto st278
@@ -15538,20 +13164,20 @@ st291:
 	fallthrough
 case 291:
 	switch data[p] {
-		case 9: goto tr840
-		case 10: goto tr841
-		case 32: goto tr840
+		case 9: goto tr815
+		case 10: goto tr816
+		case 32: goto tr815
 		case 34: goto st0
-		case 40: goto tr842
-		case 41: goto tr843
-		case 59: goto tr844
+		case 40: goto tr817
+		case 41: goto tr818
+		case 59: goto tr819
 		case 92: goto st0
 	}
 	goto st32
-tr86:
-// line 89 "zparse.rl"
+tr81:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st292
 st292:
@@ -15559,15 +13185,15 @@ st292:
 	if p == pe { goto _test_eof292 }
 	fallthrough
 case 292:
-// line 15563 "zparse.go"
+// line 13189 "zparse.go"
 	switch data[p] {
-		case 9: goto tr845
-		case 10: goto tr846
-		case 32: goto tr845
+		case 9: goto tr820
+		case 10: goto tr821
+		case 32: goto tr820
 		case 34: goto st0
-		case 40: goto tr847
-		case 41: goto tr848
-		case 59: goto tr849
+		case 40: goto tr822
+		case 41: goto tr823
+		case 59: goto tr824
 		case 65: goto st293
 		case 78: goto st296
 		case 92: goto st0
@@ -15581,13 +13207,13 @@ st293:
 	fallthrough
 case 293:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 65: goto st294
 		case 92: goto st0
 		case 97: goto st294
@@ -15599,13 +13225,13 @@ st294:
 	fallthrough
 case 294:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 65: goto st295
 		case 92: goto st0
 		case 97: goto st295
@@ -15617,13 +13243,13 @@ st295:
 	fallthrough
 case 295:
 	switch data[p] {
-		case 9: goto tr854
-		case 10: goto tr855
-		case 32: goto tr854
+		case 9: goto tr829
+		case 10: goto tr830
+		case 32: goto tr829
 		case 34: goto st0
-		case 40: goto tr856
-		case 41: goto tr857
-		case 59: goto tr858
+		case 40: goto tr831
+		case 41: goto tr832
+		case 59: goto tr833
 		case 92: goto st0
 	}
 	goto st8
@@ -15633,13 +13259,13 @@ st296:
 	fallthrough
 case 296:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 89: goto st297
 		case 92: goto st0
 		case 121: goto st297
@@ -15651,20 +13277,20 @@ st297:
 	fallthrough
 case 297:
 	switch data[p] {
-		case 9: goto tr860
-		case 10: goto tr861
-		case 32: goto tr860
+		case 9: goto tr835
+		case 10: goto tr836
+		case 32: goto tr835
 		case 34: goto st0
-		case 40: goto tr862
-		case 41: goto tr863
-		case 59: goto tr864
+		case 40: goto tr837
+		case 41: goto tr838
+		case 59: goto tr839
 		case 92: goto st0
 	}
 	goto st8
-tr87:
-// line 89 "zparse.rl"
+tr82:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st298
 st298:
@@ -15672,15 +13298,15 @@ st298:
 	if p == pe { goto _test_eof298 }
 	fallthrough
 case 298:
-// line 15676 "zparse.go"
+// line 13302 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 72: goto st297
 		case 78: goto st299
 		case 83: goto st297
@@ -15696,13 +13322,13 @@ st299:
 	fallthrough
 case 299:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 65: goto st300
 		case 92: goto st0
 		case 97: goto st300
@@ -15714,13 +13340,13 @@ st300:
 	fallthrough
 case 300:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 77: goto st301
 		case 92: goto st0
 		case 109: goto st301
@@ -15732,13 +13358,13 @@ st301:
 	fallthrough
 case 301:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 69: goto st302
 		case 92: goto st0
 		case 101: goto st302
@@ -15750,20 +13376,20 @@ st302:
 	fallthrough
 case 302:
 	switch data[p] {
-		case 9: goto tr869
-		case 10: goto tr870
-		case 32: goto tr869
+		case 9: goto tr844
+		case 10: goto tr845
+		case 32: goto tr844
 		case 34: goto st0
-		case 40: goto tr871
-		case 41: goto tr872
-		case 59: goto tr873
+		case 40: goto tr846
+		case 41: goto tr847
+		case 59: goto tr848
 		case 92: goto st0
 	}
 	goto st8
-tr88:
-// line 89 "zparse.rl"
+tr83:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st303
 st303:
@@ -15771,24 +13397,24 @@ st303:
 	if p == pe { goto _test_eof303 }
 	fallthrough
 case 303:
-// line 15775 "zparse.go"
+// line 13401 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 83: goto st297
 		case 92: goto st0
 		case 115: goto st297
 	}
 	goto st8
-tr89:
-// line 89 "zparse.rl"
+tr84:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st304
 st304:
@@ -15796,24 +13422,24 @@ st304:
 	if p == pe { goto _test_eof304 }
 	fallthrough
 case 304:
-// line 15800 "zparse.go"
+// line 13426 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 78: goto st297
 		case 92: goto st0
 		case 110: goto st297
 	}
 	goto st8
-tr90:
-// line 89 "zparse.rl"
+tr85:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st305
 st305:
@@ -15821,15 +13447,15 @@ st305:
 	if p == pe { goto _test_eof305 }
 	fallthrough
 case 305:
-// line 15825 "zparse.go"
+// line 13451 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 88: goto st306
 		case 92: goto st0
 		case 120: goto st306
@@ -15841,20 +13467,20 @@ st306:
 	fallthrough
 case 306:
 	switch data[p] {
-		case 9: goto tr875
-		case 10: goto tr876
-		case 32: goto tr875
+		case 9: goto tr850
+		case 10: goto tr851
+		case 32: goto tr850
 		case 34: goto st0
-		case 40: goto tr877
-		case 41: goto tr878
-		case 59: goto tr879
+		case 40: goto tr852
+		case 41: goto tr853
+		case 59: goto tr854
 		case 92: goto st0
 	}
 	goto st8
-tr91:
-// line 89 "zparse.rl"
+tr86:
+// line 95 "zparse.rl"
 	{ mark = p }
-// line 92 "zparse.rl"
+// line 98 "zparse.rl"
 	{ /* ... */ }
 	goto st307
 st307:
@@ -15862,15 +13488,15 @@ st307:
 	if p == pe { goto _test_eof307 }
 	fallthrough
 case 307:
-// line 15866 "zparse.go"
+// line 13492 "zparse.go"
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 79: goto st308
 		case 83: goto st310
 		case 92: goto st0
@@ -15884,13 +13510,13 @@ st308:
 	fallthrough
 case 308:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 78: goto st309
 		case 92: goto st0
 		case 110: goto st309
@@ -15902,13 +13528,13 @@ st309:
 	fallthrough
 case 309:
 	switch data[p] {
-		case 9: goto tr50
-		case 10: goto tr51
-		case 32: goto tr50
+		case 9: goto tr45
+		case 10: goto tr46
+		case 32: goto tr45
 		case 34: goto st0
-		case 40: goto tr52
-		case 41: goto tr53
-		case 59: goto tr54
+		case 40: goto tr47
+		case 41: goto tr48
+		case 59: goto tr49
 		case 69: goto st297
 		case 92: goto st0
 		case 101: goto st297
@@ -15920,13 +13546,13 @@ st310:
 	fallthrough
 case 310:
 	switch data[p] {
-		case 9: goto tr883
-		case 10: goto tr884
-		case 32: goto tr883
+		case 9: goto tr858
+		case 10: goto tr859
+		case 32: goto tr858
 		case 34: goto st0
-		case 40: goto tr885
-		case 41: goto tr886
-		case 59: goto tr887
+		case 40: goto tr860
+		case 41: goto tr861
+		case 59: goto tr862
 		case 92: goto st0
 	}
 	goto st8
@@ -15936,13 +13562,13 @@ st311:
 	fallthrough
 case 311:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 65: goto st312
 		case 92: goto st0
 		case 97: goto st312
@@ -15954,13 +13580,13 @@ st312:
 	fallthrough
 case 312:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 65: goto st313
 		case 92: goto st0
 		case 97: goto st313
@@ -15972,13 +13598,13 @@ st313:
 	fallthrough
 case 313:
 	switch data[p] {
-		case 9: goto tr890
-		case 10: goto tr891
-		case 32: goto tr890
+		case 9: goto tr865
+		case 10: goto tr866
+		case 32: goto tr865
 		case 34: goto st0
-		case 40: goto tr892
-		case 41: goto tr893
-		case 59: goto tr894
+		case 40: goto tr867
+		case 41: goto tr868
+		case 59: goto tr869
 		case 92: goto st0
 	}
 	goto st25
@@ -15988,20 +13614,20 @@ st314:
 	fallthrough
 case 314:
 	switch data[p] {
-		case 9: goto tr132
-		case 10: goto tr133
-		case 32: goto tr132
+		case 9: goto tr127
+		case 10: goto tr128
+		case 32: goto tr127
 		case 34: goto st0
-		case 40: goto tr134
-		case 41: goto tr135
-		case 59: goto tr136
+		case 40: goto tr129
+		case 41: goto tr130
+		case 59: goto tr131
 		case 89: goto st256
 		case 92: goto st0
 		case 121: goto st256
 	}
 	goto st25
 tr31:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st315
 st315:
@@ -16009,7 +13635,7 @@ st315:
 	if p == pe { goto _test_eof315 }
 	fallthrough
 case 315:
-// line 16013 "zparse.go"
+// line 13639 "zparse.go"
 	switch data[p] {
 		case 72: goto st316
 		case 78: goto st198
@@ -16025,16 +13651,16 @@ st316:
 	fallthrough
 case 316:
 	switch data[p] {
-		case 9: goto tr896
-		case 10: goto tr897
-		case 32: goto tr896
-		case 40: goto tr898
-		case 41: goto tr899
-		case 59: goto tr900
+		case 9: goto tr871
+		case 10: goto tr872
+		case 32: goto tr871
+		case 40: goto tr873
+		case 41: goto tr874
+		case 59: goto tr875
 	}
 	goto st0
 tr32:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st317
 st317:
@@ -16042,14 +13668,14 @@ st317:
 	if p == pe { goto _test_eof317 }
 	fallthrough
 case 317:
-// line 16046 "zparse.go"
+// line 13672 "zparse.go"
 	switch data[p] {
 		case 83: goto st316
 		case 115: goto st316
 	}
 	goto st0
 tr33:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st318
 st318:
@@ -16057,14 +13683,14 @@ st318:
 	if p == pe { goto _test_eof318 }
 	fallthrough
 case 318:
-// line 16061 "zparse.go"
+// line 13687 "zparse.go"
 	switch data[p] {
 		case 78: goto st316
 		case 110: goto st316
 	}
 	goto st0
 tr35:
-// line 89 "zparse.rl"
+// line 95 "zparse.rl"
 	{ mark = p }
 	goto st319
 st319:
@@ -16072,7 +13698,7 @@ st319:
 	if p == pe { goto _test_eof319 }
 	fallthrough
 case 319:
-// line 16076 "zparse.go"
+// line 13702 "zparse.go"
 	switch data[p] {
 		case 79: goto st320
 		case 83: goto st209
@@ -16472,7 +14098,7 @@ case 323:
 	_out: {}
 	}
 
-// line 163 "zparse.rl"
+// line 154 "zparse.rl"
 
         
         if eof > -1 {
@@ -16482,7 +14108,7 @@ case 323:
                                 println("unexpected eof")
                                 return z, nil
                         } else {
-                                println("error at position ", p)
+                                println("error at position ", p, "\"",data[mark:p],"\"")
                                 return z, nil
                         }
                 }

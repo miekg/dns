@@ -77,7 +77,13 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
         data := string(buf)
         cs, p, pe := 0, 0, len(data)
+        ts, te, act := 0, 0, 0
+//        top := 0
+//        stack := make([]int, 100)
         eof := len(data)
+        // keep Go happy
+        ts = ts; te = te; act = act
+
         brace := false
         lines := 0
         mark := 0
@@ -93,21 +99,11 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 action setTtl     { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
                 action number     { tok.pushInt(data[mark:p]) }
                 action text       { tok.pushString(data[mark:p]) }
-                action set        { z.Push(rr); tok.reset() }
+                action set        { z.Push(rr); tok.reset(); println("Setting") }
                 action openBrace  { if brace { println("Brace already open")} ; brace = true }
                 action closeBrace { if !brace { println("Brace already closed")}; brace = false }
                 action brace      { brace }
                 action linecount  { lines++ }
-                action qtype      { 
-                    i := Str_rr[data[mark:p]]
-                    mk, known := rr_mk[int(i)]
-                    if ! known {
-                        println("Unknown type seen: " + data[mark:p])
-                        // panic?
-                    }
-                    rr = mk()
-                    hdr.Rrtype = i
-                }
 
                 # Newlines
                 nl = [\n]+ $linecount;
@@ -127,9 +123,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 chars       = [^; \t"\n\\)(];
                 ttl         = digit+ >mark;
                 qname       = chars+ %qname;
-                # If I use this in the definitions at the end, things break.
-                # 6l seems to hang when compiling the resulting .go file...
-                # tb is WITH the space
                 tb          = (chars | ' ')+ $1 %0 %text;
                 t           = chars+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
@@ -144,16 +137,14 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
                 # RR definitions.
                 rhs = (
-                       ('A'i         %qtype bl t) %rdata_a
-                     | ('AAAA'i      %qtype bl t) %rdata_aaaa
-                     | ('NS'i        %qtype bl t) %rdata_ns
-                     | ('CNAME'i     %qtype bl t) %rdata_cname
-#                     | ('SOA'i       %qtype bl t bl t bl n bl n bl n bl n bl n) %rdata_soa
-                     | ('MX'i        %qtype bl n bl t) %rdata_mx
-#                     | ('DS'i        %qtype bl n bl n bl n bl tb) %rdata_ds
-#                     | ('DNSKEY'i    %qtype bl n bl n bl n bl tb) %rdata_dnskey
-#                     | ('RRSIG'i     %qtype bl n bl n bl n bl n bl n bl n bl n bl t bl tb) %rdata_rrsig
-                );
+                       ('AAAA'i      bl t) %rdata_aaaa
+                     | ('A'i         bl t) %rdata_a
+                     | ('NS'i        bl t) %rdata_ns
+                     | ('CNAME'i     bl t) %rdata_cname 
+                     | ('MX'i        bl n bl t) %rdata_mx
+                     );
+#                     'SOA'i;       bl; t; bl; t; bl; n; bl; n; bl; n; bl; n; bl; n => rdata_soa; { fret; };
+#                *|;
 
                 rr = lhs rhs %set;
                 main := (rr? bl? ((comment? nl) when !brace))*;
@@ -169,7 +160,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                                 println("unexpected eof")
                                 return z, nil
                         } else {
-                                println("error at position ", p)
+                                println("error at position ", p, "\"",data[mark:p],"\"")
                                 return z, nil
                         }
                 }
