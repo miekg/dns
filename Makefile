@@ -23,7 +23,6 @@ GOFILES=\
 	xfr.go\
 	zone.go\
 	zparse.go\
-#	test.go\
 
 
 include $(GOROOT)/src/Make.pkg
@@ -35,7 +34,7 @@ examples:
 	gomake -C _examples
 
 # yes, hardcoded path, yes ugly, yes, deal with it
-zparse.go: zparse.rl types.rl
+zparse.go: zparse.rl
 	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
 
 kparse.go: kparse.rl
