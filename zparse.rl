@@ -62,7 +62,6 @@ func rdata_aaaa(hdr RR_Header, tok *token) RR {
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeAAAA
         rr.AAAA = net.ParseIP(tok.T[0])
-        println("Calling aaaa", tok.T[0])
         return rr
 }
 
@@ -81,6 +80,7 @@ func rdata_ns(hdr RR_Header, tok *token) RR {
         rr.Ns = tok.T[0]
         return rr
 }
+
 func rdata_cname(hdr RR_Header, tok *token) RR {
         rr := new(RR_CNAME)
         rr.Hdr = hdr
@@ -88,6 +88,7 @@ func rdata_cname(hdr RR_Header, tok *token) RR {
         rr.Cname = tok.T[0]
         return rr
 }
+
 func rdata_soa(hdr RR_Header, tok *token) RR {
         rr := new(RR_SOA)
         rr.Hdr = hdr
@@ -101,6 +102,7 @@ func rdata_soa(hdr RR_Header, tok *token) RR {
         rr.Minttl = uint32(tok.N[4])
         return rr
 }
+
 func rdata_mx(hdr RR_Header, tok *token) RR {
         rr := new(RR_MX)
         rr.Hdr = hdr;
@@ -109,6 +111,7 @@ func rdata_mx(hdr RR_Header, tok *token) RR {
         rr.Mx = tok.T[0]
         return rr
 }
+
 func rdata_ds(hdr RR_Header, tok *token) RR {
         rr := new(RR_DS)
         rr.Hdr = hdr;
@@ -119,6 +122,7 @@ func rdata_ds(hdr RR_Header, tok *token) RR {
         rr.Digest = tok.T[0]
         return rr
 }
+
 func rdata_dnskey(hdr RR_Header, tok *token) RR {
         rr := new(RR_DNSKEY)
         rr.Hdr = hdr;
@@ -129,6 +133,7 @@ func rdata_dnskey(hdr RR_Header, tok *token) RR {
         rr.PublicKey = tok.T[0]
         return rr
 }
+
 func rdata_rrsig(hdr RR_Header, tok *token) RR {
         rr := new(RR_RRSIG)
         rr.Hdr = hdr;
@@ -146,9 +151,8 @@ func rdata_rrsig(hdr RR_Header, tok *token) RR {
 }
 
 func set(r RR, z *Zone, tok *token) {
-    z.Push(r)
-    tok.reset()
-    println("Resetting")
+        z.Push(r)
+        tok.reset()
 }
 
 %%{
