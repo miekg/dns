@@ -15,6 +15,7 @@ type Zone struct {
 }
 
 func (z *Zone) Push(r RR) {
+        println("Pushing", r.String())
         z.v.Push(r)
 }
 
@@ -30,9 +31,9 @@ func (z *Zone) Len() int {
         return z.v.Len()
 }
 
-func (z *Zone) String() string {
+func (z *Zone) String() (s string) {
         for i:=0; i < z.Len(); i++ {
-                print(z.At(i).String())
+                s += z.At(i).String()
         }
-        return ""
+        return
 }

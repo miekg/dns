@@ -153,12 +153,13 @@ func rdata_rrsig(hdr RR_Header, tok *token) RR {
 }
 
 func set(r RR, z *Zone, tok *token) {
+        println("setting",r.String())
         z.Push(r)
         tok.reset()
 }
 
 
-// line 162 "zparse.go"
+// line 163 "zparse.go"
 var z_start int = 148
 var z_first_final int = 148
 var z_error int = 0
@@ -166,7 +167,7 @@ var z_error int = 0
 var z_en_main int = 148
 
 
-// line 161 "zparse.rl"
+// line 162 "zparse.rl"
 
 
 // SetString
@@ -196,56 +197,54 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         mark := 0
         hdr := new(RR_Header)
         tok := newToken()
-        var rr RR
-        rr = rr
 
         
-// line 204 "zparse.go"
+// line 203 "zparse.go"
 	cs = z_start
 	ts = 0
 	te = 0
 	act = 0
 
-// line 210 "zparse.go"
+// line 209 "zparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
 	case -666: // i am a hack D:
 tr425:
 // line 236 "zparse.rl"
-	{te = p;p--;{ rr = rdata_a(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_a(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr427:
 // line 239 "zparse.rl"
-	{te = p;p--;{ rr = rdata_aaaa(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_aaaa(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr429:
 // line 238 "zparse.rl"
-	{te = p;p--;{ rr = rdata_cname(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_cname(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr431:
 // line 243 "zparse.rl"
-	{te = p;p--;{ rr = rdata_dnskey(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_dnskey(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr433:
 // line 242 "zparse.rl"
-	{te = p;p--;{ rr = rdata_ds(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_ds(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr435:
 // line 240 "zparse.rl"
-	{te = p;p--;{ rr = rdata_mx(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_mx(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr437:
 // line 237 "zparse.rl"
-	{te = p;p--;{ rr = rdata_ns(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_ns(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr439:
 // line 244 "zparse.rl"
-	{te = p;p--;{ rr = rdata_rrsig(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_rrsig(*hdr, tok); set(r, z, tok); }}
 	goto st148
 tr441:
 // line 241 "zparse.rl"
-	{te = p;p--;{ rr = rdata_soa(*hdr, tok); set(rr, z, tok); }}
+	{te = p;p--;{ r := rdata_soa(*hdr, tok); set(r, z, tok); }}
 	goto st148
 st148:
 // line 1 "NONE"
@@ -256,7 +255,7 @@ st148:
 case 148:
 // line 1 "NONE"
 	{ts = p;}
-// line 260 "zparse.go"
+// line 259 "zparse.go"
 	switch data[p] {
 		case 9: goto st1
 		case 10: goto tr2
@@ -280,37 +279,37 @@ st0:
 cs = 0;
 	goto _out;
 tr2:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st1
 tr3:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st1
 tr4:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st1
 tr419:
-// line 195 "zparse.rl"
+// line 194 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st1
 tr420:
-// line 195 "zparse.rl"
+// line 194 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st1
 tr421:
-// line 195 "zparse.rl"
+// line 194 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st1
 tr422:
-// line 195 "zparse.rl"
+// line 194 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st1
 st1:
@@ -318,7 +317,7 @@ st1:
 	if p == pe { goto _test_eof1 }
 	fallthrough
 case 1:
-// line 322 "zparse.go"
+// line 321 "zparse.go"
 	switch data[p] {
 		case 9: goto st1
 		case 10: goto tr2
@@ -348,9 +347,9 @@ case 1:
 	if 48 <= data[p] && data[p] <= 57 { goto tr5 }
 	goto st0
 tr5:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st2
 st2:
@@ -358,7 +357,7 @@ st2:
 	if p == pe { goto _test_eof2 }
 	fallthrough
 case 2:
-// line 362 "zparse.go"
+// line 361 "zparse.go"
 	switch data[p] {
 		case 9: goto tr16
 		case 10: goto tr17
@@ -370,37 +369,37 @@ case 2:
 	if 48 <= data[p] && data[p] <= 57 { goto st2 }
 	goto st0
 tr23:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st3
 tr24:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st3
 tr25:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st3
 tr16:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st3
 tr17:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st3
 tr18:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st3
 tr19:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st3
 st3:
@@ -408,7 +407,7 @@ st3:
 	if p == pe { goto _test_eof3 }
 	fallthrough
 case 3:
-// line 412 "zparse.go"
+// line 411 "zparse.go"
 	switch data[p] {
 		case 9: goto st3
 		case 10: goto tr23
@@ -437,7 +436,7 @@ case 3:
 	}
 	goto st0
 tr21:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st4
 st4:
@@ -445,11 +444,11 @@ st4:
 	if p == pe { goto _test_eof4 }
 	fallthrough
 case 4:
-// line 449 "zparse.go"
+// line 448 "zparse.go"
 	if data[p] == 10 { goto tr23 }
 	goto st4
 tr27:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st5
 st5:
@@ -457,7 +456,7 @@ st5:
 	if p == pe { goto _test_eof5 }
 	fallthrough
 case 5:
-// line 461 "zparse.go"
+// line 460 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 10: goto tr37
@@ -472,15 +471,15 @@ case 5:
 	}
 	goto st0
 tr37:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st6
 tr38:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st6
 tr39:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st6
 st6:
@@ -488,7 +487,7 @@ st6:
 	if p == pe { goto _test_eof6 }
 	fallthrough
 case 6:
-// line 492 "zparse.go"
+// line 491 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 10: goto tr37
@@ -509,7 +508,7 @@ case 6:
 	}
 	goto st0
 tr43:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st7
 st7:
@@ -517,7 +516,7 @@ st7:
 	if p == pe { goto _test_eof7 }
 	fallthrough
 case 7:
-// line 521 "zparse.go"
+// line 520 "zparse.go"
 	switch data[p] {
 		case 10: goto tr44
 		case 43: goto st7
@@ -533,13 +532,13 @@ case 7:
 	}
 	goto st0
 tr426:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st149
 tr44:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st149
 st149:
@@ -547,7 +546,7 @@ st149:
 	if p == pe { goto _test_eof149 }
 	fallthrough
 case 149:
-// line 551 "zparse.go"
+// line 550 "zparse.go"
 	if data[p] == 10 { goto tr426 }
 	goto tr425
 st8:
@@ -592,15 +591,15 @@ case 11:
 	}
 	goto st0
 tr49:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st12
 tr50:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st12
 tr51:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st12
 st12:
@@ -608,7 +607,7 @@ st12:
 	if p == pe { goto _test_eof12 }
 	fallthrough
 case 12:
-// line 612 "zparse.go"
+// line 611 "zparse.go"
 	switch data[p] {
 		case 9: goto st12
 		case 10: goto tr49
@@ -629,7 +628,7 @@ case 12:
 	}
 	goto st0
 tr53:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st13
 st13:
@@ -637,7 +636,7 @@ st13:
 	if p == pe { goto _test_eof13 }
 	fallthrough
 case 13:
-// line 641 "zparse.go"
+// line 640 "zparse.go"
 	switch data[p] {
 		case 10: goto tr54
 		case 43: goto st13
@@ -653,13 +652,13 @@ case 13:
 	}
 	goto st0
 tr428:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st150
 tr54:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st150
 st150:
@@ -667,7 +666,7 @@ st150:
 	if p == pe { goto _test_eof150 }
 	fallthrough
 case 150:
-// line 671 "zparse.go"
+// line 670 "zparse.go"
 	if data[p] == 10 { goto tr428 }
 	goto tr427
 st14:
@@ -702,59 +701,59 @@ case 16:
 	}
 	goto st0
 tr63:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st17
 tr64:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st17
 tr65:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st17
 tr411:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st17
 tr412:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st17
 tr413:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st17
 tr414:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st17
 tr57:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st17
 tr58:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st17
 tr59:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st17
 tr60:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st17
 st17:
@@ -762,7 +761,7 @@ st17:
 	if p == pe { goto _test_eof17 }
 	fallthrough
 case 17:
-// line 766 "zparse.go"
+// line 765 "zparse.go"
 	switch data[p] {
 		case 9: goto st17
 		case 10: goto tr63
@@ -787,11 +786,11 @@ case 17:
 	}
 	goto st0
 tr416:
-// line 198 "zparse.rl"
+// line 197 "zparse.rl"
 	{ ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
 	goto st18
 tr61:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st18
 st18:
@@ -799,11 +798,11 @@ st18:
 	if p == pe { goto _test_eof18 }
 	fallthrough
 case 18:
-// line 803 "zparse.go"
+// line 802 "zparse.go"
 	if data[p] == 10 { goto tr63 }
 	goto st18
 tr67:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st19
 st19:
@@ -811,7 +810,7 @@ st19:
 	if p == pe { goto _test_eof19 }
 	fallthrough
 case 19:
-// line 815 "zparse.go"
+// line 814 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 10: goto tr37
@@ -824,7 +823,7 @@ case 19:
 	}
 	goto st0
 tr68:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st20
 st20:
@@ -832,7 +831,7 @@ st20:
 	if p == pe { goto _test_eof20 }
 	fallthrough
 case 20:
-// line 836 "zparse.go"
+// line 835 "zparse.go"
 	switch data[p] {
 		case 78: goto st21
 		case 110: goto st21
@@ -883,15 +882,15 @@ case 24:
 	}
 	goto st0
 tr75:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st25
 tr76:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st25
 tr77:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st25
 st25:
@@ -899,7 +898,7 @@ st25:
 	if p == pe { goto _test_eof25 }
 	fallthrough
 case 25:
-// line 903 "zparse.go"
+// line 902 "zparse.go"
 	switch data[p] {
 		case 9: goto st25
 		case 10: goto tr75
@@ -920,7 +919,7 @@ case 25:
 	}
 	goto st0
 tr79:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st26
 st26:
@@ -928,7 +927,7 @@ st26:
 	if p == pe { goto _test_eof26 }
 	fallthrough
 case 26:
-// line 932 "zparse.go"
+// line 931 "zparse.go"
 	switch data[p] {
 		case 10: goto tr80
 		case 43: goto st26
@@ -944,13 +943,13 @@ case 26:
 	}
 	goto st0
 tr430:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st151
 tr80:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st151
 st151:
@@ -958,7 +957,7 @@ st151:
 	if p == pe { goto _test_eof151 }
 	fallthrough
 case 151:
-// line 962 "zparse.go"
+// line 961 "zparse.go"
 	if data[p] == 10 { goto tr430 }
 	goto tr429
 st27:
@@ -969,13 +968,13 @@ case 27:
 	if data[p] == 10 { goto tr75 }
 	goto st27
 tr9:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st28
 tr29:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st28
 st28:
@@ -983,7 +982,7 @@ st28:
 	if p == pe { goto _test_eof28 }
 	fallthrough
 case 28:
-// line 987 "zparse.go"
+// line 986 "zparse.go"
 	switch data[p] {
 		case 78: goto st29
 		case 83: goto st46
@@ -1046,15 +1045,15 @@ case 33:
 	}
 	goto st0
 tr89:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st34
 tr90:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st34
 tr91:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st34
 st34:
@@ -1062,7 +1061,7 @@ st34:
 	if p == pe { goto _test_eof34 }
 	fallthrough
 case 34:
-// line 1066 "zparse.go"
+// line 1065 "zparse.go"
 	switch data[p] {
 		case 9: goto st34
 		case 10: goto tr89
@@ -1074,7 +1073,7 @@ case 34:
 	if 48 <= data[p] && data[p] <= 57 { goto tr93 }
 	goto st0
 tr93:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st35
 st35:
@@ -1082,7 +1081,7 @@ st35:
 	if p == pe { goto _test_eof35 }
 	fallthrough
 case 35:
-// line 1086 "zparse.go"
+// line 1085 "zparse.go"
 	switch data[p] {
 		case 9: goto tr94
 		case 10: goto tr95
@@ -1094,37 +1093,37 @@ case 35:
 	if 48 <= data[p] && data[p] <= 57 { goto st35 }
 	goto st0
 tr101:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st36
 tr102:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st36
 tr103:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st36
 tr94:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st36
 tr95:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st36
 tr96:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st36
 tr97:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st36
 st36:
@@ -1132,7 +1131,7 @@ st36:
 	if p == pe { goto _test_eof36 }
 	fallthrough
 case 36:
-// line 1136 "zparse.go"
+// line 1135 "zparse.go"
 	switch data[p] {
 		case 9: goto st36
 		case 10: goto tr101
@@ -1144,7 +1143,7 @@ case 36:
 	if 48 <= data[p] && data[p] <= 57 { goto tr104 }
 	goto st0
 tr104:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st37
 st37:
@@ -1152,7 +1151,7 @@ st37:
 	if p == pe { goto _test_eof37 }
 	fallthrough
 case 37:
-// line 1156 "zparse.go"
+// line 1155 "zparse.go"
 	switch data[p] {
 		case 9: goto tr106
 		case 10: goto tr107
@@ -1164,37 +1163,37 @@ case 37:
 	if 48 <= data[p] && data[p] <= 57 { goto st37 }
 	goto st0
 tr113:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st38
 tr114:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st38
 tr115:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st38
 tr106:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st38
 tr107:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st38
 tr108:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st38
 tr109:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st38
 st38:
@@ -1202,7 +1201,7 @@ st38:
 	if p == pe { goto _test_eof38 }
 	fallthrough
 case 38:
-// line 1206 "zparse.go"
+// line 1205 "zparse.go"
 	switch data[p] {
 		case 9: goto st38
 		case 10: goto tr113
@@ -1214,7 +1213,7 @@ case 38:
 	if 48 <= data[p] && data[p] <= 57 { goto tr116 }
 	goto st0
 tr116:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st39
 st39:
@@ -1222,7 +1221,7 @@ st39:
 	if p == pe { goto _test_eof39 }
 	fallthrough
 case 39:
-// line 1226 "zparse.go"
+// line 1225 "zparse.go"
 	switch data[p] {
 		case 9: goto tr118
 		case 10: goto tr119
@@ -1234,37 +1233,37 @@ case 39:
 	if 48 <= data[p] && data[p] <= 57 { goto st39 }
 	goto st0
 tr125:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st40
 tr126:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st40
 tr127:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st40
 tr118:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st40
 tr119:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st40
 tr120:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st40
 tr121:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st40
 st40:
@@ -1272,7 +1271,7 @@ st40:
 	if p == pe { goto _test_eof40 }
 	fallthrough
 case 40:
-// line 1276 "zparse.go"
+// line 1275 "zparse.go"
 	switch data[p] {
 		case 9: goto st40
 		case 10: goto tr125
@@ -1293,7 +1292,7 @@ case 40:
 	}
 	goto st0
 tr128:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st41
 st41:
@@ -1301,7 +1300,7 @@ st41:
 	if p == pe { goto _test_eof41 }
 	fallthrough
 case 41:
-// line 1305 "zparse.go"
+// line 1304 "zparse.go"
 	switch data[p] {
 		case 10: goto tr130
 		case 43: goto st41
@@ -1317,13 +1316,13 @@ case 41:
 	}
 	goto st0
 tr432:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st152
 tr130:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st152
 st152:
@@ -1331,11 +1330,11 @@ st152:
 	if p == pe { goto _test_eof152 }
 	fallthrough
 case 152:
-// line 1335 "zparse.go"
+// line 1334 "zparse.go"
 	if data[p] == 10 { goto tr432 }
 	goto tr431
 tr123:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st42
 st42:
@@ -1343,11 +1342,11 @@ st42:
 	if p == pe { goto _test_eof42 }
 	fallthrough
 case 42:
-// line 1347 "zparse.go"
+// line 1346 "zparse.go"
 	if data[p] == 10 { goto tr125 }
 	goto st42
 tr111:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st43
 st43:
@@ -1355,11 +1354,11 @@ st43:
 	if p == pe { goto _test_eof43 }
 	fallthrough
 case 43:
-// line 1359 "zparse.go"
+// line 1358 "zparse.go"
 	if data[p] == 10 { goto tr113 }
 	goto st43
 tr99:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st44
 st44:
@@ -1367,7 +1366,7 @@ st44:
 	if p == pe { goto _test_eof44 }
 	fallthrough
 case 44:
-// line 1371 "zparse.go"
+// line 1370 "zparse.go"
 	if data[p] == 10 { goto tr101 }
 	goto st44
 st45:
@@ -1392,15 +1391,15 @@ case 46:
 	}
 	goto st0
 tr133:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st47
 tr134:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st47
 tr135:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st47
 st47:
@@ -1408,7 +1407,7 @@ st47:
 	if p == pe { goto _test_eof47 }
 	fallthrough
 case 47:
-// line 1412 "zparse.go"
+// line 1411 "zparse.go"
 	switch data[p] {
 		case 9: goto st47
 		case 10: goto tr133
@@ -1420,7 +1419,7 @@ case 47:
 	if 48 <= data[p] && data[p] <= 57 { goto tr137 }
 	goto st0
 tr137:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st48
 st48:
@@ -1428,7 +1427,7 @@ st48:
 	if p == pe { goto _test_eof48 }
 	fallthrough
 case 48:
-// line 1432 "zparse.go"
+// line 1431 "zparse.go"
 	switch data[p] {
 		case 9: goto tr138
 		case 10: goto tr139
@@ -1440,37 +1439,37 @@ case 48:
 	if 48 <= data[p] && data[p] <= 57 { goto st48 }
 	goto st0
 tr145:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st49
 tr146:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st49
 tr147:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st49
 tr138:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st49
 tr139:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st49
 tr140:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st49
 tr141:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st49
 st49:
@@ -1478,7 +1477,7 @@ st49:
 	if p == pe { goto _test_eof49 }
 	fallthrough
 case 49:
-// line 1482 "zparse.go"
+// line 1481 "zparse.go"
 	switch data[p] {
 		case 9: goto st49
 		case 10: goto tr145
@@ -1490,7 +1489,7 @@ case 49:
 	if 48 <= data[p] && data[p] <= 57 { goto tr148 }
 	goto st0
 tr148:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st50
 st50:
@@ -1498,7 +1497,7 @@ st50:
 	if p == pe { goto _test_eof50 }
 	fallthrough
 case 50:
-// line 1502 "zparse.go"
+// line 1501 "zparse.go"
 	switch data[p] {
 		case 9: goto tr150
 		case 10: goto tr151
@@ -1510,37 +1509,37 @@ case 50:
 	if 48 <= data[p] && data[p] <= 57 { goto st50 }
 	goto st0
 tr157:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st51
 tr158:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st51
 tr159:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st51
 tr150:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st51
 tr151:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st51
 tr152:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st51
 tr153:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st51
 st51:
@@ -1548,7 +1547,7 @@ st51:
 	if p == pe { goto _test_eof51 }
 	fallthrough
 case 51:
-// line 1552 "zparse.go"
+// line 1551 "zparse.go"
 	switch data[p] {
 		case 9: goto st51
 		case 10: goto tr157
@@ -1560,7 +1559,7 @@ case 51:
 	if 48 <= data[p] && data[p] <= 57 { goto tr160 }
 	goto st0
 tr160:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st52
 st52:
@@ -1568,7 +1567,7 @@ st52:
 	if p == pe { goto _test_eof52 }
 	fallthrough
 case 52:
-// line 1572 "zparse.go"
+// line 1571 "zparse.go"
 	switch data[p] {
 		case 9: goto tr162
 		case 10: goto tr163
@@ -1580,37 +1579,37 @@ case 52:
 	if 48 <= data[p] && data[p] <= 57 { goto st52 }
 	goto st0
 tr169:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st53
 tr170:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st53
 tr171:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st53
 tr162:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st53
 tr163:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st53
 tr164:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st53
 tr165:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st53
 st53:
@@ -1618,7 +1617,7 @@ st53:
 	if p == pe { goto _test_eof53 }
 	fallthrough
 case 53:
-// line 1622 "zparse.go"
+// line 1621 "zparse.go"
 	switch data[p] {
 		case 9: goto st53
 		case 10: goto tr169
@@ -1639,7 +1638,7 @@ case 53:
 	}
 	goto st0
 tr172:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st54
 st54:
@@ -1647,7 +1646,7 @@ st54:
 	if p == pe { goto _test_eof54 }
 	fallthrough
 case 54:
-// line 1651 "zparse.go"
+// line 1650 "zparse.go"
 	switch data[p] {
 		case 10: goto tr174
 		case 43: goto st54
@@ -1663,13 +1662,13 @@ case 54:
 	}
 	goto st0
 tr434:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st153
 tr174:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st153
 st153:
@@ -1677,11 +1676,11 @@ st153:
 	if p == pe { goto _test_eof153 }
 	fallthrough
 case 153:
-// line 1681 "zparse.go"
+// line 1680 "zparse.go"
 	if data[p] == 10 { goto tr434 }
 	goto tr433
 tr167:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st55
 st55:
@@ -1689,11 +1688,11 @@ st55:
 	if p == pe { goto _test_eof55 }
 	fallthrough
 case 55:
-// line 1693 "zparse.go"
+// line 1692 "zparse.go"
 	if data[p] == 10 { goto tr169 }
 	goto st55
 tr155:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st56
 st56:
@@ -1701,11 +1700,11 @@ st56:
 	if p == pe { goto _test_eof56 }
 	fallthrough
 case 56:
-// line 1705 "zparse.go"
+// line 1704 "zparse.go"
 	if data[p] == 10 { goto tr157 }
 	goto st56
 tr143:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st57
 st57:
@@ -1713,7 +1712,7 @@ st57:
 	if p == pe { goto _test_eof57 }
 	fallthrough
 case 57:
-// line 1717 "zparse.go"
+// line 1716 "zparse.go"
 	if data[p] == 10 { goto tr145 }
 	goto st57
 st58:
@@ -1724,13 +1723,13 @@ case 58:
 	if data[p] == 10 { goto tr133 }
 	goto st58
 tr12:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st59
 tr32:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st59
 st59:
@@ -1738,7 +1737,7 @@ st59:
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-// line 1742 "zparse.go"
+// line 1741 "zparse.go"
 	switch data[p] {
 		case 88: goto st60
 		case 120: goto st60
@@ -1759,15 +1758,15 @@ case 60:
 	}
 	goto st0
 tr178:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st61
 tr179:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st61
 tr180:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st61
 st61:
@@ -1775,7 +1774,7 @@ st61:
 	if p == pe { goto _test_eof61 }
 	fallthrough
 case 61:
-// line 1779 "zparse.go"
+// line 1778 "zparse.go"
 	switch data[p] {
 		case 9: goto st61
 		case 10: goto tr178
@@ -1787,7 +1786,7 @@ case 61:
 	if 48 <= data[p] && data[p] <= 57 { goto tr182 }
 	goto st0
 tr182:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st62
 st62:
@@ -1795,7 +1794,7 @@ st62:
 	if p == pe { goto _test_eof62 }
 	fallthrough
 case 62:
-// line 1799 "zparse.go"
+// line 1798 "zparse.go"
 	switch data[p] {
 		case 9: goto tr183
 		case 10: goto tr184
@@ -1807,37 +1806,37 @@ case 62:
 	if 48 <= data[p] && data[p] <= 57 { goto st62 }
 	goto st0
 tr190:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st63
 tr191:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st63
 tr192:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st63
 tr183:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st63
 tr184:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st63
 tr185:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st63
 tr186:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st63
 st63:
@@ -1845,7 +1844,7 @@ st63:
 	if p == pe { goto _test_eof63 }
 	fallthrough
 case 63:
-// line 1849 "zparse.go"
+// line 1848 "zparse.go"
 	switch data[p] {
 		case 9: goto st63
 		case 10: goto tr190
@@ -1866,7 +1865,7 @@ case 63:
 	}
 	goto st0
 tr193:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st64
 st64:
@@ -1874,7 +1873,7 @@ st64:
 	if p == pe { goto _test_eof64 }
 	fallthrough
 case 64:
-// line 1878 "zparse.go"
+// line 1877 "zparse.go"
 	switch data[p] {
 		case 10: goto tr195
 		case 43: goto st64
@@ -1890,13 +1889,13 @@ case 64:
 	}
 	goto st0
 tr436:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st154
 tr195:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st154
 st154:
@@ -1904,11 +1903,11 @@ st154:
 	if p == pe { goto _test_eof154 }
 	fallthrough
 case 154:
-// line 1908 "zparse.go"
+// line 1907 "zparse.go"
 	if data[p] == 10 { goto tr436 }
 	goto tr435
 tr188:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st65
 st65:
@@ -1916,7 +1915,7 @@ st65:
 	if p == pe { goto _test_eof65 }
 	fallthrough
 case 65:
-// line 1920 "zparse.go"
+// line 1919 "zparse.go"
 	if data[p] == 10 { goto tr190 }
 	goto st65
 st66:
@@ -1927,7 +1926,7 @@ case 66:
 	if data[p] == 10 { goto tr178 }
 	goto st66
 tr69:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st67
 st67:
@@ -1935,7 +1934,7 @@ st67:
 	if p == pe { goto _test_eof67 }
 	fallthrough
 case 67:
-// line 1939 "zparse.go"
+// line 1938 "zparse.go"
 	switch data[p] {
 		case 83: goto st68
 		case 115: goto st68
@@ -1956,15 +1955,15 @@ case 68:
 	}
 	goto st0
 tr199:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st69
 tr200:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st69
 tr201:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st69
 st69:
@@ -1972,7 +1971,7 @@ st69:
 	if p == pe { goto _test_eof69 }
 	fallthrough
 case 69:
-// line 1976 "zparse.go"
+// line 1975 "zparse.go"
 	switch data[p] {
 		case 9: goto st69
 		case 10: goto tr199
@@ -1993,7 +1992,7 @@ case 69:
 	}
 	goto st0
 tr203:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st70
 st70:
@@ -2001,7 +2000,7 @@ st70:
 	if p == pe { goto _test_eof70 }
 	fallthrough
 case 70:
-// line 2005 "zparse.go"
+// line 2004 "zparse.go"
 	switch data[p] {
 		case 10: goto tr204
 		case 43: goto st70
@@ -2017,13 +2016,13 @@ case 70:
 	}
 	goto st0
 tr438:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st155
 tr204:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st155
 st155:
@@ -2031,7 +2030,7 @@ st155:
 	if p == pe { goto _test_eof155 }
 	fallthrough
 case 155:
-// line 2035 "zparse.go"
+// line 2034 "zparse.go"
 	if data[p] == 10 { goto tr438 }
 	goto tr437
 st71:
@@ -2042,13 +2041,13 @@ case 71:
 	if data[p] == 10 { goto tr199 }
 	goto st71
 tr14:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st72
 tr34:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st72
 st72:
@@ -2056,7 +2055,7 @@ st72:
 	if p == pe { goto _test_eof72 }
 	fallthrough
 case 72:
-// line 2060 "zparse.go"
+// line 2059 "zparse.go"
 	switch data[p] {
 		case 82: goto st73
 		case 114: goto st73
@@ -2107,15 +2106,15 @@ case 76:
 	}
 	goto st0
 tr211:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st77
 tr212:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st77
 tr213:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st77
 st77:
@@ -2123,7 +2122,7 @@ st77:
 	if p == pe { goto _test_eof77 }
 	fallthrough
 case 77:
-// line 2127 "zparse.go"
+// line 2126 "zparse.go"
 	switch data[p] {
 		case 9: goto st77
 		case 10: goto tr211
@@ -2135,7 +2134,7 @@ case 77:
 	if 48 <= data[p] && data[p] <= 57 { goto tr215 }
 	goto st0
 tr215:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st78
 st78:
@@ -2143,7 +2142,7 @@ st78:
 	if p == pe { goto _test_eof78 }
 	fallthrough
 case 78:
-// line 2147 "zparse.go"
+// line 2146 "zparse.go"
 	switch data[p] {
 		case 9: goto tr216
 		case 10: goto tr217
@@ -2155,37 +2154,37 @@ case 78:
 	if 48 <= data[p] && data[p] <= 57 { goto st78 }
 	goto st0
 tr223:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st79
 tr224:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st79
 tr225:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st79
 tr216:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st79
 tr217:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st79
 tr218:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st79
 tr219:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st79
 st79:
@@ -2193,7 +2192,7 @@ st79:
 	if p == pe { goto _test_eof79 }
 	fallthrough
 case 79:
-// line 2197 "zparse.go"
+// line 2196 "zparse.go"
 	switch data[p] {
 		case 9: goto st79
 		case 10: goto tr223
@@ -2205,7 +2204,7 @@ case 79:
 	if 48 <= data[p] && data[p] <= 57 { goto tr226 }
 	goto st0
 tr226:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st80
 st80:
@@ -2213,7 +2212,7 @@ st80:
 	if p == pe { goto _test_eof80 }
 	fallthrough
 case 80:
-// line 2217 "zparse.go"
+// line 2216 "zparse.go"
 	switch data[p] {
 		case 9: goto tr228
 		case 10: goto tr229
@@ -2225,37 +2224,37 @@ case 80:
 	if 48 <= data[p] && data[p] <= 57 { goto st80 }
 	goto st0
 tr235:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st81
 tr236:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st81
 tr237:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st81
 tr228:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st81
 tr229:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st81
 tr230:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st81
 tr231:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st81
 st81:
@@ -2263,7 +2262,7 @@ st81:
 	if p == pe { goto _test_eof81 }
 	fallthrough
 case 81:
-// line 2267 "zparse.go"
+// line 2266 "zparse.go"
 	switch data[p] {
 		case 9: goto st81
 		case 10: goto tr235
@@ -2275,7 +2274,7 @@ case 81:
 	if 48 <= data[p] && data[p] <= 57 { goto tr238 }
 	goto st0
 tr238:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st82
 st82:
@@ -2283,7 +2282,7 @@ st82:
 	if p == pe { goto _test_eof82 }
 	fallthrough
 case 82:
-// line 2287 "zparse.go"
+// line 2286 "zparse.go"
 	switch data[p] {
 		case 9: goto tr240
 		case 10: goto tr241
@@ -2295,37 +2294,37 @@ case 82:
 	if 48 <= data[p] && data[p] <= 57 { goto st82 }
 	goto st0
 tr247:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st83
 tr248:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st83
 tr249:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st83
 tr240:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st83
 tr241:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st83
 tr242:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st83
 tr243:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st83
 st83:
@@ -2333,7 +2332,7 @@ st83:
 	if p == pe { goto _test_eof83 }
 	fallthrough
 case 83:
-// line 2337 "zparse.go"
+// line 2336 "zparse.go"
 	switch data[p] {
 		case 9: goto st83
 		case 10: goto tr247
@@ -2345,7 +2344,7 @@ case 83:
 	if 48 <= data[p] && data[p] <= 57 { goto tr250 }
 	goto st0
 tr250:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st84
 st84:
@@ -2353,7 +2352,7 @@ st84:
 	if p == pe { goto _test_eof84 }
 	fallthrough
 case 84:
-// line 2357 "zparse.go"
+// line 2356 "zparse.go"
 	switch data[p] {
 		case 9: goto tr252
 		case 10: goto tr253
@@ -2365,37 +2364,37 @@ case 84:
 	if 48 <= data[p] && data[p] <= 57 { goto st84 }
 	goto st0
 tr259:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st85
 tr260:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st85
 tr261:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st85
 tr252:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st85
 tr253:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st85
 tr254:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st85
 tr255:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st85
 st85:
@@ -2403,7 +2402,7 @@ st85:
 	if p == pe { goto _test_eof85 }
 	fallthrough
 case 85:
-// line 2407 "zparse.go"
+// line 2406 "zparse.go"
 	switch data[p] {
 		case 9: goto st85
 		case 10: goto tr259
@@ -2415,7 +2414,7 @@ case 85:
 	if 48 <= data[p] && data[p] <= 57 { goto tr262 }
 	goto st0
 tr262:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st86
 st86:
@@ -2423,7 +2422,7 @@ st86:
 	if p == pe { goto _test_eof86 }
 	fallthrough
 case 86:
-// line 2427 "zparse.go"
+// line 2426 "zparse.go"
 	switch data[p] {
 		case 9: goto tr264
 		case 10: goto tr265
@@ -2435,37 +2434,37 @@ case 86:
 	if 48 <= data[p] && data[p] <= 57 { goto st86 }
 	goto st0
 tr271:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st87
 tr272:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st87
 tr273:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st87
 tr264:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st87
 tr265:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st87
 tr266:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st87
 tr267:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st87
 st87:
@@ -2473,7 +2472,7 @@ st87:
 	if p == pe { goto _test_eof87 }
 	fallthrough
 case 87:
-// line 2477 "zparse.go"
+// line 2476 "zparse.go"
 	switch data[p] {
 		case 9: goto st87
 		case 10: goto tr271
@@ -2485,7 +2484,7 @@ case 87:
 	if 48 <= data[p] && data[p] <= 57 { goto tr274 }
 	goto st0
 tr274:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st88
 st88:
@@ -2493,7 +2492,7 @@ st88:
 	if p == pe { goto _test_eof88 }
 	fallthrough
 case 88:
-// line 2497 "zparse.go"
+// line 2496 "zparse.go"
 	switch data[p] {
 		case 9: goto tr276
 		case 10: goto tr277
@@ -2505,37 +2504,37 @@ case 88:
 	if 48 <= data[p] && data[p] <= 57 { goto st88 }
 	goto st0
 tr283:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st89
 tr284:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st89
 tr285:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st89
 tr276:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st89
 tr277:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st89
 tr278:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st89
 tr279:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st89
 st89:
@@ -2543,7 +2542,7 @@ st89:
 	if p == pe { goto _test_eof89 }
 	fallthrough
 case 89:
-// line 2547 "zparse.go"
+// line 2546 "zparse.go"
 	switch data[p] {
 		case 9: goto st89
 		case 10: goto tr283
@@ -2555,7 +2554,7 @@ case 89:
 	if 48 <= data[p] && data[p] <= 57 { goto tr286 }
 	goto st0
 tr286:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st90
 st90:
@@ -2563,7 +2562,7 @@ st90:
 	if p == pe { goto _test_eof90 }
 	fallthrough
 case 90:
-// line 2567 "zparse.go"
+// line 2566 "zparse.go"
 	switch data[p] {
 		case 9: goto tr288
 		case 10: goto tr289
@@ -2575,37 +2574,37 @@ case 90:
 	if 48 <= data[p] && data[p] <= 57 { goto st90 }
 	goto st0
 tr295:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st91
 tr296:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st91
 tr297:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st91
 tr288:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st91
 tr289:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st91
 tr290:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st91
 tr291:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st91
 st91:
@@ -2613,7 +2612,7 @@ st91:
 	if p == pe { goto _test_eof91 }
 	fallthrough
 case 91:
-// line 2617 "zparse.go"
+// line 2616 "zparse.go"
 	switch data[p] {
 		case 9: goto st91
 		case 10: goto tr295
@@ -2634,7 +2633,7 @@ case 91:
 	}
 	goto st0
 tr298:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st92
 st92:
@@ -2642,7 +2641,7 @@ st92:
 	if p == pe { goto _test_eof92 }
 	fallthrough
 case 92:
-// line 2646 "zparse.go"
+// line 2645 "zparse.go"
 	switch data[p] {
 		case 9: goto tr300
 		case 10: goto tr301
@@ -2663,37 +2662,37 @@ case 92:
 	}
 	goto st0
 tr307:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st93
 tr308:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st93
 tr309:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st93
 tr301:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st93
 tr300:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st93
 tr302:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st93
 tr303:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st93
 st93:
@@ -2701,7 +2700,7 @@ st93:
 	if p == pe { goto _test_eof93 }
 	fallthrough
 case 93:
-// line 2705 "zparse.go"
+// line 2704 "zparse.go"
 	switch data[p] {
 		case 9: goto st93
 		case 10: goto tr307
@@ -2722,7 +2721,7 @@ case 93:
 	}
 	goto st0
 tr310:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st94
 st94:
@@ -2730,7 +2729,7 @@ st94:
 	if p == pe { goto _test_eof94 }
 	fallthrough
 case 94:
-// line 2734 "zparse.go"
+// line 2733 "zparse.go"
 	switch data[p] {
 		case 10: goto tr312
 		case 43: goto st94
@@ -2746,13 +2745,13 @@ case 94:
 	}
 	goto st0
 tr440:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st156
 tr312:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st156
 st156:
@@ -2760,11 +2759,11 @@ st156:
 	if p == pe { goto _test_eof156 }
 	fallthrough
 case 156:
-// line 2764 "zparse.go"
+// line 2763 "zparse.go"
 	if data[p] == 10 { goto tr440 }
 	goto tr439
 tr305:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st95
 st95:
@@ -2772,11 +2771,11 @@ st95:
 	if p == pe { goto _test_eof95 }
 	fallthrough
 case 95:
-// line 2776 "zparse.go"
+// line 2775 "zparse.go"
 	if data[p] == 10 { goto tr307 }
 	goto st95
 tr293:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st96
 st96:
@@ -2784,11 +2783,11 @@ st96:
 	if p == pe { goto _test_eof96 }
 	fallthrough
 case 96:
-// line 2788 "zparse.go"
+// line 2787 "zparse.go"
 	if data[p] == 10 { goto tr295 }
 	goto st96
 tr281:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st97
 st97:
@@ -2796,11 +2795,11 @@ st97:
 	if p == pe { goto _test_eof97 }
 	fallthrough
 case 97:
-// line 2800 "zparse.go"
+// line 2799 "zparse.go"
 	if data[p] == 10 { goto tr283 }
 	goto st97
 tr269:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st98
 st98:
@@ -2808,11 +2807,11 @@ st98:
 	if p == pe { goto _test_eof98 }
 	fallthrough
 case 98:
-// line 2812 "zparse.go"
+// line 2811 "zparse.go"
 	if data[p] == 10 { goto tr271 }
 	goto st98
 tr257:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st99
 st99:
@@ -2820,11 +2819,11 @@ st99:
 	if p == pe { goto _test_eof99 }
 	fallthrough
 case 99:
-// line 2824 "zparse.go"
+// line 2823 "zparse.go"
 	if data[p] == 10 { goto tr259 }
 	goto st99
 tr245:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st100
 st100:
@@ -2832,11 +2831,11 @@ st100:
 	if p == pe { goto _test_eof100 }
 	fallthrough
 case 100:
-// line 2836 "zparse.go"
+// line 2835 "zparse.go"
 	if data[p] == 10 { goto tr247 }
 	goto st100
 tr233:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st101
 st101:
@@ -2844,11 +2843,11 @@ st101:
 	if p == pe { goto _test_eof101 }
 	fallthrough
 case 101:
-// line 2848 "zparse.go"
+// line 2847 "zparse.go"
 	if data[p] == 10 { goto tr235 }
 	goto st101
 tr221:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st102
 st102:
@@ -2856,7 +2855,7 @@ st102:
 	if p == pe { goto _test_eof102 }
 	fallthrough
 case 102:
-// line 2860 "zparse.go"
+// line 2859 "zparse.go"
 	if data[p] == 10 { goto tr223 }
 	goto st102
 st103:
@@ -2867,13 +2866,13 @@ case 103:
 	if data[p] == 10 { goto tr211 }
 	goto st103
 tr15:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st104
 tr35:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st104
 st104:
@@ -2881,7 +2880,7 @@ st104:
 	if p == pe { goto _test_eof104 }
 	fallthrough
 case 104:
-// line 2885 "zparse.go"
+// line 2884 "zparse.go"
 	switch data[p] {
 		case 79: goto st105
 		case 111: goto st105
@@ -2912,15 +2911,15 @@ case 106:
 	}
 	goto st0
 tr317:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st107
 tr318:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st107
 tr319:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st107
 st107:
@@ -2928,7 +2927,7 @@ st107:
 	if p == pe { goto _test_eof107 }
 	fallthrough
 case 107:
-// line 2932 "zparse.go"
+// line 2931 "zparse.go"
 	switch data[p] {
 		case 9: goto st107
 		case 10: goto tr317
@@ -2949,7 +2948,7 @@ case 107:
 	}
 	goto st0
 tr321:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st108
 st108:
@@ -2957,7 +2956,7 @@ st108:
 	if p == pe { goto _test_eof108 }
 	fallthrough
 case 108:
-// line 2961 "zparse.go"
+// line 2960 "zparse.go"
 	switch data[p] {
 		case 9: goto tr322
 		case 10: goto tr323
@@ -2978,37 +2977,37 @@ case 108:
 	}
 	goto st0
 tr329:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st109
 tr330:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st109
 tr331:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st109
 tr323:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st109
 tr322:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st109
 tr324:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st109
 tr325:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st109
 st109:
@@ -3016,7 +3015,7 @@ st109:
 	if p == pe { goto _test_eof109 }
 	fallthrough
 case 109:
-// line 3020 "zparse.go"
+// line 3019 "zparse.go"
 	switch data[p] {
 		case 9: goto st109
 		case 10: goto tr329
@@ -3037,7 +3036,7 @@ case 109:
 	}
 	goto st0
 tr332:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st110
 st110:
@@ -3045,7 +3044,7 @@ st110:
 	if p == pe { goto _test_eof110 }
 	fallthrough
 case 110:
-// line 3049 "zparse.go"
+// line 3048 "zparse.go"
 	switch data[p] {
 		case 9: goto tr334
 		case 10: goto tr335
@@ -3066,37 +3065,37 @@ case 110:
 	}
 	goto st0
 tr341:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st111
 tr342:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st111
 tr343:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st111
 tr335:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st111
 tr334:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st111
 tr336:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st111
 tr337:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st111
 st111:
@@ -3104,7 +3103,7 @@ st111:
 	if p == pe { goto _test_eof111 }
 	fallthrough
 case 111:
-// line 3108 "zparse.go"
+// line 3107 "zparse.go"
 	switch data[p] {
 		case 9: goto st111
 		case 10: goto tr341
@@ -3116,7 +3115,7 @@ case 111:
 	if 48 <= data[p] && data[p] <= 57 { goto tr344 }
 	goto st0
 tr344:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st112
 st112:
@@ -3124,7 +3123,7 @@ st112:
 	if p == pe { goto _test_eof112 }
 	fallthrough
 case 112:
-// line 3128 "zparse.go"
+// line 3127 "zparse.go"
 	switch data[p] {
 		case 9: goto tr346
 		case 10: goto tr347
@@ -3136,37 +3135,37 @@ case 112:
 	if 48 <= data[p] && data[p] <= 57 { goto st112 }
 	goto st0
 tr353:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st113
 tr354:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st113
 tr355:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st113
 tr346:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st113
 tr347:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st113
 tr348:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st113
 tr349:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st113
 st113:
@@ -3174,7 +3173,7 @@ st113:
 	if p == pe { goto _test_eof113 }
 	fallthrough
 case 113:
-// line 3178 "zparse.go"
+// line 3177 "zparse.go"
 	switch data[p] {
 		case 9: goto st113
 		case 10: goto tr353
@@ -3186,7 +3185,7 @@ case 113:
 	if 48 <= data[p] && data[p] <= 57 { goto tr356 }
 	goto st0
 tr356:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st114
 st114:
@@ -3194,7 +3193,7 @@ st114:
 	if p == pe { goto _test_eof114 }
 	fallthrough
 case 114:
-// line 3198 "zparse.go"
+// line 3197 "zparse.go"
 	switch data[p] {
 		case 9: goto tr358
 		case 10: goto tr359
@@ -3206,37 +3205,37 @@ case 114:
 	if 48 <= data[p] && data[p] <= 57 { goto st114 }
 	goto st0
 tr365:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st115
 tr366:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st115
 tr367:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st115
 tr358:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st115
 tr359:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st115
 tr360:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st115
 tr361:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st115
 st115:
@@ -3244,7 +3243,7 @@ st115:
 	if p == pe { goto _test_eof115 }
 	fallthrough
 case 115:
-// line 3248 "zparse.go"
+// line 3247 "zparse.go"
 	switch data[p] {
 		case 9: goto st115
 		case 10: goto tr365
@@ -3256,7 +3255,7 @@ case 115:
 	if 48 <= data[p] && data[p] <= 57 { goto tr368 }
 	goto st0
 tr368:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st116
 st116:
@@ -3264,7 +3263,7 @@ st116:
 	if p == pe { goto _test_eof116 }
 	fallthrough
 case 116:
-// line 3268 "zparse.go"
+// line 3267 "zparse.go"
 	switch data[p] {
 		case 9: goto tr370
 		case 10: goto tr371
@@ -3276,37 +3275,37 @@ case 116:
 	if 48 <= data[p] && data[p] <= 57 { goto st116 }
 	goto st0
 tr377:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st117
 tr378:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st117
 tr379:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st117
 tr370:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st117
 tr371:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st117
 tr372:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st117
 tr373:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st117
 st117:
@@ -3314,7 +3313,7 @@ st117:
 	if p == pe { goto _test_eof117 }
 	fallthrough
 case 117:
-// line 3318 "zparse.go"
+// line 3317 "zparse.go"
 	switch data[p] {
 		case 9: goto st117
 		case 10: goto tr377
@@ -3326,7 +3325,7 @@ case 117:
 	if 48 <= data[p] && data[p] <= 57 { goto tr380 }
 	goto st0
 tr380:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st118
 st118:
@@ -3334,7 +3333,7 @@ st118:
 	if p == pe { goto _test_eof118 }
 	fallthrough
 case 118:
-// line 3338 "zparse.go"
+// line 3337 "zparse.go"
 	switch data[p] {
 		case 9: goto tr382
 		case 10: goto tr383
@@ -3346,37 +3345,37 @@ case 118:
 	if 48 <= data[p] && data[p] <= 57 { goto st118 }
 	goto st0
 tr389:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st119
 tr390:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st119
 tr391:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st119
 tr382:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st119
 tr383:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st119
 tr384:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st119
 tr385:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st119
 st119:
@@ -3384,7 +3383,7 @@ st119:
 	if p == pe { goto _test_eof119 }
 	fallthrough
 case 119:
-// line 3388 "zparse.go"
+// line 3387 "zparse.go"
 	switch data[p] {
 		case 9: goto st119
 		case 10: goto tr389
@@ -3396,7 +3395,7 @@ case 119:
 	if 48 <= data[p] && data[p] <= 57 { goto tr392 }
 	goto st0
 tr392:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st120
 st120:
@@ -3404,18 +3403,18 @@ st120:
 	if p == pe { goto _test_eof120 }
 	fallthrough
 case 120:
-// line 3408 "zparse.go"
+// line 3407 "zparse.go"
 	if data[p] == 10 { goto tr394 }
 	if 48 <= data[p] && data[p] <= 57 { goto st120 }
 	goto st0
 tr442:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st157
 tr394:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st157
 st157:
@@ -3423,11 +3422,11 @@ st157:
 	if p == pe { goto _test_eof157 }
 	fallthrough
 case 157:
-// line 3427 "zparse.go"
+// line 3426 "zparse.go"
 	if data[p] == 10 { goto tr442 }
 	goto tr441
 tr387:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st121
 st121:
@@ -3435,11 +3434,11 @@ st121:
 	if p == pe { goto _test_eof121 }
 	fallthrough
 case 121:
-// line 3439 "zparse.go"
+// line 3438 "zparse.go"
 	if data[p] == 10 { goto tr389 }
 	goto st121
 tr375:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st122
 st122:
@@ -3447,11 +3446,11 @@ st122:
 	if p == pe { goto _test_eof122 }
 	fallthrough
 case 122:
-// line 3451 "zparse.go"
+// line 3450 "zparse.go"
 	if data[p] == 10 { goto tr377 }
 	goto st122
 tr363:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st123
 st123:
@@ -3459,11 +3458,11 @@ st123:
 	if p == pe { goto _test_eof123 }
 	fallthrough
 case 123:
-// line 3463 "zparse.go"
+// line 3462 "zparse.go"
 	if data[p] == 10 { goto tr365 }
 	goto st123
 tr351:
-// line 199 "zparse.rl"
+// line 198 "zparse.rl"
 	{ tok.pushInt(data[mark:p]) }
 	goto st124
 st124:
@@ -3471,11 +3470,11 @@ st124:
 	if p == pe { goto _test_eof124 }
 	fallthrough
 case 124:
-// line 3475 "zparse.go"
+// line 3474 "zparse.go"
 	if data[p] == 10 { goto tr353 }
 	goto st124
 tr339:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st125
 st125:
@@ -3483,11 +3482,11 @@ st125:
 	if p == pe { goto _test_eof125 }
 	fallthrough
 case 125:
-// line 3487 "zparse.go"
+// line 3486 "zparse.go"
 	if data[p] == 10 { goto tr341 }
 	goto st125
 tr327:
-// line 200 "zparse.rl"
+// line 199 "zparse.rl"
 	{ tok.pushString(data[mark:p]) }
 	goto st126
 st126:
@@ -3495,7 +3494,7 @@ st126:
 	if p == pe { goto _test_eof126 }
 	fallthrough
 case 126:
-// line 3499 "zparse.go"
+// line 3498 "zparse.go"
 	if data[p] == 10 { goto tr329 }
 	goto st126
 st127:
@@ -3506,7 +3505,7 @@ case 127:
 	if data[p] == 10 { goto tr317 }
 	goto st127
 tr28:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st128
 st128:
@@ -3514,7 +3513,7 @@ st128:
 	if p == pe { goto _test_eof128 }
 	fallthrough
 case 128:
-// line 3518 "zparse.go"
+// line 3517 "zparse.go"
 	switch data[p] {
 		case 72: goto st16
 		case 78: goto st21
@@ -3525,7 +3524,7 @@ case 128:
 	}
 	goto st0
 tr30:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st129
 st129:
@@ -3533,14 +3532,14 @@ st129:
 	if p == pe { goto _test_eof129 }
 	fallthrough
 case 129:
-// line 3537 "zparse.go"
+// line 3536 "zparse.go"
 	switch data[p] {
 		case 83: goto st16
 		case 115: goto st16
 	}
 	goto st0
 tr31:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st130
 st130:
@@ -3548,14 +3547,14 @@ st130:
 	if p == pe { goto _test_eof130 }
 	fallthrough
 case 130:
-// line 3552 "zparse.go"
+// line 3551 "zparse.go"
 	switch data[p] {
 		case 78: goto st16
 		case 110: goto st16
 	}
 	goto st0
 tr33:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st131
 st131:
@@ -3563,7 +3562,7 @@ st131:
 	if p == pe { goto _test_eof131 }
 	fallthrough
 case 131:
-// line 3567 "zparse.go"
+// line 3566 "zparse.go"
 	switch data[p] {
 		case 79: goto st132
 		case 83: goto st68
@@ -3592,7 +3591,7 @@ case 133:
 	}
 	goto st0
 tr424:
-// line 195 "zparse.rl"
+// line 194 "zparse.rl"
 	{ hdr.Name = data[mark:p] }
 	goto st134
 st134:
@@ -3600,13 +3599,13 @@ st134:
 	if p == pe { goto _test_eof134 }
 	fallthrough
 case 134:
-// line 3604 "zparse.go"
+// line 3603 "zparse.go"
 	if data[p] == 10 { goto tr2 }
 	goto st134
 tr7:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st135
 st135:
@@ -3614,7 +3613,7 @@ st135:
 	if p == pe { goto _test_eof135 }
 	fallthrough
 case 135:
-// line 3618 "zparse.go"
+// line 3617 "zparse.go"
 	switch data[p] {
 		case 9: goto st6
 		case 10: goto tr37
@@ -3653,37 +3652,37 @@ case 137:
 	}
 	goto st0
 tr406:
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st138
 tr407:
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st138
 tr408:
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st138
 tr400:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st138
 tr401:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 204 "zparse.rl"
+// line 203 "zparse.rl"
 	{ lines++ }
 	goto st138
 tr402:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 201 "zparse.rl"
+// line 200 "zparse.rl"
 	{ if brace { println("Brace already open")} ; brace = true }
 	goto st138
 tr403:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
-// line 202 "zparse.rl"
+// line 201 "zparse.rl"
 	{ if !brace { println("Brace already closed")}; brace = false }
 	goto st138
 st138:
@@ -3691,7 +3690,7 @@ st138:
 	if p == pe { goto _test_eof138 }
 	fallthrough
 case 138:
-// line 3695 "zparse.go"
+// line 3694 "zparse.go"
 	switch data[p] {
 		case 9: goto st138
 		case 10: goto tr406
@@ -3717,7 +3716,7 @@ case 138:
 	if 48 <= data[p] && data[p] <= 57 { goto tr409 }
 	goto st0
 tr409:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
 	goto st139
 st139:
@@ -3725,7 +3724,7 @@ st139:
 	if p == pe { goto _test_eof139 }
 	fallthrough
 case 139:
-// line 3729 "zparse.go"
+// line 3728 "zparse.go"
 	switch data[p] {
 		case 9: goto tr411
 		case 10: goto tr412
@@ -3737,7 +3736,7 @@ case 139:
 	if 48 <= data[p] && data[p] <= 57 { goto st139 }
 	goto st0
 tr404:
-// line 196 "zparse.rl"
+// line 195 "zparse.rl"
 	{ hdr.Class = Str_class[data[mark:p]] }
 	goto st140
 st140:
@@ -3745,13 +3744,13 @@ st140:
 	if p == pe { goto _test_eof140 }
 	fallthrough
 case 140:
-// line 3749 "zparse.go"
+// line 3748 "zparse.go"
 	if data[p] == 10 { goto tr406 }
 	goto st140
 tr8:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st141
 st141:
@@ -3759,7 +3758,7 @@ st141:
 	if p == pe { goto _test_eof141 }
 	fallthrough
 case 141:
-// line 3763 "zparse.go"
+// line 3762 "zparse.go"
 	switch data[p] {
 		case 72: goto st137
 		case 78: goto st21
@@ -3770,9 +3769,9 @@ case 141:
 	}
 	goto st0
 tr10:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st142
 st142:
@@ -3780,16 +3779,16 @@ st142:
 	if p == pe { goto _test_eof142 }
 	fallthrough
 case 142:
-// line 3784 "zparse.go"
+// line 3783 "zparse.go"
 	switch data[p] {
 		case 83: goto st137
 		case 115: goto st137
 	}
 	goto st0
 tr11:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st143
 st143:
@@ -3797,16 +3796,16 @@ st143:
 	if p == pe { goto _test_eof143 }
 	fallthrough
 case 143:
-// line 3801 "zparse.go"
+// line 3800 "zparse.go"
 	switch data[p] {
 		case 78: goto st137
 		case 110: goto st137
 	}
 	goto st0
 tr13:
-// line 194 "zparse.rl"
+// line 193 "zparse.rl"
 	{ mark = p }
-// line 197 "zparse.rl"
+// line 196 "zparse.rl"
 	{ /* ... */ }
 	goto st144
 st144:
@@ -3814,7 +3813,7 @@ st144:
 	if p == pe { goto _test_eof144 }
 	fallthrough
 case 144:
-// line 3818 "zparse.go"
+// line 3817 "zparse.go"
 	switch data[p] {
 		case 79: goto st145
 		case 83: goto st68
@@ -4043,7 +4042,7 @@ case 147:
 	_out: {}
 	}
 
-// line 250 "zparse.rl"
+// line 249 "zparse.rl"
 
         
         if eof > -1 {

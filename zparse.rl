@@ -151,6 +151,7 @@ func rdata_rrsig(hdr RR_Header, tok *token) RR {
 }
 
 func set(r RR, z *Zone, tok *token) {
+        println("setting",r.String())
         z.Push(r)
         tok.reset()
 }
@@ -187,8 +188,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         mark := 0
         hdr := new(RR_Header)
         tok := newToken()
-        var rr RR
-        rr = rr
 
         %%{
                 action mark       { mark = p }
@@ -221,7 +220,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 ws          = [ \t]+;
                 qclass      = ('IN'i|'CS'i|'CH'i|'HS'i|'ANY'i|'NONE'i) %qclass;
                 qname       = [a-zA-Z0-9_\-.\+=/]+ %qname;
-                t           = [a-zA-Z0-9_\-.:\+=/]+ $1 %0 %text;
+                t           = [a-zA-Z0-9_\-.:\+=/]+ $1 %0 >mark %text;
                 # now if I use this, I get an assertion failure in Ragel ... :-)
                 tb          = [a-zA-Z0-9_\-.: ]+ $1 %0 %text;
                 n           = [0-9]+ $1 %0 %number;
@@ -234,15 +233,15 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 )?;
 
                 main := |*
-                    lhs 'A'i        bl t nl      => { rr = rdata_a(*hdr, tok); set(rr, z, tok); };
-                    lhs 'NS'i       bl t nl      => { rr = rdata_ns(*hdr, tok); set(rr, z, tok); };
-                    lhs 'CNAME'i    bl t nl      => { rr = rdata_cname(*hdr, tok); set(rr, z, tok); };
-                    lhs 'AAAA'i     bl t nl      => { rr = rdata_aaaa(*hdr, tok); set(rr, z, tok); };
-                    lhs 'MX'i       bl n bl t nl => { rr = rdata_mx(*hdr, tok); set(rr, z, tok); };
-                    lhs 'SOA'i      bl t bl t bl n bl n bl n bl n bl n nl           => { rr = rdata_soa(*hdr, tok); set(rr, z, tok); };
-                    lhs 'DS'i       bl n bl n bl n bl t nl                          => { rr = rdata_ds(*hdr, tok); set(rr, z, tok); };
-                    lhs 'DNSKEY'i   bl n bl n bl n bl t nl                          => { rr = rdata_dnskey(*hdr, tok); set(rr, z, tok); };
-                    lhs 'RRSIG'i    bl n bl n bl n bl n bl n bl n bl n bl t bl t nl => { rr = rdata_rrsig(*hdr, tok); set(rr, z, tok); };
+                    lhs 'A'i        bl t nl      => { r := rdata_a(*hdr, tok); set(r, z, tok); };
+                    lhs 'NS'i       bl t nl      => { r := rdata_ns(*hdr, tok); set(r, z, tok); };
+                    lhs 'CNAME'i    bl t nl      => { r := rdata_cname(*hdr, tok); set(r, z, tok); };
+                    lhs 'AAAA'i     bl t nl      => { r := rdata_aaaa(*hdr, tok); set(r, z, tok); };
+                    lhs 'MX'i       bl n bl t nl => { r := rdata_mx(*hdr, tok); set(r, z, tok); };
+                    lhs 'SOA'i      bl t bl t bl n bl n bl n bl n bl n nl           => { r := rdata_soa(*hdr, tok); set(r, z, tok); };
+                    lhs 'DS'i       bl n bl n bl n bl t nl                          => { r := rdata_ds(*hdr, tok); set(r, z, tok); };
+                    lhs 'DNSKEY'i   bl n bl n bl n bl t nl                          => { r := rdata_dnskey(*hdr, tok); set(r, z, tok); };
+                    lhs 'RRSIG'i    bl n bl n bl n bl n bl n bl n bl n bl t bl t nl => { r := rdata_rrsig(*hdr, tok); set(r, z, tok); };
                 *|;
 
                 write init;
