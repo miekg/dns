@@ -71,7 +71,7 @@ func atoi(s string) uint {
 
 // Token parses a zone file, but only returns the last RR read.
 func (zp *Parser) RR() RR {
-    z, err := zp.Do()
+    z, err := zp.Zone()
     if err != nil {
         return nil
     }
@@ -81,7 +81,7 @@ func (zp *Parser) RR() RR {
 // All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
-func (zp *Parser) Do() (z *Zone, err os.Error) {
+func (zp *Parser) Zone() (z *Zone, err os.Error) {
         z = new(Zone)
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)

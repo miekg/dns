@@ -4,8 +4,6 @@ package dns
 
 import (
     "os"
-    "io"
-    "bufio"
     "strings"
 )
 
@@ -17,13 +15,11 @@ import (
 // Parse a private key file as defined in XXX.
 // A map[string]string is returned with the values. All the keys
 // are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
-func Kparse(q io.Reader) (m map[string]string, err os.Error) {
-        r := bufio.NewReader(q)
-
+func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
         m = make(map[string]string)
-        k := ""
-        data, err := r.ReadString('\n')
-        for err == nil {
+        var k string
+        lines := strings.SplitAfter(string(kp.buf), "\n", -1)
+        for _, data := range lines {
             cs, p, pe := 0, 0, len(data)
             mark := 0
 
@@ -64,7 +60,6 @@ func Kparse(q io.Reader) (m map[string]string, err os.Error) {
                 write init;
                 write exec;
         }%%
-            data, err = r.ReadString('\n')
         }
 
         /*

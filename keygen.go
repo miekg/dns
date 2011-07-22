@@ -130,7 +130,8 @@ func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
 }
 
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
-        kv, _ := Kparse(q)
+        p := NewParser(q)
+        kv, _ := p.PrivateKey()
         if _, ok := kv["private-key-format"]; !ok {
                 return nil, ErrPrivKey
         }

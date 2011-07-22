@@ -113,7 +113,7 @@ func TestParse(t *testing.T) {
                 }
         for test, result := range tests {
                 p := NewParser(strings.NewReader(test))
-                z, err := p.Do()
+                z, err := p.Zone()
                 if err != nil || z == nil{
                         t.Logf("Error of nil r %v %s\n", err, test)
                         t.Fail()
@@ -161,7 +161,7 @@ func BenchmarkZoneParsing(b *testing.B) {
         }
         p := NewParser(bufio.NewReader(file))
         // Don't care about errors (there shouldn't be any)
-        p.Do()
+        p.Zone()
 }
 
 func TestZoneParsing(t *testing.T) {
@@ -174,7 +174,7 @@ func TestZoneParsing(t *testing.T) {
 
         // Don't care about errors (there shouldn't be any)
         start := time.Nanoseconds()
-        z, err := p.Do()
+        z, err := p.Zone()
         if err != nil {
                 t.Logf("error %v\n", err.String())
                 t.Fail()
