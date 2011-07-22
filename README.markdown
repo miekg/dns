@@ -49,7 +49,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 5155 - NSEC
 * 5933 - GOST
 * 5936 - AXFR
-* xxxx - ECCDSA
+* xxxx - ECDSA
 
 ## Loosely based upon:
 

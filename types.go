@@ -953,11 +953,8 @@ func tsigTimeToDate(t uint64) string {
 
 // Helper function for parsing from strings
 func parse(s string) RR {
-        z, err := Zparse(strings.NewReader(s))
-        if err != nil {
-                return nil
-        }
-        return z.Pop().(RR)
+        p := NewParser(strings.NewReader(s))
+        return p.RR()
 }
 
 // Map of constructors for each RR wire type.

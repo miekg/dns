@@ -112,7 +112,8 @@ func TestParse(t *testing.T) {
                         "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
                 }
         for test, result := range tests {
-                z, err := Zparse(strings.NewReader(test))
+                p := NewParser(strings.NewReader(test))
+                z, err := p.Do()
                 if err != nil || z == nil{
                         t.Logf("Error of nil r %v %s\n", err, test)
                         t.Fail()
@@ -158,10 +159,9 @@ func BenchmarkZoneParsing(b *testing.B) {
         if err != nil {
                 return
         }
-        r := bufio.NewReader(file)
-
+        p := NewParser(bufio.NewReader(file))
         // Don't care about errors (there shouldn't be any)
-        Zparse(r)
+        p.Do()
 }
 
 func TestZoneParsing(t *testing.T) {
@@ -170,11 +170,11 @@ func TestZoneParsing(t *testing.T) {
         if err != nil {
                 return
         }
-        r := bufio.NewReader(file)
+        p := NewParser(bufio.NewReader(file))
 
         // Don't care about errors (there shouldn't be any)
         start := time.Nanoseconds()
-        z, err := Zparse(r)
+        z, err := p.Do()
         if err != nil {
                 t.Logf("error %v\n", err.String())
                 t.Fail()

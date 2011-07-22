@@ -11,6 +11,30 @@ import (
     "strconv"
 )
 
+// A Parser represents a DNS master zone file parser for a 
+// particular input stream.
+type Parser struct {
+    // nothing here yet
+    buf    []byte
+}
+
+// NewParser create a new DNS master zone file parser from r.
+func NewParser(r io.Reader) *Parser {
+        buf := make([]byte, _IOBUF) 
+        n, err := r.Read(buf)
+        if err != nil {
+            return nil
+        }
+        if buf[n-1] != '\n' {
+            buf[n] = '\n'
+            n++
+        }
+        buf = buf[:n]
+        p := new(Parser)
+        p.buf = buf
+        return p
+}
+
 //const _IOBUF = 65365 // See comments in gdnsd
 const _IOBUF = 3e7
 
@@ -45,23 +69,21 @@ func atoi(s string) uint {
         write data;
 }%%
 
+// Token parses a zone file, but only returns the last RR read.
+func (zp *Parser) RR() RR {
+    z, err := zp.Do()
+    if err != nil {
+        return nil
+    }
+    return z.Pop().(RR)
+}
+
 // All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
-func Zparse(q io.Reader) (z *Zone, err os.Error) {
-        buf := make([]byte, _IOBUF) 
-        n, err := q.Read(buf)
-        if err != nil {
-            return nil, err
-        }
-        buf = buf[:n]
+func (zp *Parser) Do() (z *Zone, err os.Error) {
         z = new(Zone)
-
-        data := string(buf)
-        // guardian
-        if data[len(data)-1] != '\n' {
-            data += "\n"
-        }
+        data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
         eof := len(data)
 
