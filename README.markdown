@@ -5,13 +5,13 @@ supported including DNSSEC types.
 
 Feaures:
 
-* EDNS0 (see edns.go)
 * UDP/TCP queries, IPv4 and IPv6
 * TSIG
+* EDNS0 (see edns.go)
 * AXFR (and IXFR probably)
 * Client and server side programming (mimicking the http package)
 * Asynchronous queries (client/server)
-* RFC 1035 zone file parsing (work in progress)
+* RFC 1035 zone file parsing (everything, except multiline records work)
 
 Sample programs can be found in the `_examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
@@ -49,6 +49,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 5155 - NSEC
 * 5933 - GOST
 * 5936 - AXFR
+* xxxx - ECCDSA
 
 ## Loosely based upon:
 
