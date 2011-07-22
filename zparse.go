@@ -1045,14 +1045,16 @@ case 53:
 	_out: {}
 	}
 
-// line 121 "zparse.rl"
+// line 120 "zparse.rl"
 
         
         if eof > -1 {
                 if cs < z_first_final {
                         // No clue what I'm doing what so ever
                         if p == pe {
-                                println("unexpected eof at line", lines)
+        println("p", p, "pe", pe)
+        println("cs", cs, "z_first_final", z_first_final)
+                                println("unexpected eof at line ", lines)
                                 return z, nil
                         } else {
                                 println("error at position ", p, "\"",data[mark:p],"\" at line ", lines)

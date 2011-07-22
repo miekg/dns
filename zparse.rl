@@ -90,7 +90,6 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 #                )+;
                 bl = [ \t]+;
 
-#                rdata  = [a-zA-Z0-9.]+ >mark;
                 rdata = [^\n]+ >mark;
                 qname  = [a-zA-Z0-9.\-_]+ >mark %setQname;
                 qclass = ('IN'i|'CH'i|'HS'i) >mark %setQclass;
@@ -124,7 +123,9 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 if cs < z_first_final {
                         // No clue what I'm doing what so ever
                         if p == pe {
-                                println("unexpected eof at line", lines)
+        println("p", p, "pe", pe)
+        println("cs", cs, "z_first_final", z_first_final)
+                                println("unexpected eof at line ", lines)
                                 return z, nil
                         } else {
                                 println("error at position ", p, "\"",data[mark:p],"\" at line ", lines)
