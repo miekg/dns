@@ -29,10 +29,3 @@ func (z *Zone) At(i int) RR {
 func (z *Zone) Len() int {
         return z.v.Len()
 }
-
-func (z *Zone) String() (s string) {
-        for i:=0; i < z.Len(); i++ {
-                s += z.At(i).String() + "\n"
-        }
-        return
-}

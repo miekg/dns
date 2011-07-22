@@ -12,7 +12,8 @@ import (
     "strconv"
 )
 
-const _IOBUF = 65365
+//const _IOBUF = 65365
+const _IOBUF = 3e7
 
 // Return the rdata fields as a slice. All starting whitespace deleted
 func fields(s string, i int) (rdf []string) {
@@ -25,10 +26,10 @@ func fields(s string, i int) (rdf []string) {
     return
 }
 
-func atoi(s string) int {
-    i, err :=  strconv.Atoi(s)
+func atoi(s string) uint {
+    i, err :=  strconv.Atoui(s)
     if err != nil {
-        panic("not a number: " + s)
+        panic("not a number: " + s + " " + err.String())
     }
     return i
 }
@@ -103,7 +104,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 action setQname   { hdr.Name = data[mark:p] }
                 action setQclass  { hdr.Class = Str_class[data[mark:p]] }
                 action defTtl     { /* ... */ }
-                action setTtl     { ttl, _ :=  strconv.Atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
+                action setTtl     { ttl := atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
                 action lineCount  { lines++ }
 
 #                action openBrace  { if brace { println("Brace already open")} ; brace = true }
@@ -114,7 +115,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
                 nl  = [\n]+ $lineCount;
                 comment = ';' [^\n]*;
-                ttl = digit+;
+                ttl = digit+ >mark;
 #                bl  = ( [ \t]+
 #                    | '(' $openBrace
 #                    | ')' $closeBrace
@@ -153,10 +154,10 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 if cs < z_first_final {
                         // No clue what I'm doing what so ever
                         if p == pe {
-                                println("unexpected eof")
+                                println("unexpected eof at line", lines)
                                 return z, nil
                         } else {
-                                println("error at position ", p, "\"",data[mark:p],"\"")
+                                println("error at position ", p, "\"",data[mark:p],"\" at line ", lines)
                                 return z, nil
                         }
                 }
