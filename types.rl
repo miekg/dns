@@ -50,7 +50,6 @@
     }
 
     action setSOA {
-        println("SOA")
         rdf := fields(data[mark:p], 7)
         rr := new(RR_SOA)
         rr.Hdr = *hdr

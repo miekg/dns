@@ -16,20 +16,19 @@ const _IOBUF = 65365
 
 // Return the rdata fields as a slice. All starting whitespace deleted
 func fields(s string, i int) (rdf []string) {
-    rdf = strings.Split(strings.TrimSpace(s), " ", i)
+    rdf = strings.Fields(strings.TrimSpace(s))
     for i, _ := range rdf {
         rdf[i] = strings.TrimSpace(rdf[i])
     }
-    if len(rdf) != i {
-        panic("not enough rdata seen")
-    }
+    // every rdf above i should be stiched together without
+    // the spaces
     return
 }
 
 func atoi(s string) int {
     i, err :=  strconv.Atoi(s)
     if err != nil {
-        panic("not a number")
+        panic("not a number: " + s)
     }
     return i
 }
