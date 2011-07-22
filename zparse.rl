@@ -16,9 +16,9 @@ const _IOBUF = 3e7
 
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.
-// If i is 0 no space are deleted from the final rdfs
+// If i is 0 no spaces are deleted from the final rdfs.
 func fields(s string, i int) (rdf []string) {
-    rdf = strings.Fields(strings.TrimSpace(s))
+    rdf = strings.Fields(s)
     for i, _ := range rdf {
         rdf[i] = strings.TrimSpace(rdf[i])
     }
@@ -104,26 +104,26 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                 )?;
 
                 rhs = (
-                      ( 'A'i        rdata ) %setA
-                    | ( 'PTR'i      rdata ) %setPTR
-                    | ( 'TXT'i      rdata ) %setTXT
-                    | ( 'SRV'i      rdata ) %setSRV
-                    | ( 'CERT'i     rdata ) %setCERT
-                    | ( 'NAPTR'i    rdata ) %setNAPTR
-                    | ( 'AAAA'i     rdata ) %setAAAA
-                    | ( 'SOA'i      rdata ) %setSOA
-                    | ( 'CNAME'i    rdata ) %setCNAME
-                    | ( 'DNAME'i    rdata ) %setDNAME
-                    | ( 'NS'i       rdata ) %setNS
-                    | ( 'MX'i       rdata ) %setMX
-                    | ( 'DS'i       rdata ) %setDS
-                    | ( 'DLV'i      rdata ) %setDLV
-                    | ( 'TA'i       rdata ) %setTA
-                    | ( 'DNSKEY'i   rdata ) %setDNSKEY
-                    | ( 'RRSIG'i    rdata ) %setRRSIG
-                    | ( 'NSEC'i     rdata ) %setNSEC
-                    | ( 'NSEC3'i    rdata ) %setNSEC3
-                    | ( 'NSEC3PARAM'i rdata ) %setNSEC3PARAM
+                      ( 'A'i        bl rdata ) %setA
+                    | ( 'PTR'i      bl rdata ) %setPTR
+                    | ( 'TXT'i      bl rdata ) %setTXT
+                    | ( 'SRV'i      bl rdata ) %setSRV
+                    | ( 'CERT'i     bl rdata ) %setCERT
+                    | ( 'NAPTR'i    bl rdata ) %setNAPTR
+                    | ( 'AAAA'i     bl rdata ) %setAAAA
+                    | ( 'SOA'i      bl rdata ) %setSOA
+                    | ( 'CNAME'i    bl rdata ) %setCNAME
+                    | ( 'DNAME'i    bl rdata ) %setDNAME
+                    | ( 'NS'i       bl rdata ) %setNS
+                    | ( 'MX'i       bl rdata ) %setMX
+                    | ( 'DS'i       bl rdata ) %setDS
+                    | ( 'DLV'i      bl rdata ) %setDLV
+                    | ( 'TA'i       bl rdata ) %setTA
+                    | ( 'DNSKEY'i   bl rdata ) %setDNSKEY
+                    | ( 'RRSIG'i    bl rdata ) %setRRSIG
+                    | ( 'NSEC'i     bl rdata ) %setNSEC
+                    | ( 'NSEC3'i    bl rdata ) %setNSEC3
+                    | ( 'NSEC3PARAM'i bl rdata ) %setNSEC3PARAM
                 );
 
                 rr = lhs rhs;

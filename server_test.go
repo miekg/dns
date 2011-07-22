@@ -42,6 +42,5 @@ func BenchmarkServing(b *testing.B) {
         b.StartTimer()
         for i := 0; i < b.N; i++ {
                 c.Exchange(m, "127.0.0.1:8053")
-                print(i, " ")
         }
 }

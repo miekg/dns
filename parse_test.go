@@ -1,7 +1,9 @@
 package dns
 
 import (
-	"net"
+        "os"
+        "time"
+        "bufio"
         "strings"
 	"testing"
 	"crypto/rsa"
@@ -73,28 +75,6 @@ Activate: 20110302104537`
         }
 }
 
-func TestA(t *testing.T) {
-	a := new(RR_A)
-	a.Hdr = RR_Header{"miek.nl.", TypeA, ClassINET, 14400, 0}
-	a.A = net.ParseIP("192.168.1.1")
-	str := a.String()
-	if str != "miek.nl.\t14400\tIN\tA\t192.168.1.1" {
-		t.Log(str)
-		t.Fail()
-	}
-}
-
-func TestQuadA(t *testing.T) {
-	a := new(RR_AAAA)
-	a.Hdr = RR_Header{"miek.nl.", TypeAAAA, ClassINET, 14400, 0}
-	a.AAAA = net.ParseIP("::1")
-	str := a.String()
-	if str != "miek.nl.\t14400\tIN\tAAAA\t::1" {
-		t.Log(str)
-		t.Fail()
-	}
-}
-
 func TestDotInName(t *testing.T) {
 	buf := make([]byte, 20)
 	packDomainName("aa\\.bb.nl.", buf, 0)
@@ -124,6 +104,7 @@ func TestParse(t *testing.T) {
                 "miek.nl. 3600 IN MX 10 elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
                 "miek.nl. IN 3600 A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
                 "miek.nl. A 127.0.0.1":         "miek.nl.\t0\tCLASS0\tA\t127.0.0.1",
+                "miek.nl. IN AAAA ::1":         "miek.nl.\t0\tIN\tAAAA\t::1",
                 "miek.nl. IN A 127.0.0.1":      "miek.nl.\t0\tIN\tA\t127.0.0.1",
                 "miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":
                         "miek.nl.\t0\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
@@ -169,4 +150,35 @@ func TestSetString(t *testing.T) {
                 t.Log(d.String(), "miek.nl. IN NS ns1.miek.nl")
                 t.Fail()
         }
+}
+
+func BenchmarkZoneParsing(b *testing.B) {
+        file, err := os.Open("miek.nl")
+        defer file.Close()
+        if err != nil {
+                return
+        }
+        r := bufio.NewReader(file)
+
+        // Don't care about errors (there shouldn't be any)
+        Zparse(r)
+}
+
+func TestZoneParsing(t *testing.T) {
+        file, err := os.Open("miek.nl")
+        defer file.Close()
+        if err != nil {
+                return
+        }
+        r := bufio.NewReader(file)
+
+        // Don't care about errors (there shouldn't be any)
+        start := time.Nanoseconds()
+        z, err := Zparse(r)
+        if err != nil {
+                t.Logf("error %v\n", err.String())
+                t.Fail()
+        }
+        delta := time.Nanoseconds() - start
+        t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", z.Len(), float32(delta)/1e9, float32(z.Len())/(float32(delta)/1e9))
 }
