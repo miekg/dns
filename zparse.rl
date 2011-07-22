@@ -11,7 +11,7 @@ import (
     "strconv"
 )
 
-//const _IOBUF = 65365
+//const _IOBUF = 65365 // See comments in gdnsd
 const _IOBUF = 3e7
 
 // Return the rdata fields as a string slice. 
