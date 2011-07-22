@@ -15,14 +15,19 @@ import (
 //const _IOBUF = 65365
 const _IOBUF = 3e7
 
-// Return the rdata fields as a slice. All starting whitespace deleted
+// Return the rdata fields as a string slice. 
+// All starting whitespace is deleted.
 func fields(s string, i int) (rdf []string) {
     rdf = strings.Fields(strings.TrimSpace(s))
     for i, _ := range rdf {
         rdf[i] = strings.TrimSpace(rdf[i])
     }
-    // every rdf above i should be stiched together without
-    // the spaces
+    if len(rdf) > i {
+        // The last rdf contained embedded spaces, glue it back together.
+        for j := i; j < len(rdf); j++ {
+            rdf[i-1] += rdf[j]
+        }
+    }
     return
 }
 
@@ -33,44 +38,6 @@ func atoi(s string) uint {
     }
     return i
 }
-
-/*
-func rdata_ds(hdr RR_Header, tok *token) RR {
-        rr := new(RR_DS)
-        rr.Hdr = hdr;
-        rr.Hdr.Rrtype = TypeDS
-        rr.KeyTag = uint16(tok.N[0])
-        rr.Algorithm = uint8(tok.N[1])
-        rr.DigestType = uint8(tok.N[2])
-        rr.Digest = tok.T[0]
-        return rr
-}
-func rdata_dnskey(hdr RR_Header, tok *token) RR {
-        rr := new(RR_DNSKEY)
-        rr.Hdr = hdr;
-        rr.Hdr.Rrtype = TypeDNSKEY
-        rr.Flags = uint16(tok.N[0])
-        rr.Protocol = uint8(tok.N[1])
-        rr.Algorithm = uint8(tok.N[2])
-        rr.PublicKey = tok.T[0]
-        return rr
-}
-func rdata_rrsig(hdr RR_Header, tok *token) RR {
-        rr := new(RR_RRSIG)
-        rr.Hdr = hdr;
-        rr.Hdr.Rrtype = TypeRRSIG
-        rr.TypeCovered = uint16(tok.N[0])
-        rr.Algorithm = uint8(tok.N[1])
-        rr.Labels = uint8(tok.N[2])
-        rr.OrigTtl = uint32(tok.N[3])
-        rr.Expiration = uint32(tok.N[4])
-        rr.Inception = uint32(tok.N[5])
-        rr.KeyTag = uint16(tok.N[6])
-        rr.SignerName = tok.T[0]
-        rr.Signature = tok.T[1]
-        return rr
-}
-*/
 
 %%{
         machine z;
@@ -120,7 +87,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 #                    | '(' $openBrace
 #                    | ')' $closeBrace
 #                    | (comment? nl)+ when brace
-#                )+ %mark;
+#                )+;
                 bl = [ \t]+;
 
 #                rdata  = [a-zA-Z0-9.]+ >mark;
@@ -140,11 +107,14 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
                     | ( 'CNAME'i    rdata ) %setCNAME
                     | ( 'NS'i       rdata ) %setNS
                     | ( 'MX'i       rdata ) %setMX
+                    | ( 'DS'i       rdata ) %setDS
+                    | ( 'DNSKEY'i   rdata ) %setDNSKEY
+                    | ( 'RRSIG'i    rdata ) %setRRSIG
                 );
 
                 rr = lhs rhs;
 #                main := (rr? bl? ((comment? nl) when !brace))*;
-                main := (rr? nl)*;
+                main := ((rr?|comment?) nl)*;
 
                 write init;
                 write exec;
