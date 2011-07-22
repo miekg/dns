@@ -9,6 +9,7 @@ Todo:
 * Is subdomain, is glue helper functions for this kind of stuff
 * Cleanups
 * Fix multiline RR when parsing
+* Need to define a handy zone data structure (r/b tree)
 
 Examples:
-* Test impl of nameserver, with a small zone, 1 KSK and online  signing
+* Test impl of nameserver, with a small zone, 1 KSK and online signing
