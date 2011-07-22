@@ -11,6 +11,9 @@ import (
     "strconv"
 )
 
+//const _IOBUF = 65365 // See comments in gdnsd
+const _IOBUF = 3e7  // TODO fix sliding window stuff in Ragel
+
 // A Parser represents a DNS master zone file parser for a 
 // particular input stream.
 type Parser struct {
@@ -35,8 +38,6 @@ func NewParser(r io.Reader) *Parser {
         return p
 }
 
-//const _IOBUF = 65365 // See comments in gdnsd
-const _IOBUF = 3e7
 
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.
