@@ -2,7 +2,6 @@ package dns
 
 // Parse RRs
 // With the thankful help of gdnsd and the Go examples for Ragel.
-// 
 
 import (
     "os"
@@ -31,6 +30,7 @@ func fields(s string, i int) (rdf []string) {
     return
 }
 
+// Wrapper for strconv.Atoi*().
 func atoi(s string) uint {
     i, err :=  strconv.Atoui(s)
     if err != nil {
@@ -44,7 +44,6 @@ func atoi(s string) uint {
         write data;
 }%%
 
-// SetString
 // All the NewReader stuff is expensive...
 // only works for short io.Readers as we put the whole thing
 // in a string -- needs to be extended for large files (sliding window).
@@ -58,6 +57,9 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         z = new(Zone)
 
         data := string(buf)
+        if data[len(data)-1] != '\n' {
+            data += "\n"
+        }
         cs, p, pe := 0, 0, len(data)
         eof := len(data)
 
