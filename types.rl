@@ -75,6 +75,30 @@
         z.Push(rr)
     }
 
+    action setDLV {
+        rdf := fields(data[mark:p], 4)
+        rr := new(RR_DLV)
+        rr.Hdr = *hdr
+        rr.Hdr.Rrtype = TypeDLV
+        rr.KeyTag = uint16(atoi(rdf[0]))
+        rr.Algorithm = uint8(atoi(rdf[1]))
+        rr.DigestType = uint8(atoi(rdf[2]))
+        rr.Digest = rdf[3]
+        z.Push(rr)
+    }
+
+    action setTA {
+        rdf := fields(data[mark:p], 4)
+        rr := new(RR_TA)
+        rr.Hdr = *hdr
+        rr.Hdr.Rrtype = TypeTA
+        rr.KeyTag = uint16(atoi(rdf[0]))
+        rr.Algorithm = uint8(atoi(rdf[1]))
+        rr.DigestType = uint8(atoi(rdf[2]))
+        rr.Digest = rdf[3]
+        z.Push(rr)
+    }
+
     action setDNSKEY {
         rdf := fields(data[mark:p], 4)
         rr := new(RR_DNSKEY)
@@ -104,4 +128,63 @@
         z.Push(rr)
     }
 
+    action setNSEC {
+        rdf := fields(data[mark:p], 0)
+        rr := new(RR_NSEC)
+        rr.Hdr = *hdr
+        rr.Hdr.Rrtype = TypeNSEC
+        rr.NextDomain = rdf[0]
+        rr.TypeBitMap = make([]uint16, len(rdf)-1)
+        // Fill the Type Bit Map
+        for i := 1; i < len(rdf); i++ {
+            // Check if its there in the map TODO
+            rr.TypeBitMap[i-1] = Str_rr[rdf[i]]
+        }
+        z.Push(rr)
+    }
+
+    action setNSEC3 {
+        rdf := fields(data[mark:p], 0)
+        rr := new(RR_NSEC3)
+        rr.Hdr = *hdr
+        rr.Hdr.Rrtype = TypeNSEC3
+        rr.Hash = uint8(atoi(rdf[0]))
+        rr.Flags = uint8(atoi(rdf[1]))
+        rr.Iterations = uint16(atoi(rdf[2]))
+        rr.SaltLength = uint8(atoi(rdf[3]))
+        rr.Salt = rdf[4]
+        rr.HashLength = uint8(atoi(rdf[4]))
+        rr.NextDomain = rdf[5]
+        rr.TypeBitMap = make([]uint16, len(rdf)-6)
+        // Fill the Type Bit Map
+        for i := 6; i < len(rdf); i++ {
+            // Check if its there in the map TODO
+            rr.TypeBitMap[i-6] = Str_rr[rdf[i]]
+        }
+        z.Push(rr)
+    }
+
+    action setNSEC3PARAM {
+    }
+
+    action setPRT {
+    }
+
+    action setTXT {
+    }
+
+    action setSRV {
+    }
+
+    action setCERT {
+    }
+
+    action setPTR {
+    }
+
+    action setDNAME {
+    }
+
+    action setNAPTR {
+    }
 }%%

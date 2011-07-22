@@ -552,7 +552,6 @@ func (rr *RR_LOC) String() string {
 	return rr.Hdr.String() + "TODO"
 }
 
-// DNSSEC types
 type RR_RRSIG struct {
 	Hdr         RR_Header
 	TypeCovered uint16

@@ -16,12 +16,13 @@ const _IOBUF = 3e7
 
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.
+// If i is 0 no space are deleted from the final rdfs
 func fields(s string, i int) (rdf []string) {
     rdf = strings.Fields(strings.TrimSpace(s))
     for i, _ := range rdf {
         rdf[i] = strings.TrimSpace(rdf[i])
     }
-    if len(rdf) > i {
+    if i > 0 && len(rdf) > i {
         // The last rdf contained embedded spaces, glue it back together.
         for j := i; j < len(rdf); j++ {
             rdf[i-1] += rdf[j]
@@ -104,14 +105,25 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
 
                 rhs = (
                       ( 'A'i        rdata ) %setA
+                    | ( 'PTR'i      rdata ) %setPTR
+                    | ( 'TXT'i      rdata ) %setTXT
+                    | ( 'SRV'i      rdata ) %setSRV
+                    | ( 'CERT'i     rdata ) %setCERT
+                    | ( 'NAPTR'i    rdata ) %setNAPTR
                     | ( 'AAAA'i     rdata ) %setAAAA
                     | ( 'SOA'i      rdata ) %setSOA
                     | ( 'CNAME'i    rdata ) %setCNAME
+                    | ( 'DNAME'i    rdata ) %setDNAME
                     | ( 'NS'i       rdata ) %setNS
                     | ( 'MX'i       rdata ) %setMX
                     | ( 'DS'i       rdata ) %setDS
+                    | ( 'DLV'i      rdata ) %setDLV
+                    | ( 'TA'i       rdata ) %setTA
                     | ( 'DNSKEY'i   rdata ) %setDNSKEY
                     | ( 'RRSIG'i    rdata ) %setRRSIG
+                    | ( 'NSEC'i     rdata ) %setNSEC
+                    | ( 'NSEC3'i    rdata ) %setNSEC3
+                    | ( 'NSEC3PARAM'i rdata ) %setNSEC3PARAM
                 );
 
                 rr = lhs rhs;
