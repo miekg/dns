@@ -57,6 +57,7 @@ func Zparse(q io.Reader) (z *Zone, err os.Error) {
         z = new(Zone)
 
         data := string(buf)
+        // guardian
         if data[len(data)-1] != '\n' {
             data += "\n"
         }
