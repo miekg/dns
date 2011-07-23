@@ -14,14 +14,14 @@ import (
 //const _IOBUF = 65365 // See comments in gdnsd
 const _IOBUF = 3e7  // TODO fix sliding window stuff in Ragel
 
-// A Parser represents a DNS master zone file parser for a 
-// particular input stream.
+// A Parser represents a DNS parser for a 
+// particular input stream. 
 type Parser struct {
     // nothing here yet
     buf    []byte
 }
 
-// NewParser create a new DNS master zone file parser from r.
+// NewParser creates a new DNS file parser from r.
 func NewParser(r io.Reader) *Parser {
         buf := make([]byte, _IOBUF) 
         n, err := r.Read(buf)
@@ -70,7 +70,7 @@ func atoi(s string) uint {
         write data;
 }%%
 
-// Token parses a zone file, but only returns the last RR read.
+// RR parses a zone file, but only returns the last RR read.
 func (zp *Parser) RR() RR {
     z, err := zp.Zone()
     if err != nil {
@@ -79,9 +79,7 @@ func (zp *Parser) RR() RR {
     return z.Pop().(RR)
 }
 
-// All the NewReader stuff is expensive...
-// only works for short io.Readers as we put the whole thing
-// in a string -- needs to be extended for large files (sliding window).
+// Zone parses an DNS master zone file.
 func (zp *Parser) Zone() (z *Zone, err os.Error) {
         z = new(Zone)
         data := string(zp.buf)
@@ -161,8 +159,8 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
                 if cs < z_first_final {
                         // No clue what I'm doing what so ever
                         if p == pe {
-        println("p", p, "pe", pe)
-        println("cs", cs, "z_first_final", z_first_final)
+                                println("p", p, "pe", pe)
+                                println("cs", cs, "z_first_final", z_first_final)
                                 println("unexpected eof at line ", lines)
                                 return z, nil
                         } else {
