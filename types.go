@@ -37,7 +37,7 @@ const (
 	TypeLOC   = 29
 	TypeSRV   = 33
 	TypeNAPTR = 35
-        TypeKX    = 36
+	TypeKX    = 36
 	TypeCERT  = 37
 	TypeDNAME = 39
 
@@ -53,7 +53,7 @@ const (
 	TypeRRSIG      = 46
 	TypeNSEC       = 47
 	TypeDNSKEY     = 48
-        TypeDHCID      = 49
+	TypeDHCID      = 49
 	TypeNSEC3      = 50
 	TypeNSEC3PARAM = 51
 	TypeTALINK     = 58
@@ -67,18 +67,16 @@ const (
 	TypeMAILB = 253
 	TypeMAILA = 254
 	TypeALL   = 255
-	// newly defined types
-	TypeURI = 256
-
-	TypeTA  = 32768
-	TypeDLV = 32769
+	TypeURI   = 256
+	TypeTA    = 32768
+	TypeDLV   = 32769
 
 	// valid Question.Qclass
 	ClassINET   = 1
 	ClassCSNET  = 2
 	ClassCHAOS  = 3
 	ClassHESIOD = 4
-        ClassNONE   = 254
+	ClassNONE   = 254
 	ClassANY    = 255
 
 	// Msg.rcode
@@ -162,16 +160,14 @@ func (rr *RR_CNAME) String() string {
 }
 
 func (rr *RR_CNAME) SetString(s string) (*RR_CNAME, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_CNAME); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_CNAME).Hdr
-        rr.Cname   = p.(*RR_CNAME).Cname
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_CNAME); !ok {
+		return nil, false
+	}
+	return p.(*RR_CNAME), true
 }
 
 type RR_HINFO struct {
@@ -189,17 +185,14 @@ func (rr *RR_HINFO) String() string {
 }
 
 func (rr *RR_HINFO) SetString(s string) (*RR_HINFO, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_HINFO); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_HINFO).Hdr
-        rr.Cpu   = p.(*RR_HINFO).Cpu
-        rr.Os   = p.(*RR_HINFO).Os
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_HINFO); !ok {
+		return nil, false
+	}
+	return p.(*RR_HINFO), true
 }
 
 type RR_MB struct {
@@ -216,16 +209,14 @@ func (rr *RR_MB) String() string {
 }
 
 func (rr *RR_MB) SetString(s string) (*RR_MB, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_MB); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_MB).Hdr
-        rr.Mb   = p.(*RR_MB).Mb
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_MB); !ok {
+		return nil, false
+	}
+	return p.(*RR_MB), true
 }
 
 type RR_MG struct {
@@ -283,17 +274,14 @@ func (rr *RR_MX) String() string {
 }
 
 func (rr *RR_MX) SetString(s string) (*RR_MX, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_MX); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_MX).Hdr
-        rr.Pref = p.(*RR_MX).Pref
-        rr.Mx   = p.(*RR_MX).Mx
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_MX); !ok {
+		return nil, false
+	}
+	return p.(*RR_MX), true
 }
 
 type RR_NS struct {
@@ -310,16 +298,14 @@ func (rr *RR_NS) String() string {
 }
 
 func (rr *RR_NS) SetString(s string) (*RR_NS, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_NS); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_NS).Hdr
-        rr.Ns   = p.(*RR_NS).Ns
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_NS); !ok {
+		return nil, false
+	}
+	return p.(*RR_NS), true
 }
 
 type RR_PTR struct {
@@ -360,21 +346,14 @@ func (rr *RR_SOA) String() string {
 }
 
 func (rr *RR_SOA) SetString(s string) (*RR_SOA, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_SOA); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_SOA).Hdr
-        rr.Ns   = p.(*RR_SOA).Ns
-        rr.Mbox   = p.(*RR_SOA).Mbox
-        rr.Refresh   = p.(*RR_SOA).Refresh
-        rr.Retry   = p.(*RR_SOA).Retry
-        rr.Expire   = p.(*RR_SOA).Expire
-        rr.Minttl   = p.(*RR_SOA).Minttl
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_SOA); !ok {
+		return nil, false
+	}
+	return p.(*RR_SOA), true
 }
 
 type RR_TXT struct {
@@ -391,16 +370,14 @@ func (rr *RR_TXT) String() string {
 }
 
 func (rr *RR_TXT) SetString(s string) (*RR_TXT, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_TXT); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_TXT).Hdr
-        rr.Txt   = p.(*RR_TXT).Txt
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_TXT); !ok {
+		return nil, false
+	}
+	return p.(*RR_TXT), true
 }
 
 type RR_SRV struct {
@@ -494,16 +471,14 @@ func (rr *RR_A) String() string {
 }
 
 func (rr *RR_A) SetString(s string) (*RR_A, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_A); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_A).Hdr
-        rr.A   = p.(*RR_A).A
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_A); !ok {
+		return nil, false
+	}
+	return p.(*RR_A), true
 }
 
 type RR_AAAA struct {
@@ -520,16 +495,14 @@ func (rr *RR_AAAA) String() string {
 }
 
 func (rr *RR_AAAA) SetString(s string) (*RR_AAAA, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_AAAA); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_AAAA).Hdr
-        rr.AAAA = p.(*RR_AAAA).AAAA
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_AAAA); !ok {
+		return nil, false
+	}
+	return p.(*RR_AAAA), true
 }
 
 type RR_LOC struct {
@@ -582,24 +555,14 @@ func (rr *RR_RRSIG) String() string {
 }
 
 func (rr *RR_RRSIG) SetString(s string) (*RR_RRSIG, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_RRSIG); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_RRSIG).Hdr
-        rr.TypeCovered   = p.(*RR_RRSIG).TypeCovered
-        rr.Algorithm   = p.(*RR_RRSIG).Algorithm
-        rr.Labels   = p.(*RR_RRSIG).Labels
-        rr.OrigTtl   = p.(*RR_RRSIG).OrigTtl
-        rr.Expiration   = p.(*RR_RRSIG).Expiration
-        rr.Inception   = p.(*RR_RRSIG).Inception
-        rr.KeyTag   = p.(*RR_RRSIG).KeyTag
-        rr.SignerName   = p.(*RR_RRSIG).SignerName
-        rr.Signature   = p.(*RR_RRSIG).Signature
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_RRSIG); !ok {
+		return nil, false
+	}
+	return p.(*RR_RRSIG), true
 }
 
 type RR_NSEC struct {
@@ -663,18 +626,18 @@ func (rr *RR_DLV) String() string {
 }
 
 type RR_KX struct {
-        Hdr     RR_Header
-        Preference uint16
-        Exchanger string "domain-name"
+	Hdr        RR_Header
+	Preference uint16
+	Exchanger  string "domain-name"
 }
 
 func (rr *RR_KX) Header() *RR_Header {
-        return &rr.Hdr
+	return &rr.Hdr
 }
 
 func (rr *RR_KX) String() string {
-        return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
-                " " + rr.Exchanger
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+		" " + rr.Exchanger
 }
 
 type RR_TA struct {
@@ -748,19 +711,14 @@ func (rr *RR_DNSKEY) String() string {
 }
 
 func (rr *RR_DNSKEY) SetString(s string) (*RR_DNSKEY, bool) {
-        p := parse(s)
-        if p == nil {
-                return nil, false
-        }
-        if _, ok := p.(*RR_DNSKEY); !ok {
-                return nil, false
-        }
-        rr.Hdr = p.(*RR_DNSKEY).Hdr
-        rr.Flags   = p.(*RR_DNSKEY).Flags
-        rr.Protocol   = p.(*RR_DNSKEY).Protocol
-        rr.Algorithm   = p.(*RR_DNSKEY).Algorithm
-        rr.PublicKey   = p.(*RR_DNSKEY).PublicKey
-        return rr, true
+	p := parse(s)
+	if p == nil {
+		return nil, false
+	}
+	if _, ok := p.(*RR_DNSKEY); !ok {
+		return nil, false
+	}
+	return p.(*RR_DNSKEY), true
 }
 
 type RR_NSEC3 struct {
@@ -888,48 +846,48 @@ func (rr *RR_URI) String() string {
 }
 
 type RR_DHCID struct {
-        Hdr     RR_Header
-        Digest  string "base64"
+	Hdr    RR_Header
+	Digest string "base64"
 }
 
 func (rr *RR_DHCID) Header() *RR_Header {
-        return &rr.Hdr
+	return &rr.Hdr
 }
 
 func (rr *RR_DHCID) String() string {
-        return rr.Hdr.String() + rr.Digest
+	return rr.Hdr.String() + rr.Digest
 }
 
 // RFC 2845.
 type RR_TSIG struct {
-        Hdr        RR_Header
-        Algorithm  string "domain-name"
-        TimeSigned uint64
-        Fudge      uint16
-        MACSize    uint16
-        MAC        string "size-hex"
-        OrigId     uint16
-        Error      uint16
-        OtherLen   uint16
-        OtherData  string "size-hex"
+	Hdr        RR_Header
+	Algorithm  string "domain-name"
+	TimeSigned uint64
+	Fudge      uint16
+	MACSize    uint16
+	MAC        string "size-hex"
+	OrigId     uint16
+	Error      uint16
+	OtherLen   uint16
+	OtherData  string "size-hex"
 }
 
 func (rr *RR_TSIG) Header() *RR_Header {
-        return &rr.Hdr
+	return &rr.Hdr
 }
 
 // TSIG has no official presentation format, but this will suffice.
 func (rr *RR_TSIG) String() string {
-        return rr.Hdr.String() +
-                " " + rr.Algorithm +
-                " " + tsigTimeToDate(rr.TimeSigned) +
-                " " + strconv.Itoa(int(rr.Fudge)) +
-                " " + strconv.Itoa(int(rr.MACSize)) +
-                " " + strings.ToUpper(rr.MAC) +
-                " " + strconv.Itoa(int(rr.OrigId)) +
-                " " + strconv.Itoa(int(rr.Error)) +
-                " " + strconv.Itoa(int(rr.OtherLen)) +
-                " " + rr.OtherData
+	return rr.Hdr.String() +
+		" " + rr.Algorithm +
+		" " + tsigTimeToDate(rr.TimeSigned) +
+		" " + strconv.Itoa(int(rr.Fudge)) +
+		" " + strconv.Itoa(int(rr.MACSize)) +
+		" " + strings.ToUpper(rr.MAC) +
+		" " + strconv.Itoa(int(rr.OrigId)) +
+		" " + strconv.Itoa(int(rr.Error)) +
+		" " + strconv.Itoa(int(rr.OtherLen)) +
+		" " + rr.OtherData
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
@@ -953,8 +911,8 @@ func tsigTimeToDate(t uint64) string {
 
 // Helper function for parsing from strings
 func parse(s string) RR {
-        p := NewParser(strings.NewReader(s))
-        return p.RR()
+	p := NewParser(strings.NewReader(s))
+	return p.RR()
 }
 
 // Map of constructors for each RR wire type.
@@ -978,16 +936,16 @@ var rr_mk = map[int]func() RR{
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
-        TypeCERT:       func() RR { return new(RR_CERT) },
-        TypeKX:         func() RR { return new(RR_KX) },
-        TypeSPF:        func() RR { return new(RR_SPF) },
+	TypeCERT:       func() RR { return new(RR_CERT) },
+	TypeKX:         func() RR { return new(RR_KX) },
+	TypeSPF:        func() RR { return new(RR_SPF) },
 	TypeTALINK:     func() RR { return new(RR_TALINK) },
 	TypeSSHFP:      func() RR { return new(RR_SSHFP) },
 	TypeRRSIG:      func() RR { return new(RR_RRSIG) },
 	TypeNSEC:       func() RR { return new(RR_NSEC) },
 	TypeDNSKEY:     func() RR { return new(RR_DNSKEY) },
 	TypeNSEC3:      func() RR { return new(RR_NSEC3) },
-        TypeDHCID:      func() RR { return new(RR_DHCID) },
+	TypeDHCID:      func() RR { return new(RR_DHCID) },
 	TypeNSEC3PARAM: func() RR { return new(RR_NSEC3PARAM) },
 	TypeTKEY:       func() RR { return new(RR_TKEY) },
 	TypeTSIG:       func() RR { return new(RR_TSIG) },
