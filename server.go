@@ -66,7 +66,8 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// Helper handlers
+// Helper handler that returns an answer with
+// RCODE = refused for every request.
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetReply(r)
@@ -76,9 +77,10 @@ func Refused(w ResponseWriter, r *Msg) {
 	w.Write(buf)
 }
 
-// RefusedHandler return a REFUSED answer
+// RefusedHandler returns HandlerFunc with Refused.
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
+// ...
 func ListenAndServe(addr string, network string, handler Handler) os.Error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()

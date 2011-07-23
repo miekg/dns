@@ -94,7 +94,7 @@ func (dns *Msg) IsIxfr() (ok bool) {
 	return
 }
 
-// Has a message a TSIG record as the last record?
+// Has the message a TSIG record as the last record?
 func (dns *Msg) IsTsig() (ok bool) {
 	if len(dns.Extra) > 0 {
 		return dns.Extra[0].Header().Rrtype == TypeTSIG
@@ -102,6 +102,7 @@ func (dns *Msg) IsTsig() (ok bool) {
 	return
 }
 
+// SetTsig Calculates and appends a TSIG RR on the message.
 func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}

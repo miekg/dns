@@ -13,8 +13,9 @@ import (
 }%%
 
 // PrivateKey parses a private key file as defined in XXX.
-// A map[string]string is returned with the values. All the keys
-// are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
+// A map[string]string is returned with the values. All the keys are
+// converted to lowercase. All values are returned as-is, except
+// the algorithm [e.g. 5 (RSASHA1)] is returned as: m[algorithm] = "RSASHA1"
 func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
         m = make(map[string]string)
         var (

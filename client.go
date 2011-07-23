@@ -125,7 +125,7 @@ type Client struct {
         // LocalAddr string            // Local address to use
 }
 
-// Create a new client, with some default values filled in.
+// Create a new client, with some defaults.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"

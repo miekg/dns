@@ -88,9 +88,9 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.
 	return m, nil
 }
 
-// Verify a TSIG on a message. 
+// Verify the TSIG on a message. 
 // If the signature does not validate err contains the
-// error. If the it validates err is nil
+// error. If it validates err is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) (bool, os.Error) {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
