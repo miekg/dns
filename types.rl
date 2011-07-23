@@ -138,7 +138,7 @@
         // Fill the Type Bit Map
         for i := 1; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-1] = Str_rr[rdf[i]]
+            rr.TypeBitMap[i-1] = str_rr[rdf[i]]
         }
         z.Push(rr)
     }
@@ -159,7 +159,7 @@
         // Fill the Type Bit Map
         for i := 6; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-6] = Str_rr[rdf[i]]
+            rr.TypeBitMap[i-6] = str_rr[rdf[i]]
         }
         z.Push(rr)
     }

@@ -34,7 +34,7 @@ const (
         ECDSAP384SHA384 = 14
 )
 
-// DNSSEC hashing codes.
+// DNSSEC hashing algorithm codes.
 const (
 	_ = iota
 	SHA1        // RFC 4034
@@ -43,7 +43,7 @@ const (
         SHA384      // Experimental
 )
 
-// DNSKEY flags values.
+// DNSKEY flag values.
 const (
 	KSK    = 1
 	ZSK    = 1 << 8

@@ -183,7 +183,6 @@ func (rr *RR_HINFO) String() string {
 	return rr.Hdr.String() + rr.Cpu + " " + rr.Os
 }
 
-
 type RR_MB struct {
 	Hdr RR_Header
 	Mb  string "domain-name"

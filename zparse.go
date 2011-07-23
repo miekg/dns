@@ -256,7 +256,7 @@ tr121:
         // Fill the Type Bit Map
         for i := 1; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-1] = Str_rr[rdf[i]]
+            rr.TypeBitMap[i-1] = str_rr[rdf[i]]
         }
         z.Push(rr)
     }
@@ -281,7 +281,7 @@ tr127:
         // Fill the Type Bit Map
         for i := 6; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-6] = Str_rr[rdf[i]]
+            rr.TypeBitMap[i-6] = str_rr[rdf[i]]
         }
         z.Push(rr)
     }
@@ -726,7 +726,7 @@ tr184:
 	goto st22
 tr51:
 // line 97 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+	{ hdr.Class = str_class[data[mark:p]] }
 	goto st22
 st22:
 	p++
@@ -2037,7 +2037,7 @@ case 127:
 	goto st0
 tr181:
 // line 97 "zparse.rl"
-	{ hdr.Class = Str_class[data[mark:p]] }
+	{ hdr.Class = str_class[data[mark:p]] }
 	goto st128
 st128:
 	p++

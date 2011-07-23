@@ -3,15 +3,19 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben.
 
-// Package dns implements a full featured interface to the DNS.
+// Package dns implements a full featured interface to the Domain Name System.
 // The package allows complete control over what is send out to the DNS. 
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
 //
-//         r := new(RR_TXT)
-//         r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-//         r.TXT = "This is the content of the TXT record"
+//      r := new(RR_TXT)
+//      r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+//      r.TXT = "This is the content of the TXT record"
+//
+// Or directly from a string:
+//
+//      mx := NewRR("miek.nl IN MX 10 mx.miek.nl.")
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
@@ -21,8 +25,7 @@
 //      m := new(Msg)
 //      m.SetQuestion("miek.nl.", TypeMX)
 //
-//
-// Or slightly more verbose and flexible:
+// Or slightly more verbose, but more flexible:
 //
 //      m1 := new(Msg)
 //      m1.MsgHdr.Id = Id()
@@ -30,8 +33,10 @@
 //      m1.Question = make([]Question, 1)
 //      m1.Question[0] = Question{"miek.nl", TypeDNSKEY, ClassINET}
 //
-//
-// Basic use pattern for synchronous querying of the DNS
+// After creating a message it can be send.
+// Basic use pattern for synchronous querying the DNS, here
+// sending the message 'm' to the server 127.0.0.1 on port 53 and
+// waiting for the reply.
 //
 //      c := dns.NewClient()
 //      // c.Net = "tcp" // If you want to use TCP

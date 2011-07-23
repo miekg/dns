@@ -94,7 +94,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
         %%{
                 action mark       { mark = p }
                 action setQname   { hdr.Name = data[mark:p] }
-                action setQclass  { hdr.Class = Str_class[data[mark:p]] }
+                action setQclass  { hdr.Class = str_class[data[mark:p]] }
                 action defTtl     { /* ... */ }
                 action setTtl     { ttl := atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
                 action lineCount  { lines++ }

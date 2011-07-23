@@ -118,8 +118,8 @@ var Rr_str = map[uint16]string{
 }
 
 // Reverse, needed for string parsing.
-var Str_rr = reverse(Rr_str)
-var Str_class = reverse(Class_str)
+var str_rr = reverse(Rr_str)
+var str_class = reverse(Class_str)
 
 // Map of strings for each CLASS wire type.
 var Class_str = map[uint16]string{
