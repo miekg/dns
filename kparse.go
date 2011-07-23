@@ -21,38 +21,41 @@ var k_en_main int = 111
 // line 13 "kparse.rl"
 
 
-// Parse a private key file as defined in XXX.
+// PrivateKey parses a private key file as defined in XXX.
 // A map[string]string is returned with the values. All the keys
 // are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
 func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
         m = make(map[string]string)
-        var k string
+        var (
+            k, data string
+            cs, p, pe int
+        )
         lines := strings.SplitAfter(string(kp.buf), "\n", -1)
         for _, data := range lines {
-            cs, p, pe := 0, 0, len(data)
+            cs, p, pe = 0, 0, len(data)
             mark := 0
 
         
-// line 37 "kparse.go"
+// line 40 "kparse.go"
 	cs = k_start
 
-// line 40 "kparse.go"
+// line 43 "kparse.go"
 	{
 	if p == pe { goto _test_eof }
 	switch cs {
 	case -666: // i am a hack D:
 tr13:
-// line 29 "kparse.rl"
+// line 32 "kparse.rl"
 	{ m[k] = data[mark:p] }
 	goto st111
 tr28:
-// line 30 "kparse.rl"
+// line 33 "kparse.rl"
 	{ m[k] = strings.ToUpper(data[mark:p-1]) }
 	goto st111
 tr40:
-// line 29 "kparse.rl"
+// line 32 "kparse.rl"
 	{ m[k] = data[mark:p] }
-// line 30 "kparse.rl"
+// line 33 "kparse.rl"
 	{ m[k] = strings.ToUpper(data[mark:p-1]) }
 	goto st111
 st111:
@@ -60,7 +63,7 @@ st111:
 	if p == pe { goto _test_eof111 }
 	fallthrough
 case 111:
-// line 64 "kparse.go"
+// line 67 "kparse.go"
 	switch data[p] {
 		case 65: goto tr110
 		case 67: goto tr111
@@ -81,7 +84,7 @@ st0:
 cs = 0;
 	goto _out;
 tr110:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st1
 st1:
@@ -89,7 +92,7 @@ st1:
 	if p == pe { goto _test_eof1 }
 	fallthrough
 case 1:
-// line 93 "kparse.go"
+// line 96 "kparse.go"
 	switch data[p] {
 		case 67: goto st2
 		case 76: goto st37
@@ -165,7 +168,7 @@ case 8:
 	if data[p] == 58 { goto tr9 }
 	goto st0
 tr9:
-// line 28 "kparse.rl"
+// line 31 "kparse.rl"
 	{ k = strings.ToLower(data[mark:p]) }
 	goto st9
 st9:
@@ -173,7 +176,7 @@ st9:
 	if p == pe { goto _test_eof9 }
 	fallthrough
 case 9:
-// line 177 "kparse.go"
+// line 180 "kparse.go"
 	if data[p] == 32 { goto st10 }
 	goto st0
 st10:
@@ -204,7 +207,7 @@ case 10:
 	}
 	goto st0
 tr11:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st11
 st11:
@@ -212,7 +215,7 @@ st11:
 	if p == pe { goto _test_eof11 }
 	fallthrough
 case 11:
-// line 216 "kparse.go"
+// line 219 "kparse.go"
 	switch data[p] {
 		case 10: goto tr13
 		case 32: goto st11
@@ -233,7 +236,7 @@ case 11:
 	}
 	goto st0
 tr12:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st12
 st12:
@@ -241,7 +244,7 @@ st12:
 	if p == pe { goto _test_eof12 }
 	fallthrough
 case 12:
-// line 245 "kparse.go"
+// line 248 "kparse.go"
 	switch data[p] {
 		case 9: goto st13
 		case 10: goto tr13
@@ -288,7 +291,7 @@ case 14:
 	}
 	goto st0
 tr19:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st15
 st15:
@@ -296,7 +299,7 @@ st15:
 	if p == pe { goto _test_eof15 }
 	fallthrough
 case 15:
-// line 300 "kparse.go"
+// line 303 "kparse.go"
 	switch data[p] {
 		case 83: goto st16
 		case 115: goto st16
@@ -430,7 +433,7 @@ case 26:
 	}
 	goto st0
 tr31:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st27
 st27:
@@ -438,7 +441,7 @@ st27:
 	if p == pe { goto _test_eof27 }
 	fallthrough
 case 27:
-// line 442 "kparse.go"
+// line 445 "kparse.go"
 	switch data[p] {
 		case 10: goto tr13
 		case 32: goto st11
@@ -757,7 +760,7 @@ case 43:
 	}
 	goto st0
 tr111:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st44
 st44:
@@ -765,7 +768,7 @@ st44:
 	if p == pe { goto _test_eof44 }
 	fallthrough
 case 44:
-// line 769 "kparse.go"
+// line 772 "kparse.go"
 	switch data[p] {
 		case 79: goto st45
 		case 82: goto st54
@@ -914,7 +917,7 @@ case 58:
 	}
 	goto st0
 tr112:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st59
 st59:
@@ -922,7 +925,7 @@ st59:
 	if p == pe { goto _test_eof59 }
 	fallthrough
 case 59:
-// line 926 "kparse.go"
+// line 929 "kparse.go"
 	switch data[p] {
 		case 88: goto st60
 		case 120: goto st60
@@ -996,7 +999,7 @@ case 66:
 	if 49 <= data[p] && data[p] <= 50 { goto st8 }
 	goto st0
 tr113:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st67
 st67:
@@ -1004,7 +1007,7 @@ st67:
 	if p == pe { goto _test_eof67 }
 	fallthrough
 case 67:
-// line 1008 "kparse.go"
+// line 1011 "kparse.go"
 	switch data[p] {
 		case 79: goto st68
 		case 111: goto st68
@@ -1068,7 +1071,7 @@ case 73:
 	if data[p] == 49 { goto st8 }
 	goto st0
 tr114:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st74
 st74:
@@ -1076,7 +1079,7 @@ st74:
 	if p == pe { goto _test_eof74 }
 	fallthrough
 case 74:
-// line 1080 "kparse.go"
+// line 1083 "kparse.go"
 	switch data[p] {
 		case 79: goto st75
 		case 111: goto st75
@@ -1133,7 +1136,7 @@ case 79:
 	}
 	goto st0
 tr115:
-// line 27 "kparse.rl"
+// line 30 "kparse.rl"
 	{ mark = p }
 	goto st80
 st80:
@@ -1141,7 +1144,7 @@ st80:
 	if p == pe { goto _test_eof80 }
 	fallthrough
 case 80:
-// line 1145 "kparse.go"
+// line 1148 "kparse.go"
 	switch data[p] {
 		case 82: goto st81
 		case 85: goto st103
@@ -1564,23 +1567,20 @@ case 110:
 	_out: {}
 	}
 
-// line 62 "kparse.rl"
+// line 65 "kparse.rl"
 
         }
 
-        /*
-        if cs < z_first_final {
-                // No clue what I'm doing what so ever
+        if cs < k_first_final {
                 if p == pe {
                         //return nil, os.ErrorString("unexpected eof")
                         println("err unexp eof")
                         return m, nil
                 } else {
                         //return nil, os.ErrorString(fmt.Sprintf("error at position %d", p))
-                        println("err ", p, "data:", string(data[p]))
+                        println("err ", p, "data:", data[p])
                         return nil, nil
                 }
         }
-        */
         return m, nil
 }

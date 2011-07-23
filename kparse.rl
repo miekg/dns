@@ -12,15 +12,18 @@ import (
         write data;
 }%%
 
-// Parse a private key file as defined in XXX.
+// PrivateKey parses a private key file as defined in XXX.
 // A map[string]string is returned with the values. All the keys
 // are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
 func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
         m = make(map[string]string)
-        var k string
+        var (
+            k, data string
+            cs, p, pe int
+        )
         lines := strings.SplitAfter(string(kp.buf), "\n", -1)
         for _, data := range lines {
-            cs, p, pe := 0, 0, len(data)
+            cs, p, pe = 0, 0, len(data)
             mark := 0
 
         %%{
@@ -62,19 +65,16 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
         }%%
         }
 
-        /*
-        if cs < z_first_final {
-                // No clue what I'm doing what so ever
+        if cs < k_first_final {
                 if p == pe {
                         //return nil, os.ErrorString("unexpected eof")
                         println("err unexp eof")
                         return m, nil
                 } else {
                         //return nil, os.ErrorString(fmt.Sprintf("error at position %d", p))
-                        println("err ", p, "data:", string(data[p]))
+                        println("err ", p, "data:", data[p])
                         return nil, nil
                 }
         }
-        */
         return m, nil
 }
