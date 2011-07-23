@@ -89,7 +89,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 //        brace := false
         lines := 0
         mark := 0
-        hdr := new(RR_Header)
+        var hdr RR_Header
 
         %%{
                 action mark       { mark = p }
