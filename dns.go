@@ -83,7 +83,7 @@ func (r RRset) Len() int           { return len(r) }
 func (r RRset) Less(i, j int) bool { return r[i].Header().Name < r[j].Header().Name }
 func (r RRset) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
 
-// Check if the RRset is RFC 2181 compliant
+// Check if the RRset is RFC 2181 compliant.
 func (r RRset) Ok() bool {
 	ttl := r[0].Header().Ttl
 	name := r[0].Header().Name
