@@ -108,7 +108,7 @@ func (mux *QueryMux) HandleQueryFunc(pattern string, handler func(RequestWriter,
 func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
 	h := mux.match(r.Question[0].Name)
 	if h == nil {
-                panic("dns: no handler found for " + r.Question[0].Name)
+		panic("dns: no handler found for " + r.Question[0].Name)
 	}
 	h.QueryDNS(w, r)
 }
@@ -122,7 +122,7 @@ type Client struct {
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
-        // LocalAddr string            // Local address to use
+	// LocalAddr string            // Local address to use
 }
 
 // Create a new client, with some defaults.
@@ -144,7 +144,7 @@ func (q *Query) Query() os.Error {
 	if handler == nil {
 		handler = DefaultQueryMux
 	}
-//forever:
+	//forever:
 	for {
 		select {
 		case in := <-q.ChannelQuery:
@@ -210,7 +210,7 @@ func (c *Client) Exchange(m *Msg, a string) *Msg {
 		return nil
 	}
 	p = p[:n]
-        r := new(Msg)
+	r := new(Msg)
 	if ok := r.Unpack(p); !ok {
 		return nil
 	}

@@ -2,12 +2,12 @@ package dns
 
 import (
 	"os"
-        "io"
+	"io"
 	"big"
 	"strconv"
 	"crypto/rsa"
-        "crypto/ecdsa"
-        "crypto/elliptic"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 )
 
@@ -31,14 +31,14 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
 		}
-        case ECDSAP256SHA256:
-                if bits != 256 {
-                        return nil, ErrKeySize
-                }
-        case ECDSAP384SHA384:
-                if bits != 384 {
-                        return nil, ErrKeySize
-                }
+	case ECDSAP256SHA256:
+		if bits != 256 {
+			return nil, ErrKeySize
+		}
+	case ECDSAP384SHA384:
+		if bits != 384 {
+			return nil, ErrKeySize
+		}
 	}
 
 	switch r.Algorithm {
@@ -47,22 +47,22 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 		if err != nil {
 			return nil, err
 		}
-                r.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
+		r.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
 		return priv, nil
-        case ECDSAP256SHA256, ECDSAP384SHA384:
-                var c *elliptic.Curve
-                switch r.Algorithm {
-                case ECDSAP256SHA256:
-                        c = elliptic.P256()
-                case ECDSAP384SHA384:
-                        c = elliptic.P384()
-                }
-                priv, err := ecdsa.GenerateKey(c, rand.Reader)
-                if err != nil {
-                        return nil, err
-                }
-                r.setPublicKeyCurve(priv.PublicKey.X, priv.PublicKey.Y)
-                return priv, nil
+	case ECDSAP256SHA256, ECDSAP384SHA384:
+		var c *elliptic.Curve
+		switch r.Algorithm {
+		case ECDSAP256SHA256:
+			c = elliptic.P256()
+		case ECDSAP384SHA384:
+			c = elliptic.P384()
+		}
+		priv, err := ecdsa.GenerateKey(c, rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+		r.setPublicKeyCurve(priv.PublicKey.X, priv.PublicKey.Y)
+		return priv, nil
 	default:
 		return nil, ErrAlg
 	}
@@ -106,81 +106,81 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Exponent1: " + exponent1 + "\n" +
 			"Exponent2: " + exponent2 + "\n" +
 			"Coefficient: " + coefficient + "\n"
-        case *ecdsa.PrivateKey:
-                //
+	case *ecdsa.PrivateKey:
+		//
 	}
 	return
 }
 
 func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
-        p := NewParser(q)
-        r := p.RR()
-        if r == nil {
-                return nil
-        }
-        if _, ok := r.(*RR_DNSKEY); !ok {
-                panic("did not read a DNSKEY")
-        }
-        k.Hdr = r.(*RR_DNSKEY).Hdr
-        k.Flags = r.(*RR_DNSKEY).Flags
-        k.Protocol = r.(*RR_DNSKEY).Protocol
-        k.Algorithm = r.(*RR_DNSKEY).Algorithm
-        k.PublicKey = r.(*RR_DNSKEY).PublicKey
-        return nil
+	p := NewParser(q)
+	r := p.RR()
+	if r == nil {
+		return nil
+	}
+	if _, ok := r.(*RR_DNSKEY); !ok {
+		panic("did not read a DNSKEY")
+	}
+	k.Hdr = r.(*RR_DNSKEY).Hdr
+	k.Flags = r.(*RR_DNSKEY).Flags
+	k.Protocol = r.(*RR_DNSKEY).Protocol
+	k.Algorithm = r.(*RR_DNSKEY).Algorithm
+	k.PublicKey = r.(*RR_DNSKEY).PublicKey
+	return nil
 }
 
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
-        p := NewParser(q)
-        kv, _ := p.PrivateKey()
-        if _, ok := kv["private-key-format"]; !ok {
-                return nil, ErrPrivKey
-        }
-        if kv["private-key-format"] != "v1.2" && kv["private-key-format"] != "v1.3" {
-                return nil, ErrPrivKey
-        }
-        switch kv["algorithm"] {
-        case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
-                return k.readPrivateKeyRSA(kv)
-        case "ECDSAP256SHA256", "ECDSAP384SHA384":
-                return k.readPrivateKeyECDSA(kv)
-        }
+	p := NewParser(q)
+	kv, _ := p.PrivateKey()
+	if _, ok := kv["private-key-format"]; !ok {
+		return nil, ErrPrivKey
+	}
+	if kv["private-key-format"] != "v1.2" && kv["private-key-format"] != "v1.3" {
+		return nil, ErrPrivKey
+	}
+	switch kv["algorithm"] {
+	case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
+		return k.readPrivateKeyRSA(kv)
+	case "ECDSAP256SHA256", "ECDSAP384SHA384":
+		return k.readPrivateKeyECDSA(kv)
+	}
 	return nil, ErrPrivKey
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
 func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, os.Error) {
 	p := new(rsa.PrivateKey)
-	p.Primes = []*big.Int{nil,nil}
-        for k, v := range kv {
-                switch k {
-                case "modulus", "publicexponent", "privateexponent", "prime1", "prime2":
-                        v1, err := packBase64([]byte(v))
-                        if err != nil {
-                                return nil, err
-                        }
-                        switch k {
-                        case "modulus":
-                                p.PublicKey.N = big.NewInt(0)
-                                p.PublicKey.N.SetBytes(v1)
-                        case "publicexponent":
-                                i := big.NewInt(0)
-                                i.SetBytes(v1)
-                                p.PublicKey.E = int(i.Int64()) // int64 should be large enough
-                        case "privateexponent":
-                                p.D = big.NewInt(0)
-                                p.D.SetBytes(v1)
-                        case "prime1":
-                                p.Primes[0] = big.NewInt(0)
-                                p.Primes[0].SetBytes(v1)
-                        case "prime2":
-                                p.Primes[1] = big.NewInt(0)
-                                p.Primes[1].SetBytes(v1)
-                        }
-                case "exponent1", "exponent2", "coefficient":
-                        // not used in Go (yet)
-                case "created", "publish", "activate":
-                        // not used in Go (yet)
-                }
+	p.Primes = []*big.Int{nil, nil}
+	for k, v := range kv {
+		switch k {
+		case "modulus", "publicexponent", "privateexponent", "prime1", "prime2":
+			v1, err := packBase64([]byte(v))
+			if err != nil {
+				return nil, err
+			}
+			switch k {
+			case "modulus":
+				p.PublicKey.N = big.NewInt(0)
+				p.PublicKey.N.SetBytes(v1)
+			case "publicexponent":
+				i := big.NewInt(0)
+				i.SetBytes(v1)
+				p.PublicKey.E = int(i.Int64()) // int64 should be large enough
+			case "privateexponent":
+				p.D = big.NewInt(0)
+				p.D.SetBytes(v1)
+			case "prime1":
+				p.Primes[0] = big.NewInt(0)
+				p.Primes[0].SetBytes(v1)
+			case "prime2":
+				p.Primes[1] = big.NewInt(0)
+				p.Primes[1].SetBytes(v1)
+			}
+		case "exponent1", "exponent2", "coefficient":
+			// not used in Go (yet)
+		case "created", "publish", "activate":
+			// not used in Go (yet)
+		}
 	}
 	return p, nil
 }
@@ -188,18 +188,18 @@ func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, os.Erro
 func (k *RR_DNSKEY) readPrivateKeyECDSA(kv map[string]string) (PrivateKey, os.Error) {
 	p := new(ecdsa.PrivateKey)
 	p.D = big.NewInt(0)
-        // Need to check if we have everything
-        for k, v := range kv {
-                switch k {
-                case "privatekey:":
-                        v1, err := packBase64([]byte(v))
-                        if err != nil {
-                                return nil, err
-                        }
-                        p.D.SetBytes(v1)
-                case "created:", "publish:", "activate:":
-                        /* not used in Go (yet) */
-                }
-        }
+	// Need to check if we have everything
+	for k, v := range kv {
+		switch k {
+		case "privatekey:":
+			v1, err := packBase64([]byte(v))
+			if err != nil {
+				return nil, err
+			}
+			p.D.SetBytes(v1)
+		case "created:", "publish:", "activate:":
+			/* not used in Go (yet) */
+		}
+	}
 	return p, nil
 }

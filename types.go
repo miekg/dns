@@ -149,11 +149,11 @@ func (q *Question) String() string {
 // NewRR returns the last RR contained in s.
 func NewRR(s string) RR {
 	p := NewParser(strings.NewReader(s))
-        x := p.RR()
+	x := p.RR()
 	if x == nil {
 		return nil
 	}
-        return x
+	return x
 }
 
 type RR_CNAME struct {

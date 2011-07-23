@@ -6,8 +6,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-        "crypto/ecdsa"
-        "crypto/elliptic"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rsa"
 	"crypto/rand"
 	"encoding/hex"
@@ -22,25 +22,25 @@ import (
 
 // DNSSEC encryption algorithm codes.
 const (
-	RSAMD5    = 1
-	DH        = 2
-	DSA       = 3
-	ECC       = 4
-	RSASHA1   = 5
-	RSASHA256 = 8
-	RSASHA512 = 10
-	ECCGOST   = 12
-        ECDSAP256SHA256 = 13
-        ECDSAP384SHA384 = 14
+	RSAMD5          = 1
+	DH              = 2
+	DSA             = 3
+	ECC             = 4
+	RSASHA1         = 5
+	RSASHA256       = 8
+	RSASHA512       = 10
+	ECCGOST         = 12
+	ECDSAP256SHA256 = 13
+	ECDSAP384SHA384 = 14
 )
 
 // DNSSEC hashing algorithm codes.
 const (
-	_ = iota
-	SHA1        // RFC 4034
-	SHA256      // RFC 4509 
-	GOST94      // RFC 5933
-        SHA384      // Experimental
+	_      = iota
+	SHA1   // RFC 4034
+	SHA256 // RFC 4509 
+	GOST94 // RFC 5933
+	SHA384 // Experimental
 )
 
 // DNSKEY flag values.
@@ -151,8 +151,8 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 		s := sha256.New()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
-        case SHA384:
-                s := sha512.New384()
+	case SHA384:
+		s := sha512.New384()
 		io.WriteString(s, string(digest))
 		ds.Digest = hex.EncodeToString(s.Sum())
 	case GOST94:
@@ -213,49 +213,49 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	}
 	signdata = append(signdata, wire...)
 
-        var sighash []byte
-        var h hash.Hash
-	var ch crypto.Hash      // Only need for RSA
-        switch s.Algorithm {
-                case RSAMD5:
-                        h = md5.New()
-			ch = crypto.MD5
-	        case RSASHA1:
-                        h = sha1.New()
-			ch = crypto.SHA1
-                case RSASHA256, ECDSAP256SHA256:
-                        h = sha256.New()
-			ch = crypto.SHA256
-                case ECDSAP384SHA384:
-                        h = sha512.New384()
-                case RSASHA512:
-                        h = sha512.New()
-			ch = crypto.SHA512
-                default:
-                        return false            // Illegal alg
-        }
-        io.WriteString(h, string(signdata))
-        sighash = h.Sum()
+	var sighash []byte
+	var h hash.Hash
+	var ch crypto.Hash // Only need for RSA
+	switch s.Algorithm {
+	case RSAMD5:
+		h = md5.New()
+		ch = crypto.MD5
+	case RSASHA1:
+		h = sha1.New()
+		ch = crypto.SHA1
+	case RSASHA256, ECDSAP256SHA256:
+		h = sha256.New()
+		ch = crypto.SHA256
+	case ECDSAP384SHA384:
+		h = sha512.New384()
+	case RSASHA512:
+		h = sha512.New()
+		ch = crypto.SHA512
+	default:
+		return false // Illegal alg
+	}
+	io.WriteString(h, string(signdata))
+	sighash = h.Sum()
 
-        switch p := k.(type) {
-        case *rsa.PrivateKey:
-                signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
-                if err != nil {
-                        return false
-                }
-                s.Signature = unpackBase64(signature)
-        case *ecdsa.PrivateKey:
-                r1, s1, err := ecdsa.Sign(rand.Reader, p, sighash)
-                if err != nil {
-                        return false
-                }
-                signature := r1.Bytes()
-                signature = append(signature, s1.Bytes()...)
-                s.Signature =unpackBase64(signature)
-        default:
-                // Not given the correct key
-                return false
-        }
+	switch p := k.(type) {
+	case *rsa.PrivateKey:
+		signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+		if err != nil {
+			return false
+		}
+		s.Signature = unpackBase64(signature)
+	case *ecdsa.PrivateKey:
+		r1, s1, err := ecdsa.Sign(rand.Reader, p, sighash)
+		if err != nil {
+			return false
+		}
+		signature := r1.Bytes()
+		signature = append(signature, s1.Bytes()...)
+		s.Signature = unpackBase64(signature)
+	default:
+		// Not given the correct key
+		return false
+	}
 	return true
 }
 
@@ -394,23 +394,23 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 
 // Extract the Curve public key from the Key record
 func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
-        keybuf, err := packBase64([]byte(k.PublicKey))
-        if err != nil {
-                return nil
-        }
-        var c *elliptic.Curve
-        switch k.Algorithm {
-        case ECDSAP256SHA256:
-                c = elliptic.P256()
-        case ECDSAP384SHA384:
-                c = elliptic.P384()
-        }
-        x, y := c.Unmarshal(keybuf)
-        pubkey := new(ecdsa.PublicKey)
-        pubkey.X = x
-        pubkey.Y = y
-        pubkey.Curve = c
-        return pubkey
+	keybuf, err := packBase64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	var c *elliptic.Curve
+	switch k.Algorithm {
+	case ECDSAP256SHA256:
+		c = elliptic.P256()
+	case ECDSAP384SHA384:
+		c = elliptic.P384()
+	}
+	x, y := c.Unmarshal(keybuf)
+	pubkey := new(ecdsa.PublicKey)
+	pubkey.X = x
+	pubkey.Y = y
+	pubkey.Curve = c
+	return pubkey
 }
 
 // Set the public key (the value E and N)
@@ -426,12 +426,12 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 
 // Set the public key for Elliptic Curves
 func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
-        if _X == nil || _Y == nil {
-                return false
-        }
-        buf := curveToBuf(_X, _Y)
-        k.PublicKey = unpackBase64(buf)
-        return true
+	if _X == nil || _Y == nil {
+		return false
+	}
+	buf := curveToBuf(_X, _Y)
+	k.PublicKey = unpackBase64(buf)
+	return true
 }
 
 // Set the public key (the values E and N) for RSA
@@ -455,9 +455,9 @@ func exponentToBuf(_E int) []byte {
 // Set the public key for X and Y for Curve
 // Experimental
 func curveToBuf(_X, _Y *big.Int) []byte {
-        buf := _X.Bytes()
-        buf = append(buf, _Y.Bytes()...)
-        return buf
+	buf := _X.Bytes()
+	buf = append(buf, _Y.Bytes()...)
+	return buf
 }
 
 // return a saw signature data 
@@ -500,13 +500,13 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 // Map for algorithm names.
 var alg_str = map[uint8]string{
-	RSAMD5:    "RSAMD5",
-	DH:        "DH",
-	DSA:       "DSA",
-	RSASHA1:   "RSASHA1",
-	RSASHA256: "RSASHA256",
-	RSASHA512: "RSASHA512",
-	ECCGOST:   "ECC-GOST",
-        ECDSAP256SHA256: "ECDSAP256SHA256",
-        ECDSAP384SHA384: "ECDSAP384SHA384",
+	RSAMD5:          "RSAMD5",
+	DH:              "DH",
+	DSA:             "DSA",
+	RSASHA1:         "RSASHA1",
+	RSASHA256:       "RSASHA256",
+	RSASHA512:       "RSASHA512",
+	ECCGOST:         "ECC-GOST",
+	ECDSAP256SHA256: "ECDSAP256SHA256",
+	ECDSAP384SHA384: "ECDSAP384SHA384",
 }

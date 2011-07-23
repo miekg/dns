@@ -2,7 +2,7 @@ package dns
 
 import (
 	"testing"
-        "time"
+	"time"
 )
 
 func TestClientSync(t *testing.T) {
@@ -80,19 +80,19 @@ func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl")
 
-        m.SetTsig("axfr", HmacMD5, 300, uint64(time.Seconds()))
-        secrets := make(map[string]string)
-        secrets["axfr"] = "so6ZGir4GPAqINNh9U5c3A=="
+	m.SetTsig("axfr", HmacMD5, 300, uint64(time.Seconds()))
+	secrets := make(map[string]string)
+	secrets["axfr"] = "so6ZGir4GPAqINNh9U5c3A=="
 
-        c := NewClient()
-        c.Net = "tcp"
-        c.TsigSecret = secrets
+	c := NewClient()
+	c.Net = "tcp"
+	c.TsigSecret = secrets
 
-        c.XfrReceive(m, "85.223.71.124:53")
-        /*
-        if err != nil {
-                t.Log("%s\n", err.String())
-                t.Fail()
-        }
-        */
+	c.XfrReceive(m, "85.223.71.124:53")
+	/*
+	   if err != nil {
+	           t.Log("%s\n", err.String())
+	           t.Fail()
+	   }
+	*/
 }

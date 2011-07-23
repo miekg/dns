@@ -119,10 +119,10 @@ func TestSignVerify(t *testing.T) {
 }
 
 func TestKeyGen(t *testing.T) {
-        algs := []uint8{RSASHA256, ECDSAP256SHA256}
-        bits := []int{1024, 256}
+	algs := []uint8{RSASHA256, ECDSAP256SHA256}
+	bits := []int{1024, 256}
 
-        i := 0
+	i := 0
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "keygen.miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
@@ -130,13 +130,13 @@ func TestKeyGen(t *testing.T) {
 	key.Hdr.Ttl = 3600
 	key.Flags = 256
 	key.Protocol = 3
-        for _, v := range algs {
-                key.Algorithm = v
-                key.Generate(bits[i])
-                i++
-                t.Logf("%s\n", key)
-        }
-        //Really hard to figure out what to check here... Parse it back to a proper key?
+	for _, v := range algs {
+		key.Algorithm = v
+		key.Generate(bits[i])
+		i++
+		t.Logf("%s\n", key)
+	}
+	//Really hard to figure out what to check here... Parse it back to a proper key?
 }
 
 /*

@@ -127,7 +127,7 @@ var Class_str = map[uint16]string{
 	ClassCSNET:  "CS",
 	ClassCHAOS:  "CH",
 	ClassHESIOD: "HS",
-        ClassNONE:   "NONE",
+	ClassNONE:   "NONE",
 	ClassANY:    "ANY",
 }
 
@@ -363,8 +363,8 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			i := fv.Uint()
 			switch fv.Type().Kind() {
 			default:
-                                //fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
-                                return len(msg), false
+				//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
+				return len(msg), false
 			case reflect.Uint8:
 				if off+1 > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
@@ -597,8 +597,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 			switch fv.Type().Kind() {
 			default:
-                                //fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
-                                return len(msg), false
+				//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
+				return len(msg), false
 
 			case reflect.Uint8:
 				if off+1 > len(msg) {

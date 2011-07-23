@@ -28,19 +28,19 @@ func TestServing(t *testing.T) {
 }
 
 func BenchmarkServing(b *testing.B) {
-        b.StopTimer()
-        // Again start a server
+	b.StopTimer()
+	// Again start a server
 	HandleFunc("miek.nl.", HelloServer)
 	go func() {
-	        ListenAndServe("127.0.0.1:8053", "udp", nil)
+		ListenAndServe("127.0.0.1:8053", "udp", nil)
 	}()
 
-        c := NewClient()
-        m := new(Msg)
-        m.SetQuestion("miek.nl", TypeSOA)
+	c := NewClient()
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeSOA)
 
-        b.StartTimer()
-        for i := 0; i < b.N; i++ {
-                c.Exchange(m, "127.0.0.1:8053")
-        }
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		c.Exchange(m, "127.0.0.1:8053")
+	}
 }

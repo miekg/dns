@@ -23,7 +23,7 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-        // Write a reply back to the client.
+	// Write a reply back to the client.
 	Write([]byte) (int, os.Error)
 }
 
@@ -164,12 +164,12 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 // A Server defines parameters for running an DNS server.
 // Note how much it starts to look like 'Client struct'
 type Server struct {
-	Addr         string  // address to listen on, ":dns" if empty
-	Net          string  // if "tcp" it will invoke a TCP listener, otherwise an UDP one
-	Handler      Handler // handler to invoke, dns.DefaultServeMux if nil
-	ReadTimeout  int64   // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout int64   // the net.Conn.SetWriteTimeout value for new connections
-        TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
+	Addr         string            // address to listen on, ":dns" if empty
+	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
+	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
+	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
+	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
 // ...
@@ -333,7 +333,7 @@ func (w *response) Write(data []byte) (n int, err os.Error) {
 	case w.conn._UDP != nil:
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
-                        println(err.String())
+			println(err.String())
 			return 0, err
 		}
 	case w.conn._TCP != nil:
