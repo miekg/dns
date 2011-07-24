@@ -784,7 +784,7 @@ func timeToDate(t uint32) string {
 
 	// If needed assume wrap around(s)
 	ti := time.SecondsToUTC(int64(t) + (mod * Year68)) // abs()? TODO
-	return ti.Format("20060102030405")
+	return ti.Format("20060102150405")
 }
 
 // Translate the TSIG time signed into a date. There is no
@@ -792,7 +792,7 @@ func timeToDate(t uint32) string {
 func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
 	ti := time.SecondsToUTC(int64(t))
-	return ti.Format("20060102030405")
+	return ti.Format("20060102150405")
 }
 
 // Map of constructors for each RR wire type.

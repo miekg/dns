@@ -7,7 +7,7 @@
         rr.Hdr.Rrtype = TypeA
         rr.A = net.ParseIP(rdf[0])
         if rr.A == nil {
-                return z, &ParseError{Error: "bad A: " + rdf[0], line: l}
+                return z, &ParseError{Error: "bad A", name: rdf[0], line: l}
         }
         z.Push(rr)
     }
@@ -19,7 +19,7 @@
         rr.Hdr.Rrtype = TypeAAAA
         rr.AAAA = net.ParseIP(rdf[0])
         if rr.AAAA == nil {
-                return z, &ParseError{Error: "bad AAAA: " + rdf[0], line: l}
+                return z, &ParseError{Error: "bad AAAA", name: rdf[0], line: l}
         }
         z.Push(rr)
     }
@@ -31,7 +31,7 @@
         rr.Hdr.Rrtype = TypeNS
         rr.Ns = rdf[0]
         if ! IsDomainName(rdf[0]) {
-                return z, &ParseError{Error: "bad NS: " + rdf[0], line: l}
+                return z, &ParseError{Error: "bad NS", name: rdf[0], line: l}
         }
         z.Push(rr)
     }
@@ -45,7 +45,7 @@
         rr.Pref = uint16(i)
         rr.Mx = rdf[1]
         if err != nil {
-                return z, &ParseError{Error: "bad MX: " + rdf[0], line: l}
+                return z, &ParseError{Error: "bad MX", name: rdf[0], line: l}
         }
         z.Push(rr)
     }
@@ -57,14 +57,14 @@
         rr.Hdr.Rrtype = TypeCNAME
         rr.Cname = rdf[0]
         if ! IsDomainName(rdf[0]) {
-                return z, &ParseError{Error: "bad CNAME: " + rdf[0], line: l}
+                return z, &ParseError{Error: "bad CNAME", name: rdf[0], line: l}
         }
         z.Push(rr)
     }
 
     action setSOA {
         var (
-                i int
+                i uint
                 err os.Error
         )
         rdf := fields(data[mark:p], 7)
@@ -73,20 +73,23 @@
         rr.Hdr.Rrtype = TypeSOA
         rr.Ns = rdf[0]
         rr.Mbox = rdf[1]
-        if ! IsDomainName(rdf[0]) || ! IsDomainName(rdf[1]) {
-                return z, &ParseError{Error: "bad SOA: " + rdf[0] + "," + rdf[1], line: l}
+        if ! IsDomainName(rdf[0]) {
+                return z, &ParseError{Error: "bad SOA", name: rdf[0], line: l}
         }
-        for j, _ := range rdf[2:7] {
-            if i, err = strconv.Atoi(rdf[j]); err != nil {
-                    return z, &ParseError{Error: "bad SOA: " + rdf[j], line: l}
-            }
-            switch j {
-                    case 2: rr.Serial = uint32(i)
-                    case 3: rr.Refresh = uint32(i)
-                    case 4: rr.Retry = uint32(i)
-                    case 5: rr.Expire = uint32(i)
-                    case 6: rr.Minttl = uint32(i)
-            }
+        if ! IsDomainName(rdf[1]) {
+                return z, &ParseError{Error: "bad SOA", name: rdf[1], line: l}
+        }
+        for j, s := range rdf[2:7] {
+                if i, err = strconv.Atoui(s); err != nil {
+                        return z, &ParseError{Error: "bad SOA", name: s, line: l}
+                }
+                switch j {
+                case 0: rr.Serial = uint32(i)
+                case 1: rr.Refresh = uint32(i)
+                case 2: rr.Retry = uint32(i)
+                case 3: rr.Expire = uint32(i)
+                case 4: rr.Minttl = uint32(i)
+                }
         }
         z.Push(rr)
     }
@@ -140,19 +143,54 @@
     }
 
     action setRRSIG {
+        var (
+                i uint
+                j uint32
+                err os.Error
+        )
         rdf := fields(data[mark:p], 9)
         rr := new(RR_RRSIG)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeRRSIG
-        rr.TypeCovered = uint16(atoi(rdf[0]))
-        rr.Algorithm = uint8(atoi(rdf[1]))
-        rr.Labels = uint8(atoi(rdf[2]))
-        rr.OrigTtl = uint32(atoi(rdf[3]))
-        rr.Expiration = uint32(atoi(rdf[4]))
-        rr.Inception = uint32(atoi(rdf[5]))
-        rr.KeyTag = uint16(atoi(rdf[6]))
+
+        if _, ok := str_rr[rdf[0]]; !ok {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[0], line: l}
+        }
+        rr.TypeCovered = str_rr[rdf[0]]
+
+        if i, err = strconv.Atoui(rdf[1]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[1], line: l}
+        }
+        rr.Algorithm = uint8(i)
+        if i, err = strconv.Atoui(rdf[2]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[2], line: l}
+        }
+        rr.Labels = uint8(i)
+        if i, err = strconv.Atoui(rdf[3]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[3], line: l}
+        }
+        rr.OrigTtl = uint32(i)
+
+        if j, err = dateToTime(rdf[4]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[4], line: l}
+        }
+        rr.Expiration = j
+        if j, err = dateToTime(rdf[5]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[5], line: l}
+        }
+        rr.Inception = j
+
+        if i, err = strconv.Atoui(rdf[6]); err != nil {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[3], line: l}
+        }
+        rr.KeyTag = uint16(i)
+       
         rr.SignerName = rdf[7]
-        rr.Signature = rdf[9]
+        if ! IsDomainName(rdf[7]) {
+                return z, &ParseError{Error: "bad RRSIG", name: rdf[7], line: l}
+        }
+        // Check base64 TODO
+        rr.Signature = rdf[8]
         z.Push(rr)
     }
 
@@ -165,8 +203,8 @@
         rr.TypeBitMap = make([]uint16, len(rdf)-1)
         // Fill the Type Bit Map
         for i := 1; i < len(rdf); i++ {
-            // Check if its there in the map TODO
-            rr.TypeBitMap[i-1] = str_rr[rdf[i]]
+                // Check if its there in the map TODO
+                rr.TypeBitMap[i-1] = str_rr[rdf[i]]
         }
         z.Push(rr)
     }

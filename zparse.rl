@@ -7,6 +7,7 @@ import (
     "os"
     "io"
     "net"
+    "time"
     "strings"
     "strconv"
 )
@@ -16,18 +17,19 @@ const _IOBUF = MaxMsgSize
 // A Parser represents a DNS parser for a 
 // particular input stream. 
 type Parser struct {
-    // nothing here yet
-    buf    []byte
+        // nothing here yet
+        buf    []byte
 }
 
 type ParseError struct {
-    Error string
-    line  int
+        Error string
+        name  string
+        line  int
 }
 
 func (e *ParseError) String() string {
-    s := e.Error + " line: " + strconv.Itoa(e.line)
-    return s
+        s := e.Error + ": \""  + e.name + "\" at line: " + strconv.Itoa(e.line)
+        return s
 }
 
 // NewParser creates a new DNS file parser from r.
@@ -47,6 +49,18 @@ func NewParser(r io.Reader) *Parser {
         return p
 }
 
+// Translate the RRSIG's incep. and expir. times from 
+// string values ("20110403154150") to an integer.
+// Taking into account serial arithmetic (RFC 1982)
+func dateToTime(s string) (uint32, os.Error) {
+    t, e := time.Parse("20060102150405", s)
+    if e != nil {
+        return 0, e
+    }
+    mod := t.Seconds() / Year68
+    ti := uint32(t.Seconds() - (mod * Year68))
+    return ti, nil
+}
 
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.

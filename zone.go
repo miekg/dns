@@ -20,15 +20,24 @@ func (z *Zone) Push(r RR) {
 
 // Remove a RR from the zone.
 func (z *Zone) Pop() RR {
+	if z == nil {
+		return nil
+	}
 	return z.v.Pop().(RR)
 }
 
 // Return the RR at index i of zone.
 func (z *Zone) At(i int) RR {
+        if z == nil {
+                return nil
+        }
 	return z.v.At(i).(RR)
 }
 
 // The number of RRs in zone.
 func (z *Zone) Len() int {
+        if z == nil {
+                return 0
+        }
 	return z.v.Len()
 }
