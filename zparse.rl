@@ -11,8 +11,7 @@ import (
     "strconv"
 )
 
-//const _IOBUF = 65365 // See comments in gdnsd
-const _IOBUF = 3e7  // TODO fix sliding window stuff in Ragel
+const _IOBUF = MaxMsgSize
 
 // A Parser represents a DNS parser for a 
 // particular input stream. 
