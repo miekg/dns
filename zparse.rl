@@ -20,6 +20,16 @@ type Parser struct {
     buf    []byte
 }
 
+type ParseError struct {
+    Error string
+    line  int
+}
+
+func (e *ParseError) String() string {
+    s := e.Error + " line: " + strconv.Itoa(e.line)
+    return s
+}
+
 // NewParser creates a new DNS file parser from r.
 func NewParser(r io.Reader) *Parser {
         buf := make([]byte, _IOBUF) 
@@ -70,12 +80,12 @@ func atoi(s string) uint {
 }%%
 
 // RR parses a zone file, but only returns the last RR read.
-func (zp *Parser) RR() RR {
+func (zp *Parser) RR() (RR, os.Error) {
     z, err := zp.Zone()
     if err != nil {
-        return nil
+        return nil, err
     }
-    return z.Pop().(RR)
+    return z.Pop().(RR), nil
 }
 
 // Zone parses an DNS master zone file.
@@ -86,18 +96,29 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
         eof := len(data)
 
 //        brace := false
-        lines := 0
+        l := 1  // or... 0?
         mark := 0
         var hdr RR_Header
 
         %%{
+    
+
                 action mark       { mark = p }
-                action setQname   { hdr.Name = data[mark:p] }
+                action lineCount  { l++ }
+                action setQname   { if ! IsDomainName(data[mark:p]) {
+                                            return z, &ParseError{Error: "bad qname: " + data[mark:p], line: l}
+                                    }
+                                    hdr.Name = data[mark:p]
+                                  }
+                action errQclass  { return z, &ParseError{Error: "bad qclass: " + data[mark:p], line: l} }
                 action setQclass  { hdr.Class = str_class[data[mark:p]] }
                 action defTtl     { /* ... */ }
-                action setTtl     { ttl := atoi(data[mark:p]); hdr.Ttl = uint32(ttl) }
-                action lineCount  { lines++ }
-
+                action setTtl     { i, err := strconv.Atoui(data[mark:p])
+                                    if err != nil {
+                                            return z, &ParseError{Error: "bad ttl: " + data[mark:p], line: l}
+                                    }
+                                    hdr.Ttl = uint32(i)
+                                  }
 #                action openBrace  { if brace { println("Brace already open")} ; brace = true }
 #                action closeBrace { if !brace { println("Brace already closed")}; brace = false }
 #                action brace      { brace }
@@ -116,7 +137,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 
                 rdata = [^\n]+ >mark;
                 qname  = [a-zA-Z0-9.\-_]+ >mark %setQname;
-                qclass = ('IN'i|'CH'i|'HS'i) >mark %setQclass;
+                qclass = ('IN'i|'CH'i|'HS'i) >mark %setQclass; # @err(errQclass);
 
                 lhs = qname? bl %defTtl (
                       (ttl %setTtl bl (qclass bl)?)
@@ -160,10 +181,10 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
                         if p == pe {
                                 println("p", p, "pe", pe)
                                 println("cs", cs, "z_first_final", z_first_final)
-                                println("unexpected eof at line ", lines)
+                                println("unexpected eof at line ", l)
                                 return z, nil
                         } else {
-                                println("error at position ", p, "\"",data[mark:p],"\" at line ", lines)
+                                println("error at position ", p, "\"",data[mark:p],"\" at line ", l)
                                 return z, nil
                         }
                 }

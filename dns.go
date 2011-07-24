@@ -145,24 +145,3 @@ func (h *RR_Header) String() string {
 	}
 	return s
 }
-
-// Return the number of labels in a domain name.
-// Need to add these kind of function in a structured way. TODO(mg)
-func LabelCount(a string) (c uint8) {
-	// walk the string and count the dots
-	// except when it is escaped
-	esc := false
-	for _, v := range a {
-		switch v {
-		case '.':
-			if esc {
-				esc = !esc
-				continue
-			}
-			c++
-		case '\\':
-			esc = true
-		}
-	}
-	return
-}

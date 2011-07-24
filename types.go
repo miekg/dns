@@ -6,6 +6,7 @@
 package dns
 
 import (
+        "os"
 	"net"
 	"time"
 	"strconv"
@@ -147,13 +148,9 @@ func (q *Question) String() string {
 }
 
 // NewRR returns the last RR contained in s.
-func NewRR(s string) RR {
+func NewRR(s string) (RR, os.Error) {
 	p := NewParser(strings.NewReader(s))
-	x := p.RR()
-	if x == nil {
-		return nil
-	}
-	return x
+	return p.RR()
 }
 
 type RR_CNAME struct {

@@ -114,9 +114,9 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 
 func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
 	p := NewParser(q)
-	r := p.RR()
-	if r == nil {
-		return nil
+	r, err := p.RR()
+	if err != nil {
+		return err
 	}
 	if _, ok := r.(*RR_DNSKEY); !ok {
 		panic("did not read a DNSKEY")

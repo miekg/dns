@@ -124,27 +124,21 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestSetString(t *testing.T) {
-	a := NewRR("miek.nl. IN A 127.0.0.1")
-	if a.String() != "miek.nl.\t0\tIN\tA\t127.0.0.1" {
-		t.Log(a.String(), "!= miek.nl. IN A 127.0.0.1")
-		t.Fail()
-	}
-	b := NewRR("miek.nl. IN AAAA ::1")
-	if b.String() != "miek.nl.\t0\tIN\tAAAA\t::1" {
-		t.Log(b.String(), "!= miek.nl. IN AAAA ::1")
-		t.Fail()
-	}
-	c := NewRR("miek.nl. IN MX 10 miek.nl.")
-	if c.String() != "miek.nl.\t0\tIN\tMX\t10 miek.nl." {
-		t.Log(c.String(), "!= miek.nl. IN MX 10 miek.nl.")
-		t.Fail()
-	}
-	d := NewRR("miek.nl. IN NS ns1.miek.nl")
-	if d.String() != "miek.nl.\t0\tIN\tNS\tns1.miek.nl" {
-		t.Log(d.String(), "!= miek.nl. IN NS ns1.miek.nl")
-		t.Fail()
-	}
+func TestParseFailure(t *testing.T) {
+        tests := []string{"miek.nl. IN A 327.0.0.1",
+	        "miek.nl. IN AAAA ::x",
+	        "miek.nl. IN MX a0 miek.nl.",
+	        "miek.nl. PA MX 10 miek.nl.",
+        }
+
+        for _, t1 := range tests {
+	        _, err := NewRR(t1)
+                if err == nil {
+                        t.Log("Should have triggered an error")
+                        t.Fail()
+                }
+                t.Logf("%s: %s\n", t1, err.String())
+        }
 }
 
 func BenchmarkZoneParsing(b *testing.B) {

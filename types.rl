@@ -9,6 +9,9 @@
         rr.Hdr.Rrtype = TypeA
         rr.A = net.ParseIP(rdf[0])
         z.Push(rr)
+        if rr.A == nil {
+                return z, &ParseError{Error: "bad A: " + rdf[0], line: l}
+        }
     }
 
     action setAAAA {
@@ -18,6 +21,9 @@
         rr.Hdr.Rrtype = TypeAAAA
         rr.AAAA = net.ParseIP(rdf[0])
         z.Push(rr)
+        if rr.AAAA == nil {
+                return z, &ParseError{Error: "bad AAAA: " + rdf[0], line: l}
+        }
     }
 
     action setNS {
@@ -27,6 +33,9 @@
         rr.Hdr.Rrtype = TypeNS
         rr.Ns = rdf[0]
         z.Push(rr)
+        if ! IsDomainName(rdf[0]) {
+                return z, &ParseError{Error: "bad NS: " + rdf[0], line: l}
+        }
     }
 
     action setMX {
@@ -34,9 +43,13 @@
         rr := new(RR_MX)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeMX
-        rr.Pref = uint16(atoi(rdf[0]))
+        i, err := strconv.Atoui(rdf[0])
+        rr.Pref = uint16(i)
         rr.Mx = rdf[1]
         z.Push(rr)
+        if err != nil {
+                return z, &ParseError{Error: "bad MX: " + rdf[0], line: l}
+        }
     }
 
     action setCNAME {
@@ -46,6 +59,9 @@
         rr.Hdr.Rrtype = TypeCNAME
         rr.Cname = rdf[0]
         z.Push(rr)
+        if ! IsDomainName(rdf[0]) {
+                return z, &ParseError{Error: "bad CNAME: " + rdf[0], line: l}
+        }
     }
 
     action setSOA {
