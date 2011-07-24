@@ -289,4 +289,24 @@
 
     action setNAPTR {
     }
+
+    action setSSHFP {
+        var (
+            i int
+            e os.Error
+        )
+        rdf := fields(data[mark:p], 3)
+        rr := new(RR_SSHFP)
+        rr.Hdr = hdr
+        rr.Hdr.Rrtype = TypeSSHFP
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad SSHFP", name: rdf[0], line: l}
+        }
+        rr.Algorithm = uint8(i)
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad SSHFP", name: rdf[1], line: l}
+        }
+        rr.Type = uint8(i)
+        rr.FingerPrint = rdf[2]
+    }
 }%%

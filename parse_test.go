@@ -152,25 +152,22 @@ func TestParseFailure(t *testing.T) {
 }
 
 func BenchmarkZoneParsing(b *testing.B) {
-	file, err := os.Open("miek.nl")
+	file, err := os.Open("miek.nl.signed_test")
 	defer file.Close()
 	if err != nil {
 		return
 	}
 	p := NewParser(bufio.NewReader(file))
-	// Don't care about errors (there shouldn't be any)
 	p.Zone()
 }
 
 func TestZoneParsing(t *testing.T) {
-	file, err := os.Open("miek.nl")
+	file, err := os.Open("miek.nl.signed_test")
 	defer file.Close()
 	if err != nil {
 		return
 	}
 	p := NewParser(bufio.NewReader(file))
-
-	// Don't care about errors (there shouldn't be any)
 	start := time.Nanoseconds()
 	z, err := p.Zone()
 	if err != nil {

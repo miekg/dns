@@ -91,11 +91,11 @@ func atoi(s string) uint {
 
 
 // line 95 "zparse.go"
-var z_start int = 134
-var z_first_final int = 134
+var z_start int = 141
+var z_first_final int = 141
 var z_error int = 0
 
-var z_en_main int = 134
+var z_en_main int = 141
 
 
 // line 94 "zparse.rl"
@@ -149,7 +149,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr40:
 			// line 15 "types.rl"
 			{
@@ -167,7 +167,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr50:
 			// line 281 "types.rl"
 			{
@@ -176,7 +176,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr61:
 			// line 53 "types.rl"
 			{
@@ -194,7 +194,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr70:
 			// line 109 "types.rl"
 			{
@@ -212,7 +212,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr79:
 			// line 287 "types.rl"
 			{
@@ -221,7 +221,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr87:
 			// line 133 "types.rl"
 			{
@@ -253,7 +253,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr92:
 			// line 97 "types.rl"
 			{
@@ -271,7 +271,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr98:
 			// line 39 "types.rl"
 			{
@@ -291,7 +291,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr108:
 			// line 290 "types.rl"
 			{
@@ -300,7 +300,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr114:
 			// line 27 "types.rl"
 			{
@@ -318,7 +318,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr121:
 			// line 211 "types.rl"
 			{
@@ -339,7 +339,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr127:
 			// line 226 "types.rl"
 			{
@@ -366,7 +366,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr136:
 			// line 247 "types.rl"
 			{
@@ -397,7 +397,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr143:
 			// line 284 "types.rl"
 			{
@@ -406,7 +406,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
+			goto st141
 		tr152:
 			// line 159 "types.rl"
 			{
@@ -464,8 +464,8 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
-		tr160:
+			goto st141
+		tr161:
 			// line 65 "types.rl"
 			{
 				var (
@@ -507,8 +507,8 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
-		tr166:
+			goto st141
+		tr167:
 			// line 278 "types.rl"
 			{
 			}
@@ -516,8 +516,34 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
-		tr173:
+			goto st141
+		tr175:
+			// line 293 "types.rl"
+			{
+				var (
+					i int
+					e os.Error
+				)
+				rdf := fields(data[mark:p], 3)
+				rr := new(RR_SSHFP)
+				rr.Hdr = hdr
+				rr.Hdr.Rrtype = TypeSSHFP
+				if i, e = strconv.Atoi(rdf[0]); e != nil {
+					return z, &ParseError{Error: "bad SSHFP", name: rdf[0], line: l}
+				}
+				rr.Algorithm = uint8(i)
+				if i, e = strconv.Atoi(rdf[1]); e != nil {
+					return z, &ParseError{Error: "bad SSHFP", name: rdf[1], line: l}
+				}
+				rr.Type = uint8(i)
+				rr.FingerPrint = rdf[2]
+			}
+			// line 121 "zparse.rl"
+			{
+				l++
+			}
+			goto st141
+		tr182:
 			// line 121 "types.rl"
 			{
 				rdf := fields(data[mark:p], 4)
@@ -534,8 +560,8 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
-		tr179:
+			goto st141
+		tr188:
 			// line 275 "types.rl"
 			{
 			}
@@ -543,53 +569,55 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				l++
 			}
-			goto st134
-		tr189:
+			goto st141
+		tr198:
 			// line 121 "zparse.rl"
 			{
 				l++
 			}
-			goto st134
-		st134:
+			goto st141
+		st141:
 			p++
 			if p == pe {
-				goto _test_eof134
+				goto _test_eof141
 			}
 			fallthrough
-		case 134:
-			// line 512 "zparse.go"
+		case 141:
+			// line 536 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st1
 			case 10:
-				goto tr189
+				goto tr198
 			case 32:
 				goto st1
+			case 42:
+				goto tr199
 			case 59:
-				goto st133
+				goto st140
 			case 95:
-				goto tr190
+				goto tr199
 			}
 			if data[p] < 48 {
 				if 45 <= data[p] && data[p] <= 46 {
-					goto tr190
+					goto tr199
 				}
 			} else if data[p] > 57 {
 				if data[p] > 90 {
 					if 97 <= data[p] && data[p] <= 122 {
-						goto tr190
+						goto tr199
 					}
 				} else if data[p] >= 65 {
-					goto tr190
+					goto tr199
 				}
 			} else {
-				goto tr190
+				goto tr199
 			}
 			goto st0
 		st0:
 			cs = 0
 			goto _out
-		tr186:
+		tr195:
 			// line 122 "zparse.rl"
 			{
 				if !IsDomainName(data[mark:p]) {
@@ -605,7 +633,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 1:
-			// line 548 "zparse.go"
+			// line 573 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st1
@@ -676,7 +704,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 2:
-			// line 588 "zparse.go"
+			// line 613 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr14
@@ -701,7 +729,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 3:
-			// line 604 "zparse.go"
+			// line 629 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st3
@@ -728,7 +756,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 83:
 				goto st103
 			case 84:
-				goto st114
+				goto st121
 			case 97:
 				goto st4
 			case 99:
@@ -750,7 +778,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 115:
 				goto st103
 			case 116:
-				goto st114
+				goto st121
 			}
 			goto st0
 		tr3:
@@ -765,7 +793,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 4:
-			// line 641 "zparse.go"
+			// line 666 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st5
@@ -806,7 +834,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 6:
-			// line 669 "zparse.go"
+			// line 694 "zparse.go"
 			if data[p] == 10 {
 				goto tr33
 			}
@@ -824,7 +852,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 7:
-			// line 681 "zparse.go"
+			// line 706 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr31
@@ -905,7 +933,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 12:
-			// line 738 "zparse.go"
+			// line 763 "zparse.go"
 			if data[p] == 10 {
 				goto tr40
 			}
@@ -923,7 +951,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 13:
-			// line 750 "zparse.go"
+			// line 775 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr38
@@ -946,7 +974,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 14:
-			// line 766 "zparse.go"
+			// line 791 "zparse.go"
 			switch data[p] {
 			case 69:
 				goto st15
@@ -1033,7 +1061,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 19:
-			// line 826 "zparse.go"
+			// line 851 "zparse.go"
 			if data[p] == 10 {
 				goto tr50
 			}
@@ -1051,7 +1079,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 20:
-			// line 838 "zparse.go"
+			// line 863 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr48
@@ -1075,7 +1103,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 				goto tr51
 			}
 			goto st0
-		tr184:
+		tr193:
 			// line 131 "zparse.rl"
 			{
 				i, _ := strconv.Atoui(data[mark:p])
@@ -1095,7 +1123,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 22:
-			// line 868 "zparse.go"
+			// line 893 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st22
@@ -1118,7 +1146,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 83:
 				goto st103
 			case 84:
-				goto st114
+				goto st121
 			case 97:
 				goto st4
 			case 99:
@@ -1136,7 +1164,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 115:
 				goto st103
 			case 116:
-				goto st114
+				goto st121
 			}
 			goto st0
 		st23:
@@ -1242,7 +1270,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 29:
-			// line 964 "zparse.go"
+			// line 989 "zparse.go"
 			if data[p] == 10 {
 				goto tr61
 			}
@@ -1260,7 +1288,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 30:
-			// line 976 "zparse.go"
+			// line 1001 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr59
@@ -1282,7 +1310,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 31:
-			// line 992 "zparse.go"
+			// line 1017 "zparse.go"
 			switch data[p] {
 			case 76:
 				goto st32
@@ -1355,7 +1383,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 35:
-			// line 1042 "zparse.go"
+			// line 1067 "zparse.go"
 			if data[p] == 10 {
 				goto tr70
 			}
@@ -1373,7 +1401,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 36:
-			// line 1054 "zparse.go"
+			// line 1079 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr68
@@ -1472,7 +1500,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 42:
-			// line 1123 "zparse.go"
+			// line 1148 "zparse.go"
 			if data[p] == 10 {
 				goto tr79
 			}
@@ -1490,7 +1518,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 43:
-			// line 1135 "zparse.go"
+			// line 1160 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr77
@@ -1585,7 +1613,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 49:
-			// line 1202 "zparse.go"
+			// line 1227 "zparse.go"
 			if data[p] == 10 {
 				goto tr87
 			}
@@ -1603,7 +1631,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 50:
-			// line 1214 "zparse.go"
+			// line 1239 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr85
@@ -1656,7 +1684,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 53:
-			// line 1251 "zparse.go"
+			// line 1276 "zparse.go"
 			if data[p] == 10 {
 				goto tr92
 			}
@@ -1674,7 +1702,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 54:
-			// line 1263 "zparse.go"
+			// line 1288 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr90
@@ -1696,7 +1724,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 55:
-			// line 1279 "zparse.go"
+			// line 1304 "zparse.go"
 			switch data[p] {
 			case 88:
 				goto st56
@@ -1747,7 +1775,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 58:
-			// line 1315 "zparse.go"
+			// line 1340 "zparse.go"
 			if data[p] == 10 {
 				goto tr98
 			}
@@ -1765,7 +1793,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 59:
-			// line 1327 "zparse.go"
+			// line 1352 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr96
@@ -1787,7 +1815,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 60:
-			// line 1343 "zparse.go"
+			// line 1368 "zparse.go"
 			switch data[p] {
 			case 65:
 				goto st61
@@ -1884,7 +1912,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 66:
-			// line 1411 "zparse.go"
+			// line 1436 "zparse.go"
 			if data[p] == 10 {
 				goto tr108
 			}
@@ -1902,7 +1930,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 67:
-			// line 1423 "zparse.go"
+			// line 1448 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr106
@@ -1959,7 +1987,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 70:
-			// line 1462 "zparse.go"
+			// line 1487 "zparse.go"
 			if data[p] == 10 {
 				goto tr114
 			}
@@ -1977,7 +2005,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 71:
-			// line 1474 "zparse.go"
+			// line 1499 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr112
@@ -2046,7 +2074,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 75:
-			// line 1522 "zparse.go"
+			// line 1547 "zparse.go"
 			if data[p] == 10 {
 				goto tr121
 			}
@@ -2064,7 +2092,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 76:
-			// line 1534 "zparse.go"
+			// line 1559 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr119
@@ -2121,7 +2149,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 79:
-			// line 1573 "zparse.go"
+			// line 1598 "zparse.go"
 			if data[p] == 10 {
 				goto tr127
 			}
@@ -2139,7 +2167,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 80:
-			// line 1585 "zparse.go"
+			// line 1610 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr125
@@ -2248,7 +2276,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 87:
-			// line 1662 "zparse.go"
+			// line 1687 "zparse.go"
 			if data[p] == 10 {
 				goto tr136
 			}
@@ -2266,7 +2294,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 88:
-			// line 1674 "zparse.go"
+			// line 1699 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr134
@@ -2288,7 +2316,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 89:
-			// line 1690 "zparse.go"
+			// line 1715 "zparse.go"
 			switch data[p] {
 			case 84:
 				goto st90
@@ -2353,7 +2381,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 93:
-			// line 1736 "zparse.go"
+			// line 1761 "zparse.go"
 			if data[p] == 10 {
 				goto tr143
 			}
@@ -2371,7 +2399,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 94:
-			// line 1748 "zparse.go"
+			// line 1773 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr141
@@ -2393,7 +2421,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 95:
-			// line 1764 "zparse.go"
+			// line 1789 "zparse.go"
 			switch data[p] {
 			case 82:
 				goto st96
@@ -2486,7 +2514,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 101:
-			// line 1830 "zparse.go"
+			// line 1855 "zparse.go"
 			if data[p] == 10 {
 				goto tr152
 			}
@@ -2504,7 +2532,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 102:
-			// line 1842 "zparse.go"
+			// line 1867 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr150
@@ -2526,16 +2554,20 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 103:
-			// line 1858 "zparse.go"
+			// line 1883 "zparse.go"
 			switch data[p] {
 			case 79:
 				goto st104
 			case 82:
 				goto st109
+			case 83:
+				goto st114
 			case 111:
 				goto st104
 			case 114:
 				goto st109
+			case 115:
+				goto st114
 			}
 			goto st0
 		st104:
@@ -2575,14 +2607,14 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 		case 106:
 			switch data[p] {
 			case 9:
-				goto tr158
+				goto tr159
 			case 10:
 				goto st0
 			case 32:
-				goto tr158
+				goto tr159
 			}
-			goto tr157
-		tr157:
+			goto tr158
+		tr158:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2595,12 +2627,12 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 107:
-			// line 1906 "zparse.go"
+			// line 1933 "zparse.go"
 			if data[p] == 10 {
-				goto tr160
+				goto tr161
 			}
 			goto st107
-		tr158:
+		tr159:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2613,16 +2645,16 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 108:
-			// line 1918 "zparse.go"
+			// line 1945 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr158
+				goto tr159
 			case 10:
-				goto tr160
+				goto tr161
 			case 32:
-				goto tr158
+				goto tr159
 			}
-			goto tr157
+			goto tr158
 		st109:
 			p++
 			if p == pe {
@@ -2660,14 +2692,14 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 		case 111:
 			switch data[p] {
 			case 9:
-				goto tr164
+				goto tr165
 			case 10:
 				goto st0
 			case 32:
-				goto tr164
+				goto tr165
 			}
-			goto tr163
-		tr163:
+			goto tr164
+		tr164:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2680,12 +2712,12 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 112:
-			// line 1965 "zparse.go"
+			// line 1992 "zparse.go"
 			if data[p] == 10 {
-				goto tr166
+				goto tr167
 			}
 			goto st112
-		tr164:
+		tr165:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2698,21 +2730,16 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 113:
-			// line 1977 "zparse.go"
+			// line 2004 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr164
+				goto tr165
 			case 10:
-				goto tr166
+				goto tr167
 			case 32:
-				goto tr164
+				goto tr165
 			}
-			goto tr163
-		tr13:
-			// line 129 "zparse.rl"
-			{ /* ... */
-			}
-			goto st114
+			goto tr164
 		st114:
 			p++
 			if p == pe {
@@ -2720,16 +2747,11 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 114:
-			// line 1993 "zparse.go"
 			switch data[p] {
-			case 65:
+			case 72:
 				goto st115
-			case 88:
-				goto st119
-			case 97:
+			case 104:
 				goto st115
-			case 120:
-				goto st119
 			}
 			goto st0
 		st115:
@@ -2740,9 +2762,9 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			fallthrough
 		case 115:
 			switch data[p] {
-			case 9:
+			case 70:
 				goto st116
-			case 32:
+			case 102:
 				goto st116
 			}
 			goto st0
@@ -2754,20 +2776,12 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			fallthrough
 		case 116:
 			switch data[p] {
-			case 9:
-				goto tr171
-			case 10:
-				goto st0
-			case 32:
-				goto tr171
+			case 80:
+				goto st117
+			case 112:
+				goto st117
 			}
-			goto tr170
-		tr170:
-			// line 120 "zparse.rl"
-			{
-				mark = p
-			}
-			goto st117
+			goto st0
 		st117:
 			p++
 			if p == pe {
@@ -2775,17 +2789,13 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 117:
-			// line 2031 "zparse.go"
-			if data[p] == 10 {
-				goto tr173
+			switch data[p] {
+			case 9:
+				goto st118
+			case 32:
+				goto st118
 			}
-			goto st117
-		tr171:
-			// line 120 "zparse.rl"
-			{
-				mark = p
-			}
-			goto st118
+			goto st0
 		st118:
 			p++
 			if p == pe {
@@ -2793,16 +2803,21 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 118:
-			// line 2043 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr171
-			case 10:
 				goto tr173
+			case 10:
+				goto st0
 			case 32:
-				goto tr171
+				goto tr173
 			}
-			goto tr170
+			goto tr172
+		tr172:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st119
 		st119:
 			p++
 			if p == pe {
@@ -2810,13 +2825,17 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 119:
-			switch data[p] {
-			case 84:
-				goto st120
-			case 116:
-				goto st120
+			// line 2071 "zparse.go"
+			if data[p] == 10 {
+				goto tr175
 			}
-			goto st0
+			goto st119
+		tr173:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st120
 		st120:
 			p++
 			if p == pe {
@@ -2824,13 +2843,21 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 120:
+			// line 2083 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto st121
+				goto tr173
+			case 10:
+				goto tr175
 			case 32:
-				goto st121
+				goto tr173
 			}
-			goto st0
+			goto tr172
+		tr13:
+			// line 129 "zparse.rl"
+			{ /* ... */
+			}
+			goto st121
 		st121:
 			p++
 			if p == pe {
@@ -2838,21 +2865,18 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 121:
+			// line 2099 "zparse.go"
 			switch data[p] {
-			case 9:
-				goto tr177
-			case 10:
-				goto st0
-			case 32:
-				goto tr177
+			case 65:
+				goto st122
+			case 88:
+				goto st126
+			case 97:
+				goto st122
+			case 120:
+				goto st126
 			}
-			goto tr176
-		tr176:
-			// line 120 "zparse.rl"
-			{
-				mark = p
-			}
-			goto st122
+			goto st0
 		st122:
 			p++
 			if p == pe {
@@ -2860,17 +2884,13 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 122:
-			// line 2090 "zparse.go"
-			if data[p] == 10 {
-				goto tr179
+			switch data[p] {
+			case 9:
+				goto st123
+			case 32:
+				goto st123
 			}
-			goto st122
-		tr177:
-			// line 120 "zparse.rl"
-			{
-				mark = p
-			}
-			goto st123
+			goto st0
 		st123:
 			p++
 			if p == pe {
@@ -2878,17 +2898,16 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 123:
-			// line 2102 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr177
+				goto tr180
 			case 10:
-				goto tr179
+				goto st0
 			case 32:
-				goto tr177
+				goto tr180
 			}
-			goto tr176
-		tr20:
+			goto tr179
+		tr179:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2901,15 +2920,12 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 124:
-			// line 2118 "zparse.go"
-			switch data[p] {
-			case 83:
-				goto st21
-			case 115:
-				goto st21
+			// line 2137 "zparse.go"
+			if data[p] == 10 {
+				goto tr182
 			}
-			goto st0
-		tr21:
+			goto st124
+		tr180:
 			// line 120 "zparse.rl"
 			{
 				mark = p
@@ -2922,7 +2938,136 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 			fallthrough
 		case 125:
-			// line 2133 "zparse.go"
+			// line 2149 "zparse.go"
+			switch data[p] {
+			case 9:
+				goto tr180
+			case 10:
+				goto tr182
+			case 32:
+				goto tr180
+			}
+			goto tr179
+		st126:
+			p++
+			if p == pe {
+				goto _test_eof126
+			}
+			fallthrough
+		case 126:
+			switch data[p] {
+			case 84:
+				goto st127
+			case 116:
+				goto st127
+			}
+			goto st0
+		st127:
+			p++
+			if p == pe {
+				goto _test_eof127
+			}
+			fallthrough
+		case 127:
+			switch data[p] {
+			case 9:
+				goto st128
+			case 32:
+				goto st128
+			}
+			goto st0
+		st128:
+			p++
+			if p == pe {
+				goto _test_eof128
+			}
+			fallthrough
+		case 128:
+			switch data[p] {
+			case 9:
+				goto tr186
+			case 10:
+				goto st0
+			case 32:
+				goto tr186
+			}
+			goto tr185
+		tr185:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st129
+		st129:
+			p++
+			if p == pe {
+				goto _test_eof129
+			}
+			fallthrough
+		case 129:
+			// line 2196 "zparse.go"
+			if data[p] == 10 {
+				goto tr188
+			}
+			goto st129
+		tr186:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st130
+		st130:
+			p++
+			if p == pe {
+				goto _test_eof130
+			}
+			fallthrough
+		case 130:
+			// line 2208 "zparse.go"
+			switch data[p] {
+			case 9:
+				goto tr186
+			case 10:
+				goto tr188
+			case 32:
+				goto tr186
+			}
+			goto tr185
+		tr20:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st131
+		st131:
+			p++
+			if p == pe {
+				goto _test_eof131
+			}
+			fallthrough
+		case 131:
+			// line 2224 "zparse.go"
+			switch data[p] {
+			case 83:
+				goto st21
+			case 115:
+				goto st21
+			}
+			goto st0
+		tr21:
+			// line 120 "zparse.rl"
+			{
+				mark = p
+			}
+			goto st132
+		st132:
+			p++
+			if p == pe {
+				goto _test_eof132
+			}
+			fallthrough
+		case 132:
+			// line 2239 "zparse.go"
 			switch data[p] {
 			case 78:
 				goto st21
@@ -2938,63 +3083,63 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				mark = p
 			}
-			goto st126
-		st126:
+			goto st133
+		st133:
 			p++
 			if p == pe {
-				goto _test_eof126
+				goto _test_eof133
 			}
 			fallthrough
-		case 126:
-			// line 2150 "zparse.go"
+		case 133:
+			// line 2256 "zparse.go"
 			switch data[p] {
 			case 69:
 				goto st15
 			case 72:
-				goto st127
+				goto st134
 			case 78:
 				goto st24
 			case 101:
 				goto st15
 			case 104:
-				goto st127
+				goto st134
 			case 110:
 				goto st24
 			}
 			goto st0
-		st127:
+		st134:
 			p++
 			if p == pe {
-				goto _test_eof127
+				goto _test_eof134
 			}
 			fallthrough
-		case 127:
+		case 134:
 			switch data[p] {
 			case 9:
-				goto tr181
+				goto tr190
 			case 32:
-				goto tr181
+				goto tr190
 			}
 			goto st0
-		tr181:
+		tr190:
 			// line 128 "zparse.rl"
 			{
 				hdr.Class = str_class[data[mark:p]]
 			}
-			goto st128
-		st128:
+			goto st135
+		st135:
 			p++
 			if p == pe {
-				goto _test_eof128
+				goto _test_eof135
 			}
 			fallthrough
-		case 128:
-			// line 2179 "zparse.go"
+		case 135:
+			// line 2285 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto st128
+				goto st135
 			case 32:
-				goto st128
+				goto st135
 			case 65:
 				goto st4
 			case 67:
@@ -3012,7 +3157,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 83:
 				goto st103
 			case 84:
-				goto st114
+				goto st121
 			case 97:
 				goto st4
 			case 99:
@@ -3030,34 +3175,34 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			case 115:
 				goto st103
 			case 116:
-				goto st114
+				goto st121
 			}
 			if 48 <= data[p] && data[p] <= 57 {
-				goto tr183
+				goto tr192
 			}
 			goto st0
-		tr183:
+		tr192:
 			// line 120 "zparse.rl"
 			{
 				mark = p
 			}
-			goto st129
-		st129:
+			goto st136
+		st136:
 			p++
 			if p == pe {
-				goto _test_eof129
+				goto _test_eof136
 			}
 			fallthrough
-		case 129:
-			// line 2213 "zparse.go"
+		case 136:
+			// line 2319 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr184
+				goto tr193
 			case 32:
-				goto tr184
+				goto tr193
 			}
 			if 48 <= data[p] && data[p] <= 57 {
-				goto st129
+				goto st136
 			}
 			goto st0
 		tr6:
@@ -3068,20 +3213,20 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				mark = p
 			}
-			goto st130
-		st130:
+			goto st137
+		st137:
 			p++
 			if p == pe {
-				goto _test_eof130
+				goto _test_eof137
 			}
 			fallthrough
-		case 130:
-			// line 2231 "zparse.go"
+		case 137:
+			// line 2337 "zparse.go"
 			switch data[p] {
 			case 83:
-				goto st127
+				goto st134
 			case 115:
-				goto st127
+				goto st134
 			}
 			goto st0
 		tr7:
@@ -3092,74 +3237,76 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			{
 				mark = p
 			}
-			goto st131
-		st131:
+			goto st138
+		st138:
 			p++
 			if p == pe {
-				goto _test_eof131
+				goto _test_eof138
 			}
 			fallthrough
-		case 131:
-			// line 2248 "zparse.go"
+		case 138:
+			// line 2354 "zparse.go"
 			switch data[p] {
 			case 78:
-				goto st127
+				goto st134
 			case 110:
-				goto st127
+				goto st134
 			}
 			goto st0
-		tr190:
+		tr199:
 			// line 120 "zparse.rl"
 			{
 				mark = p
 			}
-			goto st132
-		st132:
+			goto st139
+		st139:
 			p++
 			if p == pe {
-				goto _test_eof132
+				goto _test_eof139
 			}
 			fallthrough
-		case 132:
-			// line 2263 "zparse.go"
+		case 139:
+			// line 2369 "zparse.go"
 			switch data[p] {
 			case 9:
-				goto tr186
+				goto tr195
 			case 32:
-				goto tr186
+				goto tr195
+			case 42:
+				goto st139
 			case 95:
-				goto st132
+				goto st139
 			}
 			if data[p] < 48 {
 				if 45 <= data[p] && data[p] <= 46 {
-					goto st132
+					goto st139
 				}
 			} else if data[p] > 57 {
 				if data[p] > 90 {
 					if 97 <= data[p] && data[p] <= 122 {
-						goto st132
+						goto st139
 					}
 				} else if data[p] >= 65 {
-					goto st132
+					goto st139
 				}
 			} else {
-				goto st132
+				goto st139
 			}
 			goto st0
-		st133:
+		st140:
 			p++
 			if p == pe {
-				goto _test_eof133
+				goto _test_eof140
 			}
 			fallthrough
-		case 133:
+		case 140:
 			if data[p] == 10 {
-				goto tr189
+				goto tr198
 			}
-			goto st133
+			goto st140
 		}
-	_test_eof134:
-		cs = 134
+	_test_eof141:
+		cs = 141
 		goto _test_eof
 	_test_eof1:
 		cs = 1
@@ -3560,6 +3707,27 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 	_test_eof133:
 		cs = 133
 		goto _test_eof
+	_test_eof134:
+		cs = 134
+		goto _test_eof
+	_test_eof135:
+		cs = 135
+		goto _test_eof
+	_test_eof136:
+		cs = 136
+		goto _test_eof
+	_test_eof137:
+		cs = 137
+		goto _test_eof
+	_test_eof138:
+		cs = 138
+		goto _test_eof
+	_test_eof139:
+		cs = 139
+		goto _test_eof
+	_test_eof140:
+		cs = 140
+		goto _test_eof
 
 	_test_eof:
 		{
@@ -3569,7 +3737,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 		}
 	}
 
-	// line 186 "zparse.rl"
+	// line 187 "zparse.rl"
 
 
 	if eof > -1 {

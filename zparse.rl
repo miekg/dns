@@ -146,7 +146,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
                 bl = [ \t]+;
 
                 rdata = [^\n]+ >mark;
-                qname  = [a-zA-Z0-9.\-_]+ >mark %setQname;
+                qname  = [a-zA-Z0-9.\-_*]+ >mark %setQname;
                 qclass = ('IN'i|'CH'i|'HS'i) >mark %setQclass; # @err(errQclass);
 
                 lhs = qname? bl %defTtl (
@@ -174,6 +174,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
                     | ( 'RRSIG'i    bl rdata ) %setRRSIG
                     | ( 'NSEC'i     bl rdata ) %setNSEC
                     | ( 'NSEC3'i    bl rdata ) %setNSEC3
+                    | ( 'SSHFP'i    bl rdata ) %setSSHFP
                     | ( 'NSEC3PARAM'i bl rdata ) %setNSEC3PARAM
                 );
 
