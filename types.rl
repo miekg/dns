@@ -131,13 +131,27 @@
     }
 
     action setDNSKEY {
+        var (
+            i uint
+            e os.Error
+        )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_DNSKEY)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDNSKEY
-        rr.Flags = uint16(atoi(rdf[0]))
-        rr.Protocol = uint8(atoi(rdf[1]))
-        rr.Algorithm = uint8(atoi(rdf[2]))
+
+        if i, e = strconv.Atoui(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad DNSKEY", name: rdf[0], line: l}
+        }
+        rr.Flags = uint16(i)
+        if i, e = strconv.Atoui(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad DNSKEY", name: rdf[1], line: l}
+        }
+        rr.Protocol = uint8(i)
+        if i, e = strconv.Atoui(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad DNSKEY", name: rdf[2], line: l}
+        }
+        rr.Algorithm = uint8(i)
         rr.PublicKey = rdf[3]
         z.Push(rr)
     }
