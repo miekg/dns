@@ -646,7 +646,7 @@ type RR_NSEC3PARAM struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string "hex"
+	Salt       string "hex" // hexsize??
 }
 
 func (rr *RR_NSEC3PARAM) Header() *RR_Header {

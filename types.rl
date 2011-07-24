@@ -231,6 +231,28 @@
     }
 
     action setNSEC3PARAM {
+        var (
+            i int
+            e os.Error
+        )
+        rdf := fields(data[mark:p], 4)
+        rr := new(RR_NSEC3PARAM)
+        rr.Hdr = hdr
+        rr.Hdr.Rrtype = TypeNSEC3PARAM
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3PARAM", name: rdf[0], line: l}
+        }
+        rr.Hash = uint8(i)
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3PARAM", name: rdf[1], line: l}
+        }
+        rr.Flags = uint8(i)
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3PARAM", name: rdf[2], line: l}
+        }
+        rr.Iterations = uint16(i)
+        rr.Salt = rdf[3]
+        rr.SaltLength = uint8(len(rr.Salt))
     }
 
     action setPRT {
