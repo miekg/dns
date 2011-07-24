@@ -11,9 +11,13 @@ things that need to be fixed.
 * Cleanup?;
 * Multiline RRs when parsing;
 * Need to define a handy zone data structure (r/b tree)?.
+  - Should do glue detection
+  - return rrsets
+  - DNSSEC ready
 * String compression *inside* the library, so the string
   miek.nl is stored once and all RRs reference it. Would be
   a major memory saver.
+* Check base64/base32/hex validity when parsing RRs
 
 ## Issues
 

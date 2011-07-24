@@ -1,17 +1,15 @@
 %%{
-
     machine z;
-
     action setA {
         rdf := fields(data[mark:p], 1)
         rr := new(RR_A)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeA
         rr.A = net.ParseIP(rdf[0])
-        z.Push(rr)
         if rr.A == nil {
                 return z, &ParseError{Error: "bad A: " + rdf[0], line: l}
         }
+        z.Push(rr)
     }
 
     action setAAAA {
@@ -20,10 +18,10 @@
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeAAAA
         rr.AAAA = net.ParseIP(rdf[0])
-        z.Push(rr)
         if rr.AAAA == nil {
                 return z, &ParseError{Error: "bad AAAA: " + rdf[0], line: l}
         }
+        z.Push(rr)
     }
 
     action setNS {
@@ -32,10 +30,10 @@
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeNS
         rr.Ns = rdf[0]
-        z.Push(rr)
         if ! IsDomainName(rdf[0]) {
                 return z, &ParseError{Error: "bad NS: " + rdf[0], line: l}
         }
+        z.Push(rr)
     }
 
     action setMX {
@@ -46,10 +44,10 @@
         i, err := strconv.Atoui(rdf[0])
         rr.Pref = uint16(i)
         rr.Mx = rdf[1]
-        z.Push(rr)
         if err != nil {
                 return z, &ParseError{Error: "bad MX: " + rdf[0], line: l}
         }
+        z.Push(rr)
     }
 
     action setCNAME {
@@ -58,24 +56,38 @@
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeCNAME
         rr.Cname = rdf[0]
-        z.Push(rr)
         if ! IsDomainName(rdf[0]) {
                 return z, &ParseError{Error: "bad CNAME: " + rdf[0], line: l}
         }
+        z.Push(rr)
     }
 
     action setSOA {
+        var (
+                i int
+                err os.Error
+        )
         rdf := fields(data[mark:p], 7)
         rr := new(RR_SOA)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeSOA
         rr.Ns = rdf[0]
         rr.Mbox = rdf[1]
-        rr.Serial = uint32(atoi(rdf[2]))
-        rr.Refresh = uint32(atoi(rdf[3]))
-        rr.Retry = uint32(atoi(rdf[4]))
-        rr.Expire = uint32(atoi(rdf[5]))
-        rr.Minttl = uint32(atoi(rdf[6]))
+        if ! IsDomainName(rdf[0]) || ! IsDomainName(rdf[1]) {
+                return z, &ParseError{Error: "bad SOA: " + rdf[0] + "," + rdf[1], line: l}
+        }
+        for j, _ := range rdf[2:7] {
+            if i, err = strconv.Atoi(rdf[j]); err != nil {
+                    return z, &ParseError{Error: "bad SOA: " + rdf[j], line: l}
+            }
+            switch j {
+                    case 2: rr.Serial = uint32(i)
+                    case 3: rr.Refresh = uint32(i)
+                    case 4: rr.Retry = uint32(i)
+                    case 5: rr.Expire = uint32(i)
+                    case 6: rr.Minttl = uint32(i)
+            }
+        }
         z.Push(rr)
     }
 

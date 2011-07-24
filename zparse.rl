@@ -113,12 +113,8 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
                 action errQclass  { return z, &ParseError{Error: "bad qclass: " + data[mark:p], line: l} }
                 action setQclass  { hdr.Class = str_class[data[mark:p]] }
                 action defTtl     { /* ... */ }
-                action setTtl     { i, err := strconv.Atoui(data[mark:p])
-                                    if err != nil {
-                                            return z, &ParseError{Error: "bad ttl: " + data[mark:p], line: l}
-                                    }
-                                    hdr.Ttl = uint32(i)
-                                  }
+                action errTtl     { /* ... */ }
+                action setTtl     { i, _ := strconv.Atoui(data[mark:p]); hdr.Ttl = uint32(i) }
 #                action openBrace  { if brace { println("Brace already open")} ; brace = true }
 #                action closeBrace { if !brace { println("Brace already closed")}; brace = false }
 #                action brace      { brace }
@@ -127,7 +123,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 
                 nl  = [\n]+ $lineCount;
                 comment = ';' [^\n]*;
-                ttl = digit+ >mark;
+                ttl = digit+ >mark; #@err(errTtl)
 #                bl  = ( [ \t]+
 #                    | '(' $openBrace
 #                    | ')' $closeBrace
