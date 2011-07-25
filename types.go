@@ -147,10 +147,18 @@ func (q *Question) String() string {
 	return s
 }
 
-// NewRR returns the last RR contained in s.
-func NewRR(s string) (RR, os.Error) {
+// NewRRString returns the last RR contained in s.
+func NewRRString(s string) (RR, os.Error) {
 	p := NewParser(strings.NewReader(s))
 	return p.RR()
+}
+
+// NewRR returns a new RR with the hdr.Rrtype also set.
+// If the type i is not known, nil is returned.
+func NewRR(i int) RR {
+        r := rr_mk[i]()
+        r.Header().Rrtype = uint16(i)
+        return r
 }
 
 type RR_CNAME struct {

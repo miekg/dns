@@ -142,7 +142,7 @@ func TestParseFailure(t *testing.T) {
 //	        "miek.nl. PA MX 10 miek.nl.",
 
         for _, t1 := range tests {
-	        _, err := NewRR(t1)
+	        _, err := NewRRString(t1)
                 if err == nil {
                         t.Log("Should have triggered an error")
                         t.Fail()

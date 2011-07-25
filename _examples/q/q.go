@@ -104,7 +104,7 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-		opt := new(dns.RR_OPT)
+                opt := dns.NewRR(dns.TypeOPT).(*dns.RR_OPT)
 		opt.SetDo()
 		opt.SetVersion(0)
 		opt.SetUDPSize(dns.DefaultMsgSize)
