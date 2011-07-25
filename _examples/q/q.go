@@ -10,13 +10,14 @@ import (
 )
 
 func q(w dns.RequestWriter, m *dns.Msg) {
-        w.Send(m)
-        r, _ := w.Receive()
-        w.Write(r)
+	w.Send(m)
+	r, _ := w.Receive()
+	w.Write(r)
 }
 
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "request DNSSEC records")
+	var query *bool = flag.Bool("query", false, "show query")
 	var short *bool = flag.Bool("short", false, "abbriate long DNSKEY and RRSIG RRs")
 	var aa *bool = flag.Bool("aa", false, "set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "set AD flag in query")
@@ -72,24 +73,26 @@ Flags:
 		// Anything else is a qname
 		qname = append(qname, flag.Arg(i))
 	}
-        if len(qname) == 0 {
-                qname = make([]string, 1)
-                qname[0] = "."
-                qtype = dns.TypeNS
-        }
-        if qtype == 0 {
-                qtype = dns.TypeA
-        }
+	if len(qname) == 0 {
+		qname = make([]string, 1)
+		qname[0] = "."
+		qtype = dns.TypeNS
+	}
+	if qtype == 0 {
+		qtype = dns.TypeA
+	}
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	if !strings.HasSuffix(nameserver, ":53") {
 		nameserver += ":53"
 	}
-        // ipv6 todo
+	// ipv6 todo
 
-        dns.HandleQueryFunc(".", q)
-        dns.ListenAndQuery(nil, nil)
-        c := dns.NewClient()
+        // We use the async query handling, just to show how
+        // it is to be used.
+	dns.HandleQueryFunc(".", q)
+	dns.ListenAndQuery(nil, nil)
+	c := dns.NewClient()
 	if *tcp {
 		c.Net = "tcp"
 	}
@@ -111,11 +114,14 @@ Flags:
 		m.Extra = make([]dns.RR, 1)
 		m.Extra[0] = opt
 	}
-        for _, v := range qname {
-	        m.Question[0] = dns.Question{v, qtype, qclass}
-	        m.Id = dns.Id()
-                c.Do(m, nameserver)
-        }
+	for _, v := range qname {
+		m.Question[0] = dns.Question{v, qtype, qclass}
+		m.Id = dns.Id()
+                if *query {
+                        fmt.Printf("%s\n", m.String())
+                }
+		c.Do(m, nameserver)
+	}
 
 	i := 0
 forever:
