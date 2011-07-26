@@ -41,15 +41,31 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.Question = make([]Question, 1)
         dns.Question[0] = request.Question[0]
 }
-// TODO isRcode for symmetry
 
-// Create a FormError packet.
+func (dns *Msg) IsRcode(rcode int) (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+        ok = dns.MsgHdr.Rcode == rcode
+        return
+}
+
+// Create a packet with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Rcode = RcodeFormatError
         dns.MsgHdr.Opcode = OpcodeQuery
         dns.MsgHdr.Response = true
         dns.MsgHdr.Authoritative = false
         dns.MsgHdr.Id = request.MsgHdr.Id
+}
+
+// Is the message a packet with the FormErr set?
+func (dns *Msg) IsRcodeFormatError() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+        ok = dns.MsgHdr.Rcode == RcodeFormatError
+        return
 }
 
 // Is the message a dynamic update packet?
