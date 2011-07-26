@@ -31,6 +31,27 @@ func (dns *Msg) SetNotify(z string) {
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
+// Create an error packet.
+func (dns *Msg) SetRcode(request *Msg, rcode int) {
+        dns.MsgHdr.Rcode = rcode
+        dns.MsgHdr.Opcode = OpcodeQuery
+        dns.MsgHdr.Response = true
+        dns.MsgHdr.Authoritative = false
+        dns.MsgHdr.Id = request.MsgHdr.Id
+        dns.Question = make([]Question, 1)
+        dns.Question[0] = request.Question[0]
+}
+// TODO isRcode for symmetry
+
+// Create a FormError packet.
+func (dns *Msg) SetRcodeFormatError(request *Msg) {
+        dns.MsgHdr.Rcode = RcodeFormatError
+        dns.MsgHdr.Opcode = OpcodeQuery
+        dns.MsgHdr.Response = true
+        dns.MsgHdr.Authoritative = false
+        dns.MsgHdr.Id = request.MsgHdr.Id
+}
+
 // Is the message a dynamic update packet?
 func (dns *Msg) IsUpdate() (ok bool) {
 	if len(dns.Question) == 0 {

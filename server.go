@@ -70,10 +70,8 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 // RCODE = refused for every request.
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
-	m.SetReply(r)
-	m.MsgHdr.Rcode = RcodeRefused
-	m.MsgHdr.Authoritative = false
-	buf, _ := m.Pack()
+        m.SetRcode(r, RcodeRefused)
+        buf, _ := m.Pack()
 	w.Write(buf)
 }
 
@@ -313,6 +311,11 @@ func (c *conn) serve() {
 		w.conn = c
 		req := new(Msg)
 		if !req.Unpack(c.request) {
+                        // Send a format error back
+                        x := new(Msg)
+                        x.SetRcodeFormatError(req)
+                        buf, _ := x.Pack()
+                        w.Write(buf)
 			break
 		}
 		w.req = req

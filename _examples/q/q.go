@@ -105,6 +105,7 @@ Flags:
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
                 opt := dns.NewRR(dns.TypeOPT).(*dns.RR_OPT)
+                opt.Hdr.Rrtype = 0
 		opt.SetDo()
 		opt.SetVersion(0)
 		opt.SetUDPSize(dns.DefaultMsgSize)
