@@ -17,7 +17,6 @@ var soa  dns.RR
 var spam dns.RR
 
 func send(w dns.ResponseWriter, m *dns.Msg) {
-        println(">", m.String())
 	buf, _ := m.Pack()
 	w.Write(buf)
 }
