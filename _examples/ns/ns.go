@@ -8,13 +8,14 @@ import (
 	"os/signal"
 )
 
-// A small nameserver implementation.
-// Not too fast.
-
-var zone *dns.Zone
-var ns   []dns.RR
-var soa  dns.RR
-var spam dns.RR
+// A small nameserver implementation, not too fast.
+var (
+	zone   *dns.Zone
+	ns     []dns.RR
+	soa    dns.RR
+	spamIN dns.RR
+	spamCH dns.RR
+)
 
 func send(w dns.ResponseWriter, m *dns.Msg) {
 	buf, _ := m.Pack()
@@ -22,15 +23,14 @@ func send(w dns.ResponseWriter, m *dns.Msg) {
 }
 
 func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
-        println(req.String())
+	println(req.String())
 	m := new(dns.Msg)
 	qname := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 	qclass := req.Question[0].Qclass
 
-        m.Extra = make([]dns.RR, 1)
-        m.Extra[0] = spam
-        m.Extra[0].Header().Class = dns.ClassCHAOS
+	m.Extra = make([]dns.RR, 1)
+	m.Extra[0] = spamCH
 
 	if qclass != dns.ClassCHAOS {
 		m.SetRcode(req, dns.RcodeServerFailure)
@@ -60,13 +60,13 @@ func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
-        println(req.String())
+	println(req.String())
 	m := new(dns.Msg)
 	qname := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 	qclass := req.Question[0].Qclass
-        m.Extra = make([]dns.RR, 1)
-        m.Extra[0] = spam
+	m.Extra = make([]dns.RR, 1)
+	m.Extra[0] = spamIN
 
 	if qclass != dns.ClassINET {
 		m.SetRcode(req, dns.RcodeServerFailure)
@@ -75,29 +75,29 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	}
 	m.SetReply(req)
 
-        m.Ns = ns
+	m.Ns = ns
 
-        names := false
-        m.Answer = make([]dns.RR, 0)
+	names := false
+	m.Answer = make([]dns.RR, 0)
 	for i := 0; i < zone.Len(); i++ {
-                if zone.At(i).Header().Name == qname {
-                        names = true
-                        // Name found
-                        if zone.At(i).Header().Rrtype == qtype {
-                                // Type also found, exact match
-                                m.Answer = append(m.Answer, zone.At(i))
-                        }
-                }
+		if zone.At(i).Header().Name == qname {
+			names = true
+			// Name found
+			if zone.At(i).Header().Rrtype == qtype {
+				// Type also found, exact match
+				m.Answer = append(m.Answer, zone.At(i))
+			}
+		}
 	}
-        if len(m.Answer) == 0 {
-                m.Ns = m.Ns[:1]
-                m.Ns[0] = soa
-                if ! names {
-                        // NXDOMAIN
-                        m.MsgHdr.Rcode = dns.RcodeNameError
-                }
-        }
-        // Glue?? TODO
+	if len(m.Answer) == 0 {
+		m.Ns = m.Ns[:1]
+		m.Ns[0] = soa
+		if !names {
+			// NXDOMAIN
+			m.MsgHdr.Rcode = dns.RcodeNameError
+		}
+	}
+	// Glue?? TODO
 	send(w, m)
 }
 
@@ -113,17 +113,19 @@ func main() {
 
 	}
 
-        ns = make([]dns.RR, 0)
+	ns = make([]dns.RR, 0)
 	for i := 0; i < zone.Len(); i++ {
-                if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeSOA {
-                        soa = zone.At(i)
-                }
-                if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeNS {
-                        ns = append(ns, zone.At(i))
-                }
-        }
-        spam = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.",
-			Rrtype: dns.TypeTXT, Class: dns.ClassINET}, Txt: "Proudly served with Go: http://www.golang.org"}
+		if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeSOA {
+			soa = zone.At(i)
+		}
+		if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeNS {
+			ns = append(ns, zone.At(i))
+		}
+	}
+	s := "Proudly served with Go: http://www.golang.org"
+	spamIN = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET}, Txt: s}
+	spamCH = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassCHAOS}, Txt: s}
+
 	dns.HandleFunc("miek.nl.", handleQuery)
 	dns.HandleFunc("bind.", handleQueryCHAOS)
 	go func() {
