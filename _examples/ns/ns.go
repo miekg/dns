@@ -12,19 +12,26 @@ import (
 // Not too fast.
 
 var zone *dns.Zone
+var ns   []dns.RR
+var soa  dns.RR
+var spam dns.RR
 
 func send(w dns.ResponseWriter, m *dns.Msg) {
+        println(">", m.String())
 	buf, _ := m.Pack()
 	w.Write(buf)
 }
 
 func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
+        println(req.String())
 	m := new(dns.Msg)
 	qname := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 	qclass := req.Question[0].Qclass
 
-        println(req.String())
+        m.Extra = make([]dns.RR, 1)
+        m.Extra[0] = spam
+        m.Extra[0].Header().Class = dns.ClassCHAOS
 
 	if qclass != dns.ClassCHAOS {
 		m.SetRcode(req, dns.RcodeServerFailure)
@@ -54,12 +61,13 @@ func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
+        println(req.String())
 	m := new(dns.Msg)
 	qname := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 	qclass := req.Question[0].Qclass
-
-        println(req.String())
+        m.Extra = make([]dns.RR, 1)
+        m.Extra[0] = spam
 
 	if qclass != dns.ClassINET {
 		m.SetRcode(req, dns.RcodeServerFailure)
@@ -68,18 +76,13 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	}
 	m.SetReply(req)
 
-        // Create AUTH section
-        m.Ns = make([]dns.RR, 0)
-	for i := 0; i < zone.Len(); i++ {
-                if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeNS {
-                        m.Ns = append(m.Ns, zone.At(i))
-                }
-        }
+        m.Ns = ns
 
-        // Save the name
+        names := false
         m.Answer = make([]dns.RR, 0)
 	for i := 0; i < zone.Len(); i++ {
                 if zone.At(i).Header().Name == qname {
+                        names = true
                         // Name found
                         if zone.At(i).Header().Rrtype == qtype {
                                 // Type also found, exact match
@@ -87,7 +90,15 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
                         }
                 }
 	}
-        // Glue??
+        if len(m.Answer) == 0 {
+                m.Ns = m.Ns[:1]
+                m.Ns[0] = soa
+                if ! names {
+                        // NXDOMAIN
+                        m.MsgHdr.Rcode = dns.RcodeNameError
+                }
+        }
+        // Glue?? TODO
 	send(w, m)
 }
 
@@ -103,6 +114,17 @@ func main() {
 
 	}
 
+        ns = make([]dns.RR, 0)
+	for i := 0; i < zone.Len(); i++ {
+                if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeSOA {
+                        soa = zone.At(i)
+                }
+                if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeNS {
+                        ns = append(ns, zone.At(i))
+                }
+        }
+        spam = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.",
+			Rrtype: dns.TypeTXT, Class: dns.ClassINET}, Txt: "Proudly served with Go: http://www.golang.org"}
 	dns.HandleFunc("miek.nl.", handleQuery)
 	dns.HandleFunc("bind.", handleQueryCHAOS)
 	go func() {
