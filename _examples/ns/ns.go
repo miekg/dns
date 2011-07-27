@@ -78,14 +78,26 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 	m.Ns = ns
 
 	names := false
+	cname := 0
 	m.Answer = make([]dns.RR, 0)
+again:
 	for i := 0; i < zone.Len(); i++ {
 		if zone.At(i).Header().Name == qname {
 			names = true
 			// Name found
 			if zone.At(i).Header().Rrtype == qtype {
-				// Type also found, exact match
+				// Exact match
 				m.Answer = append(m.Answer, zone.At(i))
+			}
+			if zone.At(i).Header().Rrtype == dns.TypeCNAME {
+				// Cname match
+				m.Answer = append(m.Answer, zone.At(i))
+				qname = zone.At(i).(*dns.RR_CNAME).Cname
+				cname++
+				if cname > 7 {
+					break
+				}
+				goto again
 			}
 		}
 	}
