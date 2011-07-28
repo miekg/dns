@@ -91,7 +91,7 @@ func (s RRset) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s RRset) String() string {
         str := ""
         for _, r := range s {
-                str += r.String()
+                str += r.String() + "\n"
         }
         return str
 }

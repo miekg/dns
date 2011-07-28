@@ -65,6 +65,16 @@ func (z Zone) Len() int {
         return i
 }
 
+func (z Zone) String() string {
+        s := ""
+        for _, im := range z {
+                for _, s1 := range im {
+                        s += s1.RRs.String()
+                }
+        }
+        return s
+}
+
 // Add a new RR to the zone. First we need to find out if the 
 // RR already lives inside it.
 func (z Zone) PushRR(r RR) {
@@ -72,13 +82,23 @@ func (z Zone) PushRR(r RR) {
         if s == nil {
                 s = NewZRRset()
         }
-        s.RRs.Push(r)
+        switch r.Header().Rrtype {
+        case TypeRRSIG: fallthrough
+        // If nsec/nsec3/rrsig comes first, tricky with allocation
+        // Need to always check all 4 item
+//                s.RRsigs.Push(r)
+        case TypeNSEC: fallthrough
+        case TypeNSEC3: fallthrough
+        default:
+                s.RRs.Push(r)
+        }
         z.Push(s)
 }
 
 // Push a new ZRRset to the zone
 func (z Zone) Push(s *ZRRset) {
         i := intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
+        // Need to check the type covered as the RRsigs (if any)
         if z[s.RRs[0].Header().Name] == nil {
                 im := make(map[int]*ZRRset)             // intmap
                 im[i] = s

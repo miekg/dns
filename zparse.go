@@ -13,6 +13,7 @@ import (
 	"strconv"
 )
 
+// REALLY make haste with the window reading
 const _IOBUF = MaxMsgSize
 
 // A Parser represents a DNS parser for a 
