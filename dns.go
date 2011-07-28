@@ -79,16 +79,60 @@ type RR interface {
 // An RRset is a slice of RRs.
 type RRset []RR
 
-func (r RRset) Len() int           { return len(r) }
-func (r RRset) Less(i, j int) bool { return r[i].Header().Name < r[j].Header().Name }
-func (r RRset) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+func NewRRset() RRset {
+        s := make([]RR, 0)
+        return s
+}
+
+func (s RRset) Len() int           { return len(s) }
+func (s RRset) Less(i, j int) bool { return s[i].Header().Name < s[j].Header().Name }
+func (s RRset) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+func (s RRset) String() string {
+        str := ""
+        for _, r := range s {
+                str += r.String()
+        }
+        return str
+}
+
+// Remove the last pushed RR from the RRset. Return nil
+// when there is nothing to remove
+func (s *RRset) Pop() RR {
+        if len(*s) == 0 {
+                return nil
+        }
+        // Pop and remove the entry
+        r := (*s)[len(*s)-1]
+        *s = (*s)[:len(*s)-1]
+        return r
+}
+
+// Push the RR r to the RRset
+func (s *RRset) Push(r RR) bool {
+        if s.Len() == 0 {
+                *s = append(*s, r)
+                return true
+        }
+	if (*s)[0].Header().Ttl != r.Header().Ttl {
+                return false
+        }
+        if (*s)[0].Header().Name != r.Header().Name {
+                return false
+        }
+        if (*s)[0].Header().Class != r.Header().Class {
+                return false
+        }
+        *s = append(*s, r)
+        return true
+}
 
 // Check if the RRset is RFC 2181 compliant.
-func (r RRset) Ok() bool {
-	ttl := r[0].Header().Ttl
-	name := r[0].Header().Name
-	class := r[0].Header().Class
-	for _, rr := range r[1:] {
+func (s RRset) Ok() bool {
+	ttl := s[0].Header().Ttl
+	name := s[0].Header().Name
+	class := s[0].Header().Class
+	for _, rr := range s[1:] {
 		if rr.Header().Ttl != ttl {
 			return false
 		}

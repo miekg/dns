@@ -118,7 +118,7 @@ func TestParse(t *testing.T) {
 			t.Logf("Error of nil r %v %s\n", err, test)
 			t.Fail()
 		}
-                r := z.Pop()
+                r := z.PopRR()
                 if r == nil {
                         t.Log("Empty RR")
                         t.Fail()

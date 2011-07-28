@@ -9,7 +9,7 @@
         if rr.A == nil {
                 return z, &ParseError{Error: "bad A", name: rdf[0], line: l}
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setAAAA {
@@ -21,7 +21,7 @@
         if rr.AAAA == nil {
                 return z, &ParseError{Error: "bad AAAA", name: rdf[0], line: l}
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setNS {
@@ -33,7 +33,7 @@
         if ! IsDomainName(rdf[0]) {
                 return z, &ParseError{Error: "bad NS", name: rdf[0], line: l}
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setMX {
@@ -47,7 +47,7 @@
         if err != nil {
                 return z, &ParseError{Error: "bad MX", name: rdf[0], line: l}
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setCNAME {
@@ -59,7 +59,7 @@
         if ! IsDomainName(rdf[0]) {
                 return z, &ParseError{Error: "bad CNAME", name: rdf[0], line: l}
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setSOA {
@@ -91,7 +91,7 @@
                 case 4: rr.Minttl = uint32(i)
                 }
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setDS {
@@ -103,7 +103,7 @@
         rr.Algorithm = uint8(atoi(rdf[1]))
         rr.DigestType = uint8(atoi(rdf[2]))
         rr.Digest = rdf[3]
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setDLV {
@@ -115,7 +115,7 @@
         rr.Algorithm = uint8(atoi(rdf[1]))
         rr.DigestType = uint8(atoi(rdf[2]))
         rr.Digest = rdf[3]
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setTA {
@@ -127,7 +127,7 @@
         rr.Algorithm = uint8(atoi(rdf[1]))
         rr.DigestType = uint8(atoi(rdf[2]))
         rr.Digest = rdf[3]
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setDNSKEY {
@@ -153,7 +153,7 @@
         }
         rr.Algorithm = uint8(i)
         rr.PublicKey = rdf[3]
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setRRSIG {
@@ -205,7 +205,7 @@
         }
         // Check base64 TODO
         rr.Signature = rdf[8]
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setNSEC {
@@ -220,7 +220,7 @@
                 // Check if its there in the map TODO
                 rr.TypeBitMap[i-1] = str_rr[rdf[i]]
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setNSEC3 {
@@ -241,7 +241,7 @@
             // Check if its there in the map TODO
             rr.TypeBitMap[i-6] = str_rr[rdf[i]]
         }
-        z.Push(rr)
+        z.PushRR(rr)
     }
 
     action setNSEC3PARAM {
@@ -267,6 +267,7 @@
         rr.Iterations = uint16(i)
         rr.Salt = rdf[3]
         rr.SaltLength = uint8(len(rr.Salt))
+        z.PushRR(rr)
     }
 
     action setPRT {

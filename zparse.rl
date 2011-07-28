@@ -99,12 +99,12 @@ func (zp *Parser) RR() (RR, os.Error) {
     if err != nil {
         return nil, err
     }
-    return z.Pop().(RR), nil
+    return z.PopRR(), nil
 }
 
 // Zone parses an DNS master zone file.
-func (zp *Parser) Zone() (z *Zone, err os.Error) {
-        z = new(Zone)
+func (zp *Parser) Zone() (z Zone, err os.Error) {
+        z = NewZone()
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
         eof := len(data)
