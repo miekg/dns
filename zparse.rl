@@ -79,15 +79,6 @@ func fields(s string, i int) (rdf []string) {
     return
 }
 
-// Wrapper for strconv.Atoi*().
-func atoi(s string) uint {
-    i, err :=  strconv.Atoui(s)
-    if err != nil {
-        panic("not a number: " + s + " " + err.String())
-    }
-    return i
-}
-
 %%{
         machine z;
         write data;
