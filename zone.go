@@ -6,8 +6,8 @@ package dns
 
 import (
 	"os"
-        "sort"
-        "container/vector"
+	"sort"
+	"container/vector"
 	"strings"
 )
 
@@ -21,8 +21,6 @@ type ZRRset struct {
 	Nxt    RR    // the NSEC or NSEC3 for this name
 	Glue   bool  // when this RRset is glue, set to true
 }
-// For DNSSEC I also need to know the PREVIOUS name for this RRSET...Or at least the 
-// previous NXT RR
 
 func NewZRRset() *ZRRset {
 	s := new(ZRRset)
@@ -35,14 +33,14 @@ func NewZRRset() *ZRRset {
 // This will be converted to some kind of tree structure
 type Zone map[string]map[int]*ZRRset
 
-func NewZone() Zone {
+func NewZone() *Zone {
 	z := make(Zone)
-	return z
+	return &z
 }
 
 // Get the first value 
-func (z Zone) Pop() *ZRRset {
-	for _, v := range z {
+func (z *Zone) Pop() *ZRRset {
+	for _, v := range *z {
 		for _, v1 := range v {
 			return v1
 		}
@@ -50,7 +48,7 @@ func (z Zone) Pop() *ZRRset {
 	return nil
 }
 
-func (z Zone) PopRR() RR {
+func (z *Zone) PopRR() RR {
 	s := z.Pop()
 	if s == nil {
 		return nil
@@ -67,9 +65,9 @@ func (z Zone) PopRR() RR {
 	return nil
 }
 
-func (z Zone) Len() int {
+func (z *Zone) Len() int {
 	i := 0
-	for _, im := range z {
+	for _, im := range *z {
 		for _, s := range im {
 			i += len(s.RRs) + len(s.RRsigs)
 			if s.Nxt != nil {
@@ -80,9 +78,9 @@ func (z Zone) Len() int {
 	return i
 }
 
-func (z Zone) String() string {
+func (z *Zone) String() string {
 	s := ""
-	for _, im := range z {
+	for _, im := range *z {
 		for _, s1 := range im {
 			s += s1.RRs.String()
 			s += s1.RRsigs.String()
@@ -96,7 +94,7 @@ func (z Zone) String() string {
 
 // Add a new RR to the zone. First we need to find out if the 
 // RR already lives inside it.
-func (z Zone) PushRR(r RR) {
+func (z *Zone) PushRR(r RR) {
 	s, _ := z.LookupRR(r)
 	if s == nil {
 		s = NewZRRset()
@@ -113,7 +111,7 @@ func (z Zone) PushRR(r RR) {
 }
 
 // Push a new ZRRset to the zone
-func (z Zone) Push(s *ZRRset) {
+func (z *Zone) Push(s *ZRRset) {
 	// s can hold RRs, RRsigs or a Nxt
 	name := ""
 	i := 0
@@ -128,13 +126,13 @@ func (z Zone) Push(s *ZRRset) {
 		name = s.Nxt.Header().Name
 		i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
 	}
-	if z[name] == nil {
+	if (*z)[name] == nil {
 		im := make(map[int]*ZRRset) // intmap
 		im[i] = s
-		z[name] = im
+		(*z)[name] = im
 		return
 	}
-	im := z[name]
+	im := (*z)[name]
 	im[i] = s
 	return
 }
@@ -144,22 +142,22 @@ func (z Zone) Push(s *ZRRset) {
 // Considerations for wildcards
 // Return NXDomain, Name error, wildcard?
 // Casing!
-func (z Zone) LookupRR(r RR) (*ZRRset, os.Error) {
+func (z *Zone) LookupRR(r RR) (*ZRRset, os.Error) {
 	if r.Header().Rrtype == TypeRRSIG {
 		return z.LookupName(r.Header().Name, r.Header().Class, r.(*RR_RRSIG).TypeCovered)
 	}
 	return z.LookupName(r.Header().Name, r.Header().Class, r.Header().Rrtype)
 }
 
-func (z Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
+func (z *Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
 	// Impossible to look for an typecovered in a question, because the rdata is
 	// not there.
 	return z.LookupName(q.Name, q.Qclass, q.Qtype)
 }
 
-func (z Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
+func (z *Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
 	i := intval(qclass, qtype)
-	if im, ok := z[strings.ToLower(qname)]; ok {
+	if im, ok := (*z)[strings.ToLower(qname)]; ok {
 		// Have an im, intmap
 		if s, ok := im[i]; ok {
 			return s, nil

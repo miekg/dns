@@ -94,7 +94,7 @@ func (zp *Parser) RR() (RR, os.Error) {
 }
 
 // Zone parses an DNS master zone file.
-func (zp *Parser) Zone() (z Zone, err os.Error) {
+func (zp *Parser) Zone() (z *Zone, err os.Error) {
         z = NewZone()
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
