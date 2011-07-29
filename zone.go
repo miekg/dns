@@ -50,8 +50,16 @@ func (z Zone) PopRR() RR {
 	if s == nil {
 		return nil
 	}
-	// differentiate between the type 'n stuff
-	return s.RRs.Pop()
+        switch {
+        case len(s.RRs) != 0:
+                return s.RRs.Pop()
+        case len(s.RRsigs) != 0:
+                return s.RRsigs.Pop()
+        case s.Nxt != nil:
+                return s.Nxt
+        }
+        panic("not reached")
+	return nil
 }
 
 func (z Zone) Len() int {
@@ -74,29 +82,11 @@ func (z Zone) String() string {
 			s += s1.RRs.String()
 			s += s1.RRsigs.String()
                         if s1.Nxt != nil {
-                                s += s1.Nxt.String()
+                                s += s1.Nxt.String() + "\n"
                         }
 		}
 	}
 	return s
-}
-
-// Create a debug output of the zone
-func (z Zone) DebugString() string {
-        s := ""
-	for name, im := range z {
-                s += "Data for: [" + name + "]\n"
-		for _, s1 := range im {
-			s += s1.RRs.String()
-			s += s1.RRsigs.String()
-                        if s1.Nxt != nil {
-                                s += s1.Nxt.String()
-                        }
-		}
-                s += "\n"
-	}
-	return s
-
 }
 
 // Add a new RR to the zone. First we need to find out if the 

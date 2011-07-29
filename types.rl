@@ -206,10 +206,10 @@
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeRRSIG
 
-        if _, ok := str_rr[rdf[0]]; !ok {
+        if _, ok := str_rr[strings.ToUpper(rdf[0])]; !ok {
                 return z, &ParseError{Error: "bad RRSIG", name: rdf[0], line: l}
         }
-        rr.TypeCovered = str_rr[rdf[0]]
+        rr.TypeCovered = str_rr[strings.ToUpper(rdf[0])]
 
         if i, err = strconv.Atoui(rdf[1]); err != nil {
                 return z, &ParseError{Error: "bad RRSIG", name: rdf[1], line: l}
@@ -257,7 +257,7 @@
         // Fill the Type Bit Map
         for i := 1; i < len(rdf); i++ {
                 // Check if its there in the map TODO
-                rr.TypeBitMap[i-1] = str_rr[rdf[i]]
+                rr.TypeBitMap[i-1] = str_rr[strings.ToUpper(rdf[i])]
         }
         z.PushRR(rr)
     }
@@ -293,7 +293,7 @@
         // Fill the Type Bit Map
         for i := 5; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-5] = str_rr[rdf[i]]
+            rr.TypeBitMap[i-5] = str_rr[strings.ToUpper(rdf[i])]
         }
         z.PushRR(rr)
     }
@@ -369,5 +369,6 @@
         }
         rr.Type = uint8(i)
         rr.FingerPrint = rdf[2]
+        z.PushRR(rr)
     }
 }%%

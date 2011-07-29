@@ -114,9 +114,11 @@ func (s *RRset) Push(r RR) bool {
                 *s = append(*s, r)
                 return true
         }
-	if (*s)[0].Header().Ttl != r.Header().Ttl {
-                return false
-        }
+        // For RRSIGs this is not true (RFC???)
+        // Don't make it a failure if this happens
+//	if (*s)[0].Header().Ttl != r.Header().Ttl {
+//                return false
+//        }
         if (*s)[0].Header().Name != r.Header().Name {
                 return false
         }
