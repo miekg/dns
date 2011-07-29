@@ -140,22 +140,22 @@ func (z Zone) Push(s *ZRRset) {
 // Return NXDomain, Name error, wildcard?
 // Casing!
 func (z Zone) LookupRR(r RR) (*ZRRset, os.Error) {
-	return z.lookup(r.Header().Name, r.Header().Class, r.Header().Rrtype)
+	return z.LookupName(r.Header().Name, r.Header().Class, r.Header().Rrtype)
 }
 
 func (z Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
-	return z.lookup(q.Name, q.Qclass, q.Qtype)
+	return z.LookupName(q.Name, q.Qclass, q.Qtype)
 }
 
-func (z Zone) lookup(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
+func (z Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
 	i := intval(qclass, qtype)
 	if im, ok := z[qname]; ok {
 		// Have an im, intmap
 		if s, ok := im[i]; ok {
 			return s, nil
 		}
-		// Name found, class/type not found
-		return nil, nil
+                // Wildcard 'n stuff
+		return nil, ErrName
 	}
 	return nil, nil
 }
