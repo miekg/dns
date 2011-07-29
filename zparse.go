@@ -13,7 +13,6 @@ import (
 	"strconv"
 )
 
-// REALLY make haste with the window reading
 const _IOBUF = MaxMsgSize
 
 // A Parser represents a DNS parser for a 
@@ -170,7 +169,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr50:
-			// line 282 "types.rl"
+			// line 342 "types.rl"
 			{
 			}
 			// line 121 "zparse.rl"
@@ -197,15 +196,28 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr70:
-			// line 109 "types.rl"
+			// line 122 "types.rl"
 			{
+				var (
+					i uint
+					e os.Error
+				)
 				rdf := fields(data[mark:p], 4)
 				rr := new(RR_DLV)
 				rr.Hdr = hdr
 				rr.Hdr.Rrtype = TypeDLV
-				rr.KeyTag = uint16(atoi(rdf[0]))
-				rr.Algorithm = uint8(atoi(rdf[1]))
-				rr.DigestType = uint8(atoi(rdf[2]))
+				if i, e = strconv.Atoui(rdf[0]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+				}
+				rr.KeyTag = uint16(i)
+				if i, e = strconv.Atoui(rdf[1]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+				}
+				rr.Algorithm = uint8(i)
+				if i, e = strconv.Atoui(rdf[2]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+				}
+				rr.DigestType = uint8(i)
 				rr.Digest = rdf[3]
 				z.PushRR(rr)
 			}
@@ -215,7 +227,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr79:
-			// line 288 "types.rl"
+			// line 348 "types.rl"
 			{
 			}
 			// line 121 "zparse.rl"
@@ -224,7 +236,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr87:
-			// line 133 "types.rl"
+			// line 172 "types.rl"
 			{
 				var (
 					i uint
@@ -258,13 +270,26 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 		tr92:
 			// line 97 "types.rl"
 			{
+				var (
+					i uint
+					e os.Error
+				)
 				rdf := fields(data[mark:p], 4)
 				rr := new(RR_DS)
 				rr.Hdr = hdr
 				rr.Hdr.Rrtype = TypeDS
-				rr.KeyTag = uint16(atoi(rdf[0]))
-				rr.Algorithm = uint8(atoi(rdf[1]))
-				rr.DigestType = uint8(atoi(rdf[2]))
+				if i, e = strconv.Atoui(rdf[0]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+				}
+				rr.KeyTag = uint16(i)
+				if i, e = strconv.Atoui(rdf[1]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+				}
+				rr.Algorithm = uint8(i)
+				if i, e = strconv.Atoui(rdf[2]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+				}
+				rr.DigestType = uint8(i)
 				rr.Digest = rdf[3]
 				z.PushRR(rr)
 			}
@@ -294,7 +319,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr108:
-			// line 291 "types.rl"
+			// line 351 "types.rl"
 			{
 			}
 			// line 121 "zparse.rl"
@@ -321,7 +346,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr121:
-			// line 211 "types.rl"
+			// line 250 "types.rl"
 			{
 				rdf := fields(data[mark:p], 0)
 				rr := new(RR_NSEC)
@@ -342,24 +367,39 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr127:
-			// line 226 "types.rl"
+			// line 265 "types.rl"
 			{
+				var (
+					i uint
+					e os.Error
+				)
 				rdf := fields(data[mark:p], 0)
 				rr := new(RR_NSEC3)
 				rr.Hdr = hdr
 				rr.Hdr.Rrtype = TypeNSEC3
-				rr.Hash = uint8(atoi(rdf[0]))
-				rr.Flags = uint8(atoi(rdf[1]))
-				rr.Iterations = uint16(atoi(rdf[2]))
-				rr.SaltLength = uint8(atoi(rdf[3]))
-				rr.Salt = rdf[4]
-				rr.HashLength = uint8(atoi(rdf[4]))
-				rr.NextDomain = rdf[5]
-				rr.TypeBitMap = make([]uint16, len(rdf)-6)
+
+				if i, e = strconv.Atoui(rdf[0]); e != nil {
+					return z, &ParseError{Error: "bad NSEC3", name: rdf[0], line: l}
+				}
+				rr.Hash = uint8(i)
+				if i, e = strconv.Atoui(rdf[1]); e != nil {
+					return z, &ParseError{Error: "bad NSEC3", name: rdf[1], line: l}
+				}
+				rr.Flags = uint8(i)
+				if i, e = strconv.Atoui(rdf[2]); e != nil {
+					return z, &ParseError{Error: "bad NSEC3", name: rdf[2], line: l}
+				}
+				rr.Iterations = uint16(i)
+				rr.SaltLength = uint8(len(rdf[3]))
+				rr.Salt = rdf[3]
+
+				rr.HashLength = uint8(len(rdf[4]))
+				rr.NextDomain = rdf[4]
+				rr.TypeBitMap = make([]uint16, len(rdf)-5)
 				// Fill the Type Bit Map
-				for i := 6; i < len(rdf); i++ {
+				for i := 5; i < len(rdf); i++ {
 					// Check if its there in the map TODO
-					rr.TypeBitMap[i-6] = str_rr[rdf[i]]
+					rr.TypeBitMap[i-5] = str_rr[rdf[i]]
 				}
 				z.PushRR(rr)
 			}
@@ -369,7 +409,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr136:
-			// line 247 "types.rl"
+			// line 301 "types.rl"
 			{
 				var (
 					i int
@@ -401,7 +441,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr143:
-			// line 285 "types.rl"
+			// line 345 "types.rl"
 			{
 			}
 			// line 121 "zparse.rl"
@@ -410,7 +450,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr152:
-			// line 159 "types.rl"
+			// line 198 "types.rl"
 			{
 				var (
 					i   uint
@@ -511,7 +551,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr167:
-			// line 279 "types.rl"
+			// line 339 "types.rl"
 			{
 			}
 			// line 121 "zparse.rl"
@@ -520,7 +560,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr175:
-			// line 294 "types.rl"
+			// line 354 "types.rl"
 			{
 				var (
 					i int
@@ -546,15 +586,28 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr182:
-			// line 121 "types.rl"
+			// line 147 "types.rl"
 			{
+				var (
+					i uint
+					e os.Error
+				)
 				rdf := fields(data[mark:p], 4)
 				rr := new(RR_TA)
 				rr.Hdr = hdr
 				rr.Hdr.Rrtype = TypeTA
-				rr.KeyTag = uint16(atoi(rdf[0]))
-				rr.Algorithm = uint8(atoi(rdf[1]))
-				rr.DigestType = uint8(atoi(rdf[2]))
+				if i, e = strconv.Atoui(rdf[0]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+				}
+				rr.KeyTag = uint16(i)
+				if i, e = strconv.Atoui(rdf[1]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+				}
+				rr.Algorithm = uint8(i)
+				if i, e = strconv.Atoui(rdf[2]); e != nil {
+					return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+				}
+				rr.DigestType = uint8(i)
 				rr.Digest = rdf[3]
 				z.PushRR(rr)
 			}
@@ -564,8 +617,14 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			goto st141
 		tr188:
-			// line 276 "types.rl"
+			// line 330 "types.rl"
 			{
+				rdf := fields(data[mark:p], 1)
+				rr := new(RR_TXT)
+				rr.Hdr = hdr
+				rr.Hdr.Rrtype = TypeTXT
+				rr.Txt = rdf[0]
+				z.PushRR(rr)
 			}
 			// line 121 "zparse.rl"
 			{
@@ -585,7 +644,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 141:
-			// line 537 "zparse.go"
+			// line 597 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st1
@@ -635,7 +694,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 1:
-			// line 574 "zparse.go"
+			// line 634 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st1
@@ -706,7 +765,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 2:
-			// line 614 "zparse.go"
+			// line 674 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr14
@@ -731,7 +790,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 3:
-			// line 630 "zparse.go"
+			// line 690 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st3
@@ -795,7 +854,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 4:
-			// line 667 "zparse.go"
+			// line 727 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st5
@@ -836,7 +895,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 6:
-			// line 695 "zparse.go"
+			// line 755 "zparse.go"
 			if data[p] == 10 {
 				goto tr33
 			}
@@ -854,7 +913,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 7:
-			// line 707 "zparse.go"
+			// line 767 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr31
@@ -935,7 +994,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 12:
-			// line 764 "zparse.go"
+			// line 824 "zparse.go"
 			if data[p] == 10 {
 				goto tr40
 			}
@@ -953,7 +1012,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 13:
-			// line 776 "zparse.go"
+			// line 836 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr38
@@ -976,7 +1035,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 14:
-			// line 792 "zparse.go"
+			// line 852 "zparse.go"
 			switch data[p] {
 			case 69:
 				goto st15
@@ -1063,7 +1122,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 19:
-			// line 852 "zparse.go"
+			// line 912 "zparse.go"
 			if data[p] == 10 {
 				goto tr50
 			}
@@ -1081,7 +1140,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 20:
-			// line 864 "zparse.go"
+			// line 924 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr48
@@ -1125,7 +1184,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 22:
-			// line 894 "zparse.go"
+			// line 954 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st22
@@ -1272,7 +1331,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 29:
-			// line 990 "zparse.go"
+			// line 1050 "zparse.go"
 			if data[p] == 10 {
 				goto tr61
 			}
@@ -1290,7 +1349,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 30:
-			// line 1002 "zparse.go"
+			// line 1062 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr59
@@ -1312,7 +1371,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 31:
-			// line 1018 "zparse.go"
+			// line 1078 "zparse.go"
 			switch data[p] {
 			case 76:
 				goto st32
@@ -1385,7 +1444,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 35:
-			// line 1068 "zparse.go"
+			// line 1128 "zparse.go"
 			if data[p] == 10 {
 				goto tr70
 			}
@@ -1403,7 +1462,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 36:
-			// line 1080 "zparse.go"
+			// line 1140 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr68
@@ -1502,7 +1561,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 42:
-			// line 1149 "zparse.go"
+			// line 1209 "zparse.go"
 			if data[p] == 10 {
 				goto tr79
 			}
@@ -1520,7 +1579,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 43:
-			// line 1161 "zparse.go"
+			// line 1221 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr77
@@ -1615,7 +1674,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 49:
-			// line 1228 "zparse.go"
+			// line 1288 "zparse.go"
 			if data[p] == 10 {
 				goto tr87
 			}
@@ -1633,7 +1692,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 50:
-			// line 1240 "zparse.go"
+			// line 1300 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr85
@@ -1686,7 +1745,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 53:
-			// line 1277 "zparse.go"
+			// line 1337 "zparse.go"
 			if data[p] == 10 {
 				goto tr92
 			}
@@ -1704,7 +1763,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 54:
-			// line 1289 "zparse.go"
+			// line 1349 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr90
@@ -1726,7 +1785,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 55:
-			// line 1305 "zparse.go"
+			// line 1365 "zparse.go"
 			switch data[p] {
 			case 88:
 				goto st56
@@ -1777,7 +1836,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 58:
-			// line 1341 "zparse.go"
+			// line 1401 "zparse.go"
 			if data[p] == 10 {
 				goto tr98
 			}
@@ -1795,7 +1854,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 59:
-			// line 1353 "zparse.go"
+			// line 1413 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr96
@@ -1817,7 +1876,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 60:
-			// line 1369 "zparse.go"
+			// line 1429 "zparse.go"
 			switch data[p] {
 			case 65:
 				goto st61
@@ -1914,7 +1973,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 66:
-			// line 1437 "zparse.go"
+			// line 1497 "zparse.go"
 			if data[p] == 10 {
 				goto tr108
 			}
@@ -1932,7 +1991,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 67:
-			// line 1449 "zparse.go"
+			// line 1509 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr106
@@ -1989,7 +2048,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 70:
-			// line 1488 "zparse.go"
+			// line 1548 "zparse.go"
 			if data[p] == 10 {
 				goto tr114
 			}
@@ -2007,7 +2066,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 71:
-			// line 1500 "zparse.go"
+			// line 1560 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr112
@@ -2076,7 +2135,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 75:
-			// line 1548 "zparse.go"
+			// line 1608 "zparse.go"
 			if data[p] == 10 {
 				goto tr121
 			}
@@ -2094,7 +2153,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 76:
-			// line 1560 "zparse.go"
+			// line 1620 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr119
@@ -2151,7 +2210,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 79:
-			// line 1599 "zparse.go"
+			// line 1659 "zparse.go"
 			if data[p] == 10 {
 				goto tr127
 			}
@@ -2169,7 +2228,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 80:
-			// line 1611 "zparse.go"
+			// line 1671 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr125
@@ -2278,7 +2337,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 87:
-			// line 1688 "zparse.go"
+			// line 1748 "zparse.go"
 			if data[p] == 10 {
 				goto tr136
 			}
@@ -2296,7 +2355,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 88:
-			// line 1700 "zparse.go"
+			// line 1760 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr134
@@ -2318,7 +2377,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 89:
-			// line 1716 "zparse.go"
+			// line 1776 "zparse.go"
 			switch data[p] {
 			case 84:
 				goto st90
@@ -2383,7 +2442,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 93:
-			// line 1762 "zparse.go"
+			// line 1822 "zparse.go"
 			if data[p] == 10 {
 				goto tr143
 			}
@@ -2401,7 +2460,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 94:
-			// line 1774 "zparse.go"
+			// line 1834 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr141
@@ -2423,7 +2482,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 95:
-			// line 1790 "zparse.go"
+			// line 1850 "zparse.go"
 			switch data[p] {
 			case 82:
 				goto st96
@@ -2516,7 +2575,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 101:
-			// line 1856 "zparse.go"
+			// line 1916 "zparse.go"
 			if data[p] == 10 {
 				goto tr152
 			}
@@ -2534,7 +2593,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 102:
-			// line 1868 "zparse.go"
+			// line 1928 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr150
@@ -2556,7 +2615,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 103:
-			// line 1884 "zparse.go"
+			// line 1944 "zparse.go"
 			switch data[p] {
 			case 79:
 				goto st104
@@ -2629,7 +2688,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 107:
-			// line 1934 "zparse.go"
+			// line 1994 "zparse.go"
 			if data[p] == 10 {
 				goto tr161
 			}
@@ -2647,7 +2706,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 108:
-			// line 1946 "zparse.go"
+			// line 2006 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr159
@@ -2714,7 +2773,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 112:
-			// line 1993 "zparse.go"
+			// line 2053 "zparse.go"
 			if data[p] == 10 {
 				goto tr167
 			}
@@ -2732,7 +2791,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 113:
-			// line 2005 "zparse.go"
+			// line 2065 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr165
@@ -2827,7 +2886,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 119:
-			// line 2072 "zparse.go"
+			// line 2132 "zparse.go"
 			if data[p] == 10 {
 				goto tr175
 			}
@@ -2845,7 +2904,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 120:
-			// line 2084 "zparse.go"
+			// line 2144 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr173
@@ -2867,7 +2926,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 121:
-			// line 2100 "zparse.go"
+			// line 2160 "zparse.go"
 			switch data[p] {
 			case 65:
 				goto st122
@@ -2922,7 +2981,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 124:
-			// line 2138 "zparse.go"
+			// line 2198 "zparse.go"
 			if data[p] == 10 {
 				goto tr182
 			}
@@ -2940,7 +2999,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 125:
-			// line 2150 "zparse.go"
+			// line 2210 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr180
@@ -3007,7 +3066,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 129:
-			// line 2197 "zparse.go"
+			// line 2257 "zparse.go"
 			if data[p] == 10 {
 				goto tr188
 			}
@@ -3025,7 +3084,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 130:
-			// line 2209 "zparse.go"
+			// line 2269 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr186
@@ -3048,7 +3107,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 131:
-			// line 2225 "zparse.go"
+			// line 2285 "zparse.go"
 			switch data[p] {
 			case 83:
 				goto st21
@@ -3069,7 +3128,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 132:
-			// line 2240 "zparse.go"
+			// line 2300 "zparse.go"
 			switch data[p] {
 			case 78:
 				goto st21
@@ -3093,7 +3152,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 133:
-			// line 2257 "zparse.go"
+			// line 2317 "zparse.go"
 			switch data[p] {
 			case 69:
 				goto st15
@@ -3136,7 +3195,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 135:
-			// line 2286 "zparse.go"
+			// line 2346 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto st135
@@ -3196,7 +3255,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 136:
-			// line 2320 "zparse.go"
+			// line 2380 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr193
@@ -3223,7 +3282,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 137:
-			// line 2338 "zparse.go"
+			// line 2398 "zparse.go"
 			switch data[p] {
 			case 83:
 				goto st134
@@ -3247,7 +3306,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 138:
-			// line 2355 "zparse.go"
+			// line 2415 "zparse.go"
 			switch data[p] {
 			case 78:
 				goto st134
@@ -3268,7 +3327,7 @@ func (zp *Parser) Zone() (z Zone, err os.Error) {
 			}
 			fallthrough
 		case 139:
-			// line 2370 "zparse.go"
+			// line 2430 "zparse.go"
 			switch data[p] {
 			case 9:
 				goto tr195

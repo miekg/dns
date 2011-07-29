@@ -58,7 +58,10 @@ func (z Zone) Len() int {
 	i := 0
 	for _, im := range z {
 		for _, s := range im {
-			i += len(s.RRs) //+ len(s.RRsigs)
+			i += len(s.RRs) + len(s.RRsigs)
+                        if s.Nxt != nil {
+                                i++
+                        }
 		}
 	}
 	return i
@@ -69,9 +72,31 @@ func (z Zone) String() string {
 	for _, im := range z {
 		for _, s1 := range im {
 			s += s1.RRs.String()
+			s += s1.RRsigs.String()
+                        if s1.Nxt != nil {
+                                s += s1.Nxt.String()
+                        }
 		}
 	}
 	return s
+}
+
+// Create a debug output of the zone
+func (z Zone) DebugString() string {
+        s := ""
+	for name, im := range z {
+                s += "Data for: [" + name + "]\n"
+		for _, s1 := range im {
+			s += s1.RRs.String()
+			s += s1.RRsigs.String()
+                        if s1.Nxt != nil {
+                                s += s1.Nxt.String()
+                        }
+		}
+                s += "\n"
+	}
+	return s
+
 }
 
 // Add a new RR to the zone. First we need to find out if the 
@@ -83,12 +108,9 @@ func (z Zone) PushRR(r RR) {
 	}
 	switch r.Header().Rrtype {
 	case TypeRRSIG:
-		fallthrough
-	// If nsec/nsec3/rrsig comes first, tricky with allocation
-	// Need to always check all 4 item
-	//                s.RRsigs.Push(r)
+		s.RRsigs.Push(r)
 	case TypeNSEC, TypeNSEC3:
-		fallthrough
+		s.Nxt = r
 	default:
 		s.RRs.Push(r)
 	}
@@ -97,15 +119,27 @@ func (z Zone) PushRR(r RR) {
 
 // Push a new ZRRset to the zone
 func (z Zone) Push(s *ZRRset) {
-	i := intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
-	// Need to check the type covered as the RRsigs (if any)
-	if z[s.RRs[0].Header().Name] == nil {
+        // s can hold RRs, RRsigs or a Nxt
+        name := ""
+        i := 0
+        switch {
+        case len(s.RRs) != 0:
+                name = s.RRs[0].Header().Name
+	        i = intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
+        case len(s.RRsigs) != 0:
+                name = s.RRsigs[0].Header().Name
+	        i = intval(s.RRsigs[0].Header().Class, s.RRsigs[0].Header().Rrtype)
+        case s.Nxt != nil:
+                name = s.Nxt.Header().Name
+	        i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
+        }
+	if z[name] == nil {
 		im := make(map[int]*ZRRset) // intmap
 		im[i] = s
-		z[s.RRs[0].Header().Name] = im
+		z[name] = im
 		return
 	}
-	im := z[s.RRs[0].Header().Name]
+	im := z[name]
 	im[i] = s
 	return
 }

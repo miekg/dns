@@ -95,45 +95,84 @@
     }
 
     action setDS {
+        var (
+                i uint
+                e os.Error
+        )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_DS)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDS
-        rr.KeyTag = uint16(atoi(rdf[0]))
-        rr.Algorithm = uint8(atoi(rdf[1]))
-        rr.DigestType = uint8(atoi(rdf[2]))
+        if i, e = strconv.Atoui(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+        }
+        rr.KeyTag = uint16(i)
+        if i, e = strconv.Atoui(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+        }
+        rr.Algorithm = uint8(i)
+        if i, e = strconv.Atoui(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+        }
+        rr.DigestType = uint8(i)
         rr.Digest = rdf[3]
         z.PushRR(rr)
     }
 
     action setDLV {
+        var (
+                i uint
+                e os.Error
+        )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_DLV)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDLV
-        rr.KeyTag = uint16(atoi(rdf[0]))
-        rr.Algorithm = uint8(atoi(rdf[1]))
-        rr.DigestType = uint8(atoi(rdf[2]))
+        if i, e = strconv.Atoui(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+        }
+        rr.KeyTag = uint16(i)
+        if i, e = strconv.Atoui(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+        }
+        rr.Algorithm = uint8(i)
+        if i, e = strconv.Atoui(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+        }
+        rr.DigestType = uint8(i)
         rr.Digest = rdf[3]
         z.PushRR(rr)
     }
 
     action setTA {
+        var (
+                i uint
+                e os.Error
+        )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_TA)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeTA
-        rr.KeyTag = uint16(atoi(rdf[0]))
-        rr.Algorithm = uint8(atoi(rdf[1]))
-        rr.DigestType = uint8(atoi(rdf[2]))
+        if i, e = strconv.Atoui(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[0], line: l}
+        }
+        rr.KeyTag = uint16(i)
+        if i, e = strconv.Atoui(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[1], line: l}
+        }
+        rr.Algorithm = uint8(i)
+        if i, e = strconv.Atoui(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad DS", name: rdf[2], line: l}
+        }
+        rr.DigestType = uint8(i)
         rr.Digest = rdf[3]
         z.PushRR(rr)
     }
 
     action setDNSKEY {
         var (
-            i uint
-            e os.Error
+                i uint
+                e os.Error
         )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_DNSKEY)
@@ -224,30 +263,45 @@
     }
 
     action setNSEC3 {
+        var (
+                i uint
+                e os.Error
+        )
         rdf := fields(data[mark:p], 0)
         rr := new(RR_NSEC3)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeNSEC3
-        rr.Hash = uint8(atoi(rdf[0]))
-        rr.Flags = uint8(atoi(rdf[1]))
-        rr.Iterations = uint16(atoi(rdf[2]))
-        rr.SaltLength = uint8(atoi(rdf[3]))
-        rr.Salt = rdf[4]
-        rr.HashLength = uint8(atoi(rdf[4]))
-        rr.NextDomain = rdf[5]
-        rr.TypeBitMap = make([]uint16, len(rdf)-6)
+
+        if i, e = strconv.Atoui(rdf[0]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3", name: rdf[0], line: l}
+        }
+        rr.Hash = uint8(i)
+        if i, e = strconv.Atoui(rdf[1]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3", name: rdf[1], line: l}
+        }
+        rr.Flags = uint8(i)
+        if i, e = strconv.Atoui(rdf[2]); e != nil {
+                return z, &ParseError{Error: "bad NSEC3", name: rdf[2], line: l}
+        }
+        rr.Iterations = uint16(i)
+        rr.SaltLength = uint8(len(rdf[3]))
+        rr.Salt = rdf[3]
+
+        rr.HashLength = uint8(len(rdf[4]))
+        rr.NextDomain = rdf[4]
+        rr.TypeBitMap = make([]uint16, len(rdf)-5)
         // Fill the Type Bit Map
-        for i := 6; i < len(rdf); i++ {
+        for i := 5; i < len(rdf); i++ {
             // Check if its there in the map TODO
-            rr.TypeBitMap[i-6] = str_rr[rdf[i]]
+            rr.TypeBitMap[i-5] = str_rr[rdf[i]]
         }
         z.PushRR(rr)
     }
 
     action setNSEC3PARAM {
         var (
-            i int
-            e os.Error
+                i int
+                e os.Error
         )
         rdf := fields(data[mark:p], 4)
         rr := new(RR_NSEC3PARAM)
@@ -274,6 +328,12 @@
     }
 
     action setTXT {
+        rdf := fields(data[mark:p], 1)
+        rr := new(RR_TXT)
+        rr.Hdr = hdr
+        rr.Hdr.Rrtype = TypeTXT
+        rr.Txt = rdf[0]
+        z.PushRR(rr)
     }
 
     action setSRV {
@@ -293,8 +353,8 @@
 
     action setSSHFP {
         var (
-            i int
-            e os.Error
+                i int
+                e os.Error
         )
         rdf := fields(data[mark:p], 3)
         rr := new(RR_SSHFP)
