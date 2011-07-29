@@ -6,7 +6,7 @@ package dns
 
 import (
 	"os"
-        "strings"
+	"strings"
 )
 
 const _CLASS = 2 << 16
@@ -53,15 +53,15 @@ func (z Zone) PopRR() RR {
 	if s == nil {
 		return nil
 	}
-        switch {
-        case len(s.RRs) != 0:
-                return s.RRs.Pop()
-        case len(s.RRsigs) != 0:
-                return s.RRsigs.Pop()
-        case s.Nxt != nil:
-                return s.Nxt
-        }
-        panic("not reached")
+	switch {
+	case len(s.RRs) != 0:
+		return s.RRs.Pop()
+	case len(s.RRsigs) != 0:
+		return s.RRsigs.Pop()
+	case s.Nxt != nil:
+		return s.Nxt
+	}
+	panic("not reached")
 	return nil
 }
 
@@ -70,9 +70,9 @@ func (z Zone) Len() int {
 	for _, im := range z {
 		for _, s := range im {
 			i += len(s.RRs) + len(s.RRsigs)
-                        if s.Nxt != nil {
-                                i++
-                        }
+			if s.Nxt != nil {
+				i++
+			}
 		}
 	}
 	return i
@@ -84,9 +84,9 @@ func (z Zone) String() string {
 		for _, s1 := range im {
 			s += s1.RRs.String()
 			s += s1.RRsigs.String()
-                        if s1.Nxt != nil {
-                                s += s1.Nxt.String() + "\n"
-                        }
+			if s1.Nxt != nil {
+				s += s1.Nxt.String() + "\n"
+			}
 		}
 	}
 	return s
@@ -112,20 +112,20 @@ func (z Zone) PushRR(r RR) {
 
 // Push a new ZRRset to the zone
 func (z Zone) Push(s *ZRRset) {
-        // s can hold RRs, RRsigs or a Nxt
-        name := ""
-        i := 0
-        switch {
-        case len(s.RRs) != 0:
-                name = s.RRs[0].Header().Name
-	        i = intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
-        case len(s.RRsigs) != 0:
-                name = s.RRsigs[0].Header().Name
-	        i = intval(s.RRsigs[0].Header().Class, s.RRsigs[0].(*RR_RRSIG).TypeCovered)
-        case s.Nxt != nil:
-                name = s.Nxt.Header().Name
-	        i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
-        }
+	// s can hold RRs, RRsigs or a Nxt
+	name := ""
+	i := 0
+	switch {
+	case len(s.RRs) != 0:
+		name = s.RRs[0].Header().Name
+		i = intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
+	case len(s.RRsigs) != 0:
+		name = s.RRsigs[0].Header().Name
+		i = intval(s.RRsigs[0].Header().Class, s.RRsigs[0].(*RR_RRSIG).TypeCovered)
+	case s.Nxt != nil:
+		name = s.Nxt.Header().Name
+		i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
+	}
 	if z[name] == nil {
 		im := make(map[int]*ZRRset) // intmap
 		im[i] = s
@@ -143,15 +143,15 @@ func (z Zone) Push(s *ZRRset) {
 // Return NXDomain, Name error, wildcard?
 // Casing!
 func (z Zone) LookupRR(r RR) (*ZRRset, os.Error) {
-        if r.Header().Rrtype == TypeRRSIG {
-	        return z.LookupName(r.Header().Name, r.Header().Class, r.(*RR_RRSIG).TypeCovered)
-        }
+	if r.Header().Rrtype == TypeRRSIG {
+		return z.LookupName(r.Header().Name, r.Header().Class, r.(*RR_RRSIG).TypeCovered)
+	}
 	return z.LookupName(r.Header().Name, r.Header().Class, r.Header().Rrtype)
 }
 
 func (z Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
-        // Impossible to look for an typecovered in a question, because the rdata is
-        // not there.
+	// Impossible to look for an typecovered in a question, because the rdata is
+	// not there.
 	return z.LookupName(q.Name, q.Qclass, q.Qtype)
 }
 
@@ -162,7 +162,7 @@ func (z Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error)
 		if s, ok := im[i]; ok {
 			return s, nil
 		}
-                // Wildcard 'n stuff
+		// Wildcard 'n stuff
 		return nil, ErrName
 	}
 	return nil, nil
@@ -171,4 +171,33 @@ func (z Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error)
 // Number in the second map denotes the class + type.
 func intval(c, t uint16) int {
 	return int(c)*_CLASS + int(t)
+}
+
+// Needed for NSEC/NSEC3 in DNSSEC
+// SortInsert insert the string s in the already sorted
+// vector p. If s is already present it is not inserted again.
+func SortInsert(p *vector.StringVector, s string) {
+	sa := sort.StringArray(*p)
+	i := sa.Search(s)
+	if i < p.Len() && p.At(i) == s {
+		// element already there
+		return
+	}
+	p.Insert(i, s)
+}
+
+
+// Search searches the sorted vector p using binary search. If
+// the element s can not be found, the previous element is returned.
+func SortSearch(p *vector.StringVector, s string) string {
+	sa := sort.StringArray(*p)
+	i := sa.Search(s)
+	// with zones there must always be one before
+	if p.At(i) == s {
+		return s
+	}
+	if i > 0 {
+		i--
+	}
+	return p.At(i)
 }
