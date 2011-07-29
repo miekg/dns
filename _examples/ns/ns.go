@@ -11,7 +11,7 @@ import (
 
 // A small nameserver implementation, not too fast.
 var (
-	zone   *dns.Zone
+	zone   dns.Zone
 	ns     []dns.RR
 	soa    dns.RR
 	spamIN dns.RR
@@ -24,7 +24,6 @@ func send(w dns.ResponseWriter, m *dns.Msg) {
 }
 
 func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
-	println(req.String())
 	m := new(dns.Msg)
 	qname := strings.ToLower(req.Question[0].Name)
 	qtype := req.Question[0].Qtype
@@ -61,51 +60,35 @@ func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
-	println(req.String())
 	m := new(dns.Msg)
-	qname := req.Question[0].Name
-	qtype := req.Question[0].Qtype
-	qclass := req.Question[0].Qclass
 	m.Extra = make([]dns.RR, 1)
 	m.Extra[0] = spamIN
 
-	if qclass != dns.ClassINET {
+	if req.Question[0].Qclass != dns.ClassINET {
 		m.SetRcode(req, dns.RcodeServerFailure)
 		send(w, m)
 		return
 	}
 	m.SetReply(req)
-
 	m.Ns = ns
 
-	names := false
-	cname := 0
-	m.Answer = make([]dns.RR, 0)
-again:
-	for i := 0; i < zone.Len(); i++ {
-		if zone.At(i).Header().Name == qname {
-			names = true
-			// Name found
-			if zone.At(i).Header().Rrtype == qtype {
-				// Exact match
-				m.Answer = append(m.Answer, zone.At(i))
-			}
-			if zone.At(i).Header().Rrtype == dns.TypeCNAME {
-				// Cname match
-				m.Answer = append(m.Answer, zone.At(i))
-				qname = zone.At(i).(*dns.RR_CNAME).Cname
-				cname++
-				if cname > 7 {
-					break
-				}
-				goto again
-			}
-		}
-	}
+	//m.Answer = make([]dns.RR, 0)
+        s, _ := zone.LookupQuestion(req.Question[0])
+        switch req.Question[0].Qtype {
+        case dns.TypeRRSIG:
+                m.Answer = s.RRsigs
+        case dns.TypeNSEC, dns.TypeNSEC3:
+                m.Answer = []dns.RR{s.Nxt}
+        default:
+                m.Answer = s.RRs
+        }
+
+        // CNAME fails now
+
 	if len(m.Answer) == 0 {
 		m.Ns = m.Ns[:1]
 		m.Ns[0] = soa
-		if !names {
+		if s == nil {
 			// NXDOMAIN
 			m.MsgHdr.Rcode = dns.RcodeNameError
 		}
@@ -118,26 +101,32 @@ func main() {
 	file, err := os.Open("miek.nl.signed")
 	defer file.Close()
 	if err != nil {
+                fmt.Printf("%s\n", err.String())
 		return
 	}
 	p := dns.NewParser(bufio.NewReader(file))
 	zone, err = p.Zone()
 	if err != nil {
-
+                fmt.Printf("%s\n", err.String())
+                return
 	}
-
-	ns = make([]dns.RR, 0)
-	for i := 0; i < zone.Len(); i++ {
-		if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeSOA {
-			soa = zone.At(i)
-		}
-		if zone.At(i).Header().Name == "miek.nl." && zone.At(i).Header().Rrtype == dns.TypeNS {
-			ns = append(ns, zone.At(i))
-		}
+        s, err := zone.LookupName("miek.nl.", dns.ClassINET, dns.TypeSOA)
+	if err != nil {
+                fmt.Printf("%s\n", err.String())
+                return
 	}
-	s := "Proudly served with Go: http://www.golang.org"
-	spamIN = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET}, Txt: s}
-	spamCH = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassCHAOS}, Txt: s}
+        soa = s.RRs[0]
+
+        s1, err := zone.LookupName("miek.nl.", dns.ClassINET, dns.TypeNS)
+	if err != nil {
+                fmt.Printf("%s\n", err.String())
+                return
+	}
+        ns = s1.RRs
+
+	spam := "Proudly served by Go: http://www.golang.org"
+	spamIN = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassINET}, Txt: spam}
+	spamCH = &dns.RR_TXT{Hdr: dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeTXT, Class: dns.ClassCHAOS}, Txt: spam}
 
 	dns.HandleFunc("miek.nl.", handleQuery)
 	dns.HandleFunc("bind.", handleQueryCHAOS)

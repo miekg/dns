@@ -6,6 +6,7 @@ package dns
 
 import (
 	"os"
+        "strings"
 )
 
 const _CLASS = 2 << 16
@@ -149,7 +150,7 @@ func (z Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
 
 func (z Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
 	i := intval(qclass, qtype)
-	if im, ok := z[qname]; ok {
+	if im, ok := z[strings.ToLower(qname)]; ok {
 		// Have an im, intmap
 		if s, ok := im[i]; ok {
 			return s, nil

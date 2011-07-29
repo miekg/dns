@@ -47,6 +47,7 @@ var (
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
 	ErrHandle    os.Error = &Error{Error: "handle is nil"}
 	ErrChan      os.Error = &Error{Error: "channel is nil"}
+        ErrName      os.Error = &Error{Error: "type not found for name"}
 )
 
 // A manually-unpacked version of (id, bits).
