@@ -31,16 +31,26 @@ func NewZRRset() *ZRRset {
 
 // Zone implements the concept of RFC 1035 master zone files.
 // This will be converted to some kind of tree structure
-type Zone map[string]map[int]*ZRRset
+// type Zone map[string]map[int]*ZRRset
 
+// Zone implements the concept of RFC 1035 master zone files.
+// This will be converted to some kind of tree structure
+type Zone struct {
+        Zone map[string]map[int]*ZRRset    // the contents of the zone
+        Nxt  *vector.StringVector       // sorted list of owernames in the zone
+}
+
+// NewZone returns a new *Zone
 func NewZone() *Zone {
-	z := make(Zone)
-	return &z
+        z := new(Zone)
+        z.Zone = make(map[string]map[int]*ZRRset)
+        z.Nxt  = new(vector.StringVector)
+	return z
 }
 
 // Get the first value 
 func (z *Zone) Pop() *ZRRset {
-	for _, v := range *z {
+	for _, v := range z.Zone {
 		for _, v1 := range v {
 			return v1
 		}
@@ -67,7 +77,7 @@ func (z *Zone) PopRR() RR {
 
 func (z *Zone) Len() int {
 	i := 0
-	for _, im := range *z {
+	for _, im := range z.Zone {
 		for _, s := range im {
 			i += len(s.RRs) + len(s.RRsigs)
 			if s.Nxt != nil {
@@ -80,7 +90,7 @@ func (z *Zone) Len() int {
 
 func (z *Zone) String() string {
 	s := ""
-	for _, im := range *z {
+	for _, im := range z.Zone {
 		for _, s1 := range im {
 			s += s1.RRs.String()
 			s += s1.RRsigs.String()
@@ -126,13 +136,13 @@ func (z *Zone) Push(s *ZRRset) {
 		name = s.Nxt.Header().Name
 		i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
 	}
-	if (*z)[name] == nil {
+	if z.Zone[name] == nil {
 		im := make(map[int]*ZRRset) // intmap
 		im[i] = s
-		(*z)[name] = im
+		z.Zone[name] = im
 		return
 	}
-	im := (*z)[name]
+	im := z.Zone[name]
 	im[i] = s
 	return
 }
@@ -157,7 +167,7 @@ func (z *Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
 
 func (z *Zone) LookupName(qname string, qclass, qtype uint16) (*ZRRset, os.Error) {
 	i := intval(qclass, qtype)
-	if im, ok := (*z)[strings.ToLower(qname)]; ok {
+	if im, ok := z.Zone[strings.ToLower(qname)]; ok {
 		// Have an im, intmap
 		if s, ok := im[i]; ok {
 			return s, nil
@@ -173,7 +183,6 @@ func intval(c, t uint16) int {
 	return int(c)*_CLASS + int(t)
 }
 
-// Needed for NSEC/NSEC3 in DNSSEC
 // SortInsert insert the string s in the already sorted
 // vector p. If s is already present it is not inserted again.
 func SortInsert(p *vector.StringVector, s string) {
@@ -185,7 +194,6 @@ func SortInsert(p *vector.StringVector, s string) {
 	}
 	p.Insert(i, s)
 }
-
 
 // Search searches the sorted vector p using binary search. If
 // the element s can not be found, the previous element is returned.
