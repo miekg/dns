@@ -6,6 +6,8 @@ package dns
 
 import (
 	"os"
+        "sort"
+        "container/vector"
 	"strings"
 )
 
