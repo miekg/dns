@@ -45,6 +45,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 4408 - SPF
 * 4509 - SHA256 Hash in DS
 * 4635 - HMAC SHA TSIG
+* 4892 - id.server
 * 5001 - NSID 
 * 5155 - NSEC
 * 5933 - GOST

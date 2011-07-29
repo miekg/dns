@@ -5,6 +5,7 @@ import (
 	"dns"
 	"fmt"
 	"bufio"
+        "strings"
 	"os/signal"
 )
 
@@ -25,7 +26,7 @@ func send(w dns.ResponseWriter, m *dns.Msg) {
 func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 	println(req.String())
 	m := new(dns.Msg)
-	qname := req.Question[0].Name
+	qname := strings.ToLower(req.Question[0].Name)
 	qtype := req.Question[0].Qtype
 	qclass := req.Question[0].Qclass
 
@@ -38,7 +39,7 @@ func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 
-	if qname == "version.bind." && qtype == dns.TypeTXT {
+	if (qname == "version.bind." || qname == "id.server.") && qtype == dns.TypeTXT {
 		m.SetReply(req)
 		m.Answer = make([]dns.RR, 1)
 		m.Answer[0] = &dns.RR_TXT{Hdr: dns.RR_Header{Name: qname,
@@ -46,7 +47,7 @@ func handleQueryCHAOS(w dns.ResponseWriter, req *dns.Msg) {
 		send(w, m)
 		return
 	}
-	if qname == "authors.bind." && qtype == dns.TypeTXT {
+	if (qname == "authors.bind." || qname == "authors.server.") && qtype == dns.TypeTXT {
 		m.SetReply(req)
 		m.Answer = make([]dns.RR, 1)
 		m.Answer[0] = &dns.RR_TXT{Hdr: dns.RR_Header{Name: qname,
@@ -140,6 +141,7 @@ func main() {
 
 	dns.HandleFunc("miek.nl.", handleQuery)
 	dns.HandleFunc("bind.", handleQueryCHAOS)
+	dns.HandleFunc("server.", handleQueryCHAOS)
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
 		if err != nil {
