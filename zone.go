@@ -19,6 +19,8 @@ type ZRRset struct {
 	Nxt    RR    // the NSEC or NSEC3 for this name
 	Glue   bool  // when this RRset is glue, set to true
 }
+// For DNSSEC I also need to know the PREVIOUS name for this RRSET...Or at least the 
+// previous NXT RR
 
 func NewZRRset() *ZRRset {
 	s := new(ZRRset)
@@ -119,7 +121,7 @@ func (z Zone) Push(s *ZRRset) {
 	        i = intval(s.RRs[0].Header().Class, s.RRs[0].Header().Rrtype)
         case len(s.RRsigs) != 0:
                 name = s.RRsigs[0].Header().Name
-	        i = intval(s.RRsigs[0].Header().Class, s.RRsigs[0].Header().Rrtype)
+	        i = intval(s.RRsigs[0].Header().Class, s.RRsigs[0].(*RR_RRSIG).TypeCovered)
         case s.Nxt != nil:
                 name = s.Nxt.Header().Name
 	        i = intval(s.Nxt.Header().Class, s.Nxt.Header().Rrtype)
@@ -141,10 +143,15 @@ func (z Zone) Push(s *ZRRset) {
 // Return NXDomain, Name error, wildcard?
 // Casing!
 func (z Zone) LookupRR(r RR) (*ZRRset, os.Error) {
+        if r.Header().Rrtype == TypeRRSIG {
+	        return z.LookupName(r.Header().Name, r.Header().Class, r.(*RR_RRSIG).TypeCovered)
+        }
 	return z.LookupName(r.Header().Name, r.Header().Class, r.Header().Rrtype)
 }
 
 func (z Zone) LookupQuestion(q Question) (*ZRRset, os.Error) {
+        // Impossible to look for an typecovered in a question, because the rdata is
+        // not there.
 	return z.LookupName(q.Name, q.Qclass, q.Qtype)
 }
 

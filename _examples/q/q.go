@@ -17,7 +17,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 
 func main() {
 	var dnssec *bool = flag.Bool("dnssec", false, "request DNSSEC records")
-	var query *bool = flag.Bool("query", false, "show query")
+	var query *bool = flag.Bool("question", false, "show question")
 	var short *bool = flag.Bool("short", false, "abbriate long DNSKEY and RRSIG RRs")
 	var aa *bool = flag.Bool("aa", false, "set AA flag in query")
 	var ad *bool = flag.Bool("ad", false, "set AD flag in query")

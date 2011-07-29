@@ -42,6 +42,7 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.Question[0] = request.Question[0]
 }
 
+// IsRocde checks if the header of the packet has rcode set.
 func (dns *Msg) IsRcode(rcode int) (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
