@@ -19,6 +19,7 @@ things that need to be fixed.
   a major memory saver;
 * Check base64/base32/hex validity when parsing RRs;
 * Include os.Error in ParseError too? (more info).
+* zone.Nxt needs to be differently sorted than the default 
 * Split up the package? An idea might be:
     dns/zone        -- contains all zone parsing
     dns/server      -- server side stuff

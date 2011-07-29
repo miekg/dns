@@ -109,6 +109,9 @@ func (z *Zone) PushRR(r RR) {
 	if s == nil {
 		s = NewZRRset()
 	}
+        // Add the sorted ownernames list
+        SortInsert(z.Nxt, r.Header().Name)
+
 	switch r.Header().Rrtype {
 	case TypeRRSIG:
 		s.RRsigs.Push(r)

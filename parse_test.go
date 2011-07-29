@@ -175,5 +175,6 @@ func TestZoneParsing(t *testing.T) {
 		t.Fail()
 	}
 	delta := time.Nanoseconds() - start
+        t.Logf("%v", z.Nxt)
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", z.Len(), float32(delta)/1e9, float32(z.Len())/(float32(delta)/1e9))
 }
