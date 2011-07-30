@@ -7,7 +7,6 @@ package dns
 import (
 	"os"
 	"sort"
-	"container/vector"
 	"strings"
 )
 
@@ -36,15 +35,15 @@ func NewZRRset() *ZRRset {
 // Zone implements the concept of RFC 1035 master zone files.
 // This will be converted to some kind of tree structure
 type Zone struct {
-        Zone map[string]map[int]*ZRRset    // the contents of the zone
-        Nxt  *vector.StringVector       // sorted list of owernames in the zone
+	Zone map[string]map[int]*ZRRset // the contents of the zone
+	Nxt  *QnameString               // sorted list of owernames in the zone
 }
 
 // NewZone returns a new *Zone
 func NewZone() *Zone {
-        z := new(Zone)
-        z.Zone = make(map[string]map[int]*ZRRset)
-        z.Nxt  = new(vector.StringVector)
+	z := new(Zone)
+	z.Zone = make(map[string]map[int]*ZRRset)
+	z.Nxt = NewQnameString()
 	return z
 }
 
@@ -109,8 +108,8 @@ func (z *Zone) PushRR(r RR) {
 	if s == nil {
 		s = NewZRRset()
 	}
-        // Add the sorted ownernames list
-        SortInsert(z.Nxt, r.Header().Name)
+	// Add to the sorted ownernames list
+	SortInsert(z.Nxt, r.Header().Name)
 
 	switch r.Header().Rrtype {
 	case TypeRRSIG:
@@ -188,10 +187,9 @@ func intval(c, t uint16) int {
 
 // SortInsert insert the string s in the already sorted
 // vector p. If s is already present it is not inserted again.
-func SortInsert(p *vector.StringVector, s string) {
-	sa := sort.StringArray(*p)
-	i := sa.Search(s)
-	if i < p.Len() && p.At(i) == s {
+func SortInsert(p *QnameString, s string) {
+	i := sort.Search(len(*p), func(i int) bool { return (*p)[i] >= s })
+	if i < len(*p) && (*p)[i] == s {
 		// element already there
 		return
 	}
@@ -200,15 +198,14 @@ func SortInsert(p *vector.StringVector, s string) {
 
 // Search searches the sorted vector p using binary search. If
 // the element s can not be found, the previous element is returned.
-func SortSearch(p *vector.StringVector, s string) string {
-	sa := sort.StringArray(*p)
-	i := sa.Search(s)
+func SortSearch(p *QnameString, s string) string {
+	i := sort.Search(len(*p), func(i int) bool { return (*p)[i] >= s })
 	// with zones there must always be one before
-	if p.At(i) == s {
+	if (*p)[i] == s {
 		return s
 	}
 	if i > 0 {
 		i--
 	}
-	return p.At(i)
+	return (*p)[i]
 }

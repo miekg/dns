@@ -22,6 +22,7 @@ GOFILES=\
 	types.go\
 	xfr.go\
 	zone.go\
+	qnamestring.go\
 	zparse.go\
 
 

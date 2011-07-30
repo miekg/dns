@@ -93,6 +93,9 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		m.Ns[0] = soa
 		m.MsgHdr.Rcode = dns.RcodeNameError
 		send(w, m)
+                // Lookup the previous name in the Nxt list for this zone
+                // and insert the nsec/nsec3 from that. Also give the nsec
+                // that proofs there is no wildcard
 		return
 	}
 
