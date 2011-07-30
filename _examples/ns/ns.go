@@ -3,21 +3,24 @@ package main
 import (
 	"os"
 	"dns"
+        "log"
+        "flag"
 	"fmt"
 	"bufio"
 	"strings"
 	"os/signal"
+        "runtime/pprof"
 )
 
 // A small nameserver implementation, not too fast.
 var (
-	zone     dns.Zone
+	zone     *dns.Zone
 	ns       []dns.RR
 	nsDNSSEC []dns.RR
 	soa      dns.RR
 	spamIN   dns.RR
 	spamCH   dns.RR
-	debug    bool
+	debug    *bool
 )
 
 func send(w dns.ResponseWriter, m *dns.Msg) {
@@ -114,14 +117,24 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 			m.Answer = append(m.Answer, r)
 		}
 	}
-        if debug {
-                println(m.String())
-        }
+        if *debug { println(m.String()) }
 	send(w, m)
 }
 
 func main() {
-        debug = false
+        debug = flag.Bool("debug", false, "enable debugging")
+        cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+        flag.Parse()
+
+        if *cpuprofile != "" {
+                f, err := os.Create(*cpuprofile)
+                if err != nil {
+                        log.Fatal(err)
+                }
+                pprof.StartCPUProfile(f)
+                defer pprof.StopCPUProfile()
+        }
+
 	file, err := os.Open("miek.nl.signed")
 	defer file.Close()
 	if err != nil {
