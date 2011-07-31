@@ -80,8 +80,8 @@ type RR interface {
 type RRset []RR
 
 func NewRRset() RRset {
-        s := make([]RR, 0)
-        return s
+	s := make([]RR, 0)
+	return s
 }
 
 func (s RRset) Len() int           { return len(s) }
@@ -89,44 +89,44 @@ func (s RRset) Less(i, j int) bool { return s[i].Header().Name < s[j].Header().N
 func (s RRset) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func (s RRset) String() string {
-        str := ""
-        for _, r := range s {
-                str += r.String() + "\n"
-        }
-        return str
+	str := ""
+	for _, r := range s {
+		str += r.String() + "\n"
+	}
+	return str
 }
 
 // Remove the last pushed RR from the RRset. Return nil
 // when there is nothing to remove
 func (s *RRset) Pop() RR {
-        if len(*s) == 0 {
-                return nil
-        }
-        // Pop and remove the entry
-        r := (*s)[len(*s)-1]
-        *s = (*s)[:len(*s)-1]
-        return r
+	if len(*s) == 0 {
+		return nil
+	}
+	// Pop and remove the entry
+	r := (*s)[len(*s)-1]
+	*s = (*s)[:len(*s)-1]
+	return r
 }
 
 // Push the RR r to the RRset
 func (s *RRset) Push(r RR) bool {
-        if s.Len() == 0 {
-                *s = append(*s, r)
-                return true
-        }
-        // For RRSIGs this is not true (RFC???)
-        // Don't make it a failure if this happens
-//	if (*s)[0].Header().Ttl != r.Header().Ttl {
-//                return false
-//        }
-        if (*s)[0].Header().Name != r.Header().Name {
-                return false
-        }
-        if (*s)[0].Header().Class != r.Header().Class {
-                return false
-        }
-        *s = append(*s, r)
-        return true
+	if s.Len() == 0 {
+		*s = append(*s, r)
+		return true
+	}
+	// For RRSIGs this is not true (RFC???)
+	// Don't make it a failure if this happens
+	//	if (*s)[0].Header().Ttl != r.Header().Ttl {
+	//                return false
+	//        }
+	if (*s)[0].Header().Name != r.Header().Name {
+		return false
+	}
+	if (*s)[0].Header().Class != r.Header().Class {
+		return false
+	}
+	*s = append(*s, r)
+	return true
 }
 
 // Check if the RRset is RFC 2181 compliant.
@@ -190,4 +190,30 @@ func (h *RR_Header) String() string {
 		s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
 	}
 	return s
+}
+
+func zoneMatch(pattern, zone string) (ok bool) {
+	if len(pattern) == 0 {
+		return
+	}
+	if pattern[len(pattern)-1] != '.' {
+		pattern += "."
+	}
+	if zone[len(zone)-1] != '.' {
+		zone += "."
+	}
+	i := 0
+	for {
+		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
+		i++
+
+		if !ok {
+			break
+		}
+		if len(pattern)-1-i < 0 || len(zone)-1-i < 0 {
+			break
+		}
+
+	}
+	return
 }

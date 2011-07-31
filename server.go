@@ -84,32 +84,6 @@ func ListenAndServe(addr string, network string, handler Handler) os.Error {
 	return server.ListenAndServe()
 }
 
-func zoneMatch(pattern, zone string) (ok bool) {
-	if len(pattern) == 0 {
-		return
-	}
-	if pattern[len(pattern)-1] != '.' {
-		pattern += "."
-	}
-	if zone[len(zone)-1] != '.' {
-		zone += "."
-	}
-	i := 0
-	for {
-		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
-		i++
-
-		if !ok {
-			break
-		}
-		if len(pattern)-1-i < 0 || len(zone)-1-i < 0 {
-			break
-		}
-
-	}
-	return
-}
-
 func (mux *ServeMux) match(zone string) Handler {
 	var h Handler
 	var n = 0
