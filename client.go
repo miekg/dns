@@ -125,7 +125,7 @@ type Client struct {
 	// LocalAddr string            // Local address to use
 }
 
-// Create a new client, with some defaults.
+// NewClient creates a new client, with Net set to "udp" and Attempts to 1.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
@@ -179,7 +179,7 @@ func (w *reply) Write(m *Msg) {
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// channel set in the c.
+// channel set in the c. If no channel is set DefaultQueryChan is used.
 func (c *Client) Do(m *Msg, a string) {
 	if c.ChannelQuery == nil {
 		DefaultQueryChan <- &Request{Client: c, Addr: a, Request: m}
@@ -188,8 +188,8 @@ func (c *Client) Do(m *Msg, a string) {
 	}
 }
 
-// Perform an synchronous query. Send the message m to the address
-// contained in a and wait for an reply.
+// Exchange performs an synchronous query. It sends the message m to the address
+// contained in a and waits for an reply.
 func (c *Client) Exchange(m *Msg, a string) *Msg {
 	w := new(reply)
 	w.client = c
