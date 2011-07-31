@@ -55,7 +55,9 @@ func (c Cache) lookup(q *dns.Msg) []byte {
         if im, ok := c[q.Question[0].Name]; ok {
                 // we have the name
                 if d, ok := im[i]; ok {
-                        return d
+                        e := make([]byte, len(d))
+                        copy(e, d)
+                        return e
                 }
         }
         return nil
@@ -73,6 +75,7 @@ func checkcache(m *dns.Msg, ok bool) (o []byte) {
                 o[1] = byte(m.MsgHdr.Id)
                 return
         }
+        println("Cache miss")
         var p *dns.Msg
         // nothing found
         for _, c := range qr {

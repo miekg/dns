@@ -99,15 +99,17 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	// change is cumulative.
 	ok, ok1 := true, true
 	pkt1 := pkt
-	for _, m := range f.Matches {
-		pkt1, ok1 = m.Func(pkt1, IN)
-		switch m.Op {
-		case AND:
-			ok = ok && ok1
-		case OR:
-			ok = ok || ok1
-		}
-	}
+        if len(f.Matches) > 0 {
+                for _, m := range f.Matches {
+                        pkt1, ok1 = m.Func(pkt1, IN)
+                        switch m.Op {
+                        case AND:
+                                ok = ok && ok1
+                        case OR:
+                                ok = ok || ok1
+                        }
+                }
+        }
 	if *verbose { //modified
 		verboseprint(pkt1, ">> ")
 	}
