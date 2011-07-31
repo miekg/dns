@@ -117,7 +117,7 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 			m.Answer = append(m.Answer, r)
 		}
 	}
-        if *debug { println(m.String()) }
+        if *debug { println(m.Question[0].String()) }
 	send(w, m)
 }
 

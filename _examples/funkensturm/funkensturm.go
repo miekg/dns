@@ -8,13 +8,13 @@ package main
 
 import (
 	"os"
-        "log"
+	"log"
 	"flag"
 	"fmt"
 	"dns"
 	"os/signal"
 	"strings"
-        "runtime/pprof"
+	"runtime/pprof"
 )
 
 var qr []*Funk
@@ -24,8 +24,8 @@ var verbose *bool
 // A small wrapper to keep the address together
 // with a client.
 type Funk struct {
-        Client *dns.Client
-        Addr string
+	Client *dns.Client
+	Addr   string
 }
 
 // Where does the packet come from? 
@@ -59,6 +59,10 @@ type Action struct {
 	Func func(*dns.Msg, bool) *dns.Msg
 }
 
+type ActionRaw struct {
+	FuncRaw func(*dns.Msg, bool) []byte
+}
+
 // A complete config for Funkensturm. All matches in the Matches slice are
 // chained together: incoming dns.Msg -> Match[0] -> dns.Msg -> Match[1] -> dns.Msg -> ...
 // The dns.Msg output of Match[n] is the input for Match[n+1]. 
@@ -68,16 +72,17 @@ type Action struct {
 // The result of this matching is given to the action function(s). They can then
 // decide what to do with a packet in the 'true' and in the 'false' case.
 type Funkensturm struct {
-	Setup   func() bool // Inital setup (for extra resolvers, or loading keys, or ...)
-	Matches []Match     // Match- and modify functions
-	Actions []Action    // What to do with the packets
+	Setup      func() bool // Inital setup (for extra resolvers, or loading keys, or ...)
+	Matches    []Match     // Match- and modify functions
+	Actions    []Action    // What to do with the packets
+	ActionsRaw []ActionRaw // Raw action, return []byte not *dns.Msg
 }
 
 func verboseprint(i *dns.Msg, indent string) {
-        for _, line := range strings.Split(i.String(), "\n", -1) {
-                fmt.Printf("%s%s\n", indent, line)
-        }
-        fmt.Println()
+	for _, line := range strings.Split(i.String(), "\n", -1) {
+		fmt.Printf("%s%s\n", indent, line)
+	}
+	fmt.Println()
 }
 
 func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
@@ -115,7 +120,7 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 		resultpkt = a.Func(pkt1, ok)
 	}
 
-	if *verbose {    //orignal out
+	if *verbose { //orignal out
 		verboseprint(resultpkt, "< ")
 	}
 
@@ -123,17 +128,29 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 	// for some last minute packet changing. Note the boolean return
 	// code isn't used any more, i.e No more actions are allowed
 	// anymore
-	pkt1 = resultpkt
-	for _, m := range f.Matches {
-		pkt1, _ = m.Func(pkt1, OUT)
-	}
+        if len(f.Matches) > 0 {
+                pkt1 = resultpkt
+                for _, m := range f.Matches {
+                        pkt1, _ = m.Func(pkt1, OUT)
+                }
+                if pkt1 == nil {
+                        // don't need to send something back
+                        return nil, nil
+                }
+        }
 
-	if pkt1 == nil {
-		// don't need to send something back
-		return nil, nil
-	}
+        if len(f.ActionsRaw) > 0 {
+                var buf []byte
+                for _, r := range f.ActionsRaw {
+                        buf = r.FuncRaw(pkt, ok)
+                }
+                if buf != nil {
+                        // send the buffer back at once
+                        return buf, nil
+                }
+        }
 
-	if *verbose {   // modified out
+	if *verbose { // modified out
 		verboseprint(pkt1, "<< ")
 	}
 
@@ -146,47 +163,47 @@ func doFunkensturm(pkt *dns.Msg) ([]byte, os.Error) {
 }
 
 func serve(w dns.ResponseWriter, req *dns.Msg) {
-        out, err := doFunkensturm(req)
-        if err != nil {
+	out, err := doFunkensturm(req)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err.String())
 		return
-        }
-        if out != nil {
-                w.Write(out)
-        }
+	}
+	if out != nil {
+		w.Write(out)
+	}
 }
 
 func listenAndServe(add, net string) {
-        err := dns.ListenAndServe(add, net, nil)
-        if err != nil {
-                fmt.Printf("Failed to setup: " + net + " " + add + "\n")
-        }
+	err := dns.ListenAndServe(add, net, nil)
+	if err != nil {
+		fmt.Printf("Failed to setup: " + net + " " + add + "\n")
+	}
 }
 
 func main() {
 	sserver := flag.String("sserver", "127.0.0.1:8053", "set the listener address")
 	rserver := flag.String("rserver", "127.0.0.1:53", "remote server address(es), seperate with commas")
-        cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-        if *cpuprofile != "" {
-                f, err := os.Create(*cpuprofile)
-                if err != nil {
-                    log.Fatal(err)
-                }
-                pprof.StartCPUProfile(f)
-                defer pprof.StopCPUProfile()
-        }
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	clients := strings.Split(*rserver, ",", -1)
 	qr = make([]*Funk, len(clients))
 	for i, ra := range clients {
-                qr[i] = new(Funk)
-                qr[i].Client = dns.NewClient()
+		qr[i] = new(Funk)
+		qr[i].Client = dns.NewClient()
 		qr[i].Addr = ra
 	}
 
@@ -197,13 +214,13 @@ func main() {
 		return
 	}
 
-        dns.HandleFunc(".", serve)
-        go listenAndServe(*sserver, "tcp")
-        go listenAndServe(*sserver, "udp")
+	dns.HandleFunc(".", serve)
+	go listenAndServe(*sserver, "tcp")
+	go listenAndServe(*sserver, "udp")
 
 forever:
 	for {
-                select {
+		select {
 		case <-signal.Incoming:
 			fmt.Printf("Signal received, stopping\n")
 			break forever

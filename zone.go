@@ -33,7 +33,10 @@ func NewZRRset() *ZRRset {
 // type Zone map[string]map[int]*ZRRset
 
 // Zone implements the concept of RFC 1035 master zone files.
-// This will be converted to some kind of tree structure
+// We store the zone contents in a map where the ownername is
+// the key. In that map we have another map with integers 
+// (class * _CLASS + type) that has the RRset:
+// map[<ownername>] -> map[<int>] -> ZRRset
 type Zone struct {
 	Zone map[string]map[int]*ZRRset // the contents of the zone
 	Nxt  *QnameString               // sorted list of owernames in the zone
