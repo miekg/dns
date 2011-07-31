@@ -13,7 +13,7 @@ import (
 const _CLASS = 2 << 16
 
 // ZRRset is a structure that keeps several items from
-// a zone file together. It  helps in speeding up DNSSEC lookups.
+// a zone file together. 
 type ZRRset struct {
 	RRs    RRset // the RRset for this type and name
 	RRsigs RRset // the RRSIGs belonging to this RRset (if any)
@@ -21,6 +21,7 @@ type ZRRset struct {
 	Glue   bool  // when this RRset is glue, set to true
 }
 
+// NewZRRset returns a pointer to a new ZRRset.
 func NewZRRset() *ZRRset {
 	s := new(ZRRset)
 	s.RRs = NewRRset()
@@ -29,13 +30,9 @@ func NewZRRset() *ZRRset {
 }
 
 // Zone implements the concept of RFC 1035 master zone files.
-// This will be converted to some kind of tree structure
-// type Zone map[string]map[int]*ZRRset
-
-// Zone implements the concept of RFC 1035 master zone files.
 // We store the zone contents in a map where the ownername is
 // the key. In that map we have another map with integers 
-// (class * _CLASS + type) that has the RRset:
+// (class * _CLASS + type) that has the ZRRset:
 // map[<ownername>] -> map[<int>] -> ZRRset
 type Zone struct {
 	Zone map[string]map[int]*ZRRset // the contents of the zone
@@ -50,6 +47,7 @@ func NewZone() *Zone {
 	return z
 }
 
+// Pop returns the last pushed ZRRset from z.
 // Get the first value 
 func (z *Zone) Pop() *ZRRset {
 	for _, v := range z.Zone {
@@ -60,6 +58,7 @@ func (z *Zone) Pop() *ZRRset {
 	return nil
 }
 
+// PopRR returns the last RR pushed from z.
 func (z *Zone) PopRR() RR {
 	s := z.Pop()
 	if s == nil {
@@ -77,6 +76,7 @@ func (z *Zone) PopRR() RR {
 	return nil
 }
 
+// Len returns the number of RRs in z.
 func (z *Zone) Len() int {
 	i := 0
 	for _, im := range z.Zone {
@@ -104,8 +104,7 @@ func (z *Zone) String() string {
 	return s
 }
 
-// Add a new RR to the zone. First we need to find out if the 
-// RR already lives inside it.
+// PushRR adds a new RR to the zone. 
 func (z *Zone) PushRR(r RR) {
 	s, _ := z.LookupRR(r)
 	if s == nil {
@@ -125,7 +124,7 @@ func (z *Zone) PushRR(r RR) {
 	z.Push(s)
 }
 
-// Push a new ZRRset to the zone
+// Push adds a new ZRRset to the zone.
 func (z *Zone) Push(s *ZRRset) {
 	// s can hold RRs, RRsigs or a Nxt
 	name := ""
