@@ -42,7 +42,9 @@ Also see: http://www.miek.nl/blog/archives/2011/01/23/funkensturm/index.html for
 a architectural overview.
 
 In FunkenSturm you define chains named Funk's (maybe just 'chain' is a better name). Each Funk
-consi
+consists out of match and action function. If the match function matches (return true) the
+action function is called.
+Multiple Funk's may be used. The first 'true' value win and that action function is performed.
 
 */
 package documentation
