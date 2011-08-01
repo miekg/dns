@@ -21,8 +21,9 @@ var k_en_main int = 111
 
 
 // PrivateKey parses a private key file as defined in XXX.
-// A map[string]string is returned with the values. All the keys
-// are in lowercase. The algorithm is returned as m[algorithm] = "RSASHA1"
+// A map[string]string is returned with the values. All the keys are
+// converted to lowercase. All values are returned as-is, except
+// the algorithm [e.g. 5 (RSASHA1)] is returned as: m[algorithm] = "RSASHA1"
 func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 	m = make(map[string]string)
 	var (
@@ -34,10 +35,10 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 		cs, p, pe = 0, 0, len(data)
 		mark := 0
 
-		// line 40 "kparse.go"
+		// line 41 "kparse.go"
 		cs = k_start
 
-		// line 43 "kparse.go"
+		// line 44 "kparse.go"
 		{
 			if p == pe {
 				goto _test_eof
@@ -45,23 +46,23 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 			switch cs {
 			case -666: // i am a hack D:
 			tr13:
-				// line 32 "kparse.rl"
+				// line 33 "kparse.rl"
 				{
 					m[k] = data[mark:p]
 				}
 				goto st111
 			tr28:
-				// line 33 "kparse.rl"
+				// line 34 "kparse.rl"
 				{
 					m[k] = strings.ToUpper(data[mark : p-1])
 				}
 				goto st111
 			tr40:
-				// line 32 "kparse.rl"
+				// line 33 "kparse.rl"
 				{
 					m[k] = data[mark:p]
 				}
-				// line 33 "kparse.rl"
+				// line 34 "kparse.rl"
 				{
 					m[k] = strings.ToUpper(data[mark : p-1])
 				}
@@ -73,7 +74,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 111:
-				// line 67 "kparse.go"
+				// line 68 "kparse.go"
 				switch data[p] {
 				case 65:
 					goto tr110
@@ -107,7 +108,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				cs = 0
 				goto _out
 			tr110:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -119,7 +120,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 1:
-				// line 96 "kparse.go"
+				// line 97 "kparse.go"
 				switch data[p] {
 				case 67:
 					goto st2
@@ -227,7 +228,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr9:
-				// line 31 "kparse.rl"
+				// line 32 "kparse.rl"
 				{
 					k = strings.ToLower(data[mark:p])
 				}
@@ -239,7 +240,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 9:
-				// line 180 "kparse.go"
+				// line 181 "kparse.go"
 				if data[p] == 32 {
 					goto st10
 				}
@@ -282,7 +283,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr11:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -294,7 +295,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 11:
-				// line 219 "kparse.go"
+				// line 220 "kparse.go"
 				switch data[p] {
 				case 10:
 					goto tr13
@@ -324,7 +325,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr12:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -336,7 +337,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 12:
-				// line 248 "kparse.go"
+				// line 249 "kparse.go"
 				switch data[p] {
 				case 9:
 					goto st13
@@ -402,7 +403,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr19:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -414,7 +415,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 15:
-				// line 303 "kparse.go"
+				// line 304 "kparse.go"
 				switch data[p] {
 				case 83:
 					goto st16
@@ -613,7 +614,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr31:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -625,7 +626,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 27:
-				// line 445 "kparse.go"
+				// line 446 "kparse.go"
 				switch data[p] {
 				case 10:
 					goto tr13
@@ -1096,7 +1097,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr111:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -1108,7 +1109,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 44:
-				// line 772 "kparse.go"
+				// line 773 "kparse.go"
 				switch data[p] {
 				case 79:
 					goto st45
@@ -1317,7 +1318,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr112:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -1329,7 +1330,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 59:
-				// line 929 "kparse.go"
+				// line 930 "kparse.go"
 				switch data[p] {
 				case 88:
 					goto st60
@@ -1433,7 +1434,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr113:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -1445,7 +1446,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 67:
-				// line 1011 "kparse.go"
+				// line 1012 "kparse.go"
 				switch data[p] {
 				case 79:
 					goto st68
@@ -1535,7 +1536,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr114:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -1547,7 +1548,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 74:
-				// line 1083 "kparse.go"
+				// line 1084 "kparse.go"
 				switch data[p] {
 				case 79:
 					goto st75
@@ -1626,7 +1627,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				goto st0
 			tr115:
-				// line 30 "kparse.rl"
+				// line 31 "kparse.rl"
 				{
 					mark = p
 				}
@@ -1638,7 +1639,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 				}
 				fallthrough
 			case 80:
-				// line 1148 "kparse.go"
+				// line 1149 "kparse.go"
 				switch data[p] {
 				case 82:
 					goto st81
@@ -2418,7 +2419,7 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 			}
 		}
 
-		// line 65 "kparse.rl"
+		// line 66 "kparse.rl"
 
 	}
 

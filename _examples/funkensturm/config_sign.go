@@ -13,7 +13,7 @@ import (
 
 func sign(m *dns.Msg) *dns.Msg {
 	sg := new(dns.RR_RRSIG)
-	sg.Hdr = dns.RR_Header{"www.example.org.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
+	sg.Hdr = dns.RR_Header{"c.miek.nl.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
 	sg.Expiration = 1296534305  // date -u '+%s' -d"2011-02-01 04:25:05"
 	sg.Inception = 1293942305   // date -u '+%s' -d"2011-01-02 04:25:05"
 	sg.KeyTag = pubkey.KeyTag() // Get the keyfrom the Key
@@ -31,12 +31,18 @@ func sign(m *dns.Msg) *dns.Msg {
 			sg.Sign(p, []dns.RR{an})
 		}
 	}
-	m.Answer = append(m.Answer, sg)
+        m.Answer = append(m.Answer, sg)
 	return m
 }
 
-func match(m *dns.Msg) (*dns.Msg, bool) {
-	return m, m.Question[0].Name == "www.example.org."
+func sendsign(m *dns.Msg) (o []byte) {
+	var p *dns.Msg
+	for _, c := range qr {
+		p = c.Client.Exchange(m, c.Addr)
+	}
+	o, _ = sign(p).Pack()
+        println("signing")
+	return
 }
 
 func send(m *dns.Msg) (o []byte) {
@@ -44,7 +50,7 @@ func send(m *dns.Msg) (o []byte) {
 	for _, c := range qr {
 		p = c.Client.Exchange(m, c.Addr)
 	}
-	o, _ = sign(p).Pack()
+	o, _ = p.Pack()
 	return
 }
 
@@ -81,7 +87,7 @@ func NewFunkenSturm() *FunkenSturm {
 	f.Default = send
 
 	f.Funk[0] = new(Funk)
-	f.Funk[0].Match = func(m *dns.Msg) (*dns.Msg, bool) { return m, m.Question[0].Name == "www.example.org." }
-	f.Funk[0].Action = send
+	f.Funk[0].Match = func(m *dns.Msg) (*dns.Msg, bool) { return m, m.Question[0].Name == "c.miek.nl." }
+	f.Funk[0].Action = sendsign
 	return f
 }
