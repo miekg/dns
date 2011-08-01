@@ -38,6 +38,11 @@ Debugging flags:
 Predefined configurations are shown in `config_delay.go` and `config_sign.go`. The
 default `config.go` implements a transparant proxy.
 
-Also see: http://www.miek.nl/blog/archives/2011/01/23/funkensturm/index.html
+Also see: http://www.miek.nl/blog/archives/2011/01/23/funkensturm/index.html for
+a architectural overview.
+
+In FunkenSturm you define chains named Funk's (maybe just 'chain' is a better name). Each Funk
+consi
+
 */
 package documentation

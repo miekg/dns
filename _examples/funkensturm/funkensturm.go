@@ -28,32 +28,16 @@ type FunkClient struct {
 	Addr   string
 }
 
-const (
-	OR  = iota // chain match functions with logical 'or'
-	AND        // chain match functions with logical 'and'
-)
-
-// A Match function is used on a DNS packet and
-// returns (a possibly modified) DNS packet. It should
-// return true when the packets matches the criteria set in 
-// the function.
-// Op is used in chaining Match-functions together
-type Match struct {
-	Op   int // boolean op: OR, AND
-	Func func(*dns.Msg) (*dns.Msg, bool)
-}
-
 // A FunkAction combines a set of matches and an action. If
 // the matches are successfull (return true) the action is
 // performed
 type Funk struct {
-	Matches []Match
+	Match func(*dns.Msg) (*dns.Msg, bool)
 	Action  func(*dns.Msg) []byte
 }
 
-func NewFunk(m int) *Funk {
+func NewFunk() *Funk {
 	f := new(Funk)
-	f.Matches = make([]Match, m)
 	return f
 }
 
@@ -69,6 +53,7 @@ func NewFunk(m int) *Funk {
 // configuration file.
 type FunkenSturm struct {
 	Setup func() bool // Inital setup (for extra resolvers, or loading keys, or ...)
+        Default func(*dns.Msg) []byte    // Default action is all fails
 	Funk  []*Funk     // The configuration
 }
 
@@ -81,29 +66,12 @@ func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
 	// Loop through the Funks and decide what to do with
 	// the packet.
 	for _, f := range f.Funk {
-		ok := true
-		for _, m := range f.Matches {
-			var ok1 bool
-			pkt, ok1 = m.Func(pkt)
-			switch m.Op {
-			case AND:
-				ok = ok && ok1
-			case OR:
-				ok = ok || ok1
-			}
-		}
-		if ok {
-			ret = f.Action(pkt)
+                if m, ok := f.Match(pkt); ok {
+			ret = f.Action(m)
 			return
 		}
 	}
-        // If still alive, non of the action did something.
-        // So we do it ourselves
-        var o *dns.Msg
-        for _, c := range qr {
-                o = c.Client.Exchange(pkt, c.Addr)
-        }
-        ret, _ = o.Pack()
+        ret = f.Default(pkt)
 	return
 }
 
