@@ -52,7 +52,7 @@ func NewFunkenSturm() *FunkenSturm {
 	f.Setup = func() bool { previous = time.Nanoseconds(); return true }
 
 	f.Funk = make([]*Funk, 1)
-	f.Funk[0] = NewFunk()
+	f.Funk[0] = new(Funk)
 	f.Funk[0].Match = match
 	f.Funk[0].Action = delay
 	return f

@@ -7,52 +7,52 @@ package main
 // We could also use one 1 key for multiple domains.
 import (
 	"dns"
-        "strings"
-        "crypto/rsa"
+	"strings"
+	"crypto/rsa"
 )
 
 func sign(m *dns.Msg) *dns.Msg {
-        sg := new(dns.RR_RRSIG)
-        sg.Hdr = dns.RR_Header{"www.example.org.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
-        sg.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
-        sg.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
-        sg.KeyTag = pubkey.KeyTag()   // Get the keyfrom the Key
-        sg.SignerName = pubkey.Hdr.Name
-        sg.Algorithm = dns.RSASHA256
+	sg := new(dns.RR_RRSIG)
+	sg.Hdr = dns.RR_Header{"www.example.org.", dns.TypeRRSIG, dns.ClassINET, 14400, 0}
+	sg.Expiration = 1296534305  // date -u '+%s' -d"2011-02-01 04:25:05"
+	sg.Inception = 1293942305   // date -u '+%s' -d"2011-01-02 04:25:05"
+	sg.KeyTag = pubkey.KeyTag() // Get the keyfrom the Key
+	sg.SignerName = pubkey.Hdr.Name
+	sg.Algorithm = dns.RSASHA256
 
-        if len(m.Answer) > 0 {
-                // sign the first record
-                an := m.Answer[0]
-                sg.TypeCovered = an.Header().Rrtype
-                sg.Labels = dns.Labels(an.Header().Name)
-                sg.OrigTtl = an.Header().Ttl
-                switch p:=privkey.(type) {
-                        case *rsa.PrivateKey:
-                        sg.Sign(p, []dns.RR{an})
-                }
-        }
-        m.Answer = append(m.Answer, sg)
-        return m
+	if len(m.Answer) > 0 {
+		// sign the first record
+		an := m.Answer[0]
+		sg.TypeCovered = an.Header().Rrtype
+		sg.Labels = dns.Labels(an.Header().Name)
+		sg.OrigTtl = an.Header().Ttl
+		switch p := privkey.(type) {
+		case *rsa.PrivateKey:
+			sg.Sign(p, []dns.RR{an})
+		}
+	}
+	m.Answer = append(m.Answer, sg)
+	return m
 }
 
 func match(m *dns.Msg) (*dns.Msg, bool) {
-        return m, m.Question[0].Name == "www.example.org."
+	return m, m.Question[0].Name == "www.example.org."
 }
 
 func send(m *dns.Msg) (o []byte) {
-        var p *dns.Msg
-        for _, c := range qr {
-                p = c.Client.Exchange(m, c.Addr)
-        }
-        o, _ = sign(p).Pack()
-        return
+	var p *dns.Msg
+	for _, c := range qr {
+		p = c.Client.Exchange(m, c.Addr)
+	}
+	o, _ = sign(p).Pack()
+	return
 }
 
 var pubkey *dns.RR_DNSKEY
 var privkey dns.PrivateKey
 
 func setup() bool {
-        privdata := `Private-key-format: v1.3
+	privdata := `Private-key-format: v1.3
 Algorithm: 5 (RSASHA1)
 Modulus: AaTnz33zSgSIWzUBSJwerZiUdsTmfQNaB+AKpN8FnVlhGOfabJ6ZCi123hjOr3ucE/LWfPGtmEppuFf2dmuJW/yO6s8td5q5b81PUOt+uPMNBGJ1T4DUO8sOQQp4SXw76Q7KIgcrj2RSuNt9qv3JC4VlQB6j7bgVF8er2gbKxbvR
 PublicExponent: AQAB
@@ -65,22 +65,23 @@ Coefficient: AZX3xIGzo/3fw4ouA6nAjpiWGpTK+OdFRkZtvbmzwgqnFDQopB0SweVnd1shpKCXkPT
 Created: 20110122104659
 Publish: 20110122104659
 Activate: 20110122104659`
-        pubkey = new(dns.RR_DNSKEY)
-        privkey, _ = pubkey.ReadPrivateKey(strings.NewReader(privdata))
-        pubkey.Hdr = dns.RR_Header{"miek.nl.", dns.TypeDNSKEY, dns.ClassINET, 3600, 0}
-        pubkey.Protocol = 3
-        pubkey.Flags = 256
-        return true
+	pubkey = new(dns.RR_DNSKEY)
+	privkey, _ = pubkey.ReadPrivateKey(strings.NewReader(privdata))
+	pubkey.Hdr = dns.RR_Header{"miek.nl.", dns.TypeDNSKEY, dns.ClassINET, 3600, 0}
+	pubkey.Protocol = 3
+	pubkey.Flags = 256
+	return true
 }
 
 // Return the configration
 func NewFunkenSturm() *FunkenSturm {
 	f := new(FunkenSturm)
-        f.Funk = make([]*Funk, 1)       // 1 Chain
+	f.Funk = make([]*Funk, 1)
 	f.Setup = setup
+	f.Default = send
 
-        f.Funk[0] = NewFunk(1)
-	f.Funk[0].Matches[0].Func = match
+	f.Funk[0] = new(Funk)
+	f.Funk[0].Match = func(m *dns.Msg) (*dns.Msg, bool) { return m, m.Question[0].Name == "www.example.org." }
 	f.Funk[0].Action = send
 	return f
 }

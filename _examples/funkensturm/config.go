@@ -20,7 +20,7 @@ func NewFunkenSturm() *FunkenSturm {
 	f.Default = send
 
 	f.Funk = make([]*Funk, 1) // 1 Funk chain
-	f.Funk[0] = NewFunk()
+	f.Funk[0] = new(Funk)
 	f.Funk[0].Match = func(m *dns.Msg) (*dns.Msg, bool) { return m, true }
 	f.Funk[0].Action = send
 	return f

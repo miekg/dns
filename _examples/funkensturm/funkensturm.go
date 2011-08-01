@@ -35,11 +35,6 @@ type Funk struct {
 	Action func(*dns.Msg) []byte
 }
 
-func NewFunk() *Funk {
-	f := new(Funk)
-	return f
-}
-
 // Hold the information.
 type FunkenSturm struct {
 	Setup   func() bool           // Inital setup (for extra resolvers, or loading keys, or ...)
@@ -60,6 +55,10 @@ func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
 			return
 		}
 	}
+        if f.Default == nil {
+                println("No f.Default set!")
+                return
+        }
 	ret = f.Default(pkt)
 	return
 }

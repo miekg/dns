@@ -91,7 +91,7 @@ func NewFunkenSturm() *FunkenSturm {
 	f := new(FunkenSturm)
         f.Funk = make([]*Funk, 1)
 	f.Setup = func() bool { cache = NewCache(); return true }
-        f.Funk[0] = NewFunk()
+        f.Funk[0] = new(Funk)
         f.Funk[0].Match = func(m *dns.Msg) (*dns.Msg, bool) { return m, true }
 	f.Funk[0].Action = checkcache
 	return f
