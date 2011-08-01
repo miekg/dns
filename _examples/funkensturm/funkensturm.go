@@ -53,8 +53,7 @@ func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
 		return nil
 	}
 
-	// Loop through the Funks and decide what to do with
-	// the packet.
+	// Loop through the Funks and decide what to do with the packet.
 	for _, f := range f.Funk {
 		if m, ok := f.Match(pkt); ok {
 			ret = f.Action(m)
