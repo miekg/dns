@@ -18,13 +18,13 @@ func sign(m *dns.Msg) *dns.Msg {
         sg.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
         sg.KeyTag = pubkey.KeyTag()   // Get the keyfrom the Key
         sg.SignerName = pubkey.Hdr.Name
-        sg.Algorithm = dns.AlgRSASHA256
+        sg.Algorithm = dns.RSASHA256
 
         if len(m.Answer) > 0 {
                 // sign the first record
                 an := m.Answer[0]
                 sg.TypeCovered = an.Header().Rrtype
-                sg.Labels = dns.LabelCount(an.Header().Name)
+                sg.Labels = dns.Labels(an.Header().Name)
                 sg.OrigTtl = an.Header().Ttl
                 switch p:=privkey.(type) {
                         case *rsa.PrivateKey:
@@ -35,34 +35,16 @@ func sign(m *dns.Msg) *dns.Msg {
         return m
 }
 
-func match(m *dns.Msg, d int) (*dns.Msg, bool) {
-	// Matching criteria
-        switch d {
-        case IN:
-                // nothing
-        case OUT:
-                // Note that when sending back only the mangling is important
-                // the actual return code of these function isn't checked by
-                // funkensturm
-        }
-
-	// Packet Mangling
-	switch d {
-	case IN:
-		// nothing
-	case OUT:
-                if m.Question[0].Name == "www.example.org." {
-                        // On the way out sign the packet
-                        m = sign(m) // keys are global
-                }
-	}
-	return m, true
+func match(m *dns.Msg) (*dns.Msg, bool) {
+        return m, m.Question[0].Name == "www.example.org."
 }
 
-func send(m *dns.Msg, ok bool) (o *dns.Msg) {
+func send(m *dns.Msg) (o []byte) {
+        var p *dns.Msg
         for _, c := range qr {
-                o = c.Client.Exchange(m, c.Addr)
+                p = c.Client.Exchange(m, c.Addr)
         }
+        o, _ = sign(p).Pack()
         return
 }
 
@@ -92,16 +74,13 @@ Activate: 20110122104659`
 }
 
 // Return the configration
-func funkensturm() *Funkensturm {
-	f := new(Funkensturm)
-
+func NewFunkenSturm() *FunkenSturm {
+	f := new(FunkenSturm)
+        f.Funk = make([]*Funk, 1)       // 1 Chain
 	f.Setup = setup
 
-	f.Matches = make([]Match, 1)
-	f.Matches[0].Op = AND
-	f.Matches[0].Func = match
-
-	f.Actions = make([]Action, 1)
-	f.Actions[0].Func = send
+        f.Funk[0] = NewFunk(1)
+	f.Funk[0].Matches[0].Func = match
+	f.Funk[0].Action = send
 	return f
 }

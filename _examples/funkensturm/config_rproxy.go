@@ -32,7 +32,6 @@ func (c Cache) evict(q dns.Msg) {
         // todo
 }
 
-
 // Add an entry from the cache. The old entry (if any) gets
 // overwritten
 func (c Cache) add(q *dns.Msg) {
@@ -63,7 +62,7 @@ func (c Cache) lookup(q *dns.Msg) []byte {
         return nil
 }
 
-func checkcache(m *dns.Msg, ok bool) (o []byte) {
+func checkcache(m *dns.Msg) (o []byte) {
         // Check if we have the packet in Cache
         // if so, return it. Otherwise ask the
         // server, return that answer and put it
@@ -77,7 +76,6 @@ func checkcache(m *dns.Msg, ok bool) (o []byte) {
         }
         println("Cache miss")
         var p *dns.Msg
-        // nothing found
         for _, c := range qr {
                 p = c.Client.Exchange(m, c.Addr)
         }
@@ -89,10 +87,12 @@ func checkcache(m *dns.Msg, ok bool) (o []byte) {
 var cache Cache
 
 // Return the configration
-func funkensturm() *Funkensturm {
-	f := new(Funkensturm)
+func NewFunkenSturm() *FunkenSturm {
+	f := new(FunkenSturm)
+        f.Funk = make([]*Funk, 1)
 	f.Setup = func() bool { cache = NewCache(); return true }
-	f.ActionsRaw = make([]ActionRaw, 1)
-	f.ActionsRaw[0].FuncRaw = checkcache
+        f.Funk[0] = NewFunk(1)
+        f.Funk[0].Matches[0].Func = func(m *dns.Msg) (*dns.Msg, bool) { return m, true }
+	f.Funk[0].Action = checkcache
 	return f
 }

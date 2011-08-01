@@ -17,8 +17,8 @@ type QueryHandler interface {
 	QueryDNS(w RequestWriter, q *Msg)
 }
 
-// A RequestWriter interface is used by an DNS query handler to
-// construct an DNS request.
+// The RequestWriter interface is used by a DNS query handler to
+// construct a DNS request.
 type RequestWriter interface {
 	WriteMessages([]*Msg)
 	Write(*Msg)
@@ -36,6 +36,7 @@ type reply struct {
 	tsigTimersOnly bool
 }
 
+// A Request is a incoming message from a Client
 type Request struct {
 	Request *Msg
 	Addr    string

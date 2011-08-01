@@ -3,9 +3,7 @@ package main
 // This proxy delays pkt that have the RD bit set.
 
 import (
-        "os"
 	"dns"
-        "fmt"
 	"time"
 )
 
@@ -25,62 +23,39 @@ func checkDelay() (ti int64, limitok bool) {
 }
 
 // the only matching we do is on the RD bit
-func match(m *dns.Msg, d int) (*dns.Msg, bool) {
-	// Matching criteria
-	var ok bool
-	switch d {
-	case IN:
-		// only delay pkts with RD bit 
-		ok = m.MsgHdr.RecursionDesired == true
-	case OUT:
-		// nothing
-	}
-
-	// Packet Mangling
-	switch d {
-	case IN:
-		// nothing
-	case OUT:
-		// nothing
-	}
-	return m, ok
+func match(m *dns.Msg) (*dns.Msg, bool) {
+	// only delay pkts with RD bit 
+	return m, m.MsgHdr.RecursionDesired == true
 }
 
-func delay(m *dns.Msg, ok bool) (o *dns.Msg) {
-	var ok1 bool
-	switch ok {
-	case true:
-		previous, ok1 = checkDelay()
-		if !ok1 {
-			fmt.Fprintf(os.Stderr, "Info: Dropping: too often\n")
-			time.Sleep(NSECDELAY)
-			return
-		} else {
-			fmt.Fprintf(os.Stderr, "Info: Ok: let it through\n")
-                        for _, c := range qr {
-			        o = c.Client.Exchange(m, c.Addr)
-                        }
-			return
-		}
-	case false:
-                for _, c := range qr {
-		        o = c.Client.Exchange(m, c.Addr)
-                }
-		return
-	}
-	return
+func delay(m *dns.Msg) (buf []byte) {
+	var (
+		ok1 bool
+		o   *dns.Msg
+	)
+        if previous, ok1 = checkDelay(); !ok1 {
+                println("Info: Dropping: too often")
+                time.Sleep(NSECDELAY)
+                return
+        }
+        println("Info: Ok: let it through")
+        for _, c := range qr {
+                o = c.Client.Exchange(m, c.Addr)
+        }
+        buf, _ = o.Pack()
+        return
 }
 
 // Return the configration
-func funkensturm() *Funkensturm {
-	f := new(Funkensturm)
+func NewFunkenSturm() *FunkenSturm {
+	f := new(FunkenSturm)
+	f.Funk = make([]*Funk, 1)
+	// Not concurrent save
 	f.Setup = func() bool { previous = time.Nanoseconds(); return true }
 
-	f.Matches = make([]Match, 1)
-	f.Matches[0].Op = AND
-	f.Matches[0].Func = match
-
-	f.Actions = make([]Action, 1)
-	f.Actions[0].Func = delay
+	f.Funk[0] = NewFunk(1)
+	f.Funk[0].Matches[0].Op = AND
+	f.Funk[0].Matches[0].Func = match
+	f.Funk[0].Action = delay
 	return f
 }
