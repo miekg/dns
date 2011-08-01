@@ -33,29 +33,27 @@ func delay(m *dns.Msg) (buf []byte) {
 		ok1 bool
 		o   *dns.Msg
 	)
-        if previous, ok1 = checkDelay(); !ok1 {
-                println("Info: Dropping: too often")
-                time.Sleep(NSECDELAY)
-                return
-        }
-        println("Info: Ok: let it through")
-        for _, c := range qr {
-                o = c.Client.Exchange(m, c.Addr)
-        }
-        buf, _ = o.Pack()
-        return
+	if previous, ok1 = checkDelay(); !ok1 {
+		println("Dropping: too often")
+		time.Sleep(NSECDELAY)
+		return
+	}
+	println("Ok: let it through")
+	for _, c := range qr {
+		o = c.Client.Exchange(m, c.Addr)
+	}
+	buf, _ = o.Pack()
+	return
 }
 
 // Return the configration
 func NewFunkenSturm() *FunkenSturm {
 	f := new(FunkenSturm)
-	f.Funk = make([]*Funk, 1)
-	// Not concurrent save
 	f.Setup = func() bool { previous = time.Nanoseconds(); return true }
 
-	f.Funk[0] = NewFunk(1)
-	f.Funk[0].Matches[0].Op = AND
-	f.Funk[0].Matches[0].Func = match
+	f.Funk = make([]*Funk, 1)
+	f.Funk[0] = NewFunk()
+	f.Funk[0].Match = match
 	f.Funk[0].Action = delay
 	return f
 }

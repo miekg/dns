@@ -10,7 +10,6 @@ import (
 	"os"
 	"log"
 	"flag"
-	"fmt"
 	"dns"
 	"os/signal"
 	"strings"
@@ -32,8 +31,8 @@ type FunkClient struct {
 // the matches are successfull (return true) the action is
 // performed
 type Funk struct {
-	Match func(*dns.Msg) (*dns.Msg, bool)
-	Action  func(*dns.Msg) []byte
+	Match  func(*dns.Msg) (*dns.Msg, bool)
+	Action func(*dns.Msg) []byte
 }
 
 func NewFunk() *Funk {
@@ -41,20 +40,11 @@ func NewFunk() *Funk {
 	return f
 }
 
-// A complete config for Funkensturm. All matches in the Matches slice are
-// chained together: incoming dns.Msg -> Match[0] -> dns.Msg -> Match[1] -> dns.Msg -> ...
-// The dns.Msg output of Match[n] is the input for Match[n+1]. 
-//
-// The final outcome (does a packet match or not?) is calculated as follows:
-// true Match[0].Op Match[0].Func() Match[1].Op Match[1].Func() ...
-// The result of this matching is given to the action function. That last
-// function decides "what to do with the packet" is the match(es) return 'true'
-// There is no NewFunkenSturm() because that is what needs to be done in the
-// configuration file.
+// Hold the information.
 type FunkenSturm struct {
-	Setup func() bool // Inital setup (for extra resolvers, or loading keys, or ...)
-        Default func(*dns.Msg) []byte    // Default action is all fails
-	Funk  []*Funk     // The configuration
+	Setup   func() bool           // Inital setup (for extra resolvers, or loading keys, or ...)
+	Default func(*dns.Msg) []byte // Default action is all fails
+	Funk    []*Funk               // The configuration
 }
 
 func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
@@ -66,12 +56,12 @@ func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
 	// Loop through the Funks and decide what to do with
 	// the packet.
 	for _, f := range f.Funk {
-                if m, ok := f.Match(pkt); ok {
+		if m, ok := f.Match(pkt); ok {
 			ret = f.Action(m)
 			return
 		}
 	}
-        ret = f.Default(pkt)
+	ret = f.Default(pkt)
 	return
 }
 
@@ -83,7 +73,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg) {
 
 func listenAndServe(add, net string) {
 	if err := dns.ListenAndServe(add, net, nil); err != nil {
-		fmt.Printf("Failed to setup: " + net + " " + add + "\n")
+		println("Failed to setup: ", net, " ", add)
 	}
 }
 
@@ -93,7 +83,6 @@ func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -117,7 +106,7 @@ func main() {
 	f = NewFunkenSturm()
 	ok := f.Setup()
 	if !ok {
-		fmt.Fprintf(os.Stderr, "Setup failed")
+		println("Setup failed")
 		return
 	}
 
@@ -129,7 +118,7 @@ forever:
 	for {
 		select {
 		case <-signal.Incoming:
-			fmt.Printf("Signal received, stopping\n")
+			println("Signal received, stopping")
 			break forever
 		}
 	}
