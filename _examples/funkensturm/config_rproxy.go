@@ -19,6 +19,7 @@ func intval(c, t uint16) int {
         return int(c)*_CLASS + int(t)
 }
 
+// Mutex entry in the cache, if non-nill take the lock
 // Ala Zone in zone.go, but slightly different
 type Cache map[string]map[int][]byte
 
@@ -29,7 +30,13 @@ func NewCache() Cache {
 
 // Remove an entry from the cache
 func (c Cache) evict(q dns.Msg) {
-        // todo
+        if im, ok := c[q.Question[0].Name]; !ok {
+                // already gone
+                return
+        } else {
+                i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
+                im[i] = nil, false
+        }
 }
 
 // Add an entry from the cache. The old entry (if any) gets

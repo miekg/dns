@@ -93,7 +93,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	clients := strings.Split(*rserver, ",", -1)
+	clients := strings.Split(*rserver, ",")
 	qr = make([]*FunkClient, len(clients))
 	for i, ra := range clients {
 		qr[i] = new(FunkClient)
