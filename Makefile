@@ -17,12 +17,12 @@ GOFILES=\
 	kparse.go\
 	msg.go\
 	nsec3.go \
+	qnamestring.go\
 	server.go \
 	tsig.go\
 	types.go\
 	xfr.go\
 	zone.go\
-	qnamestring.go\
 	zparse.go\
 
 
@@ -34,11 +34,12 @@ _examples:
 examples:
 	gomake -C _examples
 
+# doesn't work with r59 - disabled until Ragel catches up
 # yes, hardcoded path, yes ugly, yes, deal with it
-zparse.go: zparse.rl types.rl
-	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
-	gofmt -w zparse.go
-
-kparse.go: kparse.rl
-	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
-	gofmt -w kparse.go
+#zparse.go: zparse.rl types.rl
+#	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
+#	gofmt -w zparse.go
+#
+#kparse.go: kparse.rl
+#	/home/miekg/svn/ragel/ragel/ragel -Z -G2 -o $@ $<
+#	gofmt -w kparse.go

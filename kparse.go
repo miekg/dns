@@ -5,7 +5,7 @@ package dns
 
 import (
 	"os"
-	"strings"
+//	"strings"
 )
 
 
@@ -25,12 +25,14 @@ var k_en_main int = 111
 // converted to lowercase. All values are returned as-is, except
 // the algorithm [e.g. 5 (RSASHA1)] is returned as: m[algorithm] = "RSASHA1"
 func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
+//off Ragel generate illegal code now 
+        /* 
 	m = make(map[string]string)
 	var (
 		k, data   string
 		cs, p, pe int
 	)
-	lines := strings.SplitAfter(string(kp.buf), "\n", -1)
+	lines := strings.SplitAfter(string(kp.buf), "\n")
 	for _, data := range lines {
 		cs, p, pe = 0, 0, len(data)
 		mark := 0
@@ -2434,5 +2436,6 @@ func (kp *Parser) PrivateKey() (m map[string]string, err os.Error) {
 			return nil, nil
 		}
 	}
+        */
 	return m, nil
 }

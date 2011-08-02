@@ -7,7 +7,7 @@ package dns
 import (
 	"os"
 	"io"
-	"net"
+//	"net"
 	"time"
 	"strings"
 	"strconv"
@@ -103,6 +103,7 @@ func (zp *Parser) RR() (RR, os.Error) {
 
 // Zone parses an DNS master zone file.
 func (zp *Parser) Zone() (z *Zone, err os.Error) {
+        /*
 	z = NewZone()
 	data := string(zp.buf)
 	cs, p, pe := 0, 0, len(data)
@@ -743,7 +744,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto st0
 		tr2:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			// line 111 "zparse.rl"
 			{
@@ -836,7 +837,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto st0
 		tr3:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st4
 		st4:
@@ -1353,7 +1354,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr58
 		tr5:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ...
 			}
 			goto st31
 		st31:
@@ -1767,7 +1768,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr89
 		tr8:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ...
 			}
 			goto st55
 		st55:
@@ -1858,7 +1859,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr95
 		tr9:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st60
 		st60:
@@ -2359,7 +2360,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr133
 		tr10:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st89
 		st89:
@@ -2464,7 +2465,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr140
 		tr11:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st95
 		st95:
@@ -2597,7 +2598,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr149
 		tr12:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st103
 		st103:
@@ -2908,7 +2909,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto tr172
 		tr13:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			goto st121
 		st121:
@@ -3130,7 +3131,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto st0
 		tr4:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ...
 			}
 			// line 111 "zparse.rl"
 			{
@@ -3260,7 +3261,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto st0
 		tr6:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ... 
 			}
 			// line 111 "zparse.rl"
 			{
@@ -3284,7 +3285,7 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			goto st0
 		tr7:
 			// line 120 "zparse.rl"
-			{ /* ... */
+			{ // ...
 			}
 			// line 111 "zparse.rl"
 			{
@@ -3807,5 +3808,6 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 			}
 		}
 	}
+        */
 	return z, nil
 }
