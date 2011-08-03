@@ -6,13 +6,24 @@ package main
 
 import (
 	"dns"
+        "time"
 )
 
 // Keep everything in the cache for 60 seconds
 const (
-        CACHETTL = 60
+        CACHETTL = 1
         _CLASS = 2 << 16
+
+        INSERT = iota
+        DELETE
 )
+
+var cache Cache
+
+type cacheitem struct {
+        epoch int64
+        msg []byte
+}
 
 // Number in the second map denotes the class + type.
 func intval(c, t uint16) int {
@@ -21,7 +32,7 @@ func intval(c, t uint16) int {
 
 // Mutex entry in the cache, if non-nill take the lock
 // Ala Zone in zone.go, but slightly different
-type Cache map[string]map[int][]byte
+type Cache map[string]map[int]*cacheitem
 
 func NewCache() Cache {
         c := make(Cache)
@@ -29,13 +40,20 @@ func NewCache() Cache {
 }
 
 // Remove an entry from the cache
-func (c Cache) evict(q dns.Msg) {
+// This function is not thread safe
+func (c Cache) evict(q *dns.Msg) {
         if im, ok := c[q.Question[0].Name]; !ok {
                 // already gone
+                println("already gone")
                 return
         } else {
+                println("deleting")
                 i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
                 im[i] = nil, false
+                if len(im) == 0 {
+                        // nothing left for this ownername
+                        c[q.Question[0].Name] = nil, false
+                }
         }
 }
 
@@ -45,15 +63,15 @@ func (c Cache) add(q *dns.Msg) {
         qname := q.Question[0].Name
         i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
         if c[qname] == nil {
-                im := make(map[int][]byte)
+                im := make(map[int]*cacheitem)
                 c[qname] = im
         }
         buf, _ := q.Pack()
         im := c[qname]
-        im[i] = buf
+        im[i] = &cacheitem{time.Seconds(), buf}
 }
 
-// Lookup an entry in the cache. Returns null
+// Lookup an entry in the cache. Returns nil
 // when nothing found.
 func (c Cache) lookup(q *dns.Msg) []byte {
         // Use the question section for looking up
@@ -61,8 +79,14 @@ func (c Cache) lookup(q *dns.Msg) []byte {
         if im, ok := c[q.Question[0].Name]; ok {
                 // we have the name
                 if d, ok := im[i]; ok {
-                        e := make([]byte, len(d))
-                        copy(e, d)
+                        // We even have the entry, check cache time
+                        if time.Seconds() - d.epoch > CACHETTL {
+                                // bummer, too old
+                                c.evict(q)
+                                return nil
+                        }
+                        e := make([]byte, len(d.msg))
+                        copy(e, d.msg)
                         return e
                 }
         }
@@ -90,8 +114,6 @@ func checkcache(m *dns.Msg) (o []byte) {
         o, _ = p.Pack()
         return
 }
-
-var cache Cache
 
 // Return the configration
 func NewFunkenSturm() *FunkenSturm {
