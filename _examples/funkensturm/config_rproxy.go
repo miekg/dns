@@ -78,7 +78,6 @@ func (c Cache) lookup(q *dns.Msg) []byte {
                         e := make([]byte, len(d.msg))
                         copy(e, d.msg)
                         return e
-                        return d.msg
                 }
         }
         return nil
