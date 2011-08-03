@@ -6,6 +6,7 @@ package main
 
 import (
 	"dns"
+        "sync"
         "time"
 )
 
@@ -20,7 +21,7 @@ const (
 
 var cache Cache
 
-type cacheitem struct {
+type item struct {
         epoch int64
         msg []byte
 }
@@ -32,62 +33,52 @@ func intval(c, t uint16) int {
 
 // Mutex entry in the cache, if non-nill take the lock
 // Ala Zone in zone.go, but slightly different
-type Cache map[string]map[int]*cacheitem
+type Cache struct {
+        data map[string]map[int]*item
+        rw  *sync.RWMutex
+}
 
 func NewCache() Cache {
-        c := make(Cache)
-        return c
+        c := new(Cache)
+        c.data = make(map[string]map[int]*item)
+        c.rw = new(sync.RWMutex)
+        return *c
 }
 
-// Remove an entry from the cache
-// This function is not thread safe
-func (c Cache) evict(q *dns.Msg) {
-        if im, ok := c[q.Question[0].Name]; !ok {
-                // already gone
-                println("already gone")
-                return
-        } else {
-                println("deleting")
-                i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
-                im[i] = nil, false
-                if len(im) == 0 {
-                        // nothing left for this ownername
-                        c[q.Question[0].Name] = nil, false
-                }
-        }
-}
-
-// Add an entry from the cache. The old entry (if any) gets
-// overwritten
+// Add an entry to the cache. The old entry (if any) gets overwritten
 func (c Cache) add(q *dns.Msg) {
+        c.rw.Lock()
+        defer c.rw.Unlock()
         qname := q.Question[0].Name
         i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
-        if c[qname] == nil {
-                im := make(map[int]*cacheitem)
-                c[qname] = im
+        if c.data[qname] == nil {
+                im := make(map[int]*item)
+                c.data[qname] = im
         }
         buf, _ := q.Pack()
-        im := c[qname]
-        im[i] = &cacheitem{time.Seconds(), buf}
+        im := c.data[qname]
+        im[i] = &item{time.Seconds(), buf}
 }
 
 // Lookup an entry in the cache. Returns nil
 // when nothing found.
 func (c Cache) lookup(q *dns.Msg) []byte {
         // Use the question section for looking up
+        c.rw.RLock()
+        defer c.rw.RUnlock()
         i := intval(q.Question[0].Qclass, q.Question[0].Qtype)
-        if im, ok := c[q.Question[0].Name]; ok {
+        if im, ok := c.data[q.Question[0].Name]; ok {
                 // we have the name
                 if d, ok := im[i]; ok {
                         // We even have the entry, check cache time
                         if time.Seconds() - d.epoch > CACHETTL {
-                                // bummer, too old
-                                c.evict(q)
+                                // Too olds means we get a new one
                                 return nil
                         }
                         e := make([]byte, len(d.msg))
                         copy(e, d.msg)
                         return e
+                        return d.msg
                 }
         }
         return nil
@@ -105,6 +96,7 @@ func checkcache(m *dns.Msg) (o []byte) {
                 o[1] = byte(m.MsgHdr.Id)
                 return
         }
+
         println("Cache miss")
         var p *dns.Msg
         for _, c := range qr {
