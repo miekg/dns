@@ -189,33 +189,46 @@ func (c *Client) Do(m *Msg, a string) {
 	}
 }
 
-// Exchange performs an synchronous query. It sends the message m to the address
-// contained in a and waits for an reply.
-func (c *Client) Exchange(m *Msg, a string) *Msg {
+// ExchangeBuf performs a synchronous query. It sends the buffer m to the
+// address (net.Addr?) contained in a
+func (c *Client) ExchangeBuffer(m []byte, a string) []byte {
 	w := new(reply)
 	w.client = c
 	w.addr = a
-	out, ok := m.Pack()
-	if !ok {
-		//
-	}
-	_, err := w.writeClient(out)
+	_, err := w.writeClient(m)
+	defer w.closeClient() // XXX here?? what about TCP which should remain open
 	if err != nil {
+		println(err.String())
 		return nil
 	}
 
-	// udp / tcp
+	// udp / tcp TODO
 	p := make([]byte, DefaultMsgSize)
 	n, err := w.readClient(p)
 	if err != nil {
 		return nil
 	}
 	p = p[:n]
+        return p
+
+}
+
+// Exchange performs an synchronous query. It sends the message m to the address
+// contained in a and waits for an reply.
+func (c *Client) Exchange(m *Msg, a string) *Msg {
+	out, ok := m.Pack()
+	if !ok {
+		panic("failed to pack message")
+	}
+        p := c.ExchangeBuffer(out, a)
+        if p == nil {
+                return nil
+        }
 	r := new(Msg)
 	if ok := r.Unpack(p); !ok {
 		return nil
 	}
-	return r
+        return r
 }
 
 func (w *reply) WriteMessages(m []*Msg) {
@@ -394,4 +407,9 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		}
 	}
 	return 0, nil
+}
+
+// UDP/TCP stuff
+func (w *reply) closeClient() (err os.Error) {
+	return w.conn.Close()
 }

@@ -6,6 +6,7 @@ things that need to be fixed.
 ## Todo
 
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
+* add functions to operate on []byte messages (raw packets)
 * HIP RR (needs list of domain names, need slice for that);
 * IsSubdomain, IsGlue helper functions;
 * Cleanup?;
