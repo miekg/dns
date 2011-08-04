@@ -18,59 +18,59 @@ import (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
-	TypeA     = 1
-	TypeNS    = 2
-	TypeMD    = 3
-	TypeMF    = 4
-	TypeCNAME = 5
-	TypeSOA   = 6
-	TypeMB    = 7
-	TypeMG    = 8
-	TypeMR    = 9
-	TypeNULL  = 10
-	TypeWKS   = 11
-	TypePTR   = 12
-	TypeHINFO = 13
-	TypeMINFO = 14
-	TypeMX    = 15
-	TypeTXT   = 16
-	TypeAAAA  = 28
-	TypeLOC   = 29
-	TypeSRV   = 33
-	TypeNAPTR = 35
-	TypeKX    = 36
-	TypeCERT  = 37
-	TypeDNAME = 39
+	TypeA   uint16 = 1
+	TypeNS  uint16  = 2
+	TypeMD  uint16  = 3
+	TypeMF  uint16  = 4
+	TypeCNAME uint16= 5
+	TypeSOA uint16  = 6
+	TypeMB  uint16  = 7
+	TypeMG   uint16 = 8
+	TypeMR  uint16  = 9
+	TypeNULL uint16 = 10
+	TypeWKS  uint16 = 11
+	TypePTR  uint16 = 12
+	TypeHINFO uint16= 13
+	TypeMINFO uint16= 14
+	TypeMX    uint16= 15
+	TypeTXT   uint16= 16
+	TypeAAAA  uint16= 28
+	TypeLOC   uint16= 29
+	TypeSRV   uint16= 33
+	TypeNAPTR uint16= 35
+	TypeKX    uint16= 36
+	TypeCERT  uint16= 37
+	TypeDNAME uint16= 39
 
 	// EDNS
-	TypeOPT = 41
+	TypeOPT uint16= 41
 
-	TypeSIG        = 24
-	TypeKEY        = 25
-	TypeNXT        = 30
-	TypeDS         = 43
-	TypeSSHFP      = 44
-	TypeIPSECKEY   = 45 // No type implemented
-	TypeRRSIG      = 46
-	TypeNSEC       = 47
-	TypeDNSKEY     = 48
-	TypeDHCID      = 49
-	TypeNSEC3      = 50
-	TypeNSEC3PARAM = 51
-	TypeTALINK     = 58
-	TypeSPF        = 99
+	TypeSIG        uint16= 24
+	TypeKEY        uint16= 25
+	TypeNXT        uint16= 30
+	TypeDS         uint16= 43
+	TypeSSHFP      uint16= 44
+	TypeIPSECKEY   uint16= 45 // No type implemented
+	TypeRRSIG      uint16= 46
+	TypeNSEC       uint16= 47
+	TypeDNSKEY     uint16= 48
+	TypeDHCID      uint16= 49
+	TypeNSEC3      uint16= 50
+	TypeNSEC3PARAM uint16= 51
+	TypeTALINK     uint16= 58
+	TypeSPF        uint16= 99
 
-	TypeTKEY = 249
-	TypeTSIG = 250
+	TypeTKEY uint16= 249
+	TypeTSIG uint16= 250
 	// valid Question.Qtype only
-	TypeIXFR  = 251
-	TypeAXFR  = 252
-	TypeMAILB = 253
-	TypeMAILA = 254
-	TypeALL   = 255
-	TypeURI   = 256
-	TypeTA    = 32768
-	TypeDLV   = 32769
+	TypeIXFR uint16 = 251
+	TypeAXFR uint16 = 252
+	TypeMAILB uint16= 253
+	TypeMAILA uint16= 254
+	TypeALL   uint16= 255
+	TypeURI   uint16= 256
+	TypeTA    uint16= 32768
+	TypeDLV   uint16= 32769
 
 	// valid Question.Qclass
 	ClassINET   = 1
@@ -156,7 +156,7 @@ func NewRRString(s string) (RR, os.Error) {
 // NewRR returns a new RR with the hdr.Rrtype also set.
 // If the type i is not known, nil is returned.
 func NewRR(i int) RR {
-        r := rr_mk[i]()
+        r := rr_mk[uint16(i)]()
         r.Header().Rrtype = uint16(i)
         return r
 }
@@ -804,7 +804,7 @@ func tsigTimeToDate(t uint64) string {
 }
 
 // Map of constructors for each RR wire type.
-var rr_mk = map[int]func() RR{
+var rr_mk = map[uint16]func() RR{
 	TypeCNAME:      func() RR { return new(RR_CNAME) },
 	TypeHINFO:      func() RR { return new(RR_HINFO) },
 	TypeMB:         func() RR { return new(RR_MB) },

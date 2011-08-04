@@ -860,7 +860,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 
 	// make an rr of that type and re-unpack.
 	// again inefficient but doesn't need to be fast.
-	mk, known := rr_mk[int(h.Rrtype)]
+	mk, known := rr_mk[h.Rrtype]
 	if !known {
 		rr = new(RR_RFC3597)
 	} else {
