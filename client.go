@@ -196,20 +196,17 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) bool {
 	w.client = c
 	w.addr = a
 	_, err := w.writeClient(inbuf)
-//	defer w.closeClient() // XXX here?? what about TCP which should remain open
+	defer w.closeClient() // XXX here?? what about TCP which should remain open
 	if err != nil {
 		println(err.String())
-                w.closeClient()
 		return false
 	}
 
 	// udp / tcp TODO
 	n, err := w.readClient(outbuf)
 	if err != nil {
-                w.closeClient()
 		return false
 	}
-                w.closeClient()
 	outbuf = outbuf[:n]
         return true
 }
