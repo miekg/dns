@@ -196,17 +196,20 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) bool {
 	w.client = c
 	w.addr = a
 	_, err := w.writeClient(inbuf)
-	defer w.closeClient() // XXX here?? what about TCP which should remain open
+//	defer w.closeClient() // XXX here?? what about TCP which should remain open
 	if err != nil {
 		println(err.String())
+                w.closeClient()
 		return false
 	}
 
 	// udp / tcp TODO
 	n, err := w.readClient(outbuf)
 	if err != nil {
+                w.closeClient()
 		return false
 	}
+                w.closeClient()
 	outbuf = outbuf[:n]
         return true
 }
@@ -341,25 +344,24 @@ func (w *reply) Send(m *Msg) os.Error {
 }
 
 func (w *reply) writeClient(p []byte) (n int, err os.Error) {
-	c := w.Client()
-	if c.Attempts == 0 {
+	if w.Client().Attempts == 0 {
 		panic("c.Attempts 0")
 	}
-	if c.Net == "" {
+	if w.Client().Net == "" {
 		panic("c.Net empty")
 	}
 
-	conn, err := net.Dial(c.Net, w.addr)
+	conn, err := net.Dial(w.Client().Net, w.addr)
 	if err != nil {
 		return 0, err
 	}
 	w.conn = conn
-	switch c.Net {
+	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
 			return 0, io.ErrShortBuffer
 		}
-		for a := 0; a < c.Attempts; a++ {
+		for a := 0; a < w.Client().Attempts; a++ {
 			l := make([]byte, 2)
 			l[0], l[1] = packUint16(uint16(len(p)))
 			n, err = conn.Write(l)
@@ -394,7 +396,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 			n = i
 		}
 	case "udp", "udp4", "udp6":
-		for a := 0; a < c.Attempts; a++ {
+		for a := 0; a < w.Client().Attempts; a++ {
 			n, err = conn.(*net.UDPConn).WriteTo(p, conn.RemoteAddr())
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {

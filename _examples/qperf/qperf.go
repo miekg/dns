@@ -124,17 +124,6 @@ Flags:
                                 }
                                 queries_send++  // global var...???
                                 qid++   // let it overflow and wrap
-                                /*
-                                if r == nil {
-                                        println("weird reply", qid)
-                                }
-                                */
-                                /*
-                                if r != nil && r.Rcode != dns.RcodeSuccess {
-                                        println("not a success code")
-                                }
-                                its a raw buffer
-                                */
                         }
                 }()
         }
