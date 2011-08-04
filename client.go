@@ -191,26 +191,24 @@ func (c *Client) Do(m *Msg, a string) {
 
 // ExchangeBuf performs a synchronous query. It sends the buffer m to the
 // address (net.Addr?) contained in a
-func (c *Client) ExchangeBuffer(m []byte, a string) []byte {
+func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) bool {
 	w := new(reply)
 	w.client = c
 	w.addr = a
-	_, err := w.writeClient(m)
+	_, err := w.writeClient(inbuf)
 	defer w.closeClient() // XXX here?? what about TCP which should remain open
 	if err != nil {
 		println(err.String())
-		return nil
+		return false
 	}
 
 	// udp / tcp TODO
-	p := make([]byte, DefaultMsgSize)
-	n, err := w.readClient(p)
+	n, err := w.readClient(outbuf)
 	if err != nil {
-		return nil
+		return false
 	}
-	p = p[:n]
-        return p
-
+	outbuf = outbuf[:n]
+        return true
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
@@ -220,12 +218,12 @@ func (c *Client) Exchange(m *Msg, a string) *Msg {
 	if !ok {
 		panic("failed to pack message")
 	}
-        p := c.ExchangeBuffer(out, a)
-        if p == nil {
+        in := make([]byte, DefaultMsgSize)
+        if ok := c.ExchangeBuffer(out, a, in); !ok {
                 return nil
         }
 	r := new(Msg)
-	if ok := r.Unpack(p); !ok {
+	if ok := r.Unpack(in); !ok {
 		return nil
 	}
         return r

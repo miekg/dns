@@ -18,6 +18,7 @@ func main() {
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "ask for NSID")
 	queries := flag.Int("queries", 20, "number of concurrent queries to perform")
+	maxproc := flag.Int("maxproc", 4, "set GOMAXPROCS to this value")
         looptime := flag.Int("time", 2, "number of seconds to query")
         cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Usage = func() {
@@ -41,7 +42,7 @@ func main() {
                 pprof.StartCPUProfile(f)
                 defer pprof.StopCPUProfile()
         }
-        runtime.GOMAXPROCS(*queries)
+        runtime.GOMAXPROCS(*maxproc)
 
 Flags:
 	for i := 0; i < flag.NArg(); i++ {
@@ -94,6 +95,7 @@ Flags:
         for i := 0; i < *queries; i++ {
                 go func() {
                         println("starting querier")
+                        pktbuf := make([]byte, dns.DefaultMsgSize)
                         c := dns.NewClient()
                         if *tcp {
                                 c.Net = "tcp"
@@ -117,9 +119,11 @@ Flags:
                         for {
                                 // set Id
                                 mbuf[0], mbuf[1] = byte(qid >> 8), byte(qid)
-                                c.ExchangeBuffer(mbuf, nameserver)
+                                if ok := c.ExchangeBuffer(mbuf, nameserver, pktbuf); !ok {
+                                        println("weird reply", qid)
+                                }
                                 queries_send++  // global var...???
-                                qid++   // let is overflow and wrap
+                                qid++   // let it overflow and wrap
                                 /*
                                 if r == nil {
                                         println("weird reply", qid)
