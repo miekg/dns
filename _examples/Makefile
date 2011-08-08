@@ -4,6 +4,7 @@ key2ds \
 axfr \
 reflect \
 q \
+qperf \
 funkensturm \
 ns \
 

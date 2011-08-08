@@ -7,7 +7,7 @@ import (
 func send(m *dns.Msg) (buf []byte) {
 	var o *dns.Msg
 	for _, c := range qr {
-		o = c.Client.Exchange(m, c.Addr)
+		o, _ = c.Client.Exchange(m, c.Addr)
 	}
 	buf, _ = o.Pack()
 	return
