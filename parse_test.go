@@ -146,8 +146,9 @@ func TestParseFailure(t *testing.T) {
                 if err == nil {
                         t.Log("Should have triggered an error")
                         t.Fail()
+                } else {
+                        t.Logf("%s: %s\n", t1, err.String())
                 }
-                t.Logf("%s: %s\n", t1, err.String())
         }
 }
 
@@ -175,6 +176,8 @@ func TestZoneParsing(t *testing.T) {
 		t.Fail()
 	}
 	delta := time.Nanoseconds() - start
-        t.Logf("%s", z.Nxt)
-	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", z.Len(), float32(delta)/1e9, float32(z.Len())/(float32(delta)/1e9))
+        if z != nil {
+                t.Logf("%s", z.Nxt)
+                t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", z.Len(), float32(delta)/1e9, float32(z.Len())/(float32(delta)/1e9))
+        }
 }
