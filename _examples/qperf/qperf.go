@@ -15,24 +15,18 @@ func main() {
 	queries := flag.Int("queries", 20, "number of concurrent queries to perform")
 	maxproc := flag.Int("maxproc", 4, "set GOMAXPROCS to this value")
         looptime := flag.Int("time", 2, "number of seconds to query")
+        reflect := flag.Bool("reflect", false, "enable reflection")
         nameserver := flag.String("ns", "127.0.0.1:53", "the nameserver to query")
         cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [qtype] [qclass] [name]", os.Args[0])
 		flag.PrintDefaults()
 	}
-
         queries_send := int64(0)
         qid := uint16(1)
         qtype := uint16(dns.TypeMX)
 	qclass := uint16(dns.ClassINET) // Default qclass
 	qname := "miek.nl"
-//	nameserver := "127.0.0.1:53"
-//        nameserver = "193.0.14.129:53" // k.root-server.net
-//        nameserver = "213.154.224.1:53"    // open.nlnetlabs.nl
-//        nameserver = "193.110.157.135:53"     // xelerance.com
-//        nameserver = "195.169.221.157:53"       // Jelte, bind10-devel
-
 	flag.Parse()
         if *cpuprofile != "" {
                 f, err := os.Create(*cpuprofile)
@@ -44,7 +38,7 @@ func main() {
         }
         runtime.GOMAXPROCS(*maxproc)
         start := time.Nanoseconds()
-        fmt.Printf("Starting %d query functions. GOMAXPROCS set to %d\n", *queries, *maxproc)
+        fmt.Printf("Starting %d query functions. GOMAXPROCS set to %d. *reflection set to %v*\n", *queries, *maxproc, *reflect)
         fmt.Printf("Querying %s\n", *nameserver)
         for i := 0; i < *queries; i++ {
                 go func() {
@@ -67,13 +61,11 @@ func main() {
                                         log.Print(err)
                                         continue
                                 }
-                                r.Unpack(pktbuf[:n])
-                                //println(r.MsgHdr.String())
-                                n=n
-                                r=r
+                                if *reflect {
+                                        r.Unpack(pktbuf[:n])
+                                }
                                 queries_send++
                                 qid++
-                                //break           // stop after 1 query
                         }
                 }()
         }
