@@ -18,15 +18,15 @@ func main() {
         reflect := flag.Bool("reflect", false, "enable reflection")
         nameserver := flag.String("ns", "127.0.0.1:53", "the nameserver to query")
         cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+        qname := flag.String("qname", "miek.nl", "which qname to use")
+
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [qtype] [qclass] [name]", os.Args[0])
 		flag.PrintDefaults()
 	}
         queries_send := int64(0)
         qid := uint16(1)
-        qtype := uint16(dns.TypeMX)
+        qtype := dns.TypeMX
 	qclass := uint16(dns.ClassINET) // Default qclass
-	qname := "miek.nl"
 	flag.Parse()
         if *cpuprofile != "" {
                 f, err := os.Create(*cpuprofile)
@@ -45,7 +45,7 @@ func main() {
                         pktbuf := make([]byte, dns.DefaultMsgSize)
                         m := new(dns.Msg)
                         m.Question = make([]dns.Question, 1)
-                        m.Question[0] = dns.Question{qname, qtype, qclass}
+                        m.Question[0] = dns.Question{*qname, qtype, qclass}
                         qbuf, _ := m.Pack()
                         c := dns.NewClient()
                         if err := c.Dial(*nameserver); err != nil {
