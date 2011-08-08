@@ -19,6 +19,7 @@ GOFILES=\
 	nsec3.go \
 	qnamestring.go\
 	server.go \
+	rawmsg.go \
 	tsig.go\
 	types.go\
 	xfr.go\
