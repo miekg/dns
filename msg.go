@@ -360,51 +360,44 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			}
 		case reflect.Struct:
 			off, ok = packStructValue(fv, msg, off)
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-			i := fv.Uint()
-			switch fv.Type().Kind() {
-			default:
-				//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
-				return len(msg), false
-			case reflect.Uint8:
-				if off+1 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
-					return len(msg), false
-				}
-				msg[off] = byte(i)
-				off++
-			case reflect.Uint16:
-				if off+2 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing uint16")
-					return len(msg), false
-				}
-				msg[off] = byte(i >> 8)
-				msg[off+1] = byte(i)
-				off += 2
-			case reflect.Uint32:
-				if off+4 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing uint32")
-					return len(msg), false
-				}
-				msg[off] = byte(i >> 24)
-				msg[off+1] = byte(i >> 16)
-				msg[off+2] = byte(i >> 8)
-				msg[off+3] = byte(i)
-				off += 4
-			case reflect.Uint64:
-				// Only used in TSIG, where it stops at 48 bits, so we discard the upper 16
-				if off+6 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing uint64")
-					return len(msg), false
-				}
-				msg[off] = byte(i >> 40)
-				msg[off+1] = byte(i >> 32)
-				msg[off+2] = byte(i >> 24)
-				msg[off+3] = byte(i >> 16)
-				msg[off+4] = byte(i >> 8)
-				msg[off+5] = byte(i)
-				off += 6
-			}
+                case reflect.Uint8:
+                        if off+1 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
+                                return len(msg), false
+                        }
+                        msg[off] = byte(i)
+                        off++
+                case reflect.Uint16:
+                        if off+2 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow packing uint16")
+                                return len(msg), false
+                        }
+                        msg[off] = byte(i >> 8)
+                        msg[off+1] = byte(i)
+                        off += 2
+                case reflect.Uint32:
+                        if off+4 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow packing uint32")
+                                return len(msg), false
+                        }
+                        msg[off] = byte(i >> 24)
+                        msg[off+1] = byte(i >> 16)
+                        msg[off+2] = byte(i >> 8)
+                        msg[off+3] = byte(i)
+                        off += 4
+                case reflect.Uint64:
+                        // Only used in TSIG, where it stops at 48 bits, so we discard the upper 16
+                        if off+6 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow packing uint64")
+                                return len(msg), false
+                        }
+                        msg[off] = byte(i >> 40)
+                        msg[off+1] = byte(i >> 32)
+                        msg[off+2] = byte(i >> 24)
+                        msg[off+3] = byte(i >> 16)
+                        msg[off+4] = byte(i >> 8)
+                        msg[off+5] = byte(i)
+                        off += 6
 		case reflect.String:
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
