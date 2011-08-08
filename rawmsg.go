@@ -23,3 +23,8 @@ func (h *RR_Header) RawSetRdlength(buf []byte, off int) bool {
 	buf[off+off1+2+2+4], buf[off+off1+2+2+4+1] = packUint16(h.Rdlength)
 	return true
 }
+
+func RawSetId(buf []byte, off int, id uint16) bool {
+        buf[off], buf[off+1] = packUint16(id)
+        return true
+}

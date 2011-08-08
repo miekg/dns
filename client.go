@@ -125,7 +125,7 @@ type Client struct {
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
-	//Conn         net.Conn          // if set, use this connection, otherwise Dial again TODO
+	Hijacked     net.Conn           // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use
 }
 
@@ -182,6 +182,22 @@ func (w *reply) Write(m *Msg) {
 	w.Client().ChannelReply <- []*Msg{w.req, m}
 }
 
+func (c *Client) Dial(addr string) os.Error {
+        conn, err := net.Dial(c.Net, addr)
+        if err != nil {
+                return err
+        }
+        c.Hijacked = conn
+        return nil
+}
+
+func (c *Client) Close() os.Error {
+        if c.Hijacked == nil {
+                return nil      // TODO
+        }
+        return c.Hijacked.Close()
+}
+
 // Do performs an asynchronous query. The result is returned on the
 // channel set in the c. If no channel is set DefaultQueryChan is used.
 func (c *Client) Do(m *Msg, a string) {
@@ -198,10 +214,15 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	w := new(reply)
 	w.client = c
 	w.addr = a
-	if err = w.Dial(); err != nil {
-		return 0, err
+        if c.Hijacked == nil {
+                if err = w.Dial(); err != nil {
+                        return 0, err
+                }
+		defer w.Close()
 	}
-	defer w.Close() // XXX here?? what about TCP which should remain open
+        if c.Hijacked != nil {
+                w.conn = c.Hijacked
+        }
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, err
 	}
@@ -365,8 +386,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 	if w.Client().Net == "" {
 		panic("c.Net empty")
 	}
-	if w.conn == nil {
-		// No connection yet, dial it. impl. at this place? TODO
+	if w.Client().Hijacked == nil {
 		if err = w.Dial(); err != nil {
 			return 0, err
 		}
