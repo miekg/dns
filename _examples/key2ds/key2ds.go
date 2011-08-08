@@ -28,7 +28,7 @@ func main() {
         m.Extra = append(m.Extra, e)
 
         c := dns.NewClient()
-        r := c.Exchange(m, conf.Servers[0])
+        r, _ := c.Exchange(m, conf.Servers[0])
         if r == nil {
                 fmt.Printf("*** no answer received for %s\n", os.Args[1])
                 os.Exit(1)

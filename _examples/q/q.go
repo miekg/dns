@@ -11,7 +11,10 @@ import (
 
 func q(w dns.RequestWriter, m *dns.Msg) {
 	w.Send(m)
-	r, _ := w.Receive()
+	r, err := w.Receive()
+        if err != nil {
+                fmt.Printf("%s\n", err.String())
+        }
 	w.Write(r)
 }
 
@@ -130,9 +133,11 @@ forever:
 		select {
 		case r := <-dns.DefaultReplyChan:
 			if r[1] != nil {
-				if r[0].Id != r[1].Id {
-					fmt.Printf("Id mismatch\n")
-				}
+                                if r[1].Rcode == dns.RcodeSuccess {
+                                        if r[0].Id != r[1].Id {
+                                                fmt.Printf("Id mismatch\n")
+                                        }
+                                }
 				if *short {
 					r[1] = shortMsg(r[1])
 				}

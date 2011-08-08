@@ -99,7 +99,7 @@ func checkcache(m *dns.Msg) (o []byte) {
         println("Cache miss")
         var p *dns.Msg
         for _, c := range qr {
-                p = c.Client.Exchange(m, c.Addr)
+                p, _ = c.Client.Exchange(m, c.Addr)
         }
         cache.add(p)
         o, _ = p.Pack()

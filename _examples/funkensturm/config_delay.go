@@ -40,7 +40,7 @@ func delay(m *dns.Msg) (buf []byte) {
 	}
 	println("Ok: let it through")
 	for _, c := range qr {
-		o = c.Client.Exchange(m, c.Addr)
+		o, _ = c.Client.Exchange(m, c.Addr)
 	}
 	buf, _ = o.Pack()
 	return

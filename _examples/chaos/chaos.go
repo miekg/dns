@@ -27,12 +27,12 @@ func main() {
         }
 	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in := c.Exchange(m, a)
+		in, _ := c.Exchange(m, a)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in = c.Exchange(m, a)
+		in, _ = c.Exchange(m, a)
 		if in != nil && in.Answer != nil {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
@@ -40,6 +40,8 @@ func main() {
 }
 
 func qhandler(w dns.RequestWriter, m *dns.Msg) {
+        w.Dial()
+        defer w.Close()
         w.Send(m)
         r, _ := w.Receive()
         w.Write(r)

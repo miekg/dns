@@ -38,7 +38,7 @@ func sign(m *dns.Msg) *dns.Msg {
 func sendsign(m *dns.Msg) (o []byte) {
 	var p *dns.Msg
 	for _, c := range qr {
-		p = c.Client.Exchange(m, c.Addr)
+		p, _ = c.Client.Exchange(m, c.Addr)
 	}
 	o, _ = sign(p).Pack()
         println("signing")
@@ -48,7 +48,7 @@ func sendsign(m *dns.Msg) (o []byte) {
 func send(m *dns.Msg) (o []byte) {
 	var p *dns.Msg
 	for _, c := range qr {
-		p = c.Client.Exchange(m, c.Addr)
+		p, _ = c.Client.Exchange(m, c.Addr)
 	}
 	o, _ = p.Pack()
 	return

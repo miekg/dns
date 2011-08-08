@@ -365,13 +365,14 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
                                 //fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
                                 return len(msg), false
                         }
-                        msg[off] = byte(i)
+                        msg[off] = byte(fv.Uint())
                         off++
                 case reflect.Uint16:
                         if off+2 > len(msg) {
                                 //fmt.Fprintf(os.Stderr, "dns: overflow packing uint16")
                                 return len(msg), false
                         }
+                        i := fv.Uint()
                         msg[off] = byte(i >> 8)
                         msg[off+1] = byte(i)
                         off += 2
@@ -380,6 +381,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
                                 //fmt.Fprintf(os.Stderr, "dns: overflow packing uint32")
                                 return len(msg), false
                         }
+                        i := fv.Uint()
                         msg[off] = byte(i >> 24)
                         msg[off+1] = byte(i >> 16)
                         msg[off+2] = byte(i >> 8)
@@ -391,6 +393,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
                                 //fmt.Fprintf(os.Stderr, "dns: overflow packing uint64")
                                 return len(msg), false
                         }
+                        i := fv.Uint()
                         msg[off] = byte(i >> 40)
                         msg[off+1] = byte(i >> 32)
                         msg[off+2] = byte(i >> 24)

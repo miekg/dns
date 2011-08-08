@@ -24,6 +24,8 @@ type RequestWriter interface {
 	Write(*Msg)
 	Send(*Msg) os.Error
 	Receive() (*Msg, os.Error)
+	Close() os.Error
+	Dial() os.Error
 }
 
 // hijacked connections...?
@@ -123,6 +125,7 @@ type Client struct {
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
+	//Conn         net.Conn          // if set, use this connection, otherwise Dial again TODO
 	// LocalAddr string            // Local address to use
 }
 
@@ -191,43 +194,58 @@ func (c *Client) Do(m *Msg, a string) {
 
 // ExchangeBuf performs a synchronous query. It sends the buffer m to the
 // address (net.Addr?) contained in a
-func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) bool {
+func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, err os.Error) {
 	w := new(reply)
 	w.client = c
 	w.addr = a
-	_, err := w.writeClient(inbuf)
-	defer w.closeClient() // XXX here?? what about TCP which should remain open
-	if err != nil {
-		println(err.String())
-		return false
+	if err = w.Dial(); err != nil {
+		return 0, err
 	}
-
+	defer w.Close() // XXX here?? what about TCP which should remain open
+	if n, err = w.writeClient(inbuf); err != nil {
+		return 0, err
+	}
 	// udp / tcp TODO
-	n, err := w.readClient(outbuf)
-	if err != nil {
-		return false
+	if n, err = w.readClient(outbuf); err != nil {
+		return n, err
 	}
-	outbuf = outbuf[:n]
-        return true
+	return n, nil
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply.
-func (c *Client) Exchange(m *Msg, a string) *Msg {
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
+	var n int
 	out, ok := m.Pack()
 	if !ok {
 		panic("failed to pack message")
 	}
-        in := make([]byte, DefaultMsgSize)
-        if ok := c.ExchangeBuffer(out, a, in); !ok {
-                return nil
-        }
-	r := new(Msg)
-	if ok := r.Unpack(in); !ok {
-		return nil
+	in := make([]byte, DefaultMsgSize)
+	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
+		return nil, err
 	}
-        return r
+	r = new(Msg)
+	if ok := r.Unpack(in[:n]); !ok {
+		return nil, ErrUnpack
+	}
+	return r, nil
 }
+
+// Dial connects to the address addr for the networks c.Net
+func (w *reply) Dial() os.Error {
+	conn, err := net.Dial(w.Client().Net, w.addr)
+	if err != nil {
+		return err
+	}
+	w.conn = conn
+	return nil
+}
+
+// UDP/TCP stuff big TODO
+func (w *reply) Close() (err os.Error) {
+	return w.conn.Close()
+}
+
 
 func (w *reply) WriteMessages(m []*Msg) {
 	m1 := append([]*Msg{w.req}, m...)
@@ -347,12 +365,12 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 	if w.Client().Net == "" {
 		panic("c.Net empty")
 	}
-
-	conn, err := net.Dial(w.Client().Net, w.addr)
-	if err != nil {
-		return 0, err
+	if w.conn == nil {
+		// No connection yet, dial it. impl. at this place? TODO
+		if err = w.Dial(); err != nil {
+			return 0, err
+		}
 	}
-	w.conn = conn
 	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
@@ -361,7 +379,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		for a := 0; a < w.Client().Attempts; a++ {
 			l := make([]byte, 2)
 			l[0], l[1] = packUint16(uint16(len(p)))
-			n, err = conn.Write(l)
+			n, err = w.conn.Write(l)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -371,7 +389,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 			if n != 2 {
 				return n, io.ErrShortWrite
 			}
-			n, err = conn.Write(p)
+			n, err = w.conn.Write(p)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -380,7 +398,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 			}
 			i := n
 			if i < len(p) {
-				j, err := conn.Write(p[i:len(p)])
+				j, err := w.conn.Write(p[i:len(p)])
 				if err != nil {
 					if e, ok := err.(net.Error); ok && e.Timeout() {
 						// We are half way in our write...
@@ -394,7 +412,7 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		}
 	case "udp", "udp4", "udp6":
 		for a := 0; a < w.Client().Attempts; a++ {
-			n, err = conn.(*net.UDPConn).WriteTo(p, conn.RemoteAddr())
+			n, err = w.conn.(*net.UDPConn).WriteTo(p, w.conn.RemoteAddr())
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
@@ -404,9 +422,4 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		}
 	}
 	return 0, nil
-}
-
-// UDP/TCP stuff
-func (w *reply) closeClient() (err os.Error) {
-	return w.conn.Close()
 }
