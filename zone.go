@@ -50,6 +50,9 @@ func NewZone() *Zone {
 // Pop returns the last pushed ZRRset from z.
 // Get the first value 
 func (z *Zone) Pop() *ZRRset {
+        if z == nil {
+                return nil
+        }
 	for _, v := range z.Zone {
 		for _, v1 := range v {
 			return v1
@@ -60,6 +63,9 @@ func (z *Zone) Pop() *ZRRset {
 
 // PopRR returns the last RR pushed from z.
 func (z *Zone) PopRR() RR {
+        if z == nil {
+                return nil
+        }
 	s := z.Pop()
 	if s == nil {
 		return nil
@@ -91,6 +97,9 @@ func (z *Zone) Len() int {
 }
 
 func (z *Zone) String() string {
+        if z == nil {
+                return "<nil> zone"
+        }
 	s := ""
 	for _, im := range z.Zone {
 		for _, s1 := range im {
