@@ -217,3 +217,15 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	}
 	return
 }
+
+// DnameLength returns the length of a packed dname
+func DomainNameLength(s string) int {                   // TODO better name
+        // Add trailing dot to canonicalize name.
+        if n := len(s); n == 0 || s[n-1] != '.' {
+                return n+1
+        } else {
+                return n+1
+        }
+        panic("not reached")
+        return 0
+}

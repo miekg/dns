@@ -784,7 +784,7 @@ func unpackBase64(b []byte) string {
 	return string(b64)
 }
 
-// Helper function for packing, mostly used in dnssec.go
+// Helper function for packing
 func packUint16(i uint16) (byte, byte) {
 	return byte(i >> 8), byte(i)
 }
@@ -829,9 +829,11 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	if !ok {
 		return len(msg), false
 	}
-	if !RawSetRdlength(msg, uint16(off2-off1)) {
-                return len(msg), false
+	rr.Header().Rdlength = uint16(off2 - off1)
+        if !rr.Header().RawSetRdlength(msg, off) {
+		return len(msg), false
         }
+
 	return off2, true
 }
 

@@ -13,13 +13,13 @@ package dns
 // directly at the correct position in the buffer buf.
 // If buf does not look like a DNS message false is returned,
 // otherwise true.
-func RawSetRdlength(buf []byte, i uint16) bool {
-        var off int
-        var ok bool
-	if _, off, ok = unpackDomainName(buf, 0); !ok {
+func (h *RR_Header) RawSetRdlength(buf []byte, off int) bool {
+        // TODO double check DomainNameLength
+	off1 := DomainNameLength(h.Name)
+	if off1 == 0 || len(buf) < off+off1+2+2+4+1 {
 		return false
 	}
-        // off + type(2) + class(2) + ttl(4) -> rdlength
-        buf[off+2+2+4], buf[off+2+2+4+1] = packUint16(i)
-        return true
+	// + type(2) + class(2) + ttl(4) is where rdlength it at
+	buf[off+off1+2+2+4], buf[off+off1+2+2+4+1] = packUint16(h.Rdlength)
+	return true
 }
