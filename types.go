@@ -155,9 +155,9 @@ func NewRRString(s string) (RR, os.Error) {
 
 // NewRR returns a new RR with the hdr.Rrtype also set.
 // If the type i is not known, nil is returned.
-func NewRR(i int) RR {
-        r := rr_mk[uint16(i)]()
-        r.Header().Rrtype = uint16(i)
+func NewRR(i uint16) RR {
+        r := rr_mk[i]()
+        r.Header().Rrtype = i
         return r
 }
 
