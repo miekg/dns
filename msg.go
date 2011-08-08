@@ -588,48 +588,41 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			}
 		case reflect.Struct:
 			off, ok = unpackStructValue(fv, msg, off)
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-			switch fv.Type().Kind() {
-			default:
-				//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
-				return len(msg), false
-
-			case reflect.Uint8:
-				if off+1 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint8")
-					return len(msg), false
-				}
-				i := uint8(msg[off])
-				fv.SetUint(uint64(i))
-				off++
-			case reflect.Uint16:
-				var i uint16
-				if off+2 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint16")
-					return len(msg), false
-				}
-				i, off = unpackUint16(msg, off)
-				fv.SetUint(uint64(i))
-			case reflect.Uint32:
-				if off+4 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint32")
-					return len(msg), false
-				}
-				i := uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])
-				fv.SetUint(uint64(i))
-				off += 4
-			case reflect.Uint64:
-				// This is *only* used in TSIG where the last 48 bits are occupied
-				// So for now, assume a uint48 (6 bytes)
-				if off+6 > len(msg) {
-					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint64")
-					return len(msg), false
-				}
-				i := uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-					uint64(msg[off+4])<<8 | uint64(msg[off+5])
-				fv.SetUint(uint64(i))
-				off += 6
-			}
+                case reflect.Uint8:
+                        if off+1 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint8")
+                                return len(msg), false
+                        }
+                        i := uint8(msg[off])
+                        fv.SetUint(uint64(i))
+                        off++
+                case reflect.Uint16:
+                        var i uint16
+                        if off+2 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint16")
+                                return len(msg), false
+                        }
+                        i, off = unpackUint16(msg, off)
+                        fv.SetUint(uint64(i))
+                case reflect.Uint32:
+                        if off+4 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint32")
+                                return len(msg), false
+                        }
+                        i := uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])
+                        fv.SetUint(uint64(i))
+                        off += 4
+                case reflect.Uint64:
+                        // This is *only* used in TSIG where the last 48 bits are occupied
+                        // So for now, assume a uint48 (6 bytes)
+                        if off+6 > len(msg) {
+                                //fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint64")
+                                return len(msg), false
+                        }
+                        i := uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+                                uint64(msg[off+4])<<8 | uint64(msg[off+5])
+                        fv.SetUint(uint64(i))
+                        off += 6
 		case reflect.String:
 			var s string
 			switch f.Tag {
@@ -834,7 +827,7 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 		return len(msg), false
 	}
 
-	// TODO make this quicker?
+	// TODO make this quicker
 	// pack a third time; redo header with correct data length
 	rr.Header().Rdlength = uint16(off2 - off1)
 	packStruct(rr.Header(), msg, off)
@@ -852,7 +845,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	end := off + int(h.Rdlength)
 
 	// make an rr of that type and re-unpack.
-	// again inefficient but doesn't need to be fast.
+	// again inefficient but doesn't need to be fast. TODO speed
 	mk, known := rr_mk[h.Rrtype]
 	if !known {
 		rr = new(RR_RFC3597)
