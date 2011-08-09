@@ -292,16 +292,17 @@ Loop:
 // slices and other (often anonymous) structs.
 func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
-		f := val.Type().Field(i)
+//		f := val.Type().Field(i)
+                lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
-			return len(msg), false
+			return lenmsg, false
 		case reflect.Slice:
-			switch f.Tag {
+			switch val.Type().Field(i).Tag {
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing slice tag %v\n", f.Tag)
-				return len(msg), false
+				return lenmsg, false
 			case "OPT": // edns
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j)
@@ -310,7 +311,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					h, e := hex.DecodeString(string(element.Field(1).String()))
 					if e != nil {
 						//fmt.Fprintf(os.Stderr, "dns: failure packing OTP")
-						return len(msg), false
+						return lenmsg, false
 					}
 					data := string(h)
 					// Option Code
@@ -326,9 +327,9 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			case "A":
 				// It must be a slice of 4, even if it is 16, we encode
 				// only the first 4
-				if off+net.IPv4len > len(msg) {
+				if off+net.IPv4len > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-					return len(msg), false
+					return lenmsg, false
 				}
 				if fv.Len() == net.IPv6len {
 					msg[off] = byte(fv.Index(12).Uint())
@@ -343,9 +344,9 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				}
 				off += net.IPv4len
 			case "AAAA":
-				if fv.Len() > net.IPv6len || off+fv.Len() > len(msg) {
+				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing AAAA")
-					return len(msg), false
+					return lenmsg, false
 				}
 				for j := 0; j < net.IPv6len; j++ {
 					msg[off] = byte(fv.Index(j).Uint())
@@ -361,25 +362,25 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 		case reflect.Struct:
 			off, ok = packStructValue(fv, msg, off)
 		case reflect.Uint8:
-			if off+1 > len(msg) {
+			if off+1 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
-				return len(msg), false
+				return lenmsg, false
 			}
 			msg[off] = byte(fv.Uint())
 			off++
 		case reflect.Uint16:
-			if off+2 > len(msg) {
+			if off+2 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint16")
-				return len(msg), false
+				return lenmsg, false
 			}
 			i := fv.Uint()
 			msg[off] = byte(i >> 8)
 			msg[off+1] = byte(i)
 			off += 2
 		case reflect.Uint32:
-			if off+4 > len(msg) {
+			if off+4 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint32")
-				return len(msg), false
+				return lenmsg, false
 			}
 			i := fv.Uint()
 			msg[off] = byte(i >> 24)
@@ -389,9 +390,9 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			off += 4
 		case reflect.Uint64:
 			// Only used in TSIG, where it stops at 48 bits, so we discard the upper 16
-			if off+6 > len(msg) {
+			if off+6 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint64")
-				return len(msg), false
+				return lenmsg, false
 			}
 			i := fv.Uint()
 			msg[off] = byte(i >> 40)
@@ -405,15 +406,15 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
 			s := fv.String()
-			switch f.Tag {
+			switch val.Type().Field(i).Tag {
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing string tag %v", f.Tag)
-				return len(msg), false
+				return lenmsg, false
 			case "base32":
 				b32, err := packBase32([]byte(s))
 				if err != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing base32")
-					return len(msg), false
+					return lenmsg, false
 				}
 				copy(msg[off:off+len(b32)], b32)
 				off += len(b32)
@@ -421,7 +422,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				b64, err := packBase64([]byte(s))
 				if err != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing base64")
-					return len(msg), false
+					return lenmsg, false
 				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
@@ -429,7 +430,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				off, ok = packDomainName(s, msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
-					return len(msg), false
+					return lenmsg, false
 				}
 			case "size-hex":
 				fallthrough
@@ -438,7 +439,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				h, e := hex.DecodeString(s)
 				if e != nil {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing (size-)hex string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
@@ -453,7 +454,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				fallthrough
 			case "":
 				// Counted string: 1 byte length.
-				if len(s) > 255 || off+1+len(s) > len(msg) {
+				if len(s) > 255 || off+1+len(s) > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing string")
 					return len(msg), false
 				}
@@ -482,34 +483,35 @@ func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 // Same restrictions as packStructValue.
 func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
-		f := val.Type().Field(i)
+//		f := val.Type().Field(i)
+                lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			//fmt.Fprintf(os.Stderr, "dns: unknown unpacking type %v", f.Type)
-			return len(msg), false
+			return lenmsg, false
 		case reflect.Slice:
-			switch f.Tag {
+			switch val.Type().Field(i).Tag {
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown unpacking slice tag %v", f.Tag)
-				return len(msg), false
+				return lenmsg, false
 			case "A":
 				if off+net.IPv4len > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking A")
-					return len(msg), false
+					return lenmsg, false
 				}
 				fv.Set(reflect.ValueOf( net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3]) ))
 				off += net.IPv4len
 			case "AAAA":
-				if off+net.IPv6len > len(msg) {
+				if off+net.IPv6len > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking AAAA")
-					return len(msg), false
+					return lenmsg, false
 				}
                                 fv.Set(reflect.ValueOf( net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
                                         msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
                                         msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]} ))
 				off += net.IPv6len
 			case "OPT": // EDNS
-				if off+2 > len(msg) {
+				if off+2 > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking OPT")
 					// No room for anything else
 					break
@@ -517,26 +519,26 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				opt := make([]Option, 1)
 				opt[0].Code, off = unpackUint16(msg, off)
 				optlen, off1 := unpackUint16(msg, off)
-				if off1+int(optlen) > len(msg) {
+				if off1+int(optlen) > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking OPT")
-					return len(msg), false
+					return lenmsg, false
 				}
 				opt[0].Data = hex.EncodeToString(msg[off1 : off1+int(optlen)])
 				fv.Set(reflect.ValueOf(opt))
 				off = off1 + int(optlen)
 			case "NSEC": // NSEC/NSEC3
-				if off+1 > len(msg) {
+				if off+1 > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
-					return len(msg), false
+					return lenmsg, false
 				}
 				// Fix multple windows TODO(mg)
 				nsec := make([]uint16, 256) // use append TODO(mg)
 				ni := 0
 				window := int(msg[off])
 				blocks := int(msg[off+1])
-				if off+blocks > len(msg) {
+				if off+blocks > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
-					return len(msg), false
+					return lenmsg, false
 				}
 				if blocks == 0 {
 					// Nothing encoded in this window
@@ -590,43 +592,43 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		case reflect.Struct:
 			off, ok = unpackStructValue(fv, msg, off)
 		case reflect.Uint8:
-			if off+1 > len(msg) {
+			if off+1 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint8")
-				return len(msg), false
+				return lenmsg, false
 			}
 			fv.SetUint( uint64(uint8(msg[off]))  )
 			off++
 		case reflect.Uint16:
 			var i uint16
-			if off+2 > len(msg) {
+			if off+2 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint16")
-				return len(msg), false
+				return lenmsg, false
 			}
 			i, off = unpackUint16(msg, off)
 			fv.SetUint(uint64(i))
 		case reflect.Uint32:
-			if off+4 > len(msg) {
+			if off+4 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint32")
-				return len(msg), false
+				return lenmsg, false
 			}
 			fv.SetUint(uint64( uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]) ))
 			off += 4
 		case reflect.Uint64:
 			// This is *only* used in TSIG where the last 48 bits are occupied
 			// So for now, assume a uint48 (6 bytes)
-			if off+6 > len(msg) {
+			if off+6 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint64")
-				return len(msg), false
+				return lenmsg, false
 			}
 			fv.SetUint(uint64( uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
 				uint64(msg[off+4])<<8 | uint64(msg[off+5]) ))
 			off += 6
 		case reflect.String:
 			var s string
-			switch f.Tag {
+			switch val.Type().Field(i).Tag {
 			default:
 				//fmt.Fprintf(os.Stderr, "dns: unknown unpacking string tag %v", f.Tag)
-				return len(msg), false
+				return lenmsg, false
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
@@ -668,21 +670,21 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				s, off, ok = unpackDomainName(msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
-					return len(msg), false
+					return lenmsg, false
 				}
 			case "size-base32":
 				var size int
 				switch val.Type().Name() {
 				case "RR_NSEC3":
-					switch f.Name {
+					switch val.Type().Field(i).Name {
 					case "NextDomain":
 						name := val.FieldByName("HashLength")
 						size = int(name.Uint())
 					}
 				}
-				if off+size > len(msg) {
+				if off+size > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-base32 string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				s = unpackBase32(msg[off : off+size])
 				off += size
@@ -691,7 +693,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				var size int
 				switch val.Type().Name() {
 				case "RR_NSEC3":
-					switch f.Name {
+					switch val.Type().Field(i).Name {
 					case "Salt":
 						name := val.FieldByName("SaltLength")
 						size = int(name.Uint())
@@ -700,7 +702,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 						size = int(name.Uint())
 					}
 				case "RR_TSIG":
-					switch f.Name {
+					switch val.Type().Field(i).Name {
 					case "MAC":
 						name := val.FieldByName("MACSize")
 						size = int(name.Uint())
@@ -709,9 +711,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 						size = int(name.Uint())
 					}
 				}
-				if off+size > len(msg) {
+				if off+size > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking size-hex string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
@@ -719,9 +721,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				// 1 or multiple txt pieces
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txt:
-				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
+				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking txt string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				n := int(msg[off])
 				off++
@@ -734,9 +736,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					goto Txt
 				}
 			case "":
-				if off >= len(msg) || off+1+int(msg[off]) > len(msg) {
+				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				n := int(msg[off])
 				off++
