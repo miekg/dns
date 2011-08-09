@@ -6,9 +6,10 @@ things that need to be fixed.
 ## Todo
 
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
-* add functions to operate on []byte messages (raw packets)
+* add functions to operate on []byte messages (raw packets) see rawmsg.go
 * HIP RR (needs list of domain names, need slice for that);
 * IsSubdomain, IsGlue helper functions;
+* axfr/ixfr dynamic updates
 * Cleanup?;
 * Multiline RRs when parsing;
 * Need to define a handy zone data structure (r/b tree)?.
