@@ -37,6 +37,7 @@ func NewZRRset() *ZRRset {
 type Zone struct {
 	Zone map[string]map[int]*ZRRset // the contents of the zone
 	Nxt  *QnameString               // sorted list of owernames in the zone
+        Compression bool                // if set to true each ownername is compressed
 }
 
 // NewZone returns a new *Zone
