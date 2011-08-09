@@ -246,9 +246,9 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
         var in []byte
         switch c.Net {
         case "tcp":
-	        in := make([]byte, MaxMsgSize)
-        case "udp"
-	        in := make([]byte, DefaultMsgSize)
+	        in = make([]byte, MaxMsgSize)
+        case "udp":
+	        in = make([]byte, DefaultMsgSize)
         }
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
 		return nil, err
