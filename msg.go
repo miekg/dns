@@ -167,6 +167,7 @@ var rcode_str = map[int]string{
 // split at the dots.  They end with a zero-length string.
 func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
+        lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
 		s += "."
 	}
@@ -177,17 +178,18 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// There is also a trailing zero.
 	// Check that we have all the space we need.
 	tot := len(s) + 1
-	if off+tot > len(msg) {
-		return len(msg), false
+	if off+tot > lenmsg {
+		return lenmsg, false
 	}
 
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
 	ls := len(bs)
+        lens := ls
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
-			for j := i; j < len(s)-1; j++ {
+			for j := i; j < lens-1; j++ {
 				bs[j] = bs[j+1]
 			}
 			ls--
@@ -196,7 +198,7 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 
 		if bs[i] == '.' {
 			if i-begin >= 1<<6 { // top two bits of length must be clear
-				return len(msg), false
+				return lenmsg, false
 			}
 			msg[off] = byte(i - begin)
 			off++
@@ -231,11 +233,12 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 // We let them jump anywhere and stop jumping after a while.
 func unpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
+        lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
 Loop:
 	for {
-		if off >= len(msg) {
-			return "", len(msg), false
+		if off >= lenmsg {
+			return "", lenmsg, false
 		}
 		c := int(msg[off])
 		off++
@@ -246,8 +249,8 @@ Loop:
 				break Loop
 			}
 			// literal string
-			if off+c > len(msg) {
-				return "", len(msg), false
+			if off+c > lenmsg {
+				return "", lenmsg, false
 			}
 			for j := off; j < off+c; j++ {
 				if msg[j] == '.' {
@@ -265,8 +268,8 @@ Loop:
 			// since that's how many bytes we consumed.
 			// also, don't follow too many pointers --
 			// maybe there's a loop.
-			if off >= len(msg) {
-				return "", len(msg), false
+			if off >= lenmsg {
+				return "", lenmsg, false
 			}
 			c1 := msg[off]
 			off++
@@ -274,12 +277,12 @@ Loop:
 				off1 = off
 			}
 			if ptr++; ptr > 10 {
-				return "", len(msg), false
+				return "", lenmsg, false
 			}
 			off = (c^0xC0)<<8 | int(c1)
 		default:
 			// 0x80 and 0x40 are reserved
-			return "", len(msg), false
+			return "", lenmsg, false
 		}
 	}
 	if ptr == 0 {

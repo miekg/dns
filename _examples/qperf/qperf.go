@@ -63,6 +63,7 @@ func main() {
                                 }
                                 if *reflect {
                                         r.Unpack(pktbuf[:n])
+//                                        println(r.String())
                                 }
                                 queries_send++
                                 qid++
