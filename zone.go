@@ -29,15 +29,56 @@ func NewZRRset() *ZRRset {
 	return s
 }
 
+// Compress ...
+func (zr *ZRRset) Compress(s string) {
+
+//        HasSuffix ofcourse
+//        HasSuffix(s, suffix string) bool
+        for _, n := range zr.RRs {
+                if n.Header().Name[len(n.Header().Name)] != '.' {
+                        n.Header().Name += s
+                }
+
+        }
+        for _, n := range zr.RRsigs {
+                if n.Header().Name[len(n.Header().Name)] != '.' {
+                        n.Header().Name += s
+                }
+
+        }
+        if zr.Nxt.Header().Name[len(zr.Nxt.Header().Name)] != '.' {
+                zr.Nxt.Header().Name += s
+        }
+}
+
+// Decompress ...
+func (zr *ZRRset) Decompress(s string) {
+        for _, n := range zr.RRs {
+                if n.Header().Name[len(n.Header().Name)] != '.' {
+                        n.Header().Name += s
+                }
+
+        }
+        for _, n := range zr.RRsigs {
+                if n.Header().Name[len(n.Header().Name)] != '.' {
+                        n.Header().Name += s
+                }
+
+        }
+        if zr.Nxt.Header().Name[len(zr.Nxt.Header().Name)] != '.' {
+                zr.Nxt.Header().Name += s
+        }
+}
+
 // Zone implements the concept of RFC 1035 master zone files.
 // We store the zone contents in a map where the ownername is
 // the key. In that map we have another map with integers 
 // (class * _CLASS + type) that has the ZRRset:
 // map[<ownername>] -> map[<int>] -> ZRRset
 type Zone struct {
-	Zone map[string]map[int]*ZRRset // the contents of the zone
-	Nxt  *QnameString               // sorted list of owernames in the zone
-        Compression bool                // if set to true each ownername is compressed
+	Zone     map[string]map[int]*ZRRset // the contents of the zone
+	Nxt      *QnameString               // sorted list of owernames in the zone
+	Compress bool                       // if set to true each ownername is compressed
 }
 
 // NewZone returns a new *Zone
@@ -49,24 +90,30 @@ func NewZone() *Zone {
 }
 
 // Pop returns the last pushed ZRRset from z.
-// Get the first value 
-func (z *Zone) Pop() *ZRRset {
-        if z == nil {
-                return nil
-        }
-	for _, v := range z.Zone {
+func (z *Zone) Pop() (zrr *ZRRset) {
+	if z == nil {
+		return nil
+	}
+        name := ""
+search:
+	for n, v := range z.Zone {
 		for _, v1 := range v {
-			return v1
+			zrr = v1
+                        name = n
+			break search
 		}
 	}
-	return nil
+	if z.Compress {
+                zrr.Decompress(name)
+	}
+	return
 }
 
 // PopRR returns the last RR pushed from z.
 func (z *Zone) PopRR() RR {
-        if z == nil {
-                return nil
-        }
+	if z == nil {
+		return nil
+	}
 	s := z.Pop()
 	if s == nil {
 		return nil
@@ -98,9 +145,9 @@ func (z *Zone) Len() int {
 }
 
 func (z *Zone) String() string {
-        if z == nil {
-                return "<nil> zone"
-        }
+	if z == nil {
+		return "<nil> zone"
+	}
 	s := ""
 	for _, im := range z.Zone {
 		for _, s1 := range im {
