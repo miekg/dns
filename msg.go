@@ -505,9 +505,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking AAAA")
 					return len(msg), false
 				}
-				p := make(net.IP, net.IPv6len)
-				copy(p, msg[off:off+net.IPv6len])
-				b := net.IP(p)
+                                b := net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4], msg[off+5],
+                                        msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
+                                        msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}
 				fv.Set(reflect.ValueOf(b))
 				off += net.IPv6len
 			case "OPT": // EDNS
