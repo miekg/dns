@@ -397,9 +397,8 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 			return 0, io.ErrShortBuffer
 		}
 		for a := 0; a < w.Client().Attempts; a++ {
-			l := make([]byte, 2)
-			l[0], l[1] = packUint16(uint16(len(p)))
-			n, err = w.conn.Write(l)
+			a, b := packUint16(uint16(len(p)))
+			n, err = w.conn.Write([]byte{a, b})
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
