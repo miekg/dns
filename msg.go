@@ -497,18 +497,16 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking A")
 					return len(msg), false
 				}
-				b := net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])
-				fv.Set(reflect.ValueOf(b))
+				fv.Set(reflect.ValueOf( net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3]) ))
 				off += net.IPv4len
 			case "AAAA":
 				if off+net.IPv6len > len(msg) {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking AAAA")
 					return len(msg), false
 				}
-                                b := net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4], msg[off+5],
-                                        msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
-                                        msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}
-				fv.Set(reflect.ValueOf(b))
+                                fv.Set(reflect.ValueOf( net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
+                                        msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
+                                        msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]} ))
 				off += net.IPv6len
 			case "OPT": // EDNS
 				if off+2 > len(msg) {
@@ -596,8 +594,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint8")
 				return len(msg), false
 			}
-			i := uint8(msg[off])
-			fv.SetUint(uint64(i))
+			fv.SetUint( uint64(uint8(msg[off]))  )
 			off++
 		case reflect.Uint16:
 			var i uint16
@@ -612,8 +609,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint32")
 				return len(msg), false
 			}
-			i := uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])
-			fv.SetUint(uint64(i))
+			fv.SetUint(uint64( uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]) ))
 			off += 4
 		case reflect.Uint64:
 			// This is *only* used in TSIG where the last 48 bits are occupied
@@ -622,9 +618,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint64")
 				return len(msg), false
 			}
-			i := uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-				uint64(msg[off+4])<<8 | uint64(msg[off+5])
-			fv.SetUint(uint64(i))
+			fv.SetUint(uint64( uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+				uint64(msg[off+4])<<8 | uint64(msg[off+5]) ))
 			off += 6
 		case reflect.String:
 			var s string
@@ -730,12 +725,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				n := int(msg[off])
 				off++
-				b := make([]byte, n)
 				for i := 0; i < n; i++ {
-					b[i] = msg[off+i]
+					s += string(msg[off+i])
 				}
 				off += n
-				s += string(b)
 				if off < rdlength {
 					// More to come
 					goto Txt
@@ -747,12 +740,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				n := int(msg[off])
 				off++
-				b := make([]byte, n)
 				for i := 0; i < n; i++ {
-					b[i] = msg[off+i]
+					s += string(msg[off+i])
 				}
 				off += n
-				s = string(b)
 			}
 			fv.SetString(s)
 		}
