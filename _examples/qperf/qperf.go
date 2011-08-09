@@ -3,6 +3,7 @@ package main
 import (
 	"dns"
 	"os"
+	"os/signal"
 	"flag"
         "log"
 	"fmt"
@@ -16,6 +17,7 @@ func main() {
 	maxproc := flag.Int("maxproc", 4, "set GOMAXPROCS to this value")
         looptime := flag.Int("time", 2, "number of seconds to query")
         reflect := flag.Bool("reflect", false, "enable reflection")
+        tcp := flag.Bool("tcp", false, "use tcp")
         nameserver := flag.String("ns", "127.0.0.1:53", "the nameserver to query")
         cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
         qname := flag.String("qname", "miek.nl", "which qname to use")
@@ -38,7 +40,7 @@ func main() {
         }
         runtime.GOMAXPROCS(*maxproc)
         start := time.Nanoseconds()
-        fmt.Printf("Starting %d query functions. GOMAXPROCS set to %d. *reflection set to %v*\n", *queries, *maxproc, *reflect)
+        fmt.Printf("Starting %d query functions. GOMAXPROCS set to %d. *reflection set to %v* [tcp = %v]\n", *queries, *maxproc, *reflect, *tcp)
         fmt.Printf("Querying %s\n", *nameserver)
         for i := 0; i < *queries; i++ {
                 go func() {
@@ -48,10 +50,22 @@ func main() {
                         m.Question[0] = dns.Question{*qname, qtype, qclass}
                         qbuf, _ := m.Pack()
                         c := dns.NewClient()
-                        if err := c.Dial(*nameserver); err != nil {
-                                return
+                        if *tcp {
+                                c.Net = "tcp"
                         }
-                        defer c.Close()
+
+                        /*
+                        if !*tcp {
+                                // For UDP give each goroutine a socket.
+                                // With TCP we re-dial every time
+
+                                if err := c.Dial(*nameserver); err != nil {
+                                        return
+                                }
+                                defer c.Close()
+                        }
+                        */
+
                         r := new(dns.Msg)
                         for {
                                 // set Id
@@ -59,7 +73,7 @@ func main() {
                                 n, err := c.ExchangeBuffer(qbuf, *nameserver, pktbuf)
                                 if err != nil {
                                         log.Print(err)
-                                        continue
+                                        break   // something went wrong
                                 }
                                 if *reflect {
                                         r.Unpack(pktbuf[:n])
@@ -75,8 +89,10 @@ func main() {
 wait:
         for {
                 select {
+                case <-signal.Incoming:
+                        log.Printf("Signal received, stopping")
+                        break wait
                 case <-t.C:
-                        // time is up
                         break wait
                 }
         }

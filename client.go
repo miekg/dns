@@ -13,6 +13,7 @@ import (
 	"net"
 )
 
+// Incoming (just as in os.Signal)
 type QueryHandler interface {
 	QueryDNS(w RequestWriter, q *Msg)
 }
@@ -135,6 +136,8 @@ func NewClient() *Client {
 	c.Net = "udp"
 	c.Attempts = 1
 	c.ChannelReply = DefaultReplyChan
+        c.ReadTimeout = 5000
+        c.WriteTimeout = 5000
 	return c
 }
 
@@ -226,7 +229,6 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, err
 	}
-	// udp / tcp TODO
 	if n, err = w.readClient(outbuf); err != nil {
 		return n, err
 	}
@@ -241,7 +243,13 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
 	if !ok {
 		panic("failed to pack message")
 	}
-	in := make([]byte, DefaultMsgSize)
+        var in []byte
+        switch c.Net {
+        case "tcp":
+	        in := make([]byte, MaxMsgSize)
+        case "udp"
+	        in := make([]byte, DefaultMsgSize)
+        }
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
 		return nil, err
 	}
