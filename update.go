@@ -79,7 +79,7 @@ func (u *Update) RRsetUsed(rr []RR) {
 	for i, r := range rr {
                 u.Answer[i] = r
                 u.Answer[i].Header().Class = ClassANY
-                /* rdata should be cleared */
+                u.Answer[i].Header().Rdlength = 0
 	}
 }
 
@@ -90,6 +90,43 @@ func (u *Update) RRsetNotUsed(rr []RR) {
 	for i, r := range rr {
                 u.Answer[i] = r
                 u.Answer[i].Header().Class = ClassNONE
-                /* rdata should be cleared */
+                u.Answer[i].Header().Rdlength = 0
 	}
+}
+
+// 3.4.2.6 - Table Of Metavalues Used In Update Section
+//
+//   CLASS    TYPE     RDATA    Meaning
+//   ---------------------------------------------------------
+//   ANY      ANY      empty    Delete all RRsets from a name
+//   ANY      rrset    empty    Delete an RRset
+//   NONE     rrset    rr       Delete an RR from an RRset
+//   zone     rrset    rr       Add to an RRset
+
+
+// RRsetAddFull adds an complete RRset, see RFC 2136 section 2.5.1
+func (u *Update) RRsetAddFull(rr []RR) {
+        u.Ns = make([]RR, len(rr))
+        for i, r := range rr {
+                u.Ns[i] = r
+                u.Ns[i].Header().Class = u.Msg.Question[0].Qclass       // TODO crashes if question is zero
+        }
+}
+
+// RRsetDeleteFull delete the full RR, see RFC 2136 section 2.5.2
+func (u *Update) RRsetDeleteFull(rr []RR) {
+        u.Ns = make([]RR, len(rr))
+        for i, r := range rr {
+                u.Ns[i] = r
+                u.Ns[i].Header().Class = ClassNONE
+        }
+}
+
+// RRsetDelete delete the RRset, see RFC 2136 section 2.5.2
+func (u *Update) DeleteFull(rr []RR) {
+        u.Ns = make([]RR, len(rr))
+        for i, r := range rr {
+                u.Ns[i] = r
+                u.Ns[i].Header().Class = ClassNONE
+        }
 }
