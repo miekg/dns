@@ -6,7 +6,7 @@
 package dns
 
 import (
-        "os"
+	"os"
 	"net"
 	"time"
 	"strconv"
@@ -18,59 +18,59 @@ import (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
-	TypeA   uint16 = 1
-	TypeNS  uint16  = 2
-	TypeMD  uint16  = 3
-	TypeMF  uint16  = 4
-	TypeCNAME uint16= 5
-	TypeSOA uint16  = 6
-	TypeMB  uint16  = 7
-	TypeMG   uint16 = 8
-	TypeMR  uint16  = 9
-	TypeNULL uint16 = 10
-	TypeWKS  uint16 = 11
-	TypePTR  uint16 = 12
-	TypeHINFO uint16= 13
-	TypeMINFO uint16= 14
-	TypeMX    uint16= 15
-	TypeTXT   uint16= 16
-	TypeAAAA  uint16= 28
-	TypeLOC   uint16= 29
-	TypeSRV   uint16= 33
-	TypeNAPTR uint16= 35
-	TypeKX    uint16= 36
-	TypeCERT  uint16= 37
-	TypeDNAME uint16= 39
+	TypeA     uint16 = 1
+	TypeNS    uint16 = 2
+	TypeMD    uint16 = 3
+	TypeMF    uint16 = 4
+	TypeCNAME uint16 = 5
+	TypeSOA   uint16 = 6
+	TypeMB    uint16 = 7
+	TypeMG    uint16 = 8
+	TypeMR    uint16 = 9
+	TypeNULL  uint16 = 10
+	TypeWKS   uint16 = 11
+	TypePTR   uint16 = 12
+	TypeHINFO uint16 = 13
+	TypeMINFO uint16 = 14
+	TypeMX    uint16 = 15
+	TypeTXT   uint16 = 16
+	TypeAAAA  uint16 = 28
+	TypeLOC   uint16 = 29
+	TypeSRV   uint16 = 33
+	TypeNAPTR uint16 = 35
+	TypeKX    uint16 = 36
+	TypeCERT  uint16 = 37
+	TypeDNAME uint16 = 39
 
 	// EDNS
-	TypeOPT uint16= 41
+	TypeOPT uint16 = 41
 
-	TypeSIG        uint16= 24
-	TypeKEY        uint16= 25
-	TypeNXT        uint16= 30
-	TypeDS         uint16= 43
-	TypeSSHFP      uint16= 44
-	TypeIPSECKEY   uint16= 45 // No type implemented
-	TypeRRSIG      uint16= 46
-	TypeNSEC       uint16= 47
-	TypeDNSKEY     uint16= 48
-	TypeDHCID      uint16= 49
-	TypeNSEC3      uint16= 50
-	TypeNSEC3PARAM uint16= 51
-	TypeTALINK     uint16= 58
-	TypeSPF        uint16= 99
+	TypeSIG        uint16 = 24
+	TypeKEY        uint16 = 25
+	TypeNXT        uint16 = 30
+	TypeDS         uint16 = 43
+	TypeSSHFP      uint16 = 44
+	TypeIPSECKEY   uint16 = 45 // No type implemented
+	TypeRRSIG      uint16 = 46
+	TypeNSEC       uint16 = 47
+	TypeDNSKEY     uint16 = 48
+	TypeDHCID      uint16 = 49
+	TypeNSEC3      uint16 = 50
+	TypeNSEC3PARAM uint16 = 51
+	TypeTALINK     uint16 = 58
+	TypeSPF        uint16 = 99
 
-	TypeTKEY uint16= 249
-	TypeTSIG uint16= 250
+	TypeTKEY uint16 = 249
+	TypeTSIG uint16 = 250
 	// valid Question.Qtype only
-	TypeIXFR uint16 = 251
-	TypeAXFR uint16 = 252
-	TypeMAILB uint16= 253
-	TypeMAILA uint16= 254
-	TypeALL   uint16= 255
-	TypeURI   uint16= 256
-	TypeTA    uint16= 32768
-	TypeDLV   uint16= 32769
+	TypeIXFR  uint16 = 251
+	TypeAXFR  uint16 = 252
+	TypeMAILB uint16 = 253
+	TypeMAILA uint16 = 254
+	TypeANY   uint16 = 255
+	TypeURI   uint16 = 256
+	TypeTA    uint16 = 32768
+	TypeDLV   uint16 = 32769
 
 	// valid Question.Qclass
 	ClassINET   = 1
@@ -156,9 +156,9 @@ func NewRRString(s string) (RR, os.Error) {
 // NewRR returns a new RR with the hdr.Rrtype also set.
 // If the type i is not known, nil is returned.
 func NewRR(i uint16) RR {
-        r := rr_mk[i]()
-        r.Header().Rrtype = i
-        return r
+	r := rr_mk[i]()
+	r.Header().Rrtype = i
+	return r
 }
 
 type RR_CNAME struct {

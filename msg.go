@@ -112,7 +112,7 @@ var Rr_str = map[uint16]string{
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeAXFR:       "AXFR", // Meta RR
 	TypeIXFR:       "IXFR", // Meta RR
-	TypeALL:        "ANY",  // Meta RR
+	TypeANY:        "ANY",  // Meta RR
 	TypeURI:        "URI",
 	TypeTA:         "TA",
 	TypeDLV:        "DLV",
