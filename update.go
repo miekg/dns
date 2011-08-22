@@ -27,11 +27,11 @@ func (u *Update) Additional() []RR {
 
 // NewUpdate creats a new DNS update packet.
 func NewUpdate(zone string, class uint16) *Update {
-        u := new(Update)
-        u.MsgHdr.Opcode = OpcodeUpdate
-        u.Question = make([]Question, 1)
-        u.Question[0] = Question{zone, TypeSOA, class}
-        return u
+	u := new(Update)
+	u.MsgHdr.Opcode = OpcodeUpdate
+	u.Question = make([]Question, 1)
+	u.Question[0] = Question{zone, TypeSOA, class}
+	return u
 }
 
 // 3.2.4 - Table Of Metavalues Used In Prerequisite Section
@@ -58,7 +58,7 @@ func (u *Update) NameUsed(rr []RR) {
 func (u *Update) NameNotUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-                u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassNONE}}
+		u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassNONE}}
 	}
 }
 
@@ -67,8 +67,8 @@ func (u *Update) NameNotUsed(rr []RR) {
 func (u *Update) RRsetUsedFull(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-                u.Answer[i] = r
-                u.Answer[i].Header().Class = u.Msg.Question[0].Qclass       // TODO crashes if question is zero
+		u.Answer[i] = r
+		u.Answer[i].Header().Class = u.Msg.Question[0].Qclass // TODO crashes if question is zero
 	}
 }
 
@@ -77,9 +77,10 @@ func (u *Update) RRsetUsedFull(rr []RR) {
 func (u *Update) RRsetUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-                u.Answer[i] = r
-                u.Answer[i].Header().Class = ClassANY
-                u.Answer[i].Header().Rdlength = 0
+		u.Answer[i] = r
+		u.Answer[i].Header().Class = ClassANY
+		u.Answer[i].Header().Ttl = 0
+		u.Answer[i].Header().Rdlength = 0
 	}
 }
 
@@ -88,9 +89,10 @@ func (u *Update) RRsetUsed(rr []RR) {
 func (u *Update) RRsetNotUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-                u.Answer[i] = r
-                u.Answer[i].Header().Class = ClassNONE
-                u.Answer[i].Header().Rdlength = 0
+		u.Answer[i] = r
+		u.Answer[i].Header().Class = ClassNONE
+		u.Answer[i].Header().Rdlength = 0
+		u.Answer[i].Header().Ttl = 0
 	}
 }
 
@@ -103,30 +105,39 @@ func (u *Update) RRsetNotUsed(rr []RR) {
 //   NONE     rrset    rr       Delete an RR from an RRset
 //   zone     rrset    rr       Add to an RRset
 
-
 // RRsetAddFull adds an complete RRset, see RFC 2136 section 2.5.1
 func (u *Update) RRsetAddFull(rr []RR) {
-        u.Ns = make([]RR, len(rr))
-        for i, r := range rr {
-                u.Ns[i] = r
-                u.Ns[i].Header().Class = u.Msg.Question[0].Qclass       // TODO crashes if question is zero
-        }
+	u.Ns = make([]RR, len(rr))
+	for i, r := range rr {
+		u.Ns[i] = r
+		u.Ns[i].Header().Class = u.Msg.Question[0].Qclass // TODO crashes if question is zero
+	}
 }
 
-// RRsetDeleteFull delete the full RR, see RFC 2136 section 2.5.2
-func (u *Update) RRsetDeleteFull(rr []RR) {
-        u.Ns = make([]RR, len(rr))
-        for i, r := range rr {
-                u.Ns[i] = r
-                u.Ns[i].Header().Class = ClassNONE
-        }
+// RRsetDelete delete an RRset, see RFC 2136 section 2.5.2
+func (u *Update) RRsetDelete(rr []RR) {
+	u.Ns = make([]RR, len(rr))
+	for i, r := range rr {
+		u.Ns[i] = r
+		u.Ns[i].Header().Class = ClassANY
+		u.Ns[i].Header().Rdlength = 0
+		u.Ns[i].Header().Ttl = 0
+	}
 }
 
-// RRsetDelete delete the RRset, see RFC 2136 section 2.5.2
-func (u *Update) DeleteFull(rr []RR) {
-        u.Ns = make([]RR, len(rr))
-        for i, r := range rr {
-                u.Ns[i] = r
-                u.Ns[i].Header().Class = ClassNONE
-        }
+// NameDelete deletes all RRsets of a name, see RFC 2136 section 2.5.3
+func (u *Update) NameDelete(rr []RR) {
+	u.Ns = make([]RR, len(rr))
+	for i, r := range rr {
+		u.Ns[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
+	}
+}
+
+// RRsetDeleteRR deletes RR from the RRSset, see RFC 2136 section 2.5.4
+func (u *Update) RRsetDeleteRR(rr []RR) {
+	u.Ns = make([]RR, len(rr))
+	for i, r := range rr {
+		u.Ns[i] = r
+		u.Ns[i].Header().Class = ClassNONE
+	}
 }
