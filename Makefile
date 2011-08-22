@@ -22,6 +22,7 @@ GOFILES=\
 	rawmsg.go \
 	tsig.go\
 	types.go\
+	update.go\
 	xfr.go\
 	zone.go\
 	zparse.go\

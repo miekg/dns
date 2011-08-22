@@ -60,6 +60,15 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Id = request.MsgHdr.Id
 }
 
+// IsQuestion returns true if the the packet is a question
+func (dns *Msg) IsQuestion() (ok bool) {
+        if len(dns.Question) == 0 {
+                return false
+        }
+        ok = dns.MsgHdr.Response == false
+        return
+}
+
 // Is the message a packet with the FormErr set?
 func (dns *Msg) IsRcodeFormatError() (ok bool) {
 	if len(dns.Question) == 0 {
@@ -82,6 +91,7 @@ func (dns *Msg) IsUpdate() (ok bool) {
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, classINET.
 func (dns *Msg) SetUpdate(z string) {
+        dns.MsgHdr.Id = Id()
         dns.MsgHdr.Opcode = OpcodeUpdate
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
