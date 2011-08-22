@@ -42,7 +42,7 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.Question[0] = request.Question[0]
 }
 
-// IsRocde checks if the header of the packet has rcode set.
+// IsRcode checks if the header of the packet has rcode set.
 func (dns *Msg) IsRcode(rcode int) (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -69,7 +69,7 @@ func (dns *Msg) IsRcodeFormatError() (ok bool) {
         return
 }
 
-// Is the message a dynamic update packet?
+// IsUpdate checks if the message is a dynamic update packet?
 func (dns *Msg) IsUpdate() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -77,6 +77,14 @@ func (dns *Msg) IsUpdate() (ok bool) {
 	ok = dns.MsgHdr.Opcode == OpcodeUpdate
 	ok = ok && dns.Question[0].Qtype == TypeSOA
 	return
+}
+
+// SetUpdate makes the message a dynamic update packet. It
+// sets the ZONE section to: z, TypeSOA, classINET.
+func (dns *Msg) SetUpdate(z string) {
+        dns.MsgHdr.Opcode = OpcodeUpdate
+	dns.Question = make([]Question, 1)
+	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
 // Is the message a valid notify packet?
