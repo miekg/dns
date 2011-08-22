@@ -161,6 +161,19 @@ func NewRR(i uint16) RR {
 	return r
 }
 
+type RR_ANY struct {
+        Hdr RR_Header
+        // Does not have any rdata
+}
+
+func (rr *RR_ANY) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_ANY) String() string {
+	return rr.Hdr.String()
+}
+
 type RR_CNAME struct {
 	Hdr   RR_Header
 	Cname string "domain-name"
