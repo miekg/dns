@@ -60,7 +60,7 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Id = request.MsgHdr.Id
 }
 
-// IsQuestion returns true if the the packet is a question
+// IsQuestion returns true if the the packet is a question.
 func (dns *Msg) IsQuestion() (ok bool) {
         if len(dns.Question) == 0 {
                 return false
