@@ -29,7 +29,7 @@ Miek Gieben  -  2010, 2011 - miek@miek.nl
 * 1876 - LOC record (incomplete)
 * 1995 - IXFR
 * 1996 - DNS notify
-* 2136 - DNS Update
+* 2136 - DNS Update (dynamic updates)
 * 2181 - RRset definition
 * 2537 - RSAMD5 DNS keys
 * 2065 - DNSSEC (updated in later RFCs)
