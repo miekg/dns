@@ -91,8 +91,7 @@ func checkcache(m *dns.Msg) (o []byte) {
         o = cache.lookup(m)
         if o != nil {
                 // octet 1 and 2 contain the Id, set the one for the current pkt
-                o[0] = byte(m.MsgHdr.Id >> 8)
-                o[1] = byte(m.MsgHdr.Id)
+                dns.RawSetId(o, 0, m.MsgHdr.Id)
                 return
         }
 
