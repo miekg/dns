@@ -34,7 +34,7 @@ func (e *ParseError) String() string {
 
 // NewParser creates a new DNS file parser from r.
 func NewParser(r io.Reader) *Parser {
-        buf := make([]byte, _IOBUF) 
+        buf := make([]byte, _IOBUF)
         n, err := r.Read(buf)
         if err != nil {
             return nil
@@ -93,8 +93,9 @@ func (zp *Parser) RR() (RR, os.Error) {
     return z.PopRR(), nil
 }
 
-// Zone parses an DNS master zone file.
-func (zp *Parser) Zone() (z *Zone, err os.Error) {
+// Run parses an DNS master zone file. It returns each parsed RR
+// on the channel as soon as it has been parsed.
+func (zp *Parser) Run() (err os.Error) {
         z = NewZone()
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
@@ -106,7 +107,6 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
         var hdr RR_Header
 
         %%{
-    
 
                 action mark       { mark = p }
                 action lineCount  { l++ }
