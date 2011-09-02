@@ -150,7 +150,7 @@ func (q *Question) String() string {
 // NewRRString returns the last RR contained in s.
 func NewRRString(s string) (RR, os.Error) {
 	p := NewParser(strings.NewReader(s))
-	return p.RR()
+	return p.First()
 }
 
 // NewRR returns a new RR with the hdr.Rrtype also set.

@@ -33,6 +33,12 @@ func (e *ParseError) String() string {
 	return s
 }
 
+// First will return the first RR found when parsing.
+func (zp *Parser) First() (RR, os.Error) {
+    // defer close something
+        return nil, nil
+}
+
 // NewParser creates a new DNS file parser from r.
 func NewParser(r io.Reader) *Parser {
 	buf := make([]byte, _IOBUF)
@@ -91,18 +97,8 @@ var z_en_main int = 141
 
 // line 85 "zparse.rl"
 
-
-// RR parses a zone file, but only returns the last RR read.
-func (zp *Parser) RR() (RR, os.Error) {
-	z, err := zp.Zone()
-	if err != nil {
-		return nil, err
-	}
-	return z.PopRR(), nil
-}
-
 // Zone parses an DNS master zone file.
-func (zp *Parser) Zone() (z *Zone, err os.Error) {
+func (zp *Parser) Zone() (err os.Error) {
         /*
 	z = NewZone()
 	data := string(zp.buf)
@@ -3801,13 +3797,13 @@ func (zp *Parser) Zone() (z *Zone, err os.Error) {
 				println("p", p, "pe", pe)
 				println("cs", cs, "z_first_final", z_first_final)
 				println("unexpected eof at line ", l)
-				return z, nil
+				return nil
 			} else {
 				println("error at position ", p, "\"", data[mark:p], "\" at line ", l)
-				return z, nil
+				return nil
 			}
 		}
 	}
         */
-	return z, nil
+	return nil
 }

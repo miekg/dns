@@ -21,6 +21,7 @@ type Parser struct {
         // nothing here yet
         buf    []byte
         RR     chan RR
+        Error  chan *ParseError
 }
 
 type ParseError struct {
@@ -35,6 +36,7 @@ func (e *ParseError) String() string {
 }
 
 // NewParser creates a new DNS file parser from r.
+// Need sliding window stuff TODO.
 func NewParser(r io.Reader) *Parser {
         buf := make([]byte, _IOBUF)
         n, err := r.Read(buf)
@@ -48,7 +50,8 @@ func NewParser(r io.Reader) *Parser {
         buf = buf[:n]
         p := new(Parser)
         p.buf = buf
-        p.RR = make(chan RR)
+        p.RR = make(chan RR) 
+        p.Error = make(chan ParseError)
         return p
 }
 
@@ -87,37 +90,52 @@ func fields(s string, i int) (rdf []string) {
         write data;
 }%%
 
-// RR parses a zone file, but only returns the last RR read.
-func (zp *Parser) RR() (RR, os.Error) {
-    z, err := zp.Zone()
-    if err != nil {
-        return nil, err
+// First will return the first RR found when parsing.
+func (zp *Parser) First() (RR, os.Error) {
+    // defer close something
+    go run(zp, quit)
+    select {
+    case r := <-zp.RR:
+        return r, nil
+    case e := <-zp.Error:
+        return nil, e
     }
-    return z.PopRR(), nil
+}
+
+
+// Run starts the parsers and returns the parsed Rr on the RR channel.
+// Errors are return on the Error channel. After an error the parsing stops.
+func (zp *Parser) Run(quit chan bool) {
+    go run(zp, quit)
 }
 
 // Run parses an DNS master zone file. It returns each parsed RR
 // on the channel as soon as it has been parsed.
-func (zp *Parser) Run() (err os.Error) {
+func run(zp *Parser, quit chan bool) (err os.Error) {
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
         eof := len(data)
+
+        defer close(zp.Error)
+        defer close(zp.RR)
 
 //        brace := false
         l := 1  // or... 0?
         mark := 0
         var hdr RR_Header
+        // Need to listen to the quit channel
 
         %%{
 
                 action mark       { mark = p }
                 action lineCount  { l++ }
                 action setQname   { if ! IsDomainName(data[mark:p]) {
-                                            return z, &ParseError{Error: "bad qname: " + data[mark:p], line: l}
+                                            zp.Error <- &ParseError{Error: "bad qname: " + data[mark:p], line: l}
+                                            return
                                     }
                                     hdr.Name = data[mark:p]
                                   }
-                action errQclass  { return z, &ParseError{Error: "bad qclass: " + data[mark:p], line: l} }
+                action errQclass  { zp.Error <- &ParseError{Error: "bad qclass: " + data[mark:p], line: l}; return }
                 action setQclass  { hdr.Class = str_class[data[mark:p]] }
                 action defTtl     { /* ... */ }
                 action errTtl     { /* ... */ }
@@ -186,12 +204,12 @@ func (zp *Parser) Run() (err os.Error) {
                                 println("p", p, "pe", pe)
                                 println("cs", cs, "z_first_final", z_first_final)
                                 println("unexpected eof at line ", l)
-                                return z, nil
+                                return
                         } else {
                                 println("error at position ", p, "\"",data[mark:p],"\" at line ", l)
-                                return z, nil
+                                return
                         }
                 }
         }
-        return z, nil
+        return
 }
