@@ -42,15 +42,6 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.Question[0] = request.Question[0]
 }
 
-// IsRcode checks if the header of the packet has rcode set.
-func (dns *Msg) IsRcode(rcode int) (ok bool) {
-	if len(dns.Question) == 0 {
-		return false
-	}
-        ok = dns.MsgHdr.Rcode == rcode
-        return
-}
-
 // Create a packet with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Rcode = RcodeFormatError
@@ -60,34 +51,6 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Id = request.MsgHdr.Id
 }
 
-// IsQuestion returns true if the the packet is a question.
-func (dns *Msg) IsQuestion() (ok bool) {
-        if len(dns.Question) == 0 {
-                return false
-        }
-        ok = dns.MsgHdr.Response == false
-        return
-}
-
-// Is the message a packet with the FormErr set?
-func (dns *Msg) IsRcodeFormatError() (ok bool) {
-	if len(dns.Question) == 0 {
-		return false
-	}
-        ok = dns.MsgHdr.Rcode == RcodeFormatError
-        return
-}
-
-// IsUpdate checks if the message is a dynamic update packet?
-func (dns *Msg) IsUpdate() (ok bool) {
-	if len(dns.Question) == 0 {
-		return false
-	}
-	ok = dns.MsgHdr.Opcode == OpcodeUpdate
-	ok = ok && dns.Question[0].Qtype == TypeSOA
-	return
-}
-
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, classINET.
 func (dns *Msg) SetUpdate(z string) {
@@ -95,17 +58,6 @@ func (dns *Msg) SetUpdate(z string) {
         dns.MsgHdr.Opcode = OpcodeUpdate
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
-}
-
-// Is the message a valid notify packet?
-func (dns *Msg) IsNotify() (ok bool) {
-	if len(dns.Question) == 0 {
-		return false
-	}
-	ok = dns.MsgHdr.Opcode == OpcodeNotify
-	ok = ok && dns.Question[0].Qclass == ClassINET
-	ok = ok && dns.Question[0].Qtype == TypeSOA
-	return
 }
 
 // Create a dns msg suitable for requesting an ixfr.
@@ -128,7 +80,66 @@ func (dns *Msg) SetAxfr(z string) {
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
 
-// Is the message a valid axfr request packet?
+// SetTsig Calculates and appends a TSIG RR on the message.
+func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
+	t := new(RR_TSIG)
+	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
+	t.Algorithm = algo
+	t.Fudge = fudge
+	t.TimeSigned = timesigned
+	dns.Extra = append(dns.Extra, t)
+}
+
+
+// IsRcode checks if the header of the packet has rcode set.
+func (dns *Msg) IsRcode(rcode int) (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+        ok = dns.MsgHdr.Rcode == rcode
+        return
+}
+
+// IsQuestion returns true if the the packet is a question.
+func (dns *Msg) IsQuestion() (ok bool) {
+        if len(dns.Question) == 0 {
+                return false
+        }
+        ok = dns.MsgHdr.Response == false
+        return
+}
+
+// IsRcodeFormatError checks if the message has the FormErr set.
+func (dns *Msg) IsRcodeFormatError() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+        ok = dns.MsgHdr.Rcode == RcodeFormatError
+        return
+}
+
+// IsUpdate checks if the message is a dynamic update packet.
+func (dns *Msg) IsUpdate() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+	ok = dns.MsgHdr.Opcode == OpcodeUpdate
+	ok = ok && dns.Question[0].Qtype == TypeSOA
+	return
+}
+
+// IsNotify checks if the message is a valid notify packet.
+func (dns *Msg) IsNotify() (ok bool) {
+	if len(dns.Question) == 0 {
+		return false
+	}
+	ok = dns.MsgHdr.Opcode == OpcodeNotify
+	ok = ok && dns.Question[0].Qclass == ClassINET
+	ok = ok && dns.Question[0].Qtype == TypeSOA
+	return
+}
+
+// IsAxfr checks if the message is a valid axfr request packet.
 func (dns *Msg) IsAxfr() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -139,7 +150,7 @@ func (dns *Msg) IsAxfr() (ok bool) {
 	return
 }
 
-// Is the message a valid ixfr request packet?
+// IsIXfr checks if the message is a valid ixfr request packet.
 func (dns *Msg) IsIxfr() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -150,22 +161,12 @@ func (dns *Msg) IsIxfr() (ok bool) {
 	return
 }
 
-// Has the message a TSIG record as the last record?
+// IsTsig checks if the message has a TSIG record as the last record.
 func (dns *Msg) IsTsig() (ok bool) {
 	if len(dns.Extra) > 0 {
 		return dns.Extra[0].Header().Rrtype == TypeTSIG
 	}
 	return
-}
-
-// SetTsig Calculates and appends a TSIG RR on the message.
-func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
-	t := new(RR_TSIG)
-	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
-	t.Algorithm = algo
-	t.Fudge = fudge
-	t.TimeSigned = timesigned
-	dns.Extra = append(dns.Extra, t)
 }
 
 // IsDomainName checks if s is a valid domainname.
