@@ -6,7 +6,6 @@ reflect \
 q \
 qperf \
 funkensturm \
-ns \
 
 
 all: 
