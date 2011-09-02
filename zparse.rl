@@ -123,7 +123,7 @@ func run(zp *Parser, quit chan bool) (err os.Error) {
         l := 1  // or... 0?
         mark := 0
         var hdr RR_Header
-        // Need to listen to the quit channel
+        // Need to listen to the quit channel, do this in the mark action, or something?
 
         %%{
 
