@@ -15,10 +15,12 @@ import (
 const _IOBUF = MaxMsgSize
 
 // A Parser represents a DNS parser for a 
-// particular input stream. 
+// particular input stream. Each parsed RR will be returned
+// on the channel RR.
 type Parser struct {
         // nothing here yet
         buf    []byte
+        RR     chan RR
 }
 
 type ParseError struct {
@@ -46,6 +48,7 @@ func NewParser(r io.Reader) *Parser {
         buf = buf[:n]
         p := new(Parser)
         p.buf = buf
+        p.RR = make(chan RR)
         return p
 }
 
@@ -96,7 +99,6 @@ func (zp *Parser) RR() (RR, os.Error) {
 // Run parses an DNS master zone file. It returns each parsed RR
 // on the channel as soon as it has been parsed.
 func (zp *Parser) Run() (err os.Error) {
-        z = NewZone()
         data := string(zp.buf)
         cs, p, pe := 0, 0, len(data)
         eof := len(data)
@@ -176,7 +178,7 @@ func (zp *Parser) Run() (err os.Error) {
                 write init;
                 write exec;
         }%%
-        
+
         if eof > -1 {
                 if cs < z_first_final {
                         // No clue what I'm doing what so ever

@@ -24,7 +24,6 @@ GOFILES=\
 	types.go\
 	update.go\
 	xfr.go\
-	zone.go\
 	zparse.go\
 
 
