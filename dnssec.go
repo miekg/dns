@@ -192,8 +192,6 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 		s.Labels-- // wildcards, remove from label count
 	}
 
-	sort.Sort(rrset)
-
 	sigwire := new(rrsigWireFmt)
 	sigwire.TypeCovered = s.TypeCovered
 	sigwire.Algorithm = s.Algorithm
@@ -202,7 +200,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
-	sigwire.SignerName = s.SignerName
+	sigwire.SignerName = strings.ToLower(s.SignerName)
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
@@ -287,7 +285,6 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 			return false
 		}
 	}
-	sort.Sort(rrset)
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
@@ -299,7 +296,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
-	sigwire.SignerName = s.SignerName
+	sigwire.SignerName = strings.ToLower(s.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signeddata, 0)
