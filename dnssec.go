@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/md5"
 	"crypto/sha1"
@@ -463,9 +464,20 @@ func curveToBuf(_X, _Y *big.Int) []byte {
 	return buf
 }
 
+type wireSlice [][]byte
+
+func (p wireSlice) Len() int { return len(p) }
+func (p wireSlice) Less(i, j int) bool {
+	_, ioff, _ := unpackDomainName(p[i], 0)
+	_, joff, _ := unpackDomainName(p[j], 0)
+	return bytes.Compare(p[i][ioff+10:], p[j][joff+10:]) < 0
+}
+func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
 // Return the raw signature data.
 func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
-	for _, r := range rrset {
+	wires := make(wireSlice, len(rrset))
+	for i, r := range rrset {
 		h := r.Header()
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
 		name := h.Name
@@ -487,15 +499,16 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 		h.Ttl = s.OrigTtl
 		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0)
-		if !ok1 {
-			return nil
-		}
 		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
 		h.Name = name
 		if !ok1 {
 			return nil
 		}
+		wires[i] = wire
+	}
+	sort.Sort(wires)
+	for _, wire := range wires {
 		buf = append(buf, wire...)
 	}
 	return
