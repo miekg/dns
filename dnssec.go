@@ -76,7 +76,7 @@ type dnskeyWireFmt struct {
 	/* Nothing is left out */
 }
 
-// Calculate the keytag of the DNSKEY.
+// Keytag calculates the keytag of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
@@ -107,7 +107,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 	return uint16(keytag)
 }
 
-// Convert an DNSKEY record to a DS record.
+// ToDS converts a DNSKEY record to a DS record.
 func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
@@ -167,8 +167,9 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 
 // Sign signs an RRSet. The signature needs to be filled in with
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
-// The rest is copied from the RRset. Returns true when the signing went OK.
-// The Signature data in the RRSIG is filled by this method.
+// The rest is copied from the RRset. Sign returns true when the signing went OK,
+// otherwise false.
+// The signature data in the RRSIG is filled by this method.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	if k == nil {
@@ -261,7 +262,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	return true
 }
 
-// Verify validate an RRSet with the signature and key. This is only the
+// Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period most be checked separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	// Frist the easy checks
@@ -348,7 +349,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	return err == nil
 }
 
-// Use RFC1982 to calculate if a signature period is valid.
+// ValidityPeriod uses RFC1982 serial arithmetic to calculate 
+// if a signature period is valid.
 func (s *RR_RRSIG) ValidityPeriod() bool {
 	utc := time.UTC().Seconds()
 	modi := (int64(s.Inception) - utc) / Year68
@@ -454,15 +456,14 @@ func exponentToBuf(_E int) []byte {
 	return buf
 }
 
-// Set the public key for X and Y for Curve
-// Experimental
+// Set the public key for X and Y for Curve. Experiment.
 func curveToBuf(_X, _Y *big.Int) []byte {
 	buf := _X.Bytes()
 	buf = append(buf, _Y.Bytes()...)
 	return buf
 }
 
-// return a saw signature data 
+// Return the raw signature data.
 func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 	for _, r := range rrset {
 		h := r.Header()
