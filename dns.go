@@ -96,8 +96,8 @@ func (s RRset) String() string {
 	return str
 }
 
-// Remove the last pushed RR from the RRset. Return nil
-// when there is nothing to remove
+// Pop removes the last pushed RR from the RRset. Returns nil
+// when there is nothing to remove.
 func (s *RRset) Pop() RR {
 	if len(*s) == 0 {
 		return nil
@@ -108,7 +108,7 @@ func (s *RRset) Pop() RR {
 	return r
 }
 
-// Push the RR r to the RRset
+// Push pushes the RR r to the RRset.
 func (s *RRset) Push(r RR) bool {
 	if s.Len() == 0 {
 		*s = append(*s, r)
@@ -129,7 +129,7 @@ func (s *RRset) Push(r RR) bool {
 	return true
 }
 
-// Check if the RRset is RFC 2181 compliant.
+// Ok checks if the RRSet is RFC 2181 compliant.
 func (s RRset) Ok() bool {
 	ttl := s[0].Header().Ttl
 	name := s[0].Header().Name
@@ -218,7 +218,7 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	return
 }
 
-// DnameLength returns the length of a packed dname
+// DnameLength returns the length of a packed dname.
 func DomainNameLength(s string) int {                   // TODO better name
         // Add trailing dot to canonicalize name.
         if n := len(s); n == 0 || s[n-1] != '.' {
