@@ -54,6 +54,6 @@ func HashName(label string, ha int, iterations int, salt string) string {
 // to RFC 5155.
 // Use the parameters from the NSEC3 itself.
 func (nsec3 *RR_NSEC3) HashNames() {
-	nsec3.Header().Name = hashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
-	nsec3.NextDomain = hashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+	nsec3.Header().Name = HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+	nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
 }
