@@ -165,7 +165,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	return ds
 }
 
-// Sign an RRSet. The Signature needs to be filled in with
+// Sign signs an RRSet. The signature needs to be filled in with
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Returns true when the signing went OK.
 // The Signature data in the RRSIG is filled by this method.
@@ -261,7 +261,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	return true
 }
 
-// Validate an RRSet with the signature and key. This is only the
+// Verify validate an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period most be checked separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 	// Frist the easy checks
