@@ -11,8 +11,9 @@ type saltWireFmt struct {
 	Salt string "size-hex"
 }
 
-// Hash a string/label according to RFC5155.
-func hashName(label string, ha int, iterations int, salt string) string {
+// HashName hashes a string or label according to RFC5155. It returns
+// the hashed string.
+func HashName(label string, ha int, iterations int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)

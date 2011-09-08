@@ -65,9 +65,9 @@ func (u *Update) NameNotUsed(rr []RR) {
 // RRsetUsedFull sets the RRs in the prereq section to
 // "RRset exists (value dependent -- with rdata)" RRs. RFC 2136 section 2.4.2.
 func (u *Update) RRsetUsedFull(rr []RR) {
-        if len(u.Msg.Question) == 0 {
-                panic("empty question section")
-        }
+	if len(u.Msg.Question) == 0 {
+		panic("empty question section")
+	}
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = r
@@ -110,9 +110,9 @@ func (u *Update) RRsetNotUsed(rr []RR) {
 
 // RRsetAddFull adds an complete RRset, see RFC 2136 section 2.5.1
 func (u *Update) RRsetAddFull(rr []RR) {
-        if len(u.Msg.Question) == 0 {
-                panic("empty question section")
-        }
+	if len(u.Msg.Question) == 0 {
+		panic("empty question section")
+	}
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = r
