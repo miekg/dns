@@ -15,15 +15,15 @@ import (
 // private key implementations from the crypto package.
 type PrivateKey interface{}
 
-// Generate a key of the given bit size.
+// Generate generates a DNSKEY of the given bit size.
 // The public part is put inside the DNSKEY record. 
 // The Algorithm in the key must be set as this will define
 // what kind of DNSKEY will be generated.
-// For ECDSA the algorithms implies a keysize, in that case
-// bits should be zero.
+// The ECDSA algorithms imply a fixed keysize, in that case
+// bits should be set to the size of the algorithm.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 	switch r.Algorithm {
-	case RSAMD5, RSASHA1, RSASHA256:
+        case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}
@@ -42,7 +42,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 	}
 
 	switch r.Algorithm {
-	case RSAMD5, RSASHA1, RSASHA256, RSASHA512:
+        case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
 		if err != nil {
 			return nil, err
@@ -112,6 +112,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	return
 }
 
+// Read reads a DNSKEY from the io.Reader q.
 func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
 	p := NewParser(q)
 	r, err := p.First()
@@ -129,6 +130,7 @@ func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
 	return nil
 }
 
+// ReadPrivateKey reads a private key from the io.Reader q.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 	p := NewParser(q)
 	kv, _ := p.PrivateKey()
