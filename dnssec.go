@@ -22,16 +22,18 @@ import (
 
 // DNSSEC encryption algorithm codes.
 const (
-	RSAMD5          = 1
-	DH              = 2
-	DSA             = 3
-	ECC             = 4
-	RSASHA1         = 5
-	RSASHA256       = 8
-	RSASHA512       = 10
-	ECCGOST         = 12
-	ECDSAP256SHA256 = 13
-	ECDSAP384SHA384 = 14
+	RSAMD5           = 1
+	DH               = 2
+	DSA              = 3
+	ECC              = 4
+	RSASHA1          = 5
+	DSANSEC3SHA1     = 6
+	RSASHA1NSEC3SHA1 = 7
+	RSASHA256        = 8
+	RSASHA512        = 10
+	ECCGOST          = 12
+	ECDSAP256SHA256  = 13
+	ECDSAP384SHA384  = 14
 )
 
 // DNSSEC hashing algorithm codes.
@@ -220,7 +222,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) bool {
 	case RSAMD5:
 		h = md5.New()
 		ch = crypto.MD5
-	case RSASHA1:
+	case RSASHA1, RSASHA1NSEC3SHA1:
 		h = sha1.New()
 		ch = crypto.SHA1
 	case RSASHA256, ECDSAP256SHA256:
@@ -313,7 +315,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 
 	var err os.Error
 	switch s.Algorithm {
-	case RSASHA1, RSASHA256, RSASHA512, RSAMD5:
+	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
 		pubkey := k.pubKeyRSA() // Get the key
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
@@ -322,7 +324,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) bool {
 		case RSAMD5:
 			h = md5.New()
 			ch = crypto.MD5
-		case RSASHA1:
+		case RSASHA1, RSASHA1NSEC3SHA1:
 			h = sha1.New()
 			ch = crypto.SHA1
 		case RSASHA256:
@@ -500,13 +502,15 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 // Map for algorithm names.
 var alg_str = map[uint8]string{
-	RSAMD5:          "RSAMD5",
-	DH:              "DH",
-	DSA:             "DSA",
-	RSASHA1:         "RSASHA1",
-	RSASHA256:       "RSASHA256",
-	RSASHA512:       "RSASHA512",
-	ECCGOST:         "ECC-GOST",
-	ECDSAP256SHA256: "ECDSAP256SHA256",
-	ECDSAP384SHA384: "ECDSAP384SHA384",
+	RSAMD5:           "RSAMD5",
+	DH:               "DH",
+	DSA:              "DSA",
+	RSASHA1:          "RSASHA1",
+	DSANSEC3SHA1:     "DSA-NSEC3-SHA1",
+	RSASHA1NSEC3SHA1: "RSASHA1-NSEC3-SHA1",
+	RSASHA256:        "RSASHA256",
+	RSASHA512:        "RSASHA512",
+	ECCGOST:          "ECC-GOST",
+	ECDSAP256SHA256:  "ECDSAP256SHA256",
+	ECDSAP384SHA384:  "ECDSAP384SHA384",
 }
