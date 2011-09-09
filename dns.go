@@ -84,10 +84,6 @@ func NewRRset() RRset {
 	return s
 }
 
-func (s RRset) Len() int           { return len(s) }
-func (s RRset) Less(i, j int) bool { return s[i].Header().Name < s[j].Header().Name }
-func (s RRset) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
 func (s RRset) String() string {
 	str := ""
 	for _, r := range s {
@@ -110,7 +106,7 @@ func (s *RRset) Pop() RR {
 
 // Push pushes the RR r to the RRset.
 func (s *RRset) Push(r RR) bool {
-	if s.Len() == 0 {
+	if len(*s) == 0 {
 		*s = append(*s, r)
 		return true
 	}
