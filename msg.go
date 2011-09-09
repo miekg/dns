@@ -38,6 +38,7 @@ var (
 	ErrKey       os.Error = &Error{Error: "bad key"}
 	ErrPrivKey   os.Error = &Error{Error: "bad private key"}
 	ErrKeySize   os.Error = &Error{Error: "bad key size"}
+        ErrKeyAlg    os.Error = &Error{Error: "bad key algorithm"}
 	ErrAlg       os.Error = &Error{Error: "bad algorithm"}
 	ErrTime      os.Error = &Error{Error: "bad time"}
 	ErrNoSig     os.Error = &Error{Error: "no signature found"}
@@ -48,6 +49,7 @@ var (
 	ErrHandle    os.Error = &Error{Error: "handle is nil"}
 	ErrChan      os.Error = &Error{Error: "channel is nil"}
 	ErrName      os.Error = &Error{Error: "type not found for name"}
+        ErrRRset     os.Error = &Error{Error: "invalid rrset"}
 )
 
 // A manually-unpacked version of (id, bits).

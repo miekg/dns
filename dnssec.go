@@ -174,11 +174,11 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
 func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
 	if k == nil {
-		return os.NewError("Cannot sign without private key")
+		return ErrPrivKey
 	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
-		return os.NewError("Cannot sign without keytag, signer, and algorithm")
+		return ErrKey
 	}
 
 	s.Hdr.Rrtype = TypeRRSIG
@@ -206,12 +206,12 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
 	signdata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signdata, 0)
 	if !ok {
-		return os.NewError("Unable to construct canonical RRSIG")
+		return ErrPack
 	}
 	signdata = signdata[:n]
 	wire := rawSignatureData(rrset, s)
 	if wire == nil {
-		return os.NewError("Unable to construct signature data")
+		return ErrSigGen
 	}
 	signdata = append(signdata, wire...)
 
@@ -234,7 +234,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
 		h = sha512.New()
 		ch = crypto.SHA512
 	default:
-		return os.NewError("Unsupported signature algorithm")
+		return ErrAlg
 	}
 	io.WriteString(h, string(signdata))
 	sighash = h.Sum()
@@ -256,38 +256,33 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
 		s.Signature = unpackBase64(signature)
 	default:
 		// Not given the correct key
-		return os.NewError("Key type does not match algorithm")
+		return ErrKeyAlg
 	}
 	return nil
 }
-
-var (
-	ErrKeyMismatch = os.NewError("Key does not apply to signature")
-	ErrRRMismatch  = os.NewError("One or more RRs do not apply to the signature")
-)
 
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period most be checked separately.
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) os.Error {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
-		return ErrKeyMismatch
+		return ErrKey
 	}
 	if s.Hdr.Class != k.Hdr.Class {
-		return ErrKeyMismatch
+		return ErrKey
 	}
 	if s.Algorithm != k.Algorithm {
-		return ErrKeyMismatch
+		return ErrKey
 	}
 	if s.SignerName != k.Hdr.Name {
-		return ErrKeyMismatch
+		return ErrKey
 	}
 	for _, r := range rrset {
 		if r.Header().Class != s.Hdr.Class {
-			return ErrRRMismatch
+			return ErrRRset
 		}
 		if r.Header().Rrtype != s.TypeCovered {
-			return ErrRRMismatch
+			return ErrRRset
 		}
 	}
 
@@ -306,12 +301,12 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) os.Error {
 	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signeddata, 0)
 	if !ok {
-		return os.NewError("Unable to construct canonical RRSIG")
+		return ErrPack
 	}
 	signeddata = signeddata[:n]
 	wire := rawSignatureData(rrset, s)
 	if wire == nil {
-		return os.NewError("Unable to construct signature data")
+		return ErrSigGen
 	}
 	signeddata = append(signeddata, wire...)
 
@@ -342,7 +337,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) os.Error {
 		return rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
 	}
 	// Unknown alg
-	return os.NewError("Unsupported signature algorithm")
+        return ErrAlg
 }
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate 
