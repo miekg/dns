@@ -102,10 +102,4 @@ func TestClientTsigAXFR(t *testing.T) {
                         break
                 }
 	}
-	/*
-	   for {
-	           // select on c.ReplyChannel
-	           // and receive the *Exchange messages
-	   }
-	*/
 }
