@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"dns"
 	"flag"
 )
@@ -20,11 +19,13 @@ func main() {
 	} else {
 		m.SetAxfr(zone)
 	}
-        axfr, err := client.XfrReceive(m, *nameserver)
-        if err != nil {
+        if err := client.XfrReceive(m, *nameserver); err != nil {
                 println(err.String())
+                return
         }
+        /*
         for _, v := range axfr {
 		fmt.Printf("%v\n", v)
 	}
+        */
 }

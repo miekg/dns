@@ -134,11 +134,12 @@ type Client struct {
 }
 
 // NewClient creates a new client, with Net set to "udp" and Attempts to 1.
+// The client's ChannelReply is set to DefaultReplyChan.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
-	c.ChannelReply = DefaultReplyChan
+        c.ChannelReply = DefaultReplyChan
 	c.ReadTimeout = 5000
 	c.WriteTimeout = 5000
 	return c
@@ -178,8 +179,8 @@ func (q *Query) ListenAndQuery() os.Error {
 // ListenAndQuery starts the listener for firing off the queries. If
 // c is nil DefaultQueryChan is used. If handler is nil
 // DefaultQueryMux is used.
-func ListenAndQuery(c chan *Request, handler QueryHandler) {
-	q := &Query{ChannelQuery: c, Handler: handler}
+func ListenAndQuery(request chan *Request, handler QueryHandler) {
+	q := &Query{ChannelQuery: request, Handler: handler}
 	go q.ListenAndQuery()
 }
 

@@ -132,16 +132,16 @@ forever:
 	for {
 		select {
 		case r := <-dns.DefaultReplyChan:
-			if r[1] != nil {
-                                if r[1].Rcode == dns.RcodeSuccess {
-                                        if r[0].Id != r[1].Id {
+			if r.Reply != nil {
+                                if r.Reply.Rcode == dns.RcodeSuccess {
+                                        if r.Request.Id != r.Reply.Id {
                                                 fmt.Printf("Id mismatch\n")
                                         }
                                 }
 				if *short {
-					r[1] = shortMsg(r[1])
+					r.Reply = shortMsg(r.Reply)
 				}
-				fmt.Printf("%v", r[1])
+				fmt.Printf("%v", r.Reply)
 			}
 			i++
 			if i == len(qname) {

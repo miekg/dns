@@ -64,8 +64,8 @@ forever:
         for {
                 select {
                 case r := <-dns.DefaultReplyChan:
-                        if r[1] !=nil && r[1].Rcode == dns.RcodeSuccess {
-                                for _, aa := range r[1].Answer {
+                        if r.Reply !=nil && r.Reply.Rcode == dns.RcodeSuccess {
+                                for _, aa := range r.Reply.Answer {
                                         switch aa.(type) {
                                         case *dns.RR_A:
                                                 ips = append(ips, aa.(*dns.RR_A).A.String()+":53")
