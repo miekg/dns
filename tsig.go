@@ -52,7 +52,10 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// Add a Tsig to an message. // Must return the mac
+// TsigGenerate add add TSIG RR to a message. The TSIG MAC is saved
+// in the Tsig RR that is added. When TsigGenerate is called for the
+// first time requestMAC is generaly set to the empty string. TODO(mg): Really?
+// If something went wrong an error is returned, otherwise nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.Error) {
 	if !m.IsTsig() {
 		panic("TSIG not last RR in additional")
@@ -75,8 +78,8 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
 
-	t.MAC = hex.EncodeToString(h.Sum()) // Size is half!
-	t.MACSize = uint16(len(t.MAC) / 2)
+	t.MAC = hex.EncodeToString(h.Sum())
+	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
 	t.Fudge = rr.Fudge
@@ -88,23 +91,23 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.
 	return m, nil
 }
 
-// Verify the TSIG on a message. 
+// TsigVerify verifies the TSIG on a message. 
 // If the signature does not validate err contains the
-// error. If it validates err is nil.
-func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) (bool, os.Error) {
+// error, otherwise it is nil.
+func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
-		return false, err
+		return err
 	}
 	// Srtip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	buf, err := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
 	if err != nil {
-		return false, err
+		return err
 	}
 	/*
 	   if t.Name != "" {
@@ -127,7 +130,10 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) (bool, o
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-	return strings.ToUpper(hex.EncodeToString(h.Sum())) == strings.ToUpper(tsig.MAC), nil
+        if (strings.ToUpper(hex.EncodeToString(h.Sum())) != strings.ToUpper(tsig.MAC)) {
+                return ErrSig
+        }
+        return nil
 }
 
 // Create a wiredata buffer for the MAC calculation.

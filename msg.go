@@ -43,9 +43,11 @@ var (
 	ErrTime      os.Error = &Error{Error: "bad time"}
 	ErrNoSig     os.Error = &Error{Error: "no signature found"}
 	ErrSig       os.Error = &Error{Error: "bad signature"}
+	ErrSecret    os.Error = &Error{Error: "no secret defined"}
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
 	ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
+        ErrXfrLast   os.Error = &Error{Error: "last SOA"}
 	ErrHandle    os.Error = &Error{Error: "handle is nil"}
 	ErrChan      os.Error = &Error{Error: "channel is nil"}
 	ErrName      os.Error = &Error{Error: "type not found for name"}

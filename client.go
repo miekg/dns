@@ -266,7 +266,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
 	return r, nil
 }
 
-// Dial connects to the address addr for the networks c.Net
+// Dial connects to the address addr for the network set in c.Net
 func (w *reply) Dial() os.Error {
 	conn, err := net.Dial(w.Client().Net, w.addr)
 	if err != nil {
@@ -311,10 +311,12 @@ func (w *reply) Receive() (*Msg, os.Error) {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		_, ok := w.Client().TsigSecret[secret]
 		if !ok {
-			return m, ErrNoSig
+			return m, ErrSecret
 		}
-		ok, err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-		if !ok {
+                // Need to work on the original message p, as that was used
+                // to calculate the tsig.
+		err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
+		if err != nil {
 			return m, err
 		}
 	}
@@ -371,10 +373,10 @@ func (w *reply) Send(m *Msg) os.Error {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		_, ok := w.Client().TsigSecret[secret]
 		if !ok {
-			return ErrNoSig
+			return ErrSecret
 		}
 		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Safe the requestMAC
+		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Save the requestMAC
 	}
 	out, ok := m.Pack()
 	if !ok {

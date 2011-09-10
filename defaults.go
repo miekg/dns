@@ -60,7 +60,7 @@ func (dns *Msg) SetUpdate(z string) {
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
-// Create a dns msg suitable for requesting an ixfr.
+// SetIxfr creates dns msg suitable for requesting an ixfr.
 func (dns *Msg) SetIxfr(z string, serial uint32) {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
@@ -73,14 +73,14 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 	dns.Ns[0] = s
 }
 
-// Create a dns msg suitable for requesting an axfr.
+// SetAxfr creates dns msg suitable for requesting an ixfr.
 func (dns *Msg) SetAxfr(z string) {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
 
-// SetTsig Calculates and appends a TSIG RR on the message.
+// SetTsig Calculates and appends a TSIG RR to the message.
 func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
@@ -89,7 +89,6 @@ func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t.TimeSigned = timesigned
 	dns.Extra = append(dns.Extra, t)
 }
-
 
 // IsRcode checks if the header of the packet has rcode set.
 func (dns *Msg) IsRcode(rcode int) (ok bool) {
@@ -164,7 +163,7 @@ func (dns *Msg) IsIxfr() (ok bool) {
 // IsTsig checks if the message has a TSIG record as the last record.
 func (dns *Msg) IsTsig() (ok bool) {
 	if len(dns.Extra) > 0 {
-		return dns.Extra[0].Header().Rrtype == TypeTSIG
+		return dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG
 	}
 	return
 }
