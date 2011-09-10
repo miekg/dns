@@ -54,6 +54,7 @@ func main() {
                                 c.Net = "tcp"
                         }
 
+                        /*
                         if !*tcp {
                                 // For UDP give each goroutine a socket.
                                 // With TCP we re-dial every time
@@ -63,6 +64,7 @@ func main() {
                                 }
                                 defer c.Close()
                         }
+                        */
 
                         r := new(dns.Msg)
                         for {

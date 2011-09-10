@@ -190,24 +190,6 @@ func (w *reply) Write(m *Msg) {
 	w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: m}
 }
 
-// Used in qperf... for speed only??? Check...
-// Dial dials a remote server and set... TODO
-func (c *Client) Dial(addr string) os.Error {
-	conn, err := net.Dial(c.Net, addr)
-	if err != nil {
-		return err
-	}
-	c.Hijacked = conn
-	return nil
-}
-
-func (c *Client) Close() os.Error {
-	if c.Hijacked == nil {
-		return nil // TODO
-	}
-	return c.Hijacked.Close()
-}
-
 // Do performs an asynchronous query. The result is returned on the
 // channel set in the Client c. If no channel is set DefaultQueryChan is used.
 func (c *Client) Do(m *Msg, a string) {
