@@ -124,8 +124,8 @@ type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
-	ChannelQuery chan *Request     // read DNS request from this channel
-	ChannelReply chan *Exchange    // write the reply (together with the DNS request) to this channel
+	QueryChan chan *Request     // read DNS request from this channel
+	ReplyChan chan *Exchange    // write the reply (together with the DNS request) to this channel
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -134,19 +134,19 @@ type Client struct {
 }
 
 // NewClient creates a new client, with Net set to "udp" and Attempts to 1.
-// The client's ChannelReply is set to DefaultReplyChan.
+// The client's ReplyChan is set to DefaultReplyChan.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
-        c.ChannelReply = DefaultReplyChan
+        c.ReplyChan = DefaultReplyChan
 	c.ReadTimeout = 5000
 	c.WriteTimeout = 5000
 	return c
 }
 
 type Query struct {
-	ChannelQuery chan *Request // read DNS request from this channel
+	QueryChan chan *Request // read DNS request from this channel
 	Handler      QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
 }
 
@@ -158,7 +158,7 @@ func (q *Query) Query() os.Error {
 	//forever:
 	for {
 		select {
-		case in := <-q.ChannelQuery:
+		case in := <-q.QueryChan:
 			w := new(reply)
 			w.req = in.Request
 			w.addr = in.Addr
@@ -170,8 +170,8 @@ func (q *Query) Query() os.Error {
 }
 
 func (q *Query) ListenAndQuery() os.Error {
-	if q.ChannelQuery == nil {
-		q.ChannelQuery = DefaultQueryChan
+	if q.QueryChan == nil {
+		q.QueryChan = DefaultQueryChan
 	}
 	return q.Query()
 }
@@ -180,7 +180,7 @@ func (q *Query) ListenAndQuery() os.Error {
 // c is nil DefaultQueryChan is used. If handler is nil
 // DefaultQueryMux is used.
 func ListenAndQuery(request chan *Request, handler QueryHandler) {
-	q := &Query{ChannelQuery: request, Handler: handler}
+	q := &Query{QueryChan: request, Handler: handler}
 	go q.ListenAndQuery()
 }
 
@@ -188,17 +188,13 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 // client.
 func (w *reply) Write(m *Msg) {
         // Check if nil??
-	w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: m}
+	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m}
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// channel set in the Client c. If no channel is set DefaultQueryChan is used.
+// QueryChan channel set in the Client c. 
 func (c *Client) Do(m *Msg, a string) {
-	if c.ChannelQuery == nil {
-		DefaultQueryChan <- &Request{Client: c, Addr: a, Request: m}
-	} else {
-		c.ChannelQuery <- &Request{Client: c, Addr: a, Request: m}
-	}
+        c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
 
 // ExchangeBuffer performs a synchronous query. It sends the buffer m to the
