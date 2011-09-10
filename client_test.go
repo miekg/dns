@@ -20,7 +20,6 @@ func TestClientSync(t *testing.T) {
 }
 
 func helloMiek(w RequestWriter, r *Msg) {
-        println("hello")
 	w.Send(r)
 	reply, _ := w.Receive()
 	w.Write(reply)
@@ -34,7 +33,6 @@ func TestClientASync(t *testing.T) {
 	m.SetQuestion("miek.nl", TypeSOA)
 
 	c := NewClient()
-        println("Do")
 	c.Do(m, "85.223.71.124:53")
 
 forever:

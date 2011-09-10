@@ -195,9 +195,7 @@ func (w *reply) Write(m *Msg) {
 // Do performs an asynchronous query. The result is returned on the
 // QueryChan channel set in the Client c. 
 func (c *Client) Do(m *Msg, a string) {
-        println("send")
         c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
-        println("sent")
 }
 
 // ExchangeBuffer performs a synchronous query. It sends the buffer m to the
