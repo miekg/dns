@@ -144,6 +144,12 @@ func (s RRset) Ok() bool {
 	return true
 }
 
+// Exchange is used in communicating with the resolver.
+type Exchange struct {
+	Request *Msg // The question sent.
+	Reply   *Msg // The answer to the question that was sent.
+}
+
 // DNS resource records.
 // There are many types of messages,
 // but they all share the same header.
@@ -215,13 +221,13 @@ func zoneMatch(pattern, zone string) (ok bool) {
 }
 
 // DnameLength returns the length of a packed dname.
-func DomainNameLength(s string) int {                   // TODO better name
-        // Add trailing dot to canonicalize name.
-        if n := len(s); n == 0 || s[n-1] != '.' {
-                return n+1
-        } else {
-                return n+1
-        }
-        panic("not reached")
-        return 0
+func DomainNameLength(s string) int { // TODO better name
+	// Add trailing dot to canonicalize name.
+	if n := len(s); n == 0 || s[n-1] != '.' {
+		return n + 1
+	} else {
+		return n + 1
+	}
+	panic("not reached")
+	return 0
 }
