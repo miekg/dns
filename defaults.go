@@ -3,6 +3,9 @@ package dns
 // Everything is assumed in the ClassINET class. If
 // you need other classes you are on your own.
 
+// Add SetEDNS0
+// IsEDNS0  function
+
 // Create a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Id = request.MsgHdr.Id

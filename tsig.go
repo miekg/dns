@@ -1,4 +1,31 @@
+// TSIG or transaction signature add a HMAC TSIG record to each message sent. 
+// Basic use pattern when querying with TSIG:
+//
+//      m := new(Msg)
+//      m.SetAxfr("miek.nl.")
+//      // Add a skeleton TSIG record.
+//      m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
+//      // Generate the contents of the complete TSIG record.
+//      TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
+//      // A map holds all the secrets
+//      secrets := make(map[string]string)      
+//      secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="        // don't forget the . here
+//
+// The message requesting an AXFR for miek.nl with the TSIG record is now ready to use. 
+// We now need a new client with access to the secrets:
+//
+//      c := NewClient()
+//      c.TsigSecret = secrets
+//      err := c.XfrReceive(m, "85.223.71.124:53")
+//
+// You can now read the records from the AXFR as the come in.
+//
+// Basic use pattern replying to a message which has TSIG set.
+// TODO(mg)
+//
 package dns
+
+// Fill in the TSIG errors. 0 = NOERROR, etc. like BIND
 
 import (
 	"io"
@@ -8,12 +35,6 @@ import (
 	"crypto/hmac"
 	"encoding/hex"
 )
-
-// The structure Tsig is used in Read/Write functions to
-// add or remove a TSIG on a dns message. See RFC 2845
-// and RFC 4635.
-// Basic use pattern of Tsig:
-//
 
 // HMAC hashing codes. These are transmitted as domain names.
 const (
