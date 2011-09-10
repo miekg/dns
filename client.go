@@ -134,12 +134,14 @@ type Client struct {
 }
 
 // NewClient creates a new client, with Net set to "udp" and Attempts to 1.
-// The client's ReplyChan is set to DefaultReplyChan.
+// The client's ReplyChan is set to DefaultReplyChan and QueryChan
+// to DefaultQueryChan.
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
         c.ReplyChan = DefaultReplyChan
+        c.QueryChan = DefaultQueryChan
 	c.ReadTimeout = 5000
 	c.WriteTimeout = 5000
 	return c
@@ -184,17 +186,18 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 	go q.ListenAndQuery()
 }
 
-// Write returns the original question and the answer on the reply channel of the
-// client.
+// Write returns the original question and the answer on the 
+// reply channel of the client.
 func (w *reply) Write(m *Msg) {
-        // Check if nil??
 	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m}
 }
 
 // Do performs an asynchronous query. The result is returned on the
 // QueryChan channel set in the Client c. 
 func (c *Client) Do(m *Msg, a string) {
+        println("send")
         c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
+        println("sent")
 }
 
 // ExchangeBuffer performs a synchronous query. It sends the buffer m to the

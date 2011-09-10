@@ -20,6 +20,7 @@ func TestClientSync(t *testing.T) {
 }
 
 func helloMiek(w RequestWriter, r *Msg) {
+        println("hello")
 	w.Send(r)
 	reply, _ := w.Receive()
 	w.Write(reply)
@@ -33,12 +34,13 @@ func TestClientASync(t *testing.T) {
 	m.SetQuestion("miek.nl", TypeSOA)
 
 	c := NewClient()
+        println("Do")
 	c.Do(m, "85.223.71.124:53")
 
 forever:
 	for {
 		select {
-		case n := <-DefaultReplyChan:
+		case n := <-c.ReplyChan:
 			if n.Reply != nil && n.Reply.Rcode != RcodeSuccess {
 				t.Log("Failed to get an valid answer")
 				t.Fail()
@@ -88,14 +90,18 @@ func TestClientTsigAXFR(t *testing.T) {
 	c.Net = "tcp"
 	c.TsigSecret = secrets
 
-        if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
-                t.Log("Failed to setup axfr" + err.String())
-                t.Fail()
-        }
-        /*
-        for {
-                // select on c.ReplyChannel
-                // and receive the *Exchange messages
-        }
-        */
+	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
+		t.Log("Failed to setup axfr" + err.String())
+		t.Fail()
+	}
+	for {
+		ex := <-c.ReplyChan
+                println(ex.Reply.String())
+	}
+	/*
+	   for {
+	           // select on c.ReplyChannel
+	           // and receive the *Exchange messages
+	   }
+	*/
 }
