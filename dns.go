@@ -46,6 +46,7 @@ package dns
 
 import (
 	"net"
+	"os"
 	"strconv"
 )
 
@@ -146,8 +147,9 @@ func (s RRset) Ok() bool {
 
 // Exchange is used in communicating with the resolver.
 type Exchange struct {
-	Request *Msg // The question sent.
-	Reply   *Msg // The answer to the question that was sent.
+	Request *Msg     // The question sent.
+	Reply   *Msg     // The answer to the question that was sent.
+	Error   os.Error // If something when wrong, this contains the error.
 }
 
 // DNS resource records.

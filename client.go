@@ -186,6 +186,7 @@ func ListenAndQuery(c chan *Request, handler QueryHandler) {
 // Write returns the original question and the answer on the reply channel of the
 // client.
 func (w *reply) Write(m *Msg) {
+        // Check if nil??
 	w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: m}
 }
 
