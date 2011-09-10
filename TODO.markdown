@@ -5,6 +5,7 @@ things that need to be fixed.
 
 ## Todo
 
+* Use the Exchange structure to deal with errors when resolving
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
 * add functions to operate on []byte messages (raw packets) see rawmsg.go
 * HIP RR (needs list of domain names, need slice for that);
