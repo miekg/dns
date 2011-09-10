@@ -81,9 +81,11 @@ func TestClientTsigAXFR(t *testing.T) {
 	m.SetAxfr("miek.nl")
 
 	m.SetTsig("axfr", HmacMD5, 300, uint64(time.Seconds()))
+        TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
 	secrets := make(map[string]string)
 	secrets["axfr"] = "so6ZGir4GPAqINNh9U5c3A=="
 
+        println(m.String())
 	c := NewClient()
 	c.Net = "tcp"
 	c.TsigSecret = secrets

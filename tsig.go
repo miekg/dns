@@ -54,24 +54,23 @@ type timerWireFmt struct {
 
 // TsigGenerate add add TSIG RR to a message. The TSIG MAC is saved
 // in the Tsig RR that is added. When TsigGenerate is called for the
-// first time requestMAC is generaly set to the empty string. TODO(mg): Really?
-// If something went wrong an error is returned, otherwise nil.
-func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.Error) {
+// first time requestMAC is set to the empty string.
+// If something goes wrong an error is returned, otherwise it is nil.
+func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) os.Error {
 	if !m.IsTsig() {
+                // panic? panic?
 		panic("TSIG not last RR in additional")
 	}
+        // If we barf here, the caller is to blame
 	rawsecret, err := packBase64([]byte(secret))
-	if err != nil {
-		return nil, err
-	}
+        if err != nil {
+                return err
+        }
 
 	rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
 	m.Extra = m.Extra[0 : len(m.Extra)-1] // kill the TSIG from the msg
 	mbuf, _ := m.Pack()
-	buf, err := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
-	if err != nil {
-		return nil, err
-	}
+	buf := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
 
 	t := new(RR_TSIG)
 
@@ -88,7 +87,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) (*Msg, os.
 	t.OrigId = m.MsgHdr.Id
 
 	m.Extra = append(m.Extra, t)
-	return m, nil
+	return nil
 }
 
 // TsigVerify verifies the TSIG on a message. 
@@ -105,10 +104,7 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error
 		return err
 	}
 
-	buf, err := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
-	if err != nil {
-		return err
-	}
+	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
 	/*
 	   if t.Name != "" {
 	           if t.Name != dns.Extra[i].Header().Name {
@@ -137,7 +133,7 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error
 }
 
 // Create a wiredata buffer for the MAC calculation.
-func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) ([]byte, os.Error) {
+func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) []byte {
 	var (
 		macbuf []byte
 		buf    []byte
@@ -146,7 +142,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		rr.TimeSigned = uint64(time.Seconds())
 	}
 	if rr.Fudge == 0 {
-		rr.Fudge = 300
+		rr.Fudge = 300  // Standard (RFC) default.
 	}
 
 	if requestMAC != "" {
@@ -154,10 +150,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
 		macbuf = make([]byte, len(requestMAC)) // reqmac should be twice as long
-		n, ok := packStruct(m, macbuf, 0)
-		if !ok {
-			return nil, ErrSigGen
-		}
+		n, _ := packStruct(m, macbuf, 0)
 		macbuf = macbuf[:n]
 	}
 
@@ -166,10 +159,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig := new(timerWireFmt)
 		tsig.TimeSigned = rr.TimeSigned
 		tsig.Fudge = rr.Fudge
-		n, ok1 := packStruct(tsig, tsigvar, 0)
-		if !ok1 {
-			return nil, ErrSigGen
-		}
+		n, _ := packStruct(tsig, tsigvar, 0)
 		tsigvar = tsigvar[:n]
 	} else {
 		tsig := new(tsigWireFmt)
@@ -182,10 +172,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig.Error = rr.Error
 		tsig.OtherLen = rr.OtherLen
 		tsig.OtherData = rr.OtherData
-		n, ok1 := packStruct(tsig, tsigvar, 0)
-		if !ok1 {
-			return nil, ErrSigGen
-		}
+		n, _ := packStruct(tsig, tsigvar, 0)
 		tsigvar = tsigvar[:n]
 	}
 	if rr.MAC != "" {
@@ -194,7 +181,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 	} else {
 		buf = append(msgbuf, tsigvar...)
 	}
-	return buf, nil
+	return buf
 }
 
 // Strip the TSIG from the raw message

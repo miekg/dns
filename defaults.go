@@ -80,12 +80,15 @@ func (dns *Msg) SetAxfr(z string) {
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 }
 
-// SetTsig Calculates and appends a TSIG RR to the message.
+// SetTsig appends a TSIG RR to the message.
+// This is only a skeleton Tsig RR that added as the last RR in the 
+// additional section. The caller should then call TsigGenerate, 
+// to generate the complete TSIG from the secret.
 func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
 	t.Algorithm = algo
-	t.Fudge = fudge
+	t.Fudge = 300
 	t.TimeSigned = timesigned
 	dns.Extra = append(dns.Extra, t)
 }
@@ -160,7 +163,8 @@ func (dns *Msg) IsIxfr() (ok bool) {
 	return
 }
 
-// IsTsig checks if the message has a TSIG record as the last record.
+// IsTsig checks if the message has a TSIG record as the last record
+// in the additional section.
 func (dns *Msg) IsTsig() (ok bool) {
 	if len(dns.Extra) > 0 {
 		return dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG

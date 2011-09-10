@@ -346,7 +346,7 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	return
 }
 
-// Send a msg to the address specified in w.
+// Send sends a dns msg to the address specified in w.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
 func (w *reply) Send(m *Msg) os.Error {
@@ -356,8 +356,10 @@ func (w *reply) Send(m *Msg) os.Error {
 		if !ok {
 			return ErrSecret
 		}
-		m, _ = TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Save the requestMAC
+                if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
+                        return err
+                }
+		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Save the requestMAC for the next packet
 	}
 	out, ok := m.Pack()
 	if !ok {
