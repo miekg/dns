@@ -39,10 +39,10 @@ forever:
 	for {
 		select {
 		case n := <-DefaultReplyChan:
-			if n[1] != nil && n[1].Rcode != RcodeSuccess {
+			if n.Reply != nil && n.Reply.Rcode != RcodeSuccess {
 				t.Log("Failed to get an valid answer")
 				t.Fail()
-				t.Logf("%v\n", n[1])
+				t.Logf("%v\n", n.Reply)
 			}
 			break forever
 		}

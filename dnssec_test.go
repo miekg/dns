@@ -38,7 +38,7 @@ func TestSecure(t *testing.T) {
 	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
 
 	// It should validate. Period is checked seperately, so this will keep on working
-	if !sig.Verify(key, []RR{soa}) {
+	if sig.Verify(key, []RR{soa}) != nil {
 		t.Log("Failure to validate")
 		t.Fail()
 	}
@@ -108,11 +108,11 @@ func TestSignVerify(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 	sig.Algorithm = RSASHA256
 
-	if !sig.Sign(privkey, []RR{soa}) {
+	if sig.Sign(privkey, []RR{soa}) != nil {
 		t.Log("Failure to sign the SOA record")
 		t.Fail()
 	}
-	if !sig.Verify(key, []RR{soa}) {
+	if sig.Verify(key, []RR{soa}) != nil {
 		t.Log("Failure to validate")
 		t.Fail()
 	}
