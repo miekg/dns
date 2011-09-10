@@ -95,6 +95,10 @@ func TestClientTsigAXFR(t *testing.T) {
 	for {
 		ex := <-c.ReplyChan
                 println(ex.Reply.String())
+                println(ex.Error.String())
+                if ex.Error != nil {
+                        break
+                }
 	}
 	/*
 	   for {
