@@ -58,72 +58,6 @@ func (w *reply) axfrReceive() {
 }
 /*
 
-// Perform an outgoing Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed. If q's question
-// section contains an IXFR type an Ixfr is performed.
-// The actual records to send are given on the channel m. And errors
-// during transport are return on channel e.
-func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
-	switch q.Question[0].Qtype {
-	case TypeAXFR:
-		d.axfrWrite(q, m, e)
-	case TypeIXFR:
-		//                d.ixfrWrite(q, m)
-        default:
-                e <- &Error{Error: "Xfr Qtype not recognized"}
-                close(m)
-	}
-}
-
-// Just send the zone
-func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
-	out := new(Msg)
-	out.Id = q.Id
-	out.Question = q.Question
-	out.Answer = make([]RR, 1001) // TODO(mg) look at this number
-	out.MsgHdr.Response = true
-	out.MsgHdr.Authoritative = true
-        first := true
-	var soa *RR_SOA
-	i := 0
-	for r := range m {
-		out.Answer[i] = r.RR
-		if soa == nil {
-			if r.RR.Header().Rrtype != TypeSOA {
-				e <- ErrXfrSoa
-                                return
-			} else {
-				soa = r.RR.(*RR_SOA)
-			}
-		}
-		i++
-		if i > 1000 {
-			// Send it
-			err := d.WriteMsg(out)
-			if err != nil {
-				e <- err
-                                return
-			}
-			i = 0
-			// Gaat dit goed?
-			out.Answer = out.Answer[:0]
-                        if first {
-                                if d.Tsig != nil {
-                                        d.Tsig.TimersOnly = true
-                                }
-                                first = !first
-                        }
-		}
-	}
-	// Everything is sent, only the closing soa is left.
-	out.Answer[i] = soa
-	out.Answer = out.Answer[:i+1]
-	err := d.WriteMsg(out)
-	if err != nil {
-		e <- err
-	}
-}
-
 func (d *Conn) ixfrReceive(q *Msg, m chan *Xfr) {
 	defer close(m)
 	var serial uint32 // The first serial seen is the current server serial
@@ -191,6 +125,72 @@ func (d *Conn) ixfrReceive(q *Msg, m chan *Xfr) {
 	}
 	panic("not reached")
 	return
+}
+
+// Perform an outgoing Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed. If q's question
+// section contains an IXFR type an Ixfr is performed.
+// The actual records to send are given on the channel m. And errors
+// during transport are return on channel e.
+func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
+	switch q.Question[0].Qtype {
+	case TypeAXFR:
+		d.axfrWrite(q, m, e)
+	case TypeIXFR:
+		//                d.ixfrWrite(q, m)
+        default:
+                e <- &Error{Error: "Xfr Qtype not recognized"}
+                close(m)
+	}
+}
+
+// Just send the zone
+func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
+	out := new(Msg)
+	out.Id = q.Id
+	out.Question = q.Question
+	out.Answer = make([]RR, 1001) // TODO(mg) look at this number
+	out.MsgHdr.Response = true
+	out.MsgHdr.Authoritative = true
+        first := true
+	var soa *RR_SOA
+	i := 0
+	for r := range m {
+		out.Answer[i] = r.RR
+		if soa == nil {
+			if r.RR.Header().Rrtype != TypeSOA {
+				e <- ErrXfrSoa
+                                return
+			} else {
+				soa = r.RR.(*RR_SOA)
+			}
+		}
+		i++
+		if i > 1000 {
+			// Send it
+			err := d.WriteMsg(out)
+			if err != nil {
+				e <- err
+                                return
+			}
+			i = 0
+			// Gaat dit goed?
+			out.Answer = out.Answer[:0]
+                        if first {
+                                if d.Tsig != nil {
+                                        d.Tsig.TimersOnly = true
+                                }
+                                first = !first
+                        }
+		}
+	}
+	// Everything is sent, only the closing soa is left.
+	out.Answer[i] = soa
+	out.Answer = out.Answer[:i+1]
+	err := d.WriteMsg(out)
+	if err != nil {
+		e <- err
+	}
 }
 */
 
