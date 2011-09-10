@@ -8,38 +8,44 @@ import (
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
 // Each message will be send along the Client's reply channel as it
-// is received.
+// is received. 
+//
+// The last message send has Exchange.Error set to ErrXfrLast
+// to signal there is nothing more to come.
 func (c *Client) XfrReceive(q *Msg, a string) os.Error {
 	w := new(reply)
 	w.client = c
 	w.addr = a
 	w.req = q
-
+        if err := w.Dial(); err != nil {
+                return err
+        }
 	if err := w.Send(q); err != nil {
 		return err
 	}
-	// conn should be set now
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
 		go w.axfrReceive()
 	case TypeIXFR:
-		//	go w.ixfrReceive()
+		go w.ixfrReceive()
 	}
 	return nil
 }
 
 func (w *reply) axfrReceive() {
 	first := true
+        defer w.Close()
 	for {
 		in, err := w.Receive()
 		if err != nil {
-			w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: in, Error: err}
+			w.Client().ChannelReply <- &Exchange{w.req, in, err}
 			return
 		}
+                /* id check */
 
 		if first {
 			if !checkXfrSOA(in, true) {
-				w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: in, Error: ErrXfrSoa}
+				w.Client().ChannelReply <- &Exchange{w.req, in, ErrXfrSoa}
 				return
 			}
 			first = !first
@@ -47,44 +53,43 @@ func (w *reply) axfrReceive() {
 
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
-			w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: in}
 			if checkXfrSOA(in, false) {
+                                w.Client().ChannelReply <- &Exchange{w.req, in, ErrXfrLast}
 				return
 			}
+			w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: in}
 		}
 	}
 	panic("not reached")
 	return
 }
-/*
 
-func (d *Conn) ixfrReceive(q *Msg, m chan *Xfr) {
-	defer close(m)
+func (w *reply) ixfrReceive() {
 	var serial uint32 // The first serial seen is the current server serial
-	var x *Xfr
 	first := true
-	in := new(Msg)
+        defer w.Close()
 	for {
+                in, err := w.Receive()
+                if err != nil {
+                        w.Client().ChannelReply <- &Exchange{w.req, in, err}
+                        return
+                }
 
-		err := d.ReadMsg(in)
-		if err != nil {
-			m <- &Xfr{true, nil, err}
-			return
-		}
-		if in.Id != q.Id {
-			m <- &Xfr{true, nil, ErrId}
+                if w.req.Id != in.Id {
+                        w.Client().ChannelReply <- &Exchange{w.req, in, ErrId}
 			return
 		}
 
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-				return
+			        w.Client().ChannelReply <- &Exchange{w.req, in, ErrXfrLast}
+                                return
 			}
 
-			// But still check if the returned answer is ok
+			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				m <- &Xfr{true, nil, ErrXfrSoa}
+				w.Client().ChannelReply <- &Exchange{w.req, in, ErrXfrSoa}
 				return
 			}
 			// This serial is important
@@ -93,40 +98,22 @@ func (d *Conn) ixfrReceive(q *Msg, m chan *Xfr) {
 		}
 
 		// Now we need to check each message for SOA records, to see what we need to do
-		x.Add = true
 		if !first {
-			if d.Tsig != nil {
-				d.Tsig.TimersOnly = true
-			}
-			for k, r := range in.Answer {
-				// If the last record in the IXFR contains the servers' SOA,  we should quit
-				if r.Header().Rrtype == TypeSOA {
-					switch {
-					case r.(*RR_SOA).Serial == serial:
-						if k == len(in.Answer)-1 {
-							// last rr is SOA with correct serial
-							//m <- r dont' send it
-							return
-						}
-						x.Add = true
-						if k != 0 {
-							// Intermediate SOA
-							continue
-						}
-					case r.(*RR_SOA).Serial != serial:
-						x.Add = false
-						continue // Don't need to see this SOA
-					}
-				}
-				x.RR = r
-				m <- x
-			}
+                        w.tsigTimersOnly = true
+                        // If the last record in the IXFR contains the servers' SOA,  we should quit
+                        if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
+                                if v.Serial == serial {
+                                        w.Client().ChannelReply <- &Exchange{w.req, in, ErrXfrLast}
+                                        return
+                                }
+                        }
+			w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: in}
 		}
 	}
 	panic("not reached")
 	return
 }
-
+/*
 // Perform an outgoing Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If q's question
 // section contains an IXFR type an Ixfr is performed.
@@ -195,7 +182,7 @@ func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 */
 
 // Check if he SOA record exists in the Answer section of 
-// the packet. If first is true the first RR must be a soa
+// the packet. If first is true the first RR must be a SOA
 // if false, the last one should be a SOA
 func checkXfrSOA(in *Msg, first bool) bool {
 	if len(in.Answer) > 0 {
