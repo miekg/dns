@@ -190,6 +190,7 @@ func (w *reply) Write(m *Msg) {
 	w.Client().ChannelReply <- &Exchange{Request: w.req, Reply: m}
 }
 
+// Used in qperf... for speed only??? Check...
 // Dial dials a remote server and set... TODO
 func (c *Client) Dial(addr string) os.Error {
 	conn, err := net.Dial(c.Net, addr)
