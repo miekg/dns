@@ -53,18 +53,9 @@ func TestClientEDNS0(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeDNSKEY)
 
-	edns := new(RR_OPT)
-	edns.Hdr.Name = "." // must . be for edns
-	edns.Hdr.Rrtype = TypeOPT
-	// You can handle an OTP RR as any other, but there
-	// are some convience functions
-	edns.SetUDPSize(2048)
-	edns.SetDo()
-	edns.Option = make([]Option, 1)
-	edns.SetNsid("") // Empty to request it
-
-	m.Extra = make([]RR, 1)
-	m.Extra[0] = edns
+        m.SetEdns0(2048, true)
+	//edns.Option = make([]Option, 1)
+	//edns.SetNsid("") // Empty to request it
 
 	c := NewClient()
 	r, _ := c.Exchange(m, "85.223.71.124:53")

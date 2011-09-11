@@ -17,7 +17,7 @@ func (dns *Msg) SetReply(request *Msg) {
 	dns.Question[0] = request.Question[0]
 }
 
-// Create a question packet.
+// SetQuestion creates a question packet.
 func (dns *Msg) SetQuestion(z string, t uint16) {
 	dns.MsgHdr.Id = Id()
 	dns.MsgHdr.RecursionDesired = true
@@ -25,7 +25,7 @@ func (dns *Msg) SetQuestion(z string, t uint16) {
 	dns.Question[0] = Question{z, t, ClassINET}
 }
 
-// Create a notify packet.
+// SetNotify creates a notify packet.
 func (dns *Msg) SetNotify(z string) {
 	dns.MsgHdr.Opcode = OpcodeNotify
 	dns.MsgHdr.Authoritative = true
@@ -34,7 +34,7 @@ func (dns *Msg) SetNotify(z string) {
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
-// Create an error packet.
+// SetRcode creates an error packet.
 func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.MsgHdr.Rcode = rcode
         dns.MsgHdr.Opcode = OpcodeQuery
@@ -45,7 +45,7 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
         dns.Question[0] = request.Question[0]
 }
 
-// Create a packet with FormError set.
+// SetRcodeFormatError creates a packet with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) {
         dns.MsgHdr.Rcode = RcodeFormatError
         dns.MsgHdr.Opcode = OpcodeQuery
@@ -76,7 +76,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 	dns.Ns[0] = s
 }
 
-// SetAxfr creates dns msg suitable for requesting an ixfr.
+// SetAxfr creates dns msg suitable for requesting an axfr.
 func (dns *Msg) SetAxfr(z string) {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
@@ -84,9 +84,9 @@ func (dns *Msg) SetAxfr(z string) {
 }
 
 // SetTsig appends a TSIG RR to the message.
-// This is only a skeleton Tsig RR that added as the last RR in the 
+// This is only a skeleton Tsig RR that is added as the last RR in the 
 // additional section. The caller should then call TsigGenerate, 
-// to generate the complete TSIG from the secret.
+// to generate the complete TSIG with the secret.
 func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
@@ -94,6 +94,19 @@ func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 	t.Fudge = 300
 	t.TimeSigned = timesigned
 	dns.Extra = append(dns.Extra, t)
+}
+
+// SetEdns0 appends a EDNS0 OPT RR to the message. 
+// TSIG should always the last RR in a message.
+func (dns *Msg) SetEdns0(udpsize uint16, do bool) {
+        e := new(RR_OPT)
+        e.Hdr.Name = "."
+        e.Hdr.Rrtype = TypeOPT
+        e.SetUDPSize(udpsize)
+        if do {
+                e.SetDo()
+        }
+	dns.Extra = append(dns.Extra, e)
 }
 
 // IsRcode checks if the header of the packet has rcode set.
@@ -105,7 +118,7 @@ func (dns *Msg) IsRcode(rcode int) (ok bool) {
         return
 }
 
-// IsQuestion returns true if the the packet is a question.
+// IsQuestion returns true if the packet is a question.
 func (dns *Msg) IsQuestion() (ok bool) {
         if len(dns.Question) == 0 {
                 return false
@@ -114,7 +127,7 @@ func (dns *Msg) IsQuestion() (ok bool) {
         return
 }
 
-// IsRcodeFormatError checks if the message has the FormErr set.
+// IsRcodeFormatError checks if the message has FormErr set.
 func (dns *Msg) IsRcodeFormatError() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
@@ -173,6 +186,12 @@ func (dns *Msg) IsTsig() (ok bool) {
 		return dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG
 	}
 	return
+}
+
+// IsEdns0 checks if the message has a Edns0 record, as the last
+// or the one before the last, in the additional section.
+func (dns *Msg) IsEdns0() (ok bool) {
+        return
 }
 
 // IsDomainName checks if s is a valid domainname.
