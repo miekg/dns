@@ -48,6 +48,7 @@ var (
 	ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
         ErrXfrLast   os.Error = &Error{Error: "last SOA"}
+        ErrXfrType   os.Error = &Error{Error: "no ixfr, nor axfr"}
 	ErrHandle    os.Error = &Error{Error: "handle is nil"}
 	ErrChan      os.Error = &Error{Error: "channel is nil"}
 	ErrName      os.Error = &Error{Error: "type not found for name"}

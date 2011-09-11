@@ -4,12 +4,10 @@ import (
 	"os"
 )
 
-// Perform an incoming Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed. If q's question
-// section contains an IXFR type an Ixfr is performed.
-// Each message will be send along the Client's reply channel as it
-// is received. 
-//
+// XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed, if it is IXFR it does
+// an Ixfr.
+// Each message will be send along the Client's reply channel as it is received. 
 // The last message send has Exchange.Error set to ErrXfrLast
 // to signal there is nothing more to come.
 func (c *Client) XfrReceive(q *Msg, a string) os.Error {
@@ -28,6 +26,8 @@ func (c *Client) XfrReceive(q *Msg, a string) os.Error {
 		go w.axfrReceive()
 	case TypeIXFR:
 		go w.ixfrReceive()
+        default:
+                return ErrXfrType
 	}
 	return nil
 }
@@ -115,24 +115,25 @@ func (w *reply) ixfrReceive() {
 	panic("not reached")
 	return
 }
-/*
-// Perform an outgoing Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed. If q's question
-// section contains an IXFR type an Ixfr is performed.
-// The actual records to send are given on the channel m. And errors
-// during transport are return on channel e.
-func (d *Conn) XfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
+// TODO(mg): helper function for settings/making/parsing the
+// packets gotten from/to the ixfr/axfr functions
+
+// XfrSend performs an outgoing Ixfr or Axfr. If the message q's question
+// section contains an AXFR type an Axfr is performed. If it is IXFR
+// it does an Ixfr.
+func XfrSend(w ResponseWriter, q *Msg, a string) os.Error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
-		d.axfrWrite(q, m, e)
+		// go d.axfrWrite(q, m, e)
 	case TypeIXFR:
-		//                d.ixfrWrite(q, m)
+		// go d.ixfrWrite(q, m)
         default:
-                e <- &Error{Error: "Xfr Qtype not recognized"}
-                close(m)
+                return ErrXfrType
 	}
+        return nil
 }
 
+/*
 // Just send the zone
 func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
 	out := new(Msg)
