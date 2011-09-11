@@ -21,12 +21,10 @@
 // You can now read the records from the AXFR as the come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
 //
-// Basic use pattern replying to a message which has TSIG set.
+// Basic use pattern replying to a message that has TSIG set.
 // TODO(mg)
 //
 package dns
-
-// Fill in the TSIG errors. 0 = NOERROR, etc. like BIND
 
 import (
 	"io"
@@ -127,24 +125,11 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error
 	}
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
-	/*
-	   if t.Name != "" {
-	           if t.Name != dns.Extra[i].Header().Name {
-	                   return nil, ErrKey
-	           }
-	   }
-	   if t.Algorithm != "" {
-	           if t.Algorithm != dns.Extra[i].(*RR_TSIG).Algorithm {
-	                   return nil, ErrAlg
-	           }
-	   }
-	   ti := uint64(time.Seconds()) - dns.Extra[i].(*RR_TSIG).TimeSigned
-	   if uint64(dns.Extra[i].(*RR_TSIG).Fudge) < ti {
-	           return nil, ErrTime
-	   }
-	*/
 
-	// Time needs to be checked
+        ti := uint64(time.Seconds()) - tsig.TimeSigned
+        if uint64(tsig.Fudge) < ti {
+                return ErrTime
+        }
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
