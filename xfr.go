@@ -41,7 +41,10 @@ func (w *reply) axfrReceive() {
 			w.Client().ReplyChan <- &Exchange{w.req, in, err}
 			return
 		}
-                /* id check */
+                if w.req.Id != in.Id {
+                        w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
+			return
+		}
 
 		if first {
 			if !checkXfrSOA(in, true) {
@@ -74,7 +77,6 @@ func (w *reply) ixfrReceive() {
                         w.Client().ReplyChan <- &Exchange{w.req, in, err}
                         return
                 }
-
                 if w.req.Id != in.Id {
                         w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
 			return
