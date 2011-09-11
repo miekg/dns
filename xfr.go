@@ -115,8 +115,6 @@ func (w *reply) ixfrReceive() {
 	panic("not reached")
 	return
 }
-// TODO(mg): helper function for settings/making/parsing the
-// packets gotten from/to the ixfr/axfr functions
 
 // XfrSend performs an outgoing Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed. If it is IXFR

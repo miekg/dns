@@ -1,13 +1,40 @@
+// DYNAMIC UPDATES
+// 
+// Dynamic updates reuses the DNS message format, but renames the three of
+// the sections. Question is Zone, Answer is Prerequisite, Authority is
+// Update, only the Additional is not renamed. See RFC 2136 for the gory details.
+//
+// You can set a rather complex set of rules for the existence of absence of
+// certain resource records or names in a zone to specify if resource records
+// should be added or removed. The table from RFC 2136 supplemented with the Go 
+// DNS function shows which functions exist to specify the prerequisites.
+//
+// 3.2.4 - Table Of Metavalues Used In Prerequisite Section
+//
+//   CLASS    TYPE     RDATA    Meaning                          Function
+//   ----------------------------------------------------------------------------
+//   ANY      ANY      empty    Name is in use                   NameUsed
+//   ANY      rrset    empty    RRset exists (value independent) RRsetUsedNoRdata
+//   NONE     ANY      empty    Name is not in use               NameNotUsed
+//   NONE     rrset    empty    RRset does not exist             RRsetNotUsed
+//   zone     rrset    rr       RRset exists (value dependent)   RRsetUsedRdata
+// 
+// The prerequisite section can also be left empty.
+// If you have decided an the prerequisites you can tell what RRs should
+// be added or deleted. The next table shows the options you have and
+// what function to call.
+// 3.4.2.6 - Table Of Metavalues Used In Update Section
+// 
+//   CLASS    TYPE     RDATA    Meaning                          Function
+//   -------------------------------------------------------------------------
+//   ANY      ANY      empty    Delete all RRsets from a name    NameDelete
+//   ANY      rrset    empty    Delete an RRset                  RRsetDelete
+//   NONE     rrset    rr       Delete an RR from an RRset       RRsetDeleteRR
+//   zone     rrset    rr       Add to an RRset                  RRsetAddRdata
+// 
 package dns
 
-// Implements wrapper functions for dealing with dynamic update packets.
-// Dynamic update packets are identical to normal DNS messages, but the
-// names are redefined. See RFC 2136 for the details.
-
 type Update struct{ Msg }
-
-// Not sure if I want to keep these functions, but they
-// may help a programmer
 
 func (u *Update) Zone() []Question {
 	return u.Msg.Question
@@ -34,15 +61,17 @@ func NewUpdate(zone string, class uint16) *Update {
 	return u
 }
 
+// The table from RFC 2136 supplemented with the Go DNS function.
+//
 // 3.2.4 - Table Of Metavalues Used In Prerequisite Section
 //
-//   CLASS    TYPE     RDATA    Meaning
-//   ------------------------------------------------------------
-//   ANY      ANY      empty    Name is in use
-//   ANY      rrset    empty    RRset exists (value independent)
-//   NONE     ANY      empty    Name is not in use
-//   NONE     rrset    empty    RRset does not exist
-//   zone     rrset    rr       RRset exists (value dependent)
+//   CLASS    TYPE     RDATA    Meaning                           Function
+//   ----------------------------------------------------------------------
+//   ANY      ANY      empty    Name is in use                    NameUsed
+//   ANY      rrset    empty    RRset exists (value independent)  RRsetUsedNoRdata
+//   NONE     ANY      empty    Name is not in use                NameNotUsed
+//   NONE     rrset    empty    RRset does not exist              RRsetNotUsed
+//   zone     rrset    rr       RRset exists (value dependent)    RRsetUsedRdata
 
 // NameUsed sets the RRs in the prereq section to
 // "Name is in use" RRs. RFC 2136 section 2.4.4.
@@ -62,9 +91,9 @@ func (u *Update) NameNotUsed(rr []RR) {
 	}
 }
 
-// RRsetUsedFull sets the RRs in the prereq section to
+// RRsetUsedRdata sets the RRs in the prereq section to
 // "RRset exists (value dependent -- with rdata)" RRs. RFC 2136 section 2.4.2.
-func (u *Update) RRsetUsedFull(rr []RR) {
+func (u *Update) RRsetUsedRdata(rr []RR) {
 	if len(u.Msg.Question) == 0 {
 		panic("empty question section")
 	}
@@ -75,9 +104,9 @@ func (u *Update) RRsetUsedFull(rr []RR) {
 	}
 }
 
-// RRsetUsed sets the RRs in the prereq section to
+// RRsetUsedNoRdata sets the RRs in the prereq section to
 // "RRset exists (value independent -- no rdata)" RRs. RFC 2136 section 2.4.1.
-func (u *Update) RRsetUsed(rr []RR) {
+func (u *Update) RRsetUsedNoRdata(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = r
@@ -99,17 +128,19 @@ func (u *Update) RRsetNotUsed(rr []RR) {
 	}
 }
 
+// The table from RFC 2136 supplemented with the Go DNS function.
+//
 // 3.4.2.6 - Table Of Metavalues Used In Update Section
 //
-//   CLASS    TYPE     RDATA    Meaning
-//   ---------------------------------------------------------
-//   ANY      ANY      empty    Delete all RRsets from a name
-//   ANY      rrset    empty    Delete an RRset
-//   NONE     rrset    rr       Delete an RR from an RRset
-//   zone     rrset    rr       Add to an RRset
+//   CLASS    TYPE     RDATA    Meaning                         Function
+//   --------------------------------------------------------------------------
+//   ANY      ANY      empty    Delete all RRsets from a name   NameDelete
+//   ANY      rrset    empty    Delete an RRset                 RRsetDelete
+//   NONE     rrset    rr       Delete an RR from an RRset      RRsetDeleteRR
+//   zone     rrset    rr       Add to an RRset                 RRsetAddRdata
 
-// RRsetAddFull adds an complete RRset, see RFC 2136 section 2.5.1
-func (u *Update) RRsetAddFull(rr []RR) {
+// RRsetAddRdata adds an complete RRset, see RFC 2136 section 2.5.1
+func (u *Update) RRsetAddRdata(rr []RR) {
 	if len(u.Msg.Question) == 0 {
 		panic("empty question section")
 	}
@@ -120,7 +151,7 @@ func (u *Update) RRsetAddFull(rr []RR) {
 	}
 }
 
-// RRsetDelete delete an RRset, see RFC 2136 section 2.5.2
+// RRsetDelete deletes an RRset, see RFC 2136 section 2.5.2
 func (u *Update) RRsetDelete(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {

@@ -1,4 +1,6 @@
-// TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
+// TRANSACTION SIGNATURE (TSIG)
+// 
+// A TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
 // Basic use pattern when querying with TSIG:
 //
 //      m := new(Msg)
@@ -11,7 +13,11 @@
 //      secrets := make(map[string]string)      
 //      secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="        // don't forget the . here
 //
-// The message requesting an AXFR for miek.nl with the TSIG record added is now ready to use. 
+// The secrets' map index is set to 'axfr.'. This must match the ownername of the
+// TSIG records, which in the above example, is also set to 'axfr.'
+//
+// The message requesting an AXFR (almost all TSIG usage is when requesting zone transfers)
+// for miek.nl with the TSIG record added is now ready to use. 
 // We now need a new client with access to the secrets:
 //
 //      c := NewClient()

@@ -3,6 +3,8 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben.
 
+// DOMAIN NAME SYSTEM
+//
 // Package dns implements a full featured interface to the Domain Name System.
 // The package allows complete control over what is send out to the DNS. 
 //
@@ -25,16 +27,19 @@
 //      m := new(Msg)
 //      m.SetQuestion("miek.nl.", TypeMX)
 //
-// Or slightly more verbose, but more flexible:
+// The message m is now a messages with the Question section set to ask
+// the MX records for the miek.nl. zone.
+//
+// This is slightly more verbose, but more flexible:
 //
 //      m1 := new(Msg)
 //      m1.MsgHdr.Id = Id()
 //      m1.MsgHdr.RecursionDesired = false
 //      m1.Question = make([]Question, 1)
-//      m1.Question[0] = Question{"miek.nl", TypeDNSKEY, ClassINET}
+//      m1.Question[0] = Question{"miek.nl", TypeMX, ClassINET}
 //
 // After creating a message it can be send.
-// Basic use pattern for synchronous querying the DNS, here
+// Basic use pattern for synchronous querying the DNS. We are
 // sending the message 'm' to the server 127.0.0.1 on port 53 and
 // waiting for the reply.
 //
@@ -42,6 +47,7 @@
 //      // c.Net = "tcp" // If you want to use TCP
 //      in := c.Exchange(m, "127.0.0.1:53")
 //
+// An asynchronous query ... TODO(mg)
 package dns
 
 import (
