@@ -4,12 +4,8 @@ import (
 	"os"
 )
 
-// Fix the sending function to work on messages, keep the size 
-// of the callers contral
-
 // XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed, if it is IXFR it does
-// an Ixfr.
+// section contains an AXFR type an Axfr is performed, if it is IXFR it does an Ixfr.
 // Each message will be send along the Client's reply channel as it is received. 
 // The last message send has Exchange.Error set to ErrXfrLast
 // to signal there is nothing more to come.
@@ -18,9 +14,9 @@ func (c *Client) XfrReceive(q *Msg, a string) os.Error {
 	w.client = c
 	w.addr = a
 	w.req = q
-        if err := w.Dial(); err != nil {
-                return err
-        }
+	if err := w.Dial(); err != nil {
+		return err
+	}
 	if err := w.Send(q); err != nil {
 		return err
 	}
@@ -29,23 +25,23 @@ func (c *Client) XfrReceive(q *Msg, a string) os.Error {
 		go w.axfrReceive()
 	case TypeIXFR:
 		go w.ixfrReceive()
-        default:
-                return ErrXfrType
+	default:
+		return ErrXfrType
 	}
 	return nil
 }
 
 func (w *reply) axfrReceive() {
 	first := true
-        defer w.Close()
+	defer w.Close()
 	for {
 		in, err := w.Receive()
 		if err != nil {
 			w.Client().ReplyChan <- &Exchange{w.req, in, err}
 			return
 		}
-                if w.req.Id != in.Id {
-                        w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
+		if w.req.Id != in.Id {
+			w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
 			return
 		}
 
@@ -60,7 +56,7 @@ func (w *reply) axfrReceive() {
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if checkXfrSOA(in, false) {
-                                w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
+				w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
 				return
 			}
 			w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: in}
@@ -73,23 +69,23 @@ func (w *reply) axfrReceive() {
 func (w *reply) ixfrReceive() {
 	var serial uint32 // The first serial seen is the current server serial
 	first := true
-        defer w.Close()
+	defer w.Close()
 	for {
-                in, err := w.Receive()
-                if err != nil {
-                        w.Client().ReplyChan <- &Exchange{w.req, in, err}
-                        return
-                }
-                if w.req.Id != in.Id {
-                        w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
+		in, err := w.Receive()
+		if err != nil {
+			w.Client().ReplyChan <- &Exchange{w.req, in, err}
+			return
+		}
+		if w.req.Id != in.Id {
+			w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
 			return
 		}
 
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-			        w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
-                                return
+				w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
+				return
 			}
 
 			// Check if the returned answer is ok
@@ -104,14 +100,14 @@ func (w *reply) ixfrReceive() {
 
 		// Now we need to check each message for SOA records, to see what we need to do
 		if !first {
-                        w.tsigTimersOnly = true
-                        // If the last record in the IXFR contains the servers' SOA,  we should quit
-                        if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
-                                if v.Serial == serial {
-                                        w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
-                                        return
-                                }
-                        }
+			w.tsigTimersOnly = true
+			// If the last record in the IXFR contains the servers' SOA,  we should quit
+			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
+				if v.Serial == serial {
+					w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrLast}
+					return
+				}
+			}
 			w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: in}
 		}
 	}
@@ -119,19 +115,16 @@ func (w *reply) ixfrReceive() {
 	return
 }
 
-// XfrSend performs an outgoing Ixfr or Axfr. If the message q's question
-// section contains an AXFR type an Axfr is performed. If it is IXFR
-// it does an Ixfr.
+// XfrSend performs an outgoing Ixfr or Axfr. The function is xfr agnostic, it is
+// up to the caller to correctly send the sequence of messages.
 func XfrSend(w ResponseWriter, q *Msg, a string) os.Error {
 	switch q.Question[0].Qtype {
-	case TypeAXFR:
-		// go d.axfrWrite(q, m, e)
-	case TypeIXFR:
-		// go d.ixfrWrite(q, m)
-        default:
-                return ErrXfrType
+        case TypeAXFR, TypeIXFR:
+//		go d.xfrWrite(q, m, e)
+	default:
+		return ErrXfrType
 	}
-        return nil
+	return nil
 }
 
 /*

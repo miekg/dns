@@ -12,6 +12,8 @@ import (
 	"net"
 )
 
+// how to do Tsig here?? TODO(mg)
+
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 	// IP based ACL mapping. The contains the string representation
@@ -27,6 +29,7 @@ type ResponseWriter interface {
 	Write([]byte) (int, os.Error)
 }
 
+// port?
 type conn struct {
 	remoteAddr net.Addr     // address of remote side (sans port)
 	handler    Handler      // request handler
