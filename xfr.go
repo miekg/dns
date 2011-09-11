@@ -4,6 +4,9 @@ import (
 	"os"
 )
 
+// Fix the sending function to work on messages, keep the size 
+// of the callers contral
+
 // XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed, if it is IXFR it does
 // an Ixfr.
