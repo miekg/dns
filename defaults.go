@@ -6,7 +6,7 @@ package dns
 // Add SetEDNS0
 // IsEDNS0  function
 
-// Create a reply packet from a request message.
+// SetReply creates a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Id = request.MsgHdr.Id
 	dns.MsgHdr.Authoritative = true
