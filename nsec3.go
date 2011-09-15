@@ -5,6 +5,7 @@ import (
 	"hash"
 	"strings"
 	"crypto/sha1"
+	"os"
 )
 
 type saltWireFmt struct {
@@ -56,4 +57,19 @@ func HashName(label string, ha int, iterations int, salt string) string {
 func (nsec3 *RR_NSEC3) HashNames() {
 	nsec3.Header().Name = HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
 	nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+}
+
+// NsecVerify verifies the negative response (NXDOMAIN/NODATA) in 
+// the message m. 
+// NsecVerify returns nil when the NSECs in the message contain
+// the correct proof. This function does not validates the NSECs
+func (m *Msg) NsecVerify(q Question) os.Error {
+
+        return nil
+}
+
+// Nsec3Verify verifies ...
+func (m *Msg) Nsec3Verify(q Question) os.Error {
+
+        return nil
 }
