@@ -107,16 +107,7 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-                opt := dns.NewRR(dns.TypeOPT).(*dns.RR_OPT)
-                opt.Hdr.Rrtype = 0
-		opt.SetDo()
-		opt.SetVersion(0)
-		opt.SetUDPSize(dns.DefaultMsgSize)
-		if *nsid {
-			opt.SetNsid("")
-		}
-		m.Extra = make([]dns.RR, 1)
-		m.Extra[0] = opt
+                m.SetEdns0(dns.DefaultMsgSize, true)
 	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
