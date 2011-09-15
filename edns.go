@@ -50,7 +50,7 @@ func (rr *RR_OPT) Header() *RR_Header {
 }
 
 func (rr *RR_OPT) String() string {
-	s := ";; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
+	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
 	if rr.Do() {
 		s += "flags: do; "
 	} else {
