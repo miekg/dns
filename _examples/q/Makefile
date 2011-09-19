@@ -3,6 +3,6 @@
 # license that can be found in the LICENSE file.
 include $(GOROOT)/src/Make.inc
 TARG=q
-GOFILES=q.go
+GOFILES=q.go fp.go
 DEPS=../../
 include $(GOROOT)/src/Make.cmd

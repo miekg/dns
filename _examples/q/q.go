@@ -12,22 +12,23 @@ import (
 func q(w dns.RequestWriter, m *dns.Msg) {
 	w.Send(m)
 	r, err := w.Receive()
-        if err != nil {
-                fmt.Printf("%s\n", err.String())
-        }
+	if err != nil {
+		fmt.Printf("%s\n", err.String())
+	}
 	w.Write(r)
 }
 
 func main() {
-	var dnssec *bool = flag.Bool("dnssec", false, "request DNSSEC records")
-	var query *bool = flag.Bool("question", false, "show question")
-	var short *bool = flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
-	var aa *bool = flag.Bool("aa", false, "set AA flag in query")
-	var ad *bool = flag.Bool("ad", false, "set AD flag in query")
-	var cd *bool = flag.Bool("cd", false, "set CD flag in query")
-	var rd *bool = flag.Bool("rd", true, "unset RD flag in query")
-	var tcp *bool = flag.Bool("tcp", false, "TCP mode")
-	var nsid *bool = flag.Bool("nsid", false, "ask for NSID")
+	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
+	query := flag.Bool("question", false, "show question")
+	short := flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
+	aa := flag.Bool("aa", false, "set AA flag in query")
+	ad := flag.Bool("ad", false, "set AD flag in query")
+	cd := flag.Bool("cd", false, "set CD flag in query")
+	rd := flag.Bool("rd", true, "unset RD flag in query")
+	tcp := flag.Bool("tcp", false, "TCP mode")
+	nsid := flag.Bool("nsid", false, "ask for NSID")
+	fp := flag.Bool("fingerprint", false, "enable server detection")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server(:port)] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -89,10 +90,10 @@ Flags:
 	if !strings.HasSuffix(nameserver, ":53") {
 		nameserver += ":53"
 	}
-	// ipv6 todo
 
-        // We use the async query handling, just to show how
-        // it is to be used.
+	// ipv6 todo
+	// We use the async query handling, just to show how
+	// it is to be used.
 	dns.HandleQueryFunc(".", q)
 	dns.ListenAndQuery(nil, nil)
 	c := dns.NewClient()
@@ -107,14 +108,14 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-                m.SetEdns0(dns.DefaultMsgSize, true)
+		m.SetEdns0(dns.DefaultMsgSize, true)
 	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
-                if *query {
-                        fmt.Printf("%s\n", m.String())
-                }
+		if *query {
+			fmt.Printf("%s\n", m.String())
+		}
 		c.Do(m, nameserver)
 	}
 
@@ -124,14 +125,17 @@ forever:
 		select {
 		case r := <-dns.DefaultReplyChan:
 			if r.Reply != nil {
-                                if r.Reply.Rcode == dns.RcodeSuccess {
-                                        if r.Request.Id != r.Reply.Id {
-                                                fmt.Printf("Id mismatch\n")
-                                        }
-                                }
+				if r.Reply.Rcode == dns.RcodeSuccess {
+					if r.Request.Id != r.Reply.Id {
+						fmt.Printf("Id mismatch\n")
+					}
+				}
 				if *short {
 					r.Reply = shortMsg(r.Reply)
 				}
+                                if *fp {
+                                        fmt.Printf("%s\n", msgToFingerPrint(r.Reply))
+                                }
 				fmt.Printf("%v", r.Reply)
 			}
 			i++
