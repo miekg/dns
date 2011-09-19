@@ -18,7 +18,8 @@ const (
 	itemError    itemType = iota
 	itemVender            // software vendor
 	itemSoftware          // the name of the DNS server software
-	itemVersion           // the version of the software (empty if not determined)
+	itemVersionMin           // the minimum version of the software (empty if not determined)
+	itemVersionMax           // the maximum version of the software (empty if not determined)
 )
 
 // stateFn represents the state of the scanner as a function that returns the next state.
@@ -37,8 +38,8 @@ func (l *lexer) probe() *fingerprint {
 	return sendProbe(l.client, l.addr, l.fp, l.q)
 }
 
-func (l *lexer) emit() {
-        // send item on the channel
+func (l *lexer) emit(i *item) {
+        l.items <- *i
 }
 
 // "Lexer" functions
@@ -48,7 +49,9 @@ func lexDoBitMirorred(l *lexer) stateFn {
 	// The important part here is that the DO bit is on
 	l.fp.SetString("QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,0,DO,0")
 	l.q = dns.Question{".", dns.TypeNS, dns.ClassINET}
-        l.probe()
-
+        if l.probe().Do {
+                l.emit(&item{itemSoftware, NSD})
+        }
+        l.emit(&item{itemSoftware, BIND})
 	return nil
 }

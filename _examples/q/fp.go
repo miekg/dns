@@ -7,6 +7,16 @@ import (
 	"strings"
 )
 
+const (
+        // Detected software types
+	NSD  = "nsd"
+	BIND = "bind"
+
+        // Vendors
+        ISC = "ISC"
+        NLNETLABS = "NLnet Labs"
+)
+
 // SendProbe creates a packet and sends it to the nameserver.
 // Connection errors are returned as:
 // ...
