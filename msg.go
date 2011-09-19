@@ -138,7 +138,7 @@ var Class_str = map[uint16]string{
 }
 
 // Map of strings for opcodes.
-var opcode_str = map[int]string{
+var Opcode_str = map[int]string{
 	OpcodeQuery:  "QUERY",
 	OpcodeIQuery: "IQUERY",
 	OpcodeStatus: "STATUS",
@@ -147,7 +147,7 @@ var opcode_str = map[int]string{
 }
 
 // Map of strings for rcodes.
-var rcode_str = map[int]string{
+var Rcode_str = map[int]string{
 	RcodeSuccess:        "NOERROR",
 	RcodeFormatError:    "FORMERR",
 	RcodeServerFailure:  "SERVFAIL",
@@ -1042,7 +1042,6 @@ func (dns *Msg) String() string {
 	if len(dns.Question) > 0 {
 		s += "\n;; QUESTION SECTION:\n"
 		for i := 0; i < len(dns.Question); i++ {
-			// Need check if it exists? TODO(mg)
 			s += dns.Question[i].String() + "\n"
 		}
 	}
