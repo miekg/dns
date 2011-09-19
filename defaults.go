@@ -3,9 +3,6 @@ package dns
 // Everything is assumed in the ClassINET class. If
 // you need other classes you are on your own.
 
-// Add SetEDNS0
-// IsEDNS0  function
-
 // SetReply creates a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Id = request.MsgHdr.Id
@@ -188,9 +185,14 @@ func (dns *Msg) IsTsig() (ok bool) {
 	return
 }
 
-// IsEdns0 checks if the message has a Edns0 record, as the last
-// or the one before the last, in the additional section.
+// IsEdns0 checks if the message has a Edns0 record, any EDNS0
+// record in the additional section will do
 func (dns *Msg) IsEdns0() (ok bool) {
+        for _, r := range dns.Extra {
+                if r.Header().Rrtype == TypeOPT {
+                        return true
+                }
+        }
         return
 }
 

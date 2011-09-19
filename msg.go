@@ -880,8 +880,8 @@ func (h *MsgHdr) String() string {
 		return "<nil> MsgHdr"
 	}
 
-	s := ";; opcode: " + opcode_str[h.Opcode]
-	s += ", status: " + rcode_str[h.Rcode]
+	s := ";; opcode: " + Opcode_str[h.Opcode]
+	s += ", status: " + Rcode_str[h.Rcode]
 	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
 
 	s += ";; flags:"
