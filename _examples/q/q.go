@@ -114,6 +114,7 @@ Flags:
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
+                        fmt.Printf("%s\n", msgToFingerprint(m))
 			fmt.Printf("%s\n", m.String())
 		}
 		c.Do(m, nameserver)
@@ -134,7 +135,7 @@ forever:
 					r.Reply = shortMsg(r.Reply)
 				}
                                 if *fp {
-                                        fmt.Printf("%s\n", msgToFingerPrint(r.Reply))
+                                        fmt.Printf("%s\n", msgToFingerprint(r.Reply))
                                 }
 				fmt.Printf("%v", r.Reply)
 			}

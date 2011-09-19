@@ -124,8 +124,14 @@ var Rr_str = map[uint16]string{
 }
 
 // Reverse, needed for string parsing.
-var str_rr = reverse(Rr_str)
-var str_class = reverse(Class_str)
+var Str_rr = reverseInt16(Rr_str)
+var Str_class = reverseInt16(Class_str)
+
+// Map of opcodes strings.
+var Str_opcode = reverseInt(Opcode_str)
+
+// Map of rcodes strings.
+var Str_rcode = reverseInt(Rcode_str)
 
 // Map of strings for each CLASS wire type.
 var Class_str = map[uint16]string{
@@ -864,8 +870,16 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 }
 
 // Reverse a map
-func reverse(m map[uint16]string) map[string]uint16 {
+func reverseInt16(m map[uint16]string) map[string]uint16 {
 	n := make(map[string]uint16)
+	for u, s := range m {
+		n[s] = u
+	}
+	return n
+}
+
+func reverseInt(m map[int]string) map[string]int {
+	n := make(map[string]int)
 	for u, s := range m {
 		n[s] = u
 	}
