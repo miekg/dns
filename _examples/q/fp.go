@@ -8,14 +8,25 @@ import (
 )
 
 const (
-        // Detected software types
+	// Detected software types
 	NSD  = "nsd"
 	BIND = "bind"
 
-        // Vendors
-        ISC = "ISC"
-        NLNETLABS = "NLnet Labs"
+	// Vendors
+	ISC       = "ISC"
+	NLNETLABS = "NLnet Labs"
 )
+
+func startParse(addr string) {
+	l := new(lexer)
+        l.addr = addr
+	l.client = new(dns.Client)
+	l.fp = new(fingerprint)
+	l.items = make(chan item)
+        for l.state = lexDoBitMirror; l.state != nil; l.state = l.state(l) {
+//                l.state = l.state(l)
+        }
+}
 
 // SendProbe creates a packet and sends it to the nameserver.
 // Connection errors are returned as:

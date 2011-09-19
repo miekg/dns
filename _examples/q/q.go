@@ -110,6 +110,10 @@ Flags:
 	if *dnssec || *nsid {
 		m.SetEdns0(dns.DefaultMsgSize, true)
 	}
+        if *fp {
+                startParse(nameserver)
+                return
+        }
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()

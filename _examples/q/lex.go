@@ -45,13 +45,15 @@ func (l *lexer) emit(i *item) {
 // "Lexer" functions
 
 // Check if the server returns the DO-bit when set in the request. 
-func lexDoBitMirorred(l *lexer) stateFn {
+func lexDoBitMirror(l *lexer) stateFn {
 	// The important part here is that the DO bit is on
 	l.fp.SetString("QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,0,DO,0")
 	l.q = dns.Question{".", dns.TypeNS, dns.ClassINET}
         if l.probe().Do {
-                l.emit(&item{itemSoftware, NSD})
+                println(NSD)
+        //        l.emit(&item{itemSoftware, NSD})
         }
-        l.emit(&item{itemSoftware, BIND})
+        //l.emit(&item{itemSoftware, BIND})
+        println(BIND)
 	return nil
 }
