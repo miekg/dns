@@ -126,8 +126,8 @@ type Client struct {
 	Retry        bool              // retry with TCP
 	QueryChan chan *Request     // read DNS request from this channel
 	ReplyChan chan *Exchange    // write the reply (together with the DNS request) to this channel
-	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
+	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections (ns)
+	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 	Hijacked     net.Conn          // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use
@@ -384,6 +384,9 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		if err = w.Dial(); err != nil {
 			return 0, err
 		}
+                w.conn.SetWriteTimeout(w.Client().WriteTimeout)
+                w.conn.SetReadTimeout(w.Client().ReadTimeout)
+
 	}
 	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":
