@@ -4,6 +4,10 @@ import (
 	"dns"
 )
 
+const (
+	QUERYNORMAL string = "QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0"
+)
+
 // Check if the server responds at all
 func dnsAlive(l *lexer) stateFn {
 	l.verbose("Alive")
@@ -39,11 +43,11 @@ func dnsEDNS0Mangler(l *lexer) stateFn {
 	l.setString("NOTIFY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,do,0")
 	l.setQuestion("012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.0123456789012345678901234567890123456789012345678901234567890.", dns.TypeA, dns.ClassINET)
 	f := l.probe()
-        // MaraDNS does not set the QR bit in the reply... but only with this question is seems
-        // QUERY,NOERROR,qr,aa,t
-        if !f.Response && f.Opcode == dns.OpcodeQuery && f.Rcode == dns.RcodeSuccess {
-	        l.emit(&item{itemSoftware, MARADNS})
-        }
+	// MaraDNS does not set the QR bit in the reply... but only with this question is seems
+	// QUERY,NOERROR,qr,aa,t
+	if !f.Response && f.Opcode == dns.OpcodeQuery && f.Rcode == dns.RcodeSuccess {
+		l.emit(&item{itemSoftware, MARADNS})
+	}
 	return dnsTcEnable
 }
 
@@ -121,8 +125,16 @@ func dnsRcodeWhacky(l *lexer) stateFn {
 
 func dnsRcodeNotZone(l *lexer) stateFn {
 	l.verbose("RcodeNotZone")
-	l.setString("QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setString("QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
-	return nil
+	return dnsLikeWindows
+}
+
+func dnsLikeWindows(l *lexer) stateFn {
+	l.verbose("LikeWindows")
+	l.setString(QUERYNORMAL)
+	l.setQuestion(".", dns.TypeIXFR, dns.ClassINET)
+        l.probe()
+        return nil
 }

@@ -13,6 +13,7 @@ const (
 	// Detected software types
 	NSD  = "NSD"
 	BIND = "BIND"
+        WINDOWSDNS = "Windows DNS"
         MARADNS = "MaraDNS"
 
 	// Vendors
