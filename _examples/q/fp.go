@@ -116,6 +116,13 @@ func (f *fingerprint) String() string {
 	return s
 }
 
+// fingerStringNoSections returns the strings representation
+// without the sections' count and the EDNS0 stuff
+func (f *fingerprint) StringNoSections() string {
+        s := strings.SplitN(f.String(), ",", 11)
+        return strings.Join(s[:10], ",")
+}
+
 // SetString set the string to fp.. todo
 func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
