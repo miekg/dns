@@ -54,5 +54,34 @@ func dnsTcEnable(l *lexer) stateFn {
 
 	f := l.probe()
         f = f
+	return dnsUDPSize
+}
+
+func dnsUDPSize(l *lexer) stateFn {
+	l.verbose("UDPSize")
+	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,1,0,0,0,DO,4097")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	f := l.probe()
+        f = f
+	return dnsZero
+}
+
+func dnsZero(l *lexer) stateFn {
+	l.verbose("Zero")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,1,0,0,0,do,0")
+	f := l.probe()
+        f = f
+	return dnsAll
+}
+
+func dnsAll(l *lexer) stateFn {
+	l.verbose("All")
+	l.setString("NOTIFY,NOERROR,qr,AA,TC,RD,RA,AD,CD,Z,1,0,0,0,DO,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	f := l.probe()
+        f = f
 	return nil
 }
+
+
