@@ -33,12 +33,12 @@ var (
 	ErrId        os.Error = &Error{Error: "id mismatch"}
 	ErrShortRead os.Error = &Error{Error: "short read"}
 	ErrConn      os.Error = &Error{Error: "conn holds both UDP and TCP connection"}
-	ErrConnEmpy  os.Error = &Error{Error: "conn has no connection"}
+	ErrConnEmpty os.Error = &Error{Error: "conn has no connection"}
 	ErrServ      os.Error = &Error{Error: "no servers could be reached"}
 	ErrKey       os.Error = &Error{Error: "bad key"}
 	ErrPrivKey   os.Error = &Error{Error: "bad private key"}
 	ErrKeySize   os.Error = &Error{Error: "bad key size"}
-        ErrKeyAlg    os.Error = &Error{Error: "bad key algorithm"}
+	ErrKeyAlg    os.Error = &Error{Error: "bad key algorithm"}
 	ErrAlg       os.Error = &Error{Error: "bad algorithm"}
 	ErrTime      os.Error = &Error{Error: "bad time"}
 	ErrNoSig     os.Error = &Error{Error: "no signature found"}
@@ -47,12 +47,12 @@ var (
 	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
 	ErrAuth      os.Error = &Error{Error: "bad authentication"}
 	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
-        ErrXfrLast   os.Error = &Error{Error: "last SOA"}
-        ErrXfrType   os.Error = &Error{Error: "no ixfr, nor axfr"}
+	ErrXfrLast   os.Error = &Error{Error: "last SOA"}
+	ErrXfrType   os.Error = &Error{Error: "no ixfr, nor axfr"}
 	ErrHandle    os.Error = &Error{Error: "handle is nil"}
 	ErrChan      os.Error = &Error{Error: "channel is nil"}
 	ErrName      os.Error = &Error{Error: "type not found for name"}
-        ErrRRset     os.Error = &Error{Error: "invalid rrset"}
+	ErrRRset     os.Error = &Error{Error: "invalid rrset"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -178,7 +178,7 @@ var Rcode_str = map[int]string{
 // split at the dots.  They end with a zero-length string.
 func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
-        lenmsg := len(msg)
+	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
 		s += "."
 	}
@@ -197,7 +197,7 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	begin := 0
 	bs := []byte(s)
 	ls := len(bs)
-        lens := ls
+	lens := ls
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
 			for j := i; j < lens-1; j++ {
@@ -244,7 +244,7 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 // We let them jump anywhere and stop jumping after a while.
 func unpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
-        lenmsg := len(msg)
+	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
 Loop:
 	for {
@@ -306,8 +306,8 @@ Loop:
 // slices and other (often anonymous) structs.
 func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
-//		f := val.Type().Field(i)
-                lenmsg := len(msg)
+		//		f := val.Type().Field(i)
+		lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			//fmt.Fprintf(os.Stderr, "dns: unknown packing type %v\n", f.Type)
@@ -497,8 +497,8 @@ func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 // Same restrictions as packStructValue.
 func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
-//		f := val.Type().Field(i)
-                lenmsg := len(msg)
+		//		f := val.Type().Field(i)
+		lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			//fmt.Fprintf(os.Stderr, "dns: unknown unpacking type %v", f.Type)
@@ -513,16 +513,16 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking A")
 					return lenmsg, false
 				}
-				fv.Set(reflect.ValueOf( net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3]) ))
+				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
 				off += net.IPv4len
 			case "AAAA":
 				if off+net.IPv6len > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking AAAA")
 					return lenmsg, false
 				}
-                                fv.Set(reflect.ValueOf( net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
-                                        msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
-                                        msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]} ))
+				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
+					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
+					msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}))
 				off += net.IPv6len
 			case "OPT": // EDNS
 				if off+2 > lenmsg {
@@ -610,7 +610,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint8")
 				return lenmsg, false
 			}
-			fv.SetUint( uint64(uint8(msg[off]))  )
+			fv.SetUint(uint64(uint8(msg[off])))
 			off++
 		case reflect.Uint16:
 			var i uint16
@@ -625,7 +625,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint32")
 				return lenmsg, false
 			}
-			fv.SetUint(uint64( uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]) ))
+			fv.SetUint(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])))
 			off += 4
 		case reflect.Uint64:
 			// This is *only* used in TSIG where the last 48 bits are occupied
@@ -634,8 +634,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				//fmt.Fprintf(os.Stderr, "dns: overflow unpacking uint64")
 				return lenmsg, false
 			}
-			fv.SetUint(uint64( uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-				uint64(msg[off+4])<<8 | uint64(msg[off+5]) ))
+			fv.SetUint(uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+				uint64(msg[off+4])<<8 | uint64(msg[off+5])))
 			off += 6
 		case reflect.String:
 			var s string
@@ -837,9 +837,9 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 		return len(msg), false
 	}
 	rr.Header().Rdlength = uint16(off2 - off1)
-        if !rr.Header().RawSetRdlength(msg, off) {
+	if !rr.Header().RawSetRdlength(msg, off) {
 		return len(msg), false
-        }
+	}
 
 	return off2, true
 }

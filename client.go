@@ -306,7 +306,8 @@ func (w *reply) Receive() (*Msg, os.Error) {
 
 func (w *reply) readClient(p []byte) (n int, err os.Error) {
 	if w.conn == nil {
-		panic("no connection")
+                return 0, ErrConnEmpty
+		//panic("no connection")
 	}
 	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":
