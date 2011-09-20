@@ -13,9 +13,11 @@ const (
 	// Detected software types
 	NSD  = "NSD"
 	BIND = "BIND"
+        MARADNS = "MaraDNS"
 
 	// Vendors
 	ISC       = "ISC"
+        MARA      = "MaraDNS.org"        // check
 	NLNETLABS = "NLnet Labs"
 	MICROSOFT = "Microsoft"
 )

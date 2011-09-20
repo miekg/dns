@@ -18,8 +18,8 @@ type item struct {
 
 const (
 	itemError      itemType = iota
-	itemVender              // software vendor
 	itemSoftware            // the name of the DNS server software
+	itemVendor              // vendor of the DNS software
 	itemVersionMin          // the minimum version of the software (empty if not determined)
 	itemVersionMax          // the maximum version of the software (empty if not determined)
 )
@@ -40,7 +40,7 @@ type lexer struct {
 func (l *lexer) probe() *fingerprint {
 	f := sendProbe(l.client, l.addr, l.fp, l.q)
 	if l.debug {
-		fmt.Printf("  QR fp: %s\n", f)
+		fmt.Printf("      QR fp: %s\n", f)
 	}
 	return f
 }
@@ -52,12 +52,15 @@ func (l *lexer) emit(i *item) {
 func (l *lexer) setString(s string) {
 	l.fp.setString(s)
 	if l.debug {
-		fmt.Printf("   Q fp: %s\n", s)
+		fmt.Printf("       Q fp: %s\n", s)
 	}
 }
 
 func (l *lexer) setQuestion(name string, t uint16, c uint16) {
 	l.q = dns.Question{name, t, c}
+//        if l.debug {
+//                fmt.Printf("   Question: %v\n", l.q)
+//        }
 }
 
 func (l *lexer) run() {
@@ -70,5 +73,7 @@ func (l *lexer) run() {
 }
 
 func (l *lexer) verbose(s string) {
-	fmt.Printf("running: dns%s\n", s)
+	if l.debug {
+		fmt.Printf("running: dns%s\n", s)
+	}
 }
