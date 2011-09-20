@@ -11,12 +11,13 @@ import (
 
 const (
 	// Detected software types
-	NSD  = "nsd"
-	BIND = "bind"
+	NSD  = "NSD"
+	BIND = "BIND"
 
 	// Vendors
 	ISC       = "ISC"
 	NLNETLABS = "NLnet Labs"
+        MICROSOFT = "Microsoft"
 )
 
 func startParse(addr string) {

@@ -111,7 +111,7 @@ func (rr *RR_OPT) Do() bool {
 	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
 }
 
-// Set the DO bit.
+// SetDo sets the DO (DNSSEC OK) bit.
 func (rr *RR_OPT) SetDo() {
 	b1 := byte(rr.Hdr.Ttl >> 24)
 	b2 := byte(rr.Hdr.Ttl >> 16)
@@ -121,12 +121,13 @@ func (rr *RR_OPT) SetDo() {
 	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// Return the NSID as hex string.
+// Nsid returns the NSID as hex character string.
 func (rr *RR_OPT) Nsid() string {
 	return "NSID: " + rr.Option[0].Data
 }
 
-// Set the NSID from a string which is represented as hex characters.
+// SetNsid sets the NSID from a hex character string.
+// Use the empty string when requesting NSID.
 func (rr *RR_OPT) SetNsid(hexnsid string) {
 	rr.Option = make([]Option, 1) // TODO(mg) check length first?
 	rr.Option[0].Code = OptionCodeNSID

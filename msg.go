@@ -16,7 +16,6 @@ package dns
 
 import (
 	"os"
-	//        "fmt"
 	"reflect"
 	"net"
 	"rand"
@@ -318,6 +317,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing slice tag %v\n", f.Tag)
 				return lenmsg, false
 			case "OPT": // edns
+                                // Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j)
 					code := uint16(element.Field(0).Uint())
@@ -327,16 +327,18 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 						//fmt.Fprintf(os.Stderr, "dns: failure packing OTP")
 						return lenmsg, false
 					}
-					data := string(h)
 					// Option Code
-					msg[off] = byte(code >> 8)
-					msg[off+1] = byte(code)
+                                        // the rdlength needs to be set somehow
+                                        println("code ", code)
+                                        println("length ", len(string(h)))
+                                        println("off ", off)
+					msg[off], msg[off+1] = packUint16(code)
 					// Length
-					msg[off+2] = byte(len(data) >> 8)
-					msg[off+3] = byte(len(data))
-					off += 4
-					copy(msg[off:off+len(data)], []byte(data))
-					off += len(data)
+					msg[off+2], msg[off+3] = packUint16(uint16(len(string(h))))
+                                        off += 4
+
+					copy(msg[off:off+len(string(h))], h)
+					off += len(string(h))
 				}
 			case "A":
 				// It must be a slice of 4, even if it is 16, we encode

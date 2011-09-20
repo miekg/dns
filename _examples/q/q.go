@@ -108,8 +108,20 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-		m.SetEdns0(dns.DefaultMsgSize, true)
+                o := new(dns.RR_OPT)
+                o.Hdr.Name = "."
+                o.Hdr.Rrtype = dns.TypeOPT
+                if *dnssec {
+                        o.SetDo()
+                        o.SetUDPSize(dns.DefaultMsgSize)
+                }
+                if *nsid {
+                        o.SetNsid("")
+                }
+                m.Extra = append(m.Extra, o)
+		//m.SetEdns0(dns.DefaultMsgSize, true)
 	}
+
         if *fp {
                 startParse(nameserver)
                 return
