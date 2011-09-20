@@ -84,8 +84,19 @@ func (f *fingerprint) String() string {
 		return "<nil>"
 	}
 	// Use the same order as in Perl's fpdns. But use more flags.
-	s := dns.Opcode_str[f.Opcode]
-	s += "," + dns.Rcode_str[f.Rcode]
+        var s string
+        if op, ok := dns.Opcode_str[f.Opcode]; ok {
+                s = op
+        } else {        // number
+                s = valueOfInt(f.Opcode)
+        }
+
+        if op, ok := dns.Rcode_str[f.Rcode]; ok {
+                s += "," + op
+        } else {        // number
+                s += "," + valueOfInt(f.Rcode)
+        }
+
 	s += valueOfBool(f.Response, ",qr")
 	s += valueOfBool(f.Authoritative, ",aa")
 	s += valueOfBool(f.Truncated, ",tc")
@@ -95,13 +106,13 @@ func (f *fingerprint) String() string {
 	s += valueOfBool(f.CheckingDisabled, ",cd")
 	s += valueOfBool(f.Zero, ",z")
 
-	s += valueOfInt(f.Question)
-	s += valueOfInt(f.Answer)
-	s += valueOfInt(f.Ns)
-	s += valueOfInt(f.Extra)
+	s += ","+valueOfInt(f.Question)
+	s += ","+valueOfInt(f.Answer)
+	s += ","+valueOfInt(f.Ns)
+	s += ","+valueOfInt(f.Extra)
 
 	s += valueOfBool(f.Do, ",do")
-	s += valueOfInt(f.UDPSize)
+	s += ","+valueOfInt(f.UDPSize)
 	return s
 }
 
@@ -110,58 +121,38 @@ func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
 		case 0:
-			f.Opcode = dns.Str_opcode[s]
+                        if op, ok := dns.Str_opcode[s]; ok {
+			        f.Opcode = op
+                        } else { // number
+                                f.Opcode = valueOfString(s)
+                        }
 		case 1:
-			f.Rcode = dns.Str_rcode[s]
+                        if op, ok := dns.Str_rcode[s]; ok {
+			        f.Rcode = op
+                        } else { // number
+                                f.Rcode = valueOfString(s)
+                        }
 		case 2:
-			f.Response = false
-			if s == strings.ToUpper("qr") {
-				f.Response = true
-			}
+			f.Response = s == strings.ToUpper("qr")
 		case 3:
-			f.Authoritative = false
-			if s == strings.ToUpper("aa") {
-				f.Authoritative = true
-			}
+			f.Authoritative = s == strings.ToUpper("aa")
 		case 4:
-			f.Truncated = false
-			if s == strings.ToUpper("tc") {
-				f.Truncated = true
-			}
+			f.Truncated = s == strings.ToUpper("tc")
 		case 5:
-			f.RecursionDesired = false
-			if s == strings.ToUpper("rd") {
-				f.RecursionDesired = true
-			}
+			f.RecursionDesired = s == strings.ToUpper("rd")
 		case 6:
-			f.RecursionAvailable = false
-			if s == strings.ToUpper("ra") {
-				f.RecursionAvailable = true
-			}
+			f.RecursionAvailable = s == strings.ToUpper("ra")
 		case 7:
-			f.AuthenticatedData = false
-			if s == strings.ToUpper("ad") {
-				f.AuthenticatedData = true
-			}
+			f.AuthenticatedData = s == strings.ToUpper("ad")
 		case 8:
-			f.CheckingDisabled = false
-			if s == strings.ToUpper("cd") {
-				f.CheckingDisabled = true
-			}
+			f.CheckingDisabled = s == strings.ToUpper("cd")
 		case 9:
-			f.Zero = false
-			if s == strings.ToUpper("z") {
-				f.Zero = true
-			}
+			f.Zero =  s == strings.ToUpper("z")
 		case 10, 11, 12, 13:
 			// Can not set content of the message
 		case 14:
-			f.Do = false
-			if s == strings.ToUpper("do") {
-				f.Do = true
-			}
+			f.Do = s == strings.ToUpper("do")
 		case 15:
-			f.UDPSize = 0
 			f.UDPSize = valueOfString(s)
 		default:
 			panic("unhandled fingerprint")
@@ -257,7 +248,7 @@ func valueOfBool(b bool, w string) string {
 }
 
 func valueOfInt(i int) string {
-	return "," + strconv.Itoa(i)
+	return strconv.Itoa(i)
 }
 
 func valueOfString(s string) int {

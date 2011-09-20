@@ -7,7 +7,7 @@ import (
 // Check if the server responds at all
 func dnsAlive(l *lexer) stateFn {
 	l.verbose("Alive")
-	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,1,0,0,0,do,0")
+	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
 	f := l.probe()
@@ -22,7 +22,7 @@ func dnsAlive(l *lexer) stateFn {
 // Check if the server returns the DO-bit when set in the request.                                                                          
 func dnsDoBitMirror(l *lexer) stateFn {
 	l.verbose("DoBitMirror")
-	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,1,0,0,0,DO,0")
+	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
 	f := l.probe()
@@ -36,7 +36,7 @@ func dnsDoBitMirror(l *lexer) stateFn {
 
 func dnsEDNS0Mangler(l *lexer) stateFn {
 	l.verbose("EDNS0Mangler")
-	l.setString("NOTIFY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,1,0,0,0,do,0")
+	l.setString("NOTIFY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,do,0")
 	l.setQuestion("012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.0123456789012345678901234567890123456789012345678901234567890.", dns.TypeA, dns.ClassINET)
 	f := l.probe()
         // MaraDNS does not set the QR bit in the reply... but only with this question is seems
@@ -49,39 +49,80 @@ func dnsEDNS0Mangler(l *lexer) stateFn {
 
 func dnsTcEnable(l *lexer) stateFn {
 	l.verbose("TcEnable")
-	l.setString("QUERY,NOERROR,qr,aa,TC,rd,ra,ad,cd,z,1,0,0,0,do,0")
+	l.setString("QUERY,NOERROR,qr,aa,TC,rd,ra,ad,cd,z,0,0,0,0,do,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-
-	f := l.probe()
-        f = f
+	l.probe()
 	return dnsUDPSize
 }
 
 func dnsUDPSize(l *lexer) stateFn {
 	l.verbose("UDPSize")
-	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,1,0,0,0,DO,4097")
+	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,DO,4097")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-	f := l.probe()
-        f = f
+	l.probe()
 	return dnsZero
 }
 
 func dnsZero(l *lexer) stateFn {
 	l.verbose("Zero")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,1,0,0,0,do,0")
-	f := l.probe()
-        f = f
+	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.probe()
 	return dnsAll
 }
 
 func dnsAll(l *lexer) stateFn {
 	l.verbose("All")
-	l.setString("NOTIFY,NOERROR,qr,AA,TC,RD,RA,AD,CD,Z,1,0,0,0,DO,0")
+	l.setString("QUERY,NOERROR,qr,AA,TC,RD,RA,AD,CD,Z,0,0,0,0,DO,8192")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-	f := l.probe()
-        f = f
-	return nil
+	l.probe()
+	return dnsIquery
 }
 
+func dnsIquery(l *lexer) stateFn {
+	l.verbose("Iquery")
+	l.setString("IQUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return dnsUpdate
+}
 
+func dnsUpdate(l *lexer) stateFn {
+	l.verbose("Update")
+	l.setString("UPDATE,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return dnsStatus
+}
+
+func dnsStatus(l *lexer) stateFn {
+	l.verbose("Status")
+	l.setString("STATUS,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return dnsOpcodeWhacky
+}
+
+func dnsOpcodeWhacky(l *lexer) stateFn {
+	l.verbose("OpcodeWhacky")
+	l.setString("12,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return dnsRcodeWhacky
+}
+
+func dnsRcodeWhacky(l *lexer) stateFn {
+	l.verbose("RcodeWhacky")
+	l.setString("QUERY,31,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return dnsRcodeNotZone
+}
+
+func dnsRcodeNotZone(l *lexer) stateFn {
+	l.verbose("RcodeNotZone")
+	l.setString("QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0")
+	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
+	l.probe()
+	return nil
+}

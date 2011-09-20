@@ -142,8 +142,8 @@ func NewClient() *Client {
 	c.Attempts = 1
         c.ReplyChan = DefaultReplyChan
         c.QueryChan = DefaultQueryChan
-	c.ReadTimeout = 5000
-	c.WriteTimeout = 5000
+	c.ReadTimeout = 0.5 * 1e9
+	c.WriteTimeout = 0.5 * 1e9
 	return c
 }
 
