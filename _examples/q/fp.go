@@ -3,6 +3,8 @@ package main
 
 import (
 	"dns"
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -18,26 +20,33 @@ const (
 )
 
 func startParse(addr string) {
-	l := new(lexer)
-        l.addr = addr
-	l.client = new(dns.Client)
-	l.fp = new(fingerprint)
-	l.items = make(chan item)
-        for l.state = lexDoBitMirror; l.state != nil; l.state = l.state(l) {
-//                l.state = l.state(l)
+        l := &lexer {
+                addr: addr,
+                client: dns.NewClient(),
+                fp: new(fingerprint),
+                items: make(chan item),
+                state: lexAlive,
         }
+
+        l.run()
+
+        // Not completely sure about this code..
+	for {
+		item := <-l.items
+		fmt.Printf("%v\n", item)
+	        if l.state == nil {
+                        break
+		}
+	}
 }
 
-// SendProbe creates a packet and sends it to the nameserver.
-// Connection errors are returned as:
-// ...
+// SendProbe creates a packet and sends it to the nameserver. It
+// returns a fingerprint.
 func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) *fingerprint {
 	m := f.toProbe(q)
 	r, err := c.Exchange(m, addr)
 	if err != nil {
-		println(err.String())
-		//		return "connection error"
-		return nil
+                return errorToFingerprint(err)
 	}
 	return msgToFingerprint(r)
 }
@@ -91,7 +100,7 @@ func (f *fingerprint) String() string {
 }
 
 // SetString set the string to fp.. todo
-func (f *fingerprint) SetString(str string) {
+func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
 		case 0:
@@ -150,6 +159,12 @@ func (f *fingerprint) SetString(str string) {
 	return
 }
 
+func errorToFingerprint(e os.Error) *fingerprint {
+        f := new(fingerprint)
+        f.Error = e.String()
+        return f
+}
+
 func msgToFingerprint(m *dns.Msg) *fingerprint {
 	if m == nil {
 		return nil
@@ -185,8 +200,7 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 }
 
 // Create a dns message from a fingerprint string and
-// a DNS question. The order of a string is always the
-// same.
+// a DNS question. The order of a string is always the same.
 // QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096
 func (f *fingerprint) toProbe(q dns.Question) *dns.Msg {
 	m := new(dns.Msg)
