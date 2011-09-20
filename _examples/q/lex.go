@@ -6,6 +6,7 @@ package main
 
 import (
 	"dns"
+	"fmt"
 )
 
 type itemType int
@@ -60,11 +61,15 @@ func (l *lexer) run() {
 	}()
 }
 
+func (l *lexer) verbose(s string) {
+        fmt.Printf("running: dns%s\n", s)
+}
+
 // "Lexer" functions, prefixed with dns
 
-// Check if the server responds
+// Check if the server responds at all
 func dnsAlive(l *lexer) stateFn {
-	println("lexAlive")
+	l.verbose("Alive")
 	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ad,cd,z,1,0,0,0,do,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
@@ -79,9 +84,8 @@ func dnsAlive(l *lexer) stateFn {
 
 // Check if the server returns the DO-bit when set in the request. 
 func dnsDoBitMirror(l *lexer) stateFn {
-	println("lexDoBitMirror")
-
-	// The important part here is that the DO bit is on
+	l.verbose("DoBitMirror")
+	// The important part here is that the DO bit is on in the reply
 	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,0,DO,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
