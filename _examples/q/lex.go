@@ -34,10 +34,15 @@ type lexer struct {
 	q      dns.Question // question to ask.
 	items  chan item    // channel of scanned items.
 	state  stateFn      // the next function to enter.
+	debug  bool         // if true, the fingerprints are printed.
 }
 
 func (l *lexer) probe() *fingerprint {
-	return sendProbe(l.client, l.addr, l.fp, l.q)
+	f := sendProbe(l.client, l.addr, l.fp, l.q)
+	if l.debug {
+		fmt.Printf("  QR fp: %s\n", f)
+	}
+	return f
 }
 
 func (l *lexer) emit(i *item) {
@@ -46,6 +51,9 @@ func (l *lexer) emit(i *item) {
 
 func (l *lexer) setString(s string) {
 	l.fp.setString(s)
+	if l.debug {
+		fmt.Printf("   Q fp: %s\n", s)
+	}
 }
 
 func (l *lexer) setQuestion(name string, t uint16, c uint16) {
@@ -62,38 +70,5 @@ func (l *lexer) run() {
 }
 
 func (l *lexer) verbose(s string) {
-        fmt.Printf("running: dns%s\n", s)
-}
-
-// "Lexer" functions, prefixed with dns
-
-// Check if the server responds at all
-func dnsAlive(l *lexer) stateFn {
-	l.verbose("Alive")
-	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ad,cd,z,1,0,0,0,do,0")
-	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-
-	f := l.probe()
-
-	if f.ok() {
-		return dnsDoBitMirror
-	}
-	l.emit(&item{itemError, f.error()})
-	return nil
-}
-
-// Check if the server returns the DO-bit when set in the request. 
-func dnsDoBitMirror(l *lexer) stateFn {
-	l.verbose("DoBitMirror")
-	// The important part here is that the DO bit is on in the reply
-	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,0,DO,0")
-	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
-
-	f := l.probe()
-	if !f.Do {
-		l.emit(&item{itemSoftware, NSD})
-                return nil
-	}
-	l.emit(&item{itemSoftware, BIND})
-	return nil
+	fmt.Printf("running: dns%s\n", s)
 }

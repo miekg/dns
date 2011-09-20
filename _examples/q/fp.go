@@ -17,7 +17,7 @@ const (
 	// Vendors
 	ISC       = "ISC"
 	NLNETLABS = "NLnet Labs"
-        MICROSOFT = "Microsoft"
+	MICROSOFT = "Microsoft"
 )
 
 func startParse(addr string) {
@@ -27,6 +27,7 @@ func startParse(addr string) {
 		fp:     new(fingerprint),
 		items:  make(chan item),
 		state:  dnsAlive,
+		debug:  true,
 	}
 
 	l.run()
@@ -54,22 +55,23 @@ func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) *fing
 
 // This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096"
 type fingerprint struct {
-	Error             os.Error
-	Opcode            int
-	Rcode             int
-	Response          bool
-	Authoritative     bool
-	Truncated         bool
-	RecursionDesired  bool
-	AuthenticatedData bool
-	CheckingDisabled  bool
-	Zero              bool
-	Question          int
-	Answer            int
-	Ns                int
-	Extra             int
-	Do                bool
-	UDPSize           int
+	Error              os.Error
+	Opcode             int
+	Rcode              int
+	Response           bool
+	Authoritative      bool
+	Truncated          bool
+	RecursionDesired   bool
+	RecursionAvailable bool
+	AuthenticatedData  bool
+	CheckingDisabled   bool
+	Zero               bool
+	Question           int
+	Answer             int
+	Ns                 int
+	Extra              int
+	Do                 bool
+	UDPSize            int
 }
 
 // String creates a (short) string representation of a dns message.
@@ -86,6 +88,7 @@ func (f *fingerprint) String() string {
 	s += valueOfBool(f.Authoritative, ",aa")
 	s += valueOfBool(f.Truncated, ",tc")
 	s += valueOfBool(f.RecursionDesired, ",rd")
+	s += valueOfBool(f.RecursionAvailable, ",ra")
 	s += valueOfBool(f.AuthenticatedData, ",ad")
 	s += valueOfBool(f.CheckingDisabled, ",cd")
 	s += valueOfBool(f.Zero, ",z")
@@ -129,28 +132,33 @@ func (f *fingerprint) setString(str string) {
 				f.RecursionDesired = true
 			}
 		case 6:
+			f.RecursionAvailable = false
+			if s == strings.ToUpper("ra") {
+				f.RecursionAvailable = true
+			}
+		case 7:
 			f.AuthenticatedData = false
 			if s == strings.ToUpper("ad") {
 				f.AuthenticatedData = true
 			}
-		case 7:
+		case 8:
 			f.CheckingDisabled = false
 			if s == strings.ToUpper("cd") {
 				f.CheckingDisabled = true
 			}
-		case 8:
+		case 9:
 			f.Zero = false
 			if s == strings.ToUpper("z") {
 				f.Zero = true
 			}
-		case 9, 10, 11, 12:
+		case 10, 11, 12, 13:
 			// Can not set content of the message
-		case 13:
+		case 14:
 			f.Do = false
 			if s == strings.ToUpper("do") {
 				f.Do = true
 			}
-		case 14:
+		case 15:
 			f.UDPSize = 0
 			f.UDPSize = valueOfString(s)
 		default:
@@ -190,6 +198,7 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 	f.Authoritative = h.Authoritative
 	f.Truncated = h.Truncated
 	f.RecursionDesired = h.RecursionDesired
+	f.RecursionAvailable = h.RecursionAvailable
 	f.AuthenticatedData = h.AuthenticatedData
 	f.CheckingDisabled = h.CheckingDisabled
 	f.Zero = h.Zero
