@@ -20,22 +20,22 @@ const (
 )
 
 func startParse(addr string) {
-        l := &lexer {
-                addr: addr,
-                client: dns.NewClient(),
-                fp: new(fingerprint),
-                items: make(chan item),
-                state: lexAlive,
-        }
+	l := &lexer{
+		addr:   addr,
+		client: dns.NewClient(),
+		fp:     new(fingerprint),
+		items:  make(chan item),
+		state:  dnsAlive,
+	}
 
-        l.run()
+	l.run()
 
-        // Not completely sure about this code..
+	// Not completely sure about this code..
 	for {
 		item := <-l.items
 		fmt.Printf("%v\n", item)
-	        if l.state == nil {
-                        break
+		if l.state == nil {
+			break
 		}
 	}
 }
@@ -46,14 +46,14 @@ func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) *fing
 	m := f.toProbe(q)
 	r, err := c.Exchange(m, addr)
 	if err != nil {
-                return errorToFingerprint(err)
+		return errorToFingerprint(err)
 	}
 	return msgToFingerprint(r)
 }
 
 // This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096"
 type fingerprint struct {
-	Error             string
+	Error             os.Error
 	Opcode            int
 	Rcode             int
 	Response          bool
@@ -159,10 +159,21 @@ func (f *fingerprint) setString(str string) {
 	return
 }
 
+func (f *fingerprint) ok() bool {
+	return f.Error == nil
+}
+
+func (f *fingerprint) error() string {
+	if f.Error == nil {
+		panic("error is nil")
+	}
+	return f.Error.String()
+}
+
 func errorToFingerprint(e os.Error) *fingerprint {
-        f := new(fingerprint)
-        f.Error = e.String()
-        return f
+	f := new(fingerprint)
+	f.Error = e
+	return f
 }
 
 func msgToFingerprint(m *dns.Msg) *fingerprint {
