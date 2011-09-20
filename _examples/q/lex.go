@@ -90,8 +90,9 @@ func dnsDoBitMirror(l *lexer) stateFn {
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
 	f := l.probe()
-	if f.Do {
+	if !f.Do {
 		l.emit(&item{itemSoftware, NSD})
+                return nil
 	}
 	l.emit(&item{itemSoftware, BIND})
 	return nil
