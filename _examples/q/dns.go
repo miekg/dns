@@ -98,11 +98,11 @@ func dnsBindLike(l *lexer) stateFn {
                 l.emit(&item{itemVersionMajor, "8"})
 	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeServerFailure:
                 l.emit(&item{itemVersionMajor, "9"})
-                l.emit(&item{itemVersionMajor, "3"})
+                l.emit(&item{itemVersionMinor, "3"})
 	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeRefused:
 		// BIND9 leaves DO bit, but sets UDPSize to 4096. REFUSED.
                 l.emit(&item{itemVersionMajor, "9"})
-                l.emit(&item{itemVersionMajor, "[7..]"})
+                l.emit(&item{itemVersionMinor, "[7..]"})
         }
 
 	// Try authors.bind
