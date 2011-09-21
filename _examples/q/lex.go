@@ -20,8 +20,8 @@ const (
 	itemError        itemType = iota
 	itemSoftware              // the name of the DNS server software
 	itemVendor                // vendor of the DNS software
-	itemVersionMinor          // the minor version of the software (empty if not determined)
 	itemVersionMajor          // the major version of the software (empty if not determined)
+	itemVersionMinor          // the minor version of the software (empty if not determined)
 	itemVersionPatch          // the patch level of the software (empty if not determined)
 )
 
