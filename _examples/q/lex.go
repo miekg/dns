@@ -58,9 +58,9 @@ func (l *lexer) setString(s string) {
 
 func (l *lexer) setQuestion(name string, t uint16, c uint16) {
 	l.q = dns.Question{name, t, c}
-//        if l.debug {
-//                fmt.Printf("   Question: %v\n", l.q)
-//        }
+        if l.debug {
+                fmt.Printf("             %s\n", l.q.String())
+        }
 }
 
 func (l *lexer) run() {
@@ -74,6 +74,6 @@ func (l *lexer) run() {
 
 func (l *lexer) verbose(s string) {
 	if l.debug {
-		fmt.Printf("running: dns%s\n", s)
+		fmt.Printf(" dns%s\n", s)
 	}
 }

@@ -13,6 +13,7 @@ const (
 	// Detected software types
 	NSD  = "NSD"
 	BIND = "BIND"
+        POWERDNS = "PowerDNS"
         WINDOWSDNS = "Windows DNS"
         MARADNS = "MaraDNS"
 
@@ -21,6 +22,7 @@ const (
         MARA      = "MaraDNS.org"        // check
 	NLNETLABS = "NLnet Labs"
 	MICROSOFT = "Microsoft"
+        POWER     = "PowerDNS"
 )
 
 func startParse(addr string) {

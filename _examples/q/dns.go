@@ -5,27 +5,95 @@ import (
 )
 
 const (
-	QUERYNORMAL string = "QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0"
+	QUERY_NOERROR string = "QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0"
+	QUERY_ALL     string = "QUERY,NOERROR,QR,AA,TC,RD,RA,AD,CD,Z,0,0,0,0,DO,0"
 )
 
 // Check if the server responds at all
 func dnsAlive(l *lexer) stateFn {
 	l.verbose("Alive")
-	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0")
+	l.setString(QUERY_NOERROR)
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
 	f := l.probe()
-
 	if f.ok() {
-		return dnsDoBitMirror
+		return dnsServer
 	}
 	l.emit(&item{itemError, f.error()})
+	return nil
+}
+
+// This is the starting test. Perform a bunch of queries, get the
+// fingerprint a go into a general direction. NsdLike, BindLike, WindowsLike, MaraLike
+func dnsServer(l *lexer) stateFn {
+	l.verbose("Server")
+
+	// Set the DO bit
+	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,4097")
+	l.setQuestion(".", dns.TypeTXT, dns.ClassCHAOS)
+	f := l.probe()
+	switch {
+	case !f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeSuccess:
+		// NSD clears DO bit, but sets UDPSize to 4096. NOERROR.
+		l.emit(&item{itemVendor, NLNETLABS})
+		return dnsNsdLike
+	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeRefused:
+		// MaraDNS clears DO BIT, UDPSize to 0. REFUSED
+		l.emit(&item{itemVendor, MARA})
+		return dnsMaraLike
+        case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeSuccess:
+                // PowerDNS(SEC) clears DO bit, resets UDPSize. NOERROR
+		l.emit(&item{itemVendor, POWER})
+                return dnsPowerDNSLike
+	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeRefused:
+		// BIND leaves DO bit, but sets UDPSize to 4096. REFUSED.
+		l.emit(&item{itemVendor, ISC})
+		return dnsBindLike
+	case f.Do && f.UDPSize == 4097 && f.Rcode == dns.RcodeFormatError:
+		// Microsoft leaves DO bit, but echo's the UDPSize. FORMERR.
+		l.emit(&item{itemVendor, MICROSOFT})
+		return dnsWindowsLike
+	default:
+		return nil
+	}
+	panic("not reached")
+	return nil
+}
+
+func dnsNsdLike(l *lexer) stateFn {
+	l.verbose("NsdLike")
+
+	return nil
+}
+
+func dnsBindLike(l *lexer) stateFn {
+	l.verbose("BindLike")
+
+	return nil
+}
+
+func dnsWindowsLike(l *lexer) stateFn {
+	l.verbose("WindowsLike")
+
+	return nil
+}
+
+func dnsMaraLike(l *lexer) stateFn {
+	l.verbose("MaraLike")
+
+	return nil
+}
+
+func dnsPowerDNSLike(l *lexer) stateFn {
+	l.verbose("PowerDNSLike")
+
 	return nil
 }
 
 // Check if the server returns the DO-bit when set in the request.                                                                          
 func dnsDoBitMirror(l *lexer) stateFn {
 	l.verbose("DoBitMirror")
+
 	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,0")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
@@ -133,8 +201,8 @@ func dnsRcodeNotZone(l *lexer) stateFn {
 
 func dnsLikeWindows(l *lexer) stateFn {
 	l.verbose("LikeWindows")
-	l.setString(QUERYNORMAL)
+	l.setString(QUERY_NOERROR)
 	l.setQuestion(".", dns.TypeIXFR, dns.ClassINET)
-        l.probe()
-        return nil
+	l.probe()
+	return nil
 }
