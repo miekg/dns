@@ -44,7 +44,7 @@ func startParse(addr string) {
 	// Not completely sure about this code..
 	for {
 		item := <-l.items
-		fmt.Printf("%v\n", item)
+		fmt.Printf("{%s %s}\n", itemString[item.typ], item.val)
 		if l.state == nil {
 			break
 		}

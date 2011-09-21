@@ -25,6 +25,15 @@ const (
 	itemVersionPatch          // the patch level of the software (empty if not determined)
 )
 
+var itemString = map[itemType]string{
+	itemError:        "error",
+	itemSoftware:     "software",
+	itemVendor:       "vendor",
+	itemVersionMajor: "major",
+	itemVersionMinor: "minor",
+	itemVersionPatch: "patch",
+}
+
 // stateFn represents the state of the scanner as a function that returns the next state.
 type stateFn func(*lexer) stateFn
 
