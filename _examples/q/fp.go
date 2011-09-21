@@ -11,18 +11,22 @@ import (
 
 const (
 	// Detected software types
-	NSD  = "NSD"
-	BIND = "BIND"
-        POWERDNS = "PowerDNS"
-        WINDOWSDNS = "Windows DNS"
-        MARADNS = "MaraDNS"
+	NSD        = "NSD"
+	BIND       = "BIND"
+	POWERDNS   = "PowerDNS"
+	WINDOWSDNS = "Windows DNS"
+	MARADNS    = "MaraDNS"
+	NEUSTARDNS = "Neustar DNS"
+	ATLAS      = "Atlas"
 
 	// Vendors
 	ISC       = "ISC"
-        MARA      = "MaraDNS.org"        // check
+	MARA      = "MaraDNS.org" // check
 	NLNETLABS = "NLnet Labs"
 	MICROSOFT = "Microsoft"
-        POWER     = "PowerDNS"
+	POWER     = "PowerDNS.com"
+	NEUSTAR   = "Neustar"
+	VERISIGN  = "Verisign"
 )
 
 func startParse(addr string) {
@@ -87,18 +91,18 @@ func (f *fingerprint) String() string {
 		return "<nil>"
 	}
 	// Use the same order as in Perl's fpdns. But use more flags.
-        var s string
-        if op, ok := dns.Opcode_str[f.Opcode]; ok {
-                s = op
-        } else {        // number
-                s = valueOfInt(f.Opcode)
-        }
+	var s string
+	if op, ok := dns.Opcode_str[f.Opcode]; ok {
+		s = op
+	} else { // number
+		s = valueOfInt(f.Opcode)
+	}
 
-        if op, ok := dns.Rcode_str[f.Rcode]; ok {
-                s += "," + op
-        } else {        // number
-                s += "," + valueOfInt(f.Rcode)
-        }
+	if op, ok := dns.Rcode_str[f.Rcode]; ok {
+		s += "," + op
+	} else { // number
+		s += "," + valueOfInt(f.Rcode)
+	}
 
 	s += valueOfBool(f.Response, ",qr")
 	s += valueOfBool(f.Authoritative, ",aa")
@@ -109,21 +113,21 @@ func (f *fingerprint) String() string {
 	s += valueOfBool(f.CheckingDisabled, ",cd")
 	s += valueOfBool(f.Zero, ",z")
 
-	s += ","+valueOfInt(f.Question)
-	s += ","+valueOfInt(f.Answer)
-	s += ","+valueOfInt(f.Ns)
-	s += ","+valueOfInt(f.Extra)
+	s += "," + valueOfInt(f.Question)
+	s += "," + valueOfInt(f.Answer)
+	s += "," + valueOfInt(f.Ns)
+	s += "," + valueOfInt(f.Extra)
 
 	s += valueOfBool(f.Do, ",do")
-	s += ","+valueOfInt(f.UDPSize)
+	s += "," + valueOfInt(f.UDPSize)
 	return s
 }
 
 // fingerStringNoSections returns the strings representation
 // without the sections' count and the EDNS0 stuff
 func (f *fingerprint) StringNoSections() string {
-        s := strings.SplitN(f.String(), ",", 11)
-        return strings.Join(s[:10], ",")
+	s := strings.SplitN(f.String(), ",", 11)
+	return strings.Join(s[:10], ",")
 }
 
 // SetString set the string to fp.. todo
@@ -131,17 +135,17 @@ func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
 		case 0:
-                        if op, ok := dns.Str_opcode[s]; ok {
-			        f.Opcode = op
-                        } else { // number
-                                f.Opcode = valueOfString(s)
-                        }
+			if op, ok := dns.Str_opcode[s]; ok {
+				f.Opcode = op
+			} else { // number
+				f.Opcode = valueOfString(s)
+			}
 		case 1:
-                        if op, ok := dns.Str_rcode[s]; ok {
-			        f.Rcode = op
-                        } else { // number
-                                f.Rcode = valueOfString(s)
-                        }
+			if op, ok := dns.Str_rcode[s]; ok {
+				f.Rcode = op
+			} else { // number
+				f.Rcode = valueOfString(s)
+			}
 		case 2:
 			f.Response = s == strings.ToUpper("qr")
 		case 3:
@@ -157,7 +161,7 @@ func (f *fingerprint) setString(str string) {
 		case 8:
 			f.CheckingDisabled = s == strings.ToUpper("cd")
 		case 9:
-			f.Zero =  s == strings.ToUpper("z")
+			f.Zero = s == strings.ToUpper("z")
 		case 10, 11, 12, 13:
 			// Can not set content of the message
 		case 14:

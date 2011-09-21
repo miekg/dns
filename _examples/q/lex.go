@@ -17,11 +17,12 @@ type item struct {
 }
 
 const (
-	itemError      itemType = iota
-	itemSoftware            // the name of the DNS server software
-	itemVendor              // vendor of the DNS software
-	itemVersionMin          // the minimum version of the software (empty if not determined)
-	itemVersionMax          // the maximum version of the software (empty if not determined)
+	itemError        itemType = iota
+	itemSoftware              // the name of the DNS server software
+	itemVendor                // vendor of the DNS software
+	itemVersionMinor          // the minor version of the software (empty if not determined)
+	itemVersionMajor          // the major version of the software (empty if not determined)
+	itemVersionPatch          // the patch level of the software (empty if not determined)
 )
 
 // stateFn represents the state of the scanner as a function that returns the next state.
@@ -58,9 +59,9 @@ func (l *lexer) setString(s string) {
 
 func (l *lexer) setQuestion(name string, t uint16, c uint16) {
 	l.q = dns.Question{name, t, c}
-        if l.debug {
-                fmt.Printf("             %s\n", l.q.String())
-        }
+	if l.debug {
+		fmt.Printf("             %s\n", l.q.String())
+	}
 }
 
 func (l *lexer) run() {

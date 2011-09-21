@@ -6,6 +6,7 @@ import (
 
 const (
 	QUERY_NOERROR string = "QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0"
+	QUERY_NOTIFY  string = "NOTIFY,NOERROR,qr,AA,tc,RD,ra,ad,cd,Z,0,0,0,0,do,0"
 	QUERY_ALL     string = "QUERY,NOERROR,QR,AA,TC,RD,RA,AD,CD,Z,0,0,0,0,DO,0"
 )
 
@@ -41,12 +42,26 @@ func dnsServer(l *lexer) stateFn {
 		// MaraDNS clears DO BIT, UDPSize to 0. REFUSED
 		l.emit(&item{itemVendor, MARA})
 		return dnsMaraLike
-        case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeSuccess:
-                // PowerDNS(SEC) clears DO bit, resets UDPSize. NOERROR
+	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeSuccess:
+		// PowerDNS(SEC) clears DO bit, resets UDPSize. NOERROR
 		l.emit(&item{itemVendor, POWER})
-                return dnsPowerDNSLike
+		return dnsPowerdnsLike
+	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeServerFailure:
+		// Neustar
+		l.emit(&item{itemVendor, NEUSTAR})
+		return dnsNeustarLike
+	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeNotImplemented:
+		// Altas?
+		l.emit(&item{itemVendor, VERISIGN})
+		return dnsAtlasLike
+	case !f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeServerFailure:
+		// BIND8
+                fallthrough
+	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeServerFailure:
+		// BIND9 OLD
+                fallthrough
 	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeRefused:
-		// BIND leaves DO bit, but sets UDPSize to 4096. REFUSED.
+		// BIND9 leaves DO bit, but sets UDPSize to 4096. REFUSED.
 		l.emit(&item{itemVendor, ISC})
 		return dnsBindLike
 	case f.Do && f.UDPSize == 4097 && f.Rcode == dns.RcodeFormatError:
@@ -62,6 +77,9 @@ func dnsServer(l *lexer) stateFn {
 
 func dnsNsdLike(l *lexer) stateFn {
 	l.verbose("NsdLike")
+	l.setString(QUERY_NOERROR)
+	l.setQuestion("authors.bind.", dns.TypeTXT, dns.ClassCHAOS)
+	l.probe()
 
 	return nil
 }
@@ -69,6 +87,57 @@ func dnsNsdLike(l *lexer) stateFn {
 func dnsBindLike(l *lexer) stateFn {
 	l.verbose("BindLike")
 
+        l.emit(&item{itemSoftware, BIND})
+
+        // Repeat the query, as we get a lot of information from it
+	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,4097")
+	l.setQuestion(".", dns.TypeTXT, dns.ClassCHAOS)
+	f := l.probe()
+	switch {
+	case !f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeServerFailure:
+                l.emit(&item{itemVersionMajor, "8"})
+	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeServerFailure:
+                l.emit(&item{itemVersionMajor, "9"})
+                l.emit(&item{itemVersionMajor, "3"})
+	case f.Do && f.UDPSize == 4096 && f.Rcode == dns.RcodeRefused:
+		// BIND9 leaves DO bit, but sets UDPSize to 4096. REFUSED.
+                l.emit(&item{itemVersionMajor, "9"})
+                l.emit(&item{itemVersionMajor, "[7..]"})
+        }
+
+	// Try authors.bind
+	l.setString(QUERY_NOERROR)
+	l.setQuestion("authors.bind.", dns.TypeTXT, dns.ClassCHAOS)
+	f = l.probe()
+	switch f.Rcode {
+	case dns.RcodeServerFailure:
+		// No authors.bind < 9
+		l.emit(&item{itemVersionMajor, "8"})
+	case dns.RcodeSuccess, dns.RcodeRefused:
+		// BIND 9 or BIND 10
+		l.emit(&item{itemVersionMajor, "[9..10]"})
+	}
+        // The three BIND (8, 9 and 10) behave differently when
+        // receiving a notify query
+	l.setString(QUERY_NOTIFY)
+	l.setQuestion("bind.", dns.TypeSOA, dns.ClassNONE)
+	f = l.probe()
+        switch {
+        case f.Opcode == dns.OpcodeNotify:
+                if f.Rcode == dns.RcodeRefused {
+		        l.emit(&item{itemVersionMajor, "9"})
+                }
+                if f.Rcode == dns.RcodeServerFailure {
+		        l.emit(&item{itemVersionMajor, "8"})
+                }
+        case f.Opcode == dns.OpcodeQuery && f.Rcode == dns.RcodeSuccess:
+                l.emit(&item{itemVersionMajor, "10"})
+                if !f.Response {
+                        // Cardinal sin
+                        l.emit(&item{itemVersionMinor, "-devel"})
+                        l.emit(&item{itemVersionPatch, "20110809"})
+                }
+        }
 	return nil
 }
 
@@ -84,8 +153,20 @@ func dnsMaraLike(l *lexer) stateFn {
 	return nil
 }
 
-func dnsPowerDNSLike(l *lexer) stateFn {
-	l.verbose("PowerDNSLike")
+func dnsPowerdnsLike(l *lexer) stateFn {
+	l.verbose("PowerdnsLike")
+
+	return nil
+}
+
+func dnsNeustarLike(l *lexer) stateFn {
+	l.verbose("NeustarLike")
+
+	return nil
+}
+
+func dnsAtlasLike(l *lexer) stateFn {
+	l.verbose("AtlasLike")
 
 	return nil
 }
