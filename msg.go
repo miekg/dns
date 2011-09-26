@@ -320,18 +320,13 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
                                 // Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j)
-					code := uint16(element.Field(0).Uint())
 					// for each code we should do something else
 					h, e := hex.DecodeString(string(element.Field(1).String()))
 					if e != nil {
 						//fmt.Fprintf(os.Stderr, "dns: failure packing OTP")
 						return lenmsg, false
 					}
-					// Option Code
-                                        // the rdlength needs to be set somehow
-                                        println("code ", code)
-                                        println("length ", len(string(h)))
-                                        println("off ", off)
+					code := uint16(element.Field(0).Uint())
 					msg[off], msg[off+1] = packUint16(code)
 					// Length
 					msg[off+2], msg[off+3] = packUint16(uint16(len(string(h))))
