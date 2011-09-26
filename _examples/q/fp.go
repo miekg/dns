@@ -62,7 +62,7 @@ func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) *fing
 	return msgToFingerprint(r)
 }
 
-// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096"
+// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
 type fingerprint struct {
 	Error              os.Error
 	Opcode             int
@@ -81,11 +81,12 @@ type fingerprint struct {
 	Extra              int
 	Do                 bool
 	UDPSize            int
+        Nsid               bool
 }
 
 // String creates a (short) string representation of a dns message.
 // If a bit is set we uppercase the name 'AD' otherwise it's lowercase 'ad'.
-// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096"
+// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
 func (f *fingerprint) String() string {
 	if f == nil {
 		return "<nil>"
@@ -120,6 +121,7 @@ func (f *fingerprint) String() string {
 
 	s += valueOfBool(f.Do, ",do")
 	s += "," + valueOfInt(f.UDPSize)
+	s += valueOfBool(f.Nsid, ",nsid")
 	return s
 }
 
@@ -168,6 +170,8 @@ func (f *fingerprint) setString(str string) {
 			f.Do = s == strings.ToUpper("do")
 		case 15:
 			f.UDPSize = valueOfString(s)
+		case 16:
+			f.Nsid = s == strings.ToUpper("nsid")
 		default:
 			panic("unhandled fingerprint")
 		}
@@ -222,6 +226,10 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 			// version is always 0 - and I cannot set it anyway
 			f.Do = r.(*dns.RR_OPT).Do()
 			f.UDPSize = int(r.(*dns.RR_OPT).UDPSize())
+                        if len(r.(*dns.RR_OPT).Option) == 1 {
+                                // Only support NSID atm
+                                f.Nsid = r.(*dns.RR_OPT).Option[0].Code == dns.OptionCodeNSID
+                        }
 		}
 	}
 	return f
@@ -229,7 +237,7 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 
 // Create a dns message from a fingerprint string and
 // a DNS question. The order of a string is always the same.
-// QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096
+// QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096,nsid
 func (f *fingerprint) toProbe(q dns.Question) *dns.Msg {
 	m := new(dns.Msg)
 	m.MsgHdr.Id = dns.Id()
@@ -250,6 +258,9 @@ func (f *fingerprint) toProbe(q dns.Question) *dns.Msg {
 		m.SetEdns0(0, true)
 		// We have added an OPT RR, set the size.
 		m.Extra[0].(*dns.RR_OPT).SetUDPSize(uint16(f.UDPSize))
+                if f.Nsid {
+		        m.Extra[0].(*dns.RR_OPT).SetNsid("")
+                }
 	}
 	return m
 }
