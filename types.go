@@ -681,6 +681,15 @@ func (rr *RR_NSEC3PARAM) String() string {
 	return s
 }
 
+// saltString converts a NSECX salt to uppercase and
+// returns "-" when it is empty
+func saltString(s string) string {
+        if len(s) == 0 {
+                return "-"
+        }
+        return strings.ToUpper(s)
+}
+
 // See RFC 4408.
 type RR_SPF struct {
 	Hdr RR_Header
