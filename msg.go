@@ -174,7 +174,7 @@ var Rcode_str = map[int]string{
 // Pack a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots.  They end with a zero-length string.
-func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
+func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
@@ -240,7 +240,7 @@ func packDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 // which is where the next record will start.
 // In theory, the pointers are only allowed to jump backward.
 // We let them jump anywhere and stop jumping after a while.
-func unpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
+func UnpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
@@ -437,7 +437,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case "domain-name":
-				off, ok = packDomainName(s, msg, off)
+				off, ok = PackDomainName(s, msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
 					return lenmsg, false
@@ -677,7 +677,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
 			case "domain-name":
-				s, off, ok = unpackDomainName(msg, off)
+				s, off, ok = UnpackDomainName(msg, off)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
 					return lenmsg, false

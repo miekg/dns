@@ -7,6 +7,8 @@ import (
         "fmt"
 )
 
+var privatealg = "7.nsec4.nlnetlabs.nl."
+
 func main() {
         if len(os.Args) != 2 {
                 fmt.Printf("%s DOMAIN\n", os.Args[0])

@@ -130,7 +130,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, ok1 := packDomainName(k.Hdr.Name, owner, 0)
+	off, ok1 := PackDomainName(k.Hdr.Name, owner, 0)
 	if !ok1 {
 		return nil
 	}
@@ -451,8 +451,8 @@ type wireSlice [][]byte
 
 func (p wireSlice) Len() int { return len(p) }
 func (p wireSlice) Less(i, j int) bool {
-	_, ioff, _ := unpackDomainName(p[i], 0)
-	_, joff, _ := unpackDomainName(p[j], 0)
+	_, ioff, _ := UnpackDomainName(p[i], 0)
+	_, joff, _ := UnpackDomainName(p[j], 0)
 	return bytes.Compare(p[i][ioff+10:], p[j][joff+10:]) < 0
 }
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
