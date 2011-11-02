@@ -8,7 +8,6 @@ package dns
 // when the query returns.
 
 import (
-	"os"
 	"io"
 	"net"
 )
@@ -22,10 +21,10 @@ type QueryHandler interface {
 // construct a DNS request.
 type RequestWriter interface {
 	Write(*Msg)
-	Send(*Msg) os.Error
-	Receive() (*Msg, os.Error)
-	Close() os.Error
-	Dial() os.Error
+	Send(*Msg) error
+	Receive() (*Msg, error)
+	Close() error
+	Dial() error
 }
 
 // hijacked connections...?
@@ -124,8 +123,8 @@ type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
-	QueryChan chan *Request     // read DNS request from this channel
-	ReplyChan chan *Exchange    // write the reply (together with the DNS request) to this channel
+	QueryChan    chan *Request     // read DNS request from this channel
+	ReplyChan    chan *Exchange    // write the reply (together with the DNS request) to this channel
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections (ns)
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -140,8 +139,8 @@ func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
-        c.ReplyChan = DefaultReplyChan
-        c.QueryChan = DefaultQueryChan
+	c.ReplyChan = DefaultReplyChan
+	c.QueryChan = DefaultQueryChan
 	c.ReadTimeout = 1 * 1e9
 	c.WriteTimeout = 1 * 1e9
 	return c
@@ -149,10 +148,10 @@ func NewClient() *Client {
 
 type Query struct {
 	QueryChan chan *Request // read DNS request from this channel
-	Handler      QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
+	Handler   QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
 }
 
-func (q *Query) Query() os.Error {
+func (q *Query) Query() error {
 	handler := q.Handler
 	if handler == nil {
 		handler = DefaultQueryMux
@@ -171,7 +170,7 @@ func (q *Query) Query() os.Error {
 	return nil
 }
 
-func (q *Query) ListenAndQuery() os.Error {
+func (q *Query) ListenAndQuery() error {
 	if q.QueryChan == nil {
 		q.QueryChan = DefaultQueryChan
 	}
@@ -195,12 +194,12 @@ func (w *reply) Write(m *Msg) {
 // Do performs an asynchronous query. The result is returned on the
 // QueryChan channel set in the Client c. 
 func (c *Client) Do(m *Msg, a string) {
-        c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
+	c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
 
 // ExchangeBuffer performs a synchronous query. It sends the buffer m to the
 // address (net.Addr?) contained in a
-func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, err os.Error) {
+func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, err error) {
 	w := new(reply)
 	w.client = c
 	w.addr = a
@@ -224,7 +223,7 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply.
-func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	var n int
 	out, ok := m.Pack()
 	if !ok {
@@ -248,7 +247,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err os.Error) {
 }
 
 // Dial connects to the address addr for the network set in c.Net
-func (w *reply) Dial() os.Error {
+func (w *reply) Dial() error {
 	conn, err := net.Dial(w.Client().Net, w.addr)
 	if err != nil {
 		return err
@@ -258,7 +257,7 @@ func (w *reply) Dial() os.Error {
 }
 
 // UDP/TCP stuff big TODO
-func (w *reply) Close() (err os.Error) {
+func (w *reply) Close() (err error) {
 	return w.conn.Close()
 }
 
@@ -270,7 +269,7 @@ func (w *reply) Request() *Msg {
 	return w.req
 }
 
-func (w *reply) Receive() (*Msg, os.Error) {
+func (w *reply) Receive() (*Msg, error) {
 	var p []byte
 	m := new(Msg)
 	switch w.Client().Net {
@@ -294,8 +293,8 @@ func (w *reply) Receive() (*Msg, os.Error) {
 		if !ok {
 			return m, ErrSecret
 		}
-                // Need to work on the original message p, as that was used
-                // to calculate the tsig.
+		// Need to work on the original message p, as that was used
+		// to calculate the tsig.
 		err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return m, err
@@ -304,9 +303,9 @@ func (w *reply) Receive() (*Msg, os.Error) {
 	return m, nil
 }
 
-func (w *reply) readClient(p []byte) (n int, err os.Error) {
+func (w *reply) readClient(p []byte) (n int, err error) {
 	if w.conn == nil {
-                return 0, ErrConnEmpty
+		return 0, ErrConnEmpty
 		//panic("no connection")
 	}
 	switch w.Client().Net {
@@ -350,16 +349,16 @@ func (w *reply) readClient(p []byte) (n int, err os.Error) {
 // Send sends a dns msg to the address specified in w.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
-func (w *reply) Send(m *Msg) os.Error {
+func (w *reply) Send(m *Msg) error {
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		_, ok := w.Client().TsigSecret[secret]
 		if !ok {
 			return ErrSecret
 		}
-                if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
-                        return err
-                }
+		if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
+			return err
+		}
 		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Save the requestMAC for the next packet
 	}
 	out, ok := m.Pack()
@@ -373,7 +372,7 @@ func (w *reply) Send(m *Msg) os.Error {
 	return nil
 }
 
-func (w *reply) writeClient(p []byte) (n int, err os.Error) {
+func (w *reply) writeClient(p []byte) (n int, err error) {
 	if w.Client().Attempts == 0 {
 		panic("c.Attempts 0")
 	}
@@ -384,8 +383,8 @@ func (w *reply) writeClient(p []byte) (n int, err os.Error) {
 		if err = w.Dial(); err != nil {
 			return 0, err
 		}
-                w.conn.SetWriteTimeout(w.Client().WriteTimeout)
-                w.conn.SetReadTimeout(w.Client().ReadTimeout)
+		w.conn.SetWriteTimeout(w.Client().WriteTimeout)
+		w.conn.SetReadTimeout(w.Client().ReadTimeout)
 
 	}
 	switch w.Client().Net {

@@ -34,7 +34,6 @@ package dns
 
 import (
 	"io"
-	"os"
 	"time"
 	"strings"
 	"crypto/hmac"
@@ -82,16 +81,16 @@ type timerWireFmt struct {
 // in the Tsig RR that is added. When TsigGenerate is called for the
 // first time requestMAC is set to the empty string.
 // If something goes wrong an error is returned, otherwise it is nil.
-func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) os.Error {
+func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 	if !m.IsTsig() {
-                // panic? panic?
+		// panic? panic?
 		panic("TSIG not last RR in additional")
 	}
-        // If we barf here, the caller is to blame
+	// If we barf here, the caller is to blame
 	rawsecret, err := packBase64([]byte(secret))
-        if err != nil {
-                return err
-        }
+	if err != nil {
+		return err
+	}
 
 	rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
 	m.Extra = m.Extra[0 : len(m.Extra)-1] // kill the TSIG from the msg
@@ -119,7 +118,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) os.Error {
 // TsigVerify verifies the TSIG on a message. 
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
-func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error {
+func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
 		return err
@@ -132,17 +131,17 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) os.Error
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
 
-        ti := uint64(time.Seconds()) - tsig.TimeSigned
-        if uint64(tsig.Fudge) < ti {
-                return ErrTime
-        }
+	ti := uint64(time.Seconds()) - tsig.TimeSigned
+	if uint64(tsig.Fudge) < ti {
+		return ErrTime
+	}
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-        if (strings.ToUpper(hex.EncodeToString(h.Sum())) != strings.ToUpper(tsig.MAC)) {
-                return ErrSig
-        }
-        return nil
+	if strings.ToUpper(hex.EncodeToString(h.Sum())) != strings.ToUpper(tsig.MAC) {
+		return ErrSig
+	}
+	return nil
 }
 
 // Create a wiredata buffer for the MAC calculation.
@@ -155,7 +154,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		rr.TimeSigned = uint64(time.Seconds())
 	}
 	if rr.Fudge == 0 {
-		rr.Fudge = 300  // Standard (RFC) default.
+		rr.Fudge = 300 // Standard (RFC) default.
 	}
 
 	if requestMAC != "" {
@@ -198,7 +197,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 }
 
 // Strip the TSIG from the raw message
-func stripTsig(msg []byte) ([]byte, *RR_TSIG, os.Error) {
+func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	// Copied from msg.go's Unpack()
 	// Header.
 	var dh Header

@@ -18,7 +18,6 @@ import (
 	"big"
 	"sort"
 	"strings"
-	"os"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -172,7 +171,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // otherwise false.
 // The signature data in the RRSIG is filled by this method.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
-func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
+func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 	if k == nil {
 		return ErrPrivKey
 	}
@@ -263,7 +262,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) os.Error {
 
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period most be checked separately.
-func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) os.Error {
+func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
 		return ErrKey
@@ -337,7 +336,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) os.Error {
 		return rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
 	}
 	// Unknown alg
-        return ErrAlg
+	return ErrAlg
 }
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate 

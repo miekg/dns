@@ -15,7 +15,6 @@
 package dns
 
 import (
-	"os"
 	"reflect"
 	"net"
 	"rand"
@@ -27,31 +26,31 @@ import (
 )
 
 var (
-	ErrUnpack    os.Error = &Error{Error: "unpacking failed"}
-	ErrPack      os.Error = &Error{Error: "packing failed"}
-	ErrId        os.Error = &Error{Error: "id mismatch"}
-	ErrShortRead os.Error = &Error{Error: "short read"}
-	ErrConn      os.Error = &Error{Error: "conn holds both UDP and TCP connection"}
-	ErrConnEmpty os.Error = &Error{Error: "conn has no connection"}
-	ErrServ      os.Error = &Error{Error: "no servers could be reached"}
-	ErrKey       os.Error = &Error{Error: "bad key"}
-	ErrPrivKey   os.Error = &Error{Error: "bad private key"}
-	ErrKeySize   os.Error = &Error{Error: "bad key size"}
-	ErrKeyAlg    os.Error = &Error{Error: "bad key algorithm"}
-	ErrAlg       os.Error = &Error{Error: "bad algorithm"}
-	ErrTime      os.Error = &Error{Error: "bad time"}
-	ErrNoSig     os.Error = &Error{Error: "no signature found"}
-	ErrSig       os.Error = &Error{Error: "bad signature"}
-	ErrSecret    os.Error = &Error{Error: "no secret defined"}
-	ErrSigGen    os.Error = &Error{Error: "bad signature generation"}
-	ErrAuth      os.Error = &Error{Error: "bad authentication"}
-	ErrXfrSoa    os.Error = &Error{Error: "no SOA seen"}
-	ErrXfrLast   os.Error = &Error{Error: "last SOA"}
-	ErrXfrType   os.Error = &Error{Error: "no ixfr, nor axfr"}
-	ErrHandle    os.Error = &Error{Error: "handle is nil"}
-	ErrChan      os.Error = &Error{Error: "channel is nil"}
-	ErrName      os.Error = &Error{Error: "type not found for name"}
-	ErrRRset     os.Error = &Error{Error: "invalid rrset"}
+	ErrUnpack    error = &Error{Err: "unpacking failed"}
+	ErrPack      error = &Error{Err: "packing failed"}
+	ErrId        error = &Error{Err: "id mismatch"}
+	ErrShortRead error = &Error{Err: "short read"}
+	ErrConn      error = &Error{Err: "conn holds both UDP and TCP connection"}
+	ErrConnEmpty error = &Error{Err: "conn has no connection"}
+	ErrServ      error = &Error{Err: "no servers could be reached"}
+	ErrKey       error = &Error{Err: "bad key"}
+	ErrPrivKey   error = &Error{Err: "bad private key"}
+	ErrKeySize   error = &Error{Err: "bad key size"}
+	ErrKeyAlg    error = &Error{Err: "bad key algorithm"}
+	ErrAlg       error = &Error{Err: "bad algorithm"}
+	ErrTime      error = &Error{Err: "bad time"}
+	ErrNoSig     error = &Error{Err: "no signature found"}
+	ErrSig       error = &Error{Err: "bad signature"}
+	ErrSecret    error = &Error{Err: "no secret defined"}
+	ErrSigGen    error = &Error{Err: "bad signature generation"}
+	ErrAuth      error = &Error{Err: "bad authentication"}
+	ErrXfrSoa    error = &Error{Err: "no SOA seen"}
+	ErrXfrLast   error = &Error{Err: "last SOA"}
+	ErrXfrType   error = &Error{Err: "no ixfr, nor axfr"}
+	ErrHandle    error = &Error{Err: "handle is nil"}
+	ErrChan      error = &Error{Err: "channel is nil"}
+	ErrName      error = &Error{Err: "type not found for name"}
+	ErrRRset     error = &Error{Err: "invalid rrset"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -317,7 +316,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				//fmt.Fprintf(os.Stderr, "dns: unknown packing slice tag %v\n", f.Tag)
 				return lenmsg, false
 			case "OPT": // edns
-                                // Length of the entire option section
+				// Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j)
 					// for each code we should do something else
@@ -330,7 +329,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					msg[off], msg[off+1] = packUint16(code)
 					// Length
 					msg[off+2], msg[off+3] = packUint16(uint16(len(string(h))))
-                                        off += 4
+					off += 4
 
 					copy(msg[off:off+len(string(h))], h)
 					off += len(string(h))
@@ -793,7 +792,7 @@ func packUint16(i uint16) (byte, byte) {
 	return byte(i >> 8), byte(i)
 }
 
-func packBase64(s []byte) ([]byte, os.Error) {
+func packBase64(s []byte) ([]byte, error) {
 	b64len := base64.StdEncoding.DecodedLen(len(s))
 	buf := make([]byte, b64len)
 	n, err := base64.StdEncoding.Decode(buf, []byte(s))
@@ -805,7 +804,7 @@ func packBase64(s []byte) ([]byte, os.Error) {
 }
 
 // Helper function for packing, mostly used in dnssec.go
-func packBase32(s []byte) ([]byte, os.Error) {
+func packBase32(s []byte) ([]byte, error) {
 	b32len := base32.HexEncoding.DecodedLen(len(s))
 	buf := make([]byte, b32len)
 	n, err := base32.HexEncoding.Decode(buf, []byte(s))

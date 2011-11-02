@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"os"
 	"io"
 	"big"
 	"strconv"
@@ -21,9 +20,9 @@ type PrivateKey interface{}
 // what kind of DNSKEY will be generated.
 // The ECDSA algorithms imply a fixed keysize, in that case
 // bits should be set to the size of the algorithm.
-func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
+func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	switch r.Algorithm {
-        case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
+	case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}
@@ -42,7 +41,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, os.Error) {
 	}
 
 	switch r.Algorithm {
-        case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
+	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
 		if err != nil {
 			return nil, err
@@ -113,7 +112,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 }
 
 // Read reads a DNSKEY from the io.Reader q.
-func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
+func (k *RR_DNSKEY) Read(q io.Reader) error {
 	p := NewParser(q)
 	r, err := p.First()
 	if err != nil {
@@ -131,12 +130,12 @@ func (k *RR_DNSKEY) Read(q io.Reader) os.Error {
 }
 
 // ReadPrivateKey reads a private key from the io.Reader q.
-func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
 	p := NewParser(q)
 	kv, _ := p.PrivateKey()
-        if kv == nil {
-                return nil, ErrPrivKey
-        }
+	if kv == nil {
+		return nil, ErrPrivKey
+	}
 	if _, ok := kv["private-key-format"]; !ok {
 		return nil, ErrPrivKey
 	}
@@ -153,7 +152,7 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, os.Error) {
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, error) {
 	p := new(rsa.PrivateKey)
 	p.Primes = []*big.Int{nil, nil}
 	for k, v := range kv {
@@ -190,7 +189,7 @@ func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, os.Erro
 	return p, nil
 }
 
-func (k *RR_DNSKEY) readPrivateKeyECDSA(kv map[string]string) (PrivateKey, os.Error) {
+func (k *RR_DNSKEY) readPrivateKeyECDSA(kv map[string]string) (PrivateKey, error) {
 	p := new(ecdsa.PrivateKey)
 	p.D = big.NewInt(0)
 	// Need to check if we have everything

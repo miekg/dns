@@ -1,15 +1,11 @@
 package dns
 
-import (
-	"os"
-)
-
 // XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
 // section contains an AXFR type an Axfr is performed, if it is IXFR it does an Ixfr.
 // Each message will be send along the Client's reply channel as it is received. 
 // The last message send has Exchange.Error set to ErrXfrLast
 // to signal there is nothing more to come.
-func (c *Client) XfrReceive(q *Msg, a string) os.Error {
+func (c *Client) XfrReceive(q *Msg, a string) error {
 	w := new(reply)
 	w.client = c
 	w.addr = a
@@ -117,10 +113,10 @@ func (w *reply) ixfrReceive() {
 
 // XfrSend performs an outgoing Ixfr or Axfr. The function is xfr agnostic, it is
 // up to the caller to correctly send the sequence of messages.
-func XfrSend(w ResponseWriter, q *Msg, a string) os.Error {
+func XfrSend(w ResponseWriter, q *Msg, a string) error {
 	switch q.Question[0].Qtype {
-        case TypeAXFR, TypeIXFR:
-//		go d.xfrWrite(q, m, e)
+	case TypeAXFR, TypeIXFR:
+		//		go d.xfrWrite(q, m, e)
 	default:
 		return ErrXfrType
 	}

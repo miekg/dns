@@ -5,7 +5,6 @@ import (
 	"hash"
 	"strings"
 	"crypto/sha1"
-	"os"
 )
 
 type saltWireFmt struct {
@@ -63,13 +62,13 @@ func (nsec3 *RR_NSEC3) HashNames() {
 // the message m. 
 // NsecVerify returns nil when the NSECs in the message contain
 // the correct proof. This function does not validates the NSECs
-func (m *Msg) NsecVerify(q Question) os.Error {
+func (m *Msg) NsecVerify(q Question) error {
 
-        return nil
+	return nil
 }
 
 // Nsec3Verify verifies ...
-func (m *Msg) Nsec3Verify(q Question) os.Error {
+func (m *Msg) Nsec3Verify(q Question) error {
 
-        return nil
+	return nil
 }

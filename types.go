@@ -6,7 +6,6 @@
 package dns
 
 import (
-	"os"
 	"net"
 	"time"
 	"strconv"
@@ -148,7 +147,7 @@ func (q *Question) String() string {
 }
 
 // NewRRString returns the last RR contained in s.
-func NewRRString(s string) (RR, os.Error) {
+func NewRRString(s string) (RR, error) {
 	p := NewParser(strings.NewReader(s))
 	return p.First()
 }
@@ -162,8 +161,8 @@ func NewRR(i uint16) RR {
 }
 
 type RR_ANY struct {
-        Hdr RR_Header
-        // Does not have any rdata
+	Hdr RR_Header
+	// Does not have any rdata
 }
 
 func (rr *RR_ANY) Header() *RR_Header {
@@ -792,7 +791,7 @@ func (rr *RR_TSIG) String() string {
 		" " + strconv.Itoa(int(rr.MACSize)) +
 		" " + strings.ToUpper(rr.MAC) +
 		" " + strconv.Itoa(int(rr.OrigId)) +
-		" " + strconv.Itoa(int(rr.Error)) +     // BIND prints NOERROR
+		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
 		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
 }

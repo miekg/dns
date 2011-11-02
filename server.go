@@ -8,7 +8,6 @@ package dns
 
 import (
 	"io"
-	"os"
 	"net"
 )
 
@@ -26,7 +25,7 @@ type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
 	// Write a reply back to the client.
-	Write([]byte) (int, os.Error)
+	Write([]byte) (int, error)
 }
 
 // port?
@@ -73,8 +72,8 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 // RCODE = refused for every request.
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
-        m.SetRcode(r, RcodeRefused)
-        buf, _ := m.Pack()
+	m.SetRcode(r, RcodeRefused)
+	buf, _ := m.Pack()
 	w.Write(buf)
 }
 
@@ -82,7 +81,7 @@ func Refused(w ResponseWriter, r *Msg) {
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 // ...
-func ListenAndServe(addr string, network string, handler Handler) os.Error {
+func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
 }
@@ -148,7 +147,7 @@ type Server struct {
 }
 
 // ...
-func (srv *Server) ListenAndServe() os.Error {
+func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
@@ -178,7 +177,7 @@ func (srv *Server) ListenAndServe() os.Error {
 	return nil // os.Error with wrong network
 }
 
-func (srv *Server) ServeTCP(l *net.TCPListener) os.Error {
+func (srv *Server) ServeTCP(l *net.TCPListener) error {
 	defer l.Close()
 	handler := srv.Handler
 	if handler == nil {
@@ -228,7 +227,7 @@ forever:
 	panic("not reached")
 }
 
-func (srv *Server) ServeUDP(l *net.UDPConn) os.Error {
+func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler
 	if handler == nil {
@@ -257,7 +256,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) os.Error {
 	panic("not reached")
 }
 
-func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (*conn, os.Error) {
+func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (*conn, error) {
 	c := new(conn)
 	c.handler = handler
 	c._TCP = t
@@ -266,7 +265,6 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 	c.request = buf
 	return c, nil
 }
-
 
 // Close the connection.
 func (c *conn) close() {
@@ -288,11 +286,11 @@ func (c *conn) serve() {
 		w.conn = c
 		req := new(Msg)
 		if !req.Unpack(c.request) {
-                        // Send a format error back
-                        x := new(Msg)
-                        x.SetRcodeFormatError(req)
-                        buf, _ := x.Pack()
-                        w.Write(buf)
+			// Send a format error back
+			x := new(Msg)
+			x.SetRcodeFormatError(req)
+			buf, _ := x.Pack()
+			w.Write(buf)
 			break
 		}
 		w.req = req
@@ -307,13 +305,12 @@ func (c *conn) serve() {
 	}
 }
 
-
-func (w *response) Write(data []byte) (n int, err os.Error) {
+func (w *response) Write(data []byte) (n int, err error) {
 	switch {
 	case w.conn._UDP != nil:
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
-			println(err.String())
+			println(err.Error())
 			return 0, err
 		}
 	case w.conn._TCP != nil:
