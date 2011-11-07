@@ -156,6 +156,12 @@ func dnsMaraLike(l *lexer) stateFn {
 func dnsPowerdnsLike(l *lexer) stateFn {
 	l.verbose("PowerdnsLike")
 
+func dnsYadifaLike(l *lexer) stateFn {
+	l.verbose("YadifaLike")
+        l.setString(".,CLASS0,TYPE0,QUERY,NOERROR,QR,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
+        l.probe()
+        l.setString(".,CLASS42,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
+        l.probe()
 	return nil
 }
 

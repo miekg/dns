@@ -24,7 +24,7 @@ func main() {
         // Simple sync query, nothing fancy
         r, err := c.Exchange(m, config.Servers[0])
         if err != nil {
-                fmt.Printf("%s\n", err.String())
+                fmt.Printf("%s\n", err.Error())
                 os.Exit(1)
         }
 
