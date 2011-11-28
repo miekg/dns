@@ -96,7 +96,6 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
 
-
 /* from RFC 3225
           +0 (MSB)                +1 (LSB)
    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+

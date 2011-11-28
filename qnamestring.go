@@ -9,8 +9,8 @@ const initialSize = 8
 type QnameString []string
 
 func NewQnameString() *QnameString {
-        p := make(QnameString, 0)
-        return &p
+	p := make(QnameString, 0)
+	return &p
 }
 
 func (p *QnameString) Insert(i int, x string) {

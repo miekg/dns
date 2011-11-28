@@ -23,6 +23,6 @@ func (h *RR_Header) RawSetRdlength(buf []byte, off int) bool {
 
 // RawSetId sets the message ID in buf.
 func RawSetId(buf []byte, off int, id uint16) bool {
-        buf[off], buf[off+1] = packUint16(id)
-        return true
+	buf[off], buf[off+1] = packUint16(id)
+	return true
 }
