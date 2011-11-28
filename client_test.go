@@ -53,7 +53,7 @@ func TestClientEDNS0(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeDNSKEY)
 
-        m.SetEdns0(2048, true)
+	m.SetEdns0(2048, true)
 	//edns.Option = make([]Option, 1)
 	//edns.SetNsid("") // Empty to request it
 
@@ -72,7 +72,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	m.SetAxfr("miek.nl.")
 
 	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
-        TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
+	TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
 	secrets := make(map[string]string)
 	secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="
 
@@ -86,10 +86,10 @@ func TestClientTsigAXFR(t *testing.T) {
 	}
 	for {
 		ex := <-c.ReplyChan
-                t.Log(ex.Reply.String())
-                if ex.Error == ErrXfrLast {
-                        break
-                }
+		t.Log(ex.Reply.String())
+		if ex.Error == ErrXfrLast {
+			break
+		}
 	}
 }
 
@@ -106,9 +106,9 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	}
 	for {
 		ex := <-c.ReplyChan
-                t.Log(ex.Reply.String())
-                if ex.Error == ErrXfrLast {
-                        break
-                }
+		t.Log(ex.Reply.String())
+		if ex.Error == ErrXfrLast {
+			break
+		}
 	}
 }

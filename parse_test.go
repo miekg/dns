@@ -1,9 +1,9 @@
 package dns
 
 import (
-//	"os"
-//	"time"
-//	"bufio"
+	// "os"
+	// "time"
+	// "bufio"
 	"strings"
 	"testing"
 	"crypto/rsa"

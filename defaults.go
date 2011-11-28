@@ -33,29 +33,29 @@ func (dns *Msg) SetNotify(z string) {
 
 // SetRcode creates an error packet.
 func (dns *Msg) SetRcode(request *Msg, rcode int) {
-        dns.MsgHdr.Rcode = rcode
-        dns.MsgHdr.Opcode = OpcodeQuery
-        dns.MsgHdr.Response = true
-        dns.MsgHdr.Authoritative = false
-        dns.MsgHdr.Id = request.MsgHdr.Id
-        dns.Question = make([]Question, 1)
-        dns.Question[0] = request.Question[0]
+	dns.MsgHdr.Rcode = rcode
+	dns.MsgHdr.Opcode = OpcodeQuery
+	dns.MsgHdr.Response = true
+	dns.MsgHdr.Authoritative = false
+	dns.MsgHdr.Id = request.MsgHdr.Id
+	dns.Question = make([]Question, 1)
+	dns.Question[0] = request.Question[0]
 }
 
 // SetRcodeFormatError creates a packet with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) {
-        dns.MsgHdr.Rcode = RcodeFormatError
-        dns.MsgHdr.Opcode = OpcodeQuery
-        dns.MsgHdr.Response = true
-        dns.MsgHdr.Authoritative = false
-        dns.MsgHdr.Id = request.MsgHdr.Id
+	dns.MsgHdr.Rcode = RcodeFormatError
+	dns.MsgHdr.Opcode = OpcodeQuery
+	dns.MsgHdr.Response = true
+	dns.MsgHdr.Authoritative = false
+	dns.MsgHdr.Id = request.MsgHdr.Id
 }
 
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, classINET.
 func (dns *Msg) SetUpdate(z string) {
-        dns.MsgHdr.Id = Id()
-        dns.MsgHdr.Opcode = OpcodeUpdate
+	dns.MsgHdr.Id = Id()
+	dns.MsgHdr.Opcode = OpcodeUpdate
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
@@ -96,13 +96,13 @@ func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned uint64) {
 // SetEdns0 appends a EDNS0 OPT RR to the message. 
 // TSIG should always the last RR in a message.
 func (dns *Msg) SetEdns0(udpsize uint16, do bool) {
-        e := new(RR_OPT)
-        e.Hdr.Name = "."
-        e.Hdr.Rrtype = TypeOPT
-        e.SetUDPSize(udpsize)
-        if do {
-                e.SetDo()
-        }
+	e := new(RR_OPT)
+	e.Hdr.Name = "."
+	e.Hdr.Rrtype = TypeOPT
+	e.SetUDPSize(udpsize)
+	if do {
+		e.SetDo()
+	}
 	dns.Extra = append(dns.Extra, e)
 }
 
@@ -111,17 +111,17 @@ func (dns *Msg) IsRcode(rcode int) (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
 	}
-        ok = dns.MsgHdr.Rcode == rcode
-        return
+	ok = dns.MsgHdr.Rcode == rcode
+	return
 }
 
 // IsQuestion returns true if the packet is a question.
 func (dns *Msg) IsQuestion() (ok bool) {
-        if len(dns.Question) == 0 {
-                return false
-        }
-        ok = dns.MsgHdr.Response == false
-        return
+	if len(dns.Question) == 0 {
+		return false
+	}
+	ok = dns.MsgHdr.Response == false
+	return
 }
 
 // IsRcodeFormatError checks if the message has FormErr set.
@@ -129,8 +129,8 @@ func (dns *Msg) IsRcodeFormatError() (ok bool) {
 	if len(dns.Question) == 0 {
 		return false
 	}
-        ok = dns.MsgHdr.Rcode == RcodeFormatError
-        return
+	ok = dns.MsgHdr.Rcode == RcodeFormatError
+	return
 }
 
 // IsUpdate checks if the message is a dynamic update packet.
@@ -188,12 +188,12 @@ func (dns *Msg) IsTsig() (ok bool) {
 // IsEdns0 checks if the message has a Edns0 record, any EDNS0
 // record in the additional section will do
 func (dns *Msg) IsEdns0() (ok bool) {
-        for _, r := range dns.Extra {
-                if r.Header().Rrtype == TypeOPT {
-                        return true
-                }
-        }
-        return
+	for _, r := range dns.Extra {
+		if r.Header().Rrtype == TypeOPT {
+			return true
+		}
+	}
+	return
 }
 
 // IsDomainName checks if s is a valid domainname.
