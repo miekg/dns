@@ -176,5 +176,6 @@ func (u *Update) RRsetDeleteRR(rr []RR) {
 	for i, r := range rr {
 		u.Ns[i] = r
 		u.Ns[i].Header().Class = ClassNONE
+		u.Ns[i].Header().Ttl = 0
 	}
 }
