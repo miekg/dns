@@ -3,21 +3,20 @@ package dns
 import (
 	"bytes"
 	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/md5"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rsa"
-	"crypto/rand"
 	"encoding/hex"
 	"hash"
-	"time"
-	"io"
-	"big"
+	"math/big"
 	"sort"
 	"strings"
+	"time"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -147,16 +146,13 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	switch h {
 	case SHA1:
 		s := sha1.New()
-		io.WriteString(s, string(digest))
-		ds.Digest = hex.EncodeToString(s.Sum())
+		ds.Digest = hex.EncodeToString(s.Sum(digest))
 	case SHA256:
 		s := sha256.New()
-		io.WriteString(s, string(digest))
-		ds.Digest = hex.EncodeToString(s.Sum())
+		ds.Digest = hex.EncodeToString(s.Sum(digest))
 	case SHA384:
 		s := sha512.New384()
-		io.WriteString(s, string(digest))
-		ds.Digest = hex.EncodeToString(s.Sum())
+		ds.Digest = hex.EncodeToString(s.Sum(digest))
 	case GOST94:
 		/* I have no clue */
 	default:
@@ -235,8 +231,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 	default:
 		return ErrAlg
 	}
-	io.WriteString(h, string(signdata))
-	sighash = h.Sum()
+	sighash = h.Sum(signdata)
 
 	switch p := k.(type) {
 	case *rsa.PrivateKey:
@@ -331,8 +326,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
 			h = sha512.New()
 			ch = crypto.SHA512
 		}
-		io.WriteString(h, string(signeddata))
-		sighash := h.Sum()
+		sighash := h.Sum(signeddata)
 		return rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
 	}
 	// Unknown alg
@@ -342,7 +336,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate 
 // if a signature period is valid.
 func (s *RR_RRSIG) ValidityPeriod() bool {
-	utc := time.UTC().Seconds()
+	utc := time.Now().UTC().Unix()
 	modi := (int64(s.Inception) - utc) / Year68
 	mode := (int64(s.Expiration) - utc) / Year68
 	ti := int64(s.Inception) + (modi * Year68)

@@ -59,13 +59,16 @@ func NewParser(r io.Reader) *Parser {
 // string values ("20110403154150") to an integer.
 // Taking into account serial arithmetic (RFC 1982)
 func dateToTime(s string) (uint32, error) {
-	t, e := time.Parse("20060102150405", s)
+	_, e := time.Parse("20060102150405", s)
 	if e != nil {
 		return 0, e
 	}
+        return 0, nil
+        /*
 	mod := t.Seconds() / Year68
 	ti := uint32(t.Seconds() - (mod * Year68))
 	return ti, nil
+        */
 }
 
 // Return the rdata fields as a string slice. 

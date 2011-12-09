@@ -33,11 +33,11 @@
 package dns
 
 import (
-	"io"
-	"time"
-	"strings"
 	"crypto/hmac"
 	"encoding/hex"
+	"io"
+	"strings"
+	"time"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -100,9 +100,8 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 	t := new(RR_TSIG)
 
 	h := hmac.NewMD5([]byte(rawsecret))
-	io.WriteString(h, string(buf))
 
-	t.MAC = hex.EncodeToString(h.Sum())
+	t.MAC = hex.EncodeToString(h.Sum(buf))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
@@ -131,14 +130,14 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
 
-	ti := uint64(time.Seconds()) - tsig.TimeSigned
+	ti := uint64(time.Now().Unix()) - tsig.TimeSigned
 	if uint64(tsig.Fudge) < ti {
 		return ErrTime
 	}
 
 	h := hmac.NewMD5([]byte(rawsecret))
 	io.WriteString(h, string(buf))
-	if strings.ToUpper(hex.EncodeToString(h.Sum())) != strings.ToUpper(tsig.MAC) {
+	if strings.ToUpper(hex.EncodeToString(h.Sum(nil))) != strings.ToUpper(tsig.MAC) {
 		return ErrSig
 	}
 	return nil
@@ -151,7 +150,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		buf    []byte
 	)
 	if rr.TimeSigned == 0 {
-		rr.TimeSigned = uint64(time.Seconds())
+		rr.TimeSigned = uint64(time.Now().Unix())
 	}
 	if rr.Fudge == 0 {
 		rr.Fudge = 300 // Standard (RFC) default.

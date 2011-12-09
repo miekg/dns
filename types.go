@@ -7,7 +7,6 @@ package dns
 
 import (
 	"net"
-	"time"
 	"strconv"
 	"strings"
 )
@@ -799,20 +798,26 @@ func (rr *RR_TSIG) String() string {
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {
-	utc := time.UTC().Seconds()
-	mod := (int64(t) - utc) / Year68
+        //utc := time.Now().Unix()
+	//mod := (int64(t) - utc) / Year68
 
 	// If needed assume wrap around(s)
-	ti := time.SecondsToUTC(int64(t) + (mod * Year68)) // abs()? TODO
+        return ""
+        /* TODO: new time api
+	ti := time.Unix(int64(t),0).Unix() + (mod * Year68) // abs()? TODO
 	return ti.Format("20060102150405")
+        */
 }
 
 // Translate the TSIG time signed into a date. There is no
 // need for RFC1982 calculations as this date is 48 bits
 func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
-	ti := time.SecondsToUTC(int64(t))
+        return ""
+        /*
+        ti := time.Unix(int64(t), 0).Unix()
 	return ti.Format("20060102150405")
+        */
 }
 
 // Map of constructors for each RR wire type.

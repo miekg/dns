@@ -2,7 +2,7 @@ package dns
 
 import (
 	"io"
-	"big"
+	"math/big"
 	"strconv"
 	"crypto/rsa"
 	"crypto/ecdsa"
