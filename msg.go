@@ -341,18 +341,21 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
 					return lenmsg, false
 				}
-				if fv.Len() == net.IPv6len {
+				switch fv.Len() {
+				case net.IPv6len:
 					msg[off] = byte(fv.Index(12).Uint())
 					msg[off+1] = byte(fv.Index(13).Uint())
 					msg[off+2] = byte(fv.Index(14).Uint())
 					msg[off+3] = byte(fv.Index(15).Uint())
-				} else {
+				        off += net.IPv4len
+				case net.IPv4len:
 					msg[off] = byte(fv.Index(0).Uint())
 					msg[off+1] = byte(fv.Index(1).Uint())
 					msg[off+2] = byte(fv.Index(2).Uint())
 					msg[off+3] = byte(fv.Index(3).Uint())
+				        off += net.IPv4len
+				default:
 				}
-				off += net.IPv4len
 			case "AAAA":
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing AAAA")
