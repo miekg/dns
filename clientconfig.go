@@ -25,9 +25,8 @@ type ClientConfig struct {
 	Attempts int      // lost packets before giving up on server
 }
 
-// See resolv.conf(5) on a Linux machine.
-// Parse a /etc/resolv.conf like file and return a filled out ClientConfig. Note
-// that all nameservers will have the default port number appended (:53)
+// ClientConfigFromFile parses a resolv.conf(5) like file and returns
+// a *ClientConfig.
 func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 	file, err := os.Open(conf)
 	defer file.Close()
@@ -62,7 +61,7 @@ func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 					fallthrough
 				case 4:
 					a = a[0 : n+1]
-					a[n] = name + ":53"
+					a[n] = name
 					c.Servers = a
 				}
 			}
