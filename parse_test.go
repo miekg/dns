@@ -77,7 +77,7 @@ Activate: 20110302104537`
 
 func TestDotInName(t *testing.T) {
 	buf := make([]byte, 20)
-	packDomainName("aa\\.bb.nl.", buf, 0)
+	PackDomainName("aa\\.bb.nl.", buf, 0)
 	// index 3 must be a real dot
 	if buf[3] != '.' {
 		t.Log("Dot should be a real dot")
@@ -88,7 +88,7 @@ func TestDotInName(t *testing.T) {
 		t.Log("This must have the value 2")
 		t.Fail()
 	}
-	dom, _, _ := unpackDomainName(buf, 0)
+	dom, _, _ := UnpackDomainName(buf, 0)
 	// printing it should yield the backspace again
 	if dom != "aa\\.bb.nl." {
 		t.Log("Dot should have been escaped: " + dom)

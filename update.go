@@ -50,9 +50,10 @@ func (u *Msg) Additional() []RR {
 	return u.Extra
 }
 
-// NewUpdate creats a new DNS update packet.
+// NewUpdate creates a new DNS update packet, which is a normal DNS message.
 func NewUpdate(zone string, class uint16) *Msg {
 	u := new(Msg)
+        u.MsgHdr.Response = false
 	u.MsgHdr.Opcode = OpcodeUpdate
 	u.Question = make([]Question, 1)
 	u.Question[0] = Question{zone, TypeSOA, class}
