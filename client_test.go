@@ -71,7 +71,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 
-	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
+	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Now()))
 	TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
 	secrets := make(map[string]string)
 	secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="
