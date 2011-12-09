@@ -12,7 +12,7 @@
 // Basic usage pattern for creating a new resource record:
 //
 //      r := new(RR_TXT)
-//      r.Hdr = RR_Header{Name: "a.miek.nl", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
+//      r.Hdr = RR_Header{Name: "a.miek.nl.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
 //      r.TXT = "This is the content of the TXT record"
 //
 // Or directly from a string:
@@ -36,7 +36,7 @@
 //      m1.MsgHdr.Id = Id()
 //      m1.MsgHdr.RecursionDesired = false
 //      m1.Question = make([]Question, 1)
-//      m1.Question[0] = Question{"miek.nl", TypeMX, ClassINET}
+//      m1.Question[0] = Question{"miek.nl.", TypeMX, ClassINET}
 //
 // After creating a message it can be send.
 // Basic use pattern for synchronous querying the DNS. We are
