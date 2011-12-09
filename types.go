@@ -684,10 +684,10 @@ func (rr *RR_NSEC3PARAM) String() string {
 // saltString converts a NSECX salt to uppercase and
 // returns "-" when it is empty
 func saltString(s string) string {
-        if len(s) == 0 {
-                return "-"
-        }
-        return strings.ToUpper(s)
+	if len(s) == 0 {
+		return "-"
+	}
+	return strings.ToUpper(s)
 }
 
 // See RFC 4408.
@@ -807,26 +807,26 @@ func (rr *RR_TSIG) String() string {
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {
-        //utc := time.Now().Unix()
+	//utc := time.Now().Unix()
 	//mod := (int64(t) - utc) / Year68
 
 	// If needed assume wrap around(s)
-        return ""
-        /* TODO: new time api
+	return ""
+	/* TODO: new time api
 	ti := time.Unix(int64(t),0).Unix() + (mod * Year68) // abs()? TODO
 	return ti.Format("20060102150405")
-        */
+	*/
 }
 
 // Translate the TSIG time signed into a date. There is no
 // need for RFC1982 calculations as this date is 48 bits
 func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
-        return ""
-        /*
-        ti := time.Unix(int64(t), 0).Unix()
-	return ti.Format("20060102150405")
-        */
+	return ""
+	/*
+	        ti := time.Unix(int64(t), 0).Unix()
+		return ti.Format("20060102150405")
+	*/
 }
 
 // Map of constructors for each RR wire type.

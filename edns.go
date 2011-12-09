@@ -1,8 +1,8 @@
 package dns
 
 import (
-	"strconv"
 	"encoding/hex"
+	"strconv"
 )
 
 // EDNS0 Option codes.

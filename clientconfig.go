@@ -8,11 +8,11 @@
 package dns
 
 import (
-	"os"
 	"bufio"
+	"net"
+	"os"
 	"strconv"
 	"strings"
-	"net"
 )
 
 // Wraps the contents of the /etc/resolv.conf.

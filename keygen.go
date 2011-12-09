@@ -1,13 +1,13 @@
 package dns
 
 import (
-	"io"
-	"math/big"
-	"strconv"
-	"crypto/rsa"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
+	"io"
+	"math/big"
+	"strconv"
 )
 
 // Empty interface that is used as a wrapper around all possible
@@ -22,7 +22,7 @@ type PrivateKey interface{}
 // bits should be set to the size of the algorithm.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	switch r.Algorithm {
-        case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
+	case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}

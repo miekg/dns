@@ -47,12 +47,12 @@ func TestUpdateDelete(t *testing.T) {
 	if e != nil {
 		t.Log("Failed: " + e.Error())
 		t.Fail()
-                return
+		return
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed: " + r.String())
 		t.Fail()
-                return
+		return
 	}
 	t.Log(r.String())
 }

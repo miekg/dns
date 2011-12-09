@@ -1,9 +1,9 @@
 package dns
 
 import (
+	"crypto/sha1"
 	"hash"
 	"strings"
-	"crypto/sha1"
 )
 
 type saltWireFmt struct {

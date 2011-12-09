@@ -4,9 +4,9 @@ import (
 	// "os"
 	// "time"
 	// "bufio"
+	"crypto/rsa"
 	"strings"
 	"testing"
-	"crypto/rsa"
 )
 
 func TestSign(t *testing.T) {

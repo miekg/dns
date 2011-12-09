@@ -7,9 +7,9 @@ package dns
 import (
 	"io"
 	//	"net"
-	"time"
-	"strings"
 	"strconv"
+	"strings"
+	"time"
 )
 
 const _IOBUF = MaxMsgSize
@@ -63,12 +63,12 @@ func dateToTime(s string) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-        return 0, nil
-        /*
-	mod := t.Seconds() / Year68
-	ti := uint32(t.Seconds() - (mod * Year68))
-	return ti, nil
-        */
+	return 0, nil
+	/*
+		mod := t.Seconds() / Year68
+		ti := uint32(t.Seconds() - (mod * Year68))
+		return ti, nil
+	*/
 }
 
 // Return the rdata fields as a string slice. 

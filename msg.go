@@ -347,13 +347,13 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					msg[off+1] = byte(fv.Index(13).Uint())
 					msg[off+2] = byte(fv.Index(14).Uint())
 					msg[off+3] = byte(fv.Index(15).Uint())
-				        off += net.IPv4len
+					off += net.IPv4len
 				case net.IPv4len:
 					msg[off] = byte(fv.Index(0).Uint())
 					msg[off+1] = byte(fv.Index(1).Uint())
 					msg[off+2] = byte(fv.Index(2).Uint())
 					msg[off+3] = byte(fv.Index(3).Uint())
-				        off += net.IPv4len
+					off += net.IPv4len
 				default:
 				}
 			case "AAAA":

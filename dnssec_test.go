@@ -1,8 +1,8 @@
 package dns
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestSecure(t *testing.T) {
