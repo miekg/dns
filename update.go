@@ -34,27 +34,25 @@
 // 
 package dns
 
-type Update struct{ Msg }
-
-func (u *Update) Zone() []Question {
-	return u.Msg.Question
+func (u *Msg) Zone() []Question {
+	return u.Question
 }
 
-func (u *Update) Prereq() []RR {
-	return u.Msg.Answer
+func (u *Msg) Prereq() []RR {
+	return u.Answer
 }
 
-func (u *Update) Update() []RR {
-	return u.Msg.Ns
+func (u *Msg) Update() []RR {
+	return u.Ns
 }
 
-func (u *Update) Additional() []RR {
-	return u.Msg.Extra
+func (u *Msg) Additional() []RR {
+	return u.Extra
 }
 
 // NewUpdate creats a new DNS update packet.
-func NewUpdate(zone string, class uint16) *Update {
-	u := new(Update)
+func NewUpdate(zone string, class uint16) *Msg {
+	u := new(Msg)
 	u.MsgHdr.Opcode = OpcodeUpdate
 	u.Question = make([]Question, 1)
 	u.Question[0] = Question{zone, TypeSOA, class}
@@ -75,7 +73,7 @@ func NewUpdate(zone string, class uint16) *Update {
 
 // NameUsed sets the RRs in the prereq section to
 // "Name is in use" RRs. RFC 2136 section 2.4.4.
-func (u *Update) NameUsed(rr []RR) {
+func (u *Msg) NameUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
@@ -84,7 +82,7 @@ func (u *Update) NameUsed(rr []RR) {
 
 // NameNotUsed sets the RRs in the prereq section to
 // "Name is in not use" RRs. RFC 2136 section 2.4.5.
-func (u *Update) NameNotUsed(rr []RR) {
+func (u *Msg) NameNotUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassNONE}}
@@ -93,20 +91,20 @@ func (u *Update) NameNotUsed(rr []RR) {
 
 // RRsetUsedRdata sets the RRs in the prereq section to
 // "RRset exists (value dependent -- with rdata)" RRs. RFC 2136 section 2.4.2.
-func (u *Update) RRsetUsedRdata(rr []RR) {
-	if len(u.Msg.Question) == 0 {
+func (u *Msg) RRsetUsedRdata(rr []RR) {
+	if len(u.Question) == 0 {
 		panic("empty question section")
 	}
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = r
-		u.Answer[i].Header().Class = u.Msg.Question[0].Qclass
+		u.Answer[i].Header().Class = u.Question[0].Qclass
 	}
 }
 
 // RRsetUsedNoRdata sets the RRs in the prereq section to
 // "RRset exists (value independent -- no rdata)" RRs. RFC 2136 section 2.4.1.
-func (u *Update) RRsetUsedNoRdata(rr []RR) {
+func (u *Msg) RRsetUsedNoRdata(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = r
@@ -118,7 +116,7 @@ func (u *Update) RRsetUsedNoRdata(rr []RR) {
 
 // RRsetNotUsed sets the RRs in the prereq section to
 // "RRset does not exist" RRs. RFC 2136 section 2.4.3.
-func (u *Update) RRsetNotUsed(rr []RR) {
+func (u *Msg) RRsetNotUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Answer[i] = r
@@ -140,19 +138,19 @@ func (u *Update) RRsetNotUsed(rr []RR) {
 //   zone     rrset    rr       Add to an RRset                 RRsetAddRdata
 
 // RRsetAddRdata adds an complete RRset, see RFC 2136 section 2.5.1
-func (u *Update) RRsetAddRdata(rr []RR) {
-	if len(u.Msg.Question) == 0 {
+func (u *Msg) RRsetAddRdata(rr []RR) {
+	if len(u.Question) == 0 {
 		panic("empty question section")
 	}
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = r
-		u.Ns[i].Header().Class = u.Msg.Question[0].Qclass
+		u.Ns[i].Header().Class = u.Question[0].Qclass
 	}
 }
 
 // RRsetDelete deletes an RRset, see RFC 2136 section 2.5.2
-func (u *Update) RRsetDelete(rr []RR) {
+func (u *Msg) RRsetDelete(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = r
@@ -163,7 +161,7 @@ func (u *Update) RRsetDelete(rr []RR) {
 }
 
 // NameDelete deletes all RRsets of a name, see RFC 2136 section 2.5.3
-func (u *Update) NameDelete(rr []RR) {
+func (u *Msg) NameDelete(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
@@ -171,7 +169,7 @@ func (u *Update) NameDelete(rr []RR) {
 }
 
 // RRsetDeleteRR deletes RR from the RRSset, see RFC 2136 section 2.5.4
-func (u *Update) RRsetDeleteRR(rr []RR) {
+func (u *Msg) RRsetDeleteRR(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = r
