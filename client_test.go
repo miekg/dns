@@ -71,7 +71,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 
-	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Now()))
+	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Now().Unix()))
 	TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
 	secrets := make(map[string]string)
 	secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="
@@ -81,7 +81,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	c.TsigSecret = secrets
 
 	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
-		t.Log("Failed to setup axfr" + err.String())
+		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 	}
 	for {
@@ -101,7 +101,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	c.Net = "tcp"
 
 	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
-		t.Log("Failed to setup axfr" + err.String())
+		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 	}
 	for {

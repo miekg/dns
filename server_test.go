@@ -20,7 +20,7 @@ func TestServing(t *testing.T) {
 	go func() {
 		err := ListenAndServe(":8053", "udp", nil)
 		if err != nil {
-			t.Log("ListenAndServe: ", err.String())
+			t.Log("ListenAndServe: ", err.Error())
 			t.Fail()
 		}
 	}()
