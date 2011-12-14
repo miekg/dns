@@ -260,37 +260,54 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_NSEC3)
         rr.Hdr = h
 
-        rdf := fields(data[mark:p], 0)
+        l := <-c
+        if i, e = strconv.Atoui(l.token); e != nil {
+                return nil, &ParseError{"bad NSEC3", l}
+        } else {
+                rr.Hash = uint8(i)
+        }
+        <-c // _BLANK
+        l = <-c
+        if i, e = strconv.Atoui(l.token); e != nil {
+                return nil, &ParseError{"bad NSEC3", l}
+        } else {
+                rr.Flags = uint8(i)
+        }
+        <-c // _BLANK
+        l = <-c
+        if i, e = strconv.Atoui(l.token); e != nil {
+                return nil, &ParseError{"bad NSEC3", l}
+        } else {
+                rr.Iterations = uint16(i)
+        }
+        <-c
+        l = <-c
+        rr.SaltLength = uint8(len(l.token))
+        rr.Salt = l.token       // CHECK?
 
-        if i, e = strconv.Atoui(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3", name: rdf[0], line: l}
-                return
-        }
-        rr.Hash = uint8(i)
-        if i, e = strconv.Atoui(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3", name: rdf[1], line: l}
-                return
-        }
-        rr.Flags = uint8(i)
-        if i, e = strconv.Atoui(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3", name: rdf[2], line: l}
-                return
-        }
-        rr.Iterations = uint16(i)
-        rr.SaltLength = uint8(len(rdf[3]))
-        rr.Salt = rdf[3]
+        <-c
+        l = <-c
+        rr.HashLength = uint8(len(l.token))
+        rr.NextDomain = l.token
 
-        rr.HashLength = uint8(len(rdf[4]))
-        rr.NextDomain = rdf[4]
-        rr.TypeBitMap = make([]uint16, len(rdf)-5)
-        // Fill the Type Bit Map
-        for i := 5; i < len(rdf); i++ {
-            // Check if its there in the map TODO
-            rr.TypeBitMap[i-5] = str_rr[strings.ToUpper(rdf[i])]
+        rr.TypeBitMap = make([]uint16, 0)
+        l = <-c
+        for l.value != _NEWLINE {
+        case _BLANK:
+                // Ok
+        case _STRING:
+                if k, ok := str_rr[strings.ToUpper(l.token)]; !ok {
+                        return nil, &ParseError{"bad NSEC3", l}
+                } else {
+                        append(rr.TypeBitMap, k)
+                }
+        default:
+                return nil, &ParseError{"bad NSEC3", l}
         }
-        zp.RR <- rr
+        return rr, nil
     }
 
+/*
 func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_NSEC3PARAM)
         rr.Hdr = h
@@ -314,13 +331,29 @@ func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, error) {
         rr.SaltLength = uint8(len(rr.Salt))
         zp.RR <- rr
     }
+*/
 
 func setTXT(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_TXT)
         rr.Hdr = h
-        rr.Txt = rdf[0]
-        zp.RR <- rr
-    }
+
+        // Get the remaining data until we see a NEWLINE
+        l := <-c
+        var s string
+        for l.value != _NEWLINE {
+                switch l.value {
+                case _STRING:
+                        s += l.token
+                case _BLANK:
+                        // Ok
+                default:
+                        return nil, &ParseError{"bad TXT", l}
+                }
+                l = <-c
+        }
+        rr.Txt = s
+        return rr, nil
+}
 
     /*
 func setDS(h RR_Header, c chan Lex) (RR, error) {
