@@ -211,10 +211,21 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, error) {
                 rr.SignerName = l.token
         }
         // Get the remaining data until we see a NEWLINE
-
-        // Check base64 TODO
-        rr.Signature = rdf[8]
-        zp.RR <- rr
+        l = <-c
+        var s string
+        for l.value != _NEWLINE {
+                switch l.value {
+                case _STRING:
+                        s += l.token
+                case _BLANK:
+                        // Ok
+                default:
+                        return nil, &ParseError{"bad RRSIG", l}
+                }
+                l = <-c
+        }
+        rr.Signature = s
+        return rr, nil
     }
 
 func setNSEC(h RR_Header, c chan Lex) (RR, error) {
@@ -223,18 +234,26 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 
         l := <-c
         if ! IsDomainName(l.token) {
-                return nil, &ParseError{"bad RRSIG", l}
+                return nil, &ParseError{"bad NSEC", l}
         } else {
                 rr.NextDomain = l.token
         }
 
-        rr.TypeBitMap = make([]uint16, len(rdf)-1)
-        // Fill the Type Bit Map
-        for i := 1; i < len(rdf); i++ {
-                // Check if its there in the map TODO
-                rr.TypeBitMap[i-1] = str_rr[strings.ToUpper(rdf[i])]
+        rr.TypeBitMap = make([]uint16, 0)
+        l = <-c
+        for l.value != _NEWLINE {
+        case _BLANK:
+                // Ok
+        case _STRING:
+                if k, ok := str_rr[strings.ToUpper(l.token)]; !ok {
+                        return nil, &ParseError{"bad NSEC", l}
+                } else {
+                        append(rr.TypeBitMap, k)
+                }
+        default:
+                return nil, &ParseError{"bad NSEC", l}
         }
-        zp.RR <- rr
+        return rr, nil
     }
 
 func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
@@ -304,18 +323,6 @@ func setTXT(h RR_Header, c chan Lex) (RR, error) {
     }
 
     /*
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setSRV {
-    }
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-
-    action setCERT {
-    }
-
 func setDS(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_DS)
         rr.Hdr = h
@@ -442,28 +449,9 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
     }
 
 
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
+func setSSHFP(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_CNAME)
         rr.Hdr = h
-    action setPTR {
-    }
-
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setDNAME {
-    }
-
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setNAPTR {
-    }
-
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setSSHFP {
         var (
                 i int
                 e os.Error
@@ -484,4 +472,4 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         rr.Type = uint8(i)
         rr.FingerPrint = rdf[2]
         zp.RR <- rr
-    }
+}
