@@ -26,8 +26,8 @@ const (
 	_EXPECT_OWNER           = iota // Ownername
 	_EXPECT_OWNER_BL               // Whitespace after the ownername
 	_EXPECT_ANY                    // Expect rrtype, ttl or class
-	_EXPECT_ANY_NO_CLASS           // Expect rrtype or ttl
-	_EXPECT_ANY_NO_CLASS_BL        // The Whitespace after _EXPECT_ANY_NO_CLASS
+	_EXPECT_ANY_NOCLASS           // Expect rrtype or ttl
+	_EXPECT_ANY_NOCLASS_BL        // The Whitespace after _EXPECT_ANY_NOCLASS
 	_EXPECT_ANY_NOTTL              // Expect rrtype or class
 	_EXPECT_ANY_NOTTL_BL           // Whitespace after _EXPECT_ANY_NOTTL
 	_EXPECT_RRTYPE                 // Expect rrtype
@@ -103,48 +103,45 @@ func ParseZone(r io.Reader, cr chan RR) {
 				h.Name = l.token
 				st = _EXPECT_OWNER_BL
 			default:
-				println("Error at the start")
+                                fmt.Printf("%s\n", &ParseError{"Error at the start", l})
 				st = _EXPECT_OWNER
 			}
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
-				println("No blank after owner error")
+                                fmt.Printf("%s\n", &ParseError{"No blank after owner", l})
 			}
 			st = _EXPECT_ANY
 		case _EXPECT_ANY:
 			switch l.value {
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					println("Unknown RR type")
-				}
+				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 				h.Ttl = DefaultTtl
 				st = _EXPECT_RDATA_BL
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					println("Unknown Class")
+                                        fmt.Printf("%s\n", &ParseError{"Unknown class", l})
 				}
-				st = _EXPECT_ANY_NO_CLASS_BL
+				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					println("Not a TTL")
+                                        fmt.Printf("%s\n", &ParseError{"Not a TTL", l})
 				} else {
 					h.Ttl = uint32(ttl)
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
-				println("Error not expected")
+                                fmt.Printf("%s\n", &ParseError{"Expecting RR type, TTL or class, not this...", l})
 			}
-		case _EXPECT_ANY_NO_CLASS_BL:
+		case _EXPECT_ANY_NOCLASS_BL:
 			if l.value != _BLANK {
-				println("No blank before NO_CLASS error")
+                                fmt.Printf("%s\n", &ParseError{"No blank before NOCLASS", l})
 			}
-			st = _EXPECT_ANY_NO_CLASS
+			st = _EXPECT_ANY_NOCLASS
 		case _EXPECT_ANY_NOTTL_BL:
 			if l.value != _BLANK {
-				println("No blank before NOTTL error")
+                                fmt.Printf("%s\n", &ParseError{"No blank before NOTTL", l})
 			}
 			st = _EXPECT_ANY_NOTTL
 		case _EXPECT_ANY_NOTTL:
@@ -152,48 +149,39 @@ func ParseZone(r io.Reader, cr chan RR) {
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					println("Unknown Class")
+                                        fmt.Printf("%s\n", &ParseError{"Unknown class", l})
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					println("Unknown RR type")
-				}
+				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 				st = _EXPECT_RDATA_BL
 			}
-		case _EXPECT_ANY_NO_CLASS:
+		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
 			case _STRING: // TTL
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					println("Not a TTL")
+                                        fmt.Printf("%s\n", &ParseError{"Not a TTL", l})
 				} else {
 					h.Ttl = uint32(ttl)
 				}
 				st = _EXPECT_RDATA_BL
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					println("Unknown RR type")
-				}
+				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 				st = _EXPECT_RDATA_BL
 			default:
-				println("Error not TTL nor _RRTYPE seen")
+                                fmt.Printf("%s\n", &ParseError{"Expecting RR type or TTL, not this...", l})
 			}
 		case _EXPECT_RRTYPE_BL:
 			if l.value != _BLANK {
-				println("No blank after error")
+                                fmt.Printf("%s\n", &ParseError{"No blank after", l})
 			}
 			st = _EXPECT_RRTYPE
 		case _EXPECT_RRTYPE:
 			if l.value != _RRTYPE {
-				println("Error, not an rrtype")
+                                fmt.Printf("%s\n", &ParseError{"Unknown RR type", l})
 			}
-			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-			if !ok {
-				println("Unknown RR type")
-			}
+			h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 			st = _EXPECT_RDATA_BL
 		case _EXPECT_RDATA_BL:
 			if l.value != _BLANK {
@@ -201,7 +189,7 @@ func ParseZone(r io.Reader, cr chan RR) {
 			}
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
-                        r, e := setRR(h, c)
+                        r, e := setRR(h, c, l)
 			if e != nil {
 				fmt.Printf("%v\n", e)
 			}

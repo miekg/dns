@@ -28,7 +28,7 @@ func slurpRemainder(c chan Lex) error {
         return nil
 }
 
-func setRR(h RR_Header, c chan Lex) (RR, error) {
+func setRR(h RR_Header, c chan Lex, currenttok Lex) (RR, error) {
         var (
                 r RR
                 e error
@@ -39,11 +39,44 @@ func setRR(h RR_Header, c chan Lex) (RR, error) {
                 if se := slurpRemainder(c); se != nil {
                         return nil, se
                 }
+        case TypeAAAA:
+                r, e = setAAAA(h, c)
+                if se := slurpRemainder(c); se != nil {
+                        return nil, se
+                }
+        case TypeNS:
+                r, e = setNS(h, c)
+                if se := slurpRemainder(c); se != nil {
+                        return nil, se
+                }
+        case TypeMX:
+                r, e = setMX(h, c)
+                if se := slurpRemainder(c); se != nil {
+                        return nil, se
+                }
+        case TypeCNAME:
+                r, e = setCNAME(h, c)
+                if se := slurpRemainder(c); se != nil {
+                        return nil, se
+                }
+        case TypeSOA:
+                r, e = setSOA(h, c)
+                if se := slurpRemainder(c); se != nil {
+                        return nil, se
+                }
+        // These types have a variable ending either chunks of txt or chunks/base64 or hex.
+        // They need to search for the end of the RR themselves, hence they look for the ending
+        // newline. Thus there is no need to slurp the remainder, because there is none
         case TypeRRSIG:
                 r, e = setRRSIG(h, c)
-                // Remain slurped in function
+        case TypeNSEC:
+                r, e = setNSEC(h, c)
+        case TypeNSEC3:
+                r, e = setNSEC3(h, c)
+        case TypeTXT:
+                r, e = setTXT(h, c)
         default:
-                println("RR not supported")
+                return nil, &ParseError{"Unknown RR type", currenttok}
         }
         return r, e
 }
