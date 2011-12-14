@@ -187,7 +187,7 @@ func ParseZone(r io.Reader, cr chan RR) {
 			h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
-			r, e := setRR(h, c, l)
+			r, e := setRR(h, c)
 			if e != nil {
 				fmt.Printf("%v\n", e)
 			}

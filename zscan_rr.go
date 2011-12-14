@@ -30,7 +30,7 @@ func slurpRemainder(c chan Lex) error {
 	return nil
 }
 
-func setRR(h RR_Header, c chan Lex, currenttok Lex) (RR, error) {
+func setRR(h RR_Header, c chan Lex) (RR, error) {
 	var (
 		r RR
 		e error
@@ -96,7 +96,8 @@ func setRR(h RR_Header, c chan Lex, currenttok Lex) (RR, error) {
 	case TypeTXT:
 		r, e = setTXT(h, c)
 	default:
-		return nil, &ParseError{"Unknown RR type", currenttok}
+                // Don't the have the token the holds the RRtype
+		return nil, &ParseError{"Unknown RR type", Lex{} }
 	}
 	return r, e
 }
@@ -291,8 +292,9 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 	rr.Hdr = h
 
 	l := <-c
+        println("NSEC NEXTDOMAIN: ", l.token)
 	if !IsDomainName(l.token) {
-		return nil, &ParseError{"bad NSEC", l}
+		return nil, &ParseError{"bad NSEC nextdomain", l}
 	} else {
 		rr.NextDomain = l.token
 	}
@@ -305,12 +307,12 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 			// Ok
 		case _STRING:
 			if k, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
-				return nil, &ParseError{"bad NSEC", l}
+				return nil, &ParseError{"bad NSEC non RR in type bitmap", l}
 			} else {
 				rr.TypeBitMap = append(rr.TypeBitMap, k)
 			}
 		default:
-			return nil, &ParseError{"bad NSEC", l}
+                        return nil, &ParseError{"bad NSEC garbage in type bitmap", l}
 		}
 		l = <-c
 	}
