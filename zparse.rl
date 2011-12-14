@@ -55,19 +55,6 @@ func NewParser(r io.Reader) *Parser {
         return p
 }
 
-// Translate the RRSIG's incep. and expir. times from 
-// string values ("20110403154150") to an integer.
-// Taking into account serial arithmetic (RFC 1982)
-func dateToTime(s string) (uint32, os.Error) {
-    t, e := time.Parse("20060102150405", s)
-    if e != nil {
-        return 0, e
-    }
-    mod := t.Seconds() / Year68
-    ti := uint32(t.Seconds() - (mod * Year68))
-    return ti, nil
-}
-
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.
 // If i is 0 no spaces are deleted from the final rdfs.

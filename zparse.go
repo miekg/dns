@@ -5,11 +5,7 @@ package dns
 // With the thankful help of gdnsd and the Go examples for Ragel.
 
 import (
-	"io"
-	//	"net"
-	"strconv"
 	"strings"
-	"time"
 )
 
 const _IOBUF = MaxMsgSize
@@ -21,55 +17,12 @@ type Parser struct {
 	buf []byte
 }
 
-type ParseError struct {
-	Err  string
-	name string
-	line int
-}
-
-func (e *ParseError) Error() string {
-	s := e.Err + ": \"" + e.name + "\" at line: " + strconv.Itoa(e.line)
-	return s
-}
-
 // First will return the first RR found when parsing.
 func (zp *Parser) First() (RR, error) {
 	// defer close something
 	return nil, nil
 }
 
-// NewParser creates a new DNS file parser from r.
-func NewParser(r io.Reader) *Parser {
-	buf := make([]byte, _IOBUF)
-	n, err := r.Read(buf)
-	if err != nil {
-		return nil
-	}
-	if buf[n-1] != '\n' {
-		buf[n] = '\n'
-		n++
-	}
-	buf = buf[:n]
-	p := new(Parser)
-	p.buf = buf
-	return p
-}
-
-// Translate the RRSIG's incep. and expir. times from 
-// string values ("20110403154150") to an integer.
-// Taking into account serial arithmetic (RFC 1982)
-func dateToTime(s string) (uint32, error) {
-	_, e := time.Parse("20060102150405", s)
-	if e != nil {
-		return 0, e
-	}
-	return 0, nil
-	/*
-		mod := t.Seconds() / Year68
-		ti := uint32(t.Seconds() - (mod * Year68))
-		return ti, nil
-	*/
-}
 
 // Return the rdata fields as a string slice. 
 // All starting whitespace is deleted.

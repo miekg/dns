@@ -9,6 +9,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Packet formats
@@ -143,12 +144,6 @@ func (q *Question) String() string {
 		s += " " + "TYPE" + strconv.Itoa(int(q.Qtype))
 	}
 	return s
-}
-
-// NewRRString returns the last RR contained in s.
-func NewRRString(s string) (RR, error) {
-	p := NewParser(strings.NewReader(s))
-	return p.First()
 }
 
 // NewRR returns a new RR with the hdr.Rrtype also set.
@@ -827,6 +822,22 @@ func tsigTimeToDate(t uint64) string {
 	        ti := time.Unix(int64(t), 0).Unix()
 		return ti.Format("20060102150405")
 	*/
+}
+
+// Translate the RRSIG's incep. and expir. times from 
+// string values ("20110403154150") to an integer.
+// Taking into account serial arithmetic (RFC 1982)
+func dateToTime(s string) (uint32, error) {
+    _, e := time.Parse("20060102150405", s)
+    if e != nil {
+        return 0, e
+    }
+    return 0, nil
+    /*
+    mod := t.Seconds() / Year68
+    ti := uint32(t.Seconds() - (mod * Year68))
+    return ti, nil
+    */
 }
 
 // Map of constructors for each RR wire type.

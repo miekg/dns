@@ -36,6 +36,17 @@ const (
 	_EXPECT_RDATA_BL               // Whitespace BEFORE rdata starts
 )
 
+type ParseError struct {
+	err string
+	lex Lex
+}
+
+func (e *ParseError) Error() string {
+	s := e.err + ": `" + e.lex.token + "' at line: " + strconv.Itoa(e.lex.line) +
+		"and column: " + strconv.Itoa(e.lex.column)
+	return s
+}
+
 type Lex struct {
 	token  string
 	value  int
@@ -43,17 +54,33 @@ type Lex struct {
 	column int
 }
 
+// ParseString parses a string and returns the RR contained in there. If they string
+// contains more than one RR, only the first is returned.
+func NewRRString(s string) (RR, error) {
+        cr := make(chan RR)
+        go ParseZone(strings.NewReader(s), cr)
+        r := <-cr       // There are no error send as of yet
+        return r, nil   // Todo: errors
+}
+
+func newRRReader(q io.Reader) (RR, error) {
+        cr := make(chan RR)
+        go ParseZone(q, cr)
+        r := <-cr
+        return r, nil
+}
+
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR on the
 // channel cr. The channel cr is closed by ParseZone when the end of r is
 // reached.
 func ParseZone(r io.Reader, cr chan RR) {
-        defer close(cr)
+	defer close(cr)
 	var s scanner.Scanner
 	c := make(chan Lex)
 	s.Init(r)
 	s.Mode = 0
 	s.Whitespace = 0
-        // Start the lexer
+	// Start the lexer
 	go lexer(s, c)
 	// 5 possible beginnings of a line, _ is a space
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
@@ -174,16 +201,11 @@ func ParseZone(r io.Reader, cr chan RR) {
 			}
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
-			fmt.Printf("%v\n", h)
-			// Remaining items until newline are rdata
-			// reset
-			fmt.Printf("%v", l)
-			for rdata := range c {
-				fmt.Printf("%v", rdata)
-				if rdata.value == _NEWLINE {
-					break
-				}
+                        r, e := setRR(h, c)
+			if e != nil {
+				fmt.Printf("%v\n", e)
 			}
+			cr <- r
 			st = _EXPECT_OWNER
 		}
 	}

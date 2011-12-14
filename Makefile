@@ -26,6 +26,7 @@ GOFILES=\
 	xfr.go\
 	zparse.go\
 	zscan.go\
+	zscan_rr.go\
 
 
 include $(GOROOT)/src/Make.pkg

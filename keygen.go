@@ -113,8 +113,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 
 // Read reads a DNSKEY from the io.Reader q.
 func (k *RR_DNSKEY) Read(q io.Reader) error {
-	p := NewParser(q)
-	r, err := p.First()
+	r, err := newRRReader(q)
 	if err != nil {
 		return err
 	}
@@ -131,6 +130,7 @@ func (k *RR_DNSKEY) Read(q io.Reader) error {
 
 // ReadPrivateKey reads a private key from the io.Reader q.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
+/*
 	p := NewParser(q)
 	kv, _ := p.PrivateKey()
 	if kv == nil {
@@ -149,6 +149,8 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
 		return k.readPrivateKeyECDSA(kv)
 	}
 	return nil, ErrPrivKey
+*/
+        return nil, nil
 }
 
 // Read a private key (file) string and create a public key. Return the private key.
