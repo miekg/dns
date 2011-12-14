@@ -2,6 +2,8 @@ package dns
 
 import (
         "net"
+        "strconv"
+        "strings"
 )
 
 // All data from c is either _STRING or _BLANK
@@ -87,11 +89,11 @@ func setMX(h RR_Header, c chan Lex) (RR, error) {
         rr.Hdr = h
 
         l := <-c
-        i, e := strconv.Atoui(l.token)
-        if e != nil {
+        if i, e := strconv.Atoi(l.token); e != nil {
                 return nil, &ParseError{"bad MX", l}
-        }
+        } else {
         rr.Pref = uint16(i)
+}
         <-c // _BLANK
         l = <-c // _STRING
         rr.Mx = l.token
@@ -118,10 +120,6 @@ func setSOA(h RR_Header, c chan Lex) (RR, error) {
         rr.Hdr = h
 
         l := <-c
-        var (
-                i uint
-                err os.Error
-        )
         rr.Ns = l.token
         <-c // _BLANK
         if ! IsDomainName(l.token) {
@@ -131,13 +129,17 @@ func setSOA(h RR_Header, c chan Lex) (RR, error) {
         l = <-c
         rr.Mbox = l.token
         if ! IsDomainName(l.token) {
-                return nil, &ParseError{Error: "bad SOA", name: rdf[1], line: l}
+                return nil, &ParseError{"bad SOA", l}
         }
         <-c // _BLANK
 
+        var (
+                j int
+                e error
+        )
         for i := 0; i < 5; i++ {
                 l = <-c
-                if j, e = strconv.Atoui(s); e != nil {
+                if j, e = strconv.Atoi(l.token); e != nil {
                         return nil, &ParseError{"bad SOA", l}
                 }
                 switch i {
@@ -156,28 +158,28 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_RRSIG)
         rr.Hdr = h
         l := <-c
-        if t, ok := str_rr[strings.ToUpper(l.token]; !ok {
+        if t, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
                 return nil, &ParseError{"bad RRSIG", l}
         } else {
                 rr.TypeCovered = t
         }
         <-c // _BLANK
         l = <-c
-        if i, err := strconv.Atoui(l.token); err != nil {
+        if i, err := strconv.Atoi(l.token); err != nil {
                 return nil, &ParseError{"bad RRSIG", l}
         } else {
                 rr.Algorithm = uint8(i)
         }
         <-c // _BLANK
         l = <-c
-        if i, err := strconv.Atoui(l.token); err != nil {
+        if i, err := strconv.Atoi(l.token); err != nil {
                 return nil, &ParseError{"bad RRSIG", l}
         } else {
                 rr.Labels = uint8(i)
         }
         <-c // _BLANK
         l = <-c
-        if i, err := strconv.Atoui(l.token); err != nil {
+        if i, err := strconv.Atoi(l.token); err != nil {
                 return nil, &ParseError{"bad RRSIG", l}
         } else {
                 rr.OrigTtl = uint32(i)
@@ -198,7 +200,7 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, error) {
         }
         <-c // _BLANK
         l = <-c
-        if i, err := strconv.Atoui(l.token); err != nil {
+        if i, err := strconv.Atoi(l.token); err != nil {
                 return nil, &ParseError{"bad RRSIG", l}
         } else {
                 rr.KeyTag = uint16(i)
@@ -242,16 +244,19 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
         rr.TypeBitMap = make([]uint16, 0)
         l = <-c
         for l.value != _NEWLINE {
+                switch l.value {
         case _BLANK:
                 // Ok
         case _STRING:
-                if k, ok := str_rr[strings.ToUpper(l.token)]; !ok {
+                if k, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
                         return nil, &ParseError{"bad NSEC", l}
                 } else {
-                        append(rr.TypeBitMap, k)
+                        rr.TypeBitMap = append(rr.TypeBitMap, k)
                 }
         default:
                 return nil, &ParseError{"bad NSEC", l}
+        }
+        l = <-c
         }
         return rr, nil
     }
@@ -261,21 +266,21 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
         rr.Hdr = h
 
         l := <-c
-        if i, e = strconv.Atoui(l.token); e != nil {
+        if i, e := strconv.Atoi(l.token); e != nil {
                 return nil, &ParseError{"bad NSEC3", l}
         } else {
                 rr.Hash = uint8(i)
         }
         <-c // _BLANK
         l = <-c
-        if i, e = strconv.Atoui(l.token); e != nil {
+        if i, e := strconv.Atoi(l.token); e != nil {
                 return nil, &ParseError{"bad NSEC3", l}
         } else {
                 rr.Flags = uint8(i)
         }
         <-c // _BLANK
         l = <-c
-        if i, e = strconv.Atoui(l.token); e != nil {
+        if i, e := strconv.Atoi(l.token); e != nil {
                 return nil, &ParseError{"bad NSEC3", l}
         } else {
                 rr.Iterations = uint16(i)
@@ -293,16 +298,19 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
         rr.TypeBitMap = make([]uint16, 0)
         l = <-c
         for l.value != _NEWLINE {
+                switch l.value {
         case _BLANK:
                 // Ok
         case _STRING:
-                if k, ok := str_rr[strings.ToUpper(l.token)]; !ok {
+                if k, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
                         return nil, &ParseError{"bad NSEC3", l}
                 } else {
-                        append(rr.TypeBitMap, k)
+                        rr.TypeBitMap = append(rr.TypeBitMap, k)
                 }
         default:
                 return nil, &ParseError{"bad NSEC3", l}
+        }
+        l = <-c
         }
         return rr, nil
     }
@@ -368,17 +376,17 @@ func setDS(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_DS)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDS
-        if i, e = strconv.Atoui(rdf[0]); e != nil {
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
                 return
         }
         rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoui(rdf[1]); e != nil {
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
                 return
         }
         rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoui(rdf[2]); e != nil {
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
                 return
         }
@@ -399,17 +407,17 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_DLV)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDLV
-        if i, e = strconv.Atoui(rdf[0]); e != nil {
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
                 return
         }
         rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoui(rdf[1]); e != nil {
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
                 return
         }
         rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoui(rdf[2]); e != nil {
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
                 return
         }
@@ -430,17 +438,17 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_TA)
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeTA
-        if i, e = strconv.Atoui(rdf[0]); e != nil {
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
                 return
         }
         rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoui(rdf[1]); e != nil {
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
                 return
         }
         rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoui(rdf[2]); e != nil {
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
                 return
         }
@@ -462,17 +470,17 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         rr.Hdr = hdr
         rr.Hdr.Rrtype = TypeDNSKEY
 
-        if i, e = strconv.Atoui(rdf[0]); e != nil {
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[0], line: l}
                 return
         }
         rr.Flags = uint16(i)
-        if i, e = strconv.Atoui(rdf[1]); e != nil {
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[1], line: l}
                 return
         }
         rr.Protocol = uint8(i)
-        if i, e = strconv.Atoui(rdf[2]); e != nil {
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
                 zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[2], line: l}
                 return
         }
@@ -506,3 +514,4 @@ func setSSHFP(h RR_Header, c chan Lex) (RR, error) {
         rr.FingerPrint = rdf[2]
         zp.RR <- rr
 }
+*/
