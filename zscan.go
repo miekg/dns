@@ -1,9 +1,8 @@
-package main
+package dns
 
 import (
-	"dns"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -24,17 +23,17 @@ const (
 )
 
 const (
-	_EXPECT_OWNER    = iota // Ownername
-	_EXPECT_OWNER_BL        // Whitespace after the ownername
-	_EXPECT_ANY             // Expect rrtype, ttl or class
-	_EXPECT_ANY_NO_CLASS    // Expect rrtype or ttl
-	_EXPECT_ANY_NO_CLASS_BL // The Whitespace after _EXPECT_ANY_NO_CLASS
-	_EXPECT_ANY_NOTTL       // Expect rrtype or class
-	_EXPECT_ANY_NOTTL_BL    // Whitespace after _EXPECT_ANY_NOTTL
-	_EXPECT_RRTYPE          // Expect rrtype
-	_EXPECT_RRTYPE_BL       // Whitespace BEFORE rrype
-	_EXPECT_RDATA           // The first element of the rdata
-	_EXPECT_RDATA_BL        // Whitespace BEFORE rdata starts
+	_EXPECT_OWNER           = iota // Ownername
+	_EXPECT_OWNER_BL               // Whitespace after the ownername
+	_EXPECT_ANY                    // Expect rrtype, ttl or class
+	_EXPECT_ANY_NO_CLASS           // Expect rrtype or ttl
+	_EXPECT_ANY_NO_CLASS_BL        // The Whitespace after _EXPECT_ANY_NO_CLASS
+	_EXPECT_ANY_NOTTL              // Expect rrtype or class
+	_EXPECT_ANY_NOTTL_BL           // Whitespace after _EXPECT_ANY_NOTTL
+	_EXPECT_RRTYPE                 // Expect rrtype
+	_EXPECT_RRTYPE_BL              // Whitespace BEFORE rrype
+	_EXPECT_RDATA                  // The first element of the rdata
+	_EXPECT_RDATA_BL               // Whitespace BEFORE rdata starts
 )
 
 type Lex struct {
@@ -44,18 +43,17 @@ type Lex struct {
 	column int
 }
 
-func main() {
-	//f, e := os.Open("test")
-	f, e := os.Open("dnssex.nl.signed")
-	if e != nil {
-		fmt.Printf("Err: " + e.Error())
-		return
-	}
+// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR on the
+// channel cr. The channel cr is closed by ParseZone when the end of r is
+// reached.
+func ParseZone(r io.Reader, cr chan RR) {
+        defer close(cr)
 	var s scanner.Scanner
 	c := make(chan Lex)
-	s.Init(f)
+	s.Init(r)
 	s.Mode = 0
 	s.Whitespace = 0
+        // Start the lexer
 	go lexer(s, c)
 	// 5 possible beginnings of a line, _ is a space
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
@@ -66,44 +64,42 @@ func main() {
 	// After detecting these, we know the _RRTYPE so we can jump to functions
 	// handling the rdata for each of these types.
 	st := _EXPECT_OWNER
-	var h dns.RR_Header
+	var h RR_Header
 	var ok bool
 	for l := range c {
 		switch st {
-		case _EXPECT_OWNER: // Owername
+		case _EXPECT_OWNER:
 			switch l.value {
-			case _NEWLINE:
-				// empty line
+			case _NEWLINE: // Empty line
 				st = _EXPECT_OWNER
 			case _OWNER:
 				h.Name = l.token
 				st = _EXPECT_OWNER_BL
 			default:
 				println("Error at the start")
-				// Reset
 				st = _EXPECT_OWNER
 			}
-		case _EXPECT_OWNER_BL: // Expect a blank
+		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				println("No blank after owner error")
 			}
 			st = _EXPECT_ANY
-		case _EXPECT_ANY: // Expect _CLASS _STRING (TTL here) or _RRTYPE
+		case _EXPECT_ANY:
 			switch l.value {
 			case _RRTYPE:
-				h.Rrtype, ok = dns.Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					println("Unknown RR type")
 				}
-                                h.Ttl = dns.DefaultTTL
+				h.Ttl = DefaultTtl
 				st = _EXPECT_RDATA_BL
 			case _CLASS:
-				h.Class, ok = dns.Str_class[strings.ToUpper(l.token)]
+				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
 					println("Unknown Class")
 				}
 				st = _EXPECT_ANY_NO_CLASS_BL
-			case _STRING: // TTL
+			case _STRING: // TTL is this case
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
 					println("Not a TTL")
@@ -127,13 +123,13 @@ func main() {
 		case _EXPECT_ANY_NOTTL:
 			switch l.value {
 			case _CLASS:
-				h.Class, ok = dns.Str_class[strings.ToUpper(l.token)]
+				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
 					println("Unknown Class")
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, ok = dns.Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					println("Unknown RR type")
 				}
@@ -150,7 +146,7 @@ func main() {
 				}
 				st = _EXPECT_RDATA_BL
 			case _RRTYPE:
-				h.Rrtype, ok = dns.Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					println("Unknown RR type")
 				}
@@ -167,7 +163,7 @@ func main() {
 			if l.value != _RRTYPE {
 				println("Error, not an rrtype")
 			}
-			h.Rrtype, ok = dns.Str_rr[strings.ToUpper(l.token)]
+			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 			if !ok {
 				println("Unknown RR type")
 			}
@@ -211,36 +207,10 @@ func (l Lex) String() string {
 	return ""
 }
 
-func isrrtype(s string) bool {
-	switch strings.ToUpper(s) {
-	case "SOA":
-		fallthrough
-	case "TXT":
-		fallthrough
-	case "CNAME":
-		fallthrough
-	case "NSEC":
-		fallthrough
-	case "RRSIG":
-		return true
-	}
-	return false
-}
-
-func isclass(s string) bool {
-	switch strings.ToUpper(s) {
-	case "IN":
-		fallthrough
-	case "CH":
-		return true
-	}
-	return false
-}
-
 // lexer scans the sourcefile and returns tokens on the channel c.
 func lexer(s scanner.Scanner, c chan Lex) {
 	var l Lex
-	str := ""               // Hold the current read text
+	str := "" // Hold the current read text
 	quote := false
 	space := false
 	commt := false
@@ -250,6 +220,8 @@ func lexer(s scanner.Scanner, c chan Lex) {
 	tok := s.Scan()
 	defer close(c)
 	for tok != scanner.EOF {
+		l.column = s.Position.Column
+		l.line = s.Position.Line
 		switch x := s.TokenText(); x {
 		case " ", "\t":
 			if commt {
@@ -259,7 +231,7 @@ func lexer(s scanner.Scanner, c chan Lex) {
 				//l.value = _BLANK
 				//l.token = " "
 			} else if owner {
-				// If we have a string, its the first  make it an owner
+				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = str
 				c <- l
@@ -267,12 +239,14 @@ func lexer(s scanner.Scanner, c chan Lex) {
 				l.value = _STRING
 				l.token = str
 
-				if !rrtype && isrrtype(str) {
-					l.value = _RRTYPE
-					rrtype = true // We've seen one
-				}
-				if !rrtype && isclass(str) {
-					l.value = _CLASS
+				if !rrtype {
+					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+						l.value = _RRTYPE
+						rrtype = true // We've seen one
+					}
+					if _, ok := Str_class[strings.ToUpper(l.token)]; ok {
+						l.value = _CLASS
+					}
 				}
 				c <- l
 			}
@@ -293,7 +267,7 @@ func lexer(s scanner.Scanner, c chan Lex) {
 			commt = true
 		case "\n":
 			if commt {
-				// Reset
+				// Reset a comment
 				commt = false
 				rrtype = false
 				str = ""
