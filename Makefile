@@ -14,6 +14,7 @@ GOFILES=\
 	dnssec.go\
 	edns.go\
 	keygen.go\
+	kscan.go\
 	msg.go\
 	nsec3.go \
 	qnamestring.go\

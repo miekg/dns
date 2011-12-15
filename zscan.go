@@ -15,6 +15,7 @@ import (
 // * Handle comments: ;
 // * Handle braces.
 const (
+        // Zonefile
 	_EOF = iota // Don't let it start with zero
 	_STRING
 	_BLANK
@@ -22,6 +23,10 @@ const (
 	_RRTYPE
 	_OWNER
 	_CLASS
+
+        // Privatekey file
+        _VALUE
+        _KEY
 
 	_EXPECT_OWNER          // Ownername
 	_EXPECT_OWNER_BL       // Whitespace after the ownername
@@ -82,7 +87,7 @@ func ParseZone(r io.Reader, cr chan RR) {
 	s.Mode = 0
 	s.Whitespace = 0
 	// Start the lexer
-	go lexer(s, c)
+	go zlexer(s, c)
 	// 5 possible beginnings of a line, _ is a space
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
 	// 2. _OWNER _ _STRING _ _RRTYPE           -> class omitted
@@ -216,8 +221,8 @@ func (l Lex) String() string {
 	return ""
 }
 
-// lexer scans the sourcefile and returns tokens on the channel c.
-func lexer(s scanner.Scanner, c chan Lex) {
+// zlexer scans the sourcefile and returns tokens on the channel c.
+func zlexer(s scanner.Scanner, c chan Lex) {
 	var l Lex
 	str := "" // Hold the current read text
 	quote := false
