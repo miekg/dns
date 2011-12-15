@@ -138,6 +138,7 @@ func ParseZone(r io.Reader, cr chan RR) {
 				fmt.Printf("%s\n", &ParseError{"Expecting RR type, TTL or class, not this...", l})
 			}
 		case _EXPECT_ANY_NOCLASS_BL:
+                        println("IM HERE")
 			if l.value != _BLANK {
 				fmt.Printf("%s\n", &ParseError{"No blank before NOCLASS", l})
 			}
@@ -168,7 +169,7 @@ func ParseZone(r io.Reader, cr chan RR) {
 				} else {
 					h.Ttl = uint32(ttl)
 				}
-				st = _EXPECT_RDATA
+				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
 				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 				st = _EXPECT_RDATA
