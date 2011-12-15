@@ -34,7 +34,7 @@ const (
 	_EXPECT_RDATA          // The first element of the rdata
 )
 
-var DEBUG = true
+var DEBUG = false
 
 type ParseError struct {
 	err string
@@ -138,7 +138,6 @@ func ParseZone(r io.Reader, cr chan RR) {
 				fmt.Printf("%s\n", &ParseError{"Expecting RR type, TTL or class, not this...", l})
 			}
 		case _EXPECT_ANY_NOCLASS_BL:
-                        println("IM HERE")
 			if l.value != _BLANK {
 				fmt.Printf("%s\n", &ParseError{"No blank before NOCLASS", l})
 			}

@@ -292,7 +292,6 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 	rr.Hdr = h
 
 	l := <-c
-        println("NSEC NEXTDOMAIN: ", l.token)
 	if !IsDomainName(l.token) {
 		return nil, &ParseError{"bad NSEC nextdomain", l}
 	} else {
@@ -407,7 +406,6 @@ func setTXT(h RR_Header, c chan Lex) (RR, error) {
 	l := <-c
 	var s string
 	for l.value != _NEWLINE && l.value != _EOF {
-		println("tok", l.token, l.value)
 		switch l.value {
 		case _STRING:
 			s += l.token
