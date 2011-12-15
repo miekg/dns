@@ -802,15 +802,23 @@ func (rr *RR_TSIG) String() string {
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982)
 func timeToDate(t uint32) string {
-	//utc := time.Now().Unix()
-	//mod := (int64(t) - utc) / Year68
-
-	// If needed assume wrap around(s)
-	return ""
-	/* TODO: new time api
-	ti := time.Unix(int64(t),0).Unix() + (mod * Year68) // abs()? TODO
+	utc := time.Now().Unix()
+	mod := (int64(t) - utc) / Year68
+	ti := time.Unix(time.Unix(int64(t),0).Unix() + (mod * Year68), 0) // abs()? TODO
 	return ti.Format("20060102150405")
-	*/
+}
+
+// Translate the RRSIG's incep. and expir. times from 
+// string values ("20110403154150") to an integer.
+// Taking into account serial arithmetic (RFC 1982)
+func dateToTime(s string) (uint32, error) {
+    t, e := time.Parse("20060102150405", s)
+    if e != nil {
+        return 0, e
+    }
+    mod := t.Unix() / Year68
+    ti := uint32(t.Unix() - (mod * Year68))
+    return ti, nil
 }
 
 // Translate the TSIG time signed into a date. There is no
@@ -822,22 +830,6 @@ func tsigTimeToDate(t uint64) string {
 	        ti := time.Unix(int64(t), 0).Unix()
 		return ti.Format("20060102150405")
 	*/
-}
-
-// Translate the RRSIG's incep. and expir. times from 
-// string values ("20110403154150") to an integer.
-// Taking into account serial arithmetic (RFC 1982)
-func dateToTime(s string) (uint32, error) {
-    _, e := time.Parse("20060102150405", s)
-    if e != nil {
-        return 0, e
-    }
-    return 0, nil
-    /*
-    mod := t.Seconds() / Year68
-    ti := uint32(t.Seconds() - (mod * Year68))
-    return ti, nil
-    */
 }
 
 // Map of constructors for each RR wire type.
