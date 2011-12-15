@@ -1,12 +1,11 @@
 package dns
 
 import (
-	// "os"
-	// "time"
-	// "bufio"
 	"crypto/rsa"
+	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestSign(t *testing.T) {
@@ -26,8 +25,8 @@ Created: 20110302104537
 Publish: 20110302104537
 Activate: 20110302104537`
 
-	k := new(RR_DNSKEY)
-	k.Read(strings.NewReader(pub))
+	xk, _ := NewRR(pub) // TODO err
+	k := xk.(*RR_DNSKEY)
 	p, err := k.ReadPrivateKey(strings.NewReader(priv))
 	if err != nil {
 		t.Logf("%v\n", err)
@@ -95,9 +94,8 @@ func TestDotInName(t *testing.T) {
 		t.Fail()
 	}
 }
-/*
+
 // Make this a decend test case. For now, good enough
-// New style (Ragel) parsing
 func TestParse(t *testing.T) {
 	tests := map[string]string{
 		"miek.nl. 3600 IN A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
@@ -106,74 +104,68 @@ func TestParse(t *testing.T) {
 		"miek.nl. A 127.0.0.1":                       "miek.nl.\t0\tCLASS0\tA\t127.0.0.1",
 		"miek.nl. IN AAAA ::1":                       "miek.nl.\t0\tIN\tAAAA\t::1",
 		"miek.nl. IN A 127.0.0.1":                    "miek.nl.\t0\tIN\tA\t127.0.0.1",
-		"miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":           "miek.nl.\t0\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
-		"nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh": "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
-                "dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400": "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
-                "dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
+		"miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":                                                              "miek.nl.\t0\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
+		"nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh":                                                    "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
+		"dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400":                                                                                                                                                                         "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
+		"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
 	}
-        p := NewParser(strings.NewReader(tests))
-        p.Run()
-	for r := range p.RR {
-                if r == nil {
-                        t.Log("Empty RR")
-                        t.Fail()
-                } else {
-                        if r.(RR).String() != result {
-                                t.Logf("\"%s\" should be equal to\n\"%s\"\n", r, result)
-                                t.Fail()
-                        }
-                }
+	for i, o := range tests {
+		rr, _ := NewRR(i)
+		if rr.String() != o {
+			t.Logf("\"%s\" should be equal to\n\"%s\"\n", i, o)
+			t.Fail()
+		}
+                t.Logf("%s\n", rr.String())
 	}
 }
 
 func TestParseFailure(t *testing.T) {
-        tests := []string{"miek.nl. IN A 327.0.0.1",
-	        "miek.nl. IN AAAA ::x",
-	        "miek.nl. IN MX a0 miek.nl.",
-        }
-// Tests that make me crash
-//                "miek.nl aap IN MX mx.miek.nl.",
-//	        "miek.nl. IN CNAME ",
-//	        "miek.nl. PA MX 10 miek.nl.",
+	tests := []string{"miek.nl. IN A 327.0.0.1",
+		"miek.nl. IN AAAA ::x",
+		"miek.nl. IN MX a0 miek.nl.",
+		"miek.nl aap IN MX mx.miek.nl.",
+		"miek.nl. IN CNAME ",
+		"miek.nl. PA MX 10 miek.nl.",
+	}
 
-        for _, t1 := range tests {
-	        _, err := NewRRString(t1)
-                if err == nil {
-                        t.Log("Should have triggered an error")
-                        t.Fail()
-                } else {
-                        t.Logf("%s: %s\n", t1, err.String())
-                }
-        }
+	for _, s := range tests {
+		rr, err := NewRR(s)
+		if err == nil {
+			t.Log("Should have triggered an error")
+			t.Fail()
+		} else {
+			t.Logf("%s: %s\n", rr, err.Error())
+		}
+	}
 }
 
 func BenchmarkZoneParsing(b *testing.B) {
-	file, err := os.Open("miek.nl.signed_test")
-	defer file.Close()
+	f, err := os.Open("miek.nl.signed_test")
 	if err != nil {
 		return
 	}
-	p := NewParser(bufio.NewReader(file))
-	p.Zone()
+	defer f.Close()
+	cr := make(chan RR)
+	ParseZone(f, cr)
+	select {
+	case <-cr:
+	}
 }
 
 func TestZoneParsing(t *testing.T) {
-	file, err := os.Open("miek.nl.signed_test")
-	defer file.Close()
+	f, err := os.Open("miek.nl.signed_test")
 	if err != nil {
 		return
 	}
-	p := NewParser(bufio.NewReader(file))
-	start := time.Nanoseconds()
-	z, err := p.Zone()
-	if err != nil {
-		t.Logf("error %v\n", err.String())
-		t.Fail()
+	defer f.Close()
+	cr := make(chan RR)
+	start := time.Now().Nanosecond()
+	ParseZone(f, cr)
+	var i int
+	select {
+	case <-cr:
+		i++
 	}
-	delta := time.Nanoseconds() - start
-        if z != nil {
-                t.Logf("%s", z.Nxt)
-                t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", z.Len(), float32(delta)/1e9, float32(z.Len())/(float32(delta)/1e9))
-        }
+	delta := time.Now().Nanosecond() - start
+	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
-*/

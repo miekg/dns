@@ -111,23 +111,6 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	return
 }
 
-// Read reads a DNSKEY from the io.Reader q.
-func (k *RR_DNSKEY) Read(q io.Reader) error {
-	r, err := newRRReader(q)
-	if err != nil {
-		return err
-	}
-	if _, ok := r.(*RR_DNSKEY); !ok {
-		return ErrKey
-	}
-	k.Hdr = r.(*RR_DNSKEY).Hdr
-	k.Flags = r.(*RR_DNSKEY).Flags
-	k.Protocol = r.(*RR_DNSKEY).Protocol
-	k.Algorithm = r.(*RR_DNSKEY).Algorithm
-	k.PublicKey = r.(*RR_DNSKEY).PublicKey
-	return nil
-}
-
 // ReadPrivateKey reads a private key from the io.Reader q.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
 /*

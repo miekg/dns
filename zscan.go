@@ -61,20 +61,14 @@ type Lex struct {
 	column int              // column in the fil
 }
 
-// ParseString parses a string and returns the RR contained in there. If the string
-// contains more than one RR, only the first is returned.
-func NewRRString(s string) (RR, error) {
+// NewRR parses the string s and returns the RR contained in there. If the string
+// contains more than one RR, only the first is returned. If an error is detected
+// an error is returned. [TODO]
+func NewRR(s string) (RR, error) {
 	cr := make(chan RR)
 	go ParseZone(strings.NewReader(s), cr)
 	r := <-cr     // There are no error send as of yet
 	return r, nil // Todo: errors
-}
-
-func newRRReader(q io.Reader) (RR, error) {
-	cr := make(chan RR)
-	go ParseZone(q, cr)
-	r := <-cr
-	return r, nil
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR on the

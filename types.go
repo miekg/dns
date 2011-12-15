@@ -146,14 +146,6 @@ func (q *Question) String() string {
 	return s
 }
 
-// NewRR returns a new RR with the hdr.Rrtype also set.
-// If the type i is not known, nil is returned.
-func NewRR(i uint16) RR {
-	r := rr_mk[i]()
-	r.Header().Rrtype = i
-	return r
-}
-
 type RR_ANY struct {
 	Hdr RR_Header
 	// Does not have any rdata
