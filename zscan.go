@@ -9,10 +9,11 @@ import (
 )
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
-// * Add ownernames;
+// * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
 // * Make each RR fit on one line (NEWLINE is send as last)
 // * Handle comments: ;
+// * Handle braces.
 const (
 	_EOF = iota // Don't let it start with zero
 	_STRING
@@ -34,6 +35,7 @@ const (
 	_EXPECT_RDATA          // The first element of the rdata
 )
 
+// Only used when debugging the parser itself.
 var DEBUG = false
 
 type ParseError struct {
@@ -48,13 +50,13 @@ func (e *ParseError) Error() string {
 }
 
 type Lex struct {
-	token  string
-	value  int
-	line   int
-	column int
+	token  string           // text of the token
+        value  int              // value: _STRING, _BLANK, etc.
+	line   int              // line in the file
+	column int              // column in the fil
 }
 
-// ParseString parses a string and returns the RR contained in there. If they string
+// ParseString parses a string and returns the RR contained in there. If the string
 // contains more than one RR, only the first is returned.
 func NewRRString(s string) (RR, error) {
 	cr := make(chan RR)
@@ -71,8 +73,7 @@ func newRRReader(q io.Reader) (RR, error) {
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR on the
-// channel cr. The channel cr is closed by ParseZone when the end of r is
-// reached.
+// channel cr. The channel cr is closed by ParseZone when the end of r is reached.
 func ParseZone(r io.Reader, cr chan RR) {
 	defer close(cr)
 	var s scanner.Scanner
