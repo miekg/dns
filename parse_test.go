@@ -111,11 +111,13 @@ func TestParse(t *testing.T) {
 	}
 	for i, o := range tests {
 		rr, _ := NewRR(i)
-		if rr.String() != o {
+		if rr != nil && rr.String() != o {
 			t.Logf("\"%s\" should be equal to\n\"%s\"\n", i, o)
 			t.Fail()
-		}
-                t.Logf("%s\n", rr.String())
+		} else {
+                        t.Log("Failed to parse RR")
+                        t.Fail()
+                }
 	}
 }
 
@@ -129,12 +131,10 @@ func TestParseFailure(t *testing.T) {
 	}
 
 	for _, s := range tests {
-		rr, err := NewRR(s)
+		_, err := NewRR(s)
 		if err == nil {
 			t.Log("Should have triggered an error")
 			t.Fail()
-		} else {
-			t.Logf("%s: %s\n", rr, err.Error())
 		}
 	}
 }
