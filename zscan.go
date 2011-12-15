@@ -41,7 +41,7 @@ const (
 )
 
 // Only used when debugging the parser itself.
-var DEBUG = false
+var DEBUG = true
 
 type ParseError struct {
 	err string

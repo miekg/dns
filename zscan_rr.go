@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -14,9 +15,11 @@ import (
 
 func slurpRemainder(c chan Lex) error {
 	l := <-c
+        if DEBUG { fmt.Printf("%\v", l) }
 	switch l.value {
 	case _BLANK:
 		l = <-c
+        if DEBUG { fmt.Printf("%\v", l) }
 		if l.value != _NEWLINE && l.value != _EOF {
 			return &ParseError{"garbage after rdata", l}
 		}
@@ -109,8 +112,9 @@ func setA(h RR_Header, c chan Lex) (RR, error) {
 
 	l := <-c
 	rr.A = net.ParseIP(l.token)
+        println(l.token)
 	if rr.A == nil {
-		return nil, &ParseError{"bad a", l}
+		return nil, &ParseError{"bad A", l}
 	}
 	return rr, nil
 }
@@ -134,7 +138,7 @@ func setNS(h RR_Header, c chan Lex) (RR, error) {
 	l := <-c
 	rr.Ns = l.token
 	if !IsDomainName(l.token) {
-		return nil, &ParseError{"bad NS", l}
+		return nil, &ParseError{"bad NS Ns", l}
 	}
 	return rr, nil
 }
@@ -145,7 +149,7 @@ func setMX(h RR_Header, c chan Lex) (RR, error) {
 
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{"bad MX", l}
+		return nil, &ParseError{"bad MX Pref", l}
 	} else {
 		rr.Pref = uint16(i)
 	}
@@ -153,7 +157,7 @@ func setMX(h RR_Header, c chan Lex) (RR, error) {
 	l = <-c // _STRING
 	rr.Mx = l.token
 	if !IsDomainName(l.token) {
-		return nil, &ParseError{"bad CNAME", l}
+		return nil, &ParseError{"bad MX Mx", l}
 	}
 	return rr, nil
 }
