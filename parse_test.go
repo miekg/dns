@@ -98,25 +98,31 @@ func TestDotInName(t *testing.T) {
 // Make this a decend test case. For now, good enough
 func TestParse(t *testing.T) {
 	tests := map[string]string{
-//		"miek.nl. 3600 IN A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. 3600 IN MX 10 elektron.atoom.net.\n": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
-//		"miek.nl. IN 3600 A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-//		"miek.nl. A 127.0.0.1":                       "miek.nl.\t0\tCLASS0\tA\t127.0.0.1",
-//		"miek.nl. IN AAAA ::1":                       "miek.nl.\t0\tIN\tAAAA\t::1",
-//		"miek.nl. IN A 127.0.0.1":                    "miek.nl.\t0\tIN\tA\t127.0.0.1",
-//		"miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":                                                              "miek.nl.\t0\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
+		"miek.nl. 3600 IN A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. 3600 IN MX 10 elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
+		"miek.nl. IN 3600 A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. A 127.0.0.1":                       "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. IN AAAA ::1":                       "miek.nl.\t3600\tIN\tAAAA\t::1",
+		"miek.nl. IN A 127.0.0.1":                    "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":
+                        "miek.nl.\t3600\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
 //		"nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh":                                                    "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
-//		"dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400":                                                                                                                                                                         "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
-//		"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
+		"dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400":
+                        "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
+		"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": 
+                        "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
 	}
 	for i, o := range tests {
 		rr, _ := NewRR(i)
-		if rr != nil && rr.String() != o {
-			t.Logf("\"%s\" should be equal to\n\"%s\"\n", i, o)
-			t.Fail()
-		} else {
+                if rr == nil {
                         t.Log("Failed to parse RR")
                         t.Fail()
+                }
+		if rr.String() != o {
+			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
+			t.Fail()
+		} else {
+                        t.Logf("RR is %s", rr.String())
                 }
 	}
 }

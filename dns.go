@@ -17,7 +17,7 @@
 //
 // Or directly from a string:
 //
-//      mx := NewRRString("miek.nl IN MX 10 mx.miek.nl.")
+//      mx := NewRR("miek.nl. IN MX 10 mx.miek.nl.")
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.

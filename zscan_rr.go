@@ -112,7 +112,6 @@ func setA(h RR_Header, c chan Lex) (RR, error) {
 
 	l := <-c
 	rr.A = net.ParseIP(l.token)
-        println(l.token)
 	if rr.A == nil {
 		return nil, &ParseError{"bad A", l}
 	}

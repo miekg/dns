@@ -15,7 +15,7 @@ import (
 // * Handle comments: ;
 // * Handle braces.
 const (
-        // Zonefile
+	// Zonefile
 	_EOF = iota // Don't let it start with zero
 	_STRING
 	_BLANK
@@ -24,9 +24,9 @@ const (
 	_OWNER
 	_CLASS
 
-        // Privatekey file
-        _VALUE
-        _KEY
+	// Privatekey file
+	_VALUE
+	_KEY
 
 	_EXPECT_OWNER          // Ownername
 	_EXPECT_OWNER_BL       // Whitespace after the ownername
@@ -41,7 +41,7 @@ const (
 )
 
 // Only used when debugging the parser itself.
-var DEBUG = true
+var DEBUG = false
 
 type ParseError struct {
 	err string
@@ -55,18 +55,24 @@ func (e *ParseError) Error() string {
 }
 
 type Lex struct {
-	token  string           // text of the token
-        value  int              // value: _STRING, _BLANK, etc.
-	line   int              // line in the file
-	column int              // column in the fil
+	token  string // text of the token
+	value  int    // value: _STRING, _BLANK, etc.
+	line   int    // line in the file
+	column int    // column in the fil
 }
 
 // NewRR parses the string s and returns the RR contained in there. If the string
 // contains more than one RR, only the first is returned. If an error is detected
-// an error is returned. [TODO]
+// an error is returned. 
+// If the class is not specified, the IN class is assumed. If the TTL is not
+// specified DefaultTtl is assumed.
 func NewRR(s string) (RR, error) {
 	cr := make(chan RR)
-	go ParseZone(strings.NewReader(s), cr)
+	if s[len(s)-1] != '\n' { // We need a closing newline
+		go ParseZone(strings.NewReader(s+"\n"), cr)
+	} else {
+		go ParseZone(strings.NewReader(s), cr)
+	}
 	r := <-cr     // There are no error send as of yet
 	return r, nil // Todo: errors
 }
@@ -99,6 +105,9 @@ func ParseZone(r io.Reader, cr chan RR) {
 		}
 		switch st {
 		case _EXPECT_OWNER:
+                        // Set the defaults here
+                        h.Ttl = DefaultTtl
+                        h.Class = ClassINET
 			switch l.value {
 			case _NEWLINE: // Empty line
 				st = _EXPECT_OWNER
@@ -118,7 +127,6 @@ func ParseZone(r io.Reader, cr chan RR) {
 			switch l.value {
 			case _RRTYPE:
 				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
-				h.Ttl = DefaultTtl
 				st = _EXPECT_RDATA
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
