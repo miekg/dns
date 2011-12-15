@@ -373,6 +373,47 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
+func setDNSKEY(h RR_Header, c chan Lex) (RR, error) {
+        rr := new(RR_DNSKEY)
+        rr.Hdr = h
+
+        l := <-c
+        if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DNSKEY", l}
+        } else {
+                rr.Flags = uint16(i)
+        }
+	<-c     // _BLANK
+	l = <-c // _STRING
+        if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DNSKEY", l}
+        } else {
+                rr.Protocol = uint8(i)
+        }
+	<-c     // _BLANK
+	l = <-c // _STRING
+        if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DNSKEY", l}
+        } else {
+                rr.Algorithm = uint8(i)
+        }
+        l = <-c
+        var s string
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{"bad DNSKEY", l}
+		}
+		l = <-c
+	}
+	rr.PublicKey = s
+	return rr, nil
+}
+
 /*
 func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, error) {
         rr := new(RR_NSEC3PARAM)
@@ -512,38 +553,6 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         }
         rr.DigestType = uint8(i)
         rr.Digest = rdf[3]
-        zp.RR <- rr
-    }
-
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setDNSKEY {
-        var (
-                i uint
-                e os.Error
-        )
-        rdf := fields(data[mark:p], 4)
-        rr := new(RR_DNSKEY)
-        rr.Hdr = hdr
-        rr.Hdr.Rrtype = TypeDNSKEY
-
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[0], line: l}
-                return
-        }
-        rr.Flags = uint16(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[1], line: l}
-                return
-        }
-        rr.Protocol = uint8(i)
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DNSKEY", name: rdf[2], line: l}
-                return
-        }
-        rr.Algorithm = uint8(i)
-        rr.PublicKey = rdf[3]
         zp.RR <- rr
     }
 
