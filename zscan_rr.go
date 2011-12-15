@@ -13,27 +13,6 @@ import (
 // or immediately a _NEWLINE. If this is not the case we flag
 // an error: garbage after rdata.
 
-func slurpRemainder(c chan Lex) error {
-	l := <-c
-        if DEBUG { fmt.Printf("%\v", l) }
-	switch l.value {
-	case _BLANK:
-		l = <-c
-        if DEBUG { fmt.Printf("%\v", l) }
-		if l.value != _NEWLINE && l.value != _EOF {
-			return &ParseError{"garbage after rdata", l}
-		}
-		// Ok
-	case _NEWLINE:
-		// Ok
-	case _EOF:
-		// Ok
-	default:
-		return &ParseError{"garbage after rdata", l}
-	}
-	return nil
-}
-
 func setRR(h RR_Header, c chan Lex) (RR, error) {
 	var (
 		r RR
@@ -88,9 +67,11 @@ func setRR(h RR_Header, c chan Lex) (RR, error) {
 		if se := slurpRemainder(c); se != nil {
 			return nil, se
 		}
-	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
-	// They need to search for the end of the RR themselves, hence they look for the ending
-	// newline. Thus there is no need to slurp the remainder, because there is none
+		// These types have a variable ending either chunks of txt or chunks/base64 or hex.
+		// They need to search for the end of the RR themselves, hence they look for the ending
+		// newline. Thus there is no need to slurp the remainder, because there is none.
+	case TypeDNSKEY:
+		r, e = setDNSKEY(h, c)
 	case TypeRRSIG:
 		r, e = setRRSIG(h, c)
 	case TypeNSEC:
@@ -100,10 +81,35 @@ func setRR(h RR_Header, c chan Lex) (RR, error) {
 	case TypeTXT:
 		r, e = setTXT(h, c)
 	default:
-                // Don't the have the token the holds the RRtype
-		return nil, &ParseError{"Unknown RR type", Lex{} }
+		// Don't the have the token the holds the RRtype
+		return nil, &ParseError{"Unknown RR type", Lex{}}
 	}
 	return r, e
+}
+
+func slurpRemainder(c chan Lex) error {
+	l := <-c
+	if DEBUG {
+		fmt.Printf("%\v", l)
+	}
+	switch l.value {
+	case _BLANK:
+		l = <-c
+		if DEBUG {
+			fmt.Printf("%\v", l)
+		}
+		if l.value != _NEWLINE && l.value != _EOF {
+			return &ParseError{"garbage after rdata", l}
+		}
+		// Ok
+	case _NEWLINE:
+		// Ok
+	case _EOF:
+		// Ok
+	default:
+		return &ParseError{"garbage after rdata", l}
+	}
+	return nil
 }
 
 func setA(h RR_Header, c chan Lex) (RR, error) {
@@ -315,7 +321,7 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 				rr.TypeBitMap = append(rr.TypeBitMap, k)
 			}
 		default:
-                        return nil, &ParseError{"bad NSEC garbage in type bitmap", l}
+			return nil, &ParseError{"bad NSEC garbage in type bitmap", l}
 		}
 		l = <-c
 	}
@@ -377,31 +383,31 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
 }
 
 func setDNSKEY(h RR_Header, c chan Lex) (RR, error) {
-        rr := new(RR_DNSKEY)
-        rr.Hdr = h
+	rr := new(RR_DNSKEY)
+	rr.Hdr = h
 
-        l := <-c
-        if i, e := strconv.Atoi(l.token); e != nil {
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{"bad DNSKEY", l}
-        } else {
-                rr.Flags = uint16(i)
-        }
+	} else {
+		rr.Flags = uint16(i)
+	}
 	<-c     // _BLANK
 	l = <-c // _STRING
-        if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{"bad DNSKEY", l}
-        } else {
-                rr.Protocol = uint8(i)
-        }
+	} else {
+		rr.Protocol = uint8(i)
+	}
 	<-c     // _BLANK
 	l = <-c // _STRING
-        if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{"bad DNSKEY", l}
-        } else {
-                rr.Algorithm = uint8(i)
-        }
-        l = <-c
-        var s string
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	l = <-c
+	var s string
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:
