@@ -310,7 +310,7 @@ func lexer(s scanner.Scanner, c chan Lex) {
 			if commt {
 				break
 			}
-			str += "\""
+			// str += "\"" don't add quoted quotes
 			quote = !quote
 		case "(":
 			if commt {
