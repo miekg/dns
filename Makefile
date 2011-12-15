@@ -18,8 +18,8 @@ GOFILES=\
 	msg.go\
 	nsec3.go \
 	qnamestring.go\
-	server.go \
 	rawmsg.go \
+	server.go \
 	tsig.go\
 	types.go\
 	update.go\
