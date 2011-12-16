@@ -49,6 +49,8 @@ func main() {
                                 fmt.Printf("; ZSK\n")
                         case 257:
                                 fmt.Printf("; KSK\n")
+                        default:
+                                fmt.Printf("; %d\n", key.Flags)
                         }
 
 			ds := key.ToDS(dns.SHA1)
