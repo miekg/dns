@@ -171,9 +171,9 @@ var Rcode_str = map[int]string{
 // use it. Thus, if in the future we need to define new message
 // structs, no new pack/unpack/printing code needs to be written.
 
-// Pack a domain name s into msg[off:].
+// PackDomainName packs a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
-// split at the dots.  They end with a zero-length string.
+// split at the dots. They end with a zero-length string.
 func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
