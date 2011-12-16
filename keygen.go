@@ -113,27 +113,27 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 
 // ReadPrivateKey reads a private key from the io.Reader q.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
-/*
-	p := NewParser(q)
-	kv, _ := p.PrivateKey()
-	if kv == nil {
+	/*
+		p := NewParser(q)
+		kv, _ := p.PrivateKey()
+		if kv == nil {
+			return nil, ErrPrivKey
+		}
+		if _, ok := kv["private-key-format"]; !ok {
+			return nil, ErrPrivKey
+		}
+		if kv["private-key-format"] != "v1.2" && kv["private-key-format"] != "v1.3" {
+			return nil, ErrPrivKey
+		}
+		switch kv["algorithm"] {
+		case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
+			return k.readPrivateKeyRSA(kv)
+		case "ECDSAP256SHA256", "ECDSAP384SHA384":
+			return k.readPrivateKeyECDSA(kv)
+		}
 		return nil, ErrPrivKey
-	}
-	if _, ok := kv["private-key-format"]; !ok {
-		return nil, ErrPrivKey
-	}
-	if kv["private-key-format"] != "v1.2" && kv["private-key-format"] != "v1.3" {
-		return nil, ErrPrivKey
-	}
-	switch kv["algorithm"] {
-	case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
-		return k.readPrivateKeyRSA(kv)
-	case "ECDSAP256SHA256", "ECDSAP384SHA384":
-		return k.readPrivateKeyECDSA(kv)
-	}
-	return nil, ErrPrivKey
-*/
-        return nil, nil
+	*/
+	return nil, nil
 }
 
 // Read a private key (file) string and create a public key. Return the private key.

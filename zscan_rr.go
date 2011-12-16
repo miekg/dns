@@ -17,7 +17,7 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 	var r RR
 	e := new(ParseError)
 	switch h.Rrtype {
-                // goto Slurpremainder
+	// goto Slurpremainder
 	case TypeA:
 		r, e = setA(h, c)
 		if e != nil {
@@ -294,7 +294,7 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, *ParseError) {
 	}
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
-        s := ""
+	s := ""
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:
@@ -511,7 +511,7 @@ func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
 	}
 	// There can be spaces here...
 	l = <-c
-        s := ""
+	s := ""
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:

@@ -49,10 +49,10 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() string {
-        va := strconv.Itoa(e.lex.value)
-        s := e.err + ": `" + e.lex.token + "' (value: " + va + ") at line: " +
-                strconv.Itoa(e.lex.line) + " and column: " +
-                strconv.Itoa(e.lex.column)
+	va := strconv.Itoa(e.lex.value)
+	s := e.err + ": `" + e.lex.token + "' (value: " + va + ") at line: " +
+		strconv.Itoa(e.lex.line) + " and column: " +
+		strconv.Itoa(e.lex.column)
 	return s
 }
 
@@ -64,7 +64,7 @@ type Lex struct {
 }
 
 type Token struct {
-	Rr  RR          // the scanned resource record
+	Rr    RR          // the scanned resource record
 	Error *ParseError // when an error occured, this is the specifics
 }
 
@@ -222,11 +222,11 @@ func ParseZone(r io.Reader, t chan Token) {
 			// I could save my token here...? l
 			r, e := setRR(h, c)
 			if e != nil {
-                                // If e.Lex is nil than we have encounter a unknown RR type
-                                // in that case we substitute our current Lex token
-                                if e.lex.token == "" && e.lex.value == 0 {
-                                        e.lex = l       // Uh, dirty
-                                }
+				// If e.Lex is nil than we have encounter a unknown RR type
+				// in that case we substitute our current Lex token
+				if e.lex.token == "" && e.lex.value == 0 {
+					e.lex = l // Uh, dirty
+				}
 				t <- Token{Error: e}
 				return
 			}

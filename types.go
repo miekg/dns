@@ -796,7 +796,7 @@ func (rr *RR_TSIG) String() string {
 func timeToDate(t uint32) string {
 	utc := time.Now().Unix()
 	mod := (int64(t) - utc) / Year68
-	ti := time.Unix(time.Unix(int64(t),0).Unix() + (mod * Year68), 0) // abs()? TODO
+	ti := time.Unix(time.Unix(int64(t), 0).Unix()+(mod*Year68), 0) // abs()? TODO
 	return ti.Format("20060102150405")
 }
 
@@ -804,13 +804,13 @@ func timeToDate(t uint32) string {
 // string values ("20110403154150") to an integer.
 // Taking into account serial arithmetic (RFC 1982)
 func dateToTime(s string) (uint32, error) {
-    t, e := time.Parse("20060102150405", s)
-    if e != nil {
-        return 0, e
-    }
-    mod := t.Unix() / Year68
-    ti := uint32(t.Unix() - (mod * Year68))
-    return ti, nil
+	t, e := time.Parse("20060102150405", s)
+	if e != nil {
+		return 0, e
+	}
+	mod := t.Unix() / Year68
+	ti := uint32(t.Unix() - (mod * Year68))
+	return ti, nil
 }
 
 // Translate the TSIG time signed into a date. There is no
@@ -819,8 +819,8 @@ func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
 	return ""
 	/*
-	        ti := time.Unix(int64(t), 0).Unix()
-		return ti.Format("20060102150405")
+		        ti := time.Unix(int64(t), 0).Unix()
+			return ti.Format("20060102150405")
 	*/
 }
 
