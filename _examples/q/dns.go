@@ -155,6 +155,8 @@ func dnsMaraLike(l *lexer) stateFn {
 
 func dnsPowerdnsLike(l *lexer) stateFn {
 	l.verbose("PowerdnsLike")
+        return nil
+}
 
 func dnsYadifaLike(l *lexer) stateFn {
 	l.verbose("YadifaLike")

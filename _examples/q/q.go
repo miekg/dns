@@ -13,7 +13,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 	w.Send(m)
 	r, err := w.Receive()
 	if err != nil {
-		fmt.Printf("%s\n", err.String())
+		fmt.Printf("%s\n", err.Error())
 	}
 	w.Write(r)
 }
@@ -179,8 +179,6 @@ func shortMsg(in *dns.Msg) *dns.Msg {
 
 func shortRR(r dns.RR) dns.RR {
 	switch t := r.(type) {
-	case *dns.RR_NSEC3:
-		t.Salt = "-" // nobody cares
 	case *dns.RR_DS:
 		t.Digest = "..."
 	case *dns.RR_DNSKEY:
@@ -190,6 +188,7 @@ func shortRR(r dns.RR) dns.RR {
 		t.Inception = 0 // For easy grepping
 		t.Expiration = 0
 	case *dns.RR_NSEC3:
+		t.Salt = "-" // nobody cares
 		if len(t.TypeBitMap) > 5 {
 			t.TypeBitMap = t.TypeBitMap[1:5]
 		}
