@@ -17,7 +17,6 @@ GOFILES=\
 	kscan.go\
 	msg.go\
 	nsec3.go \
-	qnamestring.go\
 	rawmsg.go \
 	server.go \
 	tsig.go\
