@@ -34,22 +34,6 @@
 // 
 package dns
 
-func (u *Msg) Zone() []Question {
-	return u.Question
-}
-
-func (u *Msg) Prereq() []RR {
-	return u.Answer
-}
-
-func (u *Msg) Update() []RR {
-	return u.Ns
-}
-
-func (u *Msg) Additional() []RR {
-	return u.Extra
-}
-
 // NewUpdate creates a new DNS update packet, which is a normal DNS message.
 func NewUpdate(zone string, class uint16) *Msg {
 	u := new(Msg)
