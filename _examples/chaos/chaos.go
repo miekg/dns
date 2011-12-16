@@ -55,8 +55,8 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 	m4.SetQuestion(os.Args[1], dns.TypeA)
 	m6 := new(dns.Msg)
 	m6.SetQuestion(os.Args[1], dns.TypeAAAA)
-	c.Do(m4, conf.Servers[0]) // Also 1 and 2 (and merge the results??
-	c.Do(m6, conf.Servers[0])
+        c.Do(m4, conf.Servers[0] + ":" + conf.Port)
+        c.Do(m6, conf.Servers[0] + ":" + conf.Port)
 
 	var ips []string
 	i := 2 // two outstanding queries
