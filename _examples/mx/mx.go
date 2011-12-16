@@ -7,8 +7,6 @@ import (
 	"os"
 )
 
-var privatealg = "7.nsec4.nlnetlabs.nl."
-
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("%s DOMAIN\n", os.Args[0])
@@ -24,7 +22,7 @@ func main() {
 	m.MsgHdr.RecursionDesired = true
 
 	// Simple sync query, nothing fancy
-	r, err := c.Exchange(m, config.Servers[0])
+        r, err := c.Exchange(m, config.Servers[0] + ":" + config.Port)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		os.Exit(1)
