@@ -88,24 +88,24 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 func slurpRemainder(c chan Lex) *ParseError {
 	l := <-c
 	if _DEBUG {
-		fmt.Printf("%\v", l)
+		fmt.Printf("%v\n", l)
 	}
 	switch l.value {
 	case _BLANK:
 		l = <-c
 		if _DEBUG {
-			fmt.Printf("%\v", l)
+			fmt.Printf("%v\n", l)
 		}
 		if l.value != _NEWLINE && l.value != _EOF {
 			return &ParseError{"garbage after rdata", l}
 		}
 		// Ok
 	case _NEWLINE:
-		// Ok
+                // Ok
 	case _EOF:
 		// Ok
 	default:
-		return &ParseError{"garbage after rdata", l}
+		return &ParseError{"garbage after directly rdata", l}
 	}
 	return nil
 }

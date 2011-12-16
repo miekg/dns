@@ -9,9 +9,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = false
-
-
+var _DEBUG = true
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -51,8 +49,10 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() string {
-	s := e.err + ": `" + e.lex.token + "' at line: " + strconv.Itoa(e.lex.line) +
-		" and column: " + strconv.Itoa(e.lex.column)
+        va := strconv.Itoa(e.lex.value)
+        s := e.err + ": `" + e.lex.token + "' (value: " + va + ") at line: " +
+                strconv.Itoa(e.lex.line) + " and column: " +
+                strconv.Itoa(e.lex.column)
 	return s
 }
 
