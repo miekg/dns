@@ -200,7 +200,7 @@ func (c *Client) Do(m *Msg, a string) {
 }
 
 // ExchangeBuffer performs a synchronous query. It sends the buffer m to the
-// address (net.Addr?) contained in a
+// address contained in a.
 func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, err error) {
 	w := new(reply)
 	w.client = c
