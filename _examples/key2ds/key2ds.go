@@ -44,6 +44,13 @@ func main() {
                 // Maybe print the key flags?
 		if key, ok := k.(*dns.RR_DNSKEY); ok {
 			key.Hdr.Ttl = 0
+                        switch key.Flags {
+                        case 256:
+                                fmt.Printf("; ZSK\n")
+                        case 257:
+                                fmt.Printf("; KSK\n")
+                        }
+
 			ds := key.ToDS(dns.SHA1)
 			fmt.Printf("%v\n", ds)
 			ds = key.ToDS(dns.SHA256)
