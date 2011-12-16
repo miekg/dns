@@ -13,7 +13,7 @@ type saltWireFmt struct {
 
 // HashName hashes a string or label according to RFC5155. It returns
 // the hashed string.
-func HashName(label string, ha int, iterations int, salt string) string {
+func HashName(label string, ha, iter int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
@@ -41,10 +41,11 @@ func HashName(label string, ha int, iterations int, salt string) string {
         io.WriteString(s, string(name))
 	nsec3 := s.Sum(nil)
 	// k > 0
-	for k := 0; k < iterations; k++ {
+	for k := 0; k < iter; k++ {
 		s.Reset()
 		nsec3 = append(nsec3, wire...)
-		nsec3 = s.Sum(nsec3)
+                io.WriteString(s, string(nsec3))
+		nsec3 = s.Sum(nil)
 	}
 	return unpackBase32(nsec3)
 }
