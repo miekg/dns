@@ -27,10 +27,10 @@
 //      m := new(Msg)
 //      m.SetQuestion("miek.nl.", TypeMX)
 //
-// The message m is now a messages with the Question section set to ask
+// The message m is now a message with the question section set to ask
 // the MX records for the miek.nl. zone.
 //
-// This is slightly more verbose, but more flexible:
+// The following is slightly more verbose, but more flexible:
 //
 //      m1 := new(Msg)
 //      m1.MsgHdr.Id = Id()
@@ -47,7 +47,7 @@
 //      // c.Net = "tcp" // If you want to use TCP
 //      in := c.Exchange(m, "127.0.0.1:53")
 //
-// An asynchronous query ... TODO(mg)
+// An asynchronous query is also possible. The Basic use pattern is: TODO(mg)
 package dns
 
 import (

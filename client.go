@@ -63,10 +63,12 @@ func newQueryChan() chan *Request       { return make(chan *Request) }
 
 // Default channels to use for the resolver
 var (
-	DefaultReplyChan = newQueryChanSlice() // DefaultReplyChan is the channel on which the replies are
+	// DefaultReplyChan is the channel on which the replies are
 	// coming back. Is it a channel of *Exchange, so that the original 
 	// question is included with the answer.
-	DefaultQueryChan = newQueryChan() // DefaultQueryChan is the channel were you can send the questions to.
+	DefaultReplyChan = newQueryChanSlice()
+	// DefaultQueryChan is the channel were you can send the questions to.
+	DefaultQueryChan = newQueryChan()
 )
 
 // The HandlerQueryFunc type is an adapter to allow the use of
