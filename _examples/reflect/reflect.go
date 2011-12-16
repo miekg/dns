@@ -8,10 +8,11 @@
  * is not their normal goal): rs.dns-oarc.net, porttest.dns-oarc.net,
  * amiopen.openresolvers.org.
  *
+ * Original version from:
  * Stephane Bortzmeyer <stephane+grong@bortzmeyer.org>
  *
- * Miek Gieben <miek@miek.nl>
  * Adapted to Go DNS (i.e. completely rewritten)
+ * Miek Gieben <miek@miek.nl>
  */
 
 package main
@@ -19,6 +20,7 @@ package main
 import (
 	"dns"
 	"fmt"
+	"log"
 	"net"
 	"os/signal"
 	"strconv"
@@ -37,6 +39,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		str string
 		a   net.IP
 	)
+        log.Print("Receiving request")
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
@@ -69,6 +72,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	if !ok {
 		return
 	}
+        log.Print("Answering request")
 	w.Write(b)
 }
 
