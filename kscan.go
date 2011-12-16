@@ -23,8 +23,8 @@ func ReadPrivateKey(q io.Reader) (PrivateKey, error) {
 	}
 	switch m["algorithm"] {
 	case "1 (RSAMD5)", "5 (RSASHA1)", "8 (RSASHA256)", "10 (RSASHA512)":
-                fallthrough
-        case "7 (RSASHA1NSEC3SHA1)":
+		fallthrough
+	case "7 (RSASHA1NSEC3SHA1)":
 		return readPrivateKeyRSA(m)
 	case "13 (ECDSAP256SHA256)", "14 (ECDSAP384SHA384)":
 		return readPrivateKeyECDSA(m)
@@ -110,7 +110,7 @@ func ParseKey(r io.Reader) (map[string]string, error) {
 			if k == "" {
 				return nil, &ParseError{"No key seen", l}
 			}
-                        //println("Setting", strings.ToLower(k), "to", l.token, "b")
+			//println("Setting", strings.ToLower(k), "to", l.token, "b")
 			m[strings.ToLower(k)] = l.token
 			k = ""
 		}
@@ -134,14 +134,14 @@ func klexer(s scanner.Scanner, c chan lex) {
 			if commt {
 				break
 			}
-                        l.token = str
+			l.token = str
 			if key {
 				l.value = _KEY
 				c <- l
-                                // Next token is a space, eat it
-                                s.Scan()
+				// Next token is a space, eat it
+				s.Scan()
 				key = false
-                                str = ""
+				str = ""
 			} else {
 				l.value = _VALUE
 			}
@@ -152,8 +152,8 @@ func klexer(s scanner.Scanner, c chan lex) {
 				// Reset a comment
 				commt = false
 			}
-                        l.value = _VALUE
-                        l.token = str
+			l.value = _VALUE
+			l.token = str
 			c <- l
 			str = ""
 			commt = false

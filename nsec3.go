@@ -38,13 +38,13 @@ func HashName(label string, ha, iter int, salt string) string {
 
 	// k = 0
 	name = append(name, wire...)
-        io.WriteString(s, string(name))
+	io.WriteString(s, string(name))
 	nsec3 := s.Sum(nil)
 	// k > 0
 	for k := 0; k < iter; k++ {
 		s.Reset()
 		nsec3 = append(nsec3, wire...)
-                io.WriteString(s, string(nsec3))
+		io.WriteString(s, string(nsec3))
 		nsec3 = s.Sum(nil)
 	}
 	return unpackBase32(nsec3)
