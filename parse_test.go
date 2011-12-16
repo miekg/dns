@@ -176,6 +176,7 @@ func TestZoneParsing(t *testing.T) {
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 
+/*
 func TestZoneParsingBigZonePrint(t *testing.T) {
 	f, err := os.Open("test.zone.miek.nl.signed")
 	if err != nil {
@@ -214,3 +215,4 @@ func TestZoneParsingBigZone(t *testing.T) {
 	delta := time.Now().UnixNano() - start
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
+*/
