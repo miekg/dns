@@ -94,7 +94,7 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 func ParseKey(r io.Reader) (map[string]string, error) {
 	var s scanner.Scanner
 	m := make(map[string]string)
-	c := make(chan Lex)
+	c := make(chan lex)
 	k := ""
 	s.Init(r)
 	s.Mode = 0
@@ -119,8 +119,8 @@ func ParseKey(r io.Reader) (map[string]string, error) {
 }
 
 // klexer scans the sourcefile and returns tokens on the channel c.
-func klexer(s scanner.Scanner, c chan Lex) {
-	var l Lex
+func klexer(s scanner.Scanner, c chan lex) {
+	var l lex
 	str := "" // Hold the current read text
 	commt := false
 	key := true

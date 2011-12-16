@@ -45,7 +45,7 @@ const (
 
 type ParseError struct {
 	err string
-	lex Lex
+	lex lex
 }
 
 func (e *ParseError) Error() string {
@@ -56,7 +56,7 @@ func (e *ParseError) Error() string {
 	return s
 }
 
-type Lex struct {
+type lex struct {
 	token  string // text of the token
 	value  int    // value: _STRING, _BLANK, etc.
 	line   int    // line in the file
@@ -94,7 +94,7 @@ func NewRR(s string) (RR, error) {
 func ParseZone(r io.Reader, t chan Token) {
 	defer close(t)
 	var s scanner.Scanner
-	c := make(chan Lex)
+	c := make(chan lex)
 	s.Init(r)
 	s.Mode = 0
 	s.Whitespace = 0
@@ -222,8 +222,8 @@ func ParseZone(r io.Reader, t chan Token) {
 			// I could save my token here...? l
 			r, e := setRR(h, c)
 			if e != nil {
-				// If e.Lex is nil than we have encounter a unknown RR type
-				// in that case we substitute our current Lex token
+				// If e.lex is nil than we have encounter a unknown RR type
+				// in that case we substitute our current lex token
 				if e.lex.token == "" && e.lex.value == 0 {
 					e.lex = l // Uh, dirty
 				}
@@ -236,7 +236,7 @@ func ParseZone(r io.Reader, t chan Token) {
 	}
 }
 
-func (l Lex) String() string {
+func (l lex) String() string {
 	switch l.value {
 	case _STRING:
 		return l.token
@@ -255,8 +255,8 @@ func (l Lex) String() string {
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
-func zlexer(s scanner.Scanner, c chan Lex) {
-	var l Lex
+func zlexer(s scanner.Scanner, c chan lex) {
+	var l lex
 	str := "" // Hold the current read text
 	quote := false
 	space := false
