@@ -205,16 +205,19 @@ func setSOA(h RR_Header, c chan Lex) (RR, *ParseError) {
 		switch i {
 		case 0:
 			rr.Serial = uint32(j)
+		        <-c // _BLANK
 		case 1:
 			rr.Refresh = uint32(j)
+		        <-c // _BLANK
 		case 2:
 			rr.Retry = uint32(j)
+		        <-c // _BLANK
 		case 3:
 			rr.Expire = uint32(j)
+		        <-c // _BLANK
 		case 4:
 			rr.Minttl = uint32(j)
 		}
-		<-c // _BLANK
 	}
 	return rr, nil
 }

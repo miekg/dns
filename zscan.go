@@ -9,7 +9,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = true
+var _DEBUG = false
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -222,6 +222,11 @@ func ParseZone(r io.Reader, t chan Token) {
 			// I could save my token here...? l
 			r, e := setRR(h, c)
 			if e != nil {
+                                // If e.Lex is nil than we have encounter a unknown RR type
+                                // in that case we substitute our current Lex token
+                                if e.lex.token == "" && e.lex.value == 0 {
+                                        e.lex = l       // Uh, dirty
+                                }
 				t <- Token{Error: e}
 				return
 			}
