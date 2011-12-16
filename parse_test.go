@@ -108,8 +108,8 @@ func TestParse(t *testing.T) {
 		"nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh": "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
 		"dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400":                                                                                                                      "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
 		// RRSIG incep/expir fails (new time api)
-		//		"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": 
-		//                        "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
+				"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": 
+		                        "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
 	}
 	for i, o := range tests {
 		rr, _ := NewRR(i)
