@@ -43,6 +43,8 @@ const (
 	_EXPECT_RDATA          // The first element of the rdata
 )
 
+// ParseError contains the parse error and the location in the io.Reader
+// where the error occured.
 type ParseError struct {
 	err string
 	lex lex
@@ -70,7 +72,7 @@ type Token struct {
 
 // NewRR parses the string s and returns the RR contained in there. If the string
 // contains more than one RR, only the first is returned. If an error is detected
-// that error error is returned. 
+// that error is returned. 
 // If the class is not specified, the IN class is assumed. If the TTL is not
 // specified DefaultTtl is assumed.
 func NewRR(s string) (RR, error) {
