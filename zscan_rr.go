@@ -17,6 +17,7 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 	var r RR
 	e := new(ParseError)
 	switch h.Rrtype {
+                // goto Slurpremainder
 	case TypeA:
 		r, e = setA(h, c)
 		if e != nil {
@@ -394,6 +395,32 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, *ParseError) {
 	return rr, nil
 }
 
+/*
+func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, *ParseError) {
+        rr := new(RR_NSEC3PARAM)
+        rr.Hdr = h
+        l := <-c
+        if i, e = strconv.Atoi(rdf[0]); e != nil {
+                return nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[0], line: l}
+        } else {
+        rr.Hash = uint8(i)
+}
+        if i, e = strconv.Atoi(rdf[1]); e != nil {
+                reutrn nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[1], line: l}
+        } else {
+        rr.Flags = uint8(i)
+}
+        if i, e = strconv.Atoi(rdf[2]); e != nil {
+                return nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[2], line: l}
+        } else {
+        rr.Iterations = uint16(i)
+}
+        rr.Salt = rdf[3]
+        rr.SaltLength = uint8(len(rr.Salt))
+        zp.RR <- rr
+    }
+*/
+
 func setSSHFP(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_SSHFP)
 	rr.Hdr = h
@@ -458,6 +485,7 @@ func setDNSKEY(h RR_Header, c chan Lex) (RR, *ParseError) {
 	return rr, nil
 }
 
+// DLV and TA are the same
 func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_DS)
 	rr.Hdr = h
@@ -499,32 +527,6 @@ func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
 	return rr, nil
 }
 
-/*
-func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, *ParseError) {
-        rr := new(RR_NSEC3PARAM)
-        rr.Hdr = h
-        rdf := fields(data[mark:p], 4)
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3PARAM", name: rdf[0], line: l}
-                return
-        }
-        rr.Hash = uint8(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3PARAM", name: rdf[1], line: l}
-                return
-        }
-        rr.Flags = uint8(i)
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad NSEC3PARAM", name: rdf[2], line: l}
-                return
-        }
-        rr.Iterations = uint16(i)
-        rr.Salt = rdf[3]
-        rr.SaltLength = uint8(len(rr.Salt))
-        zp.RR <- rr
-    }
-*/
-
 func setTXT(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_TXT)
 	rr.Hdr = h
@@ -546,69 +548,3 @@ func setTXT(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr.Txt = s
 	return rr, nil
 }
-
-/*
-func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setDLV {
-        var (
-                i uint
-                e os.Error
-        )
-        rdf := fields(data[mark:p], 4)
-        rr := new(RR_DLV)
-        rr.Hdr = hdr
-        rr.Hdr.Rrtype = TypeDLV
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
-                return
-        }
-        rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
-                return
-        }
-        rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
-                return
-        }
-        rr.DigestType = uint8(i)
-        rr.Digest = rdf[3]
-        zp.RR <- rr
-    }
-
-func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-    action setTA {
-        var (
-                i uint
-                e os.Error
-        )
-        rdf := fields(data[mark:p], 4)
-        rr := new(RR_TA)
-        rr.Hdr = hdr
-        rr.Hdr.Rrtype = TypeTA
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
-                return
-        }
-        rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
-                return
-        }
-        rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
-                return
-        }
-        rr.DigestType = uint8(i)
-        rr.Digest = rdf[3]
-        zp.RR <- rr
-    }
-
-
-*/
