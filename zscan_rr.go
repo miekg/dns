@@ -11,13 +11,11 @@ import (
 // All data from the channel c is either _STRING or _BLANK.
 // After the rdata there may come 1 _BLANK and then a _NEWLINE
 // or immediately a _NEWLINE. If this is not the case we flag
-// an error: garbage after rdata.
+// an *ParseError: garbage after rdata.
 
-func setRR(h RR_Header, c chan Lex) (RR, error) {
-	var (
-		r RR
-		e error
-	)
+func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
+	var r RR
+        e := new(ParseError)
 	switch h.Rrtype {
 	case TypeA:
 		r, e = setA(h, c)
@@ -87,7 +85,7 @@ func setRR(h RR_Header, c chan Lex) (RR, error) {
 	return r, e
 }
 
-func slurpRemainder(c chan Lex) error {
+func slurpRemainder(c chan Lex) *ParseError {
 	l := <-c
 	if DEBUG {
 		fmt.Printf("%\v", l)
@@ -112,7 +110,7 @@ func slurpRemainder(c chan Lex) error {
 	return nil
 }
 
-func setA(h RR_Header, c chan Lex) (RR, error) {
+func setA(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_A)
 	rr.Hdr = h
 
@@ -124,7 +122,7 @@ func setA(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setAAAA(h RR_Header, c chan Lex) (RR, error) {
+func setAAAA(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_AAAA)
 	rr.Hdr = h
 
@@ -136,7 +134,7 @@ func setAAAA(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setNS(h RR_Header, c chan Lex) (RR, error) {
+func setNS(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_NS)
 	rr.Hdr = h
 
@@ -148,7 +146,7 @@ func setNS(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setMX(h RR_Header, c chan Lex) (RR, error) {
+func setMX(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_MX)
 	rr.Hdr = h
 
@@ -167,7 +165,7 @@ func setMX(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
+func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_CNAME)
 	rr.Hdr = h
 
@@ -179,7 +177,7 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setSOA(h RR_Header, c chan Lex) (RR, error) {
+func setSOA(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_SOA)
 	rr.Hdr = h
 
@@ -198,7 +196,7 @@ func setSOA(h RR_Header, c chan Lex) (RR, error) {
 	<-c // _BLANK
 
 	var j int
-	var e error
+        var e error
 	for i := 0; i < 5; i++ {
 		l = <-c
 		if j, e = strconv.Atoi(l.token); e != nil {
@@ -221,7 +219,7 @@ func setSOA(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setRRSIG(h RR_Header, c chan Lex) (RR, error) {
+func setRRSIG(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_RRSIG)
 	rr.Hdr = h
 	l := <-c
@@ -297,7 +295,7 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setNSEC(h RR_Header, c chan Lex) (RR, error) {
+func setNSEC(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_NSEC)
 	rr.Hdr = h
 
@@ -328,7 +326,7 @@ func setNSEC(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
+func setNSEC3(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_NSEC3)
 	rr.Hdr = h
 
@@ -382,7 +380,7 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, error) {
 	return rr, nil
 }
 
-func setDNSKEY(h RR_Header, c chan Lex) (RR, error) {
+func setDNSKEY(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_DNSKEY)
 	rr.Hdr = h
 
@@ -424,7 +422,7 @@ func setDNSKEY(h RR_Header, c chan Lex) (RR, error) {
 }
 
 /*
-func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, error) {
+func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_NSEC3PARAM)
         rr.Hdr = h
         rdf := fields(data[mark:p], 4)
@@ -449,7 +447,7 @@ func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, error) {
     }
 */
 
-func setTXT(h RR_Header, c chan Lex) (RR, error) {
+func setTXT(h RR_Header, c chan Lex) (RR, *ParseError) {
 	rr := new(RR_TXT)
 	rr.Hdr = h
 
@@ -472,7 +470,7 @@ func setTXT(h RR_Header, c chan Lex) (RR, error) {
 }
 
 /*
-func setDS(h RR_Header, c chan Lex) (RR, error) {
+func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_DS)
         rr.Hdr = h
     action setDS {
@@ -503,7 +501,7 @@ func setDS(h RR_Header, c chan Lex) (RR, error) {
         zp.RR <- rr
     }
 
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
+func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_CNAME)
         rr.Hdr = h
     action setDLV {
@@ -534,7 +532,7 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
         zp.RR <- rr
     }
 
-func setCNAME(h RR_Header, c chan Lex) (RR, error) {
+func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_CNAME)
         rr.Hdr = h
     action setTA {
@@ -566,7 +564,7 @@ func setCNAME(h RR_Header, c chan Lex) (RR, error) {
     }
 
 
-func setSSHFP(h RR_Header, c chan Lex) (RR, error) {
+func setSSHFP(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_CNAME)
         rr.Hdr = h
         var (

@@ -122,7 +122,7 @@ func TestParse(t *testing.T) {
 			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
 			t.Fail()
 		} else {
-                        t.Logf("RR is %s", rr.String())
+                        t.Logf("RR is OK: `%s'", rr.String())
                 }
 	}
 }

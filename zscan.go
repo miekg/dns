@@ -61,26 +61,34 @@ type Lex struct {
 	column int    // column in the fil
 }
 
+type Token struct {
+	Rr  RR          // the scanned resource record
+	Err *ParseError // when an error occured, this is the specifics
+}
+
 // NewRR parses the string s and returns the RR contained in there. If the string
 // contains more than one RR, only the first is returned. If an error is detected
-// an error is returned. 
+// that error error is returned. 
 // If the class is not specified, the IN class is assumed. If the TTL is not
 // specified DefaultTtl is assumed.
 func NewRR(s string) (RR, error) {
-	cr := make(chan RR)
+	t := make(chan Token)
 	if s[len(s)-1] != '\n' { // We need a closing newline
-		go ParseZone(strings.NewReader(s+"\n"), cr)
+		go ParseZone(strings.NewReader(s+"\n"), t)
 	} else {
-		go ParseZone(strings.NewReader(s), cr)
+		go ParseZone(strings.NewReader(s), t)
 	}
-	r := <-cr     // There are no error send as of yet
-	return r, nil // Todo: errors
+	r := <-t
+	if r.Err != nil {
+		return nil, r.Err
+	}
+        return r.Rr, nil
 }
 
-// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR on the
-// channel cr. The channel cr is closed by ParseZone when the end of r is reached.
-func ParseZone(r io.Reader, cr chan RR) {
-	defer close(cr)
+// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
+// on the channel t. The channel t is closed by ParseZone when the end of r is reached.
+func ParseZone(r io.Reader, t chan Token) {
+	defer close(t)
 	var s scanner.Scanner
 	c := make(chan Lex)
 	s.Init(r)
@@ -105,9 +113,9 @@ func ParseZone(r io.Reader, cr chan RR) {
 		}
 		switch st {
 		case _EXPECT_OWNER:
-                        // Set the defaults here
-                        h.Ttl = DefaultTtl
-                        h.Class = ClassINET
+			// Set the defaults here
+			h.Ttl = DefaultTtl
+			h.Class = ClassINET
 			switch l.value {
 			case _NEWLINE: // Empty line
 				st = _EXPECT_OWNER
@@ -115,12 +123,14 @@ func ParseZone(r io.Reader, cr chan RR) {
 				h.Name = l.token
 				st = _EXPECT_OWNER_BL
 			default:
-				fmt.Printf("%s\n", &ParseError{"Error at the start", l})
-				st = _EXPECT_OWNER
+				t <- Token{Err: &ParseError{"Error at the start", l}}
+				return
+				//st = _EXPECT_OWNER
 			}
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
-				fmt.Printf("%s\n", &ParseError{"No blank after owner", l})
+				t <- Token{Err: &ParseError{"No blank after owner", l}}
+				return
 			}
 			st = _EXPECT_ANY
 		case _EXPECT_ANY:
@@ -131,28 +141,33 @@ func ParseZone(r io.Reader, cr chan RR) {
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					fmt.Printf("%s\n", &ParseError{"Unknown class", l})
+					t <- Token{Err: &ParseError{"Unknown class", l}}
+					return
 				}
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					fmt.Printf("%s\n", &ParseError{"Not a TTL", l})
+					t <- Token{Err: &ParseError{"Not a TTL", l}}
+					return
 				} else {
 					h.Ttl = uint32(ttl)
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
-				fmt.Printf("%s\n", &ParseError{"Expecting RR type, TTL or class, not this...", l})
+				t <- Token{Err: &ParseError{"Expecting RR type, TTL or class, not this...", l}}
+				return
 			}
 		case _EXPECT_ANY_NOCLASS_BL:
 			if l.value != _BLANK {
-				fmt.Printf("%s\n", &ParseError{"No blank before NOCLASS", l})
+				t <- Token{Err: &ParseError{"No blank before NOCLASS", l}}
+				return
 			}
 			st = _EXPECT_ANY_NOCLASS
 		case _EXPECT_ANY_NOTTL_BL:
 			if l.value != _BLANK {
-				fmt.Printf("%s\n", &ParseError{"No blank before NOTTL", l})
+				t <- Token{Err: &ParseError{"No blank before NOTTL", l}}
+				return
 			}
 			st = _EXPECT_ANY_NOTTL
 		case _EXPECT_ANY_NOTTL:
@@ -160,7 +175,8 @@ func ParseZone(r io.Reader, cr chan RR) {
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					fmt.Printf("%s\n", &ParseError{"Unknown class", l})
+					t <- Token{Err: &ParseError{"Unknown class", l}}
+					return
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
@@ -172,7 +188,8 @@ func ParseZone(r io.Reader, cr chan RR) {
 			case _STRING: // TTL
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					fmt.Printf("%s\n", &ParseError{"Not a TTL", l})
+					t <- Token{Err: &ParseError{"Not a TTL", l}}
+					return
 				} else {
 					h.Ttl = uint32(ttl)
 				}
@@ -181,25 +198,30 @@ func ParseZone(r io.Reader, cr chan RR) {
 				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 				st = _EXPECT_RDATA
 			default:
-				fmt.Printf("%s\n", &ParseError{"Expecting RR type or TTL, not this...", l})
+				t <- Token{Err: &ParseError{"Expecting RR type or TTL, not this...", l}}
+				return
 			}
 		case _EXPECT_RRTYPE_BL:
 			if l.value != _BLANK {
-				fmt.Printf("%s\n", &ParseError{"No blank after", l})
+				t <- Token{Err: &ParseError{"No blank after", l}}
+				return
 			}
 			st = _EXPECT_RRTYPE
 		case _EXPECT_RRTYPE:
 			if l.value != _RRTYPE {
-				fmt.Printf("%s\n", &ParseError{"Unknown RR type", l})
+				t <- Token{Err: &ParseError{"Unknown RR type", l}}
+				return
 			}
 			h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
+			// I could save my token here...? l
 			r, e := setRR(h, c)
 			if e != nil {
-				fmt.Printf("%v\n", e)
+				t <- Token{Err: e}
+				return
 			}
-			cr <- r
+	                t <- Token{Rr: r}
 			st = _EXPECT_OWNER
 		}
 	}
@@ -330,7 +352,7 @@ func zlexer(s scanner.Scanner, c chan Lex) {
 			}
 			brace--
 			if brace < 0 {
-				fmt.Printf("Error\n")
+				fmt.Printf("%s\n", &ParseError{"Extra closing brace", l})
 			}
 		default:
 			if commt {
@@ -341,6 +363,4 @@ func zlexer(s scanner.Scanner, c chan Lex) {
 		}
 		tok = s.Scan()
 	}
-	// Hmm
-	//	fmt.Printf("XX %s XXX", str)
 }

@@ -154,7 +154,7 @@ func (s RRset) Ok() bool {
 type Exchange struct {
 	Request *Msg  // The question sent.
 	Reply   *Msg  // The answer to the question that was sent.
-	Error   error // If something when wrong, this contains the error.
+	ErrorMsg   error // If something when wrong, this contains the error.
 }
 
 // DNS resource records.
