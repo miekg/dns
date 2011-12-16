@@ -15,7 +15,7 @@ import (
 
 func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 	var r RR
-        e := new(ParseError)
+	e := new(ParseError)
 	switch h.Rrtype {
 	case TypeA:
 		r, e = setA(h, c)
@@ -65,6 +65,14 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 		if se := slurpRemainder(c); se != nil {
 			return nil, se
 		}
+        case TypeSSHFP:
+		r, e = setSSHFP(h, c)
+		if e != nil {
+			return nil, e
+		}
+		if se := slurpRemainder(c); se != nil {
+			return nil, se
+		}
 		// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 		// They need to search for the end of the RR themselves, hence they look for the ending
 		// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -101,7 +109,7 @@ func slurpRemainder(c chan Lex) *ParseError {
 		}
 		// Ok
 	case _NEWLINE:
-                // Ok
+		// Ok
 	case _EOF:
 		// Ok
 	default:
@@ -196,7 +204,7 @@ func setSOA(h RR_Header, c chan Lex) (RR, *ParseError) {
 	<-c // _BLANK
 
 	var j int
-        var e error
+	var e error
 	for i := 0; i < 5; i++ {
 		l = <-c
 		if j, e = strconv.Atoi(l.token); e != nil {
@@ -205,16 +213,16 @@ func setSOA(h RR_Header, c chan Lex) (RR, *ParseError) {
 		switch i {
 		case 0:
 			rr.Serial = uint32(j)
-		        <-c // _BLANK
+			<-c // _BLANK
 		case 1:
 			rr.Refresh = uint32(j)
-		        <-c // _BLANK
+			<-c // _BLANK
 		case 2:
 			rr.Retry = uint32(j)
-		        <-c // _BLANK
+			<-c // _BLANK
 		case 3:
 			rr.Expire = uint32(j)
-		        <-c // _BLANK
+			<-c // _BLANK
 		case 4:
 			rr.Minttl = uint32(j)
 		}
@@ -380,6 +388,29 @@ func setNSEC3(h RR_Header, c chan Lex) (RR, *ParseError) {
 		}
 		l = <-c
 	}
+	return rr, nil
+}
+
+func setSSHFP(h RR_Header, c chan Lex) (RR, *ParseError) {
+	rr := new(RR_SSHFP)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad SSHFP", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad SSHFP", l}
+	} else {
+		rr.Type = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	rr.FingerPrint = l.token
 	return rr, nil
 }
 
@@ -567,28 +598,4 @@ func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
     }
 
 
-func setSSHFP(h RR_Header, c chan Lex) (RR, *ParseError) {
-        rr := new(RR_CNAME)
-        rr.Hdr = h
-        var (
-                i int
-                e os.Error
-        )
-        rdf := fields(data[mark:p], 3)
-        rr := new(RR_SSHFP)
-        rr.Hdr = hdr
-        rr.Hdr.Rrtype = TypeSSHFP
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad SSHFP", name: rdf[0], line: l}
-                return
-        }
-        rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad SSHFP", name: rdf[1], line: l}
-                return
-        }
-        rr.Type = uint8(i)
-        rr.FingerPrint = rdf[2]
-        zp.RR <- rr
-}
 */
