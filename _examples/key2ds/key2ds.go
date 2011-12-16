@@ -28,7 +28,7 @@ func main() {
 	m.Extra = append(m.Extra, e)
 
 	c := dns.NewClient()
-	r, _ := c.Exchange(m, conf.Servers[0])
+        r, _ := c.Exchange(m, conf.Servers[0] + ":" + conf.Port)
 	if r == nil {
 		fmt.Printf("*** no answer received for %s\n", os.Args[1])
 		os.Exit(1)
@@ -40,7 +40,8 @@ func main() {
 	}
 	// Stuff must be in the answer section, check len(r.Answer)
 	for _, k := range r.Answer {
-		// Foreach key would need to provide a DS records, both sha1 and sha256
+		// For each key would need to provide a DS records, both sha1 and sha256
+                // Maybe print the key flags?
 		if key, ok := k.(*dns.RR_DNSKEY); ok {
 			key.Hdr.Ttl = 0
 			ds := key.ToDS(dns.SHA1)
