@@ -65,7 +65,7 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 		if se := slurpRemainder(c); se != nil {
 			return nil, se
 		}
-        case TypeSSHFP:
+	case TypeSSHFP:
 		r, e = setSSHFP(h, c)
 		if e != nil {
 			return nil, e
@@ -84,10 +84,13 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 		r, e = setNSEC(h, c)
 	case TypeNSEC3:
 		r, e = setNSEC3(h, c)
+	case TypeDS:
+		r, e = setDS(h, c)
 	case TypeTXT:
 		r, e = setTXT(h, c)
 	default:
-		// Don't the have the token the holds the RRtype
+		// Don't the have the token the holds the RRtype, but we substitute that in the
+		// calling function when lex is empty.
 		return nil, &ParseError{"Unknown RR type", Lex{}}
 	}
 	return r, e
@@ -290,7 +293,7 @@ func setRRSIG(h RR_Header, c chan Lex) (RR, *ParseError) {
 	}
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
-	var s string
+        s := ""
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:
@@ -455,6 +458,47 @@ func setDNSKEY(h RR_Header, c chan Lex) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
+	rr := new(RR_DS)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DS", l}
+	} else {
+		rr.KeyTag = uint16(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DS", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{"bad DS", l}
+	} else {
+		rr.DigestType = uint8(i)
+	}
+	// There can be spaces here...
+	l = <-c
+        s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{"bad DS", l}
+		}
+		l = <-c
+	}
+	rr.Digest = s
+	return rr, nil
+}
+
 /*
 func setNSEC3PARAM(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_NSEC3PARAM)
@@ -504,37 +548,6 @@ func setTXT(h RR_Header, c chan Lex) (RR, *ParseError) {
 }
 
 /*
-func setDS(h RR_Header, c chan Lex) (RR, *ParseError) {
-        rr := new(RR_DS)
-        rr.Hdr = h
-    action setDS {
-        var (
-                i uint
-                e os.Error
-        )
-        rdf := fields(data[mark:p], 4)
-        rr := new(RR_DS)
-        rr.Hdr = hdr
-        rr.Hdr.Rrtype = TypeDS
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[0], line: l}
-                return
-        }
-        rr.KeyTag = uint16(i)
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[1], line: l}
-                return
-        }
-        rr.Algorithm = uint8(i)
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                zp.Err <- &ParseError{Error: "bad DS", name: rdf[2], line: l}
-                return
-        }
-        rr.DigestType = uint8(i)
-        rr.Digest = rdf[3]
-        zp.RR <- rr
-    }
-
 func setCNAME(h RR_Header, c chan Lex) (RR, *ParseError) {
         rr := new(RR_CNAME)
         rr.Hdr = h
