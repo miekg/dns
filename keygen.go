@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"io"
 	"math/big"
 	"strconv"
 )
@@ -71,7 +70,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 // Convert a PrivateKey to a string. This
 // string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
 // It needs some info from the key (hashing, keytag), so its a method of the RR_DNSKEY.
-func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
+func (r *RR_DNSKEY) PrivateKeyToString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
@@ -109,86 +108,4 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		//
 	}
 	return
-}
-
-// ReadPrivateKey reads a private key from the io.Reader q.
-func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader) (PrivateKey, error) {
-	/*
-		p := NewParser(q)
-		kv, _ := p.PrivateKey()
-		if kv == nil {
-			return nil, ErrPrivKey
-		}
-		if _, ok := kv["private-key-format"]; !ok {
-			return nil, ErrPrivKey
-		}
-		if kv["private-key-format"] != "v1.2" && kv["private-key-format"] != "v1.3" {
-			return nil, ErrPrivKey
-		}
-		switch kv["algorithm"] {
-		case "RSAMD5", "RSASHA1", "RSASHA256", "RSASHA512":
-			return k.readPrivateKeyRSA(kv)
-		case "ECDSAP256SHA256", "ECDSAP384SHA384":
-			return k.readPrivateKeyECDSA(kv)
-		}
-		return nil, ErrPrivKey
-	*/
-	return nil, nil
-}
-
-// Read a private key (file) string and create a public key. Return the private key.
-func (k *RR_DNSKEY) readPrivateKeyRSA(kv map[string]string) (PrivateKey, error) {
-	p := new(rsa.PrivateKey)
-	p.Primes = []*big.Int{nil, nil}
-	for k, v := range kv {
-		switch k {
-		case "modulus", "publicexponent", "privateexponent", "prime1", "prime2":
-			v1, err := packBase64([]byte(v))
-			if err != nil {
-				return nil, err
-			}
-			switch k {
-			case "modulus":
-				p.PublicKey.N = big.NewInt(0)
-				p.PublicKey.N.SetBytes(v1)
-			case "publicexponent":
-				i := big.NewInt(0)
-				i.SetBytes(v1)
-				p.PublicKey.E = int(i.Int64()) // int64 should be large enough
-			case "privateexponent":
-				p.D = big.NewInt(0)
-				p.D.SetBytes(v1)
-			case "prime1":
-				p.Primes[0] = big.NewInt(0)
-				p.Primes[0].SetBytes(v1)
-			case "prime2":
-				p.Primes[1] = big.NewInt(0)
-				p.Primes[1].SetBytes(v1)
-			}
-		case "exponent1", "exponent2", "coefficient":
-			// not used in Go (yet)
-		case "created", "publish", "activate":
-			// not used in Go (yet)
-		}
-	}
-	return p, nil
-}
-
-func (k *RR_DNSKEY) readPrivateKeyECDSA(kv map[string]string) (PrivateKey, error) {
-	p := new(ecdsa.PrivateKey)
-	p.D = big.NewInt(0)
-	// Need to check if we have everything
-	for k, v := range kv {
-		switch k {
-		case "privatekey:":
-			v1, err := packBase64([]byte(v))
-			if err != nil {
-				return nil, err
-			}
-			p.D.SetBytes(v1)
-		case "created:", "publish:", "activate:":
-			/* not used in Go (yet) */
-		}
-	}
-	return p, nil
 }

@@ -25,9 +25,9 @@ Created: 20110302104537
 Publish: 20110302104537
 Activate: 20110302104537`
 
-	xk, _ := NewRR(pub) // TODO err
+	xk, _ := NewRR(pub)
 	k := xk.(*RR_DNSKEY)
-	p, err := k.ReadPrivateKey(strings.NewReader(priv))
+	p, err := ReadPrivateKey(strings.NewReader(priv))
 	if err != nil {
 		t.Logf("%v\n", err)
 		t.Fail()
