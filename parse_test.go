@@ -144,6 +144,7 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
+// A bit useless
 func BenchmarkZoneParsing(b *testing.B) {
 	f, err := os.Open("miek.nl.signed_test")
 	if err != nil {
@@ -152,9 +153,9 @@ func BenchmarkZoneParsing(b *testing.B) {
 	defer f.Close()
 	to := make(chan Token)
 	go ParseZone(f, to)
-        for x := range to {
-                x = x
-        }
+	for x := range to {
+		x = x
+	}
 }
 
 func TestZoneParsing(t *testing.T) {
@@ -167,10 +168,49 @@ func TestZoneParsing(t *testing.T) {
 	start := time.Now().Nanosecond()
 	go ParseZone(f, to)
 	var i int
-        for x := range to {
+	for x := range to {
 		t.Logf("%s\n", x.Rr)
 		i++
 	}
 	delta := time.Now().Nanosecond() - start
+	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
+}
+
+func TestZoneParsingBigZonePrint(t *testing.T) {
+	f, err := os.Open("test.zone.miek.nl.signed")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	to := make(chan Token)
+	start := time.Now().UnixNano()
+	go ParseZone(f, to)
+	var i int
+	for x := range to {
+		if x.Rr != nil {
+			println(x.Rr.String())
+		}
+		//		t.Logf("%s\n", x.Rr)
+		i++
+	}
+	delta := time.Now().UnixNano() - start
+	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
+}
+
+func TestZoneParsingBigZone(t *testing.T) {
+	f, err := os.Open("test.zone.miek.nl.signed")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	to := make(chan Token)
+	start := time.Now().UnixNano()
+	go ParseZone(f, to)
+	var i int
+	for x := range to {
+		x = x
+		i++
+	}
+	delta := time.Now().UnixNano() - start
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
