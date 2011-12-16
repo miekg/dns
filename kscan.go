@@ -23,7 +23,11 @@ func ParseKey(r io.Reader) (map[string]string, error) {
 		case _KEY:
 			k = l.token
 		case _VALUE:
+                        if k == "" {
+                                return nil, &ParseError{"No key seen", l}
+                        }
 			m[k] = l.token
+                        k = ""
 		}
 	}
 	return m, nil

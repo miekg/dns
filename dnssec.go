@@ -13,6 +13,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"hash"
+	"io"
 	"math/big"
 	"sort"
 	"strings"
@@ -148,13 +149,16 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	switch h {
 	case SHA1:
 		s := sha1.New()
-		ds.Digest = hex.EncodeToString(s.Sum(digest))
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum(nil))
 	case SHA256:
 		s := sha256.New()
-		ds.Digest = hex.EncodeToString(s.Sum(digest))
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum(nil))
 	case SHA384:
 		s := sha512.New384()
-		ds.Digest = hex.EncodeToString(s.Sum(digest))
+		io.WriteString(s, string(digest))
+		ds.Digest = hex.EncodeToString(s.Sum(nil))
 	case GOST94:
 		/* I have no clue */
 	default:
@@ -233,7 +237,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 	default:
 		return ErrAlg
 	}
-	sighash = h.Sum(signdata)
+	io.WriteString(h, string(signdata))
+	sighash = h.Sum(nil)
 
 	switch p := k.(type) {
 	case *rsa.PrivateKey:
@@ -331,7 +336,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
 			h = sha512.New()
 			ch = crypto.SHA512
 		}
-		sighash := h.Sum(signeddata)
+		io.WriteString(h, string(signeddata))
+		sighash := h.Sum(nil)
 		return rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
 	}
 	// Unknown alg

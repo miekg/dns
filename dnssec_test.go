@@ -257,7 +257,7 @@ func TestKeyToDS(t *testing.T) {
 
 	ds := key.ToDS(SHA1)
 	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
-		t.Logf("Wrong DS digest for Sha1\n%v\n", ds)
+		t.Logf("Wrong DS digest for SHA1\n%v\n", ds)
 		t.Fail()
 	}
 }
