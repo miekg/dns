@@ -8,6 +8,11 @@ import (
 	"text/scanner"
 )
 
+// Only used when debugging the parser itself.
+var _DEBUG = false
+
+
+
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
@@ -39,9 +44,6 @@ const (
 	_EXPECT_RRTYPE_BL      // Whitespace BEFORE rrtype
 	_EXPECT_RDATA          // The first element of the rdata
 )
-
-// Only used when debugging the parser itself.
-var DEBUG = false
 
 type ParseError struct {
 	err string
@@ -110,7 +112,7 @@ func ParseZone(r io.Reader, t chan Token) {
 	var h RR_Header
 	var ok bool
 	for l := range c {
-		if DEBUG {
+		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
 		}
 		switch st {

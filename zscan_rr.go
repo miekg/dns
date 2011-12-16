@@ -87,13 +87,13 @@ func setRR(h RR_Header, c chan Lex) (RR, *ParseError) {
 
 func slurpRemainder(c chan Lex) *ParseError {
 	l := <-c
-	if DEBUG {
+	if _DEBUG {
 		fmt.Printf("%\v", l)
 	}
 	switch l.value {
 	case _BLANK:
 		l = <-c
-		if DEBUG {
+		if _DEBUG {
 			fmt.Printf("%\v", l)
 		}
 		if l.value != _NEWLINE && l.value != _EOF {
