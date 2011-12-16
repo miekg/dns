@@ -1,15 +1,15 @@
 package main
 
 import (
-	"os"
-	"dns"
-        "log"
-        "flag"
-	"fmt"
 	"bufio"
-	"strings"
+	"dns"
+	"flag"
+	"fmt"
+	"log"
+	"os"
 	"os/signal"
-        "runtime/pprof"
+	"runtime/pprof"
+	"strings"
 )
 
 // A small nameserver implementation, not too fast.
@@ -96,9 +96,9 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 		m.Ns[0] = soa
 		m.MsgHdr.Rcode = dns.RcodeNameError
 		send(w, m)
-                // Lookup the previous name in the Nxt list for this zone
-                // and insert the nsec/nsec3 from that. Also give the nsec
-                // that proofs there is no wildcard
+		// Lookup the previous name in the Nxt list for this zone
+		// and insert the nsec/nsec3 from that. Also give the nsec
+		// that proofs there is no wildcard
 		return
 	}
 
@@ -117,23 +117,25 @@ func handleQuery(w dns.ResponseWriter, req *dns.Msg) {
 			m.Answer = append(m.Answer, r)
 		}
 	}
-        if *debug { println(m.Question[0].String()) }
+	if *debug {
+		println(m.Question[0].String())
+	}
 	send(w, m)
 }
 
 func main() {
-        debug = flag.Bool("debug", false, "enable debugging")
-        cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
-        flag.Parse()
+	debug = flag.Bool("debug", false, "enable debugging")
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	flag.Parse()
 
-        if *cpuprofile != "" {
-                f, err := os.Create(*cpuprofile)
-                if err != nil {
-                        log.Fatal(err)
-                }
-                pprof.StartCPUProfile(f)
-                defer pprof.StopCPUProfile()
-        }
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	file, err := os.Open("miek.nl.signed")
 	defer file.Close()

@@ -6,9 +6,9 @@ package main
 // signed with the key for example.org. The RRSIG is added to the packet.
 // We could also use one 1 key for multiple domains.
 import (
+	"crypto/rsa"
 	"dns"
 	"strings"
-	"crypto/rsa"
 )
 
 func sign(m *dns.Msg) *dns.Msg {
@@ -31,7 +31,7 @@ func sign(m *dns.Msg) *dns.Msg {
 			sg.Sign(p, []dns.RR{an})
 		}
 	}
-        m.Answer = append(m.Answer, sg)
+	m.Answer = append(m.Answer, sg)
 	return m
 }
 
@@ -41,7 +41,7 @@ func sendsign(m *dns.Msg) (o []byte) {
 		p, _ = c.Client.Exchange(m, c.Addr)
 	}
 	o, _ = sign(p).Pack()
-        println("signing")
+	println("signing")
 	return
 }
 

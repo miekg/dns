@@ -6,49 +6,49 @@ package main
 // (c) Miek Gieben - 2011
 import (
 	"dns"
-        "os"
-        "fmt"
+	"fmt"
+	"os"
 )
 
 func main() {
 	conf, err := dns.ClientConfigFromFile("/etc/resolv.conf")
-        if len(os.Args) != 2 || err != nil {
-                fmt.Printf("%s DOMAIN\n", os.Args[0])
-                os.Exit(1)
-        }
-        m := new(dns.Msg)
-        m.SetQuestion(os.Args[1], dns.TypeDNSKEY)
+	if len(os.Args) != 2 || err != nil {
+		fmt.Printf("%s DOMAIN\n", os.Args[0])
+		os.Exit(1)
+	}
+	m := new(dns.Msg)
+	m.SetQuestion(os.Args[1], dns.TypeDNSKEY)
 
-        // Set EDNS0's Do bit
-        e := new(dns.RR_OPT)
-        e.Hdr.Name = "."
-        e.Hdr.Rrtype = dns.TypeOPT
-        e.SetUDPSize(2048)
-        e.SetDo()
-        m.Extra = append(m.Extra, e)
+	// Set EDNS0's Do bit
+	e := new(dns.RR_OPT)
+	e.Hdr.Name = "."
+	e.Hdr.Rrtype = dns.TypeOPT
+	e.SetUDPSize(2048)
+	e.SetDo()
+	m.Extra = append(m.Extra, e)
 
-        c := dns.NewClient()
-        r, _ := c.Exchange(m, conf.Servers[0])
-        if r == nil {
-                fmt.Printf("*** no answer received for %s\n", os.Args[1])
-                os.Exit(1)
-        }
+	c := dns.NewClient()
+	r, _ := c.Exchange(m, conf.Servers[0])
+	if r == nil {
+		fmt.Printf("*** no answer received for %s\n", os.Args[1])
+		os.Exit(1)
+	}
 
-        if r.Rcode != dns.RcodeSuccess {
-                fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])
-                os.Exit(1)
-        }
-        // Stuff must be in the answer section, check len(r.Answer)
-        for _, k := range r.Answer {
-                // Foreach key would need to provide a DS records, both sha1 and sha256
-                if key, ok := k.(*dns.RR_DNSKEY); ok {
-                        key.Hdr.Ttl = 0
-                        ds := key.ToDS(dns.SHA1)
-                        fmt.Printf("%v\n", ds)
-                        ds = key.ToDS(dns.SHA256)
-                        fmt.Printf("%v\n", ds)
-                        ds = key.ToDS(dns.SHA384)
-                        fmt.Printf("%v\n", ds)
-                }
-        }
+	if r.Rcode != dns.RcodeSuccess {
+		fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])
+		os.Exit(1)
+	}
+	// Stuff must be in the answer section, check len(r.Answer)
+	for _, k := range r.Answer {
+		// Foreach key would need to provide a DS records, both sha1 and sha256
+		if key, ok := k.(*dns.RR_DNSKEY); ok {
+			key.Hdr.Ttl = 0
+			ds := key.ToDS(dns.SHA1)
+			fmt.Printf("%v\n", ds)
+			ds = key.ToDS(dns.SHA256)
+			fmt.Printf("%v\n", ds)
+			ds = key.ToDS(dns.SHA384)
+			fmt.Printf("%v\n", ds)
+		}
+	}
 }

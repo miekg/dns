@@ -2,9 +2,9 @@ package main
 
 import (
 	"dns"
-	"os"
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -108,29 +108,29 @@ Flags:
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
 	if *dnssec || *nsid {
-                o := new(dns.RR_OPT)
-                o.Hdr.Name = "."
-                o.Hdr.Rrtype = dns.TypeOPT
-                if *dnssec {
-                        o.SetDo()
-                        o.SetUDPSize(dns.DefaultMsgSize)
-                }
-                if *nsid {
-                        o.SetNsid("")
-                }
-                m.Extra = append(m.Extra, o)
+		o := new(dns.RR_OPT)
+		o.Hdr.Name = "."
+		o.Hdr.Rrtype = dns.TypeOPT
+		if *dnssec {
+			o.SetDo()
+			o.SetUDPSize(dns.DefaultMsgSize)
+		}
+		if *nsid {
+			o.SetNsid("")
+		}
+		m.Extra = append(m.Extra, o)
 		//m.SetEdns0(dns.DefaultMsgSize, true)
 	}
 
-        if *fp {
-                startParse(nameserver)
-                return
-        }
+	if *fp {
+		startParse(nameserver)
+		return
+	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
-                        fmt.Printf("%s\n", msgToFingerprint(m))
+			fmt.Printf("%s\n", msgToFingerprint(m))
 			fmt.Printf("%s\n", m.String())
 		}
 		c.Do(m, nameserver)
@@ -150,9 +150,9 @@ forever:
 				if *short {
 					r.Reply = shortMsg(r.Reply)
 				}
-                                if *fp {
-                                        fmt.Printf("%s\n", msgToFingerprint(r.Reply))
-                                }
+				if *fp {
+					fmt.Printf("%s\n", msgToFingerprint(r.Reply))
+				}
 				fmt.Printf("%v", r.Reply)
 			}
 			i++
@@ -181,18 +181,18 @@ func shortRR(r dns.RR) dns.RR {
 	switch t := r.(type) {
 	case *dns.RR_NSEC3:
 		t.Salt = "-" // nobody cares
-        case *dns.RR_DS:
-                t.Digest = "..."
+	case *dns.RR_DS:
+		t.Digest = "..."
 	case *dns.RR_DNSKEY:
 		t.PublicKey = "..."
 	case *dns.RR_RRSIG:
 		t.Signature = "..."
-                t.Inception = 0  // For easy grepping
-                t.Expiration = 0
-        case *dns.RR_NSEC3:
-                if len(t.TypeBitMap) > 5 {
-                        t.TypeBitMap = t.TypeBitMap[1:5]
-                }
+		t.Inception = 0 // For easy grepping
+		t.Expiration = 0
+	case *dns.RR_NSEC3:
+		if len(t.TypeBitMap) > 5 {
+			t.TypeBitMap = t.TypeBitMap[1:5]
+		}
 	}
 	return r
 }

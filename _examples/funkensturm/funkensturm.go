@@ -7,13 +7,13 @@
 package main
 
 import (
-	"os"
-	"log"
-	"flag"
 	"dns"
+	"flag"
+	"log"
+	"os"
 	"os/signal"
-	"strings"
 	"runtime/pprof"
+	"strings"
 )
 
 var qr []*FunkClient
@@ -55,10 +55,10 @@ func doFunkenSturm(pkt *dns.Msg) (ret []byte) {
 			return
 		}
 	}
-        if f.Default == nil {
-                println("No f.Default set!")
-                return
-        }
+	if f.Default == nil {
+		println("No f.Default set!")
+		return
+	}
 	ret = f.Default(pkt)
 	return
 }
