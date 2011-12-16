@@ -8,7 +8,7 @@ import (
 func main() {
 	var serial *int = flag.Int("serial", 0, "Perform an IXFR with the given serial")
 	var nameserver *string = flag.String("ns", "127.0.0.1:53", "Query this nameserver")
-	var secret *string = flag.String("secret", "", "Use this secret for TSIG")
+//	var secret *string = flag.String("secret", "", "Use this secret for TSIG")
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
@@ -21,7 +21,7 @@ func main() {
 		m.SetAxfr(zone)
 	}
         if err := client.XfrReceive(m, *nameserver); err != nil {
-                println(err.String())
+                println(err.Error())
                 return
         }
         /*
