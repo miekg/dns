@@ -12,11 +12,15 @@ package dns
 // If buf does not look like a DNS message false is returned,
 // otherwise true.
 func (h *RR_Header) RawSetRdlength(buf []byte, off int) bool {
+        println(h.Name)
 	off1 := DomainNameLength(h.Name)
+        println("Lengte", off1)
+        println("len(buf)", len(buf))
+        println("off", off+off1+2+2+4+1)
 	if off1 == 0 || len(buf) < off+off1+2+2+4+1 {
 		return false
 	}
-	// + type(2) + class(2) + ttl(4) is where rdlength it at
+	// + type(2) + class(2) + ttl(4) is where rdlength is at
 	buf[off+off1+2+2+4], buf[off+off1+2+2+4+1] = packUint16(h.Rdlength)
 	return true
 }
