@@ -59,10 +59,11 @@ func (e *ParseError) Error() string {
 }
 
 type lex struct {
-	token  string // text of the token
-	value  int    // value: _STRING, _BLANK, etc.
-	line   int    // line in the file
-	column int    // column in the fil
+	token  string // Text of the token
+	err    string // Error text when the lexer detects it. Not used by the grammar
+	value  int    // Value: _STRING, _BLANK, etc.
+	line   int    // Line in the file
+	column int    // Column in the fil
 }
 
 type Token struct {
@@ -117,6 +118,12 @@ func ParseZone(r io.Reader, t chan Token) {
 		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
 		}
+		// Lexer spotted an error already
+		if l.err != "" {
+			t <- Token{Error: &ParseError{l.err, l}}
+			return
+
+		}
 		switch st {
 		case _EXPECT_OWNER:
 			// Set the defaults here
@@ -154,7 +161,7 @@ func ParseZone(r io.Reader, t chan Token) {
 			case _STRING: // TTL is this case
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					t <- Token{Error: &ParseError{"Not a TTL", l}}
+					t <- Token{Error: &ParseError{"Ownername seen, not a TTL", l}}
 					return
 				} else {
 					h.Ttl = uint32(ttl)
@@ -194,7 +201,7 @@ func ParseZone(r io.Reader, t chan Token) {
 			case _STRING: // TTL
 				ttl, ok := strconv.Atoi(l.token)
 				if ok != nil {
-					t <- Token{Error: &ParseError{"Not a TTL", l}}
+					t <- Token{Error: &ParseError{"Class seen, not a TTL", l}}
 					return
 				} else {
 					h.Ttl = uint32(ttl)
@@ -241,17 +248,17 @@ func ParseZone(r io.Reader, t chan Token) {
 func (l lex) String() string {
 	switch l.value {
 	case _STRING:
-		return l.token
+		return "S:" + l.token + "$"
 	case _BLANK:
-		return " " //"_" // seems to work, make then invisible for now
+		return "_"
 	case _NEWLINE:
 		return "|\n"
 	case _RRTYPE:
-		return "R:" + l.token
+		return "R:" + l.token + "$"
 	case _OWNER:
-		return "O:" + l.token
+		return "O:" + l.token + "$"
 	case _CLASS:
-		return "C:" + l.token
+		return "C:" + l.token + "$"
 	}
 	return ""
 }
@@ -291,7 +298,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
-						rrtype = true // We've seen one
+						rrtype = true
 					}
 					if _, ok := Str_class[strings.ToUpper(l.token)]; ok {
 						l.value = _CLASS
@@ -305,8 +312,8 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				l.token = " "
 				c <- l
 			}
-			space = true
 			owner = false
+			space = true
 		case ";":
 			if quote {
 				// Inside quoted text we allow ;
@@ -325,6 +332,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			if str != "" {
 				l.value = _STRING
 				l.token = str
+                                if !rrtype {
+					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+						l.value = _RRTYPE
+						rrtype = true
+					}
+                                }
 				c <- l
 			}
 			if brace > 0 {
@@ -363,7 +376,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			brace--
 			if brace < 0 {
-				fmt.Printf("%s\n", &ParseError{"Extra closing brace", l})
+				l.err = "Extra closing brace"
+				c <- l
+				return
 			}
 		default:
 			if commt {
