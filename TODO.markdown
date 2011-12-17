@@ -3,6 +3,9 @@
 Must of the stuff is working, but there is a list of smaller
 things that need to be fixed.
 
+* Parsing
+    * $TTL, $ORIGIN, $INCLUDE and friends
+
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
 * add functions to operate on []byte messages (raw packets) see rawmsg.go
