@@ -10,7 +10,6 @@ things that need to be fixed.
 
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
-* add functions to operate on []byte messages (raw packets) see rawmsg.go
 * IsSubdomain, IsGlue helper functions;
 * Cleanup?
 * String compression *inside* the library, so the string
