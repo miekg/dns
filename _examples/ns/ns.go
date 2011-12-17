@@ -14,7 +14,7 @@ import (
 
 // A small nameserver implementation, not too fast.
 var (
-	zone     *dns.Zone
+	zone     []dns.RR
 	ns       []dns.RR
 	nsDNSSEC []dns.RR
 	soa      dns.RR

@@ -22,6 +22,7 @@ func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
+	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
 	cd := flag.Bool("cd", false, "set CD flag in query")
@@ -30,7 +31,7 @@ func main() {
 	nsid := flag.Bool("nsid", false, "ask for NSID")
 	fp := flag.Bool("fingerprint", false, "enable server detection")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [@server(:port)] [qtype] [qclass] [name ...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
@@ -52,18 +53,14 @@ Flags:
 		}
 		// First class, then type, to make ANY queries possible
 		// And if it looks like type, it is a type
-		for k, v := range dns.Rr_str {
-			if v == strings.ToUpper(flag.Arg(i)) {
-				qtype = k
-				continue Flags
-			}
+		if k, ok := dns.Str_rr[strings.ToUpper(flag.Arg(i))]; ok {
+			qtype = k
+			continue Flags
 		}
 		// If it looks like a class, it is a class
-		for k, v := range dns.Class_str {
-			if v == strings.ToUpper(flag.Arg(i)) {
-				qclass = k
-				continue Flags
-			}
+		if k, ok := dns.Str_class[strings.ToUpper(flag.Arg(i))]; ok {
+			qclass = k
+			continue Flags
 		}
 		// If it starts with TYPExxx it is unknown rr
 		if strings.HasPrefix(flag.Arg(i), "TYPE") {
@@ -87,9 +84,7 @@ Flags:
 	}
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
-	if !strings.HasSuffix(nameserver, ":53") {
-		nameserver += ":53"
-	}
+	nameserver += ":" + strconv.Itoa(*port)
 
 	// ipv6 todo
 	// We use the async query handling, just to show how

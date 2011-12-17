@@ -55,7 +55,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	if v4 {
 		rr = new(dns.RR_A)
 		rr.(*dns.RR_A).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-		rr.(*dns.RR_A).A = a
+		rr.(*dns.RR_A).A = a.To4()
 	} else {
 		rr = new(dns.RR_AAAA)
 		rr.(*dns.RR_AAAA).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
@@ -65,6 +65,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 	t.Txt = str
+
 	m.Extra[0] = t
 	m.Answer[0] = rr
 
@@ -72,7 +73,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	if !ok {
 		return
 	}
-        log.Print("Answering request")
+        log.Printf("Answering request with %d bytes", len(b))
 	w.Write(b)
 }
 
