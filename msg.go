@@ -337,27 +337,33 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 			case "A":
 				// It must be a slice of 4, even if it is 16, we encode
 				// only the first 4
-				if off+net.IPv4len > lenmsg {
-					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-					return lenmsg, false
-				}
 				switch fv.Len() {
 				case net.IPv6len:
+                                        if off+net.IPv4len > lenmsg {
+                                                //fmt.Fprintf(os.Stderr, "dns: overflow packing A")
+                                                return lenmsg, false
+                                        }
 					msg[off] = byte(fv.Index(12).Uint())
 					msg[off+1] = byte(fv.Index(13).Uint())
 					msg[off+2] = byte(fv.Index(14).Uint())
 					msg[off+3] = byte(fv.Index(15).Uint())
+                                        off += net.IPv4len
 				case net.IPv4len:
+                                        if off+net.IPv4len > lenmsg {
+                                                //fmt.Fprintf(os.Stderr, "dns: overflow packing A")
+                                                return lenmsg, false
+                                        }
 					msg[off] = byte(fv.Index(0).Uint())
 					msg[off+1] = byte(fv.Index(1).Uint())
 					msg[off+2] = byte(fv.Index(2).Uint())
 					msg[off+3] = byte(fv.Index(3).Uint())
+                                        off += net.IPv4len
+                                case 0:
+                                        // Allowed, for dynamic updates
 				default:
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-                                        println("overflow A")
                                         return lenmsg, false
 				}
-                                off += net.IPv4len
 			case "AAAA":
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing AAAA")
@@ -511,7 +517,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				return lenmsg, false
 			case "A":
 				if off+net.IPv4len > len(msg) {
-                                        println("hier")
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking A")
 					return lenmsg, false
 				}
@@ -560,7 +565,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					length = int(msg[off+1])
 					if length == 0 || length > 32 {
 						//fmt.Fprintf(os.Stderr, "dns: overflow unpacking NSEC")
-						println("illegal length value", length)
 						break
 						//                                                return lenmsg, false
 					}
