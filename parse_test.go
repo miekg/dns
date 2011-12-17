@@ -97,6 +97,7 @@ func TestDotInName(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	tests := map[string]string{
+                "(soa.) (SOA) (soa.) (soa.) (1) (1) (1) (1) (1)()": "soa.\t3600\tIN\tSOA\tsoa. soa. 1 1 1 1 1",
 		"miek.nl. 3600 IN A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"miek.nl. 3600 IN MX 10 elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
 		"miek.nl. IN 3600 A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
