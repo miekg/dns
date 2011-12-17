@@ -5,24 +5,17 @@ things that need to be fixed.
 
 * Parsing
     * $TTL, $ORIGIN, $INCLUDE and friends
+    * HIP RR (needs list of domain names, need slice for that);
+* Need to define a handy zone data structure (r/b tree)?.
 
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
 * add functions to operate on []byte messages (raw packets) see rawmsg.go
-* HIP RR (needs list of domain names, need slice for that);
 * IsSubdomain, IsGlue helper functions;
 * Cleanup?
-* Need to define a handy zone data structure (r/b tree)?.
-  - Should do glue detection
-  - return rrsets
-  - DNSSEC ready
 * String compression *inside* the library, so the string
   miek.nl is stored once and all RRs reference it. Would be
   a major memory saver;
-* Split up the package? An idea might be:
-    dns/zone        -- contains all zone parsing
-    dns/server      -- server side stuff
-    dns/client      -- client side stuff
 
 ## Issues
 
