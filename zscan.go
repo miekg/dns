@@ -26,6 +26,9 @@ const (
 	_RRTYPE
 	_OWNER
 	_CLASS
+        _DIRORIGIN      // $ORIGIN
+        _DIRTTL         // $TTL
+        _INCLUDE        // $INCLUDE
 
 	// Privatekey file
 	_VALUE
