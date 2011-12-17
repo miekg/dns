@@ -7,24 +7,6 @@ package dns
 // Function defined in this subpackage work on []byte and but still
 // provide some higher level functions.
 
-// SetRdlength sets the length of the length of the rdata
-// directly at the correct position in the buffer buf.
-// If buf does not look like a DNS message false is returned,
-// otherwise true.
-func (h *RR_Header) RawSetRdlength(buf []byte, off int) bool {
-        println(h.Name)
-	off1 := DomainNameLength(h.Name)
-        println("Lengte", off1)
-        println("len(buf)", len(buf))
-        println("off", off+off1+2+2+4+1)
-	if off1 == 0 || len(buf) < off+off1+2+2+4+1 {
-		return false
-	}
-	// + type(2) + class(2) + ttl(4) is where rdlength is at
-	buf[off+off1+2+2+4], buf[off+off1+2+2+4+1] = packUint16(h.Rdlength)
-	return true
-}
-
 // RawSetId sets the message ID in buf.
 func RawSetId(buf []byte, off int, id uint16) bool {
 	buf[off], buf[off+1] = packUint16(id)
