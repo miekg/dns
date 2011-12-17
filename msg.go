@@ -347,15 +347,17 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					msg[off+1] = byte(fv.Index(13).Uint())
 					msg[off+2] = byte(fv.Index(14).Uint())
 					msg[off+3] = byte(fv.Index(15).Uint())
-					off += net.IPv4len
 				case net.IPv4len:
 					msg[off] = byte(fv.Index(0).Uint())
 					msg[off+1] = byte(fv.Index(1).Uint())
 					msg[off+2] = byte(fv.Index(2).Uint())
 					msg[off+3] = byte(fv.Index(3).Uint())
-					off += net.IPv4len
 				default:
+					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
+                                        println("overflow A")
+                                        return lenmsg, false
 				}
+                                off += net.IPv4len
 			case "AAAA":
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing AAAA")
@@ -509,6 +511,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				return lenmsg, false
 			case "A":
 				if off+net.IPv4len > len(msg) {
+                                        println("hier")
 					//fmt.Fprintf(os.Stderr, "dns: overflow unpacking A")
 					return lenmsg, false
 				}
@@ -829,12 +832,15 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	if !ok {
 		return len(msg), false
 	}
-	rr.Header().Rdlength = uint16(off2 - off1)
-	if !rr.Header().RawSetRdlength(msg, off) {
-		return len(msg), false
-	}
 
-	return off2, true
+        // pack a third time; redo header with correct data length
+        rr.Header().Rdlength = uint16(off2 - off1)
+        packStruct(rr.Header(), msg, off)
+        return off2, true
+//	rr.Header().Rdlength = uint16(off2 - off1)
+//	if !rr.Header().RawSetRdlength(msg, off) {
+//		return len(msg), false
+//	}
 }
 
 // Resource record unpacker.
@@ -974,15 +980,19 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	off, ok = packStruct(&dh, msg, off)
 	for i := 0; i < len(question); i++ {
 		off, ok = packStruct(&question[i], msg, off)
+//                println("Question", off)
 	}
 	for i := 0; i < len(answer); i++ {
 		off, ok = packRR(answer[i], msg, off)
+//               println("Answer", off)
 	}
 	for i := 0; i < len(ns); i++ {
 		off, ok = packRR(ns[i], msg, off)
+//                println("Authority", off)
 	}
 	for i := 0; i < len(extra); i++ {
 		off, ok = packRR(extra[i], msg, off)
+//                println("Additional", off)
 	}
 	if !ok {
 		return nil, false
