@@ -792,11 +792,11 @@ func (rr *RR_TSIG) String() string {
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
-// Taking into account serial arithmetic (RFC 1982)
+// Taking into account serial arithmetic (RFC 1982) [TODO]
 func timeToDate(t uint32) string {
-	utc := time.Now().Unix()
-	mod := (int64(t) - utc) / Year68
-	ti := time.Unix(time.Unix(int64(t), 0).Unix()+(mod*Year68), 0) // abs()? TODO
+//	utc := time.Now().UTC().Unix()
+//	mod := (int64(t) - utc) / Year68
+	ti := time.Unix(int64(t), 0).UTC()
 	return ti.Format("20060102150405")
 }
 
@@ -809,7 +809,7 @@ func dateToTime(s string) (uint32, error) {
 		return 0, e
 	}
 	mod := t.Unix() / Year68
-	ti := uint32(t.Unix() - (mod * Year68))
+        ti := uint32(t.Unix() - (mod * Year68))
 	return ti, nil
 }
 
