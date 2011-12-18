@@ -211,14 +211,14 @@ func TestZoneParsing(t *testing.T) {
 	}
 	defer f.Close()
 	to := make(chan Token)
-	start := time.Now().Nanosecond()
+	start := time.Now().UnixNano()
 	go ParseZone(f, to)
 	var i int
 	for x := range to {
 		t.Logf("%s\n", x.Rr)
 		i++
 	}
-	delta := time.Now().Nanosecond() - start
+	delta := time.Now().UnixNano() - start
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 
