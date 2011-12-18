@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"text/scanner"
 	"time"
 )
 
@@ -96,33 +95,18 @@ func TestDotInName(t *testing.T) {
 	}
 }
 
-func TestParse(t *testing.T) {
-	tests := map[string]string{
-                "(soa.) (SOA) (soa.) (soa.) (1) (1) (1) (1) (1)()": "soa.\t3600\tIN\tSOA\tsoa. soa. 1 1 1 1 1",
-		"miek.nl. 3600 IN A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. 3600 IN MX 10 elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
-		"miek.nl. IN 3600 A 127.0.0.1":               "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. A 127.0.0.1":                       "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. IN AAAA ::1":                       "miek.nl.\t3600\tIN\tAAAA\t::1",
-		"miek.nl. IN A 127.0.0.1":                    "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ":           "miek.nl.\t3600\tIN\tDNSKEY\t256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ",
-		"nlnetlabs.nl. 3175 IN DNSKEY 256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh": "nlnetlabs.nl.\t3175\tIN\tDNSKEY\t256 3 8 AwEAAdR7XR95OaAN9Rz7TbtPalQ9guQk7zfxTHYNKhsiwTZA9z+F16nD0VeBlk7dNik3ETpT2GLAwr9sntG898JwurCDe353wHPvjZtMCdiTVp3cRCrjuCEvoFpmZNN82H0gaH/4v8mkv/QBDAkDSncYjz/FqHKAeYy3cMcjY6RyVweh",
-		"dnsex.nl.  86400 IN SOA  elektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400":                                                                                                                      "dnsex.nl.\t86400\tIN\tSOA\telektron.atoom.net. miekg.atoom.net. 1299256910 14400 3600 604800 86400",
-		// RRSIG incep/expir fails (new time api)
-		"dnsex.nl.  86400 IN RRSIG    SOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQ vmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchc m+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW 5Cg=": "dnsex.nl.\t86400\tIN\tRRSIG\tSOA 8 2 86400 20110403154150 20110304154150 23334 dnsex.nl. QN6hwJQLEBqRVKmO2LgkuRSx9bkKIZxXlTVtHg5SaiN+8RCTckGtUXkQvmZiBt3RdIWAjaabQYpEZHgvyjfy4Wwu/9RPDYnLt/qoyr4QKAdujchcm+fMDSbbcC7AN08i5D/dUWfNOHXjRJLY7t7AYB9DBt32LazIb0EU9QiW5Cg=",
-	}
-	for i, o := range tests {
-		rr, e:= NewRR(i)
-		if e != nil {
-			t.Log("Failed to parse RR")
-			t.Fail()
-                        continue
-		}
-		if rr.String() != o {
-			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
-			t.Fail()
+func TestParseZone(t *testing.T) {
+	zone := `zzzzz.miek.nl. 86400 IN RRSIG NSEC 8 3 86400 20110823011301 20110724011301 12051 miek.nl. lyRljEQFOmajcdo6bBI67DsTlQTGU3ag9vlE07u7ynqt9aYBXyE9mkasAK4V0oI32YGb2pOSB6RbbdHwUmSt+cYhOA49tl2t0Qoi3pH21dicJiupdZuyjfqUEqJlQoEhNXGtP/pRvWjNA4pQeOsOAoWq/BDcWCSQB9mh2LvUOH4= ; {keyid = sksak}
+zzzzz.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC`
+        // Need to implementen owner substitution in the lexer.
+	to := make(chan Token)
+	go ParseZone(strings.NewReader(zone), to)
+	for x := range to {
+		if x.Error == nil {
+			t.Logf("%v\n", x.Rr)
 		} else {
-			t.Logf("RR is OK: `%s'", rr.String())
+			t.Logf("%v\n", x.Error)
+			t.Fail()
 		}
 	}
 }
@@ -154,9 +138,9 @@ func TestParseBrace(t *testing.T) {
 	for i, o := range tests {
 		rr, e := NewRR(i)
 		if e != nil {
-                        t.Log("Failed to parse RR: " + e.Error())
+			t.Log("Failed to parse RR: " + e.Error())
 			t.Fail()
-                        continue
+			continue
 		}
 		if rr.String() != o {
 			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
@@ -259,6 +243,7 @@ func TestZoneParsingBigZone(t *testing.T) {
 }
 */
 
+/*
 func TestLexerBrace(t *testing.T) {
 	f, err := os.Open("/home/miekg/src/tmp/small")
 	if err != nil {
@@ -279,3 +264,4 @@ func TestLexerBrace(t *testing.T) {
                 t.Logf("%s ", l)
         }
 }
+*/

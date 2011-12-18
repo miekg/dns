@@ -333,10 +333,10 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If not in a brace this ends the comment AND the RR
 				if brace == 0 {
 					owner = true
-				}
 				l.value = _NEWLINE
 				l.token = "\n"
 				c <- l
+				}
 				break
 			}
 			if str != "" {

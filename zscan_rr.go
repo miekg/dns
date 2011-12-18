@@ -238,28 +238,28 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, err := dateToTime(l.token); err != nil {
-		return nil, &ParseError{"bad RRSIG", l}
+		return nil, &ParseError{"bad RRSIG expiration", l}
 	} else {
 		rr.Expiration = i
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, err := dateToTime(l.token); err != nil {
-		return nil, &ParseError{"bad RRSIG", l}
+		return nil, &ParseError{"bad RRSIG inception", l}
 	} else {
 		rr.Inception = i
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, err := strconv.Atoi(l.token); err != nil {
-		return nil, &ParseError{"bad RRSIG", l}
+		return nil, &ParseError{"bad RRSIG keytag", l}
 	} else {
 		rr.KeyTag = uint16(i)
 	}
 	<-c // _BLANK
 	l = <-c
 	if !IsDomainName(l.token) {
-		return nil, &ParseError{"bad RRSIG", l}
+		return nil, &ParseError{"bad RRSIG signername", l}
 	} else {
 		rr.SignerName = l.token
 	}
@@ -267,18 +267,16 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 	l = <-c
 	s := ""
 	for l.value != _NEWLINE && l.value != _EOF {
-                println("Wat hebben we hier", l.token, l.value)
 		switch l.value {
 		case _STRING:
 			s += l.token
 		case _BLANK:
 			// Ok
 		default:
-			return nil, &ParseError{"bad RRSIG", l}
+			return nil, &ParseError{"bad RRSIG signature", l}
 		}
 		l = <-c
 	}
-        println("S", s)
 	rr.Signature = s
 	return rr, nil
 }
