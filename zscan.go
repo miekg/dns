@@ -424,6 +424,13 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		}
 		tok = s.Scan()
 	}
+        // Hmm.
+        if len(str) > 0 {
+                // Send remainder
+                l.token = str
+                l.value = _STRING
+                c <-l
+        }
 }
 
 func stringToTtl(l lex, t chan Token) (uint32, bool) {

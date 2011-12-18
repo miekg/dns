@@ -97,26 +97,37 @@ func TestDotInName(t *testing.T) {
 
 func TestParseZone(t *testing.T) {
 	zone := `z1.miek.nl. 86400 IN RRSIG NSEC 8 3 86400 20110823011301 20110724011301 12051 miek.nl. lyRljEQFOmajcdo6bBI67DsTlQTGU3ag9vlE07u7ynqt9aYBXyE9mkasAK4V0oI32YGb2pOSB6RbbdHwUmSt+cYhOA49tl2t0Qoi3pH21dicJiupdZuyjfqUEqJlQoEhNXGtP/pRvWjNA4pQeOsOAoWq/BDcWCSQB9mh2LvUOH4= ; {keyid = sksak}
-z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC`
-        // Need to implementen owner substitution in the lexer.
+z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
+$TTL 100
+z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
+	// Need to implementen owner substitution in the lexer.
 	to := make(chan Token)
 	go ParseZone(strings.NewReader(zone), to)
-        i := 0
+	i := 0
 	for x := range to {
 		if x.Error == nil {
-                        if i == 0 && x.Rr.Header().Name != "z1.miek.nl." {
-                                t.Log("Failed to parse z1")
-                                t.Fail()
-                        }
-                        if i == 1 && x.Rr.Header().Name != "z2.miek.nl." {
-                                t.Log("Failed to parse z2")
-                                t.Fail()
-                        }
+			switch i {
+			case 0:
+				if x.Rr.Header().Name != "z1.miek.nl." {
+					t.Log("Failed to parse z1")
+					t.Fail()
+				}
+			case 1:
+				if x.Rr.Header().Name != "z2.miek.nl." {
+					t.Log("Failed to parse z2")
+					t.Fail()
+				}
+			case 2:
+                                if x.Rr.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
+					t.Logf("Failed to parse z3 %s", x.Rr.String())
+					t.Fail()
+                                }
+			}
 		} else {
-                        t.Logf("Failed to parse: %v\n", x.Error)
+			t.Logf("Failed to parse: %v\n", x.Error)
 			t.Fail()
 		}
-                i++
+		i++
 	}
 }
 
