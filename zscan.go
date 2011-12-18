@@ -26,9 +26,9 @@ const (
 	_RRTYPE
 	_OWNER
 	_CLASS
-        _DIRORIGIN      // $ORIGIN
-        _DIRTTL         // $TTL
-        _INCLUDE        // $INCLUDE
+	_DIRORIGIN // $ORIGIN
+	_DIRTTL    // $TTL
+	_INCLUDE   // $INCLUDE
 
 	// Privatekey file
 	_VALUE
@@ -330,17 +330,24 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				commt = false
 				rrtype = false
 				str = ""
+				// If not in a brace this ends the comment AND the RR
+				if brace == 0 {
+					owner = true
+				}
+				l.value = _NEWLINE
+				l.token = "\n"
+				c <- l
 				break
 			}
 			if str != "" {
 				l.value = _STRING
 				l.token = str
-                                if !rrtype {
+				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
 						rrtype = true
 					}
-                                }
+				}
 				c <- l
 			}
 			if brace > 0 {

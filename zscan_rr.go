@@ -267,6 +267,7 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 	l = <-c
 	s := ""
 	for l.value != _NEWLINE && l.value != _EOF {
+                println("Wat hebben we hier", l.token, l.value)
 		switch l.value {
 		case _STRING:
 			s += l.token
@@ -277,6 +278,7 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 		}
 		l = <-c
 	}
+        println("S", s)
 	rr.Signature = s
 	return rr, nil
 }
