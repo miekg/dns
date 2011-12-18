@@ -313,11 +313,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = str
-				if str[0] == '$' {
-					if str == "$TTL" {
-						l.value = _DIRTTL
-					}
-				}
+                                if str == "$TTL" {
+                                        l.value = _DIRTTL
+                                }
+                                if str == "$ORIGIN" {
+                                        l.value = _DIRORIGIN
+                                }
 				c <- l
 			} else {
 				l.value = _STRING
