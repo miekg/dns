@@ -26,15 +26,15 @@ const (
 	_RRTYPE
 	_OWNER
 	_CLASS
-	_DIRORIGIN // $ORIGIN
-	_DIRTTL    // $TTL
-	_INCLUDE   // $INCLUDE
+	_DIRORIGIN  // $ORIGIN
+	_DIRTTL     // $TTL
+	_DIRINCLUDE // $INCLUDE
 
 	// Privatekey file
 	_VALUE
 	_KEY
 
-	_EXPECT_OWNER          // Ownername
+	_EXPECT_OWNER_DIR      // Ownername
 	_EXPECT_OWNER_BL       // Whitespace after the ownername
 	_EXPECT_ANY            // Expect rrtype, ttl or class
 	_EXPECT_ANY_NOCLASS    // Expect rrtype or ttl
@@ -44,6 +44,8 @@ const (
 	_EXPECT_RRTYPE         // Expect rrtype
 	_EXPECT_RRTYPE_BL      // Whitespace BEFORE rrtype
 	_EXPECT_RDATA          // The first element of the rdata
+	_EXPECT_DIRTTL_BL      // Space after directive $TTL
+	_EXPECT_DIRTTL         // Directive $TTL
 )
 
 // ParseError contains the parse error and the location in the io.Reader
@@ -114,9 +116,10 @@ func ParseZone(r io.Reader, t chan Token) {
 	// 5. _OWNER _ _CLASS  _ _STRING _ _RRTYPE -> class/ttl (reversed)
 	// After detecting these, we know the _RRTYPE so we can jump to functions
 	// handling the rdata for each of these types.
-	st := _EXPECT_OWNER
+	st := _EXPECT_OWNER_DIR
 	var h RR_Header
 	var ok bool
+	var defttl uint32 = DefaultTtl
 	for l := range c {
 		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
@@ -128,21 +131,40 @@ func ParseZone(r io.Reader, t chan Token) {
 
 		}
 		switch st {
-		case _EXPECT_OWNER:
-			// Set the defaults here
-			h.Ttl = DefaultTtl
+		case _EXPECT_OWNER_DIR:
+			// We can also expect a directive, like $TTL or $ORIGIN
+			h.Ttl = defttl
 			h.Class = ClassINET
 			switch l.value {
 			case _NEWLINE: // Empty line
-				st = _EXPECT_OWNER
+				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
 				st = _EXPECT_OWNER_BL
+			case _DIRTTL:
+				st = _EXPECT_DIRTTL_BL
 			default:
 				t <- Token{Error: &ParseError{"Error at the start", l}}
 				return
-				//st = _EXPECT_OWNER
 			}
+		case _EXPECT_DIRTTL_BL:
+			if l.value != _BLANK {
+				t <- Token{Error: &ParseError{"No blank after $-directive", l}}
+				return
+			}
+			st = _EXPECT_DIRTTL
+		case _EXPECT_DIRTTL:
+			if l.value != _STRING {
+				t <- Token{Error: &ParseError{"Expecting $TTL value, not this...", l}}
+				return
+			}
+			if ttl, ok := stringToTtl(l, t); !ok {
+				return
+			} else {
+				defttl = ttl
+			}
+
+			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{"No blank after owner", l}}
@@ -162,12 +184,10 @@ func ParseZone(r io.Reader, t chan Token) {
 				}
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
-				ttl, ok := strconv.Atoi(l.token)
-				if ok != nil {
-					t <- Token{Error: &ParseError{"Ownername seen, not a TTL", l}}
+				if ttl, ok := stringToTtl(l, t); !ok {
 					return
 				} else {
-					h.Ttl = uint32(ttl)
+					h.Ttl = ttl
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
@@ -202,12 +222,10 @@ func ParseZone(r io.Reader, t chan Token) {
 		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
 			case _STRING: // TTL
-				ttl, ok := strconv.Atoi(l.token)
-				if ok != nil {
-					t <- Token{Error: &ParseError{"Class seen, not a TTL", l}}
+				if ttl, ok := stringToTtl(l, t); !ok {
 					return
 				} else {
-					h.Ttl = uint32(ttl)
+					h.Ttl = ttl
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
@@ -243,7 +261,7 @@ func ParseZone(r io.Reader, t chan Token) {
 				return
 			}
 			t <- Token{Rr: r}
-			st = _EXPECT_OWNER
+			st = _EXPECT_OWNER_DIR
 		}
 	}
 }
@@ -262,6 +280,8 @@ func (l lex) String() string {
 		return "O:" + l.token + "$"
 	case _CLASS:
 		return "C:" + l.token + "$"
+	case _DIRTTL:
+		return "T:" + l.token + "$"
 	}
 	return ""
 }
@@ -293,6 +313,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = str
+				if str[0] == '$' {
+					if str == "$TTL" {
+						l.value = _DIRTTL
+					}
+				}
 				c <- l
 			} else {
 				l.value = _STRING
@@ -333,9 +358,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If not in a brace this ends the comment AND the RR
 				if brace == 0 {
 					owner = true
-				l.value = _NEWLINE
-				l.token = "\n"
-				c <- l
+					l.value = _NEWLINE
+					l.token = "\n"
+					c <- l
 				}
 				break
 			}
@@ -399,4 +424,14 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		}
 		tok = s.Scan()
 	}
+}
+
+func stringToTtl(l lex, t chan Token) (uint32, bool) {
+	if ttl, ok := strconv.Atoi(l.token); ok != nil {
+		t <- Token{Error: &ParseError{"Not a TTL", l}}
+		return 0, false
+	} else {
+		return uint32(ttl), true
+	}
+	panic("not reached")
 }
