@@ -4,7 +4,7 @@ Must of the stuff is working, but there is a list of smaller
 things that need to be fixed.
 
 * Parsing
-    * $TTL, $ORIGIN, $INCLUDE and friends
+    * $ORIGIN and $INCLUDE 
     * HIP RR (needs list of domain names, need slice for that);
 * Need to define a handy zone data structure (r/b tree)?.
 
