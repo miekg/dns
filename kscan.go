@@ -166,4 +166,10 @@ func klexer(s scanner.Scanner, c chan lex) {
 		}
 		tok = s.Scan()
 	}
+	if len(str) > 0 {
+		// Send remainder
+		l.token = str
+		l.value = _VALUE
+		c <- l
+	}
 }

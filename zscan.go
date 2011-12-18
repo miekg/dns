@@ -291,6 +291,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 	var l lex
 	str := "" // Hold the current read text
 	quote := false
+	escape := false
 	space := false
 	commt := false
 	rrtype := false
@@ -303,6 +304,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		l.line = s.Position.Line
 		switch x := s.TokenText(); x {
 		case " ", "\t":
+                        escape = false
 			if commt {
 				break
 			}
@@ -313,12 +315,13 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = str
-                                if str == "$TTL" {
-                                        l.value = _DIRTTL
-                                }
-                                if str == "$ORIGIN" {
-                                        l.value = _DIRORIGIN
-                                }
+                                // escape $... start with a \ not a $, so this will work
+				if str == "$TTL" {
+					l.value = _DIRTTL
+				}
+				if str == "$ORIGIN" {
+					l.value = _DIRORIGIN
+				}
 				c <- l
 			} else {
 				l.value = _STRING
@@ -344,6 +347,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			owner = false
 			space = true
 		case ";":
+                        if escape {
+                                escape = false
+                                str += ";"
+                                break
+                        }
 			if quote {
 				// Inside quoted text we allow ;
 				str += ";"
@@ -351,6 +359,8 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			commt = true
 		case "\n":
+                        // Hmmm, escape newline
+                        escape = false
 			if commt {
 				// Reset a comment
 				commt = false
@@ -395,21 +405,46 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			commt = false
 			rrtype = false
 			owner = true
+		case "\\":
+			if commt {
+				break
+			}
+                        if escape {
+                                str += "\\"
+                                escape = false
+                                break
+                        }
+			escape = true
 		case "\"":
 			if commt {
 				break
 			}
+                        if escape {
+                                str += "\""
+                                escape = false
+                                break
+                        }
 			// str += "\"" don't add quoted quotes
 			quote = !quote
 		case "(":
 			if commt {
 				break
 			}
+                        if escape {
+                                str += "("
+                                escape = false
+                                break
+                        }
 			brace++
 		case ")":
 			if commt {
 				break
 			}
+                        if escape {
+                                str += ")"
+                                escape = false
+                                break
+                        }
 			brace--
 			if brace < 0 {
 				l.err = "Extra closing brace"
@@ -420,18 +455,19 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			if commt {
 				break
 			}
+                        escape = false
 			str += x
 			space = false
 		}
 		tok = s.Scan()
 	}
-        // Hmm.
-        if len(str) > 0 {
-                // Send remainder
-                l.token = str
-                l.value = _STRING
-                c <-l
-        }
+	// Hmm.
+	if len(str) > 0 {
+		// Send remainder
+		l.token = str
+		l.value = _STRING
+		c <- l
+	}
 }
 
 func stringToTtl(l lex, t chan Token) (uint32, bool) {
