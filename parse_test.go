@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"text/scanner"
 	"time"
 )
 
@@ -166,34 +167,6 @@ func TestParseBrace(t *testing.T) {
 	}
 }
 
-/*
-func TestLexerBrace(t *testing.T) {
-        aaaa := `(miek.nl.) (
-                        (IN) 
-                        (AAAA)
-                        ::1)`
-
-//        aaaa = `miek.nl. (
-//                        IN 
-//                        AAAA
-//                        ::1 ))`
-//
-        var s scanner.Scanner
-        c := make(chan lex)
-        s.Init(strings.NewReader(aaaa))
-        s.Mode = 0
-        s.Whitespace = 0
-        go zlexer(s, c)
-        for l := range c {
-                if l.err != "" {
-                        t.Logf("E: %s\n", l.err)
-                        continue
-                }
-                t.Logf("%s ", l)
-        }
-}
-*/
-
 func TestParseFailure(t *testing.T) {
 	tests := []string{"miek.nl. IN A 327.0.0.1",
 		"miek.nl. IN AAAA ::x",
@@ -213,7 +186,7 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
-// A bit useless
+// A bit useless, how to use b.N?
 func BenchmarkZoneParsing(b *testing.B) {
 	f, err := os.Open("miek.nl.signed_test")
 	if err != nil {
@@ -285,3 +258,24 @@ func TestZoneParsingBigZone(t *testing.T) {
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 */
+
+func TestLexerBrace(t *testing.T) {
+	f, err := os.Open("/home/miekg/src/tmp/small")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+        var s scanner.Scanner
+        c := make(chan lex)
+        s.Init(f)
+        s.Mode = 0
+        s.Whitespace = 0
+        go zlexer(s, c)
+        for l := range c {
+                if l.err != "" {
+                        t.Logf("E: %s\n", l.err)
+                        continue
+                }
+                t.Logf("%s ", l)
+        }
+}

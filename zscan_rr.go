@@ -17,82 +17,53 @@ func setRR(h RR_Header, c chan lex) (RR, *ParseError) {
 	var r RR
 	e := new(ParseError)
 	switch h.Rrtype {
-	// goto Slurpremainder
 	case TypeA:
 		r, e = setA(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeAAAA:
 		r, e = setAAAA(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeNS:
 		r, e = setNS(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeCNAME:
 		r, e = setCNAME(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeSOA:
 		r, e = setSOA(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
 	case TypeSSHFP:
 		r, e = setSSHFP(h, c)
-		if e != nil {
-			return nil, e
-		}
-		if se := slurpRemainder(c); se != nil {
-			return nil, se
-		}
+		goto Slurp
+	case TypeDNSKEY:
 		// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 		// They need to search for the end of the RR themselves, hence they look for the ending
 		// newline. Thus there is no need to slurp the remainder, because there is none.
-	case TypeDNSKEY:
-		r, e = setDNSKEY(h, c)
+		return setDNSKEY(h, c)
 	case TypeRRSIG:
-		r, e = setRRSIG(h, c)
+		return setRRSIG(h, c)
 	case TypeNSEC:
-		r, e = setNSEC(h, c)
+		return setNSEC(h, c)
 	case TypeNSEC3:
-		r, e = setNSEC3(h, c)
+		return setNSEC3(h, c)
 	case TypeDS:
-		r, e = setDS(h, c)
+		return setDS(h, c)
 	case TypeTXT:
-		r, e = setTXT(h, c)
+		return setTXT(h, c)
 	default:
 		// Don't the have the token the holds the RRtype, but we substitute that in the
 		// calling function when lex is empty.
 		return nil, &ParseError{"Unknown RR type", lex{}}
+	}
+Slurp:
+	if e != nil {
+		return nil, e
+	}
+	if se := slurpRemainder(c); se != nil {
+		return nil, se
 	}
 	return r, e
 }
