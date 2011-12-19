@@ -101,8 +101,7 @@ z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
 $TTL 100
 z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 	// Need to implementen owner substitution in the lexer.
-	to := make(chan Token)
-	go ParseZone(strings.NewReader(zone), to)
+        to := ParseZone(strings.NewReader(zone))
 	i := 0
 	for x := range to {
 		if x.Error == nil {
@@ -197,8 +196,7 @@ func BenchmarkZoneParsing(b *testing.B) {
 		return
 	}
 	defer f.Close()
-	to := make(chan Token)
-	go ParseZone(f, to)
+        to := ParseZone(f)
 	for x := range to {
 		x = x
 	}
@@ -210,9 +208,8 @@ func TestZoneParsing(t *testing.T) {
 		return
 	}
 	defer f.Close()
-	to := make(chan Token)
 	start := time.Now().UnixNano()
-	go ParseZone(f, to)
+        to := ParseZone(f)
 	var i int
 	for x := range to {
 		t.Logf("%s\n", x.Rr)
@@ -229,9 +226,8 @@ func TestZoneParsingBigZonePrint(t *testing.T) {
 		return
 	}
 	defer f.Close()
-	to := make(chan Token)
 	start := time.Now().UnixNano()
-	go ParseZone(f, to)
+        to := ParseZone(f)
 	var i int
 	for x := range to {
 		if x.Rr != nil {
@@ -250,9 +246,8 @@ func TestZoneParsingBigZone(t *testing.T) {
 		return
 	}
 	defer f.Close()
-	to := make(chan Token)
 	start := time.Now().UnixNano()
-	go ParseZone(f, to)
+        to := ParseZone(f)
 	var i int
 	for x := range to {
 		x = x

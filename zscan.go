@@ -84,9 +84,9 @@ type Token struct {
 func NewRR(s string) (RR, error) {
 	t := make(chan Token)
 	if s[len(s)-1] != '\n' { // We need a closing newline
-		go ParseZone(strings.NewReader(s+"\n"), t)
+		t = ParseZone(strings.NewReader(s+"\n"))
 	} else {
-		go ParseZone(strings.NewReader(s), t)
+		t= ParseZone(strings.NewReader(s))
 	}
 	r := <-t
 	if r.Error != nil {
@@ -96,10 +96,14 @@ func NewRR(s string) (RR, error) {
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
-// on the channel t. The channel t is closed by ParseZone when the end of r is reached.
-// Basic usage pattern:
-// go ParseZone
-func ParseZone(r io.Reader, t chan Token) {
+// on the returned channel. The channel t is closed by ParseZone when the end of r is reached.
+func ParseZone(r io.Reader) (chan Token) {
+        t := make(chan Token)
+        go parseZone(r, t)
+        return t
+}
+
+func parseZone(r io.Reader, t chan Token) {
 	defer close(t)
 	var s scanner.Scanner
 	c := make(chan lex)
