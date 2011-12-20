@@ -48,6 +48,7 @@ func startParse(addr string) {
 		}
 	}
 	// Print out what we've gathered
+        fmt.Println()
 	for _, i := range items {
 		fmt.Printf("{%s %s}\n", itemString[i.typ], i.val)
 	}
