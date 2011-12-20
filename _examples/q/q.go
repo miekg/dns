@@ -29,13 +29,12 @@ func main() {
 	rd := flag.Bool("rd", true, "unset RD flag in query")
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "ask for NSID")
-	fp := flag.Bool("fingerprint", false, "enable server detection")
+	fp := flag.Bool("fp", false, "enable server detection")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
-	// Need to think about it... Config
 	conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	nameserver := "@" + conf.Servers[0]
 	qtype := uint16(0)
@@ -183,7 +182,7 @@ func shortRR(r dns.RR) dns.RR {
 		t.Inception = 0 // For easy grepping
 		t.Expiration = 0
 	case *dns.RR_NSEC3:
-		t.Salt = "-" // nobody cares
+		t.Salt = "-" // Nobody cares
 		if len(t.TypeBitMap) > 5 {
 			t.TypeBitMap = t.TypeBitMap[1:5]
 		}

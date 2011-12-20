@@ -30,35 +30,38 @@ const (
 
 func startParse(addr string) {
 	l := &lexer{
-		addr:   addr,
-		client: dns.NewClient(),
-		fp:     new(fingerprint),
-		items:  make(chan item),
-		state:  dnsAlive,
-		debug:  true,
+		addr:      addr,
+		client:    dns.NewClient(),
+		fp:        new(fingerprint),
+		items:     make(chan item),
+		state:     dnsAlive,
+		verbose:   true,
+		debugging: false,
 	}
 
 	l.run()
-
-	// Not completely sure about this code..
+	items := make([]item, 0)
 	for {
-		item := <-l.items
-		fmt.Printf("{%s %s}\n", itemString[item.typ], item.val)
+		items = append(items, <-l.items)
 		if l.state == nil {
 			break
 		}
+	}
+	// Print out what we've gathered
+	for _, i := range items {
+		fmt.Printf("{%s %s}\n", itemString[i.typ], i.val)
 	}
 }
 
 // SendProbe creates a packet and sends it to the nameserver. It
 // returns a fingerprint.
-func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) *fingerprint {
+func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) (*fingerprint, dns.Question) {
 	m := f.toProbe(q)
 	r, err := c.Exchange(m, addr)
 	if err != nil {
-		return errorToFingerprint(err)
+		return errorToFingerprint(err), dns.Question{}
 	}
-	return msgToFingerprint(r)
+	return msgToFingerprint(r), r.Question[0]
 }
 
 // This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
