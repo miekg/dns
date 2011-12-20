@@ -21,14 +21,17 @@ func main() {
 	} else {
 		m.SetAxfr(zone)
 	}
-        if err := client.XfrReceive(m, *nameserver); err == nil {
-                for r := range client.ReplyChan {
-                        if r.Error == dns.ErrXfrLast {
-                                break
-                        }
-                        fmt.Printf("%v\n", r.Reply)
-                }
-        } else {
-                fmt.Printf("Error %v\n", err)
-        }
+	if err := client.XfrReceive(m, *nameserver); err == nil {
+		for r := range client.ReplyChan {
+			if r.Error != nil {
+				if r.Error == dns.ErrXfrLast {
+					fmt.Printf("%v\n", r.Reply)
+				}
+				break
+			}
+			fmt.Printf("%v\n", r.Reply)
+		}
+	} else {
+		fmt.Printf("Error %v\n", err)
+	}
 }
