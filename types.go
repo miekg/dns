@@ -134,9 +134,13 @@ type Question struct {
 	Qclass uint16
 }
 
-func (q *Question) String() string {
+func (q *Question) String() (s string) {
 	// prefix with ; (as in dig)
-	s := ";" + q.Name + "\t"
+        if len(q.Name) == 0 {
+	        s = ";.\t" // root label
+        } else {
+	        s = ";" + q.Name + "\t"
+        }
 	s = s + Class_str[q.Qclass] + "\t"
 	if _, ok := Rr_str[q.Qtype]; ok {
 		s += " " + Rr_str[q.Qtype]

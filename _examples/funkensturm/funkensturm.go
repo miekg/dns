@@ -9,10 +9,7 @@ package main
 import (
 	"dns"
 	"flag"
-	"log"
-	"os"
 	"os/signal"
-	"runtime/pprof"
 	"strings"
 )
 
@@ -76,14 +73,15 @@ func listenAndServe(add, net string) {
 }
 
 func main() {
-	sserver := flag.String("sserver", "127.0.0.1:8053", "set the listener address")
-	rserver := flag.String("rserver", "127.0.0.1:53", "remote server address(es), seperate with commas")
-	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	listen := flag.String("listen", "127.0.0.1:8053", "set the listener address")
+	server := flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
 	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
+//	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+        /*
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -92,8 +90,9 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
+        */
 
-	clients := strings.Split(*rserver, ",")
+	clients := strings.Split(*server, ",")
 	qr = make([]*FunkClient, len(clients))
 	for i, ra := range clients {
 		qr[i] = new(FunkClient)
@@ -109,8 +108,8 @@ func main() {
 	}
 
 	dns.HandleFunc(".", serve)
-	go listenAndServe(*sserver, "tcp")
-	go listenAndServe(*sserver, "udp")
+	go listenAndServe(*listen, "tcp")
+	go listenAndServe(*listen, "udp")
 
 forever:
 	for {

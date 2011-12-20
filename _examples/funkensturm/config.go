@@ -1,15 +1,32 @@
 package main
 
+// This is transparant proxy
+
 import (
 	"dns"
+	"fmt"
 )
 
 func send(m *dns.Msg) (buf []byte) {
-	var o *dns.Msg
-	for _, c := range qr {
-		o, _ = c.Client.Exchange(m, c.Addr)
+	if *verbose {
+		fmt.Printf("--> %s\n", m.Question[0].String())
 	}
-	buf, _ = o.Pack()
+
+	var o *dns.Msg
+	var err error
+	for _, c := range qr {
+		o, err = c.Client.Exchange(m, c.Addr)
+		if *verbose {
+			if err == nil {
+				fmt.Printf("<-- %s\n", m.Question[0].String())
+			} else {
+				fmt.Printf("%s\n", err.Error())
+			}
+		}
+	}
+	if err == nil {
+		buf, _ = o.Pack()
+	}
 	return
 }
 
