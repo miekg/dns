@@ -3,6 +3,7 @@ package main
 import (
 	"dns"
 	"flag"
+	"fmt"
 )
 
 func main() {
@@ -20,13 +21,14 @@ func main() {
 	} else {
 		m.SetAxfr(zone)
 	}
-	if err := client.XfrReceive(m, *nameserver); err != nil {
-		println(err.Error())
-		return
-	}
-	/*
-	        for _, v := range axfr {
-			fmt.Printf("%v\n", v)
-		}
-	*/
+        if err := client.XfrReceive(m, *nameserver); err == nil {
+                for r := range client.ReplyChan {
+                        if r.Error == dns.ErrXfrLast {
+                                break
+                        }
+                        fmt.Printf("%v\n", r.Reply)
+                }
+        } else {
+                fmt.Printf("Error %v\n", err)
+        }
 }
