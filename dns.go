@@ -205,6 +205,9 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
 	}
+        if len(zone) == 0 {
+                zone = "."
+        }
 	if pattern[len(pattern)-1] != '.' {
 		pattern += "."
 	}
