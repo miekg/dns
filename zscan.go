@@ -8,7 +8,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = true
+var _DEBUG = false
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -315,7 +315,6 @@ func zlexer(r io.Reader, c chan lex) {
 			} else if owner {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
-				println(p, q)
 				l.token = string(buf[p:q])
 				// escape $... start with a \ not a $, so this will work
 				if l.token == "$TTL" {
@@ -353,7 +352,6 @@ func zlexer(r io.Reader, c chan lex) {
 			}
 			owner = false
 			space = true
-			println("upping", p, q)
 		case ';':
 			if escape {
 				escape = false
@@ -413,7 +411,6 @@ func zlexer(r io.Reader, c chan lex) {
 			}
 
 			p = q + 1
-			println("hallo")
 			commt = false
 			rrtype = false
 			owner = true
@@ -446,6 +443,7 @@ func zlexer(r io.Reader, c chan lex) {
 				escape = false
 				break
 			}
+			p++
 			brace++
 		case ')':
 			if commt {
@@ -463,6 +461,7 @@ func zlexer(r io.Reader, c chan lex) {
 				p = q + 1
 				return
 			}
+			p++
 		default:
 			if commt {
 				p++
@@ -473,20 +472,26 @@ func zlexer(r io.Reader, c chan lex) {
 		}
 		// tok, err = r.ReadByte() read extra bytes
 		q++
-		if q > n {
-			break
+		if q > n-1 {  // Funny, 'cause q starts at zero
+			// Read in a new chunk. Every thing before p 
+			// can be discarded. 
+                        n1 := copy(buf, buf[p:])
+			// Reset the indices
+			q = q - p
+			p = 0
+			// Read a new chunk
+			n, err = r.Read(buf[n1:])
 		}
 	}
-	println("We crashen gewoon hier", p, q)
-        // It this need anymore???
-        /*
-	if p != q {
-		// Send remainder
-		l.token = string(buf[p:q])
-		l.value = _STRING
-		c <- l
-	}
-        */
+	// It this need anymore???
+	/*
+		if p != q {
+			// Send remainder
+			l.token = string(buf[p:q])
+			l.value = _STRING
+			c <- l
+		}
+	*/
 }
 
 func stringToTtl(l lex, t chan Token) (uint32, bool) {
