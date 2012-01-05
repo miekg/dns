@@ -296,24 +296,14 @@ func zlexer(r io.Reader, c chan lex) {
 	rrtype := false
 	owner := true
 	brace := 0
-        stop := false
 	p, q := 0, 0
 	buf := make([]byte, MaxMsgSize)
 	n, err := r.Read(buf)
-        if err == io.EOF {
-                stop = true
-        }
-	l.column = 0
-	l.line = 1 // Yeah, start at one
-	for {
-		l.column++
+	for err != io.EOF {
+		l.column = 0
+		l.line = 0
 		switch buf[q] {
 		case ' ', '\t':
-			// Awkward
-			if buf[q] == '\t' { // Tabs are eight
-				// Go to the first tabstop
-				l.column = (1 + (l.column / 8)) * 8
-			}
 			escape = false
 			if commt {
 				p++
@@ -375,8 +365,6 @@ func zlexer(r io.Reader, c chan lex) {
 			commt = true
 		case '\n':
 			// Hmmm, escape newline
-			l.line++
-			l.column = 0
 			escape = false
 			if commt {
 				// Reset a comment
@@ -484,43 +472,26 @@ func zlexer(r io.Reader, c chan lex) {
 		}
 		// tok, err = r.ReadByte() read extra bytes
 		q++
-		if q > n-1 { // Funny, 'cause q starts at zero
-                        if stop {
-                                break
-                        }
-
-//			println("N", n)
+		if q > n-1 {  // Funny, 'cause q starts at zero
 			// Read in a new chunk. Every thing before p 
 			// can be discarded. 
-//			println("PQ", p, q, string(buf[p:q]))
-			n1 := copy(buf, buf[p:])
-//                        println("copied n1", n1)
+                        n1 := copy(buf, buf[p:])
 			// Reset the indices
 			q = q - p
 			p = 0
 			// Read a new chunk
-                        n2, err := r.Read(buf[n1:])
-                        if err != nil {
- //                               println("OOK NOG een error")
- //                              println("err", err.Error())
-                                if err == io.EOF {
-                                        stop = true
-                                }
-                        }
-                        n = n1 + n2/// JAJAJA
-//                        println("****Wat heb ik", string(buf[:q]), "Q", "n:", n)
-//			println("****Wat heb ik", string(buf[:q+10]), "Q")
- //                       println("wat is n nu", n)
+			n, err = r.Read(buf[n1:])
 		}
 	}
 	// It this need anymore???
-//	println("pq", p, q)
-	if p != q {
-//		println("OVER", string(buf[p:q]))
-		l.token = string(buf[p:q])
-		l.value = _STRING
-		c <- l
-	}
+	/*
+		if p != q {
+			// Send remainder
+			l.token = string(buf[p:q])
+			l.value = _STRING
+			c <- l
+		}
+	*/
 }
 
 func stringToTtl(l lex, t chan Token) (uint32, bool) {
