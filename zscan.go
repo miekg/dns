@@ -297,7 +297,7 @@ func zlexer(r io.Reader, c chan lex) {
 	owner := true
 	brace := 0
 	p, q := 0, 0
-	buf := make([]byte, MaxMsgSize)
+	buf := make([]byte, 4096)
 	n, err := r.Read(buf)
 	for err != io.EOF {
 		l.column = 0
