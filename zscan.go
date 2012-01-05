@@ -5,10 +5,11 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"text/scanner"
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = true
+var _DEBUG = false
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -83,9 +84,9 @@ type Token struct {
 func NewRR(s string) (RR, error) {
 	t := make(chan Token)
 	if s[len(s)-1] != '\n' { // We need a closing newline
-		t = ParseZone(strings.NewReader(s + "\n"))
+		t = ParseZone(strings.NewReader(s+"\n"))
 	} else {
-		t = ParseZone(strings.NewReader(s))
+		t= ParseZone(strings.NewReader(s))
 	}
 	r := <-t
 	if r.Error != nil {
@@ -96,17 +97,21 @@ func NewRR(s string) (RR, error) {
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
 // on the returned channel. The channel t is closed by ParseZone when the end of r is reached.
-func ParseZone(r io.Reader) chan Token {
-	t := make(chan Token)
-	go parseZone(r, t)
-	return t
+func ParseZone(r io.Reader) (chan Token) {
+        t := make(chan Token)
+        go parseZone(r, t)
+        return t
 }
 
 func parseZone(r io.Reader, t chan Token) {
 	defer close(t)
+	var s scanner.Scanner
 	c := make(chan lex)
+	s.Init(r)
+	s.Mode = 0
+	s.Whitespace = 0
 	// Start the lexer
-	go zlexer(r, c)
+	go zlexer(s, c)
 	// 5 possible beginnings of a line, _ is a space
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
 	// 2. _OWNER _ _STRING _ _RRTYPE           -> class omitted
@@ -286,9 +291,9 @@ func (l lex) String() string {
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
-func zlexer(r io.Reader, c chan lex) {
+func zlexer(s scanner.Scanner, c chan lex) {
 	var l lex
-	defer close(c)
+	str := "" // Hold the current read text
 	quote := false
 	escape := false
 	space := false
@@ -296,39 +301,35 @@ func zlexer(r io.Reader, c chan lex) {
 	rrtype := false
 	owner := true
 	brace := 0
-	p, q := 0, 0
-	buf := make([]byte, 4096)
-	n, err := r.Read(buf)
-	for err != io.EOF {
-		l.column = 0
-		l.line = 0
-		switch buf[q] {
-		case ' ', '\t':
-			escape = false
+	tok := s.Scan()
+	defer close(c)
+	for tok != scanner.EOF {
+		l.column = s.Position.Column
+		l.line = s.Position.Line
+		switch x := s.TokenText(); x {
+		case " ", "\t":
+                        escape = false
 			if commt {
-				p++
 				break
 			}
-			if p == q {
+			if str == "" {
 				//l.value = _BLANK
 				//l.token = " "
 			} else if owner {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
-				println(p, q)
-				l.token = string(buf[p:q])
-				// escape $... start with a \ not a $, so this will work
-				if l.token == "$TTL" {
+				l.token = str
+                                // escape $... start with a \ not a $, so this will work
+				if str == "$TTL" {
 					l.value = _DIRTTL
 				}
-				if l.token == "$ORIGIN" {
+				if str == "$ORIGIN" {
 					l.value = _DIRORIGIN
 				}
 				c <- l
-				p = q + 1
 			} else {
 				l.value = _STRING
-				l.token = string(buf[p:q])
+				l.token = str
 
 				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
@@ -340,52 +341,47 @@ func zlexer(r io.Reader, c chan lex) {
 					}
 				}
 				c <- l
-				p = q + 1
 			}
+			str = ""
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
 				c <- l
-				p = q + 1
-			}
-			if space || commt {
-				p++
 			}
 			owner = false
 			space = true
-			println("upping", p, q)
-		case ';':
-			if escape {
-				escape = false
-				break
-			}
+		case ";":
+                        if escape {
+                                escape = false
+                                str += ";"
+                                break
+                        }
 			if quote {
 				// Inside quoted text we allow ;
+				str += ";"
 				break
 			}
-			p++
 			commt = true
-		case '\n':
-			// Hmmm, escape newline
-			escape = false
+		case "\n":
+                        // Hmmm, escape newline
+                        escape = false
 			if commt {
 				// Reset a comment
 				commt = false
 				rrtype = false
-				p++
+				str = ""
 				// If not in a brace this ends the comment AND the RR
 				if brace == 0 {
 					owner = true
 					l.value = _NEWLINE
 					l.token = "\n"
 					c <- l
-					p = q + 1
 				}
 				break
 			}
-			if p != q {
+			if str != "" {
 				l.value = _STRING
-				l.token = string(buf[p:q])
+				l.token = str
 				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
@@ -393,100 +389,89 @@ func zlexer(r io.Reader, c chan lex) {
 					}
 				}
 				c <- l
-				p = q + 1
 			}
 			if brace > 0 {
 				l.value = _BLANK
-				p++
+				l.token = " "
 				if !space {
 					c <- l
-					p = q + 1
 				}
 			} else {
 				l.value = _NEWLINE
 				l.token = "\n"
 				c <- l
-				p = q + 1
 			}
 			if l.value == _BLANK {
 				space = true
 			}
 
-			p = q + 1
-			println("hallo")
+			str = ""
 			commt = false
 			rrtype = false
 			owner = true
-		case '\\':
+		case "\\":
 			if commt {
-				p++
 				break
 			}
-			if escape {
-				escape = false
-				break
-			}
+                        if escape {
+                                str += "\\"
+                                escape = false
+                                break
+                        }
 			escape = true
-		case '"':
+		case "\"":
 			if commt {
-				p++
 				break
 			}
-			if escape {
-				escape = false
-				break
-			}
+                        if escape {
+                                str += "\""
+                                escape = false
+                                break
+                        }
+			// str += "\"" don't add quoted quotes
 			quote = !quote
-		case '(':
+		case "(":
 			if commt {
-				p++
 				break
 			}
-			if escape {
-				escape = false
-				break
-			}
+                        if escape {
+                                str += "("
+                                escape = false
+                                break
+                        }
 			brace++
-		case ')':
+		case ")":
 			if commt {
-				p++
 				break
 			}
-			if escape {
-				escape = false
-				break
-			}
+                        if escape {
+                                str += ")"
+                                escape = false
+                                break
+                        }
 			brace--
 			if brace < 0 {
 				l.err = "Extra closing brace"
 				c <- l
-				p = q + 1
 				return
 			}
 		default:
 			if commt {
-				p++
 				break
 			}
-			escape = false
+                        escape = false
+			str += x
 			space = false
 		}
-		// tok, err = r.ReadByte() read extra bytes
-		q++
-		if q > n {
-			break
-		}
+		tok = s.Scan()
 	}
-	println("We crashen gewoon hier", p, q)
-        // It this need anymore???
-        /*
-	if p != q {
+	// Hmm.
+	if len(str) > 0 {
 		// Send remainder
-		l.token = string(buf[p:q])
+		l.token = str
 		l.value = _STRING
 		c <- l
 	}
-        */
 }
 
 func stringToTtl(l lex, t chan Token) (uint32, bool) {
