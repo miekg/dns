@@ -8,7 +8,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = false
+var _DEBUG = true
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -303,6 +303,9 @@ func zlexer(r io.Reader, c chan lex) {
         if err == io.EOF {
                 stop = true
         }
+        if err == nil && n < MaxMsgSize {
+                stop = true
+        }
 	l.column = 0
 	l.line = 1 // Yeah, start at one
 	for {
@@ -459,7 +462,6 @@ func zlexer(r io.Reader, c chan lex) {
 			brace++
 		case ')':
 			if commt {
-				p++
 				break
 			}
 			if escape {
@@ -510,7 +512,7 @@ func zlexer(r io.Reader, c chan lex) {
                         n = n1 + n2/// JAJAJA
 //                        println("****Wat heb ik", string(buf[:q]), "Q", "n:", n)
 //			println("****Wat heb ik", string(buf[:q+10]), "Q")
- //                       println("wat is n nu", n)
+                        println("wat is n nu", n)
 		}
 	}
 	// It this need anymore???
