@@ -26336,6 +26336,4 @@ miek.nl.	345600	IN	NS	ext.ns.whyscream.net.
 miek.nl.	345600	IN	NS	open.nlnetlabs.nl.
 miek.nl.	345600	IN	NS	omval.tednet.nl.
 miek.nl.	345600	IN	NS	elektron.atoom.net.
-2miek.nl.	345600	IN	RRSIG	SOA 8 2 345600 20110823011301 20110724011301 12051 miek.nl. r7f+/sWHR8g8y50XHDzOaOjXlpixIzUzBDbOVkCKhnOKhgSHeudWxCF7ZsfxfWNTe2kRgPJeVSgAWOc9KnPAORbBEpRAO6LtzQrqi99yuVTTNCL0+7+LwTLlG6kYkAGctJzlWEvEjCyN+r8Kq9sKa9VZSegQHxHsdCfCMsjR/3U= ;{id = 12051}
-;; Added 6275 DS records (percentage was 25) to 10000 NS RRset's (from input-zone: 0, from added: 10000)
-;; lines in original input-zone: 64
+2miek.nl.	345600	IN	RRSIG	SOA 8 2 345600 20110823011301 20110724011301 12051 miek.nl. r7f+/sWHR8g8y50XHDzOaOjXlpixIzUzBDbOVkCKhnOKhgSHeudWxCF7ZsfxfWNTe2kRgPJeVSgAWOc9KnPAORbBEpRAO6LtzQrqi99yuVTTNCL0+7+LwTLlG6kYkAGctJzlWEvEjCyN+r8Kq9sKa9VZSegQHxHsdCfCMsjR/3U= 
