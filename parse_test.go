@@ -131,7 +131,7 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 }
 
 func TestDomainName(t *testing.T) {
-        tests := []string{"r\\.gieben.miek.nl."}
+        tests := []string{"r\\.gieben.miek.nl.", "www\\.www.miek.nl."}
         dbuff := make([]byte, 40)
 
 
