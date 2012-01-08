@@ -21,6 +21,8 @@
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
+// Note that domain names MUST be full qualified, before sending them. The packages
+// enforces this, by throwing a panic().
 //
 // In the DNS messages are exchanged. Use pattern for creating one:
 //
@@ -43,11 +45,20 @@
 // sending the message 'm' to the server 127.0.0.1 on port 53 and
 // waiting for the reply.
 //
-//      c := dns.NewClient()
+//      c := NewClient()
 //      // c.Net = "tcp" // If you want to use TCP
 //      in := c.Exchange(m, "127.0.0.1:53")
 //
-// An asynchronous query is also possible. The Basic use pattern is: TODO(mg)
+// An asynchronous query is also possible, setting up is more elaborate then
+// a synchronous query. The Basic use pattern is:
+// 
+//      HandleQueryFunc(".", handler)
+//      ListenAndQuery(nil, nil)
+//      c.Do(m1, "127.0.0.1:53")
+//      // Do something else
+//      r := <- DefaultReplyChan
+//      // r.Reply is the answer
+//      // r.Request is the original request
 package dns
 
 import (
