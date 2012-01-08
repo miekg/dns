@@ -49,9 +49,9 @@ const (
 
 // DNSKEY flag values.
 const (
-	KSK    = 1
-	ZSK    = 1 << 7
-	REVOKE = 1 << 6
+	SEP    = 1
+	ZONE   = 1 << 7
+	REVOKE = 1 << 8
 )
 
 // The RRSIG needs to be converted to wireformat with some of

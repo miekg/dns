@@ -17,7 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 	m := new(dns.Msg)
-	m.SetQuestion(os.Args[1], dns.TypeDNSKEY)
+	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeDNSKEY)
 
 	// Set EDNS0's Do bit
 	e := new(dns.RR_OPT)
@@ -38,27 +38,13 @@ func main() {
 		fmt.Printf(" *** invalid answer name %s after DNSKEY query for %s\n", os.Args[1], os.Args[1])
 		os.Exit(1)
 	}
-	// Stuff must be in the answer section, check len(r.Answer)
 	for _, k := range r.Answer {
-		// For each key would need to provide a DS records, both sha1 and sha256
-                // Maybe print the key flags?
 		if key, ok := k.(*dns.RR_DNSKEY); ok {
 			key.Hdr.Ttl = 0
-                        switch key.Flags {
-                        case 256:
-                                fmt.Printf("; ZSK\n")
-                        case 257:
-                                fmt.Printf("; KSK\n")
-                        default:
-                                fmt.Printf("; %d\n", key.Flags)
+                        for _, alg := range []int{dns.SHA1, dns.SHA256, dns.SHA384} {
+                                ds := key.ToDS(alg)
+                                fmt.Printf("%v; %d\n", ds, key.Flags)
                         }
-
-			ds := key.ToDS(dns.SHA1)
-			fmt.Printf("%v\n", ds)
-			ds = key.ToDS(dns.SHA256)
-			fmt.Printf("%v\n", ds)
-			ds = key.ToDS(dns.SHA384)
-			fmt.Printf("%v\n", ds)
 		}
 	}
 }
