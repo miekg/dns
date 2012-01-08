@@ -178,7 +178,8 @@ func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-		s += "."
+                return lenmsg, false    // This is an error, should be fqdn
+//		s += "."
 	}
 
 	// Each dot ends a segment of the name.

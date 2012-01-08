@@ -7,7 +7,7 @@ import (
 
 func TestClientSync(t *testing.T) {
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := NewClient()
 	r, _ := c.Exchange(m, "85.223.71.124:53")
@@ -26,11 +26,11 @@ func helloMiek(w RequestWriter, r *Msg) {
 }
 
 func TestClientASync(t *testing.T) {
-	HandleQueryFunc("miek.nl", helloMiek) // All queries for miek.nl will be handled by HelloMiek
+	HandleQueryFunc("miek.nl.", helloMiek) // All queries for miek.nl will be handled by HelloMiek
 	ListenAndQuery(nil, nil)              // Detect if this isn't running
 
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := NewClient()
 	c.Do(m, "85.223.71.124:53")
@@ -51,7 +51,7 @@ forever:
 
 func TestClientEDNS0(t *testing.T) {
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeDNSKEY)
+	m.SetQuestion("miek.nl.", TypeDNSKEY)
 
 	m.SetEdns0(2048, true)
 	//edns.Option = make([]Option, 1)

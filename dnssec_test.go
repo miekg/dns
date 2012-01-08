@@ -246,7 +246,7 @@ func TestKeyRSA(t *testing.T) {
 
 func TestKeyToDS(t *testing.T) {
 	key := new(RR_DNSKEY)
-	key.Hdr.Name = "miek.nl"
+	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 3600
