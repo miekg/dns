@@ -229,7 +229,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	var n int
 	out, ok := m.Pack()
 	if !ok {
-		panic("failed to pack message")
+                return nil, ErrPack
 	}
 	var in []byte
 	switch c.Net {
