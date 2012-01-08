@@ -199,7 +199,7 @@ func (dns *Msg) IsEdns0() (ok bool) {
 // IsDomainName checks if s is a valid domainname, it returns
 // the number of labels and true, when a domain name is valid. When false
 // the returned labelcount isn't specified.
-func IsDomainName(s string) (int, bool) { // copied from net package.
+func IsDomainName(s string) (uint8, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	if len(s) == 0 {
 		return 0, false
@@ -211,7 +211,7 @@ func IsDomainName(s string) (int, bool) { // copied from net package.
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0
-	labels := 0
+	labels := uint8(0)
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		switch {
