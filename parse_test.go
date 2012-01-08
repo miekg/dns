@@ -137,6 +137,8 @@ func TestParseBrace(t *testing.T) {
 		`miek.nl. IN (
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"(miek.nl.) (A) (127.0.0.1)": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. NS ns.miek.nl": "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
                         (IN) 
                         (AAAA)
@@ -145,6 +147,7 @@ func TestParseBrace(t *testing.T) {
                         (IN) 
                         (AAAA)
                         (::1))`: "miek.nl.\t3600\tIN\tAAAA\t::1",
+                "miek\\.nl. IN A 127.0.0.1": "miek\\.nl.\t3600\tIN\tA\t127.0.0.1",
 		"miek.nl. IN A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		`miek.nl.       86400 IN SOA elektron.atoom.net. miekg.atoom.net. (
                                 2009032802 ; serial

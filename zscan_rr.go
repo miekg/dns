@@ -13,7 +13,7 @@ import (
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
 
-func setRR(h RR_Header, c chan lex) (RR, *ParseError) {
+func setRR(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	var r RR
 	e := new(ParseError)
 	switch h.Rrtype {
@@ -24,16 +24,16 @@ func setRR(h RR_Header, c chan lex) (RR, *ParseError) {
 		r, e = setAAAA(h, c)
 		goto Slurp
 	case TypeNS:
-		r, e = setNS(h, c)
+		r, e = setNS(h, c, o)
 		goto Slurp
 	case TypeMX:
-		r, e = setMX(h, c)
+		r, e = setMX(h, c, o)
 		goto Slurp
 	case TypeCNAME:
-		r, e = setCNAME(h, c)
+		r, e = setCNAME(h, c, o)
 		goto Slurp
 	case TypeSOA:
-		r, e = setSOA(h, c)
+		r, e = setSOA(h, c, o)
 		goto Slurp
 	case TypeSSHFP:
 		r, e = setSSHFP(h, c)
@@ -44,11 +44,11 @@ func setRR(h RR_Header, c chan lex) (RR, *ParseError) {
 		// newline. Thus there is no need to slurp the remainder, because there is none.
 		return setDNSKEY(h, c)
 	case TypeRRSIG:
-		return setRRSIG(h, c)
+		return setRRSIG(h, c, o)
 	case TypeNSEC:
-		return setNSEC(h, c)
+		return setNSEC(h, c, o)
 	case TypeNSEC3:
-		return setNSEC3(h, c)
+		return setNSEC3(h, c, o)
 	case TypeDS:
 		return setDS(h, c)
 	case TypeTXT:
@@ -117,19 +117,22 @@ func setAAAA(h RR_Header, c chan lex) (RR, *ParseError) {
 	return rr, nil
 }
 
-func setNS(h RR_Header, c chan lex) (RR, *ParseError) {
+func setNS(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_NS)
 	rr.Hdr = h
 
 	l := <-c
 	rr.Ns = l.token
-	if !IsDomainName(l.token) {
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad NS Ns", l}
 	}
+        if !Fqdn(rr.Ns) {
+                rr.Ns += o
+        }
 	return rr, nil
 }
 
-func setMX(h RR_Header, c chan lex) (RR, *ParseError) {
+func setMX(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_MX)
 	rr.Hdr = h
 
@@ -142,40 +145,52 @@ func setMX(h RR_Header, c chan lex) (RR, *ParseError) {
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Mx = l.token
-	if !IsDomainName(l.token) {
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad MX Mx", l}
 	}
+        if !Fqdn(rr.Mx) {
+                rr.Mx += o
+        }
 	return rr, nil
 }
 
-func setCNAME(h RR_Header, c chan lex) (RR, *ParseError) {
+func setCNAME(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_CNAME)
 	rr.Hdr = h
 
 	l := <-c
 	rr.Cname = l.token
-	if !IsDomainName(l.token) {
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad CNAME", l}
 	}
+        if !Fqdn(rr.Cname) {
+                rr.Cname += o
+        }
 	return rr, nil
 }
 
-func setSOA(h RR_Header, c chan lex) (RR, *ParseError) {
+func setSOA(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_SOA)
 	rr.Hdr = h
 
 	l := <-c
 	rr.Ns = l.token
 	<-c // _BLANK
-	if !IsDomainName(l.token) {
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad SOA mname", l}
 	}
+        if !Fqdn(rr.Ns) {
+                rr.Ns += o
+        }
 
 	l = <-c
 	rr.Mbox = l.token
-	if !IsDomainName(l.token) {
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad SOA rname", l}
 	}
+        if !Fqdn(rr.Mbox) {
+                rr.Mbox += o
+        }
 	<-c // _BLANK
 
 	var j int
@@ -205,7 +220,7 @@ func setSOA(h RR_Header, c chan lex) (RR, *ParseError) {
 	return rr, nil
 }
 
-func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
+func setRRSIG(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_RRSIG)
 	rr.Hdr = h
 	l := <-c
@@ -258,11 +273,13 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 	}
 	<-c // _BLANK
 	l = <-c
-	if !IsDomainName(l.token) {
+	rr.SignerName = l.token
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad RRSIG signername", l}
-	} else {
-		rr.SignerName = l.token
 	}
+        if !Fqdn(rr.SignerName) {
+                rr.SignerName += o
+        }
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
 	s := ""
@@ -281,16 +298,18 @@ func setRRSIG(h RR_Header, c chan lex) (RR, *ParseError) {
 	return rr, nil
 }
 
-func setNSEC(h RR_Header, c chan lex) (RR, *ParseError) {
+func setNSEC(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_NSEC)
 	rr.Hdr = h
 
 	l := <-c
-	if !IsDomainName(l.token) {
+	rr.NextDomain = l.token
+        if ok, _ := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad NSEC nextdomain", l}
-	} else {
-		rr.NextDomain = l.token
 	}
+        if !Fqdn(rr.NextDomain) {
+                rr.NextDomain += o
+        }
 
 	rr.TypeBitMap = make([]uint16, 0)
 	l = <-c
@@ -312,7 +331,7 @@ func setNSEC(h RR_Header, c chan lex) (RR, *ParseError) {
 	return rr, nil
 }
 
-func setNSEC3(h RR_Header, c chan lex) (RR, *ParseError) {
+func setNSEC3(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	rr := new(RR_NSEC3)
 	rr.Hdr = h
 
@@ -345,6 +364,12 @@ func setNSEC3(h RR_Header, c chan lex) (RR, *ParseError) {
 	l = <-c
 	rr.HashLength = uint8(len(l.token))
 	rr.NextDomain = l.token
+        if ok, _ := IsDomainName(l.token); !ok {
+		return nil, &ParseError{"bad NSEC nextdomain", l}
+	}
+        if !Fqdn(rr.NextDomain) {
+                rr.NextDomain += o
+        }
 
 	rr.TypeBitMap = make([]uint16, 0)
 	l = <-c

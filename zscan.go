@@ -46,6 +46,8 @@ const (
 	_EXPECT_RDATA          // The first element of the rdata
 	_EXPECT_DIRTTL_BL      // Space after directive $TTL
 	_EXPECT_DIRTTL         // Directive $TTL
+	_EXPECT_DIRORIGIN_BL   // Space after directive $ORIGIN
+	_EXPECT_DIRORIGIN      // Directive $ORIGIN
 )
 
 // ParseError contains the parse error and the location in the io.Reader
@@ -84,9 +86,9 @@ type Token struct {
 func NewRR(s string) (RR, error) {
 	t := make(chan Token)
 	if s[len(s)-1] != '\n' { // We need a closing newline
-		t = ParseZone(strings.NewReader(s+"\n"))
+		t = ParseZone(strings.NewReader(s + "\n"))
 	} else {
-		t= ParseZone(strings.NewReader(s))
+		t = ParseZone(strings.NewReader(s))
 	}
 	r := <-t
 	if r.Error != nil {
@@ -97,10 +99,10 @@ func NewRR(s string) (RR, error) {
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
 // on the returned channel. The channel t is closed by ParseZone when the end of r is reached.
-func ParseZone(r io.Reader) (chan Token) {
-        t := make(chan Token)
-        go parseZone(r, t)
-        return t
+func ParseZone(r io.Reader) chan Token {
+	t := make(chan Token)
+	go parseZone(r, t)
+	return t
 }
 
 func parseZone(r io.Reader, t chan Token) {
@@ -124,6 +126,7 @@ func parseZone(r io.Reader, t chan Token) {
 	var h RR_Header
 	var ok bool
 	var defttl uint32 = DefaultTtl
+	var origin string = "."
 	for l := range c {
 		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
@@ -144,9 +147,18 @@ func parseZone(r io.Reader, t chan Token) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
+                                if ok, _ := IsDomainName(l.token); !ok {
+                                        t <- Token{Error: &ParseError{"bad owner name", l}}
+                                        return
+                                }
+                                if !Fqdn(h.Name) {
+                                        h.Name += origin
+                                }
 				st = _EXPECT_OWNER_BL
 			case _DIRTTL:
 				st = _EXPECT_DIRTTL_BL
+			case _DIRORIGIN:
+				st = _EXPECT_DIRORIGIN_BL
 			default:
 				t <- Token{Error: &ParseError{"Error at the start", l}}
 				return
@@ -167,8 +179,23 @@ func parseZone(r io.Reader, t chan Token) {
 			} else {
 				defttl = ttl
 			}
-
 			st = _EXPECT_OWNER_DIR
+                case _EXPECT_DIRORIGIN_BL:
+                        if l.value != _BLANK {
+                                t <- Token{Error: &ParseError{"No blank after $-directive", l}}
+                                return
+                        }
+                        st = _EXPECT_DIRORIGIN
+                case _EXPECT_DIRORIGIN:
+                        if l.value != _STRING {
+                                t <- Token{Error: &ParseError{"Expecting $ORIGIN value, not this...", l}}
+                                return
+                        }
+                        if !Fqdn(l.token) {
+                                origin = l.token + origin       // Append old origin if the new one isn't a fqdn
+                        } else {
+                                origin = l.token
+                        }
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{"No blank after owner", l}}
@@ -254,7 +281,7 @@ func parseZone(r io.Reader, t chan Token) {
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
 			// I could save my token here...? l
-			r, e := setRR(h, c)
+			r, e := setRR(h, c, origin)
 			if e != nil {
 				// If e.lex is nil than we have encounter a unknown RR type
 				// in that case we substitute our current lex token
@@ -308,7 +335,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		l.line = s.Position.Line
 		switch x := s.TokenText(); x {
 		case " ", "\t":
-                        escape = false
+			escape = false
 			if commt {
 				break
 			}
@@ -319,7 +346,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = str
-                                // escape $... start with a \ not a $, so this will work
+				// escape $... start with a \ not a $, so this will work
 				if str == "$TTL" {
 					l.value = _DIRTTL
 				}
@@ -351,11 +378,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			owner = false
 			space = true
 		case ";":
-                        if escape {
-                                escape = false
-                                str += ";"
-                                break
-                        }
+			if escape {
+				escape = false
+				str += ";"
+				break
+			}
 			if quote {
 				// Inside quoted text we allow ;
 				str += ";"
@@ -363,8 +390,8 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			commt = true
 		case "\n":
-                        // Hmmm, escape newline
-                        escape = false
+			// Hmmm, escape newline
+			escape = false
 			if commt {
 				// Reset a comment
 				commt = false
@@ -413,42 +440,43 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			if commt {
 				break
 			}
-                        if escape {
-                                str += "\\"
-                                escape = false
-                                break
-                        }
+			if escape {
+				str += "\\"
+				escape = false
+				break
+			}
+			str += "\\"
 			escape = true
 		case "\"":
 			if commt {
 				break
 			}
-                        if escape {
-                                str += "\""
-                                escape = false
-                                break
-                        }
+			if escape {
+				str += "\""
+				escape = false
+				break
+			}
 			// str += "\"" don't add quoted quotes
 			quote = !quote
 		case "(":
 			if commt {
 				break
 			}
-                        if escape {
-                                str += "("
-                                escape = false
-                                break
-                        }
+			if escape {
+				str += "("
+				escape = false
+				break
+			}
 			brace++
 		case ")":
 			if commt {
 				break
 			}
-                        if escape {
-                                str += ")"
-                                escape = false
-                                break
-                        }
+			if escape {
+				str += ")"
+				escape = false
+				break
+			}
 			brace--
 			if brace < 0 {
 				l.err = "Extra closing brace"
@@ -459,7 +487,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			if commt {
 				break
 			}
-                        escape = false
+			escape = false
 			str += x
 			space = false
 		}

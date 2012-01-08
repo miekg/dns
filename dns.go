@@ -230,19 +230,10 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	return
 }
 
-// DnameLength returns the length of a packed dname.
-func DomainNameLength(s string) int { // TODO better name
-	// Special case for '.'
-	if s == "." {
-		return 1
-	}
-
-	// Add trailing dot to canonicalize name.
-	if n := len(s); n == 0 || s[n-1] != '.' {
-		return n + 1
-	} else {
-		return n + 1
-	}
-	panic("not reached")
-	return 0
+// Fqdn checks if a domain name is fully qualified
+func Fqdn(s string) bool {
+        if len(s) == 0 {
+                return false // ?
+        }
+        return s[len(s)-1] == '.'
 }

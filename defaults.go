@@ -196,53 +196,59 @@ func (dns *Msg) IsEdns0() (ok bool) {
 	return
 }
 
-// IsDomainName checks if s is a valid domainname.
-func IsDomainName(s string) bool { // copied from net package.
+// IsDomainName checks if s is a valid domainname, it returns
+// true and a length, when a domain name is valid. When false
+// is return the length isn't specified.
+func IsDomainName(s string) (bool, int) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	if len(s) == 0 {
-		return false
+		return false, 0
 	}
-	if len(s) > 255 {
-		return false
+	if len(s) > 255 {       // Not true...?
+		return false, 0
 	}
-	if s[len(s)-1] != '.' { // simplify checking loop: make name end in dot
-		s += "."
-	}
+        if !Fqdn(s) {           // simplify checking loop: make name end in dot
+                s += "."
+        }
 
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0
+        n := 0
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		switch {
 		default:
-			return false
+			return false, 0
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*':
 			ok = true
 			partlen++
+                        n++
 		case '0' <= c && c <= '9':
 			// fine
 			partlen++
+                        n++
 		case c == '-':
 			// byte before dash cannot be dot
 			if last == '.' {
-				return false
+				return false, 0
 			}
 			partlen++
 		case c == '.':
 			// byte before dot cannot be dot, dash
 			if last == '.' || last == '-' {
-				return false
+				return false, 0
 			}
 			if partlen > 63 || partlen == 0 {
-				return false
+				return false, 0
 			}
 			partlen = 0
+                        n++
 		}
 		last = c
 	}
 
-	return ok
+	return ok, n
 }
 
 // Return the number of labels in a domain name.
