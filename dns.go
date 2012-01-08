@@ -219,12 +219,8 @@ func zoneMatch(pattern, zone string) (ok bool) {
         if len(zone) == 0 {
                 zone = "."
         }
-	if pattern[len(pattern)-1] != '.' {
-		pattern += "."
-	}
-	if zone[len(zone)-1] != '.' {
-		zone += "."
-	}
+        pattern = Fqdn(pattern)
+        zone = Fqdn(zone)
 	i := 0
 	for {
 		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
@@ -239,12 +235,4 @@ func zoneMatch(pattern, zone string) (ok bool) {
 
 	}
 	return
-}
-
-// Fqdn checks if a domain name is fully qualified
-func Fqdn(s string) bool {
-        if len(s) == 0 {
-                return false // ?
-        }
-        return s[len(s)-1] == '.'
 }

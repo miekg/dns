@@ -147,11 +147,11 @@ func parseZone(r io.Reader, t chan Token) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
-                                if ok, _ := IsDomainName(l.token); !ok {
+                                if _, ok := IsDomainName(l.token); !ok {
                                         t <- Token{Error: &ParseError{"bad owner name", l}}
                                         return
                                 }
-                                if !Fqdn(h.Name) {
+                                if !IsFqdn(h.Name) {
                                         h.Name += origin
                                 }
 				st = _EXPECT_OWNER_BL
@@ -191,7 +191,7 @@ func parseZone(r io.Reader, t chan Token) {
                                 t <- Token{Error: &ParseError{"Expecting $ORIGIN value, not this...", l}}
                                 return
                         }
-                        if !Fqdn(l.token) {
+                        if !IsFqdn(l.token) {
                                 origin = l.token + origin       // Append old origin if the new one isn't a fqdn
                         } else {
                                 origin = l.token

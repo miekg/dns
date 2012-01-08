@@ -197,84 +197,74 @@ func (dns *Msg) IsEdns0() (ok bool) {
 }
 
 // IsDomainName checks if s is a valid domainname, it returns
-// true and a length, when a domain name is valid. When false
-// ithe returned length isn't specified.
-func IsDomainName(s string) (bool, int) { // copied from net package.
+// the number of labels and true, when a domain name is valid. When false
+// the returned labelcount isn't specified.
+func IsDomainName(s string) (int, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	if len(s) == 0 {
-		return false, 0
+		return 0, false
 	}
-	if len(s) > 255 {       // Not true...?
-		return false, 0
+	if len(s) > 255 { // Not true...?
+		return 0, false
 	}
-        if !Fqdn(s) {           // simplify checking loop: make name end in dot
-                s += "."
-        }
-
+	s = Fqdn(s) // simplify checking loop: make name end in dot
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0
-        n := 0
+	labels := 0
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		switch {
 		default:
-			return false, 0
+			return 0, false
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*':
 			ok = true
 			partlen++
-                        n++
-                case c == '\\':
-                        // Ok
+		case c == '\\':
+			// Ok
 		case '0' <= c && c <= '9':
 			// fine
 			partlen++
-                        n++
 		case c == '-':
 			// byte before dash cannot be dot
 			if last == '.' {
-				return false, 0
+				return 0, false
 			}
 			partlen++
 		case c == '.':
 			// byte before dot cannot be dot, dash
 			if last == '.' || last == '-' {
-				return false, 0
+				return 0, false
 			}
-                        if last == '\\' { // Ok, escaped dot.
-                                partlen++
-                                n++
-                                break
-                        }
+			if last == '\\' { // Ok, escaped dot.
+				partlen++
+				break
+			}
 			if partlen > 63 || partlen == 0 {
-				return false, 0
+				return 0, false
 			}
 			partlen = 0
-                        n++
+			labels++
 		}
 		last = c
 	}
 
-	return ok, n
+	return labels, ok
 }
 
-// Return the number of labels in a domain name.
-// Need to add these kind of function in a structured way. TODO(mg)
-func Labels(a string) (c uint8) {
-	// walk the string and count the dots
-	// except when it is escaped
-	esc := false
-	for _, v := range a {
-		switch v {
-		case '.':
-			if esc {
-				esc = !esc
-				continue
-			}
-			c++
-		case '\\':
-			esc = true
-		}
+// IsFqdn checks if a domain name is fully qualified
+func IsFqdn(s string) bool {
+	if len(s) == 0 {
+		return false // ?
 	}
-	return
+	return s[len(s)-1] == '.'
+}
+
+// Fqdns return the fully qualified domain name from s.
+// Is s is already fq, then it behaves as the identity function.
+func Fqdn(s string) string {
+	if IsFqdn(s) {
+		return s
+	}
+	return s + "."
 }
