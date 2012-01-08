@@ -18,7 +18,7 @@ func main() {
 	c := dns.NewClient()
 
 	m := new(dns.Msg)
-	m.SetQuestion(os.Args[1], dns.TypeMX)
+	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeMX)
 	m.MsgHdr.RecursionDesired = true
 
 	// Simple sync query, nothing fancy
