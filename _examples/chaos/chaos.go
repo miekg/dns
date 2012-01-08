@@ -42,8 +42,11 @@ func main() {
 func qhandler(w dns.RequestWriter, m *dns.Msg) {
 	w.Dial()
 	defer w.Close()
-	w.Send(m)
-	r, _ := w.Receive()
+	if err := w.Send(m); err != nil {
+                w.Write(nil)
+                return
+        }
+        r, _ := w.Receive()
 	w.Write(r)
 }
 
@@ -52,9 +55,9 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 	dns.ListenAndQuery(nil, nil)
 
 	m4 := new(dns.Msg)
-	m4.SetQuestion(os.Args[1], dns.TypeA)
+	m4.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
 	m6 := new(dns.Msg)
-	m6.SetQuestion(os.Args[1], dns.TypeAAAA)
+	m6.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeAAAA)
         c.Do(m4, conf.Servers[0] + ":" + conf.Port)
         c.Do(m6, conf.Servers[0] + ":" + conf.Port)
 
