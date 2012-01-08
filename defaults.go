@@ -198,7 +198,7 @@ func (dns *Msg) IsEdns0() (ok bool) {
 
 // IsDomainName checks if s is a valid domainname, it returns
 // true and a length, when a domain name is valid. When false
-// is return the length isn't specified.
+// ithe returned length isn't specified.
 func IsDomainName(s string) (bool, int) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	if len(s) == 0 {
@@ -224,6 +224,8 @@ func IsDomainName(s string) (bool, int) { // copied from net package.
 			ok = true
 			partlen++
                         n++
+                case c == '\\':
+                        // Ok
 		case '0' <= c && c <= '9':
 			// fine
 			partlen++
@@ -239,6 +241,11 @@ func IsDomainName(s string) (bool, int) { // copied from net package.
 			if last == '.' || last == '-' {
 				return false, 0
 			}
+                        if last == '\\' { // Ok, escaped dot.
+                                partlen++
+                                n++
+                                break
+                        }
 			if partlen > 63 || partlen == 0 {
 				return false, 0
 			}

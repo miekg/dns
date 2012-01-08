@@ -130,6 +130,30 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 	}
 }
 
+func TestDomainName(t *testing.T) {
+        tests := []string{"r\\.gieben.miek.nl."}
+        dbuff := make([]byte, 40)
+
+
+        for _, ts := range tests {
+                if _, ok := PackDomainName(ts, dbuff, 0); !ok {
+                        t.Log("Not a valid domain name")
+                        t.Fail()
+                        continue
+                }
+                n, _, ok := UnpackDomainName(dbuff, 0)
+                if !ok {
+                        t.Log("Failed to unpack packed domain name")
+                        t.Fail()
+                        continue;
+                }
+                if ts != n {
+                        t.Logf("Must be equal: in: %s, out: %s\n", ts, n)
+                        t.Fail()
+                }
+        }
+}
+
 func TestParseBrace(t *testing.T) {
 	tests := map[string]string{
 		"(miek.nl.) 3600 IN A 127.0.0.1":                 "miek.nl.\t3600\tIN\tA\t127.0.0.1",
