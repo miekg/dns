@@ -36,4 +36,8 @@ func main() {
 	for _, a := range r.Answer {
 		fmt.Printf("%v\n", a)
 	}
+        println(r.String())
+        buf, _ := r.Pack()
+
+        dns.Compress(buf)
 }
