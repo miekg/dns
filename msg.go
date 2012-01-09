@@ -290,6 +290,7 @@ Loop:
 				return "", lenmsg, false
 			}
 			off = (c^0xC0)<<8 | int(c1)
+                        println("offset", off)
 		default:
 			// 0x80 and 0x40 are reserved
 			return "", lenmsg, false
@@ -975,6 +976,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
+        // TODO: fix this MG
 	// Could work harder to calculate message size,
 	// but this is far more than we need and not
 	// big enough to hurt the allocator.
