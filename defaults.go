@@ -268,3 +268,24 @@ func Fqdn(s string) string {
 	}
 	return s + "."
 }
+
+// SplitLabels splits a domainname string into its labels.
+// No syntax checks are performed.
+// TODO: labels functions...
+func SplitLabels(s string) (labels []string) {
+        last := byte('.')
+        k := 0
+        l := 0
+	for i := 0; i < len(s); i++ {
+                if s[i] == '.' {
+                        if last == '\\' {
+                                // do nothing
+                                break
+                        }
+                        labels[l] = s[k:i]
+                        k = i+1 // + dot
+                }
+                last = s[i]
+        }
+        return
+}

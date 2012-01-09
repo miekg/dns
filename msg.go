@@ -178,8 +178,8 @@ func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-                return lenmsg, false    // This is an error, should be fqdn
-//		s += "."
+		return lenmsg, false // This is an error, should be fqdn
+		//		s += "."
 	}
 
 	// Each dot ends a segment of the name.
@@ -340,30 +340,30 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				// only the first 4
 				switch fv.Len() {
 				case net.IPv6len:
-                                        if off+net.IPv4len > lenmsg {
-                                                //fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-                                                return lenmsg, false
-                                        }
+					if off+net.IPv4len > lenmsg {
+						//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
+						return lenmsg, false
+					}
 					msg[off] = byte(fv.Index(12).Uint())
 					msg[off+1] = byte(fv.Index(13).Uint())
 					msg[off+2] = byte(fv.Index(14).Uint())
 					msg[off+3] = byte(fv.Index(15).Uint())
-                                        off += net.IPv4len
+					off += net.IPv4len
 				case net.IPv4len:
-                                        if off+net.IPv4len > lenmsg {
-                                                //fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-                                                return lenmsg, false
-                                        }
+					if off+net.IPv4len > lenmsg {
+						//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
+						return lenmsg, false
+					}
 					msg[off] = byte(fv.Index(0).Uint())
 					msg[off+1] = byte(fv.Index(1).Uint())
 					msg[off+2] = byte(fv.Index(2).Uint())
 					msg[off+3] = byte(fv.Index(3).Uint())
-                                        off += net.IPv4len
-                                case 0:
-                                        // Allowed, for dynamic updates
+					off += net.IPv4len
+				case 0:
+					// Allowed, for dynamic updates
 				default:
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing A")
-                                        return lenmsg, false
+					return lenmsg, false
 				}
 			case "AAAA":
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
@@ -838,14 +838,14 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 		return len(msg), false
 	}
 
-        // pack a third time; redo header with correct data length
-        rr.Header().Rdlength = uint16(off2 - off1)
-        packStruct(rr.Header(), msg, off)
-        return off2, true
-//	rr.Header().Rdlength = uint16(off2 - off1)
-//	if !rr.Header().RawSetRdlength(msg, off) {
-//		return len(msg), false
-//	}
+	// pack a third time; redo header with correct data length
+	rr.Header().Rdlength = uint16(off2 - off1)
+	packStruct(rr.Header(), msg, off)
+	return off2, true
+	//	rr.Header().Rdlength = uint16(off2 - off1)
+	//	if !rr.Header().RawSetRdlength(msg, off) {
+	//		return len(msg), false
+	//	}
 }
 
 // Resource record unpacker.
@@ -985,19 +985,19 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	off, ok = packStruct(&dh, msg, off)
 	for i := 0; i < len(question); i++ {
 		off, ok = packStruct(&question[i], msg, off)
-//                println("Question", off)
+		//                println("Question", off)
 	}
 	for i := 0; i < len(answer); i++ {
 		off, ok = packRR(answer[i], msg, off)
-//               println("Answer", off)
+		//               println("Answer", off)
 	}
 	for i := 0; i < len(ns); i++ {
 		off, ok = packRR(ns[i], msg, off)
-//                println("Authority", off)
+		//                println("Authority", off)
 	}
 	for i := 0; i < len(extra); i++ {
 		off, ok = packRR(extra[i], msg, off)
-//                println("Additional", off)
+		//                println("Additional", off)
 	}
 	if !ok {
 		return nil, false
