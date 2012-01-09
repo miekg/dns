@@ -290,7 +290,6 @@ Loop:
 				return "", lenmsg, false
 			}
 			off = (c^0xC0)<<8 | int(c1)
-                        println("offset", off)
 		default:
 			// 0x80 and 0x40 are reserved
 			return "", lenmsg, false
