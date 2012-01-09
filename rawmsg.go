@@ -84,6 +84,7 @@ Loop:
                                                 }
                                         }
 
+                                        // need to shorten the rdlength in the RR too!
 					moves = append(moves, rawmove{offset: poffset, from: moffset, length: len(name) + 1})
 				}
 
