@@ -151,8 +151,8 @@ func (q *Question) String() (s string) {
 }
 
 func (q *Question) Len() int {
-	l, _ := IsDomainName(q.Name)
-	return int(l) + 4
+	l := len(q.Name)+1
+	return l + 4
 }
 
 type RR_ANY struct {
@@ -186,8 +186,8 @@ func (rr *RR_CNAME) String() string {
 }
 
 func (rr *RR_CNAME) Len() int {
-	l, _ := IsDomainName(rr.Cname)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Cname)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_HINFO struct {
@@ -222,8 +222,8 @@ func (rr *RR_MB) String() string {
 }
 
 func (rr *RR_MB) Len() int {
-	l, _ := IsDomainName(rr.Mb)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Mb)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_MG struct {
@@ -240,8 +240,8 @@ func (rr *RR_MG) String() string {
 }
 
 func (rr *RR_MG) Len() int {
-	l, _ := IsDomainName(rr.Mg)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Mg)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_MINFO struct {
@@ -259,9 +259,9 @@ func (rr *RR_MINFO) String() string {
 }
 
 func (rr *RR_MINFO) Len() int {
-	l, _ := IsDomainName(rr.Rmail)
-	n, _ := IsDomainName(rr.Email)
-	return rr.Hdr.Len() + int(l) + int(n)
+	l := len(rr.Rmail)+1
+	n := len(rr.Email)+1
+	return rr.Hdr.Len() + l + n
 }
 
 type RR_MR struct {
@@ -278,8 +278,8 @@ func (rr *RR_MR) String() string {
 }
 
 func (rr *RR_MR) Len() int {
-	l, _ := IsDomainName(rr.Mr)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Mr)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_MX struct {
@@ -297,8 +297,8 @@ func (rr *RR_MX) String() string {
 }
 
 func (rr *RR_MX) Len() int {
-	l, _ := IsDomainName(rr.Mx)
-	return rr.Hdr.Len() + int(l) + 2
+	l := len(rr.Mx)+1
+	return rr.Hdr.Len() + l + 2
 }
 
 type RR_NS struct {
@@ -315,8 +315,8 @@ func (rr *RR_NS) String() string {
 }
 
 func (rr *RR_NS) Len() int {
-	l, _ := IsDomainName(rr.Ns)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Ns)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_PTR struct {
@@ -333,8 +333,8 @@ func (rr *RR_PTR) String() string {
 }
 
 func (rr *RR_PTR) Len() int {
-	l, _ := IsDomainName(rr.Ptr)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Ptr)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_SOA struct {
@@ -362,9 +362,9 @@ func (rr *RR_SOA) String() string {
 }
 
 func (rr *RR_SOA) Len() int {
-	l, _ := IsDomainName(rr.Ns)
-	n, _ := IsDomainName(rr.Mbox)
-	return rr.Hdr.Len() + int(l) + int(n) + 20
+	l := len(rr.Ns)+1
+	n := len(rr.Mbox)+1
+	return rr.Hdr.Len() + l + n + 20
 }
 
 type RR_TXT struct {
@@ -404,8 +404,8 @@ func (rr *RR_SRV) String() string {
 }
 
 func (rr *RR_SRV) Len() int {
-	l, _ := IsDomainName(rr.Target)
-	return rr.Hdr.Len() + int(l) + 6
+	l := len(rr.Target)+1
+	return rr.Hdr.Len() + l + 6
 }
 
 type RR_NAPTR struct {
@@ -475,8 +475,8 @@ func (rr *RR_DNAME) String() string {
 }
 
 func (rr *RR_DNAME) Len() int {
-	l, _ := IsDomainName(rr.Target)
-	return rr.Hdr.Len() + int(l)
+	l := len(rr.Target)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_A struct {
@@ -567,8 +567,8 @@ func (rr *RR_RRSIG) String() string {
 }
 
 func (rr *RR_RRSIG) Len() int {
-	l, _ := IsDomainName(rr.SignerName)
-	return rr.Hdr.Len() + int(l) + len(rr.Signature) + 18
+	l := len(rr.SignerName)+1
+	return rr.Hdr.Len() + l + len(rr.Signature) + 18
 	// base64 string, wordt iets minder dus
 }
 
@@ -595,8 +595,8 @@ func (rr *RR_NSEC) String() string {
 }
 
 func (rr *RR_NSEC) Len() int {
-	l, _ := IsDomainName(rr.NextDomain)
-	return rr.Hdr.Len() + int(l) + len(rr.TypeBitMap)
+	l := len(rr.NextDomain)+1
+	return rr.Hdr.Len() + l + len(rr.TypeBitMap)
 	// This is also shorter due to the windowing
 }
 
@@ -704,9 +704,7 @@ func (rr *RR_TALINK) String() string {
 }
 
 func (rr *RR_TALINK) Len() int {
-	l, _ := IsDomainName(rr.PreviousName)
-	n, _ := IsDomainName(rr.NextName)
-	return rr.Hdr.Len() + int(l) + int(n)
+	return rr.Hdr.Len() + len(rr.PreviousName) + len(rr.NextName) + 2
 }
 
 type RR_SSHFP struct {

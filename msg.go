@@ -463,6 +463,10 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing (size-)hex string")
 					return lenmsg, false
 				}
+                                if off+hex.DecodedLen(len(s)) > lenmsg {
+                                        // Overflow
+                                        return lenmsg, false
+                                }
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case "size":
@@ -976,7 +980,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Arcount = uint16(len(extra))
 
         // TODO: still too much, but better than 64K
-	msg = make([]byte, dns.Len()*8)
+	msg = make([]byte, dns.Len()*6)
 
 	// Pack it in: header and then the pieces.
 	off := 0
