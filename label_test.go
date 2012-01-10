@@ -37,5 +37,5 @@ func TestOffLabelFromRight(t *testing.T) {
         t.Log(offsetLabelFromRight(s1, 2))
         t.Log(offsetLabelFromRight(s1, 1))
         t.Log(offsetLabelFromRight(s1, 0))
-        t.Fail()
+//        t.Fail()
 }
