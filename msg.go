@@ -463,6 +463,10 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing (size-)hex string")
 					return lenmsg, false
 				}
+                                if off+hex.DecodedLen(len(s)) > lenmsg {
+                                        // Overflow
+                                        return lenmsg, false
+                                }
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case "size":
@@ -979,11 +983,8 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-        // TODO: fix this MG
-	// Could work harder to calculate message size,
-	// but this is far more than we need and not
-	// big enough to hurt the allocator.
-	msg = make([]byte, DefaultMsgSize) // TODO, calculate REAL size
+        // TODO: still too much, but better than 64K
+	msg = make([]byte, dns.Len()*6)
 
 	// Pack it in: header and then the pieces.
 	off := 0
@@ -1097,6 +1098,33 @@ func (dns *Msg) String() string {
 		}
 	}
 	return s
+}
+
+// Len return the message length (in uncompressed wirefmt).
+func (dns *Msg) Len() int {
+	// Message header is always 12 bytes       
+	l := 12
+	if len(dns.Question) > 0 {
+		for i := 0; i < len(dns.Question); i++ {
+			l += dns.Question[i].Len()
+		}
+	}
+	if len(dns.Answer) > 0 {
+		for i := 0; i < len(dns.Answer); i++ {
+			l += dns.Answer[i].Len()
+		}
+	}
+	if len(dns.Ns) > 0 {
+		for i := 0; i < len(dns.Ns); i++ {
+			l += dns.Ns[i].Len()
+		}
+	}
+	if len(dns.Extra) > 0 {
+		for i := 0; i < len(dns.Extra); i++ {
+			l += dns.Extra[i].Len()
+		}
+	}
+	return l
 }
 
 // Id return a 16 bits random number to be used as a

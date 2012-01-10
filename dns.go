@@ -91,6 +91,7 @@ func (e *Error) Error() string {
 type RR interface {
 	Header() *RR_Header
 	String() string
+	Len() int
 }
 
 // An RRset is a slice of RRs.
@@ -212,15 +213,21 @@ func (h *RR_Header) String() string {
 	return s
 }
 
+func (h *RR_Header) Len() int {
+        l := len(h.Name) + 1
+        l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
+        return l
+}
+
 func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
 	}
-        if len(zone) == 0 {
-                zone = "."
-        }
-        pattern = Fqdn(pattern)
-        zone = Fqdn(zone)
+	if len(zone) == 0 {
+		zone = "."
+	}
+	pattern = Fqdn(pattern)
+	zone = Fqdn(zone)
 	i := 0
 	for {
 		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]

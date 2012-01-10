@@ -136,11 +136,11 @@ type Question struct {
 
 func (q *Question) String() (s string) {
 	// prefix with ; (as in dig)
-        if len(q.Name) == 0 {
-	        s = ";.\t" // root label
-        } else {
-	        s = ";" + q.Name + "\t"
-        }
+	if len(q.Name) == 0 {
+		s = ";.\t" // root label
+	} else {
+		s = ";" + q.Name + "\t"
+	}
 	s = s + Class_str[q.Qclass] + "\t"
 	if _, ok := Rr_str[q.Qtype]; ok {
 		s += " " + Rr_str[q.Qtype]
@@ -148,6 +148,11 @@ func (q *Question) String() (s string) {
 		s += " " + "TYPE" + strconv.Itoa(int(q.Qtype))
 	}
 	return s
+}
+
+func (q *Question) Len() int {
+	l := len(q.Name)+1
+	return l + 4
 }
 
 type RR_ANY struct {
@@ -163,6 +168,10 @@ func (rr *RR_ANY) String() string {
 	return rr.Hdr.String()
 }
 
+func (rr *RR_ANY) Len() int {
+	return rr.Hdr.Len()
+}
+
 type RR_CNAME struct {
 	Hdr   RR_Header
 	Cname string "domain-name"
@@ -174,6 +183,11 @@ func (rr *RR_CNAME) Header() *RR_Header {
 
 func (rr *RR_CNAME) String() string {
 	return rr.Hdr.String() + rr.Cname
+}
+
+func (rr *RR_CNAME) Len() int {
+	l := len(rr.Cname)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_HINFO struct {
@@ -190,6 +204,10 @@ func (rr *RR_HINFO) String() string {
 	return rr.Hdr.String() + rr.Cpu + " " + rr.Os
 }
 
+func (rr *RR_HINFO) Len() int {
+	return rr.Hdr.Len() + len(rr.Cpu) + len(rr.Os)
+}
+
 type RR_MB struct {
 	Hdr RR_Header
 	Mb  string "domain-name"
@@ -203,6 +221,11 @@ func (rr *RR_MB) String() string {
 	return rr.Hdr.String() + rr.Mb
 }
 
+func (rr *RR_MB) Len() int {
+	l := len(rr.Mb)+1
+	return rr.Hdr.Len() + l
+}
+
 type RR_MG struct {
 	Hdr RR_Header
 	Mg  string "domain-name"
@@ -214,6 +237,11 @@ func (rr *RR_MG) Header() *RR_Header {
 
 func (rr *RR_MG) String() string {
 	return rr.Hdr.String() + rr.Mg
+}
+
+func (rr *RR_MG) Len() int {
+	l := len(rr.Mg)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_MINFO struct {
@@ -230,6 +258,12 @@ func (rr *RR_MINFO) String() string {
 	return rr.Hdr.String() + rr.Rmail + " " + rr.Email
 }
 
+func (rr *RR_MINFO) Len() int {
+	l := len(rr.Rmail)+1
+	n := len(rr.Email)+1
+	return rr.Hdr.Len() + l + n
+}
+
 type RR_MR struct {
 	Hdr RR_Header
 	Mr  string "domain-name"
@@ -241,6 +275,11 @@ func (rr *RR_MR) Header() *RR_Header {
 
 func (rr *RR_MR) String() string {
 	return rr.Hdr.String() + rr.Mr
+}
+
+func (rr *RR_MR) Len() int {
+	l := len(rr.Mr)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_MX struct {
@@ -257,6 +296,11 @@ func (rr *RR_MX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Pref)) + " " + rr.Mx
 }
 
+func (rr *RR_MX) Len() int {
+	l := len(rr.Mx)+1
+	return rr.Hdr.Len() + l + 2
+}
+
 type RR_NS struct {
 	Hdr RR_Header
 	Ns  string "domain-name"
@@ -270,6 +314,11 @@ func (rr *RR_NS) String() string {
 	return rr.Hdr.String() + rr.Ns
 }
 
+func (rr *RR_NS) Len() int {
+	l := len(rr.Ns)+1
+	return rr.Hdr.Len() + l
+}
+
 type RR_PTR struct {
 	Hdr RR_Header
 	Ptr string "domain-name"
@@ -281,6 +330,11 @@ func (rr *RR_PTR) Header() *RR_Header {
 
 func (rr *RR_PTR) String() string {
 	return rr.Hdr.String() + rr.Ptr
+}
+
+func (rr *RR_PTR) Len() int {
+	l := len(rr.Ptr)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_SOA struct {
@@ -307,6 +361,12 @@ func (rr *RR_SOA) String() string {
 		" " + strconv.Itoa(int(rr.Minttl))
 }
 
+func (rr *RR_SOA) Len() int {
+	l := len(rr.Ns)+1
+	n := len(rr.Mbox)+1
+	return rr.Hdr.Len() + l + n + 20
+}
+
 type RR_TXT struct {
 	Hdr RR_Header
 	Txt string "txt"
@@ -318,6 +378,10 @@ func (rr *RR_TXT) Header() *RR_Header {
 
 func (rr *RR_TXT) String() string {
 	return rr.Hdr.String() + "\"" + rr.Txt + "\""
+}
+
+func (rr *RR_TXT) Len() int {
+	return rr.Hdr.Len() + len(rr.Txt) // TODO: always works?
 }
 
 type RR_SRV struct {
@@ -337,6 +401,11 @@ func (rr *RR_SRV) String() string {
 		strconv.Itoa(int(rr.Priority)) + " " +
 		strconv.Itoa(int(rr.Weight)) + " " +
 		strconv.Itoa(int(rr.Port)) + " " + rr.Target
+}
+
+func (rr *RR_SRV) Len() int {
+	l := len(rr.Target)+1
+	return rr.Hdr.Len() + l + 6
 }
 
 type RR_NAPTR struct {
@@ -363,6 +432,10 @@ func (rr *RR_NAPTR) String() string {
 		rr.Replacement
 }
 
+func (rr *RR_NAPTR) Len() int {
+	return rr.Hdr.Len() + 0
+}
+
 // See RFC 4398.
 type RR_CERT struct {
 	Hdr         RR_Header
@@ -383,6 +456,10 @@ func (rr *RR_CERT) String() string {
 		" " + rr.Certificate
 }
 
+func (rr *RR_CERT) Len() int {
+	return rr.Hdr.Len() + 0
+}
+
 // See RFC 2672.
 type RR_DNAME struct {
 	Hdr    RR_Header
@@ -395,6 +472,11 @@ func (rr *RR_DNAME) Header() *RR_Header {
 
 func (rr *RR_DNAME) String() string {
 	return rr.Hdr.String() + rr.Target
+}
+
+func (rr *RR_DNAME) Len() int {
+	l := len(rr.Target)+1
+	return rr.Hdr.Len() + l
 }
 
 type RR_A struct {
@@ -410,6 +492,10 @@ func (rr *RR_A) String() string {
 	return rr.Hdr.String() + rr.A.String()
 }
 
+func (rr *RR_A) Len() int {
+	return rr.Hdr.Len() + 4 /// 4 bytes?
+}
+
 type RR_AAAA struct {
 	Hdr  RR_Header
 	AAAA net.IP "AAAA"
@@ -421,6 +507,10 @@ func (rr *RR_AAAA) Header() *RR_Header {
 
 func (rr *RR_AAAA) String() string {
 	return rr.Hdr.String() + rr.AAAA.String()
+}
+
+func (rr *RR_AAAA) Len() int {
+	return rr.Hdr.Len() + 16
 }
 
 type RR_LOC struct {
@@ -441,6 +531,10 @@ func (rr *RR_LOC) Header() *RR_Header {
 func (rr *RR_LOC) String() string {
 	// Version is not shown
 	return rr.Hdr.String() + "TODO"
+}
+
+func (rr *RR_LOC) Len() int {
+	return rr.Hdr.Len() + 0
 }
 
 type RR_RRSIG struct {
@@ -472,6 +566,12 @@ func (rr *RR_RRSIG) String() string {
 		" " + rr.Signature
 }
 
+func (rr *RR_RRSIG) Len() int {
+	l := len(rr.SignerName)+1
+	return rr.Hdr.Len() + l + len(rr.Signature) + 18
+	// base64 string, wordt iets minder dus
+}
+
 type RR_NSEC struct {
 	Hdr        RR_Header
 	NextDomain string   "domain-name"
@@ -494,6 +594,12 @@ func (rr *RR_NSEC) String() string {
 	return s
 }
 
+func (rr *RR_NSEC) Len() int {
+	l := len(rr.NextDomain)+1
+	return rr.Hdr.Len() + l + len(rr.TypeBitMap)
+	// This is also shorter due to the windowing
+}
+
 type RR_DS struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -511,6 +617,10 @@ func (rr *RR_DS) String() string {
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + strings.ToUpper(rr.Digest)
+}
+
+func (rr *RR_DS) Len() int {
+	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
 }
 
 type RR_DLV struct {
@@ -532,6 +642,10 @@ func (rr *RR_DLV) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
+func (rr *RR_DLV) Len() int {
+	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+}
+
 type RR_KX struct {
 	Hdr        RR_Header
 	Preference uint16
@@ -545,6 +659,10 @@ func (rr *RR_KX) Header() *RR_Header {
 func (rr *RR_KX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Exchanger
+}
+
+func (rr *RR_KX) Len() int {
+	return 0
 }
 
 type RR_TA struct {
@@ -566,6 +684,10 @@ func (rr *RR_TA) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
+func (rr *RR_TA) Len() int {
+	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+}
+
 type RR_TALINK struct {
 	Hdr          RR_Header
 	PreviousName string "domain"
@@ -579,6 +701,10 @@ func (rr *RR_TALINK) Header() *RR_Header {
 func (rr *RR_TALINK) String() string {
 	return rr.Hdr.String() +
 		" " + rr.PreviousName + " " + rr.NextName
+}
+
+func (rr *RR_TALINK) Len() int {
+	return rr.Hdr.Len() + len(rr.PreviousName) + len(rr.NextName) + 2
 }
 
 type RR_SSHFP struct {
@@ -598,6 +724,10 @@ func (rr *RR_SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
+func (rr *RR_SSHFP) Len() int {
+        return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
+}
+
 type RR_DNSKEY struct {
 	Hdr       RR_Header
 	Flags     uint16
@@ -615,6 +745,10 @@ func (rr *RR_DNSKEY) String() string {
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
+}
+
+func (rr *RR_DNSKEY) Len() int {
+        return rr.Hdr.Len() + 4 + len(rr.PublicKey)     // todo: base64
 }
 
 type RR_NSEC3 struct {
@@ -650,6 +784,11 @@ func (rr *RR_NSEC3) String() string {
 	return s
 }
 
+func (rr *RR_NSEC3) Len() int {
+        return rr.Hdr.Len() + 6 + len(rr.Salt)/2+1 + len(rr.NextDomain)+1 + len(rr.TypeBitMap)
+        // TODO: size-base32 and typebitmap
+}
+
 type RR_NSEC3PARAM struct {
 	Hdr        RR_Header
 	Hash       uint8
@@ -672,13 +811,8 @@ func (rr *RR_NSEC3PARAM) String() string {
 	return s
 }
 
-// saltString converts a NSECX salt to uppercase and
-// returns "-" when it is empty
-func saltString(s string) string {
-	if len(s) == 0 {
-		return "-"
-	}
-	return strings.ToUpper(s)
+func (rr *RR_NSEC3PARAM) Len() int {
+	return rr.Hdr.Len() + 0
 }
 
 // See RFC 4408.
@@ -693,6 +827,10 @@ func (rr *RR_SPF) Header() *RR_Header {
 
 func (rr *RR_SPF) String() string {
 	return rr.Hdr.String() + "\"" + rr.Txt + "\""
+}
+
+func (rr *RR_SPF) Len() int {
+	return rr.Hdr.Len() + 0
 }
 
 type RR_TKEY struct {
@@ -717,6 +855,10 @@ func (rr *RR_TKEY) String() string {
 	return ""
 }
 
+func (rr *RR_TKEY) Len() int {
+	return rr.Hdr.Len() + 0
+}
+
 // Unknown RR representation
 type RR_RFC3597 struct {
 	Hdr   RR_Header
@@ -731,6 +873,10 @@ func (rr *RR_RFC3597) String() string {
 	s := rr.Hdr.String()
 	s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
 	return s
+}
+
+func (rr *RR_RFC3597) Len() int {
+	return rr.Hdr.Len() + len(rr.Rdata)/2
 }
 
 type RR_URI struct {
@@ -750,6 +896,10 @@ func (rr *RR_URI) String() string {
 		" " + rr.Target
 }
 
+func (rr *RR_URI) Len() int {
+	return rr.Hdr.Len() + 0
+}
+
 type RR_DHCID struct {
 	Hdr    RR_Header
 	Digest string "base64"
@@ -761,6 +911,10 @@ func (rr *RR_DHCID) Header() *RR_Header {
 
 func (rr *RR_DHCID) String() string {
 	return rr.Hdr.String() + rr.Digest
+}
+
+func (rr *RR_DHCID) Len() int {
+        return rr.Hdr.Len() + 0
 }
 
 // RFC 2845.
@@ -795,11 +949,15 @@ func (rr *RR_TSIG) String() string {
 		" " + rr.OtherData
 }
 
+func (rr *RR_TSIG) Len() int {
+        return rr.Hdr.Len() + 0
+}
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982) [TODO]
 func timeToDate(t uint32) string {
-//	utc := time.Now().UTC().Unix()
-//	mod := (int64(t) - utc) / Year68
+	//	utc := time.Now().UTC().Unix()
+	//	mod := (int64(t) - utc) / Year68
 	ti := time.Unix(int64(t), 0).UTC()
 	return ti.Format("20060102150405")
 }
@@ -813,7 +971,7 @@ func dateToTime(s string) (uint32, error) {
 		return 0, e
 	}
 	mod := t.Unix() / Year68
-        ti := uint32(t.Unix() - (mod * Year68))
+	ti := uint32(t.Unix() - (mod * Year68))
 	return ti, nil
 }
 
@@ -826,6 +984,15 @@ func tsigTimeToDate(t uint64) string {
 		        ti := time.Unix(int64(t), 0).Unix()
 			return ti.Format("20060102150405")
 	*/
+}
+
+// saltString converts a NSECX salt to uppercase and
+// returns "-" when it is empty
+func saltString(s string) string {
+	if len(s) == 0 {
+		return "-"
+	}
+	return strings.ToUpper(s)
 }
 
 // Map of constructors for each RR wire type.
