@@ -26,7 +26,7 @@ type rawmove struct {
 	length int // used in calculating how much to shrink the message
 }
 
-// Compress performs name comression in the dns message contained in buf.
+// Compress performs name compression in the dns message contained in buf.
 // It returns the shortened buffer.
 func Compress(msg []byte) []byte {
 
@@ -39,6 +39,8 @@ func Compress(msg []byte) []byte {
 	// moves.
 	// TODO: Maybe it should be optimized.
 	// TODO: put this in the packRR function
+        // TODO: only compresses owner names, not the well known RR
+        // These all those defined in 1035, important ones: CNAME, MX, NS, PTR, SOA
 
 	// Map the labels to the offset in the message
 	table := make(map[string]int)
@@ -111,7 +113,7 @@ Loop:
 				break Loop
 			}
 			// If we are too deep in the message we cannot point to
-			// it, so skip this label.
+			// it, otherwise we can just save it.
 			if off < maxPointer {
 				l[i] = rawlabel{offset: off, name: string(msg[off : off+c+1])}
 				i++
