@@ -75,6 +75,10 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
+func (rr *RR_OPT) Len() int {
+        return rr.Hdr.Len() + len(rr.Option)     // TODO: to small/large?
+}
+
 // TODO(mg)
 // Get the EDNS version (always 0 currently).
 func (rr *RR_OPT) Version() uint8 {

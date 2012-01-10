@@ -1094,6 +1094,33 @@ func (dns *Msg) String() string {
 	return s
 }
 
+// Len return the message length (in uncompressed wirefmt).
+func (dns *Msg) Len() int {
+	// Message header is always 12 bytes       
+	l := 12
+	if len(dns.Question) > 0 {
+		for i := 0; i < len(dns.Question); i++ {
+			l += dns.Question[i].Len()
+		}
+	}
+	if len(dns.Answer) > 0 {
+		for i := 0; i < len(dns.Answer); i++ {
+			l += dns.Answer[i].Len()
+		}
+	}
+	if len(dns.Ns) > 0 {
+		for i := 0; i < len(dns.Ns); i++ {
+			l += dns.Ns[i].Len()
+		}
+	}
+	if len(dns.Extra) > 0 {
+		for i := 0; i < len(dns.Extra); i++ {
+			l += dns.Extra[i].Len()
+		}
+	}
+	return l
+}
+
 // Id return a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
 func Id() uint16 {
