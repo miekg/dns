@@ -975,10 +975,8 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	// Could work harder to calculate message size,
-	// but this is far more than we need and not
-	// big enough to hurt the allocator.
-	msg = make([]byte, DefaultMsgSize) // TODO, calculate REAL size
+        // TODO: still too much, but better than 64K
+	msg = make([]byte, dns.Len()*8)
 
 	// Pack it in: header and then the pieces.
 	off := 0
