@@ -4,10 +4,6 @@
 
 package dns
 
-import (
-	"fmt"
-)
-
 const maxPointer = 2 << 13 // We have 14 bits for the offset
 
 // Function defined in this subpackage work on []byte and but still
@@ -31,8 +27,8 @@ type rawmove struct {
 }
 
 // Compress performs name comression in the dns message contained in buf.
-// It returns the number of bytes saved.
-func Compress(msg []byte) int {
+// It returns the shortened buffer.
+func Compress(msg []byte) []byte {
 
 	// First we create a table of domain names to which we 
 	// can link. This is stored in 'table'
@@ -42,7 +38,7 @@ func Compress(msg []byte) int {
 	// traversed the entire message, we perform all the
 	// moves.
 	// TODO: Maybe it should be optimized.
-        // TODO: put this in the packRR function
+	// TODO: put this in the packRR function
 
 	// Map the labels to the offset in the message
 	table := make(map[string]int)
@@ -78,14 +74,14 @@ Loop:
 					//println("met lengte", len(name)+1)
 					// the +1 for the name is for the null byte at the end
 
-                                        // Discount for previous moves, decrease the poffset counter
-                                        // with moves that occur before it
-                                        for i := len(moves)-1; i >= 0; i-- {
-                                                if poffset > moves[i].from {
-                                                        poffset -= (moves[i].length - 2)
-                                                }
-                                        }
-                                        // Only need to shorten the RR when I'm shortening the rdata
+					// Discount for previous moves, decrease the poffset counter
+					// with moves that occur before it
+					for i := len(moves) - 1; i >= 0; i-- {
+						if poffset > moves[i].from {
+							poffset -= (moves[i].length - 2)
+						}
+					}
+					// Only need to shorten the RR when I'm shortening the rdata
 					moves = append(moves, rawmove{offset: poffset, from: moffset, length: len(name) + 1})
 				}
 
@@ -100,7 +96,7 @@ Loop:
 					// In the "body" of the msg
 					off += 2 + 2 + 4 + 1 // type, class, ttl + 1     
 					// we are at the rdlength
-                                        rdlength, _ := unpackUint16(msg, off)
+					rdlength, _ := unpackUint16(msg, off)
 					off += int(rdlength) + 1 // Skip the rdata
 				}
 				off++
@@ -132,14 +128,14 @@ Loop:
 	saved := 0
 	// Start at the back, easier to move
 	for i := len(moves) - 1; i >= 0; i-- {
-		fmt.Printf("%v\n", moves[i])
+		//	fmt.Printf("%v\n", moves[i])
 		// move the bytes
-                copy(msg[moves[i].from+1:], msg[moves[i].from+moves[i].length-1:])
+		copy(msg[moves[i].from+1:], msg[moves[i].from+moves[i].length-1:])
 		// Now set the pointer at moves[i].from and moves[i].from+1
-		fmt.Printf("bits %b\n", moves[i].offset^0xC000)
+		//	fmt.Printf("bits %b\n", moves[i].offset^0xC000)
 		msg[moves[i].from], msg[moves[i].from+1] = packUint16(uint16(moves[i].offset ^ 0xC000))
-		saved += moves[i].length // minus something
+		saved += (moves[i].length - 2) // minus something
 	}
-        msg = msg[:len(msg) - saved]
-	return saved
+	msg = msg[:len(msg)-saved]
+	return msg
 }

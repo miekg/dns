@@ -38,7 +38,7 @@ func main() {
 	}
         println(r.String())
         buf, _ := r.Pack()
-        dns.Compress(buf)
+        buf = dns.Compress(buf)
         r1 := new(dns.Msg)
         ok := r1.Unpack(buf)
         if ok {
