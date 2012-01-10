@@ -15,6 +15,7 @@ GOFILES=\
 	edns.go\
 	keygen.go\
 	kscan.go\
+	labels.go\
 	msg.go\
 	nsec3.go \
 	rawmsg.go \
