@@ -647,6 +647,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+                                if off+rdlength > lenmsg {
+                                        // too large
+                                        return lenmsg, false
+                                }
 				var consumed int
 				switch val.Type().Name() {
 				case "RR_DS":

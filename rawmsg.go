@@ -36,12 +36,13 @@ func Compress(msg []byte) int {
 
 	// First we create a table of domain names to which we 
 	// can link. This is stored in 'table'
-	// Once for another name the longest possible link is
+	// Once, for another name, the longest possible link is
 	// found we save how we must change msg to perform this
 	// compression. This is saved in 'moves'. After we
 	// traversed the entire message, we perform all the
 	// moves.
 	// TODO: Maybe it should be optimized.
+        // TODO: put this in the packRR function
 
 	// Map the labels to the offset in the message
 	table := make(map[string]int)
@@ -77,14 +78,14 @@ Loop:
 					//println("met lengte", len(name)+1)
 					// the +1 for the name is for the null byte at the end
 
-                                        // Discount for previous moves, reset the poffset counter
+                                        // Discount for previous moves, decrease the poffset counter
+                                        // with moves that occur before it
                                         for i := len(moves)-1; i >= 0; i-- {
                                                 if poffset > moves[i].from {
                                                         poffset -= (moves[i].length - 2)
                                                 }
                                         }
-
-                                        // need to shorten the rdlength in the RR too!
+                                        // Only need to shorten the RR when I'm shortening the rdata
 					moves = append(moves, rawmove{offset: poffset, from: moffset, length: len(name) + 1})
 				}
 
@@ -99,7 +100,7 @@ Loop:
 					// In the "body" of the msg
 					off += 2 + 2 + 4 + 1 // type, class, ttl + 1     
 					// we are at the rdlength
-					rdlength, _ := unpackUint16(msg, off)
+                                        rdlength, _ := unpackUint16(msg, off)
 					off += int(rdlength) + 1 // Skip the rdata
 				}
 				off++
@@ -139,5 +140,6 @@ Loop:
 		msg[moves[i].from], msg[moves[i].from+1] = packUint16(uint16(moves[i].offset ^ 0xC000))
 		saved += moves[i].length // minus something
 	}
+        msg = msg[:len(msg) - saved]
 	return saved
 }
