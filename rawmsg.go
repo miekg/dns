@@ -4,6 +4,10 @@
 
 package dns
 
+import (
+        "fmt"
+)
+
 const maxPointer = 2 << 13 // We have 14 bits for the offset
 
 // Function defined in this subpackage work on []byte and but still
@@ -96,6 +100,12 @@ Loop:
 					// How to handle well known records here
 					// NS, MX, CNAME? eatName() function?
 					// In the "body" of the msg
+                                        t, _ := unpackUint16(msg, off+1)
+                                        switch t {
+                                        case TypeMX:
+                                                println("MX")
+                                                // get the labels n check
+                                        }
 					off += 2 + 2 + 4 + 1 // type, class, ttl + 1     
 					// we are at the rdlength
 					rdlength, _ := unpackUint16(msg, off)
@@ -130,11 +140,11 @@ Loop:
 	saved := 0
 	// Start at the back, easier to move
 	for i := len(moves) - 1; i >= 0; i-- {
-		//	fmt.Printf("%v\n", moves[i])
+			fmt.Printf("%v\n", moves[i])
 		// move the bytes
 		copy(msg[moves[i].from+1:], msg[moves[i].from+moves[i].length-1:])
 		// Now set the pointer at moves[i].from and moves[i].from+1
-		//	fmt.Printf("bits %b\n", moves[i].offset^0xC000)
+			fmt.Printf("bits %b\n", moves[i].offset^0xC000)
 		msg[moves[i].from], msg[moves[i].from+1] = packUint16(uint16(moves[i].offset ^ 0xC000))
 		saved += (moves[i].length - 2) // minus something
 	}
