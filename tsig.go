@@ -161,7 +161,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
 		macbuf = make([]byte, len(requestMAC)) // reqmac should be twice as long
-		n, _ := packStruct(m, macbuf, 0)
+		n, _ := packStruct(m, macbuf, 0, nil)
 		macbuf = macbuf[:n]
 	}
 
@@ -170,7 +170,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig := new(timerWireFmt)
 		tsig.TimeSigned = rr.TimeSigned
 		tsig.Fudge = rr.Fudge
-		n, _ := packStruct(tsig, tsigvar, 0)
+		n, _ := packStruct(tsig, tsigvar, 0, nil)
 		tsigvar = tsigvar[:n]
 	} else {
 		tsig := new(tsigWireFmt)
@@ -183,7 +183,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig.Error = rr.Error
 		tsig.OtherLen = rr.OtherLen
 		tsig.OtherData = rr.OtherData
-		n, _ := packStruct(tsig, tsigvar, 0)
+		n, _ := packStruct(tsig, tsigvar, 0, nil)
 		tsigvar = tsigvar[:n]
 	}
 	if rr.MAC != "" {

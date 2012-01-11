@@ -18,12 +18,15 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
 	"strconv"
 	"time"
 )
+
+const MaxCompressionOffset = 2 << 13    // We have 14 bits for the compression pointer
 
 var (
 	ErrUnpack    error = &Error{Err: "unpacking failed"}
@@ -174,7 +177,7 @@ var Rcode_str = map[int]string{
 // PackDomainName packs a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
-func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
+func PackDomainName(s string, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
@@ -211,11 +214,21 @@ func PackDomainName(s string, msg []byte, off int) (off1 int, ok bool) {
 				return lenmsg, false
 			}
 			msg[off] = byte(i - begin)
+                        offset := off
 			off++
 			for j := begin; j < i; j++ {
 				msg[off] = bs[j]
 				off++
 			}
+                        str, _, ok := UnpackDomainName(msg, offset)
+                        if !ok {
+                                // hmmm how can this be?
+                        }
+                        if compression != nil {
+                                if _, ok := compression[str]; !ok {
+                                        compression[str] = offset
+                                }
+                        }
 			begin = i + 1
 		}
 	}
@@ -303,7 +316,7 @@ Loop:
 
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
 // slices and other (often anonymous) structs.
-func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
+func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
 		//		f := val.Type().Field(i)
 		lenmsg := len(msg)
@@ -382,7 +395,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				// TODO(mg)
 			}
 		case reflect.Struct:
-			off, ok = packStructValue(fv, msg, off)
+			off, ok = packStructValue(fv, msg, off, compression)
 		case reflect.Uint8:
 			if off+1 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
@@ -449,7 +462,7 @@ func packStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool)
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case "domain-name":
-				off, ok = PackDomainName(s, msg, off)
+				off, ok = PackDomainName(s, msg, off, compression)
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
 					return lenmsg, false
@@ -500,8 +513,8 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
-func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
-	off, ok = packStructValue(structValue(any), msg, off)
+func packStruct(any interface{}, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
+	off, ok = packStructValue(structValue(any), msg, off, compression)
 	return off, ok
 }
 
@@ -829,7 +842,7 @@ func packBase32(s []byte) ([]byte, error) {
 }
 
 // Resource record packer.
-func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
+func packRR(rr RR, msg []byte, off int, compression map[string]int) (off2 int, ok bool) {
 	if rr == nil {
 		return len(msg), false
 	}
@@ -840,15 +853,15 @@ func packRR(rr RR, msg []byte, off int) (off2 int, ok bool) {
 	// a bit inefficient but this doesn't need to be fast.
 	// off1 is end of header
 	// off2 is end of rr
-	off1, ok = packStruct(rr.Header(), msg, off)
-	off2, ok = packStruct(rr, msg, off)
+	off1, ok = packStruct(rr.Header(), msg, off, compression)
+	off2, ok = packStruct(rr, msg, off, compression)
 	if !ok {
 		return len(msg), false
 	}
 
 	// pack a third time; redo header with correct data length
 	rr.Header().Rdlength = uint16(off2 - off1)
-	packStruct(rr.Header(), msg, off)
+	packStruct(rr.Header(), msg, off, compression)
 	return off2, true
 	//	rr.Header().Rdlength = uint16(off2 - off1)
 	//	if !rr.Header().RawSetRdlength(msg, off) {
@@ -943,6 +956,7 @@ func (h *MsgHdr) String() string {
 // Pack a msg: convert it to wire format.
 func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header
+        compression := make(map[string]int)     // Compression pointer mappings
 
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
@@ -988,26 +1002,27 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, ok = packStruct(&dh, msg, off)
+	off, ok = packStruct(&dh, msg, off, compression)
 	for i := 0; i < len(question); i++ {
-		off, ok = packStruct(&question[i], msg, off)
+		off, ok = packStruct(&question[i], msg, off, compression)
 		//                println("Question", off)
 	}
 	for i := 0; i < len(answer); i++ {
-		off, ok = packRR(answer[i], msg, off)
+		off, ok = packRR(answer[i], msg, off, compression)
 		//               println("Answer", off)
 	}
 	for i := 0; i < len(ns); i++ {
-		off, ok = packRR(ns[i], msg, off)
+		off, ok = packRR(ns[i], msg, off, compression)
 		//                println("Authority", off)
 	}
 	for i := 0; i < len(extra); i++ {
-		off, ok = packRR(extra[i], msg, off)
+		off, ok = packRR(extra[i], msg, off, compression)
 		//                println("Additional", off)
 	}
 	if !ok {
 		return nil, false
 	}
+        fmt.Printf("**%v\n", compression)
 	return msg[:off], true
 }
 

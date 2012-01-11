@@ -17,13 +17,13 @@ func HashName(label string, ha, iter int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
-	n, ok := packStruct(saltwire, wire, 0)
+	n, ok := packStruct(saltwire, wire, 0, nil)
 	if !ok {
 		return ""
 	}
 	wire = wire[:n]
 	name := make([]byte, 255)
-	off, ok1 := PackDomainName(strings.ToLower(label), name, 0)
+	off, ok1 := PackDomainName(strings.ToLower(label), name, 0, nil)
 	if !ok1 {
 		return ""
 	}
