@@ -239,7 +239,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
-                                                println("Compressing:", string(bs[begin:]))
+//                                                println("Compressing:", string(bs[begin:]))
 					}
 				}
 			}
