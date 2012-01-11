@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"net"
 	"testing"
 )
 
@@ -40,6 +41,29 @@ func TestPackUnpack(t *testing.T) {
 	if !in.Unpack(msg) {
 		t.Log("Failed to unpack msg with RRSIG")
 		t.Fail()
+	}
+}
+
+func TestPackUnpack2(t *testing.T) {
+	m := new(Msg)
+	m.Extra = make([]RR, 1)
+	m.Answer = make([]RR, 1)
+        dom := "miek.nl."
+        rr := new(RR_A)
+	rr.Hdr = RR_Header{Name: dom, Rrtype: TypeA, Class: ClassINET, Ttl: 0}
+	rr.A = net.IPv4(127, 0, 0, 1)
+
+	x := new(RR_TXT)
+	x.Hdr = RR_Header{Name: dom, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}
+	x.Txt = "heelalaollo"
+
+	m.Extra[0] = x
+	m.Answer[0] = rr
+	_, ok := m.Pack()
+	if !ok {
+		t.Log("Packing failed")
+		t.Fail()
+		return
 	}
 }
 

@@ -375,7 +375,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				switch fv.Len() {
 				case net.IPv6len:
 					if off+net.IPv4len > lenmsg {
-						println("dns: overflow packing A")
+						println("dns: overflow packing A", off, lenmsg)
 						return lenmsg, false
 					}
 					msg[off] = byte(fv.Index(12).Uint())
@@ -385,7 +385,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off += net.IPv4len
 				case net.IPv4len:
 					if off+net.IPv4len > lenmsg {
-						println("dns: overflow packing A")
+						println("dns: overflow packing A", off, lenmsg)
 						return lenmsg, false
 					}
 					msg[off] = byte(fv.Index(0).Uint())
@@ -1014,7 +1014,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Arcount = uint16(len(extra))
 
 	// TODO: still a little too much, but better than 64K...
-	msg = make([]byte, dns.Len()*2)
+	msg = make([]byte, dns.Len())
 
 	// Pack it in: header and then the pieces.
 	off := 0

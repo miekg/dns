@@ -494,7 +494,7 @@ func (rr *RR_A) String() string {
 }
 
 func (rr *RR_A) Len() int {
-	return rr.Hdr.Len() + 4 /// 4 bytes?
+	return rr.Hdr.Len() + net.IPv4len
 }
 
 type RR_AAAA struct {
@@ -511,7 +511,7 @@ func (rr *RR_AAAA) String() string {
 }
 
 func (rr *RR_AAAA) Len() int {
-	return rr.Hdr.Len() + 16
+	return rr.Hdr.Len() + net.IPv6len
 }
 
 type RR_LOC struct {

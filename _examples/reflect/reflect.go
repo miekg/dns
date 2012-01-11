@@ -69,7 +69,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	m.Extra[0] = t
 	m.Answer[0] = rr
 	b, ok := m.Pack()
-	if !ok {
+        if !ok {
                 log.Print("Packing failed")
 		return
 	}
