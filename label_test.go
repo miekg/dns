@@ -28,3 +28,14 @@ func TestCompareLabels(t *testing.T) {
                 t.Fail()
         }
 }
+
+func TestOffLabelFromRight(t *testing.T) {
+        s1 := "www.miek.nl" // fqdn??
+
+        t.Log(offsetLabelFromRight(s1, 4))
+        t.Log(offsetLabelFromRight(s1, 3))
+        t.Log(offsetLabelFromRight(s1, 2))
+        t.Log(offsetLabelFromRight(s1, 1))
+        t.Log(offsetLabelFromRight(s1, 0))
+//        t.Fail()
+}
