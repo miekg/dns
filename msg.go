@@ -181,8 +181,9 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-		return lenmsg, false // This is an error, should be fqdn
-		//		s += "."
+                //println("hier? s", s)
+		//return lenmsg, false // This is an error, should be fqdn
+		s += "."
 	}
 
 	// Each dot ends a segment of the name.
@@ -490,7 +491,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off, ok = PackDomainName(s, msg, off, compression, false && compress)
 				}
 				if !ok {
-					println("dns: overflow packing domain-name")
+					println("dns: overflow packing domain-name", off)
 					return lenmsg, false
 				}
 			case "size-hex":
@@ -1014,7 +1015,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Arcount = uint16(len(extra))
 
 	// TODO: still a little too much, but better than 64K...
-	msg = make([]byte, dns.Len())
+	msg = make([]byte, dns.Len()*2)
 
 	// Pack it in: header and then the pieces.
 	off := 0
