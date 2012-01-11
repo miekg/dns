@@ -24,7 +24,7 @@ func SplitLabels(s string) []string {
 
 // CompareLabels compares the strings s1 and s2 and
 // returns how many labels they have in common starting from the right.
-// The comparison stops at the first inequality
+// The comparison stops at the first inequality.
 //
 // www.miek.nl and miek.nl have two labels in common: miek and nl
 // www.miek.nl and www.bla.nl have one label in common: nl
@@ -47,20 +47,4 @@ func CompareLabels(s1, s2 string) (n int) {
 		x2--
 	}
 	return
-}
-
-// This function is needed for easy handling of compression 
-// pointers
-// www.miek.nl, 2, gives that start of miek.nl (which is
-// 2 labels from the right)
-// labeloffset of zero is fishy as is a labeloffset larger
-// than the number of labels... TODO: make it an error?
-func offsetLabelFromRight(s string, labeloffset int) int {
-	l := SplitLabels(s)
-	fromleft := len(l) - labeloffset
-	off := 0
-	for i := 0; i < fromleft; i++ {
-		off += len(l[i]) + 1
-	}
-	return off
 }
