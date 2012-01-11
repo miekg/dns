@@ -1020,8 +1020,8 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	// TODO: still too much, but better than 64K
-	msg = make([]byte, dns.Len()*4)
+	// TODO: still a little too much, but better than 64K...
+	msg = make([]byte, dns.Len())
 
 	// Pack it in: header and then the pieces.
 	off := 0
