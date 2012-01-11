@@ -129,7 +129,7 @@ const (
 
 // DNS queries.
 type Question struct {
-	Name   string "domain-name" // "domain-name" specifies encoding
+	Name   string "cdomain-name" // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
 	Qclass uint16
 }
@@ -174,7 +174,7 @@ func (rr *RR_ANY) Len() int {
 
 type RR_CNAME struct {
 	Hdr   RR_Header
-	Cname string "domain-name"
+	Cname string "cdomain-name"
 }
 
 func (rr *RR_CNAME) Header() *RR_Header {
@@ -210,7 +210,7 @@ func (rr *RR_HINFO) Len() int {
 
 type RR_MB struct {
 	Hdr RR_Header
-	Mb  string "domain-name"
+	Mb  string "cdomain-name"
 }
 
 func (rr *RR_MB) Header() *RR_Header {
@@ -228,7 +228,7 @@ func (rr *RR_MB) Len() int {
 
 type RR_MG struct {
 	Hdr RR_Header
-	Mg  string "domain-name"
+	Mg  string "cdomain-name"
 }
 
 func (rr *RR_MG) Header() *RR_Header {
@@ -246,8 +246,8 @@ func (rr *RR_MG) Len() int {
 
 type RR_MINFO struct {
 	Hdr   RR_Header
-	Rmail string "domain-name"
-	Email string "domain-name"
+	Rmail string "cdomain-name"
+	Email string "cdomain-name"
 }
 
 func (rr *RR_MINFO) Header() *RR_Header {
@@ -266,7 +266,7 @@ func (rr *RR_MINFO) Len() int {
 
 type RR_MR struct {
 	Hdr RR_Header
-	Mr  string "domain-name"
+	Mr  string "cdomain-name"
 }
 
 func (rr *RR_MR) Header() *RR_Header {
@@ -285,7 +285,7 @@ func (rr *RR_MR) Len() int {
 type RR_MX struct {
 	Hdr  RR_Header
 	Pref uint16
-	Mx   string "domain-name"
+	Mx   string "cdomain-name"
 }
 
 func (rr *RR_MX) Header() *RR_Header {
@@ -303,7 +303,7 @@ func (rr *RR_MX) Len() int {
 
 type RR_NS struct {
 	Hdr RR_Header
-	Ns  string "domain-name"
+	Ns  string "cdomain-name"
 }
 
 func (rr *RR_NS) Header() *RR_Header {
@@ -321,7 +321,7 @@ func (rr *RR_NS) Len() int {
 
 type RR_PTR struct {
 	Hdr RR_Header
-	Ptr string "domain-name"
+	Ptr string "cdomain-name"
 }
 
 func (rr *RR_PTR) Header() *RR_Header {
@@ -339,8 +339,8 @@ func (rr *RR_PTR) Len() int {
 
 type RR_SOA struct {
 	Hdr     RR_Header
-	Ns      string "domain-name"
-	Mbox    string "domain-name"
+	Ns      string "cdomain-name"
+	Mbox    string "cdomain-name"
 	Serial  uint32
 	Refresh uint32
 	Retry   uint32

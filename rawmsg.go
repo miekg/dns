@@ -4,10 +4,6 @@
 
 package dns
 
-import (
-        "fmt"
-)
-
 // Function defined in this subpackage work on []byte and but still
 // provide some higher level functions.
 

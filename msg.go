@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-const MaxCompressionOffset = 2 << 13    // We have 14 bits for the compression pointer
+const MaxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
 	ErrUnpack    error = &Error{Err: "unpacking failed"}
@@ -214,21 +214,21 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 				return lenmsg, false
 			}
 			msg[off] = byte(i - begin)
-                        offset := off
+			offset := off
 			off++
 			for j := begin; j < i; j++ {
 				msg[off] = bs[j]
 				off++
 			}
-                        str, _, ok := UnpackDomainName(msg, offset)
-                        if !ok {
-                                // hmmm how can this be?
-                        }
-                        if compression != nil {
-                                if _, ok := compression[str]; !ok {
-                                        compression[str] = offset
-                                }
-                        }
+			str, _, ok := UnpackDomainName(msg, offset)
+			if !ok {
+				// hmmm how can this be?
+			}
+			if compression != nil {
+				if _, ok := compression[str]; !ok {
+					compression[str] = offset
+				}
+			}
 			begin = i + 1
 		}
 	}
@@ -462,7 +462,13 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case "domain-name":
-				off, ok = PackDomainName(s, msg, off, compression)
+				fallthrough // No compression
+			case "cdomain-name":
+				if val.Type().Field(i).Tag == "cdomain-name" {
+					off, ok = PackDomainName(s, msg, off, compression)
+				} else {
+					off, ok = PackDomainName(s, msg, off, nil)
+				}
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
 					return lenmsg, false
@@ -476,10 +482,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing (size-)hex string")
 					return lenmsg, false
 				}
-                                if off+hex.DecodedLen(len(s)) > lenmsg {
-                                        // Overflow
-                                        return lenmsg, false
-                                }
+				if off+hex.DecodedLen(len(s)) > lenmsg {
+					// Overflow
+					return lenmsg, false
+				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case "size":
@@ -664,10 +670,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-                                if off+rdlength > lenmsg {
-                                        // too large
-                                        return lenmsg, false
-                                }
+				if off+rdlength > lenmsg {
+					// too large
+					return lenmsg, false
+				}
 				var consumed int
 				switch val.Type().Name() {
 				case "RR_DS":
@@ -956,7 +962,7 @@ func (h *MsgHdr) String() string {
 // Pack a msg: convert it to wire format.
 func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header
-        compression := make(map[string]int)     // Compression pointer mappings
+	compression := make(map[string]int) // Compression pointer mappings
 
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
@@ -997,7 +1003,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-        // TODO: still too much, but better than 64K
+	// TODO: still too much, but better than 64K
 	msg = make([]byte, dns.Len()*6)
 
 	// Pack it in: header and then the pieces.
@@ -1022,7 +1028,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	if !ok {
 		return nil, false
 	}
-        fmt.Printf("**%v\n", compression)
+	fmt.Printf("**%v\n", compression)
 	return msg[:off], true
 }
 
