@@ -234,10 +234,12 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					// keep the pointer offset we get back and store
 					// the offset of the current name, because that's
 					// where we need to insert the pointer later
-                                        // If compress is true, we allowed to compress this dname
+
+                                        // If compress is true, we're  allowed to compress this dname
 					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
+                                                println("Compressing:", string(bs[begin:]))
 					}
 				}
 			}
