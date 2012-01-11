@@ -91,7 +91,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		keywire.Algorithm = k.Algorithm
 		keywire.PublicKey = k.PublicKey
 		wire := make([]byte, DefaultMsgSize)
-		n, ok := packStruct(keywire, wire, 0, nil, false)
+		n, ok := packStruct(keywire, wire, 0)
 		if !ok {
 			return 0
 		}
@@ -126,7 +126,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	keywire.Algorithm = k.Algorithm
 	keywire.PublicKey = k.PublicKey
 	wire := make([]byte, DefaultMsgSize)
-	n, ok := packStruct(keywire, wire, 0, nil, false)
+	n, ok := packStruct(keywire, wire, 0)
 	if !ok {
 		return nil
 	}
@@ -205,7 +205,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
-	n, ok := packStruct(sigwire, signdata, 0, nil, false)
+	n, ok := packStruct(sigwire, signdata, 0)
 	if !ok {
 		return ErrPack
 	}
@@ -300,7 +300,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
 	sigwire.SignerName = strings.ToLower(s.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
-	n, ok := packStruct(sigwire, signeddata, 0, nil, false)
+	n, ok := packStruct(sigwire, signeddata, 0)
 	if !ok {
 		return ErrPack
 	}

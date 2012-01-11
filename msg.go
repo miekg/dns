@@ -542,7 +542,13 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
-func packStruct(any interface{}, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
+func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+	off, ok = packStructValue(structValue(any), msg, off, nil, false)
+	return off, ok
+}
+
+
+func packStructCompress(any interface{}, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	off, ok = packStructValue(structValue(any), msg, off, compression, compress)
 	return off, ok
 }
@@ -878,7 +884,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), false
 	}
 
-	off1, ok = packStruct(rr, msg, off, compression, compress)
+	off1, ok = packStructCompress(rr, msg, off, compression, compress)
 	if !ok {
 		return len(msg), false
 	}
@@ -1019,9 +1025,9 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, ok = packStruct(&dh, msg, off, compression, dns.Compress)
+	off, ok = packStructCompress(&dh, msg, off, compression, dns.Compress)
 	for i := 0; i < len(question); i++ {
-		off, ok = packStruct(&question[i], msg, off, compression, dns.Compress)
+		off, ok = packStructCompress(&question[i], msg, off, compression, dns.Compress)
 		//                println("Question", off)
 	}
 	for i := 0; i < len(answer); i++ {
