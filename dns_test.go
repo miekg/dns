@@ -18,7 +18,6 @@ func TestPackUnpack(t *testing.T) {
 		t.Log("Failed to pack msg with DNSKEY")
 		t.Fail()
 	}
-
 	in := new(Msg)
 	if !in.Unpack(msg) {
 		t.Log("Failed to unpack msg with DNSKEY")

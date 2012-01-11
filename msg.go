@@ -222,11 +222,12 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 				msg[off] = bs[j]
 				off++
 			}
-			if compression != nil {
-                                if p, ok := compression[string(bs[begin:])]; !ok {
+                        // Dont try to compress '.'
+                        if string(bs[begin:]) != "." && compression != nil {
+				if p, ok := compression[string(bs[begin:])]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
-                                                compression[string(bs[begin:])] = offset
+						compression[string(bs[begin:])] = offset
 					}
 				} else {
 					// The first hit is the longest matching dname
@@ -250,10 +251,11 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
-		off = nameoffset + 2
-		return off, true
+		off = nameoffset + 1
+		goto End
 	}
 	msg[off] = 0
+End:
 	off++
 	return off, true
 }
@@ -725,11 +727,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
-                        case "cdomain-name": fallthrough
+			case "cdomain-name":
+				fallthrough
 			case "domain-name":
 				s, off, ok = UnpackDomainName(msg, off)
 				if !ok {
-					//fmt.Fprintf(os.Stderr, "dns: failure unpacking domain-name")
+					//println("dns: failure unpacking domain-name")
 					return lenmsg, false
 				}
 			case "size-base32":
@@ -866,31 +869,17 @@ func packBase32(s []byte) ([]byte, error) {
 }
 
 // Resource record packer.
-func packRR(rr RR, msg []byte, off int, compression map[string]int) (off2 int, ok bool) {
+func packRR(rr RR, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
 	if rr == nil {
 		return len(msg), false
 	}
 
-	var off1 int
-	// pack twice, once to find end of header
-	// and again to find end of packet.
-	// a bit inefficient but this doesn't need to be fast.
-	// off1 is end of header
-	// off2 is end of rr
-	off1, ok = packStruct(rr.Header(), msg, off, compression)
-	off2, ok = packStruct(rr, msg, off, compression)
+	off1, ok = packStruct(rr, msg, off, compression)
 	if !ok {
 		return len(msg), false
 	}
-
-	// pack a third time; redo header with correct data length
-	rr.Header().Rdlength = uint16(off2 - off1)
-	packStruct(rr.Header(), msg, off, compression)
-	return off2, true
-	//	rr.Header().Rdlength = uint16(off2 - off1)
-	//	if !rr.Header().RawSetRdlength(msg, off) {
-	//		return len(msg), false
-	//	}
+        RawSetRdLength(msg, off, off1)
+	return off1, true
 }
 
 // Resource record unpacker.

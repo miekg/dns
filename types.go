@@ -434,7 +434,7 @@ func (rr *RR_NAPTR) String() string {
 
 func (rr *RR_NAPTR) Len() int {
 	return rr.Hdr.Len() + 4 + len(rr.Flags) + len(rr.Service) +
-                len(rr.Regexp) + len(rr.Replacement)+1
+		len(rr.Regexp) + len(rr.Replacement) + 1
 }
 
 // See RFC 4398.
@@ -568,9 +568,8 @@ func (rr *RR_RRSIG) String() string {
 }
 
 func (rr *RR_RRSIG) Len() int {
-	l := len(rr.SignerName) + 1
-	return rr.Hdr.Len() + l + len(rr.Signature) + 18
-	// base64 string, wordt iets minder dus
+	return rr.Hdr.Len() + len(rr.SignerName) + 1 + len(rr.Signature) + 18
+	// TODO base64 string, should be less
 }
 
 type RR_NSEC struct {
@@ -813,7 +812,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 }
 
 func (rr *RR_NSEC3PARAM) Len() int {
-	return rr.Hdr.Len() + 2+4+1 + len(rr.Salt)/2
+	return rr.Hdr.Len() + 2 + 4 + 1 + len(rr.Salt)/2
 }
 
 // See RFC 4408.
@@ -857,8 +856,8 @@ func (rr *RR_TKEY) String() string {
 }
 
 func (rr *RR_TKEY) Len() int {
-	return rr.Hdr.Len() + len(rr.Algorithm)+1+4+4+6+
-        len(rr.Key) + 2 + len(rr.OtherData)
+	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
+		len(rr.Key) + 2 + len(rr.OtherData)
 }
 
 // Unknown RR representation
