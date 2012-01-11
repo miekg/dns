@@ -151,7 +151,7 @@ func (q *Question) String() (s string) {
 }
 
 func (q *Question) Len() int {
-	l := len(q.Name)+1
+	l := len(q.Name) + 1
 	return l + 4
 }
 
@@ -186,7 +186,7 @@ func (rr *RR_CNAME) String() string {
 }
 
 func (rr *RR_CNAME) Len() int {
-	l := len(rr.Cname)+1
+	l := len(rr.Cname) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -222,7 +222,7 @@ func (rr *RR_MB) String() string {
 }
 
 func (rr *RR_MB) Len() int {
-	l := len(rr.Mb)+1
+	l := len(rr.Mb) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -240,7 +240,7 @@ func (rr *RR_MG) String() string {
 }
 
 func (rr *RR_MG) Len() int {
-	l := len(rr.Mg)+1
+	l := len(rr.Mg) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -259,8 +259,8 @@ func (rr *RR_MINFO) String() string {
 }
 
 func (rr *RR_MINFO) Len() int {
-	l := len(rr.Rmail)+1
-	n := len(rr.Email)+1
+	l := len(rr.Rmail) + 1
+	n := len(rr.Email) + 1
 	return rr.Hdr.Len() + l + n
 }
 
@@ -278,7 +278,7 @@ func (rr *RR_MR) String() string {
 }
 
 func (rr *RR_MR) Len() int {
-	l := len(rr.Mr)+1
+	l := len(rr.Mr) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -297,7 +297,7 @@ func (rr *RR_MX) String() string {
 }
 
 func (rr *RR_MX) Len() int {
-	l := len(rr.Mx)+1
+	l := len(rr.Mx) + 1
 	return rr.Hdr.Len() + l + 2
 }
 
@@ -315,7 +315,7 @@ func (rr *RR_NS) String() string {
 }
 
 func (rr *RR_NS) Len() int {
-	l := len(rr.Ns)+1
+	l := len(rr.Ns) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -333,7 +333,7 @@ func (rr *RR_PTR) String() string {
 }
 
 func (rr *RR_PTR) Len() int {
-	l := len(rr.Ptr)+1
+	l := len(rr.Ptr) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -362,8 +362,8 @@ func (rr *RR_SOA) String() string {
 }
 
 func (rr *RR_SOA) Len() int {
-	l := len(rr.Ns)+1
-	n := len(rr.Mbox)+1
+	l := len(rr.Ns) + 1
+	n := len(rr.Mbox) + 1
 	return rr.Hdr.Len() + l + n + 20
 }
 
@@ -404,7 +404,7 @@ func (rr *RR_SRV) String() string {
 }
 
 func (rr *RR_SRV) Len() int {
-	l := len(rr.Target)+1
+	l := len(rr.Target) + 1
 	return rr.Hdr.Len() + l + 6
 }
 
@@ -433,7 +433,8 @@ func (rr *RR_NAPTR) String() string {
 }
 
 func (rr *RR_NAPTR) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + 4 + len(rr.Flags) + len(rr.Service) +
+                len(rr.Regexp) + len(rr.Replacement)+1
 }
 
 // See RFC 4398.
@@ -457,7 +458,7 @@ func (rr *RR_CERT) String() string {
 }
 
 func (rr *RR_CERT) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + 5 + len(rr.Certificate) //too much for base64
 }
 
 // See RFC 2672.
@@ -475,7 +476,7 @@ func (rr *RR_DNAME) String() string {
 }
 
 func (rr *RR_DNAME) Len() int {
-	l := len(rr.Target)+1
+	l := len(rr.Target) + 1
 	return rr.Hdr.Len() + l
 }
 
@@ -534,7 +535,7 @@ func (rr *RR_LOC) String() string {
 }
 
 func (rr *RR_LOC) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + 4 + 12
 }
 
 type RR_RRSIG struct {
@@ -567,7 +568,7 @@ func (rr *RR_RRSIG) String() string {
 }
 
 func (rr *RR_RRSIG) Len() int {
-	l := len(rr.SignerName)+1
+	l := len(rr.SignerName) + 1
 	return rr.Hdr.Len() + l + len(rr.Signature) + 18
 	// base64 string, wordt iets minder dus
 }
@@ -595,7 +596,7 @@ func (rr *RR_NSEC) String() string {
 }
 
 func (rr *RR_NSEC) Len() int {
-	l := len(rr.NextDomain)+1
+	l := len(rr.NextDomain) + 1
 	return rr.Hdr.Len() + l + len(rr.TypeBitMap)
 	// This is also shorter due to the windowing
 }
@@ -725,7 +726,7 @@ func (rr *RR_SSHFP) String() string {
 }
 
 func (rr *RR_SSHFP) Len() int {
-        return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
+	return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
 }
 
 type RR_DNSKEY struct {
@@ -748,7 +749,7 @@ func (rr *RR_DNSKEY) String() string {
 }
 
 func (rr *RR_DNSKEY) Len() int {
-        return rr.Hdr.Len() + 4 + len(rr.PublicKey)     // todo: base64
+	return rr.Hdr.Len() + 4 + len(rr.PublicKey) // todo: base64
 }
 
 type RR_NSEC3 struct {
@@ -785,8 +786,8 @@ func (rr *RR_NSEC3) String() string {
 }
 
 func (rr *RR_NSEC3) Len() int {
-        return rr.Hdr.Len() + 6 + len(rr.Salt)/2+1 + len(rr.NextDomain)+1 + len(rr.TypeBitMap)
-        // TODO: size-base32 and typebitmap
+	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + len(rr.TypeBitMap)
+	// TODO: size-base32 and typebitmap
 }
 
 type RR_NSEC3PARAM struct {
@@ -812,7 +813,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 }
 
 func (rr *RR_NSEC3PARAM) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + 2+4+1 + len(rr.Salt)/2
 }
 
 // See RFC 4408.
@@ -830,7 +831,7 @@ func (rr *RR_SPF) String() string {
 }
 
 func (rr *RR_SPF) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + len(rr.Txt)
 }
 
 type RR_TKEY struct {
@@ -856,7 +857,8 @@ func (rr *RR_TKEY) String() string {
 }
 
 func (rr *RR_TKEY) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + len(rr.Algorithm)+1+4+4+6+
+        len(rr.Key) + 2 + len(rr.OtherData)
 }
 
 // Unknown RR representation
@@ -897,7 +899,7 @@ func (rr *RR_URI) String() string {
 }
 
 func (rr *RR_URI) Len() int {
-	return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + 4 + len(rr.Target) + 1
 }
 
 type RR_DHCID struct {
@@ -914,7 +916,7 @@ func (rr *RR_DHCID) String() string {
 }
 
 func (rr *RR_DHCID) Len() int {
-        return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + len(rr.Digest) // Slightly too much
 }
 
 // RFC 2845.
@@ -950,7 +952,8 @@ func (rr *RR_TSIG) String() string {
 }
 
 func (rr *RR_TSIG) Len() int {
-        return rr.Hdr.Len() + 0
+	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 6 +
+		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
