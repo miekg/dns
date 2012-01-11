@@ -35,14 +35,4 @@ func main() {
 	for _, a := range r.Answer {
 		fmt.Printf("%v\n", a)
 	}
-        println(r.String())
-        buf, _ := r.Pack()
-        r1 := new(dns.Msg)
-        ok := r1.Unpack(buf)
-        if ok {
-                fmt.Printf("%s", r1.String())
-        } else {
-                fmt.Printf("%s", r1.String())
-                fmt.Printf("Failed to unpack compressed msg")
-        }
 }
