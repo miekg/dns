@@ -22,6 +22,7 @@ func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
+        check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -113,7 +114,6 @@ Flags:
 			o.SetNsid("")
 		}
 		m.Extra = append(m.Extra, o)
-		//m.SetEdns0(dns.DefaultMsgSize, true)
 	}
 
 	if *fp {
@@ -144,9 +144,12 @@ forever:
 				if *short {
 					r.Reply = shortMsg(r.Reply)
 				}
-				if *fp {
-					fmt.Printf("%s\n", msgToFingerprint(r.Reply))
-				}
+                                if *check {
+                                        // Get the signatures from the message
+                                        // Get the keys mentioned from the internet
+                                        // Validate it
+
+                                }
 				fmt.Printf("%v", r.Reply)
 			}
 			i++
