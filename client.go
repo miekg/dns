@@ -358,6 +358,7 @@ func (w *reply) Send(m *Msg) error {
 		if !ok {
 			return ErrSecret
 		}
+                // Compressie maakt dit stuk
 		if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
 			return err
 		}

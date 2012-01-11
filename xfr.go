@@ -40,7 +40,6 @@ func (w *reply) axfrReceive() {
 			w.Client().ReplyChan <- &Exchange{w.req, in, ErrId}
 			return
 		}
-
 		if first {
 			if !checkXfrSOA(in, true) {
 				w.Client().ReplyChan <- &Exchange{w.req, in, ErrXfrSoa}
