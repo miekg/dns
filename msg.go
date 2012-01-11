@@ -74,6 +74,7 @@ type MsgHdr struct {
 // The layout of a DNS message.
 type Msg struct {
 	MsgHdr
+	Compress bool           // If true, the message will be compressed when converted to wire format.
 	Question []Question
 	Answer   []RR
 	Ns       []RR
@@ -338,7 +339,7 @@ Loop:
 
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
 // slices and other (often anonymous) structs.
-func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
+func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	for i := 0; i < val.NumField(); i++ {
 		//		f := val.Type().Field(i)
 		lenmsg := len(msg)
@@ -417,7 +418,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// TODO(mg)
 			}
 		case reflect.Struct:
-			off, ok = packStructValue(fv, msg, off, compression)
+			off, ok = packStructValue(fv, msg, off, compression, compress)
 		case reflect.Uint8:
 			if off+1 > lenmsg {
 				//fmt.Fprintf(os.Stderr, "dns: overflow packing uint8")
@@ -487,9 +488,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				fallthrough // No compression
 			case "cdomain-name":
 				if val.Type().Field(i).Tag == "cdomain-name" {
-					off, ok = PackDomainName(s, msg, off, compression, true)
+					off, ok = PackDomainName(s, msg, off, compression, true && compress)
 				} else {
-					off, ok = PackDomainName(s, msg, off, compression, false)
+					off, ok = PackDomainName(s, msg, off, compression, false && compress)
 				}
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")
@@ -541,8 +542,8 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
-func packStruct(any interface{}, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
-	off, ok = packStructValue(structValue(any), msg, off, compression)
+func packStruct(any interface{}, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
+	off, ok = packStructValue(structValue(any), msg, off, compression, compress)
 	return off, ok
 }
 
@@ -872,12 +873,12 @@ func packBase32(s []byte) ([]byte, error) {
 }
 
 // Resource record packer.
-func packRR(rr RR, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
+func packRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	if rr == nil {
 		return len(msg), false
 	}
 
-	off1, ok = packStruct(rr, msg, off, compression)
+	off1, ok = packStruct(rr, msg, off, compression, compress)
 	if !ok {
 		return len(msg), false
 	}
@@ -1018,21 +1019,21 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, ok = packStruct(&dh, msg, off, compression)
+	off, ok = packStruct(&dh, msg, off, compression, dns.Compress)
 	for i := 0; i < len(question); i++ {
-		off, ok = packStruct(&question[i], msg, off, compression)
+		off, ok = packStruct(&question[i], msg, off, compression, dns.Compress)
 		//                println("Question", off)
 	}
 	for i := 0; i < len(answer); i++ {
-		off, ok = packRR(answer[i], msg, off, compression)
+		off, ok = packRR(answer[i], msg, off, compression, dns.Compress)
 		//               println("Answer", off)
 	}
 	for i := 0; i < len(ns); i++ {
-		off, ok = packRR(ns[i], msg, off, compression)
+		off, ok = packRR(ns[i], msg, off, compression, dns.Compress)
 		//                println("Authority", off)
 	}
 	for i := 0; i < len(extra); i++ {
-		off, ok = packRR(extra[i], msg, off, compression)
+		off, ok = packRR(extra[i], msg, off, compression, dns.Compress)
 		//                println("Additional", off)
 	}
 	if !ok {
@@ -1160,8 +1161,8 @@ func (dns *Msg) Len() int {
 // CompressedLen returns the length of the message when in 
 // compressed wire format.
 func (dns *Msg) CompressedLen() int {
-        // Uhh. TODO
-        return 0
+	// Uhh. TODO
+	return 0
 }
 
 // Id return a 16 bits random number to be used as a
