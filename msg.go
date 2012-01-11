@@ -222,8 +222,8 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 				msg[off] = bs[j]
 				off++
 			}
-                        // Dont try to compress '.'
-                        if string(bs[begin:]) != "." && compression != nil {
+			// Dont try to compress '.'
+			if string(bs[begin:]) != "." && compression != nil {
 				if p, ok := compression[string(bs[begin:])]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
@@ -235,11 +235,11 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					// the offset of the current name, because that's
 					// where we need to insert the pointer later
 
-                                        // If compress is true, we're  allowed to compress this dname
+					// If compress is true, we're  allowed to compress this dname
 					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
-//                                                println("Compressing:", string(bs[begin:]))
+						// println("Compressing:", string(bs[begin:]))
 					}
 				}
 			}
@@ -881,7 +881,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]int) (off1 int, o
 	if !ok {
 		return len(msg), false
 	}
-        RawSetRdLength(msg, off, off1)
+	RawSetRdLength(msg, off, off1)
 	return off1, true
 }
 
