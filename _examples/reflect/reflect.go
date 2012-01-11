@@ -26,7 +26,7 @@ import (
 	"strconv"
 )
 
-var dom = "whoami.miek.nl"
+const dom = "whoami.miek.nl"
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
@@ -68,9 +68,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	m.Extra[0] = t
 	m.Answer[0] = rr
-
 	b, ok := m.Pack()
 	if !ok {
+                log.Print("Packing failed")
 		return
 	}
         log.Printf("Answering request with %d bytes", len(b))
