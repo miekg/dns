@@ -1130,7 +1130,7 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Len return the message length (in uncompressed wirefmt).
+// Len return the message length when in uncompressed wire format.
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes       
 	l := 12
@@ -1155,6 +1155,13 @@ func (dns *Msg) Len() int {
 		}
 	}
 	return l
+}
+
+// CompressedLen returns the length of the message when in 
+// compressed wire format.
+func (dns *Msg) CompressedLen() int {
+        // Uhh. TODO
+        return 0
 }
 
 // Id return a 16 bits random number to be used as a
