@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-const MaxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
+const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
 	ErrUnpack    error = &Error{Err: "unpacking failed"}
@@ -190,10 +190,13 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 	// Except for escaped dots (\.), which are normal dots.
 	// There is also a trailing zero.
 	// Check that we have all the space we need.
-	tot := len(s) + 1
+	tot := len(s) + 1 // TODO: this fails for compression...
 	if off+tot > lenmsg {
 		return lenmsg, false
 	}
+	// Compression
+	nameoffset := -1
+	pointer := -1
 
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
@@ -225,8 +228,20 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 				// hmmm how can this be?
 			}
 			if compression != nil {
-				if _, ok := compression[str]; !ok {
-					compression[str] = offset
+				if p, ok := compression[str]; !ok {
+					// Only offsets small than this can be used.
+					if offset < maxCompressionOffset {
+						compression[str] = offset
+					}
+				} else {
+					// The first hit is the longest matching dname
+					// keep the pointer offset we get back and store
+					// the offset of the current name, because that's
+					// where we need to insert the pointer later
+					if pointer == -1 {
+						pointer = p         // Where to point to
+						nameoffset = offset // Where to point from
+					}
 				}
 			}
 			begin = i + 1
@@ -234,6 +249,13 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 	}
 	// Root label is special
 	if string(bs) == "." {
+		return off, true
+	}
+	// If we did compression and we did find something, fix that here
+	if pointer != -1 {
+		// We have two bytes to put the pointer in
+		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
+		off = nameoffset + 1
 		return off, true
 	}
 	msg[off] = 0
