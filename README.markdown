@@ -1,9 +1,10 @@
 # Alternative (more granular) approach to a DNS library.
 
 Completely usable DNS library. Most widely used Resource Records are
-supported including DNSSEC types. It follows a lean and mean philosophy.
-If there is stuff you should know as a DNS programmers there isn't a convenience
-function for it.
+supported including the DNSSEC types. It follows a lean and mean philosophy.
+If there is stuff you should know as a DNS programmer there isn't a convenience
+function for it. For instance I'm pondering if a zone-like structure should be
+implemented in the library.
 
 Features:
 
@@ -11,19 +12,17 @@ Features:
 * TSIG;
 * EDNS0;
 * AXFR/IXFR;
+* DNS name compression;
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
-* RFC 1035 zone file parsing (everything, except multiline records work).
-    non-working ATM.
+* RFC 1035 zone file parsing.
 
 Sample programs can be found in the `_examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
 
-Everything else should be present and working. If not, drop me an email.
-
 Have fun!
 
-Miek Gieben  -  2010, 2011 - miek@miek.nl
+Miek Gieben  -  2010-2012 - miek@miek.nl
 
 ## Supported RFCs and features include:
 

@@ -14,7 +14,6 @@ things that need to be fixed.
 ## Issues
 
 * Check the network order, it works now, but this is on Intel?
-* Compression. Take stuff from Jan Mercl.
 
 ## Examples to create
 
