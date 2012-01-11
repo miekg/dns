@@ -39,8 +39,6 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		str string
 		a   net.IP
 	)
-        log.Print("Receiving request")
-
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 		a = ip.IP
@@ -71,9 +69,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	b, ok := m.Pack()
         if !ok {
                 log.Print("Packing failed")
+                //write formerr back?
 		return
 	}
-        log.Printf("Answering request with %d bytes", len(b))
 	w.Write(b)
 }
 
