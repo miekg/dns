@@ -176,7 +176,7 @@ var Rcode_str = map[int]string{
 // PackDomainName packs a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
-func PackDomainName(s string, msg []byte, off int, compression map[string]int) (off1 int, ok bool) {
+func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
@@ -234,7 +234,8 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 					// keep the pointer offset we get back and store
 					// the offset of the current name, because that's
 					// where we need to insert the pointer later
-					if pointer == -1 {
+                                        // If compress is true, we allowed to compress this dname
+					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
 					}
@@ -484,9 +485,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				fallthrough // No compression
 			case "cdomain-name":
 				if val.Type().Field(i).Tag == "cdomain-name" {
-					off, ok = PackDomainName(s, msg, off, compression)
+					off, ok = PackDomainName(s, msg, off, compression, true)
 				} else {
-					off, ok = PackDomainName(s, msg, off, nil)
+					off, ok = PackDomainName(s, msg, off, compression, false)
 				}
 				if !ok {
 					//fmt.Fprintf(os.Stderr, "dns: overflow packing domain-name")

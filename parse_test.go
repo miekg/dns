@@ -76,7 +76,7 @@ Activate: 20110302104537`
 
 func TestDotInName(t *testing.T) {
 	buf := make([]byte, 20)
-	PackDomainName("aa\\.bb.nl.", buf, 0, nil)
+	PackDomainName("aa\\.bb.nl.", buf, 0, nil, false)
 	// index 3 must be a real dot
 	if buf[3] != '.' {
 		t.Log("Dot should be a real dot")
@@ -136,7 +136,7 @@ func TestDomainName(t *testing.T) {
 
 
         for _, ts := range tests {
-                if _, ok := PackDomainName(ts, dbuff, 0, nil); !ok {
+                if _, ok := PackDomainName(ts, dbuff, 0, nil, false); !ok {
                         t.Log("Not a valid domain name")
                         t.Fail()
                         continue

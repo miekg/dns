@@ -129,7 +129,7 @@ const (
 
 // DNS queries.
 type Question struct {
-	Name   string "cdomain-name" // "cdomain-name" specifies encoding (and may be compressed)
+	Name   string "domain-name" // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
 	Qclass uint16
 }

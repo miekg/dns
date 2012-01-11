@@ -23,7 +23,7 @@ func HashName(label string, ha, iter int, salt string) string {
 	}
 	wire = wire[:n]
 	name := make([]byte, 255)
-	off, ok1 := PackDomainName(strings.ToLower(label), name, 0, nil)
+	off, ok1 := PackDomainName(strings.ToLower(label), name, 0, nil, false)
 	if !ok1 {
 		return ""
 	}
