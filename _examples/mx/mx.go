@@ -27,7 +27,6 @@ func main() {
 		fmt.Printf("%s\n", err.Error())
 		os.Exit(1)
 	}
-
 	if r.Rcode != dns.RcodeSuccess {
 		fmt.Printf(" *** invalid answer name %s after MX query for %s\n", os.Args[1], os.Args[1])
 		os.Exit(1)
@@ -38,7 +37,6 @@ func main() {
 	}
         println(r.String())
         buf, _ := r.Pack()
-        buf = dns.Compress(buf)
         r1 := new(dns.Msg)
         ok := r1.Unpack(buf)
         if ok {

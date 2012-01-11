@@ -18,7 +18,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
@@ -190,7 +189,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 	// Except for escaped dots (\.), which are normal dots.
 	// There is also a trailing zero.
 	// Check that we have all the space we need.
-	tot := len(s) + 1 // TODO: this fails for compression...
+	tot := len(s) + 1 // TODO: this too much for compression...
 	if off+tot > lenmsg {
 		return lenmsg, false
 	}
@@ -223,15 +222,11 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 				msg[off] = bs[j]
 				off++
 			}
-			str, _, ok := UnpackDomainName(msg, offset)
-			if !ok {
-				// hmmm how can this be?
-			}
 			if compression != nil {
-				if p, ok := compression[str]; !ok {
-					// Only offsets small than this can be used.
+                                if p, ok := compression[string(bs[begin:])]; !ok {
+					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
-						compression[str] = offset
+                                                compression[string(bs[begin:])] = offset
 					}
 				} else {
 					// The first hit is the longest matching dname
@@ -251,11 +246,11 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int) (
 	if string(bs) == "." {
 		return off, true
 	}
-	// If we did compression and we did find something, fix that here
+	// If we did compression and we find something at the pointer here
 	if pointer != -1 {
-		// We have two bytes to put the pointer in
+		// We have two bytes (14 bits) to put the pointer in
 		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
-		off = nameoffset + 1
+		off = nameoffset + 2
 		return off, true
 	}
 	msg[off] = 0
@@ -730,6 +725,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
+                        case "cdomain-name": fallthrough
 			case "domain-name":
 				s, off, ok = UnpackDomainName(msg, off)
 				if !ok {
@@ -1050,7 +1046,6 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	if !ok {
 		return nil, false
 	}
-	fmt.Printf("**%v\n", compression)
 	return msg[:off], true
 }
 
