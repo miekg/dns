@@ -79,7 +79,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func serve(net string) {
-	err := dns.ListenAndServe(":8053", net, nil)
+	err := dns.ListenAndServe(":8053", net, nil, 0)
 	if err != nil {
 		fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 	}

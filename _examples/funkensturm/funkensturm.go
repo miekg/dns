@@ -67,7 +67,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func listenAndServe(add, net string) {
-	if err := dns.ListenAndServe(add, net, nil); err != nil {
+	if err := dns.ListenAndServe(add, net, nil, 512); err != nil {
 		println("Failed to setup:", net, add)
 	}
 }
