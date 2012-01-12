@@ -19,10 +19,13 @@ package main
 
 import (
 	"dns"
+	"flag"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strconv"
 )
 
@@ -67,9 +70,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	m.Extra[0] = t
 	m.Answer[0] = rr
 	b, ok := m.Pack()
-        if !ok {
-                log.Print("Packing failed")
-                //write formerr back?
+	if !ok {
+		log.Print("Packing failed")
+		//write formerr back?
 		return
 	}
 	w.Write(b)
@@ -83,6 +86,20 @@ func serve(net string) {
 }
 
 func main() {
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	flag.Usage = func() {
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	dns.HandleFunc(".", handleReflect)
 	go serve("udp4")
 	go serve("udp6")
