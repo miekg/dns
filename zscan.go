@@ -74,7 +74,7 @@ type lex struct {
 }
 
 type Token struct {
-	RR          // the scanned resource record
+	RR                // the scanned resource record
 	Error *ParseError // when an error occured, this is the specifics
 }
 
@@ -147,13 +147,13 @@ func parseZone(r io.Reader, t chan Token) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
-                                if _, ok := IsDomainName(l.token); !ok {
-                                        t <- Token{Error: &ParseError{"bad owner name", l}}
-                                        return
-                                }
-                                if !IsFqdn(h.Name) {
-                                        h.Name += origin
-                                }
+				if _, ok := IsDomainName(l.token); !ok {
+					t <- Token{Error: &ParseError{"bad owner name", l}}
+					return
+				}
+				if !IsFqdn(h.Name) {
+					h.Name += origin
+				}
 				st = _EXPECT_OWNER_BL
 			case _DIRTTL:
 				st = _EXPECT_DIRTTL_BL
@@ -180,22 +180,22 @@ func parseZone(r io.Reader, t chan Token) {
 				defttl = ttl
 			}
 			st = _EXPECT_OWNER_DIR
-                case _EXPECT_DIRORIGIN_BL:
-                        if l.value != _BLANK {
-                                t <- Token{Error: &ParseError{"No blank after $-directive", l}}
-                                return
-                        }
-                        st = _EXPECT_DIRORIGIN
-                case _EXPECT_DIRORIGIN:
-                        if l.value != _STRING {
-                                t <- Token{Error: &ParseError{"Expecting $ORIGIN value, not this...", l}}
-                                return
-                        }
-                        if !IsFqdn(l.token) {
-                                origin = l.token + origin       // Append old origin if the new one isn't a fqdn
-                        } else {
-                                origin = l.token
-                        }
+		case _EXPECT_DIRORIGIN_BL:
+			if l.value != _BLANK {
+				t <- Token{Error: &ParseError{"No blank after $-directive", l}}
+				return
+			}
+			st = _EXPECT_DIRORIGIN
+		case _EXPECT_DIRORIGIN:
+			if l.value != _STRING {
+				t <- Token{Error: &ParseError{"Expecting $ORIGIN value, not this...", l}}
+				return
+			}
+			if !IsFqdn(l.token) {
+				origin = l.token + origin // Append old origin if the new one isn't a fqdn
+			} else {
+				origin = l.token
+			}
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{"No blank after owner", l}}

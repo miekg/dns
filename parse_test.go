@@ -101,7 +101,7 @@ z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
 $TTL 100
 z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 	// Need to implementen owner substitution in the lexer.
-        to := ParseZone(strings.NewReader(zone))
+	to := ParseZone(strings.NewReader(zone))
 	i := 0
 	for x := range to {
 		if x.Error == nil {
@@ -117,10 +117,10 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 					t.Fail()
 				}
 			case 2:
-                                if x.RR.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
+				if x.RR.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
 					t.Logf("Failed to parse z3 %s", x.RR.String())
 					t.Fail()
-                                }
+				}
 			}
 		} else {
 			t.Logf("Failed to parse: %v\n", x.Error)
@@ -131,27 +131,26 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 }
 
 func TestDomainName(t *testing.T) {
-        tests := []string{"r\\.gieben.miek.nl.", "www\\.www.miek.nl."}
-        dbuff := make([]byte, 40)
+	tests := []string{"r\\.gieben.miek.nl.", "www\\.www.miek.nl."}
+	dbuff := make([]byte, 40)
 
-
-        for _, ts := range tests {
-                if _, ok := PackDomainName(ts, dbuff, 0, nil, false); !ok {
-                        t.Log("Not a valid domain name")
-                        t.Fail()
-                        continue
-                }
-                n, _, ok := UnpackDomainName(dbuff, 0)
-                if !ok {
-                        t.Log("Failed to unpack packed domain name")
-                        t.Fail()
-                        continue;
-                }
-                if ts != n {
-                        t.Logf("Must be equal: in: %s, out: %s\n", ts, n)
-                        t.Fail()
-                }
-        }
+	for _, ts := range tests {
+		if _, ok := PackDomainName(ts, dbuff, 0, nil, false); !ok {
+			t.Log("Not a valid domain name")
+			t.Fail()
+			continue
+		}
+		n, _, ok := UnpackDomainName(dbuff, 0)
+		if !ok {
+			t.Log("Failed to unpack packed domain name")
+			t.Fail()
+			continue
+		}
+		if ts != n {
+			t.Logf("Must be equal: in: %s, out: %s\n", ts, n)
+			t.Fail()
+		}
+	}
 }
 
 func TestParseBrace(t *testing.T) {
@@ -161,8 +160,8 @@ func TestParseBrace(t *testing.T) {
 		`miek.nl. IN (
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"(miek.nl.) (A) (127.0.0.1)": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. NS ns.miek.nl": "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
+		"miek.nl A 127.0.0.1":        "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. NS ns.miek.nl":     "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
                         (IN) 
                         (AAAA)
@@ -171,16 +170,16 @@ func TestParseBrace(t *testing.T) {
                         (IN) 
                         (AAAA)
                         (::1))`: "miek.nl.\t3600\tIN\tAAAA\t::1",
-                `((m)(i)ek.(n)l.) (SOA) (soa.) (soa.) (
+		`((m)(i)ek.(n)l.) (SOA) (soa.) (soa.) (
                                 2009032802 ; serial
                                 21600      ; refresh (6 hours)
                                 7(2)00       ; retry (2 hours)
                                 604()800     ; expire (1 week)
                                 3600       ; minimum (1 hour)
                         )`: "miek.nl.\t3600\tIN\tSOA\tsoa. soa. 2009032802 21600 7200 604800 3600",
-                "miek\\.nl. IN A 127.0.0.1": "miek\\.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. IN A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek\\.nl. IN A 127.0.0.1": "miek\\.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. IN A 127.0.0.1":   "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. A 127.0.0.1":      "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		`miek.nl.       86400 IN SOA elektron.atoom.net. miekg.atoom.net. (
                                 2009032802 ; serial
                                 21600      ; refresh (6 hours)
@@ -231,7 +230,7 @@ func BenchmarkZoneParsing(b *testing.B) {
 		return
 	}
 	defer f.Close()
-        to := ParseZone(f)
+	to := ParseZone(f)
 	for x := range to {
 		x = x
 	}
@@ -244,7 +243,7 @@ func TestZoneParsing(t *testing.T) {
 	}
 	defer f.Close()
 	start := time.Now().UnixNano()
-        to := ParseZone(f)
+	to := ParseZone(f)
 	var i int
 	for x := range to {
 		t.Logf("%s\n", x.RR)

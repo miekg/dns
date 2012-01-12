@@ -229,7 +229,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	var n int
 	out, ok := m.Pack()
 	if !ok {
-                return nil, ErrPack
+		return nil, ErrPack
 	}
 	var in []byte
 	switch c.Net {
@@ -238,7 +238,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	case "udp":
 		in = make([]byte, DefaultMsgSize)
 	}
-        //TODO(mg): look at the buffer size here
+	//TODO(mg): look at the buffer size here
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
 		return nil, err
 	}
@@ -359,7 +359,7 @@ func (w *reply) Send(m *Msg) error {
 		if !ok {
 			return ErrSecret
 		}
-                // Compressie maakt dit stuk
+		// Compressie maakt dit stuk
 		if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
 			return err
 		}

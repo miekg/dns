@@ -123,12 +123,12 @@ func setNS(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Ns = l.token
-        if _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad NS Ns", l}
 	}
-        if !IsFqdn(rr.Ns) {
-                rr.Ns += o
-        }
+	if !IsFqdn(rr.Ns) {
+		rr.Ns += o
+	}
 	return rr, nil
 }
 
@@ -145,12 +145,12 @@ func setMX(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Mx = l.token
-        if _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad MX Mx", l}
 	}
-        if !IsFqdn(rr.Mx) {
-                rr.Mx += o
-        }
+	if !IsFqdn(rr.Mx) {
+		rr.Mx += o
+	}
 	return rr, nil
 }
 
@@ -160,12 +160,12 @@ func setCNAME(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Cname = l.token
-        if _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad CNAME", l}
 	}
-        if !IsFqdn(rr.Cname) {
-                rr.Cname += o
-        }
+	if !IsFqdn(rr.Cname) {
+		rr.Cname += o
+	}
 	return rr, nil
 }
 
@@ -176,21 +176,21 @@ func setSOA(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	l := <-c
 	rr.Ns = l.token
 	<-c // _BLANK
-        if  _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad SOA mname", l}
 	}
-        if !IsFqdn(rr.Ns) {
-                rr.Ns += o
-        }
+	if !IsFqdn(rr.Ns) {
+		rr.Ns += o
+	}
 
 	l = <-c
 	rr.Mbox = l.token
-        if _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad SOA rname", l}
 	}
-        if !IsFqdn(rr.Mbox) {
-                rr.Mbox += o
-        }
+	if !IsFqdn(rr.Mbox) {
+		rr.Mbox += o
+	}
 	<-c // _BLANK
 
 	var j int
@@ -274,12 +274,12 @@ func setRRSIG(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	rr.SignerName = l.token
-        if  _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad RRSIG signername", l}
 	}
-        if !IsFqdn(rr.SignerName) {
-                rr.SignerName += o
-        }
+	if !IsFqdn(rr.SignerName) {
+		rr.SignerName += o
+	}
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
 	s := ""
@@ -304,12 +304,12 @@ func setNSEC(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 
 	l := <-c
 	rr.NextDomain = l.token
-        if _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad NSEC nextdomain", l}
 	}
-        if !IsFqdn(rr.NextDomain) {
-                rr.NextDomain += o
-        }
+	if !IsFqdn(rr.NextDomain) {
+		rr.NextDomain += o
+	}
 
 	rr.TypeBitMap = make([]uint16, 0)
 	l = <-c
@@ -364,12 +364,12 @@ func setNSEC3(h RR_Header, c chan lex, o string) (RR, *ParseError) {
 	l = <-c
 	rr.HashLength = uint8(len(l.token))
 	rr.NextDomain = l.token
-        if  _, ok := IsDomainName(l.token); !ok {
+	if _, ok := IsDomainName(l.token); !ok {
 		return nil, &ParseError{"bad NSEC nextdomain", l}
 	}
-        if !IsFqdn(rr.NextDomain) {
-                rr.NextDomain += o
-        }
+	if !IsFqdn(rr.NextDomain) {
+		rr.NextDomain += o
+	}
 
 	rr.TypeBitMap = make([]uint16, 0)
 	l = <-c
