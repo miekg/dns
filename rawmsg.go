@@ -7,13 +7,16 @@ package dns
 // Function defined in this subpackage work on []byte and but still
 // provide some higher level functions.
 
-// RawSetId sets the message ID in buf.
+// RawSetId sets the message ID in buf. The offset 'off' must
+// be positioned at the beginning of the message.
 func RawSetId(msg []byte, off int, id uint16) bool {
 	msg[off], msg[off+1] = packUint16(id)
 	return true
 }
 
-// RawSetRdLength set the rdlength
+// RawSetRdLength sets the rdlength in the header of
+// the RR. The offset 'off' must be positioned at the
+// start of the header of the RR.
 func RawSetRdLength(msg []byte, off, end int) bool {
 	// We are at the start of the header, walk the
 	// domainname (might be compressed), and set the

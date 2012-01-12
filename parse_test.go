@@ -171,8 +171,16 @@ func TestParseBrace(t *testing.T) {
                         (IN) 
                         (AAAA)
                         (::1))`: "miek.nl.\t3600\tIN\tAAAA\t::1",
+                `((m)(i)ek.(n)l.) (SOA) (soa.) (soa.) (
+                                2009032802 ; serial
+                                21600      ; refresh (6 hours)
+                                7(2)00       ; retry (2 hours)
+                                604()800     ; expire (1 week)
+                                3600       ; minimum (1 hour)
+                        )`: "miek.nl.\t3600\tIN\tSOA\tsoa. soa. 2009032802 21600 7200 604800 3600",
                 "miek\\.nl. IN A 127.0.0.1": "miek\\.nl.\t3600\tIN\tA\t127.0.0.1",
 		"miek.nl. IN A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl. A 127.0.0.1": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		`miek.nl.       86400 IN SOA elektron.atoom.net. miekg.atoom.net. (
                                 2009032802 ; serial
                                 21600      ; refresh (6 hours)
