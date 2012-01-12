@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// This is not (yet) optimized for speed.
-
 // DNS packet assembly, see RFC 1035. Converting from - Unpack() -
 // and to - Pack() - wire format.
 // All the packers and unpackers take a (msg []byte, off int)
