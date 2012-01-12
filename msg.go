@@ -579,8 +579,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				off += net.IPv6len
 			case "OPT": // EDNS
 				if off+2 > lenmsg {
-					println("dns: overflow unpacking OPT")
-					// No room for anything else
+                                        // This is an ENDNS0 (OPT Record) with no rdata
+                                        // We can savely return here.
 					break
 				}
 				opt := make([]Option, 1)
