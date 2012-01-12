@@ -81,9 +81,8 @@ func Refused(w ResponseWriter, r *Msg) {
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 // ...
-func ListenAndServe(addr string, network string, handler Handler) error {
-        //TODO(mg): make message size configurable....
-        server := &Server{Addr: addr, Net: network, Handler: handler, UDPSize: DefaultMsgSize}
+func ListenAndServe(addr string, network string, handler Handler, size int) error {
+	server := &Server{Addr: addr, Net: network, Handler: handler, UDPSize: size}
 	return server.ListenAndServe()
 }
 
@@ -142,13 +141,13 @@ type Server struct {
 	Addr         string            // address to listen on, ":dns" if empty
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
-        UDPSize   int                // default buffer to use to read incoming UDP messages
+	UDPSize      int               // default buffer to use to read incoming UDP messages
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
-// ...
+// ListenAndServe starts a nameserver on the configured address.
 func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {
@@ -234,6 +233,9 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	handler := srv.Handler
 	if handler == nil {
 		handler = DefaultServeMux
+	}
+	if srv.UDPSize == 0 {
+		srv.UDPSize = UDPMsgSize
 	}
 	for {
 		m := make([]byte, srv.UDPSize)

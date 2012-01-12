@@ -18,7 +18,7 @@ func HelloServer(w ResponseWriter, req *Msg) {
 func TestServing(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	go func() {
-		err := ListenAndServe(":8053", "udp", nil)
+		err := ListenAndServe(":8053", "udp", nil, 0)
 		if err != nil {
 			t.Log("ListenAndServe: ", err.Error())
 			t.Fail()
@@ -32,7 +32,7 @@ func BenchmarkServing(b *testing.B) {
 	// Again start a server
 	HandleFunc("miek.nl.", HelloServer)
 	go func() {
-		ListenAndServe("127.0.0.1:8053", "udp", nil)
+		ListenAndServe("127.0.0.1:8053", "udp", nil, 0)
 	}()
 
 	c := NewClient()
