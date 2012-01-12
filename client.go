@@ -238,6 +238,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	case "udp":
 		in = make([]byte, DefaultMsgSize)
 	}
+        //TODO(mg): look at the buffer size here
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
 		return nil, err
 	}

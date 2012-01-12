@@ -82,7 +82,8 @@ func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 // ...
 func ListenAndServe(addr string, network string, handler Handler) error {
-	server := &Server{Addr: addr, Net: network, Handler: handler}
+        //TODO(mg): make message size configurable....
+        server := &Server{Addr: addr, Net: network, Handler: handler, UDPSize: DefaultMsgSize}
 	return server.ListenAndServe()
 }
 
@@ -141,6 +142,7 @@ type Server struct {
 	Addr         string            // address to listen on, ":dns" if empty
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
+        UDPSize   int                // default buffer to use to read incoming UDP messages
 	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -234,7 +236,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		handler = DefaultServeMux
 	}
 	for {
-		m := make([]byte, DefaultMsgSize)
+		m := make([]byte, srv.UDPSize)
 		n, a, e := l.ReadFromUDP(m)
 		if e != nil {
 			return e
