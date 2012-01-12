@@ -48,8 +48,8 @@ func TestPackUnpack2(t *testing.T) {
 	m := new(Msg)
 	m.Extra = make([]RR, 1)
 	m.Answer = make([]RR, 1)
-        dom := "miek.nl."
-        rr := new(RR_A)
+	dom := "miek.nl."
+	rr := new(RR_A)
 	rr.Hdr = RR_Header{Name: dom, Rrtype: TypeA, Class: ClassINET, Ttl: 0}
 	rr.A = net.IPv4(127, 0, 0, 1)
 

@@ -27,7 +27,7 @@ func helloMiek(w RequestWriter, r *Msg) {
 
 func TestClientASync(t *testing.T) {
 	HandleQueryFunc("miek.nl.", helloMiek) // All queries for miek.nl will be handled by HelloMiek
-	ListenAndQuery(nil, nil)              // Detect if this isn't running
+	ListenAndQuery(nil, nil)               // Detect if this isn't running
 
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
@@ -83,7 +83,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
-                return
+		return
 	}
 	for {
 		ex := <-c.ReplyChan
@@ -91,14 +91,14 @@ func TestClientTsigAXFR(t *testing.T) {
 		if ex.Error == ErrXfrLast {
 			break
 		}
-                if ex.Error != nil {
-                        t.Logf("Error %s\n", ex.Error.Error())
-                        t.Fail()
-                        break
-                }
-                if ex.Reply.Rcode != RcodeSuccess {
-                        break
-                }
+		if ex.Error != nil {
+			t.Logf("Error %s\n", ex.Error.Error())
+			t.Fail()
+			break
+		}
+		if ex.Reply.Rcode != RcodeSuccess {
+			break
+		}
 	}
 }
 
@@ -112,7 +112,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
-                return
+		return
 	}
 	for {
 		ex := <-c.ReplyChan
@@ -120,13 +120,13 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 		if ex.Error == ErrXfrLast {
 			break
 		}
-                if ex.Error != nil {
-                        t.Logf("Error %s\n", ex.Error.Error())
-                        t.Fail()
-                        break
-                }
-                if ex.Reply.Rcode != RcodeSuccess {
-                        break
-                }
+		if ex.Error != nil {
+			t.Logf("Error %s\n", ex.Error.Error())
+			t.Fail()
+			break
+		}
+		if ex.Reply.Rcode != RcodeSuccess {
+			break
+		}
 	}
 }

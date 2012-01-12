@@ -39,7 +39,7 @@ func NewUpdate(zone string, class uint16) *Msg {
 	u := new(Msg)
 	u.MsgHdr.Response = false
 	u.MsgHdr.Opcode = OpcodeUpdate
-        u.Compress = false      // Seems BIND9 at least cannot handle compressed update pkgs
+	u.Compress = false // Seems BIND9 at least cannot handle compressed update pkgs
 	u.Question = make([]Question, 1)
 	u.Question[0] = Question{zone, TypeSOA, class}
 	return u

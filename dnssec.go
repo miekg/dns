@@ -188,7 +188,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 	s.OrigTtl = rrset[0].Header().Ttl
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.TypeCovered = rrset[0].Header().Rrtype
-        s.Labels, _ = IsDomainName(rrset[0].Header().Name)
+	s.Labels, _ = IsDomainName(rrset[0].Header().Name)
 	if strings.HasPrefix(rrset[0].Header().Name, "*") {
 		s.Labels-- // wildcard, remove from label count
 	}
