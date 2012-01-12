@@ -76,7 +76,10 @@ func (rr *RR_OPT) String() string {
 }
 
 func (rr *RR_OPT) Len() int {
-        return rr.Hdr.Len() + len(rr.Option)     // TODO: to small/large?
+        l := rr.Hdr.Len()
+        for i := 0; i < len(rr.Option); i++ {
+                l += 2 + len(rr.Option[i].Data)/2
+        }
 }
 
 // TODO(mg)
