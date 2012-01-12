@@ -80,6 +80,7 @@ func (rr *RR_OPT) Len() int {
         for i := 0; i < len(rr.Option); i++ {
                 l += 2 + len(rr.Option[i].Data)/2
         }
+        return l
 }
 
 // TODO(mg)
