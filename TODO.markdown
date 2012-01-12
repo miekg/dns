@@ -10,6 +10,7 @@ things that need to be fixed.
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * encoding NSEC3/NSEC bitmaps, DEcoding works;
 * IsSubdomain, IsGlue helper functions;
+* Speed
 
 ## Issues
 
