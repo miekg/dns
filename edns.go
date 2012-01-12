@@ -76,30 +76,29 @@ func (rr *RR_OPT) String() string {
 }
 
 func (rr *RR_OPT) Len() int {
-        l := rr.Hdr.Len()
-        for i := 0; i < len(rr.Option); i++ {
-                l += 2 + len(rr.Option[i].Data)/2
-        }
-        return l
+	l := rr.Hdr.Len()
+	for i := 0; i < len(rr.Option); i++ {
+		l += 2 + len(rr.Option[i].Data)/2
+	}
+	return l
 }
 
-// TODO(mg)
-// Get the EDNS version (always 0 currently).
+// Version returns the EDNS version.
 func (rr *RR_OPT) Version() uint8 {
-	return 0
+	return uint8(rr.Hdr.Ttl & 0x00FF00FFFF)
 }
 
-// Set the version of EDNS.
+// SetVersion sets the version of EDNS. This is usually zero.
 func (rr *RR_OPT) SetVersion(v uint8) {
-	return
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | uint32(v)
 }
 
-// Get the UDP buffer size.
+// UDPSize gets the UDP buffer size.
 func (rr *RR_OPT) UDPSize() uint16 {
 	return rr.Hdr.Class
 }
 
-// Set the UDP buffer size/
+// SetUDPSize sets the UDP buffer size.
 func (rr *RR_OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
@@ -113,7 +112,7 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
-// Get the DO bit.
+// Do gets the value of the DO (DNSSEC OK) bit.
 func (rr *RR_OPT) Do() bool {
 	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
 }
@@ -134,7 +133,7 @@ func (rr *RR_OPT) Nsid() string {
 }
 
 // SetNsid sets the NSID from a hex character string.
-// Use the empty string when requesting NSID.
+// Use the empty string when requesting an NSID.
 func (rr *RR_OPT) SetNsid(hexnsid string) {
 	rr.Option = make([]Option, 1) // TODO(mg) check length first?
 	rr.Option[0].Code = OptionCodeNSID
