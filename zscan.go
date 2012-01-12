@@ -74,7 +74,7 @@ type lex struct {
 }
 
 type Token struct {
-	Rr    RR          // the scanned resource record
+	RR          // the scanned resource record
 	Error *ParseError // when an error occured, this is the specifics
 }
 
@@ -94,7 +94,7 @@ func NewRR(s string) (RR, error) {
 	if r.Error != nil {
 		return nil, r.Error
 	}
-	return r.Rr, nil
+	return r.RR, nil
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
@@ -291,7 +291,7 @@ func parseZone(r io.Reader, t chan Token) {
 				t <- Token{Error: e}
 				return
 			}
-			t <- Token{Rr: r}
+			t <- Token{RR: r}
 			st = _EXPECT_OWNER_DIR
 		}
 	}

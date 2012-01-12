@@ -107,18 +107,18 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 		if x.Error == nil {
 			switch i {
 			case 0:
-				if x.Rr.Header().Name != "z1.miek.nl." {
+				if x.RR.Header().Name != "z1.miek.nl." {
 					t.Log("Failed to parse z1")
 					t.Fail()
 				}
 			case 1:
-				if x.Rr.Header().Name != "z2.miek.nl." {
+				if x.RR.Header().Name != "z2.miek.nl." {
 					t.Log("Failed to parse z2")
 					t.Fail()
 				}
 			case 2:
-                                if x.Rr.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
-					t.Logf("Failed to parse z3 %s", x.Rr.String())
+                                if x.RR.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
+					t.Logf("Failed to parse z3 %s", x.RR.String())
 					t.Fail()
                                 }
 			}
@@ -247,7 +247,7 @@ func TestZoneParsing(t *testing.T) {
         to := ParseZone(f)
 	var i int
 	for x := range to {
-		t.Logf("%s\n", x.Rr)
+		t.Logf("%s\n", x.RR)
 		i++
 	}
 	delta := time.Now().UnixNano() - start
@@ -265,10 +265,10 @@ func TestZoneParsingBigZonePrint(t *testing.T) {
         to := ParseZone(f)
 	var i int
 	for x := range to {
-		if x.Rr != nil {
-			println(x.Rr.String())
+		if x.RR != nil {
+			println(x.RR.String())
 		}
-		//		t.Logf("%s\n", x.Rr)
+		//		t.Logf("%s\n", x.RR)
 		i++
 	}
 	delta := time.Now().UnixNano() - start
