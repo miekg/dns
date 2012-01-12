@@ -73,7 +73,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 func (r *RR_DNSKEY) PrivateKeyToString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
-		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + alg_str[r.Algorithm] + ")"
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
 		modulus := unpackBase64(t.PublicKey.N.Bytes())
 		e := big.NewInt(int64(t.PublicKey.E))
 		publicExponent := unpackBase64(e.Bytes())

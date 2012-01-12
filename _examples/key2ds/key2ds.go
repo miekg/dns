@@ -18,14 +18,7 @@ func main() {
 	}
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeDNSKEY)
-
-	// Set EDNS0's Do bit
-	e := new(dns.RR_OPT)
-	e.Hdr.Name = "."
-	e.Hdr.Rrtype = dns.TypeOPT
-	e.SetUDPSize(2048)
-	e.SetDo()
-	m.Extra = append(m.Extra, e)
+        m.SetEdns0(2048, true)
 
 	c := dns.NewClient()
         r, _ := c.Exchange(m, conf.Servers[0] + ":" + conf.Port)
