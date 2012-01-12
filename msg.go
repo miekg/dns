@@ -892,17 +892,8 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	if off, ok = unpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
-        rrtype, rdlength, off4 := RawTypeRdlength(msg, off0)
-        if rrtype == 0 {
-                return nil, len(msg), false
-        }
 	end := off + int(h.Rdlength)
-        println(h.Rdlength, "me l", rdlength)
-        println(h.Rrtype, "me t", rrtype)
-        println(end, "me tl", off4+int(rdlength))
-
 	// make an rr of that type and re-unpack.
-	// again inefficient but doesn't need to be fast. TODO speed
 	mk, known := rr_mk[h.Rrtype]
 	if !known {
 		rr = new(RR_RFC3597)

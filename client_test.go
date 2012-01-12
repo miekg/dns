@@ -91,6 +91,11 @@ func TestClientTsigAXFR(t *testing.T) {
 		if ex.Error == ErrXfrLast {
 			break
 		}
+                if ex.Error != nil {
+                        t.Logf("Error %s\n", ex.Error.Error())
+                        t.Fail()
+                        break
+                }
                 if ex.Reply.Rcode != RcodeSuccess {
                         break
                 }
@@ -115,6 +120,11 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 		if ex.Error == ErrXfrLast {
 			break
 		}
+                if ex.Error != nil {
+                        t.Logf("Error %s\n", ex.Error.Error())
+                        t.Fail()
+                        break
+                }
                 if ex.Reply.Rcode != RcodeSuccess {
                         break
                 }
