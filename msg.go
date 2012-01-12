@@ -179,7 +179,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-                //println("hier? s", s)
+		//println("hier? s", s)
 		//return lenmsg, false // This is an error, should be fqdn
 		s += "."
 	}
@@ -579,8 +579,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				off += net.IPv6len
 			case "OPT": // EDNS
 				if off+2 > lenmsg {
-                                        // This is an ENDNS0 (OPT Record) with no rdata
-                                        // We can savely return here.
+					// This is an ENDNS0 (OPT Record) with no rdata
+					// We can savely return here.
 					break
 				}
 				opt := make([]Option, 1)
@@ -880,7 +880,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if !ok {
 		return len(msg), false
 	}
-	RawSetRdLength(msg, off, off1)
+	RawSetRdlength(msg, off, off1)
 	return off1, true
 }
 
@@ -892,7 +892,14 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	if off, ok = unpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
+        rrtype, rdlength, off4 := RawTypeRdlength(msg, off0)
+        if rrtype == 0 {
+                return nil, len(msg), false
+        }
 	end := off + int(h.Rdlength)
+        println(h.Rdlength, "me l", rdlength)
+        println(h.Rrtype, "me t", rrtype)
+        println(end, "me tl", off4+int(rdlength))
 
 	// make an rr of that type and re-unpack.
 	// again inefficient but doesn't need to be fast. TODO speed
