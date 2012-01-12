@@ -51,35 +51,3 @@ Loop:
 	msg[off], msg[off+1] = packUint16(uint16(end - (off + 2)))
 	return true
 }
-
-// RawSetRdlength return the type and length as found
-// in the RR header.
-func RawTypeRdlength(msg []byte, off int) (uint16, uint16, int) {
-Loop:
-	for {
-		if off > len(msg) {
-			return 0, 0, off
-		}
-		c := int(msg[off])
-		off++
-		switch c & 0xC00 {
-		case 0x00:
-			if c == 0x00 {
-				// End of the domainname
-				break Loop
-			}
-
-		case 0xC0:
-			// pointer, next byte included, ends domainnames
-			off++
-			break Loop
-		}
-	}
-	off--
-	if off+8 > len(msg) {
-		return 0, 0, off
-	}
-	t, off := unpackUint16(msg, off)   // type
-	l, off := unpackUint16(msg, off+6) // length
-	return t, l, off
-}
