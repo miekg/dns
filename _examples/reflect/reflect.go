@@ -32,16 +32,14 @@ import (
 const dom = "whoami.miek.nl"
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
-	m := new(dns.Msg)
-	m.SetReply(r)
-	m.Extra = make([]dns.RR, 1)
-	m.Answer = make([]dns.RR, 1)
 	var (
 		v4  bool
 		rr  dns.RR
 		str string
 		a   net.IP
 	)
+	m := new(dns.Msg)
+	m.SetReply(r)
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 		a = ip.IP
@@ -67,8 +65,8 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 	t.Txt = str
 
-	m.Extra[0] = t
-	m.Answer[0] = rr
+	m.Extra = append(m.Extra, t)
+	m.Answer = append(m.Answer, rr)
 	b, ok := m.Pack()
 	if !ok {
 		log.Print("Packing failed")
