@@ -29,7 +29,7 @@ import (
 	"strconv"
 )
 
-const dom = "whoami.miek.nl"
+const dom = "whoami.miek.nl."
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	var (
@@ -65,8 +65,17 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 	t.Txt = str
 
-	m.Extra = append(m.Extra, t)
-	m.Answer = append(m.Answer, rr)
+        switch r.Question[0].Qtype {
+        case dns.TypeTXT:
+		m.Answer = append(m.Answer, t)
+		m.Extra = append(m.Extra, rr)
+        default: fallthrough
+        case dns.TypeAAAA, dns.TypeA:
+		m.Answer = append(m.Answer, rr)
+		m.Extra = append(m.Extra, t)
+
+        }
+
 	b, ok := m.Pack()
 	if !ok {
 		log.Print("Packing failed")
