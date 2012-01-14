@@ -11,8 +11,7 @@ type saltWireFmt struct {
 	Salt string "size-hex"
 }
 
-// HashName hashes a string or label according to RFC5155. It returns
-// the hashed string.
+// HashName hashes a string or label according to RFC5155. It returns the hashed string.
 func HashName(label string, ha, iter int, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
@@ -50,16 +49,15 @@ func HashName(label string, ha, iter int, salt string) string {
 	return unpackBase32(nsec3)
 }
 
-// Hash the ownername and the next owner name in an NSEC3 record according
-// to RFC 5155.
-// Use the parameters from the NSEC3 itself.
-func (nsec3 *RR_NSEC3) HashNames() {
-	nsec3.Header().Name = HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+// HashNames hashes the ownername and the next owner name in an NSEC3 record according to RFC 5155.
+// It uses the paramaters as set in the NSEC3 record. The string zone is appended to the hashed
+// ownername.
+func (nsec3 *RR_NSEC3) HashNames(zone string) {
+	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)) + "." + zone
 	nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
 }
 
-// NsecVerify verifies the negative response (NXDOMAIN/NODATA) in 
-// the message m. 
+// NsecVerify verifies the negative response (NXDOMAIN/NODATA) in the message m. 
 // NsecVerify returns nil when the NSECs in the message contain
 // the correct proof. This function does not validates the NSECs
 func (m *Msg) NsecVerify(q Question) error {
