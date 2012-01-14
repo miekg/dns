@@ -75,12 +75,28 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		m.Extra = append(m.Extra, t)
 
         }
+        nsec3 := new(dns.RR_NSEC3)
+        nsec3.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeNSEC3, Class: dns.ClassINET, Ttl: 0}
+        nsec3.Hash = dns.SHA1
+        nsec3.Flags = 0
+        nsec3.Iterations = 1
+        nsec3.Salt = "AABB"
+        nsec3.SaltLength = uint8(len(nsec3.Salt)/2)
+        nsec3.NextDomain = "miek.nl."
+//        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeMX, dns.TypeTXT, 4000, 4001}
+//        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeMX, dns.TypeTXT}
+        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeSOA}
+        nsec3.HashNames("miek.nl.")
 
+        m.Extra = append(m.Extra, nsec3)
 	b, ok := m.Pack()
+        fmt.Printf("%v\n", m.String())
 	if !ok {
 		log.Print("Packing failed")
-		//write formerr back?
-		return
+                m.SetRcode(r, dns.RcodeServerFailure)
+                m.Extra = nil
+                m.Answer = nil
+                b, _ = m.Pack()
 	}
 	w.Write(b)
 }

@@ -16,6 +16,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
@@ -408,11 +409,34 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off++
 				}
 			case "NSEC": // NSEC/NSEC3
+				// This is the uint16 type bitmap
+				// TODO(mg): overflow
+				lastwindow := uint16(0)
+				octet := uint16(0)
 				for j := 0; j < val.Field(i).Len(); j++ {
-					var _ = byte(fv.Index(j).Uint())
+					t := uint16((fv.Index(j).Uint()))
+					window := uint16(t / 256)
+					if lastwindow != window {
+						// New window
+						off += 2 + int(octet)
+					}
+					octet := (t - window*256) / 8
+					bit := t - (window * 256) - (octet * 8)
+
+					println("Setting window", off, "to", byte(window))
+					msg[off] = byte(window)
+					println("Setting octet", off+1, "to", byte(octet+1))
+					msg[off+1] = byte(octet+1)
+					println("Setting value", off+1+1+int(octet), "to", byte(1<<bit))
+					msg[off+1+1+int(octet)] |= byte(1 << bit)
+
+					println(t, window, octet, bit, 1<<bit)
+                                        fmt.Printf("%b\n", msg[off+2+int(octet)])
+
+					lastwindow = window
 				}
-				// handle type bit maps
-				// TODO(mg)
+                        //        off++
+                                println("off", off)
 			}
 		case reflect.Struct:
 			off, ok = packStructValue(fv, msg, off, compression, compress)
@@ -464,14 +488,6 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			switch val.Type().Field(i).Tag {
 			default:
 				return lenmsg, false
-			case "base32":
-				b32, err := packBase32([]byte(s))
-				if err != nil {
-					println("dns: overflow packing base32")
-					return lenmsg, false
-				}
-				copy(msg[off:off+len(b32)], b32)
-				off += len(b32)
 			case "base64":
 				b64, err := packBase64([]byte(s))
 				if err != nil {
@@ -492,6 +508,20 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					println("dns: overflow packing domain-name", off)
 					return lenmsg, false
 				}
+			case "size-base32":
+				// This is purely for NSEC3 atm, the previous byte must
+				// holds the length of the encoded string. As NSEC3
+				// is only defined to SHA1, the hashlength is 20 (160 bits)
+				msg[off-1] = 20 // Set HashLength... TODO(mg): check
+				fallthrough
+			case "base32":
+				b32, err := packBase32([]byte(s))
+				if err != nil {
+					println("dns: overflow packing base32")
+					return lenmsg, false
+				}
+				copy(msg[off:off+len(b32)], b32)
+				off += len(b32)
 			case "size-hex":
 				fallthrough
 			case "hex":
@@ -594,7 +624,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				fv.Set(reflect.ValueOf(opt))
 				off = off1 + int(optlen)
 			case "NSEC": // NSEC/NSEC3
-				// Rest of the Record it the type bitmap
+				// Rest of the Record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				rdlength -= (1 + 1 + 2 + len(val.FieldByName("NextDomain").String()) + 1)
 				if off+1 > lenmsg {

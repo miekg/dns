@@ -9,12 +9,13 @@ implemented in the library.
 Features:
 
 * UDP/TCP queries, IPv4 and IPv6;
-* TSIG;
-* EDNS0;
-* AXFR/IXFR;
-* DNS name compression;
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
+* DNSSEC;
+* EDNS0;
+* AXFR/IXFR;
+* TSIG;
+* DNS name compression;
 * RFC 1035 zone file parsing.
 
 Sample programs can be found in the `_examples` directory. They can 
@@ -50,7 +51,7 @@ Miek Gieben  -  2010-2012 - miek@miek.nl
 * 4635 - HMAC SHA TSIG
 * 4892 - id.server
 * 5001 - NSID 
-* 5155 - NSEC
+* 5155 - NSEC3
 * 5933 - GOST
 * 5936 - AXFR
 * xxxx - ECDSA

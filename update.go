@@ -11,13 +11,13 @@
 //
 // 3.2.4 - Table Of Metavalues Used In Prerequisite Section
 //
-//   CLASS    TYPE     RDATA    Meaning                          Function
-//   ----------------------------------------------------------------------------
-//   ANY      ANY      empty    Name is in use                   NameUsed
-//   ANY      rrset    empty    RRset exists (value independent) RRsetUsedNoRdata
-//   NONE     ANY      empty    Name is not in use               NameNotUsed
-//   NONE     rrset    empty    RRset does not exist             RRsetNotUsed
-//   zone     rrset    rr       RRset exists (value dependent)   RRsetUsedRdata
+//   CLASS    TYPE     RDATA    Meaning                    Function
+//   --------------------------------------------------------------
+//   ANY      ANY      empty    Name is in use             NameUsed
+//   ANY      rrset    empty    RRset exists (value indep) RRsetUsedNoRdata
+//   NONE     ANY      empty    Name is not in use         NameNotUsed
+//   NONE     rrset    empty    RRset does not exist       RRsetNotUsed
+//   zone     rrset    rr       RRset exists (value dep)   RRsetUsedRdata
 // 
 // The prerequisite section can also be left empty.
 // If you have decided an the prerequisites you can tell what RRs should
@@ -25,16 +25,17 @@
 // what function to call.
 // 3.4.2.6 - Table Of Metavalues Used In Update Section
 // 
-//   CLASS    TYPE     RDATA    Meaning                          Function
-//   -------------------------------------------------------------------------
-//   ANY      ANY      empty    Delete all RRsets from a name    NameDelete
-//   ANY      rrset    empty    Delete an RRset                  RRsetDelete
-//   NONE     rrset    rr       Delete an RR from an RRset       RRsetDeleteRR
-//   zone     rrset    rr       Add to an RRset                  RRsetAddRdata
+//   CLASS    TYPE     RDATA    Meaning                     Function
+//   ---------------------------------------------------------------
+//   ANY      ANY      empty    Delete all RRsets from name NameDelete
+//   ANY      rrset    empty    Delete an RRset             RRsetDelete
+//   NONE     rrset    rr       Delete an RR from  RRset    RRsetDeleteRR
+//   zone     rrset    rr       Add to an RRset             RRsetAddRdata
 // 
 package dns
 
-// NewUpdate creates a new DNS update packet, which is a normal DNS message.
+// NewUpdate creates a new DNS update packet. This returns a normal
+// dns *Msg, but sets some options.
 func NewUpdate(zone string, class uint16) *Msg {
 	u := new(Msg)
 	u.MsgHdr.Response = false
@@ -49,13 +50,13 @@ func NewUpdate(zone string, class uint16) *Msg {
 //
 // 3.2.4 - Table Of Metavalues Used In Prerequisite Section
 //
-//   CLASS    TYPE     RDATA    Meaning                           Function
-//   ----------------------------------------------------------------------
-//   ANY      ANY      empty    Name is in use                    NameUsed
-//   ANY      rrset    empty    RRset exists (value independent)  RRsetUsedNoRdata
-//   NONE     ANY      empty    Name is not in use                NameNotUsed
-//   NONE     rrset    empty    RRset does not exist              RRsetNotUsed
-//   zone     rrset    rr       RRset exists (value dependent)    RRsetUsedRdata
+//   CLASS    TYPE     RDATA    Meaning                     Function
+//   ---------------------------------------------------------------
+//   ANY      ANY      empty    Name is in use              NameUsed
+//   ANY      rrset    empty    RRset exists (value indep)  RRsetUsedNoRdata
+//   NONE     ANY      empty    Name is not in use          NameNotUsed
+//   NONE     rrset    empty    RRset does not exist        RRsetNotUsed
+//   zone     rrset    rr       RRset exists (value dep)    RRsetUsedRdata
 
 // NameUsed sets the RRs in the prereq section to
 // "Name is in use" RRs. RFC 2136 section 2.4.4.
@@ -116,12 +117,12 @@ func (u *Msg) RRsetNotUsed(rr []RR) {
 //
 // 3.4.2.6 - Table Of Metavalues Used In Update Section
 //
-//   CLASS    TYPE     RDATA    Meaning                         Function
-//   --------------------------------------------------------------------------
-//   ANY      ANY      empty    Delete all RRsets from a name   NameDelete
-//   ANY      rrset    empty    Delete an RRset                 RRsetDelete
-//   NONE     rrset    rr       Delete an RR from an RRset      RRsetDeleteRR
-//   zone     rrset    rr       Add to an RRset                 RRsetAddRdata
+//   CLASS    TYPE     RDATA    Meaning                     Function
+//   -----------------------------------------------------------------
+//   ANY      ANY      empty    Delete all RRsets from name NameDelete
+//   ANY      rrset    empty    Delete an RRset             RRsetDelete
+//   NONE     rrset    rr       Delete an RR from RRset     RRsetDeleteRR
+//   zone     rrset    rr       Add to an RRset             RRsetAddRdata
 
 // RRsetAddRdata adds an complete RRset, see RFC 2136 section 2.5.1
 func (u *Msg) RRsetAddRdata(rr []RR) {
