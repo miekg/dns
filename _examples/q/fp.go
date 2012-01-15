@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// .,IN,NS,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid
+
 const (
 	// Detected software types
 	NSD        = "NSD"
@@ -17,7 +19,7 @@ const (
 	MARADNS    = "MaraDNS"
 	NEUSTARDNS = "Neustar DNS"
 	ATLAS      = "Atlas"
-        ULTRADNS   = "UltraDNS"
+        YADIFA     = "Yadifa"
 
 	// Vendors
 	ISC       = "ISC"
@@ -27,48 +29,45 @@ const (
 	POWER     = "PowerDNS.com"
 	NEUSTAR   = "Neustar"
 	VERISIGN  = "Verisign"
-        ULTRA     = "UltraDNS"
+        EURID     = "EurID"
 )
 
 func startParse(addr string) {
 	l := &lexer{
-		addr:      addr,
-		client:    dns.NewClient(),
-		fp:        new(fingerprint),
-		items:     make(chan item),
-		state:     dnsAlive,
-		verbose:   true,
-		debugging: false,
+		addr:   addr,
+		client: dns.NewClient(),
+		fp:     new(fingerprint),
+		items:  make(chan item),
+		state:  dnsAlive,
+		debugging:  true,
 	}
 
 	l.run()
-	items := make([]item, 0)
+
+	// Not completely sure about this code..
 	for {
-		items = append(items, <-l.items)
+		item := <-l.items
+		fmt.Printf("{%s %s}\n", itemString[item.typ], item.val)
 		if l.state == nil {
 			break
 		}
-	}
-	// Print out what we've gathered
-        fmt.Println()
-	for _, i := range items {
-		fmt.Printf("{%s %s}\n", itemString[i.typ], i.val)
 	}
 }
 
 // SendProbe creates a packet and sends it to the nameserver. It
 // returns a fingerprint.
-func sendProbe(c *dns.Client, addr string, f *fingerprint, q dns.Question) (*fingerprint, dns.Question) {
-	m := f.toProbe(q)
+func sendProbe(c *dns.Client, addr string, f *fingerprint) *fingerprint {
+	m := f.toProbe()
 	r, err := c.Exchange(m, addr)
 	if err != nil {
-		return errorToFingerprint(err), dns.Question{}
+		return errorToFingerprint(err)
 	}
-	return msgToFingerprint(r), r.Question[0]
+	return msgToFingerprint(r)
 }
 
-// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
+// This leads to strings like: "miek.nl.,IN,A,QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
 type fingerprint struct {
+	Query              dns.Question // Question to ask or Question of the reply
 	Error              error
 	Opcode             int
 	Rcode              int
@@ -91,17 +90,35 @@ type fingerprint struct {
 
 // String creates a (short) string representation of a dns message.
 // If a bit is set we uppercase the name 'AD' otherwise it's lowercase 'ad'.
-// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
+// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID" // TODO fix doc
 func (f *fingerprint) String() string {
 	if f == nil {
 		return "<nil>"
 	}
-	// Use the same order as in Perl's fpdns. But use more flags.
+	// Use the same order as in Perl's fpdns. But use much more flags.
 	var s string
+	// The Question.
+	if len(f.Query.Name) == 0 {
+		s = "."
+	} else {
+		s = f.Query.Name
+	}
+	if _, ok := dns.Class_str[f.Query.Qclass]; ok {
+		s += "," + dns.Class_str[f.Query.Qclass]
+	} else {
+		s += "," + "CLASS" + strconv.Itoa(int(f.Query.Qclass))
+	}
+
+	if _, ok := dns.Rr_str[f.Query.Qtype]; ok {
+		s += "," + dns.Rr_str[f.Query.Qtype]
+	} else {
+		s += "," + "TYPE" + strconv.Itoa(int(f.Query.Qtype))
+	}
+
 	if op, ok := dns.Opcode_str[f.Opcode]; ok {
-		s = op
+		s += "," + op
 	} else { // number
-		s = valueOfInt(f.Opcode)
+		s += "," + valueOfInt(f.Opcode)
 	}
 
 	if op, ok := dns.Rcode_str[f.Rcode]; ok {
@@ -127,57 +144,68 @@ func (f *fingerprint) String() string {
 	s += valueOfBool(f.Do, ",do")
 	s += "," + valueOfInt(f.UDPSize)
 	s += valueOfBool(f.Nsid, ",nsid")
+
 	return s
 }
 
 // fingerStringNoSections returns the strings representation
-// without the sections' count and the EDNS0 stuff
+// without the sections' count and the EDNS0 stuff and the query
 func (f *fingerprint) StringNoSections() string {
-	s := strings.SplitN(f.String(), ",", 11)
-	return strings.Join(s[:10], ",")
+	s := strings.SplitN(f.String(), ",", 14)
+	return strings.Join(s[2:13], ",")
 }
 
 // SetString set the string to fp.. todo
 func (f *fingerprint) setString(str string) {
-        println("STR:", str)
 	for i, s := range strings.Split(str, ",") {
-                println("I", i, "S", s)
 		switch i {
-		case 0:
+		case 0: // question section domain name
+			f.Query.Name = s
+		case 1: // Qclass
+			f.Query.Qclass = 0
+			if c, ok := dns.Str_class[s]; ok {
+				f.Query.Qclass = c
+			}
+		case 2: // Qtype
+			f.Query.Qtype = 0
+			if c, ok := dns.Str_rr[s]; ok {
+				f.Query.Qtype = c
+			}
+		case 3:
 			if op, ok := dns.Str_opcode[s]; ok {
 				f.Opcode = op
 			} else { // number
 				f.Opcode = valueOfString(s)
 			}
-		case 1:
+		case 4:
 			if op, ok := dns.Str_rcode[s]; ok {
 				f.Rcode = op
 			} else { // number
 				f.Rcode = valueOfString(s)
 			}
-		case 2:
-			f.Response = s == strings.ToUpper("qr")
-		case 3:
-			f.Authoritative = s == strings.ToUpper("aa")
-		case 4:
-			f.Truncated = s == strings.ToUpper("tc")
 		case 5:
-			f.RecursionDesired = s == strings.ToUpper("rd")
+			f.Response = s == strings.ToUpper("qr")
 		case 6:
-			f.RecursionAvailable = s == strings.ToUpper("ra")
+			f.Authoritative = s == strings.ToUpper("aa")
 		case 7:
-			f.AuthenticatedData = s == strings.ToUpper("ad")
+			f.Truncated = s == strings.ToUpper("tc")
 		case 8:
-			f.CheckingDisabled = s == strings.ToUpper("cd")
+			f.RecursionDesired = s == strings.ToUpper("rd")
 		case 9:
+			f.RecursionAvailable = s == strings.ToUpper("ra")
+		case 10:
+			f.AuthenticatedData = s == strings.ToUpper("ad")
+		case 11:
+			f.CheckingDisabled = s == strings.ToUpper("cd")
+		case 12:
 			f.Zero = s == strings.ToUpper("z")
-		case 10, 11, 12, 13:
-			// Can not set content of the message
-		case 14:
+		case 13, 14, 15, 16:
+			// Can not set lenght of the section in the message
+		case 17:
 			f.Do = s == strings.ToUpper("do")
-		case 15:
+		case 18:
 			f.UDPSize = valueOfString(s)
-		case 16:
+		case 19:
 			f.Nsid = s == strings.ToUpper("nsid")
 		default:
 			panic("unhandled fingerprint")
@@ -209,6 +237,13 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 	}
 	h := m.MsgHdr
 	f := new(fingerprint)
+
+	// Set the old query
+	if len(m.Question) > 0 {
+		f.Query.Name = m.Question[0].Name
+		f.Query.Qtype = m.Question[0].Qtype
+		f.Query.Qclass = m.Question[0].Qclass
+	}
 
 	f.Opcode = h.Opcode
 	f.Rcode = h.Rcode
@@ -245,11 +280,11 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 // Create a dns message from a fingerprint string and
 // a DNS question. The order of a string is always the same.
 // QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096,nsid
-func (f *fingerprint) toProbe(q dns.Question) *dns.Msg {
+func (f *fingerprint) toProbe() *dns.Msg {
 	m := new(dns.Msg)
 	m.MsgHdr.Id = dns.Id()
 	m.Question = make([]dns.Question, 1)
-	m.Question[0] = q
+	m.Question[0] = dns.Question{f.Query.Name, f.Query.Qtype, f.Query.Qclass}
 	m.MsgHdr.Opcode = f.Opcode
 	m.MsgHdr.Rcode = f.Rcode
 	m.MsgHdr.Response = f.Response
