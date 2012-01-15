@@ -54,7 +54,10 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) {
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, classINET.
 func (dns *Msg) SetUpdate(z string) {
-        return NewUpdate(z, ClassINET)
+       dns.MsgHdr.Id = Id()
+       dns.MsgHdr.Opcode = OpcodeUpdate
+       dns.Question = make([]Question, 1)
+       dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }
 
 // SetIxfr creates dns msg suitable for requesting an ixfr.
