@@ -77,7 +77,7 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// TsigGenerate add add TSIG RR to a message. The TSIG MAC is saved
+// TsigGenerate adds an TSIG RR to a message. The TSIG MAC is saved
 // in the Tsig RR that is added. When TsigGenerate is called for the
 // first time requestMAC is set to the empty string.
 // If something goes wrong an error is returned, otherwise it is nil.

@@ -67,10 +67,10 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	return nil, nil // Dummy return
 }
 
-// Convert a PrivateKey to a string. This
+// PrivateKeyString converts a PrivateKey to a string. This
 // string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
 // It needs some info from the key (hashing, keytag), so its a method of the RR_DNSKEY.
-func (r *RR_DNSKEY) PrivateKeyToString(p PrivateKey) (s string) {
+func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
@@ -105,7 +105,7 @@ func (r *RR_DNSKEY) PrivateKeyToString(p PrivateKey) (s string) {
 			"Exponent2: " + exponent2 + "\n" +
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
-		//
+		s = "TODO"
 	}
 	return
 }

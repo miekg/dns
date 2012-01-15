@@ -206,8 +206,7 @@ func TestTag(t *testing.T) {
 }
 
 func TestKeyRSA(t *testing.T) {
-
-	return // Tijdelijk uit TODO(mg)
+	//return // Tijdelijk uit TODO(mg)
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
@@ -241,6 +240,7 @@ func TestKeyRSA(t *testing.T) {
 	sig.SignerName = "miek.nl."
 
 	sig.Sign(priv, []RR{soa})
+        // Not actually doing with the data... What should I test
 	//s := key.PrivateKeyString(priv)
 }
 
