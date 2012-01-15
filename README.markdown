@@ -9,9 +9,9 @@ implemented in the library.
 Features:
 
 * UDP/TCP queries, IPv4 and IPv6;
-* Fast, query speed should be around 30K qps. Parsing RR (from zonefiles)
-    does about 25K RR/s.
-    This is expected to be optimized in the near future;
+* Fast, reply speed should be around 30K qps. Parsing RR (from zonefiles)
+    goes with 25K RR/s.
+    This is expected to be optimized further.
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
 * RFC 1035 zone file parsing.
