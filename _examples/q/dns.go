@@ -47,7 +47,7 @@ func dnsServer(l *lexer) stateFn {
 		l.emit(&item{itemVendor, POWER})
 		return dnsPowerdnsLike
 	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeServerFailure:
-		// Neustar
+		// Neustar or UltraDNS Resolver
 		l.emit(&item{itemVendor, NEUSTAR})
 		return dnsNeustarLike
 	case !f.Do && f.UDPSize == 0 && f.Rcode == dns.RcodeNotImplemented:
@@ -169,6 +169,9 @@ func dnsYadifaLike(l *lexer) stateFn {
 
 func dnsNeustarLike(l *lexer) stateFn {
 	l.debug("NeustarLike")
+        l.debug("UltraDNS")
+	l.setString(".,CLASS42,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
+	l.probe()
 
 	return nil
 }

@@ -17,6 +17,7 @@ const (
 	MARADNS    = "MaraDNS"
 	NEUSTARDNS = "Neustar DNS"
 	ATLAS      = "Atlas"
+        ULTRADNS   = "UltraDNS"
 
 	// Vendors
 	ISC       = "ISC"
@@ -26,6 +27,7 @@ const (
 	POWER     = "PowerDNS.com"
 	NEUSTAR   = "Neustar"
 	VERISIGN  = "Verisign"
+        ULTRA     = "UltraDNS"
 )
 
 func startParse(addr string) {
@@ -137,7 +139,9 @@ func (f *fingerprint) StringNoSections() string {
 
 // SetString set the string to fp.. todo
 func (f *fingerprint) setString(str string) {
+        println("STR:", str)
 	for i, s := range strings.Split(str, ",") {
+                println("I", i, "S", s)
 		switch i {
 		case 0:
 			if op, ok := dns.Str_opcode[s]; ok {

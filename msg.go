@@ -412,30 +412,34 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// This is the uint16 type bitmap
 				// TODO(mg): overflow
 				lastwindow := uint16(0)
-				octet := uint16(0)
+				length := uint16(0)
+                                if off+2 > len(msg) {
+                                        println("dns: overflow packing NSECx bitmap")
+                                        return lenmsg, false
+                                }
 				for j := 0; j < val.Field(i).Len(); j++ {
 					t := uint16((fv.Index(j).Uint()))
 					window := uint16(t / 256)
 					if lastwindow != window {
 						// New window
-						off += 2 + int(octet)
+						off += 2 + int(length)
 					}
-					octet := (t - window*256) / 8
-					bit := t - (window * 256) - (octet * 8)
+					length := (t - window*256) / 8
+					bit := t - (window * 256) - (length * 8)
 
 					println("Setting window", off, "to", byte(window))
 					msg[off] = byte(window)
-					println("Setting octet", off+1, "to", byte(octet+1))
-					msg[off+1] = byte(octet+1)
-					println("Setting value", off+1+1+int(octet), "to", byte(1<<bit))
-					msg[off+1+1+int(octet)] |= byte(1 << bit)
+					println("Setting length", off+1, "to", byte(length+1))
+					msg[off+1] = byte(length+1)
+					println("Setting value", off+1+1+int(length), "to", byte(1<<bit))
+					msg[off+1+1+int(length)] |= byte(1 << bit)
 
-					println(t, window, octet, bit, 1<<bit)
-                                        fmt.Printf("%b\n", msg[off+2+int(octet)])
+					println(t, window, length, bit, 1<<bit)
+                                        fmt.Printf("%b\n", msg[off+2+int(length)])
 
 					lastwindow = window
 				}
-                        //        off++
+                                off += 3
                                 println("off", off)
 			}
 		case reflect.Struct:
