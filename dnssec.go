@@ -78,7 +78,7 @@ type dnskeyWireFmt struct {
 	/* Nothing is left out */
 }
 
-// Keytag calculates the keytag of the DNSKEY.
+// KeyTag calculates the keytag (or key-id) of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
