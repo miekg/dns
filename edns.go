@@ -135,5 +135,5 @@ func (rr *RR_OPT) Nsid() string {
 // SetNsid sets the NSID from a hex character string.
 // Use the empty string when requesting an NSID.
 func (rr *RR_OPT) SetNsid(hexnsid string) {
-        rr.Option = append(rr.Option, Option{OptionCodeNSID, hexnsid})
+	rr.Option = append(rr.Option, Option{OptionCodeNSID, hexnsid})
 }

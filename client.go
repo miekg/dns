@@ -217,7 +217,7 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, err
 	}
-        //Why cant we set the buf here?? TODO(MG)
+	//Why cant we set the buf here?? TODO(MG)
 	if n, err = w.readClient(outbuf); err != nil {
 		return n, err
 	}
