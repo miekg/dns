@@ -11,6 +11,7 @@ things that need to be fixed.
 * Speed
 * SaltLength in NSEC3 is ugly to set, should be automatically done. There are prolly a few more
     settings just like that -- need to look at them.
+    -edns NSID is another
 
 ## Examples to add
 

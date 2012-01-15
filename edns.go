@@ -129,7 +129,12 @@ func (rr *RR_OPT) SetDo() {
 
 // Nsid returns the NSID as hex character string.
 func (rr *RR_OPT) Nsid() string {
-	return "NSID: " + rr.Option[0].Data
+        for i := 0; i < len(rr.Option); i++ {
+                if rr.Option[i].Code == OptionCodeNSID {
+	                return "NSID: " + rr.Option[i].Data
+                }
+        }
+        return "Not found"
 }
 
 // SetNsid sets the NSID from a hex character string.
