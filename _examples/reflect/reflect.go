@@ -29,6 +29,7 @@ import (
 	"strconv"
 )
 
+var printf *bool
 const dom = "whoami.miek.nl."
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
@@ -90,7 +91,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
         */
 
 	b, ok := m.Pack()
-        fmt.Printf("%v\n", m.String())
+        if *printf {
+                fmt.Printf("%v\n", m.String())
+        }
 	if !ok {
 		log.Print("Packing failed")
                 m.SetRcode(r, dns.RcodeServerFailure)
@@ -110,6 +113,7 @@ func serve(net string) {
 
 func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	printf = flag.Bool("print", false, "print replies")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
