@@ -314,7 +314,6 @@ func (w *response) Write(data []byte) (n int, err error) {
 	case w.conn._UDP != nil:
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
-			println(err.Error())
 			return 0, err
 		}
 	case w.conn._TCP != nil:
