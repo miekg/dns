@@ -642,14 +642,15 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				seen := 2
 				for seen < rdlength {
 					window = int(msg[off])
+					//println("off", off, "lenmsg", lenmsg)
 					length = int(msg[off+1])
-                                        if length == 0 {
-                                                // Last one
-                                                break
-                                        }
+					if length == 0 {
+						// Last one
+						break
+					}
 					if length > 32 {
 						//println("dns: overflow unpacking NSEC")
-                                                // Funny, this happens, but isn't an error. TODO(mg)
+						// Funny, this happens, but isn't an error. TODO(mg)
 						break
 					}
 
@@ -684,6 +685,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					}
 					off += length
 					seen += length + 2
+					if off+1 > lenmsg {
+						println("dns: overflow unpacking NSEC")
+						return lenmsg, false
+					}
 				}
 				fv.Set(reflect.ValueOf(nsec))
 			}
