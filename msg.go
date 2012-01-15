@@ -648,7 +648,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
                                                 break
                                         }
 					if length > 32 {
-						println("dns: overflow unpacking NSEC")
+						//println("dns: overflow unpacking NSEC")
                                                 // Funny, this happens, but isn't an error. TODO(mg)
 						break
 					}
