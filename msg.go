@@ -632,12 +632,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "NSEC": // NSEC/NSEC3
 				// Rest of the Record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-				rdlength -= (1 + 1 + 2 + len(val.FieldByName("NextDomain").String()) + 1)
 				if off+1 > lenmsg {
 					println("dns: overflow unpacking NSEC")
 					return lenmsg, false
 				}
-
 				nsec := make([]uint16, 0)
 				length := 0
 				window := 0
@@ -645,10 +643,14 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				for seen < rdlength {
 					window = int(msg[off])
 					length = int(msg[off+1])
-					if length == 0 || length > 32 {
+                                        if length == 0 {
+                                                // Last one
+                                                break
+                                        }
+					if length > 32 {
 						println("dns: overflow unpacking NSEC")
+                                                // Funny, this happens, but isn't an error. TODO(mg)
 						break
-						//                                                return lenmsg, false
 					}
 
 					off += 2
