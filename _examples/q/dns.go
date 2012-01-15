@@ -12,7 +12,7 @@ const (
 
 // Check if the server responds at all
 func dnsAlive(l *lexer) stateFn {
-	l.debug("Alive")
+	l.verbose("Alive")
 	l.setString(QUERY_NOERROR)
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 
@@ -27,7 +27,7 @@ func dnsAlive(l *lexer) stateFn {
 // This is the starting test. Perform a bunch of queries, get the
 // fingerprint a go into a general direction. NsdLike, BindLike, WindowsLike, MaraLike
 func dnsServer(l *lexer) stateFn {
-	l.debug("Server")
+	l.verbose("Server")
 
 	// Set the DO bit
 	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,4097,NSID")
@@ -76,7 +76,7 @@ func dnsServer(l *lexer) stateFn {
 }
 
 func dnsNsdLike(l *lexer) stateFn {
-	l.debug("NsdLike")
+	l.verbose("NsdLike")
 	l.setString(QUERY_NOERROR)
 	l.setQuestion("authors.bind.", dns.TypeTXT, dns.ClassCHAOS)
 	l.probe()
@@ -85,7 +85,7 @@ func dnsNsdLike(l *lexer) stateFn {
 }
 
 func dnsBindLike(l *lexer) stateFn {
-	l.debug("BindLike")
+	l.verbose("BindLike")
 
 	l.emit(&item{itemSoftware, BIND})
 
@@ -142,24 +142,24 @@ func dnsBindLike(l *lexer) stateFn {
 }
 
 func dnsWindowsLike(l *lexer) stateFn {
-	l.debug("WindowsLike")
+	l.verbose("WindowsLike")
 
 	return nil
 }
 
 func dnsMaraLike(l *lexer) stateFn {
-	l.debug("MaraLike")
+	l.verbose("MaraLike")
 
 	return nil
 }
 
 func dnsPowerdnsLike(l *lexer) stateFn {
-	l.debug("PowerdnsLike")
+	l.verbose("PowerdnsLike")
 	return nil
 }
 
 func dnsYadifaLike(l *lexer) stateFn {
-	l.debug("YadifaLike")
+	l.verbose("YadifaLike")
 	l.setString(".,CLASS0,TYPE0,QUERY,NOERROR,QR,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
 	l.probe()
 	l.setString(".,CLASS42,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
@@ -168,8 +168,8 @@ func dnsYadifaLike(l *lexer) stateFn {
 }
 
 func dnsNeustarLike(l *lexer) stateFn {
-	l.debug("NeustarLike")
-        l.debug("UltraDNS")
+	l.verbose("NeustarLike")
+        l.verbose("UltraDNS")
 	l.setString(".,CLASS42,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
 	l.probe()
 
@@ -177,14 +177,14 @@ func dnsNeustarLike(l *lexer) stateFn {
 }
 
 func dnsAtlasLike(l *lexer) stateFn {
-	l.debug("AtlasLike")
+	l.verbose("AtlasLike")
 
 	return nil
 }
 
 // Check if the server returns the DO-bit when set in the request.                                                                          
 func dnsDoBitMirror(l *lexer) stateFn {
-	l.debug("DoBitMirror")
+	l.verbose("DoBitMirror")
 
 	l.setString("QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,0,NSID")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
@@ -199,7 +199,7 @@ func dnsDoBitMirror(l *lexer) stateFn {
 }
 
 func dnsEDNS0Mangler(l *lexer) stateFn {
-	l.debug("EDNS0Mangler")
+	l.verbose("EDNS0Mangler")
 	l.setString("NOTIFY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,do,0,nsid")
 	l.setQuestion("012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.012345678901234567890123456789012345678901234567890123456789012.0123456789012345678901234567890123456789012345678901234567890.", dns.TypeA, dns.ClassINET)
 	f, _ := l.probe()
@@ -212,7 +212,7 @@ func dnsEDNS0Mangler(l *lexer) stateFn {
 }
 
 func dnsTcEnable(l *lexer) stateFn {
-	l.debug("TcEnable")
+	l.verbose("TcEnable")
 	l.setString("QUERY,NOERROR,qr,aa,TC,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -220,7 +220,7 @@ func dnsTcEnable(l *lexer) stateFn {
 }
 
 func dnsUDPSize(l *lexer) stateFn {
-	l.debug("UDPSize")
+	l.verbose("UDPSize")
 	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,DO,4097,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -228,7 +228,7 @@ func dnsUDPSize(l *lexer) stateFn {
 }
 
 func dnsZero(l *lexer) stateFn {
-	l.debug("Zero")
+	l.verbose("Zero")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.setString("QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.probe()
@@ -236,7 +236,7 @@ func dnsZero(l *lexer) stateFn {
 }
 
 func dnsAll(l *lexer) stateFn {
-	l.debug("All")
+	l.verbose("All")
 	l.setString("QUERY,NOERROR,qr,AA,TC,RD,RA,AD,CD,Z,0,0,0,0,DO,8192,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -244,7 +244,7 @@ func dnsAll(l *lexer) stateFn {
 }
 
 func dnsIquery(l *lexer) stateFn {
-	l.debug("Iquery")
+	l.verbose("Iquery")
 	l.setString("IQUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -252,7 +252,7 @@ func dnsIquery(l *lexer) stateFn {
 }
 
 func dnsUpdate(l *lexer) stateFn {
-	l.debug("Update")
+	l.verbose("Update")
 	l.setString("UPDATE,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -260,7 +260,7 @@ func dnsUpdate(l *lexer) stateFn {
 }
 
 func dnsStatus(l *lexer) stateFn {
-	l.debug("Status")
+	l.verbose("Status")
 	l.setString("STATUS,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -268,7 +268,7 @@ func dnsStatus(l *lexer) stateFn {
 }
 
 func dnsOpcodeWhacky(l *lexer) stateFn {
-	l.debug("OpcodeWhacky")
+	l.verbose("OpcodeWhacky")
 	l.setString("12,NOERROR,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -276,7 +276,7 @@ func dnsOpcodeWhacky(l *lexer) stateFn {
 }
 
 func dnsRcodeWhacky(l *lexer) stateFn {
-	l.debug("RcodeWhacky")
+	l.verbose("RcodeWhacky")
 	l.setString("QUERY,31,qr,aa,tc,rd,ra,ad,cd,Z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()
@@ -284,7 +284,7 @@ func dnsRcodeWhacky(l *lexer) stateFn {
 }
 
 func dnsRcodeNotZone(l *lexer) stateFn {
-	l.debug("RcodeNotZone")
+	l.verbose("RcodeNotZone")
 	l.setString("QUERY,NOTZONE,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid")
 	l.setQuestion(".", dns.TypeNS, dns.ClassINET)
 	l.probe()

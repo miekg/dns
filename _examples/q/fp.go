@@ -39,7 +39,7 @@ func startParse(addr string) {
 		fp:     new(fingerprint),
 		items:  make(chan item),
 		state:  dnsAlive,
-		debugging:  true,
+		debug:  true,
 	}
 
 	l.run()

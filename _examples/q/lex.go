@@ -38,23 +38,20 @@ var itemString = map[itemType]string{
 type stateFn func(*lexer) stateFn
 
 type lexer struct {
-	client    *dns.Client  // client used.
-	addr      string       // addr of the server being scanned.
-	fp        *fingerprint // fingerprint to test.
-	q         dns.Question // question to ask.
-	items     chan item    // channel of scanned items.
-	state     stateFn      // the next function to enter.
-	verbose   bool         // if true, the fingerprints are printed.
-	debugging bool         // If true, print the function names.
+	client *dns.Client  // client used.
+	addr   string       // addr of the server being scanned.
+	fp     *fingerprint // fingerprint to test.
+	items  chan item    // channel of scanned items.
+	state  stateFn      // the next function to enter.
+	debug  bool         // if true, the fingerprints are printed.
 }
 
-func (l *lexer) probe() (*fingerprint, dns.Question) {
-	f, q := sendProbe(l.client, l.addr, l.fp, l.q)
-	if l.verbose {
-		fmt.Printf("QR : %s\t-", f)
-		fmt.Printf(" (%s)\n", q.String())
+func (l *lexer) probe() *fingerprint {
+	f := sendProbe(l.client, l.addr, l.fp)
+	if l.debug {
+		fmt.Printf("      QR fp: %s\n", f)
 	}
-	return f, q
+	return f
 }
 
 func (l *lexer) emit(i *item) {
@@ -63,15 +60,8 @@ func (l *lexer) emit(i *item) {
 
 func (l *lexer) setString(s string) {
 	l.fp.setString(s)
-	if l.verbose {
-		fmt.Printf("Q  : %s\t-", s)
-	}
-}
-
-func (l *lexer) setQuestion(name string, t uint16, c uint16) {
-	l.q = dns.Question{name, t, c}
-	if l.verbose {
-		fmt.Printf(" (%s)\n", l.q.String())
+	if l.debug {
+		fmt.Printf("       Q fp: %s\n", s)
 	}
 }
 
@@ -84,8 +74,8 @@ func (l *lexer) run() {
 	}()
 }
 
-func (l *lexer) debug(s string) {
-	if l.debugging {
+func (l *lexer) verbose(s string) {
+	if l.debug {
 		fmt.Printf(" dns%s\n", s)
 	}
 }
