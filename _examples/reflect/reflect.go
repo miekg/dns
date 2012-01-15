@@ -75,6 +75,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		m.Extra = append(m.Extra, t)
 
         }
+        /*
         nsec3 := new(dns.RR_NSEC3)
         nsec3.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeNSEC3, Class: dns.ClassINET, Ttl: 0}
         nsec3.Hash = dns.SHA1
@@ -83,11 +84,11 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
         nsec3.Salt = "AABB"
         nsec3.SaltLength = uint8(len(nsec3.Salt)/2)
         nsec3.NextDomain = "miek.nl."
-//        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeMX, dns.TypeTXT, 4000, 4001}
-        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeSOA, dns.TypeTXT, dns.TypeRRSIG}
+        nsec3.TypeBitMap = []uint16{dns.TypeA, dns.TypeNS, dns.TypeSOA, dns.TypeTXT, dns.TypeRRSIG, 4000, 4001, 5949}
         nsec3.HashNames("miek.nl.")
-
         m.Extra = append(m.Extra, nsec3)
+        */
+
 	b, ok := m.Pack()
         fmt.Printf("%v\n", m.String())
 	if !ok {

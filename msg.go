@@ -16,7 +16,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
@@ -410,39 +409,40 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				}
 			case "NSEC": // NSEC/NSEC3
 				// This is the uint16 type bitmap
-				// TODO(mg): overflow
 				lastwindow := uint16(0)
 				length := uint16(0)
-                                if off+2 > len(msg) {
-                                        println("dns: overflow packing NSECx bitmap")
-                                        return lenmsg, false
-                                }
+				if off+2 > len(msg) {
+					println("dns: overflow packing NSECx bitmap")
+					return lenmsg, false
+				}
 				for j := 0; j < val.Field(i).Len(); j++ {
 					t := uint16((fv.Index(j).Uint()))
 					window := uint16(t / 256)
 					if lastwindow != window {
-						// New window
-                                                println("New window, adding", 2+length)
-						off += int(length)+2
+						// New window, jump to the new offset
+						off += int(length) + 3
+						if off > lenmsg {
+							println("dns: overflow packing NSECx bitmap")
+							return lenmsg, false
+						}
 					}
 					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
 
-					println("Setting window", off, "to", byte(window))
+					// Setting the window #
 					msg[off] = byte(window)
-					println("Setting length", off+1, "to", byte(length+1))
-					msg[off+1] = byte(length+1)
-					println("Setting value", off+1+1+int(length), "to", byte(1<<bit))
-					msg[off+1+1+int(length)] |= byte(1 << (7-bit))
-
-					println(t, window, length, bit, 1<<bit)
-                                        fmt.Printf("%b\n", msg[off+2+int(length)])
-
+					// Setting the octets length
+					msg[off+1] = byte(length + 1)
+					// Setting the bit value for the type in the right octet
+					msg[off+2+int(length)] |= byte(1 << (7 - bit))
 					lastwindow = window
 				}
-                                off+=2+int(length)
-                                off++
-                                println("off", off)
+				off += 2 + int(length)
+				off++
+				if off > lenmsg {
+					println("dns: overflow packing NSECx bitmap")
+					return lenmsg, false
+				}
 			}
 		case reflect.Struct:
 			off, ok = packStructValue(fv, msg, off, compression, compress)
