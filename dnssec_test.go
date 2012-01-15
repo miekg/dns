@@ -206,7 +206,6 @@ func TestTag(t *testing.T) {
 }
 
 func TestKeyRSA(t *testing.T) {
-	//return // Tijdelijk uit TODO(mg)
 	key := new(RR_DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
@@ -215,8 +214,7 @@ func TestKeyRSA(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	length := 2048
-	priv, _ := key.Generate(length)
+	priv, _ := key.Generate(2048)
 
 	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
@@ -235,13 +233,19 @@ func TestKeyRSA(t *testing.T) {
 	sig.Labels = 2
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
-	sig.OrigTtl = 14400
+	sig.OrigTtl = soa.Hdr.Ttl
 	sig.KeyTag = key.KeyTag()
-	sig.SignerName = "miek.nl."
+	sig.SignerName = key.Hdr.Name
 
-	sig.Sign(priv, []RR{soa})
-        // Not actually doing with the data... What should I test
-	//s := key.PrivateKeyString(priv)
+        if err := sig.Sign(priv, []RR{soa}); err != nil {
+                t.Logf("Failed to sign")
+                t.Fail()
+                return
+        }
+        if err := sig.Verify(key, []RR{soa}); err != nil {
+                t.Logf("Failed to verify")
+                t.Fail()
+        }
 }
 
 func TestKeyToDS(t *testing.T) {
