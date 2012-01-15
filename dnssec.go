@@ -144,7 +144,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	// DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key.
 
 	// digest buffer
-	digest := append(owner, wire...) // another copy TODO(mg)
+	digest := append(owner, wire...) // another copy
 
 	switch h {
 	case SHA1:
@@ -490,11 +490,11 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
+		wire := make([]byte, r.Len())
 		h.Ttl = s.OrigTtl
-		wire := make([]byte, DefaultMsgSize)
 		off, ok1 := packRR(r, wire, 0, nil, false)
-		wire = wire[:off]
 		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
+		wire = wire[:off]
 		h.Name = name
 		if !ok1 {
 			return nil
