@@ -422,9 +422,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					window := uint16(t / 256)
 					if lastwindow != window {
 						// New window
-						off += 2 + int(length)
+                                                println("New window, adding", 2+length)
+						off += int(length)+2
 					}
-					length := (t - window*256) / 8
+					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
 
 					println("Setting window", off, "to", byte(window))
@@ -432,14 +433,15 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					println("Setting length", off+1, "to", byte(length+1))
 					msg[off+1] = byte(length+1)
 					println("Setting value", off+1+1+int(length), "to", byte(1<<bit))
-					msg[off+1+1+int(length)] |= byte(1 << bit)
+					msg[off+1+1+int(length)] |= byte(1 << (7-bit))
 
 					println(t, window, length, bit, 1<<bit)
                                         fmt.Printf("%b\n", msg[off+2+int(length)])
 
 					lastwindow = window
 				}
-                                off += 3
+                                off+=2+int(length)
+                                off++
                                 println("off", off)
 			}
 		case reflect.Struct:
