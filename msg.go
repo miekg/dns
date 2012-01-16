@@ -174,11 +174,11 @@ var Rcode_str = map[int]string{
 
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
-// If compression is want compress must be true and the compression
-// map, needs to hold a mapping between domain names and offsets
-// pointing into msg[].
 
 // PackDomainName packs a domain name s into msg[off:].
+// If compression is wanted compress must be true and the compression
+// map, needs to hold a mapping between domain names and offsets
+// pointing into msg[].
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
