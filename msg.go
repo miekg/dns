@@ -632,28 +632,40 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "NSEC": // NSEC/NSEC3
 				// Rest of the Record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-				if off+1 > lenmsg {
-					println("dns: overflow unpacking NSEC")
+				var endrr int
+				// for NSEC and NSEC3 calculate back what end of the RR must be
+				switch val.Type().Name() {
+				case "RR_NSEC":
+					endrr = off + (rdlength - (len(val.FieldByName("NextDomain").String()) + 1))
+				case "RR_NSEC3":
+                                        // NextDomain is always 20 for NextDomain
+					endrr = off + (rdlength - (20 + 6 + len(val.FieldByName("Salt").String())/2))
+				}
+
+				if off+2 > lenmsg {
+					println("dns: overflow unpacking NSEC 22")
 					return lenmsg, false
 				}
 				nsec := make([]uint16, 0)
 				length := 0
 				window := 0
-				seen := 2
-				for seen < rdlength {
+				for off+2 < endrr {
 					window = int(msg[off])
-					//println("off", off, "lenmsg", lenmsg)
 					length = int(msg[off+1])
+					//println("off, windows, length, end", off, window, length, endrr)
 					if length == 0 {
-						// Last one
-						break
+						// A length window of zero is strange. If there
+						// the window should not have been specified. Bail out
+						println("dns: length == 0 when unpacking NSEC")
+						return lenmsg, false
 					}
 					if length > 32 {
-						//println("dns: overflow unpacking NSEC")
-						// Funny, this happens, but isn't an error. TODO(mg)
-						break
+						println("dns: length > 32 when unpacking NSEC")
+						return lenmsg, false
 					}
 
+					// Walk the bytes in the window - and check the bit
+					// setting..
 					off += 2
 					for j := 0; j < length; j++ {
 						b := msg[off+j]
@@ -684,11 +696,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 						}
 					}
 					off += length
-					seen += length + 2
-					if off+1 > lenmsg {
-						println("dns: overflow unpacking NSEC")
-						return lenmsg, false
-					}
 				}
 				fv.Set(reflect.ValueOf(nsec))
 			}
