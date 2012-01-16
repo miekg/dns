@@ -70,6 +70,7 @@ const (
 	TypeURI   uint16 = 256
 	TypeTA    uint16 = 32768
 	TypeDLV   uint16 = 32769
+	TypeTLSA  uint16 = 65468 // Experimental
 
 	// valid Question.Qclass
 	ClassINET   = 1
@@ -957,11 +958,11 @@ func (rr *RR_TSIG) Len() int {
 
 // DANE
 type RR_TLSA struct {
-        Hdr     RR_Header
-        Usage   uint8
-        Selector uint8
-        MatchingType uint8
-        Certificate string "hex"
+	Hdr          RR_Header
+	Usage        uint8
+	Selector     uint8
+	MatchingType uint8
+	Certificate  string "hex"
 }
 
 func (rr *RR_TLSA) Header() *RR_Header {
@@ -979,7 +980,6 @@ func (rr *RR_TLSA) String() string {
 func (rr *RR_TLSA) Len() int {
 	return rr.Hdr.Len() + 3 + len(rr.Certificate)/2
 }
-
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982) [TODO]
@@ -1060,4 +1060,6 @@ var rr_mk = map[uint16]func() RR{
 	TypeURI:        func() RR { return new(RR_URI) },
 	TypeTA:         func() RR { return new(RR_TA) },
 	TypeDLV:        func() RR { return new(RR_DLV) },
+
+	TypeTLSA: func() RR { return new(RR_TLSA) },
 }
