@@ -477,6 +477,7 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 		name := h.Name
 		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
+                /*
 		switch h.Rrtype {
                 case TypeNS:
                         r.(*RR_NS).Ns = strings.ToLower(r.(*RR_NS).Ns)
@@ -501,6 +502,7 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
                 case TypeNSEC3:
                         r.(*RR_NSEC3).NextDomain = strings.ToLower(r.(*RR_NSEC3).NextDomain)
 		}
+                */
 		// 6.2. Canonical RR Form. (4) - wildcards
 		// dont have to do anything
 
