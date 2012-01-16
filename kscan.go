@@ -11,7 +11,7 @@ import (
 
 // ReadPrivateKey reads a private key from the io.Reader q.
 func ReadPrivateKey(q io.Reader) (PrivateKey, error) {
-	m, e := ParseKey(q)
+	m, e := parseKey(q)
 	if m == nil {
 		return nil, e
 	}
@@ -89,9 +89,9 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 	return p, nil
 }
 
-// ParseKey reads a private key from r. It returns a map[string]string,
+// parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
-func ParseKey(r io.Reader) (map[string]string, error) {
+func parseKey(r io.Reader) (map[string]string, error) {
 	var s scanner.Scanner
 	m := make(map[string]string)
 	c := make(chan lex)

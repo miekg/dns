@@ -14,7 +14,7 @@
 //      secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="        // don't forget the . here
 //
 // The secrets' map index is set to 'axfr.'. This must match the ownername of the
-// TSIG records, which in the above example, is also set to 'axfr.'
+// TSIG record, which in the above example, is also set to 'axfr.'
 //
 // The message requesting an AXFR (almost all TSIG usage is when requesting zone transfers)
 // for miek.nl with the TSIG record added is now ready to use. 
@@ -24,7 +24,7 @@
 //      c.TsigSecret = secrets
 //      err := c.XfrReceive(m, "85.223.71.124:53")
 //
-// You can now read the records from the AXFR as the come in. Each envelope is checked with TSIG.
+// You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
 //
 // Basic use pattern replying to a message that has TSIG set.

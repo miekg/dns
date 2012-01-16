@@ -175,6 +175,9 @@ var Rcode_str = map[int]string{
 // PackDomainName packs a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
+// If compression is want compress must be true and the compression
+// map, needs to hold a mapping between domain names and offsets
+// pointing into msg[].
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
@@ -975,7 +978,9 @@ func reverseInt(m map[int]string) map[string]int {
 }
 
 // Convert a MsgHdr to a string, mimic the way Dig displays headers:
+//
 //;; opcode: QUERY, status: NOERROR, id: 48404
+//
 //;; flags: qr aa rd ra;
 func (h *MsgHdr) String() string {
 	if h == nil {

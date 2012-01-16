@@ -1,3 +1,10 @@
+// Copyright 2012 Miek Gieben. All rights reserved.
+
+// DNSSEC
+//
+// DNSSEC (DNS Security Extension) adds a layer of security to the DNS. It
+// uses public key cryptography to securely sign resource records. The
+// public keys are stored in DNSKEY records and the signatures in RRSIG records.
 package dns
 
 import (

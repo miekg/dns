@@ -1,6 +1,6 @@
 // DYNAMIC UPDATES
 // 
-// Dynamic updates reuses the DNS message format, but renames the three of
+// Dynamic updates reuses the DNS message format, but renames three of
 // the sections. Question is Zone, Answer is Prerequisite, Authority is
 // Update, only the Additional is not renamed. See RFC 2136 for the gory details.
 //
@@ -20,9 +20,10 @@
 //   zone     rrset    rr       RRset exists (value dep)   RRsetUsedRdata
 // 
 // The prerequisite section can also be left empty.
-// If you have decided an the prerequisites you can tell what RRs should
+// If you have decided on the prerequisites you can tell what RRs should
 // be added or deleted. The next table shows the options you have and
-// what function to call.
+// what functions to call.
+//
 // 3.4.2.6 - Table Of Metavalues Used In Update Section
 // 
 //   CLASS    TYPE     RDATA    Meaning                     Function
