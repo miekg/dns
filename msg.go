@@ -172,12 +172,13 @@ var Rcode_str = map[int]string{
 // use it. Thus, if in the future we need to define new message
 // structs, no new pack/unpack/printing code needs to be written.
 
-// PackDomainName packs a domain name s into msg[off:].
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
 // If compression is want compress must be true and the compression
 // map, needs to hold a mapping between domain names and offsets
 // pointing into msg[].
+
+// PackDomainName packs a domain name s into msg[off:].
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
@@ -279,6 +280,8 @@ End:
 // which is where the next record will start.
 // In theory, the pointers are only allowed to jump backward.
 // We let them jump anywhere and stop jumping after a while.
+
+// UnpackDomainName unpack a domain name.
 func UnpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
 	lenmsg := len(msg)
