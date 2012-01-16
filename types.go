@@ -955,6 +955,32 @@ func (rr *RR_TSIG) Len() int {
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
+// DANE
+type RR_TLSA struct {
+        Hdr     RR_Header
+        Usage   uint8
+        Selector uint8
+        MatchingType uint8
+        Certificate string "hex"
+}
+
+func (rr *RR_TLSA) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_TLSA) String() string {
+	return rr.Hdr.String() +
+		" " + strconv.Itoa(int(rr.Usage)) +
+		" " + strconv.Itoa(int(rr.Selector)) +
+		" " + strconv.Itoa(int(rr.MatchingType)) +
+		" " + rr.Certificate
+}
+
+func (rr *RR_TLSA) Len() int {
+	return rr.Hdr.Len() + 3 + len(rr.Certificate)/2
+}
+
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982) [TODO]
 func timeToDate(t uint32) string {
