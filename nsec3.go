@@ -68,6 +68,7 @@ func (m *Msg) NsecVerify(q Question) error {
 // Nsec3Verify verifies an denial of existence response with NSEC3s.
 // This function does not validate the NSEC3s.
 func (m *Msg) Nsec3Verify(q Question) error {
+        /*
         var nsec3 []*RR_NSEC3
 	if len(m.Answer) > 0 && len(m.Ns) > 0 {
 		// Wildcard expansion
@@ -203,5 +204,6 @@ func (m *Msg) Nsec3Verify(q Question) error {
 		// If the nextcloser MATCHES the owername of one of the NSEC4s we have a NODATA response
 
 	}
+        */
 	return nil
 }
