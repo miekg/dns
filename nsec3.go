@@ -59,14 +59,18 @@ func (nsec3 *RR_NSEC3) HashNames(zone string) {
 
 // NsecVerify verifies the negative response (NXDOMAIN/NODATA) in the message m. 
 // NsecVerify returns nil when the NSECs in the message contain
-// the correct proof. This function does not validates the NSECs
+// the correct proof. This function does not validates the NSECs.
 func (m *Msg) NsecVerify(q Question) error {
 
 	return nil
 }
 
 // Nsec3Verify verifies ...
+// This function does validate the NSEC3s.
 func (m *Msg) Nsec3Verify(q Question) error {
+        //
+
+
 
 	return nil
 }
