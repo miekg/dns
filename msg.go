@@ -51,6 +51,7 @@ var (
 	ErrChan      error = &Error{Err: "channel is nil"}
 	ErrName      error = &Error{Err: "type not found for name"}
 	ErrRRset     error = &Error{Err: "invalid rrset"}
+        ErrNoNSec3   error = &Error{Err: "no NSEC3 records"}
 )
 
 // A manually-unpacked version of (id, bits).
