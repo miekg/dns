@@ -68,142 +68,92 @@ func (m *Msg) NsecVerify(q Question) error {
 // Nsec3Verify verifies an denial of existence response with NSEC3s.
 // This function does not validate the NSEC3s.
 func (m *Msg) Nsec3Verify(q Question) error {
-        /*
-        var nsec3 []*RR_NSEC3
+	var (
+		nsec3    []*RR_NSEC3
+		ncdenied = false // next closer denied
+		sodenied = false // source of synthesis denied
+	)
 	if len(m.Answer) > 0 && len(m.Ns) > 0 {
 		// Wildcard expansion
 		// Closest encloser inferred from SIG in authority and qname
-		println("EXPANDED WILDCARD PROOF or DNAME CNAME")
-		println("NODATA")
+		// println("EXPANDED WILDCARD PROOF or DNAME CNAME")
+		// println("NODATA")
 		// I need to check the type bitmap
 		// wildcard bit not set?
 		// MM: No need to check the wildcard bit here:
 		//     This response has only 1 NSEC4 and it does not match
 		//     the closest encloser (it covers next closer).
 	}
-
 	if len(m.Answer) == 0 && len(m.Ns) > 0 {
 		// Maybe an NXDOMAIN, we only know when we check
-                for _, n := range m.Ns {
-                        if n.Rrtype == TypeNSEC3 {
-                                nsec3 = append(nsec3, n.(*RR_NSEC3))
-                        }
-                }
-                if len(nsec3) == 0 {
-                        return ErrNoNsec3
+		for _, n := range m.Ns {
+			if n.Header().Rrtype == TypeNSEC3 {
+				nsec3 = append(nsec3, n.(*RR_NSEC3))
+			}
+		}
+		if len(nsec3) == 0 {
+			return ErrDenialNsec3
+		}
 
-		hash := nsec3[0].(*RR_NSEC3).Hash
-		iter := nsec3[0].(*RR_NSEC3).Iterations
-		salt := nsec3[0].(*RR_NSEC3).Salt
-		ce := "goed.fout."
-	ClosestEncloser:
+		hash := int(nsec3[0].Hash)
+		iter := int(nsec3[0].Iterations)
+		salt := nsec3[0].Salt
+		ce := "" // closest encloser
+		nc := "" // next closer
+		so := "" // source of synthesis
+		lastchopped := ""
+		labels := SplitLabels(q.Name)
+
+		// Find the closest encloser and create the next closer
 		for _, nsec := range nsec3 {
-			for _, candidate := range LabelSlice(q.Name) {
-				println("H:", HashName(ce1, algo, iter, salt)+suffix)
-				println("N:", strings.ToUpper(nsec.Header().Name))
-				if HashName(ce1, algo, iter, salt)+suffix == strings.ToUpper(nsec.Header().Name) {
-					ce = ce1
-					break ClosestEncloser
+			candidate := ""
+			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
+			for i := len(labels) - 1; i >= 0; i-- {
+				candidate = labels[i] + "." + candidate
+				if HashName(candidate, hash, iter, salt) == firstlab {
+					ce = candidate
 				}
+				lastchopped = labels[i]
 			}
 		}
-		if ce == "goed.fout." {
-			// If we didn't find the closest here, we have a NODATA wilcard response
-			println("CE NIET GEVONDEN")
-			println(" (WILDCARD) NODATA RESPONSE")
-			// chop the qname, append the wildcard label, and see it we have a match
-			// Zijn we nog wel in de zone bezig als we deze antwoord hebben
-			// dat moeten we toch wel controleren TODO(MG)
-			// MM: source-of-synthesis (source) = *.closest-encloser (ce)
-			// 1. ce is an ancestor of QNAME of which source is matched by an
-			// NSEC4 RR present in the response.
-			// 2. The name one label longer than ce (but still an ancestor of --
-			// or equal to -- QNAME) is covered by an NSEC4 RR present in the
-			// response.
-			// 3. Are the NSEC4 RRs from the proper zone?
-			// The NSEC4 that matches the wildcard RR is: 
-			// Check that the signer field in the RRSIG on both NSEC4 RRs
-			// is the same. If so, both NSEC4 RRs are from the same zone.
+		if ce == "" { // what about root label?
+			return ErrDenialCe
+		}
+		nc = lastchopped + "." + ce
+		so = "*." + ce
 
-		Synthesis:
-			for _, nsec := range nsec4 {
-				for _, ce1 := range LabelSlice(q.Name) {
-					source := "*." + ce1
-					if ce1 == "." {
-						source = "*."
-
-					}
-					println(source, ":", HashName(source, algo, iter, salt))
-					println("               : ", strings.ToUpper(nsec.Header().Name))
-					if HashName(source, algo, iter, salt)+suffix == strings.ToUpper(nsec.Header().Name) {
-						ce = ce1
-						break Synthesis
-					}
-				}
-			}
-			println("Source of synthesis found, CE = ", ce)
-			// Als niet gevonden, shit hits the fan?!
-			// MM: je hebt nog niet de gewone NODATA geprobeerd...
-			// need nsec that matches the qname directly
-			//                        if HashName(q.Name, algo, iter, salt)+suffix == strings.ToUpper(nsec.Header().Name) 
-
-
-			if ce == "goed.fout." {
-				println("Source of synth not found")
+		// Check if the next closer is covered and thus denied
+		for _, nsec := range nsec3 {
+			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
+			nextdom := strings.ToUpper(nsec.NextDomain)
+			hashednc := HashName(nc, hash, iter, salt)
+			if hashednc > firstlab && hashednc < nextdom {
+				ncdenied = true
+                                break
 			}
 		}
-
-		// if q.Name == ce -> Check nodata, wildcard flag off	
-		if strings.ToUpper(q.Name) == strings.ToUpper(ce) {
-			println("WE HAVE TO DO A NODATA PROOF 2")
-			for _, nsec := range nsec4 {
-				println(HashName(ce, algo, iter, salt)+suffix, strings.ToUpper(nsec.Header().Name))
-				if HashName(ce, algo, iter, salt)+suffix == strings.ToUpper(nsec.Header().Name) {
-					fmt.Printf("We should not have the type %s (%d)? %v\n", Rr_str[q.Qtype], q.Qtype, !bitmap(nsec.(*RR_NSEC4), q.Qtype))
-					fmt.Printf("                    we have: %v\n", nsec.(*RR_NSEC4).TypeBitMap)
-					if !bitmap(nsec.(*RR_NSEC4), q.Qtype) {
-						println("NODATA IS PROVEN, IF NSEC4S ARE VALID")
-					}
-					return nil
-
-				}
-			}
-			println("CHECK TYPE BITMAP 2")
-			return nil
+		if !ncdenied {
+			return ErrDenialNc
 		}
 
-		nc := NextCloser(q.Name, ce)
-
-		println("Clostest encloser found:", ce, HashName(ce, algo, iter, salt))
-		println("Next closer:", nc)
-		// One of these NSEC4s MUST cover the next closer
-
-
-		println("NEXT CLOSER PROOF")
-	NextCloser:
-		for _, nsec := range nsec4 {
-			// NSEC-like, whole name
-			println(nc)
-			println(strings.ToUpper(HashName(nc, algo, iter, salt)))
-			println(nsec.Header().Name)
-			println(nsec.(*RR_NSEC4).NextDomain)
-
-			if CoversName(HashName(nc, algo, iter, salt), nsec.Header().Name, nsec.(*RR_NSEC4).NextDomain) {
-				// Wildcard bit must be off
-				println("* covers *")
-				if nsec.(*RR_NSEC4).Flags&WILDCARD == 1 {
-					println("Wildcard set! Error")
-					println("NOT PROVEN NXDOMAIN")
-				} else {
-					println("Wildcard not set")
-					println("NXDOMAIN IS PROVEN, IF NSEC4S ARE VALID")
-					break NextCloser
-				}
+                // Check if the source of synthesis is covered and thus denied
+		for _, nsec := range nsec3 {
+			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
+			nextdom := strings.ToUpper(nsec.NextDomain)
+			hashedso := HashName(so, hash, iter, salt)
+			if hashedso > firstlab && hashedso < nextdom {
+				sodenied = true
+                                break
 			}
 		}
-		// If the nextcloser MATCHES the owername of one of the NSEC4s we have a NODATA response
-
+		if !sodenied {
+			return ErrDenialSo
+		}
+                println("NSEC3 proof succesfully proofed")
+                return nil
 	}
-        */
+
+	/*
+	*/
 	return nil
 }

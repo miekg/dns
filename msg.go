@@ -26,32 +26,35 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrUnpack    error = &Error{Err: "unpacking failed"}
-	ErrPack      error = &Error{Err: "packing failed"}
-	ErrId        error = &Error{Err: "id mismatch"}
-	ErrShortRead error = &Error{Err: "short read"}
-	ErrConn      error = &Error{Err: "conn holds both UDP and TCP connection"}
-	ErrConnEmpty error = &Error{Err: "conn has no connection"}
-	ErrServ      error = &Error{Err: "no servers could be reached"}
-	ErrKey       error = &Error{Err: "bad key"}
-	ErrPrivKey   error = &Error{Err: "bad private key"}
-	ErrKeySize   error = &Error{Err: "bad key size"}
-	ErrKeyAlg    error = &Error{Err: "bad key algorithm"}
-	ErrAlg       error = &Error{Err: "bad algorithm"}
-	ErrTime      error = &Error{Err: "bad time"}
-	ErrNoSig     error = &Error{Err: "no signature found"}
-	ErrSig       error = &Error{Err: "bad signature"}
-	ErrSecret    error = &Error{Err: "no secret defined"}
-	ErrSigGen    error = &Error{Err: "bad signature generation"}
-	ErrAuth      error = &Error{Err: "bad authentication"}
-	ErrXfrSoa    error = &Error{Err: "no SOA seen"}
-	ErrXfrLast   error = &Error{Err: "last SOA"}
-	ErrXfrType   error = &Error{Err: "no ixfr, nor axfr"}
-	ErrHandle    error = &Error{Err: "handle is nil"}
-	ErrChan      error = &Error{Err: "channel is nil"}
-	ErrName      error = &Error{Err: "type not found for name"}
-	ErrRRset     error = &Error{Err: "invalid rrset"}
-        ErrNoNSec3   error = &Error{Err: "no NSEC3 records"}
+	ErrUnpack      error = &Error{Err: "unpacking failed"}
+	ErrPack        error = &Error{Err: "packing failed"}
+	ErrId          error = &Error{Err: "id mismatch"}
+	ErrShortRead   error = &Error{Err: "short read"}
+	ErrConn        error = &Error{Err: "conn holds both UDP and TCP connection"}
+	ErrConnEmpty   error = &Error{Err: "conn has no connection"}
+	ErrServ        error = &Error{Err: "no servers could be reached"}
+	ErrKey         error = &Error{Err: "bad key"}
+	ErrPrivKey     error = &Error{Err: "bad private key"}
+	ErrKeySize     error = &Error{Err: "bad key size"}
+	ErrKeyAlg      error = &Error{Err: "bad key algorithm"}
+	ErrAlg         error = &Error{Err: "bad algorithm"}
+	ErrTime        error = &Error{Err: "bad time"}
+	ErrNoSig       error = &Error{Err: "no signature found"}
+	ErrSig         error = &Error{Err: "bad signature"}
+	ErrSecret      error = &Error{Err: "no secret defined"}
+	ErrSigGen      error = &Error{Err: "bad signature generation"}
+	ErrAuth        error = &Error{Err: "bad authentication"}
+	ErrXfrSoa      error = &Error{Err: "no SOA seen"}
+	ErrXfrLast     error = &Error{Err: "last SOA"}
+	ErrXfrType     error = &Error{Err: "no ixfr, nor axfr"}
+	ErrHandle      error = &Error{Err: "handle is nil"}
+	ErrChan        error = &Error{Err: "channel is nil"}
+	ErrName        error = &Error{Err: "type not found for name"}
+	ErrRRset       error = &Error{Err: "invalid rrset"}
+	ErrDenialNsec3 error = &Error{Err: "no NSEC3 records"}
+	ErrDenialCe    error = &Error{Err: "no matching closest encloser found"}
+        ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
+        ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -645,7 +648,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				case "RR_NSEC":
 					endrr = off + (rdlength - (len(val.FieldByName("NextDomain").String()) + 1))
 				case "RR_NSEC3":
-                                        // NextDomain is always 20 for NextDomain
+					// NextDomain is always 20 for NextDomain
 					endrr = off + (rdlength - (20 + 6 + len(val.FieldByName("Salt").String())/2))
 				}
 

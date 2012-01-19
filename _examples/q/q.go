@@ -145,9 +145,7 @@ forever:
 					r.Reply = shortMsg(r.Reply)
 				}
                                 if *check {
-                                        // Get the signatures from the message
-                                        // Get the keys mentioned from the internet
-                                        // Validate it
+                                        r.Reply.Nsec3Verify(r.Reply.Question[0])
 
                                 }
 				fmt.Printf("%v", r.Reply)
