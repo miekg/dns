@@ -30,8 +30,5 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.pkg
 
-_examples:
-	gomake -C _examples
-
 examples:
 	gomake -C _examples
