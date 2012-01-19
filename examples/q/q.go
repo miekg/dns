@@ -158,6 +158,18 @@ forever:
 	}
 }
 
+// Check the sigs in the msg, get the signer's key (additional query), get the 
+// rrset from the message, check the signature(s)
+func sigCheck(in *dns.Msg) {
+
+}
+
+// Get the key from the DNS (uses the local resolver) and return them.
+// If nothing is found we return nil
+func getKey(name string) *RR_DNSKEY {
+        // There is no recursive DNS checking here.
+}
+
 // Walk trough message and short Key data and Sig data
 func shortMsg(in *dns.Msg) *dns.Msg {
 	for i := 0; i < len(in.Answer); i++ {
