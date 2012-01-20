@@ -34,6 +34,7 @@ package dns
 
 import (
 	"crypto/hmac"
+        "crypto/md5"
 	"encoding/hex"
 	"io"
 	"strings"
@@ -99,7 +100,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 
 	t := new(RR_TSIG)
 
-	h := hmac.NewMD5([]byte(rawsecret))
+	h := hmac.New(md5.New, []byte(rawsecret))
 
 	t.MAC = hex.EncodeToString(h.Sum(buf))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
@@ -135,7 +136,7 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 		return ErrTime
 	}
 
-	h := hmac.NewMD5([]byte(rawsecret))
+	h := hmac.New(md5.New, []byte(rawsecret))
 	io.WriteString(h, string(buf))
 	if strings.ToUpper(hex.EncodeToString(h.Sum(nil))) != strings.ToUpper(tsig.MAC) {
 		return ErrSig
