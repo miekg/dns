@@ -9,6 +9,7 @@ package dns
 import (
 	"io"
 	"net"
+	"time"
 )
 
 // how to do Tsig here?? TODO(mg)
@@ -142,8 +143,8 @@ type Server struct {
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
 	UDPSize      int               // default buffer to use to read incoming UDP messages
-	ReadTimeout  int64             // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout int64             // the net.Conn.SetWriteTimeout value for new connections
+	ReadTimeout  time.Duration             // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout time.Duration             // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
@@ -191,10 +192,10 @@ forever:
 			return e
 		}
 		if srv.ReadTimeout != 0 {
-			rw.SetReadTimeout(srv.ReadTimeout)
+			rw.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 		}
 		if srv.WriteTimeout != 0 {
-			rw.SetWriteTimeout(srv.WriteTimeout)
+			rw.SetWriteDeadline(time.Now().Add(srv.WriteTimeout))
 		}
 		l := make([]byte, 2)
 		n, err := rw.Read(l)
@@ -246,10 +247,10 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		m = m[:n]
 
 		if srv.ReadTimeout != 0 {
-			l.SetReadTimeout(srv.ReadTimeout)
+			l.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 		}
 		if srv.WriteTimeout != 0 {
-			l.SetWriteTimeout(srv.WriteTimeout)
+			l.SetWriteDeadline(time.Now().Add(srv.WriteTimeout))
 		}
 		d, err := newConn(nil, l, a, m, handler)
 		if err != nil {
