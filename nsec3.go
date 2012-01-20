@@ -129,31 +129,31 @@ func (m *Msg) Nsec3Verify(q Question) error {
 			hashednc := HashName(nc, hash, iter, salt)
 			if hashednc > firstlab && hashednc < nextdom {
 				ncdenied = true
-                                break
+				break
 			}
 		}
 		if !ncdenied {
 			return ErrDenialNc
 		}
 
-                // Check if the source of synthesis is covered and thus denied
+		// Check if the source of synthesis is covered and thus denied
 		for _, nsec := range nsec3 {
 			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
 			nextdom := strings.ToUpper(nsec.NextDomain)
 			hashedso := HashName(so, hash, iter, salt)
 			if hashedso > firstlab && hashedso < nextdom {
 				sodenied = true
-                                break
+				break
 			}
 		}
 		if !sodenied {
 			return ErrDenialSo
 		}
-                println("NSEC3 proof succesfully proofed")
-                return nil
+		println("NSEC3 proof succesfully proofed")
+		return nil
 	}
 
 	/*
-	*/
+	 */
 	return nil
 }

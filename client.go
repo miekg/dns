@@ -128,8 +128,8 @@ type Client struct {
 	Retry        bool              // retry with TCP
 	QueryChan    chan *Request     // read DNS request from this channel
 	ReplyChan    chan *Exchange    // write the reply (together with the DNS request) to this channel
-	ReadTimeout  time.Duration             // the net.Conn.SetReadTimeout value for new connections (ns)
-	WriteTimeout time.Duration             // the net.Conn.SetWriteTimeout value for new connections (ns)
+	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns)
+	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 	Hijacked     net.Conn          // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use

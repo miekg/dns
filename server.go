@@ -143,8 +143,8 @@ type Server struct {
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
 	UDPSize      int               // default buffer to use to read incoming UDP messages
-	ReadTimeout  time.Duration             // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout time.Duration             // the net.Conn.SetWriteTimeout value for new connections
+	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 

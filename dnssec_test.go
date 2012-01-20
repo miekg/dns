@@ -237,15 +237,15 @@ func TestKeyRSA(t *testing.T) {
 	sig.KeyTag = key.KeyTag()
 	sig.SignerName = key.Hdr.Name
 
-        if err := sig.Sign(priv, []RR{soa}); err != nil {
-                t.Logf("Failed to sign")
-                t.Fail()
-                return
-        }
-        if err := sig.Verify(key, []RR{soa}); err != nil {
-                t.Logf("Failed to verify")
-                t.Fail()
-        }
+	if err := sig.Sign(priv, []RR{soa}); err != nil {
+		t.Logf("Failed to sign")
+		t.Fail()
+		return
+	}
+	if err := sig.Verify(key, []RR{soa}); err != nil {
+		t.Logf("Failed to verify")
+		t.Fail()
+	}
 }
 
 func TestKeyToDS(t *testing.T) {

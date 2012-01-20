@@ -34,7 +34,7 @@ package dns
 
 import (
 	"crypto/hmac"
-        "crypto/md5"
+	"crypto/md5"
 	"encoding/hex"
 	"io"
 	"strings"

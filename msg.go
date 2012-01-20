@@ -53,8 +53,8 @@ var (
 	ErrRRset       error = &Error{Err: "invalid rrset"}
 	ErrDenialNsec3 error = &Error{Err: "no NSEC3 records"}
 	ErrDenialCe    error = &Error{Err: "no matching closest encloser found"}
-        ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
-        ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
+	ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
+	ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
 )
 
 // A manually-unpacked version of (id, bits).
