@@ -404,14 +404,14 @@ func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
 	if err != nil {
 		return nil
 	}
-	var c *elliptic.Curve
+	var c elliptic.Curve
 	switch k.Algorithm {
 	case ECDSAP256SHA256:
 		c = elliptic.P256()
 	case ECDSAP384SHA384:
 		c = elliptic.P384()
 	}
-	x, y := c.Unmarshal(keybuf)
+	x, y := elliptic.Unmarshal(c,keybuf)
 	pubkey := new(ecdsa.PublicKey)
 	pubkey.X = x
 	pubkey.Y = y

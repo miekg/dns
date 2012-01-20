@@ -48,7 +48,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		r.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
 		return priv, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
-		var c *elliptic.Curve
+		var c elliptic.Curve
 		switch r.Algorithm {
 		case ECDSAP256SHA256:
 			c = elliptic.P256()
