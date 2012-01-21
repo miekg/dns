@@ -152,7 +152,8 @@ forever:
                                         if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
                                                 fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
                                         } else {
-                                                fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
+                                                // Could be: no nsec3 records
+                                        //        fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
                                         }
 
                                 }
