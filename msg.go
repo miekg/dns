@@ -438,6 +438,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					}
 					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
+                                        if off+2+int(length) > lenmsg {
+                                                println("dns: overflow packing NSECx bitmap")
+                                                return lenmsg, false
+                                        }
 
 					// Setting the window #
 					msg[off] = byte(window)
