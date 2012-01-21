@@ -144,16 +144,6 @@ forever:
 				if *check {
 					sigCheck(r.Reply, nameserver)
 					nsecCheck(r.Reply)
-					/*
-					   if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
-					           //Could be: no nsec3 records
-					           //fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
-					   } else {
-					           fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
-					   }
-					   println()
-					*/
-
 				}
 				if *short {
 					r.Reply = shortMsg(r.Reply)
@@ -186,7 +176,30 @@ func sectionCheck(set []dns.RR, server string) {
 	}
 }
 
+// Check if we have nsec3 records and if so, check them
 func nsecCheck(in *dns.Msg) {
+        for _, r := range in.Answer {
+                if r.Header().Rrtype == dns.TypeNSEC3 {
+                        goto Check
+                }
+        }
+        for _, r := range in.Ns {
+                if r.Header().Rrtype == dns.TypeNSEC3 {
+                        goto Check
+                }
+        }
+        for _, r := range in.Extra {
+                if r.Header().Rrtype == dns.TypeNSEC3 {
+                        goto Check
+                }
+        }
+        return
+Check:
+        if err := in.Nsec3Verify(in.Question[0]); err == nil {
+                fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
+        } else {
+	        fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
+        }
 }
 
 // Check the sigs in the msg, get the signer's key (additional query), get the 
