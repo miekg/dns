@@ -22,7 +22,7 @@ func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
-        check := flag.Bool("check", false, "check internal DNSSEC consistency")
+	check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -141,17 +141,20 @@ forever:
 						fmt.Printf("Id mismatch\n")
 					}
 				}
-                                if *check {
-                                        sigCheck(r.Reply, nameserver)
-                                        if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
-                                                //Could be: no nsec3 records
-                                                //fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
-                                        } else {
-                                                fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
-                                        }
-                                        println()
+				if *check {
+					sigCheck(r.Reply, nameserver)
+					nsecCheck(r.Reply)
+					/*
+					   if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
+					           //Could be: no nsec3 records
+					           //fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
+					   } else {
+					           fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
+					   }
+					   println()
+					*/
 
-                                }
+				}
 				if *short {
 					r.Reply = shortMsg(r.Reply)
 				}
@@ -166,87 +169,68 @@ forever:
 	}
 }
 
+func sectionCheck(set []dns.RR, server string) {
+	for _, rr := range set {
+		if rr.Header().Rrtype == dns.TypeRRSIG {
+			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
+			key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
+			if key == nil {
+				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
+			}
+			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
+				fmt.Printf(";- Bogus signature,  %s does not RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+			} else {
+				fmt.Printf(";+ Secure signature, %s validates RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+			}
+		}
+	}
+}
+
+func nsecCheck(in *dns.Msg) {
+}
+
 // Check the sigs in the msg, get the signer's key (additional query), get the 
 // rrset from the message, check the signature(s)
 func sigCheck(in *dns.Msg, server string) {
-        for _, rr := range in.Answer {
-                if rr.Header().Rrtype == dns.TypeRRSIG {
-                        rrset := getRRset(in.Answer, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-                        key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
-                        if key == nil {
-                                fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
-                        }
-                        if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-                                fmt.Printf(";- Bogus signature,  %s does not RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        } else {
-                                fmt.Printf(";+ Secure signature, %s validates RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        }
-                }
-        }
-        for _, rr := range in.Ns {
-                if rr.Header().Rrtype == dns.TypeRRSIG {
-                        rrset := getRRset(in.Ns, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-                        key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
-                        if key == nil {
-                                fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
-                        }
-                        if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-                                fmt.Printf(";- Bogus signature,  %s does not RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        } else {
-                                fmt.Printf(";+ Secure signature, %s validates RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        }
-                }
-        }
-        for _, rr := range in.Extra {
-                if rr.Header().Rrtype == dns.TypeRRSIG {
-                        rrset := getRRset(in.Extra, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-                        key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
-                        if key == nil {
-                                fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
-                        }
-                        if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-                                fmt.Printf(";- Bogus signature,  %s does not RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        } else {
-                                fmt.Printf(";+ Secure signature, %s validates RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
-                        }
-                }
-        }
+        sectionCheck(in.Answer, server)
+        sectionCheck(in.Ns, server)
+        sectionCheck(in.Extra, server)
 }
 
 // Return the RRset belonging to the signature with name and type t
 func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
-        l1 := make([]dns.RR, 0)
-        for _, rr := range l {
-                if rr.Header().Name == name && rr.Header().Rrtype == t {
-                        l1 = append(l1, rr)
-                }
-        }
-        return l1
+	l1 := make([]dns.RR, 0)
+	for _, rr := range l {
+		if rr.Header().Name == name && rr.Header().Rrtype == t {
+			l1 = append(l1, rr)
+		}
+	}
+	return l1
 }
 
 // Get the key from the DNS (uses the local resolver) and return them.
 // If nothing is found we return nil
 func getKey(name string, keytag uint16, server string) *dns.RR_DNSKEY {
-        c := dns.NewClient()
-        m := new(dns.Msg)
-        m.SetQuestion(name, dns.TypeDNSKEY)
-        r, err := c.Exchange(m, server)
-        if err != nil {
-                return nil
-        }
-        for _, k := range r.Answer {
-                if k1, ok := k.(*dns.RR_DNSKEY); ok {
-                        if k1.KeyTag() == keytag {
-                                return k1
-                        }
-                }
-        }
-        return nil
+	c := dns.NewClient()
+	m := new(dns.Msg)
+	m.SetQuestion(name, dns.TypeDNSKEY)
+	r, err := c.Exchange(m, server)
+	if err != nil {
+		return nil
+	}
+	for _, k := range r.Answer {
+		if k1, ok := k.(*dns.RR_DNSKEY); ok {
+			if k1.KeyTag() == keytag {
+				return k1
+			}
+		}
+	}
+	return nil
 }
 
 // shorten RRSIG to "miek.nl RRSIG(NS)"
 func shortSig(sig *dns.RR_RRSIG) string {
-        return sig.Header().Name + " RRSIG(" + dns.Rr_str[sig.TypeCovered] + ")"
+	return sig.Header().Name + " RRSIG(" + dns.Rr_str[sig.TypeCovered] + ")"
 }
 
 // Walk trough message and short Key data and Sig data
