@@ -141,22 +141,22 @@ forever:
 						fmt.Printf("Id mismatch\n")
 					}
 				}
+                                if *check {
+                                        sigCheck(r.Reply, nameserver)
+                                        if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
+                                                //Could be: no nsec3 records
+                                                //fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
+                                        } else {
+                                                fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
+                                        }
+                                        println()
+
+                                }
 				if *short {
 					r.Reply = shortMsg(r.Reply)
 				}
 
 				fmt.Printf("%v", r.Reply)
-                                if *check {
-                                        println()
-                                        sigCheck(r.Reply, nameserver)
-                                        if err := r.Reply.Nsec3Verify(r.Reply.Question[0]); err == nil {
-                                                fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
-                                        } else {
-                                                // Could be: no nsec3 records
-                                        //        fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
-                                        }
-
-                                }
 			}
 			i++
 			if i == len(qname) {
