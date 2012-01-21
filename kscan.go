@@ -10,8 +10,8 @@ import (
 )
 
 // ReadPrivateKey reads a private key from the io.Reader q.
-func ReadPrivateKey(q io.Reader) (PrivateKey, error) {
-	m, e := parseKey(q)
+func ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
+	m, e := parseKey(q, file)
 	if m == nil {
 		return nil, e
 	}
@@ -91,7 +91,7 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 
 // parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
-func parseKey(r io.Reader) (map[string]string, error) {
+func parseKey(r io.Reader, file string) (map[string]string, error) {
 	var s scanner.Scanner
 	m := make(map[string]string)
 	c := make(chan lex)
@@ -108,7 +108,7 @@ func parseKey(r io.Reader) (map[string]string, error) {
 			k = l.token
 		case _VALUE:
 			if k == "" {
-				return nil, &ParseError{"No key seen", l}
+				return nil, &ParseError{file, "No key seen", l}
 			}
 			//println("Setting", strings.ToLower(k), "to", l.token, "b")
 			m[strings.ToLower(k)] = l.token
