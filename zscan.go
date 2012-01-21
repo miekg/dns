@@ -117,6 +117,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			close(t)
 		}
 	}()
+	if include > 7 {
+		t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
+	}
 	var s scanner.Scanner
 	c := make(chan lex)
 	s.Init(r)
@@ -187,16 +190,13 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				return
 			}
 			// Start with the new file
-                        r1, e1 := os.Open(l.token)
-                        if e1 != nil {
-                                t <- Token{Error: &ParseError{f, "Failed to open `" + l.token + "'", l}}
-                                return
-                        }
-                        if include+1 > 8 {
-                                t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
-                        }
-                        parseZone(r1, l.token, t, include+1)
-                        st = _EXPECT_OWNER_DIR
+			r1, e1 := os.Open(l.token)
+			if e1 != nil {
+				t <- Token{Error: &ParseError{f, "Failed to open `" + l.token + "'", l}}
+				return
+			}
+			parseZone(r1, l.token, t, include+1)
+			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{f, "No blank after $TTL-directive", l}}
@@ -381,14 +381,14 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				l.value = _OWNER
 				l.token = str
 				// escape $... start with a \ not a $, so this will work
-                                switch str {
-                                case "$TTL":
+				switch str {
+				case "$TTL":
 					l.value = _DIRTTL
-                                case "$ORIGIN":
+				case "$ORIGIN":
 					l.value = _DIRORIGIN
-                                case "$INCLUDE":
+				case "$INCLUDE":
 					l.value = _DIRINCLUDE
-                                }
+				}
 				c <- l
 			} else {
 				l.value = _STRING
