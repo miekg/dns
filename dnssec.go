@@ -485,30 +485,30 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 		h.Name = strings.ToLower(h.Name)
 		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
 		/*
-				switch h.Rrtype {
-		                case TypeNS:
-		                        r.(*RR_NS).Ns = strings.ToLower(r.(*RR_NS).Ns)
-		                case TypeCNAME:
-		                        r.(*RR_CNAME).Cname = strings.ToLower(r.(*RR_CNAME).Cname)
-		                case TypeSOA:
-		                        r.(*RR_SOA).Ns = strings.ToLower(r.(*RR_SOA).Ns)
-		                        r.(*RR_SOA).Mbox = strings.ToLower(r.(*RR_SOA).Mbox)
-		                case TypeMB:
-		                case TypeMG:
-		                case TypeMR:
-		                case TypePTR:
-		                        r.(*RR_PTR).Ptr = strings.ToLower(r.(*RR_PTR).Ptr)
-				case TypeMINFO:
-		                case TypeMX:
-		                        r.(*RR_MX).Mx = strings.ToLower(r.(*RR_MX).Mx)
-		                case TypeSIG:
-		                case TypeRRSIG:
-				case TypeSRV:
-		                case TypeNSEC:
-		                        r.(*RR_NSEC).NextDomain = strings.ToLower(r.(*RR_NSEC).NextDomain)
-		                case TypeNSEC3:
-		                        r.(*RR_NSEC3).NextDomain = strings.ToLower(r.(*RR_NSEC3).NextDomain)
-				}
+					switch h.Rrtype {
+			                case TypeNS:
+			                        r.(*RR_NS).Ns = strings.ToLower(r.(*RR_NS).Ns)
+			                case TypeCNAME:
+			                        r.(*RR_CNAME).Cname = strings.ToLower(r.(*RR_CNAME).Cname)
+			                case TypeSOA:
+			                        r.(*RR_SOA).Ns = strings.ToLower(r.(*RR_SOA).Ns)
+			                        r.(*RR_SOA).Mbox = strings.ToLower(r.(*RR_SOA).Mbox)
+			                case TypeMB:
+			                case TypeMG:
+			                case TypeMR:
+			                case TypePTR:
+			                        r.(*RR_PTR).Ptr = strings.ToLower(r.(*RR_PTR).Ptr)
+					case TypeMINFO:
+			                case TypeMX:
+			                        r.(*RR_MX).Mx = strings.ToLower(r.(*RR_MX).Mx)
+			                case TypeSIG:
+			                case TypeRRSIG:
+					case TypeSRV:
+			                case TypeNSEC:
+			                        r.(*RR_NSEC).NextDomain = strings.ToLower(r.(*RR_NSEC).NextDomain)
+			                case TypeNSEC3:
+			                        r.(*RR_NSEC3).NextDomain = strings.ToLower(r.(*RR_NSEC3).NextDomain)
+					}
 		*/
 		// 6.2. Canonical RR Form. (4) - wildcards
 		// dont have to do anything
@@ -518,12 +518,12 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 		wire := make([]byte, r.Len())
 		h.Ttl = s.OrigTtl
 		off, ok1 := packRR(r, wire, 0, nil, false)
-		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
-		wire = wire[:off]
-		h.Name = name
 		if !ok1 {
 			return nil
 		}
+		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
+		wire = wire[:off]
+		h.Name = name
 		wires[i] = wire
 	}
 	sort.Sort(wires)
