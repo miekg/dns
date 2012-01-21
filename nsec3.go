@@ -149,11 +149,7 @@ func (m *Msg) Nsec3Verify(q Question) error {
 		if !sodenied {
 			return ErrDenialSo
 		}
-		println("NSEC3 proof succesfully proofed")
 		return nil
 	}
-
-	/*
-	 */
 	return nil
 }
