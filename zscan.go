@@ -117,9 +117,6 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			close(t)
 		}
 	}()
-	if include > 7 {
-		t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
-	}
 	var s scanner.Scanner
 	c := make(chan lex)
 	s.Init(r)
@@ -195,6 +192,10 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Failed to open `" + l.token + "'", l}}
 				return
 			}
+                        if include + 1 > 7 {
+		                t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
+                                return
+                        }
 			parseZone(r1, l.token, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
