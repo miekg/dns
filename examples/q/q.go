@@ -168,9 +168,9 @@ func sectionCheck(set []dns.RR, server string) {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
 			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-				fmt.Printf(";- Bogus signature,  %s does not validate with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+				fmt.Printf(";- Bogus signature,  %s does not validate (DNSKEY %s/%d)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
 			} else {
-				fmt.Printf(";+ Secure signature, %s validates with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
 			}
 		}
 	}

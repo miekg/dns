@@ -9,10 +9,10 @@ things that need to be fixed.
 * Add handy zone data structure (r/b tree)?
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * IsSubdomain, IsGlue helper functions;
+* NSECX covers/matches helper function
 * SaltLength in NSEC3 is ugly to set, should be automatically done. There are prolly a few more
     settings just like that -- need to look at them.
     -edns NSID is another
-
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
