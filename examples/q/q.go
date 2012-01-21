@@ -268,8 +268,6 @@ func shortRR(r dns.RR) dns.RR {
 		t.PublicKey = "..."
 	case *dns.RR_RRSIG:
 		t.Signature = "..."
-		t.Inception = 0 // For easy grepping
-		t.Expiration = 0
 	case *dns.RR_NSEC3:
 		t.Salt = "-" // Nobody cares
 		if len(t.TypeBitMap) > 5 {
