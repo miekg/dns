@@ -168,9 +168,9 @@ func sectionCheck(set []dns.RR, server string) {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
 			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-				fmt.Printf(";- Bogus signature,  %s does not RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+				fmt.Printf(";- Bogus signature,  %s does not validate with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
 			} else {
-				fmt.Printf(";+ Secure signature, %s validates RRSet with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+				fmt.Printf(";+ Secure signature, %s validates with DNSKEY %s/%d\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
 			}
 		}
 	}
@@ -196,9 +196,9 @@ func nsecCheck(in *dns.Msg) {
         return
 Check:
         if err := in.Nsec3Verify(in.Question[0]); err == nil {
-                fmt.Printf(";+ Correct authenticated denial of existence (NSEC3)\n")
+                fmt.Printf(";+ Correct denial of existence (NSEC3)\n")
         } else {
-	        fmt.Printf(";- Incorrect authenticated denial of existence (NSEC3): %s\n",err.Error())
+	        fmt.Printf(";- Incorrect denial of existence (NSEC3): %s\n",err.Error())
         }
 }
 
