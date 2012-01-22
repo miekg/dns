@@ -73,8 +73,18 @@ func (nsec3 *RR_NSEC3) Match(domain string) bool {
 func (nsec3 *RR_NSEC3) Cover(domain string) bool {
 	hashdom := strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 	nextdom := strings.ToUpper(nsec3.NextDomain)
-	owner := strings.ToUpper(SplitLabels(nsec3.Header().Name)[0])
-	return hashdom > owner && hashdom <= nextdom
+	owner := strings.ToUpper(SplitLabels(nsec3.Header().Name)[0])   // The hashed part
+        apex  := strings.ToUpper(HashName(strings.Join(SplitLabels(nsec3.Header().Name)[1:], "."), nsec3.Hash, nsec3.Iterations, nsec3.Salt)) // The name of the zone
+        // if nextdomain equals the apex, it is considered The End. So in that case hashdom is always less then nextdomain
+        if hashdom > owner && nextdom == apex {
+                return true
+        }
+
+	if hashdom > owner && hashdom <= nextdom {
+                return true
+        }
+
+        return false
 }
 
 // NsecVerify verifies an denial of existence response with NSECs

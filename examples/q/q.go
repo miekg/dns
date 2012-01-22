@@ -204,7 +204,9 @@ Check:
                 fmt.Printf(";+ Correct denial of existence (NSEC3/NODATA)\n")
         default:
                 // w == 0
-	        fmt.Printf(";- Incorrect denial of existence (NSEC3): %s\n",err.Error())
+                if err != nil {
+	                fmt.Printf(";- Incorrect denial of existence (NSEC3): %s\n",err.Error())
+                }
         }
 }
 
