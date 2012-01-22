@@ -19,9 +19,14 @@ things that need to be fixed.
 * NSEC3 records with no bitmap (empty non-terminals) are not correctly verified
     * This means they are not correctly put in wirefmt also;
 * Not completely sure wildcard handling when verifying is correct;
-* 
+* Timeouts - they may be set way too short.
 
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
 * Recursor - ala FunkenSturm?
+
+### NSEC3 checks
+
+% ./q -short -check -dnssec goed.nl @ns1.nic.nl
+no wildcard, but is ok
