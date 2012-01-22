@@ -55,6 +55,7 @@ var (
 	ErrDenialCe    error = &Error{Err: "no matching closest encloser found"}
 	ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
 	ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
+        ErrDenialBit   error = &Error{Err: "type not denied in NSEC3 bitmap"}
 )
 
 // A manually-unpacked version of (id, bits).

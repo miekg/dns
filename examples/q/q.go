@@ -195,9 +195,14 @@ func nsecCheck(in *dns.Msg) {
         }
         return
 Check:
-        if err := in.Nsec3Verify(in.Question[0]); err == nil {
-                fmt.Printf(";+ Correct denial of existence (NSEC3)\n")
-        } else {
+        w, err := in.Nsec3Verify(in.Question[0])
+        switch w {
+        case dns.NSEC3_NXDOMAIN:
+                fmt.Printf(";+ Correct denial of existence (NSEC3/NXDOMAIN)\n")
+        case dns.NSEC3_NODATA:
+                fmt.Printf(";+ Correct denial of existence (NSEC3/NODATA)\n")
+        default:
+                // w == 0
 	        fmt.Printf(";- Incorrect denial of existence (NSEC3): %s\n",err.Error())
         }
 }

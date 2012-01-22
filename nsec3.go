@@ -1,11 +1,16 @@
 package dns
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"hash"
 	"io"
 	"strings"
+)
+
+const (
+	_ = iota
+	NSEC3_NXDOMAIN
+	NSEC3_NODATA
 )
 
 type saltWireFmt struct {
@@ -58,8 +63,18 @@ func (nsec3 *RR_NSEC3) HashNames(zone string) {
 	nsec3.NextDomain = HashName(nsec3.NextDomain, nsec3.Hash, nsec3.Iterations, nsec3.Salt)
 }
 
+// Match checks if domain matches the first (hashed) owner name of the NSEC3 record, domain must be given
+// in plain text.
 func (nsec3 *RR_NSEC3) Match(domain string) bool {
-        return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
+	return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
+}
+
+// Cover checks if domain is covered by the NSEC3 record, domain must be given in plain text.
+func (nsec3 *RR_NSEC3) Cover(domain string) bool {
+	hashdom := strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
+	nextdom := strings.ToUpper(nsec3.NextDomain)
+	owner := strings.ToUpper(SplitLabels(nsec3.Header().Name)[0])
+	return hashdom > owner && hashdom <= nextdom
 }
 
 // NsecVerify verifies an denial of existence response with NSECs
@@ -72,11 +87,14 @@ func (m *Msg) NsecVerify(q Question) error {
 
 // Nsec3Verify verifies an denial of existence response with NSEC3s.
 // This function does not validate the NSEC3s.
-func (m *Msg) Nsec3Verify(q Question) error {
+func (m *Msg) Nsec3Verify(q Question) (int, error) {
 	var (
 		nsec3    []*RR_NSEC3
 		ncdenied = false // next closer denied
 		sodenied = false // source of synthesis denied
+		ce       = ""    // closest encloser
+		nc       = ""    // next closer
+		so       = ""    // source of synthesis
 	)
 	if len(m.Answer) > 0 && len(m.Ns) > 0 {
 		// Wildcard expansion
@@ -90,22 +108,16 @@ func (m *Msg) Nsec3Verify(q Question) error {
 		//     the closest encloser (it covers next closer).
 	}
 	if len(m.Answer) == 0 && len(m.Ns) > 0 {
-		// Maybe an NXDOMAIN, we only know when we check
+		// Maybe an NXDOMAIN or NODATA, we only know when we check
 		for _, n := range m.Ns {
 			if n.Header().Rrtype == TypeNSEC3 {
 				nsec3 = append(nsec3, n.(*RR_NSEC3))
 			}
 		}
 		if len(nsec3) == 0 {
-			return ErrDenialNsec3
+			return 0, ErrDenialNsec3
 		}
 
-		hash := nsec3[0].Hash
-		iter := nsec3[0].Iterations
-		salt := nsec3[0].Salt
-		ce := "" // closest encloser
-		nc := "" // next closer
-		so := "" // source of synthesis
 		lastchopped := ""
 		labels := SplitLabels(q.Name)
 
@@ -121,40 +133,49 @@ func (m *Msg) Nsec3Verify(q Question) error {
 			}
 		}
 		if ce == "" { // what about root label?
-			return ErrDenialCe
+			return 0, ErrDenialCe
 		}
 		nc = lastchopped + "." + ce
 		so = "*." + ce
 
 		// Check if the next closer is covered and thus denied
 		for _, nsec := range nsec3 {
-			firstlab := []byte(strings.ToUpper(SplitLabels(nsec.Header().Name)[0]))
-			nextdom := []byte(strings.ToUpper(nsec.NextDomain))
-			hashednc := []byte(HashName(nc, hash, iter, salt))
-			if bytes.Compare(hashednc, firstlab) == 1 &&
-                                bytes.Compare(hashednc, nextdom) == -1 {
+			if nsec.Cover(nc) {
 				ncdenied = true
 				break
 			}
 		}
 		if !ncdenied {
-                        return ErrDenialNc      // add next closer name here
+			// For NODATA we need to to check if the matching nsec3 has to correct type bit map
+			goto NoData
+			// For NXDOMAIN this is a problem
+			return 0, ErrDenialNc // add next closer name here
 		}
 
 		// Check if the source of synthesis is covered and thus denied
 		for _, nsec := range nsec3 {
-			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
-			nextdom := strings.ToUpper(nsec.NextDomain)
-			hashedso := HashName(so, hash, iter, salt)
-			if hashedso > firstlab && hashedso < nextdom {
+			if nsec.Cover(so) {
 				sodenied = true
 				break
 			}
 		}
 		if !sodenied {
-			return ErrDenialSo
+			return 0, ErrDenialSo
 		}
-		return nil
+		return NSEC3_NXDOMAIN, nil
 	}
-	return nil
+	return 0, nil
+NoData:
+	// The closest encloser MUST be the query name
+	for _, nsec := range nsec3 {
+		if nsec.Match(nc) {
+			// This nsec3 must NOT have the type bitmap set of the qtype. If it does have it, return an error
+			for _, t := range nsec.TypeBitMap {
+				if t == q.Qtype {
+					return 0, ErrDenialBit
+				}
+			}
+		}
+	}
+	return NSEC3_NODATA, nil
 }
