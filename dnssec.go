@@ -87,6 +87,9 @@ type dnskeyWireFmt struct {
 
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
+        if k == nil {
+                return 0
+        }
 	var keytag int
 	switch k.Algorithm {
 	case RSAMD5:
@@ -118,6 +121,9 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 
 // ToDS converts a DNSKEY record to a DS record.
 func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
+        if k == nil {
+                return nil
+        }
 	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class

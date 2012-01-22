@@ -166,6 +166,7 @@ func sectionCheck(set []dns.RR, server string) {
 			key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
 			if key == nil {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
+                                continue
 			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
 				fmt.Printf(";- Bogus signature,  %s does not validate (DNSKEY %s/%d)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
