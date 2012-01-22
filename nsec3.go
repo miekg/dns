@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"hash"
 	"io"
@@ -12,7 +13,7 @@ type saltWireFmt struct {
 }
 
 // HashName hashes a string (label) according to RFC5155. It returns the hashed string.
-func HashName(label string, ha, iter int, salt string) string {
+func HashName(label string, ha uint8, iter uint16, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
@@ -40,7 +41,7 @@ func HashName(label string, ha, iter int, salt string) string {
 	io.WriteString(s, string(name))
 	nsec3 := s.Sum(nil)
 	// k > 0
-	for k := 0; k < iter; k++ {
+	for k := uint16(0); k < iter; k++ {
 		s.Reset()
 		nsec3 = append(nsec3, wire...)
 		io.WriteString(s, string(nsec3))
@@ -53,8 +54,12 @@ func HashName(label string, ha, iter int, salt string) string {
 // It uses the paramaters as set in the NSEC3 record. The string zone is appended to the hashed
 // ownername.
 func (nsec3 *RR_NSEC3) HashNames(zone string) {
-	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)) + "." + zone
-	nsec3.NextDomain = HashName(nsec3.NextDomain, int(nsec3.Hash), int(nsec3.Iterations), nsec3.Salt)
+	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, nsec3.Hash, nsec3.Iterations, nsec3.Salt)) + "." + zone
+	nsec3.NextDomain = HashName(nsec3.NextDomain, nsec3.Hash, nsec3.Iterations, nsec3.Salt)
+}
+
+func (nsec3 *RR_NSEC3) Match(domain string) bool {
+        return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 }
 
 // NsecVerify verifies an denial of existence response with NSECs
@@ -95,8 +100,8 @@ func (m *Msg) Nsec3Verify(q Question) error {
 			return ErrDenialNsec3
 		}
 
-		hash := int(nsec3[0].Hash)
-		iter := int(nsec3[0].Iterations)
+		hash := nsec3[0].Hash
+		iter := nsec3[0].Iterations
 		salt := nsec3[0].Salt
 		ce := "" // closest encloser
 		nc := "" // next closer
@@ -107,10 +112,9 @@ func (m *Msg) Nsec3Verify(q Question) error {
 		// Find the closest encloser and create the next closer
 		for _, nsec := range nsec3 {
 			candidate := ""
-			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
 			for i := len(labels) - 1; i >= 0; i-- {
 				candidate = labels[i] + "." + candidate
-				if HashName(candidate, hash, iter, salt) == firstlab {
+				if nsec.Match(candidate) {
 					ce = candidate
 				}
 				lastchopped = labels[i]
@@ -124,16 +128,17 @@ func (m *Msg) Nsec3Verify(q Question) error {
 
 		// Check if the next closer is covered and thus denied
 		for _, nsec := range nsec3 {
-			firstlab := strings.ToUpper(SplitLabels(nsec.Header().Name)[0])
-			nextdom := strings.ToUpper(nsec.NextDomain)
-			hashednc := HashName(nc, hash, iter, salt)
-			if hashednc > firstlab && hashednc < nextdom {
+			firstlab := []byte(strings.ToUpper(SplitLabels(nsec.Header().Name)[0]))
+			nextdom := []byte(strings.ToUpper(nsec.NextDomain))
+			hashednc := []byte(HashName(nc, hash, iter, salt))
+			if bytes.Compare(hashednc, firstlab) == 1 &&
+                                bytes.Compare(hashednc, nextdom) == -1 {
 				ncdenied = true
 				break
 			}
 		}
 		if !ncdenied {
-			return ErrDenialNc
+                        return ErrDenialNc      // add next closer name here
 		}
 
 		// Check if the source of synthesis is covered and thus denied

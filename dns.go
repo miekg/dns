@@ -86,7 +86,11 @@ func (e *Error) Error() string {
 	if e == nil {
 		return "<nil>"
 	}
-	return e.Err
+	if e.Name == "" {
+		return e.Err
+	}
+	return e.Name + ": " + e.Err
+
 }
 
 type RR interface {
