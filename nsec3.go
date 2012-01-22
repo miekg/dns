@@ -146,10 +146,12 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 			}
 		}
 		if !ncdenied {
+                        if m.MsgHdr.Rcode == RcodeNameError {
+                                // For NXDOMAIN this is a problem
+                                return 0, ErrDenialNc // add next closer name here
+                        }
 			// For NODATA we need to to check if the matching nsec3 has to correct type bit map
 			goto NoData
-			// For NXDOMAIN this is a problem
-			return 0, ErrDenialNc // add next closer name here
 		}
 
 		// Check if the source of synthesis is covered and thus denied
