@@ -225,25 +225,25 @@ func TestParseFailure(t *testing.T) {
 
 // A bit useless, how to use b.N?
 func BenchmarkZoneParsing(b *testing.B) {
-	f, err := os.Open("miek.nl.signed_test")
+	f, err := os.Open("t/miek.nl.signed_test")
 	if err != nil {
 		return
 	}
 	defer f.Close()
-	to := ParseZone(f, "miek.nl.signed_test")
+	to := ParseZone(f, "t/miek.nl.signed_test")
 	for x := range to {
 		x = x
 	}
 }
 
 func TestZoneParsing(t *testing.T) {
-	f, err := os.Open("miek.nl.signed_test")
+	f, err := os.Open("t/miek.nl.signed_test")
 	if err != nil {
 		return
 	}
 	defer f.Close()
 	start := time.Now().UnixNano()
-	to := ParseZone(f, "miek.nl.signed_test")
+	to := ParseZone(f, "t/miek.nl.signed_test")
 	var i int
 	for x := range to {
 		t.Logf("%s\n", x.RR)
@@ -255,7 +255,7 @@ func TestZoneParsing(t *testing.T) {
 
 /*
 func TestZoneParsingBigZonePrint(t *testing.T) {
-	f, err := os.Open("test.zone.miek.nl.signed")
+	f, err := os.Open("t/test.zone.miek.nl.signed")
 	if err != nil {
 		return
 	}
@@ -275,7 +275,7 @@ func TestZoneParsingBigZonePrint(t *testing.T) {
 }
 
 func TestZoneParsingBigZone(t *testing.T) {
-	f, err := os.Open("test.zone.miek.nl.signed")
+	f, err := os.Open("t/test.zone.miek.nl.signed")
 	if err != nil {
 		return
 	}
@@ -289,28 +289,5 @@ func TestZoneParsingBigZone(t *testing.T) {
 	}
 	delta := time.Now().UnixNano() - start
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
-}
-*/
-
-/*
-func TestLexerBrace(t *testing.T) {
-	f, err := os.Open("/home/miekg/src/tmp/small")
-	if err != nil {
-		return
-	}
-	defer f.Close()
-        var s scanner.Scanner
-        c := make(chan lex)
-        s.Init(f)
-        s.Mode = 0
-        s.Whitespace = 0
-        go zlexer(s, c)
-        for l := range c {
-                if l.err != "" {
-                        t.Logf("E: %s\n", l.err)
-                        continue
-                }
-                t.Logf("%s ", l)
-        }
 }
 */

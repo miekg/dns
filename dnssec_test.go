@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -150,29 +151,22 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
-func TestKeyGen(t *testing.T) {
-	algs := []uint8{RSASHA256, ECDSAP256SHA256}
-	bits := []int{1024, 256}
-
-	i := 0
-	key := new(RR_DNSKEY)
-	key.Hdr.Name = "keygen.miek.nl."
-	key.Hdr.Rrtype = TypeDNSKEY
-	key.Hdr.Class = ClassINET
-	key.Hdr.Ttl = 3600
-	key.Flags = 256
-	key.Protocol = 3
-	for _, v := range algs {
-		key.Algorithm = v
-		key.Generate(bits[i])
-		i++
-		t.Logf("%s\n", key)
-	}
-	//Really hard to figure out what to check here... Parse it back to a proper key?
+func TestDnskey(t *testing.T) {
+        f, _ := os.Open("t/Kmiek.nl.+010+05240.private")
+        privkey, _ := ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
+        f, _ = os.Open("t/Kmiek.nl.+010+05240.key")
+        pubkey, _ := ReadRR(f, "t/Kmiek.nl.+010+05240.key")
+        // Okay, we assume this has gone OK
+        if pubkey.(*RR_DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
+                t.Log("Pubkey is not what we've read")
+                t.Fail()
+        }
+        // Coefficient looks fishy...
+//        println(pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
 }
 
+
 /*
-func TestDnskey(t *testing.T) {
         return
 	// This key was generate with LDNS:
 	// ldns-keygen -a RSASHA256 -r /dev/urandom -b 1024 miek.nl 

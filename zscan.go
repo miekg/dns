@@ -93,7 +93,7 @@ func NewRR(s string) (RR, error) {
         return ReadRR(strings.NewReader(s), "")
 }
 
-// Ioreader here, or filename?? TODO
+// Ioreader here, or filename which *we* open....???
 
 // ReadRR reads the RR contained in q. Only the first RR is returned.
 // The class defaults to IN and TTL defaults to DefaultTtl
