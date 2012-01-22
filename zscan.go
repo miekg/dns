@@ -84,23 +84,25 @@ type Token struct {
 	Error *ParseError // when an error occured, this is the specifics
 }
 
-// NewRR parses the string s and returns the RR contained in there. If the string
-// contains more than one RR, only the first is returned. If an error is detected
-// that error is returned. 
-// If the class is not specified, the IN class is assumed. If the TTL is not
-// specified DefaultTtl is assumed.
+// NewRR reads the RR contained in the string s. Only the first RR is returned.
+// The class defaults to IN and TTL defaults to DefaultTtl
 func NewRR(s string) (RR, error) {
-	t := make(chan Token)
 	if s[len(s)-1] != '\n' { // We need a closing newline
-		t = ParseZone(strings.NewReader(s+"\n"), "")
-	} else {
-		t = ParseZone(strings.NewReader(s), "")
+                return ReadRR(strings.NewReader(s+"\n"), "")
 	}
-	r := <-t
-	if r.Error != nil {
-		return nil, r.Error
-	}
-	return r.RR, nil
+        return ReadRR(strings.NewReader(s), "")
+}
+
+// Ioreader here, or filename?? TODO
+
+// ReadRR reads the RR contained in q. Only the first RR is returned.
+// The class defaults to IN and TTL defaults to DefaultTtl
+func ReadRR(q io.Reader, filename string) (RR, error) {
+        r := <-ParseZone(q, filename)
+        if r.Error != nil {
+                return nil, r.Error
+        }
+        return r.RR, nil
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
