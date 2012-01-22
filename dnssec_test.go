@@ -146,7 +146,7 @@ func TestSignVerify(t *testing.T) {
 			t.Fail()
                         continue
 		}
-                t.Log("Validate %s\n", r.Header().Name)
+                t.Logf("Validated: %s\n", r.Header().Name)
 	}
 }
 
