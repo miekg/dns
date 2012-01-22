@@ -87,9 +87,9 @@ type dnskeyWireFmt struct {
 
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.
 func (k *RR_DNSKEY) KeyTag() uint16 {
-        if k == nil {
-                return 0
-        }
+	if k == nil {
+		return 0
+	}
 	var keytag int
 	switch k.Algorithm {
 	case RSAMD5:
@@ -121,9 +121,9 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 
 // ToDS converts a DNSKEY record to a DS record.
 func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
-        if k == nil {
-                return nil
-        }
+	if k == nil {
+		return nil
+	}
 	ds := new(RR_DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
@@ -202,6 +202,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.Labels, _ = IsDomainName(rrset[0].Header().Name)
+	// ...
 	if strings.HasPrefix(rrset[0].Header().Name, "*") {
 		s.Labels-- // wildcard, remove from label count
 	}
@@ -486,39 +487,16 @@ func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
 		h := r.Header()
-		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
 		name := h.Name
-		h.Name = strings.ToLower(h.Name)
-		// 6.2.  Canonical RR Form. (3) - domain rdata to lowercaser
-		/*
-					switch h.Rrtype {
-			                case TypeNS:
-			                        r.(*RR_NS).Ns = strings.ToLower(r.(*RR_NS).Ns)
-			                case TypeCNAME:
-			                        r.(*RR_CNAME).Cname = strings.ToLower(r.(*RR_CNAME).Cname)
-			                case TypeSOA:
-			                        r.(*RR_SOA).Ns = strings.ToLower(r.(*RR_SOA).Ns)
-			                        r.(*RR_SOA).Mbox = strings.ToLower(r.(*RR_SOA).Mbox)
-			                case TypeMB:
-			                case TypeMG:
-			                case TypeMR:
-			                case TypePTR:
-			                        r.(*RR_PTR).Ptr = strings.ToLower(r.(*RR_PTR).Ptr)
-					case TypeMINFO:
-			                case TypeMX:
-			                        r.(*RR_MX).Mx = strings.ToLower(r.(*RR_MX).Mx)
-			                case TypeSIG:
-			                case TypeRRSIG:
-					case TypeSRV:
-			                case TypeNSEC:
-			                        r.(*RR_NSEC).NextDomain = strings.ToLower(r.(*RR_NSEC).NextDomain)
-			                case TypeNSEC3:
-			                        r.(*RR_NSEC3).NextDomain = strings.ToLower(r.(*RR_NSEC3).NextDomain)
-					}
-		*/
+		labels := SplitLabels(h.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
-		// dont have to do anything
-
+		if len(labels) > int(s.Labels) {
+			// Wildcard
+			h.Name = strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+		}
+		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
+		h.Name = strings.ToLower(h.Name)
+		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.  -- Deprecated.
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
 		wire := make([]byte, r.Len()*2)

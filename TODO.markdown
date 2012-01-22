@@ -15,6 +15,11 @@ things that need to be fixed.
     settings just like that -- need to look at them.
     -edns NSID is another
 
+## BUGS
+
+* NSEC3 record with no bitmap (empty non-terminals) are not correctly verified
+    * This means they are not correctly put in wirefmt also
+
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
