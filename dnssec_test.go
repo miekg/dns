@@ -5,7 +5,19 @@ import (
 	"testing"
 )
 
-func TestSecure(t *testing.T) {
+func getKey() *RR_DNSKEY {
+	key := new(RR_DNSKEY)
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = RSASHA256
+	key.PublicKey = "AwEAAcNEU67LJI5GEgF9QLNqLO1SMq1EdoQ6E9f85ha0k0ewQGCblyW2836GiVsm6k8Kr5ECIoMJ6fZWf3CQSQ9ycWfTyOHfmI3eQ/1Covhb2y4bAmL/07PhrL7ozWBW3wBfM335Ft9xjtXHPy7ztCbV9qZ4TVDTW/Iyg0PiwgoXVesz"
+	return key
+}
+
+func getSoa() *RR_SOA {
 	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
@@ -15,6 +27,11 @@ func TestSecure(t *testing.T) {
 	soa.Retry = 3600
 	soa.Expire = 604800
 	soa.Minttl = 86400
+	return soa
+}
+
+func TestSecure(t *testing.T) {
+	soa := getSoa()
 
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
@@ -75,7 +92,7 @@ func TestSignature(t *testing.T) {
 
 func TestSignVerify(t *testing.T) {
 	// The record we want to sign
-	soa := new(RR_SOA)
+        soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -84,6 +101,16 @@ func TestSignVerify(t *testing.T) {
 	soa.Retry = 3600
 	soa.Expire = 604800
 	soa.Minttl = 86400
+
+        soa1 := new(RR_SOA)
+	soa1.Hdr = RR_Header{"*.miek.nl.", TypeSOA, ClassINET, 14400, 0}
+	soa1.Ns = "open.nlnetlabs.nl."
+	soa1.Mbox = "miekg.atoom.net."
+	soa1.Serial = 1293945905
+	soa1.Refresh = 14400
+	soa1.Retry = 3600
+	soa1.Expire = 604800
+	soa1.Minttl = 86400
 
 	// With this key
 	key := new(RR_DNSKEY)
@@ -108,13 +135,18 @@ func TestSignVerify(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 	sig.Algorithm = RSASHA256
 
-	if sig.Sign(privkey, []RR{soa}) != nil {
-		t.Log("Failure to sign the SOA record")
-		t.Fail()
-	}
-	if sig.Verify(key, []RR{soa}) != nil {
-		t.Log("Failure to validate")
-		t.Fail()
+	for _, r := range []RR{soa,soa1} {
+		if sig.Sign(privkey, []RR{r}) != nil {
+			t.Log("Failure to sign the SOA record")
+			t.Fail()
+                        continue
+		}
+		if sig.Verify(key, []RR{r}) != nil {
+			t.Log("Failure to validate")
+			t.Fail()
+                        continue
+		}
+                t.Log("Validate %s\n", r.Header().Name)
 	}
 }
 
