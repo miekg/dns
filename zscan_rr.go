@@ -531,6 +531,7 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	l := <-c
 	var s string
 	for l.value != _NEWLINE && l.value != _EOF {
+                println("tok", l.token)
 		switch l.value {
 		case _STRING:
 			s += l.token
