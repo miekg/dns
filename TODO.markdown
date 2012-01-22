@@ -6,8 +6,7 @@ things that need to be fixed.
 * Parsing
     * TXT record isn't parsed correctly, if followed by a comment
         - Need to make " important in the parsing
-
-* Speed, we can always go faster. A simple reflect server now hits 30K qps
+* Speed, we can always go faster. A simple reflect server now hits 30/40K qps
 * Add handy zone data structure (r/b tree)?
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * IsSubdomain, IsGlue helper functions;
@@ -17,8 +16,10 @@ things that need to be fixed.
 
 ## BUGS
 
-* NSEC3 record with no bitmap (empty non-terminals) are not correctly verified
-    * This means they are not correctly put in wirefmt also
+* NSEC3 records with no bitmap (empty non-terminals) are not correctly verified
+    * This means they are not correctly put in wirefmt also;
+* Not completely sure wildcard handling when verifying is correct;
+* 
 
 ## Examples to add
 
