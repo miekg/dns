@@ -4,7 +4,7 @@ Must of the stuff is working, but there is a list of smaller
 things that need to be fixed.
 
 * Parsing
-    * TXT record isn't parsed correctly
+    * TXT record isn't parsed correctly, if followed by a comment
         - Need to make " important in the parsing
 
 * Speed, we can always go faster. A simple reflect server now hits 30K qps
