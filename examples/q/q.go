@@ -142,7 +142,7 @@ forever:
 					}
 				}
 				if *check {
-					sigCheck(r.Reply, nameserver)
+					sigCheck(r.Reply, nameserver, *tcp)
 					nsecCheck(r.Reply)
 				}
 				if *short {
@@ -159,11 +159,11 @@ forever:
 	}
 }
 
-func sectionCheck(set []dns.RR, server string) {
+func sectionCheck(set []dns.RR, server string, tcp bool) {
 	for _, rr := range set {
 		if rr.Header().Rrtype == dns.TypeRRSIG {
 			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-			key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server)
+			key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
 			if key == nil {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
                                 continue
@@ -212,10 +212,10 @@ Check:
 
 // Check the sigs in the msg, get the signer's key (additional query), get the 
 // rrset from the message, check the signature(s)
-func sigCheck(in *dns.Msg, server string) {
-        sectionCheck(in.Answer, server)
-        sectionCheck(in.Ns, server)
-        sectionCheck(in.Extra, server)
+func sigCheck(in *dns.Msg, server string, tcp bool) {
+        sectionCheck(in.Answer, server, tcp)
+        sectionCheck(in.Ns, server, tcp)
+        sectionCheck(in.Extra, server, tcp)
 }
 
 // Return the RRset belonging to the signature with name and type t
@@ -231,8 +231,11 @@ func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
 
 // Get the key from the DNS (uses the local resolver) and return them.
 // If nothing is found we return nil
-func getKey(name string, keytag uint16, server string) *dns.RR_DNSKEY {
+func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY {
 	c := dns.NewClient()
+        if tcp {
+                c.Net = "tcp"
+        }
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	r, err := c.Exchange(m, server)
