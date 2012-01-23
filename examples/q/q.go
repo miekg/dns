@@ -220,13 +220,13 @@ Check:
         w, err := in.Nsec3Verify(in.Question[0])
         switch w {
         case dns.NSEC3_NXDOMAIN:
-                fmt.Printf(";+ Correct denial of existence (NSEC3/NXDOMAIN)\n")
+                fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
         case dns.NSEC3_NODATA:
-                fmt.Printf(";+ Correct denial of existence (NSEC3/NODATA)\n")
+                fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
         default:
                 // w == 0
                 if err != nil {
-	                fmt.Printf(";- Incorrect denial of existence (NSEC3): %s\n",err.Error())
+	                fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n",err.Error())
                 }
         }
 }
