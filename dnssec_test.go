@@ -162,7 +162,7 @@ func TestDnskey(t *testing.T) {
                 t.Fail()
         }
         // Coefficient looks fishy...
-//        println(pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
+        t.Logf("%s", pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
 }
 
 

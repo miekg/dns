@@ -16,8 +16,6 @@ things that need to be fixed.
 
 ## BUGS
 
-* NSEC3 records with no bitmap (empty non-terminals) are not correctly verified
-    * This means they are not correctly put in wirefmt also;
 * Not completely sure wildcard handling when verifying is correct;
 * Timeouts - they may be set way too short.
 

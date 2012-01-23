@@ -420,6 +420,11 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				}
 			case "NSEC": // NSEC/NSEC3
 				// This is the uint16 type bitmap
+                                if val.Field(i).Len() == 0 {
+                                        // Do absolutely nothing
+                                        break
+                                }
+
 				lastwindow := uint16(0)
 				length := uint16(0)
 				if off+2 > len(msg) {
