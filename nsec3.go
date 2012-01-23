@@ -147,7 +147,6 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 		}
 		nc = lastchopped + "." + ce
 		so = "*." + ce
-
 		// Check if the next closer is covered and thus denied
 		for _, nsec := range nsec3 {
 			if nsec.Cover(nc) {

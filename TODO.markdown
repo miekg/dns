@@ -17,10 +17,6 @@ things that need to be fixed.
 
 ## BUGS
 
-* Not completely sure wildcard handling when verifying is correct;
-% ./q -short -check -dnssec goed.nl @ns1.nic.nl
-no wildcard, but is ok
-
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
