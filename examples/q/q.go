@@ -30,7 +30,6 @@ func main() {
 	rd := flag.Bool("rd", true, "unset RD flag in query")
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "ask for NSID")
-	fp := flag.Bool("fp", false, "enable server detection")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -116,15 +115,10 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
-	if *fp {
-		startParse(nameserver)
-		return
-	}
 	for _, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
-			fmt.Printf("%s\n", msgToFingerprint(m))
 			fmt.Printf("%s\n", m.String())
 		}
 		c.Do(m, nameserver)
