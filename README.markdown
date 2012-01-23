@@ -23,6 +23,9 @@ Features:
 Sample programs can be found in the `_examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
 
+See this [mini howto](http://www.miek.nl/blog/archives/2012/01/23/super-short_guide_to_getting_q/index.html)
+to get things going.
+
 Have fun!
 
 Miek Gieben  -  2010-2012 - miek@miek.nl
