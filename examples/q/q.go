@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var dnskey *dns.RR_DNSKEY
+
 func q(w dns.RequestWriter, m *dns.Msg) {
 	w.Send(m)
 	r, err := w.Receive()
@@ -23,6 +25,7 @@ func main() {
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
+        anchor := flag.String("anchor", "", "use the DNSKEY in this file for checking consistency")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -42,6 +45,21 @@ func main() {
 	var qname []string
 
 	flag.Parse()
+        if *anchor != "" {
+                f, err := os.Open(*anchor)
+                if err != nil {
+                        fmt.Fprintf(os.Stderr, "Failure to open %s: %s\n", *anchor, err.Error())
+                }
+                r, err := dns.ReadRR(f, *anchor)
+                if err != nil {
+                        fmt.Fprintf(os.Stderr, "Failure to read an RR from %s: %s\n", *anchor, err.Error())
+                }
+                if k, ok := r.(*dns.RR_DNSKEY); !ok {
+                        fmt.Fprintf(os.Stderr, "No DNSKEY read from %s\n", *anchor)
+                } else {
+                        dnskey = k
+                }
+        }
 
 Flags:
 	for i := 0; i < flag.NArg(); i++ {
@@ -154,18 +172,27 @@ forever:
 }
 
 func sectionCheck(set []dns.RR, server string, tcp bool) {
+        var key *dns.RR_DNSKEY
 	for _, rr := range set {
 		if rr.Header().Rrtype == dns.TypeRRSIG {
 			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-			key := getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
+                        if dnskey == nil {
+		                key = getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
+                        } else {
+                                key = dnskey
+                        }
 			if key == nil {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
                                 continue
 			}
+                        where := "net"
+                        if dnskey != nil {
+                                where = "disk"
+                        }
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-				fmt.Printf(";- Bogus signature,  %s does not validate (DNSKEY %s/%d)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+			        fmt.Printf(";- Bog us signature,  %s does not validate (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
 			} else {
-				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag())
+				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
 			}
 		}
 	}
