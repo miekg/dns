@@ -21,7 +21,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
-	short := flag.Bool("short", false, "abbreviate long DNSKEY and RRSIG RRs")
+	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
