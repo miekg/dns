@@ -612,10 +612,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
+                        println("dns: unknown case unpacking struct")
 			return lenmsg, false
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
+                                println("dns: unknown tag unpacking struct")
 				return lenmsg, false
 			case "A":
 				if off+net.IPv4len > len(msg) {
@@ -757,6 +759,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			var s string
 			switch val.Type().Field(i).Tag {
 			default:
+                                println("dns: unknown tag unpacking string")
 				return lenmsg, false
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?

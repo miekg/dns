@@ -288,6 +288,7 @@ func (w *reply) Receive() (*Msg, error) {
 		return nil, err
 	}
 	p = p[:n]
+        println("Read n", n)
 	if ok := m.Unpack(p); !ok {
 		return nil, ErrUnpack
 	}
@@ -318,6 +319,9 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 		if len(p) < 1 {
 			return 0, io.ErrShortBuffer
 		}
+                // Use Attemps here too?
+                w.conn.SetReadDeadline(time.Now().Add(w.Client().ReadTimeout))
+
 		n, err = w.conn.(*net.TCPConn).Read(p[0:2])
 		if err != nil || n != 2 {
 			return n, err
@@ -343,6 +347,8 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 		}
 		n = i
 	case "udp", "udp4", "udp6":
+                w.conn.SetReadDeadline(time.Now().Add(w.Client().ReadTimeout))
+
 		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
 		if err != nil {
 			return n, err
@@ -389,9 +395,6 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 		if err = w.Dial(); err != nil {
 			return 0, err
 		}
-		w.conn.SetWriteDeadline(time.Now().Add(w.Client().WriteTimeout))
-		w.conn.SetReadDeadline(time.Now().Add(w.Client().ReadTimeout))
-
 	}
 	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":
@@ -399,6 +402,8 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 			return 0, io.ErrShortBuffer
 		}
 		for a := 0; a < w.Client().Attempts; a++ {
+                        w.conn.SetWriteDeadline(time.Now().Add(w.Client().WriteTimeout))
+
 			a, b := packUint16(uint16(len(p)))
 			n, err = w.conn.Write([]byte{a, b})
 			if err != nil {
@@ -433,6 +438,8 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 		}
 	case "udp", "udp4", "udp6":
 		for a := 0; a < w.Client().Attempts; a++ {
+                        w.conn.SetWriteDeadline(time.Now().Add(w.Client().WriteTimeout))
+
 			n, err = w.conn.(*net.UDPConn).WriteTo(p, w.conn.RemoteAddr())
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
