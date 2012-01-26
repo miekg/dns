@@ -6,31 +6,40 @@ If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. For instance I'm pondering if a zone-like structure should be
 implemented in the library.
 
+Goals:
+* KISS;
+* Small API;
+* If its easy to code in Go, don't make a function of it.
+
 Features:
 
 * UDP/TCP queries, IPv4 and IPv6;
-* RFC 1035 zone file parsing.
-* Fast, reply speed should be around 30K qps (Faster hardware, even more qps). Parsing RRs (zonefiles)
-    goes with 25K RR/s. This is expected to be optimized further.
+* RFC 1035 zone file parsing;
+* Fast: 
+    * reply speed around 30K qps (Faster hardware -> more qps);
+    * Parsing RRs (zone files) with 25K RR/s; 
+    * This is expected to be optimized further.
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
 * DNSSEC;
 * EDNS0;
 * AXFR/IXFR;
 * TSIG;
-* DNS name compression;
+* DNS name compression.
 
-Sample programs can be found in the `_examples` directory. They can 
+Sample programs can be found in the `examples` directory. They can 
 be build with: `make examples` (after the dns package has been installed)
 
 See this [mini howto](http://www.miek.nl/blog/archives/2012/01/23/super-short_guide_to_getting_q/index.html)
-to get things going.
+to get things going (including Go itself).
 
 Have fun!
 
 Miek Gieben  -  2010-2012 - miek@miek.nl
 
 ## Supported RFCs
+
+All of them:
 
 * 103{4,5}  - DNS standard
 * 1982 - Serial Arithmetic
