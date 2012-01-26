@@ -286,7 +286,7 @@ End:
 // In theory, the pointers are only allowed to jump backward.
 // We let them jump anywhere and stop jumping after a while.
 
-// UnpackDomainName unpack a domain name.
+// UnpackDomainName unpacks a domain name into a string.
 func UnpackDomainName(msg []byte, off int) (s string, off1 int, ok bool) {
 	s = ""
 	lenmsg := len(msg)
@@ -1041,7 +1041,8 @@ func (h *MsgHdr) String() string {
 	return s
 }
 
-// Pack a msg: convert it to wire format.
+// Pack packs a Msg: it is converted to to wire format.
+// If the dns.Compress is true the message will be in compressed wire format.
 func (dns *Msg) Pack() (msg []byte, ok bool) {
 	var dh Header
 	compression := make(map[string]int) // Compression pointer mappings
@@ -1109,7 +1110,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	return msg[:off], true
 }
 
-// Unpack a binary message to a Msg structure.
+// Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) bool {
 	// Header.
 	var dh Header

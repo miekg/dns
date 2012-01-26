@@ -125,7 +125,7 @@ func (u *Msg) RRsetNotUsed(rr []RR) {
 //   NONE     rrset    rr       Delete an RR from RRset     RRsetDeleteRR
 //   zone     rrset    rr       Add to an RRset             RRsetAddRdata
 
-// RRsetAddRdata adds an complete RRset, see RFC 2136 section 2.5.1
+// RRsetAddRdata creates a dynamic update packet that adds an complete RRset, see RFC 2136 section 2.5.1
 func (u *Msg) RRsetAddRdata(rr []RR) {
 	if len(u.Question) == 0 {
 		panic("empty question section")
@@ -137,7 +137,7 @@ func (u *Msg) RRsetAddRdata(rr []RR) {
 	}
 }
 
-// RRsetDelete deletes an RRset, see RFC 2136 section 2.5.2
+// RRsetDelete creates a dynamic update packet that deletes an RRset, see RFC 2136 section 2.5.2
 func (u *Msg) RRsetDelete(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
@@ -148,7 +148,7 @@ func (u *Msg) RRsetDelete(rr []RR) {
 	}
 }
 
-// NameDelete deletes all RRsets of a name, see RFC 2136 section 2.5.3
+// NameDelete creates a dynamic update packet that deletes all RRsets of a name, see RFC 2136 section 2.5.3
 func (u *Msg) NameDelete(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
@@ -156,7 +156,7 @@ func (u *Msg) NameDelete(rr []RR) {
 	}
 }
 
-// RRsetDeleteRR deletes RR from the RRSset, see RFC 2136 section 2.5.4
+// RRsetDeleteRR creates a dynamic update packet deletes RR from the RRSset, see RFC 2136 section 2.5.4
 func (u *Msg) RRsetDeleteRR(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
