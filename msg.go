@@ -55,7 +55,7 @@ var (
 	ErrDenialCe    error = &Error{Err: "no matching closest encloser found"}
 	ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
 	ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
-        ErrDenialBit   error = &Error{Err: "type not denied in NSEC3 bitmap"}
+	ErrDenialBit   error = &Error{Err: "type not denied in NSEC3 bitmap"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -77,11 +77,11 @@ type MsgHdr struct {
 // The layout of a DNS message.
 type Msg struct {
 	MsgHdr
-	Compress bool // If true, the message will be compressed when converted to wire format.
-	Question []Question
-	Answer   []RR
-	Ns       []RR
-	Extra    []RR
+	Compress bool       // If true, the message will be compressed when converted to wire format.
+	Question []Question // Holds the RR(s) of the question section.
+	Answer   []RR       // Holds the RR(s) of the answer section.
+	Ns       []RR       // Holds the RR(s) of the authority section.
+	Extra    []RR       // Holds the RR(s) of the additional section.
 }
 
 // Map of strings for each RR wire type.
@@ -420,10 +420,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				}
 			case "NSEC": // NSEC/NSEC3
 				// This is the uint16 type bitmap
-                                if val.Field(i).Len() == 0 {
-                                        // Do absolutely nothing
-                                        break
-                                }
+				if val.Field(i).Len() == 0 {
+					// Do absolutely nothing
+					break
+				}
 
 				lastwindow := uint16(0)
 				length := uint16(0)
@@ -444,10 +444,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					}
 					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
-                                        if off+2+int(length) > lenmsg {
-                                                println("dns: overflow packing NSECx bitmap")
-                                                return lenmsg, false
-                                        }
+					if off+2+int(length) > lenmsg {
+						println("dns: overflow packing NSECx bitmap")
+						return lenmsg, false
+					}
 
 					// Setting the window #
 					msg[off] = byte(window)
@@ -612,12 +612,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		lenmsg := len(msg)
 		switch fv := val.Field(i); fv.Kind() {
 		default:
-                        println("dns: unknown case unpacking struct")
+			println("dns: unknown case unpacking struct")
 			return lenmsg, false
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
-                                println("dns: unknown tag unpacking struct")
+				println("dns: unknown tag unpacking struct")
 				return lenmsg, false
 			case "A":
 				if off+net.IPv4len > len(msg) {
@@ -759,7 +759,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			var s string
 			switch val.Type().Field(i).Tag {
 			default:
-                                println("dns: unknown tag unpacking string")
+				println("dns: unknown tag unpacking string")
 				return lenmsg, false
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?
@@ -778,7 +778,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					consumed = 0 // return len(msg), false?
 				}
 				if off+rdlength-consumed > lenmsg {
-                                        println("dns: overflow when unpacking hex string")
+					println("dns: overflow when unpacking hex string")
 					return lenmsg, false
 				}
 				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
