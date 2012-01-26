@@ -5,7 +5,7 @@
 //
 //      m := new(Msg)
 //      m.SetAxfr("miek.nl.")
-//      // Add a skeleton TSIG record.
+//      // Add a stub TSIG record.
 //      m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
 //      // Generate the contents of the complete TSIG record.
 //      TsigGenerate(m, "so6ZGir4GPAqINNh9U5c3A==", "", false)
@@ -35,6 +35,8 @@ package dns
 import (
 	"crypto/hmac"
 	"crypto/md5"
+        "crypto/sha1"
+        "crypto/sha256"
 	"encoding/hex"
 	"io"
 	"strings"
@@ -78,8 +80,11 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// TsigGenerate adds an TSIG RR to a message. The TSIG MAC is saved
-// in the Tsig RR that is added. When TsigGenerate is called for the
+// TsigGenerate adds an TSIG RR to a message. The message should contain
+// a "stub" TsigRR with the algorithm, key name (owner name of the RR), 
+// time fudge (defaults to 300 seconds) and the current time
+// The TSIG MAC is saved in that Tsig RR.
+// When TsigGenerate is called for the
 // first time requestMAC is set to the empty string.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
@@ -100,7 +105,21 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 
 	t := new(RR_TSIG)
 
-	h := hmac.New(md5.New, []byte(rawsecret))
+        switch algo {
+
+        }
+
+        h := ""
+        switch hmac {
+        case rr.Algorithm:
+                h = hmac.New(md5.New, []byte(rawsecret))
+        case HmacSHA1:
+	        h = hmac.New(sha1.New, []byte(rawsecret))
+        case HmacSHA256:
+	        h = hmac.New(sha256.New, []byte(rawsecret))
+        default:
+                return ErrKeyAlg
+        }
 
 	t.MAC = hex.EncodeToString(h.Sum(buf))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
@@ -136,7 +155,17 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 		return ErrTime
 	}
 
-	h := hmac.New(md5.New, []byte(rawsecret))
+        h := ""
+        switch tsig.Algorithm {
+        case rr.Algorithm:
+                h = hmac.New(md5.New, []byte(rawsecret))
+        case HmacSHA1:
+	        h = hmac.New(sha1.New, []byte(rawsecret))
+        case HmacSHA256:
+	        h = hmac.New(sha256.New, []byte(rawsecret))
+        default:
+                return ErrKeyAlg
+        }
 	io.WriteString(h, string(buf))
 	if strings.ToUpper(hex.EncodeToString(h.Sum(nil))) != strings.ToUpper(tsig.MAC) {
 		return ErrSig

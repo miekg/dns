@@ -25,7 +25,8 @@ func main() {
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
-        anchor := flag.String("anchor", "", "use the DNSKEY in this file for checking consistency")
+        anchor := flag.String("anchor", "", "use the DNSKEY in this file for interla DNSSEC consistency")
+        tsig   := flag.String("tsig", "", "tsig key, [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -72,6 +73,14 @@ Flags:
 		// And if it looks like type, it is a type
 		if k, ok := dns.Str_rr[strings.ToUpper(flag.Arg(i))]; ok {
 			qtype = k
+                        switch qtype {
+                        case dns.TypeAXFR:
+                                fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+                                return
+                        case dns.TypeIXFR:
+                                fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+                                return
+                        }
 			continue Flags
 		}
 		// If it looks like a class, it is a class
@@ -84,6 +93,14 @@ Flags:
 			i, e := strconv.Atoi(string([]byte(flag.Arg(i))[4:]))
 			if e == nil {
 				qtype = uint16(i)
+                                switch qtype {
+                                case dns.TypeAXFR:
+                                        fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+                                        return
+                                case dns.TypeIXFR:
+                                        fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+                                        return
+                                }
 				continue Flags
 			}
 		}
