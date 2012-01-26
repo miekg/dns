@@ -14,7 +14,8 @@
 //      secrets["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="        // don't forget the . here
 //
 // The secrets' map index is set to 'axfr.'. This must match the ownername of the
-// TSIG record, which in the above example, is also set to 'axfr.'
+// TSIG record, which in the above example, is also set to 'axfr.' The supported algorithm
+// include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
 // The message requesting an AXFR (almost all TSIG usage is when requesting zone transfers)
 // for miek.nl with the TSIG record added is now ready to use. 
@@ -33,6 +34,7 @@
 package dns
 
 import (
+	"hash"
 	"crypto/hmac"
 	"crypto/md5"
         "crypto/sha1"
@@ -105,13 +107,9 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 
 	t := new(RR_TSIG)
 
-        switch algo {
-
-        }
-
-        h := ""
-        switch hmac {
-        case rr.Algorithm:
+        var h hash.Hash
+        switch rr.Algorithm {
+        case HmacMD5:
                 h = hmac.New(md5.New, []byte(rawsecret))
         case HmacSHA1:
 	        h = hmac.New(sha1.New, []byte(rawsecret))
@@ -155,9 +153,9 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 		return ErrTime
 	}
 
-        h := ""
+        var h hash.Hash
         switch tsig.Algorithm {
-        case rr.Algorithm:
+        case HmacMD5:
                 h = hmac.New(md5.New, []byte(rawsecret))
         case HmacSHA1:
 	        h = hmac.New(sha1.New, []byte(rawsecret))
