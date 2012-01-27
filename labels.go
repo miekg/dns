@@ -4,25 +4,24 @@ package dns
 
 // SplitLabels splits a domainname string into its labels.
 func SplitLabels(s string) []string {
-	last := byte('.')
 	k := 0
 	labels := make([]string, 0)
-        escape := false
+        last := byte('.')
+        lastlast := byte('.')
 	s = Fqdn(s) // Make fully qualified
 	for i := 0; i < len(s); i++ {
-                escape = false
-                if s[i] == '\\' {
-                        escape = true
-                }
 		if s[i] == '.' {
-			if last == '\\' && !escape {
-				// do nothing
-				break
+                        if last == '\\' {
+                                if lastlast != '\\' {
+                                        // do nothing
+                                        continue
+                                }
 			}
 			labels = append(labels, s[k:i])
 			k = i + 1 // + dot
 		}
-		last = s[i]
+                lastlast = last
+                last = s[i]
 	}
 	return labels
 }
