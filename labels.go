@@ -7,10 +7,15 @@ func SplitLabels(s string) []string {
 	last := byte('.')
 	k := 0
 	labels := make([]string, 0)
+        escape := false
 	s = Fqdn(s) // Make fully qualified
 	for i := 0; i < len(s); i++ {
+                escape = false
+                if s[i] == '\\' {
+                        escape = true
+                }
 		if s[i] == '.' {
-			if last == '\\' {
+			if last == '\\' && !escape {
 				// do nothing
 				break
 			}
