@@ -82,8 +82,8 @@ func Refused(w ResponseWriter, r *Msg) {
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
 // ...
-func ListenAndServe(addr string, network string, handler Handler, size int) error {
-	server := &Server{Addr: addr, Net: network, Handler: handler, UDPSize: size}
+func ListenAndServe(addr string, network string, handler Handler) error {
+	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
 }
 
@@ -303,7 +303,7 @@ func (c *conn) serve() {
 		if c.hijacked {
 			return
 		}
-		break // TODO(mg) Why is this a loop anyway
+		break // TODO(mg) Why is this a loop anyway?
 	}
 	if c._TCP != nil {
 		c.close() // Listen and Serve is closed then
@@ -318,7 +318,9 @@ func (w *response) Write(data []byte) (n int, err error) {
 			return 0, err
 		}
 	case w.conn._TCP != nil:
-		// TODO(mg) len(data) > 64K
+                if len(data) > MaxMsgSize) {
+                       return ErrBuf
+                }
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(len(data)))
 		n, err = w.conn._TCP.Write(l)
