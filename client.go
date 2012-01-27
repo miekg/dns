@@ -459,7 +459,7 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 			w.conn.SetWriteDeadline(time.Now().Add(w.Client().WriteTimeout))
 			w.conn.SetReadDeadline(time.Now().Add(w.Client().ReadTimeout))
 
-			n, err = w.conn.(*net.UDPConn).WriteTo(p, w.conn.RemoteAddr())
+			n, err = w.conn.(*net.UDPConn).Write(p)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
