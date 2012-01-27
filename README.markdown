@@ -1,7 +1,7 @@
 # Alternative (more granular) approach to a DNS library.
 
-Completely usable DNS library. Most widely used Resource Records are
-supported including the DNSSEC types. It follows a lean and mean philosophy.
+Complete and usable DNS library. Most widely used Resource Records are
+supported, including the DNSSEC types. It follows a lean and mean philosophy.
 If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. For instance I'm pondering if a zone-like structure should be
 implemented in the library.
