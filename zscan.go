@@ -11,6 +11,7 @@ import (
 
 // Only used when debugging the parser itself.
 var _DEBUG = false
+const maxTok = 1024
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -88,9 +89,9 @@ type Token struct {
 // The class defaults to IN and TTL defaults to DefaultTtl
 func NewRR(s string) (RR, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline
-                return ReadRR(strings.NewReader(s+"\n"), "")
+		return ReadRR(strings.NewReader(s+"\n"), "")
 	}
-        return ReadRR(strings.NewReader(s), "")
+	return ReadRR(strings.NewReader(s), "")
 }
 
 // Ioreader here, or filename which *we* open....???
@@ -98,11 +99,11 @@ func NewRR(s string) (RR, error) {
 // ReadRR reads the RR contained in q. Only the first RR is returned.
 // The class defaults to IN and TTL defaults to DefaultTtl
 func ReadRR(q io.Reader, filename string) (RR, error) {
-        r := <-ParseZone(q, filename)
-        if r.Error != nil {
-                return nil, r.Error
-        }
-        return r.RR, nil
+	r := <-ParseZone(q, filename)
+	if r.Error != nil {
+		return nil, r.Error
+	}
+	return r.RR, nil
 }
 
 // ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
@@ -194,10 +195,10 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Failed to open `" + l.token + "'", l}}
 				return
 			}
-                        if include + 1 > 7 {
-		                t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
-                                return
-                        }
+			if include+1 > 7 {
+				t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
+				return
+			}
 			parseZone(r1, l.token, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
@@ -357,7 +358,8 @@ func (l lex) String() string {
 // zlexer scans the sourcefile and returns tokens on the channel c.
 func zlexer(s scanner.Scanner, c chan lex) {
 	var l lex
-	str := "" // Hold the current read text
+	str := make([]byte, maxTok) // Should be enough for any token
+        stri := 0                  // Offset in str (0 means empty)
 	quote := false
 	escape := false
 	space := false
@@ -370,21 +372,26 @@ func zlexer(s scanner.Scanner, c chan lex) {
 	for tok != scanner.EOF {
 		l.column = s.Position.Column
 		l.line = s.Position.Line
+                if stri > maxTok {
+                        l.err = "tok length insufficient for parsing"
+                        c <- l
+                        return
+                }
 		switch x := s.TokenText(); x {
 		case " ", "\t":
 			escape = false
 			if commt {
 				break
 			}
-			if str == "" {
+			if stri == 0 {
 				//l.value = _BLANK
 				//l.token = " "
 			} else if owner {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
-				l.token = str
+				l.token = string(str[:stri])
 				// escape $... start with a \ not a $, so this will work
-				switch str {
+				switch string(str[:stri]) {
 				case "$TTL":
 					l.value = _DIRTTL
 				case "$ORIGIN":
@@ -395,7 +402,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				c <- l
 			} else {
 				l.value = _STRING
-				l.token = str
+				l.token = string(str[:stri])
 
 				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
@@ -408,7 +415,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				}
 				c <- l
 			}
-			str = ""
+			stri = 0
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
@@ -419,12 +426,14 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case ";":
 			if escape {
 				escape = false
-				str += ";"
+				str[stri] = ';'
+				stri++
 				break
 			}
 			if quote {
 				// Inside quoted text we allow ;
-				str += ";"
+				str[stri] = ';'
+				stri++
 				break
 			}
 			commt = true
@@ -435,7 +444,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				// Reset a comment
 				commt = false
 				rrtype = false
-				str = ""
+				stri = 0
 				// If not in a brace this ends the comment AND the RR
 				if brace == 0 {
 					owner = true
@@ -445,9 +454,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				}
 				break
 			}
-			if str != "" {
+			if stri != 0 {
 				l.value = _STRING
-				l.token = str
+				l.token = string(str[:stri])
 				if !rrtype {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
@@ -471,7 +480,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				space = true
 			}
 
-			str = ""
+			stri = 0
 			commt = false
 			rrtype = false
 			owner = true
@@ -480,18 +489,21 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str += "\\"
+				str[stri] = '\\'
+				stri++
 				escape = false
 				break
 			}
-			str += "\\"
+			str[stri] = '\\'
+			stri++
 			escape = true
 		case "\"":
 			if commt {
 				break
 			}
 			if escape {
-				str += "\""
+				str[stri] = '"'
+				stri++
 				escape = false
 				break
 			}
@@ -502,7 +514,8 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str += "("
+				str[stri] = '('
+				stri++
 				escape = false
 				break
 			}
@@ -512,13 +525,14 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str += ")"
+				str[stri] = ')'
+				stri++
 				escape = false
 				break
 			}
 			brace--
 			if brace < 0 {
-				l.err = "Extra closing brace"
+				l.err = "extra closing brace"
 				c <- l
 				return
 			}
@@ -527,15 +541,16 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			escape = false
-			str += x
+			str[stri] = byte(x[0])  // This should be ok...
+			stri++
 			space = false
 		}
 		tok = s.Scan()
 	}
 	// Hmm.
-	if len(str) > 0 {
+	if stri > 0 {
 		// Send remainder
-		l.token = str
+		l.token = string(str[:stri])
 		l.value = _STRING
 		c <- l
 	}
