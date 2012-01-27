@@ -313,13 +313,14 @@ func (c *conn) serve() {
 func (w *response) Write(data []byte) (n int, err error) {
 	switch {
 	case w.conn._UDP != nil:
+                // I should check the clients, udp message size here TODO(mg)
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
 			return 0, err
 		}
 	case w.conn._TCP != nil:
-                if len(data) > MaxMsgSize) {
-                       return ErrBuf
+                if len(data) > MaxMsgSize {
+                       return 0, ErrBuf
                 }
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(len(data)))
