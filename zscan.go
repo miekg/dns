@@ -11,7 +11,7 @@ import (
 
 // Only used when debugging the parser itself.
 var _DEBUG = false
-const maxTok = 1024
+const maxTok = 512
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
