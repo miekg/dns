@@ -6,22 +6,22 @@ package dns
 func SplitLabels(s string) []string {
 	k := 0
 	labels := make([]string, 0)
-        last := byte('.')
-        lastlast := byte('.')
+	last := byte('.')
+	lastlast := byte('.')
 	s = Fqdn(s) // Make fully qualified
 	for i := 0; i < len(s); i++ {
 		if s[i] == '.' {
-                        if last == '\\' {
-                                if lastlast != '\\' {
-                                        // do nothing
-                                        continue
-                                }
+			if last == '\\' {
+				if lastlast != '\\' {
+					// do nothing
+					continue
+				}
 			}
 			labels = append(labels, s[k:i])
 			k = i + 1 // + dot
 		}
-                lastlast = last
-                last = s[i]
+		lastlast = last
+		last = s[i]
 	}
 	return labels
 }

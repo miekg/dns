@@ -93,7 +93,7 @@ func TestSignature(t *testing.T) {
 
 func TestSignVerify(t *testing.T) {
 	// The record we want to sign
-        soa := new(RR_SOA)
+	soa := new(RR_SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -103,7 +103,7 @@ func TestSignVerify(t *testing.T) {
 	soa.Expire = 604800
 	soa.Minttl = 86400
 
-        soa1 := new(RR_SOA)
+	soa1 := new(RR_SOA)
 	soa1.Hdr = RR_Header{"*.miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa1.Ns = "open.nlnetlabs.nl."
 	soa1.Mbox = "miekg.atoom.net."
@@ -136,35 +136,34 @@ func TestSignVerify(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 	sig.Algorithm = RSASHA256
 
-	for _, r := range []RR{soa,soa1} {
+	for _, r := range []RR{soa, soa1} {
 		if sig.Sign(privkey, []RR{r}) != nil {
 			t.Log("Failure to sign the SOA record")
 			t.Fail()
-                        continue
+			continue
 		}
 		if sig.Verify(key, []RR{r}) != nil {
 			t.Log("Failure to validate")
 			t.Fail()
-                        continue
+			continue
 		}
-                t.Logf("Validated: %s\n", r.Header().Name)
+		t.Logf("Validated: %s\n", r.Header().Name)
 	}
 }
 
 func TestDnskey(t *testing.T) {
-        f, _ := os.Open("t/Kmiek.nl.+010+05240.private")
-        privkey, _ := ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
-        f, _ = os.Open("t/Kmiek.nl.+010+05240.key")
-        pubkey, _ := ReadRR(f, "t/Kmiek.nl.+010+05240.key")
-        // Okay, we assume this has gone OK
-        if pubkey.(*RR_DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
-                t.Log("Pubkey is not what we've read")
-                t.Fail()
-        }
-        // Coefficient looks fishy...
-        t.Logf("%s", pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
+	f, _ := os.Open("t/Kmiek.nl.+010+05240.private")
+	privkey, _ := ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
+	f, _ = os.Open("t/Kmiek.nl.+010+05240.key")
+	pubkey, _ := ReadRR(f, "t/Kmiek.nl.+010+05240.key")
+	// Okay, we assume this has gone OK
+	if pubkey.(*RR_DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
+		t.Log("Pubkey is not what we've read")
+		t.Fail()
+	}
+	// Coefficient looks fishy...
+	t.Logf("%s", pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
 }
-
 
 /*
         return

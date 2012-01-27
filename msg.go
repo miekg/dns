@@ -29,7 +29,7 @@ var (
 	ErrUnpack      error = &Error{Err: "unpacking failed"}
 	ErrPack        error = &Error{Err: "packing failed"}
 	ErrId          error = &Error{Err: "id mismatch"}
-        ErrBuf         error = &Error{Err: "buffer size too large"}
+	ErrBuf         error = &Error{Err: "buffer size too large"}
 	ErrShortRead   error = &Error{Err: "short read"}
 	ErrConn        error = &Error{Err: "conn holds both UDP and TCP connection"}
 	ErrConnEmpty   error = &Error{Err: "conn has no connection"}

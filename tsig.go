@@ -34,12 +34,12 @@
 package dns
 
 import (
-	"hash"
 	"crypto/hmac"
 	"crypto/md5"
-        "crypto/sha1"
-        "crypto/sha256"
+	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
+	"hash"
 	"io"
 	"strings"
 	"time"
@@ -107,17 +107,17 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 
 	t := new(RR_TSIG)
 
-        var h hash.Hash
-        switch rr.Algorithm {
-        case HmacMD5:
-                h = hmac.New(md5.New, []byte(rawsecret))
-        case HmacSHA1:
-	        h = hmac.New(sha1.New, []byte(rawsecret))
-        case HmacSHA256:
-	        h = hmac.New(sha256.New, []byte(rawsecret))
-        default:
-                return ErrKeyAlg
-        }
+	var h hash.Hash
+	switch rr.Algorithm {
+	case HmacMD5:
+		h = hmac.New(md5.New, []byte(rawsecret))
+	case HmacSHA1:
+		h = hmac.New(sha1.New, []byte(rawsecret))
+	case HmacSHA256:
+		h = hmac.New(sha256.New, []byte(rawsecret))
+	default:
+		return ErrKeyAlg
+	}
 
 	t.MAC = hex.EncodeToString(h.Sum(buf))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
@@ -153,17 +153,17 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 		return ErrTime
 	}
 
-        var h hash.Hash
-        switch tsig.Algorithm {
-        case HmacMD5:
-                h = hmac.New(md5.New, []byte(rawsecret))
-        case HmacSHA1:
-	        h = hmac.New(sha1.New, []byte(rawsecret))
-        case HmacSHA256:
-	        h = hmac.New(sha256.New, []byte(rawsecret))
-        default:
-                return ErrKeyAlg
-        }
+	var h hash.Hash
+	switch tsig.Algorithm {
+	case HmacMD5:
+		h = hmac.New(md5.New, []byte(rawsecret))
+	case HmacSHA1:
+		h = hmac.New(sha1.New, []byte(rawsecret))
+	case HmacSHA256:
+		h = hmac.New(sha256.New, []byte(rawsecret))
+	default:
+		return ErrKeyAlg
+	}
 	io.WriteString(h, string(buf))
 	if strings.ToUpper(hex.EncodeToString(h.Sum(nil))) != strings.ToUpper(tsig.MAC) {
 		return ErrSig

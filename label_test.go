@@ -30,25 +30,25 @@ func TestCompareLabels(t *testing.T) {
 }
 
 func TestSplitLabels(t *testing.T) {
-        s1 := "www.miek.nl."
-        s2 := "www.miek.nl"
-        s3 := `www\.miek.nl.`
-        s4 := `www\\.miek.nl.`
+	s1 := "www.miek.nl."
+	s2 := "www.miek.nl"
+	s3 := `www\.miek.nl.`
+	s4 := `www\\.miek.nl.`
 
-        if len(SplitLabels(s1)) != 3 {
-                t.Logf("Labels should be 3, %s\n", s1)
-                t.Fail()
-        }
-        if len(SplitLabels(s2)) != 3 {
-                t.Logf("Labels should be 3, %s\n", s2)
-                t.Fail()
-        }
-        if len(SplitLabels(s3)) != 2 {
-                t.Logf("Labels should be 2, %s\n", s3)
-                t.Fail()
-        }
-        if len(SplitLabels(s4)) != 3 {
-                t.Logf("Labels should be 3, %s\n", s4)
-                t.Fail()
-        }
+	if len(SplitLabels(s1)) != 3 {
+		t.Logf("Labels should be 3, %s\n", s1)
+		t.Fail()
+	}
+	if len(SplitLabels(s2)) != 3 {
+		t.Logf("Labels should be 3, %s\n", s2)
+		t.Fail()
+	}
+	if len(SplitLabels(s3)) != 2 {
+		t.Logf("Labels should be 2, %s\n", s3)
+		t.Fail()
+	}
+	if len(SplitLabels(s4)) != 3 {
+		t.Logf("Labels should be 3, %s\n", s4)
+		t.Fail()
+	}
 }

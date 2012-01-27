@@ -11,6 +11,7 @@ import (
 
 // Only used when debugging the parser itself.
 var _DEBUG = false
+
 const maxTok = 512
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
@@ -359,7 +360,7 @@ func (l lex) String() string {
 func zlexer(s scanner.Scanner, c chan lex) {
 	var l lex
 	str := make([]byte, maxTok) // Should be enough for any token
-        stri := 0                  // Offset in str (0 means empty)
+	stri := 0                   // Offset in str (0 means empty)
 	quote := false
 	escape := false
 	space := false
@@ -372,11 +373,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 	for tok != scanner.EOF {
 		l.column = s.Position.Column
 		l.line = s.Position.Line
-                if stri > maxTok {
-                        l.err = "tok length insufficient for parsing"
-                        c <- l
-                        return
-                }
+		if stri > maxTok {
+			l.err = "tok length insufficient for parsing"
+			c <- l
+			return
+		}
 		switch x := s.TokenText(); x {
 		case " ", "\t":
 			escape = false
@@ -541,7 +542,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			escape = false
-			str[stri] = byte(x[0])  // This should be ok...
+			str[stri] = byte(x[0]) // This should be ok...
 			stri++
 			space = false
 		}
