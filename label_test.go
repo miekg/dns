@@ -36,12 +36,20 @@ func TestSplitLabels(t *testing.T) {
         s3 := `www\.miek.nl.`
         s4 := `www\\.miek.nl.`
 
-        println(len(SplitLabels(s1)))
-        fmt.Printf("%v\n", SplitLabels(s1))
-        println(len(SplitLabels(s2)))
-        fmt.Printf("%v\n", SplitLabels(s2))
-        println(len(SplitLabels(s3)))
-        fmt.Printf("%v\n", SplitLabels(s3))
-        println(len(SplitLabels(s4)))
-        fmt.Printf("%v\n", SplitLabels(s4))
+        if len(SplitLabels(s1)) != 3 {
+                t.Logf("Labels should be 3, %s\n", s1)
+                t.Fail()
+        }
+        if len(SplitLabels(s2)) != 3 {
+                t.Logf("Labels should be 3, %s\n", s2)
+                t.Fail()
+        }
+        if len(SplitLabels(s3)) != 2 {
+                t.Logf("Labels should be 2, %s\n", s3)
+                t.Fail()
+        }
+        if len(SplitLabels(s4)) != 3 {
+                t.Logf("Labels should be 3, %s\n", s4)
+                t.Fail()
+        }
 }
