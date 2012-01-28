@@ -41,6 +41,9 @@ func main() {
 	c := dns.NewClient()
 	prints, _ := fingerPrintFromFile("data/q")
 	results := make([]*fingerprint, 0)
+        if *report {
+                fmt.Printf("# Fingerprint of <Nameserver> <version>\n# Supplied by <Name> on <Date>\n#\n")
+        }
 	for _, f := range prints {
 		f1 := probe(c, nameserver, f)
 		results = append(results, f1)
