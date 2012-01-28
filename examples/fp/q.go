@@ -57,7 +57,7 @@ func main() {
 
 	// For now, just list them:
         files := []string{"Atlas", "Bind8", "Bind9", "MaraDNS", "Microsoft", "Nsd3", "PowerDNS"}
-        fmt.Printf("%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n", "Server type", "Diffs", "Received", "Sent")
+        fmt.Printf("%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n", "Server type", "Diffs", "Fingerprint", "Recevied")
 	for _, file := range files {
                 diff := 0
 		prints, _ := fingerPrintFromFile("data/" + file)
