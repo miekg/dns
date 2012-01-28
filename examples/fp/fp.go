@@ -185,8 +185,14 @@ func (f *fingerprint) setString(str string) {
 			f.CheckingDisabled = s == strings.ToUpper("cd")
 		case 12:
 			f.Zero = s == strings.ToUpper("z")
-		case 13, 14, 15, 16:
-			// Can not set lenght of the section in the message
+                case 13:
+                        f.Question = valueOfString(s)
+                case 14:
+                        f.Answer = valueOfString(s)
+                case 15:
+                        f.Ns = valueOfString(s)
+                case 16:
+                        f.Extra = valueOfString(s)
 		case 17:
 			f.Do = s == strings.ToUpper("do")
 		case 18:
@@ -226,7 +232,11 @@ func toFingerprint(m *dns.Msg) *fingerprint {
 	f := new(fingerprint)
 
 	if len(m.Question) > 0 {
-		f.Query.Name = m.Question[0].Name
+                if len(m.Question[0].Name) == 0 {
+		        f.Query.Name = "."
+                } else {
+		        f.Query.Name = m.Question[0].Name
+                }
 		f.Query.Qtype = m.Question[0].Qtype
 		f.Query.Qclass = m.Question[0].Qclass
 	}
