@@ -2,7 +2,7 @@
 
 ## Announcing FP
 
-*The* tool for DNS fingerprinting is `fpdns` (https://github.com/kirei/fpdns), which is Perl based.
+*The* tool for DNS fingerprinting is [fpdns](https://github.com/kirei/fpdns), which is Perl based.
 In recent times development seems to have picked up, but a little competition never hurt
 anyone, so I wrote `fp` in Go. Fp is also a fingerprint program for DNS servers. Its aim is to
 be more readable then `fpdns` is (was?).
