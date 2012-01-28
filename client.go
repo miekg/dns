@@ -218,7 +218,6 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, err
 	}
-	//Why cant we set the buf here?? TODO(MG)
 	if n, err = w.readClient(outbuf); err != nil {
 		return n, err
 	}
@@ -238,9 +237,14 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	case "tcp":
 		in = make([]byte, MaxMsgSize)
 	case "udp":
-		in = make([]byte, DefaultMsgSize)
+                size := UDPMsgSize
+                for _, r := range m.Extra {
+                        if r.Header().Rrtype == TypeOPT {
+                                size = int(r.(*RR_OPT).UDPSize())
+                        }
+                }
+		in = make([]byte, size)
 	}
-	//TODO(mg): look at the buffer size here
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
 		return nil, err
 	}
@@ -262,6 +266,7 @@ func (w *reply) Dial() error {
 }
 
 // UDP/TCP stuff big TODO
+// Close/noclose
 func (w *reply) Close() (err error) {
 	return w.conn.Close()
 }
