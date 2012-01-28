@@ -1,4 +1,4 @@
-# These are the queries that we the nameserver to identify
+# These are the queries that we ask the nameserver being identified
 #
 # The order is important, as the data files of the known nameserver are compared
 # in this order.
