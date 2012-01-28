@@ -56,11 +56,11 @@ func main() {
 	}
 
 	// For now, just list them:
-	files := []string{"data/Bind9", "data/Nsd3"}
+        files := []string{"Atlas", "Bind8", "Bind9", "MaraDNS", "Microsoft", "Nsd3", "PowerDNS"}
         fmt.Printf("%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n", "Server type", "Diffs", "Received", "Sent")
 	for _, file := range files {
                 diff := 0
-		prints, _ := fingerPrintFromFile(file)
+		prints, _ := fingerPrintFromFile("data/" + file)
 		for i, f := range prints {
 			d := f.compare(results[i])
                         diff += d
