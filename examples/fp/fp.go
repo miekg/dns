@@ -18,7 +18,7 @@ const (
 	MARADNS    = "MaraDNS"
 	NEUSTARDNS = "Neustar DNS"
 	ATLAS      = "Atlas"
-        YADIFA     = "Yadifa"
+	YADIFA     = "Yadifa"
 
 	// Vendors
 	ISC       = "ISC"
@@ -28,7 +28,7 @@ const (
 	POWER     = "PowerDNS.com"
 	NEUSTAR   = "Neustar"
 	VERISIGN  = "Verisign"
-        EURID     = "EurID"
+	EURID     = "EurID"
 )
 
 // probe creates a packet and sends it to the nameserver. It
@@ -216,7 +216,6 @@ func toFingerprint(m *dns.Msg) *fingerprint {
 	h := m.MsgHdr
 	f := new(fingerprint)
 
-	// Set the old query
 	if len(m.Question) > 0 {
 		f.Query.Name = m.Question[0].Name
 		f.Query.Qtype = m.Question[0].Qtype
@@ -283,6 +282,71 @@ func (f *fingerprint) msg() *dns.Msg {
 		}
 	}
 	return m
+}
+
+// Compare two fingerprints, it returns the number of differences.
+func (f *fingerprint) compare(f1 *fingerprint) (diff int) {
+	if f.Query.Name != f1.Query.Name {
+		diff++
+	}
+	if f.Query.Qtype != f1.Query.Qtype {
+		diff++
+	}
+	if f.Query.Qclass != f1.Query.Qclass {
+		diff++
+	}
+	if f.Opcode != f1.Opcode {
+		diff++
+	}
+	if f.Rcode != f1.Rcode {
+		diff++
+	}
+	if f.Response != f1.Response {
+		diff++
+	}
+	if f.Authoritative != f1.Authoritative {
+		diff++
+	}
+	if f.Truncated != f1.Truncated {
+		diff++
+	}
+	if f.RecursionDesired != f1.RecursionDesired {
+		diff++
+	}
+	if f.RecursionAvailable != f1.RecursionAvailable {
+		diff++
+	}
+	if f.AuthenticatedData != f1.AuthenticatedData {
+		diff++
+	}
+	if f.CheckingDisabled != f1.CheckingDisabled {
+		diff++
+	}
+	if f.Zero != f1.Zero {
+		diff++
+	}
+	if f.Question != f1.Question {
+		diff++
+	}
+	if f.Answer != f1.Answer {
+		diff++
+	}
+	if f.Ns != f1.Ns {
+		diff++
+	}
+	if f.Extra != f1.Extra {
+		diff++
+	}
+	if f.Do != f1.Do {
+		diff++
+	}
+	if f.UDPSize != f1.UDPSize {
+		diff++
+	}
+	if f.Nsid != f1.Nsid {
+		diff++
+	}
+	return
 }
 
 func valueOfBool(b bool, w string) string {
