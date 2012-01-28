@@ -2,7 +2,9 @@
 package main
 
 import (
+	"bufio"
 	"dns"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -130,6 +132,13 @@ func (f *fingerprint) String() string {
 func (f *fingerprint) StringNoSections() string {
 	s := strings.SplitN(f.String(), ",", 14)
 	return strings.Join(s[2:13], ",")
+}
+
+// Return a new fingerprint, set from string
+func newFingerprint(s string) *fingerprint {
+        f := new(fingerprint)
+        f.setString(s)
+        return f
 }
 
 // SetString sets the strings str to the fingerprint *f.
@@ -347,6 +356,30 @@ func (f *fingerprint) compare(f1 *fingerprint) (diff int) {
 		diff++
 	}
 	return
+}
+
+// Read the finger prints from the file. Lines starting with 
+// # are comments. Each line should contain one fingerprint in string format.
+func fingerPrintFromFile(f string) ([]*fingerprint, error) {
+	r, e := os.Open(f)
+	if e != nil {
+		return nil, e
+	}
+	b := bufio.NewReader(r)
+	l, p, e := b.ReadLine()
+        i := 1
+        prints := make([]*fingerprint, 0)
+	for e == nil {
+                if p {
+                        return nil, nil
+                }
+                if l[0] != '#' {
+                        prints = append(prints, newFingerprint(string(l)))
+                }
+		l, p, e = b.ReadLine()
+                i++
+	}
+        return prints, nil
 }
 
 func valueOfBool(b bool, w string) string {
