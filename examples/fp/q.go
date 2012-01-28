@@ -34,23 +34,23 @@ func main() {
 			nameserver = flag.Arg(i)
 			break
 		}
-        }
+	}
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	nameserver += ":" + strconv.Itoa(*port)
-        c := dns.NewClient()
-        fp := new(fingerprint)
-        for _, s := range fingerprints() {
-                fp.setString(s)
-                fp1 := probe(c, nameserver, fp)
-                println(s, "|", fp1.String())
-        }
+	c := dns.NewClient()
+	fp := new(fingerprint)
+	for _, s := range fingerprints() {
+		fp.setString(s)
+		fp1 := probe(c, nameserver, fp)
+		println(s, "|", fp1.String())
+	}
 }
 
 // A list of all the evil finger prints
 func fingerprints() []string {
-        return []string {
-                ".,CH,TXT,QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,4097,NSID",           // general
-                "auThoRs.bInD.,CH,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid",  // case
-                "bind.,NONE,SOA,NOTIFY,NOERROR,qr,AA,tc,RD,ra,ad,cd,Z,0,0,0,0,do,0,nsid",       // notify
-        }
+	return []string{
+		".,CH,TXT,QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,0,0,0,0,DO,4097,NSID",          // general
+		"auThoRs.bInD.,CH,TXT,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid", // case
+		"bind.,NONE,SOA,NOTIFY,NOERROR,qr,AA,tc,RD,ra,ad,cd,Z,0,0,0,0,do,0,nsid",      // notify
+	}
 }
