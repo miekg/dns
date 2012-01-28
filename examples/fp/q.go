@@ -19,7 +19,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 
 func main() {
 	port := flag.Int("port", 53, "port number to use")
-	report := flag.Bool("report", false, "show fingerprint for unknown server")
+	report := flag.Bool("report", false, "show fingerprint for (yet) unknown server")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS...] [@server]\n", os.Args[0])
 		flag.PrintDefaults()
