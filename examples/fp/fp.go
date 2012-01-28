@@ -3,7 +3,6 @@ package main
 
 import (
 	"dns"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -32,37 +31,15 @@ const (
         EURID     = "EurID"
 )
 
-func startParse(addr string) {
-	l := &lexer{
-		addr:   addr,
-		client: dns.NewClient(),
-		fp:     new(fingerprint),
-		items:  make(chan item),
-		state:  dnsAlive,
-		debug:  true,
-	}
-
-	l.run()
-
-	// Not completely sure about this code..
-	for {
-		item := <-l.items
-		fmt.Printf("{%s %s}\n", itemString[item.typ], item.val)
-		if l.state == nil {
-			break
-		}
-	}
-}
-
-// SendProbe creates a packet and sends it to the nameserver. It
+// probe creates a packet and sends it to the nameserver. It
 // returns a fingerprint.
-func sendProbe(c *dns.Client, addr string, f *fingerprint) *fingerprint {
-	m := f.toProbe()
+func probe(c *dns.Client, addr string, f *fingerprint) *fingerprint {
+	m := f.msg()
 	r, err := c.Exchange(m, addr)
 	if err != nil {
 		return errorToFingerprint(err)
 	}
-	return msgToFingerprint(r)
+	return toFingerprint(r)
 }
 
 // This leads to strings like: "miek.nl.,IN,A,QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
@@ -90,7 +67,7 @@ type fingerprint struct {
 
 // String creates a (short) string representation of a dns message.
 // If a bit is set we uppercase the name 'AD' otherwise it's lowercase 'ad'.
-// This leads to strings like: "QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID" // TODO fix doc
+// This leads to strings like: ".,IN,NS,QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
 func (f *fingerprint) String() string {
 	if f == nil {
 		return "<nil>"
@@ -155,7 +132,7 @@ func (f *fingerprint) StringNoSections() string {
 	return strings.Join(s[2:13], ",")
 }
 
-// SetString set the string to fp.. todo
+// SetString sets the strings str to the fingerprint *f.
 func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
@@ -208,7 +185,7 @@ func (f *fingerprint) setString(str string) {
 		case 19:
 			f.Nsid = s == strings.ToUpper("nsid")
 		default:
-			panic("unhandled fingerprint")
+			panic("unhandled fingerprint field")
 		}
 	}
 	return
@@ -231,7 +208,8 @@ func errorToFingerprint(e error) *fingerprint {
 	return f
 }
 
-func msgToFingerprint(m *dns.Msg) *fingerprint {
+// Convert a Msg to a fingerprint
+func toFingerprint(m *dns.Msg) *fingerprint {
 	if m == nil {
 		return nil
 	}
@@ -279,8 +257,8 @@ func msgToFingerprint(m *dns.Msg) *fingerprint {
 
 // Create a dns message from a fingerprint string and
 // a DNS question. The order of a string is always the same.
-// QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096,nsid
-func (f *fingerprint) toProbe() *dns.Msg {
+// .,IN,NS,QUERY,NOERROR,qr,aa,tc,RD,ad,ad,z,1,0,0,1,DO,4096,nsid
+func (f *fingerprint) msg() *dns.Msg {
 	m := new(dns.Msg)
 	m.MsgHdr.Id = dns.Id()
 	m.Question = make([]dns.Question, 1)
