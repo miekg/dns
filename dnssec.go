@@ -277,7 +277,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 }
 
 // Verify validates an RRSet with the signature and key. This is only the
-// cryptographic test, the signature validity period most be checked separately.
+// cryptographic test, the signature validity period must be checked separately.
+// This function (temporary) modifies the RR for the validation to work. 
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
@@ -482,7 +483,8 @@ func (p wireSlice) Less(i, j int) bool {
 }
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-// Return the raw signature data.
+// Return the raw signature data. The data in []RR is modified in 
+// this function.
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
@@ -505,7 +507,7 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		if !ok1 {
 			return nil
 		}
-		h.Ttl = ttl // restore the order in the universe TODO(mg) work on copy
+		h.Ttl = ttl // restore the order in the universe
 		wire = wire[:off]
 		h.Name = name
 		wires[i] = wire
