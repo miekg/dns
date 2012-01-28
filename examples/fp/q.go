@@ -61,7 +61,7 @@ func main() {
 		for i, f := range prints {
 			d := f.compare(results[i])
                         diff += d
-                        fmt.Printf("%s\t%d\t%s t%s\n", file, d, f.String(), results[i].String())
+                        fmt.Printf("%s\t%d\t%s %s\n", file, d, f.String(), results[i].String())
 		}
                 fmt.Printf("\t\t==\nDifferences:\t%d\n\n", diff)
 	}

@@ -9,30 +9,6 @@ import (
 	"strings"
 )
 
-// .,IN,NS,QUERY,NOERROR,qr,aa,tc,rd,ra,ad,cd,z,0,0,0,0,do,0,nsid
-
-const (
-	// Detected software types
-	NSD        = "NSD"
-	BIND       = "BIND"
-	POWERDNS   = "PowerDNS"
-	WINDOWSDNS = "Windows DNS"
-	MARADNS    = "MaraDNS"
-	NEUSTARDNS = "Neustar DNS"
-	ATLAS      = "Atlas"
-	YADIFA     = "Yadifa"
-
-	// Vendors
-	ISC       = "ISC"
-	MARA      = "MaraDNS.org" // check
-	NLNETLABS = "NLnet Labs"
-	MICROSOFT = "Microsoft"
-	POWER     = "PowerDNS.com"
-	NEUSTAR   = "Neustar"
-	VERISIGN  = "Verisign"
-	EURID     = "EurID"
-)
-
 // probe creates a packet and sends it to the nameserver. It
 // returns a fingerprint.
 func probe(c *dns.Client, addr string, f *fingerprint) *fingerprint {
@@ -70,12 +46,11 @@ type fingerprint struct {
 // String creates a (short) string representation of a dns message.
 // If a bit is set we uppercase the name 'AD' otherwise it's lowercase 'ad'.
 // This leads to strings like: ".,IN,NS,QUERY,NOERROR,qr,aa,tc,RD,ad,cd,z,1,0,0,1,DO,4096,NSID"
-func (f *fingerprint) String() string {
+func (f *fingerprint) String() (s string) {
 	if f == nil {
 		return "<nil>"
 	}
 	// Use the same order as in Perl's fpdns. But use much more flags.
-	var s string
 	// The Question.
 	if len(f.Query.Name) == 0 {
 		s = "."
@@ -127,18 +102,11 @@ func (f *fingerprint) String() string {
 	return s
 }
 
-// fingerStringNoSections returns the strings representation
-// without the sections' count and the EDNS0 stuff and the query
-func (f *fingerprint) StringNoSections() string {
-	s := strings.SplitN(f.String(), ",", 14)
-	return strings.Join(s[2:13], ",")
-}
-
 // Return a new fingerprint, set from string
 func newFingerprint(s string) *fingerprint {
-        f := new(fingerprint)
-        f.setString(s)
-        return f
+	f := new(fingerprint)
+	f.setString(s)
+	return f
 }
 
 // SetString sets the strings str to the fingerprint *f.
@@ -146,7 +114,7 @@ func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
 		case 0: // question section domain name
-			f.Query.Name = s
+		        f.Query.Name = s
 		case 1: // Qclass
 			f.Query.Qclass = 0
 			if c, ok := dns.Str_class[s]; ok {
@@ -185,14 +153,14 @@ func (f *fingerprint) setString(str string) {
 			f.CheckingDisabled = s == strings.ToUpper("cd")
 		case 12:
 			f.Zero = s == strings.ToUpper("z")
-                case 13:
-                        f.Question = valueOfString(s)
-                case 14:
-                        f.Answer = valueOfString(s)
-                case 15:
-                        f.Ns = valueOfString(s)
-                case 16:
-                        f.Extra = valueOfString(s)
+		case 13:
+			f.Question = valueOfString(s)
+		case 14:
+			f.Answer = valueOfString(s)
+		case 15:
+			f.Ns = valueOfString(s)
+		case 16:
+			f.Extra = valueOfString(s)
 		case 17:
 			f.Do = s == strings.ToUpper("do")
 		case 18:
@@ -232,14 +200,20 @@ func toFingerprint(m *dns.Msg) *fingerprint {
 	f := new(fingerprint)
 
 	if len(m.Question) > 0 {
-                if len(m.Question[0].Name) == 0 {
-		        f.Query.Name = "."
-                } else {
-		        f.Query.Name = m.Question[0].Name
-                }
+		if len(m.Question[0].Name) == 0 {
+			f.Query.Name = "."
+		} else {
+			f.Query.Name = m.Question[0].Name
+		}
 		f.Query.Qtype = m.Question[0].Qtype
 		f.Query.Qclass = m.Question[0].Qclass
-	}
+	} else {
+                // Default, nil values
+                f.Query.Name = "."
+                f.Query.Qtype = 0
+                f.Query.Qclass = 0
+        }
+
 
 	f.Opcode = h.Opcode
 	f.Rcode = h.Rcode
@@ -377,19 +351,19 @@ func fingerPrintFromFile(f string) ([]*fingerprint, error) {
 	}
 	b := bufio.NewReader(r)
 	l, p, e := b.ReadLine()
-        i := 1
-        prints := make([]*fingerprint, 0)
+	i := 1
+	prints := make([]*fingerprint, 0)
 	for e == nil {
-                if p {
-                        return nil, nil
-                }
-                if l[0] != '#' {
-                        prints = append(prints, newFingerprint(string(l)))
-                }
+		if p {
+			return nil, nil
+		}
+		if l[0] != '#' {
+			prints = append(prints, newFingerprint(string(l)))
+		}
 		l, p, e = b.ReadLine()
-                i++
+		i++
 	}
-        return prints, nil
+	return prints, nil
 }
 
 func valueOfBool(b bool, w string) string {
