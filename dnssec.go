@@ -186,7 +186,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // otherwise false.
 // The signature data in the RRSIG is filled by this method.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
-func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
+func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if k == nil {
 		return ErrPrivKey
 	}
@@ -278,7 +278,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset RRset) error {
 
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period most be checked separately.
-func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset RRset) error {
+func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// Frist the easy checks
 	if s.KeyTag != k.KeyTag() {
 		return ErrKey
@@ -483,7 +483,7 @@ func (p wireSlice) Less(i, j int) bool {
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 // Return the raw signature data.
-func rawSignatureData(rrset RRset, s *RR_RRSIG) (buf []byte) {
+func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
 		h := r.Header()

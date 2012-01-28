@@ -16,8 +16,9 @@ Features:
 * UDP/TCP queries, IPv4 and IPv6;
 * RFC 1035 zone file parsing;
 * Fast: 
-    * reply speed around 30K qps (Faster hardware -> more qps);
-    * Parsing RRs (zone files) with 30K RR/s; 
+    * reply speed around 35K qps (Faster hardware -> more qps);
+    * Parsing RRs (zone files) with 30K RR/s, that 5M records
+        in about 170 seconds;
     * This is expected to be optimized further.
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
