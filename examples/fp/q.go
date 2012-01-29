@@ -41,14 +41,14 @@ func main() {
 	c := dns.NewClient()
 	prints, _ := fingerPrintFromFile("data/q")
 	results := make([]*fingerprint, 0)
-        if *report {
-                fmt.Printf("# Fingerprint of <Nameserver> <version>\n# Supplied by <Name> on <Date>\n#\n")
-        }
+	if *report {
+		fmt.Printf("# Fingerprint of <Nameserver> <version>\n# Supplied by <Name> on <Date>\n#\n")
+	}
 	for _, f := range prints {
 		f1 := probe(c, nameserver, f)
 		results = append(results, f1)
 		if *report {
-			fmt.Printf("%s\n", f1.String())
+			fmt.Printf("#%s\n%s\n", f.String(), f1.String())
 		}
 	}
 	if *report {
@@ -56,16 +56,16 @@ func main() {
 	}
 
 	// For now, just list them:
-        files := []string{"Atlas", "Bind8", "Bind9", "MaraDNS", "Microsoft", "Nsd3", "PowerDNS"}
-        fmt.Printf("%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n", "Server type", "Diffs", "Fingerprint", "Recevied")
+	files := []string{"Atlas", "Bind8", "Bind9", "MaraDNS", "Microsoft", "Nsd3", "PowerDNS"}
+	fmt.Printf("%s\t%s\t%s\t\t\t\t\t\t\t\t%s\n", "Server type", "Diffs", "Fingerprint", "Recevied")
 	for _, file := range files {
-                diff := 0
+		diff := 0
 		prints, _ := fingerPrintFromFile("data/" + file)
 		for i, f := range prints {
 			d := f.compare(results[i])
-                        diff += d
-                        fmt.Printf("%s\t%d %s %s\n", file, d, f.String(), results[i].String())
+			diff += d
+			fmt.Printf("%s\t%d %s %s\n", file, d, f.String(), results[i].String())
 		}
-                fmt.Printf("\t\t=\nDifferences:\t%d\n\n", diff)
+		fmt.Printf("\t\t=\nDifferences:\t%d\n\n", diff)
 	}
 }
