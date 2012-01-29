@@ -806,8 +806,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					// Work because of rfc4034, section 3.17
 					consumed += len(val.FieldByName("SignerName").String()) + 1
 				default:
-					consumed = 0 // TODO
+					consumed = 0 // TODO, maybe error?
 				}
+                                if off+rdlength-consumed > lenmsg {
+                                        println("dns: failure unpacking base64")
+                                        return lenmsg, false
+                                }
 				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
 			case "cdomain-name":
