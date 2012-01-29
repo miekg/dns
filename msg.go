@@ -170,6 +170,13 @@ var Rcode_str = map[int]string{
 	RcodeNXRrset:        "NXRRSET",
 	RcodeNotAuth:        "NOTAUTH",
 	RcodeNotZone:        "NOTZONE",
+	RcodeBadSig:         "BADSIG",
+	RcodeBadKey:         "BADKEY",
+	RcodeBadTime:        "BADTIME",
+	RcodeBadMode:        "BADMODE",
+	RcodeBadName:        "BADNAME",
+	RcodeBadAlg:         "BADALG",
+	RcodeBadTrunc:       "BADTRUNC",
 }
 
 // Rather than write the usual handful of routines to pack and

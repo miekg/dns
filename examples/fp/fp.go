@@ -357,7 +357,8 @@ func fingerPrintFromFile(f string) ([]*fingerprint, error) {
 		if p {
 			return nil, nil
 		}
-		if l[0] != '#' {
+                // Comments and empty lines are ignored
+		if l[0] != '#'  && l[0] != '\n' {
 			prints = append(prints, newFingerprint(string(l)))
 		}
 		l, p, e = b.ReadLine()

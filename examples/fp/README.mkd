@@ -43,6 +43,8 @@ It has 20 fields, which are:
 9. UDP bufsize, set to 4097;
 9. NSID, uppercase: request NSID (or NSID was set).
 
+If `DO` is not set, the UDP bufsize and NSID aren't used.
+
 These fingerprints are also used in *creating* the DNS queries that are send to nameserver(s)
 being tested.
 
