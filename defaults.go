@@ -197,26 +197,29 @@ func (dns *Msg) IsEdns0() (ok bool) {
 }
 
 // IsDomainName checks if s is a valid domainname, it returns
-// the number of labels and true, when a domain name is valid. When false
-// the returned labelcount isn't specified.
-func IsDomainName(s string) (uint8, bool) { // copied from net package.
+// the number of labels, total length and true, when a domain name is valid. 
+// When false the returned labelcount and length is 0 and 0.
+func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
-	if len(s) == 0 {
-		return 0, false
+        l := len(s)
+	if l == 0 || l > 255 {
+		return 0, 0, false
 	}
-	if len(s) > 255 { // Not true...?
-		return 0, false
-	}
-	s = Fqdn(s) // simplify checking loop: make name end in dot
+	// Simplify checking loop: make the name end in a dot
+        // Don't call Fqdn() to save another len(s)
+        if s[l-1] != '.' {
+                s += "."
+                l++
+        }
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0
 	labels := uint8(0)
-	for i := 0; i < len(s); i++ {
+	for i := 0; i < l; i++ {
 		c := s[i]
 		switch {
 		default:
-			return 0, false
+			return 0, uint8(l), false
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*':
 			ok = true
 			partlen++
@@ -228,28 +231,27 @@ func IsDomainName(s string) (uint8, bool) { // copied from net package.
 		case c == '-':
 			// byte before dash cannot be dot
 			if last == '.' {
-				return 0, false
+				return 0, uint8(l), false
 			}
 			partlen++
 		case c == '.':
 			// byte before dot cannot be dot, dash
 			if last == '.' || last == '-' {
-				return 0, false
+				return 0, uint8(l), false
 			}
 			if last == '\\' { // Ok, escaped dot.
 				partlen++
 				break
 			}
 			if partlen > 63 || partlen == 0 {
-				return 0, false
+				return 0, uint8(l), false
 			}
 			partlen = 0
 			labels++
 		}
 		last = c
 	}
-
-	return labels, ok
+	return labels, uint8(l), ok
 }
 
 // IsFqdn checks if a domain name is fully qualified

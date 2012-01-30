@@ -7,15 +7,14 @@
 # explain
 .,CH,TXT,QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,1,0,0,0,DO,65535,NSID
 # explain
-.,IN,TXT,QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,1,0,0,0,DO,128,NSID
 .,IN,TXT,QUERY,NOERROR,qr,aa,tc,RD,ra,ad,cd,z,1,0,0,0,DO,127,NSID
 # explain
 .,CH,TXT,UPDATE,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,do,0,nsid
 .,CH,TXT,UPDATE,BADTRUNC,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,do,0,nsid
 # explain
 .,IN,TXT,IQUERY,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,do,0,nsid
-.,IN,TXT,QUERY,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,DO,128,nsid
-.,IN,TXT,QUERY,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,DO,128,nsid
+.,IN,TXT,QUERY,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,DO,768,nsid
+.,IN,TXT,QUERY,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,DO,801,nsid
 # explain
 .,IN,TXT,STATUS,NOERROR,qr,AA,tc,RD,ra,ad,cd,z,1,0,0,0,do,0,nsid
 # explain

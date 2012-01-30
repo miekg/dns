@@ -161,11 +161,12 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
-				if _, ok := IsDomainName(l.token); !ok {
+				_, ld, ok := IsDomainName(l.token)
+                                if !ok {
 					t <- Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
-				if !IsFqdn(h.Name) {
+                                if h.Name[ld-1] != '.' {
 					h.Name += origin
 				}
 				st = _EXPECT_OWNER_BL
@@ -378,8 +379,10 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			c <- l
 			return
 		}
-		switch x := s.TokenText(); x {
-		case " ", "\t":
+		// Each token we get is one byte, so we switch on that x[0]. This
+		// avoids a len(x) that Go otherwise will perform when comparing strings.
+		switch x := s.TokenText(); x[0] {
+		case ' ', '\t':
 			escape = false
 			if commt {
 				break
@@ -424,7 +427,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			owner = false
 			space = true
-		case ";":
+		case ';':
 			if escape {
 				escape = false
 				str[stri] = ';'
@@ -438,7 +441,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			commt = true
-		case "\n":
+		case '\n':
 			// Hmmm, escape newline
 			escape = false
 			if commt {
@@ -485,7 +488,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			commt = false
 			rrtype = false
 			owner = true
-		case "\\":
+		case '\\':
 			if commt {
 				break
 			}
@@ -498,7 +501,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			str[stri] = '\\'
 			stri++
 			escape = true
-		case "\"":
+		case '"':
 			if commt {
 				break
 			}
@@ -510,7 +513,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			// str += "\"" don't add quoted quotes
 			quote = !quote
-		case "(":
+		case '(':
 			if commt {
 				break
 			}
@@ -521,7 +524,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			brace++
-		case ")":
+		case ')':
 			if commt {
 				break
 			}
