@@ -237,12 +237,12 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	case "tcp":
 		in = make([]byte, MaxMsgSize)
 	case "udp":
-                size := UDPMsgSize
-                for _, r := range m.Extra {
-                        if r.Header().Rrtype == TypeOPT {
-                                size = int(r.(*RR_OPT).UDPSize())
-                        }
-                }
+		size := UDPMsgSize
+		for _, r := range m.Extra {
+			if r.Header().Rrtype == TypeOPT {
+				size = int(r.(*RR_OPT).UDPSize())
+			}
+		}
 		in = make([]byte, size)
 	}
 	if n, err = c.ExchangeBuffer(out, a, in); err != nil {

@@ -201,16 +201,20 @@ func (dns *Msg) IsEdns0() (ok bool) {
 // When false the returned labelcount and length is 0 and 0.
 func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
-        l := len(s)
+	l := len(s)
 	if l == 0 || l > 255 {
 		return 0, 0, false
 	}
-	// Simplify checking loop: make the name end in a dot
-        // Don't call Fqdn() to save another len(s)
-        if s[l-1] != '.' {
-                s += "."
-                l++
-        }
+	longer := 0
+	// Simplify checking loop: make the name end in a dot.
+	// Don't call Fqdn() to save another len(s).
+	// Keep in mind that if we do this, we report a longer
+	// length
+	if s[l-1] != '.' {
+		s += "."
+		l++
+		longer = 1
+	}
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0
@@ -219,7 +223,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		c := s[i]
 		switch {
 		default:
-			return 0, uint8(l), false
+			return 0, uint8(l - longer), false
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*':
 			ok = true
 			partlen++
@@ -231,27 +235,27 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		case c == '-':
 			// byte before dash cannot be dot
 			if last == '.' {
-				return 0, uint8(l), false
+				return 0, uint8(l - longer), false
 			}
 			partlen++
 		case c == '.':
 			// byte before dot cannot be dot, dash
 			if last == '.' || last == '-' {
-				return 0, uint8(l), false
+				return 0, uint8(l - longer), false
 			}
 			if last == '\\' { // Ok, escaped dot.
 				partlen++
 				break
 			}
 			if partlen > 63 || partlen == 0 {
-				return 0, uint8(l), false
+				return 0, uint8(l - longer), false
 			}
 			partlen = 0
 			labels++
 		}
 		last = c
 	}
-	return labels, uint8(l), ok
+	return labels, uint8(l - longer), ok
 }
 
 // IsFqdn checks if a domain name is fully qualified

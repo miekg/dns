@@ -162,11 +162,13 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			case _OWNER:
 				h.Name = l.token
 				_, ld, ok := IsDomainName(l.token)
-                                if !ok {
+				if !ok {
 					t <- Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
-                                if h.Name[ld-1] != '.' {
+				println(l.token)
+				println(len(l.token), ld)
+				if h.Name[ld-1] != '.' {
 					h.Name += origin
 				}
 				st = _EXPECT_OWNER_BL

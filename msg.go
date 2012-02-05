@@ -808,10 +808,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				default:
 					consumed = 0 // TODO, maybe error?
 				}
-                                if off+rdlength-consumed > lenmsg {
-                                        println("dns: failure unpacking base64")
-                                        return lenmsg, false
-                                }
+				if off+rdlength-consumed > lenmsg {
+					println("dns: failure unpacking base64")
+					return lenmsg, false
+				}
 				s = unpackBase64(msg[off : off+rdlength-consumed])
 				off += rdlength - consumed
 			case "cdomain-name":
