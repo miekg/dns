@@ -166,8 +166,6 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					t <- Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
-				println(l.token)
-				println(len(l.token), ld)
 				if h.Name[ld-1] != '.' {
 					h.Name += origin
 				}
