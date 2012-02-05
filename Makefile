@@ -1,4 +1,4 @@
-.PHONY: examples
+.PHONY: ex
 
 EXAMPLES=mx \
 	 chaos \
@@ -9,5 +9,5 @@ EXAMPLES=mx \
 	 q \
 	 funkensturm \
 
-examples:
-	for i in $(EXAMPLES); do go build dns/examples/$$i; done
+ex:
+	for i in $(EXAMPLES); do go build dns/ex/$$i; done
