@@ -124,10 +124,10 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	l := <-c
 	rr.Ns = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad NS Ns", l}
 	}
-	if rr.Ns[ld-1]!= '.' {
+	if rr.Ns[ld-1] != '.' {
 		rr.Ns += o
 	}
 	return rr, nil
@@ -147,7 +147,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	l = <-c // _STRING
 	rr.Mx = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad MX Mx", l}
 	}
 	if rr.Mx[ld-1] != '.' {
@@ -163,7 +163,7 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	l := <-c
 	rr.Cname = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad CNAME", l}
 	}
 	if rr.Cname[ld-1] != '.' {
@@ -180,7 +180,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Ns = l.token
 	<-c // _BLANK
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad SOA mname", l}
 	}
 	if rr.Ns[ld-1] != '.' {
@@ -189,11 +189,11 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l = <-c
 	rr.Mbox = l.token
-        _, ld, ok = IsDomainName(l.token)
-        if !ok {
+	_, ld, ok = IsDomainName(l.token)
+	if !ok {
 		return nil, &ParseError{f, "bad SOA rname", l}
 	}
-	if rr.Mbox[ld-1]!='.' {
+	if rr.Mbox[ld-1] != '.' {
 		rr.Mbox += o
 	}
 	<-c // _BLANK
@@ -280,7 +280,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	l = <-c
 	rr.SignerName = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad RRSIG signername", l}
 	}
 	if rr.SignerName[ld-1] != '.' {
@@ -311,7 +311,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	l := <-c
 	rr.NextDomain = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad NSEC nextdomain", l}
 	}
 	if rr.NextDomain[ld-1] != '.' {
@@ -372,7 +372,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.HashLength = uint8(len(l.token))
 	rr.NextDomain = l.token
 	_, ld, ok := IsDomainName(l.token)
-        if !ok {
+	if !ok {
 		return nil, &ParseError{f, "bad NSEC nextdomain", l}
 	}
 	if rr.NextDomain[ld-1] != '.' {
