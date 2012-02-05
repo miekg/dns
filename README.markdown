@@ -29,11 +29,13 @@ Features:
 * TSIG;
 * DNS name compression.
 
-Sample programs can be found in the `examples` directory. They can 
-be build with: `make examples` (after the dns package has been installed)
+Building is done with the `go` tool. If you have setup your GOPATH
+correctly the following should work:
 
-See this [mini howto](http://www.miek.nl/blog/archives/2012/01/23/super-short_guide_to_getting_q/index.html)
-to get things going (including Go itself).
+    go build dns
+
+Sample programs can be found in the `ex` directory. They can 
+be build with: `make ex` (after the dns package has been installed)
 
 Have fun!
 
