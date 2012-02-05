@@ -26,7 +26,7 @@ func main() {
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
         anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
-        tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
+        //tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
