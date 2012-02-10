@@ -280,7 +280,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // cryptographic test, the signature validity period must be checked separately.
 // This function (temporary) modifies the RR for the validation to work. 
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
-	// Frist the easy checks
+	// First the easy checks
 	if s.KeyTag != k.KeyTag() {
 		return ErrKey
 	}
