@@ -494,7 +494,7 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			h.Name = strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			h.Name = "*."+strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
 		h.Name = strings.ToLower(h.Name)
