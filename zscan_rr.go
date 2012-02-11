@@ -38,16 +38,16 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeSOA:
 		r, e = setSOA(h, c, o, f)
 		goto Slurp
-        case TypeSSHFP:
+	case TypeSSHFP:
 		r, e = setSSHFP(h, c, f)
 		goto Slurp
 	case TypeSRV:
 		r, e = setSRV(h, c, o, f)
 		goto Slurp
+	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
+	// They need to search for the end of the RR themselves, hence they look for the ending
+	// newline. Thus there is no need to slurp the remainder, because there is none.
 	case TypeDNSKEY:
-		// These types have a variable ending either chunks of txt or chunks/base64 or hex.
-		// They need to search for the end of the RR themselves, hence they look for the ending
-		// newline. Thus there is no need to slurp the remainder, because there is none.
 		return setDNSKEY(h, c, f)
 	case TypeRRSIG:
 		return setRRSIG(h, c, o, f)
@@ -273,7 +273,7 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
-        rr.Target = l.token
+	rr.Target = l.token
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad SRV Target", l}
