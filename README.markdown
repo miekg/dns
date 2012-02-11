@@ -18,8 +18,8 @@ Features:
 * RFC 1035 zone file parsing;
 * Fast: 
     * reply speed around 35K qps (Faster hardware -> more qps);
-    * Parsing RRs (zone files) with 30K RR/s, that 5M records
-        in about 170 seconds;
+    * Parsing RRs (zone files) with 35K RR/s, that 5M records
+        in about 142 seconds;
     * This is expected to be optimized further.
 * Client and server side programming (mimicking the http package);
 * Asynchronous queries for client and server;
