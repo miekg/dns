@@ -329,6 +329,49 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_CERT)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CERT Type", l}
+	} else {
+		rr.Type = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NAPTR KeyTag", l}
+	} else {
+		rr.KeyTag = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NAPTR Algorithm", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	// Get the remaining data until we see a NEWLINE
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad NAPTR Certificate", l}
+		}
+		l = <-c
+	}
+	rr.Certificate = s
+
+	return rr, nil
+}
+
 func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_RRSIG)
 	rr.Hdr = h
