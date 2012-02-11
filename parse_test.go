@@ -161,6 +161,8 @@ func TestParseBrace(t *testing.T) {
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"(miek.nl.) (A) (127.0.0.1)": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"miek.nl A 127.0.0.1":        "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+                "_ssh._tcp.local. 60 IN PTR stora._ssh._tcp.local.":
+                                "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
 		"miek.nl. NS ns.miek.nl":     "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
                         (IN) 

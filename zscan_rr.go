@@ -26,6 +26,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeNS:
 		r, e = setNS(h, c, o, f)
 		goto Slurp
+	case TypePTR:
+		r, e = setPTR(h, c, o, f)
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
 		goto Slurp
@@ -35,8 +38,11 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeSOA:
 		r, e = setSOA(h, c, o, f)
 		goto Slurp
-	case TypeSSHFP:
+
 		r, e = setSSHFP(h, c, f)
+		goto Slurp
+	case TypeSRV:
+		r, e = setSRV(h, c, o, f)
 		goto Slurp
 	case TypeDNSKEY:
 		// These types have a variable ending either chunks of txt or chunks/base64 or hex.
@@ -133,6 +139,22 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_PTR)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Ptr = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad PTR Ptr", l}
+	}
+	if rr.Ptr[ld-1] != '.' {
+		rr.Ptr += o
+	}
+	return rr, nil
+}
+
 func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_MX)
 	rr.Hdr = h
@@ -221,6 +243,43 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		case 4:
 			rr.Minttl = uint32(j)
 		}
+	}
+	return rr, nil
+}
+
+func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_SRV)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad SRV Priority", l}
+	} else {
+		rr.Priority = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad SRV Weight", l}
+	} else {
+		rr.Weight = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad SRV Port", l}
+	} else {
+		rr.Port = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+        rr.Target = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad SRV Target", l}
+	}
+	if rr.Target[ld-1] != '.' {
+		rr.Target += o
 	}
 	return rr, nil
 }
