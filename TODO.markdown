@@ -20,6 +20,7 @@ things that need to be fixed.
 * ListenAndServe has trouble with v6:
     Failed to setup the udp6 server: listen udp6 <nil>:8053: address already in use
     Failed to setup the tcp6 server: listen tcp6 <nil>:8053: address already in use
+* Latest weekly breaks reflect, expected to be fixed in the next weekly.
 
 ## Examples to add
 
