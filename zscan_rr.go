@@ -533,19 +533,12 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c
 	l = <-c
 	rr.SaltLength = uint8(len(l.token))
-	rr.Salt = l.token // CHECK?
+	rr.Salt = l.token
 
 	<-c
 	l = <-c
 	rr.HashLength = uint8(len(l.token))
 	rr.NextDomain = l.token
-	_, ld, ok := IsDomainName(l.token)
-	if !ok {
-		return nil, &ParseError{f, "bad NSEC NextDomain", l}
-	}
-	if rr.NextDomain[ld-1] != '.' {
-		rr.NextDomain += o
-	}
 
 	rr.TypeBitMap = make([]uint16, 0)
 	l = <-c
@@ -594,8 +587,7 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c
 	l = <-c
 	rr.SaltLength = uint8(len(l.token))
-	rr.Salt = l.token // CHECK?
-        // TODO Salt LENGTH
+        rr.Salt = l.token
         return rr, nil
 }
 
