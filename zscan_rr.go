@@ -58,6 +58,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC(h, c, o, f)
 	case TypeNSEC3:
 		return setNSEC3(h, c, o, f)
+	case TypeNSEC3PARAM:
+		return setNSEC3PARAM(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
 	case TypeNAPTR:
@@ -564,31 +566,37 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
-/*
-func setNSEC3PARAM(h RR_Header, c chan lex) (RR, *ParseError) {
-        rr := new(RR_NSEC3PARAM)
-        rr.Hdr = h
-        l := <-c
-        if i, e = strconv.Atoi(rdf[0]); e != nil {
-                return nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[0], line: l}
-        } else {
-        rr.Hash = uint8(i)
+func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_NSEC3PARAM)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NSEC3PARAM Hash", l}
+	} else {
+		rr.Hash = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NSEC3PARAM Flags", l}
+	} else {
+		rr.Flags = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NSEC3PARAM Iterations", l}
+	} else {
+		rr.Iterations = uint16(i)
+	}
+	<-c
+	l = <-c
+	rr.SaltLength = uint8(len(l.token))
+	rr.Salt = l.token // CHECK?
+        // TODO Salt LENGTH
+        return rr, nil
 }
-        if i, e = strconv.Atoi(rdf[1]); e != nil {
-                reutrn nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[1], line: l}
-        } else {
-        rr.Flags = uint8(i)
-}
-        if i, e = strconv.Atoi(rdf[2]); e != nil {
-                return nil, &ParseError{Error: "bad NSEC3PARAM", name: rdf[2], line: l}
-        } else {
-        rr.Iterations = uint16(i)
-}
-        rr.Salt = rdf[3]
-        rr.SaltLength = uint8(len(rr.Salt))
-        zp.RR <- rr
-    }
-*/
 
 func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_SSHFP)
