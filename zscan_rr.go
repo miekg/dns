@@ -35,6 +35,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeCNAME:
 		r, e = setCNAME(h, c, o, f)
 		goto Slurp
+	case TypeDNAME:
+		r, e = setDNAME(h, c, o, f)
+		goto Slurp
 	case TypeSOA:
 		r, e = setSOA(h, c, o, f)
 		goto Slurp
@@ -43,9 +46,6 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		goto Slurp
 	case TypeSRV:
 		r, e = setSRV(h, c, o, f)
-		goto Slurp
-	case TypeNAPTR:
-		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
@@ -60,6 +60,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC3(h, c, o, f)
 	case TypeDS:
 		return setDS(h, c, f)
+	case TypeNAPTR:
+	        return setNAPTR(h, c, o, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
 	default:
@@ -193,6 +195,22 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	if rr.Cname[ld-1] != '.' {
 		rr.Cname += o
+	}
+	return rr, nil
+}
+
+func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_DNAME)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Target = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad CNAME Target", l}
+	}
+	if rr.Target[ld-1] != '.' {
+		rr.Target += o
 	}
 	return rr, nil
 }
