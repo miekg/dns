@@ -44,6 +44,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeSRV:
 		r, e = setSRV(h, c, o, f)
 		goto Slurp
+	case TypeNAPTR:
+		r, e = setNAPTR(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -280,6 +283,48 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	if rr.Target[ld-1] != '.' {
 		rr.Target += o
+	}
+	return rr, nil
+}
+
+func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_NAPTR)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NAPTR Order", l}
+	} else {
+		rr.Order = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NAPTR Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Flags = l.token
+
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Service = l.token
+
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Regexp = l.token
+
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Replacement = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad NAPTR Replacement", l}
+	}
+	if rr.Replacement[ld-1] != '.' {
+		rr.Replacement += o
 	}
 	return rr, nil
 }
