@@ -38,7 +38,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeSOA:
 		r, e = setSOA(h, c, o, f)
 		goto Slurp
-
+        case TypeSSHFP:
 		r, e = setSSHFP(h, c, f)
 		goto Slurp
 	case TypeSRV:
