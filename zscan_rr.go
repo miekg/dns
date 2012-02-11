@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 )
+// TODO: SPF, TKEY, Unknown stuff, RR_URI, DHCID, TLSA
 
 // Parse the rdata of each rrtype.
 // All data from the channel c is either _STRING or _BLANK.

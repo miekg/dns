@@ -153,6 +153,31 @@ func TestDomainName(t *testing.T) {
 	}
 }
 
+// Another one hear, geared to NSECx
+func TestParseNSEC(t *testing.T) {
+	nsectests := map[string]string{
+                "nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F":     "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
+                "p2209hipbpnm681knjnu0m1febshlv4e.nl. IN NSEC3 1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM":
+                                "p2209hipbpnm681knjnu0m1febshlv4e.nl.\t3600\tIN\tNSEC3\t1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
+                "localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC": "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
+        }
+	for i, o := range nsectests {
+		rr, e := NewRR(i)
+		if e != nil {
+			t.Log("Failed to parse RR: " + e.Error())
+			t.Fail()
+			continue
+		}
+		if rr.String() != o {
+			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
+			t.Fail()
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+
+}
+
 func TestParseBrace(t *testing.T) {
 	tests := map[string]string{
 		"(miek.nl.) 3600 IN A 127.0.0.1":                 "miek.nl.\t3600\tIN\tA\t127.0.0.1",
@@ -161,7 +186,7 @@ func TestParseBrace(t *testing.T) {
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"(miek.nl.) (A) (127.0.0.1)": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
 		"miek.nl A 127.0.0.1":        "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-                "_ssh._tcp.local. 60 IN PTR stora._ssh._tcp.local.":
+                "_ssh._tcp.local. 60 IN (PTR) stora._ssh._tcp.local.":
                                 "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
 		"miek.nl. NS ns.miek.nl":     "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
