@@ -50,7 +50,7 @@ being tested.
 
 A full nameserver fingerprint consists out of multiple of these fingerprints. Right now
 `fp` fires off 3 queries to test a server, so each nameserver fingerprint *must* also
-consist out of 3 fingerprints. The nameserver [fingerprint of BIND9](https://github.com/miekg/godns/tree/master/examples/fp/data/Bind9)
+consist out of 3 fingerprints. The nameserver [fingerprint of BIND9](https://github.com/miekg/dns/tree/master/examples/fp/data/Bind9)
 looks like:
 
     # BIND9 fingerprints
@@ -64,9 +64,9 @@ extra fingerprint.
 ## Trying it yourself
 
 As said, Currently `fp` only uses three queries, but this is expected to be increased in the
-near future. In the [data directory](https://github.com/miekg/godns/tree/master/examples/fp/data), 
+near future. In the [data directory](https://github.com/miekg/dns/tree/master/examples/fp/data), 
 the file `q` holds the fingerprints of the queries to ask. Currently
-[it](https://github.com/miekg/godns/tree/master/examples/fp/data/q) looks like this:
+[it](https://github.com/miekg/dns/tree/master/examples/fp/data/q) looks like this:
 
     # These are the queries that we ask the nameserver being identified
     #
