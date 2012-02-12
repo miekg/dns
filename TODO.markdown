@@ -16,6 +16,7 @@ things that need to be fixed.
 * Add tsig check in 'q'?
 * More RRs to add. Parsing of strings within the rdata
 * Unknown RR parsing
+* \DDD in zonefiles
 
 ## BUGS
 

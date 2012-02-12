@@ -49,6 +49,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeSRV:
 		r, e = setSRV(h, c, o, f)
 		goto Slurp
+	case TypeNAPTR:
+		r, e = setNAPTR(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -64,8 +67,6 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC3PARAM(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
-	case TypeNAPTR:
-		return setNAPTR(h, c, o, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
 	default:
@@ -328,19 +329,23 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
+	println("Flags", l.token)
 	rr.Flags = l.token
 
 	<-c     // _BLANK
 	l = <-c // _STRING
+	println("Service", l.token)
 	rr.Service = l.token
 
 	<-c     // _BLANK
 	l = <-c // _STRING
+	println("Regexp", l.token)
 	rr.Regexp = l.token
 
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Replacement = l.token
+	println("Replacement", l.token, "A")
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}
@@ -703,14 +708,23 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	// Get the remaining data until we see a NEWLINE
+	quote := false
 	l := <-c
 	var s string
 	for l.value != _NEWLINE && l.value != _EOF {
+		println("SEEN", l.value, l.token)
 		switch l.value {
 		case _STRING:
-			s += l.token
+			if quote {
+				s += l.token
+			}
 		case _BLANK:
-			s += l.token
+			if quote {
+				// _BLANK can only be seen in between txt parts.
+				return nil, &ParseError{f, "bad TXT Txt", l}
+			}
+		case _QUOTE:
+			quote = !quote
 		default:
 			return nil, &ParseError{f, "bad TXT", l}
 		}

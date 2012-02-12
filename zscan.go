@@ -10,9 +10,11 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = false
+var _DEBUG = true
 
-const maxTok = 1024
+// Complete unsure about the correctness of this value?
+// Large blobs of base64 code might get longer than this....
+const maxTok = 300
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -25,6 +27,7 @@ const (
 	_EOF = iota // Don't let it start with zero
 	_STRING
 	_BLANK
+        _QUOTE
 	_NEWLINE
 	_RRTYPE
 	_OWNER
@@ -384,6 +387,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		// avoids a len(x) that Go otherwise will perform when comparing strings.
 		switch x := s.TokenText(); x[0] {
 		case ' ', '\t':
+			if quote {
+				// Inside quotes this is legal
+				str[stri] = byte(x[0])
+				stri++
+				break
+			}
 			escape = false
 			if commt {
 				break
@@ -429,21 +438,28 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			owner = false
 			space = true
 		case ';':
-			if escape {
-				escape = false
-				str[stri] = ';'
+			if quote {
+				// Inside quotes this is legal
+				str[stri] = byte(x[0])
 				stri++
 				break
 			}
-			if quote {
-				// Inside quoted text we allow ;
-				str[stri] = ';'
+			if escape {
+				escape = false
+				str[stri] = byte(x[0])
 				stri++
 				break
 			}
 			commt = true
 		case '\n':
 			// Hmmm, escape newline
+                        if quote {
+				str[stri] = byte(x[0])
+                                stri++
+                                break
+                        }
+
+                        // inside quotes this is legal
 			escape = false
 			if commt {
 				// Reset a comment
@@ -490,16 +506,17 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			rrtype = false
 			owner = true
 		case '\\':
+                        // quote?
 			if commt {
 				break
 			}
 			if escape {
-				str[stri] = '\\'
+				str[stri] = byte(x[0])
 				stri++
 				escape = false
 				break
 			}
-			str[stri] = '\\'
+			str[stri] = byte(x[0])
 			stri++
 			escape = true
 		case '"':
@@ -507,30 +524,49 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = '"'
+				str[stri] = byte(x[0])
 				stri++
 				escape = false
 				break
 			}
-			// str += "\"" don't add quoted quotes
+			// send previous gathered text and the quote
+                        if stri != 0 {
+                                l.value = _STRING
+                                l.token = string(str[:stri])
+                                c <-l
+                                stri = 0
+                        }
+                        l.value = _QUOTE
+                        l.token = "\""
+                        c <- l
 			quote = !quote
 		case '(':
+                        if quote {
+				str[stri] = byte(x[0])
+                                stri++
+                                break
+                        }
 			if commt {
 				break
 			}
 			if escape {
-				str[stri] = '('
+				str[stri] = byte(x[0])
 				stri++
 				escape = false
 				break
 			}
 			brace++
 		case ')':
+                        if quote {
+                                str[stri] = byte(x[0])
+                                stri++
+                                break
+                        }
 			if commt {
 				break
 			}
 			if escape {
-				str[stri] = ')'
+				str[stri] = byte(x[0])
 				stri++
 				escape = false
 				break
@@ -546,7 +582,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			escape = false
-			str[stri] = byte(x[0]) // This should be ok...
+			str[stri] = byte(x[0])
 			stri++
 			space = false
 		}
