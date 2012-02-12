@@ -327,25 +327,72 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	} else {
 		rr.Preference = uint16(i)
 	}
+        // Following three are put between quotes
+        // Flags
 	<-c     // _BLANK
-	l = <-c // _STRING
-	println("Flags", l.token)
-	rr.Flags = l.token
+	l = <-c // _QUOTE
+        if l.value != _QUOTE {
+		return nil, &ParseError{f, "bad NAPTR Flags", l}
+        }
+        l = <-c // Either String or Quote
+        if l.value == _STRING {
+	        rr.Flags = l.token
+                l = <-c // _QUOTE
+                if l.value != _QUOTE {
+                        return nil, &ParseError{f, "bad NAPTR Flags", l}
+                }
+        } else if l.value == _QUOTE {
+                rr.Flags = ""
+        } else {
+                return nil, &ParseError{f, "bad NAPTR Flags", l}
+        }
 
+        // Service
 	<-c     // _BLANK
-	l = <-c // _STRING
-	println("Service", l.token)
-	rr.Service = l.token
+	l = <-c // _QUOTE
+        if l.value != _QUOTE {
+		return nil, &ParseError{f, "bad NAPTR Service", l}
+        }
+        l = <-c // Either String or Quote
+        if l.value == _STRING {
+	        rr.Service = l.token
+                l = <-c // _QUOTE
+                if l.value != _QUOTE {
+                        return nil, &ParseError{f, "bad NAPTR Service", l}
+                }
+        } else if l.value == _QUOTE {
+                rr.Service = ""
+        } else {
+                return nil, &ParseError{f, "bad NAPTR Service", l}
+        }
+        println("SERVICE", rr.Service)
 
+        // Regexp
 	<-c     // _BLANK
-	l = <-c // _STRING
-	println("Regexp", l.token)
-	rr.Regexp = l.token
+	l = <-c // _QUOTE
+        if l.value != _QUOTE {
+		return nil, &ParseError{f, "bad NAPTR Regexp", l}
+        }
+        l = <-c // Either String or Quote
+        if l.value == _STRING {
+	        rr.Regexp = l.token
+                l = <-c // _QUOTE
+                if l.value != _QUOTE {
+                        return nil, &ParseError{f, "bad NAPTR Regexp", l}
+                }
+        } else if l.value == _QUOTE {
+                println("SETTING HERE")
+                rr.Regexp = ""
+        } else {
+                return nil, &ParseError{f, "bad NAPTR Regexp", l}
+        }
+        println("REGEXP", rr.Regexp)
 
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Replacement = l.token
 	println("Replacement", l.token, "A")
+	println("Replacement", l.value, "A")
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}

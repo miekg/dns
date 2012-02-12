@@ -429,9 +429,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 						l.value = _CLASS
 					}
 				}
+                                // Space ALSO?
 				c <- l
 			}
 			stri = 0
+                        // I reverse space stuff here
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
@@ -484,6 +486,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if stri != 0 {
+                                l.value = _BLANK
+                                l.token = " "
+                                c <- l
 				l.value = _STRING
 				l.token = string(str[:stri])
 				if !rrtype {
@@ -492,6 +497,8 @@ func zlexer(s scanner.Scanner, c chan lex) {
 						rrtype = true
 					}
 				}
+                                // I don't send a BLANK here
+                        println("WAT HEB IK HIER", l.token, l.value)
 				c <- l
 			}
 			if brace > 0 {
