@@ -1060,6 +1060,5 @@ var rr_mk = map[uint16]func() RR{
 	TypeURI:        func() RR { return new(RR_URI) },
 	TypeTA:         func() RR { return new(RR_TA) },
 	TypeDLV:        func() RR { return new(RR_DLV) },
-
-	TypeTLSA: func() RR { return new(RR_TLSA) },
+	TypeTLSA:       func() RR { return new(RR_TLSA) },
 }
