@@ -198,7 +198,7 @@ func (dns *Msg) IsEdns0() (ok bool) {
 
 // IsDomainName checks if s is a valid domainname, it returns
 // the number of labels, total length and true, when a domain name is valid. 
-// When false the returned labelcount and length is 0 and 0.
+// When false is returned the labelcount and length are not defined.
 func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	l := len(s)
@@ -258,7 +258,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	return labels, uint8(l - longer), ok
 }
 
-// IsFqdn checks if a domain name is fully qualified
+// IsFqdn checks if a domain name is fully qualified.
 func IsFqdn(s string) bool {
 	if len(s) == 0 {
 		return false // ?
@@ -267,7 +267,7 @@ func IsFqdn(s string) bool {
 }
 
 // Fqdns return the fully qualified domain name from s.
-// Is s is already fq, then it behaves as the identity function.
+// If s is already fully qualified, it behaves as the identity function.
 func Fqdn(s string) string {
 	if IsFqdn(s) {
 		return s

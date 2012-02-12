@@ -81,7 +81,8 @@ func Refused(w ResponseWriter, r *Msg) {
 // RefusedHandler returns HandlerFunc with Refused.
 func RefusedHandler() Handler { return HandlerFunc(Refused) }
 
-// ...
+// Start a server on addresss and network speficied. Invoke handler
+// for any incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
