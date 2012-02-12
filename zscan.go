@@ -10,9 +10,9 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = false
+var _DEBUG = true
 
-const maxTok = 512
+const maxTok = 1024
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -167,7 +167,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				}
 				if h.Name[ld-1] != '.' {
-					h.Name += origin
+					h.Name += "." + origin
 				}
 				st = _EXPECT_OWNER_BL
 			case _DIRTTL:
@@ -236,6 +236,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			} else {
 				origin = l.token
 			}
+                        st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{f, "No blank after owner", l}}
