@@ -153,6 +153,26 @@ func TestDomainName(t *testing.T) {
 	}
 }
 
+func TestParseDirective(t *testing.T) {
+	tests := map[string]string{
+                "$ORIGIN miek.nl.\na IN NS b":  "a.miek.nl.\tIN\tNS\tb.miek.nl.",
+        }
+	for i, o := range tests {
+		rr, e := NewRR(i)
+		if e != nil {
+			t.Log("Failed to parse RR: " + e.Error())
+			t.Fail()
+			continue
+		}
+		if rr.String() != o {
+			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
+			t.Fail()
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+}
+
 // Another one hear, geared to NSECx
 func TestParseNSEC(t *testing.T) {
 	nsectests := map[string]string{
@@ -175,7 +195,6 @@ func TestParseNSEC(t *testing.T) {
 			t.Logf("RR is OK: `%s'", rr.String())
 		}
 	}
-
 }
 
 func TestParseBrace(t *testing.T) {

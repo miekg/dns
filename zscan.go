@@ -98,7 +98,7 @@ func NewRR(s string) (RR, error) {
 // Ioreader here, or filename which *we* open....???
 
 // ReadRR reads the RR contained in q. Only the first RR is returned.
-// The class defaults to IN and TTL defaults to DefaultTtl
+// The class defaults to IN and TTL defaults to DefaultTtl.
 func ReadRR(q io.Reader, filename string) (RR, error) {
 	r := <-ParseZone(q, filename)
 	if r.Error != nil {
@@ -107,7 +107,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 	return r.RR, nil
 }
 
-// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or on error
+// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or an error
 // on the returned channel. The channel t is closed by ParseZone when the end of r is reached.
 func ParseZone(r io.Reader, file string) chan Token {
 	t := make(chan Token)
