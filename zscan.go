@@ -10,7 +10,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = true
+var _DEBUG = false
 
 // Complete unsure about the correctness of this value?
 // Large blobs of base64 code might get longer than this....
@@ -27,7 +27,7 @@ const (
 	_EOF = iota // Don't let it start with zero
 	_STRING
 	_BLANK
-        _QUOTE
+	_QUOTE
 	_NEWLINE
 	_RRTYPE
 	_OWNER
@@ -237,9 +237,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			if !IsFqdn(l.token) {
 				origin = l.token + "." + origin // Append old origin if the new one isn't a fqdn
 			} else {
-				origin = "." +l.token
+				origin = "." + l.token
 			}
-                        st = _EXPECT_OWNER_DIR
+			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{f, "No blank after owner", l}}
@@ -347,6 +347,8 @@ func (l lex) String() string {
 		return "S:" + l.token + "$"
 	case _BLANK:
 		return "_"
+	case _QUOTE:
+		return "\""
 	case _NEWLINE:
 		return "|\n"
 	case _RRTYPE:
@@ -450,16 +452,22 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				stri++
 				break
 			}
+			if stri > 0 {
+				l.value = _STRING
+                                l.token = string(str[:stri])
+				c <- l
+                                stri = 0
+			}
 			commt = true
 		case '\n':
 			// Hmmm, escape newline
-                        if quote {
+			if quote {
 				str[stri] = byte(x[0])
-                                stri++
-                                break
-                        }
+				stri++
+				break
+			}
 
-                        // inside quotes this is legal
+			// inside quotes this is legal
 			escape = false
 			if commt {
 				// Reset a comment
@@ -506,7 +514,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			rrtype = false
 			owner = true
 		case '\\':
-                        // quote?
+			// quote?
 			if commt {
 				break
 			}
@@ -530,22 +538,22 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			// send previous gathered text and the quote
-                        if stri != 0 {
-                                l.value = _STRING
-                                l.token = string(str[:stri])
-                                c <-l
-                                stri = 0
-                        }
-                        l.value = _QUOTE
-                        l.token = "\""
-                        c <- l
+			if stri != 0 {
+				l.value = _STRING
+				l.token = string(str[:stri])
+				c <- l
+				stri = 0
+			}
+			l.value = _QUOTE
+			l.token = "\""
+			c <- l
 			quote = !quote
 		case '(':
-                        if quote {
+			if quote {
 				str[stri] = byte(x[0])
-                                stri++
-                                break
-                        }
+				stri++
+				break
+			}
 			if commt {
 				break
 			}
@@ -557,11 +565,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			brace++
 		case ')':
-                        if quote {
-                                str[stri] = byte(x[0])
-                                stri++
-                                break
-                        }
+			if quote {
+				str[stri] = byte(x[0])
+				stri++
+				break
+			}
 			if commt {
 				break
 			}

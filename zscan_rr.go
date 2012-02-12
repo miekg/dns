@@ -709,37 +709,36 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 
 	// Get the remaining data until we see a NEWLINE
 	quote := false
-	quoted := false // unquoted strings are also allowed
 	l := <-c
-        i := 0
-	s := make([]string, i)
-	if l.value == _QUOTE {
-		quoted = true
-	}
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s = append(s, l.token)
-                        i++
-		case _BLANK:
-			if !quoted {
-                                if i = 0 {
-                                        return nil, &ParseError{f, "bad TXT txt", l}
-                                }
-				s[i-1] += l.token
-				l = <-c
-				continue
-			}
-			if quoted && quote {
-				// _BLANK can only be seen in between txt parts.
+        var s []string
+	switch l.value == _QUOTE {
+	case true:              // A number of quoted string
+	        s = make([]string, 0)
+		for l.value != _NEWLINE && l.value != _EOF {
+			switch l.value {
+			case _STRING:
+				s = append(s, l.token)
+			case _BLANK:
+				if quote {
+					// _BLANK can only be seen in between txt parts.
+					return nil, &ParseError{f, "bad TXT Txt", l}
+				}
+			case _QUOTE:
+				quote = !quote
+			default:
 				return nil, &ParseError{f, "bad TXT Txt", l}
 			}
-		case _QUOTE:
-			quote = !quote
-		default:
-			return nil, &ParseError{f, "bad TXT Txt", l}
+			l = <-c
 		}
-		l = <-c
+		if quote {
+			return nil, &ParseError{f, "Bad TXT Txt", l}
+		}
+	case false:             // Unquoted text record
+                s = make([]string, 1)
+		for l.value != _NEWLINE && l.value != _EOF {
+			s[0] += l.token
+			l = <-c
+		}
 	}
 	rr.Txt = s
 	return rr, nil
