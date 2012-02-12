@@ -1,23 +1,29 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// Extended and bugfixes by Miek Gieben.
+// Extended and bugfixes by Miek Gieben. Copyright 2010-2012.
 
 // DOMAIN NAME SYSTEM
 //
 // Package dns implements a full featured interface to the Domain Name System.
-// The package allows complete control over what is send out to the DNS. 
+// The package allows complete control over what is send out to the DNS. The package
+// API follows the less-is-more principle, but presenting a small, clean interface.
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
 //
 //      r := new(RR_TXT)
-//      r.Hdr = RR_Header{Name: "a.miek.nl.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 3600}
-//      r.TXT = "This is the content of the TXT record"
+//      r.Hdr = RR_Header{Name: "miek.nl.", Rrtype: TypeMX, Class: ClassINET, Ttl: 3600}
+//      r.Pref = 10
+//      r.Mx = "mx.miek.nl."
 //
 // Or directly from a string:
 //
-//      mx := NewRR("miek.nl. IN MX 10 mx.miek.nl.")
+//      mx := NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+// 
+// Or when the default TTL (3600) and class (IN) suit you:
+//
+//      mx := NewRR("miek.nl. MX 10 mx.miek.nl.")
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
