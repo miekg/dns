@@ -717,14 +717,15 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		quoted = true
 	}
 	for l.value != _NEWLINE && l.value != _EOF {
-		println("SEEN", l.value, l.token)
 		switch l.value {
 		case _STRING:
 			s = append(s, l.token)
                         i++
 		case _BLANK:
 			if !quoted {
-                                // i = 0, shouldn't happen here
+                                if i = 0 {
+                                        return nil, &ParseError{f, "bad TXT txt", l}
+                                }
 				s[i-1] += l.token
 				l = <-c
 				continue
