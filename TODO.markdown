@@ -4,15 +4,13 @@ Must of the stuff is working, but there is a list of smaller
 things that need to be fixed.
 
 * Parsing
-    * TXT record isn't parsed correctly, if followed by a comment
-        - Need to make " important in the parsing
 * Speed, we can always go faster. A simple reflect server now hits 30/40K qps
 * Add handy zone data structure (r/b tree)? Or not...
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * IsSubdomain, IsGlue helper functions;
 * SaltLength in NSEC3 is ugly to set, should be automatically done. There are prolly a few more
-    settings just like that -- need to look at them.
-    -edns NSID is another
+   settings just like that -- need to look at them.
+   -edns NSID is another
 * Add tsig check in 'q'?
 * More RRs to add. Parsing of strings within the rdata
 * Unknown RR parsing
@@ -23,7 +21,6 @@ things that need to be fixed.
 * ListenAndServe has trouble with v6:
     Failed to setup the udp6 server: listen udp6 <nil>:8053: address already in use
     Failed to setup the tcp6 server: listen tcp6 <nil>:8053: address already in use
-* Latest weekly breaks reflect, expected to be fixed in the next weekly.
 
 ## Examples to add
 

@@ -370,7 +370,7 @@ func (rr *RR_SOA) Len() int {
 
 type RR_TXT struct {
 	Hdr RR_Header
-	Txt string "txt"
+	Txt []string "txt"
 }
 
 func (rr *RR_TXT) Header() *RR_Header {
@@ -378,11 +378,19 @@ func (rr *RR_TXT) Header() *RR_Header {
 }
 
 func (rr *RR_TXT) String() string {
-	return rr.Hdr.String() + "\"" + rr.Txt + "\""
+	s := rr.Hdr.String()
+        for i, s1 := range rr.Txt {
+                if i > 0 {
+                        s += " " + "\""  + s1 + "\""
+                } else {
+                        s += "\""  + s1 + "\""
+                }
+        }
+        return s
 }
 
 func (rr *RR_TXT) Len() int {
-	return rr.Hdr.Len() + len(rr.Txt) // TODO: always works?
+	return rr.Hdr.Len() + len(rr.Txt)
 }
 
 type RR_SRV struct {

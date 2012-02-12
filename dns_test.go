@@ -55,7 +55,7 @@ func TestPackUnpack2(t *testing.T) {
 
 	x := new(RR_TXT)
 	x.Hdr = RR_Header{Name: dom, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}
-	x.Txt = "heelalaollo"
+	x.Txt = []string{"heelalaollo"}
 
 	m.Extra[0] = x
 	m.Answer[0] = rr

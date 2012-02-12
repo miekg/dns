@@ -709,24 +709,34 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 
 	// Get the remaining data until we see a NEWLINE
 	quote := false
+	quoted := false // unquoted strings are also allowed
 	l := <-c
-	var s string
+        i := 0
+	s := make([]string, i)
+	if l.value == _QUOTE {
+		quoted = true
+	}
 	for l.value != _NEWLINE && l.value != _EOF {
 		println("SEEN", l.value, l.token)
 		switch l.value {
 		case _STRING:
-			if quote {
-				s += l.token
-			}
+			s = append(s, l.token)
+                        i++
 		case _BLANK:
-			if quote {
+			if !quoted {
+                                // i = 0, shouldn't happen here
+				s[i-1] += l.token
+				l = <-c
+				continue
+			}
+			if quoted && quote {
 				// _BLANK can only be seen in between txt parts.
 				return nil, &ParseError{f, "bad TXT Txt", l}
 			}
 		case _QUOTE:
 			quote = !quote
 		default:
-			return nil, &ParseError{f, "bad TXT", l}
+			return nil, &ParseError{f, "bad TXT Txt", l}
 		}
 		l = <-c
 	}
