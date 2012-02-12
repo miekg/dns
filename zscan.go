@@ -10,7 +10,7 @@ import (
 )
 
 // Only used when debugging the parser itself.
-var _DEBUG = true
+var _DEBUG = false
 
 const maxTok = 1024
 
@@ -167,7 +167,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				}
 				if h.Name[ld-1] != '.' {
-					h.Name += "." + origin
+					h.Name += origin
 				}
 				st = _EXPECT_OWNER_BL
 			case _DIRTTL:
@@ -232,9 +232,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				return
 			}
 			if !IsFqdn(l.token) {
-				origin = l.token + origin // Append old origin if the new one isn't a fqdn
+				origin = l.token + "." + origin // Append old origin if the new one isn't a fqdn
 			} else {
-				origin = l.token
+				origin = "." +l.token
 			}
                         st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
