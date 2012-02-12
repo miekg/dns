@@ -5,6 +5,13 @@
 // DNSSEC (DNS Security Extension) adds a layer of security to the DNS. It
 // uses public key cryptography to securely sign resource records. The
 // public keys are stored in DNSKEY records and the signatures in RRSIG records.
+//
+// Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK) bit
+// to an request.
+// 
+//      // Set UDP bufsize to 4096 and enable the DO bit
+//      m := new(dns.Msg)
+//      m.SetEdns0(4096, true)
 package dns
 
 import (

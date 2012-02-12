@@ -27,6 +27,10 @@ func TestCompareLabels(t *testing.T) {
 		t.Logf("%s with %s should be %d", s1, s5, 1)
 		t.Fail()
 	}
+	if CompareLabels(".", ".") != 1 {
+		t.Logf("%s with %s should be %d", ".", ".", 1)
+		t.Fail()
+	}
 }
 
 func TestSplitLabels(t *testing.T) {
@@ -49,6 +53,11 @@ func TestSplitLabels(t *testing.T) {
 	}
 	if len(SplitLabels(s4)) != 3 {
 		t.Logf("Labels should be 3, %s\n", s4)
+		t.Fail()
+	}
+        // Should this be 1 or 0...
+	if len(SplitLabels(".")) != 1 {
+		t.Logf("Labels should be 1, %s\n", ".")
 		t.Fail()
 	}
 }
