@@ -650,7 +650,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
                                         println("dns: failure unpacking txt strings")
                                         return lenmsg, false
                                 }
-                                txt = append(txt, string(msg[off+1:off+l]))
+                                txt = append(txt, string(msg[off+1:off+l+1]))
                                 off += l+1
                                 if off < rdlength {
                                         // More
