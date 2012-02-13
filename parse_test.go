@@ -100,7 +100,6 @@ func TestParseZone(t *testing.T) {
 z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
 $TTL 100
 z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
-	// Need to implementen owner substitution in the lexer.
 	to := ParseZone(strings.NewReader(zone), "")
 	i := 0
 	for x := range to {
