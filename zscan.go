@@ -197,6 +197,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $INCLUDE value, not this...", l}}
 				return
 			}
+                        if e:=slurpRemainder(c, f) ; e != nil {
+                                t <- Token{Error: e}
+                        }
 			// Start with the new file
 			r1, e1 := os.Open(l.token)
 			if e1 != nil {
@@ -220,6 +223,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
 				return
 			}
+                        if e:=slurpRemainder(c, f) ; e != nil {
+                                t <- Token{Error: e}
+                        }
 			if ttl, ok := stringToTtl(l, f, t); !ok {
 				return
 			} else {
@@ -237,6 +243,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $ORIGIN value, not this...", l}}
 				return
 			}
+                        if e:=slurpRemainder(c, f) ; e != nil {
+                                t <- Token{Error: e}
+                        }
 			if !IsFqdn(l.token) {
 				origin = l.token + "." + origin // Append old origin if the new one isn't a fqdn
 			} else {
