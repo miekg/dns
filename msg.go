@@ -651,14 +651,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
                                         return lenmsg, false
                                 }
                                 txt = append(txt, string(msg[off+1:off+l]))
-                                println("ADDING", string(msg[off+1:off+l]))
                                 off += l+1
                                 if off < rdlength {
                                         // More
                                         goto Txts
                                 }
 				fv.Set(reflect.ValueOf(txt))
-                                println("SETING", len(txt))
 			case "opt": // edns0
 				if off+2 > lenmsg {
 					// This is an EDNS0 (OPT Record) with no rdata
