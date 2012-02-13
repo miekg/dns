@@ -64,7 +64,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	t := new(dns.RR_TXT)
 	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
-	t.Txt = str
+	t.Txt = []string{str}
 
         switch r.Question[0].Qtype {
         case dns.TypeTXT:

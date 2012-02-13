@@ -42,7 +42,7 @@ type Option struct {
 //      m.Extra[0] = opt        // add OPT RR to the message
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option "OPT" // tag is used in Pack and Unpack
+	Option []Option "opt" // tag is used in Pack and Unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {

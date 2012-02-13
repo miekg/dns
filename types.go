@@ -491,7 +491,7 @@ func (rr *RR_DNAME) Len() int {
 
 type RR_A struct {
 	Hdr RR_Header
-	A   net.IP "A"
+	A   net.IP "a"
 }
 
 func (rr *RR_A) Header() *RR_Header {
@@ -508,7 +508,7 @@ func (rr *RR_A) Len() int {
 
 type RR_AAAA struct {
 	Hdr  RR_Header
-	AAAA net.IP "AAAA"
+	AAAA net.IP "aaaa"
 }
 
 func (rr *RR_AAAA) Header() *RR_Header {
@@ -584,7 +584,7 @@ func (rr *RR_RRSIG) Len() int {
 type RR_NSEC struct {
 	Hdr        RR_Header
 	NextDomain string   "domain-name"
-	TypeBitMap []uint16 "NSEC"
+	TypeBitMap []uint16 "nsec"
 }
 
 func (rr *RR_NSEC) Header() *RR_Header {
@@ -769,7 +769,7 @@ type RR_NSEC3 struct {
 	Salt       string "size-hex"
 	HashLength uint8
 	NextDomain string   "size-base32"
-	TypeBitMap []uint16 "NSEC"
+	TypeBitMap []uint16 "nsec"
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {

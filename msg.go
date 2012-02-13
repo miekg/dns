@@ -367,8 +367,24 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
+				println("dns: unknown tag packing slice", val.Type().Field(i).Tag)
 				return lenmsg, false
-			case "OPT": // edns
+                        case "txt":
+				for j := 0; j < val.Field(i).Len(); j++ {
+                                        element := val.Field(i).Index(j).String()
+                                        // Counted string: 1 byte length.
+                                        if len(element) > 255 || off+1+len(element) > lenmsg {
+                                                println("dns: overflow packing TXT string")
+                                                return len(msg), false
+                                        }
+                                        msg[off] = byte(len(element))
+                                        off++
+                                        for i := 0; i < len(element); i++ {
+                                                msg[off+i] = element[i]
+                                        }
+                                        off += len(element)
+                                }
+			case "opt": // edns
 				// Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j)
@@ -387,7 +403,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					copy(msg[off:off+len(string(h))], h)
 					off += len(string(h))
 				}
-			case "A":
+			case "a":
 				// It must be a slice of 4, even if it is 16, we encode
 				// only the first 4
 				switch fv.Len() {
@@ -417,7 +433,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					println("dns: overflow packing A")
 					return lenmsg, false
 				}
-			case "AAAA":
+			case "aaaa":
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					println("dns: overflow packing AAAA")
 					return lenmsg, false
@@ -426,7 +442,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					msg[off] = byte(fv.Index(j).Uint())
 					off++
 				}
-			case "NSEC": // NSEC/NSEC3
+			case "nsec": // NSEC/NSEC3
 				// This is the uint16 type bitmap
 				if val.Field(i).Len() == 0 {
 					// Do absolutely nothing
@@ -577,8 +593,6 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+len(s)], s)
 				off += len(s)
 			case "txt":
-				// Counted string: 1 byte length, but the string may be longer
-				// than 255, in that case it should be multiple strings, for now:
 				fallthrough
 			case "":
 				// Counted string: 1 byte length.
@@ -625,25 +639,25 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
-				println("dns: unknown tag unpacking struct")
+				println("dns: unknown tag unpacking slice", val.Type().Field(i).Tag)
 				return lenmsg, false
-			case "A":
-				if off+net.IPv4len > len(msg) {
-					println("dns: overflow unpacking A")
-					return lenmsg, false
-				}
-				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
-				off += net.IPv4len
-			case "AAAA":
-				if off+net.IPv6len > lenmsg {
-					println("dns: overflow unpacking AAAA")
-					return lenmsg, false
-				}
-				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
-					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
-					msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}))
-				off += net.IPv6len
-			case "OPT": // EDNS
+                        case "txt":
+                                txt := make([]string,0)
+				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+                        Txts:
+                                l := int(msg[off])
+                                if off + l + 1 > lenmsg {
+                                        println("dns: failure unpacking txt strings")
+                                        return lenmsg, false
+                                }
+                                txt = append(txt, string(msg[off+1:off+l]))
+                                off += l
+                                if off < rdlength {
+                                        // More
+                                        goto Txts
+                                }
+				fv.Set(reflect.ValueOf(txt))
+			case "opt": // EDNS
 				if off+2 > lenmsg {
 					// This is an ENDNS0 (OPT Record) with no rdata
 					// We can savely return here.
@@ -659,7 +673,23 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				opt[0].Data = hex.EncodeToString(msg[off1 : off1+int(optlen)])
 				fv.Set(reflect.ValueOf(opt))
 				off = off1 + int(optlen)
-			case "NSEC": // NSEC/NSEC3
+			case "a":
+				if off+net.IPv4len > len(msg) {
+					println("dns: overflow unpacking A")
+					return lenmsg, false
+				}
+				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
+				off += net.IPv4len
+			case "aaaa":
+				if off+net.IPv6len > lenmsg {
+					println("dns: overflow unpacking AAAA")
+					return lenmsg, false
+				}
+				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
+					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
+					msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}))
+				off += net.IPv6len
+			case "nsec": // NSEC/NSEC3
 				// Rest of the Record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				var endrr int
@@ -868,7 +898,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
 			case "txt":
-				// 1 or multiple txt pieces
+				// 1 txt piece
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txt:
 				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
@@ -882,7 +912,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				off += n
 				if off < rdlength {
-					// More to come
+					// More to
 					goto Txt
 				}
 			case "":
