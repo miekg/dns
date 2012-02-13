@@ -275,6 +275,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				} else {
 					h.Ttl = ttl
+                                        defttl = ttl
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
@@ -313,6 +314,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				} else {
 					h.Ttl = ttl
+                                        defttl = ttl
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
