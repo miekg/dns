@@ -197,9 +197,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $INCLUDE value, not this...", l}}
 				return
 			}
-                        if e:=slurpRemainder(c, f) ; e != nil {
-                                t <- Token{Error: e}
-                        }
+			if e := slurpRemainder(c, f); e != nil {
+				t <- Token{Error: e}
+			}
 			// Start with the new file
 			r1, e1 := os.Open(l.token)
 			if e1 != nil {
@@ -223,9 +223,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
 				return
 			}
-                        if e:=slurpRemainder(c, f) ; e != nil {
-                                t <- Token{Error: e}
-                        }
+			if e := slurpRemainder(c, f); e != nil {
+				t <- Token{Error: e}
+			}
 			if ttl, ok := stringToTtl(l, f, t); !ok {
 				return
 			} else {
@@ -243,9 +243,9 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Expecting $ORIGIN value, not this...", l}}
 				return
 			}
-                        if e:=slurpRemainder(c, f) ; e != nil {
-                                t <- Token{Error: e}
-                        }
+			if e := slurpRemainder(c, f); e != nil {
+				t <- Token{Error: e}
+			}
 			if !IsFqdn(l.token) {
 				origin = l.token + "." + origin // Append old origin if the new one isn't a fqdn
 			} else {
@@ -261,13 +261,21 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 		case _EXPECT_ANY:
 			switch l.value {
 			case _RRTYPE:
-				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
+                                if !ok {
+                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						return
+                                        }
+                                }
 				st = _EXPECT_RDATA
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					t <- Token{Error: &ParseError{f, "Unknown class", l}}
-					return
+					if h.Class, ok = classToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown class", l}}
+						return
+					}
 				}
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
@@ -275,7 +283,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				} else {
 					h.Ttl = ttl
-                                        defttl = ttl
+					defttl = ttl
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
@@ -299,12 +307,20 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
-					t <- Token{Error: &ParseError{f, "Unknown class", l}}
-					return
+					if h.Class, ok = classToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown class", l}}
+						return
+					}
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
+                                if !ok {
+                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+						return
+                                        }
+                                }
 				st = _EXPECT_RDATA
 			}
 		case _EXPECT_ANY_NOCLASS:
@@ -314,11 +330,17 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 					return
 				} else {
 					h.Ttl = ttl
-                                        defttl = ttl
+					defttl = ttl
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
+                                if !ok {
+                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+						return
+                                        }
+                                }
 				st = _EXPECT_RDATA
 			default:
 				t <- Token{Error: &ParseError{f, "Expecting RR type or TTL, not this...", l}}
@@ -335,7 +357,13 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 				return
 			}
-			h.Rrtype, _ = Str_rr[strings.ToUpper(l.token)]
+			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
+                        if !ok {
+                                if h.Rrtype, ok = typeToInt(l.token); !ok {
+                                        t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+                                        return
+                                }
+                        }
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
 			// I could save my token here...? l
@@ -438,12 +466,20 @@ func zlexer(s scanner.Scanner, c chan lex) {
 					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
 						rrtype = true
-					}
+					} else {
+                                                if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
+                                                        l.value = _RRTYPE
+                                                        rrtype = true
+                                                }
+                                        }
 					if _, ok := Str_class[strings.ToUpper(l.token)]; ok {
 						l.value = _CLASS
+					} else {
+						if strings.HasPrefix(strings.ToUpper(l.token), "CLASS") {
+							l.value = _CLASS
+						}
 					}
 				}
-				// Space ALSO?
 				c <- l
 			}
 			stri = 0
@@ -553,11 +589,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				escape = false
 				break
 			}
-                        space = false
+			space = false
 			// send previous gathered text and the quote
 			if stri != 0 {
-                                //komt best vaak langs
-                                //println("DEBUG: SENDING PREV TEXT", string(str[:stri]))
+				//komt best vaak langs
+				//println("DEBUG: SENDING PREV TEXT", string(str[:stri]))
 				l.value = _STRING
 				l.token = string(str[:stri])
 				c <- l
@@ -622,6 +658,24 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		l.value = _STRING
 		c <- l
 	}
+}
+
+// Extract the class number from CLASSxx
+func classToInt(token string) (uint16, bool) {
+	class, ok := strconv.Atoi(token[5:])
+	if ok != nil {
+		return 0, false
+	}
+	return uint16(class), true
+}
+
+// Extract the rr number from TYPExxx 
+func typeToInt(token string) (uint16, bool) {
+	typ, ok := strconv.Atoi(token[4:])
+	if ok != nil {
+		return 0, false
+	}
+	return uint16(typ), true
 }
 
 func stringToTtl(l lex, f string, t chan Token) (uint32, bool) {

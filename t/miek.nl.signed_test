@@ -62,3 +62,6 @@ zzzzz.miek.nl.				      345600 IN	TXT	"Last record"
 zzzzz.miek.nl.				      345600 IN	RRSIG	TXT 8 3 345600 20110823011301 20110724011301 12051 miek.nl. mhPyq3w7I1nE08MpgJE/hZDY8DRJp1A7fJOS9hJ1zBVd4GWa/V7OXtbs 1hxLS81yUefp86bRHIjdubzoN5mTG1aZLt/fDNJ7Ou3zt/ql65iwVb+U +prIDVizuNdsDS7K2De5vfoZzGsmmGtEI7ILA/We0TtEJMF6QnINJMbP NF0=
 zzzzz.miek.nl.				      86400 IN NSEC	miek.nl. TXT RRSIG NSEC
 zzzzz.miek.nl.				      86400 IN RRSIG	NSEC 8 3 86400 20110823011301 20110724011301 12051 miek.nl. lyRljEQFOmajcdo6bBI67DsTlQTGU3ag9vlE07u7ynqt9aYBXyE9mkas AK4V0oI32YGb2pOSB6RbbdHwUmSt+cYhOA49tl2t0Qoi3pH21dicJiup dZuyjfqUEqJlQoEhNXGtP/pRvWjNA4pQeOsOAoWq/BDcWCSQB9mh2LvU OH4=
+a.example.   CLASS32     TYPE731         \# 6 abcd (
+                                               ef 01 23 45 )
+b.example.   HS          TYPE62347       \# 0

@@ -12,7 +12,6 @@ things that need to be fixed.
    settings just like that -- need to look at them.
    -edns NSID is another
 * Add tsig check in 'q'?
-* More RRs to add. Parsing of strings within the rdata
 * Unknown RR parsing
 * \DDD in zonefiles
 

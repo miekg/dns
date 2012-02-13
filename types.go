@@ -142,7 +142,12 @@ func (q *Question) String() (s string) {
 	} else {
 		s = ";" + q.Name + "\t"
 	}
-	s = s + Class_str[q.Qclass] + "\t"
+        if _, ok := Class_str[q.Qclass]; ok {
+	        s += Class_str[q.Qclass] + "\t"
+        } else {
+		s += "CLASS" + strconv.Itoa(int(q.Qtype))
+        }
+
 	if _, ok := Rr_str[q.Qtype]; ok {
 		s += " " + Rr_str[q.Qtype]
 	} else {
