@@ -215,6 +215,11 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		l++
 		longer = 1
 	}
+        // Preloop check for root label
+        if s == "." {
+                return 0, 1, true
+        }
+
 	last := byte('.')
 	ok := false // ok once we've seen a letter
 	partlen := 0

@@ -1,4 +1,4 @@
-.PHONY: ex
+.PHONY: ex clean
 
 EXAMPLES=mx \
 	 chaos \
@@ -10,3 +10,6 @@ EXAMPLES=mx \
 
 ex:
 	for i in $(EXAMPLES); do go build dns/ex/$$i; done
+
+clean:
+	rm -f $(EXAMPLES)

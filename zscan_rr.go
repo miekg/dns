@@ -327,7 +327,6 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	} else {
 		rr.Preference = uint16(i)
 	}
-        // Following three are put between quotes
         // Flags
 	<-c     // _BLANK
 	l = <-c // _QUOTE
@@ -365,7 +364,6 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
         } else {
                 return nil, &ParseError{f, "bad NAPTR Service", l}
         }
-        println("SERVICE", rr.Service)
 
         // Regexp
 	<-c     // _BLANK
@@ -381,18 +379,14 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
                         return nil, &ParseError{f, "bad NAPTR Regexp", l}
                 }
         } else if l.value == _QUOTE {
-                println("SETTING HERE")
                 rr.Regexp = ""
         } else {
                 return nil, &ParseError{f, "bad NAPTR Regexp", l}
         }
-        println("REGEXP", rr.Regexp)
-
+        // After quote no space??
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Replacement = l.token
-	println("Replacement", l.token, "A")
-	println("Replacement", l.value, "A")
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}

@@ -350,7 +350,7 @@ func (l lex) String() string {
 	case _QUOTE:
 		return "\""
 	case _NEWLINE:
-		return "|\n"
+		return "|"
 	case _RRTYPE:
 		return "R:" + l.token + "$"
 	case _OWNER:
@@ -360,7 +360,7 @@ func (l lex) String() string {
 	case _DIRTTL:
 		return "T:" + l.token + "$"
 	}
-	return ""
+	return "**"
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
@@ -429,11 +429,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 						l.value = _CLASS
 					}
 				}
-                                // Space ALSO?
+				// Space ALSO?
 				c <- l
 			}
 			stri = 0
-                        // I reverse space stuff here
+			// I reverse space stuff here
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
@@ -456,9 +456,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 			if stri > 0 {
 				l.value = _STRING
-                                l.token = string(str[:stri])
+				l.token = string(str[:stri])
 				c <- l
-                                stri = 0
+				stri = 0
 			}
 			commt = true
 		case '\n':
@@ -486,9 +486,6 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if stri != 0 {
-                                l.value = _BLANK
-                                l.token = " "
-                                c <- l
 				l.value = _STRING
 				l.token = string(str[:stri])
 				if !rrtype {
@@ -497,8 +494,6 @@ func zlexer(s scanner.Scanner, c chan lex) {
 						rrtype = true
 					}
 				}
-                                // I don't send a BLANK here
-                        println("WAT HEB IK HIER", l.token, l.value)
 				c <- l
 			}
 			if brace > 0 {
@@ -544,8 +539,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				escape = false
 				break
 			}
+                        space = false
 			// send previous gathered text and the quote
 			if stri != 0 {
+                                //komt best vaak langs
+                                //println("DEBUG: SENDING PREV TEXT", string(str[:stri]))
 				l.value = _STRING
 				l.token = string(str[:stri])
 				c <- l
