@@ -221,7 +221,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
         }
 
 	last := byte('.')
-	ok := false // ok once we've seen a letter
+	ok := false // ok once we've seen a letter or digit
 	partlen := 0
 	labels := uint8(0)
 	for i := 0; i < l; i++ {
@@ -235,7 +235,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		case c == '\\':
 			// Ok
 		case '0' <= c && c <= '9':
-			// fine
+			ok = true
 			partlen++
 		case c == '-':
 			// byte before dash cannot be dot
