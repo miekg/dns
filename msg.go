@@ -651,15 +651,17 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
                                         return lenmsg, false
                                 }
                                 txt = append(txt, string(msg[off+1:off+l]))
-                                off += l
+                                println("ADDING", string(msg[off+1:off+l]))
+                                off += l+1
                                 if off < rdlength {
                                         // More
                                         goto Txts
                                 }
 				fv.Set(reflect.ValueOf(txt))
-			case "opt": // EDNS
+                                println("SETING", len(txt))
+			case "opt": // edns0
 				if off+2 > lenmsg {
-					// This is an ENDNS0 (OPT Record) with no rdata
+					// This is an EDNS0 (OPT Record) with no rdata
 					// We can savely return here.
 					break
 				}
@@ -703,7 +705,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 
 				if off+2 > lenmsg {
-					println("dns: overflow unpacking NSEC 22")
+					println("dns: overflow unpacking NSEC")
 					return lenmsg, false
 				}
 				nsec := make([]uint16, 0)

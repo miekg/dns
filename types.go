@@ -380,6 +380,7 @@ func (rr *RR_TXT) Header() *RR_Header {
 func (rr *RR_TXT) String() string {
 	s := rr.Hdr.String()
         for i, s1 := range rr.Txt {
+                println("HALLO")
                 if i > 0 {
                         s += " " + "\""  + s1 + "\""
                 } else {
@@ -390,7 +391,11 @@ func (rr *RR_TXT) String() string {
 }
 
 func (rr *RR_TXT) Len() int {
-	return rr.Hdr.Len() + len(rr.Txt)
+        l := rr.Hdr.Len()
+        for _, t := range rr.Txt {
+                l += len(t)
+        }
+        return l
 }
 
 type RR_SRV struct {

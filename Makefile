@@ -9,7 +9,7 @@ EXAMPLES=mx \
 	 q \
 
 ex:
-	for i in $(EXAMPLES); do go build dns/ex/$$i; done
+	for i in $(EXAMPLES); do echo $$i; go build dns/ex/$$i; done
 
 clean:
 	rm -f $(EXAMPLES)
