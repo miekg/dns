@@ -14,7 +14,7 @@ var _DEBUG = false
 
 // Complete unsure about the correctness of this value?
 // Large blobs of base64 code might get longer than this....
-const maxTok = 300
+const maxTok = 512
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
