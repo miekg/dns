@@ -70,9 +70,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeTXT:
 		return setTXT(h, c, f)
 	default:
-		// Don't the have the token the holds the RRtype, but we substitute that in the
-		// calling function when lex is empty.
-		return nil, &ParseError{f, "Unknown RR type", lex{}}
+		// RFC3957 RR (Unknown RR handling)
+		return setRFC3597(h, c, f)
 	}
 Slurp:
 	if e != nil {
@@ -327,63 +326,63 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	} else {
 		rr.Preference = uint16(i)
 	}
-        // Flags
+	// Flags
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-        if l.value != _QUOTE {
+	if l.value != _QUOTE {
 		return nil, &ParseError{f, "bad NAPTR Flags", l}
-        }
-        l = <-c // Either String or Quote
-        if l.value == _STRING {
-	        rr.Flags = l.token
-                l = <-c // _QUOTE
-                if l.value != _QUOTE {
-                        return nil, &ParseError{f, "bad NAPTR Flags", l}
-                }
-        } else if l.value == _QUOTE {
-                rr.Flags = ""
-        } else {
-                return nil, &ParseError{f, "bad NAPTR Flags", l}
-        }
+	}
+	l = <-c // Either String or Quote
+	if l.value == _STRING {
+		rr.Flags = l.token
+		l = <-c // _QUOTE
+		if l.value != _QUOTE {
+			return nil, &ParseError{f, "bad NAPTR Flags", l}
+		}
+	} else if l.value == _QUOTE {
+		rr.Flags = ""
+	} else {
+		return nil, &ParseError{f, "bad NAPTR Flags", l}
+	}
 
-        // Service
+	// Service
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-        if l.value != _QUOTE {
+	if l.value != _QUOTE {
 		return nil, &ParseError{f, "bad NAPTR Service", l}
-        }
-        l = <-c // Either String or Quote
-        if l.value == _STRING {
-	        rr.Service = l.token
-                l = <-c // _QUOTE
-                if l.value != _QUOTE {
-                        return nil, &ParseError{f, "bad NAPTR Service", l}
-                }
-        } else if l.value == _QUOTE {
-                rr.Service = ""
-        } else {
-                return nil, &ParseError{f, "bad NAPTR Service", l}
-        }
+	}
+	l = <-c // Either String or Quote
+	if l.value == _STRING {
+		rr.Service = l.token
+		l = <-c // _QUOTE
+		if l.value != _QUOTE {
+			return nil, &ParseError{f, "bad NAPTR Service", l}
+		}
+	} else if l.value == _QUOTE {
+		rr.Service = ""
+	} else {
+		return nil, &ParseError{f, "bad NAPTR Service", l}
+	}
 
-        // Regexp
+	// Regexp
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-        if l.value != _QUOTE {
+	if l.value != _QUOTE {
 		return nil, &ParseError{f, "bad NAPTR Regexp", l}
-        }
-        l = <-c // Either String or Quote
-        if l.value == _STRING {
-	        rr.Regexp = l.token
-                l = <-c // _QUOTE
-                if l.value != _QUOTE {
-                        return nil, &ParseError{f, "bad NAPTR Regexp", l}
-                }
-        } else if l.value == _QUOTE {
-                rr.Regexp = ""
-        } else {
-                return nil, &ParseError{f, "bad NAPTR Regexp", l}
-        }
-        // After quote no space??
+	}
+	l = <-c // Either String or Quote
+	if l.value == _STRING {
+		rr.Regexp = l.token
+		l = <-c // _QUOTE
+		if l.value != _QUOTE {
+			return nil, &ParseError{f, "bad NAPTR Regexp", l}
+		}
+	} else if l.value == _QUOTE {
+		rr.Regexp = ""
+	} else {
+		return nil, &ParseError{f, "bad NAPTR Regexp", l}
+	}
+	// After quote no space??
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Replacement = l.token
@@ -744,6 +743,40 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_RFC3597)
+	rr.Hdr = h
+	l := <-c
+	if l.token != "\\#" {
+		return nil, &ParseError{f, "bad RFC3597 Token", l}
+	}
+	<-c // _BLANK
+	l = <-c
+	rdlength, e := strconv.Atoi(l.token)
+	if e != nil {
+		return nil, &ParseError{f, "bad RFC3597 Rdata", l}
+	}
+	// There can be spaces here...
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad RFC3597 Rdata", l}
+		}
+		l = <-c
+	}
+	if rdlength*2 != len(s) {
+		return nil, &ParseError{f, "bad RFC3597 Rdata", l}
+	}
+	rr.Rdata = s
+	return rr, nil
+}
+
 func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_TXT)
 	rr.Hdr = h
@@ -751,10 +784,10 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	// Get the remaining data until we see a NEWLINE
 	quote := false
 	l := <-c
-        var s []string
+	var s []string
 	switch l.value == _QUOTE {
-	case true:              // A number of quoted string
-	        s = make([]string, 0)
+	case true: // A number of quoted string
+		s = make([]string, 0)
 		for l.value != _NEWLINE && l.value != _EOF {
 			switch l.value {
 			case _STRING:
@@ -774,8 +807,8 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		if quote {
 			return nil, &ParseError{f, "Bad TXT Txt", l}
 		}
-	case false:             // Unquoted text record
-                s = make([]string, 1)
+	case false: // Unquoted text record
+		s = make([]string, 1)
 		for l.value != _NEWLINE && l.value != _EOF {
 			s[0] += l.token
 			l = <-c
