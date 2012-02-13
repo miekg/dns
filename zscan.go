@@ -84,9 +84,10 @@ type lex struct {
 	column int    // Column in the fil
 }
 
+// Tokens are returned when a zone file is parsed.
 type Token struct {
-	RR                // the scanned resource record
-	Error *ParseError // when an error occured, this is the specifics
+	RR                // the scanned resource record when error is not nil
+	Error *ParseError // when an error occured, this has the error specifics
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
@@ -110,8 +111,10 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 	return r.RR, nil
 }
 
-// ParseZone reads a RFC 1035 zone from r. It returns each parsed RR or an error
-// on the returned channel. The channel t is closed by ParseZone when the end of r is reached.
+// ParseZone reads a RFC 1035 zone from r. It returns Tokens on the 
+// returned channel, which consist out the parsed RR or an error. 
+// If there is an error the RR is nil.
+// The channel t is closed by ParseZone when the end of r is reached.
 func ParseZone(r io.Reader, file string) chan Token {
 	t := make(chan Token)
 	go parseZone(r, file, t, 0)
