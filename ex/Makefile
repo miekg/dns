@@ -1,5 +1,4 @@
-.PHONY: ex clean
-
+.PHONY: ex
 EXAMPLES=mx \
 	 chaos \
 	 key2ds \
@@ -9,7 +8,4 @@ EXAMPLES=mx \
 	 q \
 
 ex:
-	for i in $(EXAMPLES); do echo $$i; go build dns/ex/$$i; done
-
-clean:
-	rm -f $(EXAMPLES)
+	for i in $(EXAMPLES); do echo $$i; (cd $$i && go build); done
