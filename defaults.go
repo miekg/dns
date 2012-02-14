@@ -208,8 +208,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	longer := 0
 	// Simplify checking loop: make the name end in a dot.
 	// Don't call Fqdn() to save another len(s).
-	// Keep in mind that if we do this, we report a longer
-	// length
+	// Keep in mind that if we do this, otherwise we report a length+1
 	if s[l-1] != '.' {
 		s += "."
 		l++
@@ -263,12 +262,44 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	return labels, uint8(l - longer), ok
 }
 
+// IsSubDomain checks if child is indeed a child of parent.
+// In the DNS this is called in bailiwick.
+func IsSubDomain(parent, child string) bool {
+        // If the number of labels both domain name have
+        // in common equals the number of labels of parent,
+        // child is a subdomain of parent.
+        plabs := SplitLabels(parent)
+        clabs := SplitLabels(child)
+        if len(plabs) < len(clabs) {
+                // parent is smaller than child
+                return false
+        }
+        // Copied from CompareLabels to prevent another SplitLabels
+        n := 0
+        p := len(plabs) - 1
+        c := len(clabs) - 1
+        for {
+                if p < 0 || c < 0 {
+                        break
+                }
+                if plabs[p] == clabs[c] {
+                        n++
+                } else {
+                        break
+                }
+                p--
+                c--
+        }
+        return n == len(plabs)
+}
+
 // IsFqdn checks if a domain name is fully qualified.
 func IsFqdn(s string) bool {
-	if len(s) == 0 {
+        l := len(s)
+	if l == 0 {
 		return false // ?
 	}
-	return s[len(s)-1] == '.'
+	return s[l-1] == '.'
 }
 
 // Fqdns return the fully qualified domain name from s.
