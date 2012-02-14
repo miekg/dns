@@ -155,6 +155,8 @@ func TestDomainName(t *testing.T) {
 func TestParseDirective(t *testing.T) {
 	tests := map[string]string{
                 "$ORIGIN miek.nl.\na IN NS b":  "a.miek.nl.\t3600\tIN\tNS\tb.miek.nl.",
+                "$TTL 2H\nmiek.nl. IN NS b.":  "miek.nl.\t7200\tIN\tNS\tb.",
+                "miek.nl. 1D IN NS b.":  "miek.nl.\t86400\tIN\tNS\tb.",
         }
 	for i, o := range tests {
 		rr, e := NewRR(i)
