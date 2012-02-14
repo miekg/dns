@@ -4,7 +4,7 @@ package dns
 
 // SplitLabels splits a domainname string into its labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
-// The root label (.) returns nil
+// The root label (.) returns nil.
 func SplitLabels(s string) []string {
         if (s == ".") {
                 return nil
