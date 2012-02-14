@@ -602,8 +602,6 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			space = false
 			// send previous gathered text and the quote
 			if stri != 0 {
-				//komt best vaak langs
-				//println("DEBUG: SENDING PREV TEXT", string(str[:stri]))
 				l.value = _STRING
 				l.token = string(str[:stri])
 				c <- l
@@ -613,7 +611,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			l.token = "\""
 			c <- l
 			quote = !quote
-		case '(':
+		case '(', ')':
 			if quote {
 				str[stri] = byte(x[0])
 				stri++
@@ -628,28 +626,17 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				escape = false
 				break
 			}
-			brace++
-		case ')':
-			if quote {
-				str[stri] = byte(x[0])
-				stri++
-				break
-			}
-			if commt {
-				break
-			}
-			if escape {
-				str[stri] = byte(x[0])
-				stri++
-				escape = false
-				break
-			}
-			brace--
-			if brace < 0 {
-				l.err = "extra closing brace"
-				c <- l
-				return
-			}
+                        switch x[0] {
+                        case ')':
+                                brace--
+                                if brace < 0 {
+                                        l.err = "extra closing brace"
+                                        c <- l
+                                        return
+                                }
+                        case '(':
+                                brace++
+                        }
 		default:
 			if commt {
 				break
