@@ -327,7 +327,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
                                 if !ok {
                                         if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 						return
                                         }
                                 }
@@ -347,7 +347,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
                                 if !ok {
                                         if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 						return
                                         }
                                 }
@@ -370,7 +370,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
                         if !ok {
                                 if h.Rrtype, ok = typeToInt(l.token); !ok {
-                                        t <- Token{Error: &ParseError{f, "Unknown rr type", l}}
+                                        t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
                                         return
                                 }
                         }
