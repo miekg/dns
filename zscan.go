@@ -521,8 +521,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				stri = 0
 			}
 			commt = true
+                case '\r':
+                        // discard
+                        // this means it can also not be used as rdata
 		case '\n':
-			// Hmmm, escape newline
+			// hmmm, escape newline
 			if quote {
 				str[stri] = byte(x[0])
 				stri++
