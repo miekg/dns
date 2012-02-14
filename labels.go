@@ -4,8 +4,12 @@ package dns
 
 // SplitLabels splits a domainname string into its labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
-// . returns []string{"."}
+// The root label (.) returns nil
 func SplitLabels(s string) []string {
+        if (s == ".") {
+                return nil
+        }
+
 	k := 0
 	labels := make([]string, 0)
 	last := byte('.')
@@ -34,9 +38,6 @@ func SplitLabels(s string) []string {
 //
 // www.miek.nl. and miek.nl. have two labels in common: miek and nl
 // www.miek.nl. and www.bla.nl. have one label in common: nl
-// Be aware of these corner cases:
-// . and . have one label in common
-// . and "" (empty) have one label in common
 func CompareLabels(s1, s2 string) (n int) {
 	l1 := SplitLabels(s1)
 	l2 := SplitLabels(s2)

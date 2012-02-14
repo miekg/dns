@@ -13,12 +13,6 @@ things that need to be fixed.
    -edns NSID is another
 * Add tsig check in 'q'?
 
-## BUGS
-
-* ListenAndServe has trouble with v6:
-    Failed to setup the udp6 server: listen udp6 <nil>:8053: address already in use
-    Failed to setup the tcp6 server: listen tcp6 <nil>:8053: address already in use
-
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
