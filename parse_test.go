@@ -100,7 +100,7 @@ func TestParseZone(t *testing.T) {
 z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
 $TTL 100
 z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
-	to := ParseZone(strings.NewReader(zone), "")
+	to := ParseZone(strings.NewReader(zone), "", "")
 	i := 0
 	for x := range to {
 		if x.Error == nil {
@@ -314,7 +314,7 @@ func BenchmarkZoneParsing(b *testing.B) {
 		return
 	}
 	defer f.Close()
-	to := ParseZone(f, "t/miek.nl.signed_test")
+	to := ParseZone(f, "", "t/miek.nl.signed_test")
 	for x := range to {
 		x = x
 	}
@@ -327,7 +327,7 @@ func TestZoneParsing(t *testing.T) {
 	}
 	defer f.Close()
 	start := time.Now().UnixNano()
-	to := ParseZone(f, "t/miek.nl.signed_test")
+	to := ParseZone(f, "", "t/miek.nl.signed_test")
 	var i int
 	for x := range to {
 		t.Logf("%s\n", x.RR)

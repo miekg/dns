@@ -99,12 +99,10 @@ func NewRR(s string) (RR, error) {
 	return ReadRR(strings.NewReader(s), "")
 }
 
-// Ioreader here, or filename which *we* open....???
-
 // ReadRR reads the RR contained in q. Only the first RR is returned.
 // The class defaults to IN and TTL defaults to DefaultTtl.
 func ReadRR(q io.Reader, filename string) (RR, error) {
-	r := <-ParseZone(q, filename)
+	r := <-ParseZone(q, ".", filename)
 	if r.Error != nil {
 		return nil, r.Error
 	}
@@ -115,13 +113,13 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // returned channel, which consist out the parsed RR or an error. 
 // If there is an error the RR is nil.
 // The channel t is closed by ParseZone when the end of r is reached.
-func ParseZone(r io.Reader, file string) chan Token {
+func ParseZone(r io.Reader, origin, file string) chan Token {
 	t := make(chan Token)
-	go parseZone(r, file, t, 0)
+	go parseZone(r, origin, file, t, 0)
 	return t
 }
 
-func parseZone(r io.Reader, f string, t chan Token, include int) {
+func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	defer func() {
 		if include == 0 {
 			close(t)
@@ -142,11 +140,18 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 	// 5. _OWNER _ _CLASS  _ _STRING _ _RRTYPE -> class/ttl (reversed)
 	// After detecting these, we know the _RRTYPE so we can jump to functions
 	// handling the rdata for each of these types.
+
+        if origin == "" {
+                origin = "."
+        }
+        if _, _, ok := IsDomainName(origin); !ok {
+	        t <- Token{Error: &ParseError{f, "bad origin name", lex{}}}
+	        return
+        }
 	st := _EXPECT_OWNER_DIR
 	var h RR_Header
 	var ok bool
 	var defttl uint32 = DefaultTtl
-	var origin string = "."
 	for l := range c {
 		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
@@ -215,7 +220,7 @@ func parseZone(r io.Reader, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
 				return
 			}
-			parseZone(r1, l.token, t, include+1)
+			parseZone(r1, l.token, origin, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
 			if l.value != _BLANK {
