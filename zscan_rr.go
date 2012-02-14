@@ -748,7 +748,7 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 	l := <-c
 	if l.token != "\\#" {
-		return nil, &ParseError{f, "bad RFC3597 Token", l}
+		return nil, &ParseError{f, "Unkown RR type", l}
 	}
 	<-c // _BLANK
 	l = <-c

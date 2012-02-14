@@ -65,3 +65,4 @@ zzzzz.miek.nl.				      86400 IN RRSIG	NSEC 8 3 86400 20110823011301 20110724011
 a.example.   CLASS32     TYPE731         \# 6 abcd (
                                                ef 01 23 45 )
 b.example.   HS          TYPE62347       \# 0
+@           IN      NS  a.miek.nl.
