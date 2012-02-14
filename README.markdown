@@ -35,7 +35,7 @@ correctly the following should work:
     go build dns
 
 Sample programs can be found in the `ex` directory. They can 
-be build with: `make ex` (after the dns package has been installed)
+be build with: `make -C ex` (after the dns package has been installed)
 
 Have fun!
 
