@@ -128,10 +128,8 @@ func main() {
 	}
 
 	dns.HandleFunc(".", handleReflect)
-	go serve("tcp6")
-	go serve("tcp4")
-	go serve("udp6")
-	go serve("udp4")
+	go serve("tcp")
+	go serve("udp")
 forever:
 	for {
 		select {
