@@ -263,7 +263,6 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 }
 
 // IsSubDomain checks if child is indeed a child of the parent.
-// In the DNS this is called "the subdomain is in bailiwick".
 func IsSubDomain(parent, child string) bool {
         // If the number of labels both domain name have
         // in common equals the number of labels of parent,
