@@ -8,6 +8,7 @@ If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. 
 
 Goals:
+
 * KISS;
 * Symmetric API: client and server side should be very similar;
 * Small API;
