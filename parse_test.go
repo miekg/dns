@@ -152,11 +152,18 @@ func TestDomainName(t *testing.T) {
 	}
 }
 
-func TestParseDirective(t *testing.T) {
+func TestParseDirectiveMisc(t *testing.T) {
 	tests := map[string]string{
                 "$ORIGIN miek.nl.\na IN NS b":  "a.miek.nl.\t3600\tIN\tNS\tb.miek.nl.",
                 "$TTL 2H\nmiek.nl. IN NS b.":  "miek.nl.\t7200\tIN\tNS\tb.",
                 "miek.nl. 1D IN NS b.":  "miek.nl.\t86400\tIN\tNS\tb.",
+`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+        203362132 ; serial
+        5m        ; refresh (5 minutes)
+        5m        ; retry (5 minutes)
+        2w        ; expire (2 weeks)
+        300       ; minimum (5 minutes)
+)`: "name.\t3600\tIN\tSOA\ta6.nstld.com. hostmaster.nic.name. 203362132 300 300 1209600 300",
         }
 	for i, o := range tests {
 		rr, e := NewRR(i)

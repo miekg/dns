@@ -136,7 +136,7 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NS Ns", l}
 	}
 	if rr.Ns[ld-1] != '.' {
-                rr.Ns = appendOrigin(rr.Ns, o)
+		rr.Ns = appendOrigin(rr.Ns, o)
 	}
 	return rr, nil
 }
@@ -152,7 +152,7 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad PTR Ptr", l}
 	}
 	if rr.Ptr[ld-1] != '.' {
-                rr.Ptr = appendOrigin(rr.Ptr, o)
+		rr.Ptr = appendOrigin(rr.Ptr, o)
 	}
 	return rr, nil
 }
@@ -175,7 +175,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad MX Mx", l}
 	}
 	if rr.Mx[ld-1] != '.' {
-                rr.Mx = appendOrigin(rr.Mx, o)
+		rr.Mx = appendOrigin(rr.Mx, o)
 	}
 	return rr, nil
 }
@@ -191,7 +191,7 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad CNAME Cname", l}
 	}
 	if rr.Cname[ld-1] != '.' {
-                rr.Cname = appendOrigin(rr.Cname, o)
+		rr.Cname = appendOrigin(rr.Cname, o)
 	}
 	return rr, nil
 }
@@ -207,7 +207,7 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
 	if rr.Target[ld-1] != '.' {
-                rr.Target = appendOrigin(rr.Target, o)
+		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
 }
@@ -224,7 +224,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SOA Ns", l}
 	}
 	if rr.Ns[ld-1] != '.' {
-                rr.Ns = appendOrigin(rr.Ns, o)
+		rr.Ns = appendOrigin(rr.Ns, o)
 	}
 
 	l = <-c
@@ -234,32 +234,40 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SOA Mbox", l}
 	}
 	if rr.Mbox[ld-1] != '.' {
-                rr.Mbox = appendOrigin(rr.Mbox, o)
+		rr.Mbox = appendOrigin(rr.Mbox, o)
 	}
 	<-c // _BLANK
 
-	var j int
-	var e error
+	var v uint32
 	for i := 0; i < 5; i++ {
 		l = <-c
-		if j, e = strconv.Atoi(l.token); e != nil {
-			return nil, &ParseError{f, "bad SOA zone parameter", l}
+		if j, e := strconv.Atoi(l.token); e != nil {
+			if i == 0 {
+				// Serial should be a number
+				return nil, &ParseError{f, "bad SOA zone parameter", l}
+			}
+			if v, ok = stringToTtl(l, f); !ok {
+				return nil, &ParseError{f, "bad SOA zone parameter", l}
+
+			}
+		} else {
+			v = uint32(j)
 		}
 		switch i {
 		case 0:
-			rr.Serial = uint32(j)
+			rr.Serial = v
 			<-c // _BLANK
 		case 1:
-			rr.Refresh = uint32(j)
+			rr.Refresh = v
 			<-c // _BLANK
 		case 2:
-			rr.Retry = uint32(j)
+			rr.Retry = v
 			<-c // _BLANK
 		case 3:
-			rr.Expire = uint32(j)
+			rr.Expire = v
 			<-c // _BLANK
 		case 4:
-			rr.Minttl = uint32(j)
+			rr.Minttl = v
 		}
 	}
 	return rr, nil
@@ -297,7 +305,7 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SRV Target", l}
 	}
 	if rr.Target[ld-1] != '.' {
-                rr.Target = appendOrigin(rr.Target, o)
+		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
 }
@@ -384,7 +392,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}
 	}
 	if rr.Replacement[ld-1] != '.' {
-                rr.Replacement = appendOrigin(rr.Replacement, o)
+		rr.Replacement = appendOrigin(rr.Replacement, o)
 	}
 	return rr, nil
 }
@@ -491,7 +499,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad RRSIG SignerName", l}
 	}
 	if rr.SignerName[ld-1] != '.' {
-                rr.SignerName = appendOrigin(rr.SignerName, o)
+		rr.SignerName = appendOrigin(rr.SignerName, o)
 	}
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
@@ -522,7 +530,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NSEC NextDomain", l}
 	}
 	if rr.NextDomain[ld-1] != '.' {
-                rr.NextDomain = appendOrigin(rr.NextDomain, o)
+		rr.NextDomain = appendOrigin(rr.NextDomain, o)
 	}
 
 	rr.TypeBitMap = make([]uint16, 0)

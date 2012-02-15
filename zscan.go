@@ -256,7 +256,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: e}
 				return
 			}
-			if ttl, ok := stringToTtl(l, f, t); !ok {
+			if ttl, ok := stringToTtl(l, f); !ok {
 				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
 				return
 			} else {
@@ -314,7 +314,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				}
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
-				if ttl, ok := stringToTtl(l, f, t); !ok {
+				if ttl, ok := stringToTtl(l, f); !ok {
+			                t <- Token{Error: &ParseError{f, "Not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -361,7 +362,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
 			case _STRING: // TTL
-				if ttl, ok := stringToTtl(l, f, t); !ok {
+				if ttl, ok := stringToTtl(l, f); !ok {
+			                t <- Token{Error: &ParseError{f, "Not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -707,7 +709,7 @@ func typeToInt(token string) (uint16, bool) {
 	return uint16(typ), true
 }
 
-func stringToTtl(l lex, f string, t chan Token) (uint32, bool) {
+func stringToTtl(l lex, f string) (uint32, bool) {
 	s := uint32(0)
 	i := uint32(0)
 	for _, c := range l.token {
@@ -731,7 +733,6 @@ func stringToTtl(l lex, f string, t chan Token) (uint32, bool) {
 			i *= 10
 			i += uint32(c) - '0'
 		default:
-			t <- Token{Error: &ParseError{f, "Not a TTL", l}}
 			return 0, false
 		}
 	}
