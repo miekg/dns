@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-// how to do Tsig here?? TODO(mg)
-
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 	// IP based ACL mapping. The contains the string representation
@@ -138,7 +136,6 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 }
 
 // A Server defines parameters for running an DNS server.
-// Note how much it starts to look like 'Client struct'
 type Server struct {
 	Addr         string            // address to listen on, ":dns" if empty
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
@@ -180,6 +177,9 @@ func (srv *Server) ListenAndServe() error {
 	return nil // os.Error with wrong network
 }
 
+// ServeTCP starts a TCP listener for the server.
+// Each request is handled in a seperate goroutine.
+// with the Handler set in ....
 func (srv *Server) ServeTCP(l *net.TCPListener) error {
 	defer l.Close()
 	handler := srv.Handler
@@ -230,6 +230,9 @@ forever:
 	panic("not reached")
 }
 
+// ServeUDP starts a UDP listener for the server.
+// Each request is handled in a seperate goroutine,
+// with the Handler set in ....
 func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler
