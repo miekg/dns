@@ -91,7 +91,8 @@ type Token struct {
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
-// The class defaults to IN and TTL defaults to DefaultTtl
+// The class defaults to IN and TTL defaults to DefaultTtl. The full zone file
+// syntax like $TTL, $ORIGIN, etc. is supported.
 func NewRR(s string) (RR, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline
 		return ReadRR(strings.NewReader(s+"\n"), "")
@@ -111,7 +112,9 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 
 // ParseZone reads a RFC 1035 zone from r. It returns Tokens on the 
 // returned channel, which consist out the parsed RR or an error. 
-// If there is an error the RR is nil.
+// If there is an error the RR is nil. The string file is only used
+// in error reporting. The string origin is used as the initial origin, as
+// if the file would start with: $ORIGIN origin 
 // The channel t is closed by ParseZone when the end of r is reached.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	t := make(chan Token)
@@ -145,8 +148,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	if origin == "" {
 		origin = "."
 	}
+        if !isFqdn(origin) {
+                t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
+                return
+        }
 	if _, _, ok := IsDomainName(origin); !ok {
-		t <- Token{Error: &ParseError{f, "bad origin name", lex{}}}
+		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
 		return
 	}
 	st := _EXPECT_OWNER_DIR
