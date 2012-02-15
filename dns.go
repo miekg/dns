@@ -103,17 +103,22 @@ func (e *Error) Error() string {
 
 }
 
+// An RR represents a resource record.
 type RR interface {
+        // Header returns the header of an resource record. The header contains
+        // everything up to the rdata.
 	Header() *RR_Header
+        // String returns the text representation of the resource record.
 	String() string
+        // Len returns the length (in octects) of the uncompressed RR in wire format.
 	Len() int
 }
 
 // Exchange is used in communicating with the resolver.
 type Exchange struct {
-	Request *Msg  // The question sent.
-	Reply   *Msg  // The answer to the question that was sent.
-	Error   error // If something went wrong, this contains the error.
+	Request *Msg  // the question sent
+	Reply   *Msg  // the answer to the question that was sent
+	Error   error // if something went wrong, this contains the error
 }
 
 // DNS resource records.

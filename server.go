@@ -146,7 +146,7 @@ type Server struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
-// ListenAndServe starts a nameserver on the configured address.
+// ListenAndServe starts a nameserver on the configured addressin *Server.
 func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {
