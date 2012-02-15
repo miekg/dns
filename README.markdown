@@ -9,7 +9,7 @@ function for it.
 
 Goals:
 * KISS;
-* Symmetric API: client and server side should be similar;
+* Symmetric API: client and server side should be very similar;
 * Small API;
 * If its easy to code in Go, don't make a function for it.
 
@@ -22,7 +22,7 @@ Features:
     * Parsing RRs (zone files) with 35K RR/s, that 5M records in about 142 seconds;
     * This is expected to be optimized further.
 * Client and server side programming (mimicking the net/http package);
-* Asynchronous queries for client and server;
+* Asynchronous queries/replies for client and server;
 * DNSSEC;
 * EDNS0, NSID;
 * AXFR/IXFR;
