@@ -108,7 +108,7 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 			k = l.token
 		case _VALUE:
 			if k == "" {
-				return nil, &ParseError{file, "No key seen", l}
+				return nil, &ParseError{file, "no private key seen", l}
 			}
 			//println("Setting", strings.ToLower(k), "to", l.token, "b")
 			m[strings.ToLower(k)] = l.token

@@ -749,7 +749,7 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 	l := <-c
 	if l.token != "\\#" {
-		return nil, &ParseError{f, "Unkown RR type", l}
+		return nil, &ParseError{f, "unkown RR type", l}
 	}
 	<-c // _BLANK
 	l = <-c
@@ -806,7 +806,7 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			l = <-c
 		}
 		if quote {
-			return nil, &ParseError{f, "Bad TXT Txt", l}
+			return nil, &ParseError{f, "bad TXT Txt", l}
 		}
 	case false: // Unquoted text record
 		s = make([]string, 1)

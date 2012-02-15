@@ -156,7 +156,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
 		return
 	}
-	st := _EXPECT_OWNER_DIR
+	st := _EXPECT_OWNER_DIR         // initial state
 	var h RR_Header
 	var ok bool
 	var defttl uint32 = DefaultTtl
@@ -209,7 +209,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 						return
 					}
 				}
@@ -218,19 +218,18 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
 			default:
-				println(l.value)
-				t <- Token{Error: &ParseError{f, "Error at beginning", l}}
+				t <- Token{Error: &ParseError{f, "syntax error at beginning", l}}
 				return
 			}
 		case _EXPECT_DIRINCLUDE_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank after $INCLUDE-directive", l}}
+				t <- Token{Error: &ParseError{f, "no blank after $INCLUDE-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRINCLUDE
 		case _EXPECT_DIRINCLUDE:
 			if l.value != _STRING {
-				t <- Token{Error: &ParseError{f, "Expecting $INCLUDE value, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting $INCLUDE value, not this...", l}}
 				return
 			}
 			if e := slurpRemainder(c, f); e != nil {
@@ -239,24 +238,24 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			// Start with the new file
 			r1, e1 := os.Open(l.token)
 			if e1 != nil {
-				t <- Token{Error: &ParseError{f, "Failed to open `" + l.token + "'", l}}
+				t <- Token{Error: &ParseError{f, "failed to open `" + l.token + "'", l}}
 				return
 			}
 			if include+1 > 7 {
-				t <- Token{Error: &ParseError{f, "Too deeply nested $INCLUDE", l}}
+				t <- Token{Error: &ParseError{f, "too deeply nested $INCLUDE", l}}
 				return
 			}
 			parseZone(r1, l.token, origin, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank after $TTL-directive", l}}
+				t <- Token{Error: &ParseError{f, "no blank after $TTL-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRTTL
 		case _EXPECT_DIRTTL:
 			if l.value != _STRING {
-				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			}
 			if e := slurpRemainder(c, f); e != nil {
@@ -264,7 +263,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				return
 			}
 			if ttl, ok := stringToTtl(l, f); !ok {
-				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			} else {
 				defttl = ttl
@@ -272,13 +271,13 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRORIGIN_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank after $ORIGIN-directive", l}}
+				t <- Token{Error: &ParseError{f, "no blank after $ORIGIN-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRORIGIN
 		case _EXPECT_DIRORIGIN:
 			if l.value != _STRING {
-				t <- Token{Error: &ParseError{f, "Expecting $ORIGIN value, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting $ORIGIN value, not this...", l}}
 				return
 			}
 			if e := slurpRemainder(c, f); e != nil {
@@ -296,7 +295,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank after owner", l}}
+				t <- Token{Error: &ParseError{f, "no blank after owner", l}}
 				return
 			}
 			st = _EXPECT_ANY
@@ -306,7 +305,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 						return
 					}
 				}
@@ -315,14 +314,14 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Class, ok = classToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown class", l}}
+						t <- Token{Error: &ParseError{f, "unknown class", l}}
 						return
 					}
 				}
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
 				if ttl, ok := stringToTtl(l, f); !ok {
-			                t <- Token{Error: &ParseError{f, "Not a TTL", l}}
+			                t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -330,18 +329,18 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				}
 				st = _EXPECT_ANY_NOTTL_BL
 			default:
-				t <- Token{Error: &ParseError{f, "Expecting RR type, TTL or class, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting RR type, TTL or class, not this...", l}}
 				return
 			}
 		case _EXPECT_ANY_NOCLASS_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank before NOCLASS", l}}
+				t <- Token{Error: &ParseError{f, "no blank before class", l}}
 				return
 			}
 			st = _EXPECT_ANY_NOCLASS
 		case _EXPECT_ANY_NOTTL_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank before NOTTL", l}}
+				t <- Token{Error: &ParseError{f, "no blank before TTL", l}}
 				return
 			}
 			st = _EXPECT_ANY_NOTTL
@@ -351,7 +350,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Class, ok = classToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown class", l}}
+						t <- Token{Error: &ParseError{f, "unknown class", l}}
 						return
 					}
 				}
@@ -360,7 +359,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 						return
 					}
 				}
@@ -370,7 +369,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			switch l.value {
 			case _STRING: // TTL
 				if ttl, ok := stringToTtl(l, f); !ok {
-			                t <- Token{Error: &ParseError{f, "Not a TTL", l}}
+			                t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -381,30 +380,30 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
 					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 						return
 					}
 				}
 				st = _EXPECT_RDATA
 			default:
-				t <- Token{Error: &ParseError{f, "Expecting RR type or TTL, not this...", l}}
+				t <- Token{Error: &ParseError{f, "expecting RR type or TTL, not this...", l}}
 				return
 			}
 		case _EXPECT_RRTYPE_BL:
 			if l.value != _BLANK {
-				t <- Token{Error: &ParseError{f, "No blank after", l}}
+				t <- Token{Error: &ParseError{f, "no blank before RR type", l}}
 				return
 			}
 			st = _EXPECT_RRTYPE
 		case _EXPECT_RRTYPE:
 			if l.value != _RRTYPE {
-				t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+				t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 				return
 			}
 			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 			if !ok {
 				if h.Rrtype, ok = typeToInt(l.token); !ok {
-					t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+					t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 					return
 				}
 			}
