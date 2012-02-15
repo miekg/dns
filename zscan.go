@@ -148,7 +148,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	if origin == "" {
 		origin = "."
 	}
-        if !isFqdn(origin) {
+        if !IsFqdn(origin) {
                 t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
                 return
         }
