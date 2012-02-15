@@ -1,13 +1,12 @@
 package dns
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
 )
 
-// TODO: SPF, TKEY, Unknown RRs, RR_URI, DHCID, TLSA
+// TODO: SPF, TKEY, RR_URI, DHCID, TLSA
 
 // Parse the rdata of each rrtype.
 // All data from the channel c is either _STRING or _BLANK.
@@ -85,15 +84,9 @@ Slurp:
 
 func slurpRemainder(c chan lex, f string) *ParseError {
 	l := <-c
-	if _DEBUG {
-		fmt.Printf("%v\n", l)
-	}
 	switch l.value {
 	case _BLANK:
 		l = <-c
-		if _DEBUG {
-			fmt.Printf("%v\n", l)
-		}
 		if l.value != _NEWLINE && l.value != _EOF {
 			return &ParseError{f, "garbage after rdata", l}
 		}
@@ -143,7 +136,7 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NS Ns", l}
 	}
 	if rr.Ns[ld-1] != '.' {
-		rr.Ns += o
+                rr.Ns = appendOrigin(rr.Ns, o)
 	}
 	return rr, nil
 }
@@ -159,7 +152,7 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad PTR Ptr", l}
 	}
 	if rr.Ptr[ld-1] != '.' {
-		rr.Ptr += o
+                rr.Ptr = appendOrigin(rr.Ptr, o)
 	}
 	return rr, nil
 }
@@ -182,7 +175,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad MX Mx", l}
 	}
 	if rr.Mx[ld-1] != '.' {
-		rr.Mx += o
+                rr.Mx = appendOrigin(rr.Mx, o)
 	}
 	return rr, nil
 }
@@ -198,7 +191,7 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad CNAME Cname", l}
 	}
 	if rr.Cname[ld-1] != '.' {
-		rr.Cname += o
+                rr.Cname = appendOrigin(rr.Cname, o)
 	}
 	return rr, nil
 }
@@ -214,7 +207,7 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
 	if rr.Target[ld-1] != '.' {
-		rr.Target += o
+                rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
 }
@@ -231,7 +224,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SOA Ns", l}
 	}
 	if rr.Ns[ld-1] != '.' {
-		rr.Ns += o
+                rr.Ns = appendOrigin(rr.Ns, o)
 	}
 
 	l = <-c
@@ -241,7 +234,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SOA Mbox", l}
 	}
 	if rr.Mbox[ld-1] != '.' {
-		rr.Mbox += o
+                rr.Mbox = appendOrigin(rr.Mbox, o)
 	}
 	<-c // _BLANK
 
@@ -304,7 +297,7 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad SRV Target", l}
 	}
 	if rr.Target[ld-1] != '.' {
-		rr.Target += o
+                rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
 }
@@ -391,7 +384,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}
 	}
 	if rr.Replacement[ld-1] != '.' {
-		rr.Replacement += o
+                rr.Replacement = appendOrigin(rr.Replacement, o)
 	}
 	return rr, nil
 }
@@ -498,7 +491,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad RRSIG SignerName", l}
 	}
 	if rr.SignerName[ld-1] != '.' {
-		rr.SignerName += o
+                rr.SignerName = appendOrigin(rr.SignerName, o)
 	}
 	// Get the remaining data until we see a NEWLINE
 	l = <-c
@@ -529,7 +522,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad NSEC NextDomain", l}
 	}
 	if rr.NextDomain[ld-1] != '.' {
-		rr.NextDomain += o
+                rr.NextDomain = appendOrigin(rr.NextDomain, o)
 	}
 
 	rr.TypeBitMap = make([]uint16, 0)

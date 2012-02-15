@@ -132,7 +132,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	s.Whitespace = 0
 	// Start the lexer
 	go zlexer(s, c)
-	// 5 possible beginnings of a line, _ is a space
+	// 6 possible beginnings of a line, _ is a space
+	// 0.                            _ _RRTYPE -> all omitted until the rrtype
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
 	// 2. _OWNER _ _STRING _ _RRTYPE           -> class omitted
 	// 3. _OWNER _ _STRING _ _CLASS  _ _RRTYPE -> ttl/class
@@ -141,17 +142,18 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	// After detecting these, we know the _RRTYPE so we can jump to functions
 	// handling the rdata for each of these types.
 
-        if origin == "" {
-                origin = "."
-        }
-        if _, _, ok := IsDomainName(origin); !ok {
-	        t <- Token{Error: &ParseError{f, "bad origin name", lex{}}}
-	        return
-        }
+	if origin == "" {
+		origin = "."
+	}
+	if _, _, ok := IsDomainName(origin); !ok {
+		t <- Token{Error: &ParseError{f, "bad origin name", lex{}}}
+		return
+	}
 	st := _EXPECT_OWNER_DIR
 	var h RR_Header
 	var ok bool
 	var defttl uint32 = DefaultTtl
+	var prevName string
 	for l := range c {
 		if _DEBUG {
 			fmt.Printf("[%v]\n", l)
@@ -172,19 +174,21 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
-                                if l.token == "@" {
-                                        h.Name = origin
-                                        st = _EXPECT_OWNER_BL
-                                        break
-                                }
+				if l.token == "@" {
+					h.Name = origin
+					prevName = h.Name
+					st = _EXPECT_OWNER_BL
+					break
+				}
 				_, ld, ok := IsDomainName(l.token)
 				if !ok {
 					t <- Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
 				if h.Name[ld-1] != '.' {
-					h.Name += origin
+					h.Name = appendOrigin(h.Name, origin)
 				}
+				prevName = h.Name
 				st = _EXPECT_OWNER_BL
 			case _DIRTTL:
 				st = _EXPECT_DIRTTL_BL
@@ -192,8 +196,23 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_DIRORIGIN_BL
 			case _DIRINCLUDE:
 				st = _EXPECT_DIRINCLUDE_BL
+			case _RRTYPE:
+				// Everthing has been omitted
+				h.Name = prevName
+				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
+				if !ok {
+					if h.Rrtype, ok = typeToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+						return
+					}
+				}
+				st = _EXPECT_RDATA
+			case _BLANK:
+				// Discard, can happen when there is nothing on the
+				// line except the RR type
 			default:
-				t <- Token{Error: &ParseError{f, "Error at the start", l}}
+				println(l.value)
+				t <- Token{Error: &ParseError{f, "Error at beginning", l}}
 				return
 			}
 		case _EXPECT_DIRINCLUDE_BL:
@@ -235,8 +254,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			}
 			if e := slurpRemainder(c, f); e != nil {
 				t <- Token{Error: e}
+				return
 			}
 			if ttl, ok := stringToTtl(l, f, t); !ok {
+				t <- Token{Error: &ParseError{f, "Expecting $TTL value, not this...", l}}
 				return
 			} else {
 				defttl = ttl
@@ -257,9 +278,13 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: e}
 			}
 			if !IsFqdn(l.token) {
-				origin = l.token + "." + origin // Append old origin if the new one isn't a fqdn
+				if origin != "." { // Prevent .. endings
+					origin = l.token + "." + origin
+				} else {
+					origin = l.token + origin
+				}
 			} else {
-				origin = "." + l.token
+				origin = l.token
 			}
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
@@ -272,12 +297,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			switch l.value {
 			case _RRTYPE:
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-                                if !ok {
-                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+				if !ok {
+					if h.Rrtype, ok = typeToInt(l.token); !ok {
 						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 						return
-                                        }
-                                }
+					}
+				}
 				st = _EXPECT_RDATA
 			case _CLASS:
 				h.Class, ok = Str_class[strings.ToUpper(l.token)]
@@ -325,12 +350,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-                                if !ok {
-                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+				if !ok {
+					if h.Rrtype, ok = typeToInt(l.token); !ok {
 						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 						return
-                                        }
-                                }
+					}
+				}
 				st = _EXPECT_RDATA
 			}
 		case _EXPECT_ANY_NOCLASS:
@@ -345,12 +370,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-                                if !ok {
-                                        if h.Rrtype, ok = typeToInt(l.token); !ok {
+				if !ok {
+					if h.Rrtype, ok = typeToInt(l.token); !ok {
 						t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
 						return
-                                        }
-                                }
+					}
+				}
 				st = _EXPECT_RDATA
 			default:
 				t <- Token{Error: &ParseError{f, "Expecting RR type or TTL, not this...", l}}
@@ -368,12 +393,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				return
 			}
 			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-                        if !ok {
-                                if h.Rrtype, ok = typeToInt(l.token); !ok {
-                                        t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
-                                        return
-                                }
-                        }
+			if !ok {
+				if h.Rrtype, ok = typeToInt(l.token); !ok {
+					t <- Token{Error: &ParseError{f, "Unknown RR type", l}}
+					return
+				}
+			}
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
 			// I could save my token here...? l
@@ -410,7 +435,11 @@ func (l lex) String() string {
 	case _CLASS:
 		return "C:" + l.token + "$"
 	case _DIRTTL:
-		return "T:" + l.token + "$"
+		return "$T:" + l.token + "$"
+	case _DIRORIGIN:
+		return "$O:" + l.token + "$"
+	case _DIRINCLUDE:
+		return "$I:" + l.token + "$"
 	}
 	return "**"
 }
@@ -477,11 +506,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 						l.value = _RRTYPE
 						rrtype = true
 					} else {
-                                                if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
-                                                        l.value = _RRTYPE
-                                                        rrtype = true
-                                                }
-                                        }
+						if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
+							l.value = _RRTYPE
+							rrtype = true
+						}
+					}
 					if _, ok := Str_class[strings.ToUpper(l.token)]; ok {
 						l.value = _CLASS
 					} else {
@@ -521,9 +550,9 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				stri = 0
 			}
 			commt = true
-                case '\r':
-                        // discard
-                        // this means it can also not be used as rdata
+		case '\r':
+			// discard
+			// this means it can also not be used as rdata
 		case '\n':
 			// hmmm, escape newline
 			if quote {
@@ -629,17 +658,17 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				escape = false
 				break
 			}
-                        switch x[0] {
-                        case ')':
-                                brace--
-                                if brace < 0 {
-                                        l.err = "extra closing brace"
-                                        c <- l
-                                        return
-                                }
-                        case '(':
-                                brace++
-                        }
+			switch x[0] {
+			case ')':
+				brace--
+				if brace < 0 {
+					l.err = "extra closing brace"
+					c <- l
+					return
+				}
+			case '(':
+				brace++
+			}
 		default:
 			if commt {
 				break
@@ -679,32 +708,40 @@ func typeToInt(token string) (uint16, bool) {
 }
 
 func stringToTtl(l lex, f string, t chan Token) (uint32, bool) {
-        s := uint32(0)
-        i := uint32(0)
-        for _, c := range l.token {
-                switch c {
-                case 's', 'S':
-                        s += i
-                        i = 0
-                case 'm', 'M':
-                        s += i * 60
-                        i = 0
-                case 'h', 'H':
-                        s += i * 60 * 60
-                        i = 0
-                case 'd', 'D':
-                        s += i * 60 * 60 * 24
-                        i = 0
-                case 'w', 'W':
-                        s += i * 60 * 60 * 24 * 7
-                        i = 0
-                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-                        i *= 10
-                        i += uint32(c) - '0'
-                default:
-                        t <- Token{Error: &ParseError{f, "Not a TTL", l}}
-                        return 0, false
-                }
-        }
-        return s+i, true
+	s := uint32(0)
+	i := uint32(0)
+	for _, c := range l.token {
+		switch c {
+		case 's', 'S':
+			s += i
+			i = 0
+		case 'm', 'M':
+			s += i * 60
+			i = 0
+		case 'h', 'H':
+			s += i * 60 * 60
+			i = 0
+		case 'd', 'D':
+			s += i * 60 * 60 * 24
+			i = 0
+		case 'w', 'W':
+			s += i * 60 * 60 * 24 * 7
+			i = 0
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			i *= 10
+			i += uint32(c) - '0'
+		default:
+			t <- Token{Error: &ParseError{f, "Not a TTL", l}}
+			return 0, false
+		}
+	}
+	return s + i, true
+}
+
+func appendOrigin(name, origin string) string {
+	if origin == "." {
+		return name + origin
+	}
+	return name + "." + origin
+
 }
