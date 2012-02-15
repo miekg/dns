@@ -164,6 +164,10 @@ func TestParseDirectiveMisc(t *testing.T) {
         2w        ; expire (2 weeks)
         300       ; minimum (5 minutes)
 )`: "name.\t3600\tIN\tSOA\ta6.nstld.com. hostmaster.nic.name. 203362132 300 300 1209600 300",
+        ". 3600000  IN  NS ONE.MY-ROOTS.NET.":
+                                ".\t3600000\tIN\tNS\tONE.MY-ROOTS.NET.",
+        "ONE.MY-ROOTS.NET. 3600000 IN A 192.168.1.1":
+                                "ONE.MY-ROOTS.NET.\t3600000\tIN\tA\t192.168.1.1",
         }
 	for i, o := range tests {
 		rr, e := NewRR(i)
