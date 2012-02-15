@@ -715,6 +715,7 @@ func typeToInt(token string) (uint16, bool) {
 	return uint16(typ), true
 }
 
+// Parse things like 2w, 2m, etc, Return the time in seconds.
 func stringToTtl(l lex, f string) (uint32, bool) {
 	s := uint32(0)
 	i := uint32(0)
@@ -750,5 +751,4 @@ func appendOrigin(name, origin string) string {
 		return name + origin
 	}
 	return name + "." + origin
-
 }
