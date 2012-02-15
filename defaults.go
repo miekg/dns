@@ -262,16 +262,16 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	return labels, uint8(l - longer), ok
 }
 
-// IsSubDomain checks if child is indeed a child of parent.
-// In the DNS this is called in bailiwick.
+// IsSubDomain checks if child is indeed a child of the parent.
+// In the DNS this is called "the subdomain is in bailiwick".
 func IsSubDomain(parent, child string) bool {
         // If the number of labels both domain name have
         // in common equals the number of labels of parent,
         // child is a subdomain of parent.
         plabs := SplitLabels(parent)
         clabs := SplitLabels(child)
-        if len(plabs) < len(clabs) {
-                // parent is smaller than child
+        if len(clabs) < len(plabs) {
+                // child is smaller than parent, reversed arguments?
                 return false
         }
         // Copied from CompareLabels to prevent another SplitLabels

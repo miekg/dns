@@ -78,3 +78,26 @@ func TestEDNS_RR(t *testing.T) {
 	edns.Option[0].Data = "lalalala"
 	//t..Logf("%v\n", edns)
 }
+
+func TestBailiwick(t *testing.T) {
+        yes := map[string]string{
+                "miek.nl": "ns.miek.nl",
+                ".": "miek.nl",
+        }
+        for parent, child := range yes {
+                if !IsSubDomain(parent, child) {
+                        t.Logf("%s should be child of %s\n", child, parent)
+                        t.Fail()
+                }
+        }
+        no := map[string]string{
+                "www.miek.nl": "ns.miek.nl",
+                "miek.nl": ".",
+        }
+        for parent, child := range no {
+                if IsSubDomain(parent, child) {
+                        t.Logf("%s should not be child of %s\n", child, parent)
+                        t.Fail()
+                }
+        }
+}
