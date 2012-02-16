@@ -300,6 +300,9 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	if s.SignerName != k.Hdr.Name {
 		return ErrKey
 	}
+        if k.Protocol != 3 {
+                return ErrKey
+        }
 	for _, r := range rrset {
 		if r.Header().Class != s.Hdr.Class {
 			return ErrRRset

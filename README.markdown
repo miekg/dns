@@ -62,6 +62,7 @@ All of them:
 * 3110 - RSASHA1 DNS keys
 * 3225 - DO bit (DNSSEC OK)
 * 340{1,2,3} - NAPTR
+* 3445 - Limiting the scope of (DNS)KEY
 * 3597 - Unkown RRs
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP
