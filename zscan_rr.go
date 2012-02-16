@@ -68,6 +68,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setDS(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
+        case TypeIPSECKEY:
+                return setIPSECKEY(h, c, o, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -452,7 +454,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, err := strconv.Atoi(l.token); err != nil {
-		return nil, &ParseError{f, "bad RRSIG Algoritm", l}
+		return nil, &ParseError{f, "bad RRSIG Algorithm", l}
 	} else {
 		rr.Algorithm = uint8(i)
 	}
@@ -816,5 +818,49 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		}
 	}
 	rr.Txt = s
+	return rr, nil
+}
+
+func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_IPSECKEY)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad IPSECKEY Precedence", l}
+	} else {
+		rr.Precedence = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}
+	} else {
+		rr.GatewayType = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad IPSECKEY Algorithm", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c
+	l = <-c
+	rr.Gateway = l.token
+	l = <-c
+	var s string
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad IPSECKEY PublicKey", l}
+		}
+		l = <-c
+	}
+	rr.PublicKey = s
 	return rr, nil
 }

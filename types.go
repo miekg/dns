@@ -49,7 +49,7 @@ const (
 	TypeNXT        uint16 = 30
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
-	TypeIPSECKEY   uint16 = 45 // No type implemented
+	TypeIPSECKEY   uint16 = 45
 	TypeRRSIG      uint16 = 46
 	TypeNSEC       uint16 = 47
 	TypeDNSKEY     uint16 = 48
@@ -746,6 +746,32 @@ func (rr *RR_SSHFP) Len() int {
 	return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
 }
 
+type RR_IPSECKEY struct {
+        Hdr             RR_Header
+        Precedence      uint8
+        GatewayType     uint8
+        Algorithm       uint8
+        Gateway         string "ipseckey"
+        PublicKey       string "base64"
+}
+
+func (rr *RR_IPSECKEY) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_IPSECKEY) String() string {
+        return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
+                " " + strconv.Itoa(int(rr.GatewayType)) +
+                " " + strconv.Itoa(int(rr.Algorithm)) +
+                " " + rr.Gateway +
+                " " + rr.PublicKey
+}
+
+func (rr *RR_IPSECKEY) Len() int {
+        // TODO: this is not correct
+        return rr.Hdr.Len() + 3 + len(rr.Gateway) + len(rr.PublicKey)
+}
+
 type RR_DNSKEY struct {
 	Hdr       RR_Header
 	Flags     uint16
@@ -759,7 +785,7 @@ func (rr *RR_DNSKEY) Header() *RR_Header {
 }
 
 func (rr *RR_DNSKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+        return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
