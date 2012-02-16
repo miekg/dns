@@ -27,7 +27,7 @@
 //
 // Or even:
 //
-//      mx := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek"
+//      mx := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
