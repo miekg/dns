@@ -51,7 +51,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
         case TypeLOC:
-                r, e = setLOC(h, c, f)
+                //r, e = setLOC(h, c, f)
+                // TODO
                 goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
@@ -739,7 +740,7 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad TLSA Usage", l}
 	} else {
-		rr.KeyTag = uint8(i)
+		rr.Usage = uint8(i)
 	}
 	<-c // _BLANK
 	l = <-c
@@ -753,7 +754,7 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad TLSA MatchingType", l}
 	} else {
-		rr.DigestType = uint8(i)
+		rr.MatchingType = uint8(i)
 	}
 	// There can be spaces here...
 	l = <-c
@@ -931,14 +932,4 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	rr.PublicKey = s
 	return rr, nil
-}
-
-func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-        rr := new(RR_LOC)
-        rr.Hdr = h
-        // TODO
-
-
-        rr.Version = 0
-        return rr, nil
 }
