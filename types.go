@@ -577,7 +577,6 @@ func (rr *RR_LOC) Header() *RR_Header {
 }
 
 func (rr *RR_LOC) String() string {
-	// Version is not shown
 	return rr.Hdr.String() + "TODO"
 }
 
@@ -1010,7 +1009,6 @@ func (rr *RR_TSIG) Len() int {
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
-// DANE
 type RR_TLSA struct {
 	Hdr          RR_Header
 	Usage        uint8

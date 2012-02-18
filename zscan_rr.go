@@ -66,6 +66,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC3PARAM(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
+        case TypeTLSA:
+                return setTLSA(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
 	case TypeSPF:
@@ -706,7 +708,6 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
-// DLV and TA are the same
 func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_DS)
 	rr.Hdr = h
@@ -745,6 +746,47 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		l = <-c
 	}
 	rr.Digest = s
+	return rr, nil
+}
+
+func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_TLSA)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TLSA Usage", l}
+	} else {
+		rr.KeyTag = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TLSA Selector", l}
+	} else {
+		rr.Selector = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TLSA MatchingType", l}
+	} else {
+		rr.DigestType = uint8(i)
+	}
+	// There can be spaces here...
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad TLSA Certificate", l}
+		}
+		l = <-c
+	}
+	rr.Certificate = s
 	return rr, nil
 }
 
