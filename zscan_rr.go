@@ -6,14 +6,13 @@ import (
 	"strings"
 )
 
-// TODO: SPF, TKEY, RR_URI, DHCID, TLSA
+// TODO: TKEY, RR_URI, DHCID
 
 // Parse the rdata of each rrtype.
 // All data from the channel c is either _STRING or _BLANK.
 // After the rdata there may come 1 _BLANK and then a _NEWLINE
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
-
 func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	var r RR
 	e := new(ParseError)
@@ -51,6 +50,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeNAPTR:
 		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
+        case TypeLOC:
+                r, e = setLOC(h, c, f)
+                goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -86,25 +88,6 @@ Slurp:
 		return nil, se
 	}
 	return r, e
-}
-
-func slurpRemainder(c chan lex, f string) *ParseError {
-	l := <-c
-	switch l.value {
-	case _BLANK:
-		l = <-c
-		if l.value != _NEWLINE && l.value != _EOF {
-			return &ParseError{f, "garbage after rdata", l}
-		}
-		// Ok
-	case _NEWLINE:
-		// Ok
-	case _EOF:
-		// Ok
-	default:
-		return &ParseError{f, "garbage after rdata", l}
-	}
-	return nil
 }
 
 func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
@@ -948,4 +931,14 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	rr.PublicKey = s
 	return rr, nil
+}
+
+func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+        rr := new(RR_LOC)
+        rr.Hdr = h
+        // TODO
+
+
+        rr.Version = 0
+        return rr, nil
 }

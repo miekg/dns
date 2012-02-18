@@ -148,15 +148,15 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	if origin == "" {
 		origin = "."
 	}
-        if !IsFqdn(origin) {
-                t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
-                return
-        }
+	if !IsFqdn(origin) {
+		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
+		return
+	}
 	if _, _, ok := IsDomainName(origin); !ok {
 		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
 		return
 	}
-	st := _EXPECT_OWNER_DIR         // initial state
+	st := _EXPECT_OWNER_DIR // initial state
 	var h RR_Header
 	var ok bool
 	var defttl uint32 = DefaultTtl
@@ -321,7 +321,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
 				if ttl, ok := stringToTtl(l, f); !ok {
-			                t <- Token{Error: &ParseError{f, "not a TTL", l}}
+					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -369,7 +369,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			switch l.value {
 			case _STRING: // TTL
 				if ttl, ok := stringToTtl(l, f); !ok {
-			                t <- Token{Error: &ParseError{f, "not a TTL", l}}
+					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
 					h.Ttl = ttl
@@ -751,4 +751,23 @@ func appendOrigin(name, origin string) string {
 		return name + origin
 	}
 	return name + "." + origin
+}
+
+func slurpRemainder(c chan lex, f string) *ParseError {
+	l := <-c
+	switch l.value {
+	case _BLANK:
+		l = <-c
+		if l.value != _NEWLINE && l.value != _EOF {
+			return &ParseError{f, "garbage after rdata", l}
+		}
+		// Ok
+	case _NEWLINE:
+		// Ok
+	case _EOF:
+		// Ok
+	default:
+		return &ParseError{f, "garbage after rdata", l}
+	}
+	return nil
 }
