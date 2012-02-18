@@ -1036,7 +1036,7 @@ type RR_HIP struct {
 	HitLength          uint8
 	PublicKeyAlgorithm uint8
 	PublicKeyLength    uint16
-	Hit                string   "base16"
+	Hit                string   "hex"
 	PublicKey          string   "base64"
 	RendezvousServers  []string "domain-name"
 }
