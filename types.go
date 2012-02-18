@@ -402,6 +402,35 @@ func (rr *RR_TXT) Len() int {
         return l
 }
 
+type RR_SPF struct {
+	Hdr RR_Header
+	Txt []string "txt"
+}
+
+func (rr *RR_SPF) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_SPF) String() string {
+	s := rr.Hdr.String()
+        for i, s1 := range rr.Txt {
+                if i > 0 {
+                        s += " " + "\""  + s1 + "\""
+                } else {
+                        s += "\""  + s1 + "\""
+                }
+        }
+        return s
+}
+
+func (rr *RR_SPF) Len() int {
+        l := rr.Hdr.Len()
+        for _, t := range rr.Txt {
+                l += len(t)
+        }
+        return l
+}
+
 type RR_SRV struct {
 	Hdr      RR_Header
 	Priority uint16
@@ -857,24 +886,6 @@ func (rr *RR_NSEC3PARAM) String() string {
 
 func (rr *RR_NSEC3PARAM) Len() int {
 	return rr.Hdr.Len() + 2 + 4 + 1 + len(rr.Salt)/2
-}
-
-// See RFC 4408.
-type RR_SPF struct {
-	Hdr RR_Header
-	Txt string
-}
-
-func (rr *RR_SPF) Header() *RR_Header {
-	return &rr.Hdr
-}
-
-func (rr *RR_SPF) String() string {
-	return rr.Hdr.String() + "\"" + rr.Txt + "\""
-}
-
-func (rr *RR_SPF) Len() int {
-	return rr.Hdr.Len() + len(rr.Txt)
 }
 
 type RR_TKEY struct {
