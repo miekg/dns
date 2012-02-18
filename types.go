@@ -17,36 +17,33 @@ import (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
-	TypeA     uint16 = 1
-	TypeNS    uint16 = 2
-	TypeMD    uint16 = 3
-	TypeMF    uint16 = 4
-	TypeCNAME uint16 = 5
-	TypeSOA   uint16 = 6
-	TypeMB    uint16 = 7
-	TypeMG    uint16 = 8
-	TypeMR    uint16 = 9
-	TypeNULL  uint16 = 10
-	TypeWKS   uint16 = 11
-	TypePTR   uint16 = 12
-	TypeHINFO uint16 = 13
-	TypeMINFO uint16 = 14
-	TypeMX    uint16 = 15
-	TypeTXT   uint16 = 16
-	TypeAAAA  uint16 = 28
-	TypeLOC   uint16 = 29
-	TypeSRV   uint16 = 33
-	TypeNAPTR uint16 = 35
-	TypeKX    uint16 = 36
-	TypeCERT  uint16 = 37
-	TypeDNAME uint16 = 39
-
-	// EDNS
-	TypeOPT uint16 = 41
-
+	TypeA          uint16 = 1
+	TypeNS         uint16 = 2
+	TypeMD         uint16 = 3
+	TypeMF         uint16 = 4
+	TypeCNAME      uint16 = 5
+	TypeSOA        uint16 = 6
+	TypeMB         uint16 = 7
+	TypeMG         uint16 = 8
+	TypeMR         uint16 = 9
+	TypeNULL       uint16 = 10
+	TypeWKS        uint16 = 11
+	TypePTR        uint16 = 12
+	TypeHINFO      uint16 = 13
+	TypeMINFO      uint16 = 14
+	TypeMX         uint16 = 15
+	TypeTXT        uint16 = 16
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
+	TypeAAAA       uint16 = 28
+	TypeLOC        uint16 = 29
 	TypeNXT        uint16 = 30
+	TypeSRV        uint16 = 33
+	TypeNAPTR      uint16 = 35
+	TypeKX         uint16 = 36
+	TypeCERT       uint16 = 37
+	TypeDNAME      uint16 = 39
+	TypeOPT        uint16 = 41 // EDNS
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
 	TypeIPSECKEY   uint16 = 45
@@ -56,6 +53,7 @@ const (
 	TypeDHCID      uint16 = 49
 	TypeNSEC3      uint16 = 50
 	TypeNSEC3PARAM uint16 = 51
+	TypeHIP        uint16 = 55
 	TypeTALINK     uint16 = 58
 	TypeSPF        uint16 = 99
 
@@ -142,11 +140,11 @@ func (q *Question) String() (s string) {
 	} else {
 		s = ";" + q.Name + "\t"
 	}
-        if _, ok := Class_str[q.Qclass]; ok {
-	        s += Class_str[q.Qclass] + "\t"
-        } else {
+	if _, ok := Class_str[q.Qclass]; ok {
+		s += Class_str[q.Qclass] + "\t"
+	} else {
 		s += "CLASS" + strconv.Itoa(int(q.Qtype))
-        }
+	}
 
 	if _, ok := Rr_str[q.Qtype]; ok {
 		s += " " + Rr_str[q.Qtype]
@@ -384,22 +382,22 @@ func (rr *RR_TXT) Header() *RR_Header {
 
 func (rr *RR_TXT) String() string {
 	s := rr.Hdr.String()
-        for i, s1 := range rr.Txt {
-                if i > 0 {
-                        s += " " + "\""  + s1 + "\""
-                } else {
-                        s += "\""  + s1 + "\""
-                }
-        }
-        return s
+	for i, s1 := range rr.Txt {
+		if i > 0 {
+			s += " " + "\"" + s1 + "\""
+		} else {
+			s += "\"" + s1 + "\""
+		}
+	}
+	return s
 }
 
 func (rr *RR_TXT) Len() int {
-        l := rr.Hdr.Len()
-        for _, t := range rr.Txt {
-                l += len(t)
-        }
-        return l
+	l := rr.Hdr.Len()
+	for _, t := range rr.Txt {
+		l += len(t)
+	}
+	return l
 }
 
 type RR_SPF struct {
@@ -413,22 +411,22 @@ func (rr *RR_SPF) Header() *RR_Header {
 
 func (rr *RR_SPF) String() string {
 	s := rr.Hdr.String()
-        for i, s1 := range rr.Txt {
-                if i > 0 {
-                        s += " " + "\""  + s1 + "\""
-                } else {
-                        s += "\""  + s1 + "\""
-                }
-        }
-        return s
+	for i, s1 := range rr.Txt {
+		if i > 0 {
+			s += " " + "\"" + s1 + "\""
+		} else {
+			s += "\"" + s1 + "\""
+		}
+	}
+	return s
 }
 
 func (rr *RR_SPF) Len() int {
-        l := rr.Hdr.Len()
-        for _, t := range rr.Txt {
-                l += len(t)
-        }
-        return l
+	l := rr.Hdr.Len()
+	for _, t := range rr.Txt {
+		l += len(t)
+	}
+	return l
 }
 
 type RR_SRV struct {
@@ -775,12 +773,12 @@ func (rr *RR_SSHFP) Len() int {
 }
 
 type RR_IPSECKEY struct {
-        Hdr             RR_Header
-        Precedence      uint8
-        GatewayType     uint8
-        Algorithm       uint8
-        Gateway         string "ipseckey"
-        PublicKey       string "base64"
+	Hdr         RR_Header
+	Precedence  uint8
+	GatewayType uint8
+	Algorithm   uint8
+	Gateway     string "ipseckey"
+	PublicKey   string "base64"
 }
 
 func (rr *RR_IPSECKEY) Header() *RR_Header {
@@ -788,16 +786,16 @@ func (rr *RR_IPSECKEY) Header() *RR_Header {
 }
 
 func (rr *RR_IPSECKEY) String() string {
-        return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
-                " " + strconv.Itoa(int(rr.GatewayType)) +
-                " " + strconv.Itoa(int(rr.Algorithm)) +
-                " " + rr.Gateway +
-                " " + rr.PublicKey
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
+		" " + strconv.Itoa(int(rr.GatewayType)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + rr.Gateway +
+		" " + rr.PublicKey
 }
 
 func (rr *RR_IPSECKEY) Len() int {
-        // TODO: this is not correct
-        return rr.Hdr.Len() + 3 + len(rr.Gateway) + len(rr.PublicKey)
+	// TODO: this is not correct
+	return rr.Hdr.Len() + 3 + len(rr.Gateway) + len(rr.PublicKey)
 }
 
 type RR_DNSKEY struct {
@@ -813,7 +811,7 @@ func (rr *RR_DNSKEY) Header() *RR_Header {
 }
 
 func (rr *RR_DNSKEY) String() string {
-        return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
@@ -1033,6 +1031,35 @@ func (rr *RR_TLSA) Len() int {
 	return rr.Hdr.Len() + 3 + len(rr.Certificate)/2
 }
 
+type RR_HIP struct {
+	Hdr                RR_Header
+	HitLength          uint8
+	PublicKeyAlgorithm uint8
+	PublicKeyLength    uint16
+	Hit                string   "base16"
+	PublicKey          string   "base64"
+	RendezvousServers  []string "domain-name"
+}
+
+func (rr *RR_HIP) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_HIP) String() string {
+        s := rr.Hdr.String() +
+		" " + strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
+		" " + rr.Hit +
+		" " + rr.PublicKey
+        for _, d := range rr.RendezvousServers {
+                s += " " + d
+        }
+        return s
+}
+
+func (rr *RR_HIP) Len() int {
+	return rr.Hdr.Len() // TODO
+}
+
 // Translate the RRSIG's incep. and expir. time to the correct date.
 // Taking into account serial arithmetic (RFC 1982) [TODO]
 func timeToDate(t uint32) string {
@@ -1113,4 +1140,5 @@ var rr_mk = map[uint16]func() RR{
 	TypeTA:         func() RR { return new(RR_TA) },
 	TypeDLV:        func() RR { return new(RR_DLV) },
 	TypeTLSA:       func() RR { return new(RR_TLSA) },
+	TypeHIP:        func() RR { return new(RR_HIP) },
 }

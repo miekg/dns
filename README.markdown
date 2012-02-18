@@ -73,6 +73,7 @@ All of them:
 * 4892 - id.server
 * 5001 - NSID 
 * 5155 - NSEC3
+* 5205 - HIP
 * 5933 - GOST
 * 5936 - AXFR
 * xxxx - ECDSA
