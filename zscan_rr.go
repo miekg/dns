@@ -71,6 +71,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setDS(h, c, f)
 	case TypeDLV:
 		return setDLV(h, c, f)
+	case TypeTA:
+		return setTA(h, c, f)
 	case TypeTLSA:
 		return setTLSA(h, c, f)
 	case TypeTXT:
@@ -816,6 +818,47 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad DLV Digest", l}
+		}
+		l = <-c
+	}
+	rr.Digest = s
+	return rr, nil
+}
+
+func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_TA)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TA KeyTag", l}
+	} else {
+		rr.KeyTag = uint16(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TA Algorithm", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad TA DigestType", l}
+	} else {
+		rr.DigestType = uint8(i)
+	}
+	// There can be spaces here...
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad TA Digest", l}
 		}
 		l = <-c
 	}
