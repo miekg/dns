@@ -20,7 +20,7 @@ Features:
 * RFC 1035 zone file parsing;
 * Fast: 
     * reply speed around 35K qps (Faster hardware -> more qps);
-    * Parsing RRs (zone files) with 35K RR/s, that 5M records in about 142 seconds;
+    * Parsing RRs (zone files) with 35K RR/s, that's 5M records in about 142 seconds;
     * This is expected to be optimized further.
 * Client and server side programming (mimicking the net/http package);
 * Asynchronous queries/replies for client and server;
@@ -36,7 +36,7 @@ correctly the following should work:
     go build dns
 
 Sample programs can be found in the `ex` directory. They can 
-be build with: `make -C ex` (after the dns package has been installed)
+be build with: `make -C ex`, or also with the `go` tool.
 
 Have fun!
 
