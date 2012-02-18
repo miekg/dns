@@ -50,10 +50,10 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeNAPTR:
 		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
-        case TypeLOC:
-                //r, e = setLOC(h, c, f)
-                // TODO
-                goto Slurp
+	case TypeLOC:
+		//r, e = setLOC(h, c, f)
+		// TODO
+		goto Slurp
 	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -69,14 +69,16 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC3PARAM(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
-        case TypeTLSA:
-                return setTLSA(h, c, f)
+	case TypeTLSA:
+		return setTLSA(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
+	case TypeHIP:
+		return setHIP(h, c, o, f)
 	case TypeSPF:
 		return setSPF(h, c, f)
-        case TypeIPSECKEY:
-                return setIPSECKEY(h, c, o, f)
+	case TypeIPSECKEY:
+		return setIPSECKEY(h, c, o, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -384,6 +386,51 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.Replacement[ld-1] != '.' {
 		rr.Replacement = appendOrigin(rr.Replacement, o)
 	}
+	return rr, nil
+}
+
+func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_HIP)
+	rr.Hdr = h
+
+	// HitLength is represented
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad HIP PublicKeyAlgorithm", l}
+	} else {
+		rr.PublicKeyAlgorithm = uint8(i)
+	}
+	<-c              // _BLANK
+	l = <-c          // _STRING
+	rr.Hit = l.token // Can this have spaces? TODO
+
+	<-c                    // _BLANK
+	l = <-c                // _STRING
+	rr.PublicKey = l.token // This cannot contain spaces
+
+	// RendezvousServers (if any)
+	l = <-c
+	xs := make([]string, 0)
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			_, ld, ok := IsDomainName(l.token)
+			if !ok {
+				return nil, &ParseError{f, "bad HIP RendezvousServers", l}
+			}
+			if l.token[ld-1] != '.' {
+				l.token = appendOrigin(l.token, o)
+			}
+			xs = append(xs, l.token)
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad HIP RendezvousServers", l}
+		}
+		l = <-c
+	}
+	rr.RendezvousServers = xs
+
 	return rr, nil
 }
 
