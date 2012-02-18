@@ -81,6 +81,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setHIP(h, c, o, f)
 	case TypeSPF:
 		return setSPF(h, c, f)
+	case TypeDHCID:
+		return setDHCID(h, c, f)
 	case TypeIPSECKEY:
 		return setIPSECKEY(h, c, o, f)
 	default:
@@ -1064,5 +1066,27 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		l = <-c
 	}
 	rr.PublicKey = s
+	return rr, nil
+}
+
+func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+        // awesome record to parse!
+	rr := new(RR_DHCID)
+	rr.Hdr = h
+
+        l := <-c // _STRING
+	var s string
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad DHCID Digest", l}
+		}
+		l = <-c
+	}
+	rr.Digest = s
 	return rr, nil
 }
