@@ -70,6 +70,7 @@ All of them:
 * 4509 - SHA256 Hash in DS
 * 4592 - Wildcards in the DNS
 * 4635 - HMAC SHA TSIG
+* 4701 - DHCID
 * 4892 - id.server
 * 5001 - NSID 
 * 5155 - NSEC3
