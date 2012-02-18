@@ -55,29 +55,30 @@ All of them:
 * 2181 - RRset definition
 * 2537 - RSAMD5 DNS keys
 * 2065 - DNSSEC (updated in later RFCs)
-* 2671 - EDNS
-* 2782 - SRV
-* 2845 - TSIG
-* 2915 - NAPTR
+* 2671 - EDNS record
+* 2782 - SRV record
+* 2845 - TSIG record
+* 2915 - NAPTR record
 * 3110 - RSASHA1 DNS keys
 * 3225 - DO bit (DNSSEC OK)
-* 340{1,2,3} - NAPTR
+* 340{1,2,3} - NAPTR record
 * 3445 - Limiting the scope of (DNS)KEY
 * 3597 - Unkown RRs
 * 403{3,4,5} - DNSSEC + validation functions
-* 4255 - SSHFP
-* 4408 - SPF
+* 4255 - SSHFP record
+* 4408 - SPF record
 * 4509 - SHA256 Hash in DS
 * 4592 - Wildcards in the DNS
 * 4635 - HMAC SHA TSIG
 * 4701 - DHCID
 * 4892 - id.server
 * 5001 - NSID 
-* 5155 - NSEC3
-* 5205 - HIP
+* 5155 - NSEC3 record
+* 5205 - HIP record
 * 5933 - GOST
 * 5936 - AXFR
 * xxxx - ECDSA
+* xxxx - URI record
 
 ## Loosely based upon:
 

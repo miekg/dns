@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-// TODO: TKEY, RR_URI, DHCID
-
 // Parse the rdata of each rrtype.
 // All data from the channel c is either _STRING or _BLANK.
 // After the rdata there may come 1 _BLANK and then a _NEWLINE
@@ -1025,6 +1023,57 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_URI)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad URI Priority", l}
+	} else {
+		rr.Priority = uint16(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad URI Weight", l}
+	} else {
+		rr.Weight = uint16(i)
+	}
+	// _BLANK?
+
+	// Get the remaining data until we see a NEWLINE
+	quote := false
+	l = <-c
+	var s string
+	switch l.value == _QUOTE {
+	case true:
+		for l.value != _NEWLINE && l.value != _EOF {
+			switch l.value {
+			case _STRING:
+				s += l.token
+			case _BLANK:
+				if quote {
+					// _BLANK can only be seen in between txt parts.
+					return nil, &ParseError{f, "bad URI Target", l}
+				}
+			case _QUOTE:
+				quote = !quote
+			default:
+				return nil, &ParseError{f, "bad URI Target", l}
+			}
+			l = <-c
+		}
+		if quote {
+			return nil, &ParseError{f, "bad URI Target", l}
+		}
+	case false: // Unquoted
+		return nil, &ParseError{f, "bad URI Target", l}
+	}
+	rr.Target = s
+	return rr, nil
+}
+
 func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_IPSECKEY)
 	rr.Hdr = h
@@ -1070,11 +1119,11 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-        // awesome record to parse!
+	// awesome record to parse!
 	rr := new(RR_DHCID)
 	rr.Hdr = h
 
-        l := <-c // _STRING
+	l := <-c // _STRING
 	var s string
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
