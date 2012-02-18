@@ -936,7 +936,7 @@ type RR_URI struct {
 	Hdr      RR_Header
 	Priority uint16
 	Weight   uint16
-	Target   string
+	Target   string "txt"
 }
 
 func (rr *RR_URI) Header() *RR_Header {
