@@ -359,11 +359,11 @@ func (rr *RR_SOA) Header() *RR_Header {
 
 func (rr *RR_SOA) String() string {
 	return rr.Hdr.String() + rr.Ns + " " + rr.Mbox +
-		" " + strconv.Itoa(int(rr.Serial)) +
-		" " + strconv.Itoa(int(rr.Refresh)) +
-		" " + strconv.Itoa(int(rr.Retry)) +
-		" " + strconv.Itoa(int(rr.Expire)) +
-		" " + strconv.Itoa(int(rr.Minttl))
+		" " + strconv.FormatInt(int64(rr.Serial), 10) +
+		" " + strconv.FormatInt(int64(rr.Refresh), 10) +
+		" " + strconv.FormatInt(int64(rr.Retry), 10) +
+		" " + strconv.FormatInt(int64(rr.Expire), 10) +
+		" " + strconv.FormatInt(int64(rr.Minttl), 10)
 }
 
 func (rr *RR_SOA) Len() int {
@@ -605,7 +605,7 @@ func (rr *RR_RRSIG) String() string {
 	return rr.Hdr.String() + Rr_str[rr.TypeCovered] +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
-		" " + strconv.Itoa(int(rr.OrigTtl)) +
+		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
 		" " + timeToDate(rr.Expiration) +
 		" " + timeToDate(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +

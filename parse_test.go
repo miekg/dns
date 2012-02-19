@@ -421,3 +421,11 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
                 fmt.Printf("%s\n", hip.String())
         }
 }
+
+// example.com.	1000	IN	SOA	master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100
+func ExampleSOA() {
+        s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
+        if soa, err := NewRR(s); err == nil {
+                fmt.Printf("%s\n", soa.String())
+        }
+}

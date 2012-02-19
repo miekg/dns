@@ -105,12 +105,12 @@ func (e *Error) Error() string {
 
 // An RR represents a resource record.
 type RR interface {
-        // Header returns the header of an resource record. The header contains
-        // everything up to the rdata.
+	// Header returns the header of an resource record. The header contains
+	// everything up to the rdata.
 	Header() *RR_Header
-        // String returns the text representation of the resource record.
+	// String returns the text representation of the resource record.
 	String() string
-        // Len returns the length (in octects) of the uncompressed RR in wire format.
+	// Len returns the length (in octects) of the uncompressed RR in wire format.
 	Len() int
 }
 
@@ -149,7 +149,7 @@ func (h *RR_Header) String() string {
 	} else {
 		s += h.Name + "\t"
 	}
-	s = s + strconv.Itoa(int(h.Ttl)) + "\t"
+	s = s + strconv.FormatInt(int64(h.Ttl), 10) + "\t"
 
 	if _, ok := Class_str[h.Class]; ok {
 		s += Class_str[h.Class] + "\t"
