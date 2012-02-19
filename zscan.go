@@ -496,7 +496,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				l.value = _OWNER
 				l.token = string(str[:stri])
 				// escape $... start with a \ not a $, so this will work
-				switch string(str[:stri]) {
+				switch l.token {
 				case "$TTL":
 					l.value = _DIRTTL
 				case "$ORIGIN":
@@ -541,13 +541,13 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case ';':
 			if quote {
 				// Inside quotes this is legal
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				break
 			}
 			if escape {
 				escape = false
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				break
 			}
@@ -564,7 +564,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case '\n':
 			// Escaped newline
 			if quote {
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				break
 			}
@@ -612,12 +612,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				escape = false
 				break
 			}
-			str[stri] = byte(x[0])
+			str[stri] = x[0]
 			stri++
 			escape = true
 		case '"':
@@ -625,7 +625,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				escape = false
 				break
@@ -644,7 +644,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			quote = !quote
 		case '(', ')':
 			if quote {
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				break
 			}
@@ -652,7 +652,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				escape = false
 				break
@@ -673,7 +673,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			escape = false
-			str[stri] = byte(x[0])
+			str[stri] = x[0]
 			stri++
 			space = false
 		}
