@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+        "encoding/base64"
 )
 
 // Parse the rdata of each rrtype.
@@ -407,10 +408,12 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c              // _BLANK
 	l = <-c          // _STRING
 	rr.Hit = l.token // This can not contain spaces, see RFC 5205 Section 6.
+        rr.HitLength = uint8(len(rr.Hit))/2
 
 	<-c                    // _BLANK
 	l = <-c                // _STRING
 	rr.PublicKey = l.token // This cannot contain spaces
+        rr.PublicKeyLength = uint16(base64.StdEncoding.DecodedLen(len(rr.PublicKey)))
 
 	// RendezvousServers (if any)
 	l = <-c

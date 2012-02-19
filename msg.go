@@ -642,6 +642,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			default:
 				println("dns: unknown tag unpacking slice", val.Type().Field(i).Tag)
 				return lenmsg, false
+                        // Need to add domain-name for HIP
                         case "txt":
                                 txt := make([]string,0)
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())

@@ -6,6 +6,7 @@
 package dns
 
 import (
+	"encoding/base64"
 	"net"
 	"strconv"
 	"strings"
@@ -503,7 +504,8 @@ func (rr *RR_CERT) String() string {
 }
 
 func (rr *RR_CERT) Len() int {
-	return rr.Hdr.Len() + 5 + len(rr.Certificate) //too much for base64
+	return rr.Hdr.Len() + 5 +
+		base64.StdEncoding.DecodedLen(len(rr.Certificate))
 }
 
 // See RFC 2672.
@@ -612,8 +614,8 @@ func (rr *RR_RRSIG) String() string {
 }
 
 func (rr *RR_RRSIG) Len() int {
-	return rr.Hdr.Len() + len(rr.SignerName) + 1 + len(rr.Signature) + 18
-	// TODO base64 string, should be less
+	return rr.Hdr.Len() + len(rr.SignerName) + 1 +
+		base64.StdEncoding.DecodedLen(len(rr.Signature)) + 18
 }
 
 type RR_NSEC struct {
@@ -794,8 +796,8 @@ func (rr *RR_IPSECKEY) String() string {
 }
 
 func (rr *RR_IPSECKEY) Len() int {
-	// TODO: this is not correct
-	return rr.Hdr.Len() + 3 + len(rr.Gateway) + len(rr.PublicKey)
+	return rr.Hdr.Len() + 3 + len(rr.Gateway) + 1 +
+		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
 type RR_DNSKEY struct {
@@ -818,7 +820,8 @@ func (rr *RR_DNSKEY) String() string {
 }
 
 func (rr *RR_DNSKEY) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.PublicKey) // todo: base64
+	return rr.Hdr.Len() + 4 +
+		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
 type RR_NSEC3 struct {
@@ -856,7 +859,7 @@ func (rr *RR_NSEC3) String() string {
 
 func (rr *RR_NSEC3) Len() int {
 	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + len(rr.TypeBitMap)
-	// TODO: size-base32 and typebitmap
+	// TODO: typebitmap
 }
 
 type RR_NSEC3PARAM struct {
@@ -967,7 +970,8 @@ func (rr *RR_DHCID) String() string {
 }
 
 func (rr *RR_DHCID) Len() int {
-	return rr.Hdr.Len() + len(rr.Digest) // Slightly too much
+	return rr.Hdr.Len() +
+		base64.StdEncoding.DecodedLen(len(rr.Digest))
 }
 
 // RFC 2845.
@@ -1046,18 +1050,24 @@ func (rr *RR_HIP) Header() *RR_Header {
 }
 
 func (rr *RR_HIP) String() string {
-        s := rr.Hdr.String() +
+	s := rr.Hdr.String() +
 		" " + strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
 		" " + rr.Hit +
 		" " + rr.PublicKey
-        for _, d := range rr.RendezvousServers {
-                s += " " + d
-        }
-        return s
+	for _, d := range rr.RendezvousServers {
+		s += " " + d
+	}
+	return s
 }
 
 func (rr *RR_HIP) Len() int {
-	return rr.Hdr.Len() // TODO
+	l := rr.Hdr.Len() + 4 +
+		len(rr.Hit)/2 +
+		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	for _, d := range rr.RendezvousServers {
+		l += len(d) + 1
+	}
+	return l
 }
 
 // Translate the RRSIG's incep. and expir. time to the correct date.
