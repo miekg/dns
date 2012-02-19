@@ -79,7 +79,7 @@ func (e *ParseError) Error() (s string) {
 type lex struct {
 	token  string // Text of the token
 	err    string // Error text when the lexer detects it. Not used by the grammar
-	value  int    // Value: _STRING, _BLANK, etc.
+	value  uint8  // Value: _STRING, _BLANK, etc.
 	line   int    // Line in the file
 	column int    // Column in the fil
 }
@@ -136,7 +136,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	// Start the lexer
 	go zlexer(s, c)
 	// 6 possible beginnings of a line, _ is a space
-	// 0.                            _ _RRTYPE -> all omitted until the rrtype
+	// 0. _RRTYPE                              -> all omitted until the rrtype
 	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
 	// 2. _OWNER _ _STRING _ _RRTYPE           -> class omitted
 	// 3. _OWNER _ _STRING _ _CLASS  _ _RRTYPE -> ttl/class
@@ -181,7 +181,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_OWNER_DIR
 			case _OWNER:
 				h.Name = l.token
-				if l.token == "@" {
+				if l.token[0] == '@' {
 					h.Name = origin
 					prevName = h.Name
 					st = _EXPECT_OWNER_BL
@@ -480,7 +480,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case ' ', '\t':
 			if quote {
 				// Inside quotes this is legal
-				str[stri] = byte(x[0])
+				str[stri] = x[0]
 				stri++
 				break
 			}
@@ -586,26 +586,26 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			}
 
 			if brace == 0 {
-                                // If there is previous text, we should output it here
-                                if stri != 0 {
-                                        l.value = _STRING
-                                        l.token = string(str[:stri])
-                                        if !rrtype {
-                                                if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
-                                                        l.value = _RRTYPE
-                                                        rrtype = true
-                                                }
-                                        }
-                                        c <- l
-                                }
+				// If there is previous text, we should output it here
+				if stri != 0 {
+					l.value = _STRING
+					l.token = string(str[:stri])
+					if !rrtype {
+						if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+							l.value = _RRTYPE
+							rrtype = true
+						}
+					}
+					c <- l
+				}
 				l.value = _NEWLINE
 				l.token = "\n"
 				c <- l
-                                stri = 0
-                                commt = false
-                                rrtype = false
-                                owner = true
-                        }
+				stri = 0
+				commt = false
+				rrtype = false
+				owner = true
+			}
 		case '\\':
 			// quote?
 			if commt {
