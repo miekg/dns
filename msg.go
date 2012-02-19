@@ -572,7 +572,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// This is purely for NSEC3 atm, the previous byte must
 				// holds the length of the encoded string. As NSEC3
 				// is only defined to SHA1, the hashlength is 20 (160 bits)
-				msg[off-1] = 20 // Set HashLength... TODO(mg): check
+				msg[off-1] = 20
 				fallthrough
 			case "base32":
 				b32, err := packBase32([]byte(s))
