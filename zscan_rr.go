@@ -406,7 +406,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c              // _BLANK
 	l = <-c          // _STRING
-	rr.Hit = l.token // Can this have spaces? TODO
+	rr.Hit = l.token // This can not contain spaces, see RFC 5205 Section 6.
 
 	<-c                    // _BLANK
 	l = <-c                // _STRING
