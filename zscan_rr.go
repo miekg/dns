@@ -411,9 +411,9 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.PreviousName = appendOrigin(rr.PreviousName, o)
 	}
         <-c     // _BLANK
-	l := <-c
+	l = <-c
 	rr.NextName = l.token
-	_, ld, ok := IsDomainName(l.token)
+	_, ld, ok = IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad TALINK NextName", l}
 	}
