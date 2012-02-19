@@ -7,7 +7,7 @@
 //
 // Package dns implements a full featured interface to the Domain Name System.
 // The package allows complete control over what is send out to the DNS. The package
-// API follows the less-is-more principle, but presenting a small, clean interface.
+// API follows the less-is-more principle, by presenting a small, clean interface.
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:

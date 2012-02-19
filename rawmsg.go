@@ -4,9 +4,6 @@
 
 package dns
 
-// Function defined in this subpackage work on []byte and but still
-// provide some higher level functions.
-
 // RawSetId sets the message ID in buf. The offset 'off' must
 // be positioned at the beginning of the message.
 func RawSetId(msg []byte, off int, id uint16) bool {
