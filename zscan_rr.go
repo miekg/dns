@@ -49,6 +49,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeNAPTR:
 		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
+        case TypeTALINK:
+		r, e = setTALINK(h, c, o, f)
+		goto Slurp
 	case TypeLOC:
 		//r, e = setLOC(h, c, f)
 		// TODO
@@ -390,6 +393,32 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	if rr.Replacement[ld-1] != '.' {
 		rr.Replacement = appendOrigin(rr.Replacement, o)
+	}
+	return rr, nil
+}
+
+func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_TALINK)
+	rr.Hdr = h
+
+	l := <-c
+	rr.PreviousName = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad TALINK PreviousName", l}
+	}
+	if rr.PreviousName[ld-1] != '.' {
+		rr.PreviousName = appendOrigin(rr.PreviousName, o)
+	}
+        <-c     // _BLANK
+	l := <-c
+	rr.NextName = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad TALINK NextName", l}
+	}
+	if rr.NextName[ld-1] != '.' {
+		rr.NextName = appendOrigin(rr.NextName, o)
 	}
 	return rr, nil
 }
