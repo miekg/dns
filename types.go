@@ -859,7 +859,7 @@ func (rr *RR_NSEC3) String() string {
 
 func (rr *RR_NSEC3) Len() int {
 	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + len(rr.TypeBitMap)
-	// TODO: typebitmap
+	// TODO: typebitmap length
 }
 
 type RR_NSEC3PARAM struct {

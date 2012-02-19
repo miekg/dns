@@ -109,7 +109,7 @@ var Rr_str = map[uint16]string{
 	TypeOPT:        "OPT",
 	TypeDS:         "DS",
 	TypeDHCID:      "DHCID",
-        TypeHIP:        "HIP",
+	TypeHIP:        "HIP",
 	TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
@@ -370,21 +370,21 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			default:
 				println("dns: unknown tag packing slice", val.Type().Field(i).Tag)
 				return lenmsg, false
-                        case "txt":
+			case "txt":
 				for j := 0; j < val.Field(i).Len(); j++ {
-                                        element := val.Field(i).Index(j).String()
-                                        // Counted string: 1 byte length.
-                                        if len(element) > 255 || off+1+len(element) > lenmsg {
-                                                println("dns: overflow packing TXT string")
-                                                return len(msg), false
-                                        }
-                                        msg[off] = byte(len(element))
-                                        off++
-                                        for i := 0; i < len(element); i++ {
-                                                msg[off+i] = element[i]
-                                        }
-                                        off += len(element)
-                                }
+					element := val.Field(i).Index(j).String()
+					// Counted string: 1 byte length.
+					if len(element) > 255 || off+1+len(element) > lenmsg {
+						println("dns: overflow packing TXT string")
+						return len(msg), false
+					}
+					msg[off] = byte(len(element))
+					off++
+					for i := 0; i < len(element); i++ {
+						msg[off+i] = element[i]
+					}
+					off += len(element)
+				}
 			case "opt": // edns
 				// Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
@@ -642,22 +642,34 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			default:
 				println("dns: unknown tag unpacking slice", val.Type().Field(i).Tag)
 				return lenmsg, false
-                        // Need to add domain-name for HIP
-                        case "txt":
-                                txt := make([]string,0)
+			case "domain-name":
+				// HIP record slice of name (or none)
+                                servers := make([]string, 0)
+                                var s string
+                                for off < lenmsg {
+                                        s, off, ok = UnpackDomainName(msg, off)
+                                        if !ok {
+                                                println("dns: failure unpacking domain-name")
+                                                return lenmsg, false
+                                        }
+                                        servers = append(servers, s)
+                                }
+				fv.Set(reflect.ValueOf(servers))
+			case "txt":
+				txt := make([]string, 0)
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-                        Txts:
-                                l := int(msg[off])
-                                if off + l + 1 > lenmsg {
-                                        println("dns: failure unpacking txt strings")
-                                        return lenmsg, false
-                                }
-                                txt = append(txt, string(msg[off+1:off+l+1]))
-                                off += l+1
-                                if off < rdlength {
-                                        // More
-                                        goto Txts
-                                }
+			Txts:
+				l := int(msg[off])
+				if off+l+1 > lenmsg {
+					println("dns: failure unpacking txt strings")
+					return lenmsg, false
+				}
+				txt = append(txt, string(msg[off+1:off+l+1]))
+				off += l + 1
+				if off < rdlength {
+					// More
+					goto Txts
+				}
 				fv.Set(reflect.ValueOf(txt))
 			case "opt": // edns0
 				if off+2 > lenmsg {
