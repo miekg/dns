@@ -1291,13 +1291,6 @@ func (dns *Msg) Len() int {
 	return l
 }
 
-// CompressedLen returns the length of the message when in 
-// compressed wire format.
-func (dns *Msg) CompressedLen() int {
-	// Uhh. TODO
-	return 0
-}
-
 // Id return a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
 func Id() uint16 {
