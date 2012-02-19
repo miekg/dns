@@ -562,13 +562,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			// discard
 			// this means it can also not be used as rdata
 		case '\n':
-			// hmmm, escape newline
+			// Escaped newline
 			if quote {
 				str[stri] = byte(x[0])
 				stri++
 				break
 			}
-
 			// inside quotes this is legal
 			escape = false
 			if commt {
@@ -585,36 +584,28 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				}
 				break
 			}
-			if stri != 0 {
-				l.value = _STRING
-				l.token = string(str[:stri])
-				if !rrtype {
-					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
-						l.value = _RRTYPE
-						rrtype = true
-					}
-				}
-				c <- l
-			}
-			if brace > 0 {
-				l.value = _BLANK
-				l.token = " "
-				if !space {
-					c <- l
-				}
-			} else {
+
+			if brace == 0 {
+                                // If there is previous text, we should output it here
+                                if stri != 0 {
+                                        l.value = _STRING
+                                        l.token = string(str[:stri])
+                                        if !rrtype {
+                                                if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+                                                        l.value = _RRTYPE
+                                                        rrtype = true
+                                                }
+                                        }
+                                        c <- l
+                                }
 				l.value = _NEWLINE
 				l.token = "\n"
 				c <- l
-			}
-			if l.value == _BLANK {
-				space = true
-			}
-
-			stri = 0
-			commt = false
-			rrtype = false
-			owner = true
+                                stri = 0
+                                commt = false
+                                rrtype = false
+                                owner = true
+                        }
 		case '\\':
 			// quote?
 			if commt {

@@ -397,7 +397,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_HIP)
 	rr.Hdr = h
 
-	// HitLength is represented
+	// HitLength is not represented
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad HIP PublicKeyAlgorithm", l}
@@ -434,7 +434,6 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		l = <-c
 	}
 	rr.RendezvousServers = xs
-
 	return rr, nil
 }
 
