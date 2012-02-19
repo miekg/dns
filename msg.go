@@ -370,13 +370,22 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			default:
 				println("dns: unknown tag packing slice", val.Type().Field(i).Tag)
 				return lenmsg, false
+			case "domain-name":
+				for j := 0; j < val.Field(i).Len(); j++ {
+					element := val.Field(i).Index(j).String()
+                                        off, ok = PackDomainName(element, msg, off, compression, false && compress)
+                                        if ! ok {
+                                                println("dns: overflow packing domain-name", off)
+                                                return lenmsg, false
+                                        }
+                                }
 			case "txt":
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
 					// Counted string: 1 byte length.
 					if len(element) > 255 || off+1+len(element) > lenmsg {
 						println("dns: overflow packing TXT string")
-						return len(msg), false
+						return lenmsg, false
 					}
 					msg[off] = byte(len(element))
 					off++
@@ -452,7 +461,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 
 				lastwindow := uint16(0)
 				length := uint16(0)
-				if off+2 > len(msg) {
+				if off+2 > lenmsg {
 					println("dns: overflow packing NSECx bitmap")
 					return lenmsg, false
 				}
@@ -599,7 +608,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > lenmsg {
 					println("dns: overflow packing string")
-					return len(msg), false
+					return lenmsg, false
 				}
 				msg[off] = byte(len(s))
 				off++
