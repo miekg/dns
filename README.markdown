@@ -11,8 +11,7 @@ Goals:
 
 * KISS;
 * Symmetric API: client and server side should be very similar;
-* Small API;
-* If its easy to code in Go, don't make a function for it.
+* Small API, if its easy to code in Go, don't make a function for it.
 
 Features:
 
