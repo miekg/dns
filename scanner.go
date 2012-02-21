@@ -9,7 +9,7 @@ import (
 
 type scan struct {
 	src *bufio.Reader
-        scanner.Position
+        position scanner.Position
 }
 
 func scanInit(r io.Reader) *scan {
@@ -25,9 +25,9 @@ func (s *scan) tokenText() (byte, error) {
                 return c, err
         }
         if c == '\n' {
-                s.Postion.Line++
-                s.Postion.Column = 0
+                s.position.Line++
+                s.position.Column = 0
         }
-        s.Position.Column++
+        s.position.Column++
         return c, nil
 }

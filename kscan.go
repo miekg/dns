@@ -6,7 +6,6 @@ import (
 	"io"
 	"math/big"
 	"strings"
-	"text/scanner"
 )
 
 // ReadPrivateKey reads a private key from the io.Reader q.
@@ -92,13 +91,10 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 // parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
-	var s scanner.Scanner
+        s := scanInit(r)
 	m := make(map[string]string)
 	c := make(chan lex)
 	k := ""
-	s.Init(r)
-	s.Mode = 0
-	s.Whitespace = 0
 	// Start the lexer
 	go klexer(s, c)
 	for l := range c {
@@ -119,18 +115,18 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 }
 
 // klexer scans the sourcefile and returns tokens on the channel c.
-func klexer(s scanner.Scanner, c chan lex) {
+func klexer(s *scan, c chan lex) {
 	var l lex
 	str := "" // Hold the current read text
 	commt := false
 	key := true
-	tok := s.Scan()
+	x, err := s.tokenText()
 	defer close(c)
-	for tok != scanner.EOF {
-		l.column = s.Position.Column
-		l.line = s.Position.Line
-		switch x := s.TokenText(); x {
-		case ":":
+	for err == nil {
+		l.column = s.position.Column
+		l.line = s.position.Line
+		switch x {
+		case ':':
 			if commt {
 				break
 			}
@@ -139,15 +135,15 @@ func klexer(s scanner.Scanner, c chan lex) {
 				l.value = _KEY
 				c <- l
 				// Next token is a space, eat it
-				s.Scan()
+				s.tokenText()
 				key = false
 				str = ""
 			} else {
 				l.value = _VALUE
 			}
-		case ";":
+		case ';':
 			commt = true
-		case "\n":
+		case '\n':
 			if commt {
 				// Reset a comment
 				commt = false
@@ -162,9 +158,9 @@ func klexer(s scanner.Scanner, c chan lex) {
 			if commt {
 				break
 			}
-			str += x
+			str += string(x)
 		}
-		tok = s.Scan()
+                x, err = s.tokenText()
 	}
 	if len(str) > 0 {
 		// Send remainder

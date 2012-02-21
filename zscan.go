@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"text/scanner"
 )
 
 // Only used when debugging the parser itself.
@@ -128,11 +127,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			close(t)
 		}
 	}()
-	var s scanner.Scanner
+	s := scanInit(r)
 	c := make(chan lex)
-	s.Init(r)
-	s.Mode = 0
-	s.Whitespace = 0
 	// Start the lexer
 	go zlexer(s, c)
 	// 6 possible beginnings of a line, _ is a space
@@ -453,7 +449,7 @@ func (l lex) String() string {
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
-func zlexer(s scanner.Scanner, c chan lex) {
+func zlexer(s *scan, c chan lex) {
 	var l lex
 	str := make([]byte, maxTok) // Should be enough for any token
 	stri := 0                   // Offset in str (0 means empty)
@@ -464,23 +460,22 @@ func zlexer(s scanner.Scanner, c chan lex) {
 	rrtype := false
 	owner := true
 	brace := 0
-	tok := s.Scan()
+	x, err := s.tokenText()
 	defer close(c)
-	for tok != scanner.EOF {
-		l.column = s.Position.Column
-		l.line = s.Position.Line
+	for err == nil {
+		l.column = s.position.Column
+		l.line = s.position.Line
 		if stri > maxTok {
 			l.err = "tok length insufficient for parsing"
 			c <- l
 			return
 		}
-		// Each token we get is one byte, so we switch on that x[0]. This
-		// avoids a len(x) that Go otherwise will perform when comparing strings.
-		switch x := s.TokenText(); x[0] {
+
+		switch x {
 		case ' ', '\t':
 			if quote {
 				// Inside quotes this is legal
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				break
 			}
@@ -541,13 +536,13 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case ';':
 			if quote {
 				// Inside quotes this is legal
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				break
 			}
 			if escape {
 				escape = false
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				break
 			}
@@ -564,7 +559,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 		case '\n':
 			// Escaped newline
 			if quote {
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				break
 			}
@@ -612,12 +607,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				escape = false
 				break
 			}
-			str[stri] = x[0]
+			str[stri] = x
 			stri++
 			escape = true
 		case '"':
@@ -625,7 +620,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				escape = false
 				break
@@ -644,7 +639,7 @@ func zlexer(s scanner.Scanner, c chan lex) {
 			quote = !quote
 		case '(', ')':
 			if quote {
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				break
 			}
@@ -652,12 +647,12 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			if escape {
-				str[stri] = x[0]
+				str[stri] = x
 				stri++
 				escape = false
 				break
 			}
-			switch x[0] {
+			switch x {
 			case ')':
 				brace--
 				if brace < 0 {
@@ -673,11 +668,11 @@ func zlexer(s scanner.Scanner, c chan lex) {
 				break
 			}
 			escape = false
-			str[stri] = x[0]
+			str[stri] = x
 			stri++
 			space = false
 		}
-		tok = s.Scan()
+		x, err = s.tokenText()
 	}
 	// Hmm.
 	if stri > 0 {
