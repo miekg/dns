@@ -31,7 +31,7 @@ func main() {
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
 	cd := flag.Bool("cd", false, "set CD flag in query")
-	rd := flag.Bool("rd", true, "unset RD flag in query")
+	rd := flag.Bool("rd", true, "set RD flag in query")
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "ask for NSID")
 	flag.Usage = func() {
