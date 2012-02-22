@@ -373,12 +373,12 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case "domain-name":
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
-                                        off, ok = PackDomainName(element, msg, off, compression, false && compress)
-                                        if ! ok {
-                                                println("dns: overflow packing domain-name", off)
-                                                return lenmsg, false
-                                        }
-                                }
+					off, ok = PackDomainName(element, msg, off, compression, false && compress)
+					if !ok {
+						println("dns: overflow packing domain-name", off)
+						return lenmsg, false
+					}
+				}
 			case "txt":
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
@@ -653,20 +653,20 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				return lenmsg, false
 			case "domain-name":
 				// HIP record slice of name (or none)
-                                servers := make([]string, 0)
-                                var s string
-                                for off < lenmsg {
-                                        s, off, ok = UnpackDomainName(msg, off)
-                                        if !ok {
-                                                println("dns: failure unpacking domain-name")
-                                                return lenmsg, false
-                                        }
-                                        servers = append(servers, s)
-                                }
+				servers := make([]string, 0)
+				var s string
+				for off < lenmsg {
+					s, off, ok = UnpackDomainName(msg, off)
+					if !ok {
+						println("dns: failure unpacking domain-name")
+						return lenmsg, false
+					}
+					servers = append(servers, s)
+				}
 				fv.Set(reflect.ValueOf(servers))
 			case "txt":
 				txt := make([]string, 0)
-				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+				rdlength := off + int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txts:
 				l := int(msg[off])
 				if off+l+1 > lenmsg {
