@@ -300,9 +300,9 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	if s.SignerName != k.Hdr.Name {
 		return ErrKey
 	}
-        if k.Protocol != 3 {
-                return ErrKey
-        }
+	if k.Protocol != 3 {
+		return ErrKey
+	}
 	for _, r := range rrset {
 		if r.Header().Class != s.Hdr.Class {
 			return ErrRRset
@@ -504,11 +504,49 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			h.Name = "*."+strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
 		h.Name = strings.ToLower(h.Name)
-		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.  -- Deprecated.
+		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
+		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
+		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
+		//   SRV, DNAME, A6
+		switch x := r.(type) {
+		default:
+		case *RR_RRSIG, *RR_NSEC:
+			break
+		case *RR_NS:
+			x.Ns = strings.ToLower(x.Ns)
+		//case *RR_MD:
+		//case *RR_MF:
+		case *RR_CNAME:
+			x.Cname = strings.ToLower(x.Cname)
+		case *RR_SOA:
+			x.Ns = strings.ToLower(x.Ns)
+			x.Mbox = strings.ToLower(x.Mbox)
+		case *RR_MB:
+			x.Mb = strings.ToLower(x.Mb)
+		case *RR_MG:
+			x.Mg = strings.ToLower(x.Mg)
+		case *RR_MR:
+			x.Mr = strings.ToLower(x.Mr)
+		case *RR_PTR:
+			x.Ptr = strings.ToLower(x.Ptr)
+		case *RR_MINFO:
+			x.Rmail = strings.ToLower(x.Rmail)
+			x.Email = strings.ToLower(x.Email)
+		case *RR_MX:
+			x.Mx = strings.ToLower(x.Mx)
+		case *RR_NAPTR:
+			x.Replacement = strings.ToLower(x.Replacement)
+		case *RR_KX:
+			x.Exchanger = strings.ToLower(x.Exchanger)
+		case *RR_SRV:
+			x.Target = strings.ToLower(x.Target)
+		case *RR_DNAME:
+			x.Target = strings.ToLower(x.Target)
+		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		ttl := h.Ttl
 		wire := make([]byte, r.Len()*2)
