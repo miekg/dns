@@ -216,7 +216,7 @@ func TestQuotes(t *testing.T) {
 	tests := map[string]string{
                 `t.example.com. IN TXT "a bc"`:           "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
                 `t.example.com. IN TXT "a
- bc"`:                                                    "t.example.com.\t3600\tIN\tTXT\t\"a\n bc\"",
+ bc"`:                                                    "t.example.com.\t3600\tIN\tTXT\t\"a\\n bc\"",
                 `t.example.com. IN TXT "a"`:              "t.example.com.\t3600\tIN\tTXT\t\"a\"",
                 `t.example.com. IN TXT "aa"`:             "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
                 `t.example.com. IN TXT "aaa" ;`:          "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
@@ -370,6 +370,7 @@ func TestZoneParsing(t *testing.T) {
 // 0-g.name.	10800	IN	MX	10 mx02.nic.name.
 // 0-g.name.	10800	IN	MX	10 mx03.nic.name.
 // 0-g.name.	10800	IN	MX	10 mx04.nic.name.
+// 0-g.name.    10800   IN      TXT     "10 mx\"04.nic"
 // moutamassey.0-g.name.name.	10800	IN	NS	ns01.yahoodomains.jp.
 // moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
 func ExampleZone() {
@@ -400,6 +401,7 @@ $ORIGIN name.
                         MX      10 mx02.nic
                         MX      10 mx03.nic
                         MX      10 mx04.nic
+                        TXT     "10 mx\"04.nic"
 $ORIGIN 0-g.name
 moutamassey             NS      ns01.yahoodomains.jp.
                         NS      ns02.yahoodomains.jp.
