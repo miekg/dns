@@ -7,8 +7,6 @@ need to be fixed.
 * go test; only work correct on my machine
 * Add handy zone data structure (r/b tree)? Or not...
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
-* SaltLength in NSEC3 is ugly to set, should be automatically done. There are prolly a few more
-   settings just like that -- need to look at them. edns' NSID is another
 * Add tsig check in 'q'?
 
 ## Examples to add

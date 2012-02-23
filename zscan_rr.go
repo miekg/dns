@@ -651,7 +651,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c
 	l = <-c
-	rr.SaltLength = uint8(len(l.token))
+        rr.SaltLength = uint8(len(l.token))/2 // TODO: token cannot be 0?
 	rr.Salt = l.token
 
 	<-c
