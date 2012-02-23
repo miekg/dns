@@ -385,9 +385,9 @@ func (rr *RR_TXT) String() string {
 	s := rr.Hdr.String()
 	for i, s1 := range rr.Txt {
 		if i > 0 {
-			s += " " + "\"" + s1 + "\""
+			s += " " + strconv.QuoteToASCII(s1)
 		} else {
-			s += "\"" + s1 + "\""
+			s += strconv.QuoteToASCII(s1)
 		}
 	}
 	return s
