@@ -171,6 +171,18 @@ func (h *RR_Header) Len() int {
 	return l
 }
 
+// Create a copy of the header
+
+func (h *RR_Header) Copy() *RR_Header {
+        h1 := new(RR_Header)
+        h1.Name = h.Name
+        h1.Rrtype = h.Rrtype
+        h1.Class = h.Class
+        h1.Ttl = h.Ttl
+        h1.Rdlength = h.Rdlength
+        return h1
+}
+
 func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return

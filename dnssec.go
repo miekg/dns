@@ -493,33 +493,28 @@ func (p wireSlice) Less(i, j int) bool {
 }
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-// Return the raw signature data. The data in []RR is modified in 
-// this function.
+// Return the raw signature data. 
+// TODO: the rr rdata is lowercased for some records
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
-		h := r.Header()
-		name := h.Name
-		labels := SplitLabels(h.Name)
+                r1 := r
+                h1 := r1.Header()
+		labels := SplitLabels(h1.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			h1.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h.Name = strings.ToLower(h.Name)
+		h1.Name = strings.ToLower(h1.Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
-		switch x := r.(type) {
-		default:
-		case *RR_RRSIG, *RR_NSEC:
-			break
+                switch x := r1.(type) {
 		case *RR_NS:
 			x.Ns = strings.ToLower(x.Ns)
-		//case *RR_MD:
-		//case *RR_MF:
 		case *RR_CNAME:
 			x.Cname = strings.ToLower(x.Cname)
 		case *RR_SOA:
@@ -548,16 +543,13 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
-		ttl := h.Ttl
-		wire := make([]byte, r.Len()*2)
-		h.Ttl = s.OrigTtl
-		off, ok1 := packRR(r, wire, 0, nil, false)
+		wire := make([]byte, r1.Len()*2)
+		h1.Ttl = s.OrigTtl
+		off, ok1 := packRR(r1, wire, 0, nil, false)
 		if !ok1 {
 			return nil
 		}
-		h.Ttl = ttl // restore the order in the universe
 		wire = wire[:off]
-		h.Name = name
 		wires[i] = wire
 	}
 	sort.Sort(wires)
