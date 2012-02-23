@@ -13,7 +13,7 @@ var _DEBUG = false
 
 // Complete unsure about the correctness of this value?
 // Large blobs of base64 code might get longer than this....
-const maxTok = 512
+const maxTok = 2048
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -77,7 +77,7 @@ func (e *ParseError) Error() (s string) {
 
 type lex struct {
 	token  string // Text of the token
-	err    string // Error text when the lexer detects it. Not used by the grammar
+	err    bool   // When true, token text has lexer error 
 	value  uint8  // Value: _STRING, _BLANK, etc.
 	line   int    // Line in the file
 	column int    // Column in the fil
@@ -162,8 +162,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			fmt.Printf("[%v]\n", l)
 		}
 		// Lexer spotted an error already
-		if l.err != "" {
-			t <- Token{Error: &ParseError{f, l.err, l}}
+		if l.err == true {
+			t <- Token{Error: &ParseError{f, l.token, l}}
 			return
 
 		}
@@ -466,7 +466,8 @@ func zlexer(s *scan, c chan lex) {
 		l.column = s.position.Column
 		l.line = s.position.Line
 		if stri > maxTok {
-			l.err = "tok length insufficient for parsing"
+			l.token = "tok length insufficient for parsing"
+			l.err = true
 			c <- l
 			return
 		}
@@ -656,7 +657,8 @@ func zlexer(s *scan, c chan lex) {
 			case ')':
 				brace--
 				if brace < 0 {
-					l.err = "extra closing brace"
+					l.token = "extra closing brace"
+					l.err = true
 					c <- l
 					return
 				}
