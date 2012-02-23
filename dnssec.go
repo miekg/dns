@@ -498,8 +498,8 @@ func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
-                r1 := r
-                h1 := r1.Header()
+		r1 := r
+		h1 := r1.Header()
 		labels := SplitLabels(h1.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
@@ -512,7 +512,7 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
-                switch x := r1.(type) {
+		switch x := r1.(type) {
 		case *RR_NS:
 			x.Ns = strings.ToLower(x.Ns)
 		case *RR_CNAME:

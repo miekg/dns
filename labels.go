@@ -6,9 +6,9 @@ package dns
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
 func SplitLabels(s string) []string {
-        if (s == ".") {
-                return nil
-        }
+	if s == "." {
+		return nil
+	}
 
 	k := 0
 	labels := make([]string, 0)

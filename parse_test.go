@@ -132,8 +132,8 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 
 func TestDomainName(t *testing.T) {
 	tests := []string{"r\\.gieben.miek.nl.", "www\\.www.miek.nl.",
-                "www.*.miek.nl.", "www.*.miek.nl.",
-        }
+		"www.*.miek.nl.", "www.*.miek.nl.",
+	}
 	dbuff := make([]byte, 40)
 
 	for _, ts := range tests {
@@ -157,21 +157,19 @@ func TestDomainName(t *testing.T) {
 
 func TestParseDirectiveMisc(t *testing.T) {
 	tests := map[string]string{
-                "$ORIGIN miek.nl.\na IN NS b":  "a.miek.nl.\t3600\tIN\tNS\tb.miek.nl.",
-                "$TTL 2H\nmiek.nl. IN NS b.":  "miek.nl.\t7200\tIN\tNS\tb.",
-                "miek.nl. 1D IN NS b.":  "miek.nl.\t86400\tIN\tNS\tb.",
-`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+		"$ORIGIN miek.nl.\na IN NS b": "a.miek.nl.\t3600\tIN\tNS\tb.miek.nl.",
+		"$TTL 2H\nmiek.nl. IN NS b.":  "miek.nl.\t7200\tIN\tNS\tb.",
+		"miek.nl. 1D IN NS b.":        "miek.nl.\t86400\tIN\tNS\tb.",
+		`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
         203362132 ; serial
         5m        ; refresh (5 minutes)
         5m        ; retry (5 minutes)
         2w        ; expire (2 weeks)
         300       ; minimum (5 minutes)
 )`: "name.\t3600\tIN\tSOA\ta6.nstld.com. hostmaster.nic.name. 203362132 300 300 1209600 300",
-        ". 3600000  IN  NS ONE.MY-ROOTS.NET.":
-                                ".\t3600000\tIN\tNS\tONE.MY-ROOTS.NET.",
-        "ONE.MY-ROOTS.NET. 3600000 IN A 192.168.1.1":
-                                "ONE.MY-ROOTS.NET.\t3600000\tIN\tA\t192.168.1.1",
-        }
+		". 3600000  IN  NS ONE.MY-ROOTS.NET.":        ".\t3600000\tIN\tNS\tONE.MY-ROOTS.NET.",
+		"ONE.MY-ROOTS.NET. 3600000 IN A 192.168.1.1": "ONE.MY-ROOTS.NET.\t3600000\tIN\tA\t192.168.1.1",
+	}
 	for i, o := range tests {
 		rr, e := NewRR(i)
 		if e != nil {
@@ -191,11 +189,10 @@ func TestParseDirectiveMisc(t *testing.T) {
 // Another one hear, geared to NSECx
 func TestParseNSEC(t *testing.T) {
 	nsectests := map[string]string{
-                "nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F":     "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
-                "p2209hipbpnm681knjnu0m1febshlv4e.nl. IN NSEC3 1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM":
-                                "p2209hipbpnm681knjnu0m1febshlv4e.nl.\t3600\tIN\tNSEC3\t1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
-                "localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC": "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
-        }
+		"nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F":                                                                                                 "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
+		"p2209hipbpnm681knjnu0m1febshlv4e.nl. IN NSEC3 1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM": "p2209hipbpnm681knjnu0m1febshlv4e.nl.\t3600\tIN\tNSEC3\t1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
+		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC":                                                                                 "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
+	}
 	for i, o := range nsectests {
 		rr, e := NewRR(i)
 		if e != nil {
@@ -214,27 +211,23 @@ func TestParseNSEC(t *testing.T) {
 
 func TestQuotes(t *testing.T) {
 	tests := map[string]string{
-                `t.example.com. IN TXT "a bc"`:           "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
-                `t.example.com. IN TXT "a
- bc"`:                                                    "t.example.com.\t3600\tIN\tTXT\t\"a\\n bc\"",
-                `t.example.com. IN TXT "a"`:              "t.example.com.\t3600\tIN\tTXT\t\"a\"",
-                `t.example.com. IN TXT "aa"`:             "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
-                `t.example.com. IN TXT "aaa" ;`:          "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
-                `t.example.com. IN TXT "abc" "DEF"`:      "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
-                `t.example.com. IN TXT "abc" ( "DEF" )`:  "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
-                `t.example.com. IN TXT aaa ;`:            "t.example.com.\t3600\tIN\tTXT\t\"aaa \"",
-                `t.example.com. IN TXT aaa aaa;`:         "t.example.com.\t3600\tIN\tTXT\t\"aaa aaa\"",
-                `t.example.com. IN TXT aaa aaa`:          "t.example.com.\t3600\tIN\tTXT\t\"aaa aaa\"",
-                `t.example.com. IN TXT aaa`:              "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
-                "cid.urn.arpa. NAPTR 100 50 \"s\" \"z3950+I2L+I2C\"    \"\" _z3950._tcp.gatech.edu.":
-                        "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"z3950+I2L+I2C\" \"\" _z3950._tcp.gatech.edu.",
-                "cid.urn.arpa. NAPTR 100 50 \"s\" \"rcds+I2C\"         \"\" _rcds._udp.gatech.edu.":
-                        "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"rcds+I2C\" \"\" _rcds._udp.gatech.edu.",
-                "cid.urn.arpa. NAPTR 100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.":
-                        "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.",
-                "cid.urn.arpa. NAPTR 100 10 \"\" \"\" \"/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i\" .":
-                        "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 10 \"\" \"\" \"/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i\" .",
-        }
+		`t.example.com. IN TXT "a bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
+		`t.example.com. IN TXT "a
+ bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a\\n bc\"",
+		`t.example.com. IN TXT "a"`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"a\"",
+		`t.example.com. IN TXT "aa"`:                                                         "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
+		`t.example.com. IN TXT "aaa" ;`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
+		`t.example.com. IN TXT "abc" "DEF"`:                                                  "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
+		`t.example.com. IN TXT "abc" ( "DEF" )`:                                              "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
+		`t.example.com. IN TXT aaa ;`:                                                        "t.example.com.\t3600\tIN\tTXT\t\"aaa \"",
+		`t.example.com. IN TXT aaa aaa;`:                                                     "t.example.com.\t3600\tIN\tTXT\t\"aaa aaa\"",
+		`t.example.com. IN TXT aaa aaa`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa aaa\"",
+		`t.example.com. IN TXT aaa`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
+		"cid.urn.arpa. NAPTR 100 50 \"s\" \"z3950+I2L+I2C\"    \"\" _z3950._tcp.gatech.edu.": "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"z3950+I2L+I2C\" \"\" _z3950._tcp.gatech.edu.",
+		"cid.urn.arpa. NAPTR 100 50 \"s\" \"rcds+I2C\"         \"\" _rcds._udp.gatech.edu.":  "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"rcds+I2C\" \"\" _rcds._udp.gatech.edu.",
+		"cid.urn.arpa. NAPTR 100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.":  "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.",
+		"cid.urn.arpa. NAPTR 100 10 \"\" \"\" \"/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i\" .":     "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 10 \"\" \"\" \"/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i\" .",
+	}
 	for i, o := range tests {
 		rr, e := NewRR(i)
 		if e != nil {
@@ -257,11 +250,10 @@ func TestParseBrace(t *testing.T) {
 		"miek.nl. (3600) IN MX (10) elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
 		`miek.nl. IN (
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"(miek.nl.) (A) (127.0.0.1)": "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl A 127.0.0.1":        "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-                "_ssh._tcp.local. 60 IN (PTR) stora._ssh._tcp.local.":
-                                "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
-		"miek.nl. NS ns.miek.nl":     "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
+		"(miek.nl.) (A) (127.0.0.1)":                          "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek.nl A 127.0.0.1":                                 "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"_ssh._tcp.local. 60 IN (PTR) stora._ssh._tcp.local.": "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
+		"miek.nl. NS ns.miek.nl":                              "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
                         (IN) 
                         (AAAA)
@@ -374,7 +366,7 @@ func TestZoneParsing(t *testing.T) {
 // moutamassey.0-g.name.name.	10800	IN	NS	ns01.yahoodomains.jp.
 // moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
 func ExampleZone() {
-        zone :=`$ORIGIN .
+	zone := `$ORIGIN .
 $TTL 3600       ; 1 hour
 name                    IN SOA  a6.nstld.com. hostmaster.nic.name. (
                                 203362132  ; serial
@@ -414,20 +406,20 @@ moutamassey             NS      ns01.yahoodomains.jp.
 
 // www.example.com.	3600	IN	HIP	 2 200100107B1A74DF365639CC39F1D578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.example.com.
 func ExampleHIP() {
-        h := `www.example.com      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
+	h := `www.example.com      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
 9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQ
 b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
         rvs.example.com. )`
-        if hip, err := NewRR(h); err == nil {
-                fmt.Printf("%s\n", hip.String())
-        }
+	if hip, err := NewRR(h); err == nil {
+		fmt.Printf("%s\n", hip.String())
+	}
 }
 
 // example.com.	1000	IN	SOA	master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100
 func ExampleSOA() {
-        s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
-        if soa, err := NewRR(s); err == nil {
-                fmt.Printf("%s\n", soa.String())
-        }
+	s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
+	if soa, err := NewRR(s); err == nil {
+		fmt.Printf("%s\n", soa.String())
+	}
 }

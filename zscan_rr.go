@@ -1,10 +1,10 @@
 package dns
 
 import (
+	"encoding/base64"
 	"net"
 	"strconv"
 	"strings"
-        "encoding/base64"
 )
 
 // Parse the rdata of each rrtype.
@@ -49,7 +49,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeNAPTR:
 		r, e = setNAPTR(h, c, o, f)
 		goto Slurp
-        case TypeTALINK:
+	case TypeTALINK:
 		r, e = setTALINK(h, c, o, f)
 		goto Slurp
 	case TypeLOC:
@@ -410,7 +410,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.PreviousName[ld-1] != '.' {
 		rr.PreviousName = appendOrigin(rr.PreviousName, o)
 	}
-        <-c     // _BLANK
+	<-c // _BLANK
 	l = <-c
 	rr.NextName = l.token
 	_, ld, ok = IsDomainName(l.token)
@@ -437,12 +437,12 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c              // _BLANK
 	l = <-c          // _STRING
 	rr.Hit = l.token // This can not contain spaces, see RFC 5205 Section 6.
-        rr.HitLength = uint8(len(rr.Hit))/2
+	rr.HitLength = uint8(len(rr.Hit)) / 2
 
 	<-c                    // _BLANK
 	l = <-c                // _STRING
 	rr.PublicKey = l.token // This cannot contain spaces
-        rr.PublicKeyLength = uint16(base64.StdEncoding.DecodedLen(len(rr.PublicKey)))
+	rr.PublicKeyLength = uint16(base64.StdEncoding.DecodedLen(len(rr.PublicKey)))
 
 	// RendezvousServers (if any)
 	l = <-c

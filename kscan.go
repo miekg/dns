@@ -91,7 +91,7 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 // parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
-        s := scanInit(r)
+	s := scanInit(r)
 	m := make(map[string]string)
 	c := make(chan lex)
 	k := ""
@@ -160,7 +160,7 @@ func klexer(s *scan, c chan lex) {
 			}
 			str += string(x)
 		}
-                x, err = s.tokenText()
+		x, err = s.tokenText()
 	}
 	if len(str) > 0 {
 		// Send remainder
