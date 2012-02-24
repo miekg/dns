@@ -25,8 +25,8 @@ func main() {
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
-        anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
-        //tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
+	anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
+	//tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -46,21 +46,21 @@ func main() {
 	var qname []string
 
 	flag.Parse()
-        if *anchor != "" {
-                f, err := os.Open(*anchor)
-                if err != nil {
-                        fmt.Fprintf(os.Stderr, "Failure to open %s: %s\n", *anchor, err.Error())
-                }
-                r, err := dns.ReadRR(f, *anchor)
-                if err != nil {
-                        fmt.Fprintf(os.Stderr, "Failure to read an RR from %s: %s\n", *anchor, err.Error())
-                }
-                if k, ok := r.(*dns.RR_DNSKEY); !ok {
-                        fmt.Fprintf(os.Stderr, "No DNSKEY read from %s\n", *anchor)
-                } else {
-                        dnskey = k
-                }
-        }
+	if *anchor != "" {
+		f, err := os.Open(*anchor)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failure to open %s: %s\n", *anchor, err.Error())
+		}
+		r, err := dns.ReadRR(f, *anchor)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failure to read an RR from %s: %s\n", *anchor, err.Error())
+		}
+		if k, ok := r.(*dns.RR_DNSKEY); !ok {
+			fmt.Fprintf(os.Stderr, "No DNSKEY read from %s\n", *anchor)
+		} else {
+			dnskey = k
+		}
+	}
 
 Flags:
 	for i := 0; i < flag.NArg(); i++ {
@@ -73,14 +73,14 @@ Flags:
 		// And if it looks like type, it is a type
 		if k, ok := dns.Str_rr[strings.ToUpper(flag.Arg(i))]; ok {
 			qtype = k
-                        switch qtype {
-                        case dns.TypeAXFR:
-                                fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-                                return
-                        case dns.TypeIXFR:
-                                fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-                                return
-                        }
+			switch qtype {
+			case dns.TypeAXFR:
+				fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+				return
+			case dns.TypeIXFR:
+				fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+				return
+			}
 			continue Flags
 		}
 		// If it looks like a class, it is a class
@@ -93,14 +93,14 @@ Flags:
 			i, e := strconv.Atoi(string([]byte(flag.Arg(i))[4:]))
 			if e == nil {
 				qtype = uint16(i)
-                                switch qtype {
-                                case dns.TypeAXFR:
-                                        fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-                                        return
-                                case dns.TypeIXFR:
-                                        fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-                                        return
-                                }
+				switch qtype {
+				case dns.TypeAXFR:
+					fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+					return
+				case dns.TypeIXFR:
+					fmt.Fprintf(os.Stderr, "AXFR not supported\n")
+					return
+				}
 				continue Flags
 			}
 		}
@@ -189,25 +189,25 @@ forever:
 }
 
 func sectionCheck(set []dns.RR, server string, tcp bool) {
-        var key *dns.RR_DNSKEY
+	var key *dns.RR_DNSKEY
 	for _, rr := range set {
 		if rr.Header().Rrtype == dns.TypeRRSIG {
 			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
-                        if dnskey == nil {
-		                key = getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
-                        } else {
-                                key = dnskey
-                        }
+			if dnskey == nil {
+				key = getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
+			} else {
+				key = dnskey
+			}
 			if key == nil {
 				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
-                                continue
+				continue
 			}
-                        where := "net"
-                        if dnskey != nil {
-                                where = "disk"
-                        }
+			where := "net"
+			if dnskey != nil {
+				where = "disk"
+			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-			        fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
+				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
 			} else {
 				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
 			}
@@ -217,43 +217,43 @@ func sectionCheck(set []dns.RR, server string, tcp bool) {
 
 // Check if we have nsec3 records and if so, check them
 func nsecCheck(in *dns.Msg) {
-        for _, r := range in.Answer {
-                if r.Header().Rrtype == dns.TypeNSEC3 {
-                        goto Check
-                }
-        }
-        for _, r := range in.Ns {
-                if r.Header().Rrtype == dns.TypeNSEC3 {
-                        goto Check
-                }
-        }
-        for _, r := range in.Extra {
-                if r.Header().Rrtype == dns.TypeNSEC3 {
-                        goto Check
-                }
-        }
-        return
+	for _, r := range in.Answer {
+		if r.Header().Rrtype == dns.TypeNSEC3 {
+			goto Check
+		}
+	}
+	for _, r := range in.Ns {
+		if r.Header().Rrtype == dns.TypeNSEC3 {
+			goto Check
+		}
+	}
+	for _, r := range in.Extra {
+		if r.Header().Rrtype == dns.TypeNSEC3 {
+			goto Check
+		}
+	}
+	return
 Check:
-        w, err := in.Nsec3Verify(in.Question[0])
-        switch w {
-        case dns.NSEC3_NXDOMAIN:
-                fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
-        case dns.NSEC3_NODATA:
-                fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
-        default:
-                // w == 0
-                if err != nil {
-	                fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n",err.Error())
-                }
-        }
+	w, err := in.Nsec3Verify(in.Question[0])
+	switch w {
+	case dns.NSEC3_NXDOMAIN:
+		fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
+	case dns.NSEC3_NODATA:
+		fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
+	default:
+		// w == 0
+		if err != nil {
+			fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n", err.Error())
+		}
+	}
 }
 
 // Check the sigs in the msg, get the signer's key (additional query), get the 
 // rrset from the message, check the signature(s)
 func sigCheck(in *dns.Msg, server string, tcp bool) {
-        sectionCheck(in.Answer, server, tcp)
-        sectionCheck(in.Ns, server, tcp)
-        sectionCheck(in.Extra, server, tcp)
+	sectionCheck(in.Answer, server, tcp)
+	sectionCheck(in.Ns, server, tcp)
+	sectionCheck(in.Extra, server, tcp)
 }
 
 // Return the RRset belonging to the signature with name and type t
@@ -271,9 +271,9 @@ func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
 // If nothing is found we return nil
 func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY {
 	c := dns.NewClient()
-        if tcp {
-                c.Net = "tcp"
-        }
+	if tcp {
+		c.Net = "tcp"
+	}
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	r, err := c.Exchange(m, server)
