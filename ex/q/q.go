@@ -12,10 +12,16 @@ import (
 var dnskey *dns.RR_DNSKEY
 
 func q(w dns.RequestWriter, m *dns.Msg) {
-	w.Send(m)
+	if err := w.Send(m); err != nil {
+		fmt.Printf("%s\n", err.Error())
+		w.Write(nil)
+		return
+	}
 	r, err := w.Receive()
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
+		w.Write(nil)
+		return
 	}
 	w.Write(r)
 }
@@ -32,6 +38,7 @@ func main() {
 	ad := flag.Bool("ad", false, "set AD flag in query")
 	cd := flag.Bool("cd", false, "set CD flag in query")
 	rd := flag.Bool("rd", true, "set RD flag in query")
+	fallback := flag.Bool("fallback", false, "fallback to 4096 bytes bufsize and after that TCP")
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "ask for NSID")
 	flag.Usage = func() {
@@ -169,6 +176,30 @@ forever:
 					if r.Request.Id != r.Reply.Id {
 						fmt.Printf("Id mismatch\n")
 					}
+				}
+				if r.Reply.MsgHdr.Truncated && *fallback {
+					if c.Net != "tcp" {
+						if ! *dnssec {
+							fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
+							o := new(dns.RR_OPT)
+							o.Hdr.Name = "."
+							o.Hdr.Rrtype = dns.TypeOPT
+							o.SetUDPSize(dns.DefaultMsgSize)
+							m.Extra = append(m.Extra, o)
+							*dnssec = true
+							c.Do(m, nameserver)
+							break
+						} else {
+							// First EDNS, then TCP
+							fmt.Printf(";; Truncated, trying TCP\n")
+							c.Net = "tcp"
+							c.Do(m, nameserver)
+							break
+						}
+					}
+				}
+				if r.Reply.MsgHdr.Truncated && !*fallback {
+					fmt.Printf(";; Truncated\n")
 				}
 				if *check {
 					sigCheck(r.Reply, nameserver, *tcp)
