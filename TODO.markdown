@@ -8,7 +8,6 @@ need to be fixed.
 * Add handy zone data structure (r/b tree)? Or not...
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * Add tsig check in 'q'?
-* ReplyChannel with errors, also do this in axfr/ixfr
 
 ## Examples to add
 
