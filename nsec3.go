@@ -160,10 +160,23 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 				return 0, ErrDenialNc // add next closer name here
 			}
 			// For NODATA we need to to check if the matching nsec3 has to correct type bit map
+			// And we need to check that the wildcard does NOT exist
+			for _, nsec := range nsec3 {
+				if nsec.Cover(so) {
+					sodenied = true
+					break
+				}
+			}
+			if sodenied {
+				// Whoa, the closest encloser is denied, but there does exist
+				// a wildcard a that level. That's not good
+				return 0, ErrDenialWc
+			}
+
 			goto NoData
 		}
 
-		// Check if the source of synthesis is covered and thus denied
+		// Check if the source of synthesis is covered and thus also denied
 		for _, nsec := range nsec3 {
 			if nsec.Cover(so) {
 				sodenied = true
