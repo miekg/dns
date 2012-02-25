@@ -651,12 +651,15 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c
 	l = <-c
-        rr.SaltLength = uint8(len(l.token))/2 // TODO: token cannot be 0?
+	if len(l.token) == 0 {
+		return nil, &ParseError{f, "bad NSEC3 Salt", l}
+	}
+	rr.SaltLength = uint8(len(l.token)) / 2
 	rr.Salt = l.token
 
 	<-c
 	l = <-c
-	rr.HashLength = uint8(len(l.token))
+	rr.HashLength = 20 // Fix for NSEC3 (sha1 160 bits)
 	rr.NextDomain = l.token
 
 	rr.TypeBitMap = make([]uint16, 0)
