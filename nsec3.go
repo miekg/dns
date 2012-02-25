@@ -172,6 +172,11 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 		if !sodenied {
 			return 0, ErrDenialSo
 		}
+		// The message headers claims something different!
+		if m.MsgHdr.Rcode != RcodeNameError {
+			return 0, ErrDenialHdr
+		}
+
 		return NSEC3_NXDOMAIN, nil
 	}
 	return 0, nil
@@ -200,6 +205,9 @@ NoData:
 				}
 			}
 		}
+	}
+	if m.MsgHdr.Rcode == RcodeNameError {
+		return 0, ErrDenialHdr
 	}
 	return NSEC3_NODATA, nil
 }
