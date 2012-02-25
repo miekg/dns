@@ -265,8 +265,6 @@ func (w *reply) Dial() error {
 	return nil
 }
 
-// UDP/TCP stuff big TODO
-// Close/noclose
 func (w *reply) Close() (err error) {
 	return w.conn.Close()
 }
@@ -299,12 +297,10 @@ func (w *reply) Receive() (*Msg, error) {
 	// Tsig
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-		_, ok := w.Client().TsigSecret[secret]
-		if !ok {
+		if _, ok := w.Client().TsigSecret[secret]; !ok {
 			return m, ErrSecret
 		}
-		// Need to work on the original message p, as that was used
-		// to calculate the tsig.
+		// Need to work on the original message p, as that was used to calculate the tsig.
 		err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return m, err
