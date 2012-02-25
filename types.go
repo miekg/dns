@@ -179,7 +179,7 @@ func (rr *RR_ANY) Len() int {
 
 type RR_CNAME struct {
 	Hdr   RR_Header
-	Cname string "cdomain-name"
+	Target string "cdomain-name"
 }
 
 func (rr *RR_CNAME) Header() *RR_Header {
