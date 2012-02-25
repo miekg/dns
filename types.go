@@ -187,11 +187,11 @@ func (rr *RR_CNAME) Header() *RR_Header {
 }
 
 func (rr *RR_CNAME) String() string {
-	return rr.Hdr.String() + rr.Cname
+	return rr.Hdr.String() + rr.Target
 }
 
 func (rr *RR_CNAME) Len() int {
-	l := len(rr.Cname) + 1
+	l := len(rr.Target) + 1
 	return rr.Hdr.Len() + l
 }
 

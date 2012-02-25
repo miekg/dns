@@ -56,7 +56,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		//r, e = setLOC(h, c, f)
 		// TODO
 		goto Slurp
-	// These types have a variable ending either chunks of txt or chunks/base64 or hex.
+	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
 	case TypeDNSKEY:
@@ -185,13 +185,13 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
-	rr.Cname = l.token
+	rr.Target = l.token
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
-		return nil, &ParseError{f, "bad CNAME Cname", l}
+		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
-	if rr.Cname[ld-1] != '.' {
-		rr.Cname = appendOrigin(rr.Cname, o)
+	if rr.Target[ld-1] != '.' {
+		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
 }
