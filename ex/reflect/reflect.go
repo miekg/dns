@@ -24,7 +24,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"exp/signal"
+	"os/signal"
 	"runtime/pprof"
 	"strconv"
 )
@@ -130,10 +130,12 @@ func main() {
 	dns.HandleFunc(".", handleReflect)
 	go serve("tcp")
 	go serve("udp")
+	sig := make(chan os.Signal)
+	signal.Notify(sig)
 forever:
 	for {
 		select {
-		case <-signal.Incoming:
+		case <-sig:
 			fmt.Printf("Signal received, stopping\n")
 			break forever
 		}
