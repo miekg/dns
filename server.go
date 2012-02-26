@@ -36,17 +36,19 @@ type ResponseWriter interface {
 }
 
 type conn struct {
-	remoteAddr net.Addr     // address of remote side
-	handler    Handler      // request handler
-	request    []byte       // bytes read
-	_UDP       *net.UDPConn // i/o connection if UDP was used
-	_TCP       *net.TCPConn // i/o connection if TCP was used
-	hijacked   bool         // connection has been hijacked by hander TODO(mg)
+	remoteAddr net.Addr          // address of remote side
+	handler    Handler           // request handler
+	request    []byte            // bytes read
+	_UDP       *net.UDPConn      // i/o connection if UDP was used
+	_TCP       *net.TCPConn      // i/o connection if TCP was used
+	hijacked   bool              // connection has been hijacked by hander TODO(mg)
+	tsigSecret map[string]string // the tsig secrets
 }
 
 type response struct {
-	conn *conn
-	req  *Msg
+	conn       *conn
+	req        *Msg
+	tsigStatus int
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -74,7 +76,7 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// Helper handler that returns an answer with
+// Refused is a helper handler that returns an answer with
 // RCODE = refused for every request.
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
@@ -100,7 +102,6 @@ func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[s
 	server := &Server{Addr: addr, Net: network, Handler: handler, TsigSecret: tsig}
 	return server.ListenAndServe()
 }
-
 
 func (mux *ServeMux) match(zone string) Handler {
 	var h Handler
@@ -190,7 +191,7 @@ func (srv *Server) ListenAndServe() error {
 		}
 		return srv.ServeUDP(l)
 	}
-	return nil // os.Error with wrong network
+	return &Error{Err: "bad network"}
 }
 
 // ServeTCP starts a TCP listener for the server.
@@ -237,7 +238,7 @@ forever:
 			i += j
 		}
 		n = i
-		d, err := newConn(rw, nil, rw.RemoteAddr(), m, handler)
+		d, err := newConn(rw, nil, rw.RemoteAddr(), m, handler, srv.TsigSecret)
 		if err != nil {
 			continue
 		}
@@ -272,7 +273,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		if srv.WriteTimeout != 0 {
 			l.SetWriteDeadline(time.Now().Add(srv.WriteTimeout))
 		}
-		d, err := newConn(nil, l, a, m, handler)
+		d, err := newConn(nil, l, a, m, handler, srv.TsigSecret)
 		if err != nil {
 			continue
 		}
@@ -281,13 +282,14 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	panic("not reached")
 }
 
-func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler) (*conn, error) {
+func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler, tsig map[string]string) (*conn, error) {
 	c := new(conn)
 	c.handler = handler
 	c._TCP = t
 	c._UDP = u
 	c.remoteAddr = a
 	c.request = buf
+	c.tsigSecret = tsig
 	return c, nil
 }
 
@@ -318,8 +320,10 @@ func (c *conn) serve() {
 			w.Write(buf)
 			break
 		}
+		// Check the tsig here TODO
 		w.req = req
 		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
+		w.tsigStatus = TsigNone
 		if c.hijacked {
 			return
 		}
@@ -372,5 +376,5 @@ func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method
 func (w *response) TsigStatus() int {
-	return TsigNone
+	return w.tsigStatus
 }
