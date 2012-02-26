@@ -8,6 +8,10 @@ need to be fixed.
 * Add handy zone data structure (r/b tree)? Or not...
 * Use the Exchange structure to deal with errors when resolving, esp. Timeout
 * Add tsig check in 'q'?
+* tsig and ip blocks should be handled in the library! Other configs may be
+  stored outside and are up to the programmer
+* Query source address, for axfr n stuff is something others
+* Compression is not working correctly
 
 ## Examples to add
 

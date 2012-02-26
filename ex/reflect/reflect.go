@@ -29,7 +29,10 @@ import (
 	"strconv"
 )
 
-var printf *bool
+var (
+	printf *bool
+	compress *bool
+)
 
 const dom = "whoami.miek.nl."
 
@@ -42,6 +45,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	)
 	m := new(dns.Msg)
 	m.SetReply(r)
+	m.Compress = *compress
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 		a = ip.IP
@@ -103,6 +107,7 @@ func serve(net string) {
 func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
+	compress = flag.Bool("compress", false, "compress replies")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}

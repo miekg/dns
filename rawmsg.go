@@ -24,7 +24,7 @@ Loop:
 		}
 		c := int(msg[off])
 		off++
-		switch c & 0xC00 {
+		switch c & 0xC0 {
 		case 0x00:
 			if c == 0x00 {
 				// End of the domainname

@@ -193,26 +193,20 @@ var Rcode_str = map[int]string{
 
 // PackDomainName packs a domain name s into msg[off:].
 // If compression is wanted compress must be true and the compression
-// map, needs to hold a mapping between domain names and offsets
+// map needs to hold a mapping between domain names and offsets
 // pointing into msg[].
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-		//println("hier? s", s)
-		//return lenmsg, false // This is an error, should be fqdn
+		// Make it fully qualified
 		s += "."
 	}
-
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots.
 	// There is also a trailing zero.
-	// Check that we have all the space we need.
-	tot := len(s) + 1 // TODO: this too much for compression...
-	if off+tot > lenmsg {
-		return lenmsg, false
-	}
+
 	// Compression
 	nameoffset := -1
 	pointer := -1
@@ -238,9 +232,15 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			msg[off] = byte(i - begin)
 			offset := off
 			off++
+			if off > lenmsg {
+				return lenmsg, false
+			}
 			for j := begin; j < i; j++ {
 				msg[off] = bs[j]
 				off++
+				if off > lenmsg {
+					return lenmsg, false
+				}
 			}
 			// Dont try to compress '.'
 			if string(bs[begin:]) != "." && compression != nil {
@@ -259,7 +259,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
-						// println("Compressing:", string(bs[begin:]))
+						break
 					}
 				}
 			}
