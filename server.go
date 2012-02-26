@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+const (
+	TsigNone     = iota // No Tsig attached to the message
+	TsigVerified        // Tisg seen and verified
+	TsigBad             // Tisg seen but failed to verify
+)
+
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 	// IP based ACL mapping. The contains the string representation
@@ -23,6 +29,8 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
+	// Return the status of the Tsig (TsigNone, TsigVerified or TsigBad)
+	TsigStatus() int
 	// Write writes a reply back to the client.
 	Write([]byte) (int, error)
 }
@@ -84,6 +92,15 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
 }
+
+// Start a server on addresss and network speficied. Use the tsig
+// secrets for Tsig validation.
+// Invoke handler for any incoming queries.
+func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[string]string) error {
+	server := &Server{Addr: addr, Net: network, Handler: handler, TsigSecret: tsig}
+	return server.ListenAndServe()
+}
+
 
 func (mux *ServeMux) match(zone string) Handler {
 	var h Handler
@@ -352,3 +369,8 @@ func (w *response) Write(data []byte) (n int, err error) {
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method
 func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
+
+// TsigStatus implements the ResponseWriter.TsigStatus method
+func (w *response) TsigStatus() int {
+	return TsigNone
+}

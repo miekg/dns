@@ -7,6 +7,8 @@ package dns
 // setup for server - a HANDLER function that gets run
 // when the query returns.
 
+// TsigStatus here too? TODO
+
 import (
 	"io"
 	"net"
@@ -38,7 +40,7 @@ type reply struct {
 	tsigTimersOnly bool
 }
 
-// A Request is a incoming message from a Client
+// A Request is a incoming message from a Client.
 type Request struct {
 	Request *Msg
 	Addr    string
