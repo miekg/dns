@@ -7,13 +7,14 @@ package dns
 // setup for server - a HANDLER function that gets run
 // when the query returns.
 
-// TsigStatus here too? TODO
-
 import (
 	"io"
 	"net"
 	"time"
 )
+
+// Check incoming TSIG message. TODO(mg)
+// Need a tsigstatus for that too? Don't know yet. TODO(mg)
 
 // Incoming (just as in os.Signal)
 type QueryHandler interface {
@@ -38,6 +39,7 @@ type reply struct {
 	conn           net.Conn
 	tsigRequestMAC string
 	tsigTimersOnly bool
+	tsigStatus	int
 }
 
 // A Request is a incoming message from a Client.
@@ -296,7 +298,6 @@ func (w *reply) Receive() (*Msg, error) {
 	if ok := m.Unpack(p); !ok {
 		return nil, ErrUnpack
 	}
-	// Tsig
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		if _, ok := w.Client().TsigSecret[secret]; !ok {
@@ -386,7 +387,7 @@ func (w *reply) Send(m *Msg) error {
 		if !ok {
 			return ErrSecret
 		}
-		// Compressie maakt dit stuk
+		// TODO(mg): compression makes this fail
 		if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
 			return err
 		}
@@ -396,6 +397,7 @@ func (w *reply) Send(m *Msg) error {
 	if !ok {
 		return ErrPack
 	}
+	// Tsig calculation should happen here
 	_, err := w.writeClient(out)
 	if err != nil {
 		return err

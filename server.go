@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-const (
-	TsigNone     = iota // No Tsig attached to the message
-	TsigVerified        // Tisg seen and verified
-	TsigBad             // Tisg seen but failed to verify
-)
-
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 	// IP based ACL mapping. The contains the string representation
@@ -30,7 +24,7 @@ type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
 	// Return the status of the Tsig (TsigNone, TsigVerified or TsigBad)
-	TsigStatus() int
+	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write([]byte) (int, error)
 }
@@ -48,7 +42,7 @@ type conn struct {
 type response struct {
 	conn       *conn
 	req        *Msg
-	tsigStatus int
+	tsigStatus error
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -320,10 +314,17 @@ func (c *conn) serve() {
 			w.Write(buf)
 			break
 		}
-		// Check the tsig here TODO
+
+		w.tsigStatus = nil
+		if req.IsTsig() {
+			secret := req.Extra[len(req.Extra)-1].(*RR_TSIG).Hdr.Name
+			if _, ok := w.conn.tsigSecret[secret]; !ok {
+				w.tsigStatus = ErrKeyAlg
+			}
+			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
+		}
 		w.req = req
 		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
-		w.tsigStatus = TsigNone
 		if c.hijacked {
 			return
 		}
@@ -375,6 +376,6 @@ func (w *response) Write(data []byte) (n int, err error) {
 func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method
-func (w *response) TsigStatus() int {
+func (w *response) TsigStatus() error {
 	return w.tsigStatus
 }
