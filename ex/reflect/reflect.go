@@ -43,6 +43,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		str string
 		a   net.IP
 	)
+	// TC must be done here
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Compress = *compress

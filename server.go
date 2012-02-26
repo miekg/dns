@@ -23,13 +23,12 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// Write a reply back to the client.
+	// Write writes a reply back to the client.
 	Write([]byte) (int, error)
 }
 
-// port?
 type conn struct {
-	remoteAddr net.Addr     // address of remote side (sans port)
+	remoteAddr net.Addr     // address of remote side
 	handler    Handler      // request handler
 	request    []byte       // bytes read
 	_UDP       *net.UDPConn // i/o connection if UDP was used
@@ -317,8 +316,6 @@ func (c *conn) serve() {
 func (w *response) Write(data []byte) (n int, err error) {
 	switch {
 	case w.conn._UDP != nil:
-		// I should check the clients, udp message size here TODO(mg)
-		// TODO: setting of TC bit
 		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
 			return 0, err
