@@ -1048,6 +1048,14 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 }
 
 // Reverse a map
+func reverseInt8(m map[uint8]string) map[string]uint8 {
+	n := make(map[string]uint8)
+	for u, s := range m {
+		n[s] = u
+	}
+	return n
+}
+
 func reverseInt16(m map[uint16]string) map[string]uint16 {
 	n := make(map[string]uint16)
 	for u, s := range m {

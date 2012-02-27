@@ -604,3 +604,6 @@ var Alg_str = map[uint8]string{
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
 }
+
+// Map of algorithm strings.
+var Str_alg = reverseInt8(Alg_str)

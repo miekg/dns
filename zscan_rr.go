@@ -789,7 +789,11 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DS Algorithm", l}
+		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+			return nil, &ParseError{f, "bad DS Algorithm", l}
+		} else {
+			rr.Algorithm = i
+		}
 	} else {
 		rr.Algorithm = uint8(i)
 	}
@@ -830,7 +834,11 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DLV Algorithm", l}
+		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+			return nil, &ParseError{f, "bad DLV Algorithm", l}
+		} else {
+			rr.Algorithm = i
+		}
 	} else {
 		rr.Algorithm = uint8(i)
 	}
@@ -871,7 +879,11 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad TA Algorithm", l}
+		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+			return nil, &ParseError{f, "bad TA Algorithm", l}
+		} else {
+			rr.Algorithm = i
+		}
 	} else {
 		rr.Algorithm = uint8(i)
 	}
