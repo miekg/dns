@@ -199,8 +199,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_DIRORIGIN_BL
 			case _DIRINCLUDE:
 				st = _EXPECT_DIRINCLUDE_BL
-			case _RRTYPE:
-				// Everthing has been omitted
+			case _RRTYPE: // Everthing has been omitted, this is the first thing on the line
 				h.Name = prevName
 				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
 				if !ok {
@@ -210,9 +209,29 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 					}
 				}
 				st = _EXPECT_RDATA
+			case _CLASS:	// First thing on the line is the class
+				h.Name = prevName
+				h.Class, ok = Str_class[strings.ToUpper(l.token)]
+				if !ok {
+					if h.Class, ok = classToInt(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "unknown class", l}}
+						return
+					}
+				}
+				st = _EXPECT_ANY_NOCLASS_BL
 			case _BLANK:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
+			case _STRING:	// First thing on the is the ttl
+				if ttl, ok := stringToTtl(l, f); !ok {
+					t <- Token{Error: &ParseError{f, "not a TTL", l}}
+					return
+				} else {
+					h.Ttl = ttl
+					defttl = ttl
+				}
+				st = _EXPECT_ANY_NOTTL_BL
+				
 			default:
 				t <- Token{Error: &ParseError{f, "syntax error at beginning", l}}
 				return
@@ -485,8 +504,7 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 			if stri == 0 {
-				//l.value = _BLANK
-				//l.token = " "
+				// Space directly as the beginnin, handled in the grammar
 			} else if owner {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
@@ -573,6 +591,7 @@ func zlexer(s *scan, c chan lex) {
 				stri = 0
 				// If not in a brace this ends the comment AND the RR
 				if brace == 0 {
+					owner = true
 					owner = true
 					l.value = _NEWLINE
 					l.token = "\n"

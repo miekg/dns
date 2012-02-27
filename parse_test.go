@@ -347,9 +347,9 @@ func TestZoneParsing(t *testing.T) {
 
 // name.	3600	IN	SOA	a6.nstld.com. hostmaster.nic.name. 203362132 300 300 1209600 300
 // name.	10800	IN	NS	g6.nstld.com.
-// name.	10800	IN	NS	h6.nstld.com.
-// name.	10800	IN	NS	j6.nstld.com.
-// name.	10800	IN	NS	k6.nstld.com.
+// name.	7200	IN	NS	h6.nstld.com.
+// name.	3600	IN	NS	j6.nstld.com.
+// name.	3600	IN	NS	k6.nstld.com.
 // name.	10800	IN	NS	l6.nstld.com.
 // name.	10800	IN	NS	a6.nstld.com.
 // name.	10800	IN	NS	c6.nstld.com.
@@ -376,10 +376,10 @@ name                    IN SOA  a6.nstld.com. hostmaster.nic.name. (
                                 300        ; minimum (5 minutes)
                                 )
 $TTL 10800      ; 3 hours
-                        NS      g6.nstld.com.
-                        NS      h6.nstld.com.
-                        NS      j6.nstld.com.
-                        NS      k6.nstld.com.
+               IN       NS      g6.nstld.com.
+               7200     NS      h6.nstld.com.
+             3600 IN    NS      j6.nstld.com.
+             IN 3600    NS      k6.nstld.com.
                         NS      l6.nstld.com.
                         NS      a6.nstld.com.
                         NS      c6.nstld.com.
