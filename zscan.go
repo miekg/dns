@@ -81,6 +81,7 @@ type lex struct {
 	value  uint8  // Value: _STRING, _BLANK, etc.
 	line   int    // Line in the file
 	column int    // Column in the fil
+	torc   uint16 // Type or class as parsed in the lexer, we only need to look this up in the grammar
 }
 
 // Tokens are returned when a zone file is parsed.
@@ -154,7 +155,6 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	}
 	st := _EXPECT_OWNER_DIR // initial state
 	var h RR_Header
-	var ok bool
 	var defttl uint32 = DefaultTtl
 	var prevName string
 	for l := range c {
@@ -201,28 +201,16 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_DIRINCLUDE_BL
 			case _RRTYPE: // Everthing has been omitted, this is the first thing on the line
 				h.Name = prevName
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
-						return
-					}
-				}
+				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
-			case _CLASS:	// First thing on the line is the class
+			case _CLASS: // First thing on the line is the class
 				h.Name = prevName
-				h.Class, ok = Str_class[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Class, ok = classToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown class", l}}
-						return
-					}
-				}
+				h.Class = l.torc
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _BLANK:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
-			case _STRING:	// First thing on the is the ttl
+			case _STRING: // First thing on the is the ttl
 				if ttl, ok := stringToTtl(l, f); !ok {
 					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
@@ -231,7 +219,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 					defttl = ttl
 				}
 				st = _EXPECT_ANY_NOTTL_BL
-				
+
 			default:
 				t <- Token{Error: &ParseError{f, "syntax error at beginning", l}}
 				return
@@ -317,22 +305,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		case _EXPECT_ANY:
 			switch l.value {
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
-						return
-					}
-				}
+				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
 			case _CLASS:
-				h.Class, ok = Str_class[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Class, ok = classToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown class", l}}
-						return
-					}
-				}
+				h.Class = l.torc
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
 				if ttl, ok := stringToTtl(l, f); !ok {
@@ -362,22 +338,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		case _EXPECT_ANY_NOTTL:
 			switch l.value {
 			case _CLASS:
-				h.Class, ok = Str_class[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Class, ok = classToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown class", l}}
-						return
-					}
-				}
+				h.Class = l.torc
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
-						return
-					}
-				}
+				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
 			}
 		case _EXPECT_ANY_NOCLASS:
@@ -392,13 +356,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				}
 				st = _EXPECT_RRTYPE_BL
 			case _RRTYPE:
-				h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-				if !ok {
-					if h.Rrtype, ok = typeToInt(l.token); !ok {
-						t <- Token{Error: &ParseError{f, "unknown RR type", l}}
-						return
-					}
-				}
+				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
 			default:
 				t <- Token{Error: &ParseError{f, "expecting RR type or TTL, not this...", l}}
@@ -415,13 +373,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "unknown RR type", l}}
 				return
 			}
-			h.Rrtype, ok = Str_rr[strings.ToUpper(l.token)]
-			if !ok {
-				if h.Rrtype, ok = typeToInt(l.token); !ok {
-					t <- Token{Error: &ParseError{f, "unknown RR type", l}}
-					return
-				}
-			}
+			h.Rrtype = l.torc
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
 			// I could save my token here...? l
@@ -524,20 +476,37 @@ func zlexer(s *scan, c chan lex) {
 				l.token = string(str[:stri])
 
 				if !rrtype {
-					if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+					if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
+						l.torc = t
 						rrtype = true
 					} else {
-						if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
-							l.value = _RRTYPE
-							rrtype = true
+						if strings.HasPrefix("TYPE", l.token) {
+							if t, ok := typeToInt(l.token); !ok {
+								l.token = "unknown RR type"
+								l.err = true
+								c <- l
+								return
+							} else {
+								l.value = _RRTYPE
+								l.torc = t
+							}
 						}
 					}
-					if _, ok := Str_class[strings.ToUpper(l.token)]; ok {
+					if t, ok := Str_class[strings.ToUpper(l.token)]; ok {
 						l.value = _CLASS
+						l.torc = t
 					} else {
-						if strings.HasPrefix(strings.ToUpper(l.token), "CLASS") {
-							l.value = _CLASS
+						if strings.HasPrefix("CLASS", l.token) {
+							if t, ok := classToInt(l.token); !ok {
+								l.token = "unknown class"
+								l.err = true
+								c <- l
+								return
+							} else {
+								l.value = _CLASS
+								l.torc = t
+							}
 						}
 					}
 				}
