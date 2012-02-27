@@ -89,6 +89,9 @@ type timerWireFmt struct {
 // When TsigGenerate is called for the
 // first time requestMAC is set to the empty string.
 // If something goes wrong an error is returned, otherwise it is nil.
+// TODO this needs to work on []byte, not *Msg, to take
+// compression into account
+// This
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 	if !m.IsTsig() {
 		// panic? panic?
