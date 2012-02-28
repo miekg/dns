@@ -111,6 +111,7 @@ func TestPack(t *testing.T) {
 		m.Answer[0], err = NewRR(r)
 		if err != nil {
 			t.Logf("Failed to create RR: %s\n", err.Error())
+			t.Fail()
 			continue
 		}
 		if _, ok := m.Pack(); !ok {

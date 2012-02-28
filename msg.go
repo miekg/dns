@@ -1284,7 +1284,6 @@ func (dns *Msg) Len() int {
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].Len()
 	}
-	println("LENGTE", len(dns.Answer))
 	for i := 0; i < len(dns.Answer); i++ {
 		l += dns.Answer[i].Len()
 	}

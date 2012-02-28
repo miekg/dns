@@ -243,8 +243,8 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 			}
 			partlen++
 		case c == '.':
-			// byte before dot cannot be dot, dash
-			if last == '.' || last == '-' {
+			// byte before dot cannot be dot
+			if last == '.' {
 				return 0, uint8(l - longer), false
 			}
 			if last == '\\' { // Ok, escaped dot.
