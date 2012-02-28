@@ -10,6 +10,7 @@ need to be fixed.
 * Add tsig check in 'q'?
 * Tsig is handled in the library, api for querying tsig status
 * Query source address?
+* TEST nsec with TYPE65534
 
 ## Examples to add
 

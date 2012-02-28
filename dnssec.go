@@ -222,6 +222,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
+	// For signing, lowercase this name
 	sigwire.SignerName = strings.ToLower(s.SignerName)
 
 	// Create the desired binary blob
@@ -288,6 +289,9 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // This function modifies the rdata of some RRs (lowercases domain names) for the validation to work. 
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// First the easy checks
+	if len(rrset) == 0 {
+		return ErrSigGen
+	}
 	if s.KeyTag != k.KeyTag() {
 		return ErrKey
 	}
@@ -297,7 +301,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	if s.Algorithm != k.Algorithm {
 		return ErrKey
 	}
-	if s.SignerName != k.Hdr.Name {
+	if strings.ToLower(s.SignerName) != strings.ToLower(k.Hdr.Name) {
 		return ErrKey
 	}
 	if k.Protocol != 3 {
@@ -311,7 +315,6 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 			return ErrRRset
 		}
 	}
-
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
@@ -322,7 +325,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
-	sigwire.SignerName = strings.ToLower(s.SignerName)
+	// Copy the signername as-is, don't ToLower() it
+	sigwire.SignerName = s.SignerName
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signeddata, 0)
