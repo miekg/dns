@@ -101,3 +101,21 @@ func TestBailiwick(t *testing.T) {
 		}
 	}
 }
+
+func TestPack(t *testing.T) {
+	rr := []string{"US.    86400	IN	NSEC	0-.us. NS SOA RRSIG NSEC DNSKEY TYPE65534"}
+	m := new(Msg)
+	var err error
+	m.Answer = make([]RR, 1)
+	for _, r := range rr {
+		m.Answer[0], err = NewRR(r)
+		if err != nil {
+			t.Logf("Failed to create RR: %s\n", err.Error())
+			continue
+		}
+		if _, ok := m.Pack(); !ok {
+			t.Log("Packing failed")
+			t.Fail()
+		}
+	}
+}

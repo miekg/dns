@@ -19,15 +19,15 @@
 //
 // Or directly from a string:
 //
-//      mx := NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+//      mx, err := NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
 //
 // Or when the default TTL (3600) and class (IN) suit you:
 //
-//      mx := NewRR("miek.nl. MX 10 mx.miek.nl.")
+//      mx, err := NewRR("miek.nl. MX 10 mx.miek.nl.")
 //
 // Or even:
 //
-//      mx := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
+//      mx, err := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 // 
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
