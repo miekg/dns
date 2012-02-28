@@ -291,7 +291,7 @@ func sigCheck(in *dns.Msg, server string, tcp bool) {
 func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
 	l1 := make([]dns.RR, 0)
 	for _, rr := range l {
-		if rr.Header().Name == name && rr.Header().Rrtype == t {
+		if strings.ToLower(rr.Header().Name) == strings.ToLower(name) && rr.Header().Rrtype == t {
 			l1 = append(l1, rr)
 		}
 	}
@@ -307,6 +307,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	}
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
+	m.SetEdns0(4096, true)
 	r, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
