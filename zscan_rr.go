@@ -606,17 +606,19 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 
 	rr.TypeBitMap = make([]uint16, 0)
+	var k uint16
 	l = <-c
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
-				return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
-			} else {
-				rr.TypeBitMap = append(rr.TypeBitMap, k)
+			if k, ok = Str_rr[strings.ToUpper(l.token)]; !ok {
+				if k, ok = typeToInt(l.token); !ok {
+					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
+				}
 			}
+			rr.TypeBitMap = append(rr.TypeBitMap, k)
 		default:
 			return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
 		}
@@ -663,17 +665,22 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.NextDomain = l.token
 
 	rr.TypeBitMap = make([]uint16, 0)
+	var (
+		k uint16
+		ok bool
+	)
 	l = <-c
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
-				return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
-			} else {
-				rr.TypeBitMap = append(rr.TypeBitMap, k)
+			if k, ok = Str_rr[strings.ToUpper(l.token)]; !ok {
+				if k, ok = typeToInt(l.token); ! ok {
+					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
+				}
 			}
+			rr.TypeBitMap = append(rr.TypeBitMap, k)
 		default:
 			return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
 		}
