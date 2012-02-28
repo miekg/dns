@@ -325,7 +325,6 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
-	// Copy the signername as-is, don't ToLower() it
 	sigwire.SignerName = s.SignerName
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
