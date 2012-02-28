@@ -10,7 +10,10 @@ need to be fixed.
 * Add tsig check in 'q'?
 * Tsig is handled in the library, api for querying tsig status
 * Query source address?
-* TEST nsec with TYPE65534
+
+* NSECx bitmap length
+  array of 256 block lens set to 0. scan RRs, save highest RR / 8 in
+  each block. len is 2 * # non-0 blocks + sum block len
 
 ## Examples to add
 
