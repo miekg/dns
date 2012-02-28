@@ -642,7 +642,8 @@ func (rr *RR_NSEC) String() string {
 
 func (rr *RR_NSEC) Len() int {
 	l := len(rr.NextDomain) + 1
-	return rr.Hdr.Len() + l + len(rr.TypeBitMap)
+	return rr.Hdr.Len() + l + len(rr.TypeBitMap) + 10
+	// TODO: + 10 is only there to be sure we have enough
 	// This is also shorter due to the windowing
 }
 
@@ -858,7 +859,8 @@ func (rr *RR_NSEC3) String() string {
 }
 
 func (rr *RR_NSEC3) Len() int {
-	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + len(rr.TypeBitMap)
+	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + len(rr.TypeBitMap) + 10
+	// +10, see TODO for NSEC
 	// TODO: typebitmap length
 }
 
