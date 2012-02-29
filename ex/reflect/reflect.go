@@ -32,6 +32,7 @@ import (
 var (
 	printf *bool
 	compress *bool
+	tsig *string
 )
 
 const dom = "whoami.miek.nl."
@@ -109,10 +110,12 @@ func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
 	compress = flag.Bool("compress", false, "compress replies")
+	tsig = flag.String("tisg", "", "use SHA1 hmac tsig: keyname:base64")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	tsig = tsig //TODO
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {

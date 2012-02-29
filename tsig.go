@@ -55,7 +55,7 @@ const (
 // The following values must be put in wireformat, so that the MAC can be calculated.
 // RFC 2845, section 3.4.2. TSIG Variables.
 type tsigWireFmt struct {
-	// From RR_HEADER
+	// From RR_Header
 	Name  string "domain-name"
 	Class uint16
 	Ttl   uint32
