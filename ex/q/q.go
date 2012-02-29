@@ -238,7 +238,8 @@ func sectionCheck(set []dns.RR, server string, tcp bool) {
 				where = "disk"
 			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
+				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s) [%s]\n", 
+					shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where, err.Error())
 			} else {
 				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
 			}

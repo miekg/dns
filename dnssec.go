@@ -325,7 +325,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	sigwire.Expiration = s.Expiration
 	sigwire.Inception = s.Inception
 	sigwire.KeyTag = s.KeyTag
-	sigwire.SignerName = s.SignerName
+	sigwire.SignerName = strings.ToLower(s.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(sigwire, signeddata, 0)
@@ -347,6 +347,9 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	switch s.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
 		pubkey := k.pubKeyRSA() // Get the key
+		if pubkey == nil {
+			return ErrKey
+		}
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
 		var ch crypto.Hash
@@ -363,6 +366,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		case RSASHA512:
 			h = sha512.New()
 			ch = crypto.SHA512
+		default:
 		}
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum(nil)
@@ -409,12 +413,22 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 		keyoff = 3
 	}
 	pubkey := new(rsa.PublicKey)
+
 	pubkey.N = big.NewInt(0)
-	shift := (explen - 1) * 8
-	for i := int(explen - 1); i >= 0; i-- {
-		pubkey.E += int(keybuf[keyoff+i]) << shift
+	shift := uint64((explen - 1) * 8)
+	expo := uint64(0)
+	for i := int(explen - 1); i > 0; i-- {
+		expo += uint64(keybuf[keyoff+i]) << shift
 		shift -= 8
 	}
+	// Remainder
+	expo += uint64(keybuf[keyoff])
+	if expo > 2<<31 {
+		// Larger expo than supported
+		return nil
+	}
+	pubkey.E = int(expo)
+
 	pubkey.N.SetBytes(keybuf[keyoff+int(explen):])
 	return pubkey
 }
