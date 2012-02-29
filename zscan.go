@@ -70,7 +70,7 @@ func (e *ParseError) Error() (s string) {
 	if e.file != "" {
 		s = e.file + ": "
 	}
-	s += e.err + ": `" + e.lex.token + "' at line: " +
+	s += "dns:" + e.err + ": `" + e.lex.token + "' at line: " +
 		strconv.Itoa(e.lex.line) + ":" + strconv.Itoa(e.lex.column)
 	return
 }
