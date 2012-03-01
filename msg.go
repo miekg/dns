@@ -42,7 +42,7 @@ var (
 	ErrTime        error = &Error{Err: "dns: bad time"}
 	ErrNoSig       error = &Error{Err: "dns: no signature found"}
 	ErrSig         error = &Error{Err: "dns: bad signature"}
-	ErrSecret      error = &Error{Err: "dns: no secret defined"}
+	ErrSecret      error = &Error{Err: "dns: no secrets defined"}
 	ErrSigGen      error = &Error{Err: "dns: bad signature generation"}
 	ErrAuth        error = &Error{Err: "dns: bad authentication"}
 	ErrXfrSoa      error = &Error{Err: "dns: no SOA seen"}

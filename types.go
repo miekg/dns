@@ -178,7 +178,7 @@ func (rr *RR_ANY) Len() int {
 }
 
 type RR_CNAME struct {
-	Hdr   RR_Header
+	Hdr    RR_Header
 	Target string "cdomain-name"
 }
 
@@ -1096,7 +1096,7 @@ func dateToTime(s string) (uint32, error) {
 // need for RFC1982 calculations as this date is 48 bits
 func tsigTimeToDate(t uint64) string {
 	// only use the lower 48 bits, TODO(mg), check for 48 bit size
-	return ""
+	return "TODO"
 	/*
 		        ti := time.Unix(int64(t), 0).Unix()
 			return ti.Format("20060102150405")

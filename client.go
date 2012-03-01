@@ -39,7 +39,7 @@ type reply struct {
 	conn           net.Conn
 	tsigRequestMAC string
 	tsigTimersOnly bool
-	tsigStatus	int
+	tsigStatus     int
 }
 
 // A Request is a incoming message from a Client.
@@ -150,6 +150,7 @@ func NewClient() *Client {
 	c.QueryChan = DefaultQueryChan
 	c.ReadTimeout = 2 * 1e9
 	c.WriteTimeout = 2 * 1e9
+	c.TsigSecret = make(map[string]string)
 	return c
 }
 
@@ -382,25 +383,18 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 // signature is calculated.
 func (w *reply) Send(m *Msg) error {
 	if m.IsTsig() {
-		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-		_, ok := w.Client().TsigSecret[secret]
-		if !ok {
+		name := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+		if _, ok := w.Client().TsigSecret[name]; !ok {
 			return ErrSecret
 		}
-		// TODO(mg): compression makes this fail
-		if err := TsigGenerate(m, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly); err != nil {
+		out, mac, err := TsigGenerate(m, w.Client().TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
+		if err != nil {
 			return err
 		}
-		w.tsigRequestMAC = m.Extra[len(m.Extra)-1].(*RR_TSIG).MAC // Save the requestMAC for the next packet
-	}
-	out, ok := m.Pack()
-	if !ok {
-		return ErrPack
-	}
-	// Tsig calculation should happen here
-	_, err := w.writeClient(out)
-	if err != nil {
-		return err
+		w.tsigRequestMAC = mac
+		if _, err = w.writeClient(out); err != nil {
+			return err
+		}
 	}
 	return nil
 }

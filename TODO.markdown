@@ -6,15 +6,13 @@ need to be fixed.
 * Speed, we can always go faster. A simple reflect server now hits 35/45K qps
 * go test; only works correct on my machine
 * Add handy zone data structure (r/b tree)? Or not...
-* Use the Exchange structure to deal with errors when resolving, esp. Timeout
-* Add tsig check in 'q'?
-* Tsig is handled in the library, api for querying tsig status
 * Query source address?
 
 * NSECx bitmap length
   array of 256 block lens set to 0. scan RRs, save highest RR / 8 in
   each block. len is 2 * # non-0 blocks + sum block len
-
+  We now allocate 32 bytes for each nsec3 seen
+  
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var dnskey *dns.RR_DNSKEY
@@ -32,7 +33,7 @@ func main() {
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
-	//tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
+	tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -127,9 +128,7 @@ Flags:
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	nameserver += ":" + strconv.Itoa(*port)
 
-	// ipv6 todo
-	// We use the async query handling, just to show how
-	// it is to be used.
+	// We use the async query handling, just to show how it is to be used.
 	dns.HandleQueryFunc(".", q)
 	dns.ListenAndQuery(nil, nil)
 	c := dns.NewClient()
@@ -162,6 +161,16 @@ Flags:
 		m.Id = dns.Id()
 		if *query {
 			fmt.Printf("%s\n", m.String())
+		}
+		// Add tsig
+		if *tsig != "" {
+			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
+				m.SetTsig(name, algo, 300, uint64(time.Now().Unix()))
+				c.TsigSecret[name] = secret;
+			} else {
+				fmt.Fprintf(os.Stderr, "TSIG key error\n")
+				return
+			}
 		}
 		c.Do(m, nameserver)
 	}
@@ -217,6 +226,24 @@ forever:
 			}
 		}
 	}
+}
+
+func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
+	s1 := strings.SplitN(s, ":", 3)
+	switch len(s1) {
+	case 2:
+		return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+	case 3:
+		switch s1[0] {
+		case "hmac-md5":
+			return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+		case "hmac-sha1":
+			return "hmac-sha1.", s1[1], s1[2], true
+		case "hmac-sha256":
+			return "hmac-sha256.", s1[1], s1[2], true
+		}
+	}
+	return
 }
 
 func sectionCheck(set []dns.RR, server string, tcp bool) {

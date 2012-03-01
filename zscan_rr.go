@@ -666,7 +666,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	rr.TypeBitMap = make([]uint16, 0)
 	var (
-		k uint16
+		k  uint16
 		ok bool
 	)
 	l = <-c
@@ -676,7 +676,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 			// Ok
 		case _STRING:
 			if k, ok = Str_rr[strings.ToUpper(l.token)]; !ok {
-				if k, ok = typeToInt(l.token); ! ok {
+				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
 				}
 			}

@@ -82,34 +82,33 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// TsigGenerate adds an TSIG RR to a message. The message should contain
-// a "stub" TsigRR with the algorithm, key name (owner name of the RR), 
-// time fudge (defaults to 300 seconds) and the current time
-// The TSIG MAC is saved in that Tsig RR.
-// When TsigGenerate is called for the
-// first time requestMAC is set to the empty string.
-// If something goes wrong an error is returned, otherwise it is nil.
-// TODO this needs to work on []byte, not *Msg, to take
-// compression into account
-// This
-func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
+// TsigGenerate fills out the TSIG record attached to the message.
+// The message should contain
+// a "stub" TSIG RR with the algorithm, key name (owner name of the RR), 
+// time fudge (defaults to 300 seconds) and the current time       
+// The TSIG MAC is saved in that Tsig RR.                          
+// When TsigGenerate is called for the first time requestMAC is set to the empty string and
+// timersOnly is false.                                            
+// If something goes wrong an error is returned, otherwise it is nil. 
+func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if !m.IsTsig() {
-		// panic? panic?
 		panic("TSIG not last RR in additional")
 	}
 	// If we barf here, the caller is to blame
 	rawsecret, err := packBase64([]byte(secret))
 	if err != nil {
-		return err
+		return nil, "", err
 	}
 
 	rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
 	m.Extra = m.Extra[0 : len(m.Extra)-1] // kill the TSIG from the msg
-	mbuf, _ := m.Pack()
+	mbuf, ok := m.Pack()
+	if !ok {
+		return nil, "", ErrPack
+	}
 	buf := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
 
 	t := new(RR_TSIG)
-
 	var h hash.Hash
 	switch rr.Algorithm {
 	case HmacMD5:
@@ -119,10 +118,10 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 	case HmacSHA256:
 		h = hmac.New(sha256.New, []byte(rawsecret))
 	default:
-		return ErrKeyAlg
+		return nil, "", ErrKeyAlg
 	}
-
-	t.MAC = hex.EncodeToString(h.Sum(buf))
+	io.WriteString(h, string(buf))
+	t.MAC = hex.EncodeToString(h.Sum(nil))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
@@ -130,9 +129,16 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) error {
 	t.TimeSigned = rr.TimeSigned
 	t.Algorithm = rr.Algorithm
 	t.OrigId = m.MsgHdr.Id
-
-	m.Extra = append(m.Extra, t)
-	return nil
+	
+	tbuf := make([]byte, t.Len())
+	if off, ok := packRR(t, tbuf, 0, nil, false); ok {
+		tbuf = tbuf[:off]	// reset to actual size used
+	} else {
+		return nil, "", ErrPack
+	}
+	mbuf = append(mbuf, tbuf...)
+	RawSetExtraLen(mbuf, uint16(len(m.Extra)+1))
+	return mbuf, t.MAC, nil
 }
 
 // TsigVerify verifies the TSIG on a message. 
