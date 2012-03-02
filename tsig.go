@@ -329,3 +329,10 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	}
 	return msg[:tsigoff], rr, nil
 }
+
+// Translate the TSIG time signed into a date. There is no
+// need for RFC1982 calculations as this date is 48 bits.
+func tsigTimeToDate(t uint64) string {
+       ti := time.Unix(int64(t), 0).UTC()
+       return ti.Format("20060102150405")
+}

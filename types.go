@@ -1055,17 +1055,6 @@ func dateToTime(s string) (uint32, error) {
 	return ti, nil
 }
 
-// Translate the TSIG time signed into a date. There is no
-// need for RFC1982 calculations as this date is 48 bits
-func tsigTimeToDate(t uint64) string {
-	// only use the lower 48 bits, TODO(mg), check for 48 bit size
-	return "TODO"
-	/*
-		        ti := time.Unix(int64(t), 0).Unix()
-			return ti.Format("20060102150405")
-	*/
-}
-
 // saltString converts a NSECX salt to uppercase and
 // returns "-" when it is empty
 func saltString(s string) string {
