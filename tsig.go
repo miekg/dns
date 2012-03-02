@@ -3,19 +3,17 @@
 // A TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
 // Basic use pattern when querying with TSIG:
 //
-//      m := new(Msg)
-//      c := NewClient()
-//      m.SetQuestion("miek.nl.", TypeMX)
+//	m := new(Msg)
+//	c := NewClient()
+//	m.SetQuestion("miek.nl.", TypeMX)
 //	// Set the secret under the name "axfr."
-//      c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}	// don't forget the . here
+//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}	// don't forget the .
 //	// Add the stub TSIG RR to the message
-//      m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
+//	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
 //	...
-//	// When sending the TSIG RR is calculated automatically and filled in
+//	// When sending the TSIG RR is calculated and filled in before sending
 //
-// The secrets' map index is set to 'axfr.'. This must match the ownername of the
-// TSIG record, which in the above example, is also set to 'axfr.' The supported algorithm
-// include: HmacMD5, HmacSHA1 and HmacSHA256.
+// The supported algorithm include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
 // AXFR (TODO)
 // The message requesting an AXFR (almost all TSIG usage is when requesting zone transfers)
@@ -29,7 +27,7 @@
 // You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
 //
-// Basic use pattern replying to a message that has TSIG set.
+// Basic use pattern validating and replying to a message that has TSIG set.
 // TODO(mg)
 //
 package dns
