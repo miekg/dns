@@ -994,7 +994,8 @@ func (rr *RR_TSIG) Header() *RR_Header {
 
 // TSIG has no official presentation format, but this will suffice.
 func (rr *RR_TSIG) String() string {
-	return rr.Hdr.String() +
+	s := "\n;; TSIG PSEUDOSECTION:\n"
+	s += rr.Hdr.String() +
 		" " + rr.Algorithm +
 		" " + tsigTimeToDate(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
@@ -1004,6 +1005,7 @@ func (rr *RR_TSIG) String() string {
 		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
 		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
+	return s
 }
 
 func (rr *RR_TSIG) Len() int {

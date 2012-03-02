@@ -73,7 +73,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Now().Unix()))
 
 	c := NewClient()
-	c.TsigSecret["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="
+	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 	c.Net = "tcp"
 
 	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {

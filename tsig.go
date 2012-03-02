@@ -7,7 +7,7 @@
 //      c := NewClient()
 //      m.SetQuestion("miek.nl.", TypeMX)
 //	// Set the secret under the name "axfr."
-//      c.TsigSecret["axfr."] = "so6ZGir4GPAqINNh9U5c3A=="	// don't forget the . here
+//      c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}	// don't forget the . here
 //	// Add the stub TSIG RR to the message
 //      m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
 //	...
@@ -17,7 +17,7 @@
 // TSIG record, which in the above example, is also set to 'axfr.' The supported algorithm
 // include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
-// AXFR
+// AXFR (TODO)
 // The message requesting an AXFR (almost all TSIG usage is when requesting zone transfers)
 // for miek.nl with the TSIG record added is now ready to use. 
 // We now need a new client with access to the secrets:

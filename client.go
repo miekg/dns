@@ -150,7 +150,6 @@ func NewClient() *Client {
 	c.QueryChan = DefaultQueryChan
 	c.ReadTimeout = 2 * 1e9
 	c.WriteTimeout = 2 * 1e9
-	c.TsigSecret = make(map[string]string)
 	return c
 }
 
@@ -381,20 +380,28 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 // Send sends a dns msg to the address specified in w.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
-func (w *reply) Send(m *Msg) error {
+func (w *reply) Send(m *Msg) (err error) {
+	var out []byte
 	if m.IsTsig() {
+		mac := ""
 		name := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		if _, ok := w.Client().TsigSecret[name]; !ok {
 			return ErrSecret
 		}
-		out, mac, err := TsigGenerate(m, w.Client().TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
+		out, mac, err = TsigGenerate(m, w.Client().TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return err
 		}
 		w.tsigRequestMAC = mac
-		if _, err = w.writeClient(out); err != nil {
-			return err
+	} else {
+		ok := false
+		out, ok = m.Pack()
+		if !ok {
+			return ErrPack
 		}
+	}
+	if _, err = w.writeClient(out); err != nil {
+		return err
 	}
 	return nil
 }
