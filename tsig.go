@@ -129,10 +129,10 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.TimeSigned = rr.TimeSigned
 	t.Algorithm = rr.Algorithm
 	t.OrigId = m.MsgHdr.Id
-	
+
 	tbuf := make([]byte, t.Len())
 	if off, ok := packRR(t, tbuf, 0, nil, false); ok {
-		tbuf = tbuf[:off]	// reset to actual size used
+		tbuf = tbuf[:off] // reset to actual size used
 	} else {
 		return nil, "", ErrPack
 	}
