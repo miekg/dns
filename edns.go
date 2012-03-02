@@ -32,14 +32,6 @@ type Option struct {
  * 	Rdlength      uint16 // length of data after the header
  */
 
-// Adding an EDNS0 record to a message is done as follows:
-//      opt := new(RR_OPT)
-//      opt.Hdr = dns.RR_Header{Name: "", Rrtype: TypeOPT}
-//      opt.SetVersion(0)       // set version to zero
-//      opt.SetDo()             // set the DO bit
-//      opt.SetUDPSize(4096)    // set the message size
-//      m.Extra = make([]RR, 1)
-//      m.Extra[0] = opt        // add OPT RR to the message
 type RR_OPT struct {
 	Hdr    RR_Header
 	Option []Option "opt" // tag is used in Pack and Unpack

@@ -974,45 +974,6 @@ func (rr *RR_DHCID) Len() int {
 		base64.StdEncoding.DecodedLen(len(rr.Digest))
 }
 
-// RFC 2845.
-type RR_TSIG struct {
-	Hdr        RR_Header
-	Algorithm  string "domain-name"
-	TimeSigned uint64
-	Fudge      uint16
-	MACSize    uint16
-	MAC        string "size-hex"
-	OrigId     uint16
-	Error      uint16
-	OtherLen   uint16
-	OtherData  string "size-hex"
-}
-
-func (rr *RR_TSIG) Header() *RR_Header {
-	return &rr.Hdr
-}
-
-// TSIG has no official presentation format, but this will suffice.
-func (rr *RR_TSIG) String() string {
-	s := "\n;; TSIG PSEUDOSECTION:\n"
-	s += rr.Hdr.String() +
-		" " + rr.Algorithm +
-		" " + tsigTimeToDate(rr.TimeSigned) +
-		" " + strconv.Itoa(int(rr.Fudge)) +
-		" " + strconv.Itoa(int(rr.MACSize)) +
-		" " + strings.ToUpper(rr.MAC) +
-		" " + strconv.Itoa(int(rr.OrigId)) +
-		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
-		" " + strconv.Itoa(int(rr.OtherLen)) +
-		" " + rr.OtherData
-	return s
-}
-
-func (rr *RR_TSIG) Len() int {
-	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 6 +
-		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
-}
-
 type RR_TLSA struct {
 	Hdr          RR_Header
 	Usage        uint8

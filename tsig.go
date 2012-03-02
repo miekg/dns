@@ -33,7 +33,6 @@
 // Basic use pattern validating and replying to a message that has TSIG set.
 // TODO(mg)
 //
-//
 package dns
 
 import (
@@ -44,6 +43,7 @@ import (
 	"encoding/hex"
 	"hash"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -54,6 +54,45 @@ const (
 	HmacSHA1   = "hmac-sha1."
 	HmacSHA256 = "hmac-sha256."
 )
+
+// RFC 2845.
+type RR_TSIG struct {
+	Hdr        RR_Header
+	Algorithm  string "domain-name"
+	TimeSigned uint64
+	Fudge      uint16
+	MACSize    uint16
+	MAC        string "size-hex"
+	OrigId     uint16
+	Error      uint16
+	OtherLen   uint16
+	OtherData  string "size-hex"
+}
+
+func (rr *RR_TSIG) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+// TSIG has no official presentation format, but this will suffice.
+func (rr *RR_TSIG) String() string {
+	s := "\n;; TSIG PSEUDOSECTION:\n"
+	s += rr.Hdr.String() +
+		" " + rr.Algorithm +
+		" " + tsigTimeToDate(rr.TimeSigned) +
+		" " + strconv.Itoa(int(rr.Fudge)) +
+		" " + strconv.Itoa(int(rr.MACSize)) +
+		" " + strings.ToUpper(rr.MAC) +
+		" " + strconv.Itoa(int(rr.OrigId)) +
+		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
+		" " + strconv.Itoa(int(rr.OtherLen)) +
+		" " + rr.OtherData
+	return s
+}
+
+func (rr *RR_TSIG) Len() int {
+	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 6 +
+		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
+}
 
 // The following values must be put in wireformat, so that the MAC can be calculated.
 // RFC 2845, section 3.4.2. TSIG Variables.
