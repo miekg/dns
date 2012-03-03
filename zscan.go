@@ -23,7 +23,7 @@ const maxTok = 2048
 // * Handle braces.
 const (
 	// Zonefile
-	_EOF = iota // Don't let it start with zero
+	_EOF = iota
 	_STRING
 	_BLANK
 	_QUOTE
@@ -70,7 +70,7 @@ func (e *ParseError) Error() (s string) {
 	if e.file != "" {
 		s = e.file + ": "
 	}
-	s += "dns:" + e.err + ": `" + e.lex.token + "' at line: " +
+	s += "dns: " + e.err + ": " + strconv.QuoteToASCII(e.lex.token) + " at line: " +
 		strconv.Itoa(e.lex.line) + ":" + strconv.Itoa(e.lex.column)
 	return
 }
@@ -343,6 +343,9 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			case _RRTYPE:
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
+			case _NEWLINE:
+				t <- Token{Error: &ParseError{f, "premature newline, no RR type seen", l}}
+				return
 			}
 		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
@@ -390,6 +393,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			t <- Token{RR: r}
 			st = _EXPECT_OWNER_DIR
 		}
+	}
+	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything
+	if h.Rrtype == 0 {
+		t <- Token{Error: &ParseError{f, "nothing made sense", lex{}}}
 	}
 }
 
