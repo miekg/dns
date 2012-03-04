@@ -8,4 +8,4 @@ EXAMPLES=mx \
 	 q \
 
 ex:
-	for i in $(EXAMPLES); do echo $$i; (cd $$i && go build); done
+	for i in $(EXAMPLES); do echo $$i; (cd $$i && go install); done

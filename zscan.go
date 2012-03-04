@@ -343,8 +343,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			case _RRTYPE:
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
-			case _NEWLINE:
-				t <- Token{Error: &ParseError{f, "premature newline, no RR type seen", l}}
+			default:
+				t <- Token{Error: &ParseError{f, "expecting RR type or class, not this...", l}}
 				return
 			}
 		case _EXPECT_ANY_NOCLASS:
