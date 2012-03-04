@@ -18,7 +18,6 @@ func main() {
 	client := dns.NewClient()
 	client.Net = "tcp"
 	m := new(dns.Msg)
-	m.MsgHdr.Id = dns.Id()
 	if *serial > 0 {
 		m.SetIxfr(zone, uint32(*serial))
 	} else {
