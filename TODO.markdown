@@ -18,6 +18,8 @@ dns: overflow unpacking OPT
 dns: overflow unpacking OPT
 ;; opcode: QUERY, status: NOERROR, id: 32082
 ;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, AD
+
+* Add TsigStatus to *Msg?
   
 ## Examples to add
 
