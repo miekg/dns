@@ -11,8 +11,7 @@ func HelloServer(w ResponseWriter, req *Msg) {
 
 	m.Extra = make([]RR, 1)
 	m.Extra[0] = &RR_TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
-	buf, _ := m.Pack()
-	w.Write(buf)
+	w.Write(m)
 }
 
 func TestServing(t *testing.T) {

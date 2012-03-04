@@ -70,7 +70,7 @@ func TestClientEDNS0(t *testing.T) {
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
-	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Now().Unix()))
+	m.SetTsig("axfr.", HmacMD5, 300, m.MsgHdr.Id, time.Now().Unix())
 
 	c := NewClient()
 	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
