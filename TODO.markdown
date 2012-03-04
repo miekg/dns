@@ -4,6 +4,8 @@ Must of the stuff is working, but there is a list of smaller things that
 need to be fixed.
 
 * Speed, we can always go faster. A simple reflect server now hits 35/45K qps
+* Find a way to implement tsig and/or ip blocking for queries and transfers
+   this must work on the client side and in the server side
 * go test; only works correct on my machine
 * Add handy zone data structure (r/b tree)? Or not...
 * Query source address?
