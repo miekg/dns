@@ -13,7 +13,6 @@ import (
 var dnskey *dns.RR_DNSKEY
 
 func q(w dns.RequestWriter, m *dns.Msg) {
-	// Access this here, w.TsigStatus (for message m?)
 	if err := w.Send(m); err != nil {
 		fmt.Printf("%s\n", err.Error())
 		w.Write(nil)
@@ -24,6 +23,9 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 		fmt.Printf("%s\n", err.Error())
 		w.Write(nil)
 		return
+	}
+	if w.TsigStatus() != nil {
+		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
 	}
 	w.Write(r)
 }
@@ -166,10 +168,10 @@ Flags:
 		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
-				m.SetTsig(name, algo, 300, time.Now().Unix())
+				m.SetTsig(name, algo, 300, m.MsgHdr.Id, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
 			} else {
-				fmt.Fprintf(os.Stderr, "TSIG key error\n")
+				fmt.Fprintf(os.Stderr, "tsig key data error\n")
 				return
 			}
 		}

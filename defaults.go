@@ -84,12 +84,13 @@ func (dns *Msg) SetAxfr(z string) {
 // This is only a skeleton Tsig RR that is added as the last RR in the 
 // additional section. The Tsig is calculated when the message is being
 // send.
-func (dns *Msg) SetTsig(z, algo string, fudge uint16, timesigned int64) {
+func (dns *Msg) SetTsig(z, algo string, fudge, origid uint16, timesigned int64) {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
 	t.Algorithm = algo
 	t.Fudge = 300
 	t.TimeSigned = uint64(timesigned)
+	t.OrigId = origid
 	dns.Extra = append(dns.Extra, t)
 }
 

@@ -18,6 +18,7 @@ func main() {
 	client := dns.NewClient()
 	client.Net = "tcp"
 	m := new(dns.Msg)
+	m.MsgHdr.Id = dns.Id()
 	if *serial > 0 {
 		m.SetIxfr(zone, uint32(*serial))
 	} else {
@@ -27,7 +28,7 @@ func main() {
 		a := strings.SplitN(*tsig, ":", 2)
 		name, secret := a[0], a[1]
 		client.TsigSecret = map[string]string{name: secret}
-		m.SetTsig(name, dns.HmacMD5, 300, time.Now().Unix())
+		m.SetTsig(name, dns.HmacMD5, 300, m.MsgHdr.Id, time.Now().Unix())
 	}
 
 	if err := client.XfrReceive(m, *nameserver); err == nil {

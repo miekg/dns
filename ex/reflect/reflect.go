@@ -90,15 +90,13 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		println("Checking TSIG")
 		if w.TsigStatus() == nil {
 			println("TSIG OK")
-			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
+			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, r.MsgHdr.Id, time.Now().Unix())
 		}
 	}
-
-
 	if *printf {
 		fmt.Printf("%v\n", m.String())
 	}
-	w.Write(m)	// Discard the error?
+	w.Write(m)
 }
 
 func serve(net, name, secret string) {

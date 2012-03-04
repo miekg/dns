@@ -337,11 +337,21 @@ func (c *conn) serve() {
 	}
 }
 
-func (w *response) Write(m *Msg) error {
-	//data []byte) (n int, err error) {
-	data, ok := m.Pack()
-	if !ok {
-		return ErrPack
+func (w *response) Write(m *Msg) (err error) {
+	var (
+		data []byte
+		ok bool
+	)
+	if m.IsTsig() {
+		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
+		if err != nil {
+			return err
+		}
+	} else {
+		data, ok = m.Pack()
+		if !ok {
+			return ErrPack
+		}
 	}
 	switch {
 	case w.conn._UDP != nil:
