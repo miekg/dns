@@ -24,11 +24,17 @@ type QueryHandler interface {
 // The RequestWriter interface is used by a DNS query handler to
 // construct a DNS request.
 type RequestWriter interface {
-	// Write ??
+	// Write returns the request message and the reply back to the client.
+	Write(*Msg)
+	// Send sends the message to the server.
 	Send(*Msg) error
+	// Receive waits for the reply of the servers. 
 	Receive() (*Msg, error)
+	// Close closes the connection with the server.
 	Close() error
+	// Dials calls the server
 	Dial() error
+	// TsigStatus return the TSIG validation status.
 	TsigStatus() error
 }
 
