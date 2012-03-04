@@ -166,7 +166,7 @@ Flags:
 		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
-				m.SetTsig(name, algo, 300, uint64(time.Now().Unix()))
+				m.SetTsig(name, algo, 300, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
 			} else {
 				fmt.Fprintf(os.Stderr, "TSIG key error\n")

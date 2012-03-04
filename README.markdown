@@ -7,13 +7,13 @@ supported, including the DNSSEC types. It follows a lean and mean philosophy.
 If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. 
 
-Goals:
+## Goals:
 
 * KISS;
 * Symmetric API: client and server side should be very similar;
 * Small API, if its easy to code in Go, don't make a function for it.
 
-Features:
+## Features:
 
 * UDP/TCP queries, IPv4 and IPv6;
 * RFC 1035 zone file parsing;
@@ -29,6 +29,12 @@ Features:
 * TSIG;
 * DNS name compression.
 
+Have fun!
+
+Miek Gieben  -  2010-2012 - miek@miek.nl
+
+## Building
+
 Building is done with the `go` tool. If you have setup your GOPATH
 correctly the following should work:
 
@@ -37,9 +43,60 @@ correctly the following should work:
 Sample programs can be found in the `ex` directory. They can 
 be build with: `make -C ex`, or also with the `go` tool.
 
-Have fun!
+## Building (from scratch)
 
-Miek Gieben  -  2010-2012 - miek@miek.nl
+The development of the language [Go](http://www.golang.org) is
+going at a fast pace, hence an updated version of
+[Super-short guide to gettinq](http://www.miek.nl/blog/archives/2012/01/23/super-short_guide_to_getting_q/index.html).
+
+Get the latest version (called `weekly`) of Go:
+
+1. Get Go: `hg clone -u release https://go.googlecode.com/hg/ go`
+   Note the directory you have downloaded it to and set add its `bin`
+   directory to your PATH: `PATH=$PWD/go/bin`.
+
+2. Update Go to the latest weekly: `cd go; hg pull; hg update weekly`
+
+3. Compile Go: `cd src`, you should now sit in `go/src`.
+   And compile: `./all.bash`
+
+>    Install missing commands (gcc, sed, bison, etc.) if needed.
+
+The latest Go is now installed. You should now have the `go`-tool,
+this is the central interface to all Go program building tasks.
+
+    $ go
+    Go is a tool for managing Go source code.
+
+    Usage: go command [arguments]
+
+    The commands are:
+
+    build       compile packages and dependencies
+    clean       remove object files
+    doc         run godoc on package sources
+    fix         run go tool fix on packages
+    ....
+    ....
+    lost more
+
+If you can not run `go`, check your PATH.
+
+### Install Go DNS and set GOPATH
+
+The GOPATH variable specifies (among things) where *your* GO
+code lives. Using the `go` tool does bring a few requirement
+to the table in how to layout the directory structure.
+
+1. Create toplevel directory (`~/g`)for your code: `mkdir -p ~/g/src`
+2. Set GOPATH to this toplevel directory: `export GOPATH=~/g`
+1. Get dns: `cd ~/g/src; git clone git://github.com/miekg/dns.git`
+2. Compile it: `cd dns; go build`
+3. Compile and install the examples, there is a helper `Makefile` here, but it
+   just calls `go` multiple times: `cd ex; make`
+4. Look in `$GOPATH/bin` for the binaries, in this setup that will be `~/g/bin`
+4. Query with q: `~/g/bin/q mx miek.nl` (or add `~/g/bin` to your $PATH too)
+5. Report bugs
 
 ## Supported RFCs
 

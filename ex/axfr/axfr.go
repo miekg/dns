@@ -4,12 +4,14 @@ import (
 	"dns"
 	"flag"
 	"fmt"
+	"strings"
+	"time"
 )
 
 func main() {
-	var serial *int = flag.Int("serial", 0, "Perform an IXFR with the given serial")
-	var nameserver *string = flag.String("ns", "127.0.0.1:53", "Query this nameserver")
-	//	var secret *string = flag.String("secret", "", "Use this secret for TSIG")
+	serial := flag.Int("serial", 0, "Perform an IXFR with the given serial")
+	nameserver := flag.String("ns", "127.0.0.1:53", "Query this nameserver")
+	tsig := flag.String("tsig", "", "request tsig with key: name:key (only hmac-sha1)")
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
@@ -21,6 +23,13 @@ func main() {
 	} else {
 		m.SetAxfr(zone)
 	}
+	if *tsig != "" {
+		a := strings.SplitN(*tsig, ":", 2)
+		name, secret := a[0], a[1]
+		client.TsigSecret = map[string]string{name: secret}
+		m.SetTsig(name, dns.HmacSHA1, 300, time.Now().Unix())
+	}
+
 	if err := client.XfrReceive(m, *nameserver); err == nil {
 		for r := range client.ReplyChan {
 			if r.Error != nil {

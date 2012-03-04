@@ -1,15 +1,14 @@
 // TRANSACTION SIGNATURE (TSIG)
 // 
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
-// Basic use pattern when querying with TSIG:
+// Basic use pattern when querying with a TSIG name "axfr." and the base64
+// secret "so6ZGir4GPAqINNh9U5c3A==":
 //
 //	m := new(Msg)
 //	c := NewClient()
 //	m.SetQuestion("miek.nl.", TypeMX)
-//	// Set the secret under the name "axfr."
-//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}	// don't forget the .
-//	// Add the stub TSIG RR to the message
-//	m.SetTsig("axfr.", HmacMD5, 300, uint64(time.Seconds()))
+//	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
+//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	...
 //	// When sending the TSIG RR is calculated and filled in before sending
 //
@@ -24,6 +23,7 @@
 //	c := NewClient()
 //	m := New(Msg)
 //	m.SetAxfr("miek.nl.") 
+//	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	err := c.XfrReceive(m, "85.223.71.124:53")
 //
