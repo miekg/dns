@@ -26,7 +26,7 @@ type ResponseWriter interface {
 	// Return the status of the Tsig (TsigNone, TsigVerified or TsigBad)
 	TsigStatus() error
 	// Write writes a reply back to the client.
-	Write([]byte) (int, error)
+	Write(*Msg) error
 }
 
 type conn struct {
@@ -40,9 +40,11 @@ type conn struct {
 }
 
 type response struct {
-	conn       *conn
-	req        *Msg
-	tsigStatus error
+	conn           *conn
+	req            *Msg
+	tsigStatus     error
+	tsigTimersOnly bool
+	tsigRequestMAC string
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -75,8 +77,7 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 func Refused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeRefused)
-	buf, _ := m.Pack()
-	w.Write(buf)
+	w.Write(m)
 }
 
 // RefusedHandler returns HandlerFunc with Refused.
@@ -310,8 +311,7 @@ func (c *conn) serve() {
 			// Send a format error back
 			x := new(Msg)
 			x.SetRcodeFormatError(req)
-			buf, _ := x.Pack()
-			w.Write(buf)
+			w.Write(x)
 			break
 		}
 
@@ -321,8 +321,9 @@ func (c *conn) serve() {
 			if _, ok := w.conn.tsigSecret[secret]; !ok {
 				w.tsigStatus = ErrKeyAlg
 			}
-			// Do I *ever* need Tsig.Mac here? Or timersOnly? TODO(mg)
 			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
+			w.tsigTimersOnly = false	// Will this ever be true?
+			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		w.req = req
 		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
@@ -336,41 +337,46 @@ func (c *conn) serve() {
 	}
 }
 
-func (w *response) Write(data []byte) (n int, err error) {
+func (w *response) Write(m *Msg) error {
+	//data []byte) (n int, err error) {
+	data, ok := m.Pack()
+	if !ok {
+		return ErrPack
+	}
 	switch {
 	case w.conn._UDP != nil:
-		n, err = w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
+		_, err := w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	case w.conn._TCP != nil:
 		if len(data) > MaxMsgSize {
-			return 0, ErrBuf
+			return ErrBuf
 		}
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(len(data)))
-		n, err = w.conn._TCP.Write(l)
+		n, err := w.conn._TCP.Write(l)
 		if err != nil {
-			return n, err
+			return err
 		}
 		if n != 2 {
-			return n, io.ErrShortWrite
+			return io.ErrShortWrite
 		}
 		n, err = w.conn._TCP.Write(data)
 		if err != nil {
-			return n, err
+			return err
 		}
 		i := n
 		if i < len(data) {
 			j, err := w.conn._TCP.Write(data[i:len(data)])
 			if err != nil {
-				return i, err
+				return err
 			}
 			i += j
 		}
 		n = i
 	}
-	return n, nil
+	return nil
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method

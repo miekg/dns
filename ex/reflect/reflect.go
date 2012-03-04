@@ -27,6 +27,8 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"strconv"
+	"strings"
+	"time"
 )
 
 var (
@@ -84,25 +86,33 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		m.Extra = append(m.Extra, t)
 	}
 
-	b, ok := m.Pack()
+	if r.IsTsig() {
+		println("Checking TSIG")
+		if w.TsigStatus() == nil {
+			println("TSIG OK")
+			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
+		}
+	}
+
+
 	if *printf {
 		fmt.Printf("%v\n", m.String())
 	}
-	if !ok {
-		log.Print("Packing failed")
-		m.SetRcode(r, dns.RcodeServerFailure)
-		m.Extra = nil
-		m.Answer = nil
-		b, _ = m.Pack()
-	}
-	// The reply is smaller then 512 bytes, so it will always "fit"
-	w.Write(b)
+	w.Write(m)	// Discard the error?
 }
 
-func serve(net string) {
-	err := dns.ListenAndServe(":8053", net, nil)
-	if err != nil {
-		fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+func serve(net, name, secret string) {
+	switch name {
+	case "":
+		err := dns.ListenAndServe(":8053", net, nil)
+		if err != nil {
+			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+		}
+	default:
+		err := dns.ListenAndServeTsig(":8053", net, nil, map[string]string{name: secret})
+		if err != nil {
+			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+		}
 	}
 }
 
@@ -110,12 +120,16 @@ func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
 	compress = flag.Bool("compress", false, "compress replies")
-	tsig = flag.String("tisg", "", "use SHA1 hmac tsig: keyname:base64")
+	tsig = flag.String("tsig", "", "use MD5 hmac tsig: keyname:base64")
+	var name, secret string
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	tsig = tsig //TODO
+	if *tsig != "" {
+		a := strings.SplitN(*tsig, ":", 2)
+		name, secret = a[0], a[1]
+	}
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -126,8 +140,8 @@ func main() {
 	}
 
 	dns.HandleFunc(".", handleReflect)
-	go serve("tcp")
-	go serve("udp")
+	go serve("tcp", name, secret)
+	go serve("udp", name, secret)
 	sig := make(chan os.Signal)
 	signal.Notify(sig)
 forever:

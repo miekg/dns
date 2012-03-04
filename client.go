@@ -25,7 +25,7 @@ type QueryHandler interface {
 // construct a DNS request.
 type RequestWriter interface {
 	// Write returns the request message and the reply back to the client.
-	Write(*Msg)
+	Write(*Msg) error
 	// Send sends the message to the server.
 	Send(*Msg) error
 	// Receive waits for the reply of the servers. 
@@ -201,8 +201,9 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 
 // Write returns the original question and the answer on the 
 // reply channel of the client.
-func (w *reply) Write(m *Msg) {
+func (w *reply) Write(m *Msg) error {
 	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m}
+	return nil
 }
 
 // Do performs an asynchronous query. The result is returned on the
