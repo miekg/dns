@@ -90,7 +90,7 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 }
 
 // Start a server on addresss and network speficied. Use the tsig
-// secrets for Tsig validation.
+// secrets for Tsig validation. 
 // Invoke handler for any incoming queries.
 func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[string]string) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler, TsigSecret: tsig}
@@ -321,6 +321,7 @@ func (c *conn) serve() {
 			if _, ok := w.conn.tsigSecret[secret]; !ok {
 				w.tsigStatus = ErrKeyAlg
 			}
+			// Do I *ever* need Tsig.Mac here? Or timersOnly? TODO(mg)
 			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
 		}
 		w.req = req

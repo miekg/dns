@@ -424,7 +424,8 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 	// Remainder
 	expo += uint64(keybuf[keyoff])
 	if expo > 2<<31 {
-		// Larger expo than supported
+		// Larger expo than supported.
+		// println("dns: F5 primes (or larger) are not supported")
 		return nil
 	}
 	pubkey.E = int(expo)

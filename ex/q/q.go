@@ -13,6 +13,7 @@ import (
 var dnskey *dns.RR_DNSKEY
 
 func q(w dns.RequestWriter, m *dns.Msg) {
+	// Access this here, w.TsigStatus (for message m?)
 	if err := w.Send(m); err != nil {
 		fmt.Printf("%s\n", err.Error())
 		w.Write(nil)

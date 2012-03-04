@@ -24,11 +24,12 @@ type QueryHandler interface {
 // The RequestWriter interface is used by a DNS query handler to
 // construct a DNS request.
 type RequestWriter interface {
-	Write(*Msg)
+	// Write ??
 	Send(*Msg) error
 	Receive() (*Msg, error)
 	Close() error
 	Dial() error
+	TsigStatus() error
 }
 
 // hijacked connections...?
@@ -39,7 +40,7 @@ type reply struct {
 	conn           net.Conn
 	tsigRequestMAC string
 	tsigTimersOnly bool
-	tsigStatus     int
+	tsigStatus     error
 }
 
 // A Request is a incoming message from a Client.
@@ -281,6 +282,10 @@ func (w *reply) Request() *Msg {
 	return w.req
 }
 
+func (w *reply) TsigStatus() error {
+	return w.tsigStatus
+}
+
 func (w *reply) Receive() (*Msg, error) {
 	var p []byte
 	m := new(Msg)
@@ -301,13 +306,11 @@ func (w *reply) Receive() (*Msg, error) {
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		if _, ok := w.Client().TsigSecret[secret]; !ok {
-			return m, ErrSecret
+			w.tsigStatus = ErrSecret
+			return m, nil
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		err := TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-		if err != nil {
-			return m, err
-		}
+		w.tsigStatus = TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
 	}
 	return m, nil
 }
