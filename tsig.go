@@ -224,10 +224,7 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 
 // Create a wiredata buffer for the MAC calculation.
 func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) []byte {
-	var (
-		macbuf []byte
-		buf    []byte
-	)
+	var buf []byte
 	if rr.TimeSigned == 0 {
 		rr.TimeSigned = uint64(time.Now().Unix())
 	}
@@ -239,9 +236,9 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		m := new(macWireFmt)
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
-		macbuf = make([]byte, len(requestMAC)) // reqmac should be twice as long
-		n, _ := packStruct(m, macbuf, 0)
-		macbuf = macbuf[:n]
+		buf = make([]byte, len(requestMAC))	// long enough
+		n, _ := packStruct(m, buf, 0)
+		buf = buf[:n]
 	}
 
 	tsigvar := make([]byte, DefaultMsgSize)
@@ -265,8 +262,9 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		n, _ := packStruct(tsig, tsigvar, 0)
 		tsigvar = tsigvar[:n]
 	}
-	if rr.MAC != "" {
-		x := append(macbuf, msgbuf...)
+
+	if requestMAC != "" {
+		x := append(buf, msgbuf...)
 		buf = append(x, tsigvar...)
 	} else {
 		buf = append(msgbuf, tsigvar...)
@@ -333,6 +331,6 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 // Translate the TSIG time signed into a date. There is no
 // need for RFC1982 calculations as this date is 48 bits.
 func tsigTimeToDate(t uint64) string {
-       ti := time.Unix(int64(t), 0).UTC()
-       return ti.Format("20060102150405")
+	ti := time.Unix(int64(t), 0).UTC()
+	return ti.Format("20060102150405")
 }

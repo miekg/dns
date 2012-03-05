@@ -32,9 +32,9 @@ import (
 )
 
 var (
-	printf *bool
+	printf   *bool
 	compress *bool
-	tsig *string
+	tsig     *string
 )
 
 const dom = "whoami.miek.nl."
@@ -87,10 +87,10 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if r.IsTsig() {
-		println("Checking TSIG")
 		if w.TsigStatus() == nil {
-			println("TSIG OK")
 			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, r.MsgHdr.Id, time.Now().Unix())
+		} else {
+			println("Status", w.TsigStatus().Error())
 		}
 	}
 	if *printf {
