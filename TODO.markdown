@@ -21,8 +21,6 @@ dns: overflow unpacking OPT
 ;; opcode: QUERY, status: NOERROR, id: 32082
 ;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, AD
 
-* Add TsigStatus to *Msg?
-  
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
