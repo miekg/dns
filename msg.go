@@ -683,7 +683,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				fv.Set(reflect.ValueOf(txt))
 			case "opt": // edns0
-				if off+2 > lenmsg {
+				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+				if rdlength == 0 {
 					// This is an EDNS0 (OPT Record) with no rdata
 					// We can savely return here.
 					break
@@ -691,7 +692,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				opt := make([]Option, 1)
 				opt[0].Code, off = unpackUint16(msg, off)
 				optlen, off1 := unpackUint16(msg, off)
-				if off1+int(optlen) > lenmsg {
+				if off1+int(optlen) > off+rdlength {
 					println("dns: overflow unpacking OPT")
 					return lenmsg, false
 				}
