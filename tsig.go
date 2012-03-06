@@ -1,37 +1,51 @@
 // TRANSACTION SIGNATURE (TSIG)
 // 
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
+// The supported algorithm include: HmacMD5, HmacSHA1 and HmacSHA256.
+//
 // Basic use pattern when querying with a TSIG name "axfr." and the base64
 // secret "so6ZGir4GPAqINNh9U5c3A==":
 //
 //	m := new(Msg)
 //	c := NewClient()
+//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m.SetQuestion("miek.nl.", TypeMX)
 //	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
-//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	...
 //	// When sending the TSIG RR is calculated and filled in before sending
 //
-// The supported algorithm include: HmacMD5, HmacSHA1 and HmacSHA256.
-//
 // When requesting an AXFR (almost all TSIG usage is when requesting zone transfers), with
-// TSIG, this is the basic use pattern. In this example we request an AXFR:
-// * for miek.nl.
-// * with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
-// * use the server 85.223.71.124
+// TSIG, this is the basic use pattern. In this example we request an AXFR for
+// miek.nl. with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
+// and using the server 85.223.71.124
 //
 //	c := NewClient()
+//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m := New(Msg)
 //	m.SetAxfr("miek.nl.") 
 //	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
-//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	err := c.XfrReceive(m, "85.223.71.124:53")
 //
 // You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
 //
 // Basic use pattern validating and replying to a message that has TSIG set.
-// TODO(mg)
+//
+//	dns.ListenAndServeTsig(":8053", net, nil, map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="})
+//
+// 	func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
+//		m := new(Msg)
+//		m.SetReply(r)
+//		if r.IsTsig() {
+//			if w.TsigStatus() == nil {
+//				// *Msg r has an TSIG record and it was validated
+//				m.SetTsig("axfr.", dns.HmacMD5, 300, r.MsgHdr.Id, time.Now().Unix())
+//			} else {
+//				// *Msg r has an TSIG records and it was not valided
+//			}
+//		}
+//		w.Write(m)
+//	}
 //
 package dns
 
