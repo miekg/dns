@@ -63,13 +63,13 @@ func (nsec3 *RR_NSEC3) HashNames(zone string) {
 	nsec3.NextDomain = HashName(nsec3.NextDomain, nsec3.Hash, nsec3.Iterations, nsec3.Salt)
 }
 
-// Match checks if domain matches the first (hashed) owner name of the NSEC3 record, domain must be given
+// Match checks if domain matches the first (hashed) owner name of the NSEC3 record. Domain must be given
 // in plain text.
 func (nsec3 *RR_NSEC3) Match(domain string) bool {
 	return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 }
 
-// Cover checks if domain is covered by the NSEC3 record, domain must be given in plain text.
+// Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text.
 func (nsec3 *RR_NSEC3) Cover(domain string) bool {
 	hashdom := strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 	nextdom := strings.ToUpper(nsec3.NextDomain)
@@ -84,6 +84,11 @@ func (nsec3 *RR_NSEC3) Cover(domain string) bool {
 		return true
 	}
 
+	return false
+}
+
+// Cover checks if domain is covered by the NSEC record. Domain must be given in plain text.
+func (nsec *RR_NSEC) Cover(domain string) bool {
 	return false
 }
 
