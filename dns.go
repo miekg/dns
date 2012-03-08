@@ -67,6 +67,7 @@
 //      r := <- DefaultReplyChan
 //      // r.Reply is the answer
 //      // r.Request is the original request
+//      // r.Error is the error (if any)
 package dns
 
 import (

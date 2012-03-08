@@ -9,7 +9,6 @@
 // Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK) bit
 // to an request.
 // 
-//      // Set UDP bufsize to 4096 and enable the DO bit
 //      m := new(dns.Msg)
 //      m.SetEdns0(4096, true)
 package dns
