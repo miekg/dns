@@ -1205,6 +1205,9 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.Truncated = (dh.Bits & _TC) != 0
 	dns.RecursionDesired = (dh.Bits & _RD) != 0
 	dns.RecursionAvailable = (dh.Bits & _RA) != 0
+	dns.Zero = (dh.Bits & _Z) != 0
+	dns.AuthenticatedData = (dh.Bits & _AD) != 0
+	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
 
 	// Arrays.
