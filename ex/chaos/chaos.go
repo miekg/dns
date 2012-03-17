@@ -28,12 +28,12 @@ func main() {
 	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
 		in, _ := c.Exchange(m, a)
-		if in != nil && in.Answer != nil {
+		if in != nil && len(in.Answer) > 0  {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
 		in, _ = c.Exchange(m, a)
-		if in != nil && in.Answer != nil {
+		if in != nil && len(in.Answer) > 0 {
 			fmt.Printf("%v\n", in.Answer[0])
 		}
 	}
