@@ -25,6 +25,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}
+	// TODO: check these limits
 	case RSASHA512:
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
