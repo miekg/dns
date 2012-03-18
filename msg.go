@@ -313,6 +313,9 @@ Loop:
 		case 0x00:
 			if c == 0x00 {
 				// end of name
+				if s == "" {
+					return ".", off, true
+				}
 				break Loop
 			}
 			// literal string
@@ -641,6 +644,7 @@ func packStructCompress(any interface{}, msg []byte, off int, compression map[st
 // Unpack a reflect.StructValue from msg.
 // Same restrictions as packStructValue.
 func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok bool) {
+	var rdstart int
 	for i := 0; i < val.NumField(); i++ {
 		//		f := val.Type().Field(i)
 		lenmsg := len(msg)
@@ -718,15 +722,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "nsec": // NSEC/NSEC3
 				// Rest of the Record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-				var endrr int
-				// for NSEC and NSEC3 calculate back what end of the RR must be
-				switch val.Type().Name() {
-				case "RR_NSEC":
-					endrr = off + (rdlength - (len(val.FieldByName("NextDomain").String()) + 1))
-				case "RR_NSEC3":
-					// NextDomain is always 20 for NextDomain
-					endrr = off + (rdlength - (20 + 6 + len(val.FieldByName("Salt").String())/2))
-				}
+				endrr := rdstart + rdlength
 
 				if off+2 > lenmsg {
 					println("dns: overflow unpacking NSEC")
@@ -787,6 +783,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			}
 		case reflect.Struct:
 			off, ok = unpackStructValue(fv, msg, off)
+			if val.Type().Field(i).Name == "Hdr" {
+				rdstart = off
+			}
 		case reflect.Uint8:
 			if off+1 > lenmsg {
 				println("dns: overflow unpacking uint8")
@@ -828,48 +827,23 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			case "hex":
 				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-				var consumed int
-				switch val.Type().Name() {
-				case "RR_DS":
-					consumed = 4 // KeyTag(2) + Algorithm(1) + DigestType(1)
-				case "RR_SSHFP":
-					consumed = 2 // Algorithm(1) + Type(1)
-				case "RR_NSEC3PARAM":
-					consumed = 5 // Hash(1) + Flags(1) + Iterations(2) + SaltLength(1)
-				case "RR_RFC3597":
-					fallthrough // Rest is the unknown data
-				default:
-					consumed = 0 // return len(msg), false?
-				}
-				if off+rdlength-consumed > lenmsg {
+				endrr := rdstart + rdlength
+				if endrr > lenmsg {
 					println("dns: overflow when unpacking hex string")
 					return lenmsg, false
 				}
-				s = hex.EncodeToString(msg[off : off+rdlength-consumed])
-				off += rdlength - consumed
+				s = hex.EncodeToString(msg[off : endrr])
+				off = endrr
 			case "base64":
 				// Rest of the RR is base64 encoded value
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
-				// Need to know how much of rdlength is already consumed, in this packet
-				var consumed int
-				switch val.Type().Name() {
-				case "RR_DNSKEY":
-					consumed = 4 // Flags(2) + Protocol(1) + Algorithm(1)
-				case "RR_RRSIG":
-					consumed = 18 // TypeCovered(2) + Algorithm(1) + Labels(1) +
-					// OrigTTL(4) + SigExpir(4) + SigIncep(4) + KeyTag(2) + len(signername)
-					// Should already be set in the sequence of parsing (comes before)
-					// Work because of rfc4034, section 3.17
-					consumed += len(val.FieldByName("SignerName").String()) + 1
-				default:
-					consumed = 0 // TODO, maybe error?
-				}
-				if off+rdlength-consumed > lenmsg {
+				endrr := rdstart + rdlength
+				if endrr > lenmsg {
 					println("dns: failure unpacking base64")
 					return lenmsg, false
 				}
-				s = unpackBase64(msg[off : off+rdlength-consumed])
-				off += rdlength - consumed
+				s = unpackBase64(msg[off : endrr])
+				off = endrr
 			case "cdomain-name":
 				fallthrough
 			case "domain-name":
