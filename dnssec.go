@@ -147,14 +147,14 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 	wire := make([]byte, DefaultMsgSize)
 	n, ok := packStruct(keywire, wire, 0)
 	if !ok {
-		return nil
+		return ErrPack
 	}
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
 	off, ok1 := PackDomainName(k.Hdr.Name, owner, 0, nil, false)
 	if !ok1 {
-		return nil
+		return ErrPack
 	}
 	owner = owner[:off]
 	// RFC4034:
