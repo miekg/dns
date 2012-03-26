@@ -7,6 +7,8 @@ need to be fixed.
 * go test; only works correct on my machine
 * Add handy zone data structure (r/b tree)? Or not...
 * dnssec: DSA (also the keytag)
+* dnssec: ECC (testing)
+* deregistration of zonehandlers
 
 ## Examples to add
 
