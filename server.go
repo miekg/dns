@@ -117,15 +117,19 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	// Should this go
-	//if pattern[len(pattern)-1] != '.' { // no ending .
-	//	mux.m[pattern+"."] = handler
-	//} else {
 	mux.m[pattern] = handler
 }
 
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	mux.Handle(pattern, HandlerFunc(handler))
+}
+
+func (mux *ServeMux) HandleRemove(pattern string) {
+	if pattern == "" {
+		panic("dns: invalid pattern " + pattern)
+	}
+	// if its there, its gone
+	delete(mux.m, pattern)
 }
 
 // ServeDNS dispatches the request to the handler whose
@@ -138,11 +142,17 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	h.ServeDNS(w, request)
 }
 
-// Handle register the handler the given pattern
+// Handle registers the handler with the given pattern
 // in the DefaultServeMux. The documentation for
 // ServeMux explains how patters are matched.
 func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
 
+// HandleRemove deregisters the handle with the given pattern
+// in the DefaultServeMux.
+func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
+
+// HandleFunc registers the handler function with te given pattern
+// in the DefaultServeMux.
 func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
@@ -322,7 +332,7 @@ func (c *conn) serve() {
 				w.tsigStatus = ErrKeyAlg
 			}
 			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
-			w.tsigTimersOnly = false	// Will this ever be true?
+			w.tsigTimersOnly = false // Will this ever be true?
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		w.req = req
@@ -340,7 +350,7 @@ func (c *conn) serve() {
 func (w *response) Write(m *Msg) (err error) {
 	var (
 		data []byte
-		ok bool
+		ok   bool
 	)
 	if m.IsTsig() {
 		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)

@@ -94,8 +94,22 @@ func (f HandlerQueryFunc) QueryDNS(w RequestWriter, r *Msg) {
 	go f(w, r)
 }
 
+// HandleQueryFunc registers the handler with the given pattern in the
+// DefaultQueryMux.
 func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
-	DefaultQueryMux.HandleQueryFunc(pattern, handler)
+	DefaultQueryMux.HandleFunc(pattern, handler)
+}
+
+// HandleQuery registers the handler
+// in the DefaultQueryMux
+func HandleQuery(pattern string, handler HandlerQueryFunc) {
+	DefaultQueryMux.Handle(pattern, handler)
+}
+
+// HandleQueryRemove deregisters the handle with the given pattern                                                                          
+// in the DefaultQueryMux.                                   
+func HandleQueryRemove(pattern string) {
+	DefaultQueryMux.HandleRemove(pattern)
 }
 
 // reusing zoneMatch from server.go
@@ -121,7 +135,13 @@ func (mux *QueryMux) Handle(pattern string, handler QueryHandler) {
 	mux.m[pattern] = handler
 }
 
-func (mux *QueryMux) HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
+// HandleRemove deregisters the handler with given pattern.
+func (mux *QueryMux) HandleRemove(pattern string) {
+	delete(mux.m, pattern)
+}
+
+// HandleFunc ...
+func (mux *QueryMux) HandleFunc(pattern string, handler func(RequestWriter, *Msg)) {
 	mux.Handle(pattern, HandlerQueryFunc(handler))
 }
 
