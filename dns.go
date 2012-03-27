@@ -60,7 +60,7 @@
 // An asynchronous query is also possible, setting up is more elaborate then
 // a synchronous query. The Basic use pattern is:
 // 
-//      HandleQueryFunc(".", handler)
+//      HandleQuery(".", handler)
 //      ListenAndQuery(nil, nil)
 //      c.Do(m1, "127.0.0.1:53")
 //      // Do something else
