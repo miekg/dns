@@ -132,7 +132,7 @@ Flags:
 	nameserver += ":" + strconv.Itoa(*port)
 
 	// We use the async query handling, just to show how it is to be used.
-	dns.HandleQueryFunc(".", q)
+	dns.HandleQuery(".", q)
 	dns.ListenAndQuery(nil, nil)
 	c := dns.NewClient()
 	if *tcp {
