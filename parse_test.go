@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestSign(t *testing.T) {
+func TestSignRSA(t *testing.T) {
 	pub := "miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ"
 
 	priv := `Private-key-format: v1.3
