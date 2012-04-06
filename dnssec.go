@@ -208,7 +208,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.TypeCovered = rrset[0].Header().Rrtype
 	s.Labels, _, _ = IsDomainName(rrset[0].Header().Name)
-	// ...
+
 	if strings.HasPrefix(rrset[0].Header().Name, "*") {
 		s.Labels-- // wildcard, remove from label count
 	}
@@ -446,6 +446,7 @@ func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
 	case ECDSAP384SHA384Y:
 		c = elliptic.P384()
 	}
+	// This does not work, we need to split the buffer in two
 	x, y := elliptic.Unmarshal(c, keybuf)
 	pubkey := new(ecdsa.PublicKey)
 	pubkey.X = x
