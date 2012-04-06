@@ -9,6 +9,8 @@ import (
 	"strconv"
 )
 
+const _FORMAT = "Private-key-format: v1.3\n"
+
 // Empty interface that is used as a wrapper around all possible
 // private key implementations from the crypto package.
 type PrivateKey interface{}
@@ -25,7 +27,6 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}
-	// TODO: check these limits
 	case RSASHA512:
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
@@ -95,7 +96,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		exponent2 := unpackBase64(exp2.Bytes())
 		coefficient := unpackBase64(coeff.Bytes())
 
-		s = "Private-key-format: v1.3\n" +
+		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"Modules: " + modulus + "\n" +
 			"PublicExponent: " + publicExponent + "\n" +
@@ -106,7 +107,11 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Exponent2: " + exponent2 + "\n" +
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
-		s = "TODO"
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")" 
+		private := unpackBase64(t.D.Bytes())
+		s = _FORMAT +
+			"Algorithm: " + algorithm + "\n" +
+			"PrivateKey: " + private + "\n"
 	}
 	return
 }
