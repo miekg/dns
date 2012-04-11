@@ -31,6 +31,20 @@ func getSoa() *RR_SOA {
 	return soa
 }
 
+func TestGenerateEC(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = ECDSAP256SHA256Y
+	privkey, _ := key.Generate(256)
+	t.Logf("%s\n", key.String())
+	t.Logf("%s\n", key.PrivateKeyString(privkey))
+}
+
 func TestSecure(t *testing.T) {
 	soa := getSoa()
 

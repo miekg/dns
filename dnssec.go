@@ -58,6 +58,7 @@ const (
 	SHA256 // RFC 4509 
 	GOST94 // RFC 5933
 	SHA384 // Experimental
+	SHA512 // Experimental
 )
 
 // DNSKEY flag values.
@@ -439,19 +440,17 @@ func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
 	if err != nil {
 		return nil
 	}
-	var c elliptic.Curve
+	pubkey := new(ecdsa.PublicKey)
 	switch k.Algorithm {
 	case ECDSAP256SHA256Y:
-		c = elliptic.P256()
+		pubkey.Curve = elliptic.P256()
 	case ECDSAP384SHA384Y:
-		c = elliptic.P384()
+		pubkey.Curve = elliptic.P384()
 	}
-	// This does not work, we need to split the buffer in two
-	x, y := elliptic.Unmarshal(c, keybuf)
-	pubkey := new(ecdsa.PublicKey)
-	pubkey.X = x
-	pubkey.Y = y
-	pubkey.Curve = c
+	pubkey.X = big.NewInt(0)
+	pubkey.X.SetBytes(keybuf[:len(keybuf)/2])
+	pubkey.Y = big.NewInt(0)
+	pubkey.Y.SetBytes(keybuf[len(keybuf)/2:]) // +1?
 	return pubkey
 }
 
@@ -494,7 +493,8 @@ func exponentToBuf(_E int) []byte {
 	return buf
 }
 
-// Set the public key for X and Y for Curve. Experiment.
+// Set the public key for X and Y for Curve. The two 
+// values are just concatenated.
 func curveToBuf(_X, _Y *big.Int) []byte {
 	buf := _X.Bytes()
 	buf = append(buf, _Y.Bytes()...)
