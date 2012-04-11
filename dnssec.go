@@ -347,7 +347,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 
 	switch s.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
-		// TODO(mg): this can be done quicker 
+		// TODO(mg): this can be done quicker, ie. cache the pubkey
+		// data somewhere
 		pubkey := k.publicKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
@@ -373,6 +374,12 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum(nil)
 		return rsa.VerifyPKCS1v15(pubkey, ch, sighash, sigbuf)
+	case ECDSAP256SHA256, ECDSAP384SHA384:
+		pubkey := k.publicKeyCurve()
+		if pubkey == nil {
+			return ErrKey
+		}
+		var h hash.Hash
 	}
 	// Unknown alg
 	return ErrAlg

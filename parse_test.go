@@ -114,7 +114,10 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	sig.Sign(privkey, []RR{a})
 
 	t.Logf("%s", sig.String())
-
+	if e := sig.Verify(eckey.(*RR_DNSKEY), []RR{a}); e != nil {
+		t.Logf("Failure to validate: %s", e.Error())
+		t.Fail()
+	}
 }
 
 func TestDotInName(t *testing.T) {
@@ -486,6 +489,6 @@ func TestLineNumberError2(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	} else {
-//		fmt.Printf("%s\n", err.Error())
+		//		fmt.Printf("%s\n", err.Error())
 	}
 }
