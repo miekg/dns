@@ -347,7 +347,8 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 
 	switch s.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
-		pubkey := k.PubKeyRSA() // Get the key
+		// TODO(mg): this can be done quicker 
+		pubkey := k.publicKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
 		}
@@ -397,8 +398,23 @@ func (s *RR_RRSIG) sigBuf() []byte {
 	return sigbuf
 }
 
-// PubKeyRSA returns the RSA public key from a DNSKEY record.
-func (k *RR_DNSKEY) PubKeyRSA() *rsa.PublicKey {
+// SetPrivatePublicKey sets the public key in the private key. 
+func (k *RR_DNSKEY) SetPrivatePublicKey(p PrivateKey) bool {
+	switch t := p.(type) {
+	case *rsa.PrivateKey:
+		// Something - but the
+	case *ecdsa.PrivateKey:
+		x := k.publicKeyCurve()
+		if x == nil {
+			return false
+		}
+		t.PublicKey = *x
+	}
+	return true
+}
+
+// publicKeyRSA returns the RSA public key from a DNSKEY record.
+func (k *RR_DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
@@ -435,8 +451,8 @@ func (k *RR_DNSKEY) PubKeyRSA() *rsa.PublicKey {
 	return pubkey
 }
 
-// PubKeyCurve returns the Curve public key from the DNSKEY record.
-func (k *RR_DNSKEY) PubKeyCurve() *ecdsa.PublicKey {
+// publicKeyCurve returns the Curve public key from the DNSKEY record.
+func (k *RR_DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil

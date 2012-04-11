@@ -93,7 +93,7 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 		t.Fatal(err.Error())
 	}
 	// We need to set the pubkey in the private key
-	privkey.(*ecdsa.PrivateKey).PublicKey = eckey.(*RR_DNSKEY).PubKeyCurve()
+	eckey.(*RR_DNSKEY).SetPrivatePublicKey(privkey)
 
 	ds := eckey.(*RR_DNSKEY).ToDS(SHA384)
 	if ds.KeyTag != 10771 {
