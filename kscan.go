@@ -21,7 +21,13 @@ func ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 		return nil, ErrPrivKey
 	}
 	switch m["algorithm"] {
-	case "1 (RSAMD5)", "5 (RSASHA1)", "8 (RSASHA256)", "10 (RSASHA512)":
+	case "1 (RSAMD5)":
+		fallthrough
+	case "5 (RSASHA1)":
+		fallthrough
+	case "8 (RSASHA256)":
+		fallthrough
+	case "10 (RSASHA512)":
 		fallthrough
 	case "7 (RSASHA1NSEC3SHA1)":
 		return readPrivateKeyRSA(m)

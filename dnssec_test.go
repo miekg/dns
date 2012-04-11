@@ -39,7 +39,7 @@ func TestGenerateEC(t *testing.T) {
 	key.Hdr.Ttl = 14400
 	key.Flags = 256
 	key.Protocol = 3
-	key.Algorithm = ECDSAP256SHA256Y
+	key.Algorithm = ECDSAP256SHA256
 	privkey, _ := key.Generate(256)
 	t.Logf("%s\n", key.String())
 	t.Logf("%s\n", key.PrivateKeyString(privkey))

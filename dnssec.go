@@ -100,6 +100,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
 	case RSAMD5:
+		// TODO(mg): implement old style keytag calculation
 		keytag = 0
 	default:
 		keywire := new(dnskeyWireFmt)

@@ -606,8 +606,8 @@ func (rr *RR_RRSIG) String() string {
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
-		" " + timeToDate(rr.Expiration) +
-		" " + timeToDate(rr.Inception) +
+		" " + TimeToDate(rr.Expiration) +
+		" " + TimeToDate(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
 		" " + rr.Signature
@@ -1033,19 +1033,20 @@ func (rr *RR_HIP) Len() int {
 	return l
 }
 
-// Translate the RRSIG's incep. and expir. time to the correct date.
-// Taking into account serial arithmetic (RFC 1982) [TODO]
-func timeToDate(t uint32) string {
+// TimeToDate translates the RRSIG's incep. and expir. times to the
+// string representation used when printing the record.
+// It takes serial arithmetic (RFC 1982) into account. [TODO]
+func TimeToDate(t uint32) string {
 	//	utc := time.Now().UTC().Unix()
 	//	mod := (int64(t) - utc) / Year68
 	ti := time.Unix(int64(t), 0).UTC()
 	return ti.Format("20060102150405")
 }
 
-// Translate the RRSIG's incep. and expir. times from 
-// string values ("20110403154150") to an integer.
-// Taking into account serial arithmetic (RFC 1982)
-func dateToTime(s string) (uint32, error) {
+// DateToTime translates the RRSIG's incep. and expir. times from 
+// string values like "20110403154150" to an 32 bit integer.
+// It takes serial arithmetic (RFC 1982) into account. [TODO]
+func DateToTime(s string) (uint32, error) {
 	t, e := time.Parse("20060102150405", s)
 	if e != nil {
 		return 0, e
