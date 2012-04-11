@@ -45,8 +45,8 @@ const (
 	RSASHA256        = 8
 	RSASHA512        = 10
 	ECCGOST          = 12
-	ECDSAP256SHA256Y = 13
-	ECDSAP384SHA384Y = 14
+	ECDSAP256SHA256  = 13
+	ECDSAP384SHA384  = 14
 	PRIVATEDNS       = 253 // Private (experimental keys)
 	PRIVATEOID       = 254
 )
@@ -248,10 +248,10 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	case RSASHA1, RSASHA1NSEC3SHA1:
 		h = sha1.New()
 		ch = crypto.SHA1
-	case RSASHA256, ECDSAP256SHA256Y:
+	case RSASHA256, ECDSAP256SHA256:
 		h = sha256.New()
 		ch = crypto.SHA256
-	case ECDSAP384SHA384Y:
+	case ECDSAP384SHA384:
 		h = sha512.New384()
 	case RSASHA512:
 		h = sha512.New()
@@ -442,9 +442,9 @@ func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
 	}
 	pubkey := new(ecdsa.PublicKey)
 	switch k.Algorithm {
-	case ECDSAP256SHA256Y:
+	case ECDSAP256SHA256:
 		pubkey.Curve = elliptic.P256()
-	case ECDSAP384SHA384Y:
+	case ECDSAP384SHA384:
 		pubkey.Curve = elliptic.P384()
 	}
 	pubkey.X = big.NewInt(0)
@@ -617,8 +617,8 @@ var Alg_str = map[uint8]string{
 	RSASHA256:        "RSASHA256",
 	RSASHA512:        "RSASHA512",
 	ECCGOST:          "ECC-GOST",
-	ECDSAP256SHA256Y: "ECDSAP256SHA256Y",
-	ECDSAP384SHA384Y: "ECDSAP384SHA384Y",
+	ECDSAP256SHA256:  "ECDSAP256SHA256",
+	ECDSAP384SHA384:  "ECDSAP384SHA384",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
 }

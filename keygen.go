@@ -31,11 +31,11 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		if bits < 1024 || bits > 4096 {
 			return nil, ErrKeySize
 		}
-	case ECDSAP256SHA256Y:
+	case ECDSAP256SHA256:
 		if bits != 256 {
 			return nil, ErrKeySize
 		}
-	case ECDSAP384SHA384Y:
+	case ECDSAP384SHA384:
 		if bits != 384 {
 			return nil, ErrKeySize
 		}
@@ -49,12 +49,12 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		}
 		r.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
 		return priv, nil
-	case ECDSAP256SHA256Y, ECDSAP384SHA384Y:
+	case ECDSAP256SHA256, ECDSAP384SHA384:
 		var c elliptic.Curve
 		switch r.Algorithm {
-		case ECDSAP256SHA256Y:
+		case ECDSAP256SHA256:
 			c = elliptic.P256()
-		case ECDSAP384SHA384Y:
+		case ECDSAP384SHA384:
 			c = elliptic.P384()
 		}
 		priv, err := ecdsa.GenerateKey(c, rand.Reader)
