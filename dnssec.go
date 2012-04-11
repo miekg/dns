@@ -347,7 +347,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 
 	switch s.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
-		pubkey := k.pubKeyRSA() // Get the key
+		pubkey := k.PubKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
 		}
@@ -397,8 +397,8 @@ func (s *RR_RRSIG) sigBuf() []byte {
 	return sigbuf
 }
 
-// Extract the RSA public key from the Key record
-func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
+// PubKeyRSA returns the RSA public key from a DNSKEY record.
+func (k *RR_DNSKEY) PubKeyRSA() *rsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
@@ -435,8 +435,8 @@ func (k *RR_DNSKEY) pubKeyRSA() *rsa.PublicKey {
 	return pubkey
 }
 
-// Extract the Curve public key from the Key record
-func (k *RR_DNSKEY) pubKeyCurve() *ecdsa.PublicKey {
+// PubKeyCurve returns the Curve public key from the DNSKEY record.
+func (k *RR_DNSKEY) PubKeyCurve() *ecdsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
