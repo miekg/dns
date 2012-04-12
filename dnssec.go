@@ -275,6 +275,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
+		// Check the length and zero pad??
 		signature := r1.Bytes()
 		signature = append(signature, s1.Bytes()...)
 		s.Signature = unpackBase64(signature)
@@ -370,6 +371,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 			h = sha512.New()
 			ch = crypto.SHA512
 		default:
+			return ErrKey
 		}
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum(nil)
@@ -379,7 +381,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		if pubkey == nil {
 			return ErrKey
 		}
-		var h hash.Hash
+		//var h hash.Hash
 	}
 	// Unknown alg
 	return ErrAlg
@@ -468,13 +470,21 @@ func (k *RR_DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
 	switch k.Algorithm {
 	case ECDSAP256SHA256:
 		pubkey.Curve = elliptic.P256()
+		if len(keybuf) != 64 {
+			// wrongly encoded key
+			return nil
+		}
 	case ECDSAP384SHA384:
 		pubkey.Curve = elliptic.P384()
+		if len(keybuf) != 96 {
+			// Wrongly encoded key
+			return nil
+		}
 	}
 	pubkey.X = big.NewInt(0)
 	pubkey.X.SetBytes(keybuf[:len(keybuf)/2])
 	pubkey.Y = big.NewInt(0)
-	pubkey.Y.SetBytes(keybuf[len(keybuf)/2:]) // +1?
+	pubkey.Y.SetBytes(keybuf[len(keybuf)/2:])
 	return pubkey
 }
 
@@ -495,6 +505,7 @@ func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 		return false
 	}
 	buf := curveToBuf(_X, _Y)
+	// Check the length of the buffer, either 64 or 92 bytes
 	k.PublicKey = unpackBase64(buf)
 	return true
 }
