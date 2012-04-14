@@ -54,6 +54,7 @@ const (
 	TypeDHCID      uint16 = 49
 	TypeNSEC3      uint16 = 50
 	TypeNSEC3PARAM uint16 = 51
+	TypeTLSA       uint16 = 52
 	TypeHIP        uint16 = 55
 	TypeTALINK     uint16 = 58
 	TypeSPF        uint16 = 99
@@ -69,7 +70,6 @@ const (
 	TypeURI   uint16 = 256
 	TypeTA    uint16 = 32768
 	TypeDLV   uint16 = 32769
-	TypeTLSA  uint16 = 65468 // Experimental
 
 	// valid Question.Qclass
 	ClassINET   = 1
