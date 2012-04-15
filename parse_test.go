@@ -28,7 +28,7 @@ Activate: 20110302104537`
 
 	xk, _ := NewRR(pub)
 	k := xk.(*RR_DNSKEY)
-	p, err := ReadPrivateKey(strings.NewReader(priv), "")
+	p, err := k.NewPrivateKey(priv)
 	if err != nil {
 		t.Logf("%v\n", err)
 		t.Fail()
@@ -88,7 +88,7 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	privkey, err := eckey.(RR_DNSKEY).NewPrivateKey(strings.NewReader(priv), "")
+	privkey, err := eckey.(*RR_DNSKEY).NewPrivateKey(priv)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

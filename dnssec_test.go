@@ -166,10 +166,10 @@ func TestSignVerify(t *testing.T) {
 }
 
 func TestDnskey(t *testing.T) {
-	f, _ = os.Open("t/Kmiek.nl.+010+05240.key")
+	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
 	pubkey, _ := ReadRR(f, "t/Kmiek.nl.+010+05240.key")
-	f, _ := os.Open("t/Kmiek.nl.+010+05240.private")
-	privkey, _ := pubkey.(*RR_DNSKEU).ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
+	f, _ = os.Open("t/Kmiek.nl.+010+05240.private")
+	privkey, _ := pubkey.(*RR_DNSKEY).ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
 	// Okay, we assume this has gone OK
 	if pubkey.(*RR_DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
 		t.Log("Pubkey is not what we've read")
