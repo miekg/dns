@@ -8,8 +8,16 @@ import (
 	"strings"
 )
 
-// ReadPrivateKey reads a private key from the io.Reader q.
-func ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
+func (k *RR_DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
+	if s[len(s)-1] != '\n' { // We need a closing newline                                                               
+		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")
+	}
+	return k.ReadPrivateKey(strings.NewReader(s), "")
+}
+
+// NewPrivateKey reads a private key from the io.Reader q. The public key must be
+// known, because some cryptographics algorithms embed the public inside the privatekey.
+func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 	m, e := parseKey(q, file)
 	if m == nil {
 		return nil, e
@@ -20,6 +28,7 @@ func ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 	if m["private-key-format"] != "v1.2" && m["private-key-format"] != "v1.3" {
 		return nil, ErrPrivKey
 	}
+	// TODO(mg): check if the pubkey matches the private key
 	switch m["algorithm"] {
 	case "1 (RSAMD5)":
 		fallthrough
@@ -30,9 +39,23 @@ func ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 	case "10 (RSASHA512)":
 		fallthrough
 	case "7 (RSASHA1NSEC3SHA1)":
-		return readPrivateKeyRSA(m)
-	case "13 (ECDSAP256SHA256)", "14 (ECDSAP384SHA384)":
-		return readPrivateKeyECDSA(m)
+		p, e := readPrivateKeyRSA(m)
+		if e != nil {
+			if !k.setPublicKeyInPrivate(p) {
+				return nil, ErrPrivKey
+			}
+		}
+		return p, e
+	case "13 (ECDSAP256SHA256)":
+		fallthrough
+	case "14 (ECDSAP384SHA384)":
+		p, e := readPrivateKeyECDSA(m)
+		if e != nil {
+			if !k.setPublicKeyInPrivate(p) {
+				return nil, ErrPrivKey
+			}
+		}
+		return p, e
 	}
 	return nil, ErrPrivKey
 }

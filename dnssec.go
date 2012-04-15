@@ -407,8 +407,8 @@ func (s *RR_RRSIG) sigBuf() []byte {
 	return sigbuf
 }
 
-// SetPrivatePublicKey sets the public key in the private key. 
-func (k *RR_DNSKEY) SetPrivatePublicKey(p PrivateKey) bool {
+// setPublicKeyInPrivate sets the public key in the private key. 
+func (k *RR_DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		// Something - but the

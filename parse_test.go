@@ -88,13 +88,10 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	privkey, err := ReadPrivateKey(strings.NewReader(priv), "")
+	privkey, err := eckey.(RR_DNSKEY).NewPrivateKey(strings.NewReader(priv), "")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	// We need to set the pubkey in the private key
-	eckey.(*RR_DNSKEY).SetPrivatePublicKey(privkey)
-
 	ds := eckey.(*RR_DNSKEY).ToDS(SHA384)
 	if ds.KeyTag != 10771 {
 		t.Fatal("Wrong keytag on DS")
