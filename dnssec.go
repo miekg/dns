@@ -393,7 +393,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		r.SetBytes(sigbuf[:len(sigbuf)/2])
 		s := big.NewInt(0)
 		s.SetBytes(sigbuf[len(sigbuf)/2:])
-		if ! ecdsa.Verify(pubkey, sighash, r, s) {
+		if ecdsa.Verify(pubkey, sighash, r, s) {
 			return ErrSig
 		}
 		return nil
