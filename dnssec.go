@@ -341,15 +341,15 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	}
 	signeddata = append(signeddata, wire...)
 
-	sigbuf := s.sigBuf() // Get the binary signature data
-	if s.Algorithm == PRIVATEDNS {
+	sigbuf := s.sigBuf()           // Get the binary signature data
+	if s.Algorithm == PRIVATEDNS { // PRIVATEOID
+		// TODO(mg)
 		// remove the domain name and assume its our
 	}
 
 	switch s.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
-		// TODO(mg): this can be done quicker, ie. cache the pubkey
-		// data somewhere
+		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
 		pubkey := k.publicKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
@@ -370,8 +370,6 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		case RSASHA512:
 			h = sha512.New()
 			ch = crypto.SHA512
-		default:
-			return ErrKey
 		}
 		io.WriteString(h, string(signeddata))
 		sighash := h.Sum(nil)
@@ -381,7 +379,24 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		if pubkey == nil {
 			return ErrKey
 		}
-		//var h hash.Hash
+		var h hash.Hash
+		switch s.Algorithm {
+		case ECDSAP256SHA256:
+			h = sha256.New()
+		case ECDSAP384SHA384:
+			h = sha512.New()
+		}
+		io.WriteString(h, string(signeddata))
+		sighash := h.Sum(nil)
+		// Split sigbuf into the r and s coordinates
+		r := big.NewInt(0)
+		r.SetBytes(sigbuf[:len(sigbuf)/2])
+		s := big.NewInt(0)
+		s.SetBytes(sigbuf[len(sigbuf)/2:])
+		if ! ecdsa.Verify(pubkey, sighash, r, s) {
+			return ErrSig
+		}
+		return nil
 	}
 	// Unknown alg
 	return ErrAlg
