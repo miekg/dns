@@ -41,9 +41,10 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error)
 	case "7 (RSASHA1NSEC3SHA1)":
 		p, e := readPrivateKeyRSA(m)
 		if e != nil {
-			if !k.setPublicKeyInPrivate(p) {
-				return nil, ErrPrivKey
-			}
+			return nil, e
+		}
+		if !k.setPublicKeyInPrivate(p) {
+			return nil, ErrPrivKey
 		}
 		return p, e
 	case "13 (ECDSAP256SHA256)":
@@ -51,9 +52,10 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error)
 	case "14 (ECDSAP384SHA384)":
 		p, e := readPrivateKeyECDSA(m)
 		if e != nil {
-			if !k.setPublicKeyInPrivate(p) {
-				return nil, ErrPrivKey
-			}
+			return nil, e
+		}
+		if !k.setPublicKeyInPrivate(p) {
+			return nil, ErrPrivKey
 		}
 		return p, e
 	}
