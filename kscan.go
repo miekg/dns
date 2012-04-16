@@ -47,6 +47,13 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error)
 			return nil, ErrPrivKey
 		}
 		return p, e
+	case "12 (ECC-GOST)":
+		p, e := readPrivateKeyGOST(m)
+		if e != nil {
+			return nil, e
+		}
+		// setPublicKeyInPrivate(p)
+		return p, e
 	case "13 (ECDSAP256SHA256)":
 		fallthrough
 	case "14 (ECDSAP384SHA384)":
@@ -117,6 +124,26 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 		}
 	}
 	return p, nil
+}
+
+func readPrivateKeyGOST(m map[string]string) (PrivateKey, error) {
+//	p := new(ecdsa.PrivateKey)
+//	p.D = big.NewInt(0)
+	// Need to check if we have everything
+	for k, v := range m {
+		switch k {
+		case "gostasn1:":
+			v1, err := packBase64([]byte(v))
+			if err != nil {
+				return nil, err
+			}
+			v1 = v1
+			//p.D.SetBytes(v1)
+		case "created:", "publish:", "activate:":
+			/* not used in Go (yet) */
+		}
+	}
+	return nil, nil
 }
 
 // parseKey reads a private key from r. It returns a map[string]string,
