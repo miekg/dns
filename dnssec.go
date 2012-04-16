@@ -47,6 +47,7 @@ const (
 	ECCGOST          = 12
 	ECDSAP256SHA256  = 13
 	ECDSAP384SHA384  = 14
+	INDIRECT         = 252
 	PRIVATEDNS       = 253 // Private (experimental keys)
 	PRIVATEOID       = 254
 )
@@ -669,6 +670,7 @@ var Alg_str = map[uint8]string{
 	ECCGOST:          "ECC-GOST",
 	ECDSAP256SHA256:  "ECDSAP256SHA256",
 	ECDSAP384SHA384:  "ECDSAP384SHA384",
+	INDIRECT:         "INDIRECT",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
 }
