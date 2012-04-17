@@ -58,7 +58,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		// setPubicKey needed?
+		// setPublicKeyDSA() needed?
 		return priv, nil
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
@@ -130,6 +130,20 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"
+	case *dsa.PrivateKey:
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
+		prime := unpackBase64(t.PublicKey.Parameters.P.Bytes())
+		subprime := unpackBase64(t.PublicKey.Parameters.Q.Bytes())
+		base := unpackBase64(t.PublicKey.Parameters.G.Bytes())
+		priv := unpackBase64(t.X.Bytes())
+		pub  := unpackBase64(t.PublicKey.Y.Bytes())
+		s = _FORMAT +
+			"Algorithm: " + algorithm + "\n" +
+			"Prime(p): " + prime + "\n" +
+			"Subprime(q): " + subprime + "\n" +
+			"Base(g): " + base + "\n" +
+			"Private_value(x): " + priv + "\n" +
+			"Public_value(y): " + pub + "\n"
 	}
 	return
 }
