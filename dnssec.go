@@ -101,8 +101,14 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 	var keytag int
 	switch k.Algorithm {
 	case RSAMD5:
-		// TODO(mg): implement old style keytag calculation
-		keytag = 0
+		// Look at the bottom two bytes of the modules, which the last
+		// item in the pubkey. We could do this faster by looking directly
+		// at the base64 values. But I'm lazy.
+		modulus, _ := packBase64([]byte(k.PublicKey))
+		if (len(modulus) > 1) {
+			x, _ := unpackUint16(modulus, len(modulus)-2)
+			keytag = int(x)
+		}
 	default:
 		keywire := new(dnskeyWireFmt)
 		keywire.Flags = k.Flags
