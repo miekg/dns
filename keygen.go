@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/dsa"
 	"math/big"
 	"strconv"
 )
@@ -23,6 +24,10 @@ type PrivateKey interface{}
 // bits should be set to the size of the algorithm.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	switch r.Algorithm {
+	case DSA:
+		if bits != 1024 {
+			return nil, ErrKeySize
+		}
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
@@ -42,6 +47,19 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	}
 
 	switch r.Algorithm {
+	case DSA:
+		params := new(dsa.Parameters)
+		if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
+			return nil, err
+		}
+		priv := new(dsa.PrivateKey)
+		priv.PublicKey.Parameters = *params
+		err := dsa.GenerateKey(priv, rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+		// setPubicKey needed?
+		return priv, nil
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
 		if err != nil {
