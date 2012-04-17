@@ -3,6 +3,7 @@ package dns
 import (
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"crypto/dsa"
 	"io"
 	"math/big"
 	"strings"
@@ -30,15 +31,24 @@ func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error)
 	}
 	// TODO(mg): check if the pubkey matches the private key
 	switch m["algorithm"] {
+	case "3 (DSA)":
+		p, e := readPrivateKeyDSA(m)
+		if e != nil {
+			return nil, e
+		}
+		if !k.setPublicKeyInPrivate(p) {
+			return nil, ErrPrivKey
+		}
+		return p, e
 	case "1 (RSAMD5)":
 		fallthrough
 	case "5 (RSASHA1)":
 		fallthrough
+	case "7 (RSASHA1NSEC3SHA1)":
+		fallthrough
 	case "8 (RSASHA256)":
 		fallthrough
 	case "10 (RSASHA512)":
-		fallthrough
-	case "7 (RSASHA1NSEC3SHA1)":
 		p, e := readPrivateKeyRSA(m)
 		if e != nil {
 			return nil, e
@@ -102,6 +112,24 @@ func readPrivateKeyRSA(m map[string]string) (PrivateKey, error) {
 			// not used in Go (yet)
 		case "created", "publish", "activate":
 			// not used in Go (yet)
+		}
+	}
+	return p, nil
+}
+
+func readPrivateKeyDSA(m map[string]string) (PrivateKey, error) {
+	p := new(dsa.PrivateKey)
+	p.X = big.NewInt(0)
+	for k, v := range m {
+		switch k {
+		case "private_value(x):":
+			v1, err := packBase64([]byte(v))
+			if err != nil {
+				return nil, err
+			}
+			p.X.SetBytes(v1)
+		case "created:", "publish:", "activate:":
+			/* not used in Go (yet) */
 		}
 	}
 	return p, nil

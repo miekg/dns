@@ -16,6 +16,7 @@ package dns
 import (
 	"bytes"
 	"crypto"
+	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/md5"
@@ -432,8 +433,18 @@ func (s *RR_RRSIG) sigBuf() []byte {
 // setPublicKeyInPrivate sets the public key in the private key. 
 func (k *RR_DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
 	switch t := p.(type) {
+	case *dsa.PrivateKey:
+		x := k.publicKeyDSA()
+		if x == nil {
+			return false
+		}
+		t.PublicKey = *x
 	case *rsa.PrivateKey:
-		// Something - but the
+		x := k.publicKeyRSA()
+		if x == nil {
+			return false
+		}
+		t.PublicKey = *x
 	case *ecdsa.PrivateKey:
 		x := k.publicKeyCurve()
 		if x == nil {
@@ -510,6 +521,28 @@ func (k *RR_DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
 	return pubkey
 }
 
+func (k *RR_DNSKEY) publicKeyDSA() *dsa.PublicKey {
+	keybuf, err := packBase64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	if len(keybuf) < 22 { // TODO: check
+		return nil
+	}
+	t := int(keybuf[0])
+	size := 64 + t*8
+	pubkey := new(dsa.PublicKey)
+	pubkey.Parameters.Q = big.NewInt(0)
+	pubkey.Parameters.Q.SetBytes(keybuf[1:21]) // +/- 1 ?
+	pubkey.Parameters.P = big.NewInt(0)
+	pubkey.Parameters.P.SetBytes(keybuf[22:22+size])
+	pubkey.Parameters.G = big.NewInt(0)
+	pubkey.Parameters.G.SetBytes(keybuf[22+size+1:22+size*2])
+	pubkey.Y = big.NewInt(0)
+	pubkey.Y.SetBytes(keybuf[22+size*2+1:22+size*3])
+	return pubkey
+}
+
 // Set the public key (the value E and N)
 func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 	if _E == 0 || _N == nil {
@@ -529,6 +562,14 @@ func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 	buf := curveToBuf(_X, _Y)
 	// Check the length of the buffer, either 64 or 92 bytes
 	k.PublicKey = unpackBase64(buf)
+	return true
+}
+
+// Set the public key for DSA
+func (k RR_DNSKEY) setPublicKeyDSA(_P, _Q, _G, _Y *big.Int) bool {
+	if _P == nil || _Q == nil || _G == nil || _Y == nil {
+		return false
+	}
 	return true
 }
 
