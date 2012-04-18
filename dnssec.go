@@ -614,8 +614,8 @@ func curveToBuf(_X, _Y *big.Int) []byte {
 // Set the public key for X and Y for Curve. The two 
 // values are just concatenated.
 func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
-	_T := (len(_G.Bytes()) - 64) / 8
-	buf := []byte{_T}
+	t := byte((len(_G.Bytes()) - 64) / 8)
+	buf := []byte{t}
 	buf = append(buf, _Q.Bytes()...)
 	buf = append(buf, _P.Bytes()...)
 	buf = append(buf, _G.Bytes()...)
