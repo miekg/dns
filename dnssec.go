@@ -53,6 +53,8 @@ const (
 	PRIVATEOID       = 254
 )
 
+const _DSA_T	= 0x0F		// What should this value be?? TODO(mg)
+
 // DNSSEC hashing algorithm codes.
 const (
 	_      = iota
@@ -279,7 +281,8 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
-		signature := r1.Bytes()
+		signature := []byte{_DSA_T}
+		signature = append(signature, r1.Bytes()...)
 		signature = append(signature, s1.Bytes()...)
 		s.Signature = unpackBase64(signature)
 	case *rsa.PrivateKey:
@@ -575,10 +578,12 @@ func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 }
 
 // Set the public key for DSA
-func (k RR_DNSKEY) setPublicKeyDSA(_P, _Q, _G, _Y *big.Int) bool {
-	if _P == nil || _Q == nil || _G == nil || _Y == nil {
+func (k *RR_DNSKEY) setPublicKeyDSA(_Q, _P, _G, _Y *big.Int) bool {
+	if _Q == nil || _P == nil || _G == nil || _Y == nil {
 		return false
 	}
+	buf := dsaToBuf(_Q, _P, _G, _Y)
+	k.PublicKey = unpackBase64(buf)
 	return true
 }
 
@@ -604,6 +609,17 @@ func exponentToBuf(_E int) []byte {
 // values are just concatenated.
 func curveToBuf(_X, _Y *big.Int) []byte {
 	buf := _X.Bytes()
+	buf = append(buf, _Y.Bytes()...)
+	return buf
+}
+
+// Set the public key for X and Y for Curve. The two 
+// values are just concatenated.
+func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
+	buf := []byte{_DSA_T}
+	buf = append(buf, _Q.Bytes()...)
+	buf = append(buf, _P.Bytes()...)
+	buf = append(buf, _G.Bytes()...)
 	buf = append(buf, _Y.Bytes()...)
 	return buf
 }

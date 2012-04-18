@@ -58,7 +58,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		// setPublicKeyDSA() needed?
+		r.setPublicKeyDSA(params.Q, params.P, params.G, priv.PublicKey.Y)
 		return priv, nil
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
