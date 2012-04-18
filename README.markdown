@@ -131,6 +131,7 @@ All of them:
 * 5001 - NSID 
 * 5155 - NSEC3 record
 * 5205 - HIP record
+* 5702 - SHA2 in the DNS
 * 5933 - GOST
 * 5936 - AXFR
 * xxxx - ECDSA
