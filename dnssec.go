@@ -252,8 +252,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	var ch crypto.Hash // Only need for RSA
 	switch s.Algorithm {
 	case DSA:
-		h = sha1.New()
-		ch = crypto.SHA1
+		// Implicit in the ParameterSizes
 	case RSAMD5:
 		h = md5.New()
 		ch = crypto.MD5
@@ -276,7 +275,13 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 
 	switch p := k.(type) {
 	case *dsa.PrivateKey:
-		// TODO(mg): sign it
+		r1, s1, err := dsa.Sign(rand.Reader, p, sighash)
+		if err != nil {
+			return err
+		}
+		signature := r1.Bytes()
+		signature = append(signature, s1.Bytes()...)
+		s.Signature = unpackBase64(signature)
 	case *rsa.PrivateKey:
 		signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
 		if err != nil {
