@@ -66,7 +66,6 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() (s string) {
-	//	va := strconv.Itoa(e.lex.value)
 	if e.file != "" {
 		s = e.file + ": "
 	}
