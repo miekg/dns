@@ -45,6 +45,34 @@ func TestGenerateEC(t *testing.T) {
 	t.Logf("%s\n", key.PrivateKeyString(privkey))
 }
 
+func TestGenerateDSA(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = DSA
+	privkey, _ := key.Generate(1024)
+	t.Logf("%s\n", key.String())
+	t.Logf("%s\n", key.PrivateKeyString(privkey))
+}
+
+func TestGenerateRSA(t *testing.T) {
+	key := new(RR_DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = RSASHA256
+	privkey, _ := key.Generate(1024)
+	t.Logf("%s\n", key.String())
+	t.Logf("%s\n", key.PrivateKeyString(privkey))
+}
+
 func TestSecure(t *testing.T) {
 	soa := getSoa()
 
