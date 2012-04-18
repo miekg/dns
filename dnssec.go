@@ -53,8 +53,6 @@ const (
 	PRIVATEOID       = 254
 )
 
-const _DSA_T	= 0x0F		// What should this value be?? TODO(mg)
-
 // DNSSEC hashing algorithm codes.
 const (
 	_      = iota
@@ -281,7 +279,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
-		signature := []byte{_DSA_T}
+		signature := []byte{0x6D}	// The ASCII M for Miek (not used in DNSSEC)
 		signature = append(signature, r1.Bytes()...)
 		signature = append(signature, s1.Bytes()...)
 		s.Signature = unpackBase64(signature)
@@ -616,7 +614,8 @@ func curveToBuf(_X, _Y *big.Int) []byte {
 // Set the public key for X and Y for Curve. The two 
 // values are just concatenated.
 func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
-	buf := []byte{_DSA_T}
+	_T := (len(_G.Bytes()) - 64) / 8
+	buf := []byte{_T}
 	buf = append(buf, _Q.Bytes()...)
 	buf = append(buf, _P.Bytes()...)
 	buf = append(buf, _G.Bytes()...)
