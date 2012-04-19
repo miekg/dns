@@ -24,7 +24,7 @@ type PrivateKey interface{}
 // bits should be set to the size of the algorithm.
 func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	switch r.Algorithm {
-	case DSA:
+	case DSA, DSANSEC3SHA1:
 		if bits != 1024 {
 			return nil, ErrKeySize
 		}
@@ -47,7 +47,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 	}
 
 	switch r.Algorithm {
-	case DSA:
+	case DSA, DSANSEC3SHA1:
 		params := new(dsa.Parameters)
 		if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
 			return nil, err

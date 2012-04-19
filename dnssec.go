@@ -251,7 +251,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	var h hash.Hash
 	var ch crypto.Hash // Only need for RSA
 	switch s.Algorithm {
-	case DSA:
+	case DSA, DSANSEC3SHA1:
 		// Implicit in the ParameterSizes
 	case RSAMD5:
 		h = md5.New()
