@@ -279,7 +279,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
-		signature := []byte{0x4D}	// The ASCII M for Miek (not used in DNSSEC)
+		signature := []byte{0x4D}	// T value, here the ASCII M for Miek (not used in DNSSEC)
 		signature = append(signature, r1.Bytes()...)
 		signature = append(signature, s1.Bytes()...)
 		s.Signature = unpackBase64(signature)
