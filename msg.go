@@ -243,7 +243,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 			}
 			// Dont try to compress '.'
-			if string(bs[begin:]) != "." && compression != nil {
+			if compression != nil && string(bs[begin:]) != ".'" {
 				if p, ok := compression[string(bs[begin:])]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
