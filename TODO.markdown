@@ -7,6 +7,7 @@ need to be fixed.
 * go test; only works correct on my machine
 * Add handy zone data structure (r/b tree)? Or not...
 * privatekey.Precompute() when signing? 
+* Add source/dest and RTT timing in dns.Msg structure???
 
 ## Examples to add
 
