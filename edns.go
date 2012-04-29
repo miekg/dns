@@ -17,7 +17,7 @@ const (
 // An ENDS0 option rdata element.
 type Option struct {
 	Code uint16
-	Data string "hex"
+	Data string `dns:"hex"`
 }
 
 /* 
@@ -34,7 +34,7 @@ type Option struct {
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option "opt" // tag is used in Pack and Unpack
+	Option []Option `dns:"opt"` // tag is used in Pack and Unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -126,6 +126,7 @@ func (rr *RR_OPT) Nsid() string {
 			return "NSID: " + rr.Option[i].Data
 		}
 	}
+	// TODO: error or nil string?
 	return "Not found"
 }
 

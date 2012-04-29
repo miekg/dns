@@ -81,7 +81,7 @@ type rrsigWireFmt struct {
 	Expiration  uint32
 	Inception   uint32
 	KeyTag      uint16
-	SignerName  string "domain-name"
+	SignerName  string `dns:"domain-name"`
 	/* No Signature */
 }
 
@@ -90,7 +90,7 @@ type dnskeyWireFmt struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PublicKey string "base64"
+	PublicKey string `dns:"base64"`
 	/* Nothing is left out */
 }
 

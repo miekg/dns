@@ -14,7 +14,7 @@ const (
 )
 
 type saltWireFmt struct {
-	Salt string "size-hex"
+	Salt string `dns:"size-hex"`
 }
 
 // HashName hashes a string (label) according to RFC5155. It returns the hashed string.

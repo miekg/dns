@@ -371,9 +371,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		default:
 			return lenmsg, false
 		case reflect.Slice:
-			switch val.Type().Field(i).Tag {
+			switch val.Type().Field(i).Tag.Get("dns") {
 			default:
-				println("dns: unknown tag packing slice", val.Type().Field(i).Tag)
+				println("dns: unknown tag packing slice", val.Type().Field(i).Tag.Get("dns"), '"', val.Type().Field(i).Tag , '"')
 				return lenmsg, false
 			case "domain-name":
 				for j := 0; j < val.Field(i).Len(); j++ {
@@ -550,7 +550,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
 			s := fv.String()
-			switch val.Type().Field(i).Tag {
+			switch val.Type().Field(i).Tag.Get("dns") {
 			default:
 				return lenmsg, false
 			case "base64":
@@ -562,14 +562,12 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case "domain-name":
-				fallthrough // No compression
-			case "cdomain-name":
-				if val.Type().Field(i).Tag == "cdomain-name" {
-					off, ok = PackDomainName(s, msg, off, compression, true && compress)
-				} else {
-					off, ok = PackDomainName(s, msg, off, compression, false && compress)
+				if off, ok = PackDomainName(s, msg, off, compression, false && compress); !ok {
+					println("dns: overflow packing domain-name", off)
+					return lenmsg, false
 				}
-				if !ok {
+			case "cdomain-name":
+				if off, ok = PackDomainName(s, msg, off, compression, true && compress); !ok {
 					println("dns: overflow packing domain-name", off)
 					return lenmsg, false
 				}
@@ -653,7 +651,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			println("dns: unknown case unpacking struct")
 			return lenmsg, false
 		case reflect.Slice:
-			switch val.Type().Field(i).Tag {
+			switch val.Type().Field(i).Tag.Get("dns") {
 			default:
 				println("dns: unknown tag unpacking slice", val.Type().Field(i).Tag)
 				return lenmsg, false
@@ -820,7 +818,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 			off += 6
 		case reflect.String:
 			var s string
-			switch val.Type().Field(i).Tag {
+			switch val.Type().Field(i).Tag.Get("dns") {
 			default:
 				println("dns: unknown tag unpacking string")
 				return lenmsg, false
@@ -832,7 +830,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					println("dns: overflow when unpacking hex string")
 					return lenmsg, false
 				}
-				s = hex.EncodeToString(msg[off : endrr])
+				s = hex.EncodeToString(msg[off:endrr])
 				off = endrr
 			case "base64":
 				// Rest of the RR is base64 encoded value
@@ -842,7 +840,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					println("dns: failure unpacking base64")
 					return lenmsg, false
 				}
-				s = unpackBase64(msg[off : endrr])
+				s = unpackBase64(msg[off:endrr])
 				off = endrr
 			case "cdomain-name":
 				fallthrough

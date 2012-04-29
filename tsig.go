@@ -72,15 +72,15 @@ const (
 // RFC 2845.
 type RR_TSIG struct {
 	Hdr        RR_Header
-	Algorithm  string "domain-name"
+	Algorithm  string `dns:"domain-name"`
 	TimeSigned uint64
 	Fudge      uint16
 	MACSize    uint16
-	MAC        string "size-hex"
+	MAC        string `dns:"size-hex"`
 	OrigId     uint16
 	Error      uint16
 	OtherLen   uint16
-	OtherData  string "size-hex"
+	OtherData  string `dns:"size-hex"`
 }
 
 func (rr *RR_TSIG) Header() *RR_Header {
@@ -112,24 +112,24 @@ func (rr *RR_TSIG) Len() int {
 // RFC 2845, section 3.4.2. TSIG Variables.
 type tsigWireFmt struct {
 	// From RR_Header
-	Name  string "domain-name"
+	Name  string `dns:"domain-name"`
 	Class uint16
 	Ttl   uint32
 	// Rdata of the TSIG
-	Algorithm  string "domain-name"
+	Algorithm  string `dns:"domain-name"`
 	TimeSigned uint64
 	Fudge      uint16
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
 	OtherLen  uint16
-	OtherData string "size-hex"
+	OtherData string `dns:"size-hex"`
 }
 
 // If we have the MAC use this type to convert it to wiredata.
 // Section 3.4.3. Request MAC
 type macWireFmt struct {
 	MACSize uint16
-	MAC     string "size-hex"
+	MAC     string `dns:"size-hex"`
 }
 
 // 3.3. Time values used in TSIG calculations

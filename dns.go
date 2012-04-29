@@ -124,7 +124,7 @@ type Exchange struct {
 // There are many types of messages,
 // but they all share the same header.
 type RR_Header struct {
-	Name     string "cdomain-name"
+	Name     string `dns:"cdomain-name"`
 	Rrtype   uint16
 	Class    uint16
 	Ttl      uint32

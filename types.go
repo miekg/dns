@@ -129,7 +129,7 @@ const (
 
 // DNS queries.
 type Question struct {
-	Name   string "cdomain-name" // "cdomain-name" specifies encoding (and may be compressed)
+	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
 	Qclass uint16
 }
@@ -179,7 +179,7 @@ func (rr *RR_ANY) Len() int {
 
 type RR_CNAME struct {
 	Hdr    RR_Header
-	Target string "cdomain-name"
+	Target string `dns:"cdomain-name"`
 }
 
 func (rr *RR_CNAME) Header() *RR_Header {
@@ -215,7 +215,7 @@ func (rr *RR_HINFO) Len() int {
 
 type RR_MB struct {
 	Hdr RR_Header
-	Mb  string "cdomain-name"
+	Mb  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MB) Header() *RR_Header {
@@ -233,7 +233,7 @@ func (rr *RR_MB) Len() int {
 
 type RR_MG struct {
 	Hdr RR_Header
-	Mg  string "cdomain-name"
+	Mg  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MG) Header() *RR_Header {
@@ -251,8 +251,8 @@ func (rr *RR_MG) Len() int {
 
 type RR_MINFO struct {
 	Hdr   RR_Header
-	Rmail string "cdomain-name"
-	Email string "cdomain-name"
+	Rmail string `dns:"cdomain-name"`
+	Email string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MINFO) Header() *RR_Header {
@@ -271,7 +271,7 @@ func (rr *RR_MINFO) Len() int {
 
 type RR_MR struct {
 	Hdr RR_Header
-	Mr  string "cdomain-name"
+	Mr  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MR) Header() *RR_Header {
@@ -290,7 +290,7 @@ func (rr *RR_MR) Len() int {
 type RR_MX struct {
 	Hdr  RR_Header
 	Pref uint16
-	Mx   string "cdomain-name"
+	Mx   string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MX) Header() *RR_Header {
@@ -308,7 +308,7 @@ func (rr *RR_MX) Len() int {
 
 type RR_NS struct {
 	Hdr RR_Header
-	Ns  string "cdomain-name"
+	Ns  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_NS) Header() *RR_Header {
@@ -326,7 +326,7 @@ func (rr *RR_NS) Len() int {
 
 type RR_PTR struct {
 	Hdr RR_Header
-	Ptr string "cdomain-name"
+	Ptr string `dns:"cdomain-name"`
 }
 
 func (rr *RR_PTR) Header() *RR_Header {
@@ -344,8 +344,8 @@ func (rr *RR_PTR) Len() int {
 
 type RR_SOA struct {
 	Hdr     RR_Header
-	Ns      string "cdomain-name"
-	Mbox    string "cdomain-name"
+	Ns      string `dns:"cdomain-name"`
+	Mbox    string `dns:"cdomain-name"`
 	Serial  uint32
 	Refresh uint32
 	Retry   uint32
@@ -374,7 +374,7 @@ func (rr *RR_SOA) Len() int {
 
 type RR_TXT struct {
 	Hdr RR_Header
-	Txt []string "txt"
+	Txt []string `dns:"txt"`
 }
 
 func (rr *RR_TXT) Header() *RR_Header {
@@ -403,7 +403,7 @@ func (rr *RR_TXT) Len() int {
 
 type RR_SPF struct {
 	Hdr RR_Header
-	Txt []string "txt"
+	Txt []string `dns:"txt"`
 }
 
 func (rr *RR_SPF) Header() *RR_Header {
@@ -435,7 +435,7 @@ type RR_SRV struct {
 	Priority uint16
 	Weight   uint16
 	Port     uint16
-	Target   string "domain-name"
+	Target   string `dns:"domain-name"`
 }
 
 func (rr *RR_SRV) Header() *RR_Header {
@@ -461,7 +461,7 @@ type RR_NAPTR struct {
 	Flags       string
 	Service     string
 	Regexp      string
-	Replacement string "domain-name"
+	Replacement string `dns:"domain-name"`
 }
 
 func (rr *RR_NAPTR) Header() *RR_Header {
@@ -489,7 +489,7 @@ type RR_CERT struct {
 	Type        uint16
 	KeyTag      uint16
 	Algorithm   uint8
-	Certificate string "base64"
+	Certificate string `dns:"base64"`
 }
 
 func (rr *RR_CERT) Header() *RR_Header {
@@ -511,7 +511,7 @@ func (rr *RR_CERT) Len() int {
 // See RFC 2672.
 type RR_DNAME struct {
 	Hdr    RR_Header
-	Target string "domain-name"
+	Target string `dns:"domain-name"`
 }
 
 func (rr *RR_DNAME) Header() *RR_Header {
@@ -529,7 +529,7 @@ func (rr *RR_DNAME) Len() int {
 
 type RR_A struct {
 	Hdr RR_Header
-	A   net.IP "a"
+	A   net.IP `dns:"a"`
 }
 
 func (rr *RR_A) Header() *RR_Header {
@@ -546,7 +546,7 @@ func (rr *RR_A) Len() int {
 
 type RR_AAAA struct {
 	Hdr  RR_Header
-	AAAA net.IP "aaaa"
+	AAAA net.IP `dns:"aaaa"`
 }
 
 func (rr *RR_AAAA) Header() *RR_Header {
@@ -593,8 +593,8 @@ type RR_RRSIG struct {
 	Expiration  uint32
 	Inception   uint32
 	KeyTag      uint16
-	SignerName  string "domain-name"
-	Signature   string "base64"
+	SignerName  string `dns:"domain-name"`
+	Signature   string `dns:"base64"`
 }
 
 func (rr *RR_RRSIG) Header() *RR_Header {
@@ -620,8 +620,8 @@ func (rr *RR_RRSIG) Len() int {
 
 type RR_NSEC struct {
 	Hdr        RR_Header
-	NextDomain string   "domain-name"
-	TypeBitMap []uint16 "nsec"
+	NextDomain string   `dns:"domain-name"`
+	TypeBitMap []uint16 `dns:"nsec"`
 }
 
 func (rr *RR_NSEC) Header() *RR_Header {
@@ -651,7 +651,7 @@ type RR_DS struct {
 	KeyTag     uint16
 	Algorithm  uint8
 	DigestType uint8
-	Digest     string "hex"
+	Digest     string `dns:"hex"`
 }
 
 func (rr *RR_DS) Header() *RR_Header {
@@ -674,7 +674,7 @@ type RR_DLV struct {
 	KeyTag     uint16
 	Algorithm  uint8
 	DigestType uint8
-	Digest     string "hex"
+	Digest     string `dns:"hex"`
 }
 
 func (rr *RR_DLV) Header() *RR_Header {
@@ -695,7 +695,7 @@ func (rr *RR_DLV) Len() int {
 type RR_KX struct {
 	Hdr        RR_Header
 	Preference uint16
-	Exchanger  string "domain-name"
+	Exchanger  string `dns:"domain-name"`
 }
 
 func (rr *RR_KX) Header() *RR_Header {
@@ -716,7 +716,7 @@ type RR_TA struct {
 	KeyTag     uint16
 	Algorithm  uint8
 	DigestType uint8
-	Digest     string "hex"
+	Digest     string `dns:"hex"`
 }
 
 func (rr *RR_TA) Header() *RR_Header {
@@ -736,8 +736,8 @@ func (rr *RR_TA) Len() int {
 
 type RR_TALINK struct {
 	Hdr          RR_Header
-	PreviousName string "domain"
-	NextName     string "domain"
+	PreviousName string `dns:"domain"`
+	NextName     string `dns:"domain"`
 }
 
 func (rr *RR_TALINK) Header() *RR_Header {
@@ -757,7 +757,7 @@ type RR_SSHFP struct {
 	Hdr         RR_Header
 	Algorithm   uint8
 	Type        uint8
-	FingerPrint string "hex"
+	FingerPrint string `dns:"hex"`
 }
 
 func (rr *RR_SSHFP) Header() *RR_Header {
@@ -779,8 +779,8 @@ type RR_IPSECKEY struct {
 	Precedence  uint8
 	GatewayType uint8
 	Algorithm   uint8
-	Gateway     string "ipseckey"
-	PublicKey   string "base64"
+	Gateway     string `dns:"ipseckey"`
+	PublicKey   string `dns:"base64"`
 }
 
 func (rr *RR_IPSECKEY) Header() *RR_Header {
@@ -805,7 +805,7 @@ type RR_DNSKEY struct {
 	Flags     uint16
 	Protocol  uint8
 	Algorithm uint8
-	PublicKey string "base64"
+	PublicKey string `dns:"base64"`
 }
 
 func (rr *RR_DNSKEY) Header() *RR_Header {
@@ -830,10 +830,10 @@ type RR_NSEC3 struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string "size-hex"
+	Salt       string `dns:"size-hex"`
 	HashLength uint8
-	NextDomain string   "size-base32"
-	TypeBitMap []uint16 "nsec"
+	NextDomain string   `dns:"size-base32"`
+	TypeBitMap []uint16 `dns:"nsec"`
 }
 
 func (rr *RR_NSEC3) Header() *RR_Header {
@@ -868,7 +868,7 @@ type RR_NSEC3PARAM struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string "hex" // hexsize??
+	Salt       string `dns:"hex"` // hexsize??
 }
 
 func (rr *RR_NSEC3PARAM) Header() *RR_Header {
@@ -890,7 +890,7 @@ func (rr *RR_NSEC3PARAM) Len() int {
 
 type RR_TKEY struct {
 	Hdr        RR_Header
-	Algorithm  string "domain-name"
+	Algorithm  string `dns:"domain-name"`
 	Inception  uint32
 	Expiration uint32
 	Mode       uint16
@@ -918,7 +918,7 @@ func (rr *RR_TKEY) Len() int {
 // Unknown RR representation
 type RR_RFC3597 struct {
 	Hdr   RR_Header
-	Rdata string "hex"
+	Rdata string `dns:"hex"`
 }
 
 func (rr *RR_RFC3597) Header() *RR_Header {
@@ -939,7 +939,7 @@ type RR_URI struct {
 	Hdr      RR_Header
 	Priority uint16
 	Weight   uint16
-	Target   string "txt"
+	Target   string `dns:"txt"`
 }
 
 func (rr *RR_URI) Header() *RR_Header {
@@ -958,7 +958,7 @@ func (rr *RR_URI) Len() int {
 
 type RR_DHCID struct {
 	Hdr    RR_Header
-	Digest string "base64"
+	Digest string `dns:"base64"`
 }
 
 func (rr *RR_DHCID) Header() *RR_Header {
@@ -979,7 +979,7 @@ type RR_TLSA struct {
 	Usage        uint8
 	Selector     uint8
 	MatchingType uint8
-	Certificate  string "hex"
+	Certificate  string `dns:"hex"`
 }
 
 func (rr *RR_TLSA) Header() *RR_Header {
@@ -1003,9 +1003,9 @@ type RR_HIP struct {
 	HitLength          uint8
 	PublicKeyAlgorithm uint8
 	PublicKeyLength    uint16
-	Hit                string   "hex"
-	PublicKey          string   "base64"
-	RendezvousServers  []string "domain-name"
+	Hit                string   `dns:"hex"`
+	PublicKey          string   `dns:"base64"`
+	RendezvousServers  []string `dns:"domain-name"`
 }
 
 func (rr *RR_HIP) Header() *RR_Header {
