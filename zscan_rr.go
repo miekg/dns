@@ -511,31 +511,44 @@ Altitude:
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad LOC Altitude", l}
 	} else {
-		rr.Altitude = uint32(i * 100.0 + 10000000.0) // +0.5 in ldns?
+		rr.Altitude = uint32(i*100.0 + 10000000.0) // +0.5 in ldns?
 	}
 
-
+	// And now optionally the other values
+	l = <-c
+	count := 0
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			switch count {
+			case 0: // Size
+				if e, m, ok := stringToCm(l.token); !ok {
+					return nil, &ParseError{f, "bad LOC Size", l}
+				} else {
+					rr.Size = (e & 0x0f) | (m << 4 & 0xf0)
+				}
+			case 1: // HorizPre
+				if e, m, ok := stringToCm(l.token); !ok {
+					return nil, &ParseError{f, "bad LOC HorizPre", l}
+				} else {
+					rr.HorizPre = (e & 0x0f) | (m << 4 & 0xf0)
+				}
+			case 2: // VertPre
+				if e, m, ok := stringToCm(l.token); !ok {
+					return nil, &ParseError{f, "bad LOC VertPre", l}
+				} else {
+					rr.VertPre = (e & 0x0f) | (m << 4 & 0xf0)
+				}
+			}
+			count++
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}
+		}
+		l = <-c
+	}
 	return rr, nil
-}
-
-func locCheckNorth(token string, latitude uint32) (uint32, bool) {
-	switch token {
-	case "n", "N":
-		return _LOC_EQUATOR + latitude, true
-	case "s", "S":
-		return _LOC_EQUATOR - latitude, true
-	}
-	return latitude, false
-}
-
-func locCheckEast(token string, longitude uint32) (uint32, bool) {
-	switch token {
-	case "e", "E":
-		return _LOC_EQUATOR + longitude, true
-	case "w", "W":
-		return _LOC_EQUATOR - longitude, true
-	}
-	return longitude, false
 }
 
 func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {

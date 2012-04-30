@@ -889,7 +889,7 @@ func (rr *RR_NSEC3) String() string {
 	s += strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
-		" " + strings.ToUpper(rr.Salt) +
+		" " + saltString(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
 		if _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
@@ -924,7 +924,7 @@ func (rr *RR_NSEC3PARAM) String() string {
 	s += strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
-		" " + strings.ToUpper(rr.Salt)
+		" " + saltString(rr.Salt)
 	return s
 }
 

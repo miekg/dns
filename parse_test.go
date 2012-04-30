@@ -228,7 +228,6 @@ func TestParseDirectiveMisc(t *testing.T) {
 	}
 }
 
-// Another one hear, geared to NSECx
 func TestParseNSEC(t *testing.T) {
 	nsectests := map[string]string{
 		"nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F":                                                                                                 "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
@@ -249,6 +248,16 @@ func TestParseNSEC(t *testing.T) {
 		} else {
 			t.Logf("RR is OK: `%s'", rr.String())
 		}
+	}
+}
+
+func TestParseLOC(t *testing.T) {
+	l1, e := NewRR("SW1A2AA.find.me.uk.	604797	IN	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m")
+	if e != nil {
+		t.Log("Failed to parse LOC RR: " + e.Error())
+		t.Fatal()
+	} else {
+		t.Logf("RR is OK: `%s'\n", l1.String())
 	}
 }
 

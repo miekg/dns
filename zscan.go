@@ -775,6 +775,28 @@ func appendOrigin(name, origin string) string {
 	return name + "." + origin
 }
 
+// LOC record helper function                                                                        
+func locCheckNorth(token string, latitude uint32) (uint32, bool) {
+	switch token {
+	case "n", "N":
+		return _LOC_EQUATOR + latitude, true
+	case "s", "S":
+		return _LOC_EQUATOR - latitude, true
+	}
+	return latitude, false
+}
+
+// LOC record helper function                                                                        
+func locCheckEast(token string, longitude uint32) (uint32, bool) {
+	switch token {
+	case "e", "E":
+		return _LOC_EQUATOR + longitude, true
+	case "w", "W":
+		return _LOC_EQUATOR - longitude, true
+	}
+	return longitude, false
+}
+
 func slurpRemainder(c chan lex, f string) *ParseError {
 	l := <-c
 	switch l.value {
