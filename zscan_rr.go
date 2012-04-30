@@ -53,8 +53,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		r, e = setTALINK(h, c, o, f)
 		goto Slurp
 	case TypeLOC:
-		//r, e = setLOC(h, c, f)
-		// TODO
+		r, e = setLOC(h, c, f)
 		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
@@ -420,6 +419,12 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.NextName[ld-1] != '.' {
 		rr.NextName = appendOrigin(rr.NextName, o)
 	}
+	return rr, nil
+}
+
+func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_LOC)
+	rr.Hdr = h
 	return rr, nil
 }
 

@@ -399,7 +399,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	}
 }
 
-func (l lex) String() string {
+func (l lex) _string() string {
 	switch l.value {
 	case _STRING:
 		return "S:" + l.token + "$"
