@@ -104,7 +104,7 @@ All of them:
 
 * 103{4,5}  - DNS standard
 * 1982 - Serial Arithmetic
-* 1876 - LOC record (incomplete)
+* 1876 - LOC record
 * 1995 - IXFR
 * 1996 - DNS notify
 * 2136 - DNS Update (dynamic updates)
