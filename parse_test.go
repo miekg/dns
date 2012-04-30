@@ -252,12 +252,23 @@ func TestParseNSEC(t *testing.T) {
 }
 
 func TestParseLOC(t *testing.T) {
-	l1, e := NewRR("SW1A2AA.find.me.uk.	604797	IN	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m")
-	if e != nil {
-		t.Log("Failed to parse LOC RR: " + e.Error())
-		t.Fatal()
-	} else {
-		t.Logf("RR is OK: `%s'\n", l1.String())
+	lt := map[string]string{
+		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m":
+		  "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m",
+	}
+	for i, o := range lt {
+		rr, e := NewRR(i)
+		if e != nil {
+			t.Log("Failed to parse RR: " + e.Error())
+			t.Fail()
+			continue
+		}
+		if rr.String() != o {
+			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
+			t.Fail()
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
 	}
 }
 

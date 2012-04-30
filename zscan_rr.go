@@ -449,10 +449,10 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
 		goto East
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.ParseFloat(l.token, 32); e != nil {
 		return nil, &ParseError{f, "bad LOC Latitude seconds", l}
 	} else {
-		rr.Latitude += 1000 * 60 * 60 * uint32(i)
+		rr.Latitude += uint32(1000 * 60 * 60 * i)
 	}
 	<-c // _BLANK
 	// Either number, 'N' or 'S'
@@ -465,6 +465,7 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 
 East:
 	// East
+	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad LOC Longitude", l}
@@ -488,10 +489,10 @@ East:
 	if rr.Longitude, ok = locCheckEast(l.token, rr.Longitude); ok {
 		goto Altitude
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.ParseFloat(l.token, 32); e != nil {
 		return nil, &ParseError{f, "bad LOC Longitude seconds", l}
 	} else {
-		rr.Longitude += 1000 * 60 * 60 * uint32(i)
+		rr.Longitude += uint32(1000 * 60 * 60 * i)
 	}
 	<-c // _BLANK
 	// Either number, 'E' or 'W'
@@ -508,10 +509,10 @@ Altitude:
 	if l.token[len(l.token)-1] == 'M' || l.token[len(l.token)-1] == 'm' {
 		l.token = l.token[0 : len(l.token)-1]
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.ParseFloat(l.token, 32); e != nil {
 		return nil, &ParseError{f, "bad LOC Altitude", l}
 	} else {
-		rr.Altitude = uint32(i*100.0 + 10000000.0) // +0.5 in ldns?
+		rr.Altitude = uint32(i*100.0 + 10000000.0 + 0.5)
 	}
 
 	// And now optionally the other values
