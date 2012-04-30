@@ -7,6 +7,7 @@ package dns
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -125,6 +126,8 @@ const (
 	_Z  = 1 << 6  // Z
 	_AD = 1 << 5  // authticated data
 	_CD = 1 << 4  // checking disabled
+
+	_LOC_EQUATOR = 1 << 31 // RFC 1876, Section 2.
 )
 
 // DNS queries.
@@ -577,7 +580,48 @@ func (rr *RR_LOC) Header() *RR_Header {
 }
 
 func (rr *RR_LOC) String() string {
-	return rr.Hdr.String() + "TODO"
+	s := rr.Hdr.String()
+	// Copied from ldns
+	// Latitude
+	lat := rr.Latitude
+	north := "N"
+	if lat > _LOC_EQUATOR {
+		lat = lat - _LOC_EQUATOR
+	} else {
+		north = "S"
+		lat = _LOC_EQUATOR - lat
+	}
+	h := lat / (1000 * 60 * 60)
+	lat = lat % (1000 * 60 * 60)
+	m := lat / (1000 * 60)
+	lat = lat % (1000 * 60)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (lat / 1000.0), north)
+	// Longitude
+	lon := rr.Longitude
+	east := "E"
+	if lon > _LOC_EQUATOR {
+		lon = lon - _LOC_EQUATOR
+	} else {
+		east = "W"
+		lon = _LOC_EQUATOR - lon
+	}
+	h = lon / (1000 * 60 * 60)
+	lon = lon % (1000 * 60 * 60)
+	m = lon / (1000 * 60)
+	lon = lon % (1000 * 60)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (lon / 1000.0), east)
+
+	s1 := rr.Altitude / 100.00
+	s1 -= 100000
+	if rr.Altitude%100 == 0 {
+		s += fmt.Sprintf("%.2f m ", s1)
+	} else {
+		s += fmt.Sprintf("%.0f m ", s1)
+	}
+	s += locCM((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
+	s += locCM((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
+	s += locCM((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
+	return s
 }
 
 func (rr *RR_LOC) Len() int {
@@ -1063,6 +1107,23 @@ func saltString(s string) string {
 		return "-"
 	}
 	return strings.ToUpper(s)
+}
+
+func locCM(mantissa, exponent uint8) string {
+	switch exponent {
+	case 0, 1:
+		if exponent == 1 {
+			mantissa *= 10
+		}
+		return fmt.Sprintf("0.%02f", mantissa)
+	default:
+		s := fmt.Sprintf("%d", mantissa)
+		for i := uint8(0); i < exponent-2; i++ {
+			s += "0"
+		}
+		return s
+	}
+	panic("not reached")
 }
 
 // Map of constructors for each RR wire type.
