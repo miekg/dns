@@ -618,9 +618,9 @@ func (rr *RR_LOC) String() string {
 	} else {
 		s += fmt.Sprintf("%.0fm ", float64(s1))
 	}
-	s += locCM((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
-	s += locCM((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
-	s += locCM((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
+	s += cmToString((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
+	s += cmToString((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
+	s += cmToString((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
 	return s
 }
 
@@ -1109,7 +1109,7 @@ func saltString(s string) string {
 	return strings.ToUpper(s)
 }
 
-func locCM(mantissa, exponent uint8) string {
+func cmToString(mantissa, exponent uint8) string {
 	switch exponent {
 	case 0, 1:
 		if exponent == 1 {

@@ -245,7 +245,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 				// Serial should be a number
 				return nil, &ParseError{f, "bad SOA zone parameter", l}
 			}
-			if v, ok = stringToTtl(l, f); !ok {
+			if v, ok = stringToTtl(l.token); !ok {
 				return nil, &ParseError{f, "bad SOA zone parameter", l}
 
 			}

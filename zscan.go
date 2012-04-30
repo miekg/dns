@@ -210,7 +210,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
 			case _STRING: // First thing on the is the ttl
-				if ttl, ok := stringToTtl(l, f); !ok {
+				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
@@ -264,7 +264,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: e}
 				return
 			}
-			if ttl, ok := stringToTtl(l, f); !ok {
+			if ttl, ok := stringToTtl(l.token); !ok {
 				t <- Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			} else {
@@ -310,7 +310,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				h.Class = l.torc
 				st = _EXPECT_ANY_NOCLASS_BL
 			case _STRING: // TTL is this case
-				if ttl, ok := stringToTtl(l, f); !ok {
+				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
@@ -349,7 +349,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
 			case _STRING: // TTL
-				if ttl, ok := stringToTtl(l, f); !ok {
+				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- Token{Error: &ParseError{f, "not a TTL", l}}
 					return
 				} else {
@@ -698,10 +698,10 @@ func typeToInt(token string) (uint16, bool) {
 }
 
 // Parse things like 2w, 2m, etc, Return the time in seconds.
-func stringToTtl(l lex, f string) (uint32, bool) {
+func stringToTtl(token string) (uint32, bool) {
 	s := uint32(0)
 	i := uint32(0)
-	for _, c := range l.token {
+	for _, c := range token {
 		switch c {
 		case 's', 'S':
 			s += i
@@ -726,6 +726,46 @@ func stringToTtl(l lex, f string) (uint32, bool) {
 		}
 	}
 	return s + i, true
+}
+
+// Parse LOC records' <digits>[.<digits>][mM] into a 
+// mantissa exponent format. Token should contain the entire
+// string (i.e. no spaces allowed)
+func stringToCm(token string) (e, m uint8, ok bool) {
+	if token[len(token)-1] == 'M' || token[len(token)-1] == 'm' {
+		token = token[0 : len(token)-1]
+	}
+	s := strings.SplitN(token, ".", 2)
+	var meters, cmeters, val int
+	var err error
+	switch len(s) {
+	case 1:
+		if cmeters, err = strconv.Atoi(s[1]); err != nil {
+			return
+		}
+		fallthrough
+	case 0:
+		if meters, err = strconv.Atoi(s[0]); err != nil {
+			return
+		}
+	}
+	ok = true
+	if meters > 0 {
+		e = 2
+		val = meters
+	} else {
+		e = 0
+		val = cmeters
+	}
+	for val > 10 {
+		e++
+		val /= 10
+	}
+	if e > 9 {
+		ok = false
+	}
+	m = uint8(val)
+	return
 }
 
 func appendOrigin(name, origin string) string {
