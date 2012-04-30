@@ -595,7 +595,7 @@ func (rr *RR_LOC) String() string {
 	lat = lat % (1000 * 60 * 60)
 	m := lat / (1000 * 60)
 	lat = lat % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (lat / 1000.0), north)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lat) / 1000), north)
 	// Longitude
 	lon := rr.Longitude
 	east := "E"
@@ -609,14 +609,14 @@ func (rr *RR_LOC) String() string {
 	lon = lon % (1000 * 60 * 60)
 	m = lon / (1000 * 60)
 	lon = lon % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (lon / 1000.0), east)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lon) / 1000), east)
 
 	s1 := rr.Altitude / 100.00
 	s1 -= 100000
 	if rr.Altitude%100 == 0 {
-		s += fmt.Sprintf("%.2f m ", s1)
+		s += fmt.Sprintf("%.2fm ", float64(s1))
 	} else {
-		s += fmt.Sprintf("%.0f m ", s1)
+		s += fmt.Sprintf("%.0fm ", float64(s1))
 	}
 	s += locCM((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
 	s += locCM((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
@@ -1115,7 +1115,7 @@ func locCM(mantissa, exponent uint8) string {
 		if exponent == 1 {
 			mantissa *= 10
 		}
-		return fmt.Sprintf("0.%02f", mantissa)
+		return fmt.Sprintf("%.02f", float32(mantissa))
 	default:
 		s := fmt.Sprintf("%d", mantissa)
 		for i := uint8(0); i < exponent-2; i++ {
