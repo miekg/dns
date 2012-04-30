@@ -595,7 +595,7 @@ func (rr *RR_LOC) String() string {
 	lat = lat % (1000 * 60 * 60)
 	m := lat / (1000 * 60)
 	lat = lat % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lat) / 1000), north)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float32(lat) / 1000), north)
 	// Longitude
 	lon := rr.Longitude
 	east := "E"
@@ -609,14 +609,14 @@ func (rr *RR_LOC) String() string {
 	lon = lon % (1000 * 60 * 60)
 	m = lon / (1000 * 60)
 	lon = lon % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lon) / 1000), east)
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float32(lon) / 1000), east)
 
 	s1 := rr.Altitude / 100.00
 	s1 -= 100000
 	if rr.Altitude%100 == 0 {
-		s += fmt.Sprintf("%.2fm ", float64(s1))
+		s += fmt.Sprintf("%.2fm ", float32(s1))
 	} else {
-		s += fmt.Sprintf("%.0fm ", float64(s1))
+		s += fmt.Sprintf("%.0fm ", float32(s1))
 	}
 	s += cmToString((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
 	s += cmToString((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "

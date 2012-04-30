@@ -422,6 +422,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	// Defaults TODO(mg)
 	rr := new(RR_LOC)
 	rr.Hdr = h
 	ok := false
@@ -430,7 +431,7 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad LOC Latitude", l}
 	} else {
-		rr.Latitude = uint32(1000.0 * i) // +0.0005 in ldns?
+		rr.Latitude = 1000 * uint32(i)
 	}
 	<-c // _BLANK
 	// Either number, 'N' or 'S'
@@ -444,11 +445,7 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		rr.Latitude += 1000 * 60 * uint32(i)
 	}
 	<-c // _BLANK
-	// Either number, 'N' or 'S'
 	l = <-c
-	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
-		goto East
-	}
 	if i, e := strconv.ParseFloat(l.token, 32); e != nil {
 		return nil, &ParseError{f, "bad LOC Latitude seconds", l}
 	} else {
@@ -484,11 +481,7 @@ East:
 		rr.Longitude += 1000 * 60 * uint32(i)
 	}
 	<-c // _BLANK
-	// Either number, 'E' or 'W'
 	l = <-c
-	if rr.Longitude, ok = locCheckEast(l.token, rr.Longitude); ok {
-		goto Altitude
-	}
 	if i, e := strconv.ParseFloat(l.token, 32); e != nil {
 		return nil, &ParseError{f, "bad LOC Longitude seconds", l}
 	} else {
