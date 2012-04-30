@@ -52,9 +52,6 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeTALINK:
 		r, e = setTALINK(h, c, o, f)
 		goto Slurp
-	case TypeLOC:
-		r, e = setLOC(h, c, f)
-		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -86,6 +83,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setDHCID(h, c, f)
 	case TypeIPSECKEY:
 		return setIPSECKEY(h, c, o, f)
+	case TypeLOC:
+		r, e = setLOC(h, c, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -425,7 +424,118 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_LOC)
 	rr.Hdr = h
+	ok := false
+	// North
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Latitude", l}
+	} else {
+		rr.Latitude = uint32(1000.0 * i) // +0.0005 in ldns?
+	}
+	<-c // _BLANK
+	// Either number, 'N' or 'S'
+	l = <-c
+	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
+		goto East
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Latitude minutes", l}
+	} else {
+		rr.Latitude += 1000 * 60 * uint32(i)
+	}
+	<-c // _BLANK
+	// Either number, 'N' or 'S'
+	l = <-c
+	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
+		goto East
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Latitude seconds", l}
+	} else {
+		rr.Latitude += 1000 * 60 * 60 * uint32(i)
+	}
+	<-c // _BLANK
+	// Either number, 'N' or 'S'
+	l = <-c
+	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
+		goto East
+	}
+	// If still alive, flag an error
+	return nil, &ParseError{f, "bad LOC Latitude North/South", l}
+
+East:
+	// East
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Longitude", l}
+	} else {
+		rr.Longitude = uint32(1000.0 * i) // +0.0005 in ldns?
+	}
+	<-c // _BLANK
+	// Either number, 'E' or 'W'
+	l = <-c
+	if rr.Longitude, ok = locCheckEast(l.token, rr.Longitude); ok {
+		goto Altitude
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Longitude minutes", l}
+	} else {
+		rr.Longitude += 1000 * 60 * uint32(i)
+	}
+	<-c // _BLANK
+	// Either number, 'E' or 'W'
+	l = <-c
+	if rr.Longitude, ok = locCheckEast(l.token, rr.Longitude); ok {
+		goto Altitude
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Longitude seconds", l}
+	} else {
+		rr.Longitude += 1000 * 60 * 60 * uint32(i)
+	}
+	<-c // _BLANK
+	// Either number, 'E' or 'W'
+	l = <-c
+	if rr.Longitude, ok = locCheckEast(l.token, rr.Longitude); ok {
+		goto Altitude
+	}
+	// If still alive, flag an error
+	return nil, &ParseError{f, "bad LOC Longitude East/West", l}
+
+Altitude:
+	<-c // _BLANK
+	l = <-c
+	if l.token[len(l.token)-1] == 'M' || l.token[len(l.token)-1] == 'm' {
+		l.token = l.token[0 : len(l.token)-1]
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LOC Altitude", l}
+	} else {
+		rr.Altitude = uint32(i * 100.0 + 10000000.0) // +0.5 in ldns?
+	}
+
+
 	return rr, nil
+}
+
+func locCheckNorth(token string, latitude uint32) (uint32, bool) {
+	switch token {
+	case "n", "N":
+		return _LOC_EQUATOR + latitude, true
+	case "s", "S":
+		return _LOC_EQUATOR - latitude, true
+	}
+	return latitude, false
+}
+
+func locCheckEast(token string, longitude uint32) (uint32, bool) {
+	switch token {
+	case "e", "E":
+		return _LOC_EQUATOR + longitude, true
+	case "w", "W":
+		return _LOC_EQUATOR - longitude, true
+	}
+	return longitude, false
 }
 
 func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
