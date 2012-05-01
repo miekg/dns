@@ -35,6 +35,7 @@ const (
 	TypeMINFO      uint16 = 14
 	TypeMX         uint16 = 15
 	TypeTXT        uint16 = 16
+	TypeRP         uint16 = 17
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
 	TypeAAAA       uint16 = 28
@@ -343,6 +344,24 @@ func (rr *RR_PTR) String() string {
 func (rr *RR_PTR) Len() int {
 	l := len(rr.Ptr) + 1
 	return rr.Hdr.Len() + l
+}
+
+type RR_RP struct {
+	Hdr  RR_Header
+	Mbox string `dns:"domain-name"`
+	Txt  string `dns:"domain-name"`
+}
+
+func (rr *RR_RP) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_RP) String() string {
+	return rr.Hdr.String() + rr.Mbox + " " + rr.Txt
+}
+
+func (rr *RR_RP) Len() int {
+	return rr.Hdr.Len() + len(rr.Mbox) + 1 + len(rr.Txt) + 1
 }
 
 type RR_SOA struct {
@@ -1133,6 +1152,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeMB:         func() RR { return new(RR_MB) },
 	TypeMG:         func() RR { return new(RR_MG) },
 	TypeMINFO:      func() RR { return new(RR_MINFO) },
+	TypeRP:         func() RR { return new(RR_RP) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
 	TypeNS:         func() RR { return new(RR_NS) },

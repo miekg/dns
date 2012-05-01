@@ -52,6 +52,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeTALINK:
 		r, e = setTALINK(h, c, o, f)
 		goto Slurp
+	case TypeRP:
+		r, e = setRP(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -152,6 +155,33 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.Ptr[ld-1] != '.' {
 		rr.Ptr = appendOrigin(rr.Ptr, o)
 	}
+	return rr, nil
+}
+
+func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_RP)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Mbox = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad RP Mbox", l}
+	}
+	if rr.Mbox[ld-1] != '.' {
+		rr.Mbox = appendOrigin(rr.Mbox, o)
+	}
+	<-c // _BLANK
+	l = <-c
+	rr.Txt = l.token
+	_, ld, ok = IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad RP Txt", l}
+	}
+	if rr.Txt[ld-1] != '.' {
+		rr.Txt = appendOrigin(rr.Txt, o)
+	}
+
 	return rr, nil
 }
 
