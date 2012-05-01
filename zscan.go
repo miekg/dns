@@ -739,15 +739,18 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	var meters, cmeters, val int
 	var err error
 	switch len(s) {
-	case 1:
+	case 2:
 		if cmeters, err = strconv.Atoi(s[1]); err != nil {
 			return
 		}
 		fallthrough
-	case 0:
+	case 1:
 		if meters, err = strconv.Atoi(s[0]); err != nil {
 			return
 		}
+	case 0:
+		// huh?
+		return 0, 0, false
 	}
 	ok = true
 	if meters > 0 {
