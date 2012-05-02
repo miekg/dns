@@ -231,7 +231,7 @@ forever:
 		}
 		m := make([]byte, int(length))
 		n, err = rw.Read(m[:int(length)])
-		if err != nil {
+		if err != nil || n == 0 {
 			continue
 		}
 		i := n
@@ -267,7 +267,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	for {
 		m := make([]byte, srv.UDPSize)
 		n, a, e := l.ReadFromUDP(m)
-		if e != nil {
+		if e != nil || n == 0 {
 			return e
 		}
 		m = m[:n]
