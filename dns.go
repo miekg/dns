@@ -6,6 +6,7 @@
 // DOMAIN NAME SYSTEM
 //
 // Package dns implements a full featured interface to the Domain Name System.
+// Server- and client-side programming is supported.
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
 //
