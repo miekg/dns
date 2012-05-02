@@ -8,6 +8,10 @@
 // Package dns implements a full featured interface to the Domain Name System.
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
+
+// The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
+// TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
+// Note that domain names MUST be full qualified, before sending them.
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
@@ -29,10 +33,6 @@
 //
 //      mx, err := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 // 
-// The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
-// TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
-// Note that domain names MUST be full qualified, before sending them. The packages
-// enforces this, by throwing a panic().
 //
 // In the DNS messages are exchanged. Use pattern for creating one:
 //
