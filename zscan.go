@@ -79,7 +79,7 @@ type lex struct {
 	err    bool   // When true, token text has lexer error 
 	value  uint8  // Value: _STRING, _BLANK, etc.
 	line   int    // Line in the file
-	column int    // Column in the fil
+	column int    // Column in the file
 	torc   uint16 // Type or class as parsed in the lexer, we only need to look this up in the grammar
 }
 
@@ -113,7 +113,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // returned channel, which consist out the parsed RR or an error. 
 // If there is an error the RR is nil. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
-// if the file would start with: $ORIGIN origin 
+// if the file would start with: $ORIGIN origin  .
 // The channel t is closed by ParseZone when the end of r is reached.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	t := make(chan Token)
