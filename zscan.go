@@ -115,6 +115,17 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // in error reporting. The string origin is used as the initial origin, as
 // if the file would start with: $ORIGIN origin  .
 // The channel t is closed by ParseZone when the end of r is reached.
+//
+// Basic usage pattern when reading from a string (z) containing the 
+// zone data:
+//
+//	to := ParseZone(strings.NewReader(z), "", "testzone")
+//	for x := range to {
+//		if x.Error != nil {
+//			// Do something with x.RR
+//		}
+//	}      
+//
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	t := make(chan Token)
 	go parseZone(r, origin, file, t, 0)
