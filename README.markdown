@@ -2,10 +2,11 @@
 
 > Less is more.
 
-Complete and usable DNS library. Most widely used Resource Records are
+Complete and usable DNS library. All widely used Resource Records are
 supported, including the DNSSEC types. It follows a lean and mean philosophy.
 If there is stuff you should know as a DNS programmer there isn't a convenience
-function for it. 
+function for it. Server side and client side programming is supported, i.e. you
+can build servers and resolvers with it.
 
 ## Goals:
 
@@ -18,12 +19,12 @@ function for it.
 * UDP/TCP queries, IPv4 and IPv6;
 * RFC 1035 zone file parsing;
 * Fast: 
-    * reply speed around 35/40K qps (Faster hardware -> more qps);
+    * Reply speed around 35/40K qps (faster hardware results in more qps);
     * Parsing RRs (zone files) with 95/100K RR/s, that's 5M records in about 50 seconds;
     * This is expected to be optimized further.
 * Client and server side programming (mimicking the net/http package);
 * Asynchronous queries/replies for client and server;
-* DNSSEC;
+* DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
 * EDNS0, NSID;
 * AXFR/IXFR;
 * TSIG;
@@ -100,7 +101,7 @@ to the table in how to layout the directory structure.
 
 ## Supported RFCs
 
-All of them:
+*all of them*
 
 * 103{4,5}  - DNS standard
 * 1982 - Serial Arithmetic
@@ -132,10 +133,9 @@ All of them:
 * 5155 - NSEC3 record
 * 5205 - HIP record
 * 5702 - SHA2 in the DNS
-* 5933 - GOST
 * 5936 - AXFR
-* xxxx - ECDSA
-* xxxx - URI record
+* 6605 - ECDSA
+* xxxx - URI record (draft)
 
 ## Loosely based upon:
 
