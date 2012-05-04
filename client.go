@@ -13,10 +13,7 @@ import (
 	"time"
 )
 
-// Check incoming TSIG message. TODO(mg)
-// Need a tsigstatus for that too? Don't know yet. TODO(mg)
-
-// Incoming (just as in os.Signal)
+// Incoming (documentation just as in os.Signal)
 type QueryHandler interface {
 	QueryDNS(w RequestWriter, q *Msg)
 }
@@ -32,10 +29,12 @@ type RequestWriter interface {
 	Receive() (*Msg, error)
 	// Close closes the connection with the server.
 	Close() error
-	// Dials calls the server
+	// Dials calls the server.
 	Dial() error
-	// TsigStatus return the TSIG validation status.
+	// TsigStatus returns the TSIG validation status.
 	TsigStatus() error
+	// Rtt returns the duration of the request. The value is only valid after a Send()/Receive() sequence.
+	Rtt() time.Duration
 }
 
 // hijacked connections...?
@@ -47,6 +46,8 @@ type reply struct {
 	tsigRequestMAC string
 	tsigTimersOnly bool
 	tsigStatus     error
+	rtt            time.Duration
+	t              time.Time
 }
 
 // A Request is a incoming message from a Client.
@@ -190,7 +191,6 @@ func (q *Query) Query() error {
 	if handler == nil {
 		handler = DefaultQueryMux
 	}
-	//forever:
 	for {
 		select {
 		case in := <-q.QueryChan:
@@ -247,12 +247,14 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	if c.Hijacked != nil {
 		w.conn = c.Hijacked
 	}
+	w.t = time.Now()
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, err
 	}
 	if n, err = w.readClient(outbuf); err != nil {
 		return n, err
 	}
+	w.rtt = time.Since(w.t)
 	return n, nil
 }
 
@@ -297,22 +299,6 @@ func (w *reply) Dial() error {
 	return nil
 }
 
-func (w *reply) Close() (err error) {
-	return w.conn.Close()
-}
-
-func (w *reply) Client() *Client {
-	return w.client
-}
-
-func (w *reply) Request() *Msg {
-	return w.req
-}
-
-func (w *reply) TsigStatus() error {
-	return w.tsigStatus
-}
-
 func (w *reply) Receive() (*Msg, error) {
 	var p []byte
 	m := new(Msg)
@@ -323,13 +309,14 @@ func (w *reply) Receive() (*Msg, error) {
 		p = make([]byte, DefaultMsgSize)
 	}
 	n, err := w.readClient(p)
-	if err != nil {
+	if err != nil || n == 0 {
 		return nil, err
 	}
 	p = p[:n]
 	if ok := m.Unpack(p); !ok {
 		return nil, ErrUnpack
 	}
+	w.rtt = time.Since(w.t)
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		if _, ok := w.Client().TsigSecret[secret]; !ok {
@@ -430,6 +417,7 @@ func (w *reply) Send(m *Msg) (err error) {
 			return ErrPack
 		}
 	}
+	w.t = time.Now()
 	if _, err = w.writeClient(out); err != nil {
 		return err
 	}
@@ -505,3 +493,18 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 	}
 	return
 }
+
+// Close implents the RequestWriter.Close method
+func (w *reply) Close() (err error) { return w.conn.Close() }
+
+// Client returns a pointer to the client
+func (w *reply) Client() *Client { return w.client }
+
+// Request returns the request contained in reply
+func (w *reply) Request() *Msg { return w.req }
+
+// TsigStatus implements the RequestWriter.TsigStatus method
+func (w *reply) TsigStatus() error { return w.tsigStatus }
+
+// Rtt implements the RequestWriter.Rtt method
+func (w *reply) Rtt() time.Duration { return w.rtt }

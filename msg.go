@@ -80,11 +80,12 @@ type MsgHdr struct {
 // The layout of a DNS message.
 type Msg struct {
 	MsgHdr
-	Compress bool       // If true, the message will be compressed when converted to wire format.
-	Question []Question // Holds the RR(s) of the question section.
-	Answer   []RR       // Holds the RR(s) of the answer section.
-	Ns       []RR       // Holds the RR(s) of the authority section.
-	Extra    []RR       // Holds the RR(s) of the additional section.
+	Compress   bool          // If true, the message will be compressed when converted to wire format.
+	Rtt        time.Duration // Round Trip Time, time it took between sending a reply and receiving the answer.
+	Question   []Question    // Holds the RR(s) of the question section.
+	Answer     []RR          // Holds the RR(s) of the answer section.
+	Ns         []RR          // Holds the RR(s) of the authority section.
+	Extra      []RR          // Holds the RR(s) of the additional section.
 }
 
 // Map of strings for each RR wire type.
@@ -373,7 +374,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag.Get("dns") {
 			default:
-				println("dns: unknown tag packing slice", val.Type().Field(i).Tag.Get("dns"), '"', val.Type().Field(i).Tag , '"')
+				println("dns: unknown tag packing slice", val.Type().Field(i).Tag.Get("dns"), '"', val.Type().Field(i).Tag, '"')
 				return lenmsg, false
 			case "domain-name":
 				for j := 0; j < val.Field(i).Len(); j++ {

@@ -27,6 +27,8 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 	if w.TsigStatus() != nil {
 		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
 	}
+	// Save the Rtt in the message
+	r.Rtt = w.Rtt()
 	w.Write(r)
 }
 
@@ -222,6 +224,8 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
+				fmt.Printf("\n;; Query time: %.3d µs\n", r.Reply.Rtt/1e3)
+				// Server maybe
 			}
 			i++
 			if i == len(qname) {
