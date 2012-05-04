@@ -81,7 +81,8 @@ type MsgHdr struct {
 type Msg struct {
 	MsgHdr
 	Compress   bool          // If true, the message will be compressed when converted to wire format.
-	Rtt        time.Duration // Round Trip Time, time it took between sending a reply and receiving the answer.
+	Rtt        time.Duration // Round Trip Time, time it took between sending a reply and receiving the answer. Only valid for clients.
+	RemoteAddr net.Addr      // The remote address. Either the server or the client connecting.
 	Question   []Question    // Holds the RR(s) of the question section.
 	Answer     []RR          // Holds the RR(s) of the answer section.
 	Ns         []RR          // Holds the RR(s) of the authority section.
