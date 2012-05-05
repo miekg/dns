@@ -230,15 +230,15 @@ func (c *Client) Do(m *Msg, a string) {
 	c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
 
-// ExchangeBuffer performs a synchronous query. It sends the buffer m to the
+// exchangeBuffer performs a synchronous query. It sends the buffer m to the
 // address contained in a.
-func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, err error) {
-	w := new(reply)
+func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w *reply, err error) {
+	w = new(reply)
 	w.client = c
 	w.addr = a
 	if c.Hijacked == nil {
 		if err = w.Dial(); err != nil {
-			return 0, err
+			return 0, w, err
 		}
 		defer w.Close()
 	}
@@ -247,23 +247,23 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	}
 	w.t = time.Now()
 	if n, err = w.writeClient(inbuf); err != nil {
-		return 0, err
+		return 0, w, err
 	}
 	if n, err = w.readClient(outbuf); err != nil {
-		return n, err
+		return n, w, err
 	}
-	// This rtt value isn't useful atm, need to return it somehow, TODO(mg)
 	w.rtt = time.Since(w.t)
-	return n, nil
+	return n, w, nil
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply.
-func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var n int
+	var w *reply
 	out, ok := m.Pack()
 	if !ok {
-		return nil, ErrPack
+		return nil, 0, ErrPack
 	}
 	var in []byte
 	switch c.Net {
@@ -278,14 +278,14 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 		}
 		in = make([]byte, size)
 	}
-	if n, err = c.ExchangeBuffer(out, a, in); err != nil {
-		return nil, err
+	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
+		return nil, 0, err
 	}
 	r = new(Msg)
 	if ok := r.Unpack(in[:n]); !ok {
-		return nil, ErrUnpack
+		return nil, w.rtt, ErrUnpack
 	}
-	return r, nil
+	return r, w.rtt, nil
 }
 
 // Dial connects to the address addr for the network set in c.Net

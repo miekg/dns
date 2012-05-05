@@ -27,8 +27,6 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 	if w.TsigStatus() != nil {
 		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
 	}
-	// Save the Rtt in the message
-	// It's better to extend dns.RequestWriter...
 	w.Write(r)
 }
 
@@ -343,7 +341,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, err := c.Exchange(m, server)
+	r, _, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
 	}
