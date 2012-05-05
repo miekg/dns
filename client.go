@@ -1,11 +1,6 @@
 package dns
 
 // A concurrent client implementation. 
-// Client sends query to a channel which
-// will then handle the query. Returned replys
-// are return on another channel. Ready for handling --- same
-// setup for server - a HANDLER function that gets run
-// when the query returns.
 
 import (
 	"io"
@@ -13,7 +8,6 @@ import (
 	"time"
 )
 
-// Incoming (documentation just as in os.Signal)
 type QueryHandler interface {
 	QueryDNS(w RequestWriter, q *Msg)
 }
@@ -88,7 +82,7 @@ var (
 // QueryHandler object that calls f.
 type HandlerQueryFunc func(RequestWriter, *Msg)
 
-// QueryDNS calls f(w, reg)
+// QueryDNS calls f(w, reg).
 func (f HandlerQueryFunc) QueryDNS(w RequestWriter, r *Msg) {
 	go f(w, r)
 }
@@ -229,7 +223,13 @@ func (w *reply) Write(m *Msg) error {
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// QueryChan channel set in the Client c. 
+// QueryChan channel set in the *Client c. Basic use pattern for
+// sending message m to the server listening on port 53 on localhost
+//
+// c.Do(m, "127.0.0.1:53")		// Sends to c.QueryChan
+// r := <- DefaultReplyChan		// The reply comes back on DefaultReplyChan
+// 
+// r is of type Exchange.
 func (c *Client) Do(m *Msg, a string) {
 	c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
@@ -261,7 +261,13 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
-// contained in a and waits for an reply.
+// contained in a and waits for an reply. Basic use pattern with a *Client:
+//
+//	c := NewClient()
+//	in, rtt, addr, err := c.Exchange(m1, "127.0.0.1:53")
+// 
+// The 'addr' return value is superfluous in this case, but it is here to retain symmetry
+// with the asynchronous call, see Client.Do().
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
 	var n int
 	var w *reply

@@ -66,11 +66,12 @@
 //      c.Do(m1, "127.0.0.1:53")
 //      // Do something else
 //      r := <- DefaultReplyChan
-//      // r.Reply is the answer
-//      // r.Request is the original request
-//	// r.Rtt is the round trip time
-//	// r.RemoteAddr is the net.Addr were the request was sent to
-//      // r.Error is the error (if any)
+//      // r is of type Exchange:
+//      // * r.Reply is the answer
+//      // * r.Request is the original request
+//      // * r.Rtt is the round trip time
+//      // * r.RemoteAddr is the net.Addr were the request was sent to
+//      // * r.Error is the error (if any)
 package dns
 
 import (
@@ -121,8 +122,8 @@ type RR interface {
 type Exchange struct {
 	Request    *Msg          // the question sent
 	Reply      *Msg          // the answer to the question that was sent
-	Rtt        time.Duration // Round trip time
-	RemoteAddr net.Addr      // Client address
+	Rtt        time.Duration // round trip time
+	RemoteAddr net.Addr      // client address
 	Error      error         // if something went wrong, this contains the error
 }
 
