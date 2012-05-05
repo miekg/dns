@@ -56,7 +56,7 @@
 // server configured on 127.0.0.1 and port 53:
 //
 //      c := NewClient()
-//      in := c.Exchange(m1, "127.0.0.1:53")
+//      in, rtt, addr, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // An asynchronous query is also possible, setting up is more elaborate then
 // a synchronous query. The Basic use pattern is:
@@ -68,6 +68,8 @@
 //      r := <- DefaultReplyChan
 //      // r.Reply is the answer
 //      // r.Request is the original request
+//	// r.Rtt is the round trip time
+//	// r.RemoteAddr is the net.Addr were the request was sent to
 //      // r.Error is the error (if any)
 package dns
 
