@@ -117,10 +117,11 @@ type RR interface {
 
 // Exchange is used in communicating with the resolver.
 type Exchange struct {
-	Request *Msg          // the question sent
-	Reply   *Msg          // the answer to the question that was sent
-	Rtt     time.Duration // Round trip time
-	Error   error         // if something went wrong, this contains the error
+	Request    *Msg          // the question sent
+	Reply      *Msg          // the answer to the question that was sent
+	Rtt        time.Duration // Round trip time
+	RemoteAddr net.Addr      // Client address
+	Error      error         // if something went wrong, this contains the error
 }
 
 // DNS resource records.

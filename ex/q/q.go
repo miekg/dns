@@ -36,7 +36,7 @@ func main() {
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
-	tsig   := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
+	tsig := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
 	aa := flag.Bool("aa", false, "set AA flag in query")
 	ad := flag.Bool("ad", false, "set AD flag in query")
@@ -191,7 +191,7 @@ forever:
 				}
 				if r.Reply.MsgHdr.Truncated && *fallback {
 					if c.Net != "tcp" {
-						if ! *dnssec {
+						if !*dnssec {
 							fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
 							o := new(dns.RR_OPT)
 							o.Hdr.Name = "."
@@ -222,7 +222,7 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; Query time: %.3d µs\n", r.Rtt/1e3)
+				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s)\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network())
 				// Server maybe
 			}
 			i++
@@ -270,7 +270,7 @@ func sectionCheck(set []dns.RR, server string, tcp bool) {
 				where = "disk"
 			}
 			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
-				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s) [%s]\n", 
+				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s) [%s]\n",
 					shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where, err.Error())
 			} else {
 				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
@@ -341,7 +341,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, _, err := c.Exchange(m, server)
+	r, _, _, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
 	}

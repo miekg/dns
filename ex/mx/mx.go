@@ -1,4 +1,5 @@
 package main
+
 // Print the MX records of a domain
 // (c) Miek Gieben - 2011
 import (
@@ -22,7 +23,7 @@ func main() {
 	m.MsgHdr.RecursionDesired = true
 
 	// Simple sync query, nothing fancy
-        r, _, err := c.Exchange(m, config.Servers[0] + ":" + config.Port)
+	r, _, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		os.Exit(1)

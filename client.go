@@ -220,7 +220,11 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 // Write returns the original question and the answer on the 
 // reply channel of the client.
 func (w *reply) Write(m *Msg) error {
-	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
+	if w.conn == nil {
+		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
+	} else {
+		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
+	}
 	return nil
 }
 
@@ -258,12 +262,12 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply.
-func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
 	var n int
 	var w *reply
 	out, ok := m.Pack()
 	if !ok {
-		return nil, 0, ErrPack
+		return nil, 0, nil, ErrPack
 	}
 	var in []byte
 	switch c.Net {
@@ -279,13 +283,13 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		in = make([]byte, size)
 	}
 	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
-		return nil, 0, err
+		return nil, 0, w.conn.RemoteAddr(), err
 	}
 	r = new(Msg)
 	if ok := r.Unpack(in[:n]); !ok {
-		return nil, w.rtt, ErrUnpack
+		return nil, w.rtt, w.conn.RemoteAddr(), ErrUnpack
 	}
-	return r, w.rtt, nil
+	return r, w.rtt, w.conn.RemoteAddr(), nil
 }
 
 // Dial connects to the address addr for the network set in c.Net
