@@ -13,7 +13,7 @@ import (
 // returns a fingerprint.
 func probe(c *dns.Client, addr string, f *fingerprint) *fingerprint {
 	m := f.msg()
-	r, _, err := c.Exchange(m, addr)
+	r, _, _, err := c.Exchange(m, addr)
 	if err != nil {
 		return errorToFingerprint(err)
 	}
