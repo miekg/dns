@@ -80,12 +80,12 @@ type MsgHdr struct {
 // The layout of a DNS message.
 type Msg struct {
 	MsgHdr
-	Compress   bool          // If true, the message will be compressed when converted to wire format.
-	RemoteAddr net.Addr      // The remote address. Either the server or the client connecting.
-	Question   []Question    // Holds the RR(s) of the question section.
-	Answer     []RR          // Holds the RR(s) of the answer section.
-	Ns         []RR          // Holds the RR(s) of the authority section.
-	Extra      []RR          // Holds the RR(s) of the additional section.
+	Compress   bool       // If true, the message will be compressed when converted to wire format.
+	RemoteAddr net.Addr   // The remote address. Either the server or the client connecting.
+	Question   []Question // Holds the RR(s) of the question section.
+	Answer     []RR       // Holds the RR(s) of the answer section.
+	Ns         []RR       // Holds the RR(s) of the authority section.
+	Extra      []RR       // Holds the RR(s) of the additional section.
 }
 
 // Map of strings for each RR wire type.

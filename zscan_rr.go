@@ -455,9 +455,9 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_LOC)
 	rr.Hdr = h
 	// Non zero defaults for LOC record, see RFC 1876, Section 3.
-	rr.HorizPre = 165	// 10000
-	rr.VertPre = 162	// 10
-	rr.Size = 18		// 1
+	rr.HorizPre = 165 // 10000
+	rr.VertPre = 162  // 10
+	rr.Size = 18      // 1
 	ok := false
 	// North
 	l := <-c

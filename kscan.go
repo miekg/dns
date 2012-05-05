@@ -1,9 +1,9 @@
 package dns
 
 import (
+	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/rsa"
-	"crypto/dsa"
 	"io"
 	"math/big"
 	"strings"
@@ -155,8 +155,8 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 }
 
 func readPrivateKeyGOST(m map[string]string) (PrivateKey, error) {
-//	p := new(ecdsa.PrivateKey)
-//	p.D = big.NewInt(0)
+	//	p := new(ecdsa.PrivateKey)
+	//	p.D = big.NewInt(0)
 	// Need to check if we have everything
 	for k, v := range m {
 		switch k {

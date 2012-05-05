@@ -1,11 +1,11 @@
 package dns
 
 import (
+	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/dsa"
 	"math/big"
 	"strconv"
 )
@@ -125,7 +125,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Exponent2: " + exponent2 + "\n" +
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
-		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")" 
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
 		private := unpackBase64(t.D.Bytes())
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
@@ -136,7 +136,7 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		subprime := unpackBase64(t.PublicKey.Parameters.Q.Bytes())
 		base := unpackBase64(t.PublicKey.Parameters.G.Bytes())
 		priv := unpackBase64(t.X.Bytes())
-		pub  := unpackBase64(t.PublicKey.Y.Bytes())
+		pub := unpackBase64(t.PublicKey.Y.Bytes())
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"Prime(p): " + prime + "\n" +

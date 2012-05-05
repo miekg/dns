@@ -250,7 +250,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		m := new(macWireFmt)
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
-		buf = make([]byte, len(requestMAC))	// long enough
+		buf = make([]byte, len(requestMAC)) // long enough
 		n, _ := packStruct(m, buf, 0)
 		buf = buf[:n]
 	}

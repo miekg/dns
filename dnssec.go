@@ -106,7 +106,7 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 		// item in the pubkey. We could do this faster by looking directly
 		// at the base64 values. But I'm lazy.
 		modulus, _ := packBase64([]byte(k.PublicKey))
-		if (len(modulus) > 1) {
+		if len(modulus) > 1 {
 			x, _ := unpackUint16(modulus, len(modulus)-2)
 			keytag = int(x)
 		}
@@ -279,7 +279,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
-		signature := []byte{0x4D}	// T value, here the ASCII M for Miek (not used in DNSSEC)
+		signature := []byte{0x4D} // T value, here the ASCII M for Miek (not used in DNSSEC)
 		signature = append(signature, r1.Bytes()...)
 		signature = append(signature, s1.Bytes()...)
 		s.Signature = unpackBase64(signature)
@@ -545,11 +545,11 @@ func (k *RR_DNSKEY) publicKeyDSA() *dsa.PublicKey {
 	pubkey.Parameters.Q = big.NewInt(0)
 	pubkey.Parameters.Q.SetBytes(keybuf[1:21]) // +/- 1 ?
 	pubkey.Parameters.P = big.NewInt(0)
-	pubkey.Parameters.P.SetBytes(keybuf[22:22+size])
+	pubkey.Parameters.P.SetBytes(keybuf[22 : 22+size])
 	pubkey.Parameters.G = big.NewInt(0)
-	pubkey.Parameters.G.SetBytes(keybuf[22+size+1:22+size*2])
+	pubkey.Parameters.G.SetBytes(keybuf[22+size+1 : 22+size*2])
 	pubkey.Y = big.NewInt(0)
-	pubkey.Y.SetBytes(keybuf[22+size*2+1:22+size*3])
+	pubkey.Y.SetBytes(keybuf[22+size*2+1 : 22+size*3])
 	return pubkey
 }
 
