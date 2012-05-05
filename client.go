@@ -33,8 +33,6 @@ type RequestWriter interface {
 	Dial() error
 	// TsigStatus returns the TSIG validation status.
 	TsigStatus() error
-	// Rtt returns the duration of the request. The value is only valid after a Send()/Receive() sequence.
-	Rtt() time.Duration
 }
 
 // hijacked connections...?
@@ -222,7 +220,7 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 // Write returns the original question and the answer on the 
 // reply channel of the client.
 func (w *reply) Write(m *Msg) error {
-	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m}
+	w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
 	return nil
 }
 
@@ -505,6 +503,3 @@ func (w *reply) Request() *Msg { return w.req }
 
 // TsigStatus implements the RequestWriter.TsigStatus method
 func (w *reply) TsigStatus() error { return w.tsigStatus }
-
-// Rtt implements the RequestWriter.Rtt method
-func (w *reply) Rtt() time.Duration { return w.rtt }

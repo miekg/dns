@@ -28,7 +28,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
 	}
 	// Save the Rtt in the message
-	r.Rtt = w.Rtt()
+	// It's better to extend dns.RequestWriter...
 	w.Write(r)
 }
 
