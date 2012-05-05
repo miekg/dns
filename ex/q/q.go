@@ -224,7 +224,7 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; Query time: %.3d µs\n", r.Reply.Rtt/1e3)
+				fmt.Printf("\n;; Query time: %.3d µs\n", r.Rtt/1e3)
 				// Server maybe
 			}
 			i++

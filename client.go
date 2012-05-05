@@ -252,6 +252,7 @@ func (c *Client) ExchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, e
 	if n, err = w.readClient(outbuf); err != nil {
 		return n, err
 	}
+	// This rtt value isn't useful atm, need to return it somehow, TODO(mg)
 	w.rtt = time.Since(w.t)
 	return n, nil
 }
