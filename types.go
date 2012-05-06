@@ -479,7 +479,7 @@ func (rr *RR_SRV) Len() int {
 type RR_NAPTR struct {
 	Hdr         RR_Header
 	Order       uint16
-	Preference  uint16
+	Pref  uint16
 	Flags       string
 	Service     string
 	Regexp      string
@@ -493,7 +493,7 @@ func (rr *RR_NAPTR) Header() *RR_Header {
 func (rr *RR_NAPTR) String() string {
 	return rr.Hdr.String() +
 		strconv.Itoa(int(rr.Order)) + " " +
-		strconv.Itoa(int(rr.Preference)) + " " +
+		strconv.Itoa(int(rr.Pref)) + " " +
 		"\"" + rr.Flags + "\" " +
 		"\"" + rr.Service + "\" " +
 		"\"" + rr.Regexp + "\" " +
@@ -757,7 +757,7 @@ func (rr *RR_DLV) Len() int {
 
 type RR_KX struct {
 	Hdr        RR_Header
-	Preference uint16
+	Pref uint16
 	Exchanger  string `dns:"domain-name"`
 }
 
@@ -766,7 +766,7 @@ func (rr *RR_KX) Header() *RR_Header {
 }
 
 func (rr *RR_KX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Pref)) +
 		" " + rr.Exchanger
 }
 
