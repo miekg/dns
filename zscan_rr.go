@@ -22,6 +22,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeAAAA:
 		r, e = setAAAA(h, c, f)
 		goto Slurp
+	case TypeHINFO:
+		r, e = setHINFO(h, c, f)
+		goto Slurp
 	case TypeNS:
 		r, e = setNS(h, c, o, f)
 		goto Slurp
@@ -57,6 +60,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		goto Slurp
 	case TypeMR:
 		r, e = setMR(h, c, o, f)
+		goto Slurp
+	case TypeMB:
+		r, e = setMB(h, c, o, f)
 		goto Slurp
 	case TypeKX:
 		r, e = setKX(h, c, o, f)
@@ -191,7 +197,7 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
-func setMr(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_MR)
 	rr.Hdr = h
 
@@ -204,6 +210,51 @@ func setMr(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.Mr[ld-1] != '.' {
 		rr.Mr = appendOrigin(rr.Mr, o)
 	}
+	return rr, nil
+}
+
+func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MB)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Mb = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad MB Mb", l}
+	}
+	if rr.Mb[ld-1] != '.' {
+		rr.Mb = appendOrigin(rr.Mb, o)
+	}
+	return rr, nil
+}
+
+func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MG)
+	rr.Hdr = h
+
+	l := <-c
+	rr.MG = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad MG Mg", l}
+	}
+	if rr.Mg[ld-1] != '.' {
+		rr.Mg = appendOrigin(rr.Mg, o)
+	}
+	return rr, nil
+}
+
+func setHINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_HINFO)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Cpu = l.token
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Os = l.token
+
 	return rr, nil
 }
 
