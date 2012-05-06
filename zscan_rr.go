@@ -258,6 +258,30 @@ func setHINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MINFO)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Rmail = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad HINFO Rmail", l}
+	}
+	if rr.Rmail[ld-1] != '.' {
+		rr.Rmail = appendOrigin(rr.Rmail, o)
+	}
+	l = <-c
+	rr.Email = l.token
+	_, ld, ok = IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad HINFO Email", l}
+	}
+	if rr.Email[ld-1] != '.' {
+		rr.Email = appendOrigin(rr.Email, o)
+	}
+	return rr, nil
+}
 
 func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_MX)
