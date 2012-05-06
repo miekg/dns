@@ -55,6 +55,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeRP:
 		r, e = setRP(h, c, o, f)
 		goto Slurp
+	case TypeMR:
+		r, e = setMR(h, c, o, f)
+		goto Slurp
 	case TypeKX:
 		r, e = setKX(h, c, o, f)
 		goto Slurp
@@ -187,6 +190,23 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	return rr, nil
 }
+
+func setMr(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MR)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Mr = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad MR Mr", l}
+	}
+	if rr.Mr[ld-1] != '.' {
+		rr.Mr = appendOrigin(rr.Mr, o)
+	}
+	return rr, nil
+}
+
 
 func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_MX)
