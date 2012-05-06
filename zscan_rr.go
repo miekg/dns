@@ -266,7 +266,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Rmail = l.token
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
-		return nil, &ParseError{f, "bad HINFO Rmail", l}
+		return nil, &ParseError{f, "bad MINFO Rmail", l}
 	}
 	if rr.Rmail[ld-1] != '.' {
 		rr.Rmail = appendOrigin(rr.Rmail, o)
@@ -275,7 +275,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Email = l.token
 	_, ld, ok = IsDomainName(l.token)
 	if !ok {
-		return nil, &ParseError{f, "bad HINFO Email", l}
+		return nil, &ParseError{f, "bad MINFO Email", l}
 	}
 	if rr.Email[ld-1] != '.' {
 		rr.Email = appendOrigin(rr.Email, o)
