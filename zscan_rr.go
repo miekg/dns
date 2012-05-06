@@ -55,6 +55,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeRP:
 		r, e = setRP(h, c, o, f)
 		goto Slurp
+	case TypeKX:
+		r, e = setKX(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -208,6 +211,29 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_KX)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad KX Pref", l}
+	} else {
+		rr.Pref = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Exchanger = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad KX Exchanger", l}
+	}
+	if rr.Exchanger[ld-1] != '.' {
+		rr.Exchanger = appendOrigin(rr.Exchanger, o)
+	}
+	return rr, nil
+}
+
 func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_CNAME)
 	rr.Hdr = h
@@ -353,7 +379,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NAPTR Preference", l}
 	} else {
-		rr.Preference = uint16(i)
+		rr.Pref = uint16(i)
 	}
 	// Flags
 	<-c     // _BLANK
