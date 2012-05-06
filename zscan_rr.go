@@ -234,7 +234,7 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
-	rr.MG = l.token
+	rr.Mg = l.token
 	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MG Mg", l}
