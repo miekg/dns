@@ -10,7 +10,7 @@ func TestClientSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := NewClient()
-	r, _ , _, _:= c.Exchange(m, "85.223.71.124:53")
+	r, _:= c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -58,7 +58,7 @@ func TestClientEDNS0(t *testing.T) {
 	//edns.SetNsid("") // Empty to request it
 
 	c := NewClient()
-	r, _, _, _ := c.Exchange(m, "85.223.71.124:53")
+	r, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")

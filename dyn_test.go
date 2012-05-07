@@ -7,7 +7,7 @@ import (
 
 func sendit(u *Msg) (r *Msg, e error) {
 	c := NewClient()
-	r, _, _, e = c.Exchange(u, "127.0.0.1:53")
+	r, e = c.Exchange(u, "127.0.0.1:53")
 	return r, e
 }
 
