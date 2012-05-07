@@ -341,7 +341,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, _, _, err := c.Exchange(m, server)
+	r, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
 	}

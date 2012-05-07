@@ -23,7 +23,7 @@ func main() {
 	m.MsgHdr.RecursionDesired = true
 
 	// Simple sync query, nothing fancy
-	r, _, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	r, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		os.Exit(1)
