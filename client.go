@@ -264,11 +264,21 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
 //	c := NewClient()
-//	in, rtt, addr, err := c.Exchange(m1, "127.0.0.1:53")
+//	in, err := c.Exchange(message, "127.0.0.1:53")
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
+	r, _, _, err = c.ExchangeFull(m, a)
+	return
+}
+
+// ExchangeFull performs an synchronous query. It sends the message m to the address
+// contained in a and waits for an reply. Basic use pattern with a *Client:
+//
+//	c := NewClient()
+//	in, rtt, addr, err := c.Exchange(message, "127.0.0.1:53")
 // 
 // The 'addr' return value is superfluous in this case, but it is here to retain symmetry
 // with the asynchronous call, see Client.Do().
-func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
+func (c *Client) ExchangeFull(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
 	var n int
 	var w *reply
 	out, ok := m.Pack()
