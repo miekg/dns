@@ -265,6 +265,8 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 //
 //	c := NewClient()
 //	in, err := c.Exchange(message, "127.0.0.1:53")
+//
+// See Client.ExchangeFull(...) to get the round trip time.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 	r, _, _, err = c.ExchangeFull(m, a)
 	return
