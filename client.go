@@ -90,13 +90,32 @@ func (f HandlerQueryFunc) QueryDNS(w RequestWriter, r *Msg) {
 }
 
 // HandleQueryFunc registers the handler with the given pattern in the
-// DefaultQueryMux.
+// DefaultQueryMux. See HandleQuery for an example.
 func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 	DefaultQueryMux.HandleFunc(pattern, handler)
 }
 
-// HandleQuery registers the handler
-// in the DefaultQueryMux
+// HandleQuery registers the handler in the DefaultQueryMux. The pattern is
+// the name of a zone, or "." which can be used as a catch-all. Basic use pattern
+// (sans error checking) for setting up a query handler:
+//
+//	func myhandler(w dns.RequestWriter, m *dns.Msg) {
+//		w.Send(m)		// send the message m to server specified in the Do() call
+//		r, _ := w.Receive()	// wait for a response
+//		w.Close()		// close connection with the server
+//		w.Write(r)		// write the received answer back
+//	}
+// 
+//	func main() {
+//		dns.HandleQuery(".", myhandler)
+//		dns.ListenAndQuery(nil, nil)	// use defaults
+//		m := new(dns.Msg)
+//		c := dns.NewClient()
+//		m.SetQuestion("miek.nl.", TypeMX)
+//		c.Do(m, "127.0.0.1:53")
+//		// ...
+//		r := <- dns.DefaultReplyChan	// receive the reply in your program
+//	}
 func HandleQuery(pattern string, handler HandlerQueryFunc) {
 	DefaultQueryMux.Handle(pattern, handler)
 }
