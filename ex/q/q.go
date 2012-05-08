@@ -24,6 +24,7 @@ func q(w dns.RequestWriter, m *dns.Msg) {
 		w.Write(nil)
 		return
 	}
+	w.Close()
 	if w.TsigStatus() != nil {
 		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
 	}

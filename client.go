@@ -15,7 +15,11 @@ type QueryHandler interface {
 // The RequestWriter interface is used by a DNS query handler to
 // construct a DNS request.
 type RequestWriter interface {
-	// Write returns the request message and the reply back to the client.
+	// RemoteAddr returns the net.Addr of the server
+	RemoteAddr() net.Addr
+	// TsigStatus returns the TSIG validation status.
+	TsigStatus() error
+	// Write returns the request message and the reply back to the client (i.e. your Go code).
 	Write(*Msg) error
 	// Send sends the message to the server.
 	Send(*Msg) error
@@ -25,8 +29,6 @@ type RequestWriter interface {
 	Close() error
 	// Dials calls the server.
 	Dial() error
-	// TsigStatus returns the TSIG validation status.
-	TsigStatus() error
 }
 
 // hijacked connections...?
@@ -218,6 +220,15 @@ func (w *reply) Write(m *Msg) error {
 		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
 	} else {
 		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
+	}
+	return nil
+}
+
+func (w *reply) RemoteAddr() net.Addr {
+	if w.conn == nil {
+		return nil
+	} else {
+		return w.conn.RemoteAddr()
 	}
 	return nil
 }
