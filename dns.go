@@ -35,7 +35,8 @@
 //      mx, err := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 // 
 //
-// In the DNS messages are exchanged. Use pattern for creating one:
+// In the DNS messages are exchanged, these messages contain resource
+// records (sets).  Use pattern for creating a message:
 //
 //      m := new(Msg)
 //      m.SetQuestion("miek.nl.", TypeMX)
@@ -56,7 +57,7 @@
 // server configured on 127.0.0.1 and port 53:
 //
 //      c := NewClient()
-//      in, rtt, addr, err := c.Exchange(m1, "127.0.0.1:53")
+//      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // An asynchronous query is also possible, setting up is more elaborate then
 // a synchronous query. The Basic use pattern is:
@@ -118,12 +119,12 @@ type RR interface {
 	Len() int
 }
 
-// Exchange is used in communicating with the resolver.
+// Exchange is used in (asynchronous) communication with the resolver.
 type Exchange struct {
 	Request    *Msg          // the question sent
 	Reply      *Msg          // the answer to the question that was sent
 	Rtt        time.Duration // round trip time
-	RemoteAddr net.Addr      // client address
+	RemoteAddr net.Addr      // address of the server
 	Error      error         // if something went wrong, this contains the error
 }
 
@@ -175,18 +176,6 @@ func (h *RR_Header) Len() int {
 	l := len(h.Name) + 1
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
-}
-
-// Create a copy of the header
-
-func (h *RR_Header) Copy() *RR_Header {
-	h1 := new(RR_Header)
-	h1.Name = h.Name
-	h1.Rrtype = h.Rrtype
-	h1.Class = h.Class
-	h1.Ttl = h.Ttl
-	h1.Rdlength = h.Rdlength
-	return h1
 }
 
 func zoneMatch(pattern, zone string) (ok bool) {
