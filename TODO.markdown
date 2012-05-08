@@ -6,6 +6,8 @@ be fixed.
 * Speed, we can always go faster. A simple reflect server now hits 35/45K qps
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
+* ixfr/axfr fixen/testen
+* zonereader that extracts glue (or at least signals it) and other usefull stuff?
 
 ## Examples to add
 
