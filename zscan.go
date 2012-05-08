@@ -57,7 +57,7 @@ const (
 	_EXPECT_DIRINCLUDE     // Directive $INCLUDE
 )
 
-// ParseError contains the parse error and the location in the io.Reader
+// ParseError is a parsing error. It contains the parse error and the location in the io.Reader
 // where the error occured.
 type ParseError struct {
 	file string
@@ -119,7 +119,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // Basic usage pattern when reading from a string (z) containing the 
 // zone data:
 //
-//	to := ParseZone(strings.NewReader(z), "", "testzone")
+//	to := dns.ParseZone(strings.NewReader(z), "", "testzone")
 //	for x := range to {
 //		if x.Error != nil {
 //			// Do something with x.RR
@@ -410,6 +410,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	}
 }
 
+/*
 func (l lex) _string() string {
 	switch l.value {
 	case _STRING:
@@ -435,6 +436,7 @@ func (l lex) _string() string {
 	}
 	return "**"
 }
+*/
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
 func zlexer(s *scan, c chan lex) {
@@ -811,6 +813,7 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 	return longitude, false
 }
 
+// "Eat" the rest of the "line"
 func slurpRemainder(c chan lex, f string) *ParseError {
 	l := <-c
 	switch l.value {

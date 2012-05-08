@@ -293,7 +293,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
-//	c := NewClient()
+//	c := dns.NewClient()
 //	in, err := c.Exchange(message, "127.0.0.1:53")
 //
 // See Client.ExchangeFull(...) to get the round trip time.
@@ -305,7 +305,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 // ExchangeFull performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
-//	c := NewClient()
+//	c := dns.NewClient()
 //	in, rtt, addr, err := c.Exchange(message, "127.0.0.1:53")
 // 
 // The 'addr' return value is superfluous in this case, but it is here to retain symmetry

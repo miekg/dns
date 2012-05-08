@@ -14,8 +14,6 @@ import (
 
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
-	// IP based ACL mapping. The contains the string representation
-	// of the IP address and a boolean saying it may connect (true) or not.
 }
 
 // A ResponseWriter interface is used by an DNS handler to
@@ -30,7 +28,7 @@ type ResponseWriter interface {
 }
 
 type conn struct {
-	remoteAddr net.Addr          // address of remote side
+	remoteAddr net.Addr          // address of the client
 	handler    Handler           // request handler
 	request    []byte            // bytes read
 	_UDP       *net.UDPConn      // i/o connection if UDP was used
@@ -113,6 +111,7 @@ func (mux *ServeMux) match(zone string) Handler {
 	return h
 }
 
+// Handle adds a handler to the ServeMux for pattern.
 func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
@@ -120,10 +119,12 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	mux.m[pattern] = handler
 }
 
+// Handle adds a handler to the ServeMux for pattern.
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
+// HandleRemove deregistrars the handler specific for pattern from the ServeMux.
 func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
@@ -168,7 +169,7 @@ type Server struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
-// ListenAndServe starts a nameserver on the configured addressin *Server.
+// ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {

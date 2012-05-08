@@ -17,53 +17,53 @@
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
 //
-//      r := new(RR_TXT)
-//      r.Hdr = RR_Header{Name: "miek.nl.", Rrtype: TypeMX, Class: ClassINET, Ttl: 3600}
+//      r := new(dns.RR_TXT)
+//      r.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeMX, Class: dns.ClassINET, Ttl: 3600}
 //      r.Pref = 10
 //      r.Mx = "mx.miek.nl."
 //
 // Or directly from a string:
 //
-//      mx, err := NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+//      mx, err := dns.NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
 //
 // Or when the default TTL (3600) and class (IN) suit you:
 //
-//      mx, err := NewRR("miek.nl. MX 10 mx.miek.nl.")
+//      mx, err := dns.NewRR("miek.nl. MX 10 mx.miek.nl.")
 //
 // Or even:
 //
-//      mx, err := NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
+//      mx, err := dns.NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 // 
 //
 // In the DNS messages are exchanged, these messages contain resource
 // records (sets).  Use pattern for creating a message:
 //
-//      m := new(Msg)
-//      m.SetQuestion("miek.nl.", TypeMX)
+//      m := dns.new(Msg)
+//      m.SetQuestion("miek.nl.", dns.TypeMX)
 //
 // The message m is now a message with the question section set to ask
 // the MX records for the miek.nl. zone.
 //
 // The following is slightly more verbose, but more flexible:
 //
-//      m1 := new(Msg)
+//      m1 := new(dns.Msg)
 //      m1.MsgHdr.Id = Id()
 //      m1.MsgHdr.RecursionDesired = false
 //      m1.Question = make([]Question, 1)
-//      m1.Question[0] = Question{"miek.nl.", TypeMX, ClassINET}
+//      m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
 //
 // After creating a message it can be send.
 // Basic use pattern for synchronous querying the DNS at a
 // server configured on 127.0.0.1 and port 53:
 //
-//      c := NewClient()
+//      c := dns.NewClient()
 //      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // An asynchronous query is also possible, setting up is more elaborate then
 // a synchronous query. The Basic use pattern is:
 // 
-//      HandleQuery(".", handler)
-//      ListenAndQuery(nil, nil)
+//      dns.HandleQuery(".", handler)
+//      dns.ListenAndQuery(nil, nil)
 //      c.Do(m1, "127.0.0.1:53")
 //      // Do something else
 //      r := <- DefaultReplyChan

@@ -6,11 +6,11 @@
 // Basic use pattern when querying with a TSIG name "axfr." and the base64
 // secret "so6ZGir4GPAqINNh9U5c3A==":
 //
-//	m := new(Msg)
-//	c := NewClient()
+//	m := dns.new(Msg)
+//	c := dns.NewClient()
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-//	m.SetQuestion("miek.nl.", TypeMX)
-//	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
+//	m.SetQuestion("miek.nl.", dns.TypeMX)
+//	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
 //	...
 //	// When sending the TSIG RR is calculated and filled in before sending
 //
@@ -19,11 +19,11 @@
 // miek.nl. with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
 // and using the server 85.223.71.124
 //
-//	c := NewClient()
+//	c := dns.NewClient()
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-//	m := New(Msg)
+//	m := new(dns.Msg)
 //	m.SetAxfr("miek.nl.") 
-//	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
+//	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
 //	err := c.XfrReceive(m, "85.223.71.124:53")
 //
 // You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
@@ -88,6 +88,7 @@ func (rr *RR_TSIG) Header() *RR_Header {
 }
 
 // TSIG has no official presentation format, but this will suffice.
+
 func (rr *RR_TSIG) String() string {
 	s := "\n;; TSIG PSEUDOSECTION:\n"
 	s += rr.Hdr.String() +
