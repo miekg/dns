@@ -637,21 +637,21 @@ func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
-		r1 := r
-		h1 := r1.Header()
-		labels := SplitLabels(h1.Name)
+		h := r.Header().Copy()
+		labels := SplitLabels(h.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			h1.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h1.Name = strings.ToLower(h1.Name)
+		h.Name = strings.ToLower(h.Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
-		switch x := r1.(type) {
+		// TODO(mg): copy the rdata here?
+		switch x := r.(type) {
 		case *RR_NS:
 			p := x.Ns
 			defer func() { x.Ns = p }()
@@ -712,9 +712,9 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
-		wire := make([]byte, r1.Len()*2)
-		h1.Ttl = s.OrigTtl
-		off, ok1 := packRR(r1, wire, 0, nil, false)
+		wire := make([]byte, r.Len()*2)
+		h.Ttl = s.OrigTtl
+		off, ok1 := packRR(r, wire, 0, nil, false)
 		if !ok1 {
 			return nil
 		}

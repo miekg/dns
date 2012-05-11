@@ -143,6 +143,16 @@ func (h *RR_Header) Header() *RR_Header {
 	return h
 }
 
+func (h *RR_Header) Copy() *RR_Header {
+	r := new(RR_Header)
+	r.Name = h.Name
+	r.Rrtype = h.Rrtype
+	r.Class = h.Class
+	r.Ttl = h.Ttl
+	r.Rdlength = h.Rdlength
+	return r
+}
+
 func (h *RR_Header) String() string {
 	var s string
 
