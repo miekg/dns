@@ -8,13 +8,13 @@ If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. Server side and client side programming is supported, i.e. you
 can build servers and resolvers with it.
 
-## Goals:
+# Goals
 
 * KISS;
 * Symmetric API: client and server side should be very similar;
 * Small API, if its easy to code in Go, don't make a function for it.
 
-## Features:
+# Features
 
 * UDP/TCP queries, IPv4 and IPv6;
 * RFC 1035 zone file parsing;
@@ -34,7 +34,7 @@ Have fun!
 
 Miek Gieben  -  2010-2012 - miek@miek.nl
 
-## Building
+# Building
 
 Building is done with the `go` tool. If you have setup your GOPATH
 correctly the following should work:
