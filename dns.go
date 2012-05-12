@@ -143,7 +143,7 @@ func (h *RR_Header) Header() *RR_Header {
 	return h
 }
 
-func (h *RR_Header) Copy() *RR_Header {
+func (h *RR_Header) copy() *RR_Header {
 	r := new(RR_Header)
 	r.Name = h.Name
 	r.Rrtype = h.Rrtype
