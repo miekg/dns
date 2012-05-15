@@ -1100,23 +1100,27 @@ func (rr *RR_HIP) Len() int {
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account. [TODO]
 func TimeToDate(t uint32) string {
-	//	utc := time.Now().UTC().Unix()
-	//	mod := (int64(t) - utc) / Year68
-	ti := time.Unix(int64(t), 0).UTC()
+	mod := ( (int64(t) - time.Now().Unix()) / Year68 ) - 1
+	if mod < 0 {
+		mod = 0
+	}
+	ti := time.Unix(int64(t) - (mod * Year68), 0).UTC()
 	return ti.Format("20060102150405")
 }
 
 // DateToTime translates the RRSIG's incep. and expir. times from 
 // string values like "20110403154150" to an 32 bit integer.
-// It takes serial arithmetic (RFC 1982) into account. [TODO]
+// It takes serial arithmetic (RFC 1982) into account.
 func DateToTime(s string) (uint32, error) {
 	t, e := time.Parse("20060102150405", s)
 	if e != nil {
 		return 0, e
 	}
-	mod := t.Unix() / Year68
-	ti := uint32(t.Unix() - (mod * Year68))
-	return ti, nil
+	mod := ( t.Unix() / Year68 ) - 1
+	if mod < 0 {
+		mod = 0
+	}
+	return uint32(t.Unix() - (mod * Year68)), nil
 }
 
 // saltString converts a NSECX salt to uppercase and
