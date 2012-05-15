@@ -1098,7 +1098,7 @@ func (rr *RR_HIP) Len() int {
 
 // TimeToDate translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
-// It takes serial arithmetic (RFC 1982) into account. [TODO]
+// It takes serial arithmetic (RFC 1982) into account.
 func TimeToDate(t uint32) string {
 	mod := ( (int64(t) - time.Now().Unix()) / Year68 ) - 1
 	if mod < 0 {
