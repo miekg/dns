@@ -27,7 +27,7 @@ func main() {
 		a := strings.SplitN(*tsig, ":", 2)
 		name, secret := a[0], a[1]
 		client.TsigSecret = map[string]string{name: secret}
-		m.SetTsig(name, dns.HmacMD5, 300, m.MsgHdr.Id, time.Now().Unix())
+		m.SetTsig(name, dns.HmacMD5, 300, time.Now().Unix())
 	}
 
 	if t, e := client.XfrReceive(m, *nameserver); e == nil {
