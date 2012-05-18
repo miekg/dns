@@ -2,15 +2,16 @@ package dns
 
 // XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
 // section has type TypeAXFR an Axfr is performed, if it is TypeIXFR it does an Ixfr.
-// The [AI]xfr's records are returned on the channel. Note the with an IXFR the client
+// The [AI]xfr's records are returned on the channel. Note that with an IXFR the client
 // needs to determine if records are to be removed are added.
 // The channel is closed when the transfer is terminated.
 //
 // Basic use pattern for setting up a transfer:
 //
+//	// m contains the [AI]xfr request
 //	t, _ := client.XfrReceive(m, "127.0.0.1:53")
 //	for r := range t {
-//		// 
+//		// ... deal with r.Reply or r.Error
 //	}
 func (c *Client) XfrReceive(q *Msg, a string) (chan *Exchange, error) {
 	w := new(reply)
