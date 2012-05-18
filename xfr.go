@@ -119,7 +119,7 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 	panic("not reached")
 }
 
-// XfrSend performs an outgoing Ixfr or Axfr. The function is xfr agnostic, it is
+// XfrSend performs an outgoing Ixfr or Axfr. The function is [AI]xfr agnostic, it is
 // up to the caller to correctly send the sequence of messages.
 func XfrSend(w ResponseWriter, q *Msg, a string) error {
 	switch q.Question[0].Qtype {
