@@ -30,17 +30,13 @@ func main() {
 		m.SetTsig(name, dns.HmacMD5, 300, m.MsgHdr.Id, time.Now().Unix())
 	}
 
-	if err := client.XfrReceive(m, *nameserver); err == nil {
-		for r := range client.ReplyChan {
-			if r.Error != nil {
-				if r.Error == dns.ErrXfrLast {
-					fmt.Printf("%v\n", r.Reply)
-				}
-				break
+	if t, e := client.XfrReceive(m, *nameserver); e == nil {
+		for r := range t {
+			if r.Error == nil {
+				fmt.Printf("%v\n", r.Reply)
 			}
-			fmt.Printf("%v\n", r.Reply)
 		}
 	} else {
-		fmt.Printf("Error %v\n", err)
+		fmt.Printf("Error %v\n", e)
 	}
 }
