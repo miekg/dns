@@ -22,7 +22,6 @@ can build servers and resolvers with it.
 * Fast: 
     * Reply speed around 35/40K qps (faster hardware results in more qps);
     * Parsing RRs (zone files) with 95/100K RR/s, that's 5M records in about 50 seconds;
-    * This is expected to be optimized further.
 * Client and server side programming (mimicking the net/http package);
 * Asynchronous queries/replies for client and server;
 * DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
@@ -33,7 +32,7 @@ can build servers and resolvers with it.
 
 Have fun!
 
-Miek Gieben  -  2010-2012 - miek@miek.nl
+Miek Gieben  -  2010-2012  -  miek@miek.nl
 
 # Building
 

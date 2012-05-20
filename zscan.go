@@ -123,7 +123,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // Basic usage pattern when reading from a string (z) containing the 
 // zone data:
 //
-//	for x := range dns.ParseZone(strings.NewReader(z), "", "testzone") {
+//	for x := range dns.ParseZone(strings.NewReader(z), "", "") {
 //		if x.Error != nil {
 //			// Do something with x.RR
 //		}

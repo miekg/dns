@@ -102,14 +102,12 @@ BuildRR:
 					if sep == -1 {
 						return "bad modifier in $GENERATE"
 					}
-					//println("checking", s[j+2:j+2+sep])
 					mod, offset, err = modToPrintf(s[j+2 : j+2+sep])
 					if err != "" {
 						return err
 					}
 					j += 2 + sep // Jump to it
 				}
-				//println("mod", mod)
 				dom += fmt.Sprintf(mod, i+offset)
 			default:
 				if escape { // Pretty useless here
@@ -125,6 +123,8 @@ BuildRR:
 			return e.(*ParseError).err
 		}
 		t <- Token{RR: rx}
+		// Its more efficient to first built the rrlist and then parse it in
+		// one go! But is this a problem?
 	}
 	return ""
 }
@@ -147,15 +147,13 @@ func modToPrintf(s string) (string, int, string) {
 	if err != nil {
 		return "", offset, "bad width in $GENERATE"
 	}
-	printf := "%"
 	switch {
 	case width < 0:
 		return "", offset, "bad width in $GENERATE"
 	case width == 0:
-		printf += xs[1]
+		return "%" + xs[1] + xs[2], offset, ""
 	default:
-		printf += "0" + xs[1]
+		return "%0" + xs[1] + xs[2], offset, ""
 	}
-	printf += xs[2]
-	return printf, offset, ""
+	panic("not reached")
 }
