@@ -563,6 +563,9 @@ func TestEmpty(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
+//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
+//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
+//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
 	to := ParseZone(strings.NewReader(zone), "miek.nl.", "")
 	for x := range to {
 		if x.Error == nil {
