@@ -31,9 +31,10 @@ const (
 	_RRTYPE
 	_OWNER
 	_CLASS
-	_DIRORIGIN  // $ORIGIN
-	_DIRTTL     // $TTL
-	_DIRINCLUDE // $INCLUDE
+	_DIRORIGIN   // $ORIGIN
+	_DIRTTL      // $TTL
+	_DIRINCLUDE  // $INCLUDE
+	_DIRGENERATE // $GENERATE
 
 	// Privatekey file
 	_VALUE
@@ -55,6 +56,8 @@ const (
 	_EXPECT_DIRORIGIN      // Directive $ORIGIN
 	_EXPECT_DIRINCLUDE_BL  // Space after directive $INCLUDE
 	_EXPECT_DIRINCLUDE     // Directive $INCLUDE
+	_EXPECT_DIRGENERATE    // Directive $GENERATE
+	_EXPECT_DIRGENERATE_BL // Space after directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -209,6 +212,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				st = _EXPECT_DIRORIGIN_BL
 			case _DIRINCLUDE:
 				st = _EXPECT_DIRINCLUDE_BL
+			case _DIRGENERATE:
+				st = _EXPECT_DIRGENERATE_BL
 			case _RRTYPE: // Everthing has been omitted, this is the first thing on the line
 				h.Name = prevName
 				h.Rrtype = l.torc
@@ -306,6 +311,22 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				origin = l.token
 			}
 			st = _EXPECT_OWNER_DIR
+		case _EXPECT_DIRGENERATE_BL:
+			if l.value != _BLANK {
+				t <- Token{Error: &ParseError{f, "no blank after $GENERATE-directive", l}}
+				return
+			}
+			st = _EXPECT_DIRGENERATE
+		case _EXPECT_DIRGENERATE:
+			if l.value != _STRING {
+				t <- Token{Error: &ParseError{f, "expecting $GENERATE value, not this...", l}}
+				return
+			}
+			if e := generate(l, c, t, origin); e != "" {
+				t <- Token{Error: &ParseError{f, e, l}}
+				return
+			}
+			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
 			if l.value != _BLANK {
 				t <- Token{Error: &ParseError{f, "no blank after owner", l}}
@@ -389,7 +410,6 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			h.Rrtype = l.torc
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
-			// I could save my token here...? l
 			r, e := setRR(h, c, origin, f)
 			if e != nil {
 				// If e.lex is nil than we have encounter a unknown RR type
@@ -405,38 +425,11 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		}
 	}
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything
-	if h.Rrtype == 0 {
-		t <- Token{Error: &ParseError{f, "nothing made sense", lex{}}}
-	}
+	// Empty zonefile is also still zone file
+	//	if h.Rrtype == 0 {
+	//		t <- Token{Error: &ParseError{f, "nothing made sense", lex{}}}
+	//	}
 }
-
-/*
-func (l lex) _string() string {
-	switch l.value {
-	case _STRING:
-		return "S:" + l.token + "$"
-	case _BLANK:
-		return "_"
-	case _QUOTE:
-		return "\""
-	case _NEWLINE:
-		return "|"
-	case _RRTYPE:
-		return "R:" + l.token + "$"
-	case _OWNER:
-		return "O:" + l.token + "$"
-	case _CLASS:
-		return "C:" + l.token + "$"
-	case _DIRTTL:
-		return "$T:" + l.token + "$"
-	case _DIRORIGIN:
-		return "$O:" + l.token + "$"
-	case _DIRINCLUDE:
-		return "$I:" + l.token + "$"
-	}
-	return "**"
-}
-*/
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
 func zlexer(s *scan, c chan lex) {
@@ -488,6 +481,8 @@ func zlexer(s *scan, c chan lex) {
 					l.value = _DIRORIGIN
 				case "$INCLUDE":
 					l.value = _DIRINCLUDE
+				case "$GENERATE":
+					l.value = _DIRGENERATE
 				}
 				c <- l
 			} else {

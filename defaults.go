@@ -228,7 +228,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		switch {
 		default:
 			return 0, uint8(l - longer), false
-		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*':
+		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*' || c == '/':
 			ok = true
 			partlen++
 		case c == '\\':

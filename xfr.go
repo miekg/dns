@@ -63,7 +63,7 @@ func (w *reply) axfrReceive(c chan *Exchange) {
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if checkXfrSOA(in, false) {
-				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), ErrXfrLast}
+				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), nil}
 				return
 			}
 			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}

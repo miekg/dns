@@ -553,3 +553,16 @@ func TestRfc1982(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerate(t *testing.T) {
+	zone := "$GENERATE 65-126 $ 1D AAAA $.64/26"
+	to := ParseZone(strings.NewReader(zone), "miek.nl.", "")
+	for x := range to {
+		if x.Error == nil {
+			t.Logf("Read %s\n", x.RR.String())
+		} else {
+			t.Logf("Failed to parse %v\n", x.Error)
+			t.Fail()
+		}
+	}
+}

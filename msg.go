@@ -46,7 +46,6 @@ var (
 	ErrSigGen      error = &Error{Err: "dns: bad signature generation"}
 	ErrAuth        error = &Error{Err: "dns: bad authentication"}
 	ErrXfrSoa      error = &Error{Err: "dns: no SOA seen"}
-	ErrXfrLast     error = &Error{Err: "dns: last SOA"}
 	ErrXfrType     error = &Error{Err: "dns: no ixfr, nor axfr"}
 	ErrHandle      error = &Error{Err: "dns: handle is nil"}
 	ErrChan        error = &Error{Err: "dns: channel is nil"}

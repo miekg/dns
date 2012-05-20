@@ -17,7 +17,8 @@ can build servers and resolvers with it.
 # Features
 
 * UDP/TCP queries, IPv4 and IPv6;
-* RFC 1035 zone file parsing;
+* RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE are
+  supported);
 * Fast: 
     * Reply speed around 35/40K qps (faster hardware results in more qps);
     * Parsing RRs (zone files) with 95/100K RR/s, that's 5M records in about 50 seconds;
