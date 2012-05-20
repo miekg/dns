@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,6 +14,10 @@ import (
 // * [[ttl][class]]
 // * type
 // * rhs (rdata)
+// But we are lazy here, only the range is parsed *all* occurences
+// of $ after that are interpreted.
+// Any error are returned as a string value, the empty string signals
+// "no error".
 func generate(l lex, c chan lex, t chan Token, o string) string {
 	step := 1
 	if i := strings.IndexAny(l.token, "/"); i != -1 {
@@ -61,8 +64,8 @@ BuildRR:
 			escape bool
 			dom string
 			mod string
+			err string
 			offset int
-			err error
 		)
 
 		for j := 0; j < len(s); j++ { // No 'range' because we need to jump around
@@ -101,8 +104,8 @@ BuildRR:
 					}
 					//println("checking", s[j+2:j+2+sep])
 					mod, offset, err = modToPrintf(s[j+2 : j+2+sep])
-					if err != nil {
-						return "bad modifier in $GENERATE"
+					if err != "" {
+						return err
 					}
 					j += 2 + sep // Jump to it
 				}
@@ -117,9 +120,9 @@ BuildRR:
 			}
 		}
 		// Re-parse the RR and send it on the current channel t
-		rx, err := NewRR("$ORIGIN " + o + "\n" + dom)
-		if err != nil {
-			return err.(*ParseError).err
+		rx, e := NewRR("$ORIGIN " + o + "\n" + dom)
+		if e != nil {
+			return e.(*ParseError).err
 		}
 		t <- Token{RR: rx}
 	}
@@ -127,32 +130,32 @@ BuildRR:
 }
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.
-func modToPrintf(s string) (string, int, error) {
+func modToPrintf(s string) (string, int, string) {
 	xs := strings.SplitN(s, ",", 3)
 	if len(xs) != 3 {
-		return "", 0, errors.New("fubar")
+		return "", 0, "bad modifier in $GENERATE"
 	}
 	// xs[0] is offset, xs[1] is width, xs[2] is base
 	if xs[2] != "o" && xs[2] != "d" && xs[2] != "x" && xs[2] != "X" {
-		return "", 0, errors.New("fubar")
+		return "", 0, "bad base in $GENERATE"
 	}
 	offset, err := strconv.Atoi(xs[0])
 	if err != nil {
-		return "", 0, err
+		return "", 0, "bad offset in $GENERATE"
 	}
 	width, err := strconv.Atoi(xs[1])
 	if err != nil {
-		return "", offset, err
+		return "", offset, "bad width in $GENERATE"
 	}
 	printf := "%"
 	switch {
 	case width < 0:
-		return "", offset, errors.New("fubar")
+		return "", offset, "bad width in $GENERATE"
 	case width == 0:
 		printf += xs[1]
 	default:
 		printf += "0" + xs[1]
 	}
 	printf += xs[2]
-	return printf, offset, nil
+	return printf, offset, ""
 }
