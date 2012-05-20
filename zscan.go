@@ -424,11 +424,8 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			st = _EXPECT_OWNER_DIR
 		}
 	}
-	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything
-	// Empty zonefile is also still zone file
-	//	if h.Rrtype == 0 {
-	//		t <- Token{Error: &ParseError{f, "nothing made sense", lex{}}}
-	//	}
+	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
+	// is not an error, because an empty zone file is still a zone file.
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.

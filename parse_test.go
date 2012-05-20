@@ -554,8 +554,15 @@ func TestRfc1982(t *testing.T) {
 	}
 }
 
+func TestEmpty(t *testing.T) {
+	for _ = range ParseZone(strings.NewReader(""), "", "") {
+		t.Logf("Should be empty")
+		t.Fail()
+	}
+}
+
 func TestGenerate(t *testing.T) {
-	zone := "$GENERATE 65-126 $ 1D AAAA $.64/26"
+	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
 	to := ParseZone(strings.NewReader(zone), "miek.nl.", "")
 	for x := range to {
 		if x.Error == nil {
