@@ -10,7 +10,7 @@ func TestClientSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := NewClient()
-	r, _:= c.Exchange(m, "85.223.71.124:53")
+	r, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -70,32 +70,29 @@ func TestClientEDNS0(t *testing.T) {
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
-	m.SetTsig("axfr.", HmacMD5, 300, m.MsgHdr.Id, time.Now().Unix())
+	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
 
 	c := NewClient()
 	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 	c.Net = "tcp"
 
-	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
+	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 		return
-	}
-	for {
-		ex := <-c.ReplyChan
-		t.Log(ex.Reply.String())
-		if ex.Error == ErrXfrLast {
-			break
+	} else {
+		for ex := range a {
+			t.Log(ex.Reply.String())
+			if ex.Error != nil {
+				t.Logf("Error %s\n", ex.Error.Error())
+				t.Fail()
+				break
+			}
+			if ex.Reply.Rcode != RcodeSuccess {
+				break
+			}
+			t.Logf("%s\n", ex.Reply.String())
 		}
-		if ex.Error != nil {
-			t.Logf("Error %s\n", ex.Error.Error())
-			t.Fail()
-			break
-		}
-		if ex.Reply.Rcode != RcodeSuccess {
-			break
-		}
-		t.Logf("%s\n", ex.Reply.String())
 	}
 }
 
@@ -107,24 +104,21 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	c.Net = "tcp"
 	// timeout?
 
-	if err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
+	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 		return
-	}
-	for {
-		ex := <-c.ReplyChan
-		t.Log(ex.Reply.String())
-		if ex.Error == ErrXfrLast {
-			break
-		}
-		if ex.Error != nil {
-			t.Logf("Error %s\n", ex.Error.Error())
-			t.Fail()
-			break
-		}
-		if ex.Reply.Rcode != RcodeSuccess {
-			break
+	} else {
+		for ex := range a {
+			t.Log(ex.Reply.String())
+			if ex.Error != nil {
+				t.Logf("Error %s\n", ex.Error.Error())
+				t.Fail()
+				break
+			}
+			if ex.Reply.Rcode != RcodeSuccess {
+				break
+			}
 		}
 	}
 }
