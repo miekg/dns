@@ -117,18 +117,17 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // If there is an error the RR is nil. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
 // if the file would start with: $ORIGIN origin  .
+// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are supported.
 // The channel t is closed by ParseZone when the end of r is reached.
 //
 // Basic usage pattern when reading from a string (z) containing the 
 // zone data:
 //
-//	to := dns.ParseZone(strings.NewReader(z), "", "testzone")
-//	for x := range to {
+//	for x := range dns.ParseZone(strings.NewReader(z), "", "testzone") {
 //		if x.Error != nil {
 //			// Do something with x.RR
 //		}
 //	}      
-//
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	t := make(chan Token)
 	go parseZone(r, origin, file, t, 0)
