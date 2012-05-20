@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,7 +33,7 @@ func generate(l lex, c chan lex, t chan Token, o string) string {
 	}
 	sx := strings.SplitN(l.token, "-", 2)
 	if len(sx) != 2 {
-		return "bad start/stop in $GENERATE range"
+		return "bad start-stop in $GENERATE range"
 	}
 	start, err := strconv.Atoi(sx[0])
 	if err != nil {
@@ -40,7 +41,7 @@ func generate(l lex, c chan lex, t chan Token, o string) string {
 	}
 	end, err := strconv.Atoi(sx[1])
 	if err != nil {
-		return "bad end in $GENERATE range"
+		return "bad stop in $GENERATE range"
 	}
 	if end < 0 || start < 0 || end <= start {
 		return "bad range in $GENERATE range"
@@ -56,13 +57,14 @@ BuildRR:
 		goto BuildRR
 	}
 	for i := start; i <= end; i += step {
-		escape := false
-		dom := ""
-		// Defaults
-		mod := "%d"
-		offset := 0
-		var err error
-		// Build the domain name.
+		var (
+			escape bool
+			dom string
+			mod string
+			offset int
+			err error
+		)
+
 		for j := 0; j < len(s); j++ { // No 'range' because we need to jump around
 			switch s[j] {
 			case '\\':
@@ -128,11 +130,11 @@ BuildRR:
 func modToPrintf(s string) (string, int, error) {
 	xs := strings.SplitN(s, ",", 3)
 	if len(xs) != 3 {
-		return "", 0, nil // make error
+		return "", 0, errors.New("fubar")
 	}
 	// xs[0] is offset, xs[1] is width, xs[2] is base
 	if xs[2] != "o" && xs[2] != "d" && xs[2] != "x" && xs[2] != "X" {
-		return "", 0, nil // make error
+		return "", 0, errors.New("fubar")
 	}
 	offset, err := strconv.Atoi(xs[0])
 	if err != nil {
@@ -145,7 +147,7 @@ func modToPrintf(s string) (string, int, error) {
 	printf := "%"
 	switch {
 	case width < 0:
-		return "", offset, nil // make error
+		return "", offset, errors.New("fubar")
 	case width == 0:
 		printf += xs[1]
 	default:
