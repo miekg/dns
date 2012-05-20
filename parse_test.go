@@ -561,18 +561,24 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
-func TestGenerate(t *testing.T) {
-	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
-//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
-//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
-//	zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
-	to := ParseZone(strings.NewReader(zone), "miek.nl.", "")
+// 0.0.0.192.IN-ADDR.ARPA.	3600	IN	NS	SERVER1.EXAMPLE.
+// 0.0.0.192.IN-ADDR.ARPA.	3600	IN	NS	SERVER2.EXAMPLE.
+// 1.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	1.0.0.0.192.IN-ADDR.ARPA.
+// 2.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	2.0.0.0.192.IN-ADDR.ARPA.
+// 3.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	3.0.0.0.192.IN-ADDR.ARPA.
+// 4.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	4.0.0.0.192.IN-ADDR.ARPA.
+// 5.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	5.0.0.0.192.IN-ADDR.ARPA.
+// 6.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	6.0.0.0.192.IN-ADDR.ARPA.
+// 7.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	7.0.0.0.192.IN-ADDR.ARPA.
+// 8.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	8.0.0.0.192.IN-ADDR.ARPA.
+func ExampleGenerate() {
+	//zone := "$GENERATE 65-126 $ 1D CNAME $.64/26"
+	// From the manual: http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#id2566761
+	zone := "$GENERATE 1-2 0 NS SERVER$.EXAMPLE.\n$GENERATE 1-8 $ CNAME $.0"
+	to := ParseZone(strings.NewReader(zone), "0.0.192.IN-ADDR.ARPA.", "")
 	for x := range to {
 		if x.Error == nil {
-			t.Logf("Read %s\n", x.RR.String())
-		} else {
-			t.Logf("Failed to parse %v\n", x.Error)
-			t.Fail()
+			fmt.Printf("%s\n", x.RR.String())
 		}
 	}
 }
