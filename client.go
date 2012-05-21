@@ -76,6 +76,8 @@ var (
 	DefaultReplyChan = newQueryChanSlice()
 	// DefaultQueryChan is the channel were you can send the questions to.
 	DefaultQueryChan = newQueryChan()
+	// Incoming is an alias for DefaultQueryChan
+	Incoming = DefaultReplyChan
 )
 
 // The HandlerQueryFunc type is an adapter to allow the use of

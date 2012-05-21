@@ -169,7 +169,7 @@ Flags:
 		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
-				m.SetTsig(name, algo, 300, m.MsgHdr.Id, time.Now().Unix())
+				m.SetTsig(name, algo, 300, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
 			} else {
 				fmt.Fprintf(os.Stderr, "tsig key data error\n")
@@ -183,7 +183,7 @@ Flags:
 forever:
 	for {
 		select {
-		case r := <-dns.DefaultReplyChan:
+		case r := <-dns.Incoming:
 			if r.Reply != nil {
 				if r.Reply.Rcode == dns.RcodeSuccess {
 					if r.Request.Id != r.Reply.Id {

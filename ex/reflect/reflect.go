@@ -88,7 +88,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	if r.IsTsig() {
 		if w.TsigStatus() == nil {
-			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, r.MsgHdr.Id, time.Now().Unix())
+			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
 		} else {
 			println("Status", w.TsigStatus().Error())
 		}
