@@ -66,7 +66,7 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 forever:
 	for {
 		select {
-		case r := <-dns.DefaultReplyChan:
+		case r := <-dns.Incoming:
 			if r.Reply != nil && r.Reply.Rcode == dns.RcodeSuccess {
 				for _, aa := range r.Reply.Answer {
 					switch aa.(type) {
