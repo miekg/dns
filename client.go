@@ -263,6 +263,7 @@ func (w *reply) RemoteAddr() net.Addr {
 // 
 // r is of type Exchange.
 func (c *Client) Do(m *Msg, a string) {
+	// Outgoing
 	c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
 

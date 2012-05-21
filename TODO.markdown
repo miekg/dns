@@ -2,7 +2,9 @@
 
 * outgoing [AI]xfr
 * zonereader that extracts glue (or at least signals it) and other usefull stuff?
-* complete resolver
+* a complete dnssec resolver
+* the outgoing channel for resolver isn't usefull - remove it. 
+
 
 ## Nice to have
 

@@ -36,6 +36,8 @@ func main() {
 	query := flag.Bool("question", false, "show question")
 	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
+	six := flag.Bool("6", false, "use IPv6 only")
+	four := flag.Bool("4", false, "use IPv4 only")
 	anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
 	tsig := flag.String("tsig", "", "request tsig with key: [hmac:]name:key")
 	port := flag.Int("port", 53, "port number to use")
@@ -138,6 +140,20 @@ Flags:
 	c := dns.NewClient()
 	if *tcp {
 		c.Net = "tcp"
+		if *four {
+			c.Net = "tcp4"
+		}
+		if *six {
+			c.Net = "tcp6"
+		}
+	} else {
+		c.Net = "udp"
+		if *four {
+			c.Net = "udp4"
+		}
+		if *six {
+			c.Net = "udp6"
+		}
 	}
 
 	m := new(dns.Msg)
