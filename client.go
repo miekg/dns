@@ -114,7 +114,7 @@ func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 //		m.SetQuestion("miek.nl.", TypeMX)
 //		c.Do(m, "127.0.0.1:53")
 //		// ...
-//		r := <- dns.DefaultReplyChan	// receive the reply in your program
+//		r := <- dns.Incoming	// receive the reply in your program
 //	}
 func HandleQuery(pattern string, handler HandlerQueryFunc) {
 	DefaultQueryMux.Handle(pattern, handler)
@@ -251,11 +251,11 @@ func (w *reply) RemoteAddr() net.Addr {
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// QueryChan channel set in the *Client c. Basic use pattern for
+// channel dns.Incoming. Basic use pattern for
 // sending message m to the server listening on port 53 on localhost
 //
 // c.Do(m, "127.0.0.1:53")	// Sends query to the recursor
-// r := <- Incoming		// The reply comes back on Incoming
+// r := <- dns.Incoming		// The reply comes back on Incoming
 // 
 // r is of type Exchange.
 func (c *Client) Do(m *Msg, a string) {
