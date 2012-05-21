@@ -38,7 +38,7 @@ func TestClientASync(t *testing.T) {
 forever:
 	for {
 		select {
-		case n := <-c.Incoming:
+		case n := <-c.Reply:
 			if n.Reply != nil && n.Reply.Rcode != RcodeSuccess {
 				t.Log("Failed to get an valid answer")
 				t.Fail()
