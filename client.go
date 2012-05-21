@@ -73,9 +73,9 @@ var (
 	// Incoming is the channel on which the replies are
 	// coming back. Is it a channel of *Exchange, so that the original 
 	// question is included with the answer.
-	IncomingQuery = newQueryChanSlice()
+	QueryReply = newQueryChanSlice()
 	// RequestQuery is the channel were you can send the questions to.
-	RequestQuery = newQueryChan()
+	QueryRequest = newQueryChan()
 )
 
 // The HandlerQueryFunc type is an adapter to allow the use of
@@ -172,7 +172,7 @@ type Client struct {
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
 	Request      chan *Request     // read DNS request from this channel
-	Incoming     chan *Exchange	// write replies to this channel
+	Reply     chan *Exchange	// write replies to this channel
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns)
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -187,8 +187,8 @@ func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
-	c.Request = RequestQuery
-	c.Incoming = IncomingQuery
+	c.Request = QueryRequest
+	c.Reply = QueryReply
 	c.ReadTimeout = 2 * 1e9
 	c.WriteTimeout = 2 * 1e9
 	return c
@@ -227,7 +227,7 @@ func (q *Query) Query() error {
 
 func (q *Query) ListenAndQuery() error {
 	if q.Request == nil {
-		q.Request = RequestQuery
+		q.Request = QueryRequest
 	}
 	return q.Query()
 }
@@ -253,9 +253,9 @@ func ListenAndQueryRequest(request chan *Request, handler QueryHandler) {
 // reply channel of the client.
 func (w *reply) Write(m *Msg) error {
 	if w.conn == nil {
-		w.Client().Incoming <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
+		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
 	} else {
-		w.Client().Incoming <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
+		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
 	}
 	return nil
 }
@@ -270,11 +270,11 @@ func (w *reply) RemoteAddr() net.Addr {
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// channel dns.Incoming. Basic use pattern for
+// channel dns.Reply. Basic use pattern for
 // sending message m to the server listening on port 53 on localhost
 //
 // c.Do(m, "127.0.0.1:53")	// Sends query to the recursor
-// r := <- dns.Incoming		// The reply comes back on Incoming
+// r := <- c.Reply		// The reply comes back on Reply
 // 
 // r is of type Exchange.
 func (c *Client) Do(m *Msg, a string) {
