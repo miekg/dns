@@ -136,7 +136,7 @@ Flags:
 
 	// We use the async query handling, just to show how it is to be used.
 	dns.HandleQuery(".", q)
-	dns.ListenAndQuery(nil, nil)
+	dns.ListenAndQuery(nil)
 	c := dns.NewClient()
 	if *tcp {
 		c.Net = "tcp"
@@ -199,7 +199,7 @@ Flags:
 forever:
 	for {
 		select {
-		case r := <-dns.Incoming:
+		case r := <-c.Incoming:
 			if r.Reply != nil {
 				if r.Reply.Rcode == dns.RcodeSuccess {
 					if r.Request.Id != r.Reply.Id {

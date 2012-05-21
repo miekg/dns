@@ -52,7 +52,7 @@ func qhandler(w dns.RequestWriter, m *dns.Msg) {
 
 func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 	dns.HandleQueryFunc(os.Args[1], qhandler)
-	dns.ListenAndQuery(nil, nil)
+	dns.ListenAndQuery(nil)
 
 	m4 := new(dns.Msg)
 	m4.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
@@ -66,7 +66,7 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 forever:
 	for {
 		select {
-		case r := <-dns.Incoming:
+		case r := <-c.Incoming:
 			if r.Reply != nil && r.Reply.Rcode == dns.RcodeSuccess {
 				for _, aa := range r.Reply.Answer {
 					switch aa.(type) {

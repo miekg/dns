@@ -27,7 +27,7 @@ func helloMiek(w RequestWriter, r *Msg) {
 
 func TestClientASync(t *testing.T) {
 	HandleQueryFunc("miek.nl.", helloMiek) // All queries for miek.nl will be handled by HelloMiek
-	ListenAndQuery(nil, nil)               // Detect if this isn't running
+	ListenAndQuery(nil)                    // Detect if this isn't running
 
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
@@ -38,7 +38,7 @@ func TestClientASync(t *testing.T) {
 forever:
 	for {
 		select {
-		case n := <-c.ReplyChan:
+		case n := <-c.Incoming:
 			if n.Reply != nil && n.Reply.Rcode != RcodeSuccess {
 				t.Log("Failed to get an valid answer")
 				t.Fail()
