@@ -73,11 +73,9 @@ var (
 	// DefaultReplyChan is the channel on which the replies are
 	// coming back. Is it a channel of *Exchange, so that the original 
 	// question is included with the answer.
-	DefaultReplyChan = newQueryChanSlice()
-	// DefaultQueryChan is the channel were you can send the questions to.
-	DefaultQueryChan = newQueryChan()
-	// Incoming is an alias for DefaultQueryChan
-	Incoming = DefaultReplyChan
+	Incoming = newQueryChanSlice()
+	// defaultQueryChan is the channel were you can send the questions to.
+	defaultQueryChan = newQueryChan()
 )
 
 // The HandlerQueryFunc type is an adapter to allow the use of
@@ -174,7 +172,6 @@ type Client struct {
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
 	QueryChan    chan *Request     // read DNS request from this channel
-	ReplyChan    chan *Exchange    // write the reply (together with the DNS request) to this channel
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns)
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -189,8 +186,7 @@ func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
 	c.Attempts = 1
-	c.ReplyChan = DefaultReplyChan
-	c.QueryChan = DefaultQueryChan
+	c.QueryChan = defaultQueryChan
 	c.ReadTimeout = 2 * 1e9
 	c.WriteTimeout = 2 * 1e9
 	return c
@@ -221,13 +217,13 @@ func (q *Query) Query() error {
 
 func (q *Query) ListenAndQuery() error {
 	if q.QueryChan == nil {
-		q.QueryChan = DefaultQueryChan
+		q.QueryChan = defaultQueryChan
 	}
 	return q.Query()
 }
 
 // ListenAndQuery starts the listener for firing off the queries. If
-// c is nil DefaultQueryChan is used. If handler is nil
+// c is nil defaultQueryChan is used. If handler is nil
 // DefaultQueryMux is used.
 func ListenAndQuery(request chan *Request, handler QueryHandler) {
 	q := &Query{QueryChan: request, Handler: handler}
@@ -238,9 +234,9 @@ func ListenAndQuery(request chan *Request, handler QueryHandler) {
 // reply channel of the client.
 func (w *reply) Write(m *Msg) error {
 	if w.conn == nil {
-		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
+		Incoming <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
 	} else {
-		w.Client().ReplyChan <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
+		Incoming <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
 	}
 	return nil
 }
@@ -258,12 +254,11 @@ func (w *reply) RemoteAddr() net.Addr {
 // QueryChan channel set in the *Client c. Basic use pattern for
 // sending message m to the server listening on port 53 on localhost
 //
-// c.Do(m, "127.0.0.1:53")		// Sends to c.QueryChan
-// r := <- DefaultReplyChan		// The reply comes back on DefaultReplyChan
+// c.Do(m, "127.0.0.1:53")	// Sends query to the recursor
+// r := <- Incoming		// The reply comes back on Incoming
 // 
 // r is of type Exchange.
 func (c *Client) Do(m *Msg, a string) {
-	// Outgoing
 	c.QueryChan <- &Request{Client: c, Addr: a, Request: m}
 }
 
