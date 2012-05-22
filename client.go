@@ -328,9 +328,9 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr 
 	}
 	var in []byte
 	switch c.Net {
-	case "tcp":
+	case "tcp", "tcp4", "tcp6":
 		in = make([]byte, MaxMsgSize)
-	case "udp":
+	case "udp", "udp4", "udp6":
 		size := UDPMsgSize
 		for _, r := range m.Extra {
 			if r.Header().Rrtype == TypeOPT {
