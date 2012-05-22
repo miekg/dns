@@ -70,11 +70,12 @@ func newQueryChan() chan *Request       { return make(chan *Request) }
 
 // Default channels to use for the resolver
 var (
-	// Incoming is the channel on which the replies are
-	// coming back. Is it a channel of *Exchange, so that the original 
+	// QueryReply is the channel on which the replies are
+	// coming back. Is it a channel of *Exchange. The original 
 	// question is included with the answer.
 	QueryReply = newQueryChanSlice()
-	// RequestQuery is the channel were you can send the questions to.
+	// QueryRequest is the channel were you can send the questions to.
+	// It is a channel of *Request
 	QueryRequest = newQueryChan()
 )
 
@@ -103,7 +104,7 @@ func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 //		w.Send(m)		// send the message m to server specified in the Do() call
 //		r, _ := w.Receive()	// wait for a response
 //		w.Close()		// close connection with the server
-//		w.Write(r)		// write the received answer back
+//		w.Write(r)		// write the received answer back to the client
 //	}
 // 
 //	func main() {
@@ -181,8 +182,8 @@ type Client struct {
 }
 
 // NewClient creates a new client, with Net set to "udp" and Attempts to 1.
-// The client's ReplyChan is set to DefaultReplyChan and QueryChan
-// to DefaultQueryChan.
+// The Timeouts are set to 2 * 1e9 and the query channels (for async usage)
+// are set to the global defaults (QueryReqeust and QueryReply)
 func NewClient() *Client {
 	c := new(Client)
 	c.Net = "udp"
@@ -192,14 +193,6 @@ func NewClient() *Client {
 	c.ReadTimeout = 2 * 1e9
 	c.WriteTimeout = 2 * 1e9
 	return c
-}
-
-// NewClientRequest allows the setting of a request channel which 
-// will be used instead of the default.
-func NewClientRequest(c chan *Request) *Client {
-	c1 := NewClient()
-	c1.Request = c
-	return c1
 }
 
 type Query struct {
@@ -233,21 +226,19 @@ func (q *Query) ListenAndQuery() error {
 }
 
 // ListenAndQuery starts the listener for firing off the queries.
-// If handler is nil DefaultQueryMux is used.
+// If handler is nil DefaultQueryMux is used. The default request
+// channel (QueryRequest) is used for requesting queries.
 func ListenAndQuery(handler QueryHandler) {
 	q := &Query{Request: nil, Handler: handler}
 	go q.ListenAndQuery()
 }
 
-// ListenAndQueryRequest starts the listener for firing off the queries. If
-// c is nil defaultQueryChan is used. If handler is nil
-// DefaultQueryMux is used.
+// ListenAndQueryRequest starts the listener for firing off queries. If
+// request is nil QueryRequest is used. If handler is nil DefaultQueryMux is used.
 func ListenAndQueryRequest(request chan *Request, handler QueryHandler) {
 	q := &Query{Request: request, Handler: handler}
 	go q.ListenAndQuery()
 }
-
-
 
 // Write returns the original question and the answer on the 
 // reply channel of the client.
@@ -270,13 +261,13 @@ func (w *reply) RemoteAddr() net.Addr {
 }
 
 // Do performs an asynchronous query. The result is returned on the
-// channel dns.Reply. Basic use pattern for
+// channel c.Reply. Basic use pattern for
 // sending message m to the server listening on port 53 on localhost
 //
-// c.Do(m, "127.0.0.1:53")	// Sends query to the recursor
-// r := <- c.Reply		// The reply comes back on Reply
+//	   c.Do(m, "127.0.0.1:53")
+//	   r := <- c.Reply
 // 
-// r is of type Exchange.
+// r is of type *Exchange.
 func (c *Client) Do(m *Msg, a string) {
 	c.Request <- &Request{Client: c, Addr: a, Request: m}
 }
@@ -313,21 +304,21 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 //	c := dns.NewClient()
 //	in, err := c.Exchange(message, "127.0.0.1:53")
 //
-// See Client.ExchangeFull(...) to get the round trip time.
+// See Client.ExchangeRtt(...) to get the round trip time.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
-	r, _, _, err = c.ExchangeFull(m, a)
+	r, _, _, err = c.ExchangeRtt(m, a)
 	return
 }
 
-// ExchangeFull performs an synchronous query. It sends the message m to the address
+// ExchangeRtt performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
 //	c := dns.NewClient()
-//	in, rtt, addr, err := c.ExchangeFull(message, "127.0.0.1:53")
+//	in, rtt, addr, err := c.ExchangeRtt(message, "127.0.0.1:53")
 // 
 // The 'addr' return value is superfluous in this case, but it is here to retain symmetry
 // with the asynchronous call, see Client.Do().
-func (c *Client) ExchangeFull(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
+func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
 	var n int
 	var w *reply
 	out, ok := m.Pack()
