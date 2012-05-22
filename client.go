@@ -115,7 +115,7 @@ func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 //		m.SetQuestion("miek.nl.", TypeMX)
 //		c.Do(m, "127.0.0.1:53")
 //		// ...
-//		r := <- dns.Reply
+//		r := <- c.Reply  // or <- dns.QueryReply, when using the defaults
 //	}
 func HandleQuery(pattern string, handler HandlerQueryFunc) {
 	DefaultQueryMux.Handle(pattern, handler)
@@ -147,6 +147,7 @@ func (mux *QueryMux) Handle(pattern string, handler QueryHandler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
+	// check is domainname TODO(mg)
 	mux.m[pattern] = handler
 }
 
