@@ -199,7 +199,7 @@ Flags:
 forever:
 	for {
 		select {
-		case r := <-c.Incoming:
+		case r := <-c.Reply:
 			if r.Reply != nil {
 				if r.Reply.Rcode == dns.RcodeSuccess {
 					if r.Request.Id != r.Reply.Id {

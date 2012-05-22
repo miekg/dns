@@ -27,12 +27,12 @@ func main() {
 	}
 	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, rtt, _, _ := c.ExchangeFull(m, a)
+		in, rtt, _, _ := c.ExchangeRtt(m, a)
 		if in != nil && len(in.Answer) > 0  {
 			fmt.Printf("(time %.3d µs) %v\n", rtt/1e3, in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, rtt, _, _ = c.ExchangeFull(m, a)
+		in, rtt, _, _ = c.ExchangeRtt(m, a)
 		if in != nil && len(in.Answer) > 0 {
 			fmt.Printf("(time %.3d µs) %v\n", rtt/1e3, in.Answer[0])
 		}
@@ -66,7 +66,7 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 forever:
 	for {
 		select {
-		case r := <-c.Incoming:
+		case r := <-c.Reply:
 			if r.Reply != nil && r.Reply.Rcode == dns.RcodeSuccess {
 				for _, aa := range r.Reply.Answer {
 					switch aa.(type) {

@@ -109,13 +109,13 @@ func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 // 
 //	func main() {
 //		dns.HandleQuery(".", myhandler)
-//		dns.ListenAndQuery(nil, nil)	// use defaults
+//		dns.ListenAndQuery(nil)
 //		m := new(dns.Msg)
 //		c := dns.NewClient()
 //		m.SetQuestion("miek.nl.", TypeMX)
 //		c.Do(m, "127.0.0.1:53")
 //		// ...
-//		r := <- dns.Incoming	// receive the reply in your program
+//		r := <- dns.Reply
 //	}
 func HandleQuery(pattern string, handler HandlerQueryFunc) {
 	DefaultQueryMux.Handle(pattern, handler)
