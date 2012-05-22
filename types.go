@@ -479,7 +479,7 @@ func (rr *RR_SRV) Len() int {
 type RR_NAPTR struct {
 	Hdr         RR_Header
 	Order       uint16
-	Pref  uint16
+	Pref        uint16
 	Flags       string
 	Service     string
 	Regexp      string
@@ -756,9 +756,9 @@ func (rr *RR_DLV) Len() int {
 }
 
 type RR_KX struct {
-	Hdr        RR_Header
-	Pref uint16
-	Exchanger  string `dns:"domain-name"`
+	Hdr       RR_Header
+	Pref      uint16
+	Exchanger string `dns:"domain-name"`
 }
 
 func (rr *RR_KX) Header() *RR_Header {
@@ -1100,11 +1100,11 @@ func (rr *RR_HIP) Len() int {
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
 func TimeToDate(t uint32) string {
-	mod := ( (int64(t) - time.Now().Unix()) / Year68 ) - 1
+	mod := ((int64(t) - time.Now().Unix()) / Year68) - 1
 	if mod < 0 {
 		mod = 0
 	}
-	ti := time.Unix(int64(t) - (mod * Year68), 0).UTC()
+	ti := time.Unix(int64(t)-(mod*Year68), 0).UTC()
 	return ti.Format("20060102150405")
 }
 
@@ -1116,7 +1116,7 @@ func DateToTime(s string) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	mod := ( t.Unix() / Year68 ) - 1
+	mod := (t.Unix() / Year68) - 1
 	if mod < 0 {
 		mod = 0
 	}

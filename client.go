@@ -173,7 +173,7 @@ type Client struct {
 	Attempts     int               // number of attempts
 	Retry        bool              // retry with TCP
 	Request      chan *Request     // read DNS request from this channel
-	Reply     chan *Exchange	// write replies to this channel
+	Reply        chan *Exchange    // write replies to this channel
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns)
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns)
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
@@ -196,8 +196,8 @@ func NewClient() *Client {
 }
 
 type Query struct {
-	Request   chan *Request // read DNS request from this channel
-	Handler   QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
+	Request chan *Request // read DNS request from this channel
+	Handler QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
 }
 
 func (q *Query) Query() error {

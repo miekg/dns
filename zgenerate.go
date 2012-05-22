@@ -62,9 +62,9 @@ BuildRR:
 	for i := start; i <= end; i += step {
 		var (
 			escape bool
-			dom string
-			mod string
-			err string
+			dom    string
+			mod    string
+			err    string
 			offset int
 		)
 
