@@ -18,10 +18,10 @@ func main() {
 	}
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeDNSKEY)
-        m.SetEdns0(2048, true)
+	m.SetEdns0(2048, true)
 
 	c := dns.NewClient()
-        r, _ := c.Exchange(m, conf.Servers[0] + ":" + conf.Port)
+	r, _ := c.Exchange(m, conf.Servers[0]+":"+conf.Port)
 	if r == nil {
 		fmt.Printf("*** no answer received for %s\n", os.Args[1])
 		os.Exit(1)
@@ -34,10 +34,10 @@ func main() {
 	for _, k := range r.Answer {
 		if key, ok := k.(*dns.RR_DNSKEY); ok {
 			key.Hdr.Ttl = 0
-                        for _, alg := range []int{dns.SHA1, dns.SHA256, dns.SHA384} {
-                                ds := key.ToDS(alg)
-                                fmt.Printf("%v; %d\n", ds, key.Flags)
-                        }
+			for _, alg := range []int{dns.SHA1, dns.SHA256, dns.SHA384} {
+				ds := key.ToDS(alg)
+				fmt.Printf("%v; %d\n", ds, key.Flags)
+			}
 		}
 	}
 }

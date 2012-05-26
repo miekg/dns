@@ -76,21 +76,21 @@ func main() {
 	listen := flag.String("listen", "127.0.0.1:8053", "set the listener address")
 	server := flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
 	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
-//	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	//	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-        /*
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
+	/*
+		if *cpuprofile != "" {
+			f, err := os.Create(*cpuprofile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			pprof.StartCPUProfile(f)
+			defer pprof.StopCPUProfile()
 		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
-        */
+	*/
 
 	clients := strings.Split(*server, ",")
 	qr = make([]*FunkClient, len(clients))

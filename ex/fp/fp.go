@@ -114,7 +114,7 @@ func (f *fingerprint) setString(str string) {
 	for i, s := range strings.Split(str, ",") {
 		switch i {
 		case 0: // question section domain name
-		        f.Query.Name = s
+			f.Query.Name = s
 		case 1: // Qclass
 			f.Query.Qclass = 0
 			if c, ok := dns.Str_class[s]; ok {
@@ -208,12 +208,11 @@ func toFingerprint(m *dns.Msg) *fingerprint {
 		f.Query.Qtype = m.Question[0].Qtype
 		f.Query.Qclass = m.Question[0].Qclass
 	} else {
-                // Default, nil values
-                f.Query.Name = "."
-                f.Query.Qtype = 0
-                f.Query.Qclass = 0
-        }
-
+		// Default, nil values
+		f.Query.Name = "."
+		f.Query.Qtype = 0
+		f.Query.Qclass = 0
+	}
 
 	f.Opcode = h.Opcode
 	f.Rcode = h.Rcode
@@ -357,8 +356,8 @@ func fingerPrintFromFile(f string) ([]*fingerprint, error) {
 		if p {
 			return nil, nil
 		}
-                // Comments and empty lines are ignored
-		if l[0] != '#'  && l[0] != '\n' {
+		// Comments and empty lines are ignored
+		if l[0] != '#' && l[0] != '\n' {
 			prints = append(prints, newFingerprint(string(l)))
 		}
 		l, p, e = b.ReadLine()

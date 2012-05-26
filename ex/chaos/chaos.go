@@ -28,7 +28,7 @@ func main() {
 	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
 		in, rtt, _, _ := c.ExchangeRtt(m, a)
-		if in != nil && len(in.Answer) > 0  {
+		if in != nil && len(in.Answer) > 0 {
 			fmt.Printf("(time %.3d µs) %v\n", rtt/1e3, in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
@@ -43,10 +43,10 @@ func qhandler(w dns.RequestWriter, m *dns.Msg) {
 	w.Dial()
 	defer w.Close()
 	if err := w.Send(m); err != nil {
-                w.Write(nil)
-                return
-        }
-        r, _ := w.Receive()
+		w.Write(nil)
+		return
+	}
+	r, _ := w.Receive()
 	w.Write(r)
 }
 
@@ -58,8 +58,8 @@ func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
 	m4.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
 	m6 := new(dns.Msg)
 	m6.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeAAAA)
-        c.Do(m4, conf.Servers[0] + ":" + conf.Port)
-        c.Do(m6, conf.Servers[0] + ":" + conf.Port)
+	c.Do(m4, conf.Servers[0]+":"+conf.Port)
+	c.Do(m6, conf.Servers[0]+":"+conf.Port)
 
 	var ips []string
 	i := 2 // two outstanding queries
