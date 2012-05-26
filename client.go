@@ -231,17 +231,11 @@ func ListenAndQueryRequest(request chan *Request, handler QueryHandler) {
 // Write returns the original question and the answer on the 
 // reply channel of the client.
 func (w *reply) Write(m *Msg) error {
+	// What to do if the channels here are nil?
+	// Do() sets them if empty - but not everything goes through Do()
 	if w.conn == nil {
-		if w.Client().Reply == nil {
-			QueryReply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
-			return nil
-		}
 		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
 	} else {
-		if w.Client().Reply == nil {
-			QueryReply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
-			return nil
-		}
 		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
 	}
 	return nil
@@ -265,6 +259,12 @@ func (w *reply) RemoteAddr() net.Addr {
 // 
 // r is of type *Exchange.
 func (c *Client) Do(m *Msg, a string) {
+	if c.Request == nil {
+		c.Request = QueryRequest
+	}
+	if c.Reply == nil {
+		c.Reply = QueryReply
+	}
 	c.Request <- &Request{Client: c, Addr: a, Request: m}
 }
 
@@ -345,10 +345,15 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr 
 }
 
 // Dial connects to the address addr for the network set in c.Net
-func (w *reply) Dial() error {
-	conn, err := net.Dial(w.Client().Net, w.addr)
+func (w *reply) Dial() (err error) {
+	var conn net.Conn
+	if w.Client().Net == "" {
+		conn, err = net.Dial("udp", w.addr)
+	} else {
+		conn, err = net.Dial(w.Client().Net, w.addr)
+	}
 	if err != nil {
-		return err
+		return
 	}
 	w.conn = conn
 	return nil
