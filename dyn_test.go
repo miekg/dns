@@ -12,7 +12,8 @@ func sendit(u *Msg) (r *Msg, e error) {
 }
 
 func TestUpdateAdd(t *testing.T) {
-	u := NewUpdate("dyn.atoom.net.", ClassINET)
+	u := new(Msg)
+	u.SetUpdate("dyn.atoom.net.")
 	a := new(RR_A)
 	a.Hdr = RR_Header{"miek2.dyn.atoom.net.", TypeA, ClassINET, 1000, 0}
 	a.A = net.IPv4(127, 0, 0, 1)
@@ -34,7 +35,8 @@ func TestUpdateAdd(t *testing.T) {
 }
 
 func TestUpdateDelete(t *testing.T) {
-	u := NewUpdate("dyn.atoom.net.", ClassINET)
+	u := new(Msg)
+	u.SetUpdate("dyn.atoom.net.")
 	a := new(RR_A)
 	a.Hdr = RR_Header{"miek2.dyn.atoom.net.", TypeA, ClassINET, 1000, 0}
 	a.A = nil
