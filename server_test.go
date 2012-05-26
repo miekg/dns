@@ -34,7 +34,7 @@ func BenchmarkServing(b *testing.B) {
 		ListenAndServe("127.0.0.1:8053", "udp", nil)
 	}()
 
-	c := NewClient()
+	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeSOA)
 

@@ -56,7 +56,7 @@
 // Basic use pattern for synchronous querying the DNS at a
 // server configured on 127.0.0.1 and port 53:
 //
-//      c := dns.NewClient()
+//      c := new(Client)
 //      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // An asynchronous query is also possible, setting up is more elaborate then

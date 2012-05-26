@@ -9,7 +9,7 @@ func TestClientSync(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
-	c := NewClient()
+	c := new(Client)
 	r, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
@@ -32,7 +32,7 @@ func TestClientASync(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
-	c := NewClient()
+	c := new(Client)
 	c.Do(m, "85.223.71.124:53")
 
 forever:
@@ -57,7 +57,7 @@ func TestClientEDNS0(t *testing.T) {
 	//edns.Option = make([]Option, 1)
 	//edns.SetNsid("") // Empty to request it
 
-	c := NewClient()
+	c := new(Client) 
 	r, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
@@ -72,7 +72,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	m.SetAxfr("miek.nl.")
 	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
 
-	c := NewClient()
+	c := new(Client)
 	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 	c.Net = "tcp"
 
@@ -100,7 +100,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("dnsex.nl.")
 
-	c := NewClient()
+	c := new(Client)
 	c.Net = "tcp"
 	// timeout?
 

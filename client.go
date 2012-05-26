@@ -111,7 +111,7 @@ func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
 //		dns.HandleQuery(".", myhandler)
 //		dns.ListenAndQuery(nil)
 //		m := new(dns.Msg)
-//		c := dns.NewClient()
+//		c := new(dns.Client)
 //		m.SetQuestion("miek.nl.", TypeMX)
 //		c.Do(m, "127.0.0.1:53")
 //		// ...
@@ -181,20 +181,6 @@ type Client struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 	Hijacked     net.Conn          // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use
-}
-
-// NewClient creates a new client, with Net set to "udp" and Attempts to 1.
-// The Timeouts are set to 2 * 1e9 and the query channels (for async usage)
-// are set to the global defaults (QueryReqeust and QueryReply)
-func NewClient() *Client {
-	c := new(Client)
-	c.Net = "udp"
-	c.Attempts = 1
-	c.Request = QueryRequest
-	c.Reply = QueryReply
-	c.ReadTimeout = 2 * 1e9
-	c.WriteTimeout = 2 * 1e9
-	return c
 }
 
 type Query struct {
@@ -311,7 +297,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
-//	c := dns.NewClient()
+//	c := new(dns.Client)
 //	in, err := c.Exchange(message, "127.0.0.1:53")
 //
 // See Client.ExchangeRtt(...) to get the round trip time.
@@ -323,7 +309,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 // ExchangeRtt performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
-//	c := dns.NewClient()
+//	c := new(dns.Client)
 //	in, rtt, addr, err := c.ExchangeRtt(message, "127.0.0.1:53")
 // 
 // The 'addr' return value is superfluous in this case, but it is here to retain symmetry

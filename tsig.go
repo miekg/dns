@@ -6,8 +6,8 @@
 // Basic use pattern when querying with a TSIG name "axfr." and the base64
 // secret "so6ZGir4GPAqINNh9U5c3A==":
 //
-//	m := dns.new(Msg)
-//	c := dns.NewClient()
+//	m := new(dns.Msg)
+//	c := new(dns.Client)
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m.SetQuestion("miek.nl.", dns.TypeMX)
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
@@ -19,7 +19,7 @@
 // miek.nl. with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
 // and using the server 85.223.71.124
 //
-//	c := dns.NewClient()
+//	c := new(dns.Client)
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m := new(dns.Msg)
 //	m.SetAxfr("miek.nl.") 
