@@ -35,18 +35,6 @@
 // 
 package dns
 
-// NewUpdate creates a new DNS update packet. This returns a normal
-// dns *Msg, but sets some options.
-func NewUpdate(zone string, class uint16) *Msg {
-	u := new(Msg)
-	u.MsgHdr.Response = false
-	u.MsgHdr.Opcode = OpcodeUpdate
-	u.Compress = false // Seems BIND9 at least cannot handle compressed update pkgs
-	u.Question = make([]Question, 1)
-	u.Question[0] = Question{zone, TypeSOA, class}
-	return u
-}
-
 // The table from RFC 2136 supplemented with the Go DNS function.
 //
 // 3.2.4 - Table Of Metavalues Used In Prerequisite Section
