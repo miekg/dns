@@ -57,7 +57,7 @@ func TestClientEDNS0(t *testing.T) {
 	//edns.Option = make([]Option, 1)
 	//edns.SetNsid("") // Empty to request it
 
-	c := new(Client) 
+	c := new(Client)
 	r, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
