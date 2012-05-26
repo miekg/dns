@@ -18,7 +18,7 @@ func main() {
 
 	m := new(dns.Msg)
 	m.Question = make([]dns.Question, 1)
-	c := dns.NewClient()
+	c := new(dns.Client)
 
 	addr := addresses(conf, c, os.Args[1])
 	if len(addr) == 0 {

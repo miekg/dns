@@ -20,7 +20,7 @@ func main() {
 	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeDNSKEY)
 	m.SetEdns0(2048, true)
 
-	c := dns.NewClient()
+	c := new(dns.Client)
 	r, _ := c.Exchange(m, conf.Servers[0]+":"+conf.Port)
 	if r == nil {
 		fmt.Printf("*** no answer received for %s\n", os.Args[1])

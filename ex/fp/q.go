@@ -38,7 +38,7 @@ func main() {
 	}
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
 	nameserver += ":" + strconv.Itoa(*port)
-	c := dns.NewClient()
+	c := new(dns.Client)
 	prints, _ := fingerPrintFromFile("data/q")
 	results := make([]*fingerprint, 0)
 	if *report {

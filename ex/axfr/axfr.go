@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 	zone := flag.Arg(flag.NArg() - 1)
 
-	client := dns.NewClient()
+	client := new(dns.Client)
 	client.Net = "tcp"
 	m := new(dns.Msg)
 	if *serial > 0 {

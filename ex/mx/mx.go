@@ -16,8 +16,7 @@ func main() {
 
 	// Error checking
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-	c := dns.NewClient()
-
+	c := new(dns.Client)
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeMX)
 	m.MsgHdr.RecursionDesired = true

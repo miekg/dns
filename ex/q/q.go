@@ -137,7 +137,7 @@ Flags:
 	// We use the async query handling, just to show how it is to be used.
 	dns.HandleQuery(".", q)
 	dns.ListenAndQuery(nil)
-	c := dns.NewClient()
+	c := new(dns.Client)
 	if *tcp {
 		c.Net = "tcp"
 		if *four {
@@ -351,7 +351,7 @@ func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
 // Get the key from the DNS (uses the local resolver) and return them.
 // If nothing is found we return nil
 func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY {
-	c := dns.NewClient()
+	c := new(dns.Client)
 	if tcp {
 		c.Net = "tcp"
 	}
