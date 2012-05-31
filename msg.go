@@ -400,23 +400,21 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off += len(element)
 				}
 			case "opt": // edns
-				// Length of the entire option section
 				for j := 0; j < val.Field(i).Len(); j++ {
-					element := val.Field(i).Index(j)
-					// for each code we should do something else
-					h, e := hex.DecodeString(string(element.Field(1).String()))
+					element := val.Field(i).Index(j).Interface()
+					b, e := element.(EDNS0).Bytes()
 					if e != nil {
 						println("dns: failure packing OTP")
 						return lenmsg, false
 					}
-					code := uint16(element.Field(0).Uint())
-					msg[off], msg[off+1] = packUint16(code)
+					// Option code
+					msg[off], msg[off+1] = packUint16(element.(EDNS0).Option())
 					// Length
-					msg[off+2], msg[off+3] = packUint16(uint16(len(string(h))))
+					msg[off+2], msg[off+3] = packUint16(uint16(len(b)))
 					off += 4
-
-					copy(msg[off:off+len(string(h))], h)
-					off += len(string(h))
+					// Actual data
+					copy(msg[off:off+len(b)], b)
+					off += len(b)
 				}
 			case "a":
 				// It must be a slice of 4, even if it is 16, we encode
@@ -685,22 +683,34 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				}
 				fv.Set(reflect.ValueOf(txt))
 			case "opt": // edns0
+				// TODO: multiple EDNS0 options
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				if rdlength == 0 {
 					// This is an EDNS0 (OPT Record) with no rdata
 					// We can savely return here.
 					break
 				}
-				opt := make([]Option, 1)
-				opt[0].Code, off = unpackUint16(msg, off)
+				edns := make([]EDNS0, 0)
+				// Goto to this place, when there is a goto
+				code := uint16(0)
+
+				code, off = unpackUint16(msg, off) // Overflow? TODO
 				optlen, off1 := unpackUint16(msg, off)
 				if off1+int(optlen) > off+rdlength {
 					println("dns: overflow unpacking OPT")
 					return lenmsg, false
 				}
-				opt[0].Data = hex.EncodeToString(msg[off1 : off1+int(optlen)])
-				fv.Set(reflect.ValueOf(opt))
-				off = off1 + int(optlen)
+				switch code {
+				case OptionNSID:
+					e := new(EDNS0_NSID)
+					e.SetBytes(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case OptionSUBNET:
+					// ..
+				}
+				fv.Set(reflect.ValueOf(edns))
+				// goto ??
 			case "a":
 				if off+net.IPv4len > len(msg) {
 					println("dns: overflow unpacking A")

@@ -171,7 +171,10 @@ Flags:
 			o.SetUDPSize(dns.DefaultMsgSize)
 		}
 		if *nsid {
-			o.SetNsid("")
+			// Ask for it
+			e := new(dns.EDNS0_NSID)
+			e.SetBytes([]byte(""))
+			o.Option = append(o.Option, e)
 		}
 		m.Extra = append(m.Extra, o)
 	}

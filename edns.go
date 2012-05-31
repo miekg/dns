@@ -2,23 +2,19 @@ package dns
 
 import (
 	"encoding/hex"
+	"net"
 	"strconv"
 )
 
 // EDNS0 Option codes.
 const (
-	_              = iota
-	OptionCodeLLQ           // not used
-	OptionCodeUL            // not used
-	OptionCodeNSID          // NSID, RFC5001
-	_DO            = 1 << 7 // dnssec ok
+	_                = iota
+	OptionLLQ             // not used
+	OptionUL              // not used
+	OptionNSID            // NSID, RFC5001
+	OptionSUBNET = 0x50fa // client-subnet draft
+	_DO              = 1 << 7 // dnssec ok
 )
-
-// An ENDS0 option rdata element.
-type Option struct {
-	Code uint16
-	Data string `dns:"hex"`
-}
 
 /* 
  * EDNS extended RR.
@@ -34,7 +30,7 @@ type Option struct {
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []Option `dns:"opt"` // tag is used in Pack and Unpack
+	Option []EDNS0 `dns:"opt"` // tag is used in Pack and Unpack
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
@@ -51,10 +47,10 @@ func (rr *RR_OPT) String() string {
 	s += "udp: " + strconv.Itoa(int(rr.UDPSize()))
 
 	for _, o := range rr.Option {
-		switch o.Code {
-		case OptionCodeNSID:
-			s += "\n; NSID: " + o.Data
-			h, e := hex.DecodeString(o.Data)
+		switch o.(type) {
+		case *EDNS0_NSID:
+			s += "\n; NSID: " + o.String()
+			h, e := o.Bytes()
 			var r string
 			if e == nil {
 				for _, c := range h {
@@ -70,7 +66,8 @@ func (rr *RR_OPT) String() string {
 func (rr *RR_OPT) Len() int {
 	l := rr.Hdr.Len()
 	for i := 0; i < len(rr.Option); i++ {
-		l += 2 + len(rr.Option[i].Data)/2
+		lo, _ := rr.Option[i].Bytes()
+		l += 2 + len(lo)
 	}
 	return l
 }
@@ -119,19 +116,49 @@ func (rr *RR_OPT) SetDo() {
 	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// Nsid returns the NSID as hex character string.
-func (rr *RR_OPT) Nsid() string {
-	for i := 0; i < len(rr.Option); i++ {
-		if rr.Option[i].Code == OptionCodeNSID {
-			return "NSID: " + rr.Option[i].Data
-		}
-	}
-	// TODO: error or nil string?
-	return "Not found"
+// EDNS0 defines a EDNS0 Option
+type EDNS0 interface {
+	// Option return the option code for the option.
+	Option() uint16
+	// Bytes returns the bytes of the option data.
+	Bytes() ([]byte, error)
+	// String returns the string representation of the option.
+	String() string
+	// SetBytes sets the data as found in the packet. Is also sets
+	// the length of the slice as the length of the option data.
+	SetBytes([]byte)
 }
 
-// SetNsid sets the NSID from a hex character string.
-// Use the empty string when requesting an NSID.
-func (rr *RR_OPT) SetNsid(hexnsid string) {
-	rr.Option = append(rr.Option, Option{OptionCodeNSID, hexnsid})
+type EDNS0_NSID struct {
+	Code uint16
+	Nsid string // This string must be encoded as Hex
+}
+
+func (e *EDNS0_NSID) Option() uint16 {
+	return e.Code
+}
+
+func (e *EDNS0_NSID) Bytes() ([]byte, error) {
+	h, err := hex.DecodeString(e.Nsid)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
+}
+
+func (e *EDNS0_NSID) String() string {
+	return string(e.Nsid)
+}
+
+func (e *EDNS0_NSID) SetBytes(b []byte) {
+	e.Code = OptionNSID
+	e.Nsid = hex.EncodeToString(b)
+}
+
+type EDNS0_SUBNET struct {
+	Code          uint16
+	Family        uint16
+	SourceNetmask uint8
+	SourceScope   uint8
+	Address       []net.IP
 }
