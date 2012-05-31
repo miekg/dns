@@ -173,7 +173,8 @@ Flags:
 		if *nsid {
 			// Ask for it
 			e := new(dns.EDNS0_NSID)
-			e.SetBytes([]byte(""))
+			e.Nsid = ""
+			e.Code = dns.EDNS0NSID
 			o.Option = append(o.Option, e)
 		}
 		m.Extra = append(m.Extra, o)

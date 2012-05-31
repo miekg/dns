@@ -9,10 +9,10 @@ import (
 // EDNS0 Option codes.
 const (
 	_                = iota
-	OptionLLQ             // not used
-	OptionUL              // not used
-	OptionNSID            // NSID, RFC5001
-	OptionSUBNET = 0x50fa // client-subnet draft
+	EDNS0LLQ             // not used
+	EDNS0UL              // not used
+	EDNS0NSID            // NSID, RFC5001
+	EDNS0SUBNET = 0x50fa // client-subnet draft
 	_DO              = 1 << 7 // dnssec ok
 )
 
@@ -50,7 +50,7 @@ func (rr *RR_OPT) String() string {
 		switch o.(type) {
 		case *EDNS0_NSID:
 			s += "\n; NSID: " + o.String()
-			h, e := o.Bytes()
+			h, e := o.Pack()
 			var r string
 			if e == nil {
 				for _, c := range h {
@@ -66,7 +66,7 @@ func (rr *RR_OPT) String() string {
 func (rr *RR_OPT) Len() int {
 	l := rr.Hdr.Len()
 	for i := 0; i < len(rr.Option); i++ {
-		lo, _ := rr.Option[i].Bytes()
+		lo, _ := rr.Option[i].Pack()
 		l += 2 + len(lo)
 	}
 	return l
@@ -120,25 +120,25 @@ func (rr *RR_OPT) SetDo() {
 type EDNS0 interface {
 	// Option return the option code for the option.
 	Option() uint16
-	// Bytes returns the bytes of the option data.
-	Bytes() ([]byte, error)
+	// Pack returns the bytes of the option data.
+	Pack() ([]byte, error)
+	// Unpack sets the data as found in the packet. Is also sets
+	// the length of the slice as the length of the option data.
+	Unpack([]byte)
 	// String returns the string representation of the option.
 	String() string
-	// SetBytes sets the data as found in the packet. Is also sets
-	// the length of the slice as the length of the option data.
-	SetBytes([]byte)
 }
 
 type EDNS0_NSID struct {
 	Code uint16
-	Nsid string // This string must be encoded as Hex
+	Nsid string		// This string needs to be hex encoded
 }
 
 func (e *EDNS0_NSID) Option() uint16 {
 	return e.Code
 }
 
-func (e *EDNS0_NSID) Bytes() ([]byte, error) {
+func (e *EDNS0_NSID) Pack() ([]byte, error) {
 	h, err := hex.DecodeString(e.Nsid)
 	if err != nil {
 		return nil, err
@@ -146,13 +146,12 @@ func (e *EDNS0_NSID) Bytes() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_NSID) String() string {
-	return string(e.Nsid)
+func (e *EDNS0_NSID) Unpack(b []byte) {
+	e.Nsid = hex.EncodeToString(b)
 }
 
-func (e *EDNS0_NSID) SetBytes(b []byte) {
-	e.Code = OptionNSID
-	e.Nsid = hex.EncodeToString(b)
+func (e *EDNS0_NSID) String() string {
+	return string(e.Nsid)
 }
 
 type EDNS0_SUBNET struct {

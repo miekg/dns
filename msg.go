@@ -402,7 +402,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case "opt": // edns
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).Interface()
-					b, e := element.(EDNS0).Bytes()
+					b, e := element.(EDNS0).Pack()
 					if e != nil {
 						println("dns: failure packing OTP")
 						return lenmsg, false
@@ -701,12 +701,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					return lenmsg, false
 				}
 				switch code {
-				case OptionNSID:
+				case EDNS0NSID:
 					e := new(EDNS0_NSID)
-					e.SetBytes(msg[off1 : off1+int(optlen)])
+					e.Unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
-				case OptionSUBNET:
+				case EDNS0SUBNET:
 					// ..
 				}
 				fv.Set(reflect.ValueOf(edns))
