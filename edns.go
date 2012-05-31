@@ -178,11 +178,12 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 	case 1:
 		// just copy? TODO (also in msg.go...)
 		ip := make([]byte, net.IPv4len)
+		a := e.Address.To4()
 		for i := 0; i < net.IPv4len; i++ {
 			if i+1 > len(e.Address) {
 				break
 			}
-			ip[i] = e.Address[i]
+			ip[i] = a[i]
 		}
 		b = append(b, ip...)
 	case 2:

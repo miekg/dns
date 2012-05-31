@@ -181,16 +181,17 @@ Flags:
 		if *client != "" {
 			e := new(dns.EDNS0_SUBNET)
 			e.Code = dns.EDNS0SUBNET
-			e.SourceNetmask = 0
 			e.SourceScope = 0
 			e.Address = net.ParseIP(*client)
 			if e.Address == nil {
 				fmt.Fprintf(os.Stderr, "Failure to parse IP address: %s\n", *client)
 				return
 			}
-			e.Family = 1	// IP4
-			if len(e.Address) > net.IPv4len {
+			e.Family = 1 // IP4
+			e.SourceNetmask = 32
+			if e.Address.To4() == nil {
 				e.Family = 2 // IP6
+				e.SourceNetmask = 128
 			}
 			o.Option = append(o.Option, e)
 		}
