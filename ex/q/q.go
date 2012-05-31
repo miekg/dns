@@ -4,6 +4,7 @@ import (
 	"dns"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -47,7 +48,8 @@ func main() {
 	rd := flag.Bool("rd", true, "set RD flag in query")
 	fallback := flag.Bool("fallback", false, "fallback to 4096 bytes bufsize and after that TCP")
 	tcp := flag.Bool("tcp", false, "TCP mode")
-	nsid := flag.Bool("nsid", false, "ask for NSID")
+	nsid := flag.Bool("nsid", false, "set edns nsid option")
+	client := flag.String("client", "", "set edns client-subnet option")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -162,7 +164,8 @@ Flags:
 	m.MsgHdr.CheckingDisabled = *cd
 	m.MsgHdr.RecursionDesired = *rd
 	m.Question = make([]dns.Question, 1)
-	if *dnssec || *nsid {
+
+	if *dnssec || *nsid || *client != "" {
 		o := new(dns.RR_OPT)
 		o.Hdr.Name = "."
 		o.Hdr.Rrtype = dns.TypeOPT
@@ -171,10 +174,24 @@ Flags:
 			o.SetUDPSize(dns.DefaultMsgSize)
 		}
 		if *nsid {
-			// Ask for it
 			e := new(dns.EDNS0_NSID)
-			e.Nsid = ""
 			e.Code = dns.EDNS0NSID
+			o.Option = append(o.Option, e)
+		}
+		if *client != "" {
+			e := new(dns.EDNS0_SUBNET)
+			e.Code = dns.EDNS0SUBNET
+			e.SourceNetmask = 0
+			e.SourceScope = 0
+			e.Address = net.ParseIP(*client)
+			if e.Address == nil {
+				fmt.Fprintf(os.Stderr, "Failure to parse IP address: %s\n", *client)
+				return
+			}
+			e.Family = 1	// IP4
+			if len(e.Address) > net.IPv4len {
+				e.Family = 2 // IP6
+			}
 			o.Option = append(o.Option, e)
 		}
 		m.Extra = append(m.Extra, o)
@@ -243,8 +260,7 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %dB\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Len())
-				// Server maybe
+				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Len())
 			}
 			i++
 			if i == len(qname) {

@@ -2,18 +2,19 @@ package dns
 
 import (
 	"encoding/hex"
+	"errors"
 	"net"
 	"strconv"
 )
 
 // EDNS0 Option codes.
 const (
-	_                = iota
+	_           = iota
 	EDNS0LLQ             // not used
 	EDNS0UL              // not used
 	EDNS0NSID            // NSID, RFC5001
 	EDNS0SUBNET = 0x50fa // client-subnet draft
-	_DO              = 1 << 7 // dnssec ok
+	_DO         = 1 << 7 // dnssec ok
 )
 
 /* 
@@ -58,6 +59,8 @@ func (rr *RR_OPT) String() string {
 				}
 				s += "  " + r
 			}
+		case *EDNS0_SUBNET:
+			s += "\n; SUBNET: " + o.String()
 		}
 	}
 	return s
@@ -130,8 +133,8 @@ type EDNS0 interface {
 }
 
 type EDNS0_NSID struct {
-	Code uint16
-	Nsid string		// This string needs to be hex encoded
+	Code uint16 // Always EDNS0NSID
+	Nsid string // This string needs to be hex encoded
 }
 
 func (e *EDNS0_NSID) Option() uint16 {
@@ -155,9 +158,70 @@ func (e *EDNS0_NSID) String() string {
 }
 
 type EDNS0_SUBNET struct {
-	Code          uint16
-	Family        uint16
+	Code          uint16 // Always EDNS0SUBNET
+	Family        uint16 // 1 for IP, 2 for IP6
 	SourceNetmask uint8
 	SourceScope   uint8
-	Address       []net.IP
+	Address       net.IP
+}
+
+func (e *EDNS0_SUBNET) Option() uint16 {
+	return e.Code
+}
+
+func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
+	b := make([]byte, 4)
+	b[0], b[1] = packUint16(e.Family)
+	b[2] = e.SourceNetmask
+	b[3] = e.SourceScope
+	switch e.Family {
+	case 1:
+		// just copy? TODO (also in msg.go...)
+		ip := make([]byte, net.IPv4len)
+		for i := 0; i < net.IPv4len; i++ {
+			if i+1 > len(e.Address) {
+				break
+			}
+			ip[i] = e.Address[i]
+		}
+		b = append(b, ip...)
+	case 2:
+		ip := make([]byte, net.IPv6len)
+		for i := 0; i < net.IPv6len; i++ {
+			if i+1 > len(e.Address) {
+				break
+			}
+			ip[i] = e.Address[i]
+		}
+		b = append(b, ip...)
+	default:
+		return nil, errors.New("bad address family")
+	}
+	return b, nil
+}
+
+func (e *EDNS0_SUBNET) Unpack(b []byte) {
+	// TODO: length of b
+	e.Family, _ = unpackUint16(b, 0)
+	e.SourceNetmask = b[2]
+	e.SourceScope = b[3]
+	switch e.Family {
+	case 1:
+		if len(b) == 8 {
+			e.Address = net.IPv4(b[4], b[5], b[6], b[7])
+		}
+	case 2:
+		if len(b) == 20 {
+			e.Address = net.IP{b[4], b[4+1], b[4+2], b[4+3], b[4+4],
+				b[4+5], b[4+6], b[4+7], b[4+8], b[4+9], b[4+10],
+				b[4+11], b[4+12], b[4+13], b[4+14], b[4+15]}
+		}
+	}
+	return
+}
+
+func (e *EDNS0_SUBNET) String() string {
+	return e.Address.String() + "/" +
+		strconv.Itoa(int(e.SourceNetmask)) + "/" +
+		strconv.Itoa(int(e.SourceScope))
 }
