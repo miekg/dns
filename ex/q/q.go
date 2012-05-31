@@ -242,7 +242,7 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s)\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network())
+				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %dB\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Len())
 				// Server maybe
 			}
 			i++
