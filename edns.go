@@ -221,8 +221,12 @@ func (e *EDNS0_SUBNET) Unpack(b []byte) {
 	return
 }
 
-func (e *EDNS0_SUBNET) String() string {
-	return e.Address.String() + "/" +
-		strconv.Itoa(int(e.SourceNetmask)) + "/" +
-		strconv.Itoa(int(e.SourceScope))
+func (e *EDNS0_SUBNET) String() (s string) {
+	if e.Address.To4() != nil {
+		s = e.Address.String()
+	} else {
+		s = "[" + e.Address.String() + "]"
+	}
+	s += "/" + strconv.Itoa(int(e.SourceNetmask)) + "/" + strconv.Itoa(int(e.SourceScope))
+	return
 }
