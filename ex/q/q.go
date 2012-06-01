@@ -177,8 +177,7 @@ Flags:
 			e := new(dns.EDNS0_NSID)
 			e.Code = dns.EDNS0NSID
 			o.Option = append(o.Option, e)
-			// NSD will not return nsid when the udp message size
-			// is zero
+			// NSD will not return nsid when the udp message size is too small
 			o.SetUDPSize(dns.DefaultMsgSize)
 		}
 		if *client != "" {
@@ -264,7 +263,7 @@ forever:
 				}
 
 				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Len())
+				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Size)
 			}
 			i++
 			if i == len(qname) {

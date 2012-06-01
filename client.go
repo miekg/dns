@@ -338,6 +338,7 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr 
 		return nil, 0, w.conn.RemoteAddr(), err
 	}
 	r = new(Msg)
+	r.Size = n
 	if ok := r.Unpack(in[:n]); !ok {
 		return nil, w.rtt, w.conn.RemoteAddr(), ErrUnpack
 	}
@@ -377,6 +378,7 @@ func (w *reply) Receive() (*Msg, error) {
 		return nil, ErrUnpack
 	}
 	w.rtt = time.Since(w.t)
+	m.Size = n
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
 		if _, ok := w.Client().TsigSecret[secret]; !ok {
