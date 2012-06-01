@@ -178,7 +178,7 @@ Flags:
 			e.Code = dns.EDNS0NSID
 			o.Option = append(o.Option, e)
 			// NSD will not return nsid when the udp message size is too small
-			o.SetUDPSize(dns.DefaultMsgSize)
+			//o.SetUDPSize(dns.DefaultMsgSize)
 		}
 		if *client != "" {
 			e := new(dns.EDNS0_SUBNET)
