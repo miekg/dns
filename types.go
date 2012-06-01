@@ -291,6 +291,40 @@ func (rr *RR_MR) Len() int {
 	return rr.Hdr.Len() + l
 }
 
+type RR_MF struct {
+	Hdr RR_Header
+	Mf   string `dns:"cdomain-name"`
+}
+
+func (rr *RR_MF) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_MF) String() string {
+	return rr.Hdr.String() + " " + rr.Mf
+}
+
+func (rr *RR_MF) Len() int {
+	return rr.Hdr.Len() + len(rr.Mf) + 1
+}
+
+type RR_MD struct {
+	Hdr RR_Header
+	Md   string `dns:"cdomain-name"`
+}
+
+func (rr *RR_MD) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_MD) String() string {
+	return rr.Hdr.String() + " " + rr.Md
+}
+
+func (rr *RR_MD) Len() int {
+	return rr.Hdr.Len() + len(rr.Md) + 1
+}
+
 type RR_MX struct {
 	Hdr  RR_Header
 	Pref uint16

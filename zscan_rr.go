@@ -31,6 +31,12 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypePTR:
 		r, e = setPTR(h, c, o, f)
 		goto Slurp
+	case TypeMF:
+		r, e = setMF(h, c, o, f)
+		goto Slurp
+	case TypeMD:
+		r, e = setMD(h, c, o, f)
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
 		goto Slurp
@@ -279,6 +285,38 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	if rr.Email[ld-1] != '.' {
 		rr.Email = appendOrigin(rr.Email, o)
+	}
+	return rr, nil
+}
+
+func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MF)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Mf = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad MF Mf", l}
+	}
+	if rr.Mf[ld-1] != '.' {
+		rr.Mf = appendOrigin(rr.Mf, o)
+	}
+	return rr, nil
+}
+
+func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_MD)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Md = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad MD Md", l}
+	}
+	if rr.Md[ld-1] != '.' {
+		rr.Md = appendOrigin(rr.Md, o)
 	}
 	return rr, nil
 }
