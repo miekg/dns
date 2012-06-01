@@ -37,6 +37,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeMD:
 		r, e = setMD(h, c, o, f)
 		goto Slurp
+	case TypeAFSDB:
+		r, e = setAFSDB(h, c, o, f)
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
 		goto Slurp
@@ -340,6 +343,29 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	if rr.Mx[ld-1] != '.' {
 		rr.Mx = appendOrigin(rr.Mx, o)
+	}
+	return rr, nil
+}
+
+func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_AFSDB)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad AFSDB Subtype", l}
+	} else {
+		rr.Subtype = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Hostname = l.token
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad AFSDB Hostname", l}
+	}
+	if rr.Hostname[ld-1] != '.' {
+		rr.Hostname = appendOrigin(rr.Hostname, o)
 	}
 	return rr, nil
 }

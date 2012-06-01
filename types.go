@@ -36,6 +36,7 @@ const (
 	TypeMX         uint16 = 15
 	TypeTXT        uint16 = 16
 	TypeRP         uint16 = 17
+	TypeAFSDB      uint16 = 18
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
 	TypeAAAA       uint16 = 28
@@ -293,7 +294,7 @@ func (rr *RR_MR) Len() int {
 
 type RR_MF struct {
 	Hdr RR_Header
-	Mf   string `dns:"cdomain-name"`
+	Mf  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MF) Header() *RR_Header {
@@ -310,7 +311,7 @@ func (rr *RR_MF) Len() int {
 
 type RR_MD struct {
 	Hdr RR_Header
-	Md   string `dns:"cdomain-name"`
+	Md  string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MD) Header() *RR_Header {
@@ -341,6 +342,25 @@ func (rr *RR_MX) String() string {
 
 func (rr *RR_MX) Len() int {
 	l := len(rr.Mx) + 1
+	return rr.Hdr.Len() + l + 2
+}
+
+type RR_AFSDB struct {
+	Hdr  RR_Header
+	Subtype uint16
+	Hostname   string `dns:"cdomain-name"`
+}
+
+func (rr *RR_AFSDB) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_AFSDB) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + rr.Hostname
+}
+
+func (rr *RR_AFSDB) Len() int {
+	l := len(rr.Hostname) + 1
 	return rr.Hdr.Len() + l + 2
 }
 
@@ -1189,8 +1209,11 @@ var rr_mk = map[uint16]func() RR{
 	TypeHINFO:      func() RR { return new(RR_HINFO) },
 	TypeMB:         func() RR { return new(RR_MB) },
 	TypeMG:         func() RR { return new(RR_MG) },
+	TypeMD:         func() RR { return new(RR_MD) },
+	TypeMF:         func() RR { return new(RR_MF) },
 	TypeMINFO:      func() RR { return new(RR_MINFO) },
 	TypeRP:         func() RR { return new(RR_RP) },
+	TypeAFSDB:      func() RR { return new(RR_AFSDB) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
 	TypeNS:         func() RR { return new(RR_NS) },
