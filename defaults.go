@@ -57,7 +57,7 @@ func (dns *Msg) SetUpdate(z string) {
 	dns.MsgHdr.Id = Id()
 	dns.MsgHdr.Response = false
 	dns.MsgHdr.Opcode = OpcodeUpdate
-	dns.Compress = false	// BIND9 cannot handle compression
+	dns.Compress = false // BIND9 cannot handle compression
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 }

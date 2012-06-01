@@ -346,9 +346,9 @@ func (rr *RR_MX) Len() int {
 }
 
 type RR_AFSDB struct {
-	Hdr  RR_Header
-	Subtype uint16
-	Hostname   string `dns:"cdomain-name"`
+	Hdr      RR_Header
+	Subtype  uint16
+	Hostname string `dns:"cdomain-name"`
 }
 
 func (rr *RR_AFSDB) Header() *RR_Header {

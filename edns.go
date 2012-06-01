@@ -197,11 +197,11 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 	b[3] = e.SourceScope
 	switch e.Family {
 	case 1:
-		if e.SourceNetmask > net.IPv4len * 8 {
+		if e.SourceNetmask > net.IPv4len*8 {
 			return nil, errors.New("bad netmask")
 		}
 		ip := make([]byte, net.IPv4len)
-		a := e.Address.To4().Mask( net.CIDRMask(int(e.SourceNetmask), net.IPv4len * 8) )
+		a := e.Address.To4().Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
 		for i := 0; i < net.IPv4len; i++ {
 			if i+1 > len(e.Address) {
 				break
@@ -210,11 +210,11 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 		}
 		b = append(b, ip...)
 	case 2:
-		if e.SourceNetmask > net.IPv6len * 8 {
+		if e.SourceNetmask > net.IPv6len*8 {
 			return nil, errors.New("bad netmask")
 		}
 		ip := make([]byte, net.IPv6len)
-		a := e.Address.Mask( net.CIDRMask(int(e.SourceNetmask), net.IPv6len * 8) )
+		a := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
 		for i := 0; i < net.IPv6len; i++ {
 			if i+1 > len(e.Address) {
 				break
