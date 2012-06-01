@@ -3,6 +3,8 @@
 * outgoing [AI]xfr
 * zonereader that extracts glue (or at least signals it) and other usefull stuff?
 * a complete dnssec resolver
+* test multiple edns0 options
+* fix 'q' standardize ipv6 input with [ and ] ?
 
 ## Nice to have
 
