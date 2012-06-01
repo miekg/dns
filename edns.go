@@ -229,7 +229,9 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 }
 
 func (e *EDNS0_SUBNET) Unpack(b []byte) {
-	// TODO: length of b (overflow)
+	if len(b) < 8 {
+		return
+	}
 	e.Family, _ = unpackUint16(b, 0)
 	e.SourceNetmask = b[2]
 	e.SourceScope = b[3]
@@ -249,7 +251,9 @@ func (e *EDNS0_SUBNET) Unpack(b []byte) {
 }
 
 func (e *EDNS0_SUBNET) String() (s string) {
-	if e.Address.To4() != nil {
+	if e.Address == nil {
+		s = "<nil>"
+	} else if e.Address.To4() != nil {
 		s = e.Address.String()
 	} else {
 		s = "[" + e.Address.String() + "]"

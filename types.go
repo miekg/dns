@@ -1150,6 +1150,26 @@ func (rr *RR_HIP) Len() int {
 	return l
 }
 
+type RR_WKS struct {
+	Hdr          RR_Header
+	Address      net.IP `dns:"a"`
+	Protocol     uint8
+	Bitmap		[]uint16 `dns:"wks"`
+}
+
+func (rr *RR_WKS) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_WKS) String() string {
+	return rr.Hdr.String() +
+		" " + rr.Address.String()
+}
+
+func (rr *RR_WKS) Len() int {
+	return rr.Hdr.Len() + net.IPv4len + 1
+}
+
 // TimeToDate translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1224,6 +1244,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
 	TypeDNAME:      func() RR { return new(RR_DNAME) },
 	TypeA:          func() RR { return new(RR_A) },
+	TypeWKS:	func() RR { return new(RR_WKS) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },

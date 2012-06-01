@@ -11,9 +11,10 @@
 * Speed, we can always go faster. A simple reflect server now hits 35/45K qps
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
-* RRs: WKS (1183)
 
 ## Examples to add
 
 * Nameserver, with a small zone, 1 KSK and online signing;
 * Recursor - ala FunkenSturm?
+
+WKS: net.LookupPort("tcp", service")
