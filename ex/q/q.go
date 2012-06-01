@@ -190,10 +190,10 @@ Flags:
 				return
 			}
 			e.Family = 1 // IP4
-			e.SourceNetmask = 32
+			e.SourceNetmask = net.IPv4len * 8
 			if e.Address.To4() == nil {
 				e.Family = 2 // IP6
-				e.SourceNetmask = 128
+				e.SourceNetmask = net.IPv6len * 8
 			}
 			o.Option = append(o.Option, e)
 		}
