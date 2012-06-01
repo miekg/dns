@@ -119,13 +119,13 @@ func (rr *RR_OPT) SetDo() {
 	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// EDNS0 defines a EDNS0 Option
+// EDNS0 defines an EDNS0 Option.
 type EDNS0 interface {
-	// Option return the option code for the option.
+	// Option returns the option code for the option.
 	Option() uint16
 	// Pack returns the bytes of the option data.
 	Pack() ([]byte, error)
-	// Unpack sets the data as found in the packet. Is also sets
+	// Unpack sets the data as found in the buffer. Is also sets
 	// the length of the slice as the length of the option data.
 	Unpack([]byte)
 	// String returns the string representation of the option.
@@ -176,9 +176,11 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 	b[3] = e.SourceScope
 	switch e.Family {
 	case 1:
-		// just copy? TODO (also in msg.go...)
+		if e.SourceNetmask > net.IPv4len * 8 {
+			return nil, errors.New("bad netmask")
+		}
 		ip := make([]byte, net.IPv4len)
-		a := e.Address.To4()
+		a := e.Address.To4().Mask( net.CIDRMask(int(e.SourceNetmask), net.IPv4len * 8) )
 		for i := 0; i < net.IPv4len; i++ {
 			if i+1 > len(e.Address) {
 				break
@@ -187,12 +189,16 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 		}
 		b = append(b, ip...)
 	case 2:
+		if e.SourceNetmask > net.IPv6len * 8 {
+			return nil, errors.New("bad netmask")
+		}
 		ip := make([]byte, net.IPv6len)
+		a := e.Address.Mask( net.CIDRMask(int(e.SourceNetmask), net.IPv6len * 8) )
 		for i := 0; i < net.IPv6len; i++ {
 			if i+1 > len(e.Address) {
 				break
 			}
-			ip[i] = e.Address[i]
+			ip[i] = a[i]
 		}
 		b = append(b, ip...)
 	default:
@@ -202,7 +208,7 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 }
 
 func (e *EDNS0_SUBNET) Unpack(b []byte) {
-	// TODO: length of b
+	// TODO: length of b (overflow)
 	e.Family, _ = unpackUint16(b, 0)
 	e.SourceNetmask = b[2]
 	e.SourceScope = b[3]
