@@ -1151,10 +1151,10 @@ func (rr *RR_HIP) Len() int {
 }
 
 type RR_WKS struct {
-	Hdr          RR_Header
-	Address      net.IP `dns:"a"`
-	Protocol     uint8
-	Bitmap		[]uint16 `dns:"wks"`
+	Hdr      RR_Header
+	Address  net.IP `dns:"a"`
+	Protocol uint8
+	Bitmap   []uint16 `dns:"wks"`
 }
 
 func (rr *RR_WKS) Header() *RR_Header {
@@ -1162,8 +1162,12 @@ func (rr *RR_WKS) Header() *RR_Header {
 }
 
 func (rr *RR_WKS) String() string {
-	return rr.Hdr.String() +
-		" " + rr.Address.String()
+	s := rr.Hdr.String() + " " + rr.Address.String()
+	for i := 0; i < len(rr.Bitmap); i++ {
+		// lookup the port
+		s += " " + strconv.Itoa(int(rr.Bitmap[i]))
+	}
+	return s
 }
 
 func (rr *RR_WKS) Len() int {
@@ -1244,7 +1248,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
 	TypeDNAME:      func() RR { return new(RR_DNAME) },
 	TypeA:          func() RR { return new(RR_A) },
-	TypeWKS:	func() RR { return new(RR_WKS) },
+	TypeWKS:        func() RR { return new(RR_WKS) },
 	TypeAAAA:       func() RR { return new(RR_AAAA) },
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },

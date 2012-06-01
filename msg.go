@@ -456,6 +456,22 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					msg[off] = byte(fv.Index(j).Uint())
 					off++
 				}
+			case "wks":
+				if val.Field(i).Len() == 0 {
+					break
+				}
+				var bitmapbyte uint16
+				for j := 0; j < val.Field(i).Len(); j++ {
+					serv := uint16((fv.Index(j).Uint()))
+					bitmapbyte = uint16(serv / 8)
+					if int(bitmapbyte) > lenmsg {
+						println("dns: overflow packing WKS")
+						return lenmsg, false
+					}
+					bit := uint16(serv) - bitmapbyte*8
+					msg[bitmapbyte] = byte(1 << (7 - bit))
+				}
+				off += int(bitmapbyte)
 			case "nsec": // NSEC/NSEC3
 				// This is the uint16 type bitmap
 				if val.Field(i).Len() == 0 {
@@ -731,8 +747,18 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
 					msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}))
 				off += net.IPv6len
+			case "wks":
+				// Rest of the record is the bitmap
+				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+				endrr := rdstart + rdlength
+				serv := make([]uint16, 0)
+				for off < endrr {
+
+				}
+
+
 			case "nsec": // NSEC/NSEC3
-				// Rest of the Record is the type bitmap
+				// Rest of the record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				endrr := rdstart + rdlength
 

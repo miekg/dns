@@ -39,7 +39,7 @@ const (
 
 type RR_OPT struct {
 	Hdr    RR_Header
-	Option []EDNS0 `dns:"opt"` // tag is used in Pack and Unpack
+	Option []EDNS0 `dns:"opt"`
 }
 
 func (rr *RR_OPT) Header() *RR_Header {
