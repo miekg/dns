@@ -187,7 +187,7 @@ func (dns *Msg) IsTsig() (ok bool) {
 	return
 }
 
-// IsEdns0 checks if the message has a Edns0 record, any EDNS0
+// IsEdns0 checks if the message has a EDNS0 (OPT) record, any EDNS0
 // record in the additional section will do.
 func (dns *Msg) IsEdns0() (ok bool) {
 	for _, r := range dns.Extra {

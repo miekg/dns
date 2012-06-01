@@ -1,3 +1,23 @@
+// EDNS0
+//
+// EDNS0 is an extension mechanism for the DNS defined in RFC 2671. It defines a 
+// standard RR type, the OPT RR, which is then completely abused. The normal RR header is
+// redefined as:
+//
+//  	Name          string "domain-name"  // should always be "."
+//  	Opt           uint16		    // was type, but is always TypeOPT
+//  	UDPSize       uint16		    // was class
+//  	ExtendedRcode uint8		    // was TTL
+//  	Version       uint8		    // was TTL
+//  	Z             uint16		    // was TTL (all flags should be put here)
+//  	Rdlength      uint16		    // not changed
+// 
+// Basic use pattern for creating an (empty) OPT RR:
+//
+//	o := new(dns.RR_OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
+//
 package dns
 
 import (
@@ -12,22 +32,10 @@ const (
 	_           = iota
 	EDNS0LLQ             // not used
 	EDNS0UL              // not used
-	EDNS0NSID            // NSID, RFC5001
+	EDNS0NSID            // nsid (RFC5001)
 	EDNS0SUBNET = 0x50fa // client-subnet draft
 	_DO         = 1 << 7 // dnssec ok
 )
-
-/* 
- * EDNS extended RR.
- * This is the EDNS0 Header
- * 	Name          string "domain-name"
- * 	Opt           uint16 // was type, but is always TypeOPT
- * 	UDPSize       uint16 // was class
- * 	ExtendedRcode uint8  // was TTL
- * 	Version       uint8  // was TTL
- * 	Z             uint16 // was TTL (all flags should be put here)
- * 	Rdlength      uint16 // length of data after the header
- */
 
 type RR_OPT struct {
 	Hdr    RR_Header
@@ -75,7 +83,7 @@ func (rr *RR_OPT) Len() int {
 	return l
 }
 
-// Version returns the EDNS version.
+// Version returns the EDNS version used. Only zero is defined.
 func (rr *RR_OPT) Version() uint8 {
 	return uint8(rr.Hdr.Ttl & 0x00FF00FFFF)
 }
@@ -85,7 +93,7 @@ func (rr *RR_OPT) SetVersion(v uint8) {
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | uint32(v)
 }
 
-// UDPSize gets the UDP buffer size.
+// UDPSize returns the UDP buffer size.
 func (rr *RR_OPT) UDPSize() uint16 {
 	return rr.Hdr.Class
 }
@@ -95,16 +103,7 @@ func (rr *RR_OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
 
-/* from RFC 3225
-          +0 (MSB)                +1 (LSB)
-   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-0: |   EXTENDED-RCODE      |       VERSION         |
-   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-2: |DO|                    Z                       |
-   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-*/
-
-// Do gets the value of the DO (DNSSEC OK) bit.
+// Do returns the value of the DO (DNSSEC OK) bit.
 func (rr *RR_OPT) Do() bool {
 	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
 }
@@ -119,7 +118,11 @@ func (rr *RR_OPT) SetDo() {
 	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// EDNS0 defines an EDNS0 Option.
+// EDNS0 defines an EDNS0 Option. An OPT RR can have multiple option appended to
+// it. Basic use pattern for adding an option to and OPT RR:
+//
+//	// o is the OPT RR, e is the EDNS0 option
+//	o.Option = append(o.Option, e)
 type EDNS0 interface {
 	// Option returns the option code for the option.
 	Option() uint16
@@ -132,6 +135,12 @@ type EDNS0 interface {
 	String() string
 }
 
+// The nsid EDNS0 option is used to retrieve some sort of nameserver
+// identifier. The identifier is an opaque string encoded has hex.
+// Basic use pattern for creating an nsid option:
+//
+//	e := new(dns.EDNS0_NSID)
+//	e.Code = dns.EDNS0NSID
 type EDNS0_NSID struct {
 	Code uint16 // Always EDNS0NSID
 	Nsid string // This string needs to be hex encoded
@@ -157,6 +166,18 @@ func (e *EDNS0_NSID) String() string {
 	return string(e.Nsid)
 }
 
+// The subnet EDNS0 option is used to give the remote nameserver
+// an idea of where the client lives. It can then give back a different
+// answer depending on the location or network topology.
+// Basic use pattern for creating an subnet option:
+//
+//	e := new(dns.EDNS0_SUBNET)
+//	e.Code = dns.EDNS0SUBNET
+//	e.Family = 1	// 1 for IPv4 source address, 2 for IPv6
+//	e.NetMask = 32	// 32 for IPV4, 128 for IPv6
+//	e.SourceScope = 0
+//	e.Address = net.ParseIP("127.0.0.1").To4()	// for IPv4
+//	// e.Address = net.ParseIP("2001:7b8:32a::2")	// for IPV6
 type EDNS0_SUBNET struct {
 	Code          uint16 // Always EDNS0SUBNET
 	Family        uint16 // 1 for IP, 2 for IP6
