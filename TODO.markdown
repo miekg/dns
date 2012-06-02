@@ -4,7 +4,7 @@
 * zonereader that extracts glue (or at least signals it) and other usefull stuff?
 * a complete dnssec resolver
 * test multiple edns0 options
-* fix 'q' standardize ipv6 input with [ and ] ?
+* fix 'q' standardize ipv6 input with [::1]#53 ?
 
 ## Nice to have
 
@@ -16,5 +16,3 @@
 
 * Nameserver, with a small zone, 1 KSK and online signing;
 * Recursor - ala FunkenSturm?
-
-WKS: net.LookupPort("tcp", service")
