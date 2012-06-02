@@ -94,9 +94,13 @@ var Rr_str = map[uint16]string{
 	TypeHINFO:      "HINFO",
 	TypeMB:         "MB",
 	TypeMG:         "MG",
+	TypeRP:		"RP",
+	TypeMD:		"MD",
+	TypeMF:		"MF",
 	TypeMINFO:      "MINFO",
 	TypeMR:         "MR",
 	TypeMX:         "MX",
+	TypeWKS:	"WKS",
 	TypeNS:         "NS",
 	TypePTR:        "PTR",
 	TypeSOA:        "SOA",
@@ -752,11 +756,38 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, ok boo
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				endrr := rdstart + rdlength
 				serv := make([]uint16, 0)
+				j := 0
 				for off < endrr {
-
+					b := msg[off]
+					// Check the bits one by one, and set the type
+					if b&0x80 == 0x80 {
+						serv = append(serv, uint16(j*8+0))
+					}
+					if b&0x40 == 0x40 {
+						serv = append(serv, uint16(j*8+1))
+					}
+					if b&0x20 == 0x20 {
+						serv = append(serv, uint16(j*8+2))
+					}
+					if b&0x10 == 0x10 {
+						serv = append(serv, uint16(j*8+3))
+					}
+					if b&0x8 == 0x8 {
+						serv = append(serv, uint16(j*8+4))
+					}
+					if b&0x4 == 0x4 {
+						serv = append(serv, uint16(j*8+5))
+					}
+					if b&0x2 == 0x2 {
+						serv = append(serv, uint16(j*8+6))
+					}
+					if b&0x1 == 0x1 {
+						serv = append(serv, uint16(j*8+7))
+					}
+					j++
+					off++
 				}
-
-
+				fv.Set(reflect.ValueOf(serv))
 			case "nsec": // NSEC/NSEC3
 				// Rest of the record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())

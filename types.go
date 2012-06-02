@@ -1154,7 +1154,7 @@ type RR_WKS struct {
 	Hdr      RR_Header
 	Address  net.IP `dns:"a"`
 	Protocol uint8
-	Bitmap   []uint16 `dns:"wks"`
+	BitMap   []uint16 `dns:"wks"`
 }
 
 func (rr *RR_WKS) Header() *RR_Header {
@@ -1162,10 +1162,10 @@ func (rr *RR_WKS) Header() *RR_Header {
 }
 
 func (rr *RR_WKS) String() string {
-	s := rr.Hdr.String() + " " + rr.Address.String()
-	for i := 0; i < len(rr.Bitmap); i++ {
-		// lookup the port
-		s += " " + strconv.Itoa(int(rr.Bitmap[i]))
+	s := rr.Hdr.String() + rr.Address.String()
+	for i := 0; i < len(rr.BitMap); i++ {
+		// should lookup the port
+		s += " " + strconv.Itoa(int(rr.BitMap[i]))
 	}
 	return s
 }

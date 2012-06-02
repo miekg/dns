@@ -89,6 +89,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setNSEC3(h, c, o, f)
 	case TypeNSEC3PARAM:
 		return setNSEC3PARAM(h, c, f)
+	case TypeWKS:
+		return setWKS(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
 	case TypeDLV:
@@ -1057,6 +1059,61 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	l = <-c
 	rr.SaltLength = uint8(len(l.token))
 	rr.Salt = l.token
+	return rr, nil
+}
+
+func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_WKS)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Address = net.ParseIP(l.token)
+	if rr.Address == nil {
+		return nil, &ParseError{f, "bad WKS Adress", l}
+	}
+
+	<-c // _BLANK
+	l = <-c
+	proto := "tcp"
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad WKS Protocol", l}
+	} else {
+		rr.Protocol = uint8(i)
+		switch rr.Protocol {
+		case 17:
+			proto = "udp"
+		case 6:
+			proto = "tcp"
+		default:
+			return nil, &ParseError{f, "bad WKS Protocol", l}
+		}
+	}
+
+	<-c
+	l = <-c
+	rr.BitMap = make([]uint16, 0)
+	var (
+		k  int
+		err error
+	)
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _BLANK:
+			// Ok
+		case _STRING:
+			if k, err = net.LookupPort(proto, l.token); err != nil {
+				if i, e := strconv.Atoi(l.token); e != nil {	// If a number use that
+					rr.BitMap = append(rr.BitMap, uint16(i))
+				} else {
+					return nil, &ParseError{f, "bad WKS BitMap", l}
+				}
+			}
+			rr.BitMap = append(rr.BitMap, uint16(k))
+		default:
+			return nil, &ParseError{f, "bad WKS BitMap", l}
+		}
+		l = <-c
+	}
 	return rr, nil
 }
 
