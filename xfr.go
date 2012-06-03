@@ -45,16 +45,16 @@ func (w *reply) axfrReceive(c chan *Exchange) {
 	for {
 		in, err := w.Receive()
 		if err != nil {
-			c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), err}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), ErrId}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrId}
 			return
 		}
 		if first {
 			if !checkXfrSOA(in, true) {
-				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), ErrXfrSoa}
+				c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
 				return
 			}
 			first = !first
@@ -63,7 +63,7 @@ func (w *reply) axfrReceive(c chan *Exchange) {
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if checkXfrSOA(in, false) {
-				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), nil}
+				c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 				return
 			}
 			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
@@ -80,23 +80,23 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 	for {
 		in, err := w.Receive()
 		if err != nil {
-			c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), err}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), ErrId}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrId}
 			return
 		}
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), nil}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 				return
 			}
 
 			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), ErrXfrSoa}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
 				return
 			}
 			// This serial is important
@@ -110,11 +110,11 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 			// If the last record in the IXFR contains the servers' SOA,  we should quit
 			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
 				if v.Serial == serial {
-					c <- &Exchange{w.req, in, w.rtt, w.conn.RemoteAddr(), nil}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 					return
 				}
 			}
-			c <- &Exchange{Request: w.req, Reply: in}
+			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
 		}
 	}
 	panic("not reached")
