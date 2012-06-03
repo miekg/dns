@@ -180,6 +180,7 @@ type Client struct {
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 	Hijacked     net.Conn          // if set the calling code takes care of the connection
+	TrustAnchor  []*RR_DS	       // A list of DS records to use as trust anchors for DNSSEC.
 	// LocalAddr string            // Local address to use
 }
 

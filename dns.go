@@ -113,6 +113,9 @@ type Exchange struct {
 	Reply      *Msg          // the answer to the question that was sent
 	Rtt        time.Duration // round trip time
 	RemoteAddr net.Addr      // address of the server
+	Nxdomain   bool          // True if nodata because name does not exist
+	Secure     bool          // True if result is secure
+	Bogus      bool          // True if result is bogus, see Error for the reason
 	Error      error         // if something went wrong, this contains the error
 }
 

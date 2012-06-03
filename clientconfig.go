@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Read system DNS config from /etc/resolv.conf
-// Extend this further, but need to thinks about Conn
-
 package dns
 
 import (
