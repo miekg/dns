@@ -204,7 +204,8 @@ Flags:
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
-			fmt.Printf("%s\n", m.String())
+			fmt.Printf("%s", m.String())
+			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
 		}
 		// Add tsig
 		if *tsig != "" {
