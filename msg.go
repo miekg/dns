@@ -92,7 +92,7 @@ type Msg struct {
 var Rr_str = map[uint16]string{
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
-	TypeTSLA:	"TSLA",
+	TypeTLSA:	"TSLA",
 	TypeMB:         "MB",
 	TypeMG:         "MG",
 	TypeRP:		"RP",
