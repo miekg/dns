@@ -33,7 +33,7 @@ type TrustAnchor struct {
 	AnchorId   string    // KeyDigest id 
 	Anchor     *RR_DS    // The digest encoded as an DS record
 	ValidFrom  time.Time // Validity specification
-	ValidUntil time.Time
+	ValidUntil time.Time // Validaty specification
 }
 
 // TrustAnchorString convert a TrustAnchor to a string encoded as XML.
