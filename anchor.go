@@ -60,8 +60,8 @@ func TrustAnchorString(t []*TrustAnchor) string {
 	return string(b)
 }
 
-// ReadTrustAnchor read a root trust anchor from: http://data.iana.org/root-anchors/root-anchors.xml
-// and return the data or an error.
+// ReadTrustAnchor reads a root trust anchor from: http://data.iana.org/root-anchors/root-anchors.xml
+// and returns the data or an error.
 func ReadTrustAnchor(q io.Reader) ([]*TrustAnchor, error) {
 	d := xml.NewDecoder(q)
 	t := new(XMLTrustAnchor)
