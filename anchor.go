@@ -2,7 +2,6 @@ package dns
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"time"
 )
@@ -65,9 +64,8 @@ func TrustAnchorString(t []*TrustAnchor) string {
 func ReadTrustAnchor(q io.Reader) ([]*TrustAnchor, error) {
 	d := xml.NewDecoder(q)
 	t := new(XMLTrustAnchor)
-	e := d.Decode(t)
-	if e != nil {
-		println(e.Error())
+	if e := d.Decode(t); e != nil {
+		return nil, e
 	}
 	ta := make([]*TrustAnchor, 0)
 	var err error
@@ -94,7 +92,6 @@ func ReadTrustAnchor(q io.Reader) ([]*TrustAnchor, error) {
 		// Some checks here too?
 		ta = append(ta, t1)
 	}
-	fmt.Printf("%+v %+v\n", t, t.KeyDigest[0])
 	return ta, nil
 }
 

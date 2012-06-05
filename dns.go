@@ -107,7 +107,9 @@ type RR interface {
 	Len() int
 }
 
-// Exchange is used in (asynchronous) communication with the resolver.
+// Exchange is used in (asynchronous) communication with the resolver. If the 
+// client has trust anchors configured the Nxdomain, Secure and Bogus settings
+// are derived from those anchors.
 type Exchange struct {
 	Request    *Msg          // the question sent
 	Reply      *Msg          // the answer to the question that was sent
