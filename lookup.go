@@ -6,7 +6,14 @@ import (
 	"time"
 )
 
-// Nxdomain, Secure, Bogus
+type SecurityStatus int
+
+const (
+	SECURE SecurityStatus = iota
+	INSECURE
+	BOGUS
+	INDETERMINATE
+)
 
 // Lookup does a (secure) DNS lookup. The message m contains
 // the question to be asked. Lookup returns last packet seen
