@@ -15,6 +15,15 @@ const (
 	INDETERMINATE
 )
 
+// Types of answers (without looking the RFCs)
+// len(m.Ns) > 0
+// NS records in there? -> delegation (rcode should be rcode.Success)
+//	- secure delegation -> DS should be there
+//	- insecure delegation -> Proof of no DS (either NSEC or NSEC3)
+//	- plain old DNS delegation -> ...
+// SOA record in there? -> nxdomain   (rcode should be rcode.Nxdomain)
+
+
 // Lookup does a (secure) DNS lookup. The message m contains
 // the question to be asked. Lookup returns last packet seen
 // which is either the answer or a packet somewhere in the

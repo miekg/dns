@@ -69,7 +69,11 @@ func (nsec3 *RR_NSEC3) Match(domain string) bool {
 	return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 }
 
-// Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text.
+// RR_NSEC Match? (Do have them both??)
+
+// Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text (i.e. not hashed)
+// TODO(mg): this doesn't loop around
+// TODO(mg): make a CoverHashed variant?
 func (nsec3 *RR_NSEC3) Cover(domain string) bool {
 	hashdom := strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
 	nextdom := strings.ToUpper(nsec3.NextDomain)
