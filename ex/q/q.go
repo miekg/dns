@@ -258,6 +258,7 @@ forever:
 				if *check {
 					sigCheck(r.Reply, nameserver, *tcp)
 					nsecCheck(r.Reply)
+//					dns.AssertDelegationSigner(r.Reply, nil)
 				}
 				if *short {
 					r.Reply = shortMsg(r.Reply)

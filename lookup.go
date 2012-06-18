@@ -1,5 +1,7 @@
 package dns
 
+// This file is in flux
+
 import (
 	"math/rand"
 	"strings"
@@ -14,6 +16,55 @@ const (
 	BOGUS
 	INDETERMINATE
 )
+
+// Check if the returned message has a delegation signer record
+// Algo:
+// The auth section's owner name (should be all equal)  - seperate check!
+// The ownername of the DS records must match the right side of the qname
+// 
+func AssertDelegationSigner(m *Msg, trustdb []*RR_DNSKEY) error {
+
+	// look for the DS(s)
+	dss := make([]*RR_DS, 0)
+	// If there are ddssen, there should also be a SIG (what if not?)
+	var sig *RR_RRSIG
+	for _, r := range m.Ns {
+		if d, ok := r.(*RR_DS); ok {
+			dss = append(dss ,d)
+			continue
+		}
+		if s, ok := r.(*RR_RRSIG); ok {
+			if s.TypeCovered == TypeDS {
+				sig = s
+			}
+		}
+	}
+	if len(dss) == 0 {
+		// No DSs found ... 
+		return nil
+	}
+	println("DSs found", len(dss))
+	if sig == nil {
+		// No SIG found ...
+		return nil
+	}
+	println("SIG found")
+
+
+	// Ownername of the DSs should match the qname
+	if CompareLabels(dss[0].Header().Name, m.Question[0].Name) == 0 {
+		// No match
+	}
+	// Optionally keep track of these comparison, it should increase
+	println("Match found between delegation DS and qname")
+	println(dss[0].String())
+	println(sig.String())
+
+
+	return nil
+
+}
+
 
 // Types of answers (without looking the RFCs)
 // len(m.Ns) > 0
@@ -104,6 +155,13 @@ func primingZone() (a, aaaa []string) {
 	}
 	// Randomize
 	return
+}
+
+// Validate the root key with the DS records we've gotten offline
+func createTrustDB(dss []*RR_DS, a, aaaa []string) *[]RR_DNSKEY {
+	// Query a root server, get the DNSKEY, toDS() and check
+	return nil
+
 }
 
 // Parse the builtin trust anchor and return the DS records
