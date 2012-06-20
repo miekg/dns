@@ -13,6 +13,22 @@ const (
 	NSEC3_NODATA
 )
 
+// A Denialer is a record that performs denial
+// of existence in DNSSEC. Currently there are 
+// two types NSEC and NSEC3.
+type Denialer interface {
+	// HashNames hashes the owner and next domain name according
+	// to the hashing set in the record. For NSEC it is the identity function.
+	// The string domain is appended to the ownername in case of NSEC3
+	HashNames(domain string)
+	// Match checks if domain matches the (hashed) owner of name of the record.
+	Match(domain string) bool
+	// Cover checks if domain is covered by the NSEC(3) record
+	Cover(domain string) bool
+	// MatchType checks if the type is present in the bitmap
+	MatchType(rrtype uint16) bool
+}
+
 type saltWireFmt struct {
 	Salt string `dns:"size-hex"`
 }
@@ -55,21 +71,45 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 	return unpackBase32(nsec3)
 }
 
-// HashNames hashes the ownername and the next owner name in an NSEC3 record according to RFC 5155.
-// It uses the paramaters as set in the NSEC3 record. The string zone is appended to the hashed
-// ownername.
-func (nsec3 *RR_NSEC3) HashNames(zone string) {
-	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, nsec3.Hash, nsec3.Iterations, nsec3.Salt)) + "." + zone
+// Implement the HashNames method of Denialer
+func (nsec3 *RR_NSEC3) HashNames(domain string) {
+	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, nsec3.Hash, nsec3.Iterations, nsec3.Salt)) + "." + domain
 	nsec3.NextDomain = HashName(nsec3.NextDomain, nsec3.Hash, nsec3.Iterations, nsec3.Salt)
 }
 
-// Match checks if domain matches the first (hashed) owner name of the NSEC3 record. Domain must be given
-// in plain text.
-func (nsec3 *RR_NSEC3) Match(domain string) bool {
-	return strings.ToUpper(SplitLabels(nsec3.Header().Name)[0]) == strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
+// Implement the Match method of Denialer
+func (n *RR_NSEC3) Match(domain string) bool {
+	return strings.ToUpper(SplitLabels(n.Header().Name)[0]) == strings.ToUpper(HashName(domain, n.Hash, n.Iterations, n.Salt))
 }
 
-// RR_NSEC Match? (Do have them both??)
+// Implement the Match method of Denialer
+func (n *RR_NSEC) Match(domain string) bool {
+	return strings.ToUpper(n.Header().Name) == strings.ToUpper(domain)
+}
+
+func (n *RR_NSEC3) MatchType(rrtype uint16) bool {
+	for _, t := range n.TypeBitMap {
+		if t == rrtype {
+			return true
+		}
+		if t > rrtype {
+			return false
+		}
+	}
+	return false
+}
+
+func (n *RR_NSEC) MatchType(rrtype uint16) bool {
+	for _, t := range n.TypeBitMap {
+		if t == rrtype {
+			return true
+		}
+		if t > rrtype {
+			return false
+		}
+	}
+	return false
+}
 
 // Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text (i.e. not hashed)
 // TODO(mg): this doesn't loop around
