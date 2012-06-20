@@ -533,6 +533,10 @@ func (rr *RR_TXT) Len() int {
 	return l
 }
 
+func (rr *RR_TXT) Copy() *RR_TXT {
+	return &RR_TXT{*rr.Hdr.Copy(), rr.Txt}
+}
+
 type RR_SPF struct {
 	Hdr RR_Header
 	Txt []string `dns:"txt"`
@@ -562,6 +566,10 @@ func (rr *RR_SPF) Len() int {
 	return l
 }
 
+func (rr *RR_SPF) Copy() *RR_SPF {
+	return &RR_SPF{*rr.Hdr.Copy(), rr.Txt}
+}
+
 type RR_SRV struct {
 	Hdr      RR_Header
 	Priority uint16
@@ -584,6 +592,10 @@ func (rr *RR_SRV) String() string {
 func (rr *RR_SRV) Len() int {
 	l := len(rr.Target) + 1
 	return rr.Hdr.Len() + l + 6
+}
+
+func (rr *RR_SRV) Copy() *RR_SRV {
+	return &RR_SRV{*rr.Hdr.Copy(), rr.Priority, rr.Weight, rr.Port, rr.Target}
 }
 
 type RR_NAPTR struct {
@@ -615,6 +627,10 @@ func (rr *RR_NAPTR) Len() int {
 		len(rr.Regexp) + len(rr.Replacement) + 1
 }
 
+func (rr *RR_NAPTR) Copy() *RR_NAPTR {
+	return &RR_NAPTR{*rr.Hdr.Copy(), rr.Order, rr.Pref, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
+}
+
 // See RFC 4398.
 type RR_CERT struct {
 	Hdr         RR_Header
@@ -638,6 +654,10 @@ func (rr *RR_CERT) String() string {
 func (rr *RR_CERT) Len() int {
 	return rr.Hdr.Len() + 5 +
 		base64.StdEncoding.DecodedLen(len(rr.Certificate))
+}
+
+func (rr *RR_CERT) Copy() *RR_CERT {
+	return &RR_CERT{*rr.Hdr.Copy(), rr.Type, rr.KeyTag, rr.Algorithm, rr.Certificate}
 }
 
 // See RFC 2672.
@@ -757,6 +777,10 @@ func (rr *RR_LOC) Len() int {
 	return rr.Hdr.Len() + 4 + 12
 }
 
+func (rr *RR_LOC) Copy() *RR_LOC {
+	return &RR_LOC{*rr.Hdr.Copy(), rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
+}
+
 type RR_RRSIG struct {
 	Hdr         RR_Header
 	TypeCovered uint16
@@ -791,6 +815,10 @@ func (rr *RR_RRSIG) Len() int {
 		base64.StdEncoding.DecodedLen(len(rr.Signature)) + 18
 }
 
+func (rr *RR_RRSIG) Copy() *RR_RRSIG {
+	return &RR_RRSIG{*rr.Hdr.Copy(), rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
+}
+
 type RR_NSEC struct {
 	Hdr        RR_Header
 	NextDomain string   `dns:"domain-name"`
@@ -819,6 +847,10 @@ func (rr *RR_NSEC) Len() int {
 	// TODO: +32 is max type bitmap
 }
 
+func (rr *RR_NSEC) Copy() *RR_NSEC {
+	return &RR_NSEC{*rr.Hdr.Copy(), rr.NextDomain, rr.TypeBitMap}
+}
+
 type RR_DS struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -840,6 +872,10 @@ func (rr *RR_DS) String() string {
 
 func (rr *RR_DS) Len() int {
 	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+}
+
+func (rr *RR_DS) Copy() *RR_DS {
+	return &RR_DS{*rr.Hdr.Copy(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
 type RR_DLV struct {
@@ -865,6 +901,10 @@ func (rr *RR_DLV) Len() int {
 	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
 }
 
+func (rr *RR_DLV) Copy() *RR_DLV {
+	return &RR_DLV{*rr.Hdr.Copy(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+}
+
 type RR_KX struct {
 	Hdr       RR_Header
 	Pref      uint16
@@ -882,6 +922,10 @@ func (rr *RR_KX) String() string {
 
 func (rr *RR_KX) Len() int {
 	return 0
+}
+
+func (rr *RR_KX) Copy() *RR_KX {
+	return &RR_KX{*rr.Hdr.Copy(), rr.Pref, rr.Exchanger}
 }
 
 type RR_TA struct {
@@ -907,6 +951,10 @@ func (rr *RR_TA) Len() int {
 	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
 }
 
+func (rr *RR_TA) Copy() *RR_TA {
+	return &RR_TA{*rr.Hdr.Copy(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+}
+
 type RR_TALINK struct {
 	Hdr          RR_Header
 	PreviousName string `dns:"domain"`
@@ -924,6 +972,10 @@ func (rr *RR_TALINK) String() string {
 
 func (rr *RR_TALINK) Len() int {
 	return rr.Hdr.Len() + len(rr.PreviousName) + len(rr.NextName) + 2
+}
+
+func (rr *RR_TALINK) Copy() *RR_TALINK {
+	return &RR_TALINK{*rr.Hdr.Copy(), rr.PreviousName, rr.NextName}
 }
 
 type RR_SSHFP struct {
@@ -945,6 +997,10 @@ func (rr *RR_SSHFP) String() string {
 
 func (rr *RR_SSHFP) Len() int {
 	return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
+}
+
+func (rr *RR_SSHFP) Copy() *RR_SSHFP {
+	return &RR_SSHFP{*rr.Hdr.Copy(), rr.Algorithm, rr.Type, rr.FingerPrint}
 }
 
 type RR_IPSECKEY struct {
@@ -973,6 +1029,10 @@ func (rr *RR_IPSECKEY) Len() int {
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
+func (rr *RR_IPSECKEY) Copy() *RR_IPSECKEY {
+	return &RR_IPSECKEY{*rr.Hdr.Copy(), rr.Precedence, rr.GatewayType, rr.Algorithm, rr.Gateway, rr.PublicKey}
+}
+
 type RR_DNSKEY struct {
 	Hdr       RR_Header
 	Flags     uint16
@@ -995,6 +1055,10 @@ func (rr *RR_DNSKEY) String() string {
 func (rr *RR_DNSKEY) Len() int {
 	return rr.Hdr.Len() + 4 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+}
+
+func (rr *RR_DNSKEY) Copy() *RR_DNSKEY {
+	return &RR_DNSKEY{*rr.Hdr.Copy(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
 }
 
 type RR_NSEC3 struct {
@@ -1035,6 +1099,10 @@ func (rr *RR_NSEC3) Len() int {
 	// TODO: +32 is MAX type bit map
 }
 
+func (rr *RR_NSEC3) Copy() *RR_NSEC3 {
+	return &RR_NSEC3{*rr.Hdr.Copy(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, rr.TypeBitMap}
+}
+
 type RR_NSEC3PARAM struct {
 	Hdr        RR_Header
 	Hash       uint8
@@ -1061,6 +1129,10 @@ func (rr *RR_NSEC3PARAM) Len() int {
 	return rr.Hdr.Len() + 2 + 4 + 1 + len(rr.Salt)/2
 }
 
+func (rr *RR_NSEC3PARAM) Copy() *RR_NSEC3PARAM {
+	return &RR_NSEC3PARAM{*rr.Hdr.Copy(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
+}
+
 type RR_TKEY struct {
 	Hdr        RR_Header
 	Algorithm  string `dns:"domain-name"`
@@ -1070,7 +1142,7 @@ type RR_TKEY struct {
 	Error      uint16
 	KeySize    uint16
 	Key        string
-	Otherlen   uint16
+	OtherLen   uint16
 	OtherData  string
 }
 
@@ -1086,6 +1158,10 @@ func (rr *RR_TKEY) String() string {
 func (rr *RR_TKEY) Len() int {
 	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
 		len(rr.Key) + 2 + len(rr.OtherData)
+}
+
+func (rr *RR_TKEY) Copy() *RR_TKEY {
+	return &RR_TKEY{*rr.Hdr.Copy(), rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
 }
 
 // Unknown RR representation
@@ -1106,6 +1182,10 @@ func (rr *RR_RFC3597) String() string {
 
 func (rr *RR_RFC3597) Len() int {
 	return rr.Hdr.Len() + len(rr.Rdata)/2
+}
+
+func (rr *RR_RFC3597) Copy() *RR_RFC3597 {
+	return &RR_RFC3597{*rr.Hdr.Copy(), rr.Rdata}
 }
 
 type RR_URI struct {
@@ -1129,6 +1209,10 @@ func (rr *RR_URI) Len() int {
 	return rr.Hdr.Len() + 4 + len(rr.Target) + 1
 }
 
+func (rr *RR_URI) Copy() *RR_URI {
+	return &RR_URI{*rr.Hdr.Copy(), rr.Weight, rr.Priority, rr.Target}
+}
+
 type RR_DHCID struct {
 	Hdr    RR_Header
 	Digest string `dns:"base64"`
@@ -1145,6 +1229,10 @@ func (rr *RR_DHCID) String() string {
 func (rr *RR_DHCID) Len() int {
 	return rr.Hdr.Len() +
 		base64.StdEncoding.DecodedLen(len(rr.Digest))
+}
+
+func (rr *RR_DHCID) Copy() *RR_DHCID {
+	return &RR_DHCID{*rr.Hdr.Copy(), rr.Digest}
 }
 
 type RR_TLSA struct {
@@ -1169,6 +1257,10 @@ func (rr *RR_TLSA) String() string {
 
 func (rr *RR_TLSA) Len() int {
 	return rr.Hdr.Len() + 3 + len(rr.Certificate)/2
+}
+
+func (rr *RR_TLSA) Copy() *RR_TLSA {
+	return &RR_TLSA{*rr.Hdr.Copy(), rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
 }
 
 type RR_HIP struct {
@@ -1206,6 +1298,10 @@ func (rr *RR_HIP) Len() int {
 	return l
 }
 
+func (rr *RR_HIP) Copy() *RR_HIP {
+	return &RR_HIP{*rr.Hdr.Copy(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
+}
+
 type RR_WKS struct {
 	Hdr      RR_Header
 	Address  net.IP `dns:"a"`
@@ -1228,6 +1324,10 @@ func (rr *RR_WKS) String() string {
 
 func (rr *RR_WKS) Len() int {
 	return rr.Hdr.Len() + net.IPv4len + 1
+}
+
+func (rr *RR_WKS) Copy() *RR_WKS {
+	return &RR_WKS{*rr.Hdr.Copy(), rr.Address, rr.Protocol, rr.BitMap}
 }
 
 // TimeToDate translates the RRSIG's incep. and expir. times to the
