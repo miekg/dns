@@ -201,7 +201,7 @@ func (rr *RR_CNAME) Len() int {
 }
 
 func (rr *RR_CNAME) Copy() *RR_CNAME {
-	return &RR_CNAME{Hdr: *rr.Hdr.Copy(), Target: rr.Target}
+	return &RR_CNAME{*rr.Hdr.Copy(), rr.Target}
 }
 
 type RR_HINFO struct {
@@ -222,6 +222,10 @@ func (rr *RR_HINFO) Len() int {
 	return rr.Hdr.Len() + len(rr.Cpu) + len(rr.Os)
 }
 
+func (rr *RR_HINFO) Copy() *RR_HINFO {
+	return &RR_HINFO{*rr.Hdr.Copy(), rr.Cpu, rr.Os}
+}
+
 type RR_MB struct {
 	Hdr RR_Header
 	Mb  string `dns:"cdomain-name"`
@@ -240,6 +244,10 @@ func (rr *RR_MB) Len() int {
 	return rr.Hdr.Len() + l
 }
 
+func (rr *RR_MB) Copy() *RR_MB {
+	return &RR_MB{*rr.Hdr.Copy(), rr.Mb}
+}
+
 type RR_MG struct {
 	Hdr RR_Header
 	Mg  string `dns:"cdomain-name"`
@@ -256,6 +264,10 @@ func (rr *RR_MG) String() string {
 func (rr *RR_MG) Len() int {
 	l := len(rr.Mg) + 1
 	return rr.Hdr.Len() + l
+}
+
+func (rr *RR_MG) Copy() *RR_MG {
+	return &RR_MG{*rr.Hdr.Copy(), rr.Mg}
 }
 
 type RR_MINFO struct {
@@ -278,6 +290,10 @@ func (rr *RR_MINFO) Len() int {
 	return rr.Hdr.Len() + l + n
 }
 
+func (rr *RR_MINFO) Copy() *RR_MINFO {
+	return &RR_MINFO{*rr.Hdr.Copy(), rr.Rmail, rr.Email}
+}
+
 type RR_MR struct {
 	Hdr RR_Header
 	Mr  string `dns:"cdomain-name"`
@@ -294,6 +310,10 @@ func (rr *RR_MR) String() string {
 func (rr *RR_MR) Len() int {
 	l := len(rr.Mr) + 1
 	return rr.Hdr.Len() + l
+}
+
+func (rr *RR_MR) Copy() *RR_MR {
+	return &RR_MR{*rr.Hdr.Copy(), rr.Mr}
 }
 
 type RR_MF struct {
@@ -313,6 +333,10 @@ func (rr *RR_MF) Len() int {
 	return rr.Hdr.Len() + len(rr.Mf) + 1
 }
 
+func (rr *RR_MF) Copy() *RR_MF {
+	return &RR_MF{*rr.Hdr.Copy(), rr.Mf}
+}
+
 type RR_MD struct {
 	Hdr RR_Header
 	Md  string `dns:"cdomain-name"`
@@ -328,6 +352,10 @@ func (rr *RR_MD) String() string {
 
 func (rr *RR_MD) Len() int {
 	return rr.Hdr.Len() + len(rr.Md) + 1
+}
+
+func (rr *RR_MD) Copy() *RR_MD {
+	return &RR_MD{*rr.Hdr.Copy(), rr.Md}
 }
 
 type RR_MX struct {
@@ -349,6 +377,10 @@ func (rr *RR_MX) Len() int {
 	return rr.Hdr.Len() + l + 2
 }
 
+func (rr *RR_MX) Copy() *RR_MX {
+	return &RR_MX{*rr.Hdr.Copy(), rr.Pref, rr.Mx}
+}
+
 type RR_AFSDB struct {
 	Hdr      RR_Header
 	Subtype  uint16
@@ -366,6 +398,10 @@ func (rr *RR_AFSDB) String() string {
 func (rr *RR_AFSDB) Len() int {
 	l := len(rr.Hostname) + 1
 	return rr.Hdr.Len() + l + 2
+}
+
+func (rr *RR_AFSDB) Copy() *RR_AFSDB {
+	return &RR_AFSDB{*rr.Hdr.Copy(), rr.Subtype, rr.Hostname}
 }
 
 type RR_NS struct {
@@ -386,6 +422,10 @@ func (rr *RR_NS) Len() int {
 	return rr.Hdr.Len() + l
 }
 
+func (rr *RR_NS) Copy() *RR_NS {
+	return &RR_NS{*rr.Hdr.Copy(), rr.Ns}
+}
+
 type RR_PTR struct {
 	Hdr RR_Header
 	Ptr string `dns:"cdomain-name"`
@@ -402,6 +442,10 @@ func (rr *RR_PTR) String() string {
 func (rr *RR_PTR) Len() int {
 	l := len(rr.Ptr) + 1
 	return rr.Hdr.Len() + l
+}
+
+func (rr *RR_PTR) Copy() *RR_PTR {
+	return &RR_PTR{*rr.Hdr.Copy(), rr.Ptr}
 }
 
 type RR_RP struct {
