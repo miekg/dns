@@ -200,6 +200,10 @@ func (rr *RR_CNAME) Len() int {
 	return rr.Hdr.Len() + l
 }
 
+func (rr *RR_CNAME) Copy() *RR_CNAME {
+	return &RR_CNAME{Hdr: *rr.Hdr.Copy(), Target: rr.Target}
+}
+
 type RR_HINFO struct {
 	Hdr RR_Header
 	Cpu string

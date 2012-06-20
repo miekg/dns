@@ -637,7 +637,8 @@ func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
-		h := r.Header().copy()
+		h := r.Header().Copy()
+		h.Ttl = s.OrigTtl
 		labels := SplitLabels(h.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
@@ -661,6 +662,7 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 			defer func() { x.Target = p }()
 			x.Target = strings.ToLower(x.Target)
 		case *RR_SOA:
+			x.Hdr = *h	 // NO NO NO need to copy each RR
 			p := x.Ns
 			q := x.Mbox
 			defer func() { x.Ns = p }()
@@ -713,7 +715,6 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		wire := make([]byte, r.Len()*2)
-		h.Ttl = s.OrigTtl
 		off, ok1 := packRR(r, wire, 0, nil, false)
 		if !ok1 {
 			return nil
