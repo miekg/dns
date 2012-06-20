@@ -637,85 +637,53 @@ func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
-		h := r.Header().Copy()
-		h.Ttl = s.OrigTtl
-		labels := SplitLabels(h.Name)
+		r1 := r.Copy()
+		r1.Header().Ttl = s.OrigTtl
+		labels := SplitLabels(r1.Header().Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			r1.Header().Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h.Name = strings.ToLower(h.Name)
+		r1.Header().Name = strings.ToLower(r1.Header().Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
-		// TODO(mg): copy the rdata here?
 		switch x := r.(type) {
 		case *RR_NS:
-			p := x.Ns
-			defer func() { x.Ns = p }()
 			x.Ns = strings.ToLower(x.Ns)
 		case *RR_CNAME:
-			p := x.Target
-			defer func() { x.Target = p }()
 			x.Target = strings.ToLower(x.Target)
 		case *RR_SOA:
-			x.Hdr = *h	 // NO NO NO need to copy each RR
-			p := x.Ns
-			q := x.Mbox
-			defer func() { x.Ns = p }()
-			defer func() { x.Mbox = q }()
 			x.Ns = strings.ToLower(x.Ns)
 			x.Mbox = strings.ToLower(x.Mbox)
 		case *RR_MB:
-			p := x.Mb
-			defer func() { x.Mb = p }()
 			x.Mb = strings.ToLower(x.Mb)
 		case *RR_MG:
-			p := x.Mg
-			defer func() { x.Mg = p }()
 			x.Mg = strings.ToLower(x.Mg)
 		case *RR_MR:
-			p := x.Mr
-			defer func() { x.Mr = p }()
 			x.Mr = strings.ToLower(x.Mr)
 		case *RR_PTR:
-			p := x.Ptr
-			defer func() { x.Ptr = p }()
 			x.Ptr = strings.ToLower(x.Ptr)
 		case *RR_MINFO:
-			p := x.Rmail
-			q := x.Email
-			defer func() { x.Rmail = p }()
-			defer func() { x.Email = q }()
 			x.Rmail = strings.ToLower(x.Rmail)
 			x.Email = strings.ToLower(x.Email)
 		case *RR_MX:
-			p := x.Mx
-			defer func() { x.Mx = p }()
 			x.Mx = strings.ToLower(x.Mx)
 		case *RR_NAPTR:
-			p := x.Replacement
-			defer func() { x.Replacement = p }()
 			x.Replacement = strings.ToLower(x.Replacement)
 		case *RR_KX:
-			p := x.Exchanger
-			defer func() { x.Exchanger = p }()
 			x.Exchanger = strings.ToLower(x.Exchanger)
 		case *RR_SRV:
-			p := x.Target
-			defer func() { x.Target = p }()
 			x.Target = strings.ToLower(x.Target)
 		case *RR_DNAME:
-			p := x.Target
-			defer func() { x.Target = p }()
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		wire := make([]byte, r.Len()*2)
-		off, ok1 := packRR(r, wire, 0, nil, false)
+		off, ok1 := packRR(r1, wire, 0, nil, false)
 		if !ok1 {
 			return nil
 		}

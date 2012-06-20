@@ -105,8 +105,8 @@ type RR interface {
 	String() string
 	// Len returns the length (in octects) of the uncompressed RR in wire format.
 	Len() int
-// Copy returns a copy of the RR
-// Copy() RR
+	// Copy returns a copy of the RR
+	 Copy() RR
 }
 
 // Exchange is used in (asynchronous) communication with the resolver. If the 
@@ -135,7 +135,7 @@ func (h *RR_Header) Header() *RR_Header {
 	return h
 }
 
-func (h *RR_Header) Copy() *RR_Header {
+func (h *RR_Header) CopyHeader() *RR_Header {
 	r := new(RR_Header)
 	r.Name = h.Name
 	r.Rrtype = h.Rrtype
@@ -143,6 +143,11 @@ func (h *RR_Header) Copy() *RR_Header {
 	r.Ttl = h.Ttl
 	r.Rdlength = h.Rdlength
 	return r
+}
+
+// Just to imlement the RR interface
+func (h *RR_Header) Copy() RR {
+	return nil
 }
 
 func (h *RR_Header) String() string {
