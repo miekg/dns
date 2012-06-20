@@ -466,6 +466,10 @@ func (rr *RR_RP) Len() int {
 	return rr.Hdr.Len() + len(rr.Mbox) + 1 + len(rr.Txt) + 1
 }
 
+func (rr *RR_RP) Copy() *RR_RP {
+	return &RR_RP{*rr.Hdr.Copy(), rr.Mbox, rr.Txt}
+}
+
 type RR_SOA struct {
 	Hdr     RR_Header
 	Ns      string `dns:"cdomain-name"`
@@ -494,6 +498,10 @@ func (rr *RR_SOA) Len() int {
 	l := len(rr.Ns) + 1
 	n := len(rr.Mbox) + 1
 	return rr.Hdr.Len() + l + n + 20
+}
+
+func (rr *RR_SOA) Copy() *RR_SOA {
+	return &RR_SOA{*rr.Hdr.Copy(), rr.Ns, rr.Mbox, rr.Serial, rr.Refresh, rr.Retry, rr.Expire, rr.Minttl}
 }
 
 type RR_TXT struct {
