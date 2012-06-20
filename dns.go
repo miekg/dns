@@ -106,7 +106,7 @@ type RR interface {
 	// Len returns the length (in octects) of the uncompressed RR in wire format.
 	Len() int
 	// Copy returns a copy of the RR
-	 Copy() RR
+	Copy() RR
 }
 
 // Exchange is used in (asynchronous) communication with the resolver. If the 

@@ -90,13 +90,13 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+				c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 				return
 			}
 
 			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
+				c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
 				return
 			}
 			// This serial is important
@@ -110,7 +110,7 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 			// If the last record in the IXFR contains the servers' SOA,  we should quit
 			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
 				if v.Serial == serial {
-			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+					c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 					return
 				}
 			}

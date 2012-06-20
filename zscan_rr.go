@@ -1093,7 +1093,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	l = <-c
 	rr.BitMap = make([]uint16, 0)
 	var (
-		k  int
+		k   int
 		err error
 	)
 	for l.value != _NEWLINE && l.value != _EOF {
@@ -1102,7 +1102,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			// Ok
 		case _STRING:
 			if k, err = net.LookupPort(proto, l.token); err != nil {
-				if i, e := strconv.Atoi(l.token); e != nil {	// If a number use that
+				if i, e := strconv.Atoi(l.token); e != nil { // If a number use that
 					rr.BitMap = append(rr.BitMap, uint16(i))
 				} else {
 					return nil, &ParseError{f, "bad WKS BitMap", l}

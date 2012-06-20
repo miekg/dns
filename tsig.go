@@ -111,7 +111,7 @@ func (rr *RR_TSIG) Len() int {
 }
 
 func (rr *RR_TSIG) Copy() RR {
-		return &RR_TSIG{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+	return &RR_TSIG{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
 }
 
 // The following values must be put in wireformat, so that the MAC can be calculated.

@@ -30,7 +30,7 @@ func AssertDelegationSigner(m *Msg, trustdb []*RR_DNSKEY) error {
 	var sig *RR_RRSIG
 	for _, r := range m.Ns {
 		if d, ok := r.(*RR_DS); ok {
-			dss = append(dss ,d)
+			dss = append(dss, d)
 			continue
 		}
 		if s, ok := r.(*RR_RRSIG); ok {
@@ -50,7 +50,6 @@ func AssertDelegationSigner(m *Msg, trustdb []*RR_DNSKEY) error {
 	}
 	println("SIG found")
 
-
 	// Ownername of the DSs should match the qname
 	if CompareLabels(dss[0].Header().Name, m.Question[0].Name) == 0 {
 		// No match
@@ -60,11 +59,9 @@ func AssertDelegationSigner(m *Msg, trustdb []*RR_DNSKEY) error {
 	println(dss[0].String())
 	println(sig.String())
 
-
 	return nil
 
 }
-
 
 // Types of answers (without looking the RFCs)
 // len(m.Ns) > 0
@@ -73,7 +70,6 @@ func AssertDelegationSigner(m *Msg, trustdb []*RR_DNSKEY) error {
 //	- insecure delegation -> Proof of no DS (either NSEC or NSEC3)
 //	- plain old DNS delegation -> ...
 // SOA record in there? -> nxdomain   (rcode should be rcode.Nxdomain)
-
 
 // Lookup does a (secure) DNS lookup. The message m contains
 // the question to be asked. Lookup returns last packet seen
@@ -108,7 +104,7 @@ func Lookup(m *Msg) (*Msg, error) {
 	// n is our reply, deal with it
 	// Check for DS
 	// Check for DS absent (NSEC/NSEC3)
-	if len(n.Ns) > 0 && len(n.Answer) == 0  && n.Rcode == RcodeSuccess {	// Referral
+	if len(n.Ns) > 0 && len(n.Answer) == 0 && n.Rcode == RcodeSuccess { // Referral
 		// the ns name of the nameservers should match the right most labels. Check the answer 
 		println("Referral")
 		for i, j := range addrFromReferral4(n) {
