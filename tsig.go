@@ -110,6 +110,10 @@ func (rr *RR_TSIG) Len() int {
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
+func (rr *RR_TSIG) Copy() *RR_TSIG {
+		return &RR_TSIG{*rr.Hdr.Copy(), rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+}
+
 // The following values must be put in wireformat, so that the MAC can be calculated.
 // RFC 2845, section 3.4.2. TSIG Variables.
 type tsigWireFmt struct {

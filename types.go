@@ -679,6 +679,10 @@ func (rr *RR_DNAME) Len() int {
 	return rr.Hdr.Len() + l
 }
 
+func (rr *RR_DNAME) Copy() *RR_DNAME {
+	return &RR_DNAME{*rr.Hdr.Copy(), rr.Target}
+}
+
 type RR_A struct {
 	Hdr RR_Header
 	A   net.IP `dns:"a"`
@@ -696,6 +700,10 @@ func (rr *RR_A) Len() int {
 	return rr.Hdr.Len() + net.IPv4len
 }
 
+func (rr *RR_A) Copy() *RR_A {
+	return &RR_A{*rr.Hdr.Copy(), rr.A}
+}
+
 type RR_AAAA struct {
 	Hdr  RR_Header
 	AAAA net.IP `dns:"aaaa"`
@@ -711,6 +719,10 @@ func (rr *RR_AAAA) String() string {
 
 func (rr *RR_AAAA) Len() int {
 	return rr.Hdr.Len() + net.IPv6len
+}
+
+func (rr *RR_AAAA) Copy() *RR_AAAA {
+	return &RR_AAAA{*rr.Hdr.Copy(), rr.AAAA}
 }
 
 type RR_LOC struct {
@@ -778,7 +790,7 @@ func (rr *RR_LOC) Len() int {
 }
 
 func (rr *RR_LOC) Copy() *RR_LOC {
-	return &RR_LOC{*rr.Hdr.Copy(), rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
+	return &RR_LOC{*rr.Hdr.Copy(), rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
 }
 
 type RR_RRSIG struct {

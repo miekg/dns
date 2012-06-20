@@ -83,6 +83,10 @@ func (rr *RR_OPT) Len() int {
 	return l
 }
 
+func (rr *RR_OPT) Copy() *RR_OPT {
+	return &RR_OPT{*rr.Hdr.Copy(), rr.Option}
+}
+
 // Version returns the EDNS version used. Only zero is defined.
 func (rr *RR_OPT) Version() uint8 {
 	return uint8(rr.Hdr.Ttl & 0x00FF00FFFF)
