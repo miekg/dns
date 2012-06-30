@@ -1400,7 +1400,7 @@ func cmToString(mantissa, exponent uint8) string {
 }
 
 // Map of constructors for each RR wire type.
-var rr_mk = map[uint16]func() RR{
+var Rr_mk = map[uint16]func() RR{
 	TypeCNAME:      func() RR { return new(RR_CNAME) },
 	TypeHINFO:      func() RR { return new(RR_HINFO) },
 	TypeMB:         func() RR { return new(RR_MB) },
