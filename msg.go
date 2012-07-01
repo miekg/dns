@@ -649,7 +649,7 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
-func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+func PackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	off, ok = packStructValue(structValue(any), msg, off, nil, false)
 	return off, ok
 }
@@ -1010,7 +1010,7 @@ func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
 	return
 }
 
-func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+func UnpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	off, ok = unpackStructValue(structValue(any), msg, off)
 	return off, ok
 }
@@ -1056,7 +1056,7 @@ func packBase32(s []byte) ([]byte, error) {
 }
 
 // Resource record packer.
-func packRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
+func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	if rr == nil {
 		return len(msg), false
 	}
@@ -1070,11 +1070,11 @@ func packRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 }
 
 // Resource record unpacker.
-func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
+func UnpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// unpack just the header, to find the rr type and length
 	var h RR_Header
 	off0 := off
-	if off, ok = unpackStruct(&h, msg, off); !ok {
+	if off, ok = UnpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
 	end := off + int(h.Rdlength)
@@ -1085,7 +1085,7 @@ func unpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	} else {
 		rr = mk()
 	}
-	off, ok = unpackStruct(rr, msg, off0)
+	off, ok = UnpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, true
 	}
@@ -1219,13 +1219,13 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 		off, ok = packStructCompress(&question[i], msg, off, compression, dns.Compress)
 	}
 	for i := 0; i < len(answer); i++ {
-		off, ok = packRR(answer[i], msg, off, compression, dns.Compress)
+		off, ok = PackRR(answer[i], msg, off, compression, dns.Compress)
 	}
 	for i := 0; i < len(ns); i++ {
-		off, ok = packRR(ns[i], msg, off, compression, dns.Compress)
+		off, ok = PackRR(ns[i], msg, off, compression, dns.Compress)
 	}
 	for i := 0; i < len(extra); i++ {
-		off, ok = packRR(extra[i], msg, off, compression, dns.Compress)
+		off, ok = PackRR(extra[i], msg, off, compression, dns.Compress)
 	}
 	if !ok {
 		return nil, false
@@ -1239,7 +1239,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	var dh Header
 	off := 0
 	var ok bool
-	if off, ok = unpackStruct(&dh, msg, off); !ok {
+	if off, ok = UnpackStruct(&dh, msg, off); !ok {
 		return false
 	}
 	dns.Id = dh.Id
@@ -1261,16 +1261,16 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.Extra = make([]RR, dh.Arcount)
 
 	for i := 0; i < len(dns.Question); i++ {
-		off, ok = unpackStruct(&dns.Question[i], msg, off)
+		off, ok = UnpackStruct(&dns.Question[i], msg, off)
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		dns.Answer[i], off, ok = unpackRR(msg, off)
+		dns.Answer[i], off, ok = UnpackRR(msg, off)
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		dns.Ns[i], off, ok = unpackRR(msg, off)
+		dns.Ns[i], off, ok = UnpackRR(msg, off)
 	}
 	for i := 0; i < len(dns.Extra); i++ {
-		dns.Extra[i], off, ok = unpackRR(msg, off)
+		dns.Extra[i], off, ok = UnpackRR(msg, off)
 	}
 	if !ok {
 		return false
