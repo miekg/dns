@@ -105,7 +105,7 @@ func NewRR(s string) (RR, error) {
 // ReadRR reads the RR contained in q. Only the first RR is returned.
 // The class defaults to IN and TTL defaults to DefaultTtl.
 func ReadRR(q io.Reader, filename string) (RR, error) {
-	r := <-ParseZone(q, ".", filename)
+	r := <-parseZoneHelper(q, ".", filename, 1)
 	if r.Error != nil {
 		return nil, r.Error
 	}
@@ -129,9 +129,14 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 //		}
 //	}      
 func ParseZone(r io.Reader, origin, file string) chan Token {
-	t := make(chan Token)
+	return parseZoneHelper(r, origin, file, 10000)
+}
+
+func parseZoneHelper(r io.Reader, origin, file string, chansize int) chan Token {
+	t := make(chan Token, chansize)
 	go parseZone(r, origin, file, t, 0)
 	return t
+
 }
 
 func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
@@ -141,7 +146,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 		}
 	}()
 	s := scanInit(r)
-	c := make(chan lex)
+	c := make(chan lex, 1000)
 	// Start the lexer
 	go zlexer(s, c)
 	// 6 possible beginnings of a line, _ is a space
