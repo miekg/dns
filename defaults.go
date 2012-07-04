@@ -1,5 +1,12 @@
 package dns
 
+import (
+	"net"
+	"strconv"
+)
+
+const hexDigit = "0123456789abcdef"
+
 // Everything is assumed in the ClassINET class. If
 // you need other classes you are on your own.
 
@@ -310,4 +317,33 @@ func Fqdn(s string) string {
 		return s
 	}
 	return s + "."
+}
+
+// Copied from the official Go code
+
+// ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP                                        
+// address addr suitable for rDNS (PTR) record lookup or an error if it fails                                   
+// to parse the IP address.                                                                                     
+func ReverseAddr(addr string) (arpa string, err error) {
+	ip := net.ParseIP(addr)
+	if ip == nil {
+		return "", &Error{Err: "unrecognized address", Name: addr}
+	}
+	if ip.To4() != nil {
+		return strconv.Itoa(int(ip[15])) + "." + strconv.Itoa(int(ip[14])) + "." + strconv.Itoa(int(ip[13])) + "." +
+			strconv.Itoa(int(ip[12])) + ".in-addr.arpa.", nil
+	}
+	// Must be IPv6                                                                                         
+	buf := make([]byte, 0, len(ip)*4+len("ip6.arpa."))
+	// Add it, in reverse, to the buffer                                                                    
+	for i := len(ip) - 1; i >= 0; i-- {
+		v := ip[i]
+		buf = append(buf, hexDigit[v&0xF])
+		buf = append(buf, '.')
+		buf = append(buf, hexDigit[v>>4])
+		buf = append(buf, '.')
+	}
+	// Append "ip6.arpa." and return (buf already has the final .)                                          
+	buf = append(buf, "ip6.arpa."...)
+	return string(buf), nil
 }
