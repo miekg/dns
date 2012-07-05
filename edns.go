@@ -155,7 +155,7 @@ type EDNS0_NSID struct {
 }
 
 func (e *EDNS0_NSID) Option() uint16 {
-	return e.Code
+	return EDNS0NSID
 }
 
 func (e *EDNS0_NSID) Pack() ([]byte, error) {
@@ -199,7 +199,7 @@ type EDNS0_SUBNET struct {
 }
 
 func (e *EDNS0_SUBNET) Option() uint16 {
-	return e.Code
+	return EDNS0SUBNET
 }
 
 func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
