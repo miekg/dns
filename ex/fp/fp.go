@@ -239,7 +239,7 @@ func toFingerprint(m *dns.Msg) *fingerprint {
 			f.UDPSize = int(r.(*dns.RR_OPT).UDPSize())
 			if len(r.(*dns.RR_OPT).Option) == 1 {
 				// Only support NSID atm
-				f.Nsid = r.(*dns.RR_OPT).Option[0].Code == dns.OptionCodeNSID
+				f.Nsid = r.(*dns.RR_OPT).Option[0].Option() == dns.EDNS0NSID
 			}
 		}
 	}
@@ -270,7 +270,9 @@ func (f *fingerprint) msg() *dns.Msg {
 		// We have added an OPT RR, set the size.
 		m.Extra[0].(*dns.RR_OPT).SetUDPSize(uint16(f.UDPSize))
 		if f.Nsid {
-			m.Extra[0].(*dns.RR_OPT).SetNsid("")
+			e := new(dns.EDNS0_NSID)
+			e.Code = dns.EDNS0NSID
+			m.Extra[0].(*dns.RR_OPT).Option = append(m.Extra[0].(*dns.RR_OPT).Option, e)
 		}
 	}
 	return m

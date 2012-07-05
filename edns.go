@@ -143,8 +143,12 @@ type EDNS0 interface {
 // identifier. The identifier is an opaque string encoded has hex.
 // Basic use pattern for creating an nsid option:
 //
+//	o := new(dns.RR_OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_NSID)
 //	e.Code = dns.EDNS0NSID
+//	o.Option = append(o.Option, e)
 type EDNS0_NSID struct {
 	Code uint16 // Always EDNS0NSID
 	Nsid string // This string needs to be hex encoded
@@ -175,6 +179,9 @@ func (e *EDNS0_NSID) String() string {
 // answer depending on the location or network topology.
 // Basic use pattern for creating an subnet option:
 //
+//	o := new(dns.RR_OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_SUBNET)
 //	e.Code = dns.EDNS0SUBNET
 //	e.Family = 1	// 1 for IPv4 source address, 2 for IPv6
@@ -182,6 +189,7 @@ func (e *EDNS0_NSID) String() string {
 //	e.SourceScope = 0
 //	e.Address = net.ParseIP("127.0.0.1").To4()	// for IPv4
 //	// e.Address = net.ParseIP("2001:7b8:32a::2")	// for IPV6
+//	o.Option = append(o.Option, e)
 type EDNS0_SUBNET struct {
 	Code          uint16 // Always EDNS0SUBNET
 	Family        uint16 // 1 for IP, 2 for IP6
