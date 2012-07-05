@@ -335,7 +335,10 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr 
 		in = make([]byte, size)
 	}
 	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
-		return nil, 0, w.conn.RemoteAddr(), err
+		if w.conn != nil {
+			return nil, 0, w.conn.RemoteAddr(), err
+		}
+		return nil, 0, nil, err
 	}
 	r = new(Msg)
 	r.Size = n
