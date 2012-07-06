@@ -112,7 +112,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 	return r.RR, nil
 }
 
-// ParseZone reads a RFC 1035 zone from r. It returns Tokens on the 
+// ParseZone reads a RFC 1035 style one from r. It returns Tokens on the 
 // returned channel, which consist out the parsed RR or an error. 
 // If there is an error the RR is nil. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
