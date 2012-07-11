@@ -496,7 +496,7 @@ func zlexer(s *scan, c chan lex) {
 						l.torc = t
 						rrtype = true
 					} else {
-						if strings.HasPrefix("TYPE", l.token) {
+						if strings.HasPrefix(l.token, "TYPE") {
 							if t, ok := typeToInt(l.token); !ok {
 								l.token = "unknown RR type"
 								l.err = true
@@ -512,7 +512,7 @@ func zlexer(s *scan, c chan lex) {
 						l.value = _CLASS
 						l.torc = t
 					} else {
-						if strings.HasPrefix("CLASS", l.token) {
+						if strings.HasPrefix(l.token, "CLASS") {
 							if t, ok := classToInt(l.token); !ok {
 								l.token = "unknown class"
 								l.err = true
