@@ -3,7 +3,7 @@ package dns
 // A structure for handling zone data
 
 import (
-	"github.com/miekg/radix"
+	"github.com/sauerbraten/radix"
 )
 
 type Zone struct {
