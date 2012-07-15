@@ -19,7 +19,7 @@ type ZoneData struct {
 }
 
 // New ...
-func New(name string) *Zone {
+func NewZone(name string) *Zone {
 	z := new(Zone)
 	z.Name = name
 	z.Radix = radix.New()
@@ -31,6 +31,8 @@ func (z *Zone) Insert(r RR) {
 	if zd == nil {
 		zd := new(ZoneData)
 		zd.Name = r.Header().Name
+		zd.RR = make(map[uint16][]RR)
+		zd.Signatures = make([]*RR_RRSIG, 0)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			zd.Signatures = append(zd.Signatures, r.(*RR_RRSIG))
