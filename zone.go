@@ -37,7 +37,7 @@ func (z *Zone) Insert(r RR) {
 		default:
 			zd.RR[t] = append(zd.RR[t], r)
 		}
-		z.Radix.Insert(r.Header().Name)
+		z.Radix.Insert(r.Header().Name, zd)
 		return
 	}
 	switch t := r.Header().Rrtype; t {
