@@ -12,8 +12,7 @@ type Zone struct {
 	*radix.Radix        // Zone data
 }
 
-// ZoneData holds all the RR belonging to Name.
-// TODO(mg): uitbreiden
+// ZoneData holds all the RRs having their ownername equal to Name.
 type ZoneData struct {
 	Name string          // Domain name for this node
 	RR   map[uint16][]RR // Map of the RR type to the RR
@@ -23,7 +22,7 @@ type ZoneData struct {
 	Authoritatve bool
 }
 
-// New ...
+// NewZone creates an initialized zone with Origin set origin.
 func NewZone(origin string) *Zone {
 	if origin == "" {
 		origin = "."
@@ -37,13 +36,11 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// Insert inserts an RR into the zone. Overwrites.
-// Out-of-zone data
-// Glue
-func (z *Zone) Insert(r RR) {
+// Insert inserts an RR into the zone. Duplicate data overwrites the
+// old data.
+func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(r.Header().Name, z.Origin) {
-		println("Out of zone data", z.Origin, r.String())
-		return
+		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
 	zd := z.Radix.Find(r.Header().Name)
