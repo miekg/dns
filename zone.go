@@ -3,7 +3,7 @@ package dns
 // A structure for handling zone data
 
 import (
-	"github.com/sauerbraten/radix"
+	"radix"
 )
 
 // Zone represents a DNS zone. 
@@ -34,6 +34,8 @@ func NewZone(origin string) *Zone {
 }
 
 // Insert inserts an RR into the zone. Overwrites.
+// Out-of-zone data
+// Glue
 func (z *Zone) Insert(r RR) {
 	zd := z.Radix.Find(r.Header().Name)
 	if zd == nil {
@@ -46,17 +48,27 @@ func (z *Zone) Insert(r RR) {
 			zd.Signatures = append(zd.Signatures, r.(*RR_RRSIG))
 		default:
 			zd.RR[t] = append(zd.RR[t], r)
+			glueCheck(r)
 		}
 		z.Radix.Insert(r.Header().Name, zd)
 		return
 	}
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		zd.(*ZoneData).Signatures = append(zd.(*ZoneData).Signatures, r.(*RR_RRSIG))
+		zd.Value.(*ZoneData).Signatures = append(zd.Value.(*ZoneData).Signatures, r.(*RR_RRSIG))
 	default:
-		zd.(*ZoneData).RR[t] = append(zd.(*ZoneData).RR[t], r)
+		zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t], r)
 	}
 	return
+}
+
+func glueCheck(r RR) {
+	if n, ok := r.(*RR_NS); ok {
+		// Check if glue would be needed
+		if CompareLabels(r.Header().Name, n.Ns) == LenLabels(r.Header().Name) {
+			println("glue needed?", r.Header().Name, n.Ns)
+		}
+	}
 }
 
 func (z *Zone) Remove(r RR) {
