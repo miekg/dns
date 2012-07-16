@@ -38,6 +38,9 @@ func SplitLabels(s string) []string {
 //
 // www.miek.nl. and miek.nl. have two labels in common: miek and nl
 // www.miek.nl. and www.bla.nl. have one label in common: nl
+// 
+// Domain s1 is a subdomain of s2 if
+// CompareLabels(s1, s2) == LenLabels(s1)
 func CompareLabels(s1, s2 string) (n int) {
 	l1 := SplitLabels(s1)
 	l2 := SplitLabels(s2)
@@ -55,6 +58,30 @@ func CompareLabels(s1, s2 string) (n int) {
 		}
 		x1--
 		x2--
+	}
+	return
+}
+
+// LenLabels returns the number of labels in a domain name
+func LenLabels(s string) (labels int) {
+	if s == "." {
+		return
+	}
+	last := byte('.')
+	lastlast := byte('.')
+	s = Fqdn(s) // Make fully qualified
+	for i := 0; i < len(s); i++ {
+		if s[i] == '.' {
+			if last == '\\' {
+				if lastlast != '\\' {
+					// do nothing
+					continue
+				}
+			}
+			labels++
+		}
+		lastlast = last
+		last = s[i]
 	}
 	return
 }
