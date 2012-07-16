@@ -22,7 +22,7 @@ type ZoneData struct {
 	NonAuth bool
 }
 
-// NewZone creates an initialized zone with Origin set origin.
+// NewZone creates an initialized zone with Origin set to origin.
 func NewZone(origin string) *Zone {
 	if origin == "" {
 		origin = "."
