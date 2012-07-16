@@ -12,16 +12,18 @@ type Zone struct {
 }
 
 type ZoneData struct {
-	Name       string          // Domain name for this node
-	RR         map[uint16][]RR // Map of the RR type to the RR
-	Signatures []*RR_RRSIG     // DNSSEC signatures
-	Glue       bool            // True if the A and AAAA record are glue
+	Name string          // Domain name for this node
+	RR   map[uint16][]RR // Map of the RR type to the RR
+	// DNSSEC signatures for the RRsets
+	Signatures []*RR_RRSIG
+	// Almost always true, except for non-origin NS records (and accompanying glue)
+	Authoritatve bool
 }
 
 // New ...
-func NewZone(name string) *Zone {
+func NewZone(origin string) *Zone {
 	z := new(Zone)
-	z.Name = name
+	z.Origin = origin
 	z.Radix = radix.New()
 	return z
 }
