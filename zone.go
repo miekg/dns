@@ -54,7 +54,7 @@ func (z *Zone) Insert(r RR) error {
 			zd.Signatures = append(zd.Signatures, r.(*RR_RRSIG))
 		case TypeNS:
 			// NS records with other names than z.Origin are non-auth
-			if z.Header().Name != z.Origin {
+			if r.Header().Name != z.Origin {
 				zd.NonAuth = true
 			}
 			fallthrough
@@ -62,24 +62,23 @@ func (z *Zone) Insert(r RR) error {
 			zd.RR[t] = append(zd.RR[t], r)
 		}
 		z.Radix.Insert(r.Header().Name, zd)
-		return
+		return nil
 	}
-	// Name already added
+	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		zd.Value.(*ZoneData).Signatures = append(zd.Value.(*ZoneData).Signatures, r.(*RR_RRSIG))
 	case TypeNS:
-		// NS records with other names than z.Origin are non-auth
-		if z.Header().Name != z.Origin {
-			zd.NonAuth = true
+		if r.Header().Name != z.Origin {
+			zd.Value.(*ZoneData).NonAuth = true
 		}
 		fallthrough
 	default:
 		zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t], r)
 	}
-	return
+	return nil
 }
 
-func (z *Zone) Remove(r RR) {
-
+func (z *Zone) Remove(r RR) error {
+	return nil
 }
