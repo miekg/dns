@@ -8,10 +8,8 @@ import (
 
 // Zone represents a DNS zone. 
 type Zone struct {
-	Name         string // Name of the zone
+	Origin       string // Origin of the zone
 	*radix.Radix        // Zone data
-
-	// soa parameters in here TODO(mg)
 }
 
 // ZoneData holds all the RR belonging to Name.
@@ -27,8 +25,14 @@ type ZoneData struct {
 
 // New ...
 func NewZone(origin string) *Zone {
+	if origin == "" {
+		origin = "."
+	}
+	if _, _, ok := IsDomainName(origin); !ok {
+		return nil
+	}
 	z := new(Zone)
-	z.Origin = origin
+	z.Origin = Fqdn(origin)
 	z.Radix = radix.New()
 	return z
 }
@@ -37,6 +41,11 @@ func NewZone(origin string) *Zone {
 // Out-of-zone data
 // Glue
 func (z *Zone) Insert(r RR) {
+	if !IsSubDomain(r.Header().Name, z.Origin) {
+		println("Out of zone data", z.Origin, r.String())
+		return
+	}
+
 	zd := z.Radix.Find(r.Header().Name)
 	if zd == nil {
 		zd := new(ZoneData)
@@ -53,6 +62,7 @@ func (z *Zone) Insert(r RR) {
 		z.Radix.Insert(r.Header().Name, zd)
 		return
 	}
+	// Name already added
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		zd.Value.(*ZoneData).Signatures = append(zd.Value.(*ZoneData).Signatures, r.(*RR_RRSIG))

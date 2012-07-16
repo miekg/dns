@@ -162,14 +162,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	if origin == "" {
 		origin = "."
 	}
-	if !IsFqdn(origin) {
-		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
-		return
-	}
 	if _, _, ok := IsDomainName(origin); !ok {
 		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
 		return
 	}
+	origin = Fqdn(origin)
+
 	st := _EXPECT_OWNER_DIR // initial state
 	var h RR_Header
 	var defttl uint32 = DefaultTtl
