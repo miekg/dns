@@ -56,7 +56,6 @@ func (z *Zone) Insert(r RR) {
 	default:
 		zd.(*ZoneData).RR[t] = append(zd.(*ZoneData).RR[t], r)
 	}
-	// TODO(mg): Glue
 	return
 }
 
