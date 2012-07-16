@@ -32,6 +32,8 @@ func NewZone(name string) *Zone {
 }
 
 // Insert inserts an RR into the zone. Overwrites.
+// Out-of-zone data
+// Glue
 func (z *Zone) Insert(r RR) {
 	zd := z.Radix.Find(r.Header().Name)
 	if zd == nil {
