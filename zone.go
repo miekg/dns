@@ -3,14 +3,19 @@ package dns
 // A structure for handling zone data
 
 import (
-	"github.com/miekg/radix"
+	"github.com/sauerbraten/radix"
 )
 
+// Zone represents a DNS zone. 
 type Zone struct {
 	Name         string // Name of the zone
 	*radix.Radix        // Zone data
+
+	// soa parameters in here TODO(mg)
 }
 
+// ZoneData holds all the RR belonging to Name.
+// TODO(mg): uitbreiden
 type ZoneData struct {
 	Name string          // Domain name for this node
 	RR   map[uint16][]RR // Map of the RR type to the RR
@@ -28,6 +33,7 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
+// Insert inserts an RR into the zone. Overwrites.
 func (z *Zone) Insert(r RR) {
 	zd := z.Radix.Find(r.Header().Name)
 	if zd == nil {
