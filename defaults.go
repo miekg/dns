@@ -273,32 +273,8 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 
 // IsSubDomain checks if child is indeed a child of the parent.
 func IsSubDomain(parent, child string) bool {
-	// If the number of labels both domain name have
-	// in common equals the number of labels of parent,
-	// child is a subdomain of parent.
-	plabs := SplitLabels(parent)
-	clabs := SplitLabels(child)
-	if len(clabs) < len(plabs) {
-		// child is smaller than parent, reversed arguments?
-		return false
-	}
-	// Copied from CompareLabels to prevent another SplitLabels
-	n := 0
-	p := len(plabs) - 1
-	c := len(clabs) - 1
-	for {
-		if p < 0 || c < 0 {
-			break
-		}
-		if plabs[p] == clabs[c] {
-			n++
-		} else {
-			break
-		}
-		p--
-		c--
-	}
-	return n == len(plabs)
+	// Entire child is contained in parent
+	return CompareLabels(child, parent) == LenLabels(child)
 }
 
 // IsFqdn checks if a domain name is fully qualified.
