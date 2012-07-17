@@ -18,7 +18,7 @@ type ZoneData struct {
 	RR   map[uint16][]RR // Map of the RR type to the RR
 	// DNSSEC signatures for the RRsets
 	Signatures []*RR_RRSIG
-	// Always false, except for glue... TODO(mg)
+	// Always false, except for NSsets the differs from z.Origin
 	NonAuth bool
 }
 
