@@ -4,6 +4,7 @@ package dns
 
 import (
 	"radix"
+	"strings"
 )
 
 // Zone represents a DNS zone. 
@@ -18,8 +19,20 @@ type ZoneData struct {
 	RR   map[uint16][]RR // Map of the RR type to the RR
 	// DNSSEC signatures for the RRsets
 	Signatures []*RR_RRSIG
-	// Always false, except for NSsets the differs from z.Origin
+	// Always false, except for NSsets that differ from z.Origin
 	NonAuth bool
+}
+
+
+// toRadixName reverses a domainname so that when we store it in the radix tree
+// we preserve the nsec ordering of the zone (this idea was stolen from NSD).
+// each label is also lowercased.
+func toRadixName(d string) string {
+	s := ""
+	for _, l := range SplitLabels(d) {
+		s = strings.ToLower(l) + s
+	}
+	return s
 }
 
 // NewZone creates an initialized zone with Origin set to origin.
@@ -36,14 +49,14 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// Insert inserts an RR into the zone. Duplicate data overwrites the
-// old data.
+// Insert inserts an RR into the zone. Duplicate data overwrites the old data.
 func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(r.Header().Name, z.Origin) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
-	zd := z.Radix.Find(r.Header().Name)
+	key := toRadixName(r.Header().Name)
+	zd := z.Radix.Find(key)
 	if zd == nil {
 		zd := new(ZoneData)
 		zd.Name = r.Header().Name
@@ -61,7 +74,7 @@ func (z *Zone) Insert(r RR) error {
 		default:
 			zd.RR[t] = append(zd.RR[t], r)
 		}
-		z.Radix.Insert(r.Header().Name, zd)
+		z.Radix.Insert(key, zd)
 		return nil
 	}
 	// Name already there
@@ -79,6 +92,7 @@ func (z *Zone) Insert(r RR) error {
 	return nil
 }
 
+// RemoveName removeRRset ??
 func (z *Zone) Remove(r RR) error {
 	return nil
 }
