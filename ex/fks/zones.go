@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	z   = flag.String("zone", "", "zonefile to read")
+	z = flag.String("zone", "", "zonefile to read")
 	o = flag.String("origin", "", "origin of the zone")
 )
 
@@ -52,7 +52,23 @@ func main() {
 		log.Fatal("no origin")
 	}
 	Z := new(Zones)
+	Z.Radix = radix.New()
 	Z.addZone(*o, *z)
 	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z) })
-	// NX domain??
+	// NX domain?? TODO(mg)
+	go func() {
+		err := dns.ListenAndServe(":8053", "udp", nil)
+		if err != nil {
+			log.Fatal("Could not start")
+		}
+	}()
+	sig := make(chan os.Signal)
+forever:
+	for {
+		select {
+		case <-sig:
+			log.Printf("Signal received, stopping\n")
+			break forever
+		}
+	}
 }
