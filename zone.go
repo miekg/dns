@@ -100,7 +100,6 @@ func (z *Zone) Remove(r RR) error {
 // Find search the zone data and returns a node or nil when
 // nothing is found.
 func (z *Zone) Find(s string) *ZoneData {
-	println("looking for", toRadixName(s))
 	if z.Radix == nil {
 		println("huh nil")
 		return nil
