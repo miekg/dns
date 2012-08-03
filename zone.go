@@ -15,14 +15,12 @@ type Zone struct {
 
 // ZoneData holds all the RRs having their ownername equal to Name.
 type ZoneData struct {
-	Name string          // Domain name for this node
-	RR   map[uint16][]RR // Map of the RR type to the RR
-	// DNSSEC signatures for the RRsets
-	Signatures []*RR_RRSIG
+	Name       string               // Domain name for this node
+	RR         map[uint16][]RR      // Map of the RR type to the RR
+	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	// Always false, except for NSsets that differ from z.Origin
 	NonAuth bool
 }
-
 
 // toRadixName reverses a domainname so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
@@ -61,10 +59,11 @@ func (z *Zone) Insert(r RR) error {
 		zd := new(ZoneData)
 		zd.Name = r.Header().Name
 		zd.RR = make(map[uint16][]RR)
-		zd.Signatures = make([]*RR_RRSIG, 0)
+		zd.Signatures = make(map[uint16][]*RR_RRSIG)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
-			zd.Signatures = append(zd.Signatures, r.(*RR_RRSIG))
+			sigtype := r.(*RR_RRSIG).TypeCovered
+			zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RR_RRSIG))
 		case TypeNS:
 			// NS records with other names than z.Origin are non-auth
 			if r.Header().Name != z.Origin {
@@ -80,7 +79,8 @@ func (z *Zone) Insert(r RR) error {
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		zd.Value.(*ZoneData).Signatures = append(zd.Value.(*ZoneData).Signatures, r.(*RR_RRSIG))
+		sigtype := r.(*RR_RRSIG).TypeCovered
+		zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype], r.(*RR_RRSIG))
 	case TypeNS:
 		if r.Header().Name != z.Origin {
 			zd.Value.(*ZoneData).NonAuth = true
