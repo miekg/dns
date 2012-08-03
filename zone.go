@@ -30,7 +30,7 @@ type ZoneData struct {
 func toRadixName(d string) string {
 	s := ""
 	for _, l := range SplitLabels(d) {
-		s = strings.ToLower(l) + s
+		s = strings.ToLower(l) + "." + s
 	}
 	return s
 }
@@ -95,4 +95,19 @@ func (z *Zone) Insert(r RR) error {
 // RemoveName removeRRset ??
 func (z *Zone) Remove(r RR) error {
 	return nil
+}
+
+// Find search the zone data and returns a node or nil when
+// nothing is found.
+func (z *Zone) Find(s string) *ZoneData {
+	println("looking for", toRadixName(s))
+	if z.Radix == nil {
+		println("huh nil")
+		return nil
+	}
+	zd := z.Radix.Find(toRadixName(s))
+	if zd == nil {
+		return nil
+	}
+	return zd.Value.(*ZoneData)
 }

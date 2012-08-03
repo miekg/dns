@@ -134,7 +134,8 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 }
 
 // ServeDNS dispatches the request to the handler whose
-// pattern most closely matches the request message.
+// pattern most closely matches the request message. For DS queries
+// a parent zone is sought.
 // If no handler is found a standard SERVFAIL message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	h := mux.match(request.Question[0].Name)
@@ -354,6 +355,9 @@ func (w *response) Write(m *Msg) (err error) {
 		data []byte
 		ok   bool
 	)
+	if m == nil {
+		return &Error{Err: "nil message"}
+	}
 	if m.IsTsig() {
 		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
