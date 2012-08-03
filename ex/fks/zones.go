@@ -6,7 +6,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"radix"
 )
 
 var (
@@ -14,14 +13,8 @@ var (
 	o = flag.String("origin", "", "origin of the zone")
 )
 
-// Zones holds all the zones we have. Its only holds
-// the zone's name and nothing else.
-type Zones struct {
-	*radix.Radix
-}
-
 // Read a zone and add it.
-func (z *Zones) addZone(origin, file string) error {
+func addZone(zones map[string]*dns.Zone, origin, file string) error {
 	origin = dns.Fqdn(origin)
 	z1 := dns.NewZone(origin)
 	if z1 == nil {
@@ -31,14 +24,13 @@ func (z *Zones) addZone(origin, file string) error {
 	if e != nil {
 		return e
 	}
-
 	for rr := range dns.ParseZone(f, origin, file) {
 		// TODO(mg): blab something about the error?
 		if rr.Error == nil {
 			z1.Insert(rr.RR)
 		}
 	}
-	z.Radix.Insert(origin, z1)
+	zones[origin] = z1
 	return nil
 }
 
@@ -51,11 +43,9 @@ func main() {
 	if *o == "" {
 		log.Fatal("no origin")
 	}
-	Z := new(Zones)
-	Z.Radix = radix.New()
-	Z.addZone(*o, *z)
-	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z) })
-	// NX domain?? TODO(mg)
+	Z := make(map[string]*dns.Zone)
+	addZone(Z, *o, *z)
+	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z[*o]) })
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
 		if err != nil {

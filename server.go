@@ -70,16 +70,16 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// Refused is a helper handler that returns an answer with
-// RCODE = refused for every request.
-func Refused(w ResponseWriter, r *Msg) {
+// Failed is a helper handler that returns an answer with
+// RCODE = servfail for every request.
+func Failed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
-	m.SetRcode(r, RcodeRefused)
+	m.SetRcode(r, RcodeServerFailure)
 	w.Write(m)
 }
 
-// RefusedHandler returns HandlerFunc with Refused.
-func RefusedHandler() Handler { return HandlerFunc(Refused) }
+// FailedHandler returns HandlerFunc with Failed.
+func FailedHandler() Handler { return HandlerFunc(Failed) }
 
 // Start a server on addresss and network speficied. Invoke handler
 // for any incoming queries.
@@ -135,10 +135,11 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 
 // ServeDNS dispatches the request to the handler whose
 // pattern most closely matches the request message.
+// If no handler is found a standard SERVFAIL message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	h := mux.match(request.Question[0].Name)
 	if h == nil {
-		h = RefusedHandler()
+		h = FailedHandler()
 	}
 	h.ServeDNS(w, request)
 }
