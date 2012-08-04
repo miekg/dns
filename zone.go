@@ -97,16 +97,22 @@ func (z *Zone) Remove(r RR) error {
 	return nil
 }
 
-// Find search the zone data and returns a node or nil when
-// nothing is found.
+// Find wraps radix.Find. 
 func (z *Zone) Find(s string) *ZoneData {
-	if z.Radix == nil {
-		println("huh nil")
-		return nil
-	}
 	zd := z.Radix.Find(toRadixName(s))
 	if zd == nil {
 		return nil
 	}
+	return zd.Value.(*ZoneData)
+}
+
+// Predecessor wraps radix.Predecessor.
+func (z *Zone) Predecessor(s string) *ZoneData {
+	println("looking for", toRadixName(s))
+	zd := z.Radix.Predecessor(toRadixName(s))
+	if zd == nil {
+		return nil
+	}
+	println("Found", zd.Key())
 	return zd.Value.(*ZoneData)
 }
