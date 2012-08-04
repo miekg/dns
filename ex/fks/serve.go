@@ -6,10 +6,6 @@ import (
 )
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
-	// See RFC 1035...
-	m := new(dns.Msg)
-	m.SetRcode(req, dns.RcodeNameError)
-
 	log.Printf("incoming %s %d\n", req.Question[0].Name, req.Question[0].Qtype)
 	// Check for referral
 	// if we find something with NonAuth = true, it means
@@ -35,8 +31,6 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		return
 	}
 	apex := z.Find(z.Origin)
-	log.Println("Upper zone", nss.Name)
-	log.Println("It auth value", nss.NonAuth)
 
 	// Referral need support from the radix tree, successor?
 	// Name found, look for type, yes, answer, no 
@@ -58,5 +52,9 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		w.Write(m)
 		return
 	}
+	// See RFC 1035...
+	m := new(dns.Msg)
+	m.SetRcode(req, dns.RcodeNameError)
+
 	w.Write(m)
 }
