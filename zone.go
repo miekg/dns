@@ -108,11 +108,9 @@ func (z *Zone) Find(s string) *ZoneData {
 
 // Predecessor wraps radix.Predecessor.
 func (z *Zone) Predecessor(s string) *ZoneData {
-	println("looking for", toRadixName(s))
 	zd := z.Radix.Predecessor(toRadixName(s))
 	if zd == nil {
 		return nil
 	}
-	println("Found", zd.Key())
 	return zd.Value.(*ZoneData)
 }
