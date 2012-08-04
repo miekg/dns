@@ -13,7 +13,7 @@ const hexDigit = "0123456789abcdef"
 // SetReply creates a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Id = request.MsgHdr.Id
-	dns.MsgHdr.Authoritative = true
+	dns.MsgHdr.RecursionDesired = request.MsgHdr.RecursionDesired // Copy rd bit
 	dns.MsgHdr.Response = true
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Rcode = RcodeSuccess

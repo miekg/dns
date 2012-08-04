@@ -6,12 +6,13 @@ import (
 )
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
-	log.Printf("incoming %s %d\n", req.Question[0].Name, req.Question[0].Qtype)
+	log.Printf("incoming %s %s\n", req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype])
 	// Check for referral
 	// if we find something with NonAuth = true, it means
-	// we need to return referaal
+	// we need to return referral
 	nss := z.Predecessor(req.Question[0].Name)
-	if nss.NonAuth {
+	if nss != nil && nss.NonAuth {
+		log.Printf("Referral")
 		m := new(dns.Msg)
 		m.SetReply(req)
 		m.Ns = nss.RR[dns.TypeNS]
@@ -21,6 +22,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		return
 
 	}
+
 	// For now:
 	// look up name -> yes, continue, no -> nxdomain
 	node := z.Find(req.Question[0].Name)
@@ -32,12 +34,12 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	}
 	apex := z.Find(z.Origin)
 
-	// Referral need support from the radix tree, successor?
 	// Name found, look for type, yes, answer, no 
 	if rrs, ok := node.RR[req.Question[0].Qtype]; ok {
 		// Need to look at class to but... no
 		m := new(dns.Msg)
 		m.SetReply(req)
+		m.MsgHdr.Authoritative = true
 		m.Answer = rrs
 		// auth section
 		m.Ns = apex.RR[dns.TypeNS]
