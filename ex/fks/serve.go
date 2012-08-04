@@ -15,14 +15,13 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	// look up name -> yes, continue, no -> nxdomain
 	node := z.Find(req.Question[0].Name)
 	if node == nil {
-		log.Printf("nothing found")
 		m := new(dns.Msg)
 		m.SetRcode(req, dns.RcodeNameError)
 		w.Write(m)
 		return
 	}
 	apex := z.Find(z.Origin)
-	// Referral?
+	// Referral need support from the radix tree, successor?
 	// Name found, look for type, yes, answer, no 
 	if rrs, ok := node.RR[req.Question[0].Qtype]; ok {
 		// Need to look at class to but... no
