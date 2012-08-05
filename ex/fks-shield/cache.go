@@ -49,9 +49,6 @@ func (c *Cache) Find(d *dns.Msg) []byte {
 		}
 		return nil
 	}
-	if *verbose {
-		log.Printf("Cache hit for " + toRadixKey(d))
-	}
 	return quickCopy(p.Value.(*Packet).d)
 }
 
