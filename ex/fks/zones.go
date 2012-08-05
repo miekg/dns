@@ -3,6 +3,7 @@ package main
 import (
 	"dns"
 	"errors"
+	"log"
 	"os"
 )
 
@@ -11,7 +12,7 @@ func addZone(zones map[string]*dns.Zone, origin, file string) error {
 	origin = dns.Fqdn(origin)
 	z1 := dns.NewZone(origin)
 	if z1 == nil {
-		return errors.New("fks: failed to open %s", file)
+		return errors.New("fks: failed to open zone file")
 	}
 	f, e := os.Open(file)
 	if e != nil {

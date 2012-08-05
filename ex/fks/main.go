@@ -28,7 +28,7 @@ func main() {
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
 		if err != nil {
-			log.Fatal("Could not start")
+			log.Fatal("fks: could not start")
 		}
 	}()
 	sig := make(chan os.Signal)
@@ -36,7 +36,7 @@ forever:
 	for {
 		select {
 		case <-sig:
-			log.Printf("Signal received, stopping\n")
+			log.Printf("fks: signal received, stopping\n")
 			break forever
 		}
 	}

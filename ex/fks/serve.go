@@ -6,7 +6,7 @@ import (
 )
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
-	log.Printf("incoming %s %s %d\n", req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
+	log.Printf("fks: incoming %s %s %d\n", req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
 	// Referral
 	// if we find something with NonAuth = true, it means
 	// we need to return referral
@@ -51,7 +51,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		m.Ns = apex.RR[dns.TypeNS]
 		w.Write(m)
 		return
-	} else { // NoData reply
+	} else { // NoData reply or CNAME
 		m.SetReply(req)
 		m.Ns = apex.RR[dns.TypeSOA]
 		w.Write(m)
