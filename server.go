@@ -26,6 +26,8 @@ type ResponseWriter interface {
 	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write(*Msg) error
+	// WriteBuf writes a raw buffer back to the client.
+	WriteBuf([]byte) error
 }
 
 type conn struct {
@@ -403,6 +405,47 @@ func (w *response) Write(m *Msg) (err error) {
 		i := n
 		if i < len(data) {
 			j, err := w.conn._TCP.Write(data[i:len(data)])
+			if err != nil {
+				return err
+			}
+			i += j
+		}
+		n = i
+	}
+	return nil
+}
+
+func (w *response) WriteBuf(m []byte) (err error) {
+	// TODO(mg): refacter as we duplicate code from above?
+	if m == nil {
+		return &Error{Err: "nil message"}
+	}
+	switch {
+	case w.conn._UDP != nil:
+		_, err := w.conn._UDP.WriteTo(m, w.conn.remoteAddr)
+		if err != nil {
+			return err
+		}
+	case w.conn._TCP != nil:
+		if len(m) > MaxMsgSize {
+			return ErrBuf
+		}
+		l := make([]byte, 2)
+		l[0], l[1] = packUint16(uint16(len(m)))
+		n, err := w.conn._TCP.Write(l)
+		if err != nil {
+			return err
+		}
+		if n != 2 {
+			return io.ErrShortWrite
+		}
+		n, err = w.conn._TCP.Write(m)
+		if err != nil {
+			return err
+		}
+		i := n
+		if i < len(m) {
+			j, err := w.conn._TCP.Write(m[i:len(m)])
 			if err != nil {
 				return err
 			}
