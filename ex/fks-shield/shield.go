@@ -75,11 +75,13 @@ func main() {
 	go listenAndServe(*listen, "tcp")
 	go listenAndServe(*listen, "udp")
 
+	sig := make(chan os.Signal)
+
 forever:
 	for {
 		select {
-		case <-signal.Incoming:
-			println("Signal received, stopping")
+		case <-sig:
+			log.Printf("fks-shield: signal received, stopping")
 			break forever
 		}
 	}
