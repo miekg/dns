@@ -15,8 +15,8 @@ type Zone struct {
 
 // ZoneData holds all the RRs having their ownername equal to Name.
 type ZoneData struct {
-	Name       string               // Domain name for this node
-	RR         map[uint16][]RR      // Map of the RR type to the RR
+	Name       string                 // Domain name for this node
+	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	// Always false, except for NSsets that differ from z.Origin
 	NonAuth bool
@@ -26,11 +26,14 @@ type ZoneData struct {
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
 // each label is also lowercased.
 func toRadixName(d string) string {
+	if d == "." {
+		return "."
+	}
 	s := ""
 	for _, l := range SplitLabels(d) {
 		s = strings.ToLower(l) + "." + s
 	}
-	return s
+	return "." + s
 }
 
 // NewZone creates an initialized zone with Origin set to origin.

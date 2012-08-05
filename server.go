@@ -99,11 +99,12 @@ func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[s
 
 func (mux *ServeMux) match(zone string, t uint16) Handler {
 	// Exact match
-	if h := mux.m.Find(zone); h.Value != nil {
+	zone = toRadixName(zone)
+	if h := mux.m.Find(zone); h != nil && h.Value != nil {
 		return h.Value.(Handler)
 	}
 	// Best matching
-	if h := mux.m.Predecessor(zone); h.Value != nil {
+	if h := mux.m.Predecessor(zone); h != nil && h.Value != nil {
 		return h.Value.(Handler)
 	}
 	return nil
@@ -114,7 +115,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m.Insert(Fqdn(pattern), handler)
+	mux.m.Insert(toRadixName(Fqdn(pattern)), handler)
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -128,7 +129,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	// if its there, its gone
-	mux.m.Remove(Fqdn(pattern))
+	mux.m.Remove(toRadixName(Fqdn(pattern)))
 }
 
 // ServeDNS dispatches the request to the handler whose
