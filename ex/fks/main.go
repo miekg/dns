@@ -24,7 +24,7 @@ func main() {
 	if e := addZone(Z, *o, *z); e != nil {
 		log.Fatal("Huh %s\n", e.Error())
 	}
-	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z[dns.Fqdn(*o)]) })
+	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z[*o]) })
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
 		if err != nil {

@@ -185,6 +185,7 @@ func (h *RR_Header) Len() int {
 	return l
 }
 
+// find best matching pattern for zone
 func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
@@ -192,7 +193,7 @@ func zoneMatch(pattern, zone string) (ok bool) {
 	if len(zone) == 0 {
 		zone = "."
 	}
-	pattern = Fqdn(pattern)
+	// pattern = Fqdn(pattern) // should already be a fqdn
 	zone = Fqdn(zone)
 	i := 0
 	for {

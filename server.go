@@ -116,7 +116,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m[pattern] = handler
+	mux.m[dns.Fqdn(pattern)] = handler
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -130,7 +130,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	// if its there, its gone
-	delete(mux.m, pattern)
+	delete(mux.m, Fqdn(pattern))
 }
 
 // ServeDNS dispatches the request to the handler whose
