@@ -49,7 +49,9 @@ type response struct {
 // ServeMux is an DNS request multiplexer. It matches the
 // zone name of each incoming request against a list of 
 // registered patterns add calls the handler for the pattern
-// that most closely matches the zone name.
+// that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
+// that queries for the DS record are redirected to the parent zone (if that
+// is also registered).
 type ServeMux struct {
 	m *radix.Radix
 }
@@ -101,6 +103,14 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 	// Exact match
 	zone = toRadixName(zone)
 	if h := mux.m.Find(zone); h != nil && h.Value != nil {
+		// If we got queried for a DS record, we must see if we
+		// if we also serve the parent. We then redirect it.
+		if t == TypeDS {
+			if d := h.Up(); d != nil {
+				return d.Value.(Handler)
+			}
+		}
+
 		return h.Value.(Handler)
 	}
 	// Best matching
