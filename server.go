@@ -110,10 +110,9 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 				return d.Value.(Handler)
 			}
 		}
-
 		return h.Value.(Handler)
 	}
-	// Best matching
+	// Best matching one.
 	if h := mux.m.Predecessor(zone); h != nil && h.Value != nil {
 		return h.Value.(Handler)
 	}

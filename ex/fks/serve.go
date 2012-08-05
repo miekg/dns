@@ -6,6 +6,9 @@ import (
 )
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
+	if z == nil {
+		panic("fks: no zone")
+	}
 	if *l {
 		log.Printf("fks: [zone %s] incoming %s %s %d\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
 	}

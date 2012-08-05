@@ -16,18 +16,21 @@ var (
 func main() {
 	flag.Parse()
 	if *z == "" {
-		log.Fatal("no zone")
+		log.Fatal("fks: no zone")
 	}
 	if *o == "" {
-		log.Fatal("no origin")
+		log.Fatal("fks: origin")
 	}
 	Z := make(map[string]*dns.Zone)
 	if e := addZone(Z, *o, *z); e != nil {
-		log.Fatal("Huh %s\n", e.Error())
+		log.Fatal("fks: %s\n", e.Error())
 	}
+	if e := addZone(Z, "nl.", "z/nl.db"); e != nil {
+		log.Fatal("fks: %s\n", e.Error())
+	}
+
 	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z[dns.Fqdn(*o)]) })
 	dns.HandleFunc("nl.", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["nl."]) })
-	dns.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["."]) })
 
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
