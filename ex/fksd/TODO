@@ -3,3 +3,7 @@
 * locking r/w or copy-on-write in radix
 * check message length
 * ds handling in serve()
+* tsig
+* dynamic updates
+* zone transfers
+* incremental zone transfers
