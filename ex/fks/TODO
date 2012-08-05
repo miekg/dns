@@ -1,4 +1,5 @@
 * wildcard
 * cname (redo query with rhs?)
 * locking r/w or copy-on-write in radix
-* ...
+* check message length
+* ds handling in serve()

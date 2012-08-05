@@ -12,6 +12,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if *l {
 		log.Printf("fks: [zone %s] incoming %s %s %d\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
 	}
+	// Ds Handling
 	// Referral
 	// if we find something with NonAuth = true, it means
 	// we need to return referral
@@ -21,11 +22,20 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		m.SetReply(req)
 		m.Ns = nss.RR[dns.TypeNS]
 		for _, n := range m.Ns {
-
+			if dns.IsSubDomain(n.(*dns.RR_NS).Ns, n.Header().Name) {
+				// Need glue
+				glue := z.Find(n.(*dns.RR_NS).Ns)
+				if glue != nil {
+					if a4, ok := glue.RR[dns.TypeAAAA]; ok {
+						m.Extra = append(m.Extra, a4...)
+					}
+					if a, ok := glue.RR[dns.TypeA]; ok {
+						m.Extra = append(m.Extra, a...)
+					}
+					// length
+				}
+			}
 		}
-
-		// lookup the a records for additional, only when
-		// in baliwick
 		w.Write(m)
 		return
 	}
@@ -45,8 +55,21 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if nss, ok := node.RR[dns.TypeNS]; ok && node.NonAuth {
 		m.SetReply(req)
 		m.Ns = nss
-		// lookup the a records for additional, only when
-		// in baliwick
+		for _, n := range m.Ns {
+			if dns.IsSubDomain(n.(*dns.RR_NS).Ns, n.Header().Name) {
+				// Need glue
+				glue := z.Find(n.(*dns.RR_NS).Ns)
+				if glue != nil {
+					if a4, ok := glue.RR[dns.TypeAAAA]; ok {
+						m.Extra = append(m.Extra, a4...)
+					}
+					if a, ok := glue.RR[dns.TypeA]; ok {
+						m.Extra = append(m.Extra, a...)
+					}
+					// length
+				}
+			}
+		}
 		w.Write(m)
 		return
 	}
