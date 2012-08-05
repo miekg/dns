@@ -13,8 +13,26 @@ import (
 	"os"
 )
 
-func serve(w dns.ResponseWriter, req *dns.Msg) {
+var (
+	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
+	server  = flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
+	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
+)
 
+func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
+	if p := c.Find(r); p != nil {
+		w.Write(p)
+		return
+	}
+	// Cache miss
+	client := new(dns.Client)
+	if p, e := client.Exchange(r, *server); e == nil {
+		w.Write(p)
+		c.Insert(p)
+		return
+	} else {
+		// w.Write(SERFVAIL)
+	}
 }
 
 func listenAndServe(add, net string) {
@@ -24,15 +42,15 @@ func listenAndServe(add, net string) {
 }
 
 func main() {
-	listen := flag.String("listen", "127.0.0.1:8053", "set the listener address")
-	//server := flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
-	//verbose := flag.Bool("verbose", false, "Print packet as it flows through")
 	flag.Usage = func() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
-	dns.HandleFunc(".", serve)
+	cache := NewCache()
+
+	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) { serve(w, r, cache) })
+
 	go listenAndServe(*listen, "tcp")
 	go listenAndServe(*listen, "udp")
 
