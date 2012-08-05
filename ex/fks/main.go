@@ -26,8 +26,8 @@ func main() {
 		log.Fatal("Huh %s\n", e.Error())
 	}
 	dns.HandleFunc(*o, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z[dns.Fqdn(*o)]) })
-//	dns.HandleFunc("nl.", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["nl."]) })
-//	dns.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["."]) })
+	dns.HandleFunc("nl.", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["nl."]) })
+	dns.HandleFunc(".", func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, Z["."]) })
 
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)

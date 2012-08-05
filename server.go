@@ -131,6 +131,7 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 			continue
 		}
 		if p == nil || len(k) > n {
+			println("setting", string(k))
 			n = len(k)
 			p = v
 		}
