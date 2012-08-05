@@ -1,0 +1,12 @@
+nl.		345600	IN	SOA	elektron.atoom.net. ghostbuster.atoom.net. 1343873581 14400 3600 604800 86400
+nl.		345600	IN	RRSIG	SOA 8 2 345600 20120901011301 20120802011301 12051 miek.nl. Sh1GoyMfseseRzqPdJwaNQojbIcn8nAfpGBUoq7J8Y6Jr9jKVEeivMo6 OYedeDhWDcchzLsfJxIM0j6h6dlhLqdNJu/5yLfaFeGgzJR9UcNaVLi5 CxGUwXZjDCfTlpTO8QHgo/sMiFA7Gbs7nLHg1b4V42rTOTVAqMoeZRaz AZE=
+nl.		345600	IN	NS	ext.ns.whyscream.net.
+nl.		345600	IN	NS	open.nlnetlabs.nl.
+nl.		345600	IN	NS	omval.tednet.nl.
+nl.		345600	IN	NS	elektron.atoom.net.
+
+miek.nl.		345600	IN	NS	ext.ns.whyscream.net.
+miek.nl.		345600	IN	NS	open.nlnetlabs.nl.
+miek.nl.		345600	IN	NS	omval.tednet.nl.
+miek.nl.		345600	IN	NS	elektron.atoom.net.
+miek.nl.    3600    IN  DS  5240 10 2 ddd87b83c6c3d7fdc528e94f5d79300f97f450d0961e787b9314690d69742539

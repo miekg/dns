@@ -100,6 +100,7 @@ func (mux *ServeMux) match(zone string) Handler {
 	var h Handler
 	var n = 0
 	for k, v := range mux.m {
+		println(string(k)) // DEBUG
 		if !zoneMatch(k, zone) {
 			continue
 		}
@@ -116,7 +117,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m[dns.Fqdn(pattern)] = handler
+	mux.m[Fqdn(pattern)] = handler
 }
 
 // Handle adds a handler to the ServeMux for pattern.
