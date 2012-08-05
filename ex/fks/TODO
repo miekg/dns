@@ -2,4 +2,3 @@
 * cname (redo query with rhs?)
 * locking r/w or copy-on-write in radix
 * ...
-*
