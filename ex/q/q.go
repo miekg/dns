@@ -157,6 +157,7 @@ Flags:
 			c.Net = "udp6"
 		}
 	}
+	c.Attempts = 6
 
 	m := new(dns.Msg)
 	m.MsgHdr.Authoritative = *aa

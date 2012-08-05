@@ -537,11 +537,16 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 				i += j
 			}
 			n = i
+			// TODO(mg): is the loop correct?
 		}
 	case "", "udp", "udp4", "udp6":
 		for a := 0; a < attempts; a++ {
+			println("DOING", a)
 			setTimeouts(w)
 			n, err = w.conn.(*net.UDPConn).Write(p)
+			if err == nil {
+				return
+			}
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue

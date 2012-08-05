@@ -31,6 +31,7 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 		c.Insert(p)
 		return
 	} else {
+		log.Printf("fks-shield: failed to get answer " + e.Error())
 		// w.Write(SERFVAIL)
 	}
 }
