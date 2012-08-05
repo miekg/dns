@@ -3,6 +3,7 @@ package main
 import (
 	"dns"
 	"fmt"
+	"log"
 	"radix"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ import (
 // Cache elements, we using to key (toRadixKey) to distinguish between dns and dnssec
 type Packet struct {
 	ttl time.Time // insertion time
-	d   *dns.Msg  // packet
+	d   []byte    // raw packet
 }
 
 func toRadixKey(d *dns.Msg) string {
@@ -30,20 +31,36 @@ type Cache struct {
 	*radix.Radix
 }
 
+func quickCopy(p []byte) []byte {
+	q := make([]byte, 2)
+	q = append(q, p[2:]...)
+	return q
+}
+
 func NewCache() *Cache {
 	return &Cache{Radix: radix.New()}
 }
 
-func (c *Cache) Find(d *dns.Msg) *dns.Msg {
+func (c *Cache) Find(d *dns.Msg) []byte {
 	p := c.Radix.Find(toRadixKey(d))
 	if p == nil {
+		if *verbose {
+			log.Printf("Cache miss for " + toRadixKey(d))
+		}
 		return nil
 	}
-	return p.Value.(*Packet).d
+	if *verbose {
+		log.Printf("Cache hit for " + toRadixKey(d))
+	}
+	return quickCopy(p.Value.(*Packet).d)
 }
 
 func (c *Cache) Insert(d *dns.Msg) {
-	c.Radix.Insert(toRadixKey(d), &Packet{d: d, ttl: time.Now().UTC()})
+	if *verbose {
+		log.Printf("Inserting " + toRadixKey(d))
+	}
+	buf, _ := d.Pack()	// Should always work
+	c.Radix.Insert(toRadixKey(d), &Packet{d: buf, ttl: time.Now().UTC()})
 }
 
 func (c *Cache) Remove(d *dns.Msg) {

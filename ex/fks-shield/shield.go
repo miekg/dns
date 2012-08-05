@@ -16,17 +16,22 @@ import (
 var (
 	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
 	server  = flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
-	verbose = flag.Bool("verbose", false, "Print packet as it flows through")
+	verbose = flag.Bool("verbose", false, "be more verbose")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	if p := c.Find(r); p != nil {
-		w.Write(p)
+		dns.RawSetId(p, r.MsgHdr.Id)
+		w.WriteBuf(p)
 		return
 	}
 	// Cache miss
 	client := new(dns.Client)
 	if p, e := client.Exchange(r, *server); e == nil {
+		if *verbose {
+			log.Printf("fks-shield: cache miss")
+		}
+		// TODO(mg): If r has edns0 and p has not we create a mismatch here
 		w.Write(p)
 		c.Insert(p)
 		return
@@ -38,7 +43,7 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 
 func listenAndServe(add, net string) {
 	if err := dns.ListenAndServe(add, net, nil); err != nil {
-		log.Printf("fks-shield: failed to setup:", net, add)
+		log.Fatal("fks-shield: failed to setup %s %s", net, add)
 	}
 }
 

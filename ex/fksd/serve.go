@@ -5,12 +5,24 @@ import (
 	"log"
 )
 
+// Create skeleton edns opt RR from the query and
+// add it to the message m
+func ednsFromRequest(req, m *dns.Msg) {
+	for _, r := range req.Extra {
+		if r.Header().Rrtype == dns.TypeOPT {
+			m.SetEdns0(4096, r.(*dns.RR_OPT).Do())
+			return
+		}
+	}
+	return
+}
+
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if z == nil {
 		panic("fks: no zone")
 	}
 	if *l {
-		log.Printf("fks: [zone %s] incoming %s %s %d\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
+		log.Printf("fks: [zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
 	}
 	// Ds Handling
 	// Referral
@@ -36,6 +48,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 				}
 			}
 		}
+		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	}
@@ -45,6 +58,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	node := z.Find(req.Question[0].Name)
 	if node == nil {
 		m.SetRcode(req, dns.RcodeNameError)
+		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	}
@@ -70,6 +84,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 				}
 			}
 		}
+		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	}
@@ -81,14 +96,17 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		m.MsgHdr.Authoritative = true
 		m.Answer = rrs
 		m.Ns = apex.RR[dns.TypeNS]
+		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	} else { // NoData reply or CNAME
 		m.SetReply(req)
 		m.Ns = apex.RR[dns.TypeSOA]
+		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	}
 	m.SetRcode(req, dns.RcodeNameError)
+	ednsFromRequest(req, m)
 	w.Write(m)
 }
