@@ -9,7 +9,7 @@ package dns
 import (
 	"io"
 	"net"
-	"strings"
+	"radix"
 	"time"
 )
 
@@ -51,11 +51,11 @@ type response struct {
 // registered patterns add calls the handler for the pattern
 // that most closely matches the zone name.
 type ServeMux struct {
-	m map[string]Handler
+	m *radix.Radix
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux { return &ServeMux{make(map[string]Handler)} }
+func NewServeMux() *ServeMux { return &ServeMux{m: radix.New()} }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
@@ -97,50 +97,16 @@ func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[s
 	return server.ListenAndServe()
 }
 
-// Maybe use a radix tree here too...?
 func (mux *ServeMux) match(zone string, t uint16) Handler {
-	var h Handler
-	var n = 0
-	for k, v := range mux.m {
-		if !zoneMatch(k, zone) {
-			continue
-		}
-		if h == nil || len(k) > n {
-			n = len(k)
-			h = v
-		}
+	// Exact match
+	if h := mux.m.Find(zone); h.Value != nil {
+		return h.Value.(Handler)
 	}
-	// Zone has been found
-	if t != TypeDS {
-		return h
+	// Best matching
+	if h := mux.m.Predecessor(zone); h.Value != nil {
+		return h.Value.(Handler)
 	}
-	// Uberhack: if we are matching DS records, we chop of the
-	// first label. This way we will not match the zone
-	// but the first parent.
-
-	// Check if we also are authoritative for the parent
-	// TODO(mg): second time we 'range' the map
-	// TODO(mg): root check
-	var p Handler
-	xs := SplitLabels(zone)
-	zone = Fqdn(strings.Join(xs[1:], "."))
-	println(zone)
-	n = 0
-	for k, v := range mux.m {
-		if !zoneMatch(k, zone) {
-			continue
-		}
-		if p == nil || len(k) > n {
-			println("setting", string(k))
-			n = len(k)
-			p = v
-		}
-	}
-	if p != nil {
-		println("returning p")
-		return p
-	}
-	return h
+	return nil
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -148,7 +114,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m[Fqdn(pattern)] = handler
+	mux.m.Insert(Fqdn(pattern), handler)
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -162,7 +128,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	// if its there, its gone
-	delete(mux.m, Fqdn(pattern))
+	mux.m.Remove(Fqdn(pattern))
 }
 
 // ServeDNS dispatches the request to the handler whose
