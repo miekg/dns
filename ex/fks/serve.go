@@ -20,6 +20,10 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if nss != nil && nss.NonAuth {
 		m.SetReply(req)
 		m.Ns = nss.RR[dns.TypeNS]
+		for _, n := range m.Ns {
+
+		}
+
 		// lookup the a records for additional, only when
 		// in baliwick
 		w.Write(m)
