@@ -9,6 +9,7 @@ package dns
 import (
 	"io"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -96,11 +97,11 @@ func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[s
 	return server.ListenAndServe()
 }
 
-func (mux *ServeMux) match(zone string) Handler {
+// Maybe use a radix tree here too...?
+func (mux *ServeMux) match(zone string, t uint16) Handler {
 	var h Handler
 	var n = 0
 	for k, v := range mux.m {
-		println(string(k)) // DEBUG
 		if !zoneMatch(k, zone) {
 			continue
 		}
@@ -108,6 +109,35 @@ func (mux *ServeMux) match(zone string) Handler {
 			n = len(k)
 			h = v
 		}
+	}
+	// Zone has been found
+	if t != TypeDS {
+		return h
+	}
+	// Uberhack: if we are matching DS records, we chop of the
+	// first label. This way we will not match the zone
+	// but the first parent.
+
+	// Check if we also are authoritative for the parent
+	// TODO(mg): second time we 'range' the map
+	// TODO(mg): root check
+	var p Handler
+	xs := SplitLabels(zone)
+	zone = Fqdn(strings.Join(xs[1:], "."))
+	println(zone)
+	n = 0
+	for k, v := range mux.m {
+		if !zoneMatch(k, zone) {
+			continue
+		}
+		if p == nil || len(k) > n {
+			n = len(k)
+			p = v
+		}
+	}
+	if p != nil {
+		println("returning p")
+		return p
 	}
 	return h
 }
@@ -139,7 +169,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // a parent zone is sought.
 // If no handler is found a standard SERVFAIL message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
-	h := mux.match(request.Question[0].Name)
+	h := mux.match(request.Question[0].Name, request.Question[0].Qtype)
 	if h == nil {
 		h = FailedHandler()
 	}

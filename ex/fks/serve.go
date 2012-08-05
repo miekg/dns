@@ -7,7 +7,7 @@ import (
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if *l {
-		log.Printf("fks: incoming %s %s %d\n", req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
+		log.Printf("fks: [zone %s] incoming %s %s %d\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id)
 	}
 	// Referral
 	// if we find something with NonAuth = true, it means
