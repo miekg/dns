@@ -81,7 +81,6 @@ type Msg struct {
 	MsgHdr
 	Compress   bool       // If true, the message will be compressed when converted to wire format.
 	Size       int        // Number of octects in the message received from the wire.
-	RemoteAddr net.Addr   // The remote address. Either the server or the client connecting.
 	Question   []Question // Holds the RR(s) of the question section.
 	Answer     []RR       // Holds the RR(s) of the answer section.
 	Ns         []RR       // Holds the RR(s) of the authority section.
