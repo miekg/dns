@@ -8,25 +8,6 @@ import (
 	"time"
 )
 
-// The RequestWriter interface is used by a DNS query handler to
-// construct a DNS request.
-type RequestWriter interface {
-	// RemoteAddr returns the net.Addr of the server
-	RemoteAddr() net.Addr
-	// TsigStatus returns the TSIG validation status.
-	TsigStatus() error
-	// Write returns the request message and the reply back to the client (i.e. your Go code).
-	Write(*Msg) error
-	// Send sends the message to the server.
-	Send(*Msg) error
-	// Receive waits for the reply of the servers. 
-	Receive() (*Msg, error)
-	// Close closes the connection with the server.
-	Close() error
-	// Dials calls the server.
-	Dial() error
-}
-
 // hijacked connections...?
 type reply struct {
 	client         *Client
