@@ -29,7 +29,7 @@ type Client struct {
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
-	Hijacked     net.Conn          // if set the calling code takes care of the connection
+	//	Hijacked     net.Conn          // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use
 }
 
@@ -60,15 +60,10 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 	w = new(reply)
 	w.client = c
 	w.addr = a
-	if c.Hijacked == nil {
-		if err = w.Dial(); err != nil {
-			return 0, w, err
-		}
-		defer w.Close()
+	if err = w.dial(); err != nil {
+		return 0, w, err
 	}
-	if c.Hijacked != nil {
-		w.conn = c.Hijacked
-	}
+	defer w.Close()
 	w.t = time.Now()
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, w, err
@@ -132,8 +127,8 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	return r, w.rtt, nil
 }
 
-// Dial connects to the address addr for the network set in c.Net
-func (w *reply) Dial() (err error) {
+// dial connects to the address addr for the network set in c.Net
+func (w *reply) dial() (err error) {
 	var conn net.Conn
 	if w.Client().Net == "" {
 		conn, err = net.Dial("udp", w.addr)
@@ -147,7 +142,7 @@ func (w *reply) Dial() (err error) {
 	return nil
 }
 
-func (w *reply) Receive() (*Msg, error) {
+func (w *reply) receive() (*Msg, error) {
 	var p []byte
 	m := new(Msg)
 	switch w.Client().Net {
@@ -246,10 +241,10 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 	return
 }
 
-// Send sends a dns msg to the address specified in w.
+// send sends a dns msg to the address specified in w.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
-func (w *reply) Send(m *Msg) (err error) {
+func (w *reply) send(m *Msg) (err error) {
 	var out []byte
 	if m.IsTsig() {
 		mac := ""
@@ -281,10 +276,8 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 	if attempts == 0 {
 		attempts = 1
 	}
-	if w.Client().Hijacked == nil {
-		if err = w.Dial(); err != nil {
-			return 0, err
-		}
+	if err = w.dial(); err != nil {
+		return 0, err
 	}
 	switch w.Client().Net {
 	case "tcp", "tcp4", "tcp6":

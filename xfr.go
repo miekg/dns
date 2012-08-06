@@ -18,10 +18,10 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *Exchange, error) {
 	w.client = c
 	w.addr = a
 	w.req = q
-	if err := w.Dial(); err != nil {
+	if err := w.dial(); err != nil {
 		return nil, err
 	}
-	if err := w.Send(q); err != nil {
+	if err := w.send(q); err != nil {
 		return nil, err
 	}
 	e := make(chan *Exchange)
@@ -43,7 +43,7 @@ func (w *reply) axfrReceive(c chan *Exchange) {
 	defer w.Close()
 	defer close(c)
 	for {
-		in, err := w.Receive()
+		in, err := w.receive()
 		if err != nil {
 			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
 			return
@@ -78,7 +78,7 @@ func (w *reply) ixfrReceive(c chan *Exchange) {
 	defer w.Close()
 	defer close(c)
 	for {
-		in, err := w.Receive()
+		in, err := w.receive()
 		if err != nil {
 			c <- &Exchange{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
 			return
