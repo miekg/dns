@@ -11,7 +11,7 @@ import (
 func (c *Config) ReadZone(origin, file string) error {
 	z := dns.NewZone(origin)
 	if z == nil {
-		return errors.New("fks: failed to open zone file")
+		return errors.New("fksd: failed to open zone file")
 	}
 	f, e := os.Open(file)
 	if e != nil {
@@ -21,9 +21,10 @@ func (c *Config) ReadZone(origin, file string) error {
 		if rr.Error == nil {
 			z.Insert(rr.RR)
 		} else {
-			log.Printf("fks: failed to parse: %s\n", rr.Error.Error())
+			log.Printf("fksd: failed to parse: %s\n", rr.Error.Error())
 		}
 	}
 	c.Zones[origin] = z
+	dns.HandleFunc(origin, func(w dns.ResponseWriter, req *dns.Msg) { serve(w, req, c.Zones[origin]) }) 
 	return nil
 }

@@ -15,19 +15,19 @@ func main() {
 	flag.Parse()
 	conf := NewConfig()
 	go func() {
-		err := dns.ListenAndServe(":8053", "udp", nil)
+		err := dns.ListenAndServe(":1053", "udp", nil)
 		if err != nil {
-			log.Fatal("fksd: could not start config listener")
+			log.Fatal("fksd: could not start server listener: %s", err.Error())
 		}
 	}()
 	go func() {
-		err := dns.ListenAndServe(":5353", "udp", nil)
+		err := dns.ListenAndServe(":8053", "tcp", nil)
 		if err != nil {
-			log.Fatal("fksd: could not start server listener")
+			log.Fatal("fksd: could not start config listener: %s", err.Error())
 		}
 	}()
 	// Yes, we HIJACK zone. ... not sure on how to make this "private"
-	dns.HandleFunc("zone.", func(w dns.ResponseWriter, req *dns.Msg) { config(w, req, conf) })
+	dns.HandleFunc("ZONE.", func(w dns.ResponseWriter, req *dns.Msg) { config(w, req, conf) })
 
 	sig := make(chan os.Signal)
 forever:

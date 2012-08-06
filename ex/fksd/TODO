@@ -7,3 +7,6 @@
 * dynamic updates
 * zone transfers
 * incremental zone transfers
+* configuration
+    * journal
+    * ...

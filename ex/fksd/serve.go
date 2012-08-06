@@ -19,10 +19,10 @@ func ednsFromRequest(req, m *dns.Msg) {
 
 func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if z == nil {
-		panic("fks: no zone")
+		panic("fksd: no zone")
 	}
 	if *l {
-		log.Printf("fks: [zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
+		log.Printf("fksd: [zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
 	}
 	// Ds Handling
 	// Referral
