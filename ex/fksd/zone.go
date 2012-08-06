@@ -7,11 +7,10 @@ import (
 	"os"
 )
 
-// Read a zone and add it.
-func addZone(zones map[string]*dns.Zone, origin, file string) error {
-	origin = dns.Fqdn(origin)
-	z1 := dns.NewZone(origin)
-	if z1 == nil {
+// ReadZone reads a zone and adds it.
+func (c *Config) ReadZone(origin, file string) error {
+	z := dns.NewZone(origin)
+	if z == nil {
 		return errors.New("fks: failed to open zone file")
 	}
 	f, e := os.Open(file)
@@ -20,11 +19,11 @@ func addZone(zones map[string]*dns.Zone, origin, file string) error {
 	}
 	for rr := range dns.ParseZone(f, origin, file) {
 		if rr.Error == nil {
-			z1.Insert(rr.RR)
+			z.Insert(rr.RR)
 		} else {
 			log.Printf("fks: failed to parse: %s\n", rr.Error.Error())
 		}
 	}
-	zones[origin] = z1
+	c.Zones[origin] = z
 	return nil
 }
