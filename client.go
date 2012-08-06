@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-type QueryHandler interface {
-	QueryDNS(w RequestWriter, q *Msg)
-}
-
 // The RequestWriter interface is used by a DNS query handler to
 // construct a DNS request.
 type RequestWriter interface {
@@ -44,201 +40,16 @@ type reply struct {
 	t              time.Time
 }
 
-// A Request is a incoming message from a Client.
-type Request struct {
-	Request *Msg
-	Addr    string
-	Client  *Client
-}
-
-// QueryMux is an DNS request multiplexer. It matches the
-// zone name of each incoming request against a list of 
-// registered patterns add calls the handler for the pattern
-// that most closely matches the zone name.
-type QueryMux struct {
-	m map[string]QueryHandler
-}
-
-// NewQueryMux allocates and returns a new QueryMux.
-func NewQueryMux() *QueryMux { return &QueryMux{make(map[string]QueryHandler)} }
-
-// DefaultQueryMux is the default QueryMux used by Query.
-var DefaultQueryMux = NewQueryMux()
-
-func newQueryChanSlice() chan *Exchange { return make(chan *Exchange) }
-func newQueryChan() chan *Request       { return make(chan *Request) }
-
-// Default channels to use for the resolver
-var (
-	// QueryReply is the channel on which the replies are
-	// coming back. Is it a channel of *Exchange. The original 
-	// question is included with the answer.
-	QueryReply = newQueryChanSlice()
-	// QueryRequest is the channel were you can send the questions to.
-	// It is a channel of *Request
-	QueryRequest = newQueryChan()
-)
-
-// The HandlerQueryFunc type is an adapter to allow the use of
-// ordinary functions as DNS query handlers.  If f is a function
-// with the appropriate signature, HandlerQueryFunc(f) is a
-// QueryHandler object that calls f.
-type HandlerQueryFunc func(RequestWriter, *Msg)
-
-// QueryDNS calls f(w, reg).
-func (f HandlerQueryFunc) QueryDNS(w RequestWriter, r *Msg) {
-	go f(w, r)
-}
-
-// HandleQueryFunc registers the handler with the given pattern in the
-// DefaultQueryMux. See HandleQuery for an example.
-func HandleQueryFunc(pattern string, handler func(RequestWriter, *Msg)) {
-	DefaultQueryMux.HandleFunc(pattern, handler)
-}
-
-// HandleQuery registers the handler in the DefaultQueryMux. The pattern is
-// the name of a zone, or "." which can be used as a catch-all. Basic use pattern
-// (sans error checking) for setting up a query handler:
-//
-//	func myhandler(w dns.RequestWriter, m *dns.Msg) {
-//		w.Send(m)		// send the message m to server specified in the Do() call
-//		r, _ := w.Receive()	// wait for a response
-//		w.Close()		// close connection with the server
-//		w.Write(r)		// write the received answer back to the client
-//	}
-// 
-//	func main() {
-//		dns.HandleQuery(".", myhandler)
-//		dns.ListenAndQuery(nil)
-//		m := new(dns.Msg)
-//		c := new(dns.Client)
-//		m.SetQuestion("miek.nl.", TypeMX)
-//		c.Do(m, "127.0.0.1:53")
-//		// ...
-//		r := <- c.Reply  // or <- dns.QueryReply, when using the defaults
-//	}
-func HandleQuery(pattern string, handler HandlerQueryFunc) {
-	DefaultQueryMux.Handle(pattern, handler)
-}
-
-// HandleQueryRemove deregisters the handle with the given pattern                                                                          
-// in the DefaultQueryMux.                                   
-func HandleQueryRemove(pattern string) {
-	DefaultQueryMux.HandleRemove(pattern)
-}
-
-// reusing zoneMatch from server.go
-func (mux *QueryMux) match(zone string) QueryHandler {
-	var h QueryHandler
-	var n = 0
-	for k, v := range mux.m {
-		if !zoneMatch(k, zone) {
-			continue
-		}
-		if h == nil || len(k) > n {
-			n = len(k)
-			h = v
-		}
-	}
-	return h
-}
-
-func (mux *QueryMux) Handle(pattern string, handler QueryHandler) {
-	if pattern == "" {
-		panic("dns: invalid pattern " + pattern)
-	}
-	// check is domainname TODO(mg)
-	mux.m[pattern] = handler
-}
-
-// HandleRemove deregisters the handler with given pattern.
-func (mux *QueryMux) HandleRemove(pattern string) {
-	delete(mux.m, pattern)
-}
-
-// HandleFunc ...
-func (mux *QueryMux) HandleFunc(pattern string, handler func(RequestWriter, *Msg)) {
-	mux.Handle(pattern, HandlerQueryFunc(handler))
-}
-
-func (mux *QueryMux) QueryDNS(w RequestWriter, r *Msg) {
-	h := mux.match(r.Question[0].Name)
-	if h == nil {
-		panic("dns: no handler found for " + r.Question[0].Name)
-	}
-	h.QueryDNS(w, r)
-}
-
 // A nil Client is usable.
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "", is UDP)
 	Attempts     int               // number of attempts, if not set defaults to 1
 	Retry        bool              // retry with TCP
-	Request      chan *Request     // read DNS request from this channel
-	Reply        chan *Exchange    // write replies to this channel
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
 	Hijacked     net.Conn          // if set the calling code takes care of the connection
 	// LocalAddr string            // Local address to use
-}
-
-type Query struct {
-	Request chan *Request // read DNS request from this channel
-	Handler QueryHandler  // handler to invoke, dns.DefaultQueryMux if nil
-}
-
-func (q *Query) Query() error {
-	handler := q.Handler
-	if handler == nil {
-		handler = DefaultQueryMux
-	}
-	for {
-		select {
-		case in := <-q.Request:
-			w := new(reply)
-			w.req = in.Request
-			w.addr = in.Addr
-			w.client = in.Client
-			handler.QueryDNS(w, in.Request)
-		}
-	}
-	return nil
-}
-
-func (q *Query) ListenAndQuery() error {
-	if q.Request == nil {
-		q.Request = QueryRequest
-	}
-	return q.Query()
-}
-
-// ListenAndQuery starts the listener for firing off the queries.
-// If handler is nil DefaultQueryMux is used. The default request
-// channel (QueryRequest) is used for requesting queries.
-func ListenAndQuery(handler QueryHandler) {
-	q := &Query{Request: nil, Handler: handler}
-	go q.ListenAndQuery()
-}
-
-// ListenAndQueryRequest starts the listener for firing off queries. If
-// request is nil QueryRequest is used. If handler is nil DefaultQueryMux is used.
-func ListenAndQueryRequest(request chan *Request, handler QueryHandler) {
-	q := &Query{Request: request, Handler: handler}
-	go q.ListenAndQuery()
-}
-
-// Write returns the original question and the answer on the 
-// reply channel of the client.
-func (w *reply) Write(m *Msg) error {
-	// What to do if the channels here are nil?
-	// Do() sets them if empty - but not everything goes through Do()
-	if w.conn == nil {
-		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt}
-	} else {
-		w.Client().Reply <- &Exchange{Request: w.req, Reply: m, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
-	}
-	return nil
 }
 
 func (w *reply) RemoteAddr() net.Addr {
@@ -250,30 +61,12 @@ func (w *reply) RemoteAddr() net.Addr {
 	return nil
 }
 
-// Do performs an asynchronous query. The result is returned on the
-// channel c.Reply. Basic use pattern for
-// sending message m to the server listening on port 53 on localhost
-//
-//	   c.Do(m, "127.0.0.1:53")
-//	   r := <- c.Reply
-// 
-// r is of type *Exchange.
-func (c *Client) Do(m *Msg, a string) {
-	if c.Request == nil {
-		c.Request = QueryRequest
-	}
-	if c.Reply == nil {
-		c.Reply = QueryReply
-	}
-	c.Request <- &Request{Client: c, Addr: a, Request: m}
-}
-
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
 // string addr is the address of the nameserver, the parameter data in
 // in the callback function. The call backback function is called with the
 // origin query, the answer returned from the nameserver, optional error and
 // data.
-func (c *Client) Do2(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, error, interface{})) {
+func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, error, interface{})) {
 	go func() {
 		r, err := c.Exchange(msg, addr)
 		callback(msg, r, err, data)
