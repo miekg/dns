@@ -268,6 +268,18 @@ func (c *Client) Do(m *Msg, a string) {
 	c.Request <- &Request{Client: c, Addr: a, Request: m}
 }
 
+// Do performs an asynchronous query. The msg *Msg is the question to ask, the 
+// string addr is the address of the nameserver, the parameter data in
+// in the callback function. The call backback function is called with the
+// origin query, the answer returned from the nameserver, optional error and
+// data.
+func (c *Client) Do2(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, error, interface{})) {
+	go func() {
+		r, err := c.Exchange(msg, addr)
+		callback(msg, r, err, data)
+	}()
+}
+
 // exchangeBuffer performs a synchronous query. It sends the buffer m to the
 // address contained in a.
 func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w *reply, err error) {
@@ -302,7 +314,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 //
 // See Client.ExchangeRtt(...) to get the round trip time.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
-	r, _, _, err = c.ExchangeRtt(m, a)
+	r, _, err = c.ExchangeRtt(m, a)
 	return
 }
 
@@ -312,14 +324,12 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 //	c := new(dns.Client)
 //	in, rtt, addr, err := c.ExchangeRtt(message, "127.0.0.1:53")
 // 
-// The 'addr' return value is superfluous in this case, but it is here to retain symmetry
-// with the asynchronous call, see Client.Do().
-func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr net.Addr, err error) {
+func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var n int
 	var w *reply
 	out, ok := m.Pack()
 	if !ok {
-		return nil, 0, nil, ErrPack
+		return nil, 0, ErrPack
 	}
 	var in []byte
 	switch c.Net {
@@ -336,16 +346,16 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, addr 
 	}
 	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
 		if w.conn != nil {
-			return nil, 0, w.conn.RemoteAddr(), err
+			return nil, 0, err
 		}
-		return nil, 0, nil, err
+		return nil, 0, err
 	}
 	r = new(Msg)
 	r.Size = n
 	if ok := r.Unpack(in[:n]); !ok {
-		return nil, w.rtt, w.conn.RemoteAddr(), ErrUnpack
+		return nil, w.rtt, ErrUnpack
 	}
-	return r, w.rtt, w.conn.RemoteAddr(), nil
+	return r, w.rtt, nil
 }
 
 // Dial connects to the address addr for the network set in c.Net

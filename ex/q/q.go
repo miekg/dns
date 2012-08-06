@@ -200,7 +200,7 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
-	for _, v := range qname {
+	for i, v := range qname {
 		m.Question[0] = dns.Question{v, qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
@@ -217,62 +217,62 @@ Flags:
 				return
 			}
 		}
-		c.Do(m, nameserver)
-	}
-
-	i := 0
-forever:
-	for {
-		select {
-		case r := <-c.Reply:
-			if r.Reply != nil {
-				if r.Reply.Rcode == dns.RcodeSuccess {
-					if r.Request.Id != r.Reply.Id {
-						fmt.Printf("Id mismatch\n")
+		c.Do2(m, nameserver, nil, func(m, r *dns.Msg, e error, data interface{}) {
+			defer func() {
+				if i == len(qname)-1 {
+					os.Exit(0)
+				}
+			}()
+			if r == nil {
+				return
+			}
+			if r.Rcode != dns.RcodeSuccess {
+				return
+			}
+			if r.Id != m.Id {
+				fmt.Printf("Id mismatch\n")
+				return
+			}
+			if r.MsgHdr.Truncated && *fallback {
+				if c.Net != "tcp" {
+					if !*dnssec {
+						fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
+						o := new(dns.RR_OPT)
+						o.Hdr.Name = "."
+						o.Hdr.Rrtype = dns.TypeOPT
+						o.SetUDPSize(dns.DefaultMsgSize)
+						m.Extra = append(m.Extra, o)
+						*dnssec = true
+						c.Do(m, nameserver)
+						return
+					} else {
+						// First EDNS, then TCP
+						fmt.Printf(";; Truncated, trying TCP\n")
+						c.Net = "tcp"
+						c.Do(m, nameserver)
+						return
 					}
 				}
-				if r.Reply.MsgHdr.Truncated && *fallback {
-					if c.Net != "tcp" {
-						if !*dnssec {
-							fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
-							o := new(dns.RR_OPT)
-							o.Hdr.Name = "."
-							o.Hdr.Rrtype = dns.TypeOPT
-							o.SetUDPSize(dns.DefaultMsgSize)
-							m.Extra = append(m.Extra, o)
-							*dnssec = true
-							c.Do(m, nameserver)
-							break
-						} else {
-							// First EDNS, then TCP
-							fmt.Printf(";; Truncated, trying TCP\n")
-							c.Net = "tcp"
-							c.Do(m, nameserver)
-							break
-						}
-					}
-				}
-				if r.Reply.MsgHdr.Truncated && !*fallback {
-					fmt.Printf(";; Truncated\n")
-				}
-				if *check {
-					sigCheck(r.Reply, nameserver, *tcp)
-					nsecCheck(r.Reply)
-//					dns.AssertDelegationSigner(r.Reply, nil)
-				}
-				if *short {
-					r.Reply = shortMsg(r.Reply)
-				}
+			}
+			if r.MsgHdr.Truncated && !*fallback {
+				fmt.Printf(";; Truncated\n")
+			}
+			if *check {
+				sigCheck(r, nameserver, *tcp)
+				nsecCheck(r)
+				//					dns.AssertDelegationSigner(r.Reply, nil)
+			}
+			if *short {
+				r = shortMsg(r)
+			}
 
-				fmt.Printf("%v", r.Reply)
-				fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", r.Rtt/1e3, r.RemoteAddr, r.RemoteAddr.Network(), r.Reply.Size)
-			}
-			i++
-			if i == len(qname) {
-				break forever
-			}
-		}
+			fmt.Printf("%v", r)
+			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", 1e3, nameserver, c.Net, r.Size)
+
+		})
 	}
+	select { }
+
 }
 
 func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
