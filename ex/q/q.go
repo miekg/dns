@@ -13,25 +13,6 @@ import (
 
 var dnskey *dns.RR_DNSKEY
 
-func q(w dns.RequestWriter, m *dns.Msg) {
-	if err := w.Send(m); err != nil {
-		fmt.Printf("%s\n", err.Error())
-		w.Write(nil)
-		return
-	}
-	r, err := w.Receive()
-	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-		w.Write(nil)
-		return
-	}
-	w.Close()
-	if w.TsigStatus() != nil {
-		fmt.Printf(";; Couldn't verify TSIG signature: %s\n", w.TsigStatus().Error())
-	}
-	w.Write(r)
-}
-
 func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
@@ -137,8 +118,6 @@ Flags:
 	nameserver += ":" + strconv.Itoa(*port)
 
 	// We use the async query handling, just to show how it is to be used.
-	dns.HandleQuery(".", q)
-	dns.ListenAndQuery(nil)
 	c := new(dns.Client)
 	if *tcp {
 		c.Net = "tcp"
@@ -217,7 +196,7 @@ Flags:
 				return
 			}
 		}
-		c.Do2(m, nameserver, nil, func(m, r *dns.Msg, e error, data interface{}) {
+		c.Do(m, nameserver, nil, func(m, r *dns.Msg, e error, data interface{}) {
 			defer func() {
 				if i == len(qname)-1 {
 					os.Exit(0)
@@ -243,13 +222,15 @@ Flags:
 						o.SetUDPSize(dns.DefaultMsgSize)
 						m.Extra = append(m.Extra, o)
 						*dnssec = true
-						c.Do(m, nameserver)
+						// This does not work yet
+						//c.Do(m, nameserver)
 						return
 					} else {
 						// First EDNS, then TCP
 						fmt.Printf(";; Truncated, trying TCP\n")
 						c.Net = "tcp"
-						c.Do(m, nameserver)
+						// This not work yet
+						// c.Do(m, nameserver)
 						return
 					}
 				}
