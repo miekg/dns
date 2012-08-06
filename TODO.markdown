@@ -1,13 +1,10 @@
 # TODO
 
 * outgoing [AI]xfr
-* zonereader that extracts glue (or at least signals it) and other usefull stuff?
-* a complete dnssec resolver
 * test multiple edns0 options
 * fix 'q' standardize ipv6 input with [::1]#53 ?
 * use function callback with {}interface...  for async querying...?
-  Maybe in version v2 of this lib
-  Us
+* merge send/receive in Exchange*()
 
 ## Nice to have
 
