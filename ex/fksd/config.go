@@ -2,7 +2,6 @@ package main
 
 import (
 	"dns"
-	"log"
 	"strings"
 )
 
@@ -24,10 +23,15 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 	// SUBSYSTEM. IN TXT "OPERATION<SPACE>OPTIONS..."
 	// ZONE. IN TXT "READ origin /z/bloep" - absolute path in fs
 
-	// TODO: check tsig
-	if *l {
-		log.Printf("fksd: config commmand")
+	if !req.IsUpdate() {
+		logPrintf("non config command")
+		m := new(dns.Msg)
+		w.Write(m.SetRcode(req, dns.RcodeFormatError))
+		return
 	}
+
+	// TODO: check tsig
+	logPrintf("config commmand")
 	for _, rr := range req.Ns {
 		t, ok := rr.(*dns.RR_TXT)
 
@@ -53,13 +57,9 @@ func configZONE(t *dns.RR_TXT, c *Config) error {
 	}
 	switch strings.ToUpper(sx[0]) {
 	case "READ":
-		if *l {
-			log.Printf("fksd: config: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
-		}
+		logPrintf("config: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
 		if e := c.ReadZone(dns.Fqdn(sx[1]), sx[2]); e != nil {
-			if *l {
-				log.Printf("fksd: failed to read %s: %s\n", sx[2], e.Error())
-			}
+			logPrintf("failed to read %s: %s\n", sx[2], e.Error())
 			return e
 		}
 		return nil

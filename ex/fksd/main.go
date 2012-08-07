@@ -34,7 +34,7 @@ forever:
 	for {
 		select {
 		case <-sig:
-			log.Printf("fksd: signal received, stopping\n")
+			logPrintf("signal received, stopping")
 			break forever
 		}
 	}
