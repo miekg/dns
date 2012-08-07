@@ -1,5 +1,5 @@
 server 127.0.0.1 8053
 zone ZONE.
 update add ZONE. 60 IN TXT "LIST"
-key miekg c3R1cGlk
+key miekg bWlla2c=
 send

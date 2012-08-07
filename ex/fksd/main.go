@@ -16,9 +16,8 @@ var (
 
 func main() {
 	flag.Parse()
-	conf := NewConfig()
 	*superuser = strings.ToLower(*superuser)
-	conf.Tsigs[dns.Fqdn(*superuser)] = *superkey
+	conf := NewConfig()
 	conf.Rights[*superuser] = R_LIST | R_WRITE | R_DROP | R_USER // *all* of them
 
 	go func() {
@@ -28,11 +27,14 @@ func main() {
 		}
 	}()
 	go func() {
-		err := dns.ListenAndServeTsig(":8053", "tcp", nil, conf.Tsigs)
+		conf.Server = &dns.Server{Addr: ":8053", Net: "tcp", TsigSecret: map[string]string{dns.Fqdn(*superuser): *superkey}}
+		err := conf.Server.ListenAndServe()
 		if err != nil {
 			log.Fatal("fksd: could not start config listener: %s", err.Error())
 		}
 	}()
+
+
 	// Yes, we HIJACK zone. ... not sure on how to make this "private"
 	dns.HandleFunc("ZONE.", func(w dns.ResponseWriter, req *dns.Msg) { config(w, req, conf) })
 	// Gasp!! And USER.

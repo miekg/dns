@@ -16,15 +16,14 @@ const (
 
 // fks config
 type Config struct {
+	Server *dns.Server	    // Server instance for this configuration
 	Zones  map[string]*dns.Zone // All zones we are authoritative for
-	Tsigs  map[string]string    // Tsig keys for all users
 	Rights map[string]int       // Rights for all users
 }
 
 func NewConfig() *Config {
 	c := new(Config)
 	c.Zones = make(map[string]*dns.Zone)
-	c.Tsigs = make(map[string]string)
 	c.Rights = make(map[string]int)
 	return c
 }
@@ -72,8 +71,8 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 		return
 	}
 
-	if w.TsigStatus() != nil {
-		logPrintf("non config command (tsig fail)")
+	if e := w.TsigStatus(); e != nil {
+		logPrintf("non config command (tsig fail): %s", e.Error())
 		formerr(w, req)
 		return
 	}
@@ -179,17 +178,26 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 			return nil
 		}
 		logPrintf("config: ADD %s with %s\n", dns.Fqdn(sx[1]), sx[2])
-		c.Tsigs[sx[1]] = sx[2]
-		c.Rights[sx[1]] = R_NONE
+		c.Server.TsigSecret[dns.Fqdn(sx[1])] = sx[2]
+		c.Rights[dns.Fqdn(sx[1])] = R_NONE
+		noerr(w, req)
 	case "DROP":
 		if len(sx) != 2 {
 			return nil
 		}
 		logPrintf("config: DROP %s\n", dns.Fqdn(sx[1]))
-		delete(c.Tsigs, sx[1])
-		delete(c.Rights, sx[1])
+		delete(c.Server.TsigSecret, dns.Fqdn(sx[1]))
+		delete(c.Rights, dns.Fqdn(sx[1]))
+		noerr(w, req)
+	case "LIST":
+		for u, p := range c.Server.TsigSecret {
+			logPrintf("config: USER %s: %s\n", u, p)
+		}
+		fallthrough
 	case "ADDRIGHT":
+		fallthrough
 	case "DROPRIGHT":
+		noerr(w, req)
 	}
 	return nil
 }
