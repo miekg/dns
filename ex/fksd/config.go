@@ -21,6 +21,11 @@ func formerr(w dns.ResponseWriter, req *dns.Msg) {
 	w.Write(m.SetRcode(req, dns.RcodeFormatError))
 }
 
+func noerr(w dns.ResponseWriter, req *dns.Msg) {
+	m := new(dns.Msg)
+	w.Write(m.SetReply(req))
+}
+
 func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 	// Set question to fks. IN TXT otherwise error
 	// tsig signed, key = user
@@ -40,13 +45,14 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 		t, ok := rr.(*dns.RR_TXT)
 
 		if !ok {
-			// Not the TXT record -> error
+			formerr(w, req)
 			return
 		}
 		switch strings.ToUpper(t.Header().Name) {
 		case "ZONE.":
-			if e := configZONE(t, c); e != nil {
+			if e := configZONE(w, req, t, c); e != nil {
 				formerr(w, req)
+				return
 			}
 		default:
 			return
@@ -56,7 +62,7 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 }
 
 // Deal with the zone options
-func configZONE(t *dns.RR_TXT, c *Config) error {
+func configZONE(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) error {
 	sx := strings.Split(t.Txt[0], " ")
 	if len(sx) == 0 {
 		return nil
@@ -72,6 +78,7 @@ func configZONE(t *dns.RR_TXT, c *Config) error {
 			return e
 		}
 		logPrintf("config: added: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		noerr(w, req)
 	case "READXFR":
 		if len(sx) != 3 {
 			return nil
@@ -82,6 +89,7 @@ func configZONE(t *dns.RR_TXT, c *Config) error {
 			return e
 		}
 		logPrintf("config: added: READXFR %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		noerr(w, req)
 	case "DROP":
 		if len(sx) != 2 {
 			return nil
@@ -92,6 +100,17 @@ func configZONE(t *dns.RR_TXT, c *Config) error {
 			return e
 		}
 		logPrintf("config: dropped: DROP %s\n", dns.Fqdn(sx[1]))
+		noerr(w, req)
+	case "LIST":
+		logPrintf("config: LIST\n")
+		m := new(dns.Msg)
+		m.SetReply(req)
+		// Add the zones to the additional section
+		for zone, _ := range c.Zones {
+			a, _ := dns.NewRR("ZONE. TXT \"" + zone + "\"")
+			m.Extra = append(m.Extra, a)
+		}
+		w.Write(m)
 	}
 	return nil
 }

@@ -29,4 +29,23 @@ Add from axfr:
 
     ZONE. TXT   "DROP origin"
 
+## List zones
+
+    ZONE. TXT   "list"
+
+Zones are listed in the additional section of the reply packet
+
+    ZONE. TXT   "zonename1"
+    ZONE. TXT   "zonename2"
+
 # USER
+
+## Add user
+
+    USER. TXT   "ADD miekg tsig 
+
+    USER. TXT   "DROP miekg"
+
+    USER. TXT   "ADDRIGHT miekg list"   // list/write/drop
+
+    USER. TXT   "DROPRIGHT miekg list"
