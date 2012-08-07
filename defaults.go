@@ -11,7 +11,7 @@ const hexDigit = "0123456789abcdef"
 // you need other classes you are on your own.
 
 // SetReply creates a reply packet from a request message.
-func (dns *Msg) SetReply(request *Msg) {
+func (dns *Msg) SetReply(request *Msg) *Msg {
 	dns.MsgHdr.Id = request.MsgHdr.Id
 	dns.MsgHdr.RecursionDesired = request.MsgHdr.RecursionDesired // Copy rd bit
 	dns.MsgHdr.Response = true
@@ -19,27 +19,30 @@ func (dns *Msg) SetReply(request *Msg) {
 	dns.MsgHdr.Rcode = RcodeSuccess
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = request.Question[0]
+	return dns
 }
 
 // SetQuestion creates a question packet.
-func (dns *Msg) SetQuestion(z string, t uint16) {
+func (dns *Msg) SetQuestion(z string, t uint16) *Msg {
 	dns.MsgHdr.Id = Id()
 	dns.MsgHdr.RecursionDesired = true
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, t, ClassINET}
+	return dns
 }
 
 // SetNotify creates a notify packet.
-func (dns *Msg) SetNotify(z string) {
+func (dns *Msg) SetNotify(z string) *Msg {
 	dns.MsgHdr.Opcode = OpcodeNotify
 	dns.MsgHdr.Authoritative = true
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
+	return dns
 }
 
 // SetRcode creates an error packet.
-func (dns *Msg) SetRcode(request *Msg, rcode int) {
+func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 	dns.MsgHdr.Rcode = rcode
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Response = true
@@ -47,30 +50,33 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) {
 	dns.MsgHdr.Id = request.MsgHdr.Id
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = request.Question[0]
+	return dns
 }
 
 // SetRcodeFormatError creates a packet with FormError set.
-func (dns *Msg) SetRcodeFormatError(request *Msg) {
+func (dns *Msg) SetRcodeFormatError(request *Msg) *Msg {
 	dns.MsgHdr.Rcode = RcodeFormatError
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Response = true
 	dns.MsgHdr.Authoritative = false
 	dns.MsgHdr.Id = request.MsgHdr.Id
+	return dns
 }
 
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, classINET.
-func (dns *Msg) SetUpdate(z string) {
+func (dns *Msg) SetUpdate(z string) *Msg {
 	dns.MsgHdr.Id = Id()
 	dns.MsgHdr.Response = false
 	dns.MsgHdr.Opcode = OpcodeUpdate
 	dns.Compress = false // BIND9 cannot handle compression
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
+	return dns
 }
 
 // SetIxfr creates dns msg suitable for requesting an ixfr.
-func (dns *Msg) SetIxfr(z string, serial uint32) {
+func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
@@ -80,19 +86,21 @@ func (dns *Msg) SetIxfr(z string, serial uint32) {
 
 	dns.Question[0] = Question{z, TypeIXFR, ClassINET}
 	dns.Ns[0] = s
+	return dns
 }
 
 // SetAxfr creates dns msg suitable for requesting an axfr.
-func (dns *Msg) SetAxfr(z string) {
+func (dns *Msg) SetAxfr(z string) *Msg {
 	dns.MsgHdr.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
+	return dns
 }
 
 // SetTsig appends a TSIG RR to the message.
 // This is only a skeleton Tsig RR that is added as the last RR in the 
 // additional section. The Tsig is calculated when the message is being send.
-func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) {
+func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) *Msg {
 	t := new(RR_TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
 	t.Algorithm = algo
@@ -100,11 +108,12 @@ func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) {
 	t.TimeSigned = uint64(timesigned)
 	t.OrigId = dns.MsgHdr.Id
 	dns.Extra = append(dns.Extra, t)
+	return dns
 }
 
 // SetEdns0 appends a EDNS0 OPT RR to the message. 
 // TSIG should always the last RR in a message.
-func (dns *Msg) SetEdns0(udpsize uint16, do bool) {
+func (dns *Msg) SetEdns0(udpsize uint16, do bool) *Msg {
 	e := new(RR_OPT)
 	e.Hdr.Name = "."
 	e.Hdr.Rrtype = TypeOPT
@@ -113,6 +122,7 @@ func (dns *Msg) SetEdns0(udpsize uint16, do bool) {
 		e.SetDo()
 	}
 	dns.Extra = append(dns.Extra, e)
+	return dns
 }
 
 // IsRcode checks if the header of the packet has rcode set.
