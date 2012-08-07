@@ -20,6 +20,7 @@ var (
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
+	// only do queries not dynamic updates
 	if p := c.Find(r); p != nil {
 		dns.RawSetId(p, r.MsgHdr.Id)
 		w.WriteBuf(p)

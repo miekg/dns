@@ -18,7 +18,6 @@ func main() {
 	flag.Parse()
 	conf := NewConfig()
 	*superuser = strings.ToLower(*superuser)
-	conf.Users[*superuser] = true
 	conf.Tsigs[dns.Fqdn(*superuser)] = *superkey
 	conf.Rights[*superuser] = R_LIST | R_WRITE | R_DROP | R_USER // *all* of them
 

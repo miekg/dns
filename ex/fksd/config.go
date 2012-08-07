@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	R_NONE  = 0 // Right to do nada
 	R_LIST  = 1 // Right to list stuff
 	R_WRITE = 2 // Right to write stuff
 	R_DROP  = 4 // Right to drop stuff
@@ -32,7 +33,7 @@ func formerr(w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	m.MsgHdr.Opcode = dns.OpcodeUpdate
 	if req.IsTsig() {
-		m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
+		m.SetTsig(userFromTsig(req), dns.HmacMD5, 300, time.Now().Unix())
 	}
 	w.Write(m.SetRcode(req, dns.RcodeFormatError))
 }
@@ -40,11 +41,11 @@ func formerr(w dns.ResponseWriter, req *dns.Msg) {
 func noerr(w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	m.MsgHdr.Opcode = dns.OpcodeUpdate
-	m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
+	m.SetTsig(userFromTsig(req), dns.HmacMD5, 300, time.Now().Unix())
 	w.Write(m.SetReply(req))
 }
 
-func tsig(req *dns.Msg) string {
+func userFromTsig(req *dns.Msg) string {
 	return req.Extra[len(req.Extra)-1].Header().Name
 }
 
@@ -94,6 +95,12 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 				return
 			}
 		case "USER.":
+			if userFromTsig(req) != *superuser {
+				logPrintf("user management is only superuser\n")
+				formerr(w, req)
+				return
+			}
+
 			if e := configUSER(w, req, t, c); e != nil {
 				formerr(w, req)
 				return
@@ -154,7 +161,7 @@ func configZONE(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 			a, _ := dns.NewRR("ZONE. TXT \"" + zone + "\"")
 			m.Extra = append(m.Extra, a)
 		}
-		m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
+		m.SetTsig(userFromTsig(req), dns.HmacMD5, 300, time.Now().Unix())
 		w.Write(m)
 	}
 	return nil
@@ -165,6 +172,24 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 	sx := strings.Split(t.Txt[0], " ")
 	if len(sx) == 0 {
 		return nil
+	}
+	switch strings.ToUpper(sx[0]) {
+	case "ADD":
+		if len(sx) != 3 {
+			return nil
+		}
+		logPrintf("config: ADD %s\n", dns.Fqdn(sx[1]))
+		c.Tsigs[sx[1]] = sx[2]
+		c.Rights[sx[1]] = R_NONE
+	case "DROP":
+		if len(sx) != 2 {
+			return nil
+		}
+		logPrintf("config: DROP %s\n", dns.Fqdn(sx[1]))
+		delete(c.Tsigs, sx[1])
+		delete(c.Rights, sx[1])
+	case "ADDRIGHT":
+	case "DROPRIGHT":
 	}
 	return nil
 }
