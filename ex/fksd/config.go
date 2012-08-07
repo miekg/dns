@@ -122,37 +122,37 @@ func configZONE(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 		if len(sx) != 3 {
 			return nil
 		}
-		logPrintf("config: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
 		if e := c.ReadZoneFile(dns.Fqdn(sx[1]), sx[2]); e != nil {
 			logPrintf("failed to read %s: %s\n", sx[2], e.Error())
 			return e
 		}
-		logPrintf("config: added: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config added: READ %s %s\n", dns.Fqdn(sx[1]), sx[2])
 		noerr(w, req)
 	case "READXFR":
 		if len(sx) != 3 {
 			return nil
 		}
-		logPrintf("config: READXFR %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config READXFR %s %s\n", dns.Fqdn(sx[1]), sx[2])
 		if e := c.ReadZoneXfr(dns.Fqdn(sx[1]), sx[2]); e != nil {
 			logPrintf("failed to axfr %s: %s\n", sx[2], e.Error())
 			return e
 		}
-		logPrintf("config: added: READXFR %s %s\n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config added: READXFR %s %s\n", dns.Fqdn(sx[1]), sx[2])
 		noerr(w, req)
 	case "DROP":
 		if len(sx) != 2 {
 			return nil
 		}
-		logPrintf("config: DROP %s\n", dns.Fqdn(sx[1]))
+		logPrintf("config DROP %s\n", dns.Fqdn(sx[1]))
 		if e := c.DropZone(dns.Fqdn(sx[1])); e != nil {
 			logPrintf("Failed to drop %s: %s\n", dns.Fqdn(sx[1]), e.Error())
 			return e
 		}
-		logPrintf("config: dropped: DROP %s\n", dns.Fqdn(sx[1]))
+		logPrintf("config dropped: DROP %s\n", dns.Fqdn(sx[1]))
 		noerr(w, req)
 	case "LIST":
-		logPrintf("config: LIST\n")
+		logPrintf("config LIST\n")
 		m := new(dns.Msg)
 		m.SetReply(req)
 		// Add the zones to the additional section
@@ -177,7 +177,7 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 		if len(sx) != 3 {
 			return nil
 		}
-		logPrintf("config: ADD %s with %s\n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config ADD %s with %s\n", dns.Fqdn(sx[1]), sx[2])
 		c.Server.TsigSecret[dns.Fqdn(sx[1])] = sx[2]
 		c.Rights[dns.Fqdn(sx[1])] = R_NONE
 		noerr(w, req)
@@ -185,13 +185,13 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 		if len(sx) != 2 {
 			return nil
 		}
-		logPrintf("config: DROP %s\n", dns.Fqdn(sx[1]))
+		logPrintf("config DROP %s\n", dns.Fqdn(sx[1]))
 		delete(c.Server.TsigSecret, dns.Fqdn(sx[1]))
 		delete(c.Rights, dns.Fqdn(sx[1]))
 		noerr(w, req)
 	case "LIST":
 		for u, p := range c.Server.TsigSecret {
-			logPrintf("config: USER %s: %s\n", u, p)
+			logPrintf("config USER %s: %s\n", u, p)
 		}
 		fallthrough
 	case "ADDRIGHT":
