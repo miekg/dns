@@ -5,14 +5,27 @@ import (
 	"strings"
 )
 
+const (
+	R_LIST  = 1 // Right to list stuff
+	R_WRITE = 2 // Right to write stuff
+	R_DROP  = 4 // Right to drop stuff
+	R_USER  = 8 // Right to add users
+)
+
 // fks config
 type Config struct {
-	Zones map[string]*dns.Zone
+	Zones  map[string]*dns.Zone // All zones we are authoritative for
+	Users  map[string]bool      // All known users
+	Tsigs  map[string]string    // Tsig keys for all users
+	Rights map[string]int       // Rights for all users
 }
 
 func NewConfig() *Config {
 	c := new(Config)
 	c.Zones = make(map[string]*dns.Zone)
+	c.Users = make(map[string]bool)
+	c.Tsigs = make(map[string]string)
+	c.Rights = make(map[string]int)
 	return c
 }
 
@@ -54,9 +67,14 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 				formerr(w, req)
 				return
 			}
+		case "USER.":
+			if e := configUSER(w, req, t, c); e != nil {
+				formerr(w, req)
+				return
+			}
 		default:
+			formerr(w, req)
 			return
-			// error back
 		}
 	}
 }
@@ -111,6 +129,15 @@ func configZONE(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 			m.Extra = append(m.Extra, a)
 		}
 		w.Write(m)
+	}
+	return nil
+}
+
+// Deal with the user options
+func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) error {
+	sx := strings.Split(t.Txt[0], " ")
+	if len(sx) == 0 {
+		return nil
 	}
 	return nil
 }

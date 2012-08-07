@@ -42,10 +42,10 @@ Zones are listed in the additional section of the reply packet
 
 ## Add user
 
-    USER. TXT   "ADD miekg tsig 
+    USER. TXT   "ADD miekg [tsig-secret]"
 
     USER. TXT   "DROP miekg"
 
-    USER. TXT   "ADDRIGHT miekg list"   // list/write/drop
+    USER. TXT   "ADDRIGHT miekg list"   // list/write/drop/right
 
     USER. TXT   "DROPRIGHT miekg list"
