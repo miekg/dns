@@ -3,7 +3,6 @@ package main
 import (
 	"dns"
 	"errors"
-	"log"
 	"os"
 )
 
@@ -21,7 +20,7 @@ func (c *Config) ReadZone(origin, file string) error {
 		if rr.Error == nil {
 			z.Insert(rr.RR)
 		} else {
-			log.Printf("fksd: failed to parse: %s\n", rr.Error.Error())
+			logPrintf("failed to parse: %s\n", rr.Error.Error())
 		}
 	}
 	c.Zones[origin] = z
