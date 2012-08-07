@@ -1,4 +1,5 @@
 server 127.0.0.1 8053
 zone ZONE.
 update add ZONE. 60 IN TXT "READXFR miek.nl 213.154.224.17:53"
+key root c3R1cGlk
 send

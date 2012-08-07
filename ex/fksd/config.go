@@ -95,8 +95,8 @@ func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
 				return
 			}
 		case "USER.":
-			if userFromTsig(req) != *superuser {
-				logPrintf("user management is only superuser\n")
+			if userFromTsig(req) != dns.Fqdn(*superuser) {
+				logPrintf("user management is only for the superuser\n")
 				formerr(w, req)
 				return
 			}
@@ -178,7 +178,7 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 		if len(sx) != 3 {
 			return nil
 		}
-		logPrintf("config: ADD %s\n", dns.Fqdn(sx[1]))
+		logPrintf("config: ADD %s with \n", dns.Fqdn(sx[1]), sx[2])
 		c.Tsigs[sx[1]] = sx[2]
 		c.Rights[sx[1]] = R_NONE
 	case "DROP":
