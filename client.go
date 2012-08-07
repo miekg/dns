@@ -91,7 +91,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
 //	c := new(dns.Client)
-//	in, rtt, addr, err := c.ExchangeRtt(message, "127.0.0.1:53")
+//	in, rtt, err := c.ExchangeRtt(message, "127.0.0.1:53")
 // 
 func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var n int

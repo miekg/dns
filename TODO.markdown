@@ -4,7 +4,7 @@
 * test multiple edns0 options
 * fix 'q' standardize ipv6 input with [::1]#53 ?
 * use function callback with {}interface...  for async querying...?
-* merge send/receive in Exchange*()
+* Fix tsig and Exchange*() 
 
 ## Nice to have
 

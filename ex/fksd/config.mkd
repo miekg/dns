@@ -13,10 +13,20 @@ We have defined the following groups:
 
 In zone we have:
 
+(This will probably all change and use more consistent names)
+
+## Add zones
+
+Add from file:
 
     ZONE. TXT   "READ origin /path/to/zone"
 
-    ZONE. TXT   "READAXFR origin ip-of-master [tsig-secret]"
+Add from axfr:
 
+    ZONE. TXT   "READXFR origin ip(6)-of-master [tsig-secret]"
+
+## Delete zones
+
+    ZONE. TXT   "DROP origin"
 
 # USER

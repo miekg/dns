@@ -3,7 +3,6 @@ EXAMPLES=mx \
 	 chaos \
 	 key2ds \
 	 axfr \
-	 fp \
 	 reflect \
 	 q \
 
