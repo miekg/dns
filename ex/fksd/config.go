@@ -194,9 +194,9 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 			logPrintf("config USER %s: %s\n", u, p)
 		}
 		fallthrough
-	case "ADDRIGHT":
+	case "ADDPOWER":
 		fallthrough
-	case "DROPRIGHT":
+	case "DROPPOWER":
 		noerr(w, req)
 	}
 	return nil
