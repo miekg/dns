@@ -178,7 +178,7 @@ func configUSER(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 		if len(sx) != 3 {
 			return nil
 		}
-		logPrintf("config: ADD %s with \n", dns.Fqdn(sx[1]), sx[2])
+		logPrintf("config: ADD %s with %s\n", dns.Fqdn(sx[1]), sx[2])
 		c.Tsigs[sx[1]] = sx[2]
 		c.Rights[sx[1]] = R_NONE
 	case "DROP":
