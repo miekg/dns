@@ -15,22 +15,9 @@ In zone we have:
 
 (This will probably all change and use more consistent names)
 
-## Add zones
-
-Add from file:
-
     ZONE. TXT   "READ origin /path/to/zone"
-
-Add from axfr:
-
     ZONE. TXT   "READXFR origin ip(6)-of-master [tsig-secret]"
-
-## Delete zones
-
     ZONE. TXT   "DROP origin"
-
-## List zones
-
     ZONE. TXT   "list"
 
 Zones are listed in the additional section of the reply packet
@@ -40,12 +27,7 @@ Zones are listed in the additional section of the reply packet
 
 # USER
 
-## Add user
-
-    USER. TXT   "ADD miekg [tsig-secret]"
-
+    USER. TXT   "ADD miekg hmac:base64-tsig-secret"
     USER. TXT   "DROP miekg"
-
-    USER. TXT   "ADDRIGHT miekg list"   // list/write/drop/right
-
+    USER. TXT   "ADDRIGHT miekg list"   // list/write/drop/user
     USER. TXT   "DROPRIGHT miekg list"

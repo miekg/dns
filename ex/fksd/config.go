@@ -3,6 +3,7 @@ package main
 import (
 	"dns"
 	"strings"
+	"time"
 )
 
 const (
@@ -15,7 +16,6 @@ const (
 // fks config
 type Config struct {
 	Zones  map[string]*dns.Zone // All zones we are authoritative for
-	Users  map[string]bool      // All known users
 	Tsigs  map[string]string    // Tsig keys for all users
 	Rights map[string]int       // Rights for all users
 }
@@ -23,7 +23,6 @@ type Config struct {
 func NewConfig() *Config {
 	c := new(Config)
 	c.Zones = make(map[string]*dns.Zone)
-	c.Users = make(map[string]bool)
 	c.Tsigs = make(map[string]string)
 	c.Rights = make(map[string]int)
 	return c
@@ -31,29 +30,56 @@ func NewConfig() *Config {
 
 func formerr(w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
+	m.MsgHdr.Opcode = dns.OpcodeUpdate
+	if req.IsTsig() {
+		m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
+	}
 	w.Write(m.SetRcode(req, dns.RcodeFormatError))
 }
 
 func noerr(w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
+	m.MsgHdr.Opcode = dns.OpcodeUpdate
+	m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
 	w.Write(m.SetReply(req))
 }
 
-func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
-	// Set question to fks. IN TXT otherwise error
-	// tsig signed, key = user
-	// config stuff in Auth section (just as dynamic updates (*hint* *hint*)
-	// SUBSYSTEM. IN TXT "OPERATION<SPACE>OPTIONS..."
-	// ZONE. IN TXT "READ origin /z/bloep" - absolute path in fs
+func tsig(req *dns.Msg) string {
+	return req.Extra[len(req.Extra)-1].Header().Name
+}
 
-	if !req.IsUpdate() {
-		logPrintf("non config command")
+// Check if the user has any rights
+func configRights(user string, c *Config) {
+
+}
+
+// config stuff in Auth section (just as dynamic updates (*hint* *hint*)
+// SUBSYSTEM. IN TXT "OPERATION<SPACE>OPTIONS..."
+// ZONE. IN TXT "READ origin /z/bloep" - absolute path in fs
+func config(w dns.ResponseWriter, req *dns.Msg, c *Config) {
+	logPrintf("config command")
+
+	if !req.IsTsig() {
+		logPrintf("non config command (no tsig)")
 		formerr(w, req)
 		return
 	}
 
-	// TODO: check tsig
-	logPrintf("config commmand")
+	if !req.IsUpdate() {
+		logPrintf("non config command (no update)")
+		formerr(w, req)
+		return
+	}
+
+	if w.TsigStatus() != nil {
+		logPrintf("non config command (tsig fail)")
+		formerr(w, req)
+		return
+	}
+
+	// No need to check the user, if the tsig checks out, the user exists
+	logPrintf("config command ok")
+
 	for _, rr := range req.Ns {
 		t, ok := rr.(*dns.RR_TXT)
 
@@ -128,6 +154,7 @@ func configZONE(w dns.ResponseWriter, req *dns.Msg, t *dns.RR_TXT, c *Config) er
 			a, _ := dns.NewRR("ZONE. TXT \"" + zone + "\"")
 			m.Extra = append(m.Extra, a)
 		}
+		m.SetTsig(tsig(req), dns.HmacMD5, 300, time.Now().Unix())
 		w.Write(m)
 	}
 	return nil

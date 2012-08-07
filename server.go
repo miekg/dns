@@ -214,7 +214,6 @@ func (srv *Server) ListenAndServe() error {
 
 // ServeTCP starts a TCP listener for the server.
 // Each request is handled in a seperate goroutine.
-// with the Handler set in ....
 func (srv *Server) ServeTCP(l *net.TCPListener) error {
 	defer l.Close()
 	handler := srv.Handler
@@ -267,7 +266,6 @@ forever:
 
 // ServeUDP starts a UDP listener for the server.
 // Each request is handled in a seperate goroutine,
-// with the Handler set in ....
 func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler
