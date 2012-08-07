@@ -1,0 +1,22 @@
+Zone configuration commands:
+
+We have defined the following groups:
+
+* `ZONE`:   for zone configuration
+* `USER`:   for user management
+* `ERROR`:  for error reporting
+* `SYSTEM`: for system management?
+* `...`:    ...
+
+
+# ZONE
+
+In zone we have:
+
+
+    ZONE. TXT   "READ origin /path/to/zone"
+
+    ZONE. TXT   "READAXFR origin ip-of-master [tsig-secret]"
+
+
+# USER
