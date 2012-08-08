@@ -29,8 +29,6 @@ type Client struct {
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
-	// Hijacked     net.Conn       // if set the calling code takes care of the connection
-	// LocalAddr string            // Local address to use
 }
 
 func (w *reply) RemoteAddr() net.Addr {
@@ -43,14 +41,22 @@ func (w *reply) RemoteAddr() net.Addr {
 }
 
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
-// string addr is the address of the nameserver, the parameter data in
+// string addr is the address of the nameserver, the parameter data is used
 // in the callback function. The call backback function is called with the
-// origin query, the answer returned from the nameserver, optional error and
+// original query, the answer returned from the nameserver an optional error and
 // data.
 func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, error, interface{})) {
 	go func() {
 		r, err := c.Exchange(msg, addr)
 		callback(msg, r, err, data)
+	}()
+}
+
+// DoRtt is equivalent to Do, except that is calls ExchangeRtt.
+func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, rtt time.Duration, error, interface{})) {
+	go func() {
+		r, rtt, err := c.ExchangeRtt(msg, addr)
+		callback(msg, r, rtt, err, data)
 	}()
 }
 
@@ -355,9 +361,6 @@ func (w *reply) Close() (err error) { return w.conn.Close() }
 
 // Client returns a pointer to the client
 func (w *reply) Client() *Client { return w.client }
-
-// Request returns the request contained in reply
-func (w *reply) Request() *Msg { return w.req }
 
 // TsigStatus implements the RequestWriter.TsigStatus method
 func (w *reply) TsigStatus() error { return w.tsigStatus }
