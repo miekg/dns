@@ -35,4 +35,8 @@ Zones are listed in the additional section of the reply packet
     USER. TXT   "DROPPOWER miekg list"
 
 
-The config is internally stored in some memory structure 
+The config is internally stored in some memory structure.
+
+
+    .FKS
+    ZONE.FKS.        USER.FKS.

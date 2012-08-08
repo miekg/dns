@@ -3,12 +3,12 @@
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
 // The supported algorithm include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
-// Basic use pattern when querying with a TSIG name "axfr." and the base64
-// secret "so6ZGir4GPAqINNh9U5c3A==":
+// Basic use pattern when querying with a TSIG name "axfr." (note that these key names
+// must be fully qualified) and the base64 secret "so6ZGir4GPAqINNh9U5c3A==":
 //
-//	m := new(dns.Msg)
 //	c := new(dns.Client)
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+//	m := new(dns.Msg)
 //	m.SetQuestion("miek.nl.", dns.TypeMX)
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
 //	...
@@ -32,9 +32,12 @@
 //
 // Basic use pattern validating and replying to a message that has TSIG set.
 //
-//	dns.ListenAndServeTsig(":8053", net, nil, map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="})
+//	server = new(dns.Server)
+//	server.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+//	go server.ListenAndServe()
+//	dns.HandleFunc(".", handleRequest)
 //
-// 	func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
+// 	func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 //		m := new(Msg)
 //		m.SetReply(r)
 //		if r.IsTsig() {
@@ -47,7 +50,6 @@
 //		}
 //		w.Write(m)
 //	}
-//
 package dns
 
 import (

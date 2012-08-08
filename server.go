@@ -53,7 +53,7 @@ type response struct {
 // registered patterns add calls the handler for the pattern
 // that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
 // that queries for the DS record are redirected to the parent zone (if that
-// is also registered).
+// is also registered), otherwise the child gets the query.
 type ServeMux struct {
 	m *radix.Radix
 }
@@ -350,6 +350,7 @@ func (c *conn) serve() {
 	}
 }
 
+// Write implements the ResponseWriter.Write method.
 func (w *response) Write(m *Msg) (err error) {
 	var (
 		data []byte
@@ -405,6 +406,7 @@ func (w *response) Write(m *Msg) (err error) {
 	return nil
 }
 
+// WriteBuf implements the ResponseWriter.WriteBuf method.
 func (w *response) WriteBuf(m []byte) (err error) {
 	// TODO(mg): refacter as we duplicate code from above?
 	if m == nil {
@@ -446,8 +448,8 @@ func (w *response) WriteBuf(m []byte) (err error) {
 	return nil
 }
 
-// RemoteAddr implements the ResponseWriter.RemoteAddr method
+// RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
 
-// TsigStatus implements the ResponseWriter.TsigStatus method
+// TsigStatus implements the ResponseWriter.TsigStatus method.
 func (w *response) TsigStatus() error { return w.tsigStatus }
