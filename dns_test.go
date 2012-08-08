@@ -75,6 +75,8 @@ func TestBailiwick(t *testing.T) {
 	for parent, child := range yes {
 		if !IsSubDomain(parent, child) {
 			t.Logf("%s should be child of %s\n", child, parent)
+			t.Logf("comparelabels %d", CompareLabels(parent, child))
+			t.Logf("lenlabels %d %d", LenLabels(parent), LenLabels(child))
 			t.Fail()
 		}
 	}
@@ -85,6 +87,8 @@ func TestBailiwick(t *testing.T) {
 	for parent, child := range no {
 		if IsSubDomain(parent, child) {
 			t.Logf("%s should not be child of %s\n", child, parent)
+			t.Logf("comparelabels %d", CompareLabels(parent, child))
+			t.Logf("lenlabels %d %d", LenLabels(parent), LenLabels(child))
 			t.Fail()
 		}
 	}
