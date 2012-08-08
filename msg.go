@@ -79,13 +79,13 @@ type MsgHdr struct {
 // The layout of a DNS message.
 type Msg struct {
 	MsgHdr
-	Compress   bool       // If true, the message will be compressed when converted to wire format.
-	Size       int        // Number of octects in the message received from the wire.
+	Compress bool // If true, the message will be compressed when converted to wire format.
+	Size     int  // Number of octects in the message received from the wire.
 	// Remote addr? back
-	Question   []Question // Holds the RR(s) of the question section.
-	Answer     []RR       // Holds the RR(s) of the answer section.
-	Ns         []RR       // Holds the RR(s) of the authority section.
-	Extra      []RR       // Holds the RR(s) of the additional section.
+	Question []Question // Holds the RR(s) of the question section.
+	Answer   []RR       // Holds the RR(s) of the answer section.
+	Ns       []RR       // Holds the RR(s) of the authority section.
+	Extra    []RR       // Holds the RR(s) of the additional section.
 }
 
 // Map of strings for each RR wire type.
