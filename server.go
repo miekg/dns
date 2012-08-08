@@ -370,45 +370,11 @@ func (w *response) Write(m *Msg) (err error) {
 			return ErrPack
 		}
 	}
-	switch {
-	case w.conn._UDP != nil:
-		_, err := w.conn._UDP.WriteTo(data, w.conn.remoteAddr)
-		if err != nil {
-			return err
-		}
-	case w.conn._TCP != nil:
-		if len(data) > MaxMsgSize {
-			return ErrBuf
-		}
-		l := make([]byte, 2)
-		l[0], l[1] = packUint16(uint16(len(data)))
-		n, err := w.conn._TCP.Write(l)
-		if err != nil {
-			return err
-		}
-		if n != 2 {
-			return io.ErrShortWrite
-		}
-		n, err = w.conn._TCP.Write(data)
-		if err != nil {
-			return err
-		}
-		i := n
-		if i < len(data) {
-			j, err := w.conn._TCP.Write(data[i:len(data)])
-			if err != nil {
-				return err
-			}
-			i += j
-		}
-		n = i
-	}
-	return nil
+	return w.WriteBuf(data)
 }
 
 // WriteBuf implements the ResponseWriter.WriteBuf method.
 func (w *response) WriteBuf(m []byte) (err error) {
-	// TODO(mg): refacter as we duplicate code from above?
 	if m == nil {
 		return &Error{Err: "nil message"}
 	}
