@@ -20,9 +20,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if z == nil {
 		panic("fksd: no zone")
 	}
-	//logPrintf("[zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
-	// Ds Handling
-	// Referral
+	logPrintf("[zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
 	// if we find something with NonAuth = true, it means
 	// we need to return referral
 	nss := z.Predecessor(req.Question[0].Name)
