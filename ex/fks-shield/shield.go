@@ -21,7 +21,6 @@ var (
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
-	// Check for "special queries"
 	switch {
 	case r.IsNotify():
 		if *flaglog {
@@ -84,7 +83,6 @@ func main() {
 		for {
 			// Every 10 sec run the cache cleaner
 			time.Sleep(10 * 1e9)
-			log.Printf("cache clean")
 			cache.Evict()
 		}
 	}()
