@@ -27,7 +27,7 @@ func main() {
 		}
 	}()
 	go func() {
-		conf.Server = &dns.Server{Addr: ":8053", Net: "tcp", TsigSecret: map[string]string{dns.Fqdn(*superuser): *superkey}}
+		conf.Server = &dns.Server{Addr: ":1053", Net: "tcp", TsigSecret: map[string]string{dns.Fqdn(*superuser): *superkey}}
 		err := conf.Server.ListenAndServe()
 		if err != nil {
 			log.Fatal("fksd: could not start config listener: %s", err.Error())
