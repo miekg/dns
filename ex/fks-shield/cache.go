@@ -4,10 +4,12 @@ import (
 	"dns"
 	"fmt"
 	"log"
-	"radix"
+	"github.com/miekg/radix"
 	"strings"
 	"time"
 )
+
+const TTL time.Duration = 30 * 1e9 // 30 seconds
 
 // Cache elements, we using to key (toRadixKey) to distinguish between dns and dnssec
 type Packet struct {
@@ -43,11 +45,28 @@ func NewCache() *Cache {
 	return &Cache{Radix: radix.New()}
 }
 
+func (c *Cache) Evict() {
+	// A bit tedious, keys() -> find() -> remove()
+	for _, key := range c.Radix.Keys() {
+		log.Printf("look for key %s\n", key)
+		node := c.Radix.Find(key)
+		if node == nil {
+			continue
+		}
+		if time.Since(node.Value.(*Packet).ttl) > TTL {
+			c.Radix.Remove(key)
+			if *flaglog {
+				log.Printf("fsk-shield: evicting %s\n", key)
+			}
+		}
+	}
+}
+
 func (c *Cache) Find(d *dns.Msg) []byte {
 	p := c.Radix.Find(toRadixKey(d))
 	if p == nil {
-		if *verbose {
-			log.Printf("Cache miss for " + toRadixKey(d))
+		if *flaglog {
+			log.Printf("fsk-shield: cache miss for " + toRadixKey(d))
 		}
 		return nil
 	}
@@ -55,10 +74,10 @@ func (c *Cache) Find(d *dns.Msg) []byte {
 }
 
 func (c *Cache) Insert(d *dns.Msg) {
-	if *verbose {
-		log.Printf("Inserting " + toRadixKey(d))
+	if *flaglog {
+		log.Printf("fsk-shield: inserting " + toRadixKey(d))
 	}
-	buf, _ := d.Pack()	// Should always work
+	buf, _ := d.Pack() // Should always work
 	c.Radix.Insert(toRadixKey(d), &Packet{d: buf, ttl: time.Now().UTC()})
 }
 

@@ -1,22 +1,19 @@
-/* 
- * Funkensturm, a versatile DNS proxy
- * Miek Gieben <miek@miek.nl> (c) 2011
- * GPLv2
- */
-
 package main
+
+// TODO: locking
 
 import (
 	"dns"
 	"flag"
 	"log"
 	"os"
+	"time"
 )
 
 var (
 	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
-	server  = flag.String("server", "127.0.0.1:53", "remote server address(es), seperate with commas")
-	verbose = flag.Bool("verbose", false, "be more verbose")
+	server  = flag.String("server", "127.0.0.1:53", "remote server address")
+	flaglog = flag.Bool("log", false, "be more verbose")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
@@ -29,7 +26,7 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	// Cache miss
 	client := new(dns.Client)
 	if p, e := client.Exchange(r, *server); e == nil {
-		if *verbose {
+		if *flaglog {
 			log.Printf("fks-shield: cache miss")
 		}
 		// TODO(mg): If r has edns0 and p has not we create a mismatch here
@@ -38,7 +35,9 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 		return
 	} else {
 		log.Printf("fks-shield: failed to get answer " + e.Error())
-		// w.Write(SERFVAIL)
+		m := new(dns.Msg)
+		m.SetRcode(r, dns.RcodeServerFailure)
+		w.Write(m)
 	}
 }
 
@@ -54,9 +53,16 @@ func main() {
 	// Only listen on UDP
 	go func() {
 		if err := dns.ListenAndServe(*listen, "udp", nil); err != nil {
-			log.Fatal("fks-shield: failed to setup %s %s", net, add)
+			log.Fatal("fks-shield: failed to setup %s %s", *listen, "udp")
 		}
-	}
+	}()
+	go func() {
+		for {
+			// Every 10 sec run the cache cleaner
+			time.Sleep(10 * 1e9)
+			cache.Evict()
+		}
+	}()
 
 	sig := make(chan os.Signal)
 forever:
