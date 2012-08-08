@@ -1,4 +1,4 @@
-server 127.0.0.1 8053
+server 127.0.0.1 1053
 zone ZONE.
 update add ZONE. 60 IN TXT "READ miek.nl /home/miekg/g/src/dns/ex/fksd/z/miek.nl.db"
 key root c3R1cGlk

@@ -34,7 +34,6 @@ func main() {
 		}
 	}()
 
-
 	// Yes, we HIJACK zone. ... not sure on how to make this "private"
 	dns.HandleFunc("ZONE.", func(w dns.ResponseWriter, req *dns.Msg) { config(w, req, conf) })
 	// Gasp!! And USER.
