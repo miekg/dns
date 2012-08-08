@@ -15,18 +15,15 @@ var (
 	server                = flag.String("server", "127.0.0.1:53", "remote server address")
 	flagttl               = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
 	flaglog               = flag.Bool("log", false, "be more verbose")
-	TTL     time.Duration = 0
-	//	tsifile = flag.String("tsig", "", "file with tsig secrets (key.:base64)")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
-	if *flaglog {
-		log.Printf("fks-shield: query")
-	}
-	TTL = time.Duration(*flagttl * 1e9)
 	// Check for "special queries"
 	switch {
 	case r.IsNotify():
+	if *flaglog {
+		log.Printf("fks-shield: notify/update")
+	}
 		fallthrough
 	case r.IsUpdate():
 		client := new(dns.Client)
@@ -34,6 +31,9 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 			w.Write(p)
 		}
 		return
+	}
+	if *flaglog {
+		log.Printf("fks-shield: query")
 	}
 
 	if p := c.Find(r); p != nil {
@@ -68,13 +68,14 @@ func main() {
 	// Only listen on UDP
 	go func() {
 		if err := dns.ListenAndServe(*listen, "udp", nil); err != nil {
-			log.Fatal("fks-shield: failed to setup %s %s", *listen, "udp")
+			log.Fatalf("fks-shield: failed to setup %s %s", *listen, "udp")
 		}
 	}()
 	go func() {
 		for {
 			// Every 10 sec run the cache cleaner
 			time.Sleep(10 * 1e9)
+			log.Printf("cache clean")
 			cache.Evict()
 		}
 	}()

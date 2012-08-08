@@ -50,10 +50,10 @@ func (c *Cache) Evict() {
 		if node == nil {
 			continue
 		}
-		if time.Since(node.Value.(*Packet).ttl) > TTL {
+		if t := time.Since(node.Value.(*Packet).ttl).Seconds(); t > float64(*flagttl) {
 			c.Radix.Remove(key)
 			if *flaglog {
-				log.Printf("fks-shield: evicting %s\n", key)
+				log.Printf("fks-shield: evicting %s after %f\n", key, t)
 			}
 		}
 	}
