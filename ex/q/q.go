@@ -202,6 +202,7 @@ Flags:
 					os.Exit(0)
 				}
 			}()
+			Redo:
 			if r == nil {
 				return
 			}
@@ -221,17 +222,15 @@ Flags:
 						o.Hdr.Rrtype = dns.TypeOPT
 						o.SetUDPSize(dns.DefaultMsgSize)
 						m.Extra = append(m.Extra, o)
+						r, rtt, e = c.ExchangeRtt(m, nameserver)
 						*dnssec = true
-						// This does not work yet
-						//c.Do(m, nameserver)
-						return
+						goto Redo
 					} else {
 						// First EDNS, then TCP
 						fmt.Printf(";; Truncated, trying TCP\n")
 						c.Net = "tcp"
-						// This not work yet
-						// c.Do(m, nameserver)
-						return
+						r, rtt, e = c.ExchangeRtt(m, nameserver)
+						goto Redo
 					}
 				}
 			}
