@@ -1,6 +1,6 @@
 package main
 
-// TODO: locking
+// TODO: locking, tsig (need key list to rewrap the queries)
 
 import (
 	"dns"
@@ -11,16 +11,31 @@ import (
 )
 
 var (
-	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
-	server  = flag.String("server", "127.0.0.1:53", "remote server address")
-	flaglog = flag.Bool("log", false, "be more verbose")
+	listen                = flag.String("listen", "127.0.0.1:8053", "set the listener address")
+	server                = flag.String("server", "127.0.0.1:53", "remote server address")
+	flagttl               = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
+	flaglog               = flag.Bool("log", false, "be more verbose")
+	TTL     time.Duration = 0
+	//	tsifile = flag.String("tsig", "", "file with tsig secrets (key.:base64)")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
-	// only do queries not dynamic updates
 	if *flaglog {
 		log.Printf("fks-shield: query")
 	}
+	TTL = time.Duration(*flagttl * 1e9)
+	// Check for "special queries"
+	switch {
+	case r.IsNotify():
+		fallthrough
+	case r.IsUpdate():
+		client := new(dns.Client)
+		if p, e := client.Exchange(r, *server); e == nil {
+			w.Write(p)
+		}
+		return
+	}
+
 	if p := c.Find(r); p != nil {
 		dns.RawSetId(p, r.MsgHdr.Id)
 		w.WriteBuf(p)

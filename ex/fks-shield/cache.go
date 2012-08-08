@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const TTL time.Duration = 30 * 1e9 // 30 seconds
-
 // Cache elements, we using to key (toRadixKey) to distinguish between dns and dnssec
 type Packet struct {
 	ttl time.Time // insertion time
