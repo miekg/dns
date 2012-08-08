@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
-	server  = flag.String("server", "127.0.0.1:53", "remote server address")
+	listen  = flag.String("listen", ":8053", "set the listener address")
+	server  = flag.String("server", ":53", "remote server address")
 	flagttl = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
 	flaglog = flag.Bool("log", false, "be more verbose")
 )
@@ -32,10 +32,6 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 		}
 		return
 	}
-	if *flaglog {
-		log.Printf("fks-shield: query")
-	}
-
 	if p := c.Find(r); p != nil {
 		dns.RawSetId(p, r.MsgHdr.Id)
 		w.WriteBuf(p)
