@@ -47,7 +47,8 @@ func (c *Cache) Evict() {
 	// A bit tedious, keys() -> find() -> remove()
 	for _, key := range c.Radix.Keys() {
 		node := c.Radix.Find(key)
-		if node == nil {
+		// Why can node.Value be nil?
+		if node == nil || node.Value == nil {
 			continue
 		}
 		if t := time.Since(node.Value.(*Packet).ttl).Seconds(); t > float64(*flagttl) {
