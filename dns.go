@@ -59,8 +59,7 @@
 //      c := new(Client)
 //      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
-// An asynchronous query is also possible, setting up is more elaborate then
-// a synchronous query. 
+// An asynchronous query is also possible, see client.Do and client.DoRtt.
 package dns
 
 import (
@@ -107,17 +106,6 @@ type RR interface {
 	Len() int
 	// Copy returns a copy of the RR
 	Copy() RR
-}
-
-// Exchange is used in (asynchronous) communication with the resolver. If the 
-// client has trust anchors configured the Nxdomain, Secure and Bogus settings
-// are derived from those anchors.
-type Exchange struct {
-	Request    *Msg          // the question sent
-	Reply      *Msg          // the answer to the question that was sent
-	Rtt        time.Duration // round trip time
-	RemoteAddr net.Addr      // address of the server
-	Error      error         // if something went wrong, this contains the error
 }
 
 // DNS resource records.
