@@ -11,19 +11,19 @@ import (
 )
 
 var (
-	listen                = flag.String("listen", "127.0.0.1:8053", "set the listener address")
-	server                = flag.String("server", "127.0.0.1:53", "remote server address")
-	flagttl               = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
-	flaglog               = flag.Bool("log", false, "be more verbose")
+	listen  = flag.String("listen", "127.0.0.1:8053", "set the listener address")
+	server  = flag.String("server", "127.0.0.1:53", "remote server address")
+	flagttl = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
+	flaglog = flag.Bool("log", false, "be more verbose")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	// Check for "special queries"
 	switch {
 	case r.IsNotify():
-	if *flaglog {
-		log.Printf("fks-shield: notify/update")
-	}
+		if *flaglog {
+			log.Printf("fks-shield: notify/update")
+		}
 		fallthrough
 	case r.IsUpdate():
 		client := new(dns.Client)

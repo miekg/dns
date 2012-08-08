@@ -3,8 +3,8 @@ package main
 import (
 	"dns"
 	"fmt"
-	"log"
 	"github.com/miekg/radix"
+	"log"
 	"strings"
 	"time"
 )
