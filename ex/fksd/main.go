@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
-	"os/Signal"
+	"os/signal"
 	"strings"
 )
 

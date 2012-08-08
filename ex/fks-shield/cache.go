@@ -12,7 +12,7 @@ import (
 // Cache elements, we using to key (toRadixKey) to distinguish between dns and dnssec
 type Packet struct {
 	ttl time.Time // insertion time
-	d   []byte    // raw packet
+	d   []byte    // raw packet, except the first two bytes
 }
 
 func toRadixKey(d *dns.Msg) string {
@@ -29,14 +29,6 @@ func toRadixKey(d *dns.Msg) string {
 
 type Cache struct {
 	*radix.Radix
-}
-
-// Make an as-is copy, except for the first two bytes, as these hold
-// the DNS id.
-func quickCopy(p []byte) []byte {
-	q := make([]byte, 2)
-	q = append(q, p[2:]...)
-	return q
 }
 
 func NewCache() *Cache {
@@ -67,7 +59,7 @@ func (c *Cache) Find(d *dns.Msg) []byte {
 		}
 		return nil
 	}
-	return quickCopy(p.Value.(*Packet).d)
+	return p.Value.(*Packet).d
 }
 
 func (c *Cache) Insert(d *dns.Msg) {
@@ -75,7 +67,7 @@ func (c *Cache) Insert(d *dns.Msg) {
 		log.Printf("fsk-shield: inserting " + toRadixKey(d))
 	}
 	buf, _ := d.Pack() // Should always work
-	c.Radix.Insert(toRadixKey(d), &Packet{d: buf, ttl: time.Now().UTC()})
+	c.Radix.Insert(toRadixKey(d), &Packet{d: buf[2:], ttl: time.Now().UTC()})
 }
 
 func (c *Cache) Remove(d *dns.Msg) {
