@@ -107,7 +107,8 @@ func serve(net, name, secret string) {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 		}
 	default:
-		err := dns.ListenAndServeTsig(":8053", net, nil, map[string]string{name: secret})
+		server := &dns.Server{Addr: ":8053", Net: "net", TsigSecret: map[string]string{name: secret} }
+		err := server.ListenAndServe()
 		if err != nil {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 		}
