@@ -27,58 +27,53 @@ func main() {
 	}
 	for _, a := range addr {
 		m.Question[0] = dns.Question{"version.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, rtt, _, _ := c.ExchangeRtt(m, a)
+		in, rtt, _ := c.ExchangeRtt(m, a)
 		if in != nil && len(in.Answer) > 0 {
 			fmt.Printf("(time %.3d µs) %v\n", rtt/1e3, in.Answer[0])
 		}
 		m.Question[0] = dns.Question{"hostname.bind.", dns.TypeTXT, dns.ClassCHAOS}
-		in, rtt, _, _ = c.ExchangeRtt(m, a)
+		in, rtt, _ = c.ExchangeRtt(m, a)
 		if in != nil && len(in.Answer) > 0 {
 			fmt.Printf("(time %.3d µs) %v\n", rtt/1e3, in.Answer[0])
 		}
 	}
 }
 
-func qhandler(w dns.RequestWriter, m *dns.Msg) {
-	w.Dial()
-	defer w.Close()
-	if err := w.Send(m); err != nil {
-		w.Write(nil)
+func qhandler(m, r *dns.Msg, e error, data interface{}) {
+	ips := make([]string, 0)
+	if r != nil && r.Rcode == dns.RcodeSuccess {
+		for _, aa := range r.Answer {
+			switch aa.(type) {
+			case *dns.RR_A:
+				ips = append(ips, aa.(*dns.RR_A).A.String()+":53")
+			case *dns.RR_AAAA:
+				ips = append(ips, "["+aa.(*dns.RR_AAAA).AAAA.String()+"]:53")
+			}
+		}
+		data.(chan []string) <- ips
 		return
 	}
-	r, _ := w.Receive()
-	w.Write(r)
+	data.(chan []string) <- nil
 }
 
 func addresses(conf *dns.ClientConfig, c *dns.Client, name string) []string {
-	dns.HandleQueryFunc(os.Args[1], qhandler)
-	dns.ListenAndQuery(nil)
-
 	m4 := new(dns.Msg)
 	m4.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
 	m6 := new(dns.Msg)
 	m6.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeAAAA)
-	c.Do(m4, conf.Servers[0]+":"+conf.Port)
-	c.Do(m6, conf.Servers[0]+":"+conf.Port)
+
+	addr := make(chan []string)
+	defer close(addr)
+	c.Do(m4, conf.Servers[0]+":"+conf.Port, addr, qhandler)
+	c.Do(m6, conf.Servers[0]+":"+conf.Port, addr, qhandler)
 
 	var ips []string
 	i := 2 // two outstanding queries
 forever:
 	for {
 		select {
-		case r := <-c.Reply:
-			if r.Reply != nil && r.Reply.Rcode == dns.RcodeSuccess {
-				for _, aa := range r.Reply.Answer {
-					switch aa.(type) {
-					case *dns.RR_A:
-						ips = append(ips, aa.(*dns.RR_A).A.String()+":53")
-					case *dns.RR_AAAA:
-						ips = append(ips, "["+aa.(*dns.RR_AAAA).AAAA.String()+"]:53")
-					}
-				}
-			} else {
-				fmt.Printf("Nothing recevied for %s\n", name)
-			}
+		case ip := <-addr:
+			ips = append(ips, ip...)
 			i--
 			if i == 0 {
 				break forever

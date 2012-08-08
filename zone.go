@@ -3,7 +3,7 @@ package dns
 // A structure for handling zone data
 
 import (
-	"radix"
+	"github.com/miekg/radix"
 	"strings"
 )
 

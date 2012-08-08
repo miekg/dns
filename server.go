@@ -9,7 +9,7 @@ package dns
 import (
 	"io"
 	"net"
-	"radix"
+	"github.com/miekg/radix"
 	"time"
 )
 
