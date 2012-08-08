@@ -18,6 +18,9 @@ var (
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	// only do queries not dynamic updates
+	if *flaglog {
+		log.Printf("fks-shield: query")
+	}
 	if p := c.Find(r); p != nil {
 		dns.RawSetId(p, r.MsgHdr.Id)
 		w.WriteBuf(p)
@@ -26,9 +29,6 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	// Cache miss
 	client := new(dns.Client)
 	if p, e := client.Exchange(r, *server); e == nil {
-		if *flaglog {
-			log.Printf("fks-shield: cache miss")
-		}
 		// TODO(mg): If r has edns0 and p has not we create a mismatch here
 		w.Write(p)
 		c.Insert(p)

@@ -48,7 +48,6 @@ func NewCache() *Cache {
 func (c *Cache) Evict() {
 	// A bit tedious, keys() -> find() -> remove()
 	for _, key := range c.Radix.Keys() {
-		log.Printf("look for key %s\n", key)
 		node := c.Radix.Find(key)
 		if node == nil {
 			continue
@@ -56,7 +55,7 @@ func (c *Cache) Evict() {
 		if time.Since(node.Value.(*Packet).ttl) > TTL {
 			c.Radix.Remove(key)
 			if *flaglog {
-				log.Printf("fsk-shield: evicting %s\n", key)
+				log.Printf("fks-shield: evicting %s\n", key)
 			}
 		}
 	}
