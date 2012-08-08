@@ -65,7 +65,6 @@ package dns
 import (
 	"net"
 	"strconv"
-	"time"
 )
 
 const (

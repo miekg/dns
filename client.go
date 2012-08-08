@@ -53,7 +53,7 @@ func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg,
 }
 
 // DoRtt is equivalent to Do, except that is calls ExchangeRtt.
-func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, rtt time.Duration, error, interface{})) {
+func (c *Client) DoRtt(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, time.Duration, error, interface{})) {
 	go func() {
 		r, rtt, err := c.ExchangeRtt(msg, addr)
 		callback(msg, r, rtt, err, data)

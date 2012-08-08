@@ -1,5 +1,10 @@
 package dns
 
+import (
+	"net"
+	"time"
+)
+
 // XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
 // section has type TypeAXFR an Axfr is performed, if it is TypeIXFR it does an Ixfr.
 // The [AI]xfr's records are returned on the channel. Note that with an IXFR the client
