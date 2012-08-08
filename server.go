@@ -93,14 +93,6 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// Start a server on addresss and network speficied. Use the tsig
-// secrets for Tsig validation. 
-// Invoke handler for any incoming queries.
-func ListenAndServeTsig(addr string, network string, handler Handler, tsig map[string]string) error {
-	server := &Server{Addr: addr, Net: network, Handler: handler, TsigSecret: tsig}
-	return server.ListenAndServe()
-}
-
 func (mux *ServeMux) match(zone string, t uint16) Handler {
 	// Exact match
 	zone = toRadixName(zone)

@@ -42,12 +42,6 @@ func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
 	}
 }
 
-func listenAndServe(add, net string) {
-	if err := dns.ListenAndServe(add, net, nil); err != nil {
-		log.Fatal("fks-shield: failed to setup %s %s", net, add)
-	}
-}
-
 func main() {
 	flag.Usage = func() {
 		flag.PrintDefaults()
@@ -55,11 +49,14 @@ func main() {
 	flag.Parse()
 
 	cache := NewCache()
-
 	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) { serve(w, r, cache) })
 
-	go listenAndServe(*listen, "tcp")
-	go listenAndServe(*listen, "udp")
+	// Only listen on UDP
+	go func() {
+		if err := dns.ListenAndServe(*listen, "udp", nil); err != nil {
+			log.Fatal("fks-shield: failed to setup %s %s", net, add)
+		}
+	}
 
 	sig := make(chan os.Signal)
 forever:

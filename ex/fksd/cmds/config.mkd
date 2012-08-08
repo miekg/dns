@@ -8,6 +8,7 @@ We have defined the following groups:
 * `SYSTEM`: for system management?
 * `...`:    ...
 
+Better stuff then add and set
 
 # ZONE
 
@@ -27,7 +28,11 @@ Zones are listed in the additional section of the reply packet
 
 # USER
 
-    USER. TXT   "ADD miekg base64-tsig-secret"
+    USER. TXT   "ADD miekg"
     USER. TXT   "DROP miekg"
+    USER. TXT   "ADDTSIG miekg base64-tsig-secret"
     USER. TXT   "ADDPOWER miekg list"   // list/write/drop
     USER. TXT   "DROPPOWER miekg list"
+
+
+The config is internally stored in some memory structure 

@@ -31,6 +31,8 @@ type Cache struct {
 	*radix.Radix
 }
 
+// Make an as-is copy, except for the first two bytes, as these hold
+// the DNS id.
 func quickCopy(p []byte) []byte {
 	q := make([]byte, 2)
 	q = append(q, p[2:]...)
