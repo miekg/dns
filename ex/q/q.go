@@ -196,7 +196,7 @@ Flags:
 				return
 			}
 		}
-		c.Do(m, nameserver, nil, func(m, r *dns.Msg, e error, data interface{}) {
+		c.DoRtt(m, nameserver, nil, func(m, r *dns.Msg, rtt time.Duration, e error, data interface{}) {
 			defer func() {
 				if i == len(qname)-1 {
 					os.Exit(0)
@@ -241,18 +241,18 @@ Flags:
 			if *check {
 				sigCheck(r, nameserver, *tcp)
 				nsecCheck(r)
-				//					dns.AssertDelegationSigner(r.Reply, nil)
+				//dns.AssertDelegationSigner(r.Reply, nil)
 			}
 			if *short {
 				r = shortMsg(r)
 			}
 
 			fmt.Printf("%v", r)
-			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", 1e3, nameserver, c.Net, r.Size)
+			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
 
 		})
 	}
-	select { }
+	select {}
 
 }
 
