@@ -7,6 +7,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
+	"runtime/pprof"
 	"time"
 )
 
@@ -15,6 +17,7 @@ var (
 	server  = flag.String("server", ":53", "remote server address")
 	flagttl = flag.Int("ttl", 30, "ttl (in seconds) for cached packets")
 	flaglog = flag.Bool("log", false, "be more verbose")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 )
 
 func serve(w dns.ResponseWriter, r *dns.Msg, c *Cache) {
@@ -57,6 +60,14 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	cache := NewCache()
 	dns.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) { serve(w, r, cache) })
@@ -77,6 +88,8 @@ func main() {
 	}()
 
 	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt)
+
 forever:
 	for {
 		select {

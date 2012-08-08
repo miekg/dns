@@ -47,7 +47,6 @@ func (c *Cache) Evict() {
 	// A bit tedious, keys() -> find() -> remove()
 	for _, key := range c.Radix.Keys() {
 		node := c.Radix.Find(key)
-		// Why can node.Value be nil?
 		if node == nil || node.Value == nil {
 			continue
 		}

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/Signal"
 	"strings"
 )
 
@@ -40,6 +41,7 @@ func main() {
 	dns.HandleFunc("USER.", func(w dns.ResponseWriter, req *dns.Msg) { config(w, req, conf) })
 
 	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt)
 forever:
 	for {
 		select {
