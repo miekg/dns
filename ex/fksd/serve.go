@@ -96,6 +96,9 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		return
 	} else { // NoData reply or CNAME
 		m.SetReply(req)
+		if cname, ok := node.RR[dns.TypeCNAME]; ok {
+			m.Answer = cname // tODO
+		}
 		m.Ns = apex.RR[dns.TypeSOA]
 		ednsFromRequest(req, m)
 		w.Write(m)

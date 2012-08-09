@@ -2,8 +2,6 @@
 
 * outgoing [AI]xfr
 * fix 'q' standardize ipv6 input with [::1]#53 ?
-* use function callback with {}interface...  for async querying...?
-* Fix tsig and Exchange*() 
 * Splitoff fksd
 
 ## Nice to have
