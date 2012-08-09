@@ -8,10 +8,14 @@ If there is stuff you should know as a DNS programmer there isn't a convenience
 function for it. Server side and client side programming is supported, i.e. you
 can build servers and resolvers with it.
 
+If you like this, you may also be interested in:
+
+* https://github.com/miekg/fks -- a complete nameserver written in Go;
+* https://github.com/miekg/unbound -- Go wrapper for the Unbound resolver.
+
 # Goals
 
 * KISS;
-* Symmetric API: client and server side should be very similar;
 * Small API, if its easy to code in Go, don't make a function for it.
 
 # Features
@@ -22,7 +26,8 @@ can build servers and resolvers with it.
 * Fast: 
     * Reply speed around 35/40K qps (faster hardware results in more qps);
     * Parsing RRs (zone files) with 95/100K RR/s, that's 5M records in about 50 seconds;
-* Client and server side programming (mimicking the net/http package);
+* Server side programming (mimicking the net/http package);
+* Client side programming with asynchronous calls;
 * Asynchronous queries/replies for client and server;
 * DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
 * EDNS0, NSID;
@@ -39,6 +44,7 @@ Miek Gieben  -  2010-2012  -  miek@miek.nl
 Building is done with the `go` tool. If you have setup your GOPATH
 correctly the following should work:
 
+    go get github.com/miekg/dns
     go build dns
 
 Sample programs can be found in the `ex` directory. They can 
