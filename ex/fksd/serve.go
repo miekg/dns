@@ -27,9 +27,6 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	// we need to return referral
 	nss := z.Predecessor(req.Question[0].Name)
 	m := new(dns.Msg)
-	if nss != nil {
-		println("found", nss.RR[dns.TypeNS][0].String())
-	}
 	if nss != nil && nss.NonAuth {
 		m.SetReply(req)
 		m.Ns = nss.RR[dns.TypeNS]
