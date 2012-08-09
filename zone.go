@@ -10,6 +10,7 @@ import (
 // Zone represents a DNS zone. 
 type Zone struct {
 	Origin       string // Origin of the zone
+	Wildcard     int   // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 }
 
@@ -59,6 +60,10 @@ func (z *Zone) Insert(r RR) error {
 	key := toRadixName(r.Header().Name)
 	zd := z.Radix.Find(key)
 	if zd == nil {
+		// Check if its a wildcard name
+		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+			z.Wildcard++
+		}
 		zd := new(ZoneData)
 		zd.Name = r.Header().Name
 		zd.RR = make(map[uint16][]RR)
@@ -97,6 +102,7 @@ func (z *Zone) Insert(r RR) error {
 
 // RemoveName removeRRset ??
 func (z *Zone) Remove(r RR) error {
+	// Wildcards
 	return nil
 }
 

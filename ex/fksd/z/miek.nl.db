@@ -55,3 +55,4 @@ a1.sub                  IN              A       127.0.0.1
 a2.sub                  IN              A       127.0.0.1
 a1.sub                  IN              AAAA    ::1
 a2.sub                  IN              AAAA    ::1
+*.w.miek.nl.            IN              TXT     "wildcard"

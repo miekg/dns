@@ -2,6 +2,7 @@ package main
 
 import (
 	"dns"
+	"strings"
 )
 
 // Create skeleton edns opt RR from the query and
@@ -21,8 +22,7 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		panic("fksd: no zone")
 	}
 	logPrintf("[zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
-	// if we find something with NonAuth = true, it means
-	// we need to return referral
+	// if we find something with NonAuth = true, it means we need to return referral
 	nss := z.Predecessor(req.Question[0].Name)
 	m := new(dns.Msg)
 	if nss != nil && nss.NonAuth {
@@ -48,15 +48,24 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		return
 	}
 
-	// Wildcards...?
 	// If we don't have the name return NXDOMAIN
 	node := z.Find(req.Question[0].Name)
 	if node == nil {
+		if z.Wildcard > 0 {
+			lx := dns.SplitLabels(req.Question[0].Name)
+			wc := "*." + strings.Join(lx[1:], ".")
+			node = z.Find(wc)
+			if node != nil {
+				goto Wildcard
+			}
+		}
 		m.SetRcode(req, dns.RcodeNameError)
 		ednsFromRequest(req, m)
 		w.Write(m)
 		return
 	}
+
+	Wildcard:
 
 	// We have the name it isn't a referral, but it may that
 	// we still have NSs for this name. If we have nss and they
