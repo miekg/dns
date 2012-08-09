@@ -14,7 +14,9 @@ func (c *Config) ReadZoneFile(origin, file string) error {
 	z := dns.NewZone(origin)
 	for rr := range dns.ParseZone(f, origin, file) {
 		if rr.Error == nil {
-			z.Insert(rr.RR)
+			if e := z.Insert(rr.RR); e != nil {
+				logPrintf("failed to insert record: %s\n", e.Error())
+			}
 		} else {
 			logPrintf("failed to parse: %s\n", rr.Error.Error())
 		}

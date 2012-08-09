@@ -20,13 +20,16 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 	if z == nil {
 		panic("fksd: no zone")
 	}
-	//logPrintf("[zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
+	logPrintf("[zone %s] incoming %s %s %d from %s\n", z.Origin, req.Question[0].Name, dns.Rr_str[req.Question[0].Qtype], req.MsgHdr.Id, w.RemoteAddr())
 	// Ds Handling
 	// Referral
 	// if we find something with NonAuth = true, it means
 	// we need to return referral
 	nss := z.Predecessor(req.Question[0].Name)
 	m := new(dns.Msg)
+	if nss != nil {
+		println("found", nss.RR[dns.TypeNS][0].String())
+	}
 	if nss != nil && nss.NonAuth {
 		m.SetReply(req)
 		m.Ns = nss.RR[dns.TypeNS]
@@ -98,6 +101,9 @@ func serve(w dns.ResponseWriter, req *dns.Msg, z *dns.Zone) {
 		return
 	} else { // NoData reply or CNAME
 		m.SetReply(req)
+		if cname, ok := node.RR[dns.TypeCNAME]; ok {
+			m.Answer = cname // tODO
+		}
 		m.Ns = apex.RR[dns.TypeSOA]
 		ednsFromRequest(req, m)
 		w.Write(m)
