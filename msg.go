@@ -104,6 +104,7 @@ var Rr_str = map[uint16]string{
 	TypeWKS:        "WKS",
 	TypeNS:         "NS",
 	TypePTR:        "PTR",
+	TypeRT:		"RT",
 	TypeSOA:        "SOA",
 	TypeTXT:        "TXT",
 	TypeSRV:        "SRV",

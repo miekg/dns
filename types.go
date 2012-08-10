@@ -37,6 +37,7 @@ const (
 	TypeTXT        uint16 = 16
 	TypeRP         uint16 = 17
 	TypeAFSDB      uint16 = 18
+	TypeRT         uint16 = 21
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
 	TypeAAAA       uint16 = 28
@@ -406,6 +407,29 @@ func (rr *RR_AFSDB) Len() int {
 
 func (rr *RR_AFSDB) Copy() RR {
 	return &RR_AFSDB{*rr.Hdr.CopyHeader(), rr.Subtype, rr.Hostname}
+}
+
+type RR_RT struct {
+	Hdr        RR_Header
+	Preference uint16
+	Host       string `dns:"cdomain-name"`
+}
+
+func (rr *RR_RT) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_RT) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Host
+}
+
+func (rr *RR_RT) Len() int {
+	l := len(rr.Host) + 1
+	return rr.Hdr.Len() + l + 2
+}
+
+func (rr *RR_RT) Copy() RR {
+	return &RR_RT{*rr.Hdr.CopyHeader(), rr.Preference, rr.Host}
 }
 
 type RR_NS struct {
@@ -1415,6 +1439,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeNS:         func() RR { return new(RR_NS) },
 	TypePTR:        func() RR { return new(RR_PTR) },
 	TypeSOA:        func() RR { return new(RR_SOA) },
+	TypeRT:         func() RR { return new(RR_RT) },
 	TypeTXT:        func() RR { return new(RR_TXT) },
 	TypeSRV:        func() RR { return new(RR_SRV) },
 	TypeNAPTR:      func() RR { return new(RR_NAPTR) },
