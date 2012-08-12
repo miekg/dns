@@ -2,7 +2,6 @@
 
 * outgoing [AI]xfr
 * fix 'q' standardize ipv6 input with [::1]#53 ?
-* Splitoff fksd
 
 ## Nice to have
 
