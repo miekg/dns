@@ -170,7 +170,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 
 	st := _EXPECT_OWNER_DIR // initial state
 	var h RR_Header
-	var defttl uint32 = DefaultTtl
+	var defttl uint32 = defaultTtl
 	var prevName string
 	for l := range c {
 		if _DEBUG {

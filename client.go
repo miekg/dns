@@ -111,7 +111,7 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	case "tcp", "tcp4", "tcp6":
 		in = make([]byte, MaxMsgSize)
 	case "", "udp", "udp4", "udp6":
-		size := UDPMsgSize
+		size := udpMsgSize
 		for _, r := range m.Extra {
 			if r.Header().Rrtype == TypeOPT {
 				size = int(r.(*RR_OPT).UDPSize())

@@ -70,9 +70,9 @@ import (
 const (
 	year68         = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	DefaultMsgSize = 4096    // Standard default for larger than 512 packets.
-	UDPMsgSize     = 512     // Default buffer size for servers receiving UDP packets.
+	udpMsgSize     = 512     // Default buffer size for servers receiving UDP packets.
 	MaxMsgSize     = 65536   // Largest possible DNS packet.
-	DefaultTtl     = 3600    // Default TTL.
+	defaultTtl     = 3600    // Default TTL.
 )
 
 // Error represents a DNS error

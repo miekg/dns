@@ -81,7 +81,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
 	s := new(RR_SOA)
-	s.Hdr = RR_Header{z, TypeSOA, ClassINET, DefaultTtl, 0}
+	s.Hdr = RR_Header{z, TypeSOA, ClassINET, defaultTtl, 0}
 	s.Serial = serial
 
 	dns.Question[0] = Question{z, TypeIXFR, ClassINET}

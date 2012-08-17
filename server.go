@@ -265,7 +265,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		handler = DefaultServeMux
 	}
 	if srv.UDPSize == 0 {
-		srv.UDPSize = UDPMsgSize
+		srv.UDPSize = udpMsgSize
 	}
 	for {
 		m := make([]byte, srv.UDPSize)
