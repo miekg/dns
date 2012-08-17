@@ -1011,7 +1011,7 @@ func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
 	return
 }
 
-func UnpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+func unpackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	off, ok = unpackStructValue(structValue(any), msg, off)
 	return off, ok
 }
@@ -1075,7 +1075,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	// unpack just the header, to find the rr type and length
 	var h RR_Header
 	off0 := off
-	if off, ok = UnpackStruct(&h, msg, off); !ok {
+	if off, ok = unpackStruct(&h, msg, off); !ok {
 		return nil, len(msg), false
 	}
 	end := off + int(h.Rdlength)
@@ -1086,7 +1086,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, ok bool) {
 	} else {
 		rr = mk()
 	}
-	off, ok = UnpackStruct(rr, msg, off0)
+	off, ok = unpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, true
 	}
@@ -1240,7 +1240,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	var dh Header
 	off := 0
 	var ok bool
-	if off, ok = UnpackStruct(&dh, msg, off); !ok {
+	if off, ok = unpackStruct(&dh, msg, off); !ok {
 		return false
 	}
 	dns.Id = dh.Id
@@ -1262,7 +1262,7 @@ func (dns *Msg) Unpack(msg []byte) bool {
 	dns.Extra = make([]RR, dh.Arcount)
 
 	for i := 0; i < len(dns.Question); i++ {
-		off, ok = UnpackStruct(&dns.Question[i], msg, off)
+		off, ok = unpackStruct(&dns.Question[i], msg, off)
 	}
 	for i := 0; i < len(dns.Answer); i++ {
 		dns.Answer[i], off, ok = UnpackRR(msg, off)
