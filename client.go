@@ -69,7 +69,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 	if err = w.dial(); err != nil {
 		return 0, w, err
 	}
-	defer w.Close()
+	defer w.close()
 	w.t = time.Now()
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, w, err
@@ -136,10 +136,10 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 // dial connects to the address addr for the network set in c.Net
 func (w *reply) dial() (err error) {
 	var conn net.Conn
-	if w.Client().Net == "" {
+	if w.client.Net == "" {
 		conn, err = net.Dial("udp", w.addr)
 	} else {
-		conn, err = net.Dial(w.Client().Net, w.addr)
+		conn, err = net.Dial(w.client.Net, w.addr)
 	}
 	if err != nil {
 		return
@@ -151,7 +151,7 @@ func (w *reply) dial() (err error) {
 func (w *reply) receive() (*Msg, error) {
 	var p []byte
 	m := new(Msg)
-	switch w.Client().Net {
+	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		p = make([]byte, MaxMsgSize)
 	case "", "udp", "udp4", "udp6":
@@ -169,12 +169,12 @@ func (w *reply) receive() (*Msg, error) {
 	m.Size = n
 	if m.IsTsig() {
 		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-		if _, ok := w.Client().TsigSecret[secret]; !ok {
+		if _, ok := w.client.TsigSecret[secret]; !ok {
 			w.tsigStatus = ErrSecret
 			return m, nil
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		w.tsigStatus = TsigVerify(p, w.Client().TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
+		w.tsigStatus = TsigVerify(p, w.client.TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
 	}
 	return m, nil
 }
@@ -186,11 +186,11 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 	if len(p) < 1 {
 		return 0, io.ErrShortBuffer
 	}
-	attempts := w.Client().Attempts
+	attempts := w.client.Attempts
 	if attempts == 0 {
 		attempts = 1
 	}
-	switch w.Client().Net {
+	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		setTimeouts(w)
 		for a := 0; a < attempts; a++ {
@@ -255,10 +255,10 @@ func (w *reply) send(m *Msg) (err error) {
 	if m.IsTsig() {
 		mac := ""
 		name := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
-		if _, ok := w.Client().TsigSecret[name]; !ok {
+		if _, ok := w.client.TsigSecret[name]; !ok {
 			return ErrSecret
 		}
-		out, mac, err = TsigGenerate(m, w.Client().TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
+		out, mac, err = TsigGenerate(m, w.client.TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return err
 		}
@@ -278,14 +278,14 @@ func (w *reply) send(m *Msg) (err error) {
 }
 
 func (w *reply) writeClient(p []byte) (n int, err error) {
-	attempts := w.Client().Attempts
+	attempts := w.client.Attempts
 	if attempts == 0 {
 		attempts = 1
 	}
 	if err = w.dial(); err != nil {
 		return 0, err
 	}
-	switch w.Client().Net {
+	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
 			return 0, io.ErrShortBuffer
@@ -343,24 +343,17 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 }
 
 func setTimeouts(w *reply) {
-	if w.Client().ReadTimeout == 0 {
+	if w.client.ReadTimeout == 0 {
 		w.conn.SetReadDeadline(time.Now().Add(2 * 1e9))
 	} else {
-		w.conn.SetReadDeadline(time.Now().Add(w.Client().ReadTimeout))
+		w.conn.SetReadDeadline(time.Now().Add(w.client.ReadTimeout))
 	}
 
-	if w.Client().WriteTimeout == 0 {
+	if w.client.WriteTimeout == 0 {
 		w.conn.SetWriteDeadline(time.Now().Add(2 * 1e9))
 	} else {
-		w.conn.SetWriteDeadline(time.Now().Add(w.Client().WriteTimeout))
+		w.conn.SetWriteDeadline(time.Now().Add(w.client.WriteTimeout))
 	}
 }
 
-// Close implents the RequestWriter.Close method
-func (w *reply) Close() (err error) { return w.conn.Close() }
-
-// Client returns a pointer to the client
-func (w *reply) Client() *Client { return w.client }
-
-// TsigStatus implements the RequestWriter.TsigStatus method
-func (w *reply) TsigStatus() error { return w.tsigStatus }
+func (w *reply) close() (err error) { return w.conn.Close() }

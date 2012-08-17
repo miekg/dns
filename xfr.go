@@ -55,7 +55,7 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrMsg, error) {
 
 func (w *reply) axfrReceive(c chan *XfrMsg) {
 	first := true
-	defer w.Close()
+	defer w.close()
 	defer close(c)
 	for {
 		in, err := w.receive()
@@ -90,7 +90,7 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 func (w *reply) ixfrReceive(c chan *XfrMsg) {
 	var serial uint32 // The first serial seen is the current server serial
 	first := true
-	defer w.Close()
+	defer w.close()
 	defer close(c)
 	for {
 		in, err := w.receive()
