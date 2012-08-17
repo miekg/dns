@@ -650,7 +650,7 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
-func PackStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
+func packStruct(any interface{}, msg []byte, off int) (off1 int, ok bool) {
 	off, ok = packStructValue(structValue(any), msg, off, nil, false)
 	return off, ok
 }
