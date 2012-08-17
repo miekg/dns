@@ -1374,11 +1374,11 @@ func (rr *RR_WKS) Copy() RR {
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
 func TimeToDate(t uint32) string {
-	mod := ((int64(t) - time.Now().Unix()) / Year68) - 1
+	mod := ((int64(t) - time.Now().Unix()) / year68) - 1
 	if mod < 0 {
 		mod = 0
 	}
-	ti := time.Unix(int64(t)-(mod*Year68), 0).UTC()
+	ti := time.Unix(int64(t)-(mod*year68), 0).UTC()
 	return ti.Format("20060102150405")
 }
 
@@ -1390,11 +1390,11 @@ func DateToTime(s string) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	mod := (t.Unix() / Year68) - 1
+	mod := (t.Unix() / year68) - 1
 	if mod < 0 {
 		mod = 0
 	}
-	return uint32(t.Unix() - (mod * Year68)), nil
+	return uint32(t.Unix() - (mod * year68)), nil
 }
 
 // saltString converts a NSECX salt to uppercase and

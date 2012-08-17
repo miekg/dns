@@ -424,10 +424,10 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 // if a signature period is valid.
 func (s *RR_RRSIG) ValidityPeriod() bool {
 	utc := time.Now().UTC().Unix()
-	modi := (int64(s.Inception) - utc) / Year68
-	mode := (int64(s.Expiration) - utc) / Year68
-	ti := int64(s.Inception) + (modi * Year68)
-	te := int64(s.Expiration) + (mode * Year68)
+	modi := (int64(s.Inception) - utc) / year68
+	mode := (int64(s.Expiration) - utc) / year68
+	ti := int64(s.Inception) + (modi * year68)
+	te := int64(s.Expiration) + (mode * year68)
 	return ti <= utc && utc <= te
 }
 

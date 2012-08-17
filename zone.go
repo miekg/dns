@@ -10,7 +10,7 @@ import (
 // Zone represents a DNS zone. 
 type Zone struct {
 	Origin       string // Origin of the zone
-	Wildcard     int   // Whenever we see a wildcard name, this is incremented
+	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 }
 

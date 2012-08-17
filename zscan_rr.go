@@ -373,7 +373,7 @@ func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return nil, &ParseError{f, "bad RT Host", l}
 	}
 	if rr.Host[ld-1] != '.' {
-		rr.Host= appendOrigin(rr.Host, o)
+		rr.Host = appendOrigin(rr.Host, o)
 	}
 	return rr, nil
 }
