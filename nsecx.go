@@ -38,7 +38,7 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 	saltwire := new(saltWireFmt)
 	saltwire.Salt = salt
 	wire := make([]byte, DefaultMsgSize)
-	n, ok := packStruct(saltwire, wire, 0)
+	n, ok := PackStruct(saltwire, wire, 0)
 	if !ok {
 		return ""
 	}

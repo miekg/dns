@@ -259,7 +259,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
 		buf = make([]byte, len(requestMAC)) // long enough
-		n, _ := packStruct(m, buf, 0)
+		n, _ := PackStruct(m, buf, 0)
 		buf = buf[:n]
 	}
 
@@ -268,7 +268,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig := new(timerWireFmt)
 		tsig.TimeSigned = rr.TimeSigned
 		tsig.Fudge = rr.Fudge
-		n, _ := packStruct(tsig, tsigvar, 0)
+		n, _ := PackStruct(tsig, tsigvar, 0)
 		tsigvar = tsigvar[:n]
 	} else {
 		tsig := new(tsigWireFmt)
@@ -281,7 +281,7 @@ func tsigBuffer(msgbuf []byte, rr *RR_TSIG, requestMAC string, timersOnly bool) 
 		tsig.Error = rr.Error
 		tsig.OtherLen = rr.OtherLen
 		tsig.OtherData = rr.OtherData
-		n, _ := packStruct(tsig, tsigvar, 0)
+		n, _ := PackStruct(tsig, tsigvar, 0)
 		tsigvar = tsigvar[:n]
 	}
 
@@ -304,7 +304,7 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	off := 0
 	tsigoff := 0
 	var ok bool
-	if off, ok = unpackStruct(&dh, msg, off); !ok {
+	if off, ok = UnpackStruct(&dh, msg, off); !ok {
 		return nil, nil, ErrUnpack
 	}
 	if dh.Arcount == 0 {
@@ -322,7 +322,7 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	dns.Extra = make([]RR, dh.Arcount)
 
 	for i := 0; i < len(dns.Question); i++ {
-		off, ok = unpackStruct(&dns.Question[i], msg, off)
+		off, ok = UnpackStruct(&dns.Question[i], msg, off)
 	}
 	for i := 0; i < len(dns.Answer); i++ {
 		dns.Answer[i], off, ok = UnpackRR(msg, off)
