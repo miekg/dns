@@ -9,8 +9,8 @@ import (
 
 const (
 	_ = iota
-	NSEC3_NXDOMAIN
-	NSEC3_NODATA
+	_NSEC3_NXDOMAIN
+	_NSEC3_NODATA
 )
 
 // A Denialer is a record that performs denial
@@ -226,7 +226,7 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 			return 0, ErrDenialHdr
 		}
 
-		return NSEC3_NXDOMAIN, nil
+		return _NSEC3_NXDOMAIN, nil
 	}
 	return 0, nil
 NoData:
@@ -258,5 +258,5 @@ NoData:
 	if m.MsgHdr.Rcode == RcodeNameError {
 		return 0, ErrDenialHdr
 	}
-	return NSEC3_NODATA, nil
+	return _NSEC3_NODATA, nil
 }

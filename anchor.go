@@ -108,7 +108,7 @@ var (
 </KeyDigest>
 </TrustAnchor>`
 	// This is the root zone used for priming a resolver.
-	NamedRoot = `;       This file holds the information on root name servers needed to
+	namedRoot = `;       This file holds the information on root name servers needed to
 ;       initialize cache of Internet domain name servers
 ;       (e.g. reference this file in the "cache  .  <file>"
 ;       configuration file of BIND domain name servers).

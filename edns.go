@@ -1,17 +1,7 @@
 // EDNS0
 //
 // EDNS0 is an extension mechanism for the DNS defined in RFC 2671. It defines a 
-// standard RR type, the OPT RR, which is then completely abused. The normal RR header is
-// redefined as:
-//
-//  	Name          string "domain-name"  // should always be "."
-//  	Opt           uint16		    // was type, but is always TypeOPT
-//  	UDPSize       uint16		    // was class
-//  	ExtendedRcode uint8		    // was TTL
-//  	Version       uint8		    // was TTL
-//  	Z             uint16		    // was TTL (all flags should be put here)
-//  	Rdlength      uint16		    // not changed
-// 
+// standard RR type, the OPT RR, which is then completely abused. 
 // Basic use pattern for creating an (empty) OPT RR:
 //
 //	o := new(dns.RR_OPT)

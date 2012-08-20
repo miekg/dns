@@ -35,18 +35,6 @@
 // 
 package dns
 
-// The table from RFC 2136 supplemented with the Go DNS function.
-//
-// 3.2.4 - Table Of Metavalues Used In Prerequisite Section
-//
-//   CLASS    TYPE     RDATA    Meaning                     Function
-//   ---------------------------------------------------------------
-//   ANY      ANY      empty    Name is in use              NameUsed
-//   ANY      rrset    empty    RRset exists (value indep)  RRsetUsedNoRdata
-//   NONE     ANY      empty    Name is not in use          NameNotUsed
-//   NONE     rrset    empty    RRset does not exist        RRsetNotUsed
-//   zone     rrset    rr       RRset exists (value dep)    RRsetUsedRdata
-
 // NameUsed sets the RRs in the prereq section to
 // "Name is in use" RRs. RFC 2136 section 2.4.4.
 func (u *Msg) NameUsed(rr []RR) {
