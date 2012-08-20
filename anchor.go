@@ -97,7 +97,7 @@ func ReadTrustAnchor(q io.Reader) ([]*TrustAnchor, error) {
 
 var (
 	// This the root anchor in XML format.
-	RootAnchorXML = `<?xml version="1.0" encoding="UTF-8"?>
+	rootAnchorXML = `<?xml version="1.0" encoding="UTF-8"?>
 <TrustAnchor id="AD42165F-3B1A-4778-8F42-D34A1D41FD93" source="http://data.iana.org/root-anchors/root-anchors.xml">
 <Zone>.</Zone>
 <KeyDigest id="Kjqmt7v" validFrom="2010-07-15T00:00:00+00:00">
