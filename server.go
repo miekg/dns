@@ -22,7 +22,7 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// TsigSttus returns the status of the Tsig (TsigNone, TsigVerified or TsigBad).
+	// TsigStatus returns the status of the Tsig (TsigNone, TsigVerified or TsigBad).
 	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write(*Msg) error

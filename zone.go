@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Zone represents a DNS zone. 
+// Zone represents a DNS zone. Currently there is no locking implemented.
 type Zone struct {
 	Origin       string // Origin of the zone
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
@@ -100,13 +100,15 @@ func (z *Zone) Insert(r RR) error {
 	return nil
 }
 
-// RemoveName removeRRset ??
+// Remove removes the RR r from the zone. If there RR can not be found,
+// this is a no-op. TODO(mg): not implemented.
 func (z *Zone) Remove(r RR) error {
 	// Wildcards
 	return nil
 }
 
-// Find wraps radix.Find. 
+// Find looks up the ownername s in the zone and returns the
+// data when found or nil when nothing is found.
 func (z *Zone) Find(s string) *ZoneData {
 	zd := z.Radix.Find(toRadixName(s))
 	if zd == nil {
@@ -115,7 +117,7 @@ func (z *Zone) Find(s string) *ZoneData {
 	return zd.Value.(*ZoneData)
 }
 
-// Predecessor wraps radix.Predecessor.
+// Predecessor searches the zone for a name shorter than s.
 func (z *Zone) Predecessor(s string) *ZoneData {
 	zd := z.Radix.Predecessor(toRadixName(s))
 	if zd == nil {
