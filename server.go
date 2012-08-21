@@ -257,7 +257,7 @@ forever:
 }
 
 // ServeUDP starts a UDP listener for the server.
-// Each request is handled in a seperate goroutine,
+// Each request is handled in a seperate goroutine.
 func (srv *Server) ServeUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler

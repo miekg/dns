@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-// Interally used for parsing from and to the XML
+// Internally used for parsing from and to the XML, but needs to
+// be exported for the XML parsing.
 type XMLKeyDigest struct {
 	Id         string `xml:"id,attr"`
 	ValidFrom  string `xml:"validFrom,attr"`
@@ -17,7 +18,8 @@ type XMLKeyDigest struct {
 	Digest     string `xml:"Digest"`
 }
 
-// Interally used for parsing from and to the XML
+// Internally used for parsing from and to the XML, but needs to be
+// exported for the XML parsing.
 type XMLTrustAnchor struct {
 	Id        string          `xml:"id,attr,omitempty"`
 	Source    string          `xml:"source,attr,omitempty"`
