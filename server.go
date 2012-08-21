@@ -22,7 +22,7 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// TsigStatus returns the status of the Tsig (TsigNone, TsigVerified or TsigBad).
+	// TsigStatus returns the status of the Tsig. 
 	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write(*Msg) error
@@ -167,7 +167,7 @@ type Server struct {
 	Addr         string            // address to listen on, ":dns" if empty
 	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
 	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
-	UDPSize      int               // default buffer to use to read incoming UDP messages
+	UDPSize      int               // default buffer size to use to read incoming UDP messages
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>

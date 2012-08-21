@@ -41,7 +41,7 @@ func (dns *Msg) SetNotify(z string) *Msg {
 	return dns
 }
 
-// SetRcode creates an error packet.
+// SetRcode creates an error packet suitable for the request.
 func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 	dns.MsgHdr.Rcode = rcode
 	dns.MsgHdr.Opcode = OpcodeQuery
@@ -64,7 +64,7 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) *Msg {
 }
 
 // SetUpdate makes the message a dynamic update packet. It
-// sets the ZONE section to: z, TypeSOA, classINET.
+// sets the ZONE section to: z, TypeSOA, ClassINET.
 func (dns *Msg) SetUpdate(z string) *Msg {
 	dns.MsgHdr.Id = Id()
 	dns.MsgHdr.Response = false
@@ -98,7 +98,7 @@ func (dns *Msg) SetAxfr(z string) *Msg {
 }
 
 // SetTsig appends a TSIG RR to the message.
-// This is only a skeleton Tsig RR that is added as the last RR in the 
+// This is only a skeleton TSIG RR that is added as the last RR in the 
 // additional section. The Tsig is calculated when the message is being send.
 func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) *Msg {
 	t := new(RR_TSIG)

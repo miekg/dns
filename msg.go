@@ -1118,7 +1118,7 @@ func reverseInt(m map[int]string) map[string]int {
 	return n
 }
 
-// Convert a MsgHdr to a string, mimic the way Dig displays headers:
+// Convert a MsgHdr to a string, with dig-like headers:
 //
 //;; opcode: QUERY, status: NOERROR, id: 48404
 //

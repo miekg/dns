@@ -93,7 +93,7 @@ type Token struct {
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
-// The class defaults to IN and TTL defaults to DefaultTtl. The full zone file
+// The class defaults to IN and TTL defaults to 3600. The full zone file
 // syntax like $TTL, $ORIGIN, etc. is supported.
 func NewRR(s string) (RR, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline
@@ -103,7 +103,7 @@ func NewRR(s string) (RR, error) {
 }
 
 // ReadRR reads the RR contained in q. Only the first RR is returned.
-// The class defaults to IN and TTL defaults to DefaultTtl.
+// The class defaults to IN and TTL defaults to 3600.
 func ReadRR(q io.Reader, filename string) (RR, error) {
 	r := <-parseZoneHelper(q, ".", filename, 1)
 	if r.Error != nil {
