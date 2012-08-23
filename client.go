@@ -69,7 +69,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 	if err = w.dial(); err != nil {
 		return 0, w, err
 	}
-	defer w.close()
+	defer w.conn.Close()
 	w.t = time.Now()
 	if n, err = w.writeClient(inbuf); err != nil {
 		return 0, w, err
@@ -120,9 +120,6 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 		in = make([]byte, size)
 	}
 	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
-		if w.conn != nil {
-			return nil, 0, err
-		}
 		return nil, 0, err
 	}
 	r = new(Msg)
@@ -355,5 +352,3 @@ func setTimeouts(w *reply) {
 		w.conn.SetWriteDeadline(time.Now().Add(w.client.WriteTimeout))
 	}
 }
-
-func (w *reply) close() (err error) { return w.conn.Close() }
