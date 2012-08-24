@@ -149,14 +149,14 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 
 // Handle registers the handler with the given pattern
 // in the DefaultServeMux. The documentation for
-// ServeMux explains how patters are matched.
+// ServeMux explains how patterns are matched.
 func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
 
 // HandleRemove deregisters the handle with the given pattern
 // in the DefaultServeMux.
 func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
-// HandleFunc registers the handler function with te given pattern
+// HandleFunc registers the handler function with the given pattern
 // in the DefaultServeMux.
 func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
