@@ -315,6 +315,7 @@ func (c *conn) close() {
 
 // Serve a new connection.
 func (c *conn) serve() {
+	// for block to make it easy to break out to close the tcp connection
 	for {
 		// Request has been read in ServeUDP or ServeTCP
 		w := new(response)
@@ -343,7 +344,7 @@ func (c *conn) serve() {
 		if c.hijacked {
 			return
 		}
-		break // TODO(mg) Why is this a loop anyway?
+		break
 	}
 	if c._TCP != nil {
 		c.close() // Listen and Serve is closed then
