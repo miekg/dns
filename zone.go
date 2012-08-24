@@ -51,7 +51,8 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// Insert inserts an RR into the zone. Duplicate data overwrites the old data.
+// Insert inserts an RR into the zone. Duplicate data overwrites the old data without
+// warning.
 func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(z.Origin, r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}

@@ -306,7 +306,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period must be checked separately.
-// This function copies the rdata of some RRs (to lowercases domain names) for the validation to work. 
+// This function copies the rdata of some RRs (to lowercase domain names) for the validation to work. 
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// First the easy checks
 	if len(rrset) == 0 {

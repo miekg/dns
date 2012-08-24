@@ -12,7 +12,7 @@
 //
 // The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
-// Note that domain names MUST be full qualified, before sending them.
+// Note that domain names MUST be fully qualified, before sending them.
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
@@ -48,7 +48,7 @@
 //
 //      m1 := new(dns.Msg)
 //      m1.MsgHdr.Id = Id()
-//      m1.MsgHdr.RecursionDesired = false
+//      m1.MsgHdr.RecursionDesired = true
 //      m1.Question = make([]Question, 1)
 //      m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
 //
@@ -62,7 +62,7 @@
 // An asynchronous query is also possible, see client.Do and client.DoRtt.
 //
 // From a birds eye view a dns message consists out of four sections.
-// The question section: in.Question, the answer answer section: in.Answer,
+// The question section: in.Question, the answer section: in.Answer,
 // the authority section: in.Ns and the additional section: in.Extra.
 //
 // Each of these sections (except the Question section) contain a []RR. Basic

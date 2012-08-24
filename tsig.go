@@ -72,7 +72,6 @@ const (
 	HmacSHA256 = "hmac-sha256."
 )
 
-// RFC 2845.
 type RR_TSIG struct {
 	Hdr        RR_Header
 	Algorithm  string `dns:"domain-name"`
