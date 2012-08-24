@@ -60,6 +60,18 @@
 //      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // An asynchronous query is also possible, see client.Do and client.DoRtt.
+//
+// From a birds eye view a dns message consists out of four sections.
+// The question section: m.Question, the answer answer section: m.Answer,
+// the authority section: m.Ns and the additional section: m.Extra.
+//
+// Each of these sections (except the Question section) contain a []RR. Basic
+// use pattern for accessing the rdata of a TXT RR as the first RR in 
+// the Answer section:
+//
+//	if t, ok := m.Answer[0].(*RR_TXT); ok {
+//		// do something with t.Txt
+//	}
 package dns
 
 import (
