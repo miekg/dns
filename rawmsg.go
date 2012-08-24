@@ -4,11 +4,11 @@
 
 package dns
 
-// These Raw* functions do not use reflection, they directly set the values
+// These raw* functions do not use reflection, they directly set the values
 // in the buffer. There are faster than their reflection counterparts.
 
 // RawSetId sets the message id in buf.
-func RawSetId(msg []byte, i uint16) {
+func rawSetId(msg []byte, i uint16) {
 	msg[0], msg[1] = packUint16(i)
 }
 
