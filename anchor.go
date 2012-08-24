@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// Internally used for parsing from and to the XML, but needs to
-// be exported for the XML parsing.
+// TODO(mg): more Go like NewAnchor
+
 type XMLKeyDigest struct {
 	Id         string `xml:"id,attr"`
 	ValidFrom  string `xml:"validFrom,attr"`
@@ -18,8 +18,6 @@ type XMLKeyDigest struct {
 	Digest     string `xml:"Digest"`
 }
 
-// Internally used for parsing from and to the XML, but needs to be
-// exported for the XML parsing.
 type XMLTrustAnchor struct {
 	Id        string          `xml:"id,attr,omitempty"`
 	Source    string          `xml:"source,attr,omitempty"`
@@ -27,7 +25,7 @@ type XMLTrustAnchor struct {
 	KeyDigest []*XMLKeyDigest `xml:"KeyDigest"`
 }
 
-// A TrustAnchor represents the trust anchors used in the DNS root.
+// A TrustAnchor represents the trust anchor used in the DNS root.
 type TrustAnchor struct {
 	Id         string    // TrustAnchor id attribute
 	Source     string    // TrustAnchor source attribute
@@ -61,7 +59,8 @@ func TrustAnchorString(t []*TrustAnchor) string {
 	return string(b)
 }
 
-// ReadTrustAnchor reads a root trust anchor from: http://data.iana.org/root-anchors/root-anchors.xml
+// ReadTrustAnchor reads a root trust anchor as defined in 
+// http://data.iana.org/root-anchors/root-anchors.xml
 // and returns the data or an error.
 func ReadTrustAnchor(q io.Reader) ([]*TrustAnchor, error) {
 	d := xml.NewDecoder(q)
