@@ -4,8 +4,8 @@ package main
 // address of NAMESERVER
 // (c) Miek Gieben - 2011
 import (
-	"dns"
 	"fmt"
+	"github.com/miekg/dns"
 	"os"
 )
 

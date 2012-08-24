@@ -1,9 +1,9 @@
 package main
 
 import (
-	"dns"
 	"flag"
 	"fmt"
+	"github.com/miekg/dns"
 	"net"
 	"os"
 	"strconv"
@@ -202,7 +202,7 @@ Flags:
 					os.Exit(0)
 				}
 			}()
-			Redo:
+		Redo:
 			if r == nil {
 				return
 			}

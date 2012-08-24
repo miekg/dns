@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dns"
+	"github.com/miekg/dns"
 	"flag"
 	"fmt"
 	"strings"

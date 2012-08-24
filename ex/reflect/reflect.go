@@ -18,9 +18,9 @@
 package main
 
 import (
-	"dns"
 	"flag"
 	"fmt"
+	"github.com/miekg/dns"
 	"log"
 	"net"
 	"os"
@@ -107,7 +107,7 @@ func serve(net, name, secret string) {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 		}
 	default:
-		server := &dns.Server{Addr: ":8053", Net: "net", TsigSecret: map[string]string{name: secret} }
+		server := &dns.Server{Addr: ":8053", Net: "net", TsigSecret: map[string]string{name: secret}}
 		err := server.ListenAndServe()
 		if err != nil {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())

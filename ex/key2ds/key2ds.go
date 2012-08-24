@@ -5,8 +5,8 @@ package main
 // this directly from the internet.
 // (c) Miek Gieben - 2011
 import (
-	"dns"
 	"fmt"
+	"github.com/miekg/dns"
 	"os"
 )
 

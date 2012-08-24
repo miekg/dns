@@ -200,7 +200,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		return nil, "", ErrPack
 	}
 	mbuf = append(mbuf, tbuf...)
-	RawSetExtraLen(mbuf, uint16(len(m.Extra)+1))
+	rawSetExtraLen(mbuf, uint16(len(m.Extra)+1))
 	return mbuf, t.MAC, nil
 }
 

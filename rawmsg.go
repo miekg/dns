@@ -12,31 +12,31 @@ func RawSetId(msg []byte, i uint16) {
 	msg[0], msg[1] = packUint16(i)
 }
 
-// RawSetQuestionLen sets the lenght of the question section.
-func RawSetQuestionLen(msg []byte, i uint16) {
+// rawSetQuestionLen sets the lenght of the question section.
+func rawSetQuestionLen(msg []byte, i uint16) {
 	msg[4], msg[5] = packUint16(i)
 }
 
-// RawSetAnswerLen sets the lenght of the answer section.
-func RawSetAnswerLen(msg []byte, i uint16) {
+// rawSetAnswerLen sets the lenght of the answer section.
+func rawSetAnswerLen(msg []byte, i uint16) {
 	msg[6], msg[7] = packUint16(i)
 }
 
-// RawSetsNsLen sets the lenght of the authority section.
-func RawSetNsLen(msg []byte, i uint16) {
+// rawSetsNsLen sets the lenght of the authority section.
+func rawSetNsLen(msg []byte, i uint16) {
 	msg[8], msg[9] = packUint16(i)
 }
 
-// RawSetExtraLen sets the lenght of the additional section.
-func RawSetExtraLen(msg []byte, i uint16) {
+// rawSetExtraLen sets the lenght of the additional section.
+func rawSetExtraLen(msg []byte, i uint16) {
 	msg[10], msg[11] = packUint16(i)
 }
 
-// RawSetRdlength sets the rdlength in the header of
+// rawSetRdlength sets the rdlength in the header of
 // the RR. The offset 'off' must be positioned at the
 // start of the header of the RR, 'end' must be the
 // end of the RR. There is no check if we overrun the buffer.
-func RawSetRdlength(msg []byte, off, end int) {
+func rawSetRdlength(msg []byte, off, end int) {
 Loop:
 	for {
 		c := int(msg[off])
