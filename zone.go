@@ -8,12 +8,12 @@ import (
 	"sync"
 )
 
-// Zone represents a DNS zone.
+// Zone represents a DNS zone. The structure is safe for concurrent access.
 type Zone struct {
 	Origin       string // Origin of the zone
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
-	mutex	 *sync.RWMutex
+	mutex        *sync.RWMutex
 }
 
 // ZoneData holds all the RRs having their owner name equal to Name.
