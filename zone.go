@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// Zone represents a DNS zone. Currently there is no locking implemented.
+// Zone represents a DNS zone.
 type Zone struct {
 	Origin       string // Origin of the zone
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
@@ -48,6 +48,7 @@ func NewZone(origin string) *Zone {
 		return nil
 	}
 	z := new(Zone)
+	z.mutex = new(sync.RWMutex)
 	z.Origin = Fqdn(origin)
 	z.Radix = radix.New()
 	return z
@@ -73,6 +74,7 @@ func (z *Zone) Insert(r RR) error {
 		zd.Name = r.Header().Name
 		zd.RR = make(map[uint16][]RR)
 		zd.Signatures = make(map[uint16][]*RR_RRSIG)
+		zd.mutex = new(sync.RWMutex)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RR_RRSIG).TypeCovered
