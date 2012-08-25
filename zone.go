@@ -154,6 +154,8 @@ func (z *Zone) Remove(r RR) error {
 // Find looks up the ownername s in the zone and returns the
 // data when found or nil when nothing is found.
 func (z *Zone) Find(s string) *ZoneData {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
 	zd := z.Radix.Find(toRadixName(s))
 	if zd == nil {
 		return nil
@@ -163,6 +165,8 @@ func (z *Zone) Find(s string) *ZoneData {
 
 // Predecessor searches the zone for a name shorter than s.
 func (z *Zone) Predecessor(s string) *ZoneData {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
 	zd := z.Radix.Predecessor(toRadixName(s))
 	if zd == nil {
 		return nil
