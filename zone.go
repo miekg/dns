@@ -20,6 +20,7 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
+	mutex      *sync.RWMutex          // lock for reading/writing
 }
 
 // toRadixName reverses a domainname so that when we store it in the radix tree
