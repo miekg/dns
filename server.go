@@ -330,8 +330,8 @@ func (c *conn) serve() {
 		}
 
 		w.tsigStatus = nil
-		if req.IsTsig() {
-			secret := req.Extra[len(req.Extra)-1].(*RR_TSIG).Hdr.Name
+		if t := req.IsTsig(); t != nil {
+			secret := t.Hdr.Name
 			if _, ok := w.conn.tsigSecret[secret]; !ok {
 				w.tsigStatus = ErrKeyAlg
 			}
@@ -360,8 +360,8 @@ func (w *response) Write(m *Msg) (err error) {
 	if m == nil {
 		return &Error{Err: "nil message"}
 	}
-	if m.IsTsig() {
-		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
+	if t := m.IsTsig(); t != nil {
+		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return err
 		}

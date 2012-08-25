@@ -5,25 +5,27 @@ package dns
 import (
 	"github.com/miekg/radix"
 	"strings"
+	"sync"
 )
 
-// Zone represents a DNS zone. Currently there is no locking implemented.
+// Zone represents a DNS zone. The structure is safe for concurrent access.
 type Zone struct {
 	Origin       string // Origin of the zone
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
+	mutex        *sync.RWMutex
 }
 
-// ZoneData holds all the RRs having their ownername equal to Name.
+// ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
 	Name       string                 // Domain name for this node
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	// Always false, except for NSsets that differ from z.Origin
-	NonAuth bool
+	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
+	mutex      *sync.RWMutex
 }
 
-// toRadixName reverses a domainname so that when we store it in the radix tree
+// toRadixName reverses a domain name so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
 // each label is also lowercased.
 func toRadixName(d string) string {
@@ -46,21 +48,24 @@ func NewZone(origin string) *Zone {
 		return nil
 	}
 	z := new(Zone)
+	z.mutex = new(sync.RWMutex)
 	z.Origin = Fqdn(origin)
 	z.Radix = radix.New()
 	return z
 }
 
-// Insert inserts an RR into the zone. Duplicate data overwrites the old data without
-// warning.
+// Insert inserts an RR into the zone. There is no check for duplicate data, although
+// Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(z.Origin, r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
 	key := toRadixName(r.Header().Name)
+	z.mutex.Lock()
 	zd := z.Radix.Find(key)
 	if zd == nil {
+		defer z.mutex.Unlock()
 		// Check if its a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
@@ -69,6 +74,7 @@ func (z *Zone) Insert(r RR) error {
 		zd.Name = r.Header().Name
 		zd.RR = make(map[uint16][]RR)
 		zd.Signatures = make(map[uint16][]*RR_RRSIG)
+		zd.mutex = new(sync.RWMutex)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RR_RRSIG).TypeCovered
@@ -85,6 +91,9 @@ func (z *Zone) Insert(r RR) error {
 		z.Radix.Insert(key, zd)
 		return nil
 	}
+	z.mutex.Unlock()
+	zd.Value.(*ZoneData).mutex.Lock()
+	defer zd.Value.(*ZoneData).mutex.Unlock()
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
@@ -102,9 +111,43 @@ func (z *Zone) Insert(r RR) error {
 }
 
 // Remove removes the RR r from the zone. If there RR can not be found,
-// this is a no-op. TODO(mg): not implemented.
+// this is a no-op.
 func (z *Zone) Remove(r RR) error {
-	// Wildcards
+	key := toRadixName(r.Header().Name)
+	z.mutex.Lock()
+	zd := z.Radix.Find(key)
+	if zd == nil {
+		defer z.mutex.Unlock()
+		return nil
+	}
+	z.mutex.Unlock()
+	zd.Value.(*ZoneData).mutex.Lock()
+	defer zd.Value.(*ZoneData).mutex.Unlock()
+	remove := false
+	switch t := r.Header().Rrtype; t {
+	case TypeRRSIG:
+		sigtype := r.(*RR_RRSIG).TypeCovered
+		for i, zr := range zd.Value.(*ZoneData).RR[sigtype] {
+			if r == zr {
+				zd.Value.(*ZoneData).RR[sigtype] = append(zd.Value.(*ZoneData).RR[sigtype][:i], zd.Value.(*ZoneData).RR[sigtype][i+1:]...)
+				remove = true
+			}
+		}
+	default:
+		for i, zr := range zd.Value.(*ZoneData).RR[t] {
+			if r == zr {
+				zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t][:i], zd.Value.(*ZoneData).RR[t][i+1:]...)
+				remove = true
+			}
+		}
+	}
+	if remove && len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+		z.Wildcard--
+		if z.Wildcard < 0 {
+			z.Wildcard = 0
+		}
+	}
+	// TODO(mg): what to do if the whole structure is empty? Set it to nil?
 	return nil
 }
 

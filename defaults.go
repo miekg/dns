@@ -124,23 +124,26 @@ func (dns *Msg) SetEdns0(udpsize uint16, do bool) *Msg {
 }
 
 // IsTsig checks if the message has a TSIG record as the last record
-// in the additional section.
-func (dns *Msg) IsTsig() (ok bool) {
+// in the additional section. It returns the TSIG record found or nil.
+func (dns *Msg) IsTsig() *RR_TSIG {
 	if len(dns.Extra) > 0 {
-		return dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG
+		if dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG {
+			return dns.Extra[len(dns.Extra)-1].(*RR_TSIG)
+		}
 	}
-	return
+	return nil
 }
 
 // IsEdns0 checks if the message has a EDNS0 (OPT) record, any EDNS0
-// record in the additional section will do.
-func (dns *Msg) IsEdns0() (ok bool) {
+// record in the additional section will do. It returns the OPT record
+// found or nil.
+func (dns *Msg) IsEdns0() *RR_OPT {
 	for _, r := range dns.Extra {
 		if r.Header().Rrtype == TypeOPT {
-			return true
+			return r.(*RR_OPT)
 		}
 	}
-	return
+	return nil
 }
 
 // IsDomainName checks if s is a valid domainname, it returns
