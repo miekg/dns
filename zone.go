@@ -14,7 +14,7 @@ type Zone struct {
 	*radix.Radix        // Zone data
 }
 
-// ZoneData holds all the RRs having their ownername equal to Name.
+// ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
 	Name       string                 // Domain name for this node
 	RR         map[uint16][]RR        // Map of the RR type to the RR
@@ -22,7 +22,7 @@ type ZoneData struct {
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
 }
 
-// toRadixName reverses a domainname so that when we store it in the radix tree
+// toRadixName reverses a domain name so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
 // each label is also lowercased.
 func toRadixName(d string) string {
@@ -50,7 +50,7 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// Insert inserts an RR into the zone. There is no check for duplicate data, allthough
+// Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(z.Origin, r.Header().Name) {
