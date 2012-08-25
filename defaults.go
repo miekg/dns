@@ -46,7 +46,6 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 	dns.MsgHdr.Rcode = rcode
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Response = true
-	dns.MsgHdr.Authoritative = false
 	dns.MsgHdr.Id = request.MsgHdr.Id
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = request.Question[0]
@@ -83,7 +82,6 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	s := new(RR_SOA)
 	s.Hdr = RR_Header{z, TypeSOA, ClassINET, defaultTtl, 0}
 	s.Serial = serial
-
 	dns.Question[0] = Question{z, TypeIXFR, ClassINET}
 	dns.Ns[0] = s
 	return dns
