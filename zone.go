@@ -51,8 +51,8 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// Insert inserts an RR into the zone. Duplicate data overwrites the old data without
-// warning.
+// Insert inserts an RR into the zone. There is no check for duplicate data, allthough
+// Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
 	if !IsSubDomain(z.Origin, r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
@@ -102,9 +102,36 @@ func (z *Zone) Insert(r RR) error {
 }
 
 // Remove removes the RR r from the zone. If there RR can not be found,
-// this is a no-op. TODO(mg): not implemented.
+// this is a no-op.
 func (z *Zone) Remove(r RR) error {
-	// Wildcards
+	/*
+	key := toRadixName(r.Header().Name)
+	zd := z.Radix.Find(key)
+	if zd == nil {
+		return nil
+	}
+	switch t := r.Header().Rrtype; t {
+	case TypeRRSIG:
+		sigtype := r.(*RR_RRSIG).TypeCovered
+	default:
+		for zr := range zd.Value.(*ZoneData).RR[t] {
+			// if there is a match, there can only be one
+			if r == zr {
+
+			}
+
+		}
+		zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t], r)
+	}
+	return nil
+
+	if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+		z.Wildcard--
+		if z.Wildcard < 0 {
+			z.Wildcard = 0
+		}
+	}
+	*/
 	return nil
 }
 
