@@ -19,8 +19,7 @@ type ZoneData struct {
 	Name       string                 // Domain name for this node
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	// Always false, except for NSsets that differ from z.Origin
-	NonAuth bool
+	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
 }
 
 // toRadixName reverses a domainname so that when we store it in the radix tree
@@ -104,34 +103,36 @@ func (z *Zone) Insert(r RR) error {
 // Remove removes the RR r from the zone. If there RR can not be found,
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
-	/*
 	key := toRadixName(r.Header().Name)
 	zd := z.Radix.Find(key)
 	if zd == nil {
 		return nil
 	}
+	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RR_RRSIG).TypeCovered
-	default:
-		for zr := range zd.Value.(*ZoneData).RR[t] {
-			// if there is a match, there can only be one
+		for i, zr := range zd.Value.(*ZoneData).RR[sigtype] {
 			if r == zr {
-
+				zd.Value.(*ZoneData).RR[sigtype] = append(zd.Value.(*ZoneData).RR[sigtype][:i], zd.Value.(*ZoneData).RR[sigtype][i+1:]...)
+				remove = true
 			}
-
 		}
-		zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t], r)
+	default:
+		for i, zr := range zd.Value.(*ZoneData).RR[t] {
+			if r == zr {
+				zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t][:i], zd.Value.(*ZoneData).RR[t][i+1:]...)
+				remove = true
+			}
+		}
 	}
-	return nil
-
-	if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+	if remove && len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
 			z.Wildcard = 0
 		}
 	}
-	*/
+	// TODO(mg): what to do if the whole structure is empty? Set it to nil?
 	return nil
 }
 
