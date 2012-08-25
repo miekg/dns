@@ -380,14 +380,17 @@ func TestParseFailure(t *testing.T) {
 
 // A bit useless, how to use b.N?
 func BenchmarkZoneParsing(b *testing.B) {
+	b.StopTimer()
 	f, err := os.Open("t/miek.nl.signed_test")
 	if err != nil {
 		return
 	}
 	defer f.Close()
-	to := ParseZone(f, "", "t/miek.nl.signed_test")
-	for x := range to {
-		x = x
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		to := ParseZone(f, "", "t/miek.nl.signed_test")
+		for _ = range to {
+		}
 	}
 }
 
