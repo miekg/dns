@@ -1329,6 +1329,9 @@ func (dns *Msg) String() string {
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes       
 	l := 12
+	// All ownernames can be compressed at any time
+
+	// TODO(mg): if Compress=true do with compression
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].Len()
 	}
