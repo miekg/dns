@@ -164,8 +164,8 @@ func (w *reply) receive() (*Msg, error) {
 	}
 	w.rtt = time.Since(w.t)
 	m.Size = n
-	if m.IsTsig() {
-		secret := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+	if t := m.IsTsig(); t != nil {
+		secret := t.Hdr.Name
 		if _, ok := w.client.TsigSecret[secret]; !ok {
 			w.tsigStatus = ErrSecret
 			return m, nil
@@ -249,9 +249,9 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 // signature is calculated.
 func (w *reply) send(m *Msg) (err error) {
 	var out []byte
-	if m.IsTsig() {
+	if t := m.IsTsig(); t != nil {
 		mac := ""
-		name := m.Extra[len(m.Extra)-1].(*RR_TSIG).Hdr.Name
+		name := t.Hdr.Name
 		if _, ok := w.client.TsigSecret[name]; !ok {
 			return ErrSecret
 		}
