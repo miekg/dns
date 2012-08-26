@@ -1209,7 +1209,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	// TODO: still a little too much, but better than 64K...
+	// TODO(mg): still a little too much, but better than 64K...
 	msg = make([]byte, dns.Len()*2)
 
 	// Pack it in: header and then the pieces.
@@ -1325,26 +1325,63 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Len return the message length when in uncompressed wire format.
+// Len return the message length when in (un)compressed wire format.
+// If dns.Compress is true compression is taken into account, currently
+// this only counts owner name compression.
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes       
 	l := 12
-	// All ownernames can be compressed at any time
+	var compression map[string]int
+	if dns.Compress {
+		compression = make(map[string]int)
+	}
 
-	// TODO(mg): if Compress=true do with compression
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].Len()
+		if dns.Compress {
+			compressionHelper(compression, dns.Question[i].Name)
+		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
+		if dns.Compress {
+			if v, ok := compression[dns.Answer[i].Header().Name]; ok {
+				l += dns.Answer[i].Len() - v
+				continue
+			}
+			compressionHelper(compression, dns.Answer[i].Header().Name)
+		}
 		l += dns.Answer[i].Len()
 	}
 	for i := 0; i < len(dns.Ns); i++ {
+		if dns.Compress {
+			if v, ok := compression[dns.Ns[i].Header().Name]; ok {
+				l += dns.Ns[i].Len() - v
+				continue
+			}
+			compressionHelper(compression, dns.Ns[i].Header().Name)
+		}
 		l += dns.Ns[i].Len()
 	}
 	for i := 0; i < len(dns.Extra); i++ {
+		if dns.Compress {
+			if v, ok := compression[dns.Extra[i].Header().Name]; ok {
+				l += dns.Extra[i].Len() - v
+				continue
+			}
+			compressionHelper(compression, dns.Extra[i].Header().Name)
+		}
 		l += dns.Extra[i].Len()
 	}
 	return l
+}
+
+func compressionHelper(c map[string]int, s string) {
+	pref := ""
+	lbs := SplitLabels(s)
+	for j := len(lbs) - 1; j >= 0; j-- {
+		c[lbs[j]+"."+pref] = 1 + len(pref) + len(lbs[j])
+		pref = lbs[j] + "." + pref
+	}
 }
 
 // Id return a 16 bits random number to be used as a
