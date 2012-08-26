@@ -112,3 +112,13 @@ func TestPack(t *testing.T) {
 		}
 	}
 }
+
+func TestCompressLenght(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeMX)
+	ul := m.Len()
+	m.Compress = true
+	if ul != m.Len(){
+		t.Fatalf("Should be equal")
+	}
+}
