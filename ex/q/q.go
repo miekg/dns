@@ -240,7 +240,6 @@ Flags:
 			if *check {
 				sigCheck(r, nameserver, *tcp)
 				nsecCheck(r)
-				//dns.AssertDelegationSigner(r.Reply, nil)
 			}
 			if *short {
 				r = shortMsg(r)
@@ -248,7 +247,6 @@ Flags:
 
 			fmt.Printf("%v", r)
 			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
-
 		})
 	}
 	select {}
@@ -320,6 +318,7 @@ func nsecCheck(in *dns.Msg) {
 	}
 	return
 Check:
+	/*
 	w, err := in.Nsec3Verify(in.Question[0])
 	switch w {
 	case dns.NSEC3_NXDOMAIN:
@@ -332,6 +331,7 @@ Check:
 			fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n", err.Error())
 		}
 	}
+	*/
 }
 
 // Check the sigs in the msg, get the signer's key (additional query), get the 
