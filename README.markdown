@@ -25,7 +25,7 @@ If you like this, you may also be interested in:
   are supported);
 * Fast: 
     * Reply speed around 35/40K qps (faster hardware results in more qps);
-    * Parsing RRs (zone files) with 95/100K RR/s, that's 5M records in about 50 seconds;
+    * Parsing RRs with 95/100K RR/s, that's 5M records in about 50 seconds;
 * Server side programming (mimicking the net/http package);
 * Client side programming with asynchronous calls;
 * Asynchronous queries/replies for client and server;
@@ -54,7 +54,7 @@ be build with: `make -C ex`, or also with the `go` tool.
 
 *all of them*
 
-* 103{4,5}  - DNS standard
+* 103{4,5} - DNS standard
 * 1982 - Serial Arithmetic
 * 1876 - LOC record
 * 1995 - IXFR
@@ -88,7 +88,7 @@ be build with: `make -C ex`, or also with the `go` tool.
 * 6605 - ECDSA
 * xxxx - URI record (draft)
 
-## Loosely based upon:
+## Loosely based upon
 
 * `ldns`
 * `NSD`
