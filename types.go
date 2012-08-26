@@ -1149,7 +1149,7 @@ type RR_NSEC3PARAM struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string `dns:"hex"` // hexsize??
+	Salt       string `dns:"hex"`
 }
 
 func (rr *RR_NSEC3PARAM) Header() *RR_Header {
@@ -1204,7 +1204,7 @@ func (rr *RR_TKEY) Copy() RR {
 	return &RR_TKEY{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
 }
 
-// Unknown RR representation
+// RR_RFC3597 representes an unknown RR.
 type RR_RFC3597 struct {
 	Hdr   RR_Header
 	Rdata string `dns:"hex"`
