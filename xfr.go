@@ -5,20 +5,6 @@ import (
 	"time"
 )
 
-// XfrReceives requests an incoming Ixfr or Axfr. If the message q's question
-// section has type TypeAXFR an Axfr is performed, if it is TypeIXFR it does an Ixfr.
-// The [AI]xfr's records are returned on the channel. Note that with an IXFR the client
-// needs to determine if records are to be removed or added.
-// The returned channel is closed when the transfer is terminated.
-//
-// Basic use pattern for setting up a transfer:
-//
-//	// m contains the [AI]xfr request
-//	t, _ := client.XfrReceive(m, "127.0.0.1:53")
-//	for r := range t {
-//		// ... deal with r.Reply or r.Error
-//	}
-
 // XfrMsg is used when doing [IA]xfr with a remote server.
 type XfrMsg struct {
 	Request    *Msg          // the question sent  
@@ -28,6 +14,20 @@ type XfrMsg struct {
 	Error      error         // if something went wrong, this contains the error  
 }
 
+// XfrReceive performs a [AI]xfr request (depends on the message's Qtype). It returns
+// a channel of XfrMsg on which the replies from the server are sent. At the end of
+// the transfer the channel is closed.
+// It panics if the Qtype does not equal TypeAXFR or TypeIXFR. The messages are TSIG checked if
+// needed, no other post-processing is performed. The caller must dissect the returned
+// messages.
+//
+// Basic use pattern for receiving an AXFR:
+//
+//	// m contains the [AI]xfr request
+//	t, e := client.XfrReceive(m, "127.0.0.1:53")
+//	for r := range t {
+//		// ... deal with r.Reply or r.Error
+//	}
 func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrMsg, error) {
 	w := new(reply)
 	w.client = c
@@ -149,7 +149,7 @@ func XfrSend(w ResponseWriter, q *Msg, a string) error {
 
 /*
 // Just send the zone
-func (d *Conn) axfrWrite(q *Msg, m chan *Xfr, e chan os.Error) {
+func (d *Conn) axfrSend(q *Msg, m chan *Xfr, e chan os.Error) {
 	out := new(Msg)
 	out.Id = q.Id
 	out.Question = q.Question
