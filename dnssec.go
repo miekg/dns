@@ -11,6 +11,8 @@
 // 
 //      m := new(dns.Msg)
 //      m.SetEdns0(4096, true)
+//
+// Signature generation, signature verification and key generation are all supported.
 package dns
 
 import (
@@ -310,7 +312,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// First the easy checks
 	if len(rrset) == 0 {
-		return ErrSigGen
+		return ErrRRset
 	}
 	if s.KeyTag != k.KeyTag() {
 		return ErrKey
