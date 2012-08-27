@@ -148,68 +148,29 @@ func XfrSend(w ResponseWriter, req *Msg, c chan *XfrMsg) error {
 	return nil
 }
 
+// TODO(mg): count the RRs and the resulting size.
 func axfrSend(w ResponseWriter, req *Msg, c chan *XfrMsg) {
 	rep := new(Msg)
 	rep.SetReply(req)
 	rep.MsgHdr.Authoritative = true
 
-	w.tsigTimersOnly = false
+	first := true
+	w.TsigTimersOnly(false)
 	for x := range c {
 		// assume is fits
 		rep.Answer = append(rep.Answer, x.RR...)
 		w.Write(rep)
-		if !w.tsigTimersOnly {
-			w.tsigTimersOnly = !w.tsigTimersOnly
+		if first {
+			first = !first
+			w.TsigTimersOnly(first)
 		}
 		rep.Answer = nil
 	}
 }
 
-/*
-	var soa *RR_SOA
-	i := 0
-	for r := range m {
-		out.Answer[i] = r.RR
-		if soa == nil {
-			if r.RR.Header().Rrtype != TypeSOA {
-				e <- ErrXfrSoa
-                                return
-			} else {
-				soa = r.RR.(*RR_SOA)
-			}
-		}
-		i++
-		if i > 1000 {
-			// Send it
-			err := d.WriteMsg(out)
-			if err != nil {
-				e <- err
-                                return
-			}
-			i = 0
-			// Gaat dit goed?
-			out.Answer = out.Answer[:0]
-                        if first {
-                                if d.Tsig != nil {
-                                        d.Tsig.TimersOnly = true
-                                }
-                                first = !first
-                        }
-		}
-	}
-	// Everything is sent, only the closing soa is left.
-	out.Answer[i] = soa
-	out.Answer = out.Answer[:i+1]
-	err := d.WriteMsg(out)
-	if err != nil {
-		e <- err
-	}
-}
-*/
-
 // Check if he SOA record exists in the Answer section of 
 // the packet. If first is true the first RR must be a SOA
-// if false, the last one should be a SOA
+// if false, the last one should be a SOA.
 func checkXfrSOA(in *Msg, first bool) bool {
 	if len(in.Answer) > 0 {
 		if first {
