@@ -7,8 +7,7 @@ import (
 
 // XfrMsg is used when doing [IA]xfr with a remote server.
 type XfrMsg struct {
-	Request    *Msg          // the question sent  
-	Reply      *Msg          // the answer to the question that was sent   
+	Reply      []RR          // the set of RRs in the answer section form the message of the server
 	Rtt        time.Duration // round trip time  
 	RemoteAddr net.Addr      // address of the server 
 	Error      error         // if something went wrong, this contains the error  
@@ -60,16 +59,16 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrId}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrId}
 			return
 		}
 		if first {
 			if !checkXfrSOA(in, true) {
-				c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
+				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
 				return
 			}
 			first = !first
@@ -78,10 +77,10 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if checkXfrSOA(in, false) {
-				c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
 				return
 			}
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
 		}
 	}
 	panic("not reached")
@@ -95,23 +94,23 @@ func (w *reply) ixfrReceive(c chan *XfrMsg) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: err}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrId}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrId}
 			return
 		}
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-				c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
 				return
 			}
 
 			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: ErrXfrSoa}
+				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
 				return
 			}
 			// This serial is important
@@ -125,11 +124,11 @@ func (w *reply) ixfrReceive(c chan *XfrMsg) {
 			// If the last record in the IXFR contains the servers' SOA,  we should quit
 			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
 				if v.Serial == serial {
-					c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
+					c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
 					return
 				}
 			}
-			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
+			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt}
 		}
 	}
 	panic("not reached")
