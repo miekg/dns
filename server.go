@@ -22,12 +22,14 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// TsigStatus returns the status of the Tsig. 
-	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write(*Msg) error
 	// WriteBuf writes a raw buffer back to the client.
 	WriteBuf([]byte) error
+	// TsigStatus returns the status of the Tsig. 
+	TsigStatus() error
+	// TsigTimersOnly sets the tsig timers only boolean.
+	TsigTimersOnly(bool)
 }
 
 type conn struct {
@@ -336,7 +338,7 @@ func (c *conn) serve() {
 				w.tsigStatus = ErrKeyAlg
 			}
 			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
-			w.tsigTimersOnly = false // Will this ever be true?
+			w.tsigTimersOnly = false
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		w.req = req
@@ -420,3 +422,6 @@ func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method.
 func (w *response) TsigStatus() error { return w.tsigStatus }
+
+// TsigTimersOnly implements the ResponseWriter.TsigTimersOnly method.
+func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
