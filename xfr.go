@@ -1,16 +1,17 @@
 package dns
 
 import (
-	"net"
 	"time"
 )
 
+// TODO: axfrreceive fixen, first can go
+// a tsigTimersonly to responsewriter
+
 // XfrMsg is used when doing [IA]xfr with a remote server.
 type XfrMsg struct {
-	Reply      []RR          // the set of RRs in the answer section form the message of the server
-	Rtt        time.Duration // round trip time  
-	RemoteAddr net.Addr      // address of the server 
-	Error      error         // if something went wrong, this contains the error  
+	RR    []RR          // the set of RRs in the answer section form the message of the server
+	Rtt   time.Duration // round trip time  
+	Error error         // if something went wrong, this contains the error  
 }
 
 // XfrReceive performs a [AI]xfr request (depends on the message's Qtype). It returns
@@ -22,10 +23,10 @@ type XfrMsg struct {
 //
 // Basic use pattern for receiving an AXFR:
 //
-//	// m contains the [AI]xfr request
+//	// m contains the AXFR request
 //	t, e := client.XfrReceive(m, "127.0.0.1:53")
 //	for r := range t {
-//		// ... deal with r.Reply or r.Error
+//		// ... deal with r.RR or r.Error
 //	}
 func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrMsg, error) {
 	w := new(reply)
@@ -59,16 +60,16 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: err}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrId}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: ErrId}
 			return
 		}
 		if first {
 			if !checkXfrSOA(in, true) {
-				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
+				c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
 				return
 			}
 			first = !first
@@ -77,10 +78,10 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
 			if checkXfrSOA(in, false) {
-				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
+				c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: nil}
 				return
 			}
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: nil}
 		}
 	}
 	panic("not reached")
@@ -94,23 +95,23 @@ func (w *reply) ixfrReceive(c chan *XfrMsg) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: err}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: err}
 			return
 		}
 		if w.req.Id != in.Id {
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrId}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: ErrId}
 			return
 		}
 		if first {
 			// A single SOA RR signals "no changes"
 			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
-				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
+				c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: nil}
 				return
 			}
 
 			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
+				c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: ErrXfrSoa}
 				return
 			}
 			// This serial is important
@@ -124,38 +125,47 @@ func (w *reply) ixfrReceive(c chan *XfrMsg) {
 			// If the last record in the IXFR contains the servers' SOA,  we should quit
 			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
 				if v.Serial == serial {
-					c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt, Error: nil}
+					c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt, Error: nil}
 					return
 				}
 			}
-			c <- &XfrMsg{Reply: in.Answer, Rtt: w.rtt}
+			c <- &XfrMsg{RR: in.Answer, Rtt: w.rtt}
 		}
 	}
 	panic("not reached")
 }
 
-// XfrSend performs an outgoing Ixfr or Axfr. The function is [AI]xfr agnostic, it is
-// up to the caller to correctly send the sequence of messages.
-func XfrSend(w ResponseWriter, q *Msg, a string) error {
-	switch q.Question[0].Qtype {
+// XfrSend performs an outgoing [IX]xfr depending on the request message. As
+// long as the channel c is open ... TODO(mg): docs
+// tsig is done, enveloping is done, voor de rest niks... TODO
+func XfrSend(w ResponseWriter, req *Msg, c chan *XfrMsg) error {
+	switch req.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
-		//		go d.xfrWrite(q, m, e)
+		go axfrSend(w, req, c)
 	default:
 		return ErrXfrType
 	}
 	return nil
 }
 
+func axfrSend(w ResponseWriter, req *Msg, c chan *XfrMsg) {
+	rep := new(Msg)
+	rep.SetReply(req)
+	rep.MsgHdr.Authoritative = true
+
+	w.tsigTimersOnly = false
+	for x := range c {
+		// assume is fits
+		rep.Answer = append(rep.Answer, x.RR...)
+		w.Write(rep)
+		if !w.tsigTimersOnly {
+			w.tsigTimersOnly = !w.tsigTimersOnly
+		}
+		rep.Answer = nil
+	}
+}
+
 /*
-// Just send the zone
-func (d *Conn) axfrSend(q *Msg, m chan *Xfr, e chan os.Error) {
-	out := new(Msg)
-	out.Id = q.Id
-	out.Question = q.Question
-	out.Answer = make([]RR, 1001) // TODO(mg) look at this number
-	out.MsgHdr.Response = true
-	out.MsgHdr.Authoritative = true
-        first := true
 	var soa *RR_SOA
 	i := 0
 	for r := range m {
