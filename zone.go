@@ -8,35 +8,13 @@ import (
 	"sync"
 )
 
-// Zone represents a DNS zone. The structure is safe for concurrent access.
+// Zone represents a DNS zone. It's safe for concurrent use by 
+// multilpe goroutines.
 type Zone struct {
 	Origin       string // Origin of the zone
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 	mutex        *sync.RWMutex
-}
-
-// ZoneData holds all the RRs having their owner name equal to Name.
-type ZoneData struct {
-	Name       string                 // Domain name for this node
-	RR         map[uint16][]RR        // Map of the RR type to the RR
-	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
-	mutex      *sync.RWMutex
-}
-
-// toRadixName reverses a domain name so that when we store it in the radix tree
-// we preserve the nsec ordering of the zone (this idea was stolen from NSD).
-// each label is also lowercased.
-func toRadixName(d string) string {
-	if d == "." {
-		return "."
-	}
-	s := ""
-	for _, l := range SplitLabels(d) {
-		s = strings.ToLower(l) + "." + s
-	}
-	return "." + s
 }
 
 // NewZone creates an initialized zone with Origin set to origin.
@@ -54,6 +32,40 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
+// ZoneData holds all the RRs having their owner name equal to Name.
+type ZoneData struct {
+	Name       string                 // Domain name for this node
+	RR         map[uint16][]RR        // Map of the RR type to the RR
+	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
+	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
+	mutex      *sync.RWMutex
+}
+
+// newZoneData creates a new zone data element
+func newZoneData(s string) *ZoneData {
+	zd := new(ZoneData)
+	zd.Name = s
+	zd.RR = make(map[uint16][]RR)
+	zd.Signatures = make(map[uint16][]*RR_RRSIG)
+	zd.mutex = new(sync.RWMutex)
+	return zd
+}
+
+// toRadixName reverses a domain name so that when we store it in the radix tree
+// we preserve the nsec ordering of the zone (this idea was stolen from NSD).
+// each label is also lowercased.
+func toRadixName(d string) string {
+	if d == "." {
+		return "."
+	}
+	s := ""
+	for _, l := range SplitLabels(d) {
+		s = strings.ToLower(l) + "." + s
+	}
+	return "." + s
+}
+
+
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
@@ -70,11 +82,7 @@ func (z *Zone) Insert(r RR) error {
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
 		}
-		zd := new(ZoneData)
-		zd.Name = r.Header().Name
-		zd.RR = make(map[uint16][]RR)
-		zd.Signatures = make(map[uint16][]*RR_RRSIG)
-		zd.mutex = new(sync.RWMutex)
+		zd := newZoneData(r.Header().Name)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RR_RRSIG).TypeCovered
