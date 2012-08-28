@@ -141,9 +141,9 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	var h Handler
 	if len(request.Question) != 1 {
-		h = FailedHander()
+		h = FailedHandler()
 	} else {
-		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil
+		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
 			h = FailedHandler()
 		}
 	}

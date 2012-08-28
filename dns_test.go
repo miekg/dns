@@ -111,6 +111,8 @@ func TestPack(t *testing.T) {
 			t.Fail()
 		}
 	}
+	ns := NewRR("pool.ntp.org.   390 IN  NS  a.ntpns.org")
+	t.Log("ns", ns.String())
 }
 
 func TestCompressLenght(t *testing.T) {
