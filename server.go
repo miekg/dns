@@ -32,6 +32,9 @@ type ResponseWriter interface {
 	TsigStatus() error
 	// TsigTimersOnly sets the tsig timers only boolean.
 	TsigTimersOnly(bool)
+	// Hijack lets the caller take over the connection.
+	// After a call to Hijack(), the DNS package will not do anything with the connection
+	Hijack()
 }
 
 type conn struct {
@@ -416,6 +419,9 @@ func (w *response) TsigStatus() error { return w.tsigStatus }
 
 // TsigTimersOnly implements the ResponseWriter.TsigTimersOnly method.
 func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
+
+// Hijack implements the ResponseWriter.Hijack method.
+func (w *response) Hijack() { w.hijacked = true }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
