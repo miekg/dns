@@ -144,14 +144,17 @@ func checkXfrSOA(in *Msg, first bool) bool {
 // XfrSend performs an outgoing [IX]xfr depending on the request message. As
 // long as the channel c is open ... TODO(mg): docs
 // tsig is done, enveloping is done, voor de rest niks... TODO
-func XfrSend(w ResponseWriter, req *Msg, c chan *XfrToken) error {
+func XfrSend(w ResponseWriter, q *Msg) (chan *XfrToken, error) {
+	c := make(chan *XfrToken)
 	switch req.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
-		go axfrSend(w, req, c)
+		go axfrSend(w, q, c)
+		return c, nil
 	default:
 		return ErrXfrType
+		return nil, ErrXfrType
 	}
-	return nil
+	panic("not reached")
 }
 
 // TODO(mg): count the RRs and the resulting size.
