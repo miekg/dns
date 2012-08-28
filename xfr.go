@@ -141,7 +141,11 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// XfrSend performs an outgoing [IX]xfr depending on the request message. As
+// XfrSend performs an outgoing [IX]xfr depending on the request message. The
+// caller is responsible for sending the correct sequence of RR sets through
+// the channel c.
+
+
 // long as the channel c is open ... TODO(mg): docs
 // tsig is done, enveloping is done, voor de rest niks... TODO
 func XfrSend(w ResponseWriter, req *Msg, c chan *XfrToken) error {
