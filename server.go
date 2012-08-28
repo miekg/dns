@@ -94,7 +94,6 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 }
 
 func (mux *ServeMux) match(zone string, t uint16) Handler {
-	// Exact match
 	zone = toRadixName(zone)
 	if h := mux.m.Find(zone); h != nil && h.Value != nil {
 		// If we got queried for a DS record, we must see if we
@@ -140,9 +139,13 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // a parent zone is sought.
 // If no handler is found a standard SERVFAIL message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
-	h := mux.match(request.Question[0].Name, request.Question[0].Qtype)
-	if h == nil {
-		h = FailedHandler()
+	var h Handler
+	if len(request.Question) != 1 {
+		h = FailedHander()
+	} else {
+		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil
+			h = FailedHandler()
+		}
 	}
 	h.ServeDNS(w, request)
 }
