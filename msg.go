@@ -205,7 +205,8 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-		panic("dns: name not fully qualified")
+		//println("dns: name not fully qualified")
+		return lenmsg, false
 	}
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
