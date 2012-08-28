@@ -33,7 +33,7 @@ func main() {
 	if t, e := client.XfrReceive(m, *nameserver); e == nil {
 		for r := range t {
 			if r.Error == nil {
-				for _, rr := range r.Reply {
+				for _, rr := range r.RR {
 					fmt.Printf("%v\n", rr)
 				}
 			} else {
