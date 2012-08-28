@@ -2,8 +2,8 @@ package dns
 
 // XfrToken is used when doing [IA]xfr with a remote server.
 type XfrToken struct {
-	RR    []RR          // the set of RRs in the answer section form the message of the server
-	Error error         // if something went wrong, this contains the error  
+	RR    []RR  // the set of RRs in the answer section form the message of the server
+	Error error // if something went wrong, this contains the error  
 }
 
 // XfrReceive performs a [AI]xfr request (depends on the message's Qtype). It returns
@@ -142,23 +142,25 @@ func checkXfrSOA(in *Msg, first bool) bool {
 }
 
 // XfrSend performs an outgoing [IX]xfr depending on the request message. As
-// long as the channel c is open ... TODO(mg): docs
+// long as the channel c is open the transfer proceeds. Any errors when
+// sending the messages to the client are signaled in the error
+// pointer.
+// TSIG and enveloping is handled by this function.
 // tsig is done, enveloping is done, voor de rest niks... TODO
-func XfrSend(w ResponseWriter, q *Msg) (chan *XfrToken, error) {
-	c := make(chan *XfrToken)
-	switch req.Question[0].Qtype {
+func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
+	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
-		go axfrSend(w, q, c)
-		return c, nil
+		go axfrSend(w, q, c, e)
+		return nil
 	default:
 		return ErrXfrType
-		return nil, ErrXfrType
 	}
 	panic("not reached")
 }
 
 // TODO(mg): count the RRs and the resulting size.
-func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken) {
+// when to stop
+func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	rep := new(Msg)
 	rep.SetReply(req)
 	rep.MsgHdr.Authoritative = true
@@ -168,7 +170,10 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken) {
 	for x := range c {
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
-		w.Write(rep)
+		if err := w.Write(rep); e != nil {
+			*e = err
+			return
+		}
 		if first {
 			first = !first
 			w.TsigTimersOnly(first)
@@ -176,4 +181,3 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken) {
 		rep.Answer = nil
 	}
 }
-
