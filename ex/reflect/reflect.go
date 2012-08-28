@@ -83,7 +83,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 			close(c)
 			return
 		}
-		soa, _ := dns.NewRR(`miek.nl. IN SOA elektron.atoom.net. miekg.atoom.net. (
+		soa, _ := dns.NewRR(`whoami.miek.nl. IN SOA elektron.atoom.net. miekg.atoom.net. (
 			2009032802 
 			21600 
 			7200 
