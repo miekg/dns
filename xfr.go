@@ -52,10 +52,6 @@ func (w *reply) axfrReceive(c chan *XfrToken) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrToken{in.Answer, err}
-			return
-		}
-		if w.req.Id != in.Id {
 			c <- &XfrToken{in.Answer, ErrId}
 			return
 		}
@@ -185,7 +181,6 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	for x := range c {
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
-		println(rep.String())
 		if err := w.Write(rep); e != nil {
 			*e = err
 			return

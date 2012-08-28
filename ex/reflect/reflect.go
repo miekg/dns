@@ -28,6 +28,7 @@ import (
 	"runtime/pprof"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -160,12 +161,12 @@ func main() {
 	go serve("tcp", name, secret)
 	go serve("udp", name, secret)
 	sig := make(chan os.Signal)
-	signal.Notify(sig)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 forever:
 	for {
 		select {
-		case <-sig:
-			fmt.Printf("Signal received, stopping\n")
+		case s:=<-sig:
+			fmt.Printf("Signal (%d) received, stopping\n", s)
 			break forever
 		}
 	}
