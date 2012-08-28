@@ -256,7 +256,7 @@ forever:
 		}
 		go d.serve()
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 // ServeUDP starts a UDP listener for the server.
@@ -290,7 +290,7 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		}
 		go d.serve()
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler, tsig map[string]string) (*conn, error) {

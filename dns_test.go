@@ -111,8 +111,24 @@ func TestPack(t *testing.T) {
 			t.Fail()
 		}
 	}
-	ns := NewRR("pool.ntp.org.   390 IN  NS  a.ntpns.org")
-	t.Log("ns", ns.String())
+	x := new(Msg)
+	ns, _ := NewRR("pool.ntp.org.   390 IN  NS  a.ntpns.org")
+	ns.(*RR_NS).Ns = "a.ntpns.org."
+	x.Ns = append(m.Ns, ns)
+	x.Ns = append(m.Ns, ns)
+	x.Ns = append(m.Ns, ns)
+	// This crashes due to the fact the a.ntpns.org isn't a FQDN
+	// How to recover() from a remove panic()?
+	if _, ok := x.Pack(); !ok {
+		t.Log("Packing failed")
+		t.Fail()
+	}
+	x.Answer = make([]RR, 1)
+	x.Answer[0], err = NewRR(rr[0])
+	if _, ok := x.Pack(); !ok {
+		t.Log("Packing failed")
+		t.Fail()
+	}
 }
 
 func TestCompressLenght(t *testing.T) {

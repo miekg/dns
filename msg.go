@@ -205,8 +205,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
 	if n := len(s); n == 0 || s[n-1] != '.' {
-		// Make it fully qualified
-		s += "."
+		panic("dns: name not fully qualified")
 	}
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
@@ -235,13 +234,23 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			if i-begin >= 1<<6 { // top two bits of length must be clear
 				return lenmsg, false
 			}
+			// off can already (we're in a loop) be bigger than len(msg)
+			// this happens when a name isn't fully qualified
+			if off+1 > len(msg)  {
+				return lenmsg, false
+			}
 			msg[off] = byte(i - begin)
 			offset := off
 			off++
+			// TODO(mg): because of the new check above, this can go. But
+			// just leave it as is for the moment.
 			if off > lenmsg {
 				return lenmsg, false
 			}
 			for j := begin; j < i; j++ {
+				if off+1 > len(msg) {
+					return lenmsg, false
+				}
 				msg[off] = bs[j]
 				off++
 				if off > lenmsg {
@@ -1210,7 +1219,7 @@ func (dns *Msg) Pack() (msg []byte, ok bool) {
 	dh.Arcount = uint16(len(extra))
 
 	// TODO(mg): still a little too much, but better than 64K...
-	msg = make([]byte, dns.Len()+1)
+	msg = make([]byte, dns.Len()+10)
 
 	// Pack it in: header and then the pieces.
 	off := 0
@@ -1328,7 +1337,8 @@ func (dns *Msg) String() string {
 
 // Len return the message length when in (un)compressed wire format.
 // If dns.Compress is true compression is taken into account, currently
-// this only counts owner name compression.
+// this only counts owner name compression. There is no check for 
+// nil valued sections (allocated, but contains no RRs).
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes       
 	l := 12

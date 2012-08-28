@@ -57,7 +57,7 @@ func (u *Msg) NameNotUsed(rr []RR) {
 // "RRset exists (value dependent -- with rdata)" RRs. RFC 2136 section 2.4.2.
 func (u *Msg) RRsetUsedRdata(rr []RR) {
 	if len(u.Question) == 0 {
-		panic("empty question section")
+		panic("dns: empty question section")
 	}
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
@@ -104,7 +104,7 @@ func (u *Msg) RRsetNotUsed(rr []RR) {
 // RRsetAddRdata creates a dynamic update packet that adds an complete RRset, see RFC 2136 section 2.5.1
 func (u *Msg) RRsetAddRdata(rr []RR) {
 	if len(u.Question) == 0 {
-		panic("empty question section")
+		panic("dns: empty question section")
 	}
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {

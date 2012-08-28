@@ -155,5 +155,5 @@ func modToPrintf(s string) (string, int, string) {
 	default:
 		return "%0" + xs[1] + xs[2], offset, ""
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }

@@ -50,7 +50,7 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrMsg, error) {
 	default:
 		return nil, ErrXfrType
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 func (w *reply) axfrReceive(c chan *XfrMsg) {
@@ -84,7 +84,7 @@ func (w *reply) axfrReceive(c chan *XfrMsg) {
 			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr(), Error: nil}
 		}
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 func (w *reply) ixfrReceive(c chan *XfrMsg) {
@@ -132,7 +132,7 @@ func (w *reply) ixfrReceive(c chan *XfrMsg) {
 			c <- &XfrMsg{Request: w.req, Reply: in, Rtt: w.rtt, RemoteAddr: w.conn.RemoteAddr()}
 		}
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 // XfrSend performs an outgoing Ixfr or Axfr. The function is [AI]xfr agnostic, it is

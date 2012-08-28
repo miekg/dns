@@ -883,7 +883,7 @@ func (rr *RR_NSEC) String() string {
 
 func (rr *RR_NSEC) Len() int {
 	l := len(rr.NextDomain) + 1
-	return rr.Hdr.Len() + l + 32
+	return rr.Hdr.Len() + l + 32 + 1
 	// TODO: +32 is max type bitmap
 }
 
@@ -1420,7 +1420,7 @@ func cmToString(mantissa, exponent uint8) string {
 		}
 		return s
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 // Map of constructors for each RR wire type.

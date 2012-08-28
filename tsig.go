@@ -155,7 +155,7 @@ type timerWireFmt struct {
 // If something goes wrong an error is returned, otherwise it is nil. 
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if m.IsTsig() == nil {
-		panic("TSIG not last RR in additional")
+		panic("dns: TSIG not last RR in additional")
 	}
 	// If we barf here, the caller is to blame
 	rawsecret, err := packBase64([]byte(secret))
