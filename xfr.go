@@ -2,7 +2,7 @@ package dns
 
 // XfrToken is used when doing [IA]xfr with a remote server.
 type XfrToken struct {
-	RR    []RR  // the set of RRs in the answer section form the message of the server
+	RR    []RR  // the set of RRs in the answer section of the AXFR reply message 
 	Error error // if something went wrong, this contains the error  
 }
 
@@ -141,17 +141,28 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// XfrSend performs an outgoing [IX]xfr depending on the request message. The
+
+
+// XfrSend performs an outgoing [AI]xfr depending on the request message. The
 // caller is responsible for sending the correct sequence of RR sets through
 // the channel c.
-
-
-// XfrSend performs an outgoing [IX]xfr depending on the request message. As
-
-// long as the channel c is open the transfer proceeds. Any errors when
-// sending the messages to the client are signaled in the error
-// pointer.
-// TSIG and enveloping is handled by this function.
+// Errors are signaled via the error pointer, when an error occurs the function
+// sets the error and returns (it does not close the channel).
+// TSIG and enveloping is handled by XfrSend.
+// 
+// Basic use pattern for sending an AXFR:
+//
+//	// q contains the AXFR request
+//	c := make(chan *XfrToken)
+//	var e *error
+//	err := XfrSend(w, q, c, e)
+//	for _, rrset := range rrsets {	// rrset is a []RR
+//		c <- rrset
+//		if e != nil {
+//			close(c)
+//			break
+//		}
+//	}
 func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
@@ -164,14 +175,12 @@ func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 }
 
 // TODO(mg): count the RRs and the resulting size.
-// when to stop
 func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	rep := new(Msg)
 	rep.SetReply(req)
 	rep.MsgHdr.Authoritative = true
 
 	first := true
-	w.TsigTimersOnly(false)
 	for x := range c {
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
@@ -179,10 +188,7 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 			*e = err
 			return
 		}
-		if first {
-			first = !first
-			w.TsigTimersOnly(first)
-		}
+		w.TsigTimersOnly(first)
 		rep.Answer = nil
 	}
 }
