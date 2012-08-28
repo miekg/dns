@@ -156,7 +156,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //	c := make(chan *XfrToken)
 //	var e *error
 //	err := XfrSend(w, q, c, e)
-//	w.Hijack()
+//	w.Hijack()		// hijack the connection so that the library doesn't close it
 //	for _, rrset := range rrsets {	// rrset is a []RR
 //		c <- &{XfrToken{RR: rrset}
 //		if e != nil {
@@ -164,7 +164,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //			break
 //		}
 //	}
-//	w.Close()
+//	// w.Close() // Don't! Let the client close the connection
 func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
