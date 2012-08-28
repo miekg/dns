@@ -145,7 +145,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 
 // XfrSend performs an outgoing [AI]xfr depending on the request message. The
 // caller is responsible for sending the correct sequence of RR sets through
-// the channel c.
+// the channel c. For reasons of symmetry XfrToken is re-used.
 // Errors are signaled via the error pointer, when an error occurs the function
 // sets the error and returns (it does not close the channel).
 // TSIG and enveloping is handled by XfrSend.
@@ -157,7 +157,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //	var e *error
 //	err := XfrSend(w, q, c, e)
 //	for _, rrset := range rrsets {	// rrset is a []RR
-//		c <- rrset
+//		c <- &{XfrToken{RR: rrset}
 //		if e != nil {
 //			close(c)
 //			break
@@ -180,15 +180,17 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	rep.SetReply(req)
 	rep.MsgHdr.Authoritative = true
 
-	first := true
 	for x := range c {
+		println("got some", len(x.RR))
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
+		println(rep.String())
 		if err := w.Write(rep); e != nil {
 			*e = err
 			return
 		}
-		w.TsigTimersOnly(first)
+		w.TsigTimersOnly(true)
 		rep.Answer = nil
 	}
+	w.Close()	// Hijack
 }

@@ -26,6 +26,8 @@ type ResponseWriter interface {
 	Write(*Msg) error
 	// WriteBuf writes a raw buffer back to the client.
 	WriteBuf([]byte) error
+	// Close closes the connection.
+	Close() error
 	// TsigStatus returns the status of the Tsig. 
 	TsigStatus() error
 	// TsigTimersOnly sets the tsig timers only boolean.
@@ -303,18 +305,6 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 	return c, nil
 }
 
-// Close the connection.
-func (c *conn) close() {
-	switch {
-	case c._UDP != nil:
-		c._UDP.Close()
-		c._UDP = nil
-	case c._TCP != nil:
-		c._TCP.Close()
-		c._TCP = nil
-	}
-}
-
 // Serve a new connection.
 func (c *conn) serve() {
 	// for block to make it easy to break out to close the tcp connection
@@ -349,7 +339,8 @@ func (c *conn) serve() {
 		break
 	}
 	if c._TCP != nil {
-		c.close() // Listen and Serve is closed then
+		c._TCP.Close()
+		c._TCP = nil
 	}
 }
 
@@ -425,3 +416,19 @@ func (w *response) TsigStatus() error { return w.tsigStatus }
 
 // TsigTimersOnly implements the ResponseWriter.TsigTimersOnly method.
 func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
+
+// Close implements the ResponseWriter.Close method
+func (w *response) Close() error {
+	if w.conn._UDP != nil {
+		e := w.conn._UDP.Close()
+		w.conn._UDP = nil
+		return e
+	}
+	if w.conn._TCP != nil {
+		e := w.conn._TCP.Close()
+		w.conn._TCP = nil
+		return e
+	}
+	// no-op
+	return nil
+}
