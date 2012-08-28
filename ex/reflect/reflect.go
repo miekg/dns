@@ -91,6 +91,8 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 			3600)`)
 		c <- &dns.XfrToken{RR: []dns.RR{soa, t, rr, soa}}
 		close(c)
+		w.Hijack()
+		w.Close()
 		return
 	case dns.TypeTXT:
 		m.Answer = append(m.Answer, t)

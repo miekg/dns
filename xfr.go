@@ -156,6 +156,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //	c := make(chan *XfrToken)
 //	var e *error
 //	err := XfrSend(w, q, c, e)
+//	w.Hijack()
 //	for _, rrset := range rrsets {	// rrset is a []RR
 //		c <- &{XfrToken{RR: rrset}
 //		if e != nil {
@@ -163,6 +164,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //			break
 //		}
 //	}
+//	w.Close()
 func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
@@ -181,7 +183,6 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	rep.MsgHdr.Authoritative = true
 
 	for x := range c {
-		println("got some", len(x.RR))
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
 		println(rep.String())
@@ -192,5 +193,4 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 		w.TsigTimersOnly(true)
 		rep.Answer = nil
 	}
-	w.Close()	// Hijack
 }

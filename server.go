@@ -43,12 +43,12 @@ type conn struct {
 	request    []byte            // bytes read
 	_UDP       *net.UDPConn      // i/o connection if UDP was used
 	_TCP       *net.TCPConn      // i/o connection if TCP was used
-	hijacked   bool              // connection has been hijacked by hander TODO(mg)
 	tsigSecret map[string]string // the tsig secrets
 }
 
 type response struct {
 	conn           *conn
+	hijacked       bool // connection has been hijacked by handler
 	req            *Msg
 	tsigStatus     error
 	tsigTimersOnly bool
@@ -336,7 +336,7 @@ func (c *conn) serve() {
 		}
 		w.req = req
 		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
-		if c.hijacked {
+		if w.hijacked {
 			// client takes care of the connection, i.e. calls Close()
 			return
 		}
