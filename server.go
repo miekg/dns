@@ -337,6 +337,7 @@ func (c *conn) serve() {
 		w.req = req
 		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
 		if c.hijacked {
+			// client takes care of the connection, i.e. calls Close()
 			return
 		}
 		break
@@ -344,6 +345,10 @@ func (c *conn) serve() {
 	if c._TCP != nil {
 		c._TCP.Close()
 		c._TCP = nil
+	}
+	if c._UDP != nil {
+		c._UDP.Close()
+		c._UDP = nil
 	}
 }
 
