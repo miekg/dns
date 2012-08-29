@@ -342,13 +342,16 @@ func (c *conn) serve() {
 		}
 		break
 	}
+	// quite elaborate, but this was the original c.close() function
 	if c._TCP != nil {
-		c._TCP.Close()
-		c._TCP = nil
-	}
-	if c._UDP != nil {
-		c._UDP.Close()
-		c._UDP = nil
+		switch {
+		case c._UDP != nil:
+			c._UDP.Close()
+			c._UDP = nil
+		case c._TCP != nil:
+			c._TCP.Close()
+			c._TCP = nil
+		}
 	}
 }
 
