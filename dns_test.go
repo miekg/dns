@@ -129,6 +129,12 @@ func TestPack(t *testing.T) {
 		t.Log("Packing failed")
 		t.Fail()
 	}
+	x.Question = make([]Question, 1)
+	x.Question[0] = Question{";sd#eddddséâèµâââ¥âxzztsestxssweewwsssstx@s@Zåµe@cn.pool.ntp.org.", TypeA, ClassINET}
+	if _, ok := x.Pack(); !ok {
+		t.Log("Packing failed")
+		t.Fail()
+	}
 }
 
 func TestCompressLenght(t *testing.T) {
