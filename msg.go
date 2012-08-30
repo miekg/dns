@@ -204,10 +204,12 @@ var Rcode_str = map[int]string{
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, ok bool) {
 	// Add trailing dot to canonicalize name.
 	lenmsg := len(msg)
-	if n := len(s); n == 0 || s[n-1] != '.' {
+	ls := len(s)
+	if ls == 0 || s[ls-1] != '.' {
 		//println("dns: name not fully qualified")
 		return lenmsg, false
 	}
+
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots.
@@ -220,7 +222,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
-	ls := len(bs)
+//	ls := len(bs)
 	lens := ls
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
@@ -245,18 +247,18 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			off++
 			// TODO(mg): because of the new check above, this can go. But
 			// just leave it as is for the moment.
-			if off > lenmsg {
-				return lenmsg, false
-			}
+//			if off > lenmsg {
+//				return lenmsg, false
+//			}
 			for j := begin; j < i; j++ {
 				if off+1 > len(msg) {
 					return lenmsg, false
 				}
 				msg[off] = bs[j]
 				off++
-				if off > lenmsg {
-					return lenmsg, false
-				}
+//				if off > lenmsg {
+//					return lenmsg, false
+//				}
 			}
 			// Dont try to compress '.'
 			if compression != nil && string(bs[begin:]) != ".'" {

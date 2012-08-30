@@ -125,7 +125,7 @@ func TestPack(t *testing.T) {
 	}
 	x.Answer = make([]RR, 1)
 	x.Answer[0], err = NewRR(rr[0])
-	if _, ok := x.Pack(); !ok {
+	if _, ok := x.Pack(); ok {
 		t.Log("Packing failed")
 		t.Fail()
 	}
