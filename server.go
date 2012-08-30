@@ -42,7 +42,6 @@ type conn struct {
 
 type response struct {
 	conn           *conn
-	req            *Msg
 	tsigStatus     error
 	tsigTimersOnly bool
 	tsigRequestMAC string
@@ -342,8 +341,7 @@ func (c *conn) serve() {
 			w.tsigTimersOnly = false // Will this ever be true?
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
-		w.req = req
-		c.handler.ServeDNS(w, w.req) // this does the writing back to the client
+		c.handler.ServeDNS(w, req) // this does the writing back to the client
 		if c.hijacked {
 			return
 		}
