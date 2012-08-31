@@ -218,7 +218,8 @@ forever:
 	for {
 		rw, e := l.AcceptTCP()
 		if e != nil {
-			return e
+			// don't bail out, but wait for a new request  
+			continue
 		}
 		if srv.ReadTimeout != 0 {
 			rw.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
@@ -273,7 +274,8 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		m := make([]byte, srv.UDPSize)
 		n, a, e := l.ReadFromUDP(m)
 		if e != nil || n == 0 {
-			return e
+			// don't bail out, but wait for a new request
+			continue
 		}
 		m = m[:n]
 
