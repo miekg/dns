@@ -66,16 +66,14 @@ func TestClientTsigAXFR(t *testing.T) {
 		return
 	} else {
 		for ex := range a {
-			t.Log(ex.Reply.String())
 			if ex.Error != nil {
 				t.Logf("Error %s\n", ex.Error.Error())
 				t.Fail()
 				break
 			}
-			if ex.Reply.Rcode != RcodeSuccess {
-				break
+			for _, rr := range ex.RR {
+				t.Logf("%s\n", rr.String())
 			}
-			t.Logf("%s\n", ex.Reply.String())
 		}
 	}
 }
@@ -86,7 +84,6 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 
 	c := new(Client)
 	c.Net = "tcp"
-	// timeout?
 
 	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
@@ -94,13 +91,9 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 		return
 	} else {
 		for ex := range a {
-			t.Log(ex.Reply.String())
 			if ex.Error != nil {
 				t.Logf("Error %s\n", ex.Error.Error())
 				t.Fail()
-				break
-			}
-			if ex.Reply.Rcode != RcodeSuccess {
 				break
 			}
 		}
