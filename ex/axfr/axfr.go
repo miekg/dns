@@ -19,14 +19,14 @@ func main() {
 	client.Net = "tcp"
 	m := new(dns.Msg)
 	if *serial > 0 {
-		m.SetIxfr(zone, uint32(*serial))
+		m.SetIxfr(dns.Fqdn(zone), uint32(*serial))
 	} else {
-		m.SetAxfr(zone)
+		m.SetAxfr(dns.Fqdn(zone))
 	}
 	if *tsig != "" {
 		a := strings.SplitN(*tsig, ":", 2)
 		name, secret := a[0], a[1]
-		client.TsigSecret = map[string]string{name: secret}
+		client.TsigSecret = map[string]string{dns.Fqdn(name): secret}
 		m.SetTsig(name, dns.HmacMD5, 300, time.Now().Unix())
 	}
 
