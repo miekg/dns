@@ -279,9 +279,6 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 	if attempts == 0 {
 		attempts = 1
 	}
-	if err = w.dial(); err != nil {
-		return 0, err
-	}
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
