@@ -34,10 +34,10 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrToken, error) {
 	e := make(chan *XfrToken)
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
-		go w.axfrReceive(e)
+		go w.axfrReceive(q, e)
 		return e, nil
 	case TypeIXFR:
-		go w.ixfrReceive(e)
+		go w.ixfrReceive(q, e)
 		return e, nil
 	default:
 		return nil, ErrXfrType
@@ -45,13 +45,17 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrToken, error) {
 	panic("not reached")
 }
 
-func (w *reply) axfrReceive(c chan *XfrToken) {
+func (w *reply) axfrReceive(q *Msg, c chan *XfrToken) {
 	first := true
 	defer w.conn.Close()
 	defer close(c)
 	for {
 		in, err := w.receive()
 		if err != nil {
+			c <- &XfrToken{in.Answer, err}
+			return
+		}
+		if in.Id != q.Id {
 			c <- &XfrToken{in.Answer, ErrId}
 			return
 		}
@@ -75,7 +79,7 @@ func (w *reply) axfrReceive(c chan *XfrToken) {
 	panic("not reached")
 }
 
-func (w *reply) ixfrReceive(c chan *XfrToken) {
+func (w *reply) ixfrReceive(q *Msg, c chan *XfrToken) {
 	var serial uint32 // The first serial seen is the current server serial
 	first := true
 	defer w.conn.Close()
@@ -86,7 +90,7 @@ func (w *reply) ixfrReceive(c chan *XfrToken) {
 			c <- &XfrToken{in.Answer, err}
 			return
 		}
-		if w.req.Id != in.Id {
+		if q.Id != in.Id {
 			c <- &XfrToken{in.Answer, ErrId}
 			return
 		}
