@@ -10,7 +10,7 @@
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
 //
-// The package dns supports (async) querying/replying, incoming/outgoing Axfr/Ixfr, 
+// The package dns supports (async) querying/replying, incoming/outgoing AXFR/IXFR, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 // Note that domain names MUST be fully qualified, before sending them.
 //
@@ -33,7 +33,6 @@
 // Or even:
 //
 //      mx, err := dns.NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
-// 
 //
 // In the DNS messages are exchanged, these messages contain resource
 // records (sets).  Use pattern for creating a message:
