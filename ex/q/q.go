@@ -114,7 +114,7 @@ Flags:
 		qtype = dns.TypeA
 	}
 
-	nameserver = string([]byte(nameserver)[1:]) // chop off @
+	nameserver = dns.Fqdn(string([]byte(nameserver)[1:])) // chop off @
 	nameserver += ":" + strconv.Itoa(*port)
 
 	// We use the async query handling, just to show how it is to be used.
@@ -180,7 +180,7 @@ Flags:
 	}
 
 	for i, v := range qname {
-		m.Question[0] = dns.Question{v, qtype, qclass}
+		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
 			fmt.Printf("%s", m.String())
@@ -203,7 +203,8 @@ Flags:
 				}
 			}()
 		Redo:
-			if r == nil {
+			if e != nil {
+				fmt.Printf(";; %s\n", e.Error())
 				return
 			}
 			if r.Rcode != dns.RcodeSuccess {

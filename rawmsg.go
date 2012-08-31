@@ -7,6 +7,8 @@ package dns
 // These raw* functions do not use reflection, they directly set the values
 // in the buffer. There are faster than their reflection counterparts.
 
+// TODO: make them all return booleans
+
 // RawSetId sets the message id in buf.
 func rawSetId(msg []byte, i uint16) {
 	msg[0], msg[1] = packUint16(i)
@@ -35,10 +37,14 @@ func rawSetExtraLen(msg []byte, i uint16) {
 // rawSetRdlength sets the rdlength in the header of
 // the RR. The offset 'off' must be positioned at the
 // start of the header of the RR, 'end' must be the
-// end of the RR. There is no check if we overrun the buffer.
-func rawSetRdlength(msg []byte, off, end int) {
+// end of the RR.
+func rawSetRdlength(msg []byte, off, end int) bool {
+	l := len(msg)
 Loop:
 	for {
+		if off+1 > l {
+			return false
+		}
 		c := int(msg[off])
 		off++
 		switch c & 0xC0 {
@@ -57,8 +63,11 @@ Loop:
 	// The domainname has been seen, we at the start of the fixed part in the header.
 	// Type is 2 bytes, class is 2 bytes, ttl 4 and then 2 bytes for the length.
 	off += 2 + 2 + 4
+	if off+2 > l {
+		return false
+	}
 	//off+1 is the end of the header, 'end' is the end of the rr
 	//so 'end' - 'off+2' is the lenght of the rdata
 	msg[off], msg[off+1] = packUint16(uint16(end - (off + 2)))
-	return
+	return true
 }

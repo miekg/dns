@@ -1077,7 +1077,9 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if !ok {
 		return len(msg), false
 	}
-	rawSetRdlength(msg, off, off1)
+	if !rawSetRdlength(msg, off, off1) {
+		return len(msg), false
+	}
 	return off1, true
 }
 
