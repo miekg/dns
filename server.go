@@ -198,7 +198,7 @@ func (srv *Server) ListenAndServe() error {
 		if e != nil {
 			return e
 		}
-		return srv.ServeTCP(l)
+		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
 		a, e := net.ResolveUDPAddr(srv.Net, addr)
 		if e != nil {
@@ -208,14 +208,14 @@ func (srv *Server) ListenAndServe() error {
 		if e != nil {
 			return e
 		}
-		return srv.ServeUDP(l)
+		return srv.serveUDP(l)
 	}
 	return &Error{Err: "bad network"}
 }
 
-// ServeTCP starts a TCP listener for the server.
+// serveTCP starts a TCP listener for the server.
 // Each request is handled in a seperate goroutine.
-func (srv *Server) ServeTCP(l *net.TCPListener) error {
+func (srv *Server) serveTCP(l *net.TCPListener) error {
 	defer l.Close()
 	handler := srv.Handler
 	if handler == nil {
@@ -225,7 +225,8 @@ forever:
 	for {
 		rw, e := l.AcceptTCP()
 		if e != nil {
-			return e
+			// don't bail out, but wait for a new request  
+			continue
 		}
 		if srv.ReadTimeout != 0 {
 			rw.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
@@ -265,9 +266,9 @@ forever:
 	panic("dns: not reached")
 }
 
-// ServeUDP starts a UDP listener for the server.
+// serveUDP starts a UDP listener for the server.
 // Each request is handled in a seperate goroutine.
-func (srv *Server) ServeUDP(l *net.UDPConn) error {
+func (srv *Server) serveUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler
 	if handler == nil {
@@ -280,7 +281,8 @@ func (srv *Server) ServeUDP(l *net.UDPConn) error {
 		m := make([]byte, srv.UDPSize)
 		n, a, e := l.ReadFromUDP(m)
 		if e != nil || n == 0 {
-			return e
+			// don't bail out, but wait for a new request
+			continue
 		}
 		m = m[:n]
 
@@ -314,7 +316,7 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 func (c *conn) serve() {
 	// for block to make it easy to break out to close the tcp connection
 	for {
-		// Request has been read in ServeUDP or ServeTCP
+		// Request has been read in serveUDP or serveTCP
 		w := new(response)
 		w.conn = c
 		req := new(Msg)

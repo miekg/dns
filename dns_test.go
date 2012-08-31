@@ -126,13 +126,13 @@ func TestPack(t *testing.T) {
 	x.Answer = make([]RR, 1)
 	x.Answer[0], err = NewRR(rr[0])
 	if _, ok := x.Pack(); ok {
-		t.Log("Packing failed")
+		t.Log("Packing should fail")
 		t.Fail()
 	}
 	x.Question = make([]Question, 1)
 	x.Question[0] = Question{";sd#eddddséâèµâââ¥âxzztsestxssweewwsssstx@s@Zåµe@cn.pool.ntp.org.", TypeA, ClassINET}
-	if _, ok := x.Pack(); !ok {
-		t.Log("Packing failed")
+	if _, ok := x.Pack(); ok {
+		t.Log("Packing should fail")
 		t.Fail()
 	}
 }
