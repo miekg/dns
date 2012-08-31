@@ -48,11 +48,7 @@ type conn struct {
 
 type response struct {
 	conn           *conn
-<<<<<<< HEAD
-=======
 	hijacked       bool // connection has been hijacked by handler
-	req            *Msg
->>>>>>> axfr
 	tsigStatus     error
 	tsigTimersOnly bool
 	tsigRequestMAC string
@@ -341,7 +337,7 @@ func (c *conn) serve() {
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		c.handler.ServeDNS(w, req) // this does the writing back to the client
-		if c.hijacked {
+		if w.hijacked {
 			// client takes care of the connection, i.e. calls Close()
 			return
 		}

@@ -66,6 +66,7 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 	w = new(reply)
 	w.client = c
 	w.addr = a
+	// attempts useful for dialing?
 	if err = w.dial(); err != nil {
 		return 0, w, err
 	}
