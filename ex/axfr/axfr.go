@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/miekg/dns"
 	"flag"
 	"fmt"
+	"github.com/miekg/dns"
 	"strings"
 	"time"
 )
@@ -33,7 +33,11 @@ func main() {
 	if t, e := client.XfrReceive(m, *nameserver); e == nil {
 		for r := range t {
 			if r.Error == nil {
-				fmt.Printf("%v\n", r.Reply)
+				for _, rr := range r.RR {
+					fmt.Printf("%v\n", rr)
+				}
+			} else {
+				fmt.Printf("error: %s\n", r.Error.Error())
 			}
 		}
 	} else {

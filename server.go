@@ -22,12 +22,19 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// TsigStatus returns the status of the Tsig. 
-	TsigStatus() error
 	// Write writes a reply back to the client.
 	Write(*Msg) error
 	// WriteBuf writes a raw buffer back to the client.
 	WriteBuf([]byte) error
+	// Close closes the connection.
+	Close() error
+	// TsigStatus returns the status of the Tsig. 
+	TsigStatus() error
+	// TsigTimersOnly sets the tsig timers only boolean.
+	TsigTimersOnly(bool)
+	// Hijack lets the caller take over the connection.
+	// After a call to Hijack(), the DNS package will not do anything with the connection
+	Hijack()
 }
 
 type conn struct {
@@ -36,12 +43,16 @@ type conn struct {
 	request    []byte            // bytes read
 	_UDP       *net.UDPConn      // i/o connection if UDP was used
 	_TCP       *net.TCPConn      // i/o connection if TCP was used
-	hijacked   bool              // connection has been hijacked by hander TODO(mg)
 	tsigSecret map[string]string // the tsig secrets
 }
 
 type response struct {
 	conn           *conn
+<<<<<<< HEAD
+=======
+	hijacked       bool // connection has been hijacked by handler
+	req            *Msg
+>>>>>>> axfr
 	tsigStatus     error
 	tsigTimersOnly bool
 	tsigRequestMAC string
@@ -303,18 +314,6 @@ func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Han
 	return c, nil
 }
 
-// Close the connection.
-func (c *conn) close() {
-	switch {
-	case c._UDP != nil:
-		c._UDP.Close()
-		c._UDP = nil
-	case c._TCP != nil:
-		c._TCP.Close()
-		c._TCP = nil
-	}
-}
-
 // Serve a new connection.
 func (c *conn) serve() {
 	// for block to make it easy to break out to close the tcp connection
@@ -338,17 +337,26 @@ func (c *conn) serve() {
 				w.tsigStatus = ErrKeyAlg
 			}
 			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
-			w.tsigTimersOnly = false // Will this ever be true?
+			w.tsigTimersOnly = false
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		c.handler.ServeDNS(w, req) // this does the writing back to the client
 		if c.hijacked {
+			// client takes care of the connection, i.e. calls Close()
 			return
 		}
 		break
 	}
+	// quite elaborate, but this was the original c.close() function
 	if c._TCP != nil {
-		c.close() // Listen and Serve is closed then
+		switch {
+		case c._UDP != nil:
+			c._UDP.Close()
+			c._UDP = nil
+		case c._TCP != nil:
+			c._TCP.Close()
+			c._TCP = nil
+		}
 	}
 }
 
@@ -421,3 +429,25 @@ func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method.
 func (w *response) TsigStatus() error { return w.tsigStatus }
+
+// TsigTimersOnly implements the ResponseWriter.TsigTimersOnly method.
+func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
+
+// Hijack implements the ResponseWriter.Hijack method.
+func (w *response) Hijack() { w.hijacked = true }
+
+// Close implements the ResponseWriter.Close method
+func (w *response) Close() error {
+	if w.conn._UDP != nil {
+		e := w.conn._UDP.Close()
+		w.conn._UDP = nil
+		return e
+	}
+	if w.conn._TCP != nil {
+		e := w.conn._TCP.Close()
+		w.conn._TCP = nil
+		return e
+	}
+	// no-op
+	return nil
+}

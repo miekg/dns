@@ -155,7 +155,7 @@ func (w *reply) receive() (*Msg, error) {
 		p = make([]byte, DefaultMsgSize)
 	}
 	n, err := w.readClient(p)
-	if err != nil || n == 0 {
+	if err != nil && n == 0 {
 		return nil, err
 	}
 	p = p[:n]
@@ -180,7 +180,7 @@ func (w *reply) readClient(p []byte) (n int, err error) {
 	if w.conn == nil {
 		return 0, ErrConnEmpty
 	}
-	if len(p) < 1 {
+	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
 	attempts := w.client.Attempts
@@ -278,9 +278,6 @@ func (w *reply) writeClient(p []byte) (n int, err error) {
 	attempts := w.client.Attempts
 	if attempts == 0 {
 		attempts = 1
-	}
-	if err = w.dial(); err != nil {
-		return 0, err
 	}
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":

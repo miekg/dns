@@ -1,7 +1,6 @@
 # TODO
 
-* outgoing [AI]xfr
-* fix 'q' standardize ipv6 input with [::1]#53 ?
+* 'q' standardize ipv6 input with [::1]#53 ?
 
 ## Nice to have
 

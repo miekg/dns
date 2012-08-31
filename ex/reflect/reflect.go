@@ -28,6 +28,7 @@ import (
 	"runtime/pprof"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -76,6 +77,24 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	t.Txt = []string{str}
 
 	switch r.Question[0].Qtype {
+	case dns.TypeAXFR:
+		c := make(chan *dns.XfrToken)
+		var e *error
+		if err := dns.XfrSend(w, r, c, e); err != nil {
+			close(c)
+			return
+		}
+		soa, _ := dns.NewRR(`whoami.miek.nl. IN SOA elektron.atoom.net. miekg.atoom.net. (
+			2009032802 
+			21600 
+			7200 
+			604800 
+			3600)`)
+		c <- &dns.XfrToken{RR: []dns.RR{soa, t, rr, soa}}
+		close(c)
+		w.Hijack()
+		// w.Close() // Client closes
+		return
 	case dns.TypeTXT:
 		m.Answer = append(m.Answer, t)
 		m.Extra = append(m.Extra, rr)
@@ -86,7 +105,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		m.Extra = append(m.Extra, t)
 	}
 
-	if r.IsTsig() {
+	if r.IsTsig() != nil {
 		if w.TsigStatus() == nil {
 			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
 		} else {
@@ -142,12 +161,12 @@ func main() {
 	go serve("tcp", name, secret)
 	go serve("udp", name, secret)
 	sig := make(chan os.Signal)
-	signal.Notify(sig)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 forever:
 	for {
 		select {
-		case <-sig:
-			fmt.Printf("Signal received, stopping\n")
+		case s:=<-sig:
+			fmt.Printf("Signal (%d) received, stopping\n", s)
 			break forever
 		}
 	}
