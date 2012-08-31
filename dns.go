@@ -41,6 +41,10 @@
 //      m := dns.new(Msg)
 //      m.SetQuestion("miek.nl.", dns.TypeMX)
 //
+// Or when note sure if the domain name is fully qualified:
+//
+//	m.SetQuestion(dns.Fqdn("miek.nl"), dns.TypeMX)
+//
 // The message m is now a message with the question section set to ask
 // the MX records for the miek.nl. zone.
 //
