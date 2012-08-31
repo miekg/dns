@@ -41,7 +41,7 @@
 //      m := dns.new(Msg)
 //      m.SetQuestion("miek.nl.", dns.TypeMX)
 //
-// Or when note sure if the domain name is fully qualified:
+// Or when not certain if the domain name is fully qualified:
 //
 //	m.SetQuestion(dns.Fqdn("miek.nl"), dns.TypeMX)
 //
