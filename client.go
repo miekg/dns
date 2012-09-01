@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// hijacked connections...?
 type reply struct {
 	client         *Client
 	addr           string
@@ -21,7 +20,8 @@ type reply struct {
 	t              time.Time
 }
 
-// A nil Client is usable.
+// A Client is uses when initiating a query to a nameserver. A nil
+// Client is usable.
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "", is UDP)
 	Attempts     int               // number of attempts, if not set defaults to 1
@@ -32,9 +32,7 @@ type Client struct {
 }
 
 func (w *reply) RemoteAddr() net.Addr {
-	if w.conn == nil {
-		return nil
-	} else {
+	if w.conn != nil {
 		return w.conn.RemoteAddr()
 	}
 	return nil
