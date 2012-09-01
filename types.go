@@ -71,6 +71,7 @@ const (
 	TypeMAILB uint16 = 253
 	TypeMAILA uint16 = 254
 	TypeANY   uint16 = 255
+
 	TypeURI   uint16 = 256
 	TypeTA    uint16 = 32768
 	TypeDLV   uint16 = 32769

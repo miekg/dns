@@ -20,8 +20,8 @@ type reply struct {
 	t              time.Time
 }
 
-// A Client is uses when initiating a query to a nameserver. A nil
-// Client is usable.
+// A Client defines parameter for a DNS client. A nil
+// Client is usable for sending queries.
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "", is UDP)
 	Attempts     int               // number of attempts, if not set defaults to 1
