@@ -118,7 +118,7 @@ func (z *Zone) Insert(r RR) error {
 	return nil
 }
 
-// Remove removes the RR r from the zone. If there RR can not be found,
+// Remove removes the RR r from the zone. If the RR can not be found,
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
 	key := toRadixName(r.Header().Name)

@@ -278,6 +278,12 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		srv.UDPSize = udpMsgSize
 	}
 	for {
+		if srv.ReadTimeout != 0 {
+			l.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
+		}
+		if srv.WriteTimeout != 0 {
+			l.SetWriteDeadline(time.Now().Add(srv.WriteTimeout))
+		}
 		m := make([]byte, srv.UDPSize)
 		n, a, e := l.ReadFromUDP(m)
 		if e != nil || n == 0 {
@@ -286,12 +292,6 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		}
 		m = m[:n]
 
-		if srv.ReadTimeout != 0 {
-			l.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
-		}
-		if srv.WriteTimeout != 0 {
-			l.SetWriteDeadline(time.Now().Add(srv.WriteTimeout))
-		}
 		d, err := newConn(nil, l, a, m, handler, srv.TsigSecret)
 		if err != nil {
 			continue

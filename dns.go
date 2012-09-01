@@ -10,9 +10,10 @@
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
 //
-// The package dns supports (async) querying/replying, incoming/outgoing AXFR/IXFR, 
+// The package dns supports (asynchronous) querying/replying, incoming/outgoing AXFR/IXFR, 
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
-// Note that domain names MUST be fully qualified, before sending them.
+// Note that domain names MUST be fully qualified, before sending them, unqualified
+// names in a message will result in a packing failure.
 //
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
