@@ -18,10 +18,10 @@ type Zone struct {
 	mutex        *sync.RWMutex
 }
 
-// SignaturePolicy holds the parameters for the zone (re)signing. This 
-// is mimicked from OpenDNSSEC. See:
+// SignatureConfig holds the parameters for zone (re)signing. This 
+// is copied from OpenDNSSEC. See:
 // https://wiki.opendnssec.org/display/DOCS/kasp.xml
-type SignaturePolicy struct {
+type SignatureConfig struct {
 	// Validity period of the signatures, typically 2 to 4 weeks.
 	Validity time.Duration
 	// When the end of the validity approaches, how much time should remain
@@ -37,13 +37,13 @@ type SignaturePolicy struct {
 	InceptionOffset time.Duration
 }
 
-func newSignaturePolicy() *SignaturePolicy {
-	return &SignaturePolicy{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second}
+func newSignatureConfig() *SignatureConfig {
+	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second}
 }
 
 // DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
 // Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
-var DefaultSignaturePolicy = newSignaturePolicy()
+var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to origin.
 func NewZone(origin string) *Zone {
@@ -212,10 +212,10 @@ func (z *Zone) Predecessor(s string) *ZoneData {
 // Sign (re)signes the zone z. It adds keys to the zone (if not already there)
 // and signs the keys with the KSKs and the rest of the zone with the ZSKs. For
 // authenticated denial of existence NSEC is used.
-// If policy is nil DefaultSignaturePolicy is used.
-func (z *Zone) Sign(keys []*RR_DNSKEY, policy *SignaturePolicy) error {
-	if policy == nil {
-		policy = DefaultSignaturePolicy
+// If config is nil DefaultSignatureConfig is used.
+func (z *Zone) Sign(keys []*RR_DNSKEY, config *SignatureConfig) error {
+	if config == nil {
+		config = DefaultSignatureConfig
 	}
 	// concurrently walk the zone and sign the rrsets
 
