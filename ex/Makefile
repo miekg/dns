@@ -1,6 +1,5 @@
 .PHONY: ex
-EXAMPLES=mx \
-	 chaos \
+EXAMPLES=chaos \
 	 key2ds \
 	 axfr \
 	 reflect \
