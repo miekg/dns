@@ -16,7 +16,9 @@ func (k *RR_DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
 	return k.ReadPrivateKey(strings.NewReader(s), "")
 }
 
-// NewPrivateKey reads a private key from the io.Reader q. The public key must be
+// NewPrivateKey reads a private key from the io.Reader q. The string file is 
+// only used in error reporting.
+// The public key must be
 // known, because some cryptographics algorithms embed the public inside the privatekey.
 func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 	m, e := parseKey(q, file)

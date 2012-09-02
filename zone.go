@@ -16,6 +16,8 @@ type Zone struct {
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 	mutex        *sync.RWMutex
+	// timemodified?
+	expired bool // Slave zone is expired
 }
 
 // SignatureConfig holds the parameters for zone (re)signing. This 
@@ -100,12 +102,13 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
+	// TODO(mg): quick check for doubles
 	key := toRadixName(r.Header().Name)
 	z.mutex.Lock()
 	zd := z.Radix.Find(key)
 	if zd == nil {
 		defer z.mutex.Unlock()
-		// Check if its a wildcard name
+		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
 		}
@@ -210,14 +213,27 @@ func (z *Zone) Predecessor(s string) *ZoneData {
 }
 
 // Sign (re)signes the zone z. It adds keys to the zone (if not already there)
-// and signs the keys with the KSKs and the rest of the zone with the ZSKs. For
-// authenticated denial of existence NSEC is used.
-// If config is nil DefaultSignatureConfig is used.
-func (z *Zone) Sign(keys []*RR_DNSKEY, config *SignatureConfig) error {
+// and signs the keys with the KSKs and the rest of the zone with the ZSKs. 
+// NSEC is used for authenticated denial 
+// of existence. If config is nil DefaultSignatureConfig is used.
+// TODO(mg): allow interaction with hsm
+func (z *Zone) Sign(keys []*RR_DNSKEY, privkeys []PrivateKey, config *SignatureConfig) error {
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
-	// concurrently walk the zone and sign the rrsets
+	// TODO(mg): concurrently walk the zone and sign the rrsets
+	// TODO(mg): nsec, or next pointer. Need to be a single tree-op
 
 	return nil
+}
+
+// Sign each ZoneData in place.
+// TODO(mg): assume not signed
+func signZoneData(zd *ZoneData, privkeys []PrivateKey, config *SignatureConfig) {
+	if zd.NonAuth == true {
+		return
+	}
+	s := new(RR_RRSIG)
+	// signername
+
 }
