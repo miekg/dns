@@ -6,6 +6,7 @@ import (
 	"github.com/miekg/radix"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Zone represents a DNS zone. It's safe for concurrent use by 
@@ -16,6 +17,33 @@ type Zone struct {
 	*radix.Radix        // Zone data
 	mutex        *sync.RWMutex
 }
+
+// SignaturePolicy holds the parameters for the zone (re)signing. This 
+// is mimicked from OpenDNSSEC. See:
+// https://wiki.opendnssec.org/display/DOCS/kasp.xml
+type SignaturePolicy struct {
+	// Validity period of the signatures, typically 2 to 4 weeks.
+	Validity time.Duration
+	// When the end of the validity approaches, how much time should remain
+	// before we start to resign. Typical value is 3 days.
+	Refresh time.Duration
+	// Jitter is an amount of time added or subtracted from the 
+	// expiration time to ensure not all signatures expire a the same time.
+	// Typical value is 12 hours.
+	Jitter time.Duration
+	// InceptionOffset is subtracted from the inception time to ensure badly
+	// calibrated clocks on the internet can still validate a signature.
+	// Typical value is 300 seconds.
+	InceptionOffset time.Duration
+}
+
+func newSignaturePolicy() *SignaturePolicy {
+	return &SignaturePolicy{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second}
+}
+
+// DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
+// Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
+var DefaultSignaturePolicy = newSignaturePolicy()
 
 // NewZone creates an initialized zone with Origin set to origin.
 func NewZone(origin string) *Zone {
@@ -64,7 +92,6 @@ func toRadixName(d string) string {
 	}
 	return "." + s
 }
-
 
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
@@ -180,4 +207,17 @@ func (z *Zone) Predecessor(s string) *ZoneData {
 		return nil
 	}
 	return zd.Value.(*ZoneData)
+}
+
+// Sign (re)signes the zone z. It adds keys to the zone (if not already there)
+// and signs the keys with the KSKs and the rest of the zone with the ZSKs. For
+// authenticated denial of existence NSEC is used.
+// If policy is nil DefaultSignaturePolicy is used.
+func (z *Zone) Sign(keys []*RR_DNSKEY, policy *SignaturePolicy) error {
+	if policy == nil {
+		policy = DefaultSignaturePolicy
+	}
+	// concurrently walk the zone and sign the rrsets
+
+	return nil
 }
