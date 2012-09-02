@@ -72,23 +72,23 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 }
 
 // Implement the HashNames method of Denialer
-func (nsec3 *RR_NSEC3) HashNames(domain string) {
-	nsec3.Header().Name = strings.ToLower(HashName(nsec3.Header().Name, nsec3.Hash, nsec3.Iterations, nsec3.Salt)) + "." + domain
-	nsec3.NextDomain = HashName(nsec3.NextDomain, nsec3.Hash, nsec3.Iterations, nsec3.Salt)
+func (rr *RR_NSEC3) HashNames(domain string) {
+	rr.Header().Name = strings.ToLower(HashName(rr.Header().Name, rr.Hash, rr.Iterations, rr.Salt)) + "." + domain
+	rr.NextDomain = HashName(rr.NextDomain, rr.Hash, rr.Iterations, rr.Salt)
 }
 
 // Implement the Match method of Denialer
-func (n *RR_NSEC3) Match(domain string) bool {
-	return strings.ToUpper(SplitLabels(n.Header().Name)[0]) == strings.ToUpper(HashName(domain, n.Hash, n.Iterations, n.Salt))
+func (rr *RR_NSEC3) Match(domain string) bool {
+	return strings.ToUpper(SplitLabels(rr.Header().Name)[0]) == strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
 }
 
 // Implement the Match method of Denialer
-func (n *RR_NSEC) Match(domain string) bool {
-	return strings.ToUpper(n.Header().Name) == strings.ToUpper(domain)
+func (rr *RR_NSEC) Match(domain string) bool {
+	return strings.ToUpper(rr.Header().Name) == strings.ToUpper(domain)
 }
 
-func (n *RR_NSEC3) MatchType(rrtype uint16) bool {
-	for _, t := range n.TypeBitMap {
+func (rr *RR_NSEC3) MatchType(rrtype uint16) bool {
+	for _, t := range rr.TypeBitMap {
 		if t == rrtype {
 			return true
 		}
@@ -99,8 +99,8 @@ func (n *RR_NSEC3) MatchType(rrtype uint16) bool {
 	return false
 }
 
-func (n *RR_NSEC) MatchType(rrtype uint16) bool {
-	for _, t := range n.TypeBitMap {
+func (rr *RR_NSEC) MatchType(rrtype uint16) bool {
+	for _, t := range rr.TypeBitMap {
 		if t == rrtype {
 			return true
 		}
@@ -114,11 +114,11 @@ func (n *RR_NSEC) MatchType(rrtype uint16) bool {
 // Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text (i.e. not hashed)
 // TODO(mg): this doesn't loop around
 // TODO(mg): make a CoverHashed variant?
-func (nsec3 *RR_NSEC3) Cover(domain string) bool {
-	hashdom := strings.ToUpper(HashName(domain, nsec3.Hash, nsec3.Iterations, nsec3.Salt))
-	nextdom := strings.ToUpper(nsec3.NextDomain)
-	owner := strings.ToUpper(SplitLabels(nsec3.Header().Name)[0])                                                                              // The hashed part
-	apex := strings.ToUpper(HashName(strings.Join(SplitLabels(nsec3.Header().Name)[1:], "."), nsec3.Hash, nsec3.Iterations, nsec3.Salt)) + "." // The name of the zone
+func (rr *RR_NSEC3) Cover(domain string) bool {
+	hashdom := strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
+	nextdom := strings.ToUpper(rr.NextDomain)
+	owner := strings.ToUpper(SplitLabels(rr.Header().Name)[0])                                                                              // The hashed part
+	apex := strings.ToUpper(HashName(strings.Join(SplitLabels(rr.Header().Name)[1:], "."), rr.Hash, rr.Iterations, rr.Salt)) + "." // The name of the zone
 	// if nextdomain equals the apex, it is considered The End. So in that case hashdom is always less then nextdomain
 	if hashdom > owner && nextdom == apex {
 		return true
@@ -132,7 +132,7 @@ func (nsec3 *RR_NSEC3) Cover(domain string) bool {
 }
 
 // Cover checks if domain is covered by the NSEC record. Domain must be given in plain text.
-func (nsec *RR_NSEC) Cover(domain string) bool {
+func (rr *RR_NSEC) Cover(domain string) bool {
 	return false
 }
 
