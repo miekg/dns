@@ -1,4 +1,0 @@
-# NSD3 fingerprint
-.,CH,TXT,QUERY,NOERROR,QR,aa,tc,RD,ra,ad,cd,z,1,0,0,1,DO,4096,nsid
-auThoRs.bInD.,CH,TXT,QUERY,NOERROR,QR,aa,tc,rd,ra,ad,cd,z,1,0,0,0,do,0,nsid
-.,CLASS0,TYPE0,NOTIFY,NXDOMAIN,QR,AA,tc,RD,ra,ad,cd,z,0,0,0,0,do,0,nsid

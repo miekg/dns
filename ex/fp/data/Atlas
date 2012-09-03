@@ -1,6 +1,0 @@
-# Altlas fingerprints
-# Tested on server <11122>
-# CHECK THIS, only the first is correct
-.,CH,TXT,QUERY,SERVFAIL,QR,aa,tc,RD,ra,ad,cd,z,1,0,0,1,do,0,nsid
-auThoRs.bInD.,CH,TXT,QUERY,NOERROR,QR,AA,tc,rd,ra,ad,cd,z,1,15,1,0,do,0,nsid
-bind.,NONE,SOA,NOTIFY,REFUSED,QR,aa,tc,RD,ra,ad,cd,z,1,0,0,0,do,0,nsid

@@ -1,6 +1,9 @@
 # TODO
 
 * 'q' standardize ipv6 input with [::1]#53 ?
+* put axfr in q
+* make example from chaos
+
 
 ## Nice to have
 
