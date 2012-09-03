@@ -56,6 +56,8 @@ func ExampleToDs(zone string) {
 // queries.
 func ExampleAuthors() {
 	// ... server setup is out of scope ...
+
+	// Register the handle funcs.
 	HandleFunc("authors.bind.", HandleAuthors)
 	HandleFunc("authors.server.", HandleAuthors)
 
