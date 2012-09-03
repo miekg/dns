@@ -309,45 +309,45 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period must be checked separately.
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work. 
-func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
+func (rr *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 	// First the easy checks
 	if len(rrset) == 0 {
 		return ErrRRset
 	}
-	if s.KeyTag != k.KeyTag() {
+	if rr.KeyTag != k.KeyTag() {
 		return ErrKey
 	}
-	if s.Hdr.Class != k.Hdr.Class {
+	if rr.Hdr.Class != k.Hdr.Class {
 		return ErrKey
 	}
-	if s.Algorithm != k.Algorithm {
+	if rr.Algorithm != k.Algorithm {
 		return ErrKey
 	}
-	if strings.ToLower(s.SignerName) != strings.ToLower(k.Hdr.Name) {
+	if strings.ToLower(rr.SignerName) != strings.ToLower(k.Hdr.Name) {
 		return ErrKey
 	}
 	if k.Protocol != 3 {
 		return ErrKey
 	}
 	for _, r := range rrset {
-		if r.Header().Class != s.Hdr.Class {
+		if r.Header().Class != rr.Hdr.Class {
 			return ErrRRset
 		}
-		if r.Header().Rrtype != s.TypeCovered {
+		if r.Header().Rrtype != rr.TypeCovered {
 			return ErrRRset
 		}
 	}
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
-	sigwire.TypeCovered = s.TypeCovered
-	sigwire.Algorithm = s.Algorithm
-	sigwire.Labels = s.Labels
-	sigwire.OrigTtl = s.OrigTtl
-	sigwire.Expiration = s.Expiration
-	sigwire.Inception = s.Inception
-	sigwire.KeyTag = s.KeyTag
-	sigwire.SignerName = strings.ToLower(s.SignerName)
+	sigwire.TypeCovered = rr.TypeCovered
+	sigwire.Algorithm = rr.Algorithm
+	sigwire.Labels = rr.Labels
+	sigwire.OrigTtl = rr.OrigTtl
+	sigwire.Expiration = rr.Expiration
+	sigwire.Inception = rr.Inception
+	sigwire.KeyTag = rr.KeyTag
+	sigwire.SignerName = strings.ToLower(rr.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, ok := PackStruct(sigwire, signeddata, 0)
@@ -355,19 +355,19 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		return ErrPack
 	}
 	signeddata = signeddata[:n]
-	wire := rawSignatureData(rrset, s)
+	wire := rawSignatureData(rrset, rr)
 	if wire == nil {
 		return ErrSigGen
 	}
 	signeddata = append(signeddata, wire...)
 
-	sigbuf := s.sigBuf()           // Get the binary signature data
-	if s.Algorithm == PRIVATEDNS { // PRIVATEOID
+	sigbuf := rr.sigBuf()           // Get the binary signature data
+	if rr.Algorithm == PRIVATEDNS { // PRIVATEOID
 		// TODO(mg)
 		// remove the domain name and assume its our
 	}
 
-	switch s.Algorithm {
+	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
 		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
 		pubkey := k.publicKeyRSA() // Get the key
@@ -377,7 +377,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 		// Setup the hash as defined for this alg.
 		var h hash.Hash
 		var ch crypto.Hash
-		switch s.Algorithm {
+		switch rr.Algorithm {
 		case RSAMD5:
 			h = md5.New()
 			ch = crypto.MD5
@@ -400,7 +400,7 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 			return ErrKey
 		}
 		var h hash.Hash
-		switch s.Algorithm {
+		switch rr.Algorithm {
 		case ECDSAP256SHA256:
 			h = sha256.New()
 		case ECDSAP384SHA384:
@@ -424,12 +424,12 @@ func (s *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate 
 // if a signature period is valid.
-func (s *RR_RRSIG) ValidityPeriod() bool {
+func (rr *RR_RRSIG) ValidityPeriod() bool {
 	utc := time.Now().UTC().Unix()
-	modi := (int64(s.Inception) - utc) / year68
-	mode := (int64(s.Expiration) - utc) / year68
-	ti := int64(s.Inception) + (modi * year68)
-	te := int64(s.Expiration) + (mode * year68)
+	modi := (int64(rr.Inception) - utc) / year68
+	mode := (int64(rr.Expiration) - utc) / year68
+	ti := int64(rr.Inception) + (modi * year68)
+	te := int64(rr.Expiration) + (mode * year68)
 	return ti <= utc && utc <= te
 }
 
