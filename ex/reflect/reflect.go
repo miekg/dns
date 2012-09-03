@@ -158,6 +158,8 @@ func main() {
 	}
 
 	dns.HandleFunc(".", handleReflect)
+	dns.HandleFunc("authors.bind.", dns.HandleAuthors)
+	dns.HandleFunc("authors.server.", dns.HandleAuthors)
 	go serve("tcp", name, secret)
 	go serve("udp", name, secret)
 	sig := make(chan os.Signal)

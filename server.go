@@ -81,16 +81,50 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// Failed is a helper handler that returns an answer with
-// RCODE = servfail for every request.
-func Failed(w ResponseWriter, r *Msg) {
+// FailedHandler returns a HandlerFunc 
+// returns SERVFAIL for every request it gets.
+func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
+	// does not matter if this write fails
 	w.Write(m)
 }
 
-// FailedHandler returns HandlerFunc with Failed.
-func FailedHandler() Handler { return HandlerFunc(Failed) }
+// AuthorHandler returns a HandlerFunc that returns the authors
+// of Go DNS for 'authors.bind' or 'authors.server' queries in the
+// CHAOS Class.
+func HandleAuthors(w ResponseWriter, r *Msg) {
+	if len(r.Question) != 1 {
+		HandleFailed(w, r)
+		return
+	}
+	if r.Question[0].Qtype != ClassCHAOS && r.Question[0].Qtype != TypeTXT {
+		HandleFailed(w, r)
+		return
+	}
+	if r.Question[0].Name != "authors.server." && r.Question[0].Name != "authors.bind." {
+		HandleFailed(w, r)
+		return
+	}
+	// primary author
+	m := new(Msg)
+	m.SetReply(r)
+	for _, author := range []string{"Miek Gieben"} {
+		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
+		m.Answer = append(m.Answer, &RR_TXT{h, []string{author}})
+	}
+	// from git:
+	// git log  |grep '^Author' | sort -u | sed 's/^Author: //' | sed 's/<.*>//'
+	// But only if I have a firstname and lastname
+	for _, author := range []string{"Ask Bjorn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"} {
+		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
+		m.Extra = append(m.Extra, &RR_TXT{h, []string{author}})
+	}
+	w.Write(m)
+}
+
+func authorHandler() Handler { return HandlerFunc(HandleAuthors) }
+func failedHandler() Handler { return HandlerFunc(HandleFailed) }
 
 // Start a server on addresss and network speficied. Invoke handler
 // for any incoming queries.
@@ -147,10 +181,10 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	var h Handler
 	if len(request.Question) != 1 {
-		h = FailedHandler()
+		h = failedHandler()
 	} else {
 		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
-			h = FailedHandler()
+			h = failedHandler()
 		}
 	}
 	h.ServeDNS(w, request)
