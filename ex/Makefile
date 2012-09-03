@@ -1,6 +1,5 @@
 .PHONY: ex
 EXAMPLES=chaos \
-	 key2ds \
 	 axfr \
 	 reflect \
 	 q \
