@@ -92,7 +92,7 @@ func toRadixName(d string) string {
 	for _, l := range SplitLabels(d) {
 		s = strings.ToLower(l) + "." + s
 	}
-	return "." + s
+	return s
 }
 
 func (z *Zone) String() string {
