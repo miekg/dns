@@ -229,7 +229,7 @@ func (z *Zone) Sign(keys []*RR_DNSKEY, privkeys []PrivateKey, config *SignatureC
 
 // Sign each ZoneData in place.
 // TODO(mg): assume not signed
-func signZoneData(zd *ZoneData, privkeys []PrivateKey, config *SignatureConfig) {
+func signZoneData(zd *ZoneData, privkeys []PrivateKey, signername string, config *SignatureConfig) {
 	if zd.NonAuth == true {
 		return
 	}
