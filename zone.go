@@ -95,6 +95,10 @@ func toRadixName(d string) string {
 	return "." + s
 }
 
+func (z *Zone) String() string {
+	return z.Radix.String()
+}
+
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
@@ -233,7 +237,7 @@ func signZoneData(zd *ZoneData, privkeys []PrivateKey, signername string, config
 	if zd.NonAuth == true {
 		return
 	}
-	s := new(RR_RRSIG)
+	//s := new(RR_RRSIG)
 	// signername
 
 }
