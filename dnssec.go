@@ -204,37 +204,37 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // otherwise false.
 // The signature data in the RRSIG is filled by this method.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
-func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
+func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if k == nil {
 		return ErrPrivKey
 	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
-	if s.KeyTag == 0 || len(s.SignerName) == 0 || s.Algorithm == 0 {
+	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
 	}
 
-	s.Hdr.Rrtype = TypeRRSIG
-	s.Hdr.Name = rrset[0].Header().Name
-	s.Hdr.Class = rrset[0].Header().Class
-	s.OrigTtl = rrset[0].Header().Ttl
-	s.TypeCovered = rrset[0].Header().Rrtype
-	s.TypeCovered = rrset[0].Header().Rrtype
-	s.Labels, _, _ = IsDomainName(rrset[0].Header().Name)
+	rr.Hdr.Rrtype = TypeRRSIG
+	rr.Hdr.Name = rrset[0].Header().Name
+	rr.Hdr.Class = rrset[0].Header().Class
+	rr.OrigTtl = rrset[0].Header().Ttl
+	rr.TypeCovered = rrset[0].Header().Rrtype
+	rr.TypeCovered = rrset[0].Header().Rrtype
+	rr.Labels, _, _ = IsDomainName(rrset[0].Header().Name)
 
 	if strings.HasPrefix(rrset[0].Header().Name, "*") {
-		s.Labels-- // wildcard, remove from label count
+		rr.Labels-- // wildcard, remove from label count
 	}
 
 	sigwire := new(rrsigWireFmt)
-	sigwire.TypeCovered = s.TypeCovered
-	sigwire.Algorithm = s.Algorithm
-	sigwire.Labels = s.Labels
-	sigwire.OrigTtl = s.OrigTtl
-	sigwire.Expiration = s.Expiration
-	sigwire.Inception = s.Inception
-	sigwire.KeyTag = s.KeyTag
+	sigwire.TypeCovered = rr.TypeCovered
+	sigwire.Algorithm = rr.Algorithm
+	sigwire.Labels = rr.Labels
+	sigwire.OrigTtl = rr.OrigTtl
+	sigwire.Expiration = rr.Expiration
+	sigwire.Inception = rr.Inception
+	sigwire.KeyTag = rr.KeyTag
 	// For signing, lowercase this name
-	sigwire.SignerName = strings.ToLower(s.SignerName)
+	sigwire.SignerName = strings.ToLower(rr.SignerName)
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
@@ -243,7 +243,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		return ErrPack
 	}
 	signdata = signdata[:n]
-	wire := rawSignatureData(rrset, s)
+	wire := rawSignatureData(rrset, rr)
 	if wire == nil {
 		return ErrSigGen
 	}
@@ -252,7 +252,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	var sighash []byte
 	var h hash.Hash
 	var ch crypto.Hash // Only need for RSA
-	switch s.Algorithm {
+	switch rr.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		// Implicit in the ParameterSizes
 	case RSAMD5:
@@ -284,13 +284,13 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		signature := []byte{0x4D} // T value, here the ASCII M for Miek (not used in DNSSEC)
 		signature = append(signature, r1.Bytes()...)
 		signature = append(signature, s1.Bytes()...)
-		s.Signature = unpackBase64(signature)
+		rr.Signature = unpackBase64(signature)
 	case *rsa.PrivateKey:
 		signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
 		if err != nil {
 			return err
 		}
-		s.Signature = unpackBase64(signature)
+		rr.Signature = unpackBase64(signature)
 	case *ecdsa.PrivateKey:
 		r1, s1, err := ecdsa.Sign(rand.Reader, p, sighash)
 		if err != nil {
@@ -298,7 +298,7 @@ func (s *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		}
 		signature := r1.Bytes()
 		signature = append(signature, s1.Bytes()...)
-		s.Signature = unpackBase64(signature)
+		rr.Signature = unpackBase64(signature)
 	default:
 		// Not given the correct key
 		return ErrKeyAlg
