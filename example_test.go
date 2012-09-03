@@ -64,6 +64,6 @@ func ExampleAuthors() {
 	// To extend the authors list, just append to dns.Authors (a []string)
 	Authors = append(Authors, "G. I. Joe")
 
-	// Or
+	// Or ...
 	Authors = []string{"Just Me"}
 }
