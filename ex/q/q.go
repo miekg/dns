@@ -11,12 +11,18 @@ import (
 	"time"
 )
 
-var dnskey *dns.RR_DNSKEY
+// TODO: serial in ixfr
+
+var (
+	dnskey *dns.RR_DNSKEY
+	short  *bool
+)
 
 func main() {
+	short = flag.Bool("short", false, "abbreviate long DNSSEC records")
+
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
-	short := flag.Bool("short", false, "abbreviate long DNSSEC records")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
 	six := flag.Bool("6", false, "use IPv6 only")
 	four := flag.Bool("4", false, "use IPv4 only")
@@ -31,6 +37,7 @@ func main() {
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "set edns nsid option")
 	client := flag.String("client", "", "set edns client-subnet option")
+	//serial := flag.Int("serial", 0, "perform an IXFR with this serial")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
@@ -39,7 +46,7 @@ func main() {
 	conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	nameserver := "@" + conf.Servers[0]
 	qtype := uint16(0)
-	qclass := uint16(dns.ClassINET) // Default qclass
+	qclass := uint16(dns.ClassINET)
 	var qname []string
 
 	flag.Parse()
@@ -70,14 +77,6 @@ Flags:
 		// And if it looks like type, it is a type
 		if k, ok := dns.Str_rr[strings.ToUpper(flag.Arg(i))]; ok {
 			qtype = k
-			switch qtype {
-			case dns.TypeAXFR:
-				fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-				return
-			case dns.TypeIXFR:
-				fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-				return
-			}
 			continue Flags
 		}
 		// If it looks like a class, it is a class
@@ -90,14 +89,6 @@ Flags:
 			i, e := strconv.Atoi(string([]byte(flag.Arg(i))[4:]))
 			if e == nil {
 				qtype = uint16(i)
-				switch qtype {
-				case dns.TypeAXFR:
-					fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-					return
-				case dns.TypeIXFR:
-					fmt.Fprintf(os.Stderr, "AXFR not supported\n")
-					return
-				}
 				continue Flags
 			}
 		}
@@ -192,10 +183,15 @@ Flags:
 				m.SetTsig(name, algo, 300, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
 			} else {
-				fmt.Fprintf(os.Stderr, "tsig key data error\n")
+				fmt.Fprintf(os.Stderr, "TSIG key data error\n")
 				return
 			}
 		}
+		if qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+			doXfr(c, m, nameserver)
+			continue
+		}
+
 		c.DoRtt(m, nameserver, nil, func(m, r *dns.Msg, rtt time.Duration, e error, data interface{}) {
 			defer func() {
 				if i == len(qname)-1 {
@@ -211,7 +207,7 @@ Flags:
 				return
 			}
 			if r.Id != m.Id {
-				fmt.Printf("Id mismatch\n")
+				fmt.Fprintf(os.Stderr, "Id mismatch\n")
 				return
 			}
 			if r.MsgHdr.Truncated && *fallback {
@@ -320,18 +316,18 @@ func nsecCheck(in *dns.Msg) {
 	return
 Check:
 	/*
-	w, err := in.Nsec3Verify(in.Question[0])
-	switch w {
-	case dns.NSEC3_NXDOMAIN:
-		fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
-	case dns.NSEC3_NODATA:
-		fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
-	default:
-		// w == 0
-		if err != nil {
-			fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n", err.Error())
+		w, err := in.Nsec3Verify(in.Question[0])
+		switch w {
+		case dns.NSEC3_NXDOMAIN:
+			fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
+		case dns.NSEC3_NODATA:
+			fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
+		default:
+			// w == 0
+			if err != nil {
+				fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n", err.Error())
+			}
 		}
-	}
 	*/
 }
 
@@ -412,4 +408,23 @@ func shortRR(r dns.RR) dns.RR {
 		}
 	}
 	return r
+}
+
+func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
+	if t, e := c.XfrReceive(m, nameserver); e == nil {
+		for r := range t {
+			if r.Error == nil {
+				for _, rr := range r.RR {
+					if *short {
+						rr = shortRR(rr)
+					}
+					fmt.Printf("%v\n", rr)
+				}
+			} else {
+				fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", r.Error.Error())
+			}
+		}
+	} else {
+		fmt.Printf("Error %v\n", e)
+	}
 }
