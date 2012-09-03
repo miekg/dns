@@ -17,8 +17,10 @@ func (dns *Msg) SetReply(request *Msg) *Msg {
 	dns.MsgHdr.Response = true
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Rcode = RcodeSuccess
-	dns.Question = make([]Question, 1)
-	dns.Question[0] = request.Question[0]
+	if len(request.Question) > 0 {
+		dns.Question = make([]Question, 1)
+		dns.Question[0] = request.Question[0]
+	}
 	return dns
 }
 
@@ -47,8 +49,11 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 	dns.MsgHdr.Opcode = OpcodeQuery
 	dns.MsgHdr.Response = true
 	dns.MsgHdr.Id = request.MsgHdr.Id
-	dns.Question = make([]Question, 1)
-	dns.Question[0] = request.Question[0]
+	// Note that this is actually a FORMERR
+	if len(request.Question) > 0 {
+		dns.Question = make([]Question, 1)
+		dns.Question[0] = request.Question[0]
+	}
 	return dns
 }
 
