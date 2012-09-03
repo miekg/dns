@@ -70,6 +70,9 @@ func NewServeMux() *ServeMux { return &ServeMux{m: radix.New()} }
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
+// Authors is a list of authors that helped create or make Go DNS better.
+var Authors = []string{ "Miek Gieben", "Ask Bjorn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
+
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
@@ -109,16 +112,9 @@ func HandleAuthors(w ResponseWriter, r *Msg) {
 	// primary author
 	m := new(Msg)
 	m.SetReply(r)
-	for _, author := range []string{"Miek Gieben"} {
+	for _, author := range Authors {
 		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
 		m.Answer = append(m.Answer, &RR_TXT{h, []string{author}})
-	}
-	// from git:
-	// git log  |grep '^Author' | sort -u | sed 's/^Author: //' | sed 's/<.*>//'
-	// But only if I have a firstname and lastname
-	for _, author := range []string{"Ask Bjorn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"} {
-		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
-		m.Extra = append(m.Extra, &RR_TXT{h, []string{author}})
 	}
 	w.Write(m)
 }
