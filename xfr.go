@@ -52,7 +52,7 @@ func (w *reply) axfrReceive(q *Msg, c chan *XfrToken) {
 	for {
 		in, err := w.receive()
 		if err != nil {
-			c <- &XfrToken{in.Answer, err}
+			c <- &XfrToken{nil, err}
 			return
 		}
 		if in.Id != q.Id {

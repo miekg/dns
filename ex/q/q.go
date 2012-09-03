@@ -187,7 +187,12 @@ Flags:
 				return
 			}
 		}
-		if qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+		if qtype == dns.TypeAXFR {
+			c.Net = "tcp"
+			doXfr(c, m, nameserver)
+			continue
+		}
+		if qtype == dns.TypeIXFR {
 			doXfr(c, m, nameserver)
 			continue
 		}
@@ -246,7 +251,10 @@ Flags:
 			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
 		})
 	}
-	select {}
+	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
+		// xfr don't start any goroutines
+		select {}
+	}
 
 }
 
@@ -425,6 +433,6 @@ func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
 			}
 		}
 	} else {
-		fmt.Printf("Error %v\n", e)
+		fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
 	}
 }
