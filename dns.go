@@ -3,8 +3,6 @@
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben. Copyright 2010-2012.
 
-// DOMAIN NAME SYSTEM
-//
 // Package dns implements a full featured interface to the Domain Name System.
 // Server- and client-side programming is supported.
 // The package allows complete control over what is send out to the DNS. The package
