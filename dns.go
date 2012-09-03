@@ -18,7 +18,7 @@
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
 //
-//      r := new(dns.RR_TXT)
+//      r := new(dns.RR_MX)
 //      r.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeMX, Class: dns.ClassINET, Ttl: 3600}
 //      r.Pref = 10
 //      r.Mx = "mx.miek.nl."
