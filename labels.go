@@ -34,7 +34,8 @@ func SplitLabels(s string) []string {
 
 // CompareLabels compares the strings s1 and s2 and
 // returns how many labels they have in common starting from the right.
-// The comparison stops at the first inequality.
+// The comparison stops at the first inequality. The labels are not downcased
+// before the comparison.
 //
 // www.miek.nl. and miek.nl. have two labels in common: miek and nl
 // www.miek.nl. and www.bla.nl. have one label in common: nl

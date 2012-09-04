@@ -90,6 +90,10 @@ func toRadixName(d string) string {
 	}
 	s := ""
 	for _, l := range SplitLabels(d) {
+		if s == "" {
+			s = strings.ToLower(l) + s
+			continue
+		}
 		s = strings.ToLower(l) + "." + s
 	}
 	return s
