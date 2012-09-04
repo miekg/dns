@@ -1,6 +1,8 @@
 # TODO
 
 * 'q' standardize ipv6 input with [::1]#53 ?
+* Support for on-the-fly-signing
+* (Re)sign zonefiles
 
 ## Nice to have
 
