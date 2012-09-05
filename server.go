@@ -71,7 +71,7 @@ func NewServeMux() *ServeMux { return &ServeMux{m: radix.New()} }
 var DefaultServeMux = NewServeMux()
 
 // Authors is a list of authors that helped create or make Go DNS better.
-var Authors = []string{ "Miek Gieben", "Ask Bjorn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
+var Authors = []string{ "Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
 
 // Version holds the current version.
 var Version = "Go DNS"
