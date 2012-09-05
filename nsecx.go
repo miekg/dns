@@ -204,7 +204,7 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 			}
 		}
 		if !ncdenied {
-			if m.MsgHdr.Rcode == RcodeNameError {
+			if m.Rcode == RcodeNameError {
 				// For NXDOMAIN this is a problem
 				return 0, ErrDenialNc // add next closer name here
 			}
@@ -222,7 +222,7 @@ func (m *Msg) Nsec3Verify(q Question) (int, error) {
 			return 0, ErrDenialSo
 		}
 		// The message headers claims something different!
-		if m.MsgHdr.Rcode != RcodeNameError {
+		if m.Rcode != RcodeNameError {
 			return 0, ErrDenialHdr
 		}
 
@@ -255,7 +255,7 @@ NoData:
 			}
 		}
 	}
-	if m.MsgHdr.Rcode == RcodeNameError {
+	if m.Rcode == RcodeNameError {
 		return 0, ErrDenialHdr
 	}
 	return _NSEC3_NODATA, nil
