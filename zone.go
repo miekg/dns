@@ -110,11 +110,12 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
-	// TODO(mg): quick check for doubles
+	// TODO(mg): quick check for doubles?
 	key := toRadixName(r.Header().Name)
 	z.mutex.Lock()
-	zd := z.Radix.Find(key)
-	if zd == nil {
+	zd, exact := z.Radix.Find(key)
+	if !exact {
+		// Not an exact match, so insert new value
 		defer z.mutex.Unlock()
 		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
@@ -161,8 +162,8 @@ func (z *Zone) Insert(r RR) error {
 func (z *Zone) Remove(r RR) error {
 	key := toRadixName(r.Header().Name)
 	z.mutex.Lock()
-	zd := z.Radix.Find(key)
-	if zd == nil {
+	zd, exact := z.Radix.Find(key)
+	if !exact {
 		defer z.mutex.Unlock()
 		return nil
 	}
@@ -199,22 +200,13 @@ func (z *Zone) Remove(r RR) error {
 
 // Find looks up the ownername s in the zone and returns the
 // data when found or nil when nothing is found.
+// We can do better here, and include NXDOMAIN also. Much more efficient, only
+// 1 tree walk.
 func (z *Zone) Find(s string) *ZoneData {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	zd := z.Radix.Find(toRadixName(s))
-	if zd == nil {
-		return nil
-	}
-	return zd.Value.(*ZoneData)
-}
-
-// Predecessor searches the zone for a name shorter than s.
-func (z *Zone) Predecessor(s string) *ZoneData {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
-	zd := z.Radix.Predecessor(toRadixName(s))
-	if zd == nil {
+	zd, e := z.Radix.Find(toRadixName(s))
+	if !e {
 		return nil
 	}
 	return zd.Value.(*ZoneData)
@@ -243,5 +235,4 @@ func signZoneData(zd *ZoneData, privkeys []PrivateKey, signername string, config
 	}
 	//s := new(RR_RRSIG)
 	// signername
-
 }
