@@ -191,7 +191,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.Fudge = rr.Fudge
 	t.TimeSigned = rr.TimeSigned
 	t.Algorithm = rr.Algorithm
-	t.OrigId = m.MsgHdr.Id
+	t.OrigId = m.Id
 
 	tbuf := make([]byte, t.Len())
 	if off, ok := PackRR(t, tbuf, 0, nil, false); ok {

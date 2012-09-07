@@ -49,8 +49,8 @@
 // The following is slightly more verbose, but more flexible:
 //
 //      m1 := new(dns.Msg)
-//      m1.MsgHdr.Id = Id()
-//      m1.MsgHdr.RecursionDesired = true
+//      m1.Id = Id()
+//      m1.RecursionDesired = true
 //      m1.Question = make([]Question, 1)
 //      m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
 //

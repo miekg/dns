@@ -13,11 +13,11 @@ const hexDigit = "0123456789abcdef"
 
 // SetReply creates a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) *Msg {
-	dns.MsgHdr.Id = request.MsgHdr.Id
-	dns.MsgHdr.RecursionDesired = request.MsgHdr.RecursionDesired // Copy rd bit
-	dns.MsgHdr.Response = true
-	dns.MsgHdr.Opcode = OpcodeQuery
-	dns.MsgHdr.Rcode = RcodeSuccess
+	dns.Id = request.Id
+	dns.RecursionDesired = request.RecursionDesired // Copy rd bit
+	dns.Response = true
+	dns.Opcode = OpcodeQuery
+	dns.Rcode = RcodeSuccess
 	if len(request.Question) > 0 {
 		dns.Question = make([]Question, 1)
 		dns.Question[0] = request.Question[0]
@@ -27,8 +27,8 @@ func (dns *Msg) SetReply(request *Msg) *Msg {
 
 // SetQuestion creates a question packet.
 func (dns *Msg) SetQuestion(z string, t uint16) *Msg {
-	dns.MsgHdr.Id = Id()
-	dns.MsgHdr.RecursionDesired = true
+	dns.Id = Id()
+	dns.RecursionDesired = true
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, t, ClassINET}
 	return dns
@@ -36,9 +36,9 @@ func (dns *Msg) SetQuestion(z string, t uint16) *Msg {
 
 // SetNotify creates a notify packet.
 func (dns *Msg) SetNotify(z string) *Msg {
-	dns.MsgHdr.Opcode = OpcodeNotify
-	dns.MsgHdr.Authoritative = true
-	dns.MsgHdr.Id = Id()
+	dns.Opcode = OpcodeNotify
+	dns.Authoritative = true
+	dns.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
 	return dns
@@ -46,10 +46,10 @@ func (dns *Msg) SetNotify(z string) *Msg {
 
 // SetRcode creates an error packet suitable for the request.
 func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
-	dns.MsgHdr.Rcode = rcode
-	dns.MsgHdr.Opcode = OpcodeQuery
-	dns.MsgHdr.Response = true
-	dns.MsgHdr.Id = request.MsgHdr.Id
+	dns.Rcode = rcode
+	dns.Opcode = OpcodeQuery
+	dns.Response = true
+	dns.Id = request.Id
 	// Note that this is actually a FORMERR
 	if len(request.Question) > 0 {
 		dns.Question = make([]Question, 1)
@@ -60,20 +60,20 @@ func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 
 // SetRcodeFormatError creates a packet with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) *Msg {
-	dns.MsgHdr.Rcode = RcodeFormatError
-	dns.MsgHdr.Opcode = OpcodeQuery
-	dns.MsgHdr.Response = true
-	dns.MsgHdr.Authoritative = false
-	dns.MsgHdr.Id = request.MsgHdr.Id
+	dns.Rcode = RcodeFormatError
+	dns.Opcode = OpcodeQuery
+	dns.Response = true
+	dns.Authoritative = false
+	dns.Id = request.Id
 	return dns
 }
 
 // SetUpdate makes the message a dynamic update packet. It
 // sets the ZONE section to: z, TypeSOA, ClassINET.
 func (dns *Msg) SetUpdate(z string) *Msg {
-	dns.MsgHdr.Id = Id()
-	dns.MsgHdr.Response = false
-	dns.MsgHdr.Opcode = OpcodeUpdate
+	dns.Id = Id()
+	dns.Response = false
+	dns.Opcode = OpcodeUpdate
 	dns.Compress = false // BIND9 cannot handle compression
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeSOA, ClassINET}
@@ -82,7 +82,7 @@ func (dns *Msg) SetUpdate(z string) *Msg {
 
 // SetIxfr creates dns msg suitable for requesting an ixfr.
 func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
-	dns.MsgHdr.Id = Id()
+	dns.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
 	s := new(RR_SOA)
@@ -95,7 +95,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 
 // SetAxfr creates dns msg suitable for requesting an axfr.
 func (dns *Msg) SetAxfr(z string) *Msg {
-	dns.MsgHdr.Id = Id()
+	dns.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Question[0] = Question{z, TypeAXFR, ClassINET}
 	return dns
@@ -110,7 +110,7 @@ func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) *Msg {
 	t.Algorithm = algo
 	t.Fudge = 300
 	t.TimeSigned = uint64(timesigned)
-	t.OrigId = dns.MsgHdr.Id
+	t.OrigId = dns.Id
 	dns.Extra = append(dns.Extra, t)
 	return dns
 }

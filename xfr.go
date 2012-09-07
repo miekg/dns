@@ -180,7 +180,7 @@ func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	rep := new(Msg)
 	rep.SetReply(req)
-	rep.MsgHdr.Authoritative = true
+	rep.Authoritative = true
 
 	for x := range c {
 		// assume it fits
