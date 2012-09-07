@@ -101,7 +101,7 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 
 func (mux *ServeMux) match(zone string, t uint16) Handler {
 	zone = toRadixName(zone)
-	if h, e := mux.m.Find(zone); e && h != nil && h.Value != nil {
+	if h, e := mux.m.Find(zone); e {
 		// If we got queried for a DS record, we must see if we
 		// if we also serve the parent. We then redirect it.
 		if t == TypeDS {
@@ -110,12 +110,10 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 			}
 		}
 		return h.Value.(Handler)
-	}
-	// Best matching one.
-	if h := mux.m.Predecessor(zone); h != nil && h.Value != nil {
+	} else {
 		return h.Value.(Handler)
 	}
-	return nil
+	panic("dns: not reached")
 }
 
 // Handle adds a handler to the ServeMux for pattern.
