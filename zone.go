@@ -6,6 +6,7 @@ import (
 	"github.com/miekg/radix"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Zone represents a DNS zone. It's safe for concurrent use by 
@@ -15,7 +16,36 @@ type Zone struct {
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 	mutex        *sync.RWMutex
+	// timemodified?
+	expired bool // Slave zone is expired
 }
+
+// SignatureConfig holds the parameters for zone (re)signing. This 
+// is copied from OpenDNSSEC. See:
+// https://wiki.opendnssec.org/display/DOCS/kasp.xml
+type SignatureConfig struct {
+	// Validity period of the signatures, typically 2 to 4 weeks.
+	Validity time.Duration
+	// When the end of the validity approaches, how much time should remain
+	// before we start to resign. Typical value is 3 days.
+	Refresh time.Duration
+	// Jitter is an amount of time added or subtracted from the 
+	// expiration time to ensure not all signatures expire a the same time.
+	// Typical value is 12 hours.
+	Jitter time.Duration
+	// InceptionOffset is subtracted from the inception time to ensure badly
+	// calibrated clocks on the internet can still validate a signature.
+	// Typical value is 300 seconds.
+	InceptionOffset time.Duration
+}
+
+func newSignatureConfig() *SignatureConfig {
+	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second}
+}
+
+// DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
+// Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
+var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to origin.
 func NewZone(origin string) *Zone {
@@ -60,11 +90,18 @@ func toRadixName(d string) string {
 	}
 	s := ""
 	for _, l := range SplitLabels(d) {
+		if s == "" {
+			s = strings.ToLower(l) + s
+			continue
+		}
 		s = strings.ToLower(l) + "." + s
 	}
-	return "." + s
+	return s
 }
 
+func (z *Zone) String() string {
+	return z.Radix.String()
+}
 
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
@@ -73,12 +110,14 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
+	// TODO(mg): quick check for doubles?
 	key := toRadixName(r.Header().Name)
 	z.mutex.Lock()
-	zd := z.Radix.Find(key)
-	if zd == nil {
+	zd, exact := z.Radix.Find(key)
+	if !exact {
+		// Not an exact match, so insert new value
 		defer z.mutex.Unlock()
-		// Check if its a wildcard name
+		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
 		}
@@ -123,8 +162,8 @@ func (z *Zone) Insert(r RR) error {
 func (z *Zone) Remove(r RR) error {
 	key := toRadixName(r.Header().Name)
 	z.mutex.Lock()
-	zd := z.Radix.Find(key)
-	if zd == nil {
+	zd, exact := z.Radix.Find(key)
+	if !exact {
 		defer z.mutex.Unlock()
 		return nil
 	}
@@ -161,23 +200,39 @@ func (z *Zone) Remove(r RR) error {
 
 // Find looks up the ownername s in the zone and returns the
 // data when found or nil when nothing is found.
+// We can do better here, and include NXDOMAIN also. Much more efficient, only
+// 1 tree walk.
 func (z *Zone) Find(s string) *ZoneData {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	zd := z.Radix.Find(toRadixName(s))
-	if zd == nil {
+	zd, e := z.Radix.Find(toRadixName(s))
+	if !e {
 		return nil
 	}
 	return zd.Value.(*ZoneData)
 }
 
-// Predecessor searches the zone for a name shorter than s.
-func (z *Zone) Predecessor(s string) *ZoneData {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
-	zd := z.Radix.Predecessor(toRadixName(s))
-	if zd == nil {
-		return nil
+// Sign (re)signes the zone z. It adds keys to the zone (if not already there)
+// and signs the keys with the KSKs and the rest of the zone with the ZSKs. 
+// NSEC is used for authenticated denial 
+// of existence. If config is nil DefaultSignatureConfig is used.
+// TODO(mg): allow interaction with hsm
+func (z *Zone) Sign(keys []*RR_DNSKEY, privkeys []PrivateKey, config *SignatureConfig) error {
+	if config == nil {
+		config = DefaultSignatureConfig
 	}
-	return zd.Value.(*ZoneData)
+	// TODO(mg): concurrently walk the zone and sign the rrsets
+	// TODO(mg): nsec, or next pointer. Need to be a single tree-op
+
+	return nil
+}
+
+// Sign each ZoneData in place.
+// TODO(mg): assume not signed
+func signZoneData(zd *ZoneData, privkeys []PrivateKey, signername string, config *SignatureConfig) {
+	if zd.NonAuth == true {
+		return
+	}
+	//s := new(RR_RRSIG)
+	// signername
 }
