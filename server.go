@@ -193,7 +193,8 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 			return d.Value.(Handler)
 		}
 	}
-	panic("dns: not reached")
+	// Nothing found at all
+	return nil
 }
 
 // Handle adds a handler to the ServeMux for pattern.
