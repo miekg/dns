@@ -212,6 +212,17 @@ func (z *Zone) Find(s string) *ZoneData {
 	return zd.Value.(*ZoneData)
 }
 
+// Predecessor searches the zone for a name shorter than s.
+func (z *Zone) Predecessor(s string) *ZoneData {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
+	zd := z.Radix.Predecessor(toRadixName(s))
+	if zd == nil {
+		return nil
+	}
+	return zd.Value.(*ZoneData)
+}
+
 // Sign (re)signes the zone z. It adds keys to the zone (if not already there)
 // and signs the keys with the KSKs and the rest of the zone with the ZSKs. 
 // NSEC is used for authenticated denial 
