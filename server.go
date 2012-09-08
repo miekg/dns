@@ -71,7 +71,7 @@ func NewServeMux() *ServeMux { return &ServeMux{m: radix.New()} }
 var DefaultServeMux = NewServeMux()
 
 // Authors is a list of authors that helped create or make Go DNS better.
-var Authors = []string{ "Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
+var Authors = []string{"Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
 
 // Version holds the current version.
 var Version = "Go DNS"
@@ -158,8 +158,8 @@ func HandleVersion(w ResponseWriter, r *Msg) {
 	w.Write(m)
 }
 
-func authorHandler() Handler { return HandlerFunc(HandleAuthors) }
-func failedHandler() Handler { return HandlerFunc(HandleFailed) }
+func authorHandler() Handler  { return HandlerFunc(HandleAuthors) }
+func failedHandler() Handler  { return HandlerFunc(HandleFailed) }
 func versionHandler() Handler { return HandlerFunc(HandleVersion) }
 
 // Start a server on addresss and network speficied. Invoke handler
@@ -173,15 +173,25 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 	zone = toRadixName(zone)
 	if h, e := mux.m.Find(zone); e {
 		// If we got queried for a DS record, we must see if we
-		// if we also serve the parent. We then redirect it.
-		if t == TypeDS {
-			if d := h.Up(); d != nil {
-				return d.Value.(Handler)
-			}
+		// if we also serve the parent. We then redirect the query to it.
+		// TODO(mg): grandparents works too?
+		if t != TypeDS {
+			return h.Value.(Handler)
 		}
-		return h.Value.(Handler)
+		if d := h.Up(); d != nil {
+			return d.Value.(Handler)
+		}
 	} else {
-		return h.Value.(Handler)
+		if h == nil {
+			return nil
+		}
+		// Not an exact match and h may be nil and h.Value may be nil
+		if h.Value != nil {
+			return h.Value.(Handler)
+		}
+		if d := h.Up(); d != nil {
+			return d.Value.(Handler)
+		}
 	}
 	panic("dns: not reached")
 }
