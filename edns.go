@@ -8,6 +8,20 @@
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
+// The rdata of an OPT RR consists out of a slice of EDNS0 interfaces. Currently
+// only a few have been standardized: EDNS0_NSID (RFC 5001) and EDNS0_SUBNET (draft). Note that
+// these options may be combined in an OPT RR.
+// Basic use pattern for a server to check if (and which) options are set:
+//
+//	// o is a dns.RR_OPT
+//	for _, s := range o.Options {
+//		switch e := s.(type) {
+//		case *dns.EDNS0_NSID:
+//			// do stuff with e.Nsid
+//		case *dns.EDNS0_SUBNET:
+//			// access e.Family, e.Address, etc.
+//		}
+//	}
 package dns
 
 import (
@@ -130,7 +144,8 @@ type EDNS0 interface {
 }
 
 // The nsid EDNS0 option is used to retrieve some sort of nameserver
-// identifier. The identifier is an opaque string encoded as hex.
+// identifier. When seding a request Nsid must be set to the empty string
+// The identifier is an opaque string encoded as hex.
 // Basic use pattern for creating an nsid option:
 //
 //	o := new(dns.RR_OPT)
