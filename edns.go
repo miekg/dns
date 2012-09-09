@@ -49,7 +49,7 @@ func (rr *RR_OPT) String() string {
 		switch o.(type) {
 		case *EDNS0_NSID:
 			s += "\n; NSID: " + o.String()
-			h, e := o.Pack()
+			h, e := o.pack()
 			var r string
 			if e == nil {
 				for _, c := range h {
@@ -67,7 +67,7 @@ func (rr *RR_OPT) String() string {
 func (rr *RR_OPT) Len() int {
 	l := rr.Hdr.Len()
 	for i := 0; i < len(rr.Option); i++ {
-		lo, _ := rr.Option[i].Pack()
+		lo, _ := rr.Option[i].pack()
 		l += 2 + len(lo)
 	}
 	return l
@@ -120,17 +120,17 @@ func (rr *RR_OPT) SetDo() {
 type EDNS0 interface {
 	// Option returns the option code for the option.
 	Option() uint16
-	// Pack returns the bytes of the option data.
-	Pack() ([]byte, error)
-	// Unpack sets the data as found in the buffer. Is also sets
+	// pack returns the bytes of the option data.
+	pack() ([]byte, error)
+	// unpack sets the data as found in the buffer. Is also sets
 	// the length of the slice as the length of the option data.
-	Unpack([]byte)
+	unpack([]byte)
 	// String returns the string representation of the option.
 	String() string
 }
 
 // The nsid EDNS0 option is used to retrieve some sort of nameserver
-// identifier. The identifier is an opaque string encoded has hex.
+// identifier. The identifier is an opaque string encoded as hex.
 // Basic use pattern for creating an nsid option:
 //
 //	o := new(dns.RR_OPT)
@@ -148,7 +148,7 @@ func (e *EDNS0_NSID) Option() uint16 {
 	return EDNS0NSID
 }
 
-func (e *EDNS0_NSID) Pack() ([]byte, error) {
+func (e *EDNS0_NSID) pack() ([]byte, error) {
 	h, err := hex.DecodeString(e.Nsid)
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (e *EDNS0_NSID) Pack() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_NSID) Unpack(b []byte) {
+func (e *EDNS0_NSID) unpack(b []byte) {
 	e.Nsid = hex.EncodeToString(b)
 }
 
@@ -192,7 +192,7 @@ func (e *EDNS0_SUBNET) Option() uint16 {
 	return EDNS0SUBNET
 }
 
-func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
+func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	b := make([]byte, 4)
 	b[0], b[1] = packUint16(e.Family)
 	b[2] = e.SourceNetmask
@@ -230,7 +230,7 @@ func (e *EDNS0_SUBNET) Pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_SUBNET) Unpack(b []byte) {
+func (e *EDNS0_SUBNET) unpack(b []byte) {
 	if len(b) < 8 {
 		return
 	}
