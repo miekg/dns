@@ -68,7 +68,8 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
-	mutex      *sync.RWMutex
+	mutex      *sync.RWMutex	 // For locking
+	radix      *radix.Radix		// The actual radix node belonging to this value
 }
 
 // newZoneData creates a new zone data element
@@ -199,28 +200,34 @@ func (z *Zone) Remove(r RR) error {
 }
 
 // Find looks up the ownername s in the zone and returns the
-// data when found or nil when nothing is found.
-// We can do better here, and include NXDOMAIN also. Much more efficient, only
-// 1 tree walk.
-func (z *Zone) Find(s string) *ZoneData {
+// data and true when an exact match is found. If an exact find isn't
+// possible the first parent node with a non-nil Value is returned and
+// the boolean is false.
+func (z *Zone) Find(s string) (*ZoneData, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	zd, e := z.Radix.Find(toRadixName(s))
-	if !e {
-		return nil
+	if zd == nil {
+		return nil, false
 	}
-	return zd.Value.(*ZoneData)
+	return zd.Value.(*ZoneData), e
 }
 
-// Predecessor searches the zone for a name shorter than s.
-func (z *Zone) Predecessor(s string) *ZoneData {
+// Up bla bla
+func (z *Zone) Up(s string) *ZoneData {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	zd := z.Radix.Predecessor(toRadixName(s))
+	// Another find...
+	zd, _ := z.Radix.Find(toRadixName(s))
+	// TODO(mg): what about exact??
 	if zd == nil {
 		return nil
 	}
-	return zd.Value.(*ZoneData)
+	zd1 := zd.Up()
+	if zd1 == nil {
+		return nil
+	}
+	return zd1.Value.(*ZoneData)
 }
 
 // Sign (re)signes the zone z. It adds keys to the zone (if not already there)
