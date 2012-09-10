@@ -226,7 +226,8 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 	return zd.Value.(*ZoneData), e, b
 }
 
-// Up bla bla
+// Up performs a Find and then walks the tree upwards to look
+// for this first non-nil parent value.
 func (z *Zone) Up(s string) *ZoneData {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
