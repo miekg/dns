@@ -226,24 +226,6 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 	return zd.Value.(*ZoneData), e, b
 }
 
-// Up performs a Find and then walks the tree upwards to look
-// for this first non-nil parent value.
-func (z *Zone) Up(s string) *ZoneData {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
-	// Another find...
-	zd, _ := z.Radix.Find(toRadixName(s))
-	// TODO(mg): what about exact??
-	if zd == nil {
-		return nil
-	}
-	zd1 := zd.Up()
-	if zd1 == nil {
-		return nil
-	}
-	return zd1.Value.(*ZoneData)
-}
-
 // Sign (re)signes the zone z. It adds keys to the zone (if not already there)
 // and signs the keys with the KSKs and the rest of the zone with the ZSKs. 
 // NSEC is used for authenticated denial 
