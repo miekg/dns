@@ -203,18 +203,35 @@ func (z *Zone) Remove(r RR) error {
 // data and true when an exact match is found. If an exact find isn't
 // possible the first parent node with a non-nil Value is returned and
 // the boolean is false.
-func (z *Zone) Find(s string) (*ZoneData, bool) {
+func (z *Zone) Find(s string) (node *ZoneData, exact bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	zd, e := z.Radix.Find(toRadixName(s))
-	if zd == nil {
+	n, e := z.Radix.Find(toRadixName(s))
+	if n == nil {
 		return nil, false
 	}
-	return zd.Value.(*ZoneData), e
+	node = n.Value.(*ZoneData)
+	exact = e
+	return
+}
+
+// FindAndNext looks up the ownername s and its successor. It works
+// just like Find.
+func (z *Zone) FindAndNext(s string) (node, next *ZoneData, exact bool) {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
+	n, e := z.Radix.Find(toRadixName(s))
+	if n == nil {
+		return nil, nil, false
+	}
+	node = n.Value.(*ZoneData)
+	next = n.Next().Value.(*ZoneData) // There is always a next
+	exact = e
+	return
 }
 
 // FindFunc works like Find, but the function f is executed on
-// each node which has a non-nil Value during the tree traversel.
+// each node which has a non-nil Value during the tree traversal.
 // If f returns true, that node is returned.
 func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bool) {
 	z.mutex.RLock()
@@ -226,12 +243,10 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 	return zd.Value.(*ZoneData), e, b
 }
 
-// Sign (re)signes the zone z. It adds keys to the zone (if not already there)
-// and signs the keys with the KSKs and the rest of the zone with the ZSKs. 
-// NSEC is used for authenticated denial 
-// of existence. If config is nil DefaultSignatureConfig is used.
-// TODO(mg): allow interaction with hsm
-func (z *Zone) Sign(keys []*RR_DNSKEY, privkeys []PrivateKey, config *SignatureConfig) error {
+// Sign (re)signes the zone z with the given keys, it knows about ZSKs and KSKs.
+// NSEC is used for authenticated denial of existence. 
+// If config is nil DefaultSignatureConfig is used.
+func (z *Zone) Sign(privkeys []PrivateKey, config *SignatureConfig) error {
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
