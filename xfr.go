@@ -141,8 +141,6 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-
-
 // XfrSend performs an outgoing [AI]xfr depending on the request message. The
 // caller is responsible for sending the correct sequence of RR sets through
 // the channel c. For reasons of symmetry XfrToken is re-used.

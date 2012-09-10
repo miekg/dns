@@ -142,7 +142,7 @@ func TestCompressLenght(t *testing.T) {
 	m.SetQuestion("miek.nl", TypeMX)
 	ul := m.Len()
 	m.Compress = true
-	if ul != m.Len(){
+	if ul != m.Len() {
 		t.Fatalf("Should be equal")
 	}
 }
