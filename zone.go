@@ -68,8 +68,8 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
-	mutex      *sync.RWMutex	 // For locking
-	radix      *radix.Radix		// The actual radix node belonging to this value
+	mutex      *sync.RWMutex          // For locking
+	radix      *radix.Radix           // The actual radix node belonging to this value
 }
 
 // newZoneData creates a new zone data element
@@ -211,6 +211,19 @@ func (z *Zone) Find(s string) (*ZoneData, bool) {
 		return nil, false
 	}
 	return zd.Value.(*ZoneData), e
+}
+
+// FindFunc works like Find, but the function f is executed on
+// each node which has a non-nil Value during the tree traversel.
+// If f returns true, that node is returned.
+func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bool) {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
+	zd, e, b := z.Radix.FindFunc(toRadixName(s), f)
+	if zd == nil {
+		return nil, false, false
+	}
+	return zd.Value.(*ZoneData), e, b
 }
 
 // Up bla bla
