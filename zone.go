@@ -4,6 +4,7 @@ package dns
 
 import (
 	"github.com/miekg/radix"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -99,26 +100,6 @@ func toRadixName(d string) string {
 		s = strings.ToLower(l) + "." + s
 	}
 	return s
-}
-
-// Sort the RR types in an NSEC/NSEC3 record
-func sortTypeBitMap(bitmap []uint16) []uint16 {
-	sorted := make([]uint16, 0)
-	min := 1<<16
-	max := -1
-	// a bit convoluted, but I want to avoid looping twice
-	// although the copy hurts too...
-	for _, v := range bitmap {
-		if int(v) > max {
-			sorted = append(sorted, v)
-			max = int(v)
-			continue
-		}
-		if int(v) < min {
-
-		}
-
-	}
 }
 
 // String returns a string representation of a ZoneData. There is no
@@ -350,6 +331,7 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			node.Signatures[t] = append(node.Signatures[t], s)
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
+		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		// NSEC
 		s := new(RR_RRSIG)
@@ -363,3 +345,9 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 		node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 	}
 }
+
+type uint16Slice []uint16
+
+func (p uint16Slice) Len() int           { return len(p) }
+func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
+func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
