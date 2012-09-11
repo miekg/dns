@@ -69,7 +69,6 @@ type ZoneData struct {
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
 	mutex      *sync.RWMutex          // For locking
-	radix      *radix.Radix           // The actual radix node belonging to this value
 }
 
 // newZoneData creates a new zone data element
@@ -100,7 +99,9 @@ func toRadixName(d string) string {
 	return s
 }
 
+
 func (z *Zone) String() string {
+	// FIXME(mg)
 	return z.Radix.String()
 }
 
@@ -244,24 +245,41 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 }
 
 // Sign (re)signes the zone z with the given keys, it knows about ZSKs and KSKs.
-// NSEC is used for authenticated denial of existence. 
+// NSECs and RRSIGs are added as needed. The public keys themselves are not added
+// to the zone.
 // If config is nil DefaultSignatureConfig is used.
-func (z *Zone) Sign(privkeys []PrivateKey, config *SignatureConfig) error {
+func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
-	// TODO(mg): concurrently walk the zone and sign the rrsets
-	// TODO(mg): nsec, or next pointer. Need to be a single tree-op
-
+	// Pre-calc the key tag
+	keytags := make(map[*RR_DNSKEY]uint16)
+	for k, _ := range keys {
+		keytags[k] = k.KeyTag()
+	}
+	apex, next, _ := z.FindAndNext(z.Origin)
+	signZoneData(apex, next, keys, keytags, config)
 	return nil
 }
 
 // Sign each ZoneData in place.
 // TODO(mg): assume not signed
-func signZoneData(zd *ZoneData, privkeys []PrivateKey, signername string, config *SignatureConfig) {
-	if zd.NonAuth == true {
+func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) {
+	if node.NonAuth == true {
+		// NSEC?
 		return
 	}
-	//s := new(RR_RRSIG)
-	// signername
+	for k, p := range keys {
+		for t, rrset := range node.RR {
+			s := new(RR_RRSIG)
+			s.SignerName = k.Hdr.Name
+			s.Hdr.Ttl = k.Hdr.Ttl
+			s.Algorithm = k.Algorithm
+			s.KeyTag = keytags[k]
+			s.Inception = 0	// TODO(mg)
+			s.Expiration = 0
+			s.Sign(p, rrset)	// discard error, TODO(mg)
+			node.Signatures[t] = append(node.Signatures[t], s)
+		}
+	}
 }
