@@ -369,3 +369,13 @@ type uint16Slice []uint16
 func (p uint16Slice) Len() int           { return len(p) }
 func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+// TimeToUint32 translates a time.Time to a 32 bit value which                      
+// can be used as the RRSIG's inception or expiration times.                        
+func TimeToUint32(t time.Time) uint32 {
+	mod := (t.Unix() / year68) - 1
+	if mod < 0 {
+		mod = 0
+	}
+	return uint32(t.Unix() - (mod * year68))
+}
