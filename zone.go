@@ -39,7 +39,7 @@ type SignatureConfig struct {
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
 	// SOA MINTTL value
-	minTTL uint16
+	minttl uint32
 }
 
 func newSignatureConfig() *SignatureConfig {
@@ -298,6 +298,9 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 		keytags[k] = k.KeyTag()
 	}
 	apex, next, _ := z.FindAndNext(z.Origin)
+
+	// TODO(mg): check if it exissts
+	config.minttl = apex.RR[TypeSOA][0].(*RR_SOA).Minttl
 	signZoneData(apex, next, keys, keytags, config)
 	return nil
 }
@@ -305,16 +308,31 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 // Sign each ZoneData in place.
 // TODO(mg): assume not signed
 func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) {
-
 	nsec := new(RR_NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
 	nsec.Hdr.Ttl = 3600 // Must be SOA Min TTL
 	nsec.Hdr.Name = node.Name
-	nsec.NextDomain = next.Name // Only thing I need from next...
+	nsec.NextDomain = next.Name // Only thing I need from next, actually
 	nsec.Hdr.Class = ClassINET
 
 	if node.NonAuth == true {
-		// NSEC?
+		// NSEC needed. Don't know. TODO(mg)
+		for t, _ := range node.RR {
+			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
+		}
+		sort.Sort(uint16Slice(nsec.TypeBitMap))
+		node.RR[TypeNSEC] = []RR{nsec}
+		for k, p := range keys {
+			s := new(RR_RRSIG)
+			s.SignerName = k.Hdr.Name
+			s.Hdr.Ttl = k.Hdr.Ttl
+			s.Algorithm = k.Algorithm
+			s.KeyTag = keytags[k]
+			s.Inception = 0 // TODO(mg)
+			s.Expiration = 0
+			s.Sign(p, []RR{nsec}) // discard error, TODO(mg)
+			node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
+		}
 		return
 	}
 	for k, p := range keys {
