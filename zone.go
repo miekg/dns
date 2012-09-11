@@ -37,10 +37,12 @@ type SignatureConfig struct {
 	// calibrated clocks on the internet can still validate a signature.
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
+	// SOA MINTTL value
+	minTTL uint16
 }
 
 func newSignatureConfig() *SignatureConfig {
-	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second}
+	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, 0}
 }
 
 // DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
@@ -97,6 +99,26 @@ func toRadixName(d string) string {
 		s = strings.ToLower(l) + "." + s
 	}
 	return s
+}
+
+// Sort the RR types in an NSEC/NSEC3 record
+func sortTypeBitMap(bitmap []uint16) []uint16 {
+	sorted := make([]uint16, 0)
+	min := 1<<16
+	max := -1
+	// a bit convoluted, but I want to avoid looping twice
+	// although the copy hurts too...
+	for _, v := range bitmap {
+		if int(v) > max {
+			sorted = append(sorted, v)
+			max = int(v)
+			continue
+		}
+		if int(v) < min {
+
+		}
+
+	}
 }
 
 // String returns a string representation of a ZoneData. There is no
@@ -285,6 +307,7 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 // to the zone.
 // If config is nil DefaultSignatureConfig is used.
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
+	// TODO(mg): Write lock
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
@@ -301,6 +324,14 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 // Sign each ZoneData in place.
 // TODO(mg): assume not signed
 func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) {
+
+	nsec := new(RR_NSEC)
+	nsec.Hdr.Rrtype = TypeNSEC
+	nsec.Hdr.Ttl = 3600 // Must be SOA Min TTL
+	nsec.Hdr.Name = node.Name
+	nsec.NextDomain = next.Name // Only thing I need from next...
+	nsec.Hdr.Class = ClassINET
+
 	if node.NonAuth == true {
 		// NSEC?
 		return
@@ -310,12 +341,25 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			s := new(RR_RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
+			s.Hdr.Class = ClassINET
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
 			s.Inception = 0 // TODO(mg)
 			s.Expiration = 0
 			s.Sign(p, rrset) // discard error, TODO(mg)
 			node.Signatures[t] = append(node.Signatures[t], s)
+			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
+		node.RR[TypeNSEC] = []RR{nsec}
+		// NSEC
+		s := new(RR_RRSIG)
+		s.SignerName = k.Hdr.Name
+		s.Hdr.Ttl = k.Hdr.Ttl
+		s.Algorithm = k.Algorithm
+		s.KeyTag = keytags[k]
+		s.Inception = 0 // TODO(mg)
+		s.Expiration = 0
+		s.Sign(p, []RR{nsec}) // discard error, TODO(mg)
+		node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 	}
 }
