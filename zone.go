@@ -99,10 +99,46 @@ func toRadixName(d string) string {
 	return s
 }
 
+// String returns a string representation of a ZoneData. There is no
+// String for the entire zone, because this will (most likely) take up
+// a huge amount of memory. Basic use pattern for printing an entire
+// zone:
+//
+//	// z contains the zone
+//	z.Radix.Do(func(i interface{}) {
+//		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
+func (zd *ZoneData) String() string {
+	var (
+		s string
+		t uint16
+	)
+	// Make sure SOA is first
+	// There is only one SOA, but it may have multiple sigs
+	if soa, ok := zd.RR[TypeSOA]; ok {
+		s += soa[0].String() + "\n"
+		if _, ok := zd.Signatures[TypeSOA]; ok {
+			for _, sig := range zd.Signatures[TypeSOA] {
+				s += sig.String() + "\n"
+			}
+		}
+	}
 
-func (z *Zone) String() string {
-	// FIXME(mg)
-	return z.Radix.String()
+Types:
+	for _, rrset := range zd.RR {
+		for _, rr := range rrset {
+			t = rr.Header().Rrtype
+			if t == TypeSOA { // Done above
+				continue Types
+			}
+			s += rr.String() + "\n"
+		}
+		if _, ok := zd.Signatures[t]; ok {
+			for _, rr := range zd.Signatures[t] {
+				s += rr.String() + "\n"
+			}
+		}
+	}
+	return s
 }
 
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
@@ -276,9 +312,9 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = 0	// TODO(mg)
+			s.Inception = 0 // TODO(mg)
 			s.Expiration = 0
-			s.Sign(p, rrset)	// discard error, TODO(mg)
+			s.Sign(p, rrset) // discard error, TODO(mg)
 			node.Signatures[t] = append(node.Signatures[t], s)
 		}
 	}
