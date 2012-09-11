@@ -521,8 +521,8 @@ func TestRfc1982(t *testing.T) {
 	// fall in the current 68 year span
 	strtests := []string{"20120525134203", "19700101000000", "20380119031408"}
 	for _, v := range strtests {
-		if x, _ := DateToTime(v); v != TimeToDate(x) {
-			t.Logf("1982 arithmetic string failure %s (%s:%d)", v, TimeToDate(x), x)
+		if x, _ := DateToTime(v); v != TimeToString(x) {
+			t.Logf("1982 arithmetic string failure %s (%s:%d)", v, TimeToString(x), x)
 			t.Fail()
 		}
 	}
@@ -532,8 +532,8 @@ func TestRfc1982(t *testing.T) {
 		1<<32 - 1: "21060207062815",
 	}
 	for i, v := range inttests {
-		if TimeToDate(i) != v {
-			t.Logf("1982 arithmetic int failure %d:%s (%s)", i, v, TimeToDate(i))
+		if TimeToString(i) != v {
+			t.Logf("1982 arithmetic int failure %d:%s (%s)", i, v, TimeToString(i))
 			t.Fail()
 		}
 	}
@@ -549,7 +549,7 @@ func TestRfc1982(t *testing.T) {
 	}
 	for from, to := range future {
 		x, _ := DateToTime(from)
-		y := TimeToDate(x)
+		y := TimeToString(x)
 		if y != to {
 			t.Logf("1982 arithmetic future failure %s:%s (%s)", from, to, y)
 			t.Fail()
