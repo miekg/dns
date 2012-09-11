@@ -1398,6 +1398,17 @@ func StringToTime(s string) (uint32, error) {
 	return uint32(t.Unix() - (mod * year68)), nil
 }
 
+// TimeToUint32 translates a time.Time to a 32 bit value which
+// can be used as the RRSIG's inception or expiration times.
+func TimeToUint32(t time.Time) uint32 {
+	// TODO(mg): rfc1982
+	mod := (t.Unix() / year68) - 1
+	if mod < 0 {
+		mod = 0
+	}
+	return uint32(t.Unix() - (mod * year68))
+}
+
 // saltString converts a NSECX salt to uppercase and
 // returns "-" when it is empty
 func saltString(s string) string {
