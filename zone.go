@@ -345,8 +345,8 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			s.Hdr.Class = ClassINET
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = 0 // TODO(mg)
-			s.Expiration = 0
+			s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+			s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 			s.Sign(p, rrset) // discard error, TODO(mg)
 			node.Signatures[t] = append(node.Signatures[t], s)
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
