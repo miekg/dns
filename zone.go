@@ -4,6 +4,7 @@ package dns
 
 import (
 	"github.com/miekg/radix"
+	"math/rand"
 	"sort"
 	"strings"
 	"sync"
@@ -17,8 +18,8 @@ type Zone struct {
 	Wildcard     int    // Whenever we see a wildcard name, this is incremented
 	*radix.Radix        // Zone data
 	mutex        *sync.RWMutex
-	// timemodified?
-	expired bool // Slave zone is expired
+	expired      bool // Slave zone is expired
+	// Do we need a timemodified?
 }
 
 // SignatureConfig holds the parameters for zone (re)signing. This 
@@ -30,15 +31,16 @@ type SignatureConfig struct {
 	// When the end of the validity approaches, how much time should remain
 	// before we start to resign. Typical value is 3 days.
 	Refresh time.Duration
-	// Jitter is an amount of time added or subtracted from the 
+	// Jitter is an random amount of time added or subtracted from the 
 	// expiration time to ensure not all signatures expire a the same time.
-	// Typical value is 12 hours.
+	// Typical value is 12 hours, which means the actual jitter value is
+	// between -12..0..+12.
 	Jitter time.Duration
 	// InceptionOffset is subtracted from the inception time to ensure badly
 	// calibrated clocks on the internet can still validate a signature.
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
-	// SOA MINTTL value
+	// SOA MINTTL value used as the TTL on NSEC/NSEC3 -- no override
 	minttl uint32
 }
 
@@ -71,11 +73,11 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
-	mutex      *sync.RWMutex          // For locking
+	mutex      *sync.RWMutex
 }
 
-// newZoneData creates a new zone data element
-func newZoneData(s string) *ZoneData {
+// NewZoneData creates a new zone data element.
+func NewZoneData(s string) *ZoneData {
 	zd := new(ZoneData)
 	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
@@ -86,7 +88,7 @@ func newZoneData(s string) *ZoneData {
 
 // toRadixName reverses a domain name so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
-// each label is also lowercased.
+// Each label is also lowercased.
 func toRadixName(d string) string {
 	if d == "." {
 		return "."
@@ -162,7 +164,7 @@ func (z *Zone) Insert(r RR) error {
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
 		}
-		zd := newZoneData(r.Header().Name)
+		zd := NewZoneData(r.Header().Name)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RR_RRSIG).TypeCovered
@@ -357,8 +359,8 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 		s.Hdr.Ttl = k.Hdr.Ttl
 		s.Algorithm = k.Algorithm
 		s.KeyTag = keytags[k]
-		s.Inception = 0 // TODO(mg)
-		s.Expiration = 0
+		s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+		s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 		s.Sign(p, []RR{nsec}) // discard error, TODO(mg)
 		node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 	}
@@ -378,4 +380,13 @@ func TimeToUint32(t time.Time) uint32 {
 		mod = 0
 	}
 	return uint32(t.Unix() - (mod * year68))
+}
+
+// jitterTime returns a random +/- jitter
+func jitterDuration(d time.Duration) time.Duration {
+	jitter := rand.Intn(int(d))
+	if rand.Intn(1) == 1 {
+		return time.Duration(jitter)
+	}
+	return -time.Duration(jitter)
 }
