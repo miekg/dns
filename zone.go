@@ -29,7 +29,7 @@ func (p uint16Slice) Len() int           { return len(p) }
 func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-type signData struct{node, next *ZoneData }
+type signData struct{ node, next *ZoneData }
 
 // SignatureConfig holds the parameters for zone (re)signing. This 
 // is copied from OpenDNSSEC. See:
@@ -145,7 +145,7 @@ Types:
 	for _, rrset := range zd.RR {
 		for _, rr := range rrset {
 			t = rr.Header().Rrtype
-			if t == TypeSOA { // Done above
+			if t == TypeSOA || t == TypeNSEC { // Done above or below
 				continue Types
 			}
 			s += rr.String() + "\n"
@@ -153,6 +153,16 @@ Types:
 		if _, ok := zd.Signatures[t]; ok {
 			for _, rr := range zd.Signatures[t] {
 				s += rr.String() + "\n"
+			}
+		}
+	}
+	// Make sure NSEC is last
+	// There is only one NSEC, but it may have multiple sigs
+	if soa, ok := zd.RR[TypeNSEC]; ok {
+		s += soa[0].String() + "\n"
+		if _, ok := zd.Signatures[TypeNSEC]; ok {
+			for _, sig := range zd.Signatures[TypeNSEC] {
+				s += sig.String() + "\n"
 			}
 		}
 	}
@@ -382,7 +392,6 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	nsec.Hdr.Class = ClassINET
 
 	if node.NonAuth == true {
-		// Check for DS records, FIXME(mg)
 		for t, _ := range node.RR {
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
@@ -403,6 +412,20 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				return e
 			}
 			node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
+			// DS
+			if ds, ok := node.RR[TypeDS]; ok {
+				s := new(RR_RRSIG)
+				s.SignerName = k.Hdr.Name
+				s.Hdr.Ttl = k.Hdr.Ttl
+				s.Algorithm = k.Algorithm
+				s.KeyTag = keytags[k]
+				s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+				s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+				e := s.Sign(p, ds)
+				if e != nil {
+					return e
+				}
+			}
 		}
 		return nil
 	}
