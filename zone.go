@@ -425,6 +425,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				if e != nil {
 					return e
 				}
+				node.Signatures[TypeDS] = append(node.Signatures[TypeDS], s)
 			}
 		}
 		return nil
