@@ -299,13 +299,17 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	for k, _ := range keys {
 		keytags[k] = k.KeyTag()
 	}
-	apex, next, _ := z.FindAndNext(z.Origin)
-	// TODO(mg): check if it exissts
-	config.minttl = apex.RR[TypeSOA][0].(*RR_SOA).Minttl
-
-	for next.Name != z.Origin {
-		signZoneData(apex, next, keys, keytags, config)
-		apex, next, _ = z.FindAndNext(z.Origin)
+	// FindAndNext returns the value I want the raw Radix nodes
+	// TODO(mg): LOCKING
+	apex, e := z.Radix.Find(toRadixName(z.Origin))
+	e = e // TODO(mg)
+	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
+	next := apex.Next()
+	signZoneData(apex.Value.(*ZoneData), next.Value.(*ZoneData), keys, keytags, config)
+	for next.Value.(*ZoneData).Name != z.Origin {
+		nextnext := next.Next()
+		signZoneData(next.Value.(*ZoneData), nextnext.Value.(*ZoneData), keys, keytags, config)
+		next = nextnext
 	}
 
 	return nil
