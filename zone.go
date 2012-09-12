@@ -5,6 +5,7 @@ package dns
 import (
 	"github.com/miekg/radix"
 	"math/rand"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -21,6 +22,14 @@ type Zone struct {
 	expired      bool // Slave zone is expired
 	// Do we need a timemodified?
 }
+
+type uint16Slice []uint16
+
+func (p uint16Slice) Len() int           { return len(p) }
+func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
+func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+type signData struct{ node, next *ZoneData }
 
 // SignatureConfig holds the parameters for zone (re)signing. This 
 // is copied from OpenDNSSEC. See:
@@ -40,16 +49,20 @@ type SignatureConfig struct {
 	// calibrated clocks on the internet can still validate a signature.
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
+	// SignerRoutines specifies the number of signing goroutines, if not
+	// set runtime.NumCPU() + 1 is used as the value
+	SignerRoutines int
 	// SOA MINTTL value used as the TTL on NSEC/NSEC3 -- no override
 	minttl uint32
 }
 
 func newSignatureConfig() *SignatureConfig {
-	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, 0}
+	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, runtime.NumCPU() + 1, 0}
 }
 
 // DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
 // Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
+// SignerRoutines is set to runtime.NumCPU() + 1
 var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to origin.
@@ -146,6 +159,12 @@ Types:
 	return s
 }
 
+// Lock locks z for writing.
+func (z *Zone) Lock() { z.mutex.Lock() }
+
+// Unlock unlocks z for writing.
+func (z *Zone) Unlock() { z.mutex.Unlock() }
+
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
@@ -155,11 +174,11 @@ func (z *Zone) Insert(r RR) error {
 
 	// TODO(mg): quick check for doubles?
 	key := toRadixName(r.Header().Name)
-	z.mutex.Lock()
+	z.Lock()
 	zd, exact := z.Radix.Find(key)
 	if !exact {
 		// Not an exact match, so insert new value
-		defer z.mutex.Unlock()
+		defer z.Unlock()
 		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
@@ -181,7 +200,7 @@ func (z *Zone) Insert(r RR) error {
 		z.Radix.Insert(key, zd)
 		return nil
 	}
-	z.mutex.Unlock()
+	z.Unlock()
 	zd.Value.(*ZoneData).mutex.Lock()
 	defer zd.Value.(*ZoneData).mutex.Unlock()
 	// Name already there
@@ -204,13 +223,13 @@ func (z *Zone) Insert(r RR) error {
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
 	key := toRadixName(r.Header().Name)
-	z.mutex.Lock()
+	z.Lock()
 	zd, exact := z.Radix.Find(key)
 	if !exact {
-		defer z.mutex.Unlock()
+		defer z.Unlock()
 		return nil
 	}
-	z.mutex.Unlock()
+	z.Unlock()
 	zd.Value.(*ZoneData).mutex.Lock()
 	defer zd.Value.(*ZoneData).mutex.Unlock()
 	remove := false
@@ -257,21 +276,6 @@ func (z *Zone) Find(s string) (node *ZoneData, exact bool) {
 	return
 }
 
-// FindAndNext looks up the ownername s and its successor. It works
-// just like Find.
-func (z *Zone) FindAndNext(s string) (node, next *ZoneData, exact bool) {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
-	n, e := z.Radix.Find(toRadixName(s))
-	if n == nil {
-		return nil, nil, false
-	}
-	node = n.Value.(*ZoneData)
-	next = n.Next().Value.(*ZoneData) // There is always a next
-	exact = e
-	return
-}
-
 // FindFunc works like Find, but the function f is executed on
 // each node which has a non-nil Value during the tree traversal.
 // If f returns true, that node is returned.
@@ -287,10 +291,17 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 
 // Sign (re)signes the zone z with the given keys, it knows about ZSKs and KSKs.
 // NSECs and RRSIGs are added as needed. The public keys themselves are not added
-// to the zone.
-// If config is nil DefaultSignatureConfig is used.
+// to the zone. If config is nil DefaultSignatureConfig is used.
+// Basic use pattern for signing a zone with the default SignatureConfig:
+//
+//	// A signle PublicKey/PrivateKey have been read from disk
+//	e := z.Sign(map[*dns.RR_DNSKEY]dns.PrivateKey{pubkey.(*dns.RR_DNSKEY): privkey}, nil)
+//	if e != nil {
+//		// signing error
+//	}
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
-	// TODO(mg): Write lock
+	z.Lock()
+	defer z.Unlock()
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
@@ -299,37 +310,73 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	for k, _ := range keys {
 		keytags[k] = k.KeyTag()
 	}
-	// FindAndNext returns the value I want the raw Radix nodes
-	// TODO(mg): LOCKING
-	apex, e := z.Radix.Find(toRadixName(z.Origin))
-	e = e // TODO(mg)
-	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
-	next := apex.Next()
-	signZoneData(apex.Value.(*ZoneData), next.Value.(*ZoneData), keys, keytags, config)
-	for next.Value.(*ZoneData).Name != z.Origin {
-		nextnext := next.Next()
-		signZoneData(next.Value.(*ZoneData), nextnext.Value.(*ZoneData), keys, keytags, config)
-		next = nextnext
+
+	errChan := make(chan error)
+	signChan := make(chan *signData)
+
+	// Start the signer goroutines
+	for i := 0; i < config.SignerRoutines; i++ {
+		println("Signer", i, "started")
+		go signerRoutine(keys, keytags, config, signChan, errChan)
 	}
 
+	apex, e := z.Radix.Find(toRadixName(z.Origin))
+	if !e {
+		// apex not found...?
+		return nil
+	}
+	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
+	next := apex.Next()
+	signChan <- &signData{apex.Value.(*ZoneData), next.Value.(*ZoneData)}
+
+	for next.Value.(*ZoneData).Name != z.Origin {
+		nextnext := next.Next()
+		signChan <- &signData{next.Value.(*ZoneData), nextnext.Value.(*ZoneData)}
+		next = nextnext
+	}
+	println("READY")
+	close(signChan)
+	close(errChan)
 	return nil
 }
 
-// Sign each ZoneData in place.
-// TODO(mg): assume not signed
-func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) {
+// signerRoutine is a small helper routines to make the concurrent signing work.
+func signerRoutine(keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *signData, err chan error) {
+	for {
+		select {
+		case data, ok := <-in:
+			if !ok {
+				return
+			}
+			e := data.node.Sign(data.next, keys, keytags, config)
+			if e != nil {
+				err <- e
+				return
+			}
+		}
+	}
+}
+
+// Sign signs a single ZoneData node. The zonedata itself is locked for writing,
+// during the execution. It is important that the nodes' next record does not
+// changes. The caller must take care that the zone is locked for writing.
+func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
+	node.mutex.Lock()
+	defer node.mutex.Unlock()
 	nsec := new(RR_NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
-	nsec.Hdr.Ttl = 3600 // Must be SOA Min TTL
+	nsec.Hdr.Ttl = config.minttl // SOA's minimum value
 	nsec.Hdr.Name = node.Name
 	nsec.NextDomain = next.Name // Only thing I need from next, actually
 	nsec.Hdr.Class = ClassINET
 
 	if node.NonAuth == true {
-		// NSEC needed. Don't know. TODO(mg)
+		// Check for DS records, FIXME(mg)
 		for t, _ := range node.RR {
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		for k, p := range keys {
@@ -338,12 +385,15 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = 0 // TODO(mg)
-			s.Expiration = 0
-			s.Sign(p, []RR{nsec}) // discard error, TODO(mg)
+			s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+			s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+			e := s.Sign(p, []RR{nsec})
+			if e != nil {
+				return e
+			}
 			node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 		}
-		return
+		return nil
 	}
 	for k, p := range keys {
 		for t, rrset := range node.RR {
@@ -355,12 +405,15 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			s.KeyTag = keytags[k]
 			s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
 			s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
-			s.Sign(p, rrset) // discard error, TODO(mg)
+			e := s.Sign(p, rrset)
+			if e != nil {
+				return e
+			}
 			node.Signatures[t] = append(node.Signatures[t], s)
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG)	// Add sig too
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)	// Add me too!
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		// NSEC
@@ -371,16 +424,14 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 		s.KeyTag = keytags[k]
 		s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
 		s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
-		s.Sign(p, []RR{nsec}) // discard error, TODO(mg)
+		e := s.Sign(p, []RR{nsec})
+		if e != nil {
+			return e
+		}
 		node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 	}
+	return nil
 }
-
-type uint16Slice []uint16
-
-func (p uint16Slice) Len() int           { return len(p) }
-func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
-func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // TimeToUint32 translates a time.Time to a 32 bit value which                      
 // can be used as the RRSIG's inception or expiration times.                        

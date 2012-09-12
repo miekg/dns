@@ -40,7 +40,7 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *XfrToken, error) {
 		go w.ixfrReceive(q, e)
 		return e, nil
 	default:
-		return nil, ErrXfrType
+		return nil, nil
 	}
 	panic("dns: not reached")
 }
@@ -61,7 +61,7 @@ func (w *reply) axfrReceive(q *Msg, c chan *XfrToken) {
 		}
 		if first {
 			if !checkXfrSOA(in, true) {
-				c <- &XfrToken{in.Answer, ErrXfrSoa}
+				c <- &XfrToken{in.Answer, ErrSoa}
 				return
 			}
 			first = !first
@@ -103,7 +103,7 @@ func (w *reply) ixfrReceive(q *Msg, c chan *XfrToken) {
 
 			// Check if the returned answer is ok
 			if !checkXfrSOA(in, true) {
-				c <- &XfrToken{in.Answer, ErrXfrSoa}
+				c <- &XfrToken{in.Answer, ErrSoa}
 				return
 			}
 			// This serial is important
@@ -169,7 +169,7 @@ func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 		go axfrSend(w, q, c, e)
 		return nil
 	default:
-		return ErrXfrType
+		return nil
 	}
 	panic("not reached")
 }
