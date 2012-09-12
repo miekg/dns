@@ -406,7 +406,6 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		}
 		return nil
 	}
-	println("HIER")
 	for k, p := range keys {
 		for t, rrset := range node.RR {
 			s := new(RR_RRSIG)
