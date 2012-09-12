@@ -110,7 +110,7 @@ func toRadixName(d string) string {
 // zone:
 //
 //	// z contains the zone
-//	z.Radix.Do(func(i interface{}) {
+//	z.Radix.DoNext(func(i interface{}) {
 //		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
 func (zd *ZoneData) String() string {
 	var (
@@ -359,6 +359,8 @@ func signZoneData(node, next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags 
 			node.Signatures[t] = append(node.Signatures[t], s)
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG)	// Add sig too
+		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)	// Add me too!
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		// NSEC
