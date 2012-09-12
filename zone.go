@@ -29,7 +29,7 @@ func (p uint16Slice) Len() int           { return len(p) }
 func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-type signData struct{ node, next *ZoneData }
+type signData struct{node, next *ZoneData }
 
 // SignatureConfig holds the parameters for zone (re)signing. This 
 // is copied from OpenDNSSEC. See:
@@ -315,14 +315,15 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	signChan := make(chan *signData)
 
 	// Start the signer goroutines
+	wg := new(sync.WaitGroup)
+	wg.Add(config.SignerRoutines)
 	for i := 0; i < config.SignerRoutines; i++ {
-		go signerRoutine(keys, keytags, config, signChan, errChan)
+		go signerRoutine(wg, keys, keytags, config, signChan, errChan)
 	}
 
 	apex, e := z.Radix.Find(toRadixName(z.Origin))
 	if !e {
-		// apex not found...?
-		return nil
+		return ErrSoa
 	}
 	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
 	next := apex.Next()
@@ -345,11 +346,13 @@ Sign:
 	if err != nil {
 		return err
 	}
+	wg.Wait()
 	return nil
 }
 
 // signerRoutine is a small helper routines to make the concurrent signing work.
-func signerRoutine(keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *signData, err chan error) {
+func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *signData, err chan error) {
+	defer wg.Done()
 	for {
 		select {
 		case data, ok := <-in:
@@ -403,6 +406,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		}
 		return nil
 	}
+	println("HIER")
 	for k, p := range keys {
 		for t, rrset := range node.RR {
 			s := new(RR_RRSIG)
