@@ -300,10 +300,14 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 		keytags[k] = k.KeyTag()
 	}
 	apex, next, _ := z.FindAndNext(z.Origin)
-
 	// TODO(mg): check if it exissts
 	config.minttl = apex.RR[TypeSOA][0].(*RR_SOA).Minttl
-	signZoneData(apex, next, keys, keytags, config)
+
+	for next.Name != z.Origin {
+		signZoneData(apex, next, keys, keytags, config)
+		apex, next, _ = z.FindAndNext(z.Origin)
+	}
+
 	return nil
 }
 
