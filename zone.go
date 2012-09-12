@@ -316,7 +316,6 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 
 	// Start the signer goroutines
 	for i := 0; i < config.SignerRoutines; i++ {
-		println("Signer", i, "started")
 		go signerRoutine(keys, keytags, config, signChan, errChan)
 	}
 
@@ -329,14 +328,23 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	next := apex.Next()
 	signChan <- &signData{apex.Value.(*ZoneData), next.Value.(*ZoneData)}
 
+	var err error
+Sign:
 	for next.Value.(*ZoneData).Name != z.Origin {
-		nextnext := next.Next()
-		signChan <- &signData{next.Value.(*ZoneData), nextnext.Value.(*ZoneData)}
-		next = nextnext
+		select {
+		case err = <-errChan:
+			break Sign
+		default:
+			nextnext := next.Next()
+			signChan <- &signData{next.Value.(*ZoneData), nextnext.Value.(*ZoneData)}
+			next = nextnext
+		}
 	}
-	println("READY")
 	close(signChan)
 	close(errChan)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

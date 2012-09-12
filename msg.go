@@ -45,7 +45,7 @@ var (
 	ErrSecret      error = &Error{Err: "dns: no secrets defined"}
 	ErrSigGen      error = &Error{Err: "dns: bad signature generation"}
 	ErrAuth        error = &Error{Err: "dns: bad authentication"}
-	ErrSoa      error = &Error{Err: "dns: no SOA"}
+	ErrSoa         error = &Error{Err: "dns: no SOA"}
 	ErrHandle      error = &Error{Err: "dns: handle is nil"}
 	ErrChan        error = &Error{Err: "dns: channel is nil"}
 	ErrName        error = &Error{Err: "dns: type not found for name"}
