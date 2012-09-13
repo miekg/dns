@@ -347,9 +347,8 @@ Sign:
 		case err = <-errChan:
 			break Sign
 		default:
-			nextnext := next.Next()
 			radChan <- next
-			next = nextnext
+			next = next.Next()
 		}
 	}
 	close(radChan)
