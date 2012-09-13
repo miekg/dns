@@ -323,13 +323,13 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 
 	errChan := make(chan error)
-	signChan := make(chan *signData, config.SignerRoutines*2)
+	radChan := make(chan *radix.Radix, config.SignerRoutines*2)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
 	wg.Add(config.SignerRoutines)
 	for i := 0; i < config.SignerRoutines; i++ {
-		go signerRoutine(wg, keys, keytags, config, signChan, errChan)
+		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
 	}
 
 	apex, e := z.Radix.Find(toRadixName(z.Origin))
@@ -338,7 +338,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
 	next := apex.Next()
-	signChan <- &signData{apex.Value.(*ZoneData), next.Value.(*ZoneData)}
+	radChan <- apex
 
 	var err error
 Sign:
@@ -348,11 +348,11 @@ Sign:
 			break Sign
 		default:
 			nextnext := next.Next()
-			signChan <- &signData{next.Value.(*ZoneData), nextnext.Value.(*ZoneData)}
+			radChan <- next
 			next = nextnext
 		}
 	}
-	close(signChan)
+	close(radChan)
 	close(errChan)
 	if err != nil {
 		return err
@@ -361,8 +361,8 @@ Sign:
 	return nil
 }
 
-// signerRoutine is a small helper routines to make the concurrent signing work.
-func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *signData, err chan error) {
+// signerRoutine is a small helper routine to make the concurrent signing work.
+func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *radix.Radix, err chan error) {
 	defer wg.Done()
 	for {
 		select {
@@ -370,8 +370,8 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 			if !ok {
 				return
 			}
-			log.Printf("Signing node %s\n", data.node.Name)
-			e := data.node.Sign(data.next, keys, keytags, config)
+			log.Printf("Signing node %s\n", data.Value.(*ZoneData).Name)
+			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData), keys, keytags, config)
 			if e != nil {
 				err <- e
 				return
