@@ -4,6 +4,7 @@ package dns
 
 import (
 	"github.com/miekg/radix"
+	"log"
 	"math/rand"
 	"runtime"
 	"sort"
@@ -369,6 +370,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 			if !ok {
 				return
 			}
+			log.Printf("Signing node %s\n", data.node.Name)
 			e := data.node.Sign(data.next, keys, keytags, config)
 			if e != nil {
 				err <- e
@@ -380,10 +382,11 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
-// changes. The caller must take care that the zone is locked for writing.
+// changes. The caller must take care that the zone itself is also locked for writing.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
+
 	nsec := new(RR_NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
 	nsec.Hdr.Ttl = config.minttl // SOA's minimum value
