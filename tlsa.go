@@ -21,7 +21,7 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 
 	switch r.MatchingType {
 	case 0:
-		switch s.Selector {
+		switch r.Selector {
 		case 0:
 			r.Certificate = hex.EncodeToString(cert.Raw)
 		case 1:
@@ -29,7 +29,7 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 		}
 	case 1:
 		h := sha256.New()
-		switch s.Selector {
+		switch r.Selector {
 		case 0:
 			r.Certificate = hex.EncodeToString(cert.Raw)
 		case 1:
@@ -38,7 +38,7 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 		}
 	case 2:
 		h := sha512.New()
-		switch s.Selector {
+		switch r.Selector {
 		case 0:
 			r.Certificate = hex.EncodeToString(cert.Raw)
 		case 1:
