@@ -12,8 +12,8 @@ import (
 
 // TLSA support functions
 
-// certToTLSACert returns the hex data suitable for inclusion in a TLSA record
-func certToTLSACert(selector, matchingType uint8, cert *x509.Certificate) string {
+// CertificateToDANE converts a certificate to a hex string as used in the TLSA record.
+func CertificateToDANE(selector, matchingType uint8, cert *x509.Certificate) string {
 	switch matchingType {
 	case 0:
 		switch selector {
@@ -51,14 +51,14 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 	r.Selector = uint8(selector)
 	r.MatchingType = uint8(matchingType)
 
-	r.Certificate = certToTLSACert(r.Selector, r.MatchingType, cert)
+	r.Certificate = CertificateToDANE(r.Selector, r.MatchingType, cert)
 	return nil
 }
 
 // Verify verifies a TLSA record against a SSL certificate. If it is OK
 // a nil error is returned.
 func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
-	if r.Certificate == certToTLSACert(r.Selector, r.MatchingType, cert) {
+	if r.Certificate == CertificateToDANE(r.Selector, r.MatchingType, cert) {
 		return nil
 	}
 	return ErrSig	// ErrSig, really?
