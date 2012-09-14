@@ -50,7 +50,6 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 	r.Usage = uint8(usage)
 	r.Selector = uint8(selector)
 	r.MatchingType = uint8(matchingType)
-	// Checks on the value!?
 
 	r.Certificate = certToTLSACert(r.Selector, r.MatchingType, cert)
 	return nil
@@ -65,16 +64,16 @@ func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
 	return ErrSig	// ErrSig, really?
 }
 
-// Name set the ownername of the TLSA record according to the
-// rules specified in RFC 6698, Section 3.
-func (r *RR_TLSA) Name(name, service, network string) bool {
+// TLSAName returns the ownername of a TLSA resource record as per the
+// rules specified in RFC 6698, Section 3. When an erros occurs the
+// empty string is returned.
+func TLSAName(name, service, network string) string {
 	if !IsFqdn(name) {
-		return false
+		return ""
 	}
 	p, e := net.LookupPort(network, service)
 	if e != nil {
-		return false
+		return ""
 	}
-	r.Hdr.Name = "_" + strconv.Itoa(p) + "_" + network + "." + name
-	return true
+	return "_" + strconv.Itoa(p) + "_" + network + "." + name
 }
