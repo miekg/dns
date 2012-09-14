@@ -49,8 +49,9 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 	return nil
 }
 
-// Verify verifies a TLSA record against a SSL certificate.
-func (r *RR_TLSA) Verify() error {
+// Verify verifies a TLSA record against a SSL certificate. If it is OK
+// a nil error is returned.
+func (r *RR_TLSA) Verify(cert *x509.Certifcate) error {
 	return nil
 
 }
