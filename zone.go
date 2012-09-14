@@ -323,7 +323,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 
 	errChan := make(chan error)
-	radChan := make(chan *radix.Radix, config.SignerRoutines*2)
+	radChan := make(chan *radix.Radix, config.SignerRoutines*200)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
