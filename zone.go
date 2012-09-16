@@ -4,7 +4,6 @@ package dns
 
 import (
 	"github.com/miekg/radix"
-	"log"
 	"math/rand"
 	"runtime"
 	"sort"
