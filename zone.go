@@ -369,7 +369,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 			if !ok {
 				return
 			}
-			log.Printf("Signing node %s\n", data.Value.(*ZoneData).Name)
+			//log.Printf("Signing node %s\n", data.Value.(*ZoneData).Name)
 			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData), keys, keytags, config)
 			if e != nil {
 				err <- e
