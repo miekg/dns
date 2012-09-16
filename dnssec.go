@@ -284,7 +284,8 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		signature = append(signature, s1.Bytes()...)
 		rr.Signature = unpackBase64(signature)
 	case *rsa.PrivateKey:
-		signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+		// We can use nil as rand.Reader here (says AGL)
+		signature, err := rsa.SignPKCS1v15(nil, p, ch, sighash)
 		if err != nil {
 			return err
 		}
