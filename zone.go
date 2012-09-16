@@ -327,7 +327,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
 	wg.Add(config.SignerRoutines)
-	for i := 0; i < config.SignerRoutines; i++ {
+	for i := 0; i < config.SignerRoutines*20; i++ {
 		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
 	}
 
