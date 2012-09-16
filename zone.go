@@ -322,12 +322,12 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 
 	errChan := make(chan error)
-	radChan := make(chan *radix.Radix, config.SignerRoutines*200)
+	radChan := make(chan *radix.Radix, config.SignerRoutines*10)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
-	wg.Add(config.SignerRoutines)
-	for i := 0; i < config.SignerRoutines*20; i++ {
+	wg.Add(config.SignerRoutines *10 + 1)
+	for i := 0; i < config.SignerRoutines*10; i++ {
 		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
 	}
 
@@ -368,7 +368,6 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 			if !ok {
 				return
 			}
-			//log.Printf("Signing node %s\n", data.Value.(*ZoneData).Name)
 			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData), keys, keytags, config)
 			if e != nil {
 				err <- e
