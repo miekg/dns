@@ -169,10 +169,10 @@ Types:
 	return s
 }
 
-// Lock locks z for writing.
+// Lock locks the zone z for writing.
 func (z *Zone) Lock() { z.mutex.Lock() }
 
-// Unlock unlocks z for writing.
+// Unlock unlocks the zone z for writing.
 func (z *Zone) Unlock() { z.mutex.Unlock() }
 
 // Insert inserts an RR into the zone. There is no check for duplicate data, although
@@ -304,11 +304,13 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 // to the zone. If config is nil DefaultSignatureConfig is used.
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
-//	// A signle PublicKey/PrivateKey have been read from disk
+//	// A signle PublicKey/PrivateKey have been read from disk.
 //	e := z.Sign(map[*dns.RR_DNSKEY]dns.PrivateKey{pubkey.(*dns.RR_DNSKEY): privkey}, nil)
 //	if e != nil {
 //		// signing error
 //	}
+//	// Admire your signed zone...
+// TODO(mg): resigning is not implemented
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
 	defer z.Unlock()
@@ -327,7 +329,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
 	wg.Add(config.SignerRoutines * 5)
-	for i := 0; i < config.SignerRoutines * 5; i++ {
+	for i := 0; i < config.SignerRoutines*5; i++ {
 		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
 	}
 
@@ -380,6 +382,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
 // changes. The caller must take care that the zone itself is also locked for writing.
+// It works just like the Sign method for zones.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
@@ -400,6 +403,10 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		for k, p := range keys {
+			if k.Flags&SEP == SEP {
+				// KSK
+				continue
+			}
 			s := new(RR_RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
@@ -432,6 +439,13 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	}
 	for k, p := range keys {
 		for t, rrset := range node.RR {
+			if k.Flags&SEP == SEP {
+				if _, ok := rrset[0].(*RR_DNSKEY); !ok {
+					// only sign keys with SEP keys
+					continue
+				}
+			}
+
 			s := new(RR_RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
