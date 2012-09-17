@@ -404,7 +404,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		node.RR[TypeNSEC] = []RR{nsec}
 		for k, p := range keys {
 			if k.Flags&SEP == SEP {
-				// KSK
+				// only sign keys with SEP keys
 				continue
 			}
 			s := new(RR_RRSIG)
