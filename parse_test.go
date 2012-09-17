@@ -102,8 +102,8 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	a, _ := NewRR("www.example.net. 3600 IN A 192.0.2.1")
 	sig := new(RR_RRSIG)
 	sig.Hdr = RR_Header{"example.net.", TypeRRSIG, ClassINET, 14400, 0}
-	sig.Expiration, _ = DateToTime("20100909102025")
-	sig.Inception, _ = DateToTime("20100812102025")
+	sig.Expiration, _ = StringToTime("20100909102025")
+	sig.Inception, _ = StringToTime("20100812102025")
 	sig.KeyTag = eckey.(*RR_DNSKEY).KeyTag()
 	sig.SignerName = eckey.(*RR_DNSKEY).Hdr.Name
 	sig.Algorithm = eckey.(*RR_DNSKEY).Algorithm
@@ -521,7 +521,7 @@ func TestRfc1982(t *testing.T) {
 	// fall in the current 68 year span
 	strtests := []string{"20120525134203", "19700101000000", "20380119031408"}
 	for _, v := range strtests {
-		if x, _ := DateToTime(v); v != TimeToString(x) {
+		if x, _ := StringToTime(v); v != TimeToString(x) {
 			t.Logf("1982 arithmetic string failure %s (%s:%d)", v, TimeToString(x), x)
 			t.Fail()
 		}
@@ -548,7 +548,7 @@ func TestRfc1982(t *testing.T) {
 		"29210101121212": "21040522212236",
 	}
 	for from, to := range future {
-		x, _ := DateToTime(from)
+		x, _ := StringToTime(from)
 		y := TimeToString(x)
 		if y != to {
 			t.Logf("1982 arithmetic future failure %s:%s (%s)", from, to, y)

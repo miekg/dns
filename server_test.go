@@ -70,3 +70,19 @@ func BenchmarkServing(b *testing.B) {
 		c.Exchange(m, "127.0.0.1:8053")
 	}
 }
+
+func TestDotAsCatchAllWildcard(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", HandlerFunc(HelloServer))
+	mux.Handle("example.com.", HandlerFunc(AnotherHelloServer))
+
+	handler := mux.match("www.mike.nl", TypeTXT)
+	if handler == nil {
+		t.Error("wildcard match failed")
+	}
+
+	nhandler := mux.match("www.example.com", TypeTXT)
+	if nhandler == nil {
+		t.Error("match failed")
+	}
+}
