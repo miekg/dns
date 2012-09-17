@@ -494,15 +494,13 @@ func timeToUint32(t time.Time) uint32 {
 
 // uint32ToTime translates a uint32 to a time.Time
 func uint32ToTime(t uint32) time.Time {
-	/*
 	// uint32 to duration and then add it to epoch(0)
-	mod := (time.Time.Unix() / year68) - 1
+	mod := (time.Now().Unix() / year68) - 1
 	if mod < 0 {
 		mod = 0
 	}
-//	duration := (mod * year68) * t
-*/
-	return time.Time{}
+	duration := time.Duration((mod * year68) * int64(t))
+	return time.Unix(0,0).Add(duration)
 }
 
 // jitterTime returns a random +/- jitter
