@@ -50,9 +50,9 @@ type SignatureConfig struct {
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
 	// SignerRoutines specifies the number of signing goroutines, if not
-	// set runtime.NumCPU() + 1 is used as the value
+	// set runtime.NumCPU() + 1 is used as the value.
 	SignerRoutines int
-	// SOA MINTTL value used as the TTL on NSEC/NSEC3 -- no override
+	// SOA MINTTL value used as the TTL on NSEC/NSEC3.
 	minttl uint32
 }
 
@@ -412,8 +412,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-			s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+			s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+			s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 			e := s.Sign(p, []RR{nsec})
 			if e != nil {
 				return e
@@ -426,8 +426,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				s.Hdr.Ttl = k.Hdr.Ttl
 				s.Algorithm = k.Algorithm
 				s.KeyTag = keytags[k]
-				s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-				s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+				s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+				s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 				e := s.Sign(p, ds)
 				if e != nil {
 					return e
@@ -452,8 +452,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 			s.Hdr.Class = ClassINET
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-			s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+			s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+			s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 			e := s.Sign(p, rrset)
 			if e != nil {
 				return e
@@ -471,8 +471,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		s.Hdr.Ttl = k.Hdr.Ttl
 		s.Algorithm = k.Algorithm
 		s.KeyTag = keytags[k]
-		s.Inception = TimeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-		s.Expiration = TimeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+		s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
+		s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
 		e := s.Sign(p, []RR{nsec})
 		if e != nil {
 			return e
@@ -482,14 +482,27 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	return nil
 }
 
-// TimeToUint32 translates a time.Time to a 32 bit value which                      
-// can be used as the RRSIG's inception or expiration times.                        
-func TimeToUint32(t time.Time) uint32 {
+// timeToUint32 translates a time.Time to a 32 bit value which                      
+// can be used as the RRSIG's inception or expiration times.
+func timeToUint32(t time.Time) uint32 {
 	mod := (t.Unix() / year68) - 1
 	if mod < 0 {
 		mod = 0
 	}
 	return uint32(t.Unix() - (mod * year68))
+}
+
+// uint32ToTime translates a uint32 to a time.Time
+func uint32ToTime(t uint32) time.Time {
+	/*
+	// uint32 to duration and then add it to epoch(0)
+	mod := (time.Time.Unix() / year68) - 1
+	if mod < 0 {
+		mod = 0
+	}
+//	duration := (mod * year68) * t
+*/
+	return time.Time{}
 }
 
 // jitterTime returns a random +/- jitter
