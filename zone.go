@@ -96,7 +96,7 @@ func toRadixName(d string) string {
 		}
 		s = strings.ToLower(l) + "." + s
 	}
-	return s
+	return "." + s
 }
 
 func (z *Zone) String() string {
