@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-// TLSA support functions
-
 // CertificateToDANE converts a certificate to a hex string as used in the TLSA record.
 func CertificateToDANE(selector, matchingType uint8, cert *x509.Certificate) string {
 	switch matchingType {
@@ -44,7 +42,7 @@ func CertificateToDANE(selector, matchingType uint8, cert *x509.Certificate) str
 	return ""
 }
 
-// Sign creates a TLSA record from a SSL certificate.
+// Sign creates a TLSA record from an SSL certificate.
 func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate) error {
 	r.Hdr.Rrtype = TypeTLSA
 	r.Usage = uint8(usage)
@@ -55,7 +53,7 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 	return nil
 }
 
-// Verify verifies a TLSA record against a SSL certificate. If it is OK
+// Verify verifies a TLSA record against an SSL certificate. If it is OK
 // a nil error is returned.
 func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
 	if r.Certificate == CertificateToDANE(r.Selector, r.MatchingType, cert) {
@@ -65,7 +63,7 @@ func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
 }
 
 // TLSAName returns the ownername of a TLSA resource record as per the
-// rules specified in RFC 6698, Section 3. When an erros occurs the
+// rules specified in RFC 6698, Section 3. When an error occurs the
 // empty string is returned.
 func TLSAName(name, service, network string) string {
 	if !IsFqdn(name) {
