@@ -915,14 +915,14 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c // _BLANK
 	l = <-c
-	if i, err := DateToTime(l.token); err != nil {
+	if i, err := StringToTime(l.token); err != nil {
 		return nil, &ParseError{f, "bad RRSIG Expiration", l}
 	} else {
 		rr.Expiration = i
 	}
 	<-c // _BLANK
 	l = <-c
-	if i, err := DateToTime(l.token); err != nil {
+	if i, err := StringToTime(l.token); err != nil {
 		return nil, &ParseError{f, "bad RRSIG Inception", l}
 	} else {
 		rr.Inception = i

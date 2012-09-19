@@ -157,7 +157,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	dns.HandleFunc(".", handleReflect)
+	dns.HandleFunc("miek.nl.", handleReflect)
 	dns.HandleFunc("authors.bind.", dns.HandleAuthors)
 	dns.HandleFunc("authors.server.", dns.HandleAuthors)
 	dns.HandleFunc("version.bind.", dns.HandleVersion)

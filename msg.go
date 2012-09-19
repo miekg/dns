@@ -45,8 +45,7 @@ var (
 	ErrSecret      error = &Error{Err: "dns: no secrets defined"}
 	ErrSigGen      error = &Error{Err: "dns: bad signature generation"}
 	ErrAuth        error = &Error{Err: "dns: bad authentication"}
-	ErrXfrSoa      error = &Error{Err: "dns: no SOA seen"}
-	ErrXfrType     error = &Error{Err: "dns: no ixfr, nor axfr"}
+	ErrSoa         error = &Error{Err: "dns: no SOA"}
 	ErrHandle      error = &Error{Err: "dns: handle is nil"}
 	ErrChan        error = &Error{Err: "dns: channel is nil"}
 	ErrName        error = &Error{Err: "dns: type not found for name"}
@@ -222,7 +221,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
-//	ls := len(bs)
+	//	ls := len(bs)
 	lens := ls
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
@@ -239,7 +238,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			}
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1 > len(msg)  {
+			if off+1 > len(msg) {
 				return lenmsg, false
 			}
 			msg[off] = byte(i - begin)
@@ -247,18 +246,18 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			off++
 			// TODO(mg): because of the new check above, this can go. But
 			// just leave it as is for the moment.
-//			if off > lenmsg {
-//				return lenmsg, false
-//			}
+			//			if off > lenmsg {
+			//				return lenmsg, false
+			//			}
 			for j := begin; j < i; j++ {
 				if off+1 > len(msg) {
 					return lenmsg, false
 				}
 				msg[off] = bs[j]
 				off++
-//				if off > lenmsg {
-//					return lenmsg, false
-//				}
+				//				if off > lenmsg {
+				//					return lenmsg, false
+				//				}
 			}
 			// Dont try to compress '.'
 			if compression != nil && string(bs[begin:]) != ".'" {

@@ -4,6 +4,10 @@
 * make example from chaos
 * Support for on-the-fly-signing
 * (Re)sign zonefiles
+* TLSA support
+    * create record from PEM(?) files
+    * sign
+    * verify
 
 ## Nice to have
 

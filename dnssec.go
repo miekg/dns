@@ -202,7 +202,6 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
 // otherwise false.
-// The signature data in the RRSIG is filled by this method.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
 func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if k == nil {
@@ -255,9 +254,6 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	switch rr.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		// Implicit in the ParameterSizes
-	case RSAMD5:
-		h = md5.New()
-		ch = crypto.MD5
 	case RSASHA1, RSASHA1NSEC3SHA1:
 		h = sha1.New()
 		ch = crypto.SHA1
@@ -269,6 +265,8 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	case RSASHA512:
 		h = sha512.New()
 		ch = crypto.SHA512
+	case RSAMD5:
+		fallthrough		// Deprecated in RFC 6725
 	default:
 		return ErrAlg
 	}
@@ -286,7 +284,8 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		signature = append(signature, s1.Bytes()...)
 		rr.Signature = unpackBase64(signature)
 	case *rsa.PrivateKey:
-		signature, err := rsa.SignPKCS1v15(rand.Reader, p, ch, sighash)
+		// We can use nil as rand.Reader here (says AGL)
+		signature, err := rsa.SignPKCS1v15(nil, p, ch, sighash)
 		if err != nil {
 			return err
 		}

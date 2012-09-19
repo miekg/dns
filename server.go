@@ -174,27 +174,21 @@ func (mux *ServeMux) match(zone string, t uint16) Handler {
 	if h, e := mux.m.Find(zone); e {
 		// If we got queried for a DS record, we must see if we
 		// if we also serve the parent. We then redirect the query to it.
-		// TODO(mg): grandparents works too?
 		if t != TypeDS {
 			return h.Value.(Handler)
 		}
 		if d := h.Up(); d != nil {
 			return d.Value.(Handler)
 		}
+		// No parent zone found, let the original handler take care of it
+		return h.Value.(Handler)
 	} else {
 		if h == nil {
 			return nil
 		}
-		// Not an exact match and h may be nil and h.Value may be nil
-		if h.Value != nil {
-			return h.Value.(Handler)
-		}
-		if d := h.Up(); d != nil {
-			return d.Value.(Handler)
-		}
+		return h.Value.(Handler)
 	}
-	// Nothing found at all
-	return nil
+	panic("dns: not reached")
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -220,9 +214,12 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 }
 
 // ServeDNS dispatches the request to the handler whose
-// pattern most closely matches the request message. For DS queries
-// a parent zone is sought.
+// pattern most closely matches the request message. If DefaultServeMux
+// is used the correct thing for DS queries is done: a possible parent
+// is sought.
 // If no handler is found a standard SERVFAIL message is returned
+// If the request message does not have a single question in the
+// question section a SERVFAIL is returned.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	var h Handler
 	if len(request.Question) != 1 {

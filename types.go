@@ -72,9 +72,9 @@ const (
 	TypeMAILA uint16 = 254
 	TypeANY   uint16 = 255
 
-	TypeURI   uint16 = 256
-	TypeTA    uint16 = 32768
-	TypeDLV   uint16 = 32769
+	TypeURI uint16 = 256
+	TypeTA  uint16 = 32768
+	TypeDLV uint16 = 32769
 
 	// valid Question.Qclass
 	ClassINET   = 1
@@ -844,8 +844,8 @@ func (rr *RR_RRSIG) String() string {
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
-		" " + TimeToDate(rr.Expiration) +
-		" " + TimeToDate(rr.Inception) +
+		" " + TimeToString(rr.Expiration) +
+		" " + TimeToString(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
 		" " + rr.Signature
@@ -1371,10 +1371,10 @@ func (rr *RR_WKS) Copy() RR {
 	return &RR_WKS{*rr.Hdr.CopyHeader(), rr.Address, rr.Protocol, rr.BitMap}
 }
 
-// TimeToDate translates the RRSIG's incep. and expir. times to the
+// TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
-func TimeToDate(t uint32) string {
+func TimeToString(t uint32) string {
 	mod := ((int64(t) - time.Now().Unix()) / year68) - 1
 	if mod < 0 {
 		mod = 0
@@ -1383,10 +1383,10 @@ func TimeToDate(t uint32) string {
 	return ti.Format("20060102150405")
 }
 
-// DateToTime translates the RRSIG's incep. and expir. times from 
+// StringToTime translates the RRSIG's incep. and expir. times from 
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
-func DateToTime(s string) (uint32, error) {
+func StringToTime(s string) (uint32, error) {
 	t, e := time.Parse("20060102150405", s)
 	if e != nil {
 		return 0, e
