@@ -51,7 +51,7 @@ type SignatureConfig struct {
 	InceptionOffset time.Duration
 	// HonorSepFlag is a boolean which when try instructs the signer to use
 	// a KSK/ZSK split and only sign the keyset with the KSK(s). If not
-	// set all records are signed with all keys. If this flag it true and
+	// set all records are signed with all keys. If this flag is true and
 	// a single KSK is used for signing, only the keyset is signed.
 	HonorSepFlag bool
 	// SignerRoutines specifies the number of signing goroutines, if not
@@ -310,7 +310,8 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 // The public keys themselves are not added to the zone. 
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
-// should be honored.
+// should be honored. If signatures approach their expriration time, they
+// are refreshed with the current set of keys. Valid signatures are left alone.
 //
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
@@ -394,7 +395,8 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
 // changes. The caller must take care that the zone itself is also locked for writing.
-// For a more complete description see zone.Sign. NB: as this method has no (direct)
+// For a more complete description see zone.Sign. 
+// NB: as this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in signatureConfig.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.mutex.Lock()
@@ -407,6 +409,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	nsec.NextDomain = next.Name // Only thing I need from next, actually
 	nsec.Hdr.Class = ClassINET
 
+	// Still need to add NSEC + RRSIG for this data, there might also be a DS record
 	if node.NonAuth == true {
 		for t, _ := range node.RR {
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
@@ -415,18 +418,21 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
+		now := time.Now().UTC()
 		for k, p := range keys {
 			if config.HonorSepFlag && k.Flags&SEP == SEP {
 				// only sign keys with SEP keys
 				continue
 			}
+			// which sigs to check??
+
 			s := new(RR_RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-			s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+			s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
+			s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
 			e := s.Sign(p, []RR{nsec})
 			if e != nil {
 				return e
@@ -439,8 +445,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				s.Hdr.Ttl = k.Hdr.Ttl
 				s.Algorithm = k.Algorithm
 				s.KeyTag = keytags[k]
-				s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-				s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+				s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
+				s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
 				e := s.Sign(p, ds)
 				if e != nil {
 					return e
@@ -450,6 +456,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		}
 		return nil
 	}
+	now := time.Now().UTC()
 	for k, p := range keys {
 		for t, rrset := range node.RR {
 			if k.Flags&SEP == SEP {
@@ -465,8 +472,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 			s.Hdr.Class = ClassINET
 			s.Algorithm = k.Algorithm
 			s.KeyTag = keytags[k]
-			s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-			s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+			s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
+			s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
 			e := s.Sign(p, rrset)
 			if e != nil {
 				return e
@@ -484,8 +491,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		s.Hdr.Ttl = k.Hdr.Ttl
 		s.Algorithm = k.Algorithm
 		s.KeyTag = keytags[k]
-		s.Inception = timeToUint32(time.Now().UTC().Add(-config.InceptionOffset))
-		s.Expiration = timeToUint32(time.Now().UTC().Add(jitterDuration(config.Jitter)).Add(config.Validity))
+		s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
+		s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
 		e := s.Sign(p, []RR{nsec})
 		if e != nil {
 			return e
