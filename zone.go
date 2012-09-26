@@ -49,20 +49,26 @@ type SignatureConfig struct {
 	// calibrated clocks on the internet can still validate a signature.
 	// Typical value is 300 seconds.
 	InceptionOffset time.Duration
+	// HonorSepFlag is a boolean which when try instructs the signer to use
+	// a KSK/ZSK split and only sign the keyset with the KSK(s). If not
+	// set all records are signed with all keys. If this flag it true and
+	// a single KSK is used for signing, only the keyset is signed.
+	HonorSepFlag bool
 	// SignerRoutines specifies the number of signing goroutines, if not
 	// set runtime.NumCPU() + 1 is used as the value.
 	SignerRoutines int
-	// SOA MINTTL value used as the TTL on NSEC/NSEC3.
-	minttl uint32
+	// SOA Minttl value must be used as the ttl on NSEC/NSEC3 records.
+	Minttl uint32
 }
 
 func newSignatureConfig() *SignatureConfig {
-	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, runtime.NumCPU() + 1, 0}
+	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, true, runtime.NumCPU() + 1, 0}
 }
 
 // DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
 // Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
-// SignerRoutines is set to runtime.NumCPU() + 1
+// HonorSepFlag is set to true, SignerRoutines is set to runtime.NumCPU() + 1. The
+// Minttl value is zero.
 var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to origin.
@@ -299,9 +305,13 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 	return zd.Value.(*ZoneData), e, b
 }
 
-// Sign (re)signes the zone z with the given keys, it knows about ZSKs and KSKs.
-// NSECs and RRSIGs are added as needed. The public keys themselves are not added
-// to the zone. If config is nil DefaultSignatureConfig is used.
+// Sign (re)signs the zone z with the given keys. 
+// NSEC(3)s and RRSIGs are added as needed. 
+// The public keys themselves are not added to the zone. 
+// If config is nil DefaultSignatureConfig is used. The signatureConfig
+// describes how the zone must be signed and if the SEP flag (for KSK)
+// should be honored.
+//
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
 //	// A signle PublicKey/PrivateKey have been read from disk.
@@ -310,7 +320,9 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 //		// signing error
 //	}
 //	// Admire your signed zone...
+//
 // TODO(mg): resigning is not implemented
+// TODO(mg): NSEC3 is not implemented
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
 	defer z.Unlock()
@@ -324,12 +336,12 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 
 	errChan := make(chan error)
-	radChan := make(chan *radix.Radix, config.SignerRoutines*10)
+	radChan := make(chan *radix.Radix, config.SignerRoutines * 2)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
-	wg.Add(config.SignerRoutines * 5)
-	for i := 0; i < config.SignerRoutines*5; i++ {
+	wg.Add(config.SignerRoutines)
+	for i := 0; i < config.SignerRoutines; i++ {
 		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
 	}
 
@@ -337,7 +349,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	if !e {
 		return ErrSoa
 	}
-	config.minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
+	config.Minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
 	next := apex.Next()
 	radChan <- apex
 
@@ -382,14 +394,15 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
 // changes. The caller must take care that the zone itself is also locked for writing.
-// It works just like the Sign method for zones.
+// For a more complete description see zone.Sign. NB: as this method has no (direct)
+// access to the zone's SOA record, the SOA's Minttl value should be set in signatureConfig.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.mutex.Lock()
 	defer node.mutex.Unlock()
 
 	nsec := new(RR_NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
-	nsec.Hdr.Ttl = config.minttl // SOA's minimum value
+	nsec.Hdr.Ttl = config.Minttl // SOA's minimum value
 	nsec.Hdr.Name = node.Name
 	nsec.NextDomain = next.Name // Only thing I need from next, actually
 	nsec.Hdr.Class = ClassINET
@@ -403,7 +416,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		for k, p := range keys {
-			if k.Flags&SEP == SEP {
+			if config.HonorSepFlag && k.Flags&SEP == SEP {
 				// only sign keys with SEP keys
 				continue
 			}
