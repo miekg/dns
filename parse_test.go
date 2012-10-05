@@ -3,7 +3,9 @@ package dns
 import (
 	"crypto/rsa"
 	"fmt"
+	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -582,5 +584,44 @@ func ExampleGenerate() {
 		if x.Error == nil {
 			fmt.Printf("%s\n", x.RR.String())
 		}
+	}
+}
+
+func TestSRVPacking(t *testing.T) {
+	msg := Msg{}
+
+	things := []string{"1.2.3.4:8484",
+		"45.45.45.45:8484",
+		"84.84.84.84:8484",
+	}
+
+	for i, n := range things {
+		h, p, err := net.SplitHostPort(n)
+		if err != nil {
+			continue
+		}
+		port := 8484
+		tmp, err := strconv.Atoi(p)
+		if err == nil {
+			port = tmp
+		}
+
+		rr := &RR_SRV{
+			Hdr: RR_Header{Name: "somename.",
+				Rrtype: TypeSRV,
+				Class:  ClassINET,
+				Ttl:    5},
+			Priority: uint16(i),
+			Weight:   5,
+			Port:     uint16(port),
+			Target:   h + ".",
+		}
+
+		msg.Answer = append(msg.Answer, rr)
+	}
+
+	_, ok := msg.Pack()
+	if !ok {
+		t.Fatalf("Couldn't pack %v\n", msg)
 	}
 }
