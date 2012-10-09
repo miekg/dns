@@ -165,9 +165,9 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 
 	rr := m.Extra[len(m.Extra)-1].(*RR_TSIG)
 	m.Extra = m.Extra[0 : len(m.Extra)-1] // kill the TSIG from the msg
-	mbuf, ok := m.Pack()
-	if !ok {
-		return nil, "", ErrPack
+	mbuf, err := m.Pack()
+	if err != nil {
+		return nil, "", err
 	}
 	buf := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
 
@@ -194,10 +194,10 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.OrigId = m.Id
 
 	tbuf := make([]byte, t.Len())
-	if off, ok := PackRR(t, tbuf, 0, nil, false); ok {
+	if off, err := PackRR(t, tbuf, 0, nil, false); err != nil {
 		tbuf = tbuf[:off] // reset to actual size used
 	} else {
-		return nil, "", ErrPack
+		return nil, "", err
 	}
 	mbuf = append(mbuf, tbuf...)
 	rawSetExtraLen(mbuf, uint16(len(m.Extra)+1))
@@ -298,13 +298,13 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	// Copied from msg.go's Unpack()
 	// Header.
 	var dh Header
+	var err error
 	dns := new(Msg)
 	rr := new(RR_TSIG)
 	off := 0
 	tsigoff := 0
-	var ok bool
-	if off, ok = UnpackStruct(&dh, msg, off); !ok {
-		return nil, nil, ErrUnpack
+	if off, err = UnpackStruct(&dh, msg, off); err !=nil {
+		return nil, nil, err
 	}
 	if dh.Arcount == 0 {
 		return nil, nil, ErrNoSig
@@ -321,17 +321,29 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	dns.Extra = make([]RR, dh.Arcount)
 
 	for i := 0; i < len(dns.Question); i++ {
-		off, ok = UnpackStruct(&dns.Question[i], msg, off)
+		off, err = UnpackStruct(&dns.Question[i], msg, off)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		dns.Answer[i], off, ok = UnpackRR(msg, off)
+		dns.Answer[i], off, err = UnpackRR(msg, off)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		dns.Ns[i], off, ok = UnpackRR(msg, off)
+		dns.Ns[i], off, err = UnpackRR(msg, off)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
 		tsigoff = off
-		dns.Extra[i], off, ok = UnpackRR(msg, off)
+		dns.Extra[i], off, err = UnpackRR(msg, off)
+		if err != nil {
+			return nil, nil, err
+		}
 		if dns.Extra[i].Header().Rrtype == TypeTSIG {
 			rr = dns.Extra[i].(*RR_TSIG)
 			// Adjust Arcount.
@@ -339,9 +351,6 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 			msg[10], msg[11] = packUint16(arcount - 1)
 			break
 		}
-	}
-	if !ok {
-		return nil, nil, ErrUnpack
 	}
 	if rr == nil {
 		return nil, nil, ErrNoSig

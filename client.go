@@ -101,9 +101,9 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var n int
 	var w *reply
-	out, ok := m.Pack()
-	if !ok {
-		return nil, 0, ErrPack
+	out, err := m.Pack()
+	if err != nil {
+		return nil, 0, err
 	}
 	var in []byte
 	switch c.Net {
@@ -123,8 +123,8 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	}
 	r = new(Msg)
 	r.Size = n
-	if ok := r.Unpack(in[:n]); !ok {
-		return nil, w.rtt, ErrUnpack
+	if err := r.Unpack(in[:n]); err != nil {
+		return nil, w.rtt, err
 	}
 	return r, w.rtt, nil
 }
@@ -158,8 +158,8 @@ func (w *reply) receive() (*Msg, error) {
 		return nil, err
 	}
 	p = p[:n]
-	if ok := m.Unpack(p); !ok {
-		return nil, ErrUnpack
+	if err := m.Unpack(p); err != nil {
+		return nil, err
 	}
 	w.rtt = time.Since(w.t)
 	m.Size = n
@@ -260,10 +260,9 @@ func (w *reply) send(m *Msg) (err error) {
 		}
 		w.tsigRequestMAC = mac
 	} else {
-		ok := false
-		out, ok = m.Pack()
-		if !ok {
-			return ErrPack
+		out, err = m.Pack()
+		if err != nil {
+			return err
 		}
 	}
 	w.t = time.Now()

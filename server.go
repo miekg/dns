@@ -396,7 +396,7 @@ func (c *conn) serve() {
 		w := new(response)
 		w.conn = c
 		req := new(Msg)
-		if !req.Unpack(c.request) {
+		if req.Unpack(c.request) != nil {
 			// Send a format error back
 			x := new(Msg)
 			x.SetRcodeFormatError(req)
@@ -436,10 +436,7 @@ func (c *conn) serve() {
 
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m *Msg) (err error) {
-	var (
-		data []byte
-		ok   bool
-	)
+	var data []byte
 	if m == nil {
 		return &Error{Err: "nil message"}
 	}
@@ -449,9 +446,9 @@ func (w *response) Write(m *Msg) (err error) {
 			return err
 		}
 	} else {
-		data, ok = m.Pack()
-		if !ok {
-			return ErrPack
+		data, err = m.Pack()
+		if err != nil {
+			return err
 		}
 	}
 	return w.WriteBuf(data)
@@ -470,7 +467,7 @@ func (w *response) WriteBuf(m []byte) (err error) {
 		}
 	case w.conn._TCP != nil:
 		if len(m) > MaxMsgSize {
-			return ErrBuf
+			return &Error{Err: "message too large"}
 		}
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(len(m)))
