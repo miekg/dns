@@ -102,7 +102,7 @@ func (e *Error) Error() string {
 		return "dns: <nil>"
 	}
 	if e.Name == "" {
-		return "dns:" + e.Err
+		return "dns: " + e.Err
 	}
 	return "dns: " + e.Name + ": " + e.Err
 
