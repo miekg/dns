@@ -1117,7 +1117,12 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 		return nil, &Error{Err: "nil message"}
 	}
 	var dh Header
-	compression := make(map[string]int) // Compression pointer mappings
+	var compression map[string]int
+	if dns.Compress {
+		compression = make(map[string]int) // Compression pointer mappings
+	} else {
+		compression = nil
+	}
 
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
