@@ -26,8 +26,6 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrUnpack      error = &Error{Err: "unpacking failed"}
-	ErrPack        error = &Error{Err: "packing failed"}
 	ErrFqdn        error = &Error{Err: "domain must be fully qualified"}
 	ErrId          error = &Error{Err: "id mismatch"}
 	ErrRdata       error = &Error{Err: "bad rdata"}
