@@ -181,13 +181,13 @@ func TestDomainName(t *testing.T) {
 	dbuff := make([]byte, 40)
 
 	for _, ts := range tests {
-		if _, ok := PackDomainName(ts, dbuff, 0, nil, false); !ok {
+		if _, err := PackDomainName(ts, dbuff, 0, nil, false); err != nil {
 			t.Log("Not a valid domain name")
 			t.Fail()
 			continue
 		}
-		n, _, ok := UnpackDomainName(dbuff, 0)
-		if !ok {
+		n, _, err := UnpackDomainName(dbuff, 0)
+		if err != nil {
 			t.Log("Failed to unpack packed domain name")
 			t.Fail()
 			continue
@@ -620,8 +620,8 @@ func TestSRVPacking(t *testing.T) {
 		msg.Answer = append(msg.Answer, rr)
 	}
 
-	_, ok := msg.Pack()
-	if !ok {
+	_, err := msg.Pack()
+	if err != nil{
 		t.Fatalf("Couldn't pack %v\n", msg)
 	}
 }
