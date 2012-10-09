@@ -109,6 +109,7 @@ func NewZoneData(s string) *ZoneData {
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
 // Each label is also lowercased.
 func toRadixName(d string) string {
+	// FIXME(mg): make *much* faster
 	if d == "." {
 		return "."
 	}

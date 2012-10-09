@@ -61,7 +61,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	c.Net = "tcp"
 
 	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
-		t.Log("Failed to setup axfr" + err.Error())
+		t.Log("Failed to setup axfr: " + err.Error())
 		t.Fail()
 		return
 	} else {
