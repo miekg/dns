@@ -333,10 +333,7 @@ forever:
 			i += j
 		}
 		n = i
-		d, err := newConn(rw, nil, rw.RemoteAddr(), m, handler, srv.TsigSecret)
-		if err != nil {
-			continue
-		}
+		d := &conn{rw.RemoteAddr(), handler, m, nil, rw, srv.TsigSecret}
 		go d.serve()
 	}
 	panic("dns: not reached")
@@ -367,25 +364,10 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			continue
 		}
 		m = m[:n]
-
-		d, err := newConn(nil, l, a, m, handler, srv.TsigSecret)
-		if err != nil {
-			continue
-		}
+		d := &conn{a, handler, m, l, nil, srv.TsigSecret}
 		go d.serve()
 	}
 	panic("dns: not reached")
-}
-
-func newConn(t *net.TCPConn, u *net.UDPConn, a net.Addr, buf []byte, handler Handler, tsig map[string]string) (*conn, error) {
-	c := new(conn)
-	c.handler = handler
-	c._TCP = t
-	c._UDP = u
-	c.remoteAddr = a
-	c.request = buf
-	c.tsigSecret = tsig
-	return c, nil
 }
 
 // Serve a new connection.
