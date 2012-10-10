@@ -41,17 +41,19 @@ type conn struct {
 	remoteAddr net.Addr          // address of the client
 	handler    Handler           // request handler
 	request    []byte            // bytes read
-	_UDP       *net.UDPConn      // i/o connection if UDP was used
-	_TCP       *net.TCPConn      // i/o connection if TCP was used
 	tsigSecret map[string]string // the tsig secrets
 }
 
 type response struct {
-	conn           *conn
+	//	conn           *conn
 	hijacked       bool // connection has been hijacked by handler
 	tsigStatus     error
 	tsigTimersOnly bool
 	tsigRequestMAC string
+	tsigSecret     map[string]string // the tsig secrets
+	_UDP           *net.UDPConn      // i/o connection if UDP was used
+	_TCP           *net.TCPConn      // i/o connection if TCP was used
+	remoteAddr     net.Addr          // address of the client
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -333,8 +335,7 @@ forever:
 			i += j
 		}
 		n = i
-		d := &conn{rw.RemoteAddr(), handler, m, nil, rw, srv.TsigSecret}
-		go d.serve()
+		go serve(rw.RemoteAddr(), handler, m, nil, rw, srv.TsigSecret)
 	}
 	panic("dns: not reached")
 }
@@ -364,21 +365,23 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			continue
 		}
 		m = m[:n]
-		d := &conn{a, handler, m, l, nil, srv.TsigSecret}
-		go d.serve()
+		go serve(a, handler, m, l, nil, srv.TsigSecret)
 	}
 	panic("dns: not reached")
 }
 
 // Serve a new connection.
-func (c *conn) serve() {
+func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsigSecret map[string]string) {
 	// for block to make it easy to break out to close the tcp connection
 	for {
 		// Request has been read in serveUDP or serveTCP
 		w := new(response)
-		w.conn = c
+		w.tsigSecret = tsigSecret
+		w._UDP = u
+		w._TCP = t
+		w.remoteAddr = a
 		req := new(Msg)
-		if req.Unpack(c.request) != nil {
+		if req.Unpack(m) != nil {
 			// Send a format error back
 			x := new(Msg)
 			x.SetRcodeFormatError(req)
@@ -389,31 +392,24 @@ func (c *conn) serve() {
 		w.tsigStatus = nil
 		if t := req.IsTsig(); t != nil {
 			secret := t.Hdr.Name
-			if _, ok := w.conn.tsigSecret[secret]; !ok {
+			if _, ok := tsigSecret[secret]; !ok {
 				w.tsigStatus = ErrKeyAlg
 			}
-			w.tsigStatus = TsigVerify(c.request, w.conn.tsigSecret[secret], "", false)
+			w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
 			w.tsigTimersOnly = false
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
-		c.handler.ServeDNS(w, req) // this does the writing back to the client
+		h.ServeDNS(w, req) // this does the writing back to the client
 		if w.hijacked {
 			// client takes care of the connection, i.e. calls Close()
-			return
+			break
+		}
+		if t != nil {
+			w.Close()
 		}
 		break
 	}
-	// quite elaborate, but this was the original c.close() function
-	if c._TCP != nil {
-		switch {
-		case c._UDP != nil:
-			c._UDP.Close()
-			c._UDP = nil
-		case c._TCP != nil:
-			c._TCP.Close()
-			c._TCP = nil
-		}
-	}
+	return
 }
 
 // Write implements the ResponseWriter.Write method.
@@ -423,7 +419,7 @@ func (w *response) Write(m *Msg) (err error) {
 		return &Error{Err: "nil message"}
 	}
 	if t := m.IsTsig(); t != nil {
-		data, w.tsigRequestMAC, err = TsigGenerate(m, w.conn.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
+		data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
 		if err != nil {
 			return err
 		}
@@ -442,31 +438,31 @@ func (w *response) WriteBuf(m []byte) (err error) {
 		return &Error{Err: "nil message"}
 	}
 	switch {
-	case w.conn._UDP != nil:
-		_, err := w.conn._UDP.WriteTo(m, w.conn.remoteAddr)
+	case w._UDP != nil:
+		_, err := w._UDP.WriteTo(m, w.remoteAddr)
 		if err != nil {
 			return err
 		}
-	case w.conn._TCP != nil:
+	case w._TCP != nil:
 		if len(m) > MaxMsgSize {
 			return &Error{Err: "message too large"}
 		}
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(len(m)))
-		n, err := w.conn._TCP.Write(l)
+		n, err := w._TCP.Write(l)
 		if err != nil {
 			return err
 		}
 		if n != 2 {
 			return io.ErrShortWrite
 		}
-		n, err = w.conn._TCP.Write(m)
+		n, err = w._TCP.Write(m)
 		if err != nil {
 			return err
 		}
 		i := n
 		if i < len(m) {
-			j, err := w.conn._TCP.Write(m[i:len(m)])
+			j, err := w._TCP.Write(m[i:len(m)])
 			if err != nil {
 				return err
 			}
@@ -478,7 +474,7 @@ func (w *response) WriteBuf(m []byte) (err error) {
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
-func (w *response) RemoteAddr() net.Addr { return w.conn.remoteAddr }
+func (w *response) RemoteAddr() net.Addr { return w.remoteAddr }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method.
 func (w *response) TsigStatus() error { return w.tsigStatus }
@@ -491,14 +487,14 @@ func (w *response) Hijack() { w.hijacked = true }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	if w.conn._UDP != nil {
-		e := w.conn._UDP.Close()
-		w.conn._UDP = nil
+	if w._UDP != nil {
+		e := w._UDP.Close()
+		w._UDP = nil
 		return e
 	}
-	if w.conn._TCP != nil {
-		e := w.conn._TCP.Close()
-		w.conn._TCP = nil
+	if w._TCP != nil {
+		e := w._TCP.Close()
+		w._TCP = nil
 		return e
 	}
 	// no-op
