@@ -1113,9 +1113,6 @@ func (h *MsgHdr) String() string {
 // Pack packs a Msg: it is converted to to wire format.
 // If the dns.Compress is true the message will be in compressed wire format.
 func (dns *Msg) Pack() (msg []byte, err error) {
-	if dns == nil {
-		return nil, &Error{Err: "nil message"}
-	}
 	var dh Header
 	var compression map[string]int
 	if dns.Compress {
