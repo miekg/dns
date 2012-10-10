@@ -438,9 +438,6 @@ func (w *response) Write(m *Msg) (err error) {
 
 // WriteBuf implements the ResponseWriter.WriteBuf method.
 func (w *response) WriteBuf(m []byte) (err error) {
-	if m == nil {
-		return &Error{Err: "nil message"}
-	}
 	switch {
 	case w._UDP != nil:
 		_, err := w._UDP.WriteTo(m, w.remoteAddr)
