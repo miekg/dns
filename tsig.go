@@ -303,7 +303,7 @@ func stripTsig(msg []byte) ([]byte, *RR_TSIG, error) {
 	rr := new(RR_TSIG)
 	off := 0
 	tsigoff := 0
-	if off, err = UnpackStruct(&dh, msg, off); err !=nil {
+	if off, err = UnpackStruct(&dh, msg, off); err != nil {
 		return nil, nil, err
 	}
 	if dh.Arcount == 0 {

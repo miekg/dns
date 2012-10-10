@@ -165,7 +165,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 
 	owner := make([]byte, 255)
 	off, err1 := PackDomainName(k.Hdr.Name, owner, 0, nil, false)
-	if err1 != nil  {
+	if err1 != nil {
 		return nil
 	}
 	owner = owner[:off]
@@ -266,7 +266,7 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		h = sha512.New()
 		ch = crypto.SHA512
 	case RSAMD5:
-		fallthrough		// Deprecated in RFC 6725
+		fallthrough // Deprecated in RFC 6725
 	default:
 		return ErrAlg
 	}

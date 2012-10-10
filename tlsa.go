@@ -59,7 +59,7 @@ func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
 	if r.Certificate == CertificateToDANE(r.Selector, r.MatchingType, cert) {
 		return nil
 	}
-	return ErrSig	// ErrSig, really?
+	return ErrSig // ErrSig, really?
 }
 
 // TLSAName returns the ownername of a TLSA resource record as per the
