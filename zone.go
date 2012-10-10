@@ -107,21 +107,24 @@ func NewZoneData(s string) *ZoneData {
 
 // toRadixName reverses a domain name so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
-// Each label is also lowercased.
+// Each label is also lowercased. The name given must be fully qualified.
 func toRadixName(d string) string {
-	// FIXME(mg): make *much* faster
 	if d == "." {
 		return "."
 	}
 	s := ""
-	for _, l := range SplitLabels(d) {
-		if s == "" {
-			s = strings.ToLower(l) + s
-			continue
+	var lastdot int
+	var lastbyte byte
+	var lastlastbyte byte
+	for i := 0; i < len(d); i++ {
+		if d[i] == '.' && lastbyte != '\\' && lastlastbyte != '\\' {
+			s = d[lastdot:i] + "." + s
+			lastdot = i+1
 		}
-		s = strings.ToLower(l) + "." + s
+		lastlastbyte = lastbyte
+		lastbyte = d[i]
 	}
-	return "." + s
+	return "." + strings.ToLower(s[:len(s)-1])
 }
 
 // String returns a string representation of a ZoneData. There is no
@@ -338,7 +341,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 
 	errChan := make(chan error)
-	radChan := make(chan *radix.Radix, config.SignerRoutines * 2)
+	radChan := make(chan *radix.Radix, config.SignerRoutines*2)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
@@ -521,7 +524,7 @@ func uint32ToTime(t uint32) time.Time {
 		mod = 0
 	}
 	duration := time.Duration((mod * year68) * int64(t))
-	return time.Unix(0,0).Add(duration)
+	return time.Unix(0, 0).Add(duration)
 }
 
 // jitterTime returns a random +/- jitter
