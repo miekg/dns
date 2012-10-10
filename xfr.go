@@ -171,7 +171,7 @@ func XfrSend(w ResponseWriter, q *Msg, c chan *XfrToken, e *error) error {
 	default:
 		return nil
 	}
-	panic("not reached")
+	panic("dns: not reached")
 }
 
 // TODO(mg): count the RRs and the resulting size.
