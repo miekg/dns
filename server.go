@@ -417,9 +417,6 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m *Msg) (err error) {
 	var data []byte
-	if m == nil {
-		return &Error{Err: "nil message"}
-	}
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
 			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
@@ -438,9 +435,6 @@ func (w *response) Write(m *Msg) (err error) {
 
 // WriteBuf implements the ResponseWriter.WriteBuf method.
 func (w *response) WriteBuf(m []byte) (err error) {
-	if m == nil {
-		return &Error{Err: "nil message"}
-	}
 	switch {
 	case w._UDP != nil:
 		_, err := w._UDP.WriteTo(m, w.remoteAddr)
