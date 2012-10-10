@@ -109,17 +109,28 @@ func NewZoneData(s string) *ZoneData {
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
 // Each label is also lowercased. The name given must be fully qualified.
 func toRadixName(d string) string {
-	if d == "." {
+	if d == "" || d == "." {
 		return "."
 	}
 	s := ""
+	ld := len(d)
+	if d[ld-1] != '.' {
+		d = d + "."
+		ld++
+	}
 	var lastdot int
 	var lastbyte byte
 	var lastlastbyte byte
 	for i := 0; i < len(d); i++ {
-		if d[i] == '.' && lastbyte != '\\' && lastlastbyte != '\\' {
-			s = d[lastdot:i] + "." + s
-			lastdot = i+1
+		if d[i] == '.' {
+			switch {
+			case lastbyte != '\\':
+				fallthrough
+			case lastbyte == '\\' && lastlastbyte == '\\':
+				s = d[lastdot:i] + "." + s
+				lastdot = i + 1
+				continue
+			}
 		}
 		lastlastbyte = lastbyte
 		lastbyte = d[i]
