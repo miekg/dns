@@ -390,14 +390,16 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 		}
 
 		w.tsigStatus = nil
-		if t := req.IsTsig(); t != nil {
-			secret := t.Hdr.Name
-			if _, ok := tsigSecret[secret]; !ok {
-				w.tsigStatus = ErrKeyAlg
+		if w.tsigSecret != nil {
+			if t := req.IsTsig(); t != nil {
+				secret := t.Hdr.Name
+				if _, ok := tsigSecret[secret]; !ok {
+					w.tsigStatus = ErrKeyAlg
+				}
+				w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
+				w.tsigTimersOnly = false
+				w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 			}
-			w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
-			w.tsigTimersOnly = false
-			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
 		}
 		h.ServeDNS(w, req) // this does the writing back to the client
 		if w.hijacked {
@@ -418,16 +420,18 @@ func (w *response) Write(m *Msg) (err error) {
 	if m == nil {
 		return &Error{Err: "nil message"}
 	}
-	if t := m.IsTsig(); t != nil {
-		data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
-		if err != nil {
-			return err
+	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
+		if t := m.IsTsig(); t != nil {
+			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
+			if err != nil {
+				return err
+			}
+			return w.WriteBuf(data)
 		}
-	} else {
-		data, err = m.Pack()
-		if err != nil {
-			return err
-		}
+	}
+	data, err = m.Pack()
+	if err != nil {
+		return err
 	}
 	return w.WriteBuf(data)
 }
