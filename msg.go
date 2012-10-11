@@ -234,14 +234,14 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			}
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1 > len(msg) {
+			if off+1 > lenmsg {
 				return lenmsg, ErrBuf
 			}
 			msg[off] = byte(i - begin)
 			offset := off
 			off++
 			for j := begin; j < i; j++ {
-				if off+1 > len(msg) {
+				if off+1 > lenmsg {
 					return lenmsg, ErrBuf
 				}
 				msg[off] = bs[j]
@@ -703,7 +703,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				fv.Set(reflect.ValueOf(edns))
 				// multiple EDNS codes?
 			case `dns:"a"`:
-				if off+net.IPv4len > len(msg) {
+				if off+net.IPv4len > lenmsg {
 					return lenmsg, &Error{Err: "overflow unpacking a"}
 				}
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
