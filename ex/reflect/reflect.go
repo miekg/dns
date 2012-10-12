@@ -7,7 +7,7 @@
 // 
 //	dig @localhost -p 8053 whoami.miek.nl A
 //
-//      ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2157
+//	;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2157
 //	;; flags: qr rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 //	;; QUESTION SECTION:
 //	;whoami.miek.nl.			IN	A
