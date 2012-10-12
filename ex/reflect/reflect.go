@@ -156,7 +156,7 @@ func main() {
 	flag.Parse()
 	if *tsig != "" {
 		a := strings.SplitN(*tsig, ":", 2)
-		name, secret = a[0], a[1]
+		name, secret = dns.Fqdn(a[0]), a[1]	// fqdn the name, which everybody forgets...
 	}
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
