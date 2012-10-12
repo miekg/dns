@@ -32,7 +32,7 @@ func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 	}
 	c := new(ClientConfig)
 	b := bufio.NewReader(file)
-	c.Servers = make([]string, 3)[0:0] // small, but the standard limit
+	c.Servers = make([]string, 0)
 	c.Search = make([]string, 0)
 	c.Port = "53"
 	c.Ndots = 1
@@ -45,21 +45,17 @@ func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 		}
 		switch f[0] {
 		case "nameserver": // add one name server
-			a := c.Servers
-			n := len(a)
-			if len(f) > 1 && n < cap(a) {
+			if len(f) > 1 {
 				// One more check: make sure server name is
 				// just an IP address.  Otherwise we need DNS
 				// to look it up.
 				name := f[1]
-				switch len(net.ParseIP(name)) {
-				case 16:
+				switch x := net.ParseIP(name); true {
+				case x.To4() != nil:
+					c.Servers = append(c.Servers, name)
+				case x.To16() != nil:
 					name = "[" + name + "]"
-					fallthrough
-				case 4:
-					a = a[0 : n+1]
-					a[n] = name
-					c.Servers = a
+					c.Servers = append(c.Servers, name)
 				}
 			}
 

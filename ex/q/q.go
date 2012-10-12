@@ -105,9 +105,19 @@ Flags:
 		qtype = dns.TypeA
 	}
 
-	nameserver = dns.Fqdn(string([]byte(nameserver)[1:])) // chop off @
-	nameserver += ":" + strconv.Itoa(*port)
-
+	nameserver = string([]byte(nameserver)[1:]) // chop off @
+	if i := net.ParseIP(nameserver); i != nil {
+		switch {
+		case i.To4() != nil:
+			// it's a v4 address
+			nameserver += ":" + strconv.Itoa(*port)
+		case i.To16() != nil:
+			// v6 address
+			nameserver = "[" + nameserver + "]:" + strconv.Itoa(*port)
+		}
+	} else {
+		nameserver = dns.Fqdn(nameserver) + ":" + strconv.Itoa(*port)
+	}
 	// We use the async query handling, just to show how it is to be used.
 	c := new(dns.Client)
 	if *tcp {

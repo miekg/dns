@@ -1,7 +1,5 @@
 # TODO
 
-* 'q' standardize ipv6 input with [::1]#53 ?
-* make example from chaos
 * Support for on-the-fly-signing
 * (Re)sign zonefiles
 * TLSA support
@@ -11,6 +9,6 @@
 
 ## Nice to have
 
-* Speed, we can always go faster. A simple reflect server now hits 35/45K qps
+* Speed, we can always go faster. A simple reflect server now hits 45/50K qps
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
