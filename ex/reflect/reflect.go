@@ -1,8 +1,23 @@
 // Reflect is a small name server which sends back the IP address of its client, the
-// recursive resolver. When queried for type TXT, it sends back the text
-// form of the address.  When queried for type A (resp. AAAA), it sends
-// back the IPv4 (resp. v6) address.
+// recursive resolver. 
+// When queried for type A (resp. AAAA), it sends back the IPv4 (resp. v6) address.
+// In the additional section the port number and transport are shown.
 // 
+// Basic use pattern:
+// 
+//	dig @localhost -p 8053 whoami.miek.nl A
+//
+//      ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2157
+//	;; flags: qr rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+//	;; QUESTION SECTION:
+//	;whoami.miek.nl.			IN	A
+//
+//	;; ANSWER SECTION:
+//	whoami.miek.nl.		0	IN	A	127.0.0.1
+//
+//	;; ADDITIONAL SECTION:
+//	whoami.miek.nl.		0	IN	TXT	"Port: 56195 (udp)"
+//
 // Similar services: whoami.ultradns.net, whoami.akamai.net. Also (but it
 // is not their normal goal): rs.dns-oarc.net, porttest.dns-oarc.net,
 // amiopen.openresolvers.org.
