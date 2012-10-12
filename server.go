@@ -37,15 +37,7 @@ type ResponseWriter interface {
 	Hijack()
 }
 
-type conn struct {
-	remoteAddr net.Addr          // address of the client
-	handler    Handler           // request handler
-	request    []byte            // bytes read
-	tsigSecret map[string]string // the tsig secrets
-}
-
 type response struct {
-	//	conn           *conn
 	hijacked       bool // connection has been hijacked by handler
 	tsigStatus     error
 	tsigTimersOnly bool
