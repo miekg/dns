@@ -1,8 +1,7 @@
+// Chaos is a small program that prints the version.bind and hostname.bind
+// for each address of the nameserver given as argument.
 package main
 
-// Print the version.bind and hostname.bind for each
-// address of NAMESERVER
-// (c) Miek Gieben - 2011
 import (
 	"fmt"
 	"github.com/miekg/dns"
