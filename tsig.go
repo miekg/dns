@@ -4,7 +4,8 @@
 // The supported algorithms include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
 // Basic use pattern when querying with a TSIG name "axfr." (note that these key names
-// must be fully qualified) and the base64 secret "so6ZGir4GPAqINNh9U5c3A==":
+// must be fully qualified - as they are domain names) and the base64 secret 
+// "so6ZGir4GPAqINNh9U5c3A==":
 //
 //	c := new(dns.Client)
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
