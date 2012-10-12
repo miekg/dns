@@ -1,20 +1,15 @@
-/* 
- * A name server which sends back the IP address of its client, the
- * recursive resolver. When queried for type TXT, it sends back the text
- * form of the address.  When queried for type A (resp. AAAA), it sends
- * back the IPv4 (resp. v6) address.
- *
- * Similar services: whoami.ultradns.net, whoami.akamai.net. Also (but it
- * is not their normal goal): rs.dns-oarc.net, porttest.dns-oarc.net,
- * amiopen.openresolvers.org.
- *
- * Original version from:
- * Stephane Bortzmeyer <stephane+grong@bortzmeyer.org>
- *
- * Adapted to Go DNS (i.e. completely rewritten)
- * Miek Gieben <miek@miek.nl>
- */
-
+// Reflect is a small name server which sends back the IP address of its client, the
+// recursive resolver. When queried for type TXT, it sends back the text
+// form of the address.  When queried for type A (resp. AAAA), it sends
+// back the IPv4 (resp. v6) address.
+// 
+// Similar services: whoami.ultradns.net, whoami.akamai.net. Also (but it
+// is not their normal goal): rs.dns-oarc.net, porttest.dns-oarc.net,
+// amiopen.openresolvers.org.
+// 
+// Original version is from: Stephane Bortzmeyer <stephane+grong@bortzmeyer.org>.
+// 
+// Adapted to Go (i.e. completely rewritten) by Miek Gieben <miek@miek.nl>.
 package main
 
 import (
