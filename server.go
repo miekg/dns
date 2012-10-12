@@ -172,8 +172,7 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 }
 
 func (mux *ServeMux) match(zone string, t uint16) Handler {
-	zone = toRadixName(zone)
-	if h, e := mux.m.Find(zone); e {
+	if h, e := mux.m.Find(toRadixName(zone)); e {
 		// If we got queried for a DS record, we must see if we
 		// if we also serve the parent. We then redirect the query to it.
 		if t != TypeDS {
@@ -445,9 +444,8 @@ func (w *response) WriteBuf(m []byte) (err error) {
 		if len(m) > MaxMsgSize {
 			return &Error{Err: "message too large"}
 		}
-		l := make([]byte, 2)
-		l[0], l[1] = packUint16(uint16(len(m)))
-		n, err := w._TCP.Write(l)
+		a, b := packUint16(uint16(len(m)))
+		n, err := w._TCP.Write([]byte{a, b})
 		if err != nil {
 			return err
 		}

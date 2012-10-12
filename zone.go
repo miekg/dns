@@ -107,7 +107,7 @@ func NewZoneData(s string) *ZoneData {
 
 // toRadixName reverses a domain name so that when we store it in the radix tree
 // we preserve the nsec ordering of the zone (this idea was stolen from NSD).
-// Each label is also lowercased. The name given must be fully qualified.
+// Each label is also lowercased.
 func toRadixName(d string) string {
 	if d == "" || d == "." {
 		return "."
