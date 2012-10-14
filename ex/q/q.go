@@ -1,3 +1,7 @@
+// Q is a small utility which acts and behaves like 'dig' from BIND.
+// It is meant to stay lean and mean, while having a bunch of handy
+// features, like -check which checks if a packet is correctly signed (without
+// checking the chain of trust).
 package main
 
 import (
