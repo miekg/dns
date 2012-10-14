@@ -30,7 +30,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/miekg/dns"
+	"../../../dns"
 	"log"
 	"net"
 	"os"
@@ -46,9 +46,56 @@ var (
 	printf   *bool
 	compress *bool
 	tsig     *string
+	dyn_rr   map[string]dns.RR
 )
 
 const dom = "whoami.miek.nl."
+
+func handleUpdate(w dns.ResponseWriter, r *dns.Msg) {
+	fmt.Println("got request %s %s\n", w, r)
+	m := new(dns.Msg)
+	m.SetReply(r)
+	m.Compress = *compress
+
+	// if no TSIG at all, fail with NOTAUTH
+	tsig := r.IsTsig()
+	if tsig == nil {
+		m.SetRcode(r, dns.RcodeNotAuth)
+		w.Write(m)
+		return
+	}
+	// if signature is invalid, fail with BADKEY
+	if w.TsigStatus() != nil {
+		m.SetRcode(r, dns.RcodeBadKey)
+		w.Write(m)
+		return
+	}
+	// if we made it this far, the TSIG is valid, add signature on response
+	m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
+
+	// this will be the name of the key, which we will make the zone
+	// zone := tsig.Hdr.Name
+
+	if r.MsgHdr.Opcode == dns.OpcodeUpdate && len(r.Ns) > 0 {
+		for i := 0; i < len(r.Ns); i++ {
+			name := r.Ns[i].Header().Name
+			dyn_rr[name] = r.Ns[i]
+		}
+	}
+	if r.MsgHdr.Opcode == dns.OpcodeQuery && len(r.Question) > 0 {
+		for i := 0; i < len(r.Question); i++ {
+			if rr, ok := dyn_rr[r.Question[i].Name]; ok {
+				fmt.Printf("POLVI %s\n", rr)
+				m.Answer = append(m.Answer, rr)
+			}
+		}
+	}
+	if *printf {
+		fmt.Printf("Incoming msg:\n%v\n", r.String())
+		fmt.Printf("Outgoing msg:\n%v\n", m.String())
+	}
+	w.Write(m)
+}
 
 func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	var (
@@ -105,6 +152,14 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		w.Hijack()
 		// w.Close() // Client closes
 		return
+	case dns.TypeSOA:
+		soa, _ := dns.NewRR(`whoami.miek.nl. IN SOA ns.polvi. ns.polvi. (
+			2009032802 
+			21600 
+			7200 
+			604800 
+			3600)`)
+		m.Answer = append(m.Answer, soa)
 	case dns.TypeTXT:
 		m.Answer = append(m.Answer, t)
 		m.Extra = append(m.Extra, rr)
@@ -131,12 +186,12 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 func serve(net, name, secret string) {
 	switch name {
 	case "":
-		err := dns.ListenAndServe(":8053", net, nil)
+		err := dns.ListenAndServe(":53", net, nil)
 		if err != nil {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 		}
 	default:
-		server := &dns.Server{Addr: ":8053", Net: net, TsigSecret: map[string]string{name: secret}}
+		server := &dns.Server{Addr: ":53", Net: net, TsigSecret: map[string]string{name: secret}}
 		err := server.ListenAndServe()
 		if err != nil {
 			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
@@ -168,6 +223,8 @@ func main() {
 	}
 
 	dns.HandleFunc("miek.nl.", handleReflect)
+	dns.HandleFunc("polvi.", handleUpdate)
+	dyn_rr = make(map[string]dns.RR)
 	dns.HandleFunc("authors.bind.", dns.HandleAuthors)
 	dns.HandleFunc("authors.server.", dns.HandleAuthors)
 	dns.HandleFunc("version.bind.", dns.HandleVersion)
