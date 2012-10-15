@@ -99,3 +99,39 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 		}
 	}
 }
+
+// not really a test, but shows how to use update leases
+func TestUpdateLeaseTSIG(t *testing.T) {
+	m := new(Msg)
+	m.SetUpdate("t.local.ip6.io.")
+	rr, _ := NewRR("t.local.ip6.io. 30 A 127.0.0.1")
+	rrs := make([]RR, 1)
+	rrs[0] = rr
+	m.AddRR(rrs)
+
+	lease_rr := new(RR_OPT)
+	lease_rr.Hdr.Name = "."
+	lease_rr.Hdr.Rrtype = TypeOPT
+	e := new(EDNS0_UPDATE_LEASE)
+	e.Code = EDNS0UPDATELEASE
+	e.Lease = 120
+	lease_rr.Option = append(lease_rr.Option, e)
+	m.Extra = append(m.Extra, lease_rr)
+
+	c := new(Client)
+	m.SetTsig("polvi.", HmacMD5, 300, time.Now().Unix())
+	c.TsigSecret = map[string]string{"polvi.": "pRZgBrBvI4NAHZYhxmhs/Q=="}
+
+	w := new(reply)
+	w.client = c
+	w.addr = "127.0.0.1:53"
+	w.req = m
+
+	if err := w.dial(); err != nil {
+		t.Fail()
+	}
+	if err := w.send(m); err != nil {
+		t.Fail()
+	}
+
+}
