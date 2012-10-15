@@ -24,8 +24,8 @@ If you like this, you may also be interested in:
 * RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE [for all record types]
   are supported);
 * Fast: 
-    * Reply speed around 45/50K qps (faster hardware results in more qps);
-    * Parsing RRs with 95/100K RR/s, that's 5M records in about 50 seconds;
+    * Reply speed around ~ 50K qps (faster hardware results in more qps);
+    * Parsing RRs with  ~ 100K RR/s, that's 5M records in about 50 seconds;
 * Server side programming (mimicking the net/http package);
 * Client side programming with asynchronous calls;
 * Asynchronous queries/replies for client and server;

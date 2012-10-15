@@ -81,8 +81,11 @@ func TestBailiwick(t *testing.T) {
 		}
 	}
 	no := map[string]string{
-		"www.miek.nl": "ns.miek.nl",
-		"miek.nl":     ".",
+		"www.miek.nl":  "ns.miek.nl",
+		"m\\.iek.nl":   "ns.miek.nl",
+		"w\\.iek.nl":   "w.iek.nl",
+		"p\\\\.iek.nl": "ns.p.iek.nl", // p\\.iek.nl , literal \ in domain name
+		"miek.nl":      ".",
 	}
 	for parent, child := range no {
 		if IsSubDomain(parent, child) {

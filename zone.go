@@ -15,9 +15,10 @@ import (
 // Zone represents a DNS zone. It's safe for concurrent use by 
 // multilpe goroutines.
 type Zone struct {
-	Origin       string // Origin of the zone
-	Wildcard     int    // Whenever we see a wildcard name, this is incremented
-	*radix.Radix        // Zone data
+	Origin       string   // Origin of the zone
+	olabels      []string // origin cut up in labels, to speed up IsSubDomain function
+	Wildcard     int      // Whenever we see a wildcard name, this is incremented
+	*radix.Radix          // Zone data
 	mutex        *sync.RWMutex
 	expired      bool // Slave zone is expired
 	// Do we need a timemodified?
@@ -81,7 +82,8 @@ func NewZone(origin string) *Zone {
 	}
 	z := new(Zone)
 	z.mutex = new(sync.RWMutex)
-	z.Origin = Fqdn(origin)
+	z.Origin = Fqdn(strings.ToLower(origin))
+	z.olabels = SplitLabels(z.Origin)
 	z.Radix = radix.New()
 	return z
 }
@@ -146,6 +148,7 @@ func toRadixName(d string) string {
 //	// z contains the zone
 //	z.Radix.DoNext(func(i interface{}) {
 //		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
+//
 func (zd *ZoneData) String() string {
 	var (
 		s string
@@ -196,14 +199,13 @@ func (z *Zone) Lock() { z.mutex.Lock() }
 // Unlock unlocks the zone z for writing.
 func (z *Zone) Unlock() { z.mutex.Unlock() }
 
-// Insert inserts an RR into the zone. There is no check for duplicate data, although
+// Insert inserts the RR r into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
-	if !IsSubDomain(z.Origin, r.Header().Name) {
+	if !z.isSubDomain(r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
-	// TODO(mg): quick check for doubles?
 	key := toRadixName(r.Header().Name)
 	z.Lock()
 	zd, exact := z.Radix.Find(key)
@@ -311,6 +313,30 @@ func (z *Zone) Remove(r RR) error {
 	return nil
 }
 
+// RemoveName removes all the RRs with ownername matching s from the zone. Typical use of this
+// function is when processing a RemoveName dynamic update packet.
+func (z *Zone) RemoveName(s string) error {
+	key := toRadixName(s)
+	z.Lock()
+	zd, exact := z.Radix.Find(key)
+	if !exact {
+		defer z.Unlock()
+		return nil
+	}
+	z.Unlock()
+	zd.Value.(*ZoneData).mutex.Lock()
+	defer zd.Value.(*ZoneData).mutex.Unlock()
+	zd.Value = nil	// remove the lot
+
+	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
+		z.Wildcard--
+		if z.Wildcard < 0 {
+			z.Wildcard = 0
+		}
+	}
+	return nil
+}
+
 // Find looks up the ownername s in the zone and returns the
 // data and true when an exact match is found. If an exact find isn't
 // possible the first parent node with a non-nil Value is returned and
@@ -338,6 +364,10 @@ func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bo
 		return nil, false, false
 	}
 	return zd.Value.(*ZoneData), e, b
+}
+
+func (z *Zone) isSubDomain(child string) bool {
+	return compareLabelsSlice(z.olabels, strings.ToLower(child)) == len(z.olabels)
 }
 
 // Sign (re)signs the zone z with the given keys. 
@@ -565,4 +595,27 @@ func jitterDuration(d time.Duration) time.Duration {
 		return time.Duration(jitter)
 	}
 	return -time.Duration(jitter)
+}
+
+// compareLabels behaves exactly as CompareLabels expect that l1 is already
+// a tokenize (in labels) version of the domain name. This safe memory and is
+// faster
+func compareLabelsSlice(l1 []string, s2 string) (n int) {
+	l2 := SplitLabels(s2)
+
+	x1 := len(l1) - 1
+	x2 := len(l2) - 1
+	for {
+		if x1 < 0 || x2 < 0 {
+			break
+		}
+		if l1[x1] == l2[x2] {
+			n++
+		} else {
+			break
+		}
+		x1--
+		x2--
+	}
+	return
 }
