@@ -306,12 +306,12 @@ func (e *EDNS0_UPDATE_LEASE) Option() uint16 {
 
 // Copied: http://golang.org/src/pkg/net/dnsmsg.go
 func (e *EDNS0_UPDATE_LEASE) pack() ([]byte, error) {
-	lease_byte := make([]byte, 4)
-	lease_byte[0] = byte(e.Lease >> 24)
-	lease_byte[1] = byte(e.Lease >> 16)
-	lease_byte[2] = byte(e.Lease >> 8)
-	lease_byte[3] = byte(e.Lease)
-	return lease_byte, nil
+	b := make([]byte, 4)
+	b[0] = byte(e.Lease >> 24)
+	b[1] = byte(e.Lease >> 16)
+	b[2] = byte(e.Lease >> 8)
+	b[3] = byte(e.Lease)
+	return b, nil
 }
 
 func (e *EDNS0_UPDATE_LEASE) unpack(b []byte) {
