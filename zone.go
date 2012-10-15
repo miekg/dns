@@ -276,6 +276,10 @@ func (z *Zone) Remove(r RR) error {
 	default:
 		for i, zr := range zd.Value.(*ZoneData).RR[t] {
 			if r == zr {
+				if len(zd.Value.(*ZoneData).RR[t]) == 0 {
+					zd.Value.(*ZoneData).RR[t] = nil
+				}
+				println("removing", i)
 				zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t][:i], zd.Value.(*ZoneData).RR[t][i+1:]...)
 				remove = true
 			}
@@ -290,7 +294,9 @@ func (z *Zone) Remove(r RR) error {
 			z.Wildcard = 0
 		}
 	}
-	if len(z.Value.(*ZoneData).RR) == 0 && len(z.Value.(*ZoneData).Signatures) == 0 {
+	println(len(zd.Value.(*ZoneData).RR), len(zd.Value.(*ZoneData).Signatures))
+	if len(zd.Value.(*ZoneData).RR) == 0 && len(zd.Value.(*ZoneData).Signatures) == 0 {
+		println("REMOVING")
 		z.Radix.Remove(key)
 	}
 	return nil
