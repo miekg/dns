@@ -81,14 +81,13 @@ func handleBonjour(w dns.ResponseWriter, r *dns.Msg) {
 			// tsig is valid and this is an Update
 			if r.MsgHdr.Opcode == dns.OpcodeUpdate && len(r.Ns) > 0 {
 				for i := 0; i < len(r.Ns); i++ {
-					fmt.Println("GOT", r.Ns[i])
 					switch r.Ns[i].Header().Class {
 					case dns.ClassNONE:
 						// this means RRsetDeleteRR, delete the record
-						fmt.Println("REMOVING", r.Ns[i])
 						if zd, ok := z.Find(r.Ns[i].Header().Name); ok {
 							rrs := zd.RR[r.Ns[i].Header().Rrtype]
 							for j := 0; j < len(rrs); j++ {
+								fmt.Println("REMOVING", r.Ns[i])
 								z.Remove(rrs[j])
 							}
 						}
