@@ -699,6 +699,11 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
+				case EDNS0UPDATELEASE:
+					e := new(EDNS0_UPDATE_LEASE)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
 				}
 				fv.Set(reflect.ValueOf(edns))
 				// multiple EDNS codes?
