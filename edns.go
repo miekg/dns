@@ -73,6 +73,8 @@ func (rr *RR_OPT) String() string {
 			}
 		case *EDNS0_SUBNET:
 			s += "\n; SUBNET: " + o.String()
+		case *EDNS0_UPDATE_LEASE:
+			s += "\n; LEASE: " + o.String()
 		}
 	}
 	return s
@@ -277,4 +279,45 @@ func (e *EDNS0_SUBNET) String() (s string) {
 	}
 	s += "/" + strconv.Itoa(int(e.SourceNetmask)) + "/" + strconv.Itoa(int(e.SourceScope))
 	return
+}
+
+// The UPDATE_LEASE EDNS0 (draft RFC) option is used to tell the server to set
+// an expiration on an update RR. This is helpful for clients that cannot clean
+// up after themselves. This is a draft RFC and more information can be found at
+// http://files.dns-sd.org/draft-sekar-dns-ul.txt 
+//
+//	o := new(dns.RR_OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
+//	e := new(dns.EDNS0_UPDATE_LEASE)
+//	e.Code = dns.EDNS0UPDATELEASE
+//	e.Lease = 120 // in seconds
+//	o.Option = append(o.Option, e)
+const EDNS0UPDATELEASE = 0x02
+
+type EDNS0_UPDATE_LEASE struct {
+	Code          uint16 // Always EDNS0UPDATELEASE
+	Lease         uint32
+}
+
+func (e *EDNS0_UPDATE_LEASE) Option() uint16 {
+	return EDNS0UPDATELEASE
+}
+
+// Copied: http://golang.org/src/pkg/net/dnsmsg.go
+func (e *EDNS0_UPDATE_LEASE) pack() ([]byte, error) {
+	lease_byte := make([]byte, 4)
+	lease_byte[0] = byte(e.Lease >> 24)
+	lease_byte[1] = byte(e.Lease >> 16)
+	lease_byte[2] = byte(e.Lease >> 8)
+	lease_byte[3] = byte(e.Lease)
+	return lease_byte, nil
+}
+
+func (e *EDNS0_UPDATE_LEASE) unpack(b []byte) {
+	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+}
+
+func (e *EDNS0_UPDATE_LEASE) String() string {
+	return strconv.Itoa(int(e.Lease))
 }

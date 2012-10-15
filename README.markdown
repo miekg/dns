@@ -87,6 +87,7 @@ be build with: `make -C ex`, or also with the `go` tool.
 * 5936 - AXFR
 * 6605 - ECDSA
 * xxxx - URI record (draft)
+* xxxx - Dns Update Lease (draft)
 
 ## Loosely based upon
 
