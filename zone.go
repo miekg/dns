@@ -198,7 +198,7 @@ func (z *Zone) Lock() { z.mutex.Lock() }
 // Unlock unlocks the zone z for writing.
 func (z *Zone) Unlock() { z.mutex.Unlock() }
 
-// Insert inserts an RR into the zone. There is no check for duplicate data, although
+// Insert inserts the RR r into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
 	if !z.isSubDomain(r.Header().Name) {
