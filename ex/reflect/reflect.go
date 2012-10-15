@@ -111,8 +111,7 @@ func handleBonjour(w dns.ResponseWriter, r *dns.Msg) {
 		q_rr := r.Question[i]
 		qtype := q_rr.Qtype
 		name := q_rr.Name
-		zd_node, ok := z.Find(name)
-		if ok {
+		if zd_node, ok := z.Find(name); ok {
 			rrs := zd_node.RR[qtype]
 			for j := 0; j < len(rrs); j++ {
 				m.Answer = append(m.Answer, rrs[j])
