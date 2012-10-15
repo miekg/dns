@@ -148,6 +148,7 @@ func toRadixName(d string) string {
 //	// z contains the zone
 //	z.Radix.DoNext(func(i interface{}) {
 //		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
+//
 func (zd *ZoneData) String() string {
 	var (
 		s string
@@ -308,6 +309,30 @@ func (z *Zone) Remove(r RR) error {
 	if len(zd.Value.(*ZoneData).RR) == 0 && len(zd.Value.(*ZoneData).Signatures) == 0 {
 		// Entire node is empty, remove it from the Radix tree
 		z.Radix.Remove(key)
+	}
+	return nil
+}
+
+// RemoveName removes all the RRs with ownername matching s from the zone. Typical use of this
+// function is when processing a RemoveName dynamic update packet.
+func (z *Zone) RemoveName(s string) error {
+	key := toRadixName(s)
+	z.Lock()
+	zd, exact := z.Radix.Find(key)
+	if !exact {
+		defer z.Unlock()
+		return nil
+	}
+	z.Unlock()
+	zd.Value.(*ZoneData).mutex.Lock()
+	defer zd.Value.(*ZoneData).mutex.Unlock()
+	zd.Value = nil	// remove the lot
+
+	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
+		z.Wildcard--
+		if z.Wildcard < 0 {
+			z.Wildcard = 0
+		}
 	}
 	return nil
 }
