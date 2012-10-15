@@ -273,21 +273,41 @@ func (z *Zone) Remove(r RR) error {
 				remove = true
 			}
 		}
+		if remove {
+			// If every Signature of the covering type is removed, removed the type from the map
+			if len(zd.Value.(*ZoneData).RR[sigtype]) == 0 {
+				delete(zd.Value.(*ZoneData).RR, sigtype)
+			}
+		}
 	default:
 		for i, zr := range zd.Value.(*ZoneData).RR[t] {
+			// Matching RR
 			if r == zr {
 				zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t][:i], zd.Value.(*ZoneData).RR[t][i+1:]...)
 				remove = true
 			}
 		}
+		if remove {
+			// If every RR of this type is removed, removed the type from the map
+			if len(zd.Value.(*ZoneData).RR[t]) == 0 {
+				delete(zd.Value.(*ZoneData).RR, t)
+			}
+		}
 	}
-	if remove && len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+	if !remove {
+		return nil
+	}
+
+	if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
 			z.Wildcard = 0
 		}
 	}
-	// TODO(mg): what to do if the whole structure is empty? Set it to nil?
+	if len(zd.Value.(*ZoneData).RR) == 0 && len(zd.Value.(*ZoneData).Signatures) == 0 {
+		// Entire node is empty, remove it from the Radix tree
+		z.Radix.Remove(key)
+	}
 	return nil
 }
 
