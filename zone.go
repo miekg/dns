@@ -205,7 +205,6 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
-	// TODO(mg): quick check for doubles?
 	key := toRadixName(r.Header().Name)
 	z.Lock()
 	zd, exact := z.Radix.Find(key)
