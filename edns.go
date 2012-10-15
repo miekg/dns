@@ -278,3 +278,34 @@ func (e *EDNS0_SUBNET) String() (s string) {
 	s += "/" + strconv.Itoa(int(e.SourceNetmask)) + "/" + strconv.Itoa(int(e.SourceScope))
 	return
 }
+
+// http://files.dns-sd.org/draft-sekar-dns-ul.txt
+const EDNS0UPDATELEASE = 0x02
+
+type EDNS0_UPDATE_LEASE struct {
+	Code          uint16 // Always EDNS0UPDATELEASE
+	Lease         uint32
+}
+
+func (e *EDNS0_UPDATE_LEASE) Option() uint16 {
+	return EDNS0UPDATELEASE
+}
+
+// XXX: I have no idea if I am packing/unpacking correctly
+// I'm trying to copy: http://golang.org/src/pkg/net/dnsmsg.go
+func (e *EDNS0_UPDATE_LEASE) pack() ([]byte, error) {
+	lease_byte := make([]byte, 4)
+	lease_byte[0] = byte(e.Lease >> 24)
+	lease_byte[1] = byte(e.Lease >> 16)
+	lease_byte[2] = byte(e.Lease >> 8)
+	lease_byte[3] = byte(e.Lease)
+	return lease_byte, nil
+}
+
+func (e *EDNS0_UPDATE_LEASE) unpack(b []byte) {
+	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+}
+
+func (e *EDNS0_UPDATE_LEASE) String() string {
+	return string(e.Lease)
+}
