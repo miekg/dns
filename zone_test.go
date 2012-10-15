@@ -24,7 +24,7 @@ func TestInsert(t *testing.T) {
 	z := NewZone("miek.nl.")
 	mx, _ := NewRR("foo.miek.nl. MX 10 mx.miek.nl.")
 	z.Insert(mx)
-	zd, exact := z.Find("foo.miek.nl.")
+	_, exact := z.Find("foo.miek.nl.")
 	if exact != true {
 		t.Fail() // insert broken?
 	}
@@ -41,6 +41,7 @@ func TestRemove(t *testing.T) {
 	z.Remove(mx)
 	zd, exact = z.Find("foo.miek.nl.")
 	if exact != false {
+		println(zd.String())
 		t.Errorf("zd(%s) exact(%s) still exists", zd, exact) // it should no longer be in the zone
 	}
 }

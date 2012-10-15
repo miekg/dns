@@ -281,13 +281,18 @@ func (z *Zone) Remove(r RR) error {
 			}
 		}
 	}
-	if remove && len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+	if !remove {
+		return nil
+	}
+	if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
 			z.Wildcard = 0
 		}
 	}
-	// TODO(mg): what to do if the whole structure is empty? Set it to nil?
+	if len(z.Value.(*ZoneData).RR) == 0 && len(z.Value.(*ZoneData).Signatures) == 0 {
+		z.Radix.Remove(key)
+	}
 	return nil
 }
 
