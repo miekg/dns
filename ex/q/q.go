@@ -110,6 +110,9 @@ Flags:
 	}
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @
+	if nameserver[0] == '[' && nameserver[len(nameserver)-1] == ']' {
+		nameserver = nameserver[1:len(nameserver)-1]
+	}
 	if i := net.ParseIP(nameserver); i != nil {
 		switch {
 		case i.To4() != nil:
@@ -120,6 +123,9 @@ Flags:
 			nameserver = "[" + nameserver + "]:" + strconv.Itoa(*port)
 		}
 	} else {
+		// if the nameserver is from /etc/resolv.conf the [ and ] are already
+		// added, thereby breaking net.ParseIP. Check for this and don't
+		// fully qualify such a name
 		nameserver = dns.Fqdn(nameserver) + ":" + strconv.Itoa(*port)
 	}
 	// We use the async query handling, just to show how it is to be used.
