@@ -9,7 +9,7 @@ import (
 )
 
 // Order of events:
-// client -> reply -> Exchange* -> dial/write/read
+// *client -> *reply -> Exchange*() -> dial()/send()->write()/receive()->read()
 
 type reply struct {
 	client         *Client
@@ -32,13 +32,6 @@ type Client struct {
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
-}
-
-func (w *reply) RemoteAddr() net.Addr {
-	if w.conn != nil {
-		return w.conn.RemoteAddr()
-	}
-	return nil
 }
 
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
@@ -91,6 +84,13 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	}
 	r, err = w.receive()
 	return r, w.rtt, err
+}
+
+func (w *reply) RemoteAddr() net.Addr {
+	if w.conn != nil {
+		return w.conn.RemoteAddr()
+	}
+	return nil
 }
 
 // dial connects to the address addr for the network set in c.Net
