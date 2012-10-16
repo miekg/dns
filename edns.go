@@ -33,12 +33,12 @@ import (
 
 // EDNS0 Option codes.
 const (
-	_           = iota
-	EDNS0LLQ             // not used
-	EDNS0UL              // not used
-	EDNS0NSID            // nsid (RFC5001)
-	EDNS0SUBNET = 0x50fa // client-subnet draft
-	_DO         = 1 << 7 // dnssec ok
+	EDNS0LLQ         = 0x1    // not used
+	EDNS0UL          = 0x2    // not used
+	EDNS0UPDATELEASE = 0x2    // update lease draft
+	EDNS0NSID        = 0x3    // nsid (RFC5001)
+	EDNS0SUBNET      = 0x50fa // client-subnet draft
+	_DO              = 1 << 7 // dnssec ok
 )
 
 type RR_OPT struct {
@@ -293,11 +293,10 @@ func (e *EDNS0_SUBNET) String() (s string) {
 //	e.Code = dns.EDNS0UPDATELEASE
 //	e.Lease = 120 // in seconds
 //	o.Option = append(o.Option, e)
-const EDNS0UPDATELEASE = 0x02
 
 type EDNS0_UPDATE_LEASE struct {
-	Code          uint16 // Always EDNS0UPDATELEASE
-	Lease         uint32
+	Code  uint16 // Always EDNS0UPDATELEASE
+	Lease uint32
 }
 
 func (e *EDNS0_UPDATE_LEASE) Option() uint16 {
