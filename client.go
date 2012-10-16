@@ -149,12 +149,12 @@ func (w *reply) receive() (*Msg, error) {
 		secret := t.Hdr.Name
 		if _, ok := w.client.TsigSecret[secret]; !ok {
 			w.tsigStatus = ErrSecret
-			return m, nil
+			return m, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
 		w.tsigStatus = TsigVerify(p, w.client.TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
 	}
-	return m, nil
+	return m, w.tsigStatus
 }
 
 func (w *reply) read(p []byte) (n int, err error) {
