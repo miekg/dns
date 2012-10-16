@@ -107,7 +107,7 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 	rr, _ := NewRR("t.local.ip6.io. 30 A 127.0.0.1")
 	rrs := make([]RR, 1)
 	rrs[0] = rr
-	m.AddRR(rrs)
+	m.Insert(rrs)
 
 	lease_rr := new(RR_OPT)
 	lease_rr.Hdr.Name = "."

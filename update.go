@@ -17,7 +17,7 @@
 //   ANY      rrset    empty    RRset exists (value indep) RRsetUsed
 //   NONE     ANY      empty    Name is not in use         NameNotUsed
 //   NONE     rrset    empty    RRset does not exist       RRsetNotUsed
-//   zone     rrset    rr       RRset exists (value dep)   RRUsed
+//   zone     rrset    rr       RRset exists (value dep)   Used
 // 
 // The prerequisite section can also be left empty.
 // If you have decided on the prerequisites you can tell what RRs should
@@ -30,8 +30,8 @@
 //   ---------------------------------------------------------------
 //   ANY      ANY      empty    Delete all RRsets from name RemoveName
 //   ANY      rrset    empty    Delete an RRset             RemoveRRset
-//   NONE     rrset    rr       Delete an RR from RRset     RemoveRR
-//   zone     rrset    rr       Add to an RRset             AddRR
+//   NONE     rrset    rr       Delete an RR from RRset     Remove
+//   zone     rrset    rr       Add to an RRset             Insert
 // 
 package dns
 
@@ -53,9 +53,9 @@ func (u *Msg) NameNotUsed(rr []RR) {
 	}
 }
 
-// RRUsed sets the RRs in the prereq section to
+// Used sets the RRs in the prereq section to
 // "RRset exists (value dependent -- with rdata)" RRs. RFC 2136 section 2.4.2.
-func (u *Msg) RRUsed(rr []RR) {
+func (u *Msg) Used(rr []RR) {
 	if len(u.Question) == 0 {
 		panic("dns: empty question section")
 	}
@@ -90,8 +90,8 @@ func (u *Msg) RRsetNotUsed(rr []RR) {
 	}
 }
 
-// AddRR creates a dynamic update packet that adds an complete RRset, see RFC 2136 section 2.5.1.
-func (u *Msg) AddRR(rr []RR) {
+// Insert creates a dynamic update packet that adds an complete RRset, see RFC 2136 section 2.5.1.
+func (u *Msg) Insert(rr []RR) {
 	if len(u.Question) == 0 {
 		panic("dns: empty question section")
 	}
@@ -121,8 +121,8 @@ func (u *Msg) RemoveName(rr []RR) {
 	}
 }
 
-// RRsetRemoveRR creates a dynamic update packet deletes RR from the RRSset, see RFC 2136 section 2.5.4
-func (u *Msg) RemoveRR(rr []RR) {
+// Remove creates a dynamic update packet deletes RR from the RRSset, see RFC 2136 section 2.5.4
+func (u *Msg) Remove(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
 		u.Ns[i] = r

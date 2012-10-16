@@ -269,16 +269,16 @@ func (z *Zone) Remove(r RR) error {
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RR_RRSIG).TypeCovered
-		for i, zr := range zd.Value.(*ZoneData).RR[sigtype] {
+		for i, zr := range zd.Value.(*ZoneData).Signatures[sigtype] {
 			if r == zr {
-				zd.Value.(*ZoneData).RR[sigtype] = append(zd.Value.(*ZoneData).RR[sigtype][:i], zd.Value.(*ZoneData).RR[sigtype][i+1:]...)
+				zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype][:i], zd.Value.(*ZoneData).Signatures[sigtype][i+1:]...)
 				remove = true
 			}
 		}
 		if remove {
 			// If every Signature of the covering type is removed, removed the type from the map
-			if len(zd.Value.(*ZoneData).RR[sigtype]) == 0 {
-				delete(zd.Value.(*ZoneData).RR, sigtype)
+			if len(zd.Value.(*ZoneData).Signatures[sigtype]) == 0 {
+				delete(zd.Value.(*ZoneData).Signatures, sigtype)
 			}
 		}
 	default:
@@ -314,7 +314,7 @@ func (z *Zone) Remove(r RR) error {
 }
 
 // RemoveName removes all the RRs with ownername matching s from the zone. Typical use of this
-// function is when processing a RemoveName dynamic update packet.
+// method is when processing a RemoveName dynamic update packet.
 func (z *Zone) RemoveName(s string) error {
 	key := toRadixName(s)
 	z.Lock()
@@ -324,6 +324,33 @@ func (z *Zone) RemoveName(s string) error {
 		z.Wildcard--
 		if z.Wildcard < 0 {
 			z.Wildcard = 0
+		}
+	}
+	return nil
+}
+
+// RemoveRRset removes all the RRs with the ownername matching s and the type matching t from the zone.
+// Typical use of this method is when processing a RemoveRRset dynamic update packet.
+func (z *Zone) RemoveRRset(s string, t uint16) error {
+	z.Lock()
+	zd, exact := z.Radix.Find(toRadixName(s))
+	if !exact {
+		defer z.Unlock()
+		return nil
+	}
+	z.Unlock()
+	zd.Value.(*ZoneData).mutex.Lock()
+	defer zd.Value.(*ZoneData).mutex.Unlock()
+	switch t {
+	case TypeRRSIG:
+		// empty all signature maps
+		for covert, _ := range zd.Value.(*ZoneData).Signatures {
+			delete(zd.Value.(*ZoneData).Signatures, covert)
+		}
+	default:
+		// empty all rr maps
+		for t, _ := range zd.Value.(*ZoneData).RR {
+			delete(zd.Value.(*ZoneData).RR, t)
 		}
 	}
 	return nil
