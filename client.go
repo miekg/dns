@@ -101,6 +101,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var (
 		n   int
+		mac string
 		out []byte
 	)
 	w := new(reply)
@@ -108,7 +109,7 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 		if _, ok := w.client.TsigSecret[t.Hdr.Name]; !ok {
 			return nil, 0, ErrSecret
 		}
-		out, _, err = TsigGenerate(m, c.TsigSecret[t.Hdr.Name], "", false)
+		out, mac, err = TsigGenerate(m, c.TsigSecret[t.Hdr.Name], "", false)
 	} else {
 		out, err = m.Pack()
 	}
@@ -138,16 +139,13 @@ func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	}
 	if t := r.IsTsig(); t != nil {
 		secret := t.Hdr.Name
-		if _, ok := client.TsigSecret[secret]; !ok {
-			w.tsigStatus = ErrSecret
-			return m, nil
+		if _, ok := c.TsigSecret[secret]; !ok {
+			return r, w.rtt, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		w.tsigStatus = TsigVerify(p, w.client.TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
+		err = TsigVerify(in, c.TsigSecret[secret], mac, false)
 	}
-
-
-	return r, w.rtt, nil
+	return r, w.rtt, err
 }
 
 // dial connects to the address addr for the network set in c.Net
