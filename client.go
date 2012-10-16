@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// Order of events:
+// client -> reply -> Exchange* -> dial/write/read
+
 type reply struct {
 	client         *Client
 	addr           string
@@ -56,26 +59,6 @@ func (c *Client) DoRtt(msg *Msg, addr string, data interface{}, callback func(*M
 		r, rtt, err := c.ExchangeRtt(msg, addr)
 		callback(msg, r, rtt, err, data)
 	}()
-}
-
-func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w *reply, err error) {
-	w = new(reply)
-	w.client = c
-	w.addr = a
-	// attempts useful for dialing?
-	if err = w.dial(); err != nil {
-		return 0, w, err
-	}
-	defer w.conn.Close()
-	w.t = time.Now()
-	if n, err = w.write(inbuf); err != nil {
-		return 0, w, err
-	}
-	if n, err = w.read(outbuf); err != nil {
-		return n, w, err
-	}
-	w.rtt = time.Since(w.t)
-	return n, w, nil
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
