@@ -318,16 +318,8 @@ func (z *Zone) Remove(r RR) error {
 func (z *Zone) RemoveName(s string) error {
 	key := toRadixName(s)
 	z.Lock()
-	zd, exact := z.Radix.Find(key)
-	if !exact {
-		defer z.Unlock()
-		return nil
-	}
-	z.Unlock()
-	zd.Value.(*ZoneData).mutex.Lock()
-	defer zd.Value.(*ZoneData).mutex.Unlock()
-	zd.Value = nil	// remove the lot
-
+	defer z.Unlock()
+	z.Radix.Remove(key)
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
