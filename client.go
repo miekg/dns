@@ -58,8 +58,6 @@ func (c *Client) DoRtt(msg *Msg, addr string, data interface{}, callback func(*M
 	}()
 }
 
-// exchangeBuffer performs a synchronous query. It sends the buffer m to the
-// address contained in a.
 func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w *reply, err error) {
 	w = new(reply)
 	w.client = c
@@ -70,10 +68,10 @@ func (c *Client) exchangeBuffer(inbuf []byte, a string, outbuf []byte) (n int, w
 	}
 	defer w.conn.Close()
 	w.t = time.Now()
-	if n, err = w.writeClient(inbuf); err != nil {
+	if n, err = w.write(inbuf); err != nil {
 		return 0, w, err
 	}
-	if n, err = w.readClient(outbuf); err != nil {
+	if n, err = w.read(outbuf); err != nil {
 		return n, w, err
 	}
 	w.rtt = time.Since(w.t)
@@ -99,52 +97,16 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
 //	in, rtt, err := c.ExchangeRtt(message, "127.0.0.1:53")
 // 
 func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	var (
-		n   int
-		mac string
-		out []byte
-	)
 	w := new(reply)
-	if t := m.IsTsig(); t != nil {
-		if _, ok := w.client.TsigSecret[t.Hdr.Name]; !ok {
-			return nil, 0, ErrSecret
-		}
-		out, mac, err = TsigGenerate(m, c.TsigSecret[t.Hdr.Name], "", false)
-	} else {
-		out, err = m.Pack()
-	}
-	if err != nil {
+	w.client = c
+	w.addr = a
+	if err = w.dial(); err != nil {
 		return nil, 0, err
 	}
-	var in []byte
-	switch c.Net {
-	case "tcp", "tcp4", "tcp6":
-		in = make([]byte, MaxMsgSize)
-	case "", "udp", "udp4", "udp6":
-		size := udpMsgSize
-		for _, r := range m.Extra {
-			if r.Header().Rrtype == TypeOPT {
-				size = int(r.(*RR_OPT).UDPSize())
-			}
-		}
-		in = make([]byte, size)
-	}
-	if n, w, err = c.exchangeBuffer(out, a, in); err != nil {
+	if err = w.send(m); err != nil {
 		return nil, 0, err
 	}
-	r = new(Msg)
-	r.Size = n
-	if err := r.Unpack(in[:n]); err != nil {
-		return nil, w.rtt, err
-	}
-	if t := r.IsTsig(); t != nil {
-		secret := t.Hdr.Name
-		if _, ok := c.TsigSecret[secret]; !ok {
-			return r, w.rtt, ErrSecret
-		}
-		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerify(in, c.TsigSecret[secret], mac, false)
-	}
+	r, err = w.receive()
 	return r, w.rtt, err
 }
 
@@ -170,9 +132,10 @@ func (w *reply) receive() (*Msg, error) {
 	case "tcp", "tcp4", "tcp6":
 		p = make([]byte, MaxMsgSize)
 	case "", "udp", "udp4", "udp6":
+		// OPT! TODO(mg)
 		p = make([]byte, DefaultMsgSize)
 	}
-	n, err := w.readClient(p)
+	n, err := w.read(p)
 	if err != nil && n == 0 {
 		return nil, err
 	}
@@ -194,7 +157,7 @@ func (w *reply) receive() (*Msg, error) {
 	return m, nil
 }
 
-func (w *reply) readClient(p []byte) (n int, err error) {
+func (w *reply) read(p []byte) (n int, err error) {
 	if w.conn == nil {
 		return 0, ErrConnEmpty
 	}
@@ -282,13 +245,13 @@ func (w *reply) send(m *Msg) (err error) {
 		return err
 	}
 	w.t = time.Now()
-	if _, err = w.writeClient(out); err != nil {
+	if _, err = w.write(out); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (w *reply) writeClient(p []byte) (n int, err error) {
+func (w *reply) write(p []byte) (n int, err error) {
 	attempts := w.client.Attempts
 	if attempts == 0 {
 		attempts = 1
