@@ -3,6 +3,7 @@ package dns
 // A structure for handling zone data
 
 import (
+	"fmt"
 	"github.com/miekg/radix"
 	"math/rand"
 	"runtime"
@@ -354,6 +355,23 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 		}
 	}
 	return nil
+}
+
+// Apex returns the zone's apex records (SOA, NS and possibly other). If the
+// apex can not be found (thereby making it an illegal DNS zone) it returns nil.
+// Updating the zone's SOA serial, provided the apex exists:
+//
+//	z.Apex.RR[TypeSOA][0].(*RR_SOA).Serial++
+//
+// Note the a) this increment is not protected by locks and b) if you use DNSSEC
+// you MUST resign the SOA record.
+func (z *Zone) Apex() *ZoneData {
+	apex, e := z.Find(z.Origin)
+	if !e {
+		fmt.Printf("%#v\n", apex)
+		return nil
+	}
+	return apex
 }
 
 // Find looks up the ownername s in the zone and returns the
