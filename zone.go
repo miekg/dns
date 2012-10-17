@@ -16,7 +16,7 @@ import (
 // multilpe goroutines.
 type Zone struct {
 	Origin       string   // Origin of the zone
-	olabels      []string // origin cut up in labels, to speed up IsSubDomain function
+	olabels      []string // origin cut up in labels, just to speed up the isSubDomain method
 	Wildcard     int      // Whenever we see a wildcard name, this is incremented
 	*radix.Radix          // Zone data
 	mutex        *sync.RWMutex

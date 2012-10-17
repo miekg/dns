@@ -8,7 +8,6 @@ package dns
 
 import (
 	"github.com/miekg/radix"
-	"io"
 	"net"
 	"time"
 )
@@ -425,7 +424,7 @@ func (w *response) Write(m *Msg) (err error) {
 }
 
 // WriteBuf implements the ResponseWriter.WriteBuf method.
-func (w *response) WriteBuf(m []byte) (err error) {
+func (w *response) WriteBuf(m []byte) error {
 	switch {
 	case w._UDP != nil:
 		_, err := w._UDP.WriteTo(m, w.remoteAddr)
@@ -436,15 +435,10 @@ func (w *response) WriteBuf(m []byte) (err error) {
 		if len(m) > MaxMsgSize {
 			return &Error{Err: "message too large"}
 		}
-		a, b := packUint16(uint16(len(m)))
-		n, err := w._TCP.Write([]byte{a, b})
-		if err != nil {
-			return err
-		}
-		if n != 2 {
-			return io.ErrShortWrite
-		}
-		n, err = w._TCP.Write(m)
+		l := make([]byte, 2)
+		l[0], l[1] = packUint16(uint16(len(m)))
+		m = append(l, m...)
+		n, err := w._TCP.Write(m)
 		if err != nil {
 			return err
 		}

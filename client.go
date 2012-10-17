@@ -253,18 +253,10 @@ func (w *reply) write(p []byte) (n int, err error) {
 		}
 		for a := 0; a < attempts; a++ {
 			setTimeouts(w)
-			a, b := packUint16(uint16(len(p)))
-			n, err = w.conn.Write([]byte{a, b})
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
-			}
-			if n != 2 {
-				return n, io.ErrShortWrite
-			}
-			n, err = w.conn.Write(p)
+			l := make([]byte, 2)
+			l[0], l[1] = packUint16(uint16(len(p)))
+			p = append(l, p...)
+			n, err := w.conn.Write(p)
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
