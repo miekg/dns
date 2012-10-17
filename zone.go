@@ -496,9 +496,9 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
-// changes. The caller must take care that the zone itself is also locked for writing.
+// change. The caller must take care that the zone itself is also locked for writing.
 // For a more complete description see zone.Sign. 
-// NB: as this method has no (direct)
+// Note: as this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in signatureConfig.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.mutex.Lock()
