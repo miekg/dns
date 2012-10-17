@@ -96,16 +96,23 @@ func (w *reply) RemoteAddr() net.Addr {
 // dial connects to the address addr for the network set in c.Net
 func (w *reply) dial() (err error) {
 	var conn net.Conn
-	if w.client.Net == "" {
-		conn, err = net.Dial("udp", w.addr)
-	} else {
-		conn, err = net.Dial(w.client.Net, w.addr)
+	attempts := w.client.Attempts
+	if attempts == 0 {
+		attempts = 1
 	}
-	if err != nil {
-		return
+	for a := 0; a < attempts; a++ {
+		if w.client.Net == "" {
+			conn, err = net.Dial("udp", w.addr)
+		} else {
+			conn, err = net.Dial(w.client.Net, w.addr)
+		}
+		if err != nil {
+			// There are no timeouts defined?
+			continue
+		}
 	}
 	w.conn = conn
-	return nil
+	return
 }
 
 func (w *reply) receive() (*Msg, error) {
