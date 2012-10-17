@@ -48,7 +48,7 @@ correctly the following should work:
     go build dns
 
 Sample programs can be found in the `ex` directory. They can 
-be build with: `make -C ex`, or also with the `go` tool.
+also be build with: `go build`.
 
 ## Supported RFCs
 
@@ -87,7 +87,7 @@ be build with: `make -C ex`, or also with the `go` tool.
 * 5936 - AXFR
 * 6605 - ECDSA
 * xxxx - URI record (draft)
-* xxxx - Dns Update Lease (draft)
+* xxxx - EDNS0 DNS Update Lease (draft)
 
 ## Loosely based upon
 
