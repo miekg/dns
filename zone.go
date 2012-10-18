@@ -20,8 +20,8 @@ type Zone struct {
 	olabels      []string // origin cut up in labels, just to speed up the isSubDomain method
 	Wildcard     int      // Whenever we see a wildcard name, this is incremented
 	*radix.Radix          // Zone data
-	mutex        *sync.RWMutex
-	expired      bool // Slave zone is expired
+	*sync.RWMutex
+	expired bool // Slave zone is expired
 	// Do we need a timemodified?
 }
 
@@ -82,10 +82,10 @@ func NewZone(origin string) *Zone {
 		return nil
 	}
 	z := new(Zone)
-	z.mutex = new(sync.RWMutex)
 	z.Origin = Fqdn(strings.ToLower(origin))
 	z.olabels = SplitLabels(z.Origin)
 	z.Radix = radix.New()
+	z.RWMutex = new(sync.RWMutex)
 	return z
 }
 
@@ -95,7 +95,7 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
-	mutex      *sync.RWMutex
+	*sync.RWMutex
 }
 
 // NewZoneData creates a new zone data element.
@@ -104,7 +104,7 @@ func NewZoneData(s string) *ZoneData {
 	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
 	zd.Signatures = make(map[uint16][]*RR_RRSIG)
-	zd.mutex = new(sync.RWMutex)
+	zd.RWMutex = new(sync.RWMutex)
 	return zd
 }
 
@@ -194,12 +194,6 @@ Types:
 	return s
 }
 
-// Lock locks the zone z for writing.
-func (z *Zone) Lock() { z.mutex.Lock() }
-
-// Unlock unlocks the zone z for writing.
-func (z *Zone) Unlock() { z.mutex.Unlock() }
-
 // Insert inserts the RR r into the zone. There is no check for duplicate data, although
 // Remove will remove all duplicates.
 func (z *Zone) Insert(r RR) error {
@@ -235,8 +229,8 @@ func (z *Zone) Insert(r RR) error {
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).mutex.Lock()
-	defer zd.Value.(*ZoneData).mutex.Unlock()
+	zd.Value.(*ZoneData).Lock()
+	defer zd.Value.(*ZoneData).Unlock()
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
@@ -264,8 +258,8 @@ func (z *Zone) Remove(r RR) error {
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).mutex.Lock()
-	defer zd.Value.(*ZoneData).mutex.Unlock()
+	zd.Value.(*ZoneData).Lock()
+	defer zd.Value.(*ZoneData).Unlock()
 	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
@@ -340,8 +334,8 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).mutex.Lock()
-	defer zd.Value.(*ZoneData).mutex.Unlock()
+	zd.Value.(*ZoneData).Lock()
+	defer zd.Value.(*ZoneData).Unlock()
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
@@ -379,8 +373,8 @@ func (z *Zone) Apex() *ZoneData {
 // possible the first parent node with a non-nil Value is returned and
 // the boolean is false.
 func (z *Zone) Find(s string) (node *ZoneData, exact bool) {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
+	z.RLock()
+	defer z.RUnlock()
 	n, e := z.Radix.Find(toRadixName(s))
 	if n == nil {
 		return nil, false
@@ -394,8 +388,8 @@ func (z *Zone) Find(s string) (node *ZoneData, exact bool) {
 // each node which has a non-nil Value during the tree traversal.
 // If f returns true, that node is returned.
 func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bool) {
-	z.mutex.RLock()
-	defer z.mutex.RUnlock()
+	z.RLock()
+	defer z.RUnlock()
 	zd, e, b := z.Radix.FindFunc(toRadixName(s), f)
 	if zd == nil {
 		return nil, false, false
@@ -501,8 +495,8 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // Note: as this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in signatureConfig.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
-	node.mutex.Lock()
-	defer node.mutex.Unlock()
+	node.Lock()
+	defer node.Unlock()
 
 	nsec := new(RR_NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
