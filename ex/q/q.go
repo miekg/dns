@@ -228,9 +228,6 @@ Flags:
 				fmt.Printf(";; %s\n", e.Error())
 				return
 			}
-			if r.Rcode != dns.RcodeSuccess {
-				return
-			}
 			if r.Id != m.Id {
 				fmt.Fprintf(os.Stderr, "Id mismatch\n")
 				return
