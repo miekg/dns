@@ -123,7 +123,7 @@ func main() {
 						success = false
 						fmt.Printf("%s (%s) ", ips, dns.Rcode_str[soa.Rcode])
 					} else {
-						if len(soa.Answer) == 0 { /* May happen if the server is a recursor, not authoritative, since we query with RD=0 */
+						if len(soa.Answer) == 0 { // May happen if the server is a recursor, not authoritative, since we query with RD=0 
 							success = false
 							fmt.Printf("%s (0 answer) ", ip)
 						} else {
@@ -131,7 +131,7 @@ func main() {
 							switch rsoa.(type) {
 							case *dns.RR_SOA:
 								if soa.MsgHdr.Authoritative {
-									/* TODO: test if all name servers have the same serial ? */
+									// TODO: test if all name servers have the same serial ?
 									fmt.Printf("%s (%d) ", ips, rsoa.(*dns.RR_SOA).Serial)
 								} else {
 									success = false
