@@ -19,7 +19,7 @@ var (
 	conf   *dns.ClientConfig
 )
 
-func localQuery(qname string, qtype uint16) (r *dns.Msg, err error) {
+func localQuery(qname string, qtype uint16) (*dns.Msg, error) {
 	localm.SetQuestion(qname, qtype)
 	for i := range conf.Servers {
 		server := conf.Servers[i]
@@ -118,30 +118,31 @@ func main() {
 				if soa == nil {
 					success = false
 					fmt.Printf("%s (%s) ", ip, err)
-				} else {
-					if soa.Rcode != dns.RcodeSuccess {
-						success = false
-						fmt.Printf("%s (%s) ", ips, dns.Rcode_str[soa.Rcode])
+					goto Next
+				}
+				if soa.Rcode != dns.RcodeSuccess {
+					success = false
+					fmt.Printf("%s (%s) ", ips, dns.Rcode_str[soa.Rcode])
+					goto Next
+				}
+				if len(soa.Answer) == 0 { // May happen if the server is a recursor, not authoritative, since we query with RD=0 
+					success = false
+					fmt.Printf("%s (0 answer) ", ip)
+					goto Next
+				}
+				rsoa := soa.Answer[0]
+				switch rsoa.(type) {
+				case *dns.RR_SOA:
+					if soa.MsgHdr.Authoritative {
+						// TODO: test if all name servers have the same serial ?
+						fmt.Printf("%s (%d) ", ips, rsoa.(*dns.RR_SOA).Serial)
 					} else {
-						if len(soa.Answer) == 0 { // May happen if the server is a recursor, not authoritative, since we query with RD=0 
-							success = false
-							fmt.Printf("%s (0 answer) ", ip)
-						} else {
-							rsoa := soa.Answer[0]
-							switch rsoa.(type) {
-							case *dns.RR_SOA:
-								if soa.MsgHdr.Authoritative {
-									// TODO: test if all name servers have the same serial ?
-									fmt.Printf("%s (%d) ", ips, rsoa.(*dns.RR_SOA).Serial)
-								} else {
-									success = false
-									fmt.Printf("%s (not authoritative) ", ips)
-								}
-							}
-						}
+						success = false
+						fmt.Printf("%s (not authoritative) ", ips)
 					}
 				}
 			}
+		Next:
 			fmt.Printf("\n")
 		}
 	}
