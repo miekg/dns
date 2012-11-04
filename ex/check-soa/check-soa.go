@@ -1,3 +1,4 @@
+// Go equivalent of the "DNS & BIND" book check-soa program.
 package main
 
 import (
