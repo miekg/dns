@@ -108,7 +108,7 @@ func main() {
 				m.Question[0] = dns.Question{dns.Fqdn(os.Args[1]), dns.TypeSOA, dns.ClassINET}
 				nsAddressPort := ""
 				if strings.ContainsAny(":", ip) {
-					/* IPv6 address */
+					// IPv6 address
 					nsAddressPort = "[" + ip + "]:53"
 				} else {
 					nsAddressPort = ip + ":53"
