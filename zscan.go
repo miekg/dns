@@ -778,6 +778,13 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	return
 }
 
+func chekcOrigin(name, origin string) string {
+	if name == "@" {
+		return origin
+	}
+	return name
+}
+
 func appendOrigin(name, origin string) string {
 	if origin == "." {
 		return name + origin
