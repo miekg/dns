@@ -61,7 +61,8 @@
 //      c := new(Client)
 //      in, err := c.Exchange(m1, "127.0.0.1:53")
 //
-// An asynchronous query is also possible, see client.Do and client.DoRtt.
+// An asynchronous query is also possible, see client.Do or client.DoRtt, when
+// you are interested in the round trip time of the exchange.
 //
 // From a birds eye view a dns message consists out of four sections.
 // The question section: in.Question, the answer section: in.Answer,
