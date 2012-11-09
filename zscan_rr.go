@@ -219,7 +219,7 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Txt = o
 		return rr, nil
 	}
-	_, ld, ok = IsDomainName(l.token)
+	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad RP Txt", l}
 	}
@@ -326,7 +326,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Email = o
 		return rr, nil
 	}
-	_, ld, ok = IsDomainName(l.token)
+	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MINFO Email", l}
 	}
@@ -548,7 +548,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.Mbox = o
 	} else {
-		_, ld, ok = IsDomainName(l.token)
+		_, ld, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad SOA Mbox", l}
 		}
@@ -558,7 +558,10 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	<-c // _BLANK
 
-	var v uint32
+	var (
+		v  uint32
+		ok bool
+	)
 	for i := 0; i < 5; i++ {
 		l = <-c
 		if j, e := strconv.Atoi(l.token); e != nil {
@@ -745,11 +748,11 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	rr.NextName = l.token
-	if t.token == "@" {
-		rr.NexName = o
+	if l.token == "@" {
+		rr.NextName = o
 		return rr, nil
 	}
-	_, ld, ok = IsDomainName(l.token)
+	_, ld, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad TALINK NextName", l}
 	}
@@ -1081,7 +1084,10 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 
 	rr.TypeBitMap = make([]uint16, 0)
-	var k uint16
+	var (
+		k uint16
+		ok bool
+	)
 	l = <-c
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {

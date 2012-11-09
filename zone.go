@@ -147,7 +147,7 @@ func toRadixName(d string) string {
 // zone:
 //
 //	// z contains the zone
-//	z.Radix.DoNext(func(i interface{}) {
+//	z.Radix.NextDo(func(i interface{}) {
 //		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
 //
 func (zd *ZoneData) String() string {
