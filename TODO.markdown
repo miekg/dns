@@ -6,6 +6,7 @@
     * create record from PEM(?) files
     * sign
     * verify
+* Use BIND10 memory efficient zone structure?
 
 ## Nice to have
 
