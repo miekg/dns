@@ -7,6 +7,7 @@
     * sign
     * verify
 * Use BIND10 memory efficient zone structure?
+* make more use of io.Reader/io.Writer
 
 ## Nice to have
 
