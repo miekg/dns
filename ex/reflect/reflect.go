@@ -156,7 +156,7 @@ func main() {
 	flag.Parse()
 	if *tsig != "" {
 		a := strings.SplitN(*tsig, ":", 2)
-		name, secret = dns.Fqdn(a[0]), a[1]	// fqdn the name, which everybody forgets...
+		name, secret = dns.Fqdn(a[0]), a[1] // fqdn the name, which everybody forgets...
 	}
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -179,7 +179,7 @@ func main() {
 forever:
 	for {
 		select {
-		case s:=<-sig:
+		case s := <-sig:
 			fmt.Printf("Signal (%d) received, stopping\n", s)
 			break forever
 		}
