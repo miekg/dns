@@ -625,3 +625,12 @@ func TestSRVPacking(t *testing.T) {
 		t.Fatalf("Couldn't pack %v\n", msg)
 	}
 }
+
+func TestParseBackslash(t *testing.T) {
+	r, e := NewRR("nul\\000gap.test.globnix.net. 600 IN	A	192.0.2.10")
+	if e != nil {
+		t.Fatalf("Could not create RR with \\000 in it")
+	} else {
+		t.Logf("Parsed %s\n", r.String())
+	}
+}
