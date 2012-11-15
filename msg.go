@@ -16,6 +16,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
@@ -340,12 +341,15 @@ Loop:
 				return "", lenmsg, ErrBuf
 			}
 			for j := off; j < off+c; j++ {
-				if msg[j] == '.' {
-					// literal dot, escape it
+				switch {
+				case msg[j] == '.':	// literal dots
 					s += "\\."
-				} else {
+				case msg[j] < 32:	// unprintable use \DDD
+					fallthrough
+				case msg[j] >= 127:
+					s += fmt.Sprintf("\\%03d", msg[j])
+				default:
 					s += string(msg[j])
-					// TODO: \DDD
 				}
 			}
 			s += "."
