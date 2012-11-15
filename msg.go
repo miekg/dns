@@ -217,14 +217,26 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
-	//	ls := len(bs)
-	lens := ls
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
-			for j := i; j < lens-1; j++ {
+			for j := i; j < ls-1; j++ {
 				bs[j] = bs[j+1]
 			}
 			ls--
+			// check for \DDD
+			if off+1 > lenmsg {
+				return lenmsg, ErrBuf
+			}
+			if i+2 < ls && bs[i] >= '0' && bs[i] <= '9' &&
+				bs[i+1] >= '0' && bs[i+1] <= '9' &&
+				bs[i+2] >= '0' && bs[i+2] <= '9' {
+
+				bs[i] = byte((bs[i]-'0')*100 + (bs[i+1]-'0')*10 + (bs[i+2] - '0'))
+				for j := i+1; j < ls-2; j++ {
+					bs[j] = bs[j+2]
+				}
+				ls -= 2
+			}
 			continue
 		}
 
@@ -333,6 +345,7 @@ Loop:
 					s += "\\."
 				} else {
 					s += string(msg[j])
+					// TODO: \DDD
 				}
 			}
 			s += "."
