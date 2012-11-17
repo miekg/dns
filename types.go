@@ -1399,6 +1399,28 @@ func (rr *RR_NID) Copy() RR {
 	return &RR_NID{*rr.Hdr.CopyHeader(), rr.Preference, rr.NodeID}
 }
 
+type RR_L32 struct {
+	Hdr        RR_Header
+	Preference uint16
+	Locator32  net.IP `dns:"a"`
+}
+
+func (rr *RR_L32) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_L32) String() string {
+	return rr.Hdr.String() + rr.Locator32.String()
+}
+
+func (rr *RR_L32) Len() int {
+	return rr.Hdr.Len() + net.IPv4len
+}
+
+func (rr *RR_L32) Copy() RR {
+	return &RR_L32{*rr.Hdr.CopyHeader(), rr.Preference, rr.Locator32}
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1499,6 +1521,6 @@ var rr_mk = map[uint16]func() RR{
 	TypeHIP:        func() RR { return new(RR_HIP) },
 	TypeNID:        func() RR { return new(RR_NID) },
 	TypeL32:        func() RR { return new(RR_L32) },
-	TypeL64:        func() RR { return new(RR_L64) },
-	TypeLP:         func() RR { return new(RR_LP) },
+//	TypeL64:        func() RR { return new(RR_L64) },
+//	TypeLP:         func() RR { return new(RR_LP) },
 }

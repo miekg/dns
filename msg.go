@@ -125,9 +125,9 @@ var Rr_str = map[uint16]string{
 	TypeTALINK:     "TALINK",
 	TypeSPF:        "SPF",
 	TypeNID:	"NID",
-	TypeL32		"L32",
-	TypeL64		"L64",
-	TypeLP		"LP",
+	TypeL32:	"L32",
+	TypeL64:	"L64",
+	TypeLP:		"LP",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeAXFR:       "AXFR", // Meta RR
