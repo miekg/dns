@@ -86,6 +86,7 @@ also be build with: `go build`.
 * 5702 - SHA2 in the DNS
 * 5936 - AXFR
 * 6605 - ECDSA
+* 6742 - ILNP DNS
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
 

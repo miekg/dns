@@ -62,6 +62,10 @@ const (
 	TypeHIP        uint16 = 55
 	TypeTALINK     uint16 = 58
 	TypeSPF        uint16 = 99
+	TypeNID        uint16 = 104
+	TypeL32        uint16 = 105
+	TypeL64        uint16 = 106
+	TypeLP         uint16 = 107
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -1371,6 +1375,30 @@ func (rr *RR_WKS) Copy() RR {
 	return &RR_WKS{*rr.Hdr.CopyHeader(), rr.Address, rr.Protocol, rr.BitMap}
 }
 
+type RR_NID struct {
+	Hdr        RR_Header
+	Preference uint16
+	NodeID     uint64
+}
+
+func (rr *RR_NID) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_NID) String() string {
+	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+	return s
+	// TODO(mg): hexadecimal 
+}
+
+func (rr *RR_NID) Len() int {
+	return rr.Hdr.Len() + 2 + 8
+}
+
+func (rr *RR_NID) Copy() RR {
+	return &RR_NID{*rr.Hdr.CopyHeader(), rr.Preference, rr.NodeID}
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1469,4 +1497,8 @@ var rr_mk = map[uint16]func() RR{
 	TypeDLV:        func() RR { return new(RR_DLV) },
 	TypeTLSA:       func() RR { return new(RR_TLSA) },
 	TypeHIP:        func() RR { return new(RR_HIP) },
+	TypeNID:        func() RR { return new(RR_NID) },
+	TypeL32:        func() RR { return new(RR_L32) },
+	TypeL64:        func() RR { return new(RR_L64) },
+	TypeLP:         func() RR { return new(RR_LP) },
 }
