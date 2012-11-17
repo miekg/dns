@@ -82,6 +82,14 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeKX:
 		r, e = setKX(h, c, o, f)
 		goto Slurp
+//	case TypeNID:
+//		r, e := setNID(h, c, f)
+	case TypeL32:
+		r, e := setL32(h, c, f)
+//	case TypeL64:
+//		r, e := setL64(h, c, f)
+//	case TypeLP:
+//		r, e := setLP(h, c, o, f)
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -1726,5 +1734,27 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		l = <-c
 	}
 	rr.Digest = s
+	return rr, nil
+}
+
+func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+}
+
+func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_L32)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad L32 Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Locator32 = net.ParseIP(l.token)
+	if rr.Locator32 == nil {
+		return nil, &ParseError{f, "bad L32 Locator", l}
+	}
 	return rr, nil
 }
