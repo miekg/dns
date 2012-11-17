@@ -1421,6 +1421,30 @@ func (rr *RR_L32) Copy() RR {
 	return &RR_L32{*rr.Hdr.CopyHeader(), rr.Preference, rr.Locator32}
 }
 
+type RR_L64 struct {
+	Hdr        RR_Header
+	Preference uint16
+	Locator64  uint64
+}
+
+func (rr *RR_L64) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_L64) String() string {
+	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+	return s
+	// TODO(mg): locator64 as NID.NodeID
+}
+
+func (rr *RR_L64) Len() int {
+	return rr.Hdr.Len() + 2 + 8
+}
+
+func (rr *RR_L64) Copy() RR {
+	return &RR_L64{*rr.Hdr.CopyHeader(), rr.Preference, rr.Locator64}
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1521,6 +1545,6 @@ var rr_mk = map[uint16]func() RR{
 	TypeHIP:        func() RR { return new(RR_HIP) },
 	TypeNID:        func() RR { return new(RR_NID) },
 	TypeL32:        func() RR { return new(RR_L32) },
-//	TypeL64:        func() RR { return new(RR_L64) },
+	TypeL64:        func() RR { return new(RR_L64) },
 //	TypeLP:         func() RR { return new(RR_LP) },
 }
