@@ -85,7 +85,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 //	case TypeNID:
 //		r, e := setNID(h, c, f)
 	case TypeL32:
-		r, e := setL32(h, c, f)
+		r, e = setL32(h, c, f)
 //	case TypeL64:
 //		r, e := setL64(h, c, f)
 //	case TypeLP:
@@ -1738,6 +1738,7 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	return nil, nil
 }
 
 func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
