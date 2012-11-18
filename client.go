@@ -23,12 +23,13 @@ type reply struct {
 	t              time.Time
 }
 
-// An Exchange is returned on the channel when calling client.Do or client.DoRtt
+// An Exchange is returned on the channel when calling client.Do.
 type Exchange struct {
 	Request *Msg          // the outgoing message
 	Reply   *Msg          // the reply coming back
+	Address	string		// address of the server being dialed
 	Rtt     time.Duration // Round trip time
-	Error   error         // any errors
+	Error   error         // any error that occurred
 }
 
 // A Client defines parameter for a DNS client. A nil
@@ -48,11 +49,13 @@ type Client struct {
 // original query, the answer returned from the nameserver an optional error and
 // data.
 // It calls Exchange.
-func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, time.Duration, error, interface{})) {
+func (c *Client) Do(msg *Msg, addr string) (chan<-Exchange) {
+	e := make(chan<-Exchange)
 	go func() {
 		r, rtt, err := c.Exchange(msg, addr)
-		callback(msg, r, rtt, err, data)
+		e <- Exchange{msg, r, addr, rtt, err}
 	}()
+	return e
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
