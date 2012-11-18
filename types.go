@@ -1434,7 +1434,7 @@ func (rr *RR_L64) Header() *RR_Header {
 
 func (rr *RR_L64) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
-	node := fmt.Sprintf("%0.16x", rr.Locator64)
+	node := fmt.Sprintf("%0.16X", rr.Locator64)
 	s += node[0:3] + ":" + node[4:7] + ":" + node[8:11] + ":" + node[12:15]
 	return s
 }

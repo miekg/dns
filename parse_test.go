@@ -634,3 +634,28 @@ func TestParseBackslash(t *testing.T) {
 		t.Logf("Parsed %s\n", r.String())
 	}
 }
+
+func TestILNP(t *testing.T) {
+	tests := []string{
+		"host1.example.com. IN NID 10 0014:4fff:ff20:ee64",
+		"host1.example.com. IN NID 20 0015:5fff:ff21:ee65",
+		"host2.example.com. IN NID 10 0016:6fff:ff22:ee66",
+		"host1.example.com. IN L32 10 10.1.02.0",
+		"host1.example.com. IN L32 20 10.1.04.0",
+		"host2.example.com. IN L32 10 10.1.08.0",
+		"host1.example.com. IN L64 10 2001:0DB8:1140:1000",
+		"host1.example.com. IN L64 20 2001:0DB8:2140:2000",
+		"host2.example.com. IN L64 10 2001:0DB8:4140:4000",
+		"host1.example.com. IN LP 10 l64-subnet1.example.com.",
+		"host1.example.com. IN LP 10 l64-subnet2.example.com.",
+		"host1.example.com. IN LP 20 l32-subnet1.example.com.",
+	}
+	for _, t1 := range tests {
+		r, e := NewRR(t1)
+		if e != nil {
+			t.Fatalf("An error occured: %s\n", e.Error())
+		} else {
+			t.Logf("%s\n", r.String())
+		}
+	}
+}
