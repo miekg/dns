@@ -370,7 +370,7 @@ func (rr *RR_MD) Copy() RR {
 
 type RR_MX struct {
 	Hdr  RR_Header
-	Pref uint16
+	Preference uint16
 	Mx   string `dns:"cdomain-name"`
 }
 
@@ -379,7 +379,7 @@ func (rr *RR_MX) Header() *RR_Header {
 }
 
 func (rr *RR_MX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Pref)) + " " + rr.Mx
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Mx
 }
 
 func (rr *RR_MX) Len() int {
@@ -388,7 +388,7 @@ func (rr *RR_MX) Len() int {
 }
 
 func (rr *RR_MX) Copy() RR {
-	return &RR_MX{*rr.Hdr.CopyHeader(), rr.Pref, rr.Mx}
+	return &RR_MX{*rr.Hdr.CopyHeader(), rr.Preference, rr.Mx}
 }
 
 type RR_AFSDB struct {
@@ -634,7 +634,7 @@ func (rr *RR_SRV) Copy() RR {
 type RR_NAPTR struct {
 	Hdr         RR_Header
 	Order       uint16
-	Pref        uint16
+	Preference        uint16
 	Flags       string
 	Service     string
 	Regexp      string
@@ -648,7 +648,7 @@ func (rr *RR_NAPTR) Header() *RR_Header {
 func (rr *RR_NAPTR) String() string {
 	return rr.Hdr.String() +
 		strconv.Itoa(int(rr.Order)) + " " +
-		strconv.Itoa(int(rr.Pref)) + " " +
+		strconv.Itoa(int(rr.Preference)) + " " +
 		"\"" + rr.Flags + "\" " +
 		"\"" + rr.Service + "\" " +
 		"\"" + rr.Regexp + "\" " +
@@ -661,7 +661,7 @@ func (rr *RR_NAPTR) Len() int {
 }
 
 func (rr *RR_NAPTR) Copy() RR {
-	return &RR_NAPTR{*rr.Hdr.CopyHeader(), rr.Order, rr.Pref, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
+	return &RR_NAPTR{*rr.Hdr.CopyHeader(), rr.Order, rr.Preference, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
 }
 
 // See RFC 4398.
@@ -952,7 +952,7 @@ func (rr *RR_DLV) Copy() RR {
 
 type RR_KX struct {
 	Hdr       RR_Header
-	Pref      uint16
+	Preference      uint16
 	Exchanger string `dns:"domain-name"`
 }
 
@@ -961,7 +961,7 @@ func (rr *RR_KX) Header() *RR_Header {
 }
 
 func (rr *RR_KX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Pref)) +
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Exchanger
 }
 
@@ -970,7 +970,7 @@ func (rr *RR_KX) Len() int {
 }
 
 func (rr *RR_KX) Copy() RR {
-	return &RR_KX{*rr.Hdr.CopyHeader(), rr.Pref, rr.Exchanger}
+	return &RR_KX{*rr.Hdr.CopyHeader(), rr.Preference, rr.Exchanger}
 }
 
 type RR_TA struct {
