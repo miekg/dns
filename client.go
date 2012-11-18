@@ -38,17 +38,14 @@ type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	Attempts     int               // number of attempts, if not set defaults to 1
 	Retry        bool              // retry with TCP
-	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
-	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
+	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
+	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 }
 
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
-// string addr is the address of the nameserver, the parameter data is used
-// in the callback function. The call backback function is called with the
-// original query, the answer returned from the nameserver an optional error and
-// data.
-// It calls Exchange.
+// string addr is the address of the nameserver. The methods returns a channel
+// of Exchange.
 func (c *Client) Do(msg *Msg, addr string) (chan<-Exchange) {
 	e := make(chan<-Exchange)
 	go func() {
