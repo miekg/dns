@@ -25,7 +25,10 @@ type reply struct {
 
 // An Exchange is returned on the channel when calling client.Do or client.DoRtt
 type Exchange struct {
-
+	Request *Msg          // the outgoing message
+	Reply   *Msg          // the reply coming back
+	Rtt     time.Duration // Round trip time
+	Error   error         // any errors
 }
 
 // A Client defines parameter for a DNS client. A nil
