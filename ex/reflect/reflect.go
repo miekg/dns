@@ -125,7 +125,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	if *printf {
 		fmt.Printf("%v\n", m.String())
 	}
-	w.Write(m)
+	w.WriteMsg(m)
 }
 
 func serve(net, name, secret string) {
