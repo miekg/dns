@@ -183,7 +183,7 @@ func axfrSend(w ResponseWriter, req *Msg, c chan *XfrToken, e *error) {
 	for x := range c {
 		// assume it fits
 		rep.Answer = append(rep.Answer, x.RR...)
-		if err := w.Write(rep); e != nil {
+		if err := w.WriteMsg(rep); e != nil {
 			*e = err
 			return
 		}
