@@ -46,8 +46,8 @@ type Client struct {
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
 // string addr is the address of the nameserver. The methods returns a channel
 // of Exchange.
-func (c *Client) Do(msg *Msg, addr string) (chan<-Exchange) {
-	e := make(chan<-Exchange)
+func (c *Client) Do(msg *Msg, addr string) (<-chan Exchange) {
+	e := make(chan Exchange)
 	go func() {
 		r, rtt, err := c.Exchange(msg, addr)
 		e <- Exchange{msg, r, addr, rtt, err}
