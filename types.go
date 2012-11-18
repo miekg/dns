@@ -1388,7 +1388,7 @@ func (rr *RR_NID) Header() *RR_Header {
 func (rr *RR_NID) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
 	node := fmt.Sprintf("%0.16x", rr.NodeID)
-	s += node[0:3] + ":" + node[4:7] + ":" + node[8:11] + ":" + node[12:15]
+	s += " " + node[0:4] + ":" + node[4:8] + ":" + node[8:12] + ":" + node[12:16]
 	return s
 }
 
@@ -1411,7 +1411,8 @@ func (rr *RR_L32) Header() *RR_Header {
 }
 
 func (rr *RR_L32) String() string {
-	return rr.Hdr.String() + rr.Locator32.String()
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+		" " + rr.Locator32.String()
 }
 
 func (rr *RR_L32) Len() int {
@@ -1435,7 +1436,7 @@ func (rr *RR_L64) Header() *RR_Header {
 func (rr *RR_L64) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
 	node := fmt.Sprintf("%0.16X", rr.Locator64)
-	s += node[0:3] + ":" + node[4:7] + ":" + node[8:11] + ":" + node[12:15]
+	s += " " + node[0:4] + ":" + node[4:8] + ":" + node[8:12] + ":" + node[12:16]
 	return s
 }
 

@@ -82,14 +82,14 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeKX:
 		r, e = setKX(h, c, o, f)
 		goto Slurp
-//	case TypeNID:
-//		r, e := setNID(h, c, f)
+	case TypeNID:
+		r, e = setNID(h, c, f)
 	case TypeL32:
 		r, e = setL32(h, c, f)
-//	case TypeL64:
-//		r, e := setL64(h, c, f)
-//	case TypeLP:
-//		r, e := setLP(h, c, o, f)
+	case TypeL64:
+		r, e = setL64(h, c, f)
+	case TypeLP:
+		r, e = setLP(h, c, o, f)
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -392,7 +392,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad MX Pref", l}
 	} else {
-		rr.Pref = uint16(i)
+		rr.Preference = uint16(i)
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
@@ -473,7 +473,7 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad KX Pref", l}
 	} else {
-		rr.Pref = uint16(i)
+		rr.Preference = uint16(i)
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
@@ -660,7 +660,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NAPTR Preference", l}
 	} else {
-		rr.Pref = uint16(i)
+		rr.Preference = uint16(i)
 	}
 	// Flags
 	<-c     // _BLANK
@@ -1093,7 +1093,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	rr.TypeBitMap = make([]uint16, 0)
 	var (
-		k uint16
+		k  uint16
 		ok bool
 	)
 	l = <-c
@@ -1738,7 +1738,23 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	return nil, nil
+	rr := new(RR_NID)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NID Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	u, err := stringToNodeID(l)
+	if err != nil {
+		return nil, err
+	}
+	rr.NodeID = u
+	return rr, nil
 }
 
 func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
@@ -1757,5 +1773,52 @@ func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if rr.Locator32 == nil {
 		return nil, &ParseError{f, "bad L32 Locator", l}
 	}
+	return rr, nil
+}
+
+func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(RR_LP)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad LP Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Fqdn = l.token
+	if l.token == "@" {
+		rr.Fqdn = o
+		return rr, nil
+	}
+	_, ld, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad LP Fqdn", l}
+	}
+	if rr.Fqdn[ld-1] != '.' {
+		rr.Fqdn = appendOrigin(rr.Fqdn, o)
+	}
+	return rr, nil
+}
+
+func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_L64)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad L64 Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	u, err := stringToNodeID(l)
+	if err != nil {
+		return nil, err
+	}
+	rr.Locator64 = u
 	return rr, nil
 }

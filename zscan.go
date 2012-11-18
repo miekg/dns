@@ -826,3 +826,21 @@ func slurpRemainder(c chan lex, f string) *ParseError {
 	}
 	return nil
 }
+
+// Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64"
+// Used for NID and L64 record.
+func stringToNodeID(l lex) (uint64, *ParseError) {
+	if len(l.token) < 19 {
+		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
+	}
+	// There must be three colons at fixes postitions, if not its a parse error
+	if l.token[4] != ':' && l.token[9] != ':' && l.token[14] != ':' {
+		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
+	}
+	s := l.token[0:4] + l.token[5:9] + l.token[10:14] + l.token[15:19]
+	u, e := strconv.ParseUint(s, 16,64)
+	if e != nil {
+		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
+	}
+	return u, nil
+}
