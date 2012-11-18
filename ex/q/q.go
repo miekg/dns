@@ -190,6 +190,7 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
+	ch := make([]chan Exchange)
 	for i, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
@@ -217,7 +218,9 @@ Flags:
 			continue
 		}
 
-		c.Do(m, nameserver, nil, func(m, r *dns.Msg, rtt time.Duration, e error, data interface{}) {
+		ch = append(ch, c.Do(m, nameserver))
+	}
+
 			defer func() {
 				if i == len(qname)-1 {
 					os.Exit(0)
@@ -269,7 +272,7 @@ Flags:
 		})
 	}
 	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
-		// xfr don't start any goroutines
+		// xfr didn't start any goroutines
 		select {}
 	}
 
