@@ -24,7 +24,7 @@ type ResponseWriter interface {
 	// Write writes a reply back to the client.
 	Write(*Msg) error
 	// WriteBuf writes a raw buffer back to the client.
-	WriteBuf([]byte) error
+	WriteBuf([]byte) (int, error)
 	// Close closes the connection.
 	Close() error
 	// TsigStatus returns the status of the Tsig. 
@@ -413,46 +413,48 @@ func (w *response) Write(m *Msg) (err error) {
 			if err != nil {
 				return err
 			}
-			return w.WriteBuf(data)
+			_, err = w.WriteBuf(data)
+			return err
 		}
 	}
 	data, err = m.Pack()
 	if err != nil {
 		return err
 	}
-	return w.WriteBuf(data)
+	_, err = w.WriteBuf(data)
+	return err
 }
 
 // WriteBuf implements the ResponseWriter.WriteBuf method.
-func (w *response) WriteBuf(m []byte) error {
+func (w *response) WriteBuf(m []byte) (int, error) {
 	switch {
 	case w._UDP != nil:
-		_, err := w._UDP.WriteTo(m, w.remoteAddr)
-		if err != nil {
-			return err
-		}
+		n, err := w._UDP.WriteTo(m, w.remoteAddr)
+		return n, err
 	case w._TCP != nil:
+		lm := len(m)
 		if len(m) > MaxMsgSize {
-			return &Error{Err: "message too large"}
+			return 0, &Error{Err: "message too large"}
 		}
 		l := make([]byte, 2)
-		l[0], l[1] = packUint16(uint16(len(m)))
+		l[0], l[1] = packUint16(uint16(lm))
 		m = append(l, m...)
 		n, err := w._TCP.Write(m)
 		if err != nil {
-			return err
+			return n, err
 		}
 		i := n
-		if i < len(m) {
-			j, err := w._TCP.Write(m[i:len(m)])
+		if i < lm {
+			j, err := w._TCP.Write(m[i:lm])
 			if err != nil {
-				return err
+				return i, err
 			}
 			i += j
 		}
 		n = i
+		return i, nil
 	}
-	return nil
+	panic("not reached")
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
