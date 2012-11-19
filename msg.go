@@ -880,14 +880,23 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			fv.SetUint(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])))
 			off += 4
 		case reflect.Uint64:
-			// This is *only* used in TSIG where the last 48 bits are occupied
-			// So for now, assume a uint48 (6 bytes)
-			if off+6 > lenmsg {
-				return lenmsg, &Error{Err: "overflow unpacking uint64 as uint48"}
+			switch val.Type().Field(i).Tag {
+			default:
+				if off+8 > lenmsg {
+					return lenmsg, &Error{Err: "overflow unpacking uint64"}
+				}
+				fv.SetUint(uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
+					uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
+				off += 8
+			case `dns:"uint48"`:
+				// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
+				if off+6 > lenmsg {
+					return lenmsg, &Error{Err: "overflow unpacking uint64 as uint48"}
+				}
+				fv.SetUint(uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+					uint64(msg[off+4])<<8 | uint64(msg[off+5])))
+				off += 6
 			}
-			fv.SetUint(uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-				uint64(msg[off+4])<<8 | uint64(msg[off+5])))
-			off += 6
 		case reflect.String:
 			var s string
 			switch val.Type().Field(i).Tag {
