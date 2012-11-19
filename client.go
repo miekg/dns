@@ -23,15 +23,6 @@ type reply struct {
 	t              time.Time
 }
 
-// An Exchange is returned on the channel when calling client.Do.
-type Exchange struct {
-	Request *Msg          // the outgoing message
-	Reply   *Msg          // the reply coming back
-	Address string        // address of the server being dialed
-	Rtt     time.Duration // Round trip time
-	Error   error         // any error that occurred
-}
-
 // A Client defines parameter for a DNS client. A nil
 // Client is usable for sending queries.
 type Client struct {
@@ -41,17 +32,6 @@ type Client struct {
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
-}
-
-// Do performs an asynchronous query. The msg *Msg is the question to ask, the 
-// string addr is the address of the nameserver, ch is a channel of *Exchange.
-// This channel is used to send to the reply from the server to.
-func (c *Client) Do(msg *Msg, addr string, ch chan *Exchange) {
-	go func() {
-		r, rtt, err := c.Exchange(msg, addr)
-		ch <- &Exchange{msg, r, addr, rtt, err}
-	}()
-	return
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
