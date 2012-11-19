@@ -38,7 +38,7 @@ func TestServing(t *testing.T) {
 	m := new(Msg)
 
 	m.SetQuestion("miek.nl.", TypeTXT)
-	r, _ , _ := c.Exchange(m, "127.0.0.1:8053")
+	r, _, _ := c.Exchange(m, "127.0.0.1:8053")
 	txt := r.Extra[0].(*RR_TXT).Txt[0]
 	if txt != "Hello world" {
 		t.Log("Unexpected result for miek.nl", txt, "!= Hello world")
