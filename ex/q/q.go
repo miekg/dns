@@ -190,7 +190,7 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
-	ch := make([]chan Exchange)
+	ch := make(chan *dns.Exchange)
 	for i, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
@@ -218,7 +218,7 @@ Flags:
 			continue
 		}
 
-		c.Do(m, nameserver)
+		c.Do(m, nameserver, ch)
 	}
 
 	// HUH?
@@ -226,13 +226,15 @@ Flags:
 		// xfr didn't start any goroutines
 		select {}
 	}
-
+	
+	i := 0
 	for {
 		select {
-		case ex := <-dns.C:
+		case ex := <-ch:
 			if i == len(qname)-1 {
 				os.Exit(0)
 			}
+			i++
 		Redo:
 			if ex.Error != nil {
 				fmt.Printf(";; %s\n", ex.Error.Error())
@@ -251,7 +253,7 @@ Flags:
 						o.Hdr.Rrtype = dns.TypeOPT
 						o.SetUDPSize(dns.DefaultMsgSize)
 						m.Extra = append(m.Extra, o)
-						r, rtt, e = c.Exchange(m, nameserver)
+						r, rtt, e := c.Exchange(m, nameserver)
 						*dnssec = true
 						goto Redo
 					} else {
