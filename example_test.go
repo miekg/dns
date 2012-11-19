@@ -11,7 +11,7 @@ func ExampleRR_MX() {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeMX)
 	m.RecursionDesired = true
-	r, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
 	if err != nil {
 		return
 	}
@@ -36,7 +36,7 @@ func ExampleToDs(zone string) {
 	}
 	m.SetQuestion(Fqdn(zone), TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
 	if err != nil {
 		return
 	}

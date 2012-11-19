@@ -10,7 +10,7 @@ func TestClientSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	r, _ := c.Exchange(m, "85.223.71.124:53")
+	r, _, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -24,13 +24,17 @@ func TestClientASync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	c.Do(m, "85.223.71.124:53", nil, func(m, r *Msg, e error, d interface{}) {
-		if r != nil && r.Rcode != RcodeSuccess {
-			t.Log("Failed to get an valid answer")
-			t.Fail()
-			t.Logf("%v\n", r)
-		}
-	})
+	ch := c.Do(m, "85.223.71.124:53", nil)
+
+	/*
+		func(m, r *Msg, e error, d interface{}) {
+			if r != nil && r.Rcode != RcodeSuccess {
+				t.Log("Failed to get an valid answer")
+				t.Fail()
+				t.Logf("%v\n", r)
+			}
+		})
+	*/
 }
 
 func TestClientEDNS0(t *testing.T) {
@@ -42,7 +46,7 @@ func TestClientEDNS0(t *testing.T) {
 	//edns.SetNsid("") // Empty to request it
 
 	c := new(Client)
-	r, _ := c.Exchange(m, "85.223.71.124:53")
+	r, _, _ := c.Exchange(m, "85.223.71.124:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
