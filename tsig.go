@@ -76,7 +76,7 @@ const (
 type RR_TSIG struct {
 	Hdr        RR_Header
 	Algorithm  string `dns:"domain-name"`
-	TimeSigned uint64
+	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 	MACSize    uint16
 	MAC        string `dns:"size-hex"`

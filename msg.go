@@ -124,10 +124,10 @@ var Rr_str = map[uint16]string{
 	TypeNSEC3PARAM: "NSEC3PARAM",
 	TypeTALINK:     "TALINK",
 	TypeSPF:        "SPF",
-	TypeNID:	"NID",
-	TypeL32:	"L32",
-	TypeL64:	"L64",
-	TypeLP:		"LP",
+	TypeNID:        "NID",
+	TypeL32:        "L32",
+	TypeL64:        "L64",
+	TypeLP:         "LP",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeAXFR:       "AXFR", // Meta RR
@@ -237,7 +237,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 				bs[i+2] >= '0' && bs[i+2] <= '9' {
 
 				bs[i] = byte((bs[i]-'0')*100 + (bs[i+1]-'0')*10 + (bs[i+2] - '0'))
-				for j := i+1; j < ls-2; j++ {
+				for j := i + 1; j < ls-2; j++ {
 					bs[j] = bs[j+2]
 				}
 				ls -= 2
@@ -346,9 +346,9 @@ Loop:
 			}
 			for j := off; j < off+c; j++ {
 				switch {
-				case msg[j] == '.':	// literal dots
+				case msg[j] == '.': // literal dots
 					s += "\\."
-				case msg[j] < 32:	// unprintable use \DDD
+				case msg[j] < 32: // unprintable use \DDD
 					fallthrough
 				case msg[j] >= 127:
 					s += fmt.Sprintf("\\%03d", msg[j])
@@ -553,18 +553,35 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			msg[off+3] = byte(i)
 			off += 4
 		case reflect.Uint64:
-			// Only used in TSIG, where it stops at 48 bits, so we discard the upper 16
-			if off+6 > lenmsg {
-				return lenmsg, &Error{Err: "overflow packing uint64 as uint48"}
+			switch val.Type().Field(i).Tag {
+			default:
+				if off+8 > lenmsg {
+					return lenmsg, &Error{Err: "overflow packing uint64"}
+				}
+				i := fv.Uint()
+				msg[off] = byte(i >> 56)
+				msg[off+1] = byte(i >> 48)
+				msg[off+2] = byte(i >> 40)
+				msg[off+3] = byte(i >> 32)
+				msg[off+4] = byte(i >> 24)
+				msg[off+5] = byte(i >> 16)
+				msg[off+6] = byte(i >> 8)
+				msg[off+7] = byte(i)
+				off += 8
+			case `dns:"uint48"`:
+				// Used in TSIG, where it stops at 48 bits, so we discard the upper 16
+				if off+6 > lenmsg {
+					return lenmsg, &Error{Err: "overflow packing uint64 as uint48"}
+				}
+				i := fv.Uint()
+				msg[off] = byte(i >> 40)
+				msg[off+1] = byte(i >> 32)
+				msg[off+2] = byte(i >> 24)
+				msg[off+3] = byte(i >> 16)
+				msg[off+4] = byte(i >> 8)
+				msg[off+5] = byte(i)
+				off += 6
 			}
-			i := fv.Uint()
-			msg[off] = byte(i >> 40)
-			msg[off+1] = byte(i >> 32)
-			msg[off+2] = byte(i >> 24)
-			msg[off+3] = byte(i >> 16)
-			msg[off+4] = byte(i >> 8)
-			msg[off+5] = byte(i)
-			off += 6
 		case reflect.String:
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
