@@ -191,7 +191,7 @@ Flags:
 	}
 
 	ch := make(chan *dns.Exchange)
-	for i, v := range qname {
+	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
@@ -226,7 +226,7 @@ Flags:
 		// xfr didn't start any goroutines
 		select {}
 	}
-	
+
 	i := 0
 	for {
 		select {
@@ -235,16 +235,19 @@ Flags:
 				os.Exit(0)
 			}
 			i++
+			r := ex.Reply
+			rtt := ex.Rtt
+			e := ex.Error
 		Redo:
-			if ex.Error != nil {
-				fmt.Printf(";; %s\n", ex.Error.Error())
+			if e != nil {
+				fmt.Printf(";; %s\n", e.Error())
 				return
 			}
-			if ex.Reply.Id != m.Id {
+			if r.Id != m.Id {
 				fmt.Fprintf(os.Stderr, "Id mismatch\n")
 				return
 			}
-			if ex.Reply.MsgHdr.Truncated && *fallback {
+			if r.MsgHdr.Truncated && *fallback {
 				if c.Net != "tcp" {
 					if !*dnssec {
 						fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
@@ -253,7 +256,7 @@ Flags:
 						o.Hdr.Rrtype = dns.TypeOPT
 						o.SetUDPSize(dns.DefaultMsgSize)
 						m.Extra = append(m.Extra, o)
-						r, rtt, e := c.Exchange(m, nameserver)
+						r, rtt, e = c.Exchange(m, nameserver)
 						*dnssec = true
 						goto Redo
 					} else {
@@ -392,7 +395,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, err := c.Exchange(m, server)
+	r, _, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
 	}
