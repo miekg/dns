@@ -46,7 +46,7 @@ type Client struct {
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
 // string addr is the address of the nameserver. The methods returns a channel
 // of *Exchange. If ch is nil, a new channel is allocated and returned. If ch
-// is non nil ch is used and returned.
+// is non nil, ch is used and returned.
 func (c *Client) Do(msg *Msg, addr string, ch chan *Exchange) <-chan *Exchange {
 	switch ch {
 	case nil:
