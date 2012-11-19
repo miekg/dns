@@ -10,7 +10,7 @@ func TestClientSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "85.223.71.124:53")
+	r, _, _ := c.Exchange(m, "37.251.95.53:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -25,7 +25,7 @@ func TestClientASync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	ch := c.Do(m, "85.223.71.124:53", nil)
+	ch := c.Do(m, "37.251.95.53:53", nil)
 	ch = ch
 		func(m, r *Msg, e error, d interface{}) {
 			if r != nil && r.Rcode != RcodeSuccess {
@@ -46,7 +46,7 @@ func TestClientEDNS0(t *testing.T) {
 	//edns.SetNsid("") // Empty to request it
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "85.223.71.124:53")
+	r, _, _ := c.Exchange(m, "37.251.95.53:53")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -64,7 +64,7 @@ func TestClientTsigAXFR(t *testing.T) {
 	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 	c.Net = "tcp"
 
-	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
+	if a, err := c.XfrReceive(m, "37.251.95.53:53"); err != nil {
 		t.Log("Failed to setup axfr: " + err.Error())
 		t.Fail()
 		return
@@ -89,7 +89,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 	c := new(Client)
 	c.Net = "tcp"
 
-	if a, err := c.XfrReceive(m, "85.223.71.124:53"); err != nil {
+	if a, err := c.XfrReceive(m, "37.251.95.53:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 		return
