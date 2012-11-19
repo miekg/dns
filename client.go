@@ -27,7 +27,7 @@ type reply struct {
 type Exchange struct {
 	Request *Msg          // the outgoing message
 	Reply   *Msg          // the reply coming back
-	Address	string		// address of the server being dialed
+	Address string        // address of the server being dialed
 	Rtt     time.Duration // Round trip time
 	Error   error         // any error that occurred
 }
@@ -45,14 +45,25 @@ type Client struct {
 
 // Do performs an asynchronous query. The msg *Msg is the question to ask, the 
 // string addr is the address of the nameserver. The methods returns a channel
-// of Exchange.
-func (c *Client) Do(msg *Msg, addr string) (<-chan Exchange) {
-	e := make(chan Exchange)
-	go func() {
-		r, rtt, err := c.Exchange(msg, addr)
-		e <- Exchange{msg, r, addr, rtt, err}
-	}()
-	return e
+// of *Exchange. If ch is nil, a new channel is allocated and returned. If ch
+// is non nil ch is used and returned.
+func (c *Client) Do(msg *Msg, addr string, ch chan *Exchange) <-chan *Exchange {
+	switch ch {
+	case nil:
+		ex := make(chan *Exchange)
+		go func() {
+			r, rtt, err := c.Exchange(msg, addr)
+			ex <- &Exchange{msg, r, addr, rtt, err}
+		}()
+		return ex
+	default:
+		go func() {
+			r, rtt, err := c.Exchange(msg, addr)
+			ch <- &Exchange{msg, r, addr, rtt, err}
+		}()
+		return ch
+	}
+	panic("dns: not reached")
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address

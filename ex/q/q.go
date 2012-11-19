@@ -218,24 +218,31 @@ Flags:
 			continue
 		}
 
-		ch = append(ch, c.Do(m, nameserver))
+		c.Do(m, nameserver)
 	}
 
-			defer func() {
-				if i == len(qname)-1 {
-					os.Exit(0)
-				}
-			}()
+	// HUH?
+	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
+		// xfr didn't start any goroutines
+		select {}
+	}
+
+	for {
+		select {
+		case ex := <-dns.C:
+			if i == len(qname)-1 {
+				os.Exit(0)
+			}
 		Redo:
-			if e != nil {
-				fmt.Printf(";; %s\n", e.Error())
+			if ex.Error != nil {
+				fmt.Printf(";; %s\n", ex.Error.Error())
 				return
 			}
-			if r.Id != m.Id {
+			if ex.Reply.Id != m.Id {
 				fmt.Fprintf(os.Stderr, "Id mismatch\n")
 				return
 			}
-			if r.MsgHdr.Truncated && *fallback {
+			if ex.Reply.MsgHdr.Truncated && *fallback {
 				if c.Net != "tcp" {
 					if !*dnssec {
 						fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
@@ -256,7 +263,7 @@ Flags:
 					}
 				}
 			}
-			if r.MsgHdr.Truncated && !*fallback {
+			if ex.Reply.MsgHdr.Truncated && !*fallback {
 				fmt.Printf(";; Truncated\n")
 			}
 			if *check {
@@ -269,13 +276,8 @@ Flags:
 
 			fmt.Printf("%v", r)
 			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
-		})
+		}
 	}
-	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
-		// xfr didn't start any goroutines
-		select {}
-	}
-
 }
 
 func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
