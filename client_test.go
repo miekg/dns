@@ -19,24 +19,6 @@ func TestClientSync(t *testing.T) {
 	}
 }
 
-/*
-func TestClientASync(t *testing.T) {
-	m := new(Msg)
-	m.SetQuestion("miek.nl.", TypeSOA)
-
-	c := new(Client)
-	ch := c.Do(m, "37.251.95.53:53", nil)
-	ch = ch
-		func(m, r *Msg, e error, d interface{}) {
-			if r != nil && r.Rcode != RcodeSuccess {
-				t.Log("Failed to get an valid answer")
-				t.Fail()
-				t.Logf("%v\n", r)
-			}
-		})
-}
-*/
-
 func TestClientEDNS0(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeDNSKEY)
