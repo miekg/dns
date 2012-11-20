@@ -13,6 +13,8 @@
 //      m.SetEdns0(4096, true)
 //
 // Signature generation, signature verification and key generation are all supported.
+// Writing a DNSSEC validating resolver is hard, if you need something like that you
+// might want to use the unbound wrapper found at github.com/miekg/unbound .
 package dns
 
 import (
