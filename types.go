@@ -64,6 +64,7 @@ const (
 	TypeTLSA       uint16 = 52
 	TypeHIP        uint16 = 55
 	TypeNINFO      uint16 = 56
+	TypeRKEY       uint16 = 57
 	TypeTALINK     uint16 = 58
 	TypeSPF        uint16 = 99
 	TypeNID        uint16 = 104
@@ -1131,6 +1132,34 @@ func (rr *RR_DNSKEY) Copy() RR {
 	return &RR_DNSKEY{*rr.Hdr.CopyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
 }
 
+type RR_RKEY struct {
+	Hdr       RR_Header
+	Flags     uint16
+	Protocol  uint8
+	Algorithm uint8
+	PublicKey string `dns:"base64"`
+}
+
+func (rr *RR_RKEY) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_RKEY) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+		" " + strconv.Itoa(int(rr.Protocol)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + rr.PublicKey
+}
+
+func (rr *RR_RKEY) Len() int {
+	return rr.Hdr.Len() + 4 +
+		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+}
+
+func (rr *RR_RKEY) Copy() RR {
+	return &RR_RKEY{*rr.Hdr.CopyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+}
+
 type RR_NSEC3 struct {
 	Hdr        RR_Header
 	Hash       uint8
@@ -1597,6 +1626,8 @@ var rr_mk = map[uint16]func() RR{
 	TypeX25:        func() RR { return new(RR_X25) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
+	TypeRKEY:	func() RR { return new(RR_RKEY) },
+	TypeNINFO:	func() RR { return new(RR_NINFO) },
 	TypeNS:         func() RR { return new(RR_NS) },
 	TypePTR:        func() RR { return new(RR_PTR) },
 	TypeSOA:        func() RR { return new(RR_SOA) },

@@ -98,6 +98,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	// newline. Thus there is no need to slurp the remainder, because there is none.
 	case TypeDNSKEY:
 		return setDNSKEY(h, c, f)
+	case TypeRKEY:
+		return setRKEY(h, c, f)
 	case TypeRRSIG:
 		return setRRSIG(h, c, o, f)
 	case TypeNSEC:
@@ -1335,6 +1337,47 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad DNSKEY PublicKey", l}
+		}
+		l = <-c
+	}
+	rr.PublicKey = s
+	return rr, nil
+}
+
+func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_RKEY)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Flags", l}
+	} else {
+		rr.Flags = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Protocol", l}
+	} else {
+		rr.Protocol = uint8(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Algorithm", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	l = <-c
+	var s string
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad RKEY PublicKey", l}
 		}
 		l = <-c
 	}
