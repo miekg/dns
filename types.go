@@ -83,6 +83,7 @@ const (
 	TypeANY   uint16 = 255
 
 	TypeURI uint16 = 256
+	TypeCAA uint16 = 257
 	TypeTA  uint16 = 32768
 	TypeDLV uint16 = 32769
 
