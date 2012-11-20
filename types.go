@@ -63,6 +63,7 @@ const (
 	TypeNSEC3PARAM uint16 = 51
 	TypeTLSA       uint16 = 52
 	TypeHIP        uint16 = 55
+	TypeNINFO      uint16 = 56
 	TypeTALINK     uint16 = 58
 	TypeSPF        uint16 = 99
 	TypeNID        uint16 = 104
@@ -1369,6 +1370,39 @@ func (rr *RR_HIP) Len() int {
 
 func (rr *RR_HIP) Copy() RR {
 	return &RR_HIP{*rr.Hdr.CopyHeader(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
+}
+
+type RR_NINFO struct {
+	Hdr	RR_Header
+	ZSData  []string `dns:"txt"`
+}
+
+func (rr *RR_NINFO) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_NINFO) String() string {
+	s := rr.Hdr.String()
+	for i, s1 := range rr.ZSData {
+		if i > 0 {
+			s += " " + strconv.QuoteToASCII(s1)
+		} else {
+			s += strconv.QuoteToASCII(s1)
+		}
+	}
+	return s
+}
+
+func (rr *RR_NINFO) Len() int {
+	l := rr.Hdr.Len()
+	for _, t := range rr.ZSData {
+		l += len(t)
+	}
+	return l
+}
+
+func (rr *RR_NINFO) Copy() RR {
+	return &RR_NINFO{*rr.Hdr.CopyHeader(), rr.ZSData}
 }
 
 type RR_WKS struct {

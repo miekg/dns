@@ -118,6 +118,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setTLSA(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
+	case TypeNINFO:
+		return setNINFO(h, c, f)
 	case TypeHIP:
 		return setHIP(h, c, o, f)
 	case TypeSPF:
@@ -1629,6 +1631,48 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		}
 	}
 	rr.Txt = s
+	return rr, nil
+}
+
+// identical to setTXT
+func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_NINFO)
+	rr.Hdr = h
+
+	// Get the remaining data until we see a NEWLINE
+	quote := false
+	l := <-c
+	var s []string
+	switch l.value == _QUOTE {
+	case true: // A number of quoted string
+		s = make([]string, 0)
+		for l.value != _NEWLINE && l.value != _EOF {
+			switch l.value {
+			case _STRING:
+				s = append(s, l.token)
+			case _BLANK:
+				if quote {
+					// _BLANK can only be seen in between txt parts.
+					return nil, &ParseError{f, "bad NINFO ZSData", l}
+				}
+			case _QUOTE:
+				quote = !quote
+			default:
+				return nil, &ParseError{f, "bad NINFO ZSData", l}
+			}
+			l = <-c
+		}
+		if quote {
+			return nil, &ParseError{f, "bad NINFO ZSData", l}
+		}
+	case false: // Unquoted text record
+		s = make([]string, 1)
+		for l.value != _NEWLINE && l.value != _EOF {
+			s[0] += l.token
+			l = <-c
+		}
+	}
+	rr.ZSData = s
 	return rr, nil
 }
 

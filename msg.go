@@ -120,6 +120,7 @@ var Rr_str = map[uint16]string{
 	TypeDS:         "DS",
 	TypeDHCID:      "DHCID",
 	TypeHIP:        "HIP",
+	TypeNINFO:	"NINFO",
 	TypeIPSECKEY:   "IPSECKEY",
 	TypeSSHFP:      "SSHFP",
 	TypeRRSIG:      "RRSIG",
