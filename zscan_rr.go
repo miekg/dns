@@ -46,6 +46,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeAFSDB:
 		r, e = setAFSDB(h, c, o, f)
 		goto Slurp
+	case TypeX25:
+		r, e = setX25(h,c, f)
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
 		goto Slurp
@@ -462,6 +465,15 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.Hostname[ld-1] != '.' {
 		rr.Hostname = appendOrigin(rr.Hostname, o)
 	}
+	return rr, nil
+}
+
+func setX25(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_X25)
+	rr.Hdr = h
+
+	l := <-c
+	rr.PSDNAddress = l.token
 	return rr, nil
 }
 

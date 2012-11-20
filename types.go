@@ -37,6 +37,7 @@ const (
 	TypeTXT        uint16 = 16
 	TypeRP         uint16 = 17
 	TypeAFSDB      uint16 = 18
+	TypeX25	       uint16 = 19
 	TypeRT         uint16 = 21
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
@@ -412,6 +413,27 @@ func (rr *RR_AFSDB) Len() int {
 
 func (rr *RR_AFSDB) Copy() RR {
 	return &RR_AFSDB{*rr.Hdr.CopyHeader(), rr.Subtype, rr.Hostname}
+}
+
+type RR_X25 struct {
+	Hdr RR_Header
+	PSDNAddress string
+}
+
+func (rr *RR_X25) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_X25) String() string {
+	return rr.Hdr.String() + rr.PSDNAddress
+}
+
+func (rr *RR_X25) Len() int {
+	return rr.Hdr.Len() + len(rr.PSDNAddress)
+}
+
+func (rr *RR_X25) Copy() RR {
+	return &RR_X25{*rr.Hdr.CopyHeader(), rr.PSDNAddress}
 }
 
 type RR_RT struct {
@@ -1536,6 +1558,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeMINFO:      func() RR { return new(RR_MINFO) },
 	TypeRP:         func() RR { return new(RR_RP) },
 	TypeAFSDB:      func() RR { return new(RR_AFSDB) },
+	TypeX25:	func() RR { return new(RR_X25) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
 	TypeNS:         func() RR { return new(RR_NS) },

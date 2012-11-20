@@ -100,6 +100,8 @@ var Rr_str = map[uint16]string{
 	TypeWKS:        "WKS",
 	TypeNS:         "NS",
 	TypeNULL:	"NULL",
+	TypeAFSDB:	"AFSDB",
+	TypeX25:	"X25",
 	TypePTR:        "PTR",
 	TypeRT:         "RT",
 	TypeSOA:        "SOA",
