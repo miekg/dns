@@ -37,7 +37,7 @@ const (
 	TypeTXT        uint16 = 16
 	TypeRP         uint16 = 17
 	TypeAFSDB      uint16 = 18
-	TypeX25	       uint16 = 19
+	TypeX25        uint16 = 19
 	TypeISDN       uint16 = 20
 	TypeRT         uint16 = 21
 	TypeSIG        uint16 = 24
@@ -46,6 +46,7 @@ const (
 	TypeLOC        uint16 = 29
 	TypeNXT        uint16 = 30
 	TypeSRV        uint16 = 33
+	TypeATMA       uint16 = 34
 	TypeNAPTR      uint16 = 35
 	TypeKX         uint16 = 36
 	TypeCERT       uint16 = 37
@@ -371,9 +372,9 @@ func (rr *RR_MD) Copy() RR {
 }
 
 type RR_MX struct {
-	Hdr  RR_Header
+	Hdr        RR_Header
 	Preference uint16
-	Mx   string `dns:"cdomain-name"`
+	Mx         string `dns:"cdomain-name"`
 }
 
 func (rr *RR_MX) Header() *RR_Header {
@@ -417,7 +418,7 @@ func (rr *RR_AFSDB) Copy() RR {
 }
 
 type RR_X25 struct {
-	Hdr RR_Header
+	Hdr         RR_Header
 	PSDNAddress string
 }
 
@@ -657,7 +658,7 @@ func (rr *RR_SRV) Copy() RR {
 type RR_NAPTR struct {
 	Hdr         RR_Header
 	Order       uint16
-	Preference        uint16
+	Preference  uint16
 	Flags       string
 	Service     string
 	Regexp      string
@@ -974,9 +975,9 @@ func (rr *RR_DLV) Copy() RR {
 }
 
 type RR_KX struct {
-	Hdr       RR_Header
-	Preference      uint16
-	Exchanger string `dns:"domain-name"`
+	Hdr        RR_Header
+	Preference uint16
+	Exchanger  string `dns:"domain-name"`
 }
 
 func (rr *RR_KX) Header() *RR_Header {
@@ -1559,7 +1560,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeMINFO:      func() RR { return new(RR_MINFO) },
 	TypeRP:         func() RR { return new(RR_RP) },
 	TypeAFSDB:      func() RR { return new(RR_AFSDB) },
-	TypeX25:	func() RR { return new(RR_X25) },
+	TypeX25:        func() RR { return new(RR_X25) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
 	TypeNS:         func() RR { return new(RR_NS) },

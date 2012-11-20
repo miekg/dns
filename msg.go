@@ -108,6 +108,7 @@ var Rr_str = map[uint16]string{
 	TypeSOA:        "SOA",
 	TypeTXT:        "TXT",
 	TypeSRV:        "SRV",
+	TypeATMA:	"ATMA",
 	TypeNAPTR:      "NAPTR",
 	TypeKX:         "KX",
 	TypeCERT:       "CERT",
