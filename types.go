@@ -38,6 +38,7 @@ const (
 	TypeRP         uint16 = 17
 	TypeAFSDB      uint16 = 18
 	TypeX25	       uint16 = 19
+	TypeISDN       uint16 = 20
 	TypeRT         uint16 = 21
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25

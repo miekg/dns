@@ -102,6 +102,7 @@ var Rr_str = map[uint16]string{
 	TypeNULL:	"NULL",
 	TypeAFSDB:	"AFSDB",
 	TypeX25:	"X25",
+	TypeISDN:	"ISDN",
 	TypePTR:        "PTR",
 	TypeRT:         "RT",
 	TypeSOA:        "SOA",
