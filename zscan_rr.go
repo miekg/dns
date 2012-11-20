@@ -112,6 +112,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setWKS(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
+	case TypeCDS:
+		return setCDS(h, c, f)
 	case TypeDLV:
 		return setDLV(h, c, f)
 	case TypeTA:
@@ -1423,6 +1425,51 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad DS Digest", l}
+		}
+		l = <-c
+	}
+	rr.Digest = s
+	return rr, nil
+}
+
+func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_CDS)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDS KeyTag", l}
+	} else {
+		rr.KeyTag = uint16(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+			return nil, &ParseError{f, "bad CDS Algorithm", l}
+		} else {
+			rr.Algorithm = i
+		}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDS DigestType", l}
+	} else {
+		rr.DigestType = uint8(i)
+	}
+	// There can be spaces here...
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad CDS Digest", l}
 		}
 		l = <-c
 	}

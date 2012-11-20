@@ -66,6 +66,7 @@ const (
 	TypeNINFO      uint16 = 56
 	TypeRKEY       uint16 = 57
 	TypeTALINK     uint16 = 58
+	TypeCDS        uint16 = 59
 	TypeSPF        uint16 = 99
 	TypeNID        uint16 = 104
 	TypeL32        uint16 = 105
@@ -949,6 +950,33 @@ func (rr *RR_DS) Copy() RR {
 	return &RR_DS{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
+type RR_CDS struct {
+	Hdr        RR_Header
+	KeyTag     uint16
+	Algorithm  uint8
+	DigestType uint8
+	Digest     string `dns:"hex"`
+}
+
+func (rr *RR_CDS) Header() *RR_Header {
+	return &rr.Hdr
+}
+
+func (rr *RR_CDS) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + strconv.Itoa(int(rr.DigestType)) +
+		" " + strings.ToUpper(rr.Digest)
+}
+
+func (rr *RR_CDS) Len() int {
+	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+}
+
+func (rr *RR_CDS) Copy() RR {
+	return &RR_CDS{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+}
+
 type RR_DLV struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -1402,8 +1430,8 @@ func (rr *RR_HIP) Copy() RR {
 }
 
 type RR_NINFO struct {
-	Hdr	RR_Header
-	ZSData  []string `dns:"txt"`
+	Hdr    RR_Header
+	ZSData []string `dns:"txt"`
 }
 
 func (rr *RR_NINFO) Header() *RR_Header {
@@ -1626,8 +1654,8 @@ var rr_mk = map[uint16]func() RR{
 	TypeX25:        func() RR { return new(RR_X25) },
 	TypeMR:         func() RR { return new(RR_MR) },
 	TypeMX:         func() RR { return new(RR_MX) },
-	TypeRKEY:	func() RR { return new(RR_RKEY) },
-	TypeNINFO:	func() RR { return new(RR_NINFO) },
+	TypeRKEY:       func() RR { return new(RR_RKEY) },
+	TypeNINFO:      func() RR { return new(RR_NINFO) },
 	TypeNS:         func() RR { return new(RR_NS) },
 	TypePTR:        func() RR { return new(RR_PTR) },
 	TypeSOA:        func() RR { return new(RR_SOA) },
@@ -1642,6 +1670,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeLOC:        func() RR { return new(RR_LOC) },
 	TypeOPT:        func() RR { return new(RR_OPT) },
 	TypeDS:         func() RR { return new(RR_DS) },
+	TypeCDS:        func() RR { return new(RR_CDS) },
 	TypeCERT:       func() RR { return new(RR_CERT) },
 	TypeKX:         func() RR { return new(RR_KX) },
 	TypeSPF:        func() RR { return new(RR_SPF) },
