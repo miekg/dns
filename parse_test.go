@@ -507,11 +507,17 @@ func TestLineNumberError(t *testing.T) {
 // Test with no known RR on the line
 func TestLineNumberError2(t *testing.T) {
 	s := "example.com. 1000 SO master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
+	s = "example.com 1000 IN TALINK a.example.com. b.\\@example.com."
+	s = "example.com 1000 IN TALINK ( a.example.com. b.\\@example.com. )"
+	s = `example.com 1000 IN TALINK ( a.example.com. 
+			b.\@example.com. )`
+	s = `example.com 1000 IN TALINK ( a.example.com.  b.\@example.com.
+		)`
 	_, err := NewRR(s)
 	if err == nil {
 		t.Fail()
 	} else {
-		//		fmt.Printf("%s\n", err.Error())
+		fmt.Printf("%s\n", err.Error())
 	}
 }
 

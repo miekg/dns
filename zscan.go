@@ -72,11 +72,8 @@ func (e *ParseError) Error() (s string) {
 	if e.file != "" {
 		s = e.file + ": "
 	}
-	// the -e.lex.eof is used for a file line number correction. The error
-	// we are printing happend on the line N, but the tokenizer already
-	// saw the \n and incremented the linenumber counter
 	s += "dns: " + e.err + ": " + strconv.QuoteToASCII(e.lex.token) + " at line: " +
-		strconv.Itoa(e.lex.line-e.lex.eof) + ":" + strconv.Itoa(e.lex.column)
+		strconv.Itoa(e.lex.line) + ":" + strconv.Itoa(e.lex.column)
 	return
 }
 
@@ -86,7 +83,6 @@ type lex struct {
 	value  uint8  // Value: _STRING, _BLANK, etc.
 	line   int    // Line in the file
 	column int    // Column in the file
-	eof    int    // Has the tokenizer just seen a newline (0 no, 1 yes)
 	torc   uint16 // Type or class as parsed in the lexer, we only need to look this up in the grammar
 }
 
@@ -451,7 +447,6 @@ func zlexer(s *scan, c chan lex) {
 	for err == nil {
 		l.column = s.position.Column
 		l.line = s.position.Line
-		l.eof = s.eof
 		if stri > maxTok {
 			l.token = "tok length insufficient for parsing"
 			l.err = true

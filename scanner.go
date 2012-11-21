@@ -11,7 +11,7 @@ import (
 type scan struct {
 	src      *bufio.Reader
 	position scanner.Position
-	eof      int // have we just seen an EOF (0 no, 1 yes)
+	eof      bool // Have we just seen a eof
 }
 
 func scanInit(r io.Reader) *scan {
@@ -27,11 +27,16 @@ func (s *scan) tokenText() (byte, error) {
 	if err != nil {
 		return c, err
 	}
-	s.eof = 0
-	if c == '\n' {
+	// delay the newline handling until the next token is delivered,
+	// fixes off-by-one errors when reporting a parse error.
+	if s.eof == true {
 		s.position.Line++
 		s.position.Column = 0
-		s.eof = 1
+		s.eof = false
+	}
+	if c == '\n' {
+		s.eof = true
+		return c, nil
 	}
 	s.position.Column++
 	return c, nil
