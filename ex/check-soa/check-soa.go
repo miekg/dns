@@ -24,7 +24,7 @@ func localQuery(qname string, qtype uint16) (*dns.Msg, error) {
 	localm.SetQuestion(qname, qtype)
 	for i := range conf.Servers {
 		server := conf.Servers[i]
-		r, err := localc.Exchange(localm, server+":"+conf.Port)
+		r, _, err := localc.Exchange(localm, server+":"+conf.Port)
 		if r == nil || r.Rcode == dns.RcodeNameError || r.Rcode == dns.RcodeSuccess {
 			return r, err
 		}
@@ -114,7 +114,7 @@ func main() {
 				} else {
 					nsAddressPort = ip + ":53"
 				}
-				soa, err := c.Exchange(m, nsAddressPort)
+				soa, _, err := c.Exchange(m, nsAddressPort)
 				// TODO: retry if timeout? Otherwise, one lost UDP packet and it is the end
 				if soa == nil {
 					success = false

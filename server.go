@@ -21,10 +21,10 @@ type Handler interface {
 type ResponseWriter interface {
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// Write writes a reply back to the client.
-	Write(*Msg) error
-	// WriteBuf writes a raw buffer back to the client.
-	WriteBuf([]byte) error
+	// WriteMsg writes a reply back to the client.
+	WriteMsg(*Msg) error
+	// Write writes a raw buffer back to the client.
+	Write([]byte) (int, error)
 	// Close closes the connection.
 	Close() error
 	// TsigStatus returns the status of the Tsig. 
@@ -86,7 +86,7 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
 	// does not matter if this write fails
-	w.Write(m)
+	w.WriteMsg(m)
 }
 
 // AuthorHandler returns a HandlerFunc that returns the authors
@@ -118,7 +118,7 @@ func HandleAuthors(w ResponseWriter, r *Msg) {
 		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
 		m.Answer = append(m.Answer, &RR_TXT{h, []string{author}})
 	}
-	w.Write(m)
+	w.WriteMsg(m)
 }
 
 // VersionHandler returns a HandlerFunc that returns the version
@@ -148,7 +148,7 @@ func HandleVersion(w ResponseWriter, r *Msg) {
 	m.SetReply(r)
 	h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
 	m.Answer = append(m.Answer, &RR_TXT{h, []string{Version}})
-	w.Write(m)
+	w.WriteMsg(m)
 }
 
 func authorHandler() Handler  { return HandlerFunc(HandleAuthors) }
@@ -375,7 +375,7 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 			// Send a format error back
 			x := new(Msg)
 			x.SetRcodeFormatError(req)
-			w.Write(x)
+			w.WriteMsg(x)
 			break
 		}
 
@@ -404,8 +404,8 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 	return
 }
 
-// Write implements the ResponseWriter.Write method.
-func (w *response) Write(m *Msg) (err error) {
+// WriteMsg implements the ResponseWriter.WriteMsg method.
+func (w *response) WriteMsg(m *Msg) (err error) {
 	var data []byte
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
@@ -413,46 +413,48 @@ func (w *response) Write(m *Msg) (err error) {
 			if err != nil {
 				return err
 			}
-			return w.WriteBuf(data)
+			_, err = w.Write(data)
+			return err
 		}
 	}
 	data, err = m.Pack()
 	if err != nil {
 		return err
 	}
-	return w.WriteBuf(data)
+	_, err = w.Write(data)
+	return err
 }
 
-// WriteBuf implements the ResponseWriter.WriteBuf method.
-func (w *response) WriteBuf(m []byte) error {
+// Write implements the ResponseWriter.Write method.
+func (w *response) Write(m []byte) (int, error) {
 	switch {
 	case w._UDP != nil:
-		_, err := w._UDP.WriteTo(m, w.remoteAddr)
-		if err != nil {
-			return err
-		}
+		n, err := w._UDP.WriteTo(m, w.remoteAddr)
+		return n, err
 	case w._TCP != nil:
+		lm := len(m)
 		if len(m) > MaxMsgSize {
-			return &Error{Err: "message too large"}
+			return 0, &Error{Err: "message too large"}
 		}
 		l := make([]byte, 2)
-		l[0], l[1] = packUint16(uint16(len(m)))
+		l[0], l[1] = packUint16(uint16(lm))
 		m = append(l, m...)
 		n, err := w._TCP.Write(m)
 		if err != nil {
-			return err
+			return n, err
 		}
 		i := n
-		if i < len(m) {
-			j, err := w._TCP.Write(m[i:len(m)])
+		if i < lm {
+			j, err := w._TCP.Write(m[i:lm])
 			if err != nil {
-				return err
+				return i, err
 			}
 			i += j
 		}
 		n = i
+		return i, nil
 	}
-	return nil
+	panic("not reached")
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.

@@ -46,6 +46,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	case TypeAFSDB:
 		r, e = setAFSDB(h, c, o, f)
 		goto Slurp
+	case TypeX25:
+		r, e = setX25(h,c, f)
+		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
 		goto Slurp
@@ -95,6 +98,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	// newline. Thus there is no need to slurp the remainder, because there is none.
 	case TypeDNSKEY:
 		return setDNSKEY(h, c, f)
+	case TypeRKEY:
+		return setRKEY(h, c, f)
 	case TypeRRSIG:
 		return setRRSIG(h, c, o, f)
 	case TypeNSEC:
@@ -107,6 +112,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setWKS(h, c, f)
 	case TypeDS:
 		return setDS(h, c, f)
+	case TypeCDS:
+		return setCDS(h, c, f)
 	case TypeDLV:
 		return setDLV(h, c, f)
 	case TypeTA:
@@ -115,6 +122,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setTLSA(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
+	case TypeNINFO:
+		return setNINFO(h, c, f)
 	case TypeHIP:
 		return setHIP(h, c, o, f)
 	case TypeSPF:
@@ -462,6 +471,15 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if rr.Hostname[ld-1] != '.' {
 		rr.Hostname = appendOrigin(rr.Hostname, o)
 	}
+	return rr, nil
+}
+
+func setX25(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_X25)
+	rr.Hdr = h
+
+	l := <-c
+	rr.PSDNAddress = l.token
 	return rr, nil
 }
 
@@ -1328,6 +1346,47 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	return rr, nil
 }
 
+func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_RKEY)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Flags", l}
+	} else {
+		rr.Flags = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Protocol", l}
+	} else {
+		rr.Protocol = uint8(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad RKEY Algorithm", l}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	l = <-c
+	var s string
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad RKEY PublicKey", l}
+		}
+		l = <-c
+	}
+	rr.PublicKey = s
+	return rr, nil
+}
+
 func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_DS)
 	rr.Hdr = h
@@ -1366,6 +1425,51 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad DS Digest", l}
+		}
+		l = <-c
+	}
+	rr.Digest = s
+	return rr, nil
+}
+
+func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_CDS)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDS KeyTag", l}
+	} else {
+		rr.KeyTag = uint16(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+			return nil, &ParseError{f, "bad CDS Algorithm", l}
+		} else {
+			rr.Algorithm = i
+		}
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDS DigestType", l}
+	} else {
+		rr.DigestType = uint8(i)
+	}
+	// There can be spaces here...
+	l = <-c
+	s := ""
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return nil, &ParseError{f, "bad CDS Digest", l}
 		}
 		l = <-c
 	}
@@ -1617,6 +1721,48 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		}
 	}
 	rr.Txt = s
+	return rr, nil
+}
+
+// identical to setTXT
+func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(RR_NINFO)
+	rr.Hdr = h
+
+	// Get the remaining data until we see a NEWLINE
+	quote := false
+	l := <-c
+	var s []string
+	switch l.value == _QUOTE {
+	case true: // A number of quoted string
+		s = make([]string, 0)
+		for l.value != _NEWLINE && l.value != _EOF {
+			switch l.value {
+			case _STRING:
+				s = append(s, l.token)
+			case _BLANK:
+				if quote {
+					// _BLANK can only be seen in between txt parts.
+					return nil, &ParseError{f, "bad NINFO ZSData", l}
+				}
+			case _QUOTE:
+				quote = !quote
+			default:
+				return nil, &ParseError{f, "bad NINFO ZSData", l}
+			}
+			l = <-c
+		}
+		if quote {
+			return nil, &ParseError{f, "bad NINFO ZSData", l}
+		}
+	case false: // Unquoted text record
+		s = make([]string, 1)
+		for l.value != _NEWLINE && l.value != _EOF {
+			s[0] += l.token
+			l = <-c
+		}
+	}
+	rr.ZSData = s
 	return rr, nil
 }
 

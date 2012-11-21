@@ -190,7 +190,8 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
-	for i, v := range qname {
+	ch := make(chan *dns.Exchange)
+	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
@@ -217,12 +218,26 @@ Flags:
 			continue
 		}
 
-		c.DoRtt(m, nameserver, nil, func(m, r *dns.Msg, rtt time.Duration, e error, data interface{}) {
-			defer func() {
-				if i == len(qname)-1 {
-					os.Exit(0)
-				}
-			}()
+		c.Do(m, nameserver, ch)
+	}
+
+	// HUH?
+	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
+		// xfr didn't start any goroutines
+		select {}
+	}
+
+	i := 0
+	for {
+		select {
+		case ex := <-ch:
+			if i == len(qname)-1 {
+				os.Exit(0)
+			}
+			i++
+			r := ex.Reply
+			rtt := ex.Rtt
+			e := ex.Error
 		Redo:
 			if e != nil {
 				fmt.Printf(";; %s\n", e.Error())
@@ -241,19 +256,19 @@ Flags:
 						o.Hdr.Rrtype = dns.TypeOPT
 						o.SetUDPSize(dns.DefaultMsgSize)
 						m.Extra = append(m.Extra, o)
-						r, rtt, e = c.ExchangeRtt(m, nameserver)
+						r, rtt, e = c.Exchange(m, nameserver)
 						*dnssec = true
 						goto Redo
 					} else {
 						// First EDNS, then TCP
 						fmt.Printf(";; Truncated, trying TCP\n")
 						c.Net = "tcp"
-						r, rtt, e = c.ExchangeRtt(m, nameserver)
+						r, rtt, e = c.Exchange(m, nameserver)
 						goto Redo
 					}
 				}
 			}
-			if r.MsgHdr.Truncated && !*fallback {
+			if ex.Reply.MsgHdr.Truncated && !*fallback {
 				fmt.Printf(";; Truncated\n")
 			}
 			if *check {
@@ -266,13 +281,8 @@ Flags:
 
 			fmt.Printf("%v", r)
 			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
-		})
+		}
 	}
-	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
-		// xfr don't start any goroutines
-		select {}
-	}
-
 }
 
 func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
@@ -385,7 +395,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 	m := new(dns.Msg)
 	m.SetQuestion(name, dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, err := c.Exchange(m, server)
+	r, _, err := c.Exchange(m, server)
 	if err != nil {
 		return nil
 	}

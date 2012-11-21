@@ -155,6 +155,7 @@ func (dns *Msg) IsEdns0() *RR_OPT {
 // IsDomainName checks if s is a valid domainname, it returns
 // the number of labels, total length and true, when a domain name is valid. 
 // When false is returned the labelcount and length are not defined.
+// TODO(mg): checks for \DDD
 func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	// See RFC 1035, RFC 3696.
 	l := len(s)
@@ -189,6 +190,11 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 			partlen++
 		case c == '\\':
 			// Ok
+//		case c == '@':
+//			if last != '\\' {
+//				return 0, uint8(l - longer), false
+//			}
+//			partlen++
 		case '0' <= c && c <= '9':
 			ok = true
 			partlen++

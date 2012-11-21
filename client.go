@@ -9,8 +9,8 @@ import (
 )
 
 // Order of events:
-// *client -> *reply -> Exchange*() -> dial()/send()->write()/receive()->read()
-
+// *client -> *reply -> Exchange() -> dial()/send()->write()/receive()->read()
+// Do I want make this an interface thingy?
 type reply struct {
 	client         *Client
 	addr           string
@@ -29,50 +29,18 @@ type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	Attempts     int               // number of attempts, if not set defaults to 1
 	Retry        bool              // retry with TCP
-	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defauls to 2 * 1e9
-	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defauls to 2 * 1e9
+	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
+	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
-}
-
-// Do performs an asynchronous query. The msg *Msg is the question to ask, the 
-// string addr is the address of the nameserver, the parameter data is used
-// in the callback function. The call backback function is called with the
-// original query, the answer returned from the nameserver an optional error and
-// data.
-func (c *Client) Do(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, error, interface{})) {
-	go func() {
-		r, err := c.Exchange(msg, addr)
-		callback(msg, r, err, data)
-	}()
-}
-
-// DoRtt is equivalent to Do, except that is calls ExchangeRtt.
-func (c *Client) DoRtt(msg *Msg, addr string, data interface{}, callback func(*Msg, *Msg, time.Duration, error, interface{})) {
-	go func() {
-		r, rtt, err := c.ExchangeRtt(msg, addr)
-		callback(msg, r, rtt, err, data)
-	}()
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *Client:
 //
 //	c := new(dns.Client)
-//	in, err := c.Exchange(message, "127.0.0.1:53")
-//
-// See Client.ExchangeRtt(...) to get the round trip time.
-func (c *Client) Exchange(m *Msg, a string) (r *Msg, err error) {
-	r, _, err = c.ExchangeRtt(m, a)
-	return
-}
-
-// ExchangeRtt performs an synchronous query. It sends the message m to the address
-// contained in a and waits for an reply. Basic use pattern with a *Client:
-//
-//	c := new(dns.Client)
-//	in, rtt, err := c.ExchangeRtt(message, "127.0.0.1:53")
+//	in, rtt, err := c.Exchange(message, "127.0.0.1:53")
 // 
-func (c *Client) ExchangeRtt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	w := new(reply)
 	w.client = c
 	w.addr = a
