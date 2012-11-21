@@ -47,7 +47,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		r, e = setAFSDB(h, c, o, f)
 		goto Slurp
 	case TypeX25:
-		r, e = setX25(h,c, f)
+		r, e = setX25(h, c, f)
 		goto Slurp
 	case TypeMX:
 		r, e = setMX(h, c, o, f)
