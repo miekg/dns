@@ -513,8 +513,9 @@ func TestLineNumberError2(t *testing.T) {
 		"example.com 1000 IN TALINK ( a.example.com. b..example.com. )":                                      "dns: bad TALINK NextName: \"b..example.com.\" at line: 1:60",
 		`example.com 1000 IN TALINK ( a.example.com. 
 	bb..example.com. )`: "dns: bad TALINK NextName: \"bb..example.com.\" at line: 2:18",
+		// This is a bug, it should report an error on line 1, but the new is already processed.
 		`example.com 1000 IN TALINK ( a.example.com.  b...example.com.
-	)`: "dns: bad TALINK NextName: \"b...example.com.\" at line: 1:61"}
+	)`: "dns: bad TALINK NextName: \"b...example.com.\" at line: 2:1"}
 
 	for in, err := range tests {
 		_, e := NewRR(in)

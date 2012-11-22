@@ -173,9 +173,6 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	var defttl uint32 = defaultTtl
 	var prevName string
 	for l := range c {
-		if _DEBUG {
-			fmt.Printf("[%+v]\n", l)
-		}
 		// Lexer spotted an error already
 		if l.err == true {
 			t <- Token{Error: &ParseError{f, l.token, l}}
@@ -450,6 +447,9 @@ func zlexer(s *scan, c chan lex) {
 		if stri > maxTok {
 			l.token = "tok length insufficient for parsing"
 			l.err = true
+			if _DEBUG {
+				fmt.Printf("[%+v]", l.token)
+			}
 			c <- l
 			return
 		}
@@ -483,6 +483,9 @@ func zlexer(s *scan, c chan lex) {
 				case "$GENERATE":
 					l.value = _DIRGENERATE
 				}
+				if _DEBUG {
+					fmt.Printf("[7 %+v]", l.token)
+				}
 				c <- l
 			} else {
 				l.value = _STRING
@@ -498,6 +501,7 @@ func zlexer(s *scan, c chan lex) {
 							if t, ok := typeToInt(l.token); !ok {
 								l.token = "unknown RR type"
 								l.err = true
+								// no lexer debug
 								c <- l
 								return
 							} else {
@@ -514,6 +518,7 @@ func zlexer(s *scan, c chan lex) {
 							if t, ok := classToInt(l.token); !ok {
 								l.token = "unknown class"
 								l.err = true
+								// no lexer debug
 								c <- l
 								return
 							} else {
@@ -523,6 +528,9 @@ func zlexer(s *scan, c chan lex) {
 						}
 					}
 				}
+				if _DEBUG {
+					fmt.Printf("[6 %+v]", l.token)
+				}
 				c <- l
 			}
 			stri = 0
@@ -530,6 +538,9 @@ func zlexer(s *scan, c chan lex) {
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
+				if _DEBUG {
+					fmt.Printf("[5 %+v]", l.token)
+				}
 				c <- l
 			}
 			owner = false
@@ -550,6 +561,9 @@ func zlexer(s *scan, c chan lex) {
 			if stri > 0 {
 				l.value = _STRING
 				l.token = string(str[:stri])
+				if _DEBUG {
+					fmt.Printf("[4 %+v]", l.token)
+				}
 				c <- l
 				stri = 0
 			}
@@ -577,27 +591,36 @@ func zlexer(s *scan, c chan lex) {
 					owner = true
 					l.value = _NEWLINE
 					l.token = "\n"
+					if _DEBUG {
+						fmt.Printf("[3 %+v]", l.token)
+					}
 					c <- l
 				}
 				break
 			}
 
-			// If there is previous text, we should output it here
-			if stri != 0 {
-				l.value = _STRING
-				l.token = string(str[:stri])
-				if !rrtype {
-					if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
-						l.value = _RRTYPE
-						l.torc = t
-						rrtype = true
-					}
-				}
-				c <- l
-			}
 			if brace == 0 {
+				// If there is previous text, we should output it here
+				if stri != 0 {
+					l.value = _STRING
+					l.token = string(str[:stri])
+					if !rrtype {
+						if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+							l.value = _RRTYPE
+							l.torc = t
+							rrtype = true
+						}
+					}
+					if _DEBUG {
+						fmt.Printf("[2 %+v]", l.token)
+					}
+					c <- l
+				}
 				l.value = _NEWLINE
 				l.token = "\n"
+				if _DEBUG {
+					fmt.Printf("[1 %+v]", l.token)
+				}
 				c <- l
 				stri = 0
 				commt = false
@@ -633,6 +656,9 @@ func zlexer(s *scan, c chan lex) {
 			if stri != 0 {
 				l.value = _STRING
 				l.token = string(str[:stri])
+				if _DEBUG {
+					fmt.Printf("[%+v]", l.token)
+				}
 				c <- l
 				stri = 0
 			}
@@ -661,6 +687,9 @@ func zlexer(s *scan, c chan lex) {
 				if brace < 0 {
 					l.token = "extra closing brace"
 					l.err = true
+					if _DEBUG {
+						fmt.Printf("[%+v]", l.token)
+					}
 					c <- l
 					return
 				}
@@ -683,6 +712,9 @@ func zlexer(s *scan, c chan lex) {
 		// Send remainder
 		l.token = string(str[:stri])
 		l.value = _STRING
+		if _DEBUG {
+			fmt.Printf("[%+v]", l.token)
+		}
 		c <- l
 	}
 }
