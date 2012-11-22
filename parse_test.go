@@ -311,12 +311,12 @@ func TestQuotes(t *testing.T) {
 
 func TestParseBrace(t *testing.T) {
 	tests := map[string]string{
-		"(miek.nl.) 3600 IN A 127.0.0.1":                 "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"(miek.nl.) 3600 IN A 127.0.1.1":                 "miek.nl.\t3600\tIN\tA\t127.0.1.1",
 		"miek.nl. (3600) IN MX (10) elektron.atoom.net.": "miek.nl.\t3600\tIN\tMX\t10 elektron.atoom.net.",
 		`miek.nl. IN (
                         3600 A 127.0.0.1)`: "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"(miek.nl.) (A) (127.0.0.1)":                          "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl A 127.0.0.1":                                 "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"(miek.nl.) (A) (127.0.2.1)":                          "miek.nl.\t3600\tIN\tA\t127.0.2.1",
+		"miek.nl A 127.0.3.1":                                 "miek.nl.\t3600\tIN\tA\t127.0.3.1",
 		"_ssh._tcp.local. 60 IN (PTR) stora._ssh._tcp.local.": "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
 		"miek.nl. NS ns.miek.nl":                              "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
@@ -327,6 +327,7 @@ func TestParseBrace(t *testing.T) {
                         (IN) 
                         (AAAA)
                         (::1))`: "miek.nl.\t3600\tIN\tAAAA\t::1",
+		"miek.nl. IN AAAA ::2": "miek.nl.\t3600\tIN\tAAAA\t::2",
 		`((m)(i)ek.(n)l.) (SOA) (soa.) (soa.) (
                                 2009032802 ; serial
                                 21600      ; refresh (6 hours)
@@ -334,9 +335,9 @@ func TestParseBrace(t *testing.T) {
                                 604()800     ; expire (1 week)
                                 3600       ; minimum (1 hour)
                         )`: "miek.nl.\t3600\tIN\tSOA\tsoa. soa. 2009032802 21600 7200 604800 3600",
-		"miek\\.nl. IN A 127.0.0.1": "miek\\.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. IN A 127.0.0.1":   "miek.nl.\t3600\tIN\tA\t127.0.0.1",
-		"miek.nl. A 127.0.0.1":      "miek.nl.\t3600\tIN\tA\t127.0.0.1",
+		"miek\\.nl. IN A 127.0.0.10": "miek\\.nl.\t3600\tIN\tA\t127.0.0.10",
+		"miek.nl. IN A 127.0.0.11":   "miek.nl.\t3600\tIN\tA\t127.0.0.11",
+		"miek.nl. A 127.0.0.12":      "miek.nl.\t3600\tIN\tA\t127.0.0.12",
 		`miek.nl.       86400 IN SOA elektron.atoom.net. miekg.atoom.net. (
                                 2009032802 ; serial
                                 21600      ; refresh (6 hours)
@@ -348,7 +349,7 @@ func TestParseBrace(t *testing.T) {
 	for i, o := range tests {
 		rr, e := NewRR(i)
 		if e != nil {
-			t.Log("Failed to parse RR: " + e.Error())
+			t.Log("Failed to parse RR: " + e.Error() + "\n\t" + i)
 			t.Fail()
 			continue
 		}
@@ -506,18 +507,26 @@ func TestLineNumberError(t *testing.T) {
 
 // Test with no known RR on the line
 func TestLineNumberError2(t *testing.T) {
-	s := "example.com. 1000 SO master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
-	s = "example.com 1000 IN TALINK a.example.com. b.\\@example.com."
-	s = "example.com 1000 IN TALINK ( a.example.com. b.\\@example.com. )"
-	s = `example.com 1000 IN TALINK ( a.example.com. 
-			b.\@example.com. )`
-	s = `example.com 1000 IN TALINK ( a.example.com.  b.\@example.com.
-		)`
-	_, err := NewRR(s)
-	if err == nil {
-		t.Fail()
-	} else {
-		fmt.Printf("%s\n", err.Error())
+	tests := map[string]string{
+		"example.com. 1000 SO master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100": "dns: expecting RR type or class, not this...: \"SO\" at line: 1:21",
+		"example.com 1000 IN TALINK a.example.com. b..example.com.":                                          "dns: bad TALINK NextName: \"b..example.com.\" at line: 1:57",
+		"example.com 1000 IN TALINK ( a.example.com. b..example.com. )":                                      "dns: bad TALINK NextName: \"b..example.com.\" at line: 1:60",
+		`example.com 1000 IN TALINK ( a.example.com. 
+	bb..example.com. )`: "dns: bad TALINK NextName: \"bb..example.com.\" at line: 2:18",
+		`example.com 1000 IN TALINK ( a.example.com.  b...example.com.
+	)`: "dns: bad TALINK NextName: \"b...example.com.\" at line: 1:61"}
+
+	for in, err := range tests {
+		_, e := NewRR(in)
+		if e == nil {
+			t.Fail()
+		} else {
+			if e.Error() != err {
+				t.Logf("%s\n", in)
+				t.Logf("Error should be %s is %s\n", err, e.Error())
+				t.Fail()
+			}
+		}
 	}
 }
 

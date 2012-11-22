@@ -174,7 +174,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	var prevName string
 	for l := range c {
 		if _DEBUG {
-			fmt.Printf("[%v]\n", l)
+			fmt.Printf("[%+v]\n", l)
 		}
 		// Lexer spotted an error already
 		if l.err == true {
@@ -467,7 +467,7 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 			if stri == 0 {
-				// Space directly as the beginnin, handled in the grammar
+				// Space directly in the beginning, handled in the grammar
 			} else if owner {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
@@ -582,19 +582,20 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 
-			if brace == 0 {
-				// If there is previous text, we should output it here
-				if stri != 0 {
-					l.value = _STRING
-					l.token = string(str[:stri])
-					if !rrtype {
-						if _, ok := Str_rr[strings.ToUpper(l.token)]; ok {
-							l.value = _RRTYPE
-							rrtype = true
-						}
+			// If there is previous text, we should output it here
+			if stri != 0 {
+				l.value = _STRING
+				l.token = string(str[:stri])
+				if !rrtype {
+					if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+						l.value = _RRTYPE
+						l.torc = t
+						rrtype = true
 					}
-					c <- l
 				}
+				c <- l
+			}
+			if brace == 0 {
 				l.value = _NEWLINE
 				l.token = "\n"
 				c <- l

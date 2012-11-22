@@ -190,11 +190,11 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 			partlen++
 		case c == '\\':
 			// Ok
-			//		case c == '@':
-			//			if last != '\\' {
-			//				return 0, uint8(l - longer), false
-			//			}
-			//			partlen++
+		case c == '@':
+			if last != '\\' {
+				return 0, uint8(l - longer), false
+			}
+			partlen++
 		case '0' <= c && c <= '9':
 			ok = true
 			partlen++
