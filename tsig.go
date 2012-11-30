@@ -33,7 +33,7 @@
 //
 // Basic use pattern validating and replying to a message that has TSIG set.
 //
-//	server := &dns.Server{Addr: ":53", Net: "udp"}
+//	server := &dns.Server{"127.0.0.1:53", Net: "udp"}
 //	server.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	go server.ListenAndServe()
 //	dns.HandleFunc(".", handleRequest)
