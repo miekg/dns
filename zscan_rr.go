@@ -87,12 +87,16 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		goto Slurp
 	case TypeNID:
 		r, e = setNID(h, c, f)
+		goto Slurp
 	case TypeL32:
 		r, e = setL32(h, c, f)
+		goto Slurp
 	case TypeL64:
 		r, e = setL64(h, c, f)
+		goto Slurp
 	case TypeLP:
 		r, e = setLP(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
