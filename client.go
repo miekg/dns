@@ -70,13 +70,12 @@ func (w *reply) dial() (err error) {
 	}
 	for a := 0; a < attempts; a++ {
 		if w.client.Net == "" {
-			conn, err = net.Dial("udp", w.addr)
+			conn, err = net.DialTimeout("udp", w.addr, 5 * 1e9)
 		} else {
-			conn, err = net.Dial(w.client.Net, w.addr)
+			conn, err = net.DialTimeout(w.client.Net, w.addr, 5 * 1e9)
 		}
-		if err != nil {
-			// There are no timeouts defined?
-			continue
+		if err == nil {
+			break
 		}
 	}
 	w.conn = conn
@@ -128,8 +127,8 @@ func (w *reply) read(p []byte) (n int, err error) {
 	}
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
-		setTimeouts(w)
 		for a := 0; a < attempts; a++ {
+			setTimeouts(w)
 			n, err = w.conn.(*net.TCPConn).Read(p[0:2])
 			if err != nil || n != 2 {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
@@ -164,18 +163,21 @@ func (w *reply) read(p []byte) (n int, err error) {
 				i += j
 			}
 			n = i
+			if err == nil {
+				return n, err
+			}
 		}
 	case "", "udp", "udp4", "udp6":
 		for a := 0; a < attempts; a++ {
 			setTimeouts(w)
 			n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
-			if err == nil {
-				return n, err
-			}
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
 				}
+				return n, err
+			}
+			if err == nil {
 				return n, err
 			}
 		}
@@ -244,18 +246,21 @@ func (w *reply) write(p []byte) (n int, err error) {
 				i += j
 			}
 			n = i
+			if err == nil {
+				return n, err
+			}
 		}
 	case "", "udp", "udp4", "udp6":
 		for a := 0; a < attempts; a++ {
 			setTimeouts(w)
 			n, err = w.conn.(*net.UDPConn).Write(p)
-			if err == nil {
-				return
-			}
 			if err != nil {
 				if e, ok := err.(net.Error); ok && e.Timeout() {
 					continue
 				}
+				return n, err
+			}
+			if err == nil {
 				return n, err
 			}
 		}

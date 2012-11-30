@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/miekg/dns"
+	"net"
 	"os"
 )
 
@@ -38,47 +39,52 @@ func main() {
 	}
 }
 
+func do(t chan *dns.Msg, c *dns.Client, m *dns.Msg, addr string) {
+	go func() {
+		r, _, err := c.Exchange(m, addr)
+		if err != nil {
+			//print error stuff
+			t <- nil
+		}
+		t <- r
+	}()
+}
+
 func addresses(conf *dns.ClientConfig, c *dns.Client, name string) (ips []string) {
 	m4 := new(dns.Msg)
 	m4.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
 	m6 := new(dns.Msg)
 	m6.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeAAAA)
-	c4 := c.Do(m4, conf.Servers[0]+":"+conf.Port)
-	c6 := c.Do(m6, conf.Servers[0]+":"+conf.Port)
+	t := make(chan *dns.Msg)
+	defer close(t)
+	do(t, c, m4, net.JoinHostPort(conf.Servers[0], conf.Port))
+	do(t, c, m6, net.JoinHostPort(conf.Servers[0], conf.Port))
 
 	i := 2 // two outstanding queries
 forever:
 	for {
 		select {
-		case ip4 := <-c4:
-			if ip4.Reply != nil && ip4.Reply.Rcode == dns.RcodeSuccess {
-				for _, a := range ip4.Reply.Answer {
+		case d := <-t:
+			i--
+			if d == nil {
+				continue
+			}
+			if i == 0 {
+				break forever
+			}
+			if d.Rcode == dns.RcodeSuccess {
+				for _, a := range d.Answer {
 					switch a.(type) {
 					case *dns.RR_A:
-						ips = append(ips, a.(*dns.RR_A).A.String()+":53")
-
-					}
-				}
-			}
-			i--
-			if i == 0 {
-				break forever
-			}
-		case ip6 := <-c6:
-			if ip6.Reply != nil && ip6.Reply.Rcode == dns.RcodeSuccess {
-				for _, a := range ip6.Reply.Answer {
-					switch a.(type) {
+						ips = append(ips,
+							net.JoinHostPort(a.(*dns.RR_A).A.String(), "53"))
 					case *dns.RR_AAAA:
-						ips = append(ips, a.(*dns.RR_AAAA).AAAA.String()+":53")
+						ips = append(ips,
+							net.JoinHostPort(a.(*dns.RR_AAAA).AAAA.String(), "53"))
 
 					}
 				}
 			}
-			i--
-			if i == 0 {
-				break forever
-			}
-
 		}
 	}
 	return ips
