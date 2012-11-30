@@ -183,9 +183,8 @@ type RR_ANY struct {
 	// Does not have any rdata
 }
 
-func (rr *RR_ANY) Header() *RR_Header {
-	return &rr.Hdr
-}
+func (rr *RR_ANY) Header() *RR_Header { return &rr.Hdr }
+func (rr *RR_ANY) Copy() RR           { return &RR_ANY{*rr.Hdr.CopyHeader()} }
 
 func (rr *RR_ANY) String() string {
 	return rr.Hdr.String()
@@ -195,18 +194,13 @@ func (rr *RR_ANY) Len() int {
 	return rr.Hdr.Len()
 }
 
-func (rr *RR_ANY) Copy() RR {
-	return &RR_ANY{*rr.Hdr.CopyHeader()}
-}
-
 type RR_CNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"cdomain-name"`
 }
 
-func (rr *RR_CNAME) Header() *RR_Header {
-	return &rr.Hdr
-}
+func (rr *RR_CNAME) Header() *RR_Header { return &rr.Hdr }
+func (rr *RR_CNAME) Copy() RR           { return &RR_CNAME{*rr.Hdr.CopyHeader(), rr.Target} }
 
 func (rr *RR_CNAME) String() string {
 	return rr.Hdr.String() + rr.Target
@@ -215,10 +209,6 @@ func (rr *RR_CNAME) String() string {
 func (rr *RR_CNAME) Len() int {
 	l := len(rr.Target) + 1
 	return rr.Hdr.Len() + l
-}
-
-func (rr *RR_CNAME) Copy() RR {
-	return &RR_CNAME{*rr.Hdr.CopyHeader(), rr.Target}
 }
 
 type RR_HINFO struct {
@@ -248,9 +238,8 @@ type RR_MB struct {
 	Mb  string `dns:"cdomain-name"`
 }
 
-func (rr *RR_MB) Header() *RR_Header {
-	return &rr.Hdr
-}
+func (rr *RR_MB) Header() *RR_Header { return &rr.Hdr }
+func (rr *RR_MB) Copy() RR           { return &RR_MB{*rr.Hdr.CopyHeader(), rr.Mb} }
 
 func (rr *RR_MB) String() string {
 	return rr.Hdr.String() + rr.Mb
@@ -259,10 +248,6 @@ func (rr *RR_MB) String() string {
 func (rr *RR_MB) Len() int {
 	l := len(rr.Mb) + 1
 	return rr.Hdr.Len() + l
-}
-
-func (rr *RR_MB) Copy() RR {
-	return &RR_MB{*rr.Hdr.CopyHeader(), rr.Mb}
 }
 
 type RR_MG struct {
