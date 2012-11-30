@@ -132,9 +132,10 @@ type RR_Header struct {
 	Rdlength uint16 // length of data after header
 }
 
-func (h *RR_Header) Header() *RR_Header {
-	return h
-}
+func (h *RR_Header) Header() *RR_Header { return h }
+
+// Just to imlement the RR interface
+func (h *RR_Header) Copy() RR { return nil }
 
 func (h *RR_Header) CopyHeader() *RR_Header {
 	r := new(RR_Header)
@@ -144,11 +145,6 @@ func (h *RR_Header) CopyHeader() *RR_Header {
 	r.Ttl = h.Ttl
 	r.Rdlength = h.Rdlength
 	return r
-}
-
-// Just to imlement the RR interface
-func (h *RR_Header) Copy() RR {
-	return nil
 }
 
 func (h *RR_Header) String() string {
