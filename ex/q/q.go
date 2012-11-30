@@ -24,7 +24,6 @@ var (
 
 func main() {
 	short = flag.Bool("short", false, "abbreviate long DNSSEC records")
-
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
@@ -117,18 +116,10 @@ Flags:
 		nameserver = nameserver[1 : len(nameserver)-1]
 	}
 	if i := net.ParseIP(nameserver); i != nil {
-		switch {
-		case i.To4() != nil:
-			// it's a v4 address
-			nameserver += ":" + strconv.Itoa(*port)
-		case i.To16() != nil:
-			// v6 address
-			nameserver = "[" + nameserver + "]:" + strconv.Itoa(*port)
-		}
+		nameserver = net.JoinHostPort(nameserver, strconv.Itoa(*port))
 	} else {
 		nameserver = dns.Fqdn(nameserver) + ":" + strconv.Itoa(*port)
 	}
-	// We use the async query handling, just to show how it is to be used.
 	c := new(dns.Client)
 	if *tcp {
 		c.Net = "tcp"
@@ -190,7 +181,6 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
-	ch := make(chan *dns.Exchange)
 	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
@@ -217,71 +207,49 @@ Flags:
 			doXfr(c, m, nameserver)
 			continue
 		}
-
-		c.Do(m, nameserver, ch)
-	}
-
-	// HUH?
-	if qtype != dns.TypeAXFR && qtype != dns.TypeIXFR {
-		// xfr didn't start any goroutines
-		select {}
-	}
-
-	i := 0
-	for {
-		select {
-		case ex := <-ch:
-			if i == len(qname)-1 {
-				os.Exit(0)
-			}
-			i++
-			r := ex.Reply
-			rtt := ex.Rtt
-			e := ex.Error
-		Redo:
-			if e != nil {
-				fmt.Printf(";; %s\n", e.Error())
-				return
-			}
-			if r.Id != m.Id {
-				fmt.Fprintf(os.Stderr, "Id mismatch\n")
-				return
-			}
-			if r.MsgHdr.Truncated && *fallback {
-				if c.Net != "tcp" {
-					if !*dnssec {
-						fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
-						o := new(dns.RR_OPT)
-						o.Hdr.Name = "."
-						o.Hdr.Rrtype = dns.TypeOPT
-						o.SetUDPSize(dns.DefaultMsgSize)
-						m.Extra = append(m.Extra, o)
-						r, rtt, e = c.Exchange(m, nameserver)
-						*dnssec = true
-						goto Redo
-					} else {
-						// First EDNS, then TCP
-						fmt.Printf(";; Truncated, trying TCP\n")
-						c.Net = "tcp"
-						r, rtt, e = c.Exchange(m, nameserver)
-						goto Redo
-					}
+	Redo:
+		r, rtt, e := c.Exchange(m, nameserver)
+		if e != nil {
+			fmt.Printf(";; %s\n", e.Error())
+			continue
+		}
+		if r.Id != m.Id {
+			fmt.Fprintf(os.Stderr, "Id mismatch\n")
+			return
+		}
+		if r.MsgHdr.Truncated && *fallback {
+			if c.Net != "tcp" {
+				if !*dnssec {
+					fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
+					o := new(dns.RR_OPT)
+					o.Hdr.Name = "."
+					o.Hdr.Rrtype = dns.TypeOPT
+					o.SetUDPSize(dns.DefaultMsgSize)
+					m.Extra = append(m.Extra, o)
+					r, rtt, e = c.Exchange(m, nameserver)
+					*dnssec = true
+					goto Redo
+				} else {
+					// First EDNS, then TCP
+					fmt.Printf(";; Truncated, trying TCP\n")
+					c.Net = "tcp"
+					r, rtt, e = c.Exchange(m, nameserver)
+					goto Redo
 				}
 			}
-			if ex.Reply.MsgHdr.Truncated && !*fallback {
-				fmt.Printf(";; Truncated\n")
-			}
-			if *check {
-				sigCheck(r, nameserver, *tcp)
-				nsecCheck(r)
-			}
-			if *short {
-				r = shortMsg(r)
-			}
-
-			fmt.Printf("%v", r)
-			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
 		}
+		if r.MsgHdr.Truncated && !*fallback {
+			fmt.Printf(";; Truncated\n")
+		}
+		if *check {
+			sigCheck(r, nameserver, *tcp)
+		}
+		if *short {
+			r = shortMsg(r)
+		}
+
+		fmt.Printf("%v", r)
+		fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Size)
 	}
 }
 
@@ -329,41 +297,6 @@ func sectionCheck(set []dns.RR, server string, tcp bool) {
 			}
 		}
 	}
-}
-
-// Check if we have nsec3 records and if so, check them
-func nsecCheck(in *dns.Msg) {
-	for _, r := range in.Answer {
-		if r.Header().Rrtype == dns.TypeNSEC3 {
-			goto Check
-		}
-	}
-	for _, r := range in.Ns {
-		if r.Header().Rrtype == dns.TypeNSEC3 {
-			goto Check
-		}
-	}
-	for _, r := range in.Extra {
-		if r.Header().Rrtype == dns.TypeNSEC3 {
-			goto Check
-		}
-	}
-	return
-Check:
-	/*
-		w, err := in.Nsec3Verify(in.Question[0])
-		switch w {
-		case dns.NSEC3_NXDOMAIN:
-			fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NXDOMAIN)\n")
-		case dns.NSEC3_NODATA:
-			fmt.Printf(";+ [beta] Correct denial of existence (NSEC3/NODATA)\n")
-		default:
-			// w == 0
-			if err != nil {
-				fmt.Printf(";- [beta] Incorrect denial of existence (NSEC3): %s\n", err.Error())
-			}
-		}
-	*/
 }
 
 // Check the sigs in the msg, get the signer's key (additional query), get the 
@@ -437,7 +370,7 @@ func shortRR(r dns.RR) dns.RR {
 	case *dns.RR_RRSIG:
 		t.Signature = "..."
 	case *dns.RR_NSEC3:
-		t.Salt = "-" // Nobody cares
+		t.Salt = "." // Nobody cares
 		if len(t.TypeBitMap) > 5 {
 			t.TypeBitMap = t.TypeBitMap[1:5]
 		}
