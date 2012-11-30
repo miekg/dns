@@ -152,6 +152,8 @@ Slurp:
 	return r, e
 }
 
+// A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
+// or an error
 func endingToString(c chan lex, errstr, f string) (string, *ParseError) {
 	s := ""
 	l := <-c // _STRING
@@ -165,6 +167,45 @@ func endingToString(c chan lex, errstr, f string) (string, *ParseError) {
 			return "", &ParseError{f, "bad DHCID Digest", l}
 		}
 		l = <-c
+	}
+	return s, nil
+}
+
+// A remainder of the rdata with embedded spaces, return the parsed string slice (sans the spaces)
+// or an error
+func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError) {
+	// Get the remaining data until we see a NEWLINE
+	quote := false
+	l := <-c
+	var s []string
+	switch l.value == _QUOTE {
+	case true: // A number of quoted string
+		s = make([]string, 0)
+		for l.value != _NEWLINE && l.value != _EOF {
+			switch l.value {
+			case _STRING:
+				s = append(s, l.token)
+			case _BLANK:
+				if quote {
+					// _BLANK can only be seen in between txt parts.
+					return nil, &ParseError{f, errstr, l}
+				}
+			case _QUOTE:
+				quote = !quote
+			default:
+				return nil, &ParseError{f, errstr, l}
+			}
+			l = <-c
+		}
+		if quote {
+			return nil, &ParseError{f, errstr, l}
+		}
+	case false: // Unquoted text record
+		s = make([]string, 1)
+		for l.value != _NEWLINE && l.value != _EOF {
+			s[0] += l.token
+			l = <-c
+		}
 	}
 	return s, nil
 }
@@ -1569,38 +1610,9 @@ func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_SPF)
 	rr.Hdr = h
 
-	// Get the remaining data until we see a NEWLINE
-	quote := false
-	l := <-c
-	var s []string
-	switch l.value == _QUOTE {
-	case true: // A number of quoted string
-		s = make([]string, 0)
-		for l.value != _NEWLINE && l.value != _EOF {
-			switch l.value {
-			case _STRING:
-				s = append(s, l.token)
-			case _BLANK:
-				if quote {
-					// _BLANK can only be seen in between txt parts.
-					return nil, &ParseError{f, "bad SPF Txt", l}
-				}
-			case _QUOTE:
-				quote = !quote
-			default:
-				return nil, &ParseError{f, "bad SPF Txt", l}
-			}
-			l = <-c
-		}
-		if quote {
-			return nil, &ParseError{f, "bad SPF Txt", l}
-		}
-	case false: // Unquoted text record
-		s = make([]string, 1)
-		for l.value != _NEWLINE && l.value != _EOF {
-			s[0] += l.token
-			l = <-c
-		}
+	s, e := endingToTxtSlice(c, "bad SPF Txt", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Txt = s
 	return rr, nil
@@ -1610,38 +1622,9 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_TXT)
 	rr.Hdr = h
 
-	// Get the remaining data until we see a NEWLINE
-	quote := false
-	l := <-c
-	var s []string
-	switch l.value == _QUOTE {
-	case true: // A number of quoted string
-		s = make([]string, 0)
-		for l.value != _NEWLINE && l.value != _EOF {
-			switch l.value {
-			case _STRING:
-				s = append(s, l.token)
-			case _BLANK:
-				if quote {
-					// _BLANK can only be seen in between txt parts.
-					return nil, &ParseError{f, "bad TXT Txt", l}
-				}
-			case _QUOTE:
-				quote = !quote
-			default:
-				return nil, &ParseError{f, "bad TXT Txt", l}
-			}
-			l = <-c
-		}
-		if quote {
-			return nil, &ParseError{f, "bad TXT Txt", l}
-		}
-	case false: // Unquoted text record
-		s = make([]string, 1)
-		for l.value != _NEWLINE && l.value != _EOF {
-			s[0] += l.token
-			l = <-c
-		}
+	s, e := endingToTxtSlice(c, "bad TXT Txt", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Txt = s
 	return rr, nil
@@ -1652,38 +1635,9 @@ func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_NINFO)
 	rr.Hdr = h
 
-	// Get the remaining data until we see a NEWLINE
-	quote := false
-	l := <-c
-	var s []string
-	switch l.value == _QUOTE {
-	case true: // A number of quoted string
-		s = make([]string, 0)
-		for l.value != _NEWLINE && l.value != _EOF {
-			switch l.value {
-			case _STRING:
-				s = append(s, l.token)
-			case _BLANK:
-				if quote {
-					// _BLANK can only be seen in between txt parts.
-					return nil, &ParseError{f, "bad NINFO ZSData", l}
-				}
-			case _QUOTE:
-				quote = !quote
-			default:
-				return nil, &ParseError{f, "bad NINFO ZSData", l}
-			}
-			l = <-c
-		}
-		if quote {
-			return nil, &ParseError{f, "bad NINFO ZSData", l}
-		}
-	case false: // Unquoted text record
-		s = make([]string, 1)
-		for l.value != _NEWLINE && l.value != _EOF {
-			s[0] += l.token
-			l = <-c
-		}
+	s, e := endingToTxtSlice(c, "bad NINFO ZSData", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.ZSData = s
 	return rr, nil
