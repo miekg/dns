@@ -152,6 +152,23 @@ Slurp:
 	return r, e
 }
 
+func endingToString(c chan lex, errstr, f string) (string, *ParseError) {
+	s := ""
+	l := <-c // _STRING
+	for l.value != _NEWLINE && l.value != _EOF {
+		switch l.value {
+		case _STRING:
+			s += l.token
+		case _BLANK:
+			// Ok
+		default:
+			return "", &ParseError{f, "bad DHCID Digest", l}
+		}
+		l = <-c
+	}
+	return s, nil
+}
+
 func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_A)
 	rr.Hdr = h
@@ -993,22 +1010,11 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	// Get the remaining data until we see a NEWLINE
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad NAPTR Certificate", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad NAPTR Certificate", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Certificate = s
-
 	return rr, nil
 }
 
@@ -1077,19 +1083,9 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 			rr.SignerName = appendOrigin(rr.SignerName, o)
 		}
 	}
-	// Get the remaining data until we see a NEWLINE
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad RRSIG Signature", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad RRSIG Signature", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Signature = s
 	return rr, nil
@@ -1333,18 +1329,9 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	l = <-c
-	var s string
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad DNSKEY PublicKey", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad DNSKEY PublicKey", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.PublicKey = s
 	return rr, nil
@@ -1374,18 +1361,9 @@ func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	l = <-c
-	var s string
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad RKEY PublicKey", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad RKEY PublicKey", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.PublicKey = s
 	return rr, nil
@@ -1418,19 +1396,9 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad DS Digest", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad DS Digest", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Digest = s
 	return rr, nil
@@ -1463,19 +1431,9 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad CDS Digest", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad CDS Digest", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Digest = s
 	return rr, nil
@@ -1508,19 +1466,9 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad DLV Digest", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad DLV Digest", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Digest = s
 	return rr, nil
@@ -1553,19 +1501,9 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad TA Digest", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad TA Digest", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Digest = s
 	return rr, nil
@@ -1594,19 +1532,9 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.MatchingType = uint8(i)
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad TLSA Certificate", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad TLSA Certificate", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Certificate = s
 	return rr, nil
@@ -1625,19 +1553,10 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if e != nil {
 		return nil, &ParseError{f, "bad RFC3597 Rdata", l}
 	}
-	// There can be spaces here...
-	l = <-c
-	s := ""
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad RFC3597 Rdata", l}
-		}
-		l = <-c
+
+	s, e1 := endingToString(c, "bad RFC3597 Rdata", f)
+	if e1 != nil {
+		return nil, e1
 	}
 	if rdlength*2 != len(s) {
 		return nil, &ParseError{f, "bad RFC3597 Rdata", l}
@@ -1848,18 +1767,9 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c
 	l = <-c
 	rr.Gateway = l.token
-	l = <-c
-	var s string
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad IPSECKEY PublicKey", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad IPSECKEY PublicKey", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.PublicKey = s
 	return rr, nil
@@ -1870,18 +1780,9 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(RR_DHCID)
 	rr.Hdr = h
 
-	l := <-c // _STRING
-	var s string
-	for l.value != _NEWLINE && l.value != _EOF {
-		switch l.value {
-		case _STRING:
-			s += l.token
-		case _BLANK:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad DHCID Digest", l}
-		}
-		l = <-c
+	s, e := endingToString(c, "bad DHCID Digest", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Digest = s
 	return rr, nil
