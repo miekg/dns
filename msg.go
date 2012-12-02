@@ -1058,7 +1058,8 @@ func packBase32(s []byte) ([]byte, error) {
 	return buf, nil
 }
 
-// Resource record packer.
+// Resource record packer, pack rr into msg[off:]. See PackDomainName for documentation
+// about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	if rr == nil {
 		return len(msg), &Error{Err: "nil rr"}
@@ -1072,7 +1073,7 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	return off1, nil
 }
 
-// Resource record unpacker.
+// Resource record unpacker, unpack msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	// unpack just the header, to find the rr type and length
 	var h RR_Header

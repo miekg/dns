@@ -91,11 +91,11 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 
 // AuthorHandler returns a HandlerFunc that returns the authors
 // of Go DNS for 'authors.bind' or 'authors.server' queries in the
-// CHAOS Class. Note with 
+// CHAOS Class. Note with:
 //
 //	HandleFunc("authors.bind.", HandleAuthors)
 //
-// The handler is registered for all DNS classes, thereby potentially
+// the handler is registered for all DNS classes, thereby potentially
 // hijacking the authors.bind. zone in the IN class. If you need the
 // authors.bind zone to exist in the IN class, you need to register
 // some other handler, check the class in there and then call HandleAuthors.
@@ -123,11 +123,11 @@ func HandleAuthors(w ResponseWriter, r *Msg) {
 
 // VersionHandler returns a HandlerFunc that returns the version
 // of Go DNS for 'version.bind' or 'version.server' queries in the
-// CHAOS Class. Note with 
+// CHAOS Class. Note with:
 //
 //	HandleFunc("version.bind.", HandleVersion)
 //
-// The handler is registered for all DNS classes, thereby potentially
+// the handler is registered for all DNS classes, thereby potentially
 // hijacking the version.bind. zone in the IN class. If you need the
 // version.bind zone to exist in the IN class, you need to register
 // some other handler, check the class in there and then call HandleVersion.
@@ -156,7 +156,7 @@ func failedHandler() Handler  { return HandlerFunc(HandleFailed) }
 func versionHandler() Handler { return HandlerFunc(HandleVersion) }
 
 // Start a server on addresss and network speficied. Invoke handler
-// for any incoming queries.
+// for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()

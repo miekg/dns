@@ -35,7 +35,7 @@ type Client struct {
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
-// contained in a and waits for an reply. Basic use pattern with a *Client:
+// contained in a and waits for an reply. Basic use pattern with a *dns.Client:
 //
 //	c := new(dns.Client)
 //	in, rtt, err := c.Exchange(message, "127.0.0.1:53")

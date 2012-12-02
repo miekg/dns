@@ -1,12 +1,12 @@
 package dns
 
-// Envelope is used when doing [IA]xfr with a remote server.
+// Envelope is used when doing [IA]XFR with a remote server.
 type Envelope struct {
 	RR    []RR  // The set of RRs in the answer section of the AXFR reply message.
 	Error error // If something went wrong, this contains the error.
 }
 
-// TransferIn performs a [AI]xfr request (depends on the message's Qtype). It returns
+// TransferIn performs a [AI]XFR request (depends on the message's Qtype). It returns
 // a channel of *Envelope on which the replies from the server are sent. At the end of
 // the transfer the channel is closed.
 // The messages are TSIG checked if
@@ -141,7 +141,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// TransferOut performs an outgoing [AI]xfr depending on the request message. The
+// TransferOut performs an outgoing [AI]XFR depending on the request message. The
 // caller is responsible for sending the correct sequence of RR sets through
 // the channel c. For reasons of symmetry Envelope is re-used.
 // Errors are signaled via the error pointer, when an error occurs the function
