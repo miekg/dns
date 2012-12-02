@@ -6,7 +6,7 @@ type Envelope struct {
 	Error error // If something went wrong, this contains the error.
 }
 
-// XfrReceive performs a [AI]xfr request (depends on the message's Qtype). It returns
+// TransferIn performs a [AI]xfr request (depends on the message's Qtype). It returns
 // a channel of *Envelope on which the replies from the server are sent. At the end of
 // the transfer the channel is closed.
 // The messages are TSIG checked if
@@ -16,11 +16,11 @@ type Envelope struct {
 // Basic use pattern for receiving an AXFR:
 //
 //	// m contains the AXFR request
-//	t, e := client.XfrReceive(m, "127.0.0.1:53")
+//	t, e := c.TransferIn(m, "127.0.0.1:53")
 //	for r := range t {
 //		// ... deal with r.RR or r.Error
 //	}
-func (c *Client) XfrReceive(q *Msg, a string) (chan *Envelope, error) {
+func (c *Client) TransferIn(q *Msg, a string) (chan *Envelope, error) {
 	w := new(reply)
 	w.client = c
 	w.addr = a
@@ -34,10 +34,10 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *Envelope, error) {
 	e := make(chan *Envelope)
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
-		go w.axfrReceive(q, e)
+		go w.axfrIn(q, e)
 		return e, nil
 	case TypeIXFR:
-		go w.ixfrReceive(q, e)
+		go w.ixfrIn(q, e)
 		return e, nil
 	default:
 		return nil, nil
@@ -45,7 +45,7 @@ func (c *Client) XfrReceive(q *Msg, a string) (chan *Envelope, error) {
 	panic("dns: not reached")
 }
 
-func (w *reply) axfrReceive(q *Msg, c chan *Envelope) {
+func (w *reply) axfrIn(q *Msg, c chan *Envelope) {
 	first := true
 	defer w.conn.Close()
 	defer close(c)
@@ -79,7 +79,7 @@ func (w *reply) axfrReceive(q *Msg, c chan *Envelope) {
 	panic("dns: not reached")
 }
 
-func (w *reply) ixfrReceive(q *Msg, c chan *Envelope) {
+func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 	var serial uint32 // The first serial seen is the current server serial
 	first := true
 	defer w.conn.Close()
@@ -141,21 +141,21 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// XfrSend performs an outgoing [AI]xfr depending on the request message. The
+// TransferOut performs an outgoing [AI]xfr depending on the request message. The
 // caller is responsible for sending the correct sequence of RR sets through
 // the channel c. For reasons of symmetry Envelope is re-used.
 // Errors are signaled via the error pointer, when an error occurs the function
 // sets the error and returns (it does not close the channel).
-// TSIG and enveloping is handled by XfrSend.
+// TSIG and enveloping is handled by TransferOut.
 // 
 // Basic use pattern for sending an AXFR:
 //
 //	// q contains the AXFR request
 //	c := make(chan *Envelope)
 //	var e *error
-//	err := XfrSend(w, q, c, e)
-//	w.Hijack()		// hijack the connection so that the library doesn't close it
-//	for _, rrset := range rrsets {	// rrset is a []RR
+//	err := TransferOut(w, q, c, e)
+//	w.Hijack()		// hijack the connection so that the package doesn't close it
+//	for _, rrset := range rrsets {	// rrsets is a []RR
 //		c <- &{Envelope{RR: rrset}
 //		if e != nil {
 //			close(c)
@@ -163,10 +163,10 @@ func checkXfrSOA(in *Msg, first bool) bool {
 //		}
 //	}
 //	// w.Close() // Don't! Let the client close the connection
-func XfrSend(w ResponseWriter, q *Msg, c chan *Envelope, e *error) error {
+func TransferOut(w ResponseWriter, q *Msg, c chan *Envelope, e *error) error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
-		go axfrSend(w, q, c, e)
+		go xfrOut(w, q, c, e)
 		return nil
 	default:
 		return nil
@@ -175,7 +175,7 @@ func XfrSend(w ResponseWriter, q *Msg, c chan *Envelope, e *error) error {
 }
 
 // TODO(mg): count the RRs and the resulting size.
-func axfrSend(w ResponseWriter, req *Msg, c chan *Envelope, e *error) {
+func xfrOut(w ResponseWriter, req *Msg, c chan *Envelope, e *error) {
 	rep := new(Msg)
 	rep.SetReply(req)
 	rep.Authoritative = true
