@@ -41,7 +41,7 @@ Miek Gieben  -  2010-2012  -  miek@miek.nl
 # Building
 
 Building is done with the `go` tool. If you have setup your GOPATH
-correctly the following should work:
+correctly, the following should work:
 
     go get github.com/miekg/dns
     go build dns
