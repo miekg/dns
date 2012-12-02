@@ -159,14 +159,14 @@ func (q *Question) String() (s string) {
 	} else {
 		s = ";" + q.Name + "\t"
 	}
-	if _, ok := Class_str[q.Qclass]; ok {
-		s += Class_str[q.Qclass] + "\t"
+	if _, ok := ClassToString[q.Qclass]; ok {
+		s += ClassToString[q.Qclass] + "\t"
 	} else {
 		s += "CLASS" + strconv.Itoa(int(q.Qtype))
 	}
 
-	if _, ok := Rr_str[q.Qtype]; ok {
-		s += " " + Rr_str[q.Qtype]
+	if _, ok := TypeToString[q.Qtype]; ok {
+		s += " " + TypeToString[q.Qtype]
 	} else {
 		s += " " + "TYPE" + strconv.Itoa(int(q.Qtype))
 	}
@@ -753,7 +753,7 @@ func (rr *RR_RRSIG) Copy() RR {
 }
 
 func (rr *RR_RRSIG) String() string {
-	return rr.Hdr.String() + Rr_str[rr.TypeCovered] +
+	return rr.Hdr.String() + TypeToString[rr.TypeCovered] +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
@@ -781,8 +781,8 @@ func (rr *RR_NSEC) Copy() RR           { return &RR_NSEC{*rr.Hdr.CopyHeader(), r
 func (rr *RR_NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		if _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
-			s += " " + Rr_str[rr.TypeBitMap[i]]
+		if _, ok := TypeToString[rr.TypeBitMap[i]]; ok {
+			s += " " + TypeToString[rr.TypeBitMap[i]]
 		} else {
 			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
 		}
@@ -1052,8 +1052,8 @@ func (rr *RR_NSEC3) String() string {
 		" " + saltString(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		if _, ok := Rr_str[rr.TypeBitMap[i]]; ok {
-			s += " " + Rr_str[rr.TypeBitMap[i]]
+		if _, ok := TypeToString[rr.TypeBitMap[i]]; ok {
+			s += " " + TypeToString[rr.TypeBitMap[i]]
 		} else {
 			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
 		}

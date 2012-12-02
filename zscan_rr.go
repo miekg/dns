@@ -1063,7 +1063,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RR_RRSIG)
 	rr.Hdr = h
 	l := <-c
-	if t, ok := Str_rr[strings.ToUpper(l.token)]; !ok {
+	if t, ok := StringToType[strings.ToUpper(l.token)]; !ok {
 		return nil, &ParseError{f, "bad RRSIG Typecovered", l}
 	} else {
 		rr.TypeCovered = t
@@ -1161,7 +1161,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok = Str_rr[strings.ToUpper(l.token)]; !ok {
+			if k, ok = StringToType[strings.ToUpper(l.token)]; !ok {
 				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
 				}
@@ -1223,7 +1223,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok = Str_rr[strings.ToUpper(l.token)]; !ok {
+			if k, ok = StringToType[strings.ToUpper(l.token)]; !ok {
 				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
 				}
@@ -1422,7 +1422,7 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
 			return nil, &ParseError{f, "bad DS Algorithm", l}
 		} else {
 			rr.Algorithm = i
@@ -1457,7 +1457,7 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
 			return nil, &ParseError{f, "bad CDS Algorithm", l}
 		} else {
 			rr.Algorithm = i
@@ -1492,7 +1492,7 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
 			return nil, &ParseError{f, "bad DLV Algorithm", l}
 		} else {
 			rr.Algorithm = i
@@ -1527,7 +1527,7 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := Str_alg[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
 			return nil, &ParseError{f, "bad TA Algorithm", l}
 		} else {
 			rr.Algorithm = i

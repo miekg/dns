@@ -701,7 +701,7 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 }
 
 // Map for algorithm names.
-var Alg_str = map[uint8]string{
+var AlgorithmToString = map[uint8]string{
 	RSAMD5:           "RSAMD5",
 	DH:               "DH",
 	DSA:              "DSA",
@@ -719,4 +719,4 @@ var Alg_str = map[uint8]string{
 }
 
 // Map of algorithm strings.
-var Str_alg = reverseInt8(Alg_str)
+var StringToAlgorithm = reverseInt8(AlgorithmToString)

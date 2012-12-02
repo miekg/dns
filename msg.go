@@ -78,7 +78,7 @@ type Msg struct {
 }
 
 // Map of strings for each RR wire type.
-var Rr_str = map[uint16]string{
+var TypeToString = map[uint16]string{
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
 	TypeTLSA:       "TSLA",
@@ -141,17 +141,17 @@ var Rr_str = map[uint16]string{
 }
 
 // Reverse, needed for string parsing.
-var Str_rr = reverseInt16(Rr_str)
-var Str_class = reverseInt16(Class_str)
+var StringToType = reverseInt16(TypeToString)
+var StringToClass = reverseInt16(ClassToString)
 
 // Map of opcodes strings.
-var Str_opcode = reverseInt(Opcode_str)
+var StringToOpcode = reverseInt(OpcodeToString)
 
 // Map of rcodes strings.
-var Str_rcode = reverseInt(Rcode_str)
+var StringToRcode = reverseInt(RcodeToString)
 
 // Map of strings for each CLASS wire type.
-var Class_str = map[uint16]string{
+var ClassToString = map[uint16]string{
 	ClassINET:   "IN",
 	ClassCSNET:  "CS",
 	ClassCHAOS:  "CH",
@@ -161,7 +161,7 @@ var Class_str = map[uint16]string{
 }
 
 // Map of strings for opcodes.
-var Opcode_str = map[int]string{
+var OpcodeToString = map[int]string{
 	OpcodeQuery:  "QUERY",
 	OpcodeIQuery: "IQUERY",
 	OpcodeStatus: "STATUS",
@@ -170,7 +170,7 @@ var Opcode_str = map[int]string{
 }
 
 // Map of strings for rcodes.
-var Rcode_str = map[int]string{
+var RcodeToString = map[int]string{
 	RcodeSuccess:        "NOERROR",
 	RcodeFormatError:    "FORMERR",
 	RcodeServerFailure:  "SERVFAIL",
@@ -1130,8 +1130,8 @@ func (h *MsgHdr) String() string {
 		return "<nil> MsgHdr"
 	}
 
-	s := ";; opcode: " + Opcode_str[h.Opcode]
-	s += ", status: " + Rcode_str[h.Rcode]
+	s := ";; opcode: " + OpcodeToString[h.Opcode]
+	s += ", status: " + RcodeToString[h.Rcode]
 	s += ", id: " + strconv.Itoa(int(h.Id)) + "\n"
 
 	s += ";; flags:"

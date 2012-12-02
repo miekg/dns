@@ -162,14 +162,14 @@ func (h *RR_Header) String() string {
 	}
 	s = s + strconv.FormatInt(int64(h.Ttl), 10) + "\t"
 
-	if _, ok := Class_str[h.Class]; ok {
-		s += Class_str[h.Class] + "\t"
+	if _, ok := ClassToString[h.Class]; ok {
+		s += ClassToString[h.Class] + "\t"
 	} else {
 		s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
 	}
 
-	if _, ok := Rr_str[h.Rrtype]; ok {
-		s += Rr_str[h.Rrtype] + "\t"
+	if _, ok := TypeToString[h.Rrtype]; ok {
+		s += TypeToString[h.Rrtype] + "\t"
 	} else {
 		s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
 	}

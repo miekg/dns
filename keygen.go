@@ -93,7 +93,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
-		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
 		modulus := unpackBase64(t.PublicKey.N.Bytes())
 		e := big.NewInt(int64(t.PublicKey.E))
 		publicExponent := unpackBase64(e.Bytes())
@@ -125,13 +125,13 @@ func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Exponent2: " + exponent2 + "\n" +
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
-		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
 		private := unpackBase64(t.D.Bytes())
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"
 	case *dsa.PrivateKey:
-		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + Alg_str[r.Algorithm] + ")"
+		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
 		prime := unpackBase64(t.PublicKey.Parameters.P.Bytes())
 		subprime := unpackBase64(t.PublicKey.Parameters.Q.Bytes())
 		base := unpackBase64(t.PublicKey.Parameters.G.Bytes())

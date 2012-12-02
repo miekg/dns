@@ -489,7 +489,7 @@ func zlexer(s *scan, c chan lex) {
 				l.token = string(str[:stri])
 
 				if !rrtype {
-					if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+					if t, ok := StringToType[strings.ToUpper(l.token)]; ok {
 						l.value = _RRTYPE
 						l.torc = t
 						rrtype = true
@@ -507,7 +507,7 @@ func zlexer(s *scan, c chan lex) {
 							}
 						}
 					}
-					if t, ok := Str_class[strings.ToUpper(l.token)]; ok {
+					if t, ok := StringToClass[strings.ToUpper(l.token)]; ok {
 						l.value = _CLASS
 						l.torc = t
 					} else {
@@ -602,7 +602,7 @@ func zlexer(s *scan, c chan lex) {
 					l.value = _STRING
 					l.token = string(str[:stri])
 					if !rrtype {
-						if t, ok := Str_rr[strings.ToUpper(l.token)]; ok {
+						if t, ok := StringToType[strings.ToUpper(l.token)]; ok {
 							l.value = _RRTYPE
 							l.torc = t
 							rrtype = true
