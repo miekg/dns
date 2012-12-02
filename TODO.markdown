@@ -8,6 +8,8 @@
     * verify
 * Use BIND10 memory efficient zone structure?
 * copy srv/mx sorting from base library
+* allow multiple edns0 options to exist in the record when converting
+  from/to wireformat
 
 ## Nice to have
 

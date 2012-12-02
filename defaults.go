@@ -80,7 +80,7 @@ func (dns *Msg) SetUpdate(z string) *Msg {
 	return dns
 }
 
-// SetIxfr creates dns msg suitable for requesting an ixfr.
+// SetIxfr creates dns.Msg for requesting an IXFR.
 func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	dns.Id = Id()
 	dns.Question = make([]Question, 1)
@@ -93,7 +93,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	return dns
 }
 
-// SetAxfr creates dns msg suitable for requesting an axfr.
+// SetAxfr creates dns.Msg for requesting an AXFR.
 func (dns *Msg) SetAxfr(z string) *Msg {
 	dns.Id = Id()
 	dns.Question = make([]Question, 1)

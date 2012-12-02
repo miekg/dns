@@ -25,7 +25,7 @@
 //	m := new(dns.Msg)
 //	m.SetAxfr("miek.nl.") 
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
-//	t, err := c.XfrReceive(m, "85.223.71.124:53")
+//	t, err := c.TransferIn(m, "85.223.71.124:53")
 //	for r := range t { /* ... */ }
 //
 // You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
