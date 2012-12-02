@@ -411,7 +411,7 @@ func (z *Zone) isSubDomain(child string) bool {
 //
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
-//	// A signle PublicKey/PrivateKey have been read from disk.
+//	// A single PublicKey/PrivateKey have been read from disk.
 //	e := z.Sign(map[*dns.RR_DNSKEY]dns.PrivateKey{pubkey.(*dns.RR_DNSKEY): privkey}, nil)
 //	if e != nil {
 //		// signing error
@@ -493,7 +493,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // change. The caller must take care that the zone itself is also locked for writing.
 // For a more complete description see zone.Sign. 
 // Note: as this method has no (direct)
-// access to the zone's SOA record, the SOA's Minttl value should be set in signatureConfig.
+// access to the zone's SOA record, the SOA's Minttl value should be set in *config.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.Lock()
 	defer node.Unlock()
