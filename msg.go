@@ -48,13 +48,6 @@ var (
 	ErrAuth        error = &Error{Err: "bad authentication"}
 	ErrSoa         error = &Error{Err: "no SOA"}
 	ErrRRset       error = &Error{Err: "bad rrset"}
-	ErrDenialNsec3 error = &Error{Err: "no NSEC3 records"}
-	ErrDenialCe    error = &Error{Err: "no matching closest encloser found"}
-	ErrDenialNc    error = &Error{Err: "no covering NSEC3 found for next closer"}
-	ErrDenialSo    error = &Error{Err: "no covering NSEC3 found for source of synthesis"}
-	ErrDenialBit   error = &Error{Err: "type not denied in NSEC3 bitmap"}
-	ErrDenialWc    error = &Error{Err: "wildcard exist, but closest encloser is denied"}
-	ErrDenialHdr   error = &Error{Err: "message rcode conflicts with message content"}
 )
 
 // A manually-unpacked version of (id, bits).
