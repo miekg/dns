@@ -8,19 +8,16 @@ import (
 	"strings"
 )
 
-// Only used when debugging the parser itself.
-var _DEBUG = false
+var _DEBUG = false // Only used when debugging the parser itself.  
 
-// Complete unsure about the correctness of this value?
-// Large blobs of base64 code might get longer than this....
-const maxTok = 2048
+const maxTok = 2048 // Largest token we can return.
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
-// * Make each RR fit on one line (NEWLINE is send as last)
+// * Make each RR fit on one line (_NEWLINE is send as last)
 // * Handle comments: ;
-// * Handle braces.
+// * Handle braces - anywhere.
 const (
 	// Zonefile
 	_EOF = iota
@@ -44,7 +41,7 @@ const (
 	_EXPECT_OWNER_BL       // Whitespace after the ownername
 	_EXPECT_ANY            // Expect rrtype, ttl or class
 	_EXPECT_ANY_NOCLASS    // Expect rrtype or ttl
-	_EXPECT_ANY_NOCLASS_BL // The Whitespace after _EXPECT_ANY_NOCLASS
+	_EXPECT_ANY_NOCLASS_BL // The whitespace after _EXPECT_ANY_NOCLASS
 	_EXPECT_ANY_NOTTL      // Expect rrtype or class
 	_EXPECT_ANY_NOTTL_BL   // Whitespace after _EXPECT_ANY_NOTTL
 	_EXPECT_RRTYPE         // Expect rrtype
@@ -78,12 +75,12 @@ func (e *ParseError) Error() (s string) {
 }
 
 type lex struct {
-	token  string // Text of the token
-	err    bool   // When true, token text has lexer error 
-	value  uint8  // Value: _STRING, _BLANK, etc.
-	line   int    // Line in the file
-	column int    // Column in the file
-	torc   uint16 // Type or class as parsed in the lexer, we only need to look this up in the grammar
+	token  string // text of the token
+	err    bool   // when true, token text has lexer error 
+	value  uint8  // value: _STRING, _BLANK, etc.
+	line   int    // line in the file
+	column int    // column in the file
+	torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
 }
 
 // Tokens are returned when a zone file is parsed.
