@@ -77,7 +77,7 @@ func main() {
 				os.Exit(1)
 			}
 			if ra.Rcode != dns.RcodeSuccess {
-				fmt.Printf("Error getting the IPv4 address of %s: %s\n", nameserver, dns.Rcode_str[ra.Rcode])
+				fmt.Printf("Error getting the IPv4 address of %s: %s\n", nameserver, dns.RcodeToString[ra.Rcode])
 				os.Exit(1)
 			}
 			for _, ansa := range ra.Answer {
@@ -92,7 +92,7 @@ func main() {
 				os.Exit(1)
 			}
 			if raaaa.Rcode != dns.RcodeSuccess {
-				fmt.Printf("Error getting the IPv6 address of %s: %s\n", nameserver, dns.Rcode_str[raaaa.Rcode])
+				fmt.Printf("Error getting the IPv6 address of %s: %s\n", nameserver, dns.RcodeToString[raaaa.Rcode])
 				os.Exit(1)
 			}
 			for _, ansaaaa := range raaaa.Answer {
@@ -123,7 +123,7 @@ func main() {
 				}
 				if soa.Rcode != dns.RcodeSuccess {
 					success = false
-					fmt.Printf("%s (%s) ", ips, dns.Rcode_str[soa.Rcode])
+					fmt.Printf("%s (%s) ", ips, dns.RcodeToString[soa.Rcode])
 					goto Next
 				}
 				if len(soa.Answer) == 0 { // May happen if the server is a recursor, not authoritative, since we query with RD=0 

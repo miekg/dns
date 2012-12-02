@@ -88,9 +88,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	switch r.Question[0].Qtype {
 	case dns.TypeAXFR:
-		c := make(chan *dns.XfrToken)
+		c := make(chan *dns.Envelope)
 		var e *error
-		if err := dns.XfrSend(w, r, c, e); err != nil {
+		if err := dns.TransferOut(w, r, c, e); err != nil {
 			close(c)
 			return
 		}
@@ -100,7 +100,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 			7200 
 			604800 
 			3600)`)
-		c <- &dns.XfrToken{RR: []dns.RR{soa, t, rr, soa}}
+		c <- &dns.Envelope{RR: []dns.RR{soa, t, rr, soa}}
 		close(c)
 		w.Hijack()
 		// w.Close() // Client closes

@@ -78,12 +78,12 @@ Flags:
 		}
 		// First class, then type, to make ANY queries possible
 		// And if it looks like type, it is a type
-		if k, ok := dns.Str_rr[strings.ToUpper(flag.Arg(i))]; ok {
+		if k, ok := dns.StringToType[strings.ToUpper(flag.Arg(i))]; ok {
 			qtype = k
 			continue Flags
 		}
 		// If it looks like a class, it is a class
-		if k, ok := dns.Str_class[strings.ToUpper(flag.Arg(i))]; ok {
+		if k, ok := dns.StringToClass[strings.ToUpper(flag.Arg(i))]; ok {
 			qclass = k
 			continue Flags
 		}
@@ -344,7 +344,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 
 // shorten RRSIG to "miek.nl RRSIG(NS)"
 func shortSig(sig *dns.RR_RRSIG) string {
-	return sig.Header().Name + " RRSIG(" + dns.Rr_str[sig.TypeCovered] + ")"
+	return sig.Header().Name + " RRSIG(" + dns.TypeToString[sig.TypeCovered] + ")"
 }
 
 // Walk trough message and short Key data and Sig data
@@ -379,7 +379,7 @@ func shortRR(r dns.RR) dns.RR {
 }
 
 func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
-	if t, e := c.XfrReceive(m, nameserver); e == nil {
+	if t, e := c.TransferIn(m, nameserver); e == nil {
 		for r := range t {
 			if r.Error == nil {
 				for _, rr := range r.RR {
