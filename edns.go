@@ -5,7 +5,7 @@
 // Basic use pattern for creating an (empty) OPT RR:
 //
 //	o := new(dns.RR_OPT)
-//	o.Hdr.Name = "."
+//	o.Hdr.Name = "." // MUST be the root zone, per definition.
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
 // The rdata of an OPT RR consists out of a slice of EDNS0 interfaces. Currently

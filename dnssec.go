@@ -3,7 +3,7 @@
 // DNSSEC
 //
 // DNSSEC (DNS Security Extension) adds a layer of security to the DNS. It
-// uses public key cryptography to securely sign resource records. The
+// uses public key cryptography to sign resource records. The
 // public keys are stored in DNSKEY records and the signatures in RRSIG records.
 //
 // Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK) bit
@@ -14,7 +14,7 @@
 //
 // Signature generation, signature verification and key generation are all supported.
 // Writing a DNSSEC validating resolver is hard, if you need something like that you
-// might want to use the unbound wrapper found at github.com/miekg/unbound .
+// might want to use the Unbound wrapper found at github.com/miekg/unbound .
 package dns
 
 import (
