@@ -9,7 +9,7 @@ type XfrMsg struct {
 // XfrReceive performs a [AI]xfr request (depends on the message's Qtype). It returns
 // a channel of *XfrMsg on which the replies from the server are sent. At the end of
 // the transfer the channel is closed.
-// It panics if the Qtype does not equal TypeAXFR or TypeIXFR. The messages are TSIG checked if
+// The messages are TSIG checked if
 // needed, no other post-processing is performed. The caller must dissect the returned
 // messages.
 //
