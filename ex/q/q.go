@@ -182,6 +182,13 @@ Flags:
 	}
 
 	for _, v := range qname {
+		if strings.HasPrefix(v, "http://") {
+			v = v[7:]
+			if v[len(v)-1] == '/' {
+				v = v[:len(v)-1]
+			}
+		}
+
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
 		if *query {
