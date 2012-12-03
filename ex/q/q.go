@@ -27,6 +27,7 @@ func main() {
 	dnssec := flag.Bool("dnssec", false, "request DNSSEC records")
 	query := flag.Bool("question", false, "show question")
 	check := flag.Bool("check", false, "check internal DNSSEC consistency")
+	raw := flag.Bool("raw", false, "do not strip 'http://' from the qname")
 	six := flag.Bool("6", false, "use IPv6 only")
 	four := flag.Bool("4", false, "use IPv4 only")
 	anchor := flag.String("anchor", "", "use the DNSKEY in this file for interal DNSSEC consistency")
@@ -182,7 +183,7 @@ Flags:
 	}
 
 	for _, v := range qname {
-		if strings.HasPrefix(v, "http://") {
+		if !*raw && strings.HasPrefix(v, "http://") {
 			v = v[7:]
 			if v[len(v)-1] == '/' {
 				v = v[:len(v)-1]
