@@ -94,6 +94,7 @@ type ZoneData struct {
 	Name       string                 // Domain name for this node
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
+	// moet een map[uint16]map[uint16]*RR_RRSIG worden, typeocvert + keyid
 	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
 	*sync.RWMutex
 }
@@ -408,6 +409,7 @@ func (z *Zone) isSubDomain(child string) bool {
 // describes how the zone must be signed and if the SEP flag (for KSK)
 // should be honored. If signatures approach their expriration time, they
 // are refreshed with the current set of keys. Valid signatures are left alone.
+// Valid signatures from unknown keys are dropped.
 //
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
@@ -417,10 +419,8 @@ func (z *Zone) isSubDomain(child string) bool {
 //		// signing error
 //	}
 //	// Admire your signed zone...
-//
-// TODO(mg): resigning is not implemented
-// TODO(mg): NSEC3 is not implemented
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
+	// TODO(mg): NSEC3 is not implemented
 	z.Lock()
 	defer z.Unlock()
 	if config == nil {
@@ -492,66 +492,37 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // during the execution. It is important that the nodes' next record does not
 // change. The caller must take care that the zone itself is also locked for writing.
 // For a more complete description see zone.Sign. 
-// Note: as this method has no (direct)
+// Note, because this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in *config.
 func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.Lock()
 	defer node.Unlock()
 
-	nsec := new(RR_NSEC)
-	nsec.Hdr.Rrtype = TypeNSEC
-	nsec.Hdr.Ttl = config.Minttl // SOA's minimum value
-	nsec.Hdr.Name = node.Name
-	nsec.NextDomain = next.Name // Only thing I need from next, actually
-	nsec.Hdr.Class = ClassINET
-
-	// Still need to add NSEC + RRSIG for this data, there might also be a DS record
-	if node.NonAuth == true {
-		for t, _ := range node.RR {
-			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
-		}
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
-		sort.Sort(uint16Slice(nsec.TypeBitMap))
-		node.RR[TypeNSEC] = []RR{nsec}
-		now := time.Now().UTC()
-		for k, p := range keys {
-			if config.HonorSepFlag && k.Flags&SEP == SEP {
-				// only sign keys with SEP keys
-				continue
-			}
-			// which sigs to check??
-
-			s := new(RR_RRSIG)
-			s.SignerName = k.Hdr.Name
-			s.Hdr.Ttl = k.Hdr.Ttl
-			s.Algorithm = k.Algorithm
-			s.KeyTag = keytags[k]
-			s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
-			s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
-			e := s.Sign(p, []RR{nsec})
-			if e != nil {
-				return e
-			}
-			node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
-			// DS
-			if ds, ok := node.RR[TypeDS]; ok {
-				s := new(RR_RRSIG)
-				s.SignerName = k.Hdr.Name
-				s.Hdr.Ttl = k.Hdr.Ttl
-				s.Algorithm = k.Algorithm
-				s.KeyTag = keytags[k]
-				s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
-				s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
-				e := s.Sign(p, ds)
-				if e != nil {
-					return e
-				}
-				node.Signatures[TypeDS] = append(node.Signatures[TypeDS], s)
-			}
-		}
-		return nil
+	// NSEC checks: is it already there, check consitency or add a new one.
+	bitmap := make([]uint16, 0)
+	for t, _ := range node.RR {
+		bitmap = append(bitmap, t)
 	}
+	bitmap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
+	bitmap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
+	sort.Sort(uint16Slice(bitmap))
+
+	if v, ok := node.RR[TypeNSEC]; ok {
+		// There is an NSEC, check if it still points to the correct next node.
+		// Secondly the type bitmap may have chagned.
+		if v.(*RR_NSEC).NextDomain != next.Name || v.(*RR_NSEC).TypeBitMap != bitmap {
+			v.(*RR_NSEC).NextDomain = next.Name
+			v.(*RR_NSEC).TypeBitMap = bitmap
+			node.Signatures[TypeNSEC] = nil // drop all sigs
+		}
+	} else {
+		// No NSEC at all, create one
+		nsec := &RR_NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.MinTtl, 0}, NextDomain: next.Name}
+		nsec.TypeBitMap = bitmap
+		node.RR[TypeNSEC] = []{nsec}
+	}
+
+	// Walk all keys, and check the sigs
 	now := time.Now().UTC()
 	for k, p := range keys {
 		for t, rrset := range node.RR {
@@ -561,42 +532,47 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 					continue
 				}
 			}
-
-			s := new(RR_RRSIG)
-			s.SignerName = k.Hdr.Name
-			s.Hdr.Ttl = k.Hdr.Ttl
-			s.Hdr.Class = ClassINET
-			s.Algorithm = k.Algorithm
-			s.KeyTag = keytags[k]
-			s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
-			s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
-			e := s.Sign(p, rrset)
-			if e != nil {
-				return e
+			if node.NonAuth == true {
+				_, ok1 := rrset[0].(*RR_DS)
+				_, ok2 := rrset[0].(*RR_NSEC)
+				if !ok1 && !ok2 {
+					continue
+				}
 			}
-			node.Signatures[t] = append(node.Signatures[t], s)
-			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
+
+			s = signatures(node, t, keytags[k])
+			if s == nil || now.Sub(uint32ToTime(s.Expiration)) < config.Refresh { // no there, are almost expired
+				s := new(RR_RRSIG)
+				s.SignerName = k.Hdr.Name
+				s.Hdr.Ttl = k.Hdr.Ttl
+				s.Hdr.Class = ClassINET
+				s.Algorithm = k.Algorithm
+				s.KeyTag = keytags[k]
+				s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
+				s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
+				e := s.Sign(p, rrset)
+				if e != nil {
+					return e
+				}
+				node.Signatures[t] = append(node.Signatures[t], s)
+			}
 		}
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
-		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
-		sort.Sort(uint16Slice(nsec.TypeBitMap))
-		node.RR[TypeNSEC] = []RR{nsec}
-		// NSEC
-		s := new(RR_RRSIG)
-		s.SignerName = k.Hdr.Name
-		s.Hdr.Ttl = k.Hdr.Ttl
-		s.Algorithm = k.Algorithm
-		s.KeyTag = keytags[k]
-		s.Inception = timeToUint32(now.Add(-config.InceptionOffset))
-		s.Expiration = timeToUint32(now.Add(jitterDuration(config.Jitter)).Add(config.Validity))
-		e := s.Sign(p, []RR{nsec})
-		if e != nil {
-			return e
+	}
+	// No cross check, if all sigs are made by a known key
+	return nil
+}
+
+// Return the signature for the typecovered and make with the keytag
+func signatures(z *ZoneData, typecovered, keytag uint16) *RR_RRSIG {
+	for _, s := range z.Signatures[typecovered] {
+		if s.KeyTag == keytag {
+			return s
 		}
-		node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 	}
 	return nil
 }
+
+
 
 // timeToUint32 translates a time.Time to a 32 bit value which                      
 // can be used as the RRSIG's inception or expiration times.
