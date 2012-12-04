@@ -103,7 +103,7 @@ func NewZoneData(s string) *ZoneData {
 	zd := new(ZoneData)
 	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
-	zd.Signatures = make(map[uint16]map[uint16]*RR_RRSIG)
+	zd.Signatures = make(map[uint16](make map[uint16]*RR_RRSIG))
 	zd.RWMutex = new(sync.RWMutex)
 	return zd
 }
@@ -262,6 +262,7 @@ func (z *Zone) Remove(r RR) error {
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		delete(zd.Value.(*ZoneData).Signatures[r.(*RR_RRSIG).TypeCovered], r.(*RR_RRSIG).KeyTag)
+		// TODO(mg): delete entire node
 	default:
 		for i, zr := range zd.Value.(*ZoneData).RR[t] {
 			// Matching RR
