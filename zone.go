@@ -503,23 +503,25 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	for t, _ := range node.RR {
 		bitmap = append(bitmap, t)
 	}
-	bitmap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too
-	bitmap = append(nsec.TypeBitMap, TypeNSEC)  // Add me too!
+	bitmap = append(bitmap, TypeRRSIG) // Add sig too
+	bitmap = append(bitmap, TypeNSEC)  // Add me too!
 	sort.Sort(uint16Slice(bitmap))
 
 	if v, ok := node.RR[TypeNSEC]; ok {
 		// There is an NSEC, check if it still points to the correct next node.
-		// Secondly the type bitmap may have chagned.
-		if v.(*RR_NSEC).NextDomain != next.Name || v.(*RR_NSEC).TypeBitMap != bitmap {
-			v.(*RR_NSEC).NextDomain = next.Name
-			v.(*RR_NSEC).TypeBitMap = bitmap
+		// Secondly the type bitmap may have changed.
+		// TODO(mg): actually checked the types in the map
+		if v[0].(*RR_NSEC).NextDomain != next.Name || len(v[0].(*RR_NSEC).TypeBitMap) != len(bitmap) {
+			v[0].(*RR_NSEC).NextDomain = next.Name
+			v[0].(*RR_NSEC).TypeBitMap = bitmap
 			node.Signatures[TypeNSEC] = nil // drop all sigs
 		}
 	} else {
 		// No NSEC at all, create one
-		nsec := &RR_NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.MinTtl, 0}, NextDomain: next.Name}
+		nsec := &RR_NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next.Name}
 		nsec.TypeBitMap = bitmap
-		node.RR[TypeNSEC] = []{nsec}
+		node.RR[TypeNSEC] = []RR{nsec}
+		node.Signatures[TypeNSEC] = nil // drop all sigs (just in case)
 	}
 
 	// Walk all keys, and check the sigs
@@ -540,7 +542,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				}
 			}
 
-			s = signatures(node, t, keytags[k])
+			s := signatures(node, t, keytags[k])
 			if s == nil || now.Sub(uint32ToTime(s.Expiration)) < config.Refresh { // no there, are almost expired
 				s := new(RR_RRSIG)
 				s.SignerName = k.Hdr.Name
