@@ -497,8 +497,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	defer node.Unlock()
 
 	bitmap := make([]uint16, 0)
-	r := false
-	n := false
+	r, n := false, false
 	for t, _ := range node.RR {
 		if t == TypeRRSIG {
 			r = true
@@ -629,8 +628,7 @@ func jitterDuration(d time.Duration) time.Duration {
 }
 
 // compareLabels behaves exactly as CompareLabels expect that l1 is already
-// a tokenize (in labels) version of the domain name. This safe memory and is
-// faster
+// a tokenize (in labels) version of the domain name. This saves memory and is faster.
 func compareLabelsSlice(l1 []string, s2 string) (n int) {
 	l2 := SplitLabels(s2)
 
