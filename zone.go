@@ -31,8 +31,6 @@ func (p uint16Slice) Len() int           { return len(p) }
 func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-type signData struct{ node, next *ZoneData }
-
 // SignatureConfig holds the parameters for zone (re)signing. This 
 // is copied from OpenDNSSEC. See:
 // https://wiki.opendnssec.org/display/DOCS/kasp.xml
