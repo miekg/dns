@@ -475,7 +475,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 			if !ok {
 				return
 			}
-			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData), keys, keytags, config)
+			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData).Name, keys, keytags, config)
 			if e != nil {
 				err <- e
 				return
@@ -490,7 +490,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // For a more complete description see zone.Sign. 
 // Note, because this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in *config.
-func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
+func (node *ZoneData) Sign(next string, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
 	node.Lock()
 	defer node.Unlock()
 
@@ -517,14 +517,14 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		// There is an NSEC, check if it still points to the correct next node.
 		// Secondly the type bitmap may have changed.
 		// TODO(mg): actually checked the types in the map
-		if v[0].(*RR_NSEC).NextDomain != next.Name || len(v[0].(*RR_NSEC).TypeBitMap) != len(bitmap) {
-			v[0].(*RR_NSEC).NextDomain = next.Name
+		if v[0].(*RR_NSEC).NextDomain != next || len(v[0].(*RR_NSEC).TypeBitMap) != len(bitmap) {
+			v[0].(*RR_NSEC).NextDomain = next
 			v[0].(*RR_NSEC).TypeBitMap = bitmap
 			node.Signatures[TypeNSEC] = nil // drop all sigs
 		}
 	} else {
 		// No NSEC at all, create one
-		nsec := &RR_NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next.Name}
+		nsec := &RR_NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next}
 		nsec.TypeBitMap = bitmap
 		node.RR[TypeNSEC] = []RR{nsec}
 		node.Signatures[TypeNSEC] = nil // drop all sigs (just in case)
