@@ -403,13 +403,12 @@ func (z *Zone) isSubDomain(child string) bool {
 }
 
 // Sign (re)signs the zone z with the given keys. 
-// NSEC(3)s and RRSIGs are added as needed. 
+// NSECs and RRSIGs are added as needed. 
 // The public keys themselves are not added to the zone. 
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
 // should be honored. If signatures approach their expriration time, they
 // are refreshed with the current set of keys. Valid signatures are left alone.
-// Valid signatures from unknown keys are dropped.
 //
 // Basic use pattern for signing a zone with the default SignatureConfig:
 //
@@ -420,7 +419,6 @@ func (z *Zone) isSubDomain(child string) bool {
 //	}
 //	// Admire your signed zone...
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
-	// TODO(mg): NSEC3 is not implemented
 	z.Lock()
 	defer z.Unlock()
 	if config == nil {
@@ -542,7 +540,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				}
 			}
 
-			s := signatures(node, t, keytags[k])
+			j, s := signatures(node.Signatures[t], keytags[k])
 			if s == nil || now.Sub(uint32ToTime(s.Expiration)) < config.Refresh { // no there, are almost expired
 				s := new(RR_RRSIG)
 				s.SignerName = k.Hdr.Name
@@ -556,22 +554,32 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				if e != nil {
 					return e
 				}
-				node.Signatures[t] = append(node.Signatures[t], s)
+				node.Signatures[t][j] = s		// replace
 			}
 		}
 	}
-	// No cross check, if all sigs are made by a known key
-	return nil
-}
-
-// Return the signature for the typecovered and make with the keytag
-func signatures(z *ZoneData, typecovered, keytag uint16) *RR_RRSIG {
-	for _, s := range z.Signatures[typecovered] {
-		if s.KeyTag == keytag {
-			return s
+	// All signatures have been made are refreshed. Now check the all signatures for expiraton
+	for i, s := range node.Signatures {
+		// s is another slice
+		for i1, s1 := range s {
+			if now.Sub(uint32ToTime(s1.Expiration)) < config.Refresh {
+				// can only happen if made with an unknown key, drop the sig
+				node.Signatures[i] = append(node.Signatures[i][:i1], node.Signatures[i][i1+1:]...)
+			}
 		}
 	}
 	return nil
+}
+
+// Return the signature for the typecovered and make with the keytag. It
+// returns the index of the RRSIG and the RRSIG itself.
+func signatures(signatures []*RR_RRSIG, keytag uint16) (int, *RR_RRSIG) {
+	for i, s := range signatures {
+		if s.KeyTag == keytag {
+			return i, s
+		}
+	}
+	return 0, nil
 }
 
 
