@@ -563,7 +563,6 @@ func (node *ZoneData) Sign(next string, keys map[*RR_DNSKEY]PrivateKey, keytags 
 					return e
 				}
 				if q != nil {
-					println(t, j)
 					node.Signatures[t][j] = s // replace the signature
 				} else {
 					node.Signatures[t] = append(node.Signatures[t], s) // add it
