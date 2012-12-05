@@ -95,7 +95,7 @@ type ZoneData struct {
 	RR         map[uint16][]RR        // Map of the RR type to the RR
 	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	// moet een map[uint16]map[uint16]*RR_RRSIG worden, typeocvert + keyid
-	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
+	NonAuth bool // Always false, except for NSsets that differ from z.Origin
 	*sync.RWMutex
 }
 
@@ -540,8 +540,8 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				}
 			}
 
-			j, s := signatures(node.Signatures[t], keytags[k])
-			if s == nil || now.Sub(uint32ToTime(s.Expiration)) < config.Refresh { // no there, are almost expired
+			j, q := signatures(node.Signatures[t], keytags[k])
+			if q == nil || now.Sub(uint32ToTime(q.Expiration)) < config.Refresh { // no there, are almost expired
 				s := new(RR_RRSIG)
 				s.SignerName = k.Hdr.Name
 				s.Hdr.Ttl = k.Hdr.Ttl
@@ -554,7 +554,12 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				if e != nil {
 					return e
 				}
-				node.Signatures[t][j] = s		// replace
+				if q != nil {
+					println(t, j)
+					node.Signatures[t][j] = s // replace the signature
+				} else {
+					node.Signatures[t] = append(node.Signatures[t], s) // add it
+				}
 			}
 		}
 	}
@@ -581,8 +586,6 @@ func signatures(signatures []*RR_RRSIG, keytag uint16) (int, *RR_RRSIG) {
 	}
 	return 0, nil
 }
-
-
 
 // timeToUint32 translates a time.Time to a 32 bit value which                      
 // can be used as the RRSIG's inception or expiration times.
