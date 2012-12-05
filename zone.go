@@ -496,13 +496,24 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	node.Lock()
 	defer node.Unlock()
 
-	// NSEC checks: is it already there, check consitency or add a new one.
 	bitmap := make([]uint16, 0)
+	r := false
+	n := false
 	for t, _ := range node.RR {
+		if t == TypeRRSIG {
+			r = true
+		}
+		if t == TypeNSEC {
+			n = true
+		}
 		bitmap = append(bitmap, t)
 	}
-	bitmap = append(bitmap, TypeRRSIG) // Add sig too
-	bitmap = append(bitmap, TypeNSEC)  // Add me too!
+	if r == false {
+		bitmap = append(bitmap, TypeRRSIG) // Add sig too
+	}
+	if n == false {
+		bitmap = append(bitmap, TypeNSEC) // Add me too!
+	}
 	sort.Sort(uint16Slice(bitmap))
 
 	if v, ok := node.RR[TypeNSEC]; ok {
