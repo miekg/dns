@@ -91,10 +91,11 @@ func NewZone(origin string) *Zone {
 
 // ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
-	Name       string                          // Domain name for this node
-	RR         map[uint16][]RR                 // Map of the RR type to the RR
-	Signatures map[uint16]map[uint16]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered and keytag
-	NonAuth    bool                            // Always false, except for NSsets that differ from z.Origin
+	Name       string                 // Domain name for this node
+	RR         map[uint16][]RR        // Map of the RR type to the RR
+	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
+	// moet een map[uint16]map[uint16]*RR_RRSIG worden, typeocvert + keyid
+	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
 	*sync.RWMutex
 }
 
@@ -103,7 +104,7 @@ func NewZoneData(s string) *ZoneData {
 	zd := new(ZoneData)
 	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
-	zd.Signatures = make(map[uint16]map[uint16]*RR_RRSIG)
+	zd.Signatures = make(map[uint16][]*RR_RRSIG)
 	zd.RWMutex = new(sync.RWMutex)
 	return zd
 }
@@ -214,7 +215,8 @@ func (z *Zone) Insert(r RR) error {
 		zd := NewZoneData(r.Header().Name)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
-			zd.Signatures[r.(*RR_RRSIG).TypeCovered][r.(*RR_RRSIG).KeyTag] = r.(*RR_RRSIG)
+			sigtype := r.(*RR_RRSIG).TypeCovered
+			zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RR_RRSIG))
 		case TypeNS:
 			// NS records with other names than z.Origin are non-auth
 			if r.Header().Name != z.Origin {
@@ -233,7 +235,8 @@ func (z *Zone) Insert(r RR) error {
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		zd.Value.(*ZoneData).Signatures[r.(*RR_RRSIG).TypeCovered][r.(*RR_RRSIG).KeyTag] = r.(*RR_RRSIG)
+		sigtype := r.(*RR_RRSIG).TypeCovered
+		zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype], r.(*RR_RRSIG))
 	case TypeNS:
 		if r.Header().Name != z.Origin {
 			zd.Value.(*ZoneData).NonAuth = true
@@ -261,7 +264,19 @@ func (z *Zone) Remove(r RR) error {
 	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		delete(zd.Value.(*ZoneData).Signatures[r.(*RR_RRSIG).TypeCovered], r.(*RR_RRSIG).KeyTag)
+		sigtype := r.(*RR_RRSIG).TypeCovered
+		for i, zr := range zd.Value.(*ZoneData).Signatures[sigtype] {
+			if r == zr {
+				zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype][:i], zd.Value.(*ZoneData).Signatures[sigtype][i+1:]...)
+				remove = true
+			}
+		}
+		if remove {
+			// If every Signature of the covering type is removed, removed the type from the map
+			if len(zd.Value.(*ZoneData).Signatures[sigtype]) == 0 {
+				delete(zd.Value.(*ZoneData).Signatures, sigtype)
+			}
+		}
 	default:
 		for i, zr := range zd.Value.(*ZoneData).RR[t] {
 			// Matching RR
@@ -270,8 +285,11 @@ func (z *Zone) Remove(r RR) error {
 				remove = true
 			}
 		}
-		if len(zd.Value.(*ZoneData).RR[t]) == 0 {
-			delete(zd.Value.(*ZoneData).RR, t)
+		if remove {
+			// If every RR of this type is removed, removed the type from the map
+			if len(zd.Value.(*ZoneData).RR[t]) == 0 {
+				delete(zd.Value.(*ZoneData).RR, t)
+			}
 		}
 	}
 	if !remove {
@@ -538,7 +556,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 				if e != nil {
 					return e
 				}
-				node.Signatures[t][keytags[k]] = s
+				node.Signatures[t] = append(node.Signatures[t], s)
 			}
 		}
 	}
@@ -555,6 +573,8 @@ func signatures(z *ZoneData, typecovered, keytag uint16) *RR_RRSIG {
 	}
 	return nil
 }
+
+
 
 // timeToUint32 translates a time.Time to a 32 bit value which                      
 // can be used as the RRSIG's inception or expiration times.
