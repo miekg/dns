@@ -331,6 +331,7 @@ func UnpackDomainName(msg []byte, off int) (s string, off1 int, err error) {
 	s = ""
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
+	offstart := off
 Loop:
 	for {
 		if off >= lenmsg {
@@ -390,6 +391,9 @@ Loop:
 	}
 	if ptr == 0 {
 		off1 = off
+	}
+	if off1 - offstart > 255 {
+		return "", lenmsg, ErrDomain
 	}
 	return s, off1, nil
 }
