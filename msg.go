@@ -28,7 +28,7 @@ const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression poin
 
 var (
 	ErrFqdn      error = &Error{Err: "domain name must be fully qualified"}
-	ErrDomain    error = &Error{Err: "domain name must be 255 or less bytes long"}
+	ErrDomain    error = &Error{Err: "domain name must be 255 bytes or less long"}
 	ErrId        error = &Error{Err: "id mismatch"}
 	ErrRdata     error = &Error{Err: "bad rdata"}
 	ErrBuf       error = &Error{Err: "buffer size too small"}
@@ -208,6 +208,7 @@ var RcodeToString = map[int]string{
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
 	ls := len(s)
+	offstart := off
 	// If not fully qualified, error out
 	if ls == 0 || s[ls-1] != '.' {
 		return lenmsg, ErrFqdn
@@ -305,6 +306,9 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	msg[off] = 0
 End:
 	off++
+	if off - offstart > 255 {
+		return lenmsg, ErrDomain
+	}
 	return off, nil
 }
 
