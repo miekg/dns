@@ -20,7 +20,7 @@ type Zone struct {
 	olabels      []string  // origin cut up in labels, just to speed up the isSubDomain method
 	Wildcard     int       // Whenever we see a wildcard name, this is incremented
 	expired      bool      // Slave zone is expired
-	mtime        time.Time // When is the zone last modified
+	ModTime     time.Time // When is the zone last modified
 	*radix.Radix           // Zone data
 	*sync.RWMutex
 }
@@ -84,7 +84,7 @@ func NewZone(origin string) *Zone {
 	z.olabels = SplitLabels(z.Origin)
 	z.Radix = radix.New()
 	z.RWMutex = new(sync.RWMutex)
-	z.mtime = time.Now().UTC()
+	z.ModTime = time.Now().UTC()
 	return z
 }
 
@@ -203,7 +203,7 @@ func (z *Zone) Insert(r RR) error {
 
 	key := toRadixName(r.Header().Name)
 	z.Lock()
-	z.mtime = time.Now.UTC()
+	z.ModTime = time.Now().UTC()
 	zd, exact := z.Radix.Find(key)
 	if !exact {
 		// Not an exact match, so insert new value
@@ -253,7 +253,7 @@ func (z *Zone) Insert(r RR) error {
 func (z *Zone) Remove(r RR) error {
 	key := toRadixName(r.Header().Name)
 	z.Lock()
-	m.mtime = time.Now.UTC()
+	z.ModTime = time.Now().UTC()
 	zd, exact := z.Radix.Find(key)
 	if !exact {
 		defer z.Unlock()
@@ -315,7 +315,7 @@ func (z *Zone) Remove(r RR) error {
 func (z *Zone) RemoveName(s string) error {
 	key := toRadixName(s)
 	z.Lock()
-	z.mtime = time.Now().UTC()
+	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
 	z.Radix.Remove(key)
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
@@ -331,7 +331,7 @@ func (z *Zone) RemoveName(s string) error {
 // Typical use of this method is when processing a RemoveRRset dynamic update packet.
 func (z *Zone) RemoveRRset(s string, t uint16) error {
 	z.Lock()
-	z.mtime = time.Now().UTC()
+	z.ModTime = time.Now().UTC()
 	zd, exact := z.Radix.Find(toRadixName(s))
 	if !exact {
 		defer z.Unlock()
@@ -423,7 +423,7 @@ func (z *Zone) isSubDomain(child string) bool {
 //	// Admire your signed zone...
 func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
-	z.mtime = time.Now().UTC()
+	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
 	if config == nil {
 		config = DefaultSignatureConfig
