@@ -494,32 +494,43 @@ func (node *ZoneData) Sign(next string, keys map[*RR_DNSKEY]PrivateKey, keytags 
 	node.Lock()
 	defer node.Unlock()
 
-	bitmap := make([]uint16, 0)
-	r, n := false, false
+	n, nsecok := node.RR[TypeNSEC]
+	bitmap := []uint16{TypeNSEC, TypeRRSIG}
+	bitmapEqual := true
 	for t, _ := range node.RR {
-		if t == TypeRRSIG {
-			r = true
+		if nsecok {
+			// Check if the current (if available) nsec has these types too
+			// Grr O(n^2)
+			found := false
+			for _, v := range n[0].(*RR_NSEC).TypeBitMap {
+				if v == t {
+					found = true
+					break
+				}
+				if v > t { // It is sorted, so by now we haven't found it
+					found = false
+					break
+				}
+			}
+			if !found {
+				bitmapEqual = false
+			}
 		}
-		if t == TypeNSEC {
-			n = true
+		if t == TypeNSEC || t == TypeRRSIG {
+			continue
 		}
 		bitmap = append(bitmap, t)
-	}
-	if r == false {
-		bitmap = append(bitmap, TypeRRSIG) // Add sig too
-	}
-	if n == false {
-		bitmap = append(bitmap, TypeNSEC) // Add me too!
+
 	}
 	sort.Sort(uint16Slice(bitmap))
 
-	if v, ok := node.RR[TypeNSEC]; ok {
+	if nsecok {
 		// There is an NSEC, check if it still points to the correct next node.
 		// Secondly the type bitmap may have changed.
 		// TODO(mg): actually checked the types in the map
-		if v[0].(*RR_NSEC).NextDomain != next || len(v[0].(*RR_NSEC).TypeBitMap) != len(bitmap) {
-			v[0].(*RR_NSEC).NextDomain = next
-			v[0].(*RR_NSEC).TypeBitMap = bitmap
+		if n[0].(*RR_NSEC).NextDomain != next || !bitmapEqual {
+			n[0].(*RR_NSEC).NextDomain = next
+			n[0].(*RR_NSEC).TypeBitMap = bitmap
 			node.Signatures[TypeNSEC] = nil // drop all sigs
 		}
 	} else {
