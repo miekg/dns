@@ -932,7 +932,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			case `dns:"size-base32"`:
 				var size int
 				switch val.Type().Name() {
-				case "RR_NSEC3":
+				case "NSEC3":
 					switch val.Type().Field(i).Name {
 					case "NextDomain":
 						name := val.FieldByName("HashLength")
@@ -948,7 +948,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				// a "size" string, but it must be encoded in hex in the string
 				var size int
 				switch val.Type().Name() {
-				case "RR_NSEC3":
+				case "NSEC3":
 					switch val.Type().Field(i).Name {
 					case "Salt":
 						name := val.FieldByName("SaltLength")
@@ -957,7 +957,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 						name := val.FieldByName("HashLength")
 						size = int(name.Uint())
 					}
-				case "RR_TSIG":
+				case "TSIG":
 					switch val.Type().Field(i).Name {
 					case "MAC":
 						name := val.FieldByName("MACSize")
@@ -1085,7 +1085,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	// make an rr of that type and re-unpack.
 	mk, known := rr_mk[h.Rrtype]
 	if !known {
-		rr = new(RR_RFC3597)
+		rr = new(RFC3597)
 	} else {
 		rr = mk()
 	}
