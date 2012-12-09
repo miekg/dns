@@ -66,8 +66,8 @@ func main() {
 	numNS := 0
 	for _, ans := range r.Answer {
 		switch ans.(type) {
-		case *dns.RR_NS:
-			nameserver := ans.(*dns.RR_NS).Ns
+		case *dns.NS:
+			nameserver := ans.(*dns.NS).Ns
 			numNS += 1
 			ips := make([]string, 0)
 			fmt.Printf("%s : ", nameserver)
@@ -82,8 +82,8 @@ func main() {
 			}
 			for _, ansa := range ra.Answer {
 				switch ansa.(type) {
-				case *dns.RR_A:
-					ips = append(ips, ansa.(*dns.RR_A).A.String())
+				case *dns.A:
+					ips = append(ips, ansa.(*dns.A).A.String())
 				}
 			}
 			raaaa, err := localQuery(nameserver, dns.TypeAAAA)
@@ -97,8 +97,8 @@ func main() {
 			}
 			for _, ansaaaa := range raaaa.Answer {
 				switch ansaaaa.(type) {
-				case *dns.RR_AAAA:
-					ips = append(ips, ansaaaa.(*dns.RR_AAAA).AAAA.String())
+				case *dns.AAAA:
+					ips = append(ips, ansaaaa.(*dns.AAAA).AAAA.String())
 				}
 			}
 			if len(ips) == 0 {
@@ -133,10 +133,10 @@ func main() {
 				}
 				rsoa := soa.Answer[0]
 				switch rsoa.(type) {
-				case *dns.RR_SOA:
+				case *dns.SOA:
 					if soa.MsgHdr.Authoritative {
 						// TODO: test if all name servers have the same serial ?
-						fmt.Printf("%s (%d) ", ips, rsoa.(*dns.RR_SOA).Serial)
+						fmt.Printf("%s (%d) ", ips, rsoa.(*dns.SOA).Serial)
 					} else {
 						success = false
 						fmt.Printf("%s (not authoritative) ", ips)

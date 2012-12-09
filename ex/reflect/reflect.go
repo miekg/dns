@@ -73,16 +73,16 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if v4 {
-		rr = new(dns.RR_A)
-		rr.(*dns.RR_A).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
-		rr.(*dns.RR_A).A = a.To4()
+		rr = new(dns.A)
+		rr.(*dns.A).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
+		rr.(*dns.A).A = a.To4()
 	} else {
-		rr = new(dns.RR_AAAA)
-		rr.(*dns.RR_AAAA).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
-		rr.(*dns.RR_AAAA).AAAA = a
+		rr = new(dns.AAAA)
+		rr.(*dns.AAAA).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 0}
+		rr.(*dns.AAAA).AAAA = a
 	}
 
-	t := new(dns.RR_TXT)
+	t := new(dns.TXT)
 	t.Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 	t.Txt = []string{str}
 
@@ -117,7 +117,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 
 	if r.IsTsig() != nil {
 		if w.TsigStatus() == nil {
-			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.RR_TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
+			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
 		} else {
 			println("Status", w.TsigStatus().Error())
 		}
