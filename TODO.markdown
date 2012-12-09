@@ -1,10 +1,6 @@
 # TODO
 
 * Support for on-the-fly-signing
-* TLSA support
-    * create record from PEM(?) files
-    * sign
-    * verify
 * Use BIND10 memory efficient zone structure?
 * allow multiple edns0 options to exist in the record when converting
   from/to wireformat
