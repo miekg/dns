@@ -40,7 +40,7 @@ package dns
 func (u *Msg) NameUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-		u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
+		u.Answer[i] = &ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
 	}
 }
 
@@ -49,7 +49,7 @@ func (u *Msg) NameUsed(rr []RR) {
 func (u *Msg) NameNotUsed(rr []RR) {
 	u.Answer = make([]RR, len(rr))
 	for i, r := range rr {
-		u.Answer[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassNONE}}
+		u.Answer[i] = &ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassNONE}}
 	}
 }
 
@@ -117,7 +117,7 @@ func (u *Msg) RemoveRRset(rr []RR) {
 func (u *Msg) RemoveName(rr []RR) {
 	u.Ns = make([]RR, len(rr))
 	for i, r := range rr {
-		u.Ns[i] = &RR_ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
+		u.Ns[i] = &ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: TypeANY, Class: ClassANY}}
 	}
 }
 

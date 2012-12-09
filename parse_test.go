@@ -29,7 +29,7 @@ Publish: 20110302104537
 Activate: 20110302104537`
 
 	xk, _ := NewRR(pub)
-	k := xk.(*RR_DNSKEY)
+	k := xk.(*DNSKEY)
 	p, err := k.NewPrivateKey(priv)
 	if err != nil {
 		t.Logf("%v\n", err)
@@ -51,7 +51,7 @@ Activate: 20110302104537`
 		t.Fail()
 	}
 
-	soa := new(RR_SOA)
+	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -61,7 +61,7 @@ Activate: 20110302104537`
 	soa.Expire = 604800
 	soa.Minttl = 86400
 
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
 	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
@@ -90,11 +90,11 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	privkey, err := eckey.(*RR_DNSKEY).NewPrivateKey(priv)
+	privkey, err := eckey.(*DNSKEY).NewPrivateKey(priv)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	ds := eckey.(*RR_DNSKEY).ToDS(SHA384)
+	ds := eckey.(*DNSKEY).ToDS(SHA384)
 	if ds.KeyTag != 10771 {
 		t.Fatal("Wrong keytag on DS")
 	}
@@ -102,18 +102,18 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 		t.Fatal("Wrong DS Digest")
 	}
 	a, _ := NewRR("www.example.net. 3600 IN A 192.0.2.1")
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"example.net.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.Expiration, _ = StringToTime("20100909102025")
 	sig.Inception, _ = StringToTime("20100812102025")
-	sig.KeyTag = eckey.(*RR_DNSKEY).KeyTag()
-	sig.SignerName = eckey.(*RR_DNSKEY).Hdr.Name
-	sig.Algorithm = eckey.(*RR_DNSKEY).Algorithm
+	sig.KeyTag = eckey.(*DNSKEY).KeyTag()
+	sig.SignerName = eckey.(*DNSKEY).Hdr.Name
+	sig.Algorithm = eckey.(*DNSKEY).Algorithm
 
 	sig.Sign(privkey, []RR{a})
 
 	t.Logf("%s", sig.String())
-	if e := sig.Verify(eckey.(*RR_DNSKEY), []RR{a}); e != nil {
+	if e := sig.Verify(eckey.(*DNSKEY), []RR{a}); e != nil {
 		t.Logf("Failure to validate: %s", e.Error())
 		t.Fail()
 	}
@@ -622,7 +622,7 @@ func TestSRVPacking(t *testing.T) {
 			port = tmp
 		}
 
-		rr := &RR_SRV{
+		rr := &SRV{
 			Hdr: RR_Header{Name: "somename.",
 				Rrtype: TypeSRV,
 				Class:  ClassINET,

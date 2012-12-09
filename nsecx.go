@@ -56,22 +56,22 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 }
 
 // Implement the HashNames method of Denialer
-func (rr *RR_NSEC3) HashNames(domain string) {
+func (rr *NSEC3) HashNames(domain string) {
 	rr.Header().Name = strings.ToLower(HashName(rr.Header().Name, rr.Hash, rr.Iterations, rr.Salt)) + "." + domain
 	rr.NextDomain = HashName(rr.NextDomain, rr.Hash, rr.Iterations, rr.Salt)
 }
 
 // Implement the Match method of Denialer
-func (rr *RR_NSEC3) Match(domain string) bool {
+func (rr *NSEC3) Match(domain string) bool {
 	return strings.ToUpper(SplitLabels(rr.Header().Name)[0]) == strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
 }
 
 // Implement the Match method of Denialer
-func (rr *RR_NSEC) Match(domain string) bool {
+func (rr *NSEC) Match(domain string) bool {
 	return strings.ToUpper(rr.Header().Name) == strings.ToUpper(domain)
 }
 
-func (rr *RR_NSEC3) MatchType(rrtype uint16) bool {
+func (rr *NSEC3) MatchType(rrtype uint16) bool {
 	for _, t := range rr.TypeBitMap {
 		if t == rrtype {
 			return true
@@ -83,7 +83,7 @@ func (rr *RR_NSEC3) MatchType(rrtype uint16) bool {
 	return false
 }
 
-func (rr *RR_NSEC) MatchType(rrtype uint16) bool {
+func (rr *NSEC) MatchType(rrtype uint16) bool {
 	for _, t := range rr.TypeBitMap {
 		if t == rrtype {
 			return true
@@ -98,7 +98,7 @@ func (rr *RR_NSEC) MatchType(rrtype uint16) bool {
 // Cover checks if domain is covered by the NSEC3 record. Domain must be given in plain text (i.e. not hashed)
 // TODO(mg): this doesn't loop around
 // TODO(mg): make a CoverHashed variant?
-func (rr *RR_NSEC3) Cover(domain string) bool {
+func (rr *NSEC3) Cover(domain string) bool {
 	hashdom := strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
 	nextdom := strings.ToUpper(rr.NextDomain)
 	owner := strings.ToUpper(SplitLabels(rr.Header().Name)[0])                                                                     // The hashed part
@@ -116,6 +116,6 @@ func (rr *RR_NSEC3) Cover(domain string) bool {
 }
 
 // Cover checks if domain is covered by the NSEC record. Domain must be given in plain text.
-func (rr *RR_NSEC) Cover(domain string) bool {
+func (rr *NSEC) Cover(domain string) bool {
 	return false
 }

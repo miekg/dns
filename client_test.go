@@ -95,7 +95,7 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 	rrs[0] = rr
 	m.Insert(rrs)
 
-	lease_rr := new(RR_OPT)
+	lease_rr := new(OPT)
 	lease_rr.Hdr.Name = "."
 	lease_rr.Hdr.Rrtype = TypeOPT
 	e := new(EDNS0_UPDATE_LEASE)

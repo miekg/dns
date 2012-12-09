@@ -1094,7 +1094,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	// make an rr of that type and re-unpack.
 	mk, known := rr_mk[h.Rrtype]
 	if !known {
-		rr = new(RR_RFC3597)
+		rr = new(RFC3597)
 	} else {
 		rr = mk()
 	}

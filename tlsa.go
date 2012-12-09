@@ -43,7 +43,7 @@ func CertificateToDANE(selector, matchingType uint8, cert *x509.Certificate) str
 }
 
 // Sign creates a TLSA record from an SSL certificate.
-func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate) error {
+func (r *TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate) error {
 	r.Hdr.Rrtype = TypeTLSA
 	r.Usage = uint8(usage)
 	r.Selector = uint8(selector)
@@ -55,7 +55,7 @@ func (r *RR_TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate
 
 // Verify verifies a TLSA record against an SSL certificate. If it is OK
 // a nil error is returned.
-func (r *RR_TLSA) Verify(cert *x509.Certificate) error {
+func (r *TLSA) Verify(cert *x509.Certificate) error {
 	if r.Certificate == CertificateToDANE(r.Selector, r.MatchingType, cert) {
 		return nil
 	}

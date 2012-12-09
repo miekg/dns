@@ -91,10 +91,10 @@ func NewZone(origin string) *Zone {
 
 // ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
-	Name       string                 // Domain name for this node
-	RR         map[uint16][]RR        // Map of the RR type to the RR
-	Signatures map[uint16][]*RR_RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	NonAuth    bool                   // Always false, except for NSsets that differ from z.Origin
+	Name       string              // Domain name for this node
+	RR         map[uint16][]RR     // Map of the RR type to the RR
+	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
+	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
 	*sync.RWMutex
 }
 
@@ -103,7 +103,7 @@ func NewZoneData(s string) *ZoneData {
 	zd := new(ZoneData)
 	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
-	zd.Signatures = make(map[uint16][]*RR_RRSIG)
+	zd.Signatures = make(map[uint16][]*RRSIG)
 	zd.RWMutex = new(sync.RWMutex)
 	return zd
 }
@@ -214,8 +214,8 @@ func (z *Zone) Insert(r RR) error {
 		zd := NewZoneData(r.Header().Name)
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
-			sigtype := r.(*RR_RRSIG).TypeCovered
-			zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RR_RRSIG))
+			sigtype := r.(*RRSIG).TypeCovered
+			zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RRSIG))
 		case TypeNS:
 			// NS records with other names than z.Origin are non-auth
 			if r.Header().Name != z.Origin {
@@ -234,8 +234,8 @@ func (z *Zone) Insert(r RR) error {
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		sigtype := r.(*RR_RRSIG).TypeCovered
-		zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype], r.(*RR_RRSIG))
+		sigtype := r.(*RRSIG).TypeCovered
+		zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype], r.(*RRSIG))
 	case TypeNS:
 		if r.Header().Name != z.Origin {
 			zd.Value.(*ZoneData).NonAuth = true
@@ -263,7 +263,7 @@ func (z *Zone) Remove(r RR) error {
 	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
-		sigtype := r.(*RR_RRSIG).TypeCovered
+		sigtype := r.(*RRSIG).TypeCovered
 		for i, zr := range zd.Value.(*ZoneData).Signatures[sigtype] {
 			if r == zr {
 				zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype][:i], zd.Value.(*ZoneData).Signatures[sigtype][i+1:]...)
@@ -420,14 +420,14 @@ func (z *Zone) isSubDomain(child string) bool {
 //
 // TODO(mg): resigning is not implemented
 // TODO(mg): NSEC3 is not implemented
-func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) error {
+func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
 	defer z.Unlock()
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
 	// Pre-calc the key tag
-	keytags := make(map[*RR_DNSKEY]uint16)
+	keytags := make(map[*DNSKEY]uint16)
 	for k := range keys {
 		keytags[k] = k.KeyTag()
 	}
@@ -446,7 +446,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	if !e {
 		return ErrSoa
 	}
-	config.Minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*RR_SOA).Minttl
+	config.Minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*SOA).Minttl
 	next := apex.Next()
 	radChan <- apex
 
@@ -471,7 +471,7 @@ Sign:
 }
 
 // signerRoutine is a small helper routine to make the concurrent signing work.
-func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig, in chan *radix.Radix, err chan error) {
+func signerRoutine(wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *radix.Radix, err chan error) {
 	defer wg.Done()
 	for {
 		select {
@@ -494,11 +494,11 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*RR_DNSKEY]PrivateKey, keytags m
 // For a more complete description see zone.Sign. 
 // Note: as this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in *config.
-func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keytags map[*RR_DNSKEY]uint16, config *SignatureConfig) error {
+func (node *ZoneData) Sign(next *ZoneData, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig) error {
 	node.Lock()
 	defer node.Unlock()
 
-	nsec := new(RR_NSEC)
+	nsec := new(NSEC)
 	nsec.Hdr.Rrtype = TypeNSEC
 	nsec.Hdr.Ttl = config.Minttl // SOA's minimum value
 	nsec.Hdr.Name = node.Name
@@ -522,7 +522,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 			}
 			// which sigs to check??
 
-			s := new(RR_RRSIG)
+			s := new(RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Algorithm = k.Algorithm
@@ -536,7 +536,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 			node.Signatures[TypeNSEC] = append(node.Signatures[TypeNSEC], s)
 			// DS
 			if ds, ok := node.RR[TypeDS]; ok {
-				s := new(RR_RRSIG)
+				s := new(RRSIG)
 				s.SignerName = k.Hdr.Name
 				s.Hdr.Ttl = k.Hdr.Ttl
 				s.Algorithm = k.Algorithm
@@ -556,13 +556,13 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 	for k, p := range keys {
 		for t, rrset := range node.RR {
 			if k.Flags&SEP == SEP {
-				if _, ok := rrset[0].(*RR_DNSKEY); !ok {
+				if _, ok := rrset[0].(*DNSKEY); !ok {
 					// only sign keys with SEP keys
 					continue
 				}
 			}
 
-			s := new(RR_RRSIG)
+			s := new(RRSIG)
 			s.SignerName = k.Hdr.Name
 			s.Hdr.Ttl = k.Hdr.Ttl
 			s.Hdr.Class = ClassINET
@@ -582,7 +582,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 		sort.Sort(uint16Slice(nsec.TypeBitMap))
 		node.RR[TypeNSEC] = []RR{nsec}
 		// NSEC
-		s := new(RR_RRSIG)
+		s := new(RRSIG)
 		s.SignerName = k.Hdr.Name
 		s.Hdr.Ttl = k.Hdr.Ttl
 		s.Algorithm = k.Algorithm

@@ -85,7 +85,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	dns.Id = Id()
 	dns.Question = make([]Question, 1)
 	dns.Ns = make([]RR, 1)
-	s := new(RR_SOA)
+	s := new(SOA)
 	s.Hdr = RR_Header{z, TypeSOA, ClassINET, defaultTtl, 0}
 	s.Serial = serial
 	dns.Question[0] = Question{z, TypeIXFR, ClassINET}
@@ -105,7 +105,7 @@ func (dns *Msg) SetAxfr(z string) *Msg {
 // This is only a skeleton TSIG RR that is added as the last RR in the 
 // additional section. The Tsig is calculated when the message is being send.
 func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) *Msg {
-	t := new(RR_TSIG)
+	t := new(TSIG)
 	t.Hdr = RR_Header{z, TypeTSIG, ClassANY, 0, 0}
 	t.Algorithm = algo
 	t.Fudge = 300
@@ -118,7 +118,7 @@ func (dns *Msg) SetTsig(z, algo string, fudge, timesigned int64) *Msg {
 // SetEdns0 appends a EDNS0 OPT RR to the message. 
 // TSIG should always the last RR in a message.
 func (dns *Msg) SetEdns0(udpsize uint16, do bool) *Msg {
-	e := new(RR_OPT)
+	e := new(OPT)
 	e.Hdr.Name = "."
 	e.Hdr.Rrtype = TypeOPT
 	e.SetUDPSize(udpsize)
@@ -131,10 +131,10 @@ func (dns *Msg) SetEdns0(udpsize uint16, do bool) *Msg {
 
 // IsTsig checks if the message has a TSIG record as the last record
 // in the additional section. It returns the TSIG record found or nil.
-func (dns *Msg) IsTsig() *RR_TSIG {
+func (dns *Msg) IsTsig() *TSIG {
 	if len(dns.Extra) > 0 {
 		if dns.Extra[len(dns.Extra)-1].Header().Rrtype == TypeTSIG {
-			return dns.Extra[len(dns.Extra)-1].(*RR_TSIG)
+			return dns.Extra[len(dns.Extra)-1].(*TSIG)
 		}
 	}
 	return nil
@@ -143,10 +143,10 @@ func (dns *Msg) IsTsig() *RR_TSIG {
 // IsEdns0 checks if the message has a EDNS0 (OPT) record, any EDNS0
 // record in the additional section will do. It returns the OPT record
 // found or nil.
-func (dns *Msg) IsEdns0() *RR_OPT {
+func (dns *Msg) IsEdns0() *OPT {
 	for _, r := range dns.Extra {
 		if r.Header().Rrtype == TypeOPT {
-			return r.(*RR_OPT)
+			return r.(*OPT)
 		}
 	}
 	return nil

@@ -211,7 +211,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError) {
 }
 
 func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_A)
+	rr := new(A)
 	rr.Hdr = h
 
 	l := <-c
@@ -223,7 +223,7 @@ func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setAAAA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_AAAA)
+	rr := new(AAAA)
 	rr.Hdr = h
 
 	l := <-c
@@ -235,7 +235,7 @@ func setAAAA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_NS)
+	rr := new(NS)
 	rr.Hdr = h
 
 	l := <-c
@@ -255,7 +255,7 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_PTR)
+	rr := new(PTR)
 	rr.Hdr = h
 
 	l := <-c
@@ -275,7 +275,7 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_RP)
+	rr := new(RP)
 	rr.Hdr = h
 
 	l := <-c
@@ -310,7 +310,7 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MR)
+	rr := new(MR)
 	rr.Hdr = h
 
 	l := <-c
@@ -330,7 +330,7 @@ func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MB)
+	rr := new(MB)
 	rr.Hdr = h
 
 	l := <-c
@@ -350,7 +350,7 @@ func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MG)
+	rr := new(MG)
 	rr.Hdr = h
 
 	l := <-c
@@ -370,7 +370,7 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setHINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_HINFO)
+	rr := new(HINFO)
 	rr.Hdr = h
 
 	l := <-c
@@ -383,7 +383,7 @@ func setHINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MINFO)
+	rr := new(MINFO)
 	rr.Hdr = h
 
 	l := <-c
@@ -416,7 +416,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MF)
+	rr := new(MF)
 	rr.Hdr = h
 
 	l := <-c
@@ -436,7 +436,7 @@ func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MD)
+	rr := new(MD)
 	rr.Hdr = h
 
 	l := <-c
@@ -456,7 +456,7 @@ func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_MX)
+	rr := new(MX)
 	rr.Hdr = h
 
 	l := <-c
@@ -483,7 +483,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_RT)
+	rr := new(RT)
 	rr.Hdr = h
 
 	l := <-c
@@ -510,7 +510,7 @@ func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_AFSDB)
+	rr := new(AFSDB)
 	rr.Hdr = h
 
 	l := <-c
@@ -537,7 +537,7 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setX25(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_X25)
+	rr := new(X25)
 	rr.Hdr = h
 
 	l := <-c
@@ -546,7 +546,7 @@ func setX25(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_KX)
+	rr := new(KX)
 	rr.Hdr = h
 
 	l := <-c
@@ -573,7 +573,7 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_CNAME)
+	rr := new(CNAME)
 	rr.Hdr = h
 
 	l := <-c
@@ -593,7 +593,7 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_DNAME)
+	rr := new(DNAME)
 	rr.Hdr = h
 
 	l := <-c
@@ -613,7 +613,7 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_SOA)
+	rr := new(SOA)
 	rr.Hdr = h
 
 	l := <-c
@@ -685,7 +685,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_SRV)
+	rr := new(SRV)
 	rr.Hdr = h
 
 	l := <-c
@@ -726,7 +726,7 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_NAPTR)
+	rr := new(NAPTR)
 	rr.Hdr = h
 
 	l := <-c
@@ -817,7 +817,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_TALINK)
+	rr := new(TALINK)
 	rr.Hdr = h
 
 	l := <-c
@@ -851,7 +851,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_LOC)
+	rr := new(LOC)
 	rr.Hdr = h
 	// Non zero defaults for LOC record, see RFC 1876, Section 3.
 	rr.HorizPre = 165 // 10000
@@ -978,7 +978,7 @@ Altitude:
 }
 
 func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_HIP)
+	rr := new(HIP)
 	rr.Hdr = h
 
 	// HitLength is not represented
@@ -1028,7 +1028,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_CERT)
+	rr := new(CERT)
 	rr.Hdr = h
 
 	l := <-c
@@ -1060,7 +1060,7 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_RRSIG)
+	rr := new(RRSIG)
 	rr.Hdr = h
 	l := <-c
 	if t, ok := StringToType[strings.ToUpper(l.token)]; !ok {
@@ -1133,7 +1133,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_NSEC)
+	rr := new(NSEC)
 	rr.Hdr = h
 
 	l := <-c
@@ -1176,7 +1176,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_NSEC3)
+	rr := new(NSEC3)
 	rr.Hdr = h
 
 	l := <-c
@@ -1238,7 +1238,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_NSEC3PARAM)
+	rr := new(NSEC3PARAM)
 	rr.Hdr = h
 
 	l := <-c
@@ -1269,7 +1269,7 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_WKS)
+	rr := new(WKS)
 	rr.Hdr = h
 
 	l := <-c
@@ -1324,7 +1324,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_SSHFP)
+	rr := new(SSHFP)
 	rr.Hdr = h
 
 	l := <-c
@@ -1347,7 +1347,7 @@ func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_DNSKEY)
+	rr := new(DNSKEY)
 	rr.Hdr = h
 
 	l := <-c
@@ -1379,7 +1379,7 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_RKEY)
+	rr := new(RKEY)
 	rr.Hdr = h
 
 	l := <-c
@@ -1411,7 +1411,7 @@ func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_DS)
+	rr := new(DS)
 	rr.Hdr = h
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
@@ -1446,7 +1446,7 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_CDS)
+	rr := new(CDS)
 	rr.Hdr = h
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
@@ -1481,7 +1481,7 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_DLV)
+	rr := new(DLV)
 	rr.Hdr = h
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
@@ -1516,7 +1516,7 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_TA)
+	rr := new(TA)
 	rr.Hdr = h
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
@@ -1551,7 +1551,7 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_TLSA)
+	rr := new(TLSA)
 	rr.Hdr = h
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
@@ -1582,7 +1582,7 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_RFC3597)
+	rr := new(RFC3597)
 	rr.Hdr = h
 	l := <-c
 	if l.token != "\\#" {
@@ -1607,7 +1607,7 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_SPF)
+	rr := new(SPF)
 	rr.Hdr = h
 
 	s, e := endingToTxtSlice(c, "bad SPF Txt", f)
@@ -1619,7 +1619,7 @@ func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_TXT)
+	rr := new(TXT)
 	rr.Hdr = h
 
 	s, e := endingToTxtSlice(c, "bad TXT Txt", f)
@@ -1632,7 +1632,7 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 
 // identical to setTXT
 func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_NINFO)
+	rr := new(NINFO)
 	rr.Hdr = h
 
 	s, e := endingToTxtSlice(c, "bad NINFO ZSData", f)
@@ -1644,7 +1644,7 @@ func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_URI)
+	rr := new(URI)
 	rr.Hdr = h
 
 	l := <-c
@@ -1695,7 +1695,7 @@ func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_IPSECKEY)
+	rr := new(IPSECKEY)
 	rr.Hdr = h
 
 	l := <-c
@@ -1731,7 +1731,7 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	// awesome record to parse!
-	rr := new(RR_DHCID)
+	rr := new(DHCID)
 	rr.Hdr = h
 
 	s, e := endingToString(c, "bad DHCID Digest", f)
@@ -1743,7 +1743,7 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_NID)
+	rr := new(NID)
 	rr.Hdr = h
 
 	l := <-c
@@ -1763,7 +1763,7 @@ func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_L32)
+	rr := new(L32)
 	rr.Hdr = h
 
 	l := <-c
@@ -1782,7 +1782,7 @@ func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 }
 
 func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
-	rr := new(RR_LP)
+	rr := new(LP)
 	rr.Hdr = h
 
 	l := <-c
@@ -1809,7 +1809,7 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 }
 
 func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
-	rr := new(RR_L64)
+	rr := new(L64)
 	rr.Hdr = h
 
 	l := <-c

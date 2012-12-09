@@ -41,16 +41,16 @@ const (
 	_DO              = 1 << 7 // dnssec ok
 )
 
-type RR_OPT struct {
+type OPT struct {
 	Hdr    RR_Header
 	Option []EDNS0 `dns:"opt"`
 }
 
-func (rr *RR_OPT) Header() *RR_Header {
+func (rr *OPT) Header() *RR_Header {
 	return &rr.Hdr
 }
 
-func (rr *RR_OPT) String() string {
+func (rr *OPT) String() string {
 	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
 	if rr.Do() {
 		s += "flags: do; "
@@ -80,7 +80,7 @@ func (rr *RR_OPT) String() string {
 	return s
 }
 
-func (rr *RR_OPT) Len() int {
+func (rr *OPT) Len() int {
 	l := rr.Hdr.Len()
 	for i := 0; i < len(rr.Option); i++ {
 		lo, _ := rr.Option[i].pack()
@@ -89,37 +89,37 @@ func (rr *RR_OPT) Len() int {
 	return l
 }
 
-func (rr *RR_OPT) Copy() RR {
-	return &RR_OPT{*rr.Hdr.CopyHeader(), rr.Option}
+func (rr *OPT) Copy() RR {
+	return &OPT{*rr.Hdr.CopyHeader(), rr.Option}
 }
 
 // Version returns the EDNS version used. Only zero is defined.
-func (rr *RR_OPT) Version() uint8 {
+func (rr *OPT) Version() uint8 {
 	return uint8(rr.Hdr.Ttl & 0x00FF00FFFF)
 }
 
 // SetVersion sets the version of EDNS. This is usually zero.
-func (rr *RR_OPT) SetVersion(v uint8) {
+func (rr *OPT) SetVersion(v uint8) {
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | uint32(v)
 }
 
 // UDPSize returns the UDP buffer size.
-func (rr *RR_OPT) UDPSize() uint16 {
+func (rr *OPT) UDPSize() uint16 {
 	return rr.Hdr.Class
 }
 
 // SetUDPSize sets the UDP buffer size.
-func (rr *RR_OPT) SetUDPSize(size uint16) {
+func (rr *OPT) SetUDPSize(size uint16) {
 	rr.Hdr.Class = size
 }
 
 // Do returns the value of the DO (DNSSEC OK) bit.
-func (rr *RR_OPT) Do() bool {
+func (rr *OPT) Do() bool {
 	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
 }
 
 // SetDo sets the DO (DNSSEC OK) bit.
-func (rr *RR_OPT) SetDo() {
+func (rr *OPT) SetDo() {
 	b1 := byte(rr.Hdr.Ttl >> 24)
 	b2 := byte(rr.Hdr.Ttl >> 16)
 	b3 := byte(rr.Hdr.Ttl >> 8)

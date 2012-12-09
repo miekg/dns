@@ -107,7 +107,7 @@ func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 				return
 			}
 			// This serial is important
-			serial = in.Answer[0].(*RR_SOA).Serial
+			serial = in.Answer[0].(*SOA).Serial
 			first = !first
 		}
 
@@ -115,7 +115,7 @@ func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 		if !first {
 			w.tsigTimersOnly = true
 			// If the last record in the IXFR contains the servers' SOA,  we should quit
-			if v, ok := in.Answer[len(in.Answer)-1].(*RR_SOA); ok {
+			if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
 				if v.Serial == serial {
 					c <- &Envelope{in.Answer, nil}
 					return
