@@ -27,28 +27,27 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrFqdn      error = &Error{Err: "domain name must be fully qualified"}
-	ErrDomain    error = &Error{Err: "domain name must be 255 bytes or less long"}
-	ErrId        error = &Error{Err: "id mismatch"}
-	ErrRdata     error = &Error{Err: "bad rdata"}
-	ErrBuf       error = &Error{Err: "buffer size too small"}
-	ErrShortRead error = &Error{Err: "short read"}
-	ErrConn      error = &Error{Err: "conn holds both UDP and TCP connection"}
-	ErrConnEmpty error = &Error{Err: "conn has no connection"}
-	ErrServ      error = &Error{Err: "no servers could be reached"}
-	ErrKey       error = &Error{Err: "bad key"}
-	ErrPrivKey   error = &Error{Err: "bad private key"}
-	ErrKeySize   error = &Error{Err: "bad key size"}
-	ErrKeyAlg    error = &Error{Err: "bad key algorithm"}
-	ErrAlg       error = &Error{Err: "bad algorithm"}
-	ErrTime      error = &Error{Err: "bad time"}
-	ErrNoSig     error = &Error{Err: "no signature found"}
-	ErrSig       error = &Error{Err: "bad signature"}
-	ErrSecret    error = &Error{Err: "no secrets defined"}
-	ErrSigGen    error = &Error{Err: "bad signature generation"}
-	ErrAuth      error = &Error{Err: "bad authentication"}
-	ErrSoa       error = &Error{Err: "no SOA"}
-	ErrRRset     error = &Error{Err: "bad rrset"}
+	ErrFqdn        error = &Error{Err: "domain must be fully qualified"}
+	ErrId          error = &Error{Err: "id mismatch"}
+	ErrRdata       error = &Error{Err: "bad rdata"}
+	ErrBuf         error = &Error{Err: "buffer size too small"}
+	ErrShortRead   error = &Error{Err: "short read"}
+	ErrConn        error = &Error{Err: "conn holds both UDP and TCP connection"}
+	ErrConnEmpty   error = &Error{Err: "conn has no connection"}
+	ErrServ        error = &Error{Err: "no servers could be reached"}
+	ErrKey         error = &Error{Err: "bad key"}
+	ErrPrivKey     error = &Error{Err: "bad private key"}
+	ErrKeySize     error = &Error{Err: "bad key size"}
+	ErrKeyAlg      error = &Error{Err: "bad key algorithm"}
+	ErrAlg         error = &Error{Err: "bad algorithm"}
+	ErrTime        error = &Error{Err: "bad time"}
+	ErrNoSig       error = &Error{Err: "no signature found"}
+	ErrSig         error = &Error{Err: "bad signature"}
+	ErrSecret      error = &Error{Err: "no secrets defined"}
+	ErrSigGen      error = &Error{Err: "bad signature generation"}
+	ErrAuth        error = &Error{Err: "bad authentication"}
+	ErrSoa         error = &Error{Err: "no SOA"}
+	ErrRRset       error = &Error{Err: "bad rrset"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -208,7 +207,6 @@ var RcodeToString = map[int]string{
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
 	ls := len(s)
-	offstart := off
 	// If not fully qualified, error out
 	if ls == 0 || s[ls-1] != '.' {
 		return lenmsg, ErrFqdn
@@ -306,9 +304,6 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	msg[off] = 0
 End:
 	off++
-	if off-offstart > 255 {
-		return lenmsg, ErrDomain
-	}
 	return off, nil
 }
 
@@ -331,7 +326,6 @@ func UnpackDomainName(msg []byte, off int) (s string, off1 int, err error) {
 	s = ""
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
-	offstart := off
 Loop:
 	for {
 		if off >= lenmsg {
@@ -391,9 +385,6 @@ Loop:
 	}
 	if ptr == 0 {
 		off1 = off
-	}
-	if off1-offstart > 255 {
-		return "", lenmsg, ErrDomain
 	}
 	return s, off1, nil
 }
@@ -1094,7 +1085,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	// make an rr of that type and re-unpack.
 	mk, known := rr_mk[h.Rrtype]
 	if !known {
-		rr = new(RFC3597)
+		rr = new(RR_RFC3597)
 	} else {
 		rr = mk()
 	}
