@@ -16,7 +16,7 @@
 // Resource records are native types. They are not stored in wire format.
 // Basic usage pattern for creating a new resource record:
 //
-//      r := new(dns.RR_MX)
+//      r := new(dns.MX)
 //      r.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeMX, Class: dns.ClassINET, Ttl: 3600}
 //      r.Pref = 10
 //      r.Mx = "mx.miek.nl."
@@ -71,7 +71,7 @@
 // use pattern for accessing the rdata of a TXT RR as the first RR in 
 // the Answer section:
 //
-//	if t, ok := in.Answer[0].(*RR_TXT); ok {
+//	if t, ok := in.Answer[0].(*TXT); ok {
 //		// do something with t.Txt
 //	}
 package dns

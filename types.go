@@ -1121,7 +1121,7 @@ func (rr *TKEY) Len() int {
 		len(rr.Key) + 2 + len(rr.OtherData)
 }
 
-// RR_RFC3597 representes an unknown RR.
+// RFC3597 representes an unknown RR.
 type RFC3597 struct {
 	Hdr   RR_Header
 	Rdata string `dns:"hex"`

@@ -4,7 +4,7 @@
 // standard RR type, the OPT RR, which is then completely abused. 
 // Basic use pattern for creating an (empty) OPT RR:
 //
-//	o := new(dns.RR_OPT)
+//	o := new(dns.OPT)
 //	o.Hdr.Name = "." // MUST be the root zone, per definition.
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
@@ -13,7 +13,7 @@
 // these options may be combined in an OPT RR.
 // Basic use pattern for a server to check if (and which) options are set:
 //
-//	// o is a dns.RR_OPT
+//	// o is a dns.OPT
 //	for _, s := range o.Options {
 //		switch e := s.(type) {
 //		case *dns.EDNS0_NSID:
@@ -150,7 +150,7 @@ type EDNS0 interface {
 // The identifier is an opaque string encoded as hex.
 // Basic use pattern for creating an nsid option:
 //
-//	o := new(dns.RR_OPT)
+//	o := new(dns.OPT)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_NSID)
@@ -186,7 +186,7 @@ func (e *EDNS0_NSID) String() string {
 // answer depending on the location or network topology.
 // Basic use pattern for creating an subnet option:
 //
-//	o := new(dns.RR_OPT)
+//	o := new(dns.OPT)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_SUBNET)
@@ -286,7 +286,7 @@ func (e *EDNS0_SUBNET) String() (s string) {
 // up after themselves. This is a draft RFC and more information can be found at
 // http://files.dns-sd.org/draft-sekar-dns-ul.txt 
 //
-//	o := new(dns.RR_OPT)
+//	o := new(dns.OPT)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_UPDATE_LEASE)

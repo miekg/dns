@@ -89,7 +89,7 @@ func (r *DNSKEY) Generate(bits int) (PrivateKey, error) {
 
 // PrivateKeyString converts a PrivateKey to a string. This
 // string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
-// It needs some info from the key (hashing, keytag), so its a method of the RR_DNSKEY.
+// It needs some info from the key (hashing, keytag), so its a method of the DNSKEY.
 func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
