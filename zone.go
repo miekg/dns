@@ -20,7 +20,7 @@ type Zone struct {
 	olabels      []string  // origin cut up in labels, just to speed up the isSubDomain method
 	Wildcard     int       // Whenever we see a wildcard name, this is incremented
 	expired      bool      // Slave zone is expired
-	ModTime     time.Time // When is the zone last modified
+	ModTime      time.Time // When is the zone last modified
 	*radix.Radix           // Zone data
 	*sync.RWMutex
 }
@@ -90,10 +90,10 @@ func NewZone(origin string) *Zone {
 
 // ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
-	Name       string                 // Domain name for this node
-	RR         map[uint16][]RR        // Map of the RR type to the RR
+	Name       string              // Domain name for this node
+	RR         map[uint16][]RR     // Map of the RR type to the RR
 	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	NonAuth bool // Always false, except for NSsets that differ from z.Origin
+	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
 	*sync.RWMutex
 }
 
