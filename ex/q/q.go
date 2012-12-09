@@ -18,7 +18,7 @@ import (
 // TODO: serial in ixfr
 
 var (
-	dnskey *dns.RR_DNSKEY
+	dnskey *dns.DNSKEY
 	short  *bool
 )
 
@@ -63,7 +63,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failure to read an RR from %s: %s\n", *anchor, err.Error())
 		}
-		if k, ok := r.(*dns.RR_DNSKEY); !ok {
+		if k, ok := r.(*dns.DNSKEY); !ok {
 			fmt.Fprintf(os.Stderr, "No DNSKEY read from %s\n", *anchor)
 		} else {
 			dnskey = k
@@ -148,7 +148,7 @@ Flags:
 	m.Question = make([]dns.Question, 1)
 
 	if *dnssec || *nsid || *client != "" {
-		o := new(dns.RR_OPT)
+		o := new(dns.OPT)
 		o.Hdr.Name = "."
 		o.Hdr.Rrtype = dns.TypeOPT
 		if *dnssec {
@@ -229,7 +229,7 @@ Flags:
 			if c.Net != "tcp" {
 				if !*dnssec {
 					fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
-					o := new(dns.RR_OPT)
+					o := new(dns.OPT)
 					o.Hdr.Name = "."
 					o.Hdr.Rrtype = dns.TypeOPT
 					o.SetUDPSize(dns.DefaultMsgSize)
@@ -280,28 +280,28 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 }
 
 func sectionCheck(set []dns.RR, server string, tcp bool) {
-	var key *dns.RR_DNSKEY
+	var key *dns.DNSKEY
 	for _, rr := range set {
 		if rr.Header().Rrtype == dns.TypeRRSIG {
-			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RR_RRSIG).TypeCovered)
+			rrset := getRRset(set, rr.Header().Name, rr.(*dns.RRSIG).TypeCovered)
 			if dnskey == nil {
-				key = getKey(rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag, server, tcp)
+				key = getKey(rr.(*dns.RRSIG).SignerName, rr.(*dns.RRSIG).KeyTag, server, tcp)
 			} else {
 				key = dnskey
 			}
 			if key == nil {
-				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RR_RRSIG).SignerName, rr.(*dns.RR_RRSIG).KeyTag)
+				fmt.Printf(";? DNSKEY %s/%d not found\n", rr.(*dns.RRSIG).SignerName, rr.(*dns.RRSIG).KeyTag)
 				continue
 			}
 			where := "net"
 			if dnskey != nil {
 				where = "disk"
 			}
-			if err := rr.(*dns.RR_RRSIG).Verify(key, rrset); err != nil {
+			if err := rr.(*dns.RRSIG).Verify(key, rrset); err != nil {
 				fmt.Printf(";- Bogus signature, %s does not validate (DNSKEY %s/%d/%s) [%s]\n",
-					shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where, err.Error())
+					shortSig(rr.(*dns.RRSIG)), key.Header().Name, key.KeyTag(), where, err.Error())
 			} else {
-				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RR_RRSIG)), key.Header().Name, key.KeyTag(), where)
+				fmt.Printf(";+ Secure signature, %s validates (DNSKEY %s/%d/%s)\n", shortSig(rr.(*dns.RRSIG)), key.Header().Name, key.KeyTag(), where)
 			}
 		}
 	}
@@ -328,7 +328,7 @@ func getRRset(l []dns.RR, name string, t uint16) []dns.RR {
 
 // Get the key from the DNS (uses the local resolver) and return them.
 // If nothing is found we return nil
-func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY {
+func getKey(name string, keytag uint16, server string, tcp bool) *dns.DNSKEY {
 	c := new(dns.Client)
 	if tcp {
 		c.Net = "tcp"
@@ -341,7 +341,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 		return nil
 	}
 	for _, k := range r.Answer {
-		if k1, ok := k.(*dns.RR_DNSKEY); ok {
+		if k1, ok := k.(*dns.DNSKEY); ok {
 			if k1.KeyTag() == keytag {
 				return k1
 			}
@@ -351,7 +351,7 @@ func getKey(name string, keytag uint16, server string, tcp bool) *dns.RR_DNSKEY 
 }
 
 // shorten RRSIG to "miek.nl RRSIG(NS)"
-func shortSig(sig *dns.RR_RRSIG) string {
+func shortSig(sig *dns.RRSIG) string {
 	return sig.Header().Name + " RRSIG(" + dns.TypeToString[sig.TypeCovered] + ")"
 }
 
@@ -371,13 +371,13 @@ func shortMsg(in *dns.Msg) *dns.Msg {
 
 func shortRR(r dns.RR) dns.RR {
 	switch t := r.(type) {
-	case *dns.RR_DS:
+	case *dns.DS:
 		t.Digest = "..."
-	case *dns.RR_DNSKEY:
+	case *dns.DNSKEY:
 		t.PublicKey = "..."
-	case *dns.RR_RRSIG:
+	case *dns.RRSIG:
 		t.Signature = "..."
-	case *dns.RR_NSEC3:
+	case *dns.NSEC3:
 		t.Salt = "." // Nobody cares
 		if len(t.TypeBitMap) > 5 {
 			t.TypeBitMap = t.TypeBitMap[1:5]

@@ -19,7 +19,7 @@ func ExampleRR_MX() {
 		return
 	}
 	for _, a := range r.Answer {
-		if mx, ok := a.(*RR_MX); ok {
+		if mx, ok := a.(*MX); ok {
 			fmt.Printf("%s\n", mx.String())
 		}
 	}
@@ -44,7 +44,7 @@ func ExampleToDs(zone string) {
 		return
 	}
 	for _, k := range r.Answer {
-		if key, ok := k.(*RR_DNSKEY); ok {
+		if key, ok := k.(*DNSKEY); ok {
 			for _, alg := range []int{SHA1, SHA256, SHA384} {
 				fmt.Printf("%s; %d\n", key.ToDS(alg).String(), key.Flags)
 			}

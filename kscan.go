@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (k *RR_DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
+func (k *DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline                                                               
 		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")
 	}
@@ -20,7 +20,7 @@ func (k *RR_DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
 // only used in error reporting.
 // The public key must be
 // known, because some cryptographics algorithms embed the public inside the privatekey.
-func (k *RR_DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
+func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 	m, e := parseKey(q, file)
 	if m == nil {
 		return nil, e

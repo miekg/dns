@@ -75,12 +75,12 @@ forever:
 			if d.Rcode == dns.RcodeSuccess {
 				for _, a := range d.Answer {
 					switch a.(type) {
-					case *dns.RR_A:
+					case *dns.A:
 						ips = append(ips,
-							net.JoinHostPort(a.(*dns.RR_A).A.String(), "53"))
-					case *dns.RR_AAAA:
+							net.JoinHostPort(a.(*dns.A).A.String(), "53"))
+					case *dns.AAAA:
 						ips = append(ips,
-							net.JoinHostPort(a.(*dns.RR_AAAA).AAAA.String(), "53"))
+							net.JoinHostPort(a.(*dns.AAAA).AAAA.String(), "53"))
 
 					}
 				}

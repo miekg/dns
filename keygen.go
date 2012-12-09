@@ -22,7 +22,7 @@ type PrivateKey interface{}
 // what kind of DNSKEY will be generated.
 // The ECDSA algorithms imply a fixed keysize, in that case
 // bits should be set to the size of the algorithm.
-func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
+func (r *DNSKEY) Generate(bits int) (PrivateKey, error) {
 	switch r.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		if bits != 1024 {
@@ -90,7 +90,7 @@ func (r *RR_DNSKEY) Generate(bits int) (PrivateKey, error) {
 // PrivateKeyString converts a PrivateKey to a string. This
 // string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
 // It needs some info from the key (hashing, keytag), so its a method of the RR_DNSKEY.
-func (r *RR_DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
+func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"

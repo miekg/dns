@@ -116,7 +116,7 @@ func HandleAuthors(w ResponseWriter, r *Msg) {
 	m.SetReply(r)
 	for _, author := range Authors {
 		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
-		m.Answer = append(m.Answer, &RR_TXT{h, []string{author}})
+		m.Answer = append(m.Answer, &TXT{h, []string{author}})
 	}
 	w.WriteMsg(m)
 }
@@ -147,7 +147,7 @@ func HandleVersion(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetReply(r)
 	h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
-	m.Answer = append(m.Answer, &RR_TXT{h, []string{Version}})
+	m.Answer = append(m.Answer, &TXT{h, []string{Version}})
 	w.WriteMsg(m)
 }
 
@@ -388,7 +388,7 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 				}
 				w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
 				w.tsigTimersOnly = false
-				w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*RR_TSIG).MAC
+				w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 			}
 		}
 		h.ServeDNS(w, req) // this does the writing back to the client

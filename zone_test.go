@@ -42,7 +42,7 @@ func TestApex(t *testing.T) {
 		t.Fatalf("Apex not found")
 	}
 	t.Logf("Apex found %s", apex.RR[TypeSOA][0].String())
-	apex.RR[TypeSOA][0].(*RR_SOA).Serial++
+	apex.RR[TypeSOA][0].(*SOA).Serial++
 	apex = z.Apex()
 	t.Logf("Apex found %s", z.Apex().RR[TypeSOA][0].String())
 }

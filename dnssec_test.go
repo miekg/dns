@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func getKey() *RR_DNSKEY {
-	key := new(RR_DNSKEY)
+func getKey() *DNSKEY {
+	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 14400
@@ -18,8 +18,8 @@ func getKey() *RR_DNSKEY {
 	return key
 }
 
-func getSoa() *RR_SOA {
-	soa := new(RR_SOA)
+func getSoa() *SOA {
+	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -32,7 +32,7 @@ func getSoa() *RR_SOA {
 }
 
 func TestGenerateEC(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
@@ -46,7 +46,7 @@ func TestGenerateEC(t *testing.T) {
 }
 
 func TestGenerateDSA(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
@@ -60,7 +60,7 @@ func TestGenerateDSA(t *testing.T) {
 }
 
 func TestGenerateRSA(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
@@ -76,7 +76,7 @@ func TestGenerateRSA(t *testing.T) {
 func TestSecure(t *testing.T) {
 	soa := getSoa()
 
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
 	sig.Algorithm = RSASHA256
@@ -88,7 +88,7 @@ func TestSecure(t *testing.T) {
 	sig.SignerName = "miek.nl."
 	sig.Signature = "oMCbslaAVIp/8kVtLSms3tDABpcPRUgHLrOR48OOplkYo+8TeEGWwkSwaz/MRo2fB4FxW0qj/hTlIjUGuACSd+b1wKdH5GvzRJc2pFmxtCbm55ygAh4EUL0F6U5cKtGJGSXxxg6UFCQ0doJCmiGFa78LolaUOXImJrk6AFrGa0M="
 
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
 	key.Hdr.Ttl = 14400
@@ -105,7 +105,7 @@ func TestSecure(t *testing.T) {
 }
 
 func TestSignature(t *testing.T) {
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr.Name = "miek.nl."
 	sig.Hdr.Class = ClassINET
 	sig.Hdr.Ttl = 3600
@@ -135,7 +135,7 @@ func TestSignature(t *testing.T) {
 
 func TestSignVerify(t *testing.T) {
 	// The record we want to sign
-	soa := new(RR_SOA)
+	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -145,7 +145,7 @@ func TestSignVerify(t *testing.T) {
 	soa.Expire = 604800
 	soa.Minttl = 86400
 
-	soa1 := new(RR_SOA)
+	soa1 := new(SOA)
 	soa1.Hdr = RR_Header{"*.miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa1.Ns = "open.nlnetlabs.nl."
 	soa1.Mbox = "miekg.atoom.net."
@@ -156,7 +156,7 @@ func TestSignVerify(t *testing.T) {
 	soa1.Minttl = 86400
 
 	// With this key
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Class = ClassINET
@@ -167,7 +167,7 @@ func TestSignVerify(t *testing.T) {
 	privkey, _ := key.Generate(512)
 
 	// Fill in the values of the Sig, before signing
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = soa.Hdr.Rrtype
 	sig.Labels, _, _ = IsDomainName(soa.Hdr.Name)
@@ -197,14 +197,14 @@ func TestDnskey(t *testing.T) {
 	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
 	pubkey, _ := ReadRR(f, "t/Kmiek.nl.+010+05240.key")
 	f, _ = os.Open("t/Kmiek.nl.+010+05240.private")
-	privkey, _ := pubkey.(*RR_DNSKEY).ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
+	privkey, _ := pubkey.(*DNSKEY).ReadPrivateKey(f, "t/Kmiek.nl.+010+05240.private")
 	// Okay, we assume this has gone OK
-	if pubkey.(*RR_DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
+	if pubkey.(*DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
 		t.Log("Pubkey is not what we've read")
 		t.Fail()
 	}
 	// Coefficient looks fishy...
-	t.Logf("%s", pubkey.(*RR_DNSKEY).PrivateKeyString(privkey))
+	t.Logf("%s", pubkey.(*DNSKEY).PrivateKeyString(privkey))
 }
 
 /*
@@ -255,7 +255,7 @@ func TestDnskey(t *testing.T) {
 */
 
 func TestTag(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
@@ -273,7 +273,7 @@ func TestTag(t *testing.T) {
 }
 
 func TestKeyRSA(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET
@@ -283,7 +283,7 @@ func TestKeyRSA(t *testing.T) {
 	key.Algorithm = RSASHA256
 	priv, _ := key.Generate(2048)
 
-	soa := new(RR_SOA)
+	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
 	soa.Ns = "open.nlnetlabs.nl."
 	soa.Mbox = "miekg.atoom.net."
@@ -293,7 +293,7 @@ func TestKeyRSA(t *testing.T) {
 	soa.Expire = 604800
 	soa.Minttl = 86400
 
-	sig := new(RR_RRSIG)
+	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
 	sig.TypeCovered = TypeSOA
 	sig.Algorithm = RSASHA256
@@ -316,7 +316,7 @@ func TestKeyRSA(t *testing.T) {
 }
 
 func TestKeyToDS(t *testing.T) {
-	key := new(RR_DNSKEY)
+	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Class = ClassINET

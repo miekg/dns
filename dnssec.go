@@ -99,7 +99,7 @@ type dnskeyWireFmt struct {
 }
 
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.
-func (k *RR_DNSKEY) KeyTag() uint16 {
+func (k *DNSKEY) KeyTag() uint16 {
 	if k == nil {
 		return 0
 	}
@@ -140,11 +140,11 @@ func (k *RR_DNSKEY) KeyTag() uint16 {
 }
 
 // ToDS converts a DNSKEY record to a DS record.
-func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
+func (k *DNSKEY) ToDS(h int) *DS {
 	if k == nil {
 		return nil
 	}
-	ds := new(RR_DS)
+	ds := new(DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
 	ds.Hdr.Rrtype = TypeDS
@@ -205,7 +205,7 @@ func (k *RR_DNSKEY) ToDS(h int) *RR_DS {
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
 // otherwise false.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
-func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
+func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if k == nil {
 		return ErrPrivKey
 	}
@@ -310,7 +310,7 @@ func (rr *RR_RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period must be checked separately.
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work. 
-func (rr *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
+func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
 	if len(rrset) == 0 {
 		return ErrRRset
@@ -425,7 +425,7 @@ func (rr *RR_RRSIG) Verify(k *RR_DNSKEY, rrset []RR) error {
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate 
 // if a signature period is valid.
-func (rr *RR_RRSIG) ValidityPeriod() bool {
+func (rr *RRSIG) ValidityPeriod() bool {
 	utc := time.Now().UTC().Unix()
 	modi := (int64(rr.Inception) - utc) / year68
 	mode := (int64(rr.Expiration) - utc) / year68
@@ -435,7 +435,7 @@ func (rr *RR_RRSIG) ValidityPeriod() bool {
 }
 
 // Return the signatures base64 encodedig sigdata as a byte slice.
-func (s *RR_RRSIG) sigBuf() []byte {
+func (s *RRSIG) sigBuf() []byte {
 	sigbuf, err := packBase64([]byte(s.Signature))
 	if err != nil {
 		return nil
@@ -444,7 +444,7 @@ func (s *RR_RRSIG) sigBuf() []byte {
 }
 
 // setPublicKeyInPrivate sets the public key in the private key. 
-func (k *RR_DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
+func (k *DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
 	switch t := p.(type) {
 	case *dsa.PrivateKey:
 		x := k.publicKeyDSA()
@@ -469,7 +469,7 @@ func (k *RR_DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
 }
 
 // publicKeyRSA returns the RSA public key from a DNSKEY record.
-func (k *RR_DNSKEY) publicKeyRSA() *rsa.PublicKey {
+func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
@@ -507,7 +507,7 @@ func (k *RR_DNSKEY) publicKeyRSA() *rsa.PublicKey {
 }
 
 // publicKeyCurve returns the Curve public key from the DNSKEY record.
-func (k *RR_DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
+func (k *DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
@@ -534,7 +534,7 @@ func (k *RR_DNSKEY) publicKeyCurve() *ecdsa.PublicKey {
 	return pubkey
 }
 
-func (k *RR_DNSKEY) publicKeyDSA() *dsa.PublicKey {
+func (k *DNSKEY) publicKeyDSA() *dsa.PublicKey {
 	keybuf, err := packBase64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
@@ -557,7 +557,7 @@ func (k *RR_DNSKEY) publicKeyDSA() *dsa.PublicKey {
 }
 
 // Set the public key (the value E and N)
-func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
+func (k *DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 	if _E == 0 || _N == nil {
 		return false
 	}
@@ -568,7 +568,7 @@ func (k *RR_DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
 }
 
 // Set the public key for Elliptic Curves
-func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
+func (k *DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 	if _X == nil || _Y == nil {
 		return false
 	}
@@ -579,7 +579,7 @@ func (k *RR_DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 }
 
 // Set the public key for DSA
-func (k *RR_DNSKEY) setPublicKeyDSA(_Q, _P, _G, _Y *big.Int) bool {
+func (k *DNSKEY) setPublicKeyDSA(_Q, _P, _G, _Y *big.Int) bool {
 	if _Q == nil || _P == nil || _G == nil || _Y == nil {
 		return false
 	}
@@ -637,7 +637,7 @@ func (p wireSlice) Less(i, j int) bool {
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 // Return the raw signature data.
-func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
+func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
 		r1 := r.Copy()
@@ -655,33 +655,33 @@ func rawSignatureData(rrset []RR, s *RR_RRSIG) (buf []byte) {
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
 		switch x := r.(type) {
-		case *RR_NS:
+		case *NS:
 			x.Ns = strings.ToLower(x.Ns)
-		case *RR_CNAME:
+		case *CNAME:
 			x.Target = strings.ToLower(x.Target)
-		case *RR_SOA:
+		case *SOA:
 			x.Ns = strings.ToLower(x.Ns)
 			x.Mbox = strings.ToLower(x.Mbox)
-		case *RR_MB:
+		case *MB:
 			x.Mb = strings.ToLower(x.Mb)
-		case *RR_MG:
+		case *MG:
 			x.Mg = strings.ToLower(x.Mg)
-		case *RR_MR:
+		case *MR:
 			x.Mr = strings.ToLower(x.Mr)
-		case *RR_PTR:
+		case *PTR:
 			x.Ptr = strings.ToLower(x.Ptr)
-		case *RR_MINFO:
+		case *MINFO:
 			x.Rmail = strings.ToLower(x.Rmail)
 			x.Email = strings.ToLower(x.Email)
-		case *RR_MX:
+		case *MX:
 			x.Mx = strings.ToLower(x.Mx)
-		case *RR_NAPTR:
+		case *NAPTR:
 			x.Replacement = strings.ToLower(x.Replacement)
-		case *RR_KX:
+		case *KX:
 			x.Exchanger = strings.ToLower(x.Exchanger)
-		case *RR_SRV:
+		case *SRV:
 			x.Target = strings.ToLower(x.Target)
-		case *RR_DNAME:
+		case *DNAME:
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL

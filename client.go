@@ -70,9 +70,9 @@ func (w *reply) dial() (err error) {
 	}
 	for a := 0; a < attempts; a++ {
 		if w.client.Net == "" {
-			conn, err = net.DialTimeout("udp", w.addr, 5 * 1e9)
+			conn, err = net.DialTimeout("udp", w.addr, 5*1e9)
 		} else {
-			conn, err = net.DialTimeout(w.client.Net, w.addr, 5 * 1e9)
+			conn, err = net.DialTimeout(w.client.Net, w.addr, 5*1e9)
 		}
 		if err == nil {
 			break
