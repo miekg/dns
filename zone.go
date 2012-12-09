@@ -339,12 +339,12 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
-		for covert, _ := range zd.Value.(*ZoneData).Signatures {
+		for covert := range zd.Value.(*ZoneData).Signatures {
 			delete(zd.Value.(*ZoneData).Signatures, covert)
 		}
 	default:
 		// empty all rr maps
-		for t, _ := range zd.Value.(*ZoneData).RR {
+		for t := range zd.Value.(*ZoneData).RR {
 			delete(zd.Value.(*ZoneData).RR, t)
 		}
 	}
@@ -428,7 +428,7 @@ func (z *Zone) Sign(keys map[*RR_DNSKEY]PrivateKey, config *SignatureConfig) err
 	}
 	// Pre-calc the key tag
 	keytags := make(map[*RR_DNSKEY]uint16)
-	for k, _ := range keys {
+	for k := range keys {
 		keytags[k] = k.KeyTag()
 	}
 
@@ -507,7 +507,7 @@ func (node *ZoneData) Sign(next *ZoneData, keys map[*RR_DNSKEY]PrivateKey, keyta
 
 	// Still need to add NSEC + RRSIG for this data, there might also be a DS record
 	if node.NonAuth == true {
-		for t, _ := range node.RR {
+		for t := range node.RR {
 			nsec.TypeBitMap = append(nsec.TypeBitMap, t)
 		}
 		nsec.TypeBitMap = append(nsec.TypeBitMap, TypeRRSIG) // Add sig too

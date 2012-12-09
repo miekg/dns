@@ -306,7 +306,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	msg[off] = 0
 End:
 	off++
-	if off - offstart > 255 {
+	if off-offstart > 255 {
 		return lenmsg, ErrDomain
 	}
 	return off, nil
@@ -392,7 +392,7 @@ Loop:
 	if ptr == 0 {
 		off1 = off
 	}
-	if off1 - offstart > 255 {
+	if off1-offstart > 255 {
 		return "", lenmsg, ErrDomain
 	}
 	return s, off1, nil
