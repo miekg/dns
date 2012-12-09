@@ -5,6 +5,7 @@
 * allow multiple edns0 options to exist in the record when converting
   from/to wireformat
 * NSEC3 support propper in the zone structure(s)
+* Test all rdata packing with zero rdata -- allowed for dynamic updates
 
 ## Nice to have
 

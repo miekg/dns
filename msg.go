@@ -464,6 +464,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					return lenmsg, &Error{Err: "overflow packing a"}
 				}
 			case `dns:"aaaa"`:
+				// fv.Len TODO(mg) dynamisc updates?
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					return lenmsg, &Error{Err: "overflow packing aaaa"}
 				}
