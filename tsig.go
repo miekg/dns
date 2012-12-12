@@ -49,7 +49,7 @@
 //				// *Msg r has an TSIG records and it was not valided
 //			}
 //		}
-//		w.Write(m)
+//		w.WriteMsg(m)
 //	}
 package dns
 
