@@ -246,8 +246,28 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "expecting $INCLUDE value, not this...", l}}
 				return
 			}
-			if e := slurpRemainder(c, f); e != nil {
-				t <- Token{Error: e}
+			neworigin := origin // There may be optionally a new origin set after the filename, if not use current one
+			l := <-c
+			switch l.value {
+			case _BLANK:
+				l := <-c
+				if l.value == _STRING {
+					// a new origin is specified.
+					if !IsFqdn(l.token) {
+						if origin != "." { // Prevent .. endings
+							neworigin = l.token + "." + origin
+						} else {
+							neworigin = l.token + origin
+						}
+					} else {
+						neworigin = l.token
+					}
+				}
+			case _NEWLINE, _EOF:
+				// Ok
+			default:
+				t <- Token{Error: &ParseError{f, "garbage after $INCLUDE", l}}
+				return
 			}
 			// Start with the new file
 			r1, e1 := os.Open(l.token)
@@ -259,7 +279,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "too deeply nested $INCLUDE", l}}
 				return
 			}
-			parseZone(r1, l.token, origin, t, include+1)
+			parseZone(r1, l.token, neworigin, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
 			if l.value != _BLANK {
