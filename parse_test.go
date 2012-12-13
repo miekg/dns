@@ -446,7 +446,6 @@ $ORIGIN name.
                         MX      10 mx02.nic
                         MX      10 mx03.nic
                         MX      10 mx04.nic
-                        TXT     "10 mx\"04.nic"
 $ORIGIN 0-g.name
 moutamassey             NS      ns01.yahoodomains.jp.
                         NS      ns02.yahoodomains.jp.
@@ -475,7 +474,6 @@ moutamassey             NS      ns01.yahoodomains.jp.
 	// 0-g.name.	10800	IN	MX	10 mx02.nic.name.
 	// 0-g.name.	10800	IN	MX	10 mx03.nic.name.
 	// 0-g.name.	10800	IN	MX	10 mx04.nic.name.
-	// 0-g.name.    10800   IN      TXT     "10 mx\\\"04.nic"
 	// moutamassey.0-g.name.name.	10800	IN	NS	ns01.yahoodomains.jp.
 	// moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
 }
