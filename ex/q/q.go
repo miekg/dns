@@ -269,7 +269,7 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 	case 3:
 		switch s1[0] {
 		case "hmac-md5":
-			return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+			return "hmac-md5.sig-alg.reg.int.", s1[1], s1[2], true
 		case "hmac-sha1":
 			return "hmac-sha1.", s1[1], s1[2], true
 		case "hmac-sha256":
