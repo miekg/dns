@@ -252,6 +252,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			case _BLANK:
 				l := <-c
 				if l.value == _STRING {
+					if _, _, ok := IsDomainName(l.token); !ok {
+						t <- Token{Error: &ParseError{f, "bad origin name", l}}
+						return
+					}
 					// a new origin is specified.
 					if !IsFqdn(l.token) {
 						if origin != "." { // Prevent .. endings
@@ -316,6 +320,10 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			}
 			if e := slurpRemainder(c, f); e != nil {
 				t <- Token{Error: e}
+			}
+			if _, _, ok := IsDomainName(l.token); !ok {
+				t <- Token{Error: &ParseError{f, "bad origin name", l}}
+				return
 			}
 			if !IsFqdn(l.token) {
 				if origin != "." { // Prevent .. endings
