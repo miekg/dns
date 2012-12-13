@@ -125,7 +125,7 @@ type tsigWireFmt struct {
 	Ttl   uint32
 	// Rdata of the TSIG
 	Algorithm  string `dns:"domain-name"`
-	TimeSigned uint64
+	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
@@ -142,7 +142,7 @@ type macWireFmt struct {
 
 // 3.3. Time values used in TSIG calculations
 type timerWireFmt struct {
-	TimeSigned uint64
+	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 }
 
