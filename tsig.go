@@ -220,7 +220,6 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	}
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
-
 	ti := uint64(time.Now().Unix()) - tsig.TimeSigned
 	if uint64(tsig.Fudge) < ti {
 		return ErrTime

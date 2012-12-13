@@ -6,6 +6,7 @@
   from/to wireformat
 * NSEC3 support propper in the zone structure(s)
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
+* TSIG is not added in q when the query is for . 
 
 ## Nice to have
 
