@@ -192,10 +192,6 @@ Flags:
 
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
-		if *query {
-			fmt.Printf("%s", m.String())
-			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
-		}
 		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
@@ -205,6 +201,10 @@ Flags:
 				fmt.Fprintf(os.Stderr, "TSIG key data error\n")
 				return
 			}
+		}
+		if *query {
+			fmt.Printf("%s", m.String())
+			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
 		}
 		if qtype == dns.TypeAXFR {
 			c.Net = "tcp"
