@@ -128,7 +128,7 @@ func (rr *OPT) SetDo() {
 	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
 }
 
-// EDNS0 defines an EDNS0 Option. An OPT RR can have multiple option appended to
+// EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to
 // it. Basic use pattern for adding an option to and OPT RR:
 //
 //	// o is the OPT RR, e is the EDNS0 option
