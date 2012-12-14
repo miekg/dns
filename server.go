@@ -93,7 +93,7 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 // of Go DNS for 'authors.bind' or 'authors.server' queries in the
 // CHAOS Class. Note with:
 //
-//	HandleFunc("authors.bind.", HandleAuthors)
+//	dns.HandleFunc("authors.bind.", dns.HandleAuthors)
 //
 // the handler is registered for all DNS classes, thereby potentially
 // hijacking the authors.bind. zone in the IN class. If you need the
@@ -125,7 +125,7 @@ func HandleAuthors(w ResponseWriter, r *Msg) {
 // of Go DNS for 'version.bind' or 'version.server' queries in the
 // CHAOS Class. Note with:
 //
-//	HandleFunc("version.bind.", HandleVersion)
+//	dns.HandleFunc("version.bind.", dns.HandleVersion)
 //
 // the handler is registered for all DNS classes, thereby potentially
 // hijacking the version.bind. zone in the IN class. If you need the
