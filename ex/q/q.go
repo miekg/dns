@@ -192,10 +192,6 @@ Flags:
 
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
-		if *query {
-			fmt.Printf("%s", m.String())
-			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
-		}
 		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
@@ -205,6 +201,10 @@ Flags:
 				fmt.Fprintf(os.Stderr, "TSIG key data error\n")
 				return
 			}
+		}
+		if *query {
+			fmt.Printf("%s", m.String())
+			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
 		}
 		if qtype == dns.TypeAXFR {
 			c.Net = "tcp"
@@ -269,7 +269,7 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 	case 3:
 		switch s1[0] {
 		case "hmac-md5":
-			return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+			return "hmac-md5.sig-alg.reg.int.", s1[1], s1[2], true
 		case "hmac-sha1":
 			return "hmac-sha1.", s1[1], s1[2], true
 		case "hmac-sha256":
