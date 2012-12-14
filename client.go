@@ -101,7 +101,6 @@ func (w *reply) receive() (*Msg, error) {
 		return nil, err
 	}
 	w.rtt = time.Since(w.t)
-	m.Size = n
 	if t := m.IsTsig(); t != nil {
 		secret := t.Hdr.Name
 		if _, ok := w.client.TsigSecret[secret]; !ok {
