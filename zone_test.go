@@ -1,9 +1,6 @@
 package dns
 
-import (
-	"os"
-	"testing"
-)
+import "testing"
 
 func TestRadixName(t *testing.T) {
 	tests := map[string]string{".": ".",
@@ -19,32 +16,6 @@ func TestRadixName(t *testing.T) {
 			t.Fail()
 		}
 	}
-}
-
-func TestApex(t *testing.T) {
-	f, err := os.Open("t/miek.nl.signed_test")
-	if err != nil {
-		t.Logf("Failed to open zone file")
-		t.Fail()
-	}
-	defer f.Close()
-	z := NewZone("miek.nl.")
-	to := ParseZone(f, "miek.nl.", "t/miek.nl.signed_test")
-	for rr := range to {
-		if rr.Error == nil {
-			z.Insert(rr.RR)
-		} else {
-			t.Logf("Error %s\n", rr.Error.Error())
-		}
-	}
-	apex := z.Apex()
-	if apex == nil {
-		t.Fatalf("Apex not found")
-	}
-	t.Logf("Apex found %s", apex.RR[TypeSOA][0].String())
-	apex.RR[TypeSOA][0].(*SOA).Serial++
-	apex = z.Apex()
-	t.Logf("Apex found %s", z.Apex().RR[TypeSOA][0].String())
 }
 
 func TestInsert(t *testing.T) {
