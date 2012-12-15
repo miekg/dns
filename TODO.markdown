@@ -4,6 +4,8 @@
 * Use BIND10 memory efficient zone structure?
 * NSEC3 support propper in the zone structure(s)
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
+* Ratelimiting?
+* NSEC3/NSEC support function for generating NXDOMAIN respsonse?
 
 ## Nice to have
 
