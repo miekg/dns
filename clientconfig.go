@@ -6,7 +6,6 @@ package dns
 
 import (
 	"bufio"
-	"net"
 	"os"
 	"strconv"
 	"strings"
