@@ -43,7 +43,7 @@ func main() {
 	client := flag.String("client", "", "set edns client-subnet option")
 	//serial := flag.Int("serial", 0, "perform an IXFR with this serial")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [options] [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
