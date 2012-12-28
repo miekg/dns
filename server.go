@@ -54,7 +54,7 @@ type response struct {
 // that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
 // that queries for the DS record are redirected to the parent zone (if that
 // is also registered), otherwise the child gets the query.
-// ServeMux is also save for concurrent access from multiple goroutines.
+// ServeMux is also safe for concurrent access from multiple goroutines.
 type ServeMux struct {
 	r *radix.Radix
 	m *sync.RWMutex
