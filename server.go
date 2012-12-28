@@ -9,6 +9,7 @@ package dns
 import (
 	"github.com/miekg/radix"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -53,12 +54,14 @@ type response struct {
 // that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
 // that queries for the DS record are redirected to the parent zone (if that
 // is also registered), otherwise the child gets the query.
+// ServeMux is also save for concurrent access from multiple goroutines.
 type ServeMux struct {
-	m *radix.Radix
+	r *radix.Radix
+	m *sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux { return &ServeMux{m: radix.New()} }
+func NewServeMux() *ServeMux { return &ServeMux{r: radix.New(), m: new(sync.RWMutex)} }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
@@ -163,7 +166,9 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 }
 
 func (mux *ServeMux) match(zone string, t uint16) Handler {
-	if h, e := mux.m.Find(toRadixName(zone)); e {
+	mux.m.RLock()
+	defer mux.m.RUnlock()
+	if h, e := mux.r.Find(toRadixName(zone)); e {
 		// If we got queried for a DS record, we must see if we
 		// if we also serve the parent. We then redirect the query to it.
 		if t != TypeDS {
@@ -188,7 +193,9 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m.Insert(toRadixName(Fqdn(pattern)), handler)
+	mux.m.Lock()
+	mux.r.Insert(toRadixName(Fqdn(pattern)), handler)
+	mux.m.Unlock()
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -201,8 +208,9 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	// if its there, its gone
-	mux.m.Remove(toRadixName(Fqdn(pattern)))
+	mux.m.Lock()
+	mux.r.Remove(toRadixName(Fqdn(pattern)))
+	mux.m.Unlock()
 }
 
 // ServeDNS dispatches the request to the handler whose
