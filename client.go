@@ -27,7 +27,6 @@ type reply struct {
 // Client is usable for sending queries.
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	Attempts     int               // number of attempts, if not set defaults to 1
 	Retry        bool              // retry with TCP
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
@@ -64,19 +63,13 @@ func (w *reply) RemoteAddr() net.Addr {
 // dial connects to the address addr for the network set in c.Net
 func (w *reply) dial() (err error) {
 	var conn net.Conn
-	attempts := w.client.Attempts
-	if attempts == 0 {
-		attempts = 1
+	if w.client.Net == "" {
+		conn, err = net.DialTimeout("udp", w.addr, 5*1e9)
+	} else {
+		conn, err = net.DialTimeout(w.client.Net, w.addr, 5*1e9)
 	}
-	for a := 0; a < attempts; a++ {
-		if w.client.Net == "" {
-			conn, err = net.DialTimeout("udp", w.addr, 5*1e9)
-		} else {
-			conn, err = net.DialTimeout(w.client.Net, w.addr, 5*1e9)
-		}
-		if err == nil {
-			break
-		}
+	if err != nil {
+		return err
 	}
 	w.conn = conn
 	return
@@ -120,68 +113,41 @@ func (w *reply) read(p []byte) (n int, err error) {
 	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
-	attempts := w.client.Attempts
-	if attempts == 0 {
-		attempts = 1
-	}
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
-		for a := 0; a < attempts; a++ {
-			setTimeouts(w)
-			n, err = w.conn.(*net.TCPConn).Read(p[0:2])
-			if err != nil || n != 2 {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
-			}
-			l, _ := unpackUint16(p[0:2], 0)
-			if l == 0 {
-				return 0, ErrShortRead
-			}
-			if int(l) > len(p) {
-				return int(l), io.ErrShortBuffer
-			}
-			n, err = w.conn.(*net.TCPConn).Read(p[:l])
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
-			}
-			i := n
-			for i < int(l) {
-				j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
-				if err != nil {
-					if e, ok := err.(net.Error); ok && e.Timeout() {
-						// We are half way in our read...
-						continue
-					}
-					return i, err
-				}
-				i += j
-			}
-			n = i
-			if err == nil {
-				return n, err
-			}
+		setTimeouts(w)
+		n, err = w.conn.(*net.TCPConn).Read(p[0:2])
+		if err != nil || n != 2 {
+			return n, err
 		}
-	case "", "udp", "udp4", "udp6":
-		for a := 0; a < attempts; a++ {
-			setTimeouts(w)
-			n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
+		l, _ := unpackUint16(p[0:2], 0)
+		if l == 0 {
+			return 0, ErrShortRead
+		}
+		if int(l) > len(p) {
+			return int(l), io.ErrShortBuffer
+		}
+		n, err = w.conn.(*net.TCPConn).Read(p[:l])
+		if err != nil {
+			return n, err
+		}
+		i := n
+		for i < int(l) {
+			j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
 			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
+				return i, err
 			}
-			if err == nil {
-				return n, err
-			}
+			i += j
+		}
+		n = i
+	case "", "udp", "udp4", "udp6":
+		setTimeouts(w)
+		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
+		if err != nil {
+			return n, err
 		}
 	}
-	return
+	return n, err
 }
 
 // send sends a dns msg to the address specified in w.
@@ -211,57 +177,33 @@ func (w *reply) send(m *Msg) (err error) {
 }
 
 func (w *reply) write(p []byte) (n int, err error) {
-	attempts := w.client.Attempts
-	if attempts == 0 {
-		attempts = 1
-	}
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		if len(p) < 2 {
 			return 0, io.ErrShortBuffer
 		}
-		for a := 0; a < attempts; a++ {
-			setTimeouts(w)
-			l := make([]byte, 2)
-			l[0], l[1] = packUint16(uint16(len(p)))
-			p = append(l, p...)
-			n, err := w.conn.Write(p)
-			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
-			}
-			i := n
-			if i < len(p) {
-				j, err := w.conn.Write(p[i:len(p)])
-				if err != nil {
-					if e, ok := err.(net.Error); ok && e.Timeout() {
-						// We are half way in our write...
-						continue
-					}
-					return i, err
-				}
-				i += j
-			}
-			n = i
-			if err == nil {
-				return n, err
-			}
+		setTimeouts(w)
+		l := make([]byte, 2)
+		l[0], l[1] = packUint16(uint16(len(p)))
+		p = append(l, p...)
+		n, err := w.conn.Write(p)
+		if err != nil {
+			return n, err
 		}
-	case "", "udp", "udp4", "udp6":
-		for a := 0; a < attempts; a++ {
-			setTimeouts(w)
-			n, err = w.conn.(*net.UDPConn).Write(p)
+		i := n
+		if i < len(p) {
+			j, err := w.conn.Write(p[i:len(p)])
 			if err != nil {
-				if e, ok := err.(net.Error); ok && e.Timeout() {
-					continue
-				}
-				return n, err
+				return i, err
 			}
-			if err == nil {
-				return n, err
-			}
+			i += j
+		}
+		n = i
+	case "", "udp", "udp4", "udp6":
+		setTimeouts(w)
+		n, err = w.conn.(*net.UDPConn).Write(p)
+		if err != nil {
+			return n, err
 		}
 	}
 	return
