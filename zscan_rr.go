@@ -9,7 +9,7 @@ import (
 
 // Parse the rdata of each rrtype.
 // All data from the channel c is either _STRING or _BLANK.
-// After the rdata there may come 1 _BLANK and then a _NEWLINE
+// After the rdata there may come a _BLANK and then a _NEWLINE
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
 func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
