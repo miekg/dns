@@ -1151,9 +1151,16 @@ func (rr *URI) Header() *RR_Header { return &rr.Hdr }
 func (rr *URI) Copy() RR           { return &URI{*rr.Hdr.CopyHeader(), rr.Weight, rr.Priority, rr.Target} }
 
 func (rr *URI) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
-		" " + strconv.Itoa(int(rr.Weight)) +
-		" " + rr.Target
+	s := rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
+		" " + strconv.Itoa(int(rr.Weight))
+	for i, s1 := range rr.Target {
+		if i > 0 {
+			s += " " + strconv.QuoteToASCII(s1)
+		} else {
+			s += strconv.QuoteToASCII(s1)
+		}
+	}
+	return s
 }
 
 func (rr *URI) Len() int {
