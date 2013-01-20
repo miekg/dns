@@ -80,7 +80,7 @@ type Msg struct {
 var TypeToString = map[uint16]string{
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
-	TypeTLSA:       "TSLA",
+	TypeTLSA:       "TLSA",
 	TypeMB:         "MB",
 	TypeMG:         "MG",
 	TypeRP:         "RP",
