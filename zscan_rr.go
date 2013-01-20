@@ -126,6 +126,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return setTLSA(h, c, f)
 	case TypeTXT:
 		return setTXT(h, c, f)
+	case TypeURI:
+		return setURI(h, c, f)
 	case TypeNINFO:
 		return setNINFO(h, c, f)
 	case TypeHIP:
@@ -164,7 +166,7 @@ func endingToString(c chan lex, errstr, f string) (string, *ParseError) {
 		case _BLANK:
 			// Ok
 		default:
-			return "", &ParseError{f, "bad DHCID Digest", l}
+			return "", &ParseError{f, errstr, l}
 		}
 		l = <-c
 	}
@@ -1660,35 +1662,10 @@ func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	} else {
 		rr.Weight = uint16(i)
 	}
-	// _BLANK?
 
-	// Get the remaining data until we see a NEWLINE
-	quote := false
-	l = <-c
-	var s string
-	switch l.value == _QUOTE {
-	case true:
-		for l.value != _NEWLINE && l.value != _EOF {
-			switch l.value {
-			case _STRING:
-				s += l.token
-			case _BLANK:
-				if quote {
-					// _BLANK can only be seen in between txt parts.
-					return nil, &ParseError{f, "bad URI Target", l}
-				}
-			case _QUOTE:
-				quote = !quote
-			default:
-				return nil, &ParseError{f, "bad URI Target", l}
-			}
-			l = <-c
-		}
-		if quote {
-			return nil, &ParseError{f, "bad URI Target", l}
-		}
-	case false: // Unquoted
-		return nil, &ParseError{f, "bad URI Target", l}
+	s, e := endingToTxtSlice(c, "bad URI Target", f)
+	if e != nil {
+		return nil, e
 	}
 	rr.Target = s
 	return rr, nil

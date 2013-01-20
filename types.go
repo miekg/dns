@@ -1144,7 +1144,7 @@ type URI struct {
 	Hdr      RR_Header
 	Priority uint16
 	Weight   uint16
-	Target   string `dns:"txt"`
+	Target   []string `dns:"txt"`
 }
 
 func (rr *URI) Header() *RR_Header { return &rr.Hdr }
