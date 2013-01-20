@@ -1624,6 +1624,7 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(TXT)
 	rr.Hdr = h
 
+	// No _BLANK reading here, because this is all rdata is TXT
 	s, e := endingToTxtSlice(c, "bad TXT Txt", f)
 	if e != nil {
 		return nil, e
@@ -1663,6 +1664,7 @@ func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 		rr.Weight = uint16(i)
 	}
 
+	<-c // _BLANK
 	s, e := endingToTxtSlice(c, "bad URI Target", f)
 	if e != nil {
 		return nil, e
