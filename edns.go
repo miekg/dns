@@ -14,7 +14,7 @@
 // Basic use pattern for a server to check if (and which) options are set:
 //
 //	// o is a dns.OPT
-//	for _, s := range o.Options {
+//	for _, s := range o.Option {
 //		switch e := s.(type) {
 //		case *dns.EDNS0_NSID:
 //			// do stuff with e.Nsid
