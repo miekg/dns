@@ -72,6 +72,15 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		v4 = a.To4() != nil
 	}
 
+	if o := r.IsEdns0(); o != nil {
+		for _, s := range o.Options {
+			switch e = s.(type) {
+			case *dns.EDNS0_SUBNET:
+				println("SUBNET")
+			}
+		}
+	}
+
 	if v4 {
 		rr = new(dns.A)
 		rr.(*dns.A).Hdr = dns.RR_Header{Name: dom, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 0}
