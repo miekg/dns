@@ -669,6 +669,7 @@ func (rr *AAAA) Len() int {
 	return rr.Hdr.Len() + net.IPv6len
 }
 
+
 type LOC struct {
 	Hdr       RR_Header
 	Version   uint8
