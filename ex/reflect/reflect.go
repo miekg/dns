@@ -72,6 +72,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		v4 = a.To4() != nil
 	}
 
+	/*
 	if o := r.IsEdns0(); o != nil {
 		for _, s := range o.Option {
 			switch e := s.(type) {
@@ -80,6 +81,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	}
+	*/
 
 	if v4 {
 		rr = new(dns.A)
