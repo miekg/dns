@@ -73,10 +73,10 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if o := r.IsEdns0(); o != nil {
-		for _, s := range o.Options {
-			switch e = s.(type) {
+		for _, s := range o.Option {
+			switch e := s.(type) {
 			case *dns.EDNS0_SUBNET:
-				println("SUBNET")
+				log.Printf("Edns0 subnet %s", e.Address)
 			}
 		}
 	}
