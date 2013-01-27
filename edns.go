@@ -248,7 +248,8 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_SUBNET) unpack(b []byte) {
-	if len(b) < 8 {
+	lb := len(b)
+	if lb < 4 {
 		return
 	}
 	e.Family, _ = unpackUint16(b, 0)
@@ -256,15 +257,25 @@ func (e *EDNS0_SUBNET) unpack(b []byte) {
 	e.SourceScope = b[3]
 	switch e.Family {
 	case 1:
-		if len(b) == 8 {
-			e.Address = net.IPv4(b[4], b[5], b[6], b[7])
+		addr := make([]byte, 4)
+		for i := 0; i < int(e.SourceNetmask/8); i++ {
+			if 4+i > len(b) {
+				break
+			}
+			addr[i] = b[4+i]
 		}
+		e.Address = net.IPv4(addr[0], addr[1], addr[2], addr[3])
 	case 2:
-		if len(b) == 20 {
-			e.Address = net.IP{b[4], b[4+1], b[4+2], b[4+3], b[4+4],
-				b[4+5], b[4+6], b[4+7], b[4+8], b[4+9], b[4+10],
-				b[4+11], b[4+12], b[4+13], b[4+14], b[4+15]}
+		addr := make([]byte, 16)
+		for i := 0; i < int(e.SourceNetmask/8); i++ {
+			if 4+i > len(b) {
+				break
+			}
+			addr[i] = b[4+i]
 		}
+		e.Address = net.IP{addr[0], addr[1], addr[2], addr[3], addr[4],
+			addr[5], addr[6], addr[7], addr[8], addr[9], addr[10],
+			addr[11], addr[12], addr[13], addr[14], addr[15]}
 	}
 	return
 }
