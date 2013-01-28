@@ -40,13 +40,22 @@ type Client struct {
 //	in, rtt, err := c.Exchange(message, "127.0.0.1:53")
 // 
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	w := new(reply)
-	w.client = c
-	w.addr = a
+	w := &reply{client: c, addr: a}
 	if err = w.dial(); err != nil {
 		return nil, 0, err
 	}
 	defer w.conn.Close()
+	if err = w.send(m); err != nil {
+		return nil, 0, err
+	}
+	r, err = w.receive()
+	return r, w.rtt, err
+}
+
+// ExchangeConn performs an synchronous query. It sends the message m trough the
+// connection c and waits for a reply.
+func (c *Client) ExchangeConn(m *Msg, c net.Conn) (r *Msg, rtt time.Duration, err error) {
+	w := &reply{client: c, addr: a.RemoteAddr()}
 	if err = w.send(m); err != nil {
 		return nil, 0, err
 	}
