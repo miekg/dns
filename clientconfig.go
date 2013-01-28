@@ -18,7 +18,7 @@ type ClientConfig struct {
 	Port     string   // what port to use
 	Ndots    int      // number of dots in name to trigger absolute lookup
 	Timeout  int      // seconds before giving up on packet
-	Attempts int      // lost packets before giving up on server
+	Attempts int      // lost packets before giving up on server, not used in the package dns
 }
 
 // ClientConfigFromFile parses a resolv.conf(5) like file and returns
