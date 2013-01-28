@@ -46,6 +46,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	if err = w.dial(); err != nil {
 		return nil, 0, err
 	}
+	defer w.conn.Close()
 	if err = w.send(m); err != nil {
 		return nil, 0, err
 	}
