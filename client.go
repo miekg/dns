@@ -38,7 +38,7 @@ type Client struct {
 //
 //	c := new(dns.Client)
 //	in, rtt, err := c.Exchange(message, "127.0.0.1:53")
-// 
+//
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	w := &reply{client: c, addr: a}
 	if err = w.dial(); err != nil {
@@ -61,13 +61,6 @@ func (c *Client) ExchangeConn(m *Msg, s net.Conn) (r *Msg, rtt time.Duration, er
 	}
 	r, err = w.receive()
 	return r, w.rtt, err
-}
-
-func (w *reply) RemoteAddr() net.Addr {
-	if w.conn != nil {
-		return w.conn.RemoteAddr()
-	}
-	return nil
 }
 
 // dial connects to the address addr for the network set in c.Net
