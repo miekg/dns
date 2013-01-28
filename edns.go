@@ -217,7 +217,7 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	switch e.Family {
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 {
-			return nil, errors.New("bad netmask")
+			return nil, errors.New("dns: bad netmask")
 		}
 		ip := make([]byte, net.IPv4len)
 		a := e.Address.To4().Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
@@ -230,7 +230,7 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 		b = append(b, ip...)
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 {
-			return nil, errors.New("bad netmask")
+			return nil, errors.New("dns: bad netmask")
 		}
 		ip := make([]byte, net.IPv6len)
 		a := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
@@ -242,7 +242,7 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 		}
 		b = append(b, ip...)
 	default:
-		return nil, errors.New("bad address family")
+		return nil, errors.New("dns: bad address family")
 	}
 	return b, nil
 }
