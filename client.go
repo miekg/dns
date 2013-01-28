@@ -1,6 +1,6 @@
 package dns
 
-// A concurrent client implementation. 
+// A client implementation.
 
 import (
 	"io"
@@ -10,6 +10,7 @@ import (
 
 // Order of events:
 // *client -> *reply -> Exchange() -> dial()/send()->write()/receive()->read()
+
 // Do I want make this an interface thingy?
 type reply struct {
 	client         *Client
