@@ -56,8 +56,8 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 // ExchangeConn performs an synchronous query. It sends the message m trough the
 // connection s and waits for a reply.
 func (c *Client) ExchangeConn(m *Msg, s net.Conn) (r *Msg, rtt time.Duration, err error) {
-	w := &reply{client: c}
-	if err = w.send(m); err != nil {	
+	w := &reply{client: c, conn: s}
+	if err = w.send(m); err != nil {
 		return nil, 0, err
 	}
 	r, err = w.receive()
