@@ -193,7 +193,7 @@ func TestSignVerify(t *testing.T) {
 }
 
 func TestDnskey(t *testing.T) {
-//	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
+	//	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
 	pubkey, _ := ReadRR(strings.NewReader(`
 miek.nl.	IN	DNSKEY	256 3 10 AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL ;{id = 5240 (zsk), size = 1024b}
 `), "Kmiek.nl.+010+05240.key")

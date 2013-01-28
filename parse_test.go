@@ -276,8 +276,7 @@ func TestParseLOC(t *testing.T) {
 
 func TestParseDS(t *testing.T) {
 	dt := map[string]string{
-		"example.net. 3600 IN DS 40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B 2071398F":
-			"example.net.\t3600\tIN\tDS\t40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B2071398F",
+		"example.net. 3600 IN DS 40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B 2071398F": "example.net.\t3600\tIN\tDS\t40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B2071398F",
 	}
 	for i, o := range dt {
 		rr, e := NewRR(i)
@@ -294,7 +293,6 @@ func TestParseDS(t *testing.T) {
 		}
 	}
 }
-
 
 func TestQuotes(t *testing.T) {
 	tests := map[string]string{
