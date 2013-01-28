@@ -240,6 +240,7 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 			}
 			ip[i] = a[i]
 		}
+		// chop off ip a SourceNetmask/8: ip = ip[:e.SourceNetmask/8] ?
 		b = append(b, ip...)
 	default:
 		return nil, errors.New("dns: bad address family")
