@@ -210,18 +210,17 @@ func zoneMatch(pattern, zone string) (ok bool) {
 
 // ToRFC3597 converts a known RR to the unknown RR representation
 // from RFC 3597.
-func ToRFC3597(r RR) *RFC3597 {
+func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf := make([]byte, r.Len()*2)
 	off, err := PackStruct(r, buf, 0)
 	if err != nil {
-		return nil
+		return err
 	}
 	buf = buf[:off]
 	rawSetRdlength(buf, 0, off)
-	u := new(RFC3597)
-	_, err = UnpackStruct(u, buf, 0)
+	_, err = UnpackStruct(rr, buf, 0)
 	if err != nil {
-		return nil
+		return err
 	}
-	return u
+	return nil
 }
