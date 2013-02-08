@@ -1097,7 +1097,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	}
 	off, err = UnpackStruct(rr, msg, off0)
 	if off != end {
-		return &h, end, nil
+		return &h, end, &Error{Err: "bad rdlength"}
 	}
 	return rr, off, err
 }
@@ -1306,7 +1306,8 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 	if off != len(msg) {
 		// TODO(mg) remove eventually
-		// println("extra bytes in dns packet", off, "<", len(msg))
+		// Err: extra bytes in packet
+		println("dns: extra bytes in dns packet", off, "<", len(msg))
 	}
 	return nil
 }

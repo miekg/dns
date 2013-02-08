@@ -519,12 +519,15 @@ func (rr *SPF) Header() *RR_Header { return &rr.Hdr }
 func (rr *SPF) Copy() RR           { return &SPF{*rr.Hdr.CopyHeader(), rr.Txt} }
 
 func (rr *SPF) String() string {
+	println("DDSDDSDS")
 	s := rr.Hdr.String()
+	println("LENGTH", len(rr.Txt))
 	for i, s1 := range rr.Txt {
+		println(i, "DDDSDS")
 		if i > 0 {
-			s += " " + "\"" + s1 + "\""
+			s += " " + strconv.QuoteToASCII(s1)
 		} else {
-			s += "\"" + s1 + "\""
+			s += strconv.QuoteToASCII(s1)
 		}
 	}
 	return s
