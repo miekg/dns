@@ -1,4 +1,4 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 // Extended and bugfixes by Miek Gieben
@@ -173,7 +173,7 @@ func (q *Question) String() (s string) {
 	return s
 }
 
-func (q *Question) Len() int {
+func (q *Question) len() int {
 	l := len(q.Name) + 1
 	return l + 4
 }
@@ -184,14 +184,14 @@ type ANY struct {
 }
 
 func (rr *ANY) Header() *RR_Header { return &rr.Hdr }
-func (rr *ANY) Copy() RR           { return &ANY{*rr.Hdr.CopyHeader()} }
+func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
 
 func (rr *ANY) String() string {
 	return rr.Hdr.String()
 }
 
-func (rr *ANY) Len() int {
-	return rr.Hdr.Len()
+func (rr *ANY) len() int {
+	return rr.Hdr.len()
 }
 
 type CNAME struct {
@@ -200,15 +200,15 @@ type CNAME struct {
 }
 
 func (rr *CNAME) Header() *RR_Header { return &rr.Hdr }
-func (rr *CNAME) Copy() RR           { return &CNAME{*rr.Hdr.CopyHeader(), rr.Target} }
+func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), rr.Target} }
 
 func (rr *CNAME) String() string {
 	return rr.Hdr.String() + rr.Target
 }
 
-func (rr *CNAME) Len() int {
+func (rr *CNAME) len() int {
 	l := len(rr.Target) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type HINFO struct {
@@ -218,14 +218,14 @@ type HINFO struct {
 }
 
 func (rr *HINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *HINFO) Copy() RR           { return &HINFO{*rr.Hdr.CopyHeader(), rr.Cpu, rr.Os} }
+func (rr *HINFO) copy() RR           { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
 
 func (rr *HINFO) String() string {
 	return rr.Hdr.String() + rr.Cpu + " " + rr.Os
 }
 
-func (rr *HINFO) Len() int {
-	return rr.Hdr.Len() + len(rr.Cpu) + len(rr.Os)
+func (rr *HINFO) len() int {
+	return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os)
 }
 
 type MB struct {
@@ -234,15 +234,15 @@ type MB struct {
 }
 
 func (rr *MB) Header() *RR_Header { return &rr.Hdr }
-func (rr *MB) Copy() RR           { return &MB{*rr.Hdr.CopyHeader(), rr.Mb} }
+func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), rr.Mb} }
 
 func (rr *MB) String() string {
 	return rr.Hdr.String() + rr.Mb
 }
 
-func (rr *MB) Len() int {
+func (rr *MB) len() int {
 	l := len(rr.Mb) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type MG struct {
@@ -251,15 +251,15 @@ type MG struct {
 }
 
 func (rr *MG) Header() *RR_Header { return &rr.Hdr }
-func (rr *MG) Copy() RR           { return &MG{*rr.Hdr.CopyHeader(), rr.Mg} }
+func (rr *MG) copy() RR           { return &MG{*rr.Hdr.copyHeader(), rr.Mg} }
 
 func (rr *MG) String() string {
 	return rr.Hdr.String() + rr.Mg
 }
 
-func (rr *MG) Len() int {
+func (rr *MG) len() int {
 	l := len(rr.Mg) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type MINFO struct {
@@ -269,16 +269,16 @@ type MINFO struct {
 }
 
 func (rr *MINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *MINFO) Copy() RR           { return &MINFO{*rr.Hdr.CopyHeader(), rr.Rmail, rr.Email} }
+func (rr *MINFO) copy() RR           { return &MINFO{*rr.Hdr.copyHeader(), rr.Rmail, rr.Email} }
 
 func (rr *MINFO) String() string {
 	return rr.Hdr.String() + rr.Rmail + " " + rr.Email
 }
 
-func (rr *MINFO) Len() int {
+func (rr *MINFO) len() int {
 	l := len(rr.Rmail) + 1
 	n := len(rr.Email) + 1
-	return rr.Hdr.Len() + l + n
+	return rr.Hdr.len() + l + n
 }
 
 type MR struct {
@@ -287,15 +287,15 @@ type MR struct {
 }
 
 func (rr *MR) Header() *RR_Header { return &rr.Hdr }
-func (rr *MR) Copy() RR           { return &MR{*rr.Hdr.CopyHeader(), rr.Mr} }
+func (rr *MR) copy() RR           { return &MR{*rr.Hdr.copyHeader(), rr.Mr} }
 
 func (rr *MR) String() string {
 	return rr.Hdr.String() + rr.Mr
 }
 
-func (rr *MR) Len() int {
+func (rr *MR) len() int {
 	l := len(rr.Mr) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type MF struct {
@@ -304,14 +304,14 @@ type MF struct {
 }
 
 func (rr *MF) Header() *RR_Header { return &rr.Hdr }
-func (rr *MF) Copy() RR           { return &MF{*rr.Hdr.CopyHeader(), rr.Mf} }
+func (rr *MF) copy() RR           { return &MF{*rr.Hdr.copyHeader(), rr.Mf} }
 
 func (rr *MF) String() string {
 	return rr.Hdr.String() + " " + rr.Mf
 }
 
-func (rr *MF) Len() int {
-	return rr.Hdr.Len() + len(rr.Mf) + 1
+func (rr *MF) len() int {
+	return rr.Hdr.len() + len(rr.Mf) + 1
 }
 
 type MD struct {
@@ -320,14 +320,14 @@ type MD struct {
 }
 
 func (rr *MD) Header() *RR_Header { return &rr.Hdr }
-func (rr *MD) Copy() RR           { return &MD{*rr.Hdr.CopyHeader(), rr.Md} }
+func (rr *MD) copy() RR           { return &MD{*rr.Hdr.copyHeader(), rr.Md} }
 
 func (rr *MD) String() string {
 	return rr.Hdr.String() + " " + rr.Md
 }
 
-func (rr *MD) Len() int {
-	return rr.Hdr.Len() + len(rr.Md) + 1
+func (rr *MD) len() int {
+	return rr.Hdr.len() + len(rr.Md) + 1
 }
 
 type MX struct {
@@ -337,15 +337,15 @@ type MX struct {
 }
 
 func (rr *MX) Header() *RR_Header { return &rr.Hdr }
-func (rr *MX) Copy() RR           { return &MX{*rr.Hdr.CopyHeader(), rr.Preference, rr.Mx} }
+func (rr *MX) copy() RR           { return &MX{*rr.Hdr.copyHeader(), rr.Preference, rr.Mx} }
 
 func (rr *MX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Mx
 }
 
-func (rr *MX) Len() int {
+func (rr *MX) len() int {
 	l := len(rr.Mx) + 1
-	return rr.Hdr.Len() + l + 2
+	return rr.Hdr.len() + l + 2
 }
 
 type AFSDB struct {
@@ -355,15 +355,15 @@ type AFSDB struct {
 }
 
 func (rr *AFSDB) Header() *RR_Header { return &rr.Hdr }
-func (rr *AFSDB) Copy() RR           { return &AFSDB{*rr.Hdr.CopyHeader(), rr.Subtype, rr.Hostname} }
+func (rr *AFSDB) copy() RR           { return &AFSDB{*rr.Hdr.copyHeader(), rr.Subtype, rr.Hostname} }
 
 func (rr *AFSDB) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + rr.Hostname
 }
 
-func (rr *AFSDB) Len() int {
+func (rr *AFSDB) len() int {
 	l := len(rr.Hostname) + 1
-	return rr.Hdr.Len() + l + 2
+	return rr.Hdr.len() + l + 2
 }
 
 type X25 struct {
@@ -372,14 +372,14 @@ type X25 struct {
 }
 
 func (rr *X25) Header() *RR_Header { return &rr.Hdr }
-func (rr *X25) Copy() RR           { return &X25{*rr.Hdr.CopyHeader(), rr.PSDNAddress} }
+func (rr *X25) copy() RR           { return &X25{*rr.Hdr.copyHeader(), rr.PSDNAddress} }
 
 func (rr *X25) String() string {
 	return rr.Hdr.String() + rr.PSDNAddress
 }
 
-func (rr *X25) Len() int {
-	return rr.Hdr.Len() + len(rr.PSDNAddress)
+func (rr *X25) len() int {
+	return rr.Hdr.len() + len(rr.PSDNAddress)
 }
 
 type RT struct {
@@ -389,15 +389,15 @@ type RT struct {
 }
 
 func (rr *RT) Header() *RR_Header { return &rr.Hdr }
-func (rr *RT) Copy() RR           { return &RT{*rr.Hdr.CopyHeader(), rr.Preference, rr.Host} }
+func (rr *RT) copy() RR           { return &RT{*rr.Hdr.copyHeader(), rr.Preference, rr.Host} }
 
 func (rr *RT) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Host
 }
 
-func (rr *RT) Len() int {
+func (rr *RT) len() int {
 	l := len(rr.Host) + 1
-	return rr.Hdr.Len() + l + 2
+	return rr.Hdr.len() + l + 2
 }
 
 type NS struct {
@@ -406,15 +406,15 @@ type NS struct {
 }
 
 func (rr *NS) Header() *RR_Header { return &rr.Hdr }
-func (rr *NS) Copy() RR           { return &NS{*rr.Hdr.CopyHeader(), rr.Ns} }
+func (rr *NS) copy() RR           { return &NS{*rr.Hdr.copyHeader(), rr.Ns} }
 
 func (rr *NS) String() string {
 	return rr.Hdr.String() + rr.Ns
 }
 
-func (rr *NS) Len() int {
+func (rr *NS) len() int {
 	l := len(rr.Ns) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type PTR struct {
@@ -423,15 +423,15 @@ type PTR struct {
 }
 
 func (rr *PTR) Header() *RR_Header { return &rr.Hdr }
-func (rr *PTR) Copy() RR           { return &PTR{*rr.Hdr.CopyHeader(), rr.Ptr} }
+func (rr *PTR) copy() RR           { return &PTR{*rr.Hdr.copyHeader(), rr.Ptr} }
 
 func (rr *PTR) String() string {
 	return rr.Hdr.String() + rr.Ptr
 }
 
-func (rr *PTR) Len() int {
+func (rr *PTR) len() int {
 	l := len(rr.Ptr) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type RP struct {
@@ -441,14 +441,14 @@ type RP struct {
 }
 
 func (rr *RP) Header() *RR_Header { return &rr.Hdr }
-func (rr *RP) Copy() RR           { return &RP{*rr.Hdr.CopyHeader(), rr.Mbox, rr.Txt} }
+func (rr *RP) copy() RR           { return &RP{*rr.Hdr.copyHeader(), rr.Mbox, rr.Txt} }
 
 func (rr *RP) String() string {
 	return rr.Hdr.String() + rr.Mbox + " " + rr.Txt
 }
 
-func (rr *RP) Len() int {
-	return rr.Hdr.Len() + len(rr.Mbox) + 1 + len(rr.Txt) + 1
+func (rr *RP) len() int {
+	return rr.Hdr.len() + len(rr.Mbox) + 1 + len(rr.Txt) + 1
 }
 
 type SOA struct {
@@ -463,8 +463,8 @@ type SOA struct {
 }
 
 func (rr *SOA) Header() *RR_Header { return &rr.Hdr }
-func (rr *SOA) Copy() RR {
-	return &SOA{*rr.Hdr.CopyHeader(), rr.Ns, rr.Mbox, rr.Serial, rr.Refresh, rr.Retry, rr.Expire, rr.Minttl}
+func (rr *SOA) copy() RR {
+	return &SOA{*rr.Hdr.copyHeader(), rr.Ns, rr.Mbox, rr.Serial, rr.Refresh, rr.Retry, rr.Expire, rr.Minttl}
 }
 
 func (rr *SOA) String() string {
@@ -476,10 +476,10 @@ func (rr *SOA) String() string {
 		" " + strconv.FormatInt(int64(rr.Minttl), 10)
 }
 
-func (rr *SOA) Len() int {
+func (rr *SOA) len() int {
 	l := len(rr.Ns) + 1
 	n := len(rr.Mbox) + 1
-	return rr.Hdr.Len() + l + n + 20
+	return rr.Hdr.len() + l + n + 20
 }
 
 type TXT struct {
@@ -488,7 +488,7 @@ type TXT struct {
 }
 
 func (rr *TXT) Header() *RR_Header { return &rr.Hdr }
-func (rr *TXT) Copy() RR           { return &TXT{*rr.Hdr.CopyHeader(), rr.Txt} }
+func (rr *TXT) copy() RR           { return &TXT{*rr.Hdr.copyHeader(), rr.Txt} }
 
 func (rr *TXT) String() string {
 	s := rr.Hdr.String()
@@ -502,8 +502,8 @@ func (rr *TXT) String() string {
 	return s
 }
 
-func (rr *TXT) Len() int {
-	l := rr.Hdr.Len()
+func (rr *TXT) len() int {
+	l := rr.Hdr.len()
 	for _, t := range rr.Txt {
 		l += len(t)
 	}
@@ -516,7 +516,7 @@ type SPF struct {
 }
 
 func (rr *SPF) Header() *RR_Header { return &rr.Hdr }
-func (rr *SPF) Copy() RR           { return &SPF{*rr.Hdr.CopyHeader(), rr.Txt} }
+func (rr *SPF) copy() RR           { return &SPF{*rr.Hdr.copyHeader(), rr.Txt} }
 
 func (rr *SPF) String() string {
 	s := rr.Hdr.String()
@@ -530,8 +530,8 @@ func (rr *SPF) String() string {
 	return s
 }
 
-func (rr *SPF) Len() int {
-	l := rr.Hdr.Len()
+func (rr *SPF) len() int {
+	l := rr.Hdr.len()
 	for _, t := range rr.Txt {
 		l += len(t)
 	}
@@ -547,8 +547,8 @@ type SRV struct {
 }
 
 func (rr *SRV) Header() *RR_Header { return &rr.Hdr }
-func (rr *SRV) Copy() RR {
-	return &SRV{*rr.Hdr.CopyHeader(), rr.Priority, rr.Weight, rr.Port, rr.Target}
+func (rr *SRV) copy() RR {
+	return &SRV{*rr.Hdr.copyHeader(), rr.Priority, rr.Weight, rr.Port, rr.Target}
 }
 
 func (rr *SRV) String() string {
@@ -558,9 +558,9 @@ func (rr *SRV) String() string {
 		strconv.Itoa(int(rr.Port)) + " " + rr.Target
 }
 
-func (rr *SRV) Len() int {
+func (rr *SRV) len() int {
 	l := len(rr.Target) + 1
-	return rr.Hdr.Len() + l + 6
+	return rr.Hdr.len() + l + 6
 }
 
 type NAPTR struct {
@@ -574,8 +574,8 @@ type NAPTR struct {
 }
 
 func (rr *NAPTR) Header() *RR_Header { return &rr.Hdr }
-func (rr *NAPTR) Copy() RR {
-	return &NAPTR{*rr.Hdr.CopyHeader(), rr.Order, rr.Preference, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
+func (rr *NAPTR) copy() RR {
+	return &NAPTR{*rr.Hdr.copyHeader(), rr.Order, rr.Preference, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
 }
 
 func (rr *NAPTR) String() string {
@@ -588,8 +588,8 @@ func (rr *NAPTR) String() string {
 		rr.Replacement
 }
 
-func (rr *NAPTR) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Flags) + len(rr.Service) +
+func (rr *NAPTR) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Flags) + len(rr.Service) +
 		len(rr.Regexp) + len(rr.Replacement) + 1
 }
 
@@ -603,8 +603,8 @@ type CERT struct {
 }
 
 func (rr *CERT) Header() *RR_Header { return &rr.Hdr }
-func (rr *CERT) Copy() RR {
-	return &CERT{*rr.Hdr.CopyHeader(), rr.Type, rr.KeyTag, rr.Algorithm, rr.Certificate}
+func (rr *CERT) copy() RR {
+	return &CERT{*rr.Hdr.copyHeader(), rr.Type, rr.KeyTag, rr.Algorithm, rr.Certificate}
 }
 
 func (rr *CERT) String() string {
@@ -614,8 +614,8 @@ func (rr *CERT) String() string {
 		" " + rr.Certificate
 }
 
-func (rr *CERT) Len() int {
-	return rr.Hdr.Len() + 5 +
+func (rr *CERT) len() int {
+	return rr.Hdr.len() + 5 +
 		base64.StdEncoding.DecodedLen(len(rr.Certificate))
 }
 
@@ -626,15 +626,15 @@ type DNAME struct {
 }
 
 func (rr *DNAME) Header() *RR_Header { return &rr.Hdr }
-func (rr *DNAME) Copy() RR           { return &DNAME{*rr.Hdr.CopyHeader(), rr.Target} }
+func (rr *DNAME) copy() RR           { return &DNAME{*rr.Hdr.copyHeader(), rr.Target} }
 
 func (rr *DNAME) String() string {
 	return rr.Hdr.String() + rr.Target
 }
 
-func (rr *DNAME) Len() int {
+func (rr *DNAME) len() int {
 	l := len(rr.Target) + 1
-	return rr.Hdr.Len() + l
+	return rr.Hdr.len() + l
 }
 
 type A struct {
@@ -643,14 +643,14 @@ type A struct {
 }
 
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
-func (rr *A) Copy() RR           { return &A{*rr.Hdr.CopyHeader(), rr.A} }
+func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
 
 func (rr *A) String() string {
 	return rr.Hdr.String() + rr.A.String()
 }
 
-func (rr *A) Len() int {
-	return rr.Hdr.Len() + net.IPv4len
+func (rr *A) len() int {
+	return rr.Hdr.len() + net.IPv4len
 }
 
 type AAAA struct {
@@ -659,14 +659,14 @@ type AAAA struct {
 }
 
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
-func (rr *AAAA) Copy() RR           { return &AAAA{*rr.Hdr.CopyHeader(), rr.AAAA} }
+func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
 
 func (rr *AAAA) String() string {
 	return rr.Hdr.String() + rr.AAAA.String()
 }
 
-func (rr *AAAA) Len() int {
-	return rr.Hdr.Len() + net.IPv6len
+func (rr *AAAA) len() int {
+	return rr.Hdr.len() + net.IPv6len
 }
 
 type LOC struct {
@@ -681,8 +681,8 @@ type LOC struct {
 }
 
 func (rr *LOC) Header() *RR_Header { return &rr.Hdr }
-func (rr *LOC) Copy() RR {
-	return &LOC{*rr.Hdr.CopyHeader(), rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
+func (rr *LOC) copy() RR {
+	return &LOC{*rr.Hdr.copyHeader(), rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
 }
 
 func (rr *LOC) String() string {
@@ -730,8 +730,8 @@ func (rr *LOC) String() string {
 	return s
 }
 
-func (rr *LOC) Len() int {
-	return rr.Hdr.Len() + 4 + 12
+func (rr *LOC) len() int {
+	return rr.Hdr.len() + 4 + 12
 }
 
 type RRSIG struct {
@@ -748,8 +748,8 @@ type RRSIG struct {
 }
 
 func (rr *RRSIG) Header() *RR_Header { return &rr.Hdr }
-func (rr *RRSIG) Copy() RR {
-	return &RRSIG{*rr.Hdr.CopyHeader(), rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
+func (rr *RRSIG) copy() RR {
+	return &RRSIG{*rr.Hdr.copyHeader(), rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
 }
 
 func (rr *RRSIG) String() string {
@@ -764,8 +764,8 @@ func (rr *RRSIG) String() string {
 		" " + rr.Signature
 }
 
-func (rr *RRSIG) Len() int {
-	return rr.Hdr.Len() + len(rr.SignerName) + 1 +
+func (rr *RRSIG) len() int {
+	return rr.Hdr.len() + len(rr.SignerName) + 1 +
 		base64.StdEncoding.DecodedLen(len(rr.Signature)) + 18
 }
 
@@ -776,7 +776,7 @@ type NSEC struct {
 }
 
 func (rr *NSEC) Header() *RR_Header { return &rr.Hdr }
-func (rr *NSEC) Copy() RR           { return &NSEC{*rr.Hdr.CopyHeader(), rr.NextDomain, rr.TypeBitMap} }
+func (rr *NSEC) copy() RR           { return &NSEC{*rr.Hdr.copyHeader(), rr.NextDomain, rr.TypeBitMap} }
 
 func (rr *NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
@@ -790,9 +790,9 @@ func (rr *NSEC) String() string {
 	return s
 }
 
-func (rr *NSEC) Len() int {
+func (rr *NSEC) len() int {
 	l := len(rr.NextDomain) + 1
-	return rr.Hdr.Len() + l + 32 + 1
+	return rr.Hdr.len() + l + 32 + 1
 	// TODO: +32 is max type bitmap
 }
 
@@ -805,8 +805,8 @@ type DS struct {
 }
 
 func (rr *DS) Header() *RR_Header { return &rr.Hdr }
-func (rr *DS) Copy() RR {
-	return &DS{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+func (rr *DS) copy() RR {
+	return &DS{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
 func (rr *DS) String() string {
@@ -816,8 +816,8 @@ func (rr *DS) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *DS) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+func (rr *DS) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Digest)/2
 }
 
 type CDS struct {
@@ -829,8 +829,8 @@ type CDS struct {
 }
 
 func (rr *CDS) Header() *RR_Header { return &rr.Hdr }
-func (rr *CDS) Copy() RR {
-	return &CDS{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+func (rr *CDS) copy() RR {
+	return &CDS{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
 func (rr *CDS) String() string {
@@ -840,8 +840,8 @@ func (rr *CDS) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *CDS) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+func (rr *CDS) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Digest)/2
 }
 
 type DLV struct {
@@ -853,8 +853,8 @@ type DLV struct {
 }
 
 func (rr *DLV) Header() *RR_Header { return &rr.Hdr }
-func (rr *DLV) Copy() RR {
-	return &DLV{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+func (rr *DLV) copy() RR {
+	return &DLV{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
 func (rr *DLV) String() string {
@@ -864,8 +864,8 @@ func (rr *DLV) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *DLV) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+func (rr *DLV) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Digest)/2
 }
 
 type KX struct {
@@ -875,14 +875,14 @@ type KX struct {
 }
 
 func (rr *KX) Header() *RR_Header { return &rr.Hdr }
-func (rr *KX) Copy() RR           { return &KX{*rr.Hdr.CopyHeader(), rr.Preference, rr.Exchanger} }
+func (rr *KX) copy() RR           { return &KX{*rr.Hdr.copyHeader(), rr.Preference, rr.Exchanger} }
 
 func (rr *KX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Exchanger
 }
 
-func (rr *KX) Len() int {
+func (rr *KX) len() int {
 	return 0
 }
 
@@ -895,8 +895,8 @@ type TA struct {
 }
 
 func (rr *TA) Header() *RR_Header { return &rr.Hdr }
-func (rr *TA) Copy() RR {
-	return &TA{*rr.Hdr.CopyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+func (rr *TA) copy() RR {
+	return &TA{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
 }
 
 func (rr *TA) String() string {
@@ -906,8 +906,8 @@ func (rr *TA) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *TA) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Digest)/2
+func (rr *TA) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Digest)/2
 }
 
 type TALINK struct {
@@ -917,15 +917,15 @@ type TALINK struct {
 }
 
 func (rr *TALINK) Header() *RR_Header { return &rr.Hdr }
-func (rr *TALINK) Copy() RR           { return &TALINK{*rr.Hdr.CopyHeader(), rr.PreviousName, rr.NextName} }
+func (rr *TALINK) copy() RR           { return &TALINK{*rr.Hdr.copyHeader(), rr.PreviousName, rr.NextName} }
 
 func (rr *TALINK) String() string {
 	return rr.Hdr.String() +
 		" " + rr.PreviousName + " " + rr.NextName
 }
 
-func (rr *TALINK) Len() int {
-	return rr.Hdr.Len() + len(rr.PreviousName) + len(rr.NextName) + 2
+func (rr *TALINK) len() int {
+	return rr.Hdr.len() + len(rr.PreviousName) + len(rr.NextName) + 2
 }
 
 type SSHFP struct {
@@ -936,8 +936,8 @@ type SSHFP struct {
 }
 
 func (rr *SSHFP) Header() *RR_Header { return &rr.Hdr }
-func (rr *SSHFP) Copy() RR {
-	return &SSHFP{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.Type, rr.FingerPrint}
+func (rr *SSHFP) copy() RR {
+	return &SSHFP{*rr.Hdr.copyHeader(), rr.Algorithm, rr.Type, rr.FingerPrint}
 }
 
 func (rr *SSHFP) String() string {
@@ -946,8 +946,8 @@ func (rr *SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
-func (rr *SSHFP) Len() int {
-	return rr.Hdr.Len() + 2 + len(rr.FingerPrint)/2
+func (rr *SSHFP) len() int {
+	return rr.Hdr.len() + 2 + len(rr.FingerPrint)/2
 }
 
 type IPSECKEY struct {
@@ -960,8 +960,8 @@ type IPSECKEY struct {
 }
 
 func (rr *IPSECKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *IPSECKEY) Copy() RR {
-	return &IPSECKEY{*rr.Hdr.CopyHeader(), rr.Precedence, rr.GatewayType, rr.Algorithm, rr.Gateway, rr.PublicKey}
+func (rr *IPSECKEY) copy() RR {
+	return &IPSECKEY{*rr.Hdr.copyHeader(), rr.Precedence, rr.GatewayType, rr.Algorithm, rr.Gateway, rr.PublicKey}
 }
 
 func (rr *IPSECKEY) String() string {
@@ -972,8 +972,8 @@ func (rr *IPSECKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *IPSECKEY) Len() int {
-	return rr.Hdr.Len() + 3 + len(rr.Gateway) + 1 +
+func (rr *IPSECKEY) len() int {
+	return rr.Hdr.len() + 3 + len(rr.Gateway) + 1 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -986,8 +986,8 @@ type DNSKEY struct {
 }
 
 func (rr *DNSKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *DNSKEY) Copy() RR {
-	return &DNSKEY{*rr.Hdr.CopyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+func (rr *DNSKEY) copy() RR {
+	return &DNSKEY{*rr.Hdr.copyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
 }
 
 func (rr *DNSKEY) String() string {
@@ -997,8 +997,8 @@ func (rr *DNSKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *DNSKEY) Len() int {
-	return rr.Hdr.Len() + 4 +
+func (rr *DNSKEY) len() int {
+	return rr.Hdr.len() + 4 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -1011,8 +1011,8 @@ type RKEY struct {
 }
 
 func (rr *RKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *RKEY) Copy() RR {
-	return &RKEY{*rr.Hdr.CopyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+func (rr *RKEY) copy() RR {
+	return &RKEY{*rr.Hdr.copyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
 }
 
 func (rr *RKEY) String() string {
@@ -1022,8 +1022,8 @@ func (rr *RKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *RKEY) Len() int {
-	return rr.Hdr.Len() + 4 +
+func (rr *RKEY) len() int {
+	return rr.Hdr.len() + 4 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -1040,8 +1040,8 @@ type NSEC3 struct {
 }
 
 func (rr *NSEC3) Header() *RR_Header { return &rr.Hdr }
-func (rr *NSEC3) Copy() RR {
-	return &NSEC3{*rr.Hdr.CopyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, rr.TypeBitMap}
+func (rr *NSEC3) copy() RR {
+	return &NSEC3{*rr.Hdr.copyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, rr.TypeBitMap}
 }
 
 func (rr *NSEC3) String() string {
@@ -1061,8 +1061,8 @@ func (rr *NSEC3) String() string {
 	return s
 }
 
-func (rr *NSEC3) Len() int {
-	return rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + 32
+func (rr *NSEC3) len() int {
+	return rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + 32
 	// TODO: +32 is MAX type bit map
 }
 
@@ -1076,8 +1076,8 @@ type NSEC3PARAM struct {
 }
 
 func (rr *NSEC3PARAM) Header() *RR_Header { return &rr.Hdr }
-func (rr *NSEC3PARAM) Copy() RR {
-	return &NSEC3PARAM{*rr.Hdr.CopyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
+func (rr *NSEC3PARAM) copy() RR {
+	return &NSEC3PARAM{*rr.Hdr.copyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
 
 func (rr *NSEC3PARAM) String() string {
@@ -1089,8 +1089,8 @@ func (rr *NSEC3PARAM) String() string {
 	return s
 }
 
-func (rr *NSEC3PARAM) Len() int {
-	return rr.Hdr.Len() + 2 + 4 + 1 + len(rr.Salt)/2
+func (rr *NSEC3PARAM) len() int {
+	return rr.Hdr.len() + 2 + 4 + 1 + len(rr.Salt)/2
 }
 
 type TKEY struct {
@@ -1107,8 +1107,8 @@ type TKEY struct {
 }
 
 func (rr *TKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *TKEY) Copy() RR {
-	return &TKEY{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
+func (rr *TKEY) copy() RR {
+	return &TKEY{*rr.Hdr.copyHeader(), rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
 }
 
 func (rr *TKEY) String() string {
@@ -1116,8 +1116,8 @@ func (rr *TKEY) String() string {
 	return ""
 }
 
-func (rr *TKEY) Len() int {
-	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
+func (rr *TKEY) len() int {
+	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
 		len(rr.Key) + 2 + len(rr.OtherData)
 }
 
@@ -1128,7 +1128,7 @@ type RFC3597 struct {
 }
 
 func (rr *RFC3597) Header() *RR_Header { return &rr.Hdr }
-func (rr *RFC3597) Copy() RR           { return &RFC3597{*rr.Hdr.CopyHeader(), rr.Rdata} }
+func (rr *RFC3597) copy() RR           { return &RFC3597{*rr.Hdr.copyHeader(), rr.Rdata} }
 
 func (rr *RFC3597) String() string {
 	s := rr.Hdr.String()
@@ -1136,8 +1136,8 @@ func (rr *RFC3597) String() string {
 	return s
 }
 
-func (rr *RFC3597) Len() int {
-	return rr.Hdr.Len() + len(rr.Rdata)/2
+func (rr *RFC3597) len() int {
+	return rr.Hdr.len() + len(rr.Rdata)/2
 }
 
 type URI struct {
@@ -1148,7 +1148,7 @@ type URI struct {
 }
 
 func (rr *URI) Header() *RR_Header { return &rr.Hdr }
-func (rr *URI) Copy() RR           { return &URI{*rr.Hdr.CopyHeader(), rr.Weight, rr.Priority, rr.Target} }
+func (rr *URI) copy() RR           { return &URI{*rr.Hdr.copyHeader(), rr.Weight, rr.Priority, rr.Target} }
 
 func (rr *URI) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
@@ -1163,8 +1163,8 @@ func (rr *URI) String() string {
 	return s
 }
 
-func (rr *URI) Len() int {
-	return rr.Hdr.Len() + 4 + len(rr.Target) + 1
+func (rr *URI) len() int {
+	return rr.Hdr.len() + 4 + len(rr.Target) + 1
 }
 
 type DHCID struct {
@@ -1173,14 +1173,14 @@ type DHCID struct {
 }
 
 func (rr *DHCID) Header() *RR_Header { return &rr.Hdr }
-func (rr *DHCID) Copy() RR           { return &DHCID{*rr.Hdr.CopyHeader(), rr.Digest} }
+func (rr *DHCID) copy() RR           { return &DHCID{*rr.Hdr.copyHeader(), rr.Digest} }
 
 func (rr *DHCID) String() string {
 	return rr.Hdr.String() + rr.Digest
 }
 
-func (rr *DHCID) Len() int {
-	return rr.Hdr.Len() +
+func (rr *DHCID) len() int {
+	return rr.Hdr.len() +
 		base64.StdEncoding.DecodedLen(len(rr.Digest))
 }
 
@@ -1193,8 +1193,8 @@ type TLSA struct {
 }
 
 func (rr *TLSA) Header() *RR_Header { return &rr.Hdr }
-func (rr *TLSA) Copy() RR {
-	return &TLSA{*rr.Hdr.CopyHeader(), rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
+func (rr *TLSA) copy() RR {
+	return &TLSA{*rr.Hdr.copyHeader(), rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
 }
 
 func (rr *TLSA) String() string {
@@ -1205,8 +1205,8 @@ func (rr *TLSA) String() string {
 		" " + rr.Certificate
 }
 
-func (rr *TLSA) Len() int {
-	return rr.Hdr.Len() + 3 + len(rr.Certificate)/2
+func (rr *TLSA) len() int {
+	return rr.Hdr.len() + 3 + len(rr.Certificate)/2
 }
 
 type HIP struct {
@@ -1220,8 +1220,8 @@ type HIP struct {
 }
 
 func (rr *HIP) Header() *RR_Header { return &rr.Hdr }
-func (rr *HIP) Copy() RR {
-	return &HIP{*rr.Hdr.CopyHeader(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
+func (rr *HIP) copy() RR {
+	return &HIP{*rr.Hdr.copyHeader(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
 }
 
 func (rr *HIP) String() string {
@@ -1235,8 +1235,8 @@ func (rr *HIP) String() string {
 	return s
 }
 
-func (rr *HIP) Len() int {
-	l := rr.Hdr.Len() + 4 +
+func (rr *HIP) len() int {
+	l := rr.Hdr.len() + 4 +
 		len(rr.Hit)/2 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	for _, d := range rr.RendezvousServers {
@@ -1251,7 +1251,7 @@ type NINFO struct {
 }
 
 func (rr *NINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *NINFO) Copy() RR           { return &NINFO{*rr.Hdr.CopyHeader(), rr.ZSData} }
+func (rr *NINFO) copy() RR           { return &NINFO{*rr.Hdr.copyHeader(), rr.ZSData} }
 
 func (rr *NINFO) String() string {
 	s := rr.Hdr.String()
@@ -1265,8 +1265,8 @@ func (rr *NINFO) String() string {
 	return s
 }
 
-func (rr *NINFO) Len() int {
-	l := rr.Hdr.Len()
+func (rr *NINFO) len() int {
+	l := rr.Hdr.len()
 	for _, t := range rr.ZSData {
 		l += len(t)
 	}
@@ -1281,7 +1281,7 @@ type WKS struct {
 }
 
 func (rr *WKS) Header() *RR_Header { return &rr.Hdr }
-func (rr *WKS) Copy() RR           { return &WKS{*rr.Hdr.CopyHeader(), rr.Address, rr.Protocol, rr.BitMap} }
+func (rr *WKS) copy() RR           { return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, rr.BitMap} }
 
 func (rr *WKS) String() string {
 	s := rr.Hdr.String() + rr.Address.String()
@@ -1292,8 +1292,8 @@ func (rr *WKS) String() string {
 	return s
 }
 
-func (rr *WKS) Len() int {
-	return rr.Hdr.Len() + net.IPv4len + 1
+func (rr *WKS) len() int {
+	return rr.Hdr.len() + net.IPv4len + 1
 }
 
 type NID struct {
@@ -1303,7 +1303,7 @@ type NID struct {
 }
 
 func (rr *NID) Header() *RR_Header { return &rr.Hdr }
-func (rr *NID) Copy() RR           { return &NID{*rr.Hdr.CopyHeader(), rr.Preference, rr.NodeID} }
+func (rr *NID) copy() RR           { return &NID{*rr.Hdr.copyHeader(), rr.Preference, rr.NodeID} }
 
 func (rr *NID) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
@@ -1312,8 +1312,8 @@ func (rr *NID) String() string {
 	return s
 }
 
-func (rr *NID) Len() int {
-	return rr.Hdr.Len() + 2 + 8
+func (rr *NID) len() int {
+	return rr.Hdr.len() + 2 + 8
 }
 
 type L32 struct {
@@ -1323,15 +1323,15 @@ type L32 struct {
 }
 
 func (rr *L32) Header() *RR_Header { return &rr.Hdr }
-func (rr *L32) Copy() RR           { return &L32{*rr.Hdr.CopyHeader(), rr.Preference, rr.Locator32} }
+func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, rr.Locator32} }
 
 func (rr *L32) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Locator32.String()
 }
 
-func (rr *L32) Len() int {
-	return rr.Hdr.Len() + net.IPv4len
+func (rr *L32) len() int {
+	return rr.Hdr.len() + net.IPv4len
 }
 
 type L64 struct {
@@ -1341,7 +1341,7 @@ type L64 struct {
 }
 
 func (rr *L64) Header() *RR_Header { return &rr.Hdr }
-func (rr *L64) Copy() RR           { return &L64{*rr.Hdr.CopyHeader(), rr.Preference, rr.Locator64} }
+func (rr *L64) copy() RR           { return &L64{*rr.Hdr.copyHeader(), rr.Preference, rr.Locator64} }
 
 func (rr *L64) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
@@ -1350,8 +1350,8 @@ func (rr *L64) String() string {
 	return s
 }
 
-func (rr *L64) Len() int {
-	return rr.Hdr.Len() + 2 + 8
+func (rr *L64) len() int {
+	return rr.Hdr.len() + 2 + 8
 }
 
 type LP struct {
@@ -1361,7 +1361,7 @@ type LP struct {
 }
 
 func (rr *LP) Header() *RR_Header { return &rr.Hdr }
-func (rr *LP) Copy() RR           { return &LP{*rr.Hdr.CopyHeader(), rr.Preference, rr.Fqdn} }
+func (rr *LP) copy() RR           { return &LP{*rr.Hdr.copyHeader(), rr.Preference, rr.Fqdn} }
 
 func (rr *LP) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
@@ -1369,8 +1369,8 @@ func (rr *LP) String() string {
 	return s
 }
 
-func (rr *LP) Len() int {
-	return rr.Hdr.Len() + 2 + len(rr.Fqdn) + 1
+func (rr *LP) len() int {
+	return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the

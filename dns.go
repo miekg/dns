@@ -115,10 +115,10 @@ type RR interface {
 	Header() *RR_Header
 	// String returns the text representation of the resource record.
 	String() string
-	// Len returns the length (in octects) of the uncompressed RR in wire format.
-	Len() int
-	// Copy returns a copy of the RR
-	Copy() RR
+	// copy returns a copy of the RR
+	copy() RR
+	// len returns the length (in octects) of the uncompressed RR in wire format.
+	len() int
 }
 
 // DNS resource records.
@@ -135,9 +135,9 @@ type RR_Header struct {
 func (h *RR_Header) Header() *RR_Header { return h }
 
 // Just to imlement the RR interface
-func (h *RR_Header) Copy() RR { return nil }
+func (h *RR_Header) copy() RR { return nil }
 
-func (h *RR_Header) CopyHeader() *RR_Header {
+func (h *RR_Header) copyHeader() *RR_Header {
 	r := new(RR_Header)
 	r.Name = h.Name
 	r.Rrtype = h.Rrtype
@@ -176,7 +176,7 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-func (h *RR_Header) Len() int {
+func (h *RR_Header) len() int {
 	l := len(h.Name) + 1
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
@@ -211,7 +211,7 @@ func zoneMatch(pattern, zone string) (ok bool) {
 // ToRFC3597 converts a known RR to the unknown RR representation
 // from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
-	buf := make([]byte, r.Len()*2)
+	buf := make([]byte, r.len()*2)
 	off, err := PackStruct(r, buf, 0)
 	if err != nil {
 		return err

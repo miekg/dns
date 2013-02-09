@@ -107,13 +107,13 @@ func (rr *TSIG) String() string {
 	return s
 }
 
-func (rr *TSIG) Len() int {
-	return rr.Hdr.Len() + len(rr.Algorithm) + 1 + 6 +
+func (rr *TSIG) len() int {
+	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 6 +
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
-func (rr *TSIG) Copy() RR {
-	return &TSIG{*rr.Hdr.CopyHeader(), rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+func (rr *TSIG) copy() RR {
+	return &TSIG{*rr.Hdr.copyHeader(), rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
 }
 
 // The following values must be put in wireformat, so that the MAC can be calculated.
@@ -194,7 +194,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.Algorithm = rr.Algorithm
 	t.OrigId = m.Id
 
-	tbuf := make([]byte, t.Len())
+	tbuf := make([]byte, t.len())
 	if off, err := PackRR(t, tbuf, 0, nil, false); err == nil {
 		tbuf = tbuf[:off] // reset to actual size used
 	} else {

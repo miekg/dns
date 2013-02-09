@@ -80,8 +80,8 @@ func (rr *OPT) String() string {
 	return s
 }
 
-func (rr *OPT) Len() int {
-	l := rr.Hdr.Len()
+func (rr *OPT) len() int {
+	l := rr.Hdr.len()
 	for i := 0; i < len(rr.Option); i++ {
 		lo, _ := rr.Option[i].pack()
 		l += 2 + len(lo)
@@ -89,8 +89,8 @@ func (rr *OPT) Len() int {
 	return l
 }
 
-func (rr *OPT) Copy() RR {
-	return &OPT{*rr.Hdr.CopyHeader(), rr.Option}
+func (rr *OPT) copy() RR {
+	return &OPT{*rr.Hdr.copyHeader(), rr.Option}
 }
 
 // Version returns the EDNS version used. Only zero is defined.
