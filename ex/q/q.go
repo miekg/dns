@@ -215,8 +215,8 @@ Flags:
 			doXfr(c, m, nameserver)
 			continue
 		}
-	Redo:
 		r, rtt, e := c.Exchange(m, nameserver)
+	Redo:
 		if e != nil {
 			fmt.Printf(";; %s\n", e.Error())
 			continue
