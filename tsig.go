@@ -1,5 +1,5 @@
 // TRANSACTION SIGNATURE (TSIG)
-// 
+//
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
 // The supported algorithms include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
