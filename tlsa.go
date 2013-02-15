@@ -70,7 +70,7 @@ func TLSAName(name, service, network string) (string, error) {
 	}
 	p, e := net.LookupPort(network, service)
 	if e != nil {
-		return "", err
+		return "", e
 	}
 	return "_" + strconv.Itoa(p) + "_" + network + "." + name, nil
 }
