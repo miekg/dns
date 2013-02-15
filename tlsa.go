@@ -63,15 +63,14 @@ func (r *TLSA) Verify(cert *x509.Certificate) error {
 }
 
 // TLSAName returns the ownername of a TLSA resource record as per the
-// rules specified in RFC 6698, Section 3. When an error occurs the
-// empty string is returned.
-func TLSAName(name, service, network string) string {
+// rules specified in RFC 6698, Section 3. 
+func TLSAName(name, service, network string) (string, error) {
 	if !IsFqdn(name) {
-		return ""
+		return "", ErrFqdn
 	}
 	p, e := net.LookupPort(network, service)
 	if e != nil {
-		return ""
+		return "", err
 	}
-	return "_" + strconv.Itoa(p) + "_" + network + "." + name
+	return "_" + strconv.Itoa(p) + "_" + network + "." + name, nil
 }
