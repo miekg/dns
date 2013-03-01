@@ -1356,9 +1356,9 @@ func (dns *Msg) String() string {
 }
 
 // Len return the message length when in (un)compressed wire format.
-// If dns.Compress is true compression is taken into account, currently
+// If dns.Compress is true compression it is taken into account, currently
 // this only counts owner name compression. There is no check for 
-// nil valued sections (allocated, but contains no RRs).
+// nil valued sections (allocated, but contain no RRs).
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes       
 	l := 12
