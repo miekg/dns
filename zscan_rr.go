@@ -176,7 +176,7 @@ func endingToString(c chan lex, errstr, f string) (string, *ParseError, string) 
 
 // A remainder of the rdata with embedded spaces, return the parsed string slice (sans the spaces)
 // or an error
-func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError) {
+func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, string) {
 	// Get the remaining data until we see a NEWLINE
 	quote := false
 	l := <-c
@@ -191,17 +191,17 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError) {
 			case _BLANK:
 				if quote {
 					// _BLANK can only be seen in between txt parts.
-					return nil, &ParseError{f, errstr, l}
+					return nil, &ParseError{f, errstr, l}, ""
 				}
 			case _QUOTE:
 				quote = !quote
 			default:
-				return nil, &ParseError{f, errstr, l}
+				return nil, &ParseError{f, errstr, l}, ""
 			}
 			l = <-c
 		}
 		if quote {
-			return nil, &ParseError{f, errstr, l}
+			return nil, &ParseError{f, errstr, l}, ""
 		}
 	case false: // Unquoted text record
 		s = make([]string, 1)
@@ -210,7 +210,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError) {
 			l = <-c
 		}
 	}
-	return s, nil
+	return s, nil, l.comment
 }
 
 func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
@@ -1027,7 +1027,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		l = <-c
 	}
 	rr.RendezvousServers = xs
-	return rr, nil, ""
+	return rr, nil, l.comment
 }
 
 func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
@@ -1054,7 +1054,7 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	s, e,c1  := endingToString(c, "bad NAPTR Certificate", f)
+	s, e, c1 := endingToString(c, "bad NAPTR Certificate", f)
 	if e != nil {
 		return nil, e, c1
 	}
@@ -1129,7 +1129,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	s, e, c1 := endingToString(c, "bad RRSIG Signature", f)
 	if e != nil {
-		return nil, e,c1
+		return nil, e, c1
 	}
 	rr.Signature = s
 	return rr, nil, c1
@@ -1323,7 +1323,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 		}
 		l = <-c
 	}
-	return rr, nil, ""
+	return rr, nil, l.comment
 }
 
 func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError) {
@@ -1426,7 +1426,7 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
 		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
-			return nil, &ParseError{f, "bad DS Algorithm", l},""
+			return nil, &ParseError{f, "bad DS Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
 		}
@@ -1613,12 +1613,12 @@ func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(SPF)
 	rr.Hdr = h
 
-	s, e := endingToTxtSlice(c, "bad SPF Txt", f)
+	s, e, c1 := endingToTxtSlice(c, "bad SPF Txt", f)
 	if e != nil {
 		return nil, e, ""
 	}
 	rr.Txt = s
-	return rr, nil, ""
+	return rr, nil, c1
 }
 
 func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
@@ -1626,12 +1626,12 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	// No _BLANK reading here, because this is all rdata is TXT
-	s, e := endingToTxtSlice(c, "bad TXT Txt", f)
+	s, e, c1 := endingToTxtSlice(c, "bad TXT Txt", f)
 	if e != nil {
 		return nil, e, ""
 	}
 	rr.Txt = s
-	return rr, nil, ""
+	return rr, nil, c1
 }
 
 // identical to setTXT
@@ -1639,12 +1639,12 @@ func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(NINFO)
 	rr.Hdr = h
 
-	s, e := endingToTxtSlice(c, "bad NINFO ZSData", f)
+	s, e, c1 := endingToTxtSlice(c, "bad NINFO ZSData", f)
 	if e != nil {
 		return nil, e, ""
 	}
 	rr.ZSData = s
-	return rr, nil, ""
+	return rr, nil, c1
 }
 
 func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
@@ -1666,12 +1666,12 @@ func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	}
 
 	<-c // _BLANK
-	s, e := endingToTxtSlice(c, "bad URI Target", f)
+	s, e, c1 := endingToTxtSlice(c, "bad URI Target", f)
 	if e != nil {
 		return nil, e, ""
 	}
 	rr.Target = s
-	return rr, nil, ""
+	return rr, nil, c1
 }
 
 func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
