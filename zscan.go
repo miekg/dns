@@ -305,7 +305,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			}
-			if e := slurpRemainder(c, f); e != nil {
+			if e, _ := slurpRemainder(c, f); e != nil {
 				t <- Token{Error: e}
 				return
 			}
@@ -327,7 +327,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: &ParseError{f, "expecting $ORIGIN value, not this...", l}}
 				return
 			}
-			if e := slurpRemainder(c, f); e != nil {
+			if e, _ := slurpRemainder(c, f); e != nil {
 				t <- Token{Error: e}
 			}
 			if _, _, ok := IsDomainName(l.token); !ok {
@@ -628,7 +628,8 @@ func zlexer(s *scan, c chan lex) {
 					owner = true
 					l.value = _NEWLINE
 					l.token = "\n"
-					debug.Printf("[3 %+v]", l.token)
+					l.comment = string(com[:comi])
+					debug.Printf("[3 %+v %+v]", l.token, l.comment)
 					c <- l
 					comi = 0
 					break
@@ -878,24 +879,21 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 	return longitude, false
 }
 
-// "Eat" the rest of the "line"
-func slurpRemainder(c chan lex, f string) *ParseError {
+// "Eat" the rest of the "line". Return potential comments
+func slurpRemainder(c chan lex, f string) (*ParseError, string) {
 	l := <-c
 	switch l.value {
 	case _BLANK:
 		l = <-c
 		if l.value != _NEWLINE && l.value != _EOF {
-			return &ParseError{f, "garbage after rdata", l}
+			return &ParseError{f, "garbage after rdata", l}, ""
 		}
-		// Ok
 	case _NEWLINE:
-		// Ok
 	case _EOF:
-		// Ok
 	default:
-		return &ParseError{f, "garbage after rdata", l}
+		return &ParseError{f, "garbage after rdata", l}, ""
 	}
-	return nil
+	return nil, l.comment
 }
 
 // Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64"

@@ -12,7 +12,7 @@ import (
 // After the rdata there may come a _BLANK and then a _NEWLINE
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
-func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	var r RR
 	e := new(ParseError)
 	switch h.Rrtype {
@@ -146,31 +146,30 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 Slurp:
 	if e != nil {
-		return nil, e
+		return nil, e, ""
 	}
-	if se := slurpRemainder(c, f); se != nil {
-		return nil, se
+	if se, com := slurpRemainder(c, f); se != nil {
+		return nil, se, com
 	}
-	return r, e
+	return r, e, ""
 }
 
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
-func endingToString(c chan lex, errstr, f string) (string, *ParseError) {
+func endingToString(c chan lex, errstr, f string) (string, *ParseError, string) {
 	s := ""
 	l := <-c // _STRING
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:
 			s += l.token
-		case _BLANK:
-			// Ok
+		case _BLANK: // Ok
 		default:
-			return "", &ParseError{f, errstr, l}
+			return "", &ParseError{f, errstr, l}, ""
 		}
 		l = <-c
 	}
-	return s, nil
+	return s, nil, l.comment
 }
 
 // A remainder of the rdata with embedded spaces, return the parsed string slice (sans the spaces)
