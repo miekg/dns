@@ -142,7 +142,6 @@ func parseZoneHelper(r io.Reader, origin, file string, chansize int) chan Token 
 	t := make(chan Token, chansize)
 	go parseZone(r, origin, file, t, 0)
 	return t
-
 }
 
 func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
