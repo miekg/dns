@@ -488,6 +488,13 @@ func zlexer(s *scan, c chan lex) {
 			c <- l
 			return
 		}
+		if comi > maxTok {
+			l.token = "com length insufficient for parsing"
+			l.err = true
+			debug.Printf("[%+v]", l.token)
+			c <- l
+			return
+		}
 
 		switch x {
 		case ' ', '\t':
@@ -499,6 +506,8 @@ func zlexer(s *scan, c chan lex) {
 			}
 			escape = false
 			if commt {
+				com[comi] = x
+				comi++
 				break
 			}
 			if stri == 0 {
@@ -595,6 +604,8 @@ func zlexer(s *scan, c chan lex) {
 				stri = 0
 			}
 			commt = true
+			com[comi] = ';'
+			comi++
 		case '\r':
 			// discard
 			// this means it can also not be used as rdata
@@ -620,7 +631,11 @@ func zlexer(s *scan, c chan lex) {
 					l.token = "\n"
 					debug.Printf("[3 %+v]", l.token)
 					c <- l
+					comi = 0
+					break
 				}
+				com[comi] = ' ' // convert newline to space
+				comi++
 				break
 			}
 
@@ -647,10 +662,13 @@ func zlexer(s *scan, c chan lex) {
 				commt = false
 				rrtype = false
 				owner = true
+				comi = 0
 			}
 		case '\\':
 			// quote?
 			if commt {
+				com[comi] = x
+				comi++
 				break
 			}
 			if escape {
@@ -664,6 +682,8 @@ func zlexer(s *scan, c chan lex) {
 			escape = true
 		case '"':
 			if commt {
+				com[comi] = x
+				comi++
 				break
 			}
 			if escape {
@@ -692,6 +712,8 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 			if commt {
+				com[comi] = x
+				comi++
 				break
 			}
 			if escape {
@@ -715,6 +737,8 @@ func zlexer(s *scan, c chan lex) {
 			}
 		default:
 			if commt {
+				com[comi] = x
+				comi++
 				break
 			}
 			escape = false
