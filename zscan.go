@@ -94,8 +94,9 @@ type lex struct {
 
 // Tokens are returned when a zone file is parsed.
 type Token struct {
-	RR                // the scanned resource record when error is not nil
-	Error *ParseError // when an error occured, this has the error specifics
+	RR                  // the scanned resource record when error is not nil
+	Error   *ParseError // when an error occured, this has the error specifics
+	Comment string      // A potential comment positioned after the RR
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
@@ -119,7 +120,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 }
 
 // ParseZone reads a RFC 1035 style one from r. It returns Tokens on the 
-// returned channel, which consist out the parsed RR or an error. 
+// returned channel, which consist out the parsed RR, a potential comment or an error. 
 // If there is an error the RR is nil. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
 // if the file would start with: $ORIGIN origin  .
@@ -133,7 +134,14 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 //		if x.Error != nil {
 //			// Do something with x.RR
 //		}
-//	}      
+//	}
+//
+// Comments specified after an RR are returned too:
+// 
+//	foo. IN A 10.0.0.1 ; this is a comment
+//
+// The text "; this is comment" is returned in Token.comment . Comments inside,
+// before or after the RR are discarded.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	return parseZoneHelper(r, origin, file, 10000)
 }
@@ -443,7 +451,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			h.Rrtype = l.torc
 			st = _EXPECT_RDATA
 		case _EXPECT_RDATA:
-			r, e := setRR(h, c, origin, f)
+			r, e, c1 := setRR(h, c, origin, f)
 			if e != nil {
 				// If e.lex is nil than we have encounter a unknown RR type
 				// in that case we substitute our current lex token
@@ -453,7 +461,7 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 				t <- Token{Error: e}
 				return
 			}
-			t <- Token{RR: r}
+			t <- Token{RR: r, Comment: c1}
 			st = _EXPECT_OWNER_DIR
 		}
 	}
@@ -631,6 +639,7 @@ func zlexer(s *scan, c chan lex) {
 					l.comment = string(com[:comi])
 					debug.Printf("[3 %+v %+v]", l.token, l.comment)
 					c <- l
+					l.comment = ""
 					comi = 0
 					break
 				}
@@ -882,18 +891,21 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 // "Eat" the rest of the "line". Return potential comments
 func slurpRemainder(c chan lex, f string) (*ParseError, string) {
 	l := <-c
+	com := ""
 	switch l.value {
 	case _BLANK:
 		l = <-c
+		com = l.comment
 		if l.value != _NEWLINE && l.value != _EOF {
 			return &ParseError{f, "garbage after rdata", l}, ""
 		}
 	case _NEWLINE:
+		com = l.comment
 	case _EOF:
 	default:
 		return &ParseError{f, "garbage after rdata", l}, ""
 	}
-	return nil, l.comment
+	return nil, com
 }
 
 // Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64"

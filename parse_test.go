@@ -706,16 +706,23 @@ func TestILNP(t *testing.T) {
 
 func TestComment(t *testing.T) {
 	zone := `
-foo. IN A 10.0.0.1 ; this is a comment1
+foo. IN A 10.0.0.1 ; this is comment1
 foo. IN A (
-	10.0.0.2 ; this is a comment2
+	10.0.0.2 ; this is comment2
 )
-; this is a comment3
+; this is comment3
 foo. IN A 10.0.0.3
+foo. IN A ( 10.0.0.4 ); this is comment4
+
+foo. IN A 10.0.0.5
+; this is comment5
+
+foo. IN A 10.0.0.6
 `
+	// TODO(mg): Need to figure out what to test here
 	for x := range ParseZone(strings.NewReader(zone), ".", "") {
 		if x.Error == nil {
-			fmt.Printf("%s\n", x.RR.String())
+			t.Logf("%s:%s\n", x.RR.String(), x.Comment)
 		}
 	}
 }
