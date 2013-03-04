@@ -140,8 +140,8 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // 
 //	foo. IN A 10.0.0.1 ; this is a comment
 //
-// The text "; this is comment" is returned in Token.comment . Comments inside,
-// before or after the RR are discarded.
+// The text "; this is comment" is returned in Token.comment . Comments inside the 
+// RR are discarded. Comments on the line by themselves are discarded too.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	return parseZoneHelper(r, origin, file, 10000)
 }
