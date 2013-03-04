@@ -97,6 +97,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeLP:
 		r, e = setLP(h, c, o, f)
 		goto Slurp
+	case TypeNSEC3PARAM:
+		r, e = setNSEC3PARAM(h, c, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -110,8 +113,6 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return setNSEC(h, c, o, f)
 	case TypeNSEC3:
 		return setNSEC3(h, c, o, f)
-	case TypeNSEC3PARAM:
-		return setNSEC3PARAM(h, c, f)
 	case TypeWKS:
 		return setWKS(h, c, f)
 	case TypeDS:
@@ -1174,7 +1175,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		}
 		l = <-c
 	}
-	return rr, nil, ""
+	return rr, nil, l.comment
 }
 
 func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
@@ -1236,30 +1237,30 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		}
 		l = <-c
 	}
-	return rr, nil, ""
+	return rr, nil, l.comment
 }
 
-func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(NSEC3PARAM)
 	rr.Hdr = h
 
 	l := <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad NSEC3PARAM Hash", l}, ""
+		return nil, &ParseError{f, "bad NSEC3PARAM Hash", l}
 	} else {
 		rr.Hash = uint8(i)
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad NSEC3PARAM Flags", l}, ""
+		return nil, &ParseError{f, "bad NSEC3PARAM Flags", l}
 	} else {
 		rr.Flags = uint8(i)
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad NSEC3PARAM Iterations", l}, ""
+		return nil, &ParseError{f, "bad NSEC3PARAM Iterations", l}
 	} else {
 		rr.Iterations = uint16(i)
 	}
@@ -1267,7 +1268,7 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError, string) 
 	l = <-c
 	rr.SaltLength = uint8(len(l.token))
 	rr.Salt = l.token
-	return rr, nil, ""
+	return rr, nil
 }
 
 func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
