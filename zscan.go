@@ -96,7 +96,7 @@ type lex struct {
 type Token struct {
 	RR                  // the scanned resource record when error is not nil
 	Error   *ParseError // when an error occured, this has the error specifics
-	Comment string      // A potential comment positioned after the RR
+	Comment string      // A potential comment positioned after the RR, but on the same line
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
