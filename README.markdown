@@ -18,6 +18,16 @@ If you like this, you may also be interested in:
 * KISS;
 * Small API, if its easy to code in Go, don't make a function for it.
 
+# Users
+
+A not-so-up-to-date-list-that-may-be-actually-current:
+
+* https://github.com/abh/geodns
+* http://www.statdns.com/
+* http://www.dnsinspect.com/
+* https://github.com/chuangbo/jianbing-dictionary-dns/tree/master/golang
+* more?
+
 # Features
 
 * UDP/TCP queries, IPv4 and IPv6;
