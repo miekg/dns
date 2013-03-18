@@ -530,6 +530,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			}
 		case reflect.Struct:
 			off, err = packStructValue(fv, msg, off, compression, compress)
+			if err != nil {
+				return lenmsg, err
+			}
 		case reflect.Uint8:
 			if off+1 > lenmsg {
 				return lenmsg, &Error{Err: "overflow packing uint8"}
@@ -865,6 +868,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			}
 		case reflect.Struct:
 			off, err = unpackStructValue(fv, msg, off)
+			if err != nil {
+				return lenmsg, err
+			}
 			if val.Type().Field(i).Name == "Hdr" {
 				rdstart = off
 			}
@@ -1227,6 +1233,9 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	// Pack it in: header and then the pieces.
 	off := 0
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
+	if err != nil {
+		return nil, err
+	}
 	for i := 0; i < len(question); i++ {
 		off, err = packStructCompress(&question[i], msg, off, compression, dns.Compress)
 		if err != nil {
