@@ -5,7 +5,7 @@ import (
 )
 
 // Retrieve the MX records for miek.nl.
-func ExampleRR_MX() {
+func Example_MX() {
 	config, _ := ClientConfigFromFile("/etc/resolv.conf")
 	c := new(Client)
 	m := new(Msg)
@@ -27,7 +27,7 @@ func ExampleRR_MX() {
 
 // Retrieve the DNSKEY records of a zone and convert them
 // to DS records for SHA1, SHA256 and SHA384.
-func ExampleToDs(zone string) {
+func Example_Ds(zone string) {
 	config, _ := ClientConfigFromFile("/etc/resolv.conf")
 	c := new(Client)
 	m := new(Msg)
