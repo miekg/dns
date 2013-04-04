@@ -6,6 +6,7 @@
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
 * Ratelimiting?
 * NSEC3/NSEC support function for generating NXDOMAIN respsonse?
+* Actually mimic net/ ? Dial. Read/Write ?
 
 ## Nice to have
 
