@@ -16,7 +16,7 @@ func rawSetId(msg []byte, i uint16) bool {
 	return true
 }
 
-// rawSetQuestionLen sets the lenght of the question section.
+// rawSetQuestionLen sets the length of the question section.
 func rawSetQuestionLen(msg []byte, i uint16) bool {
 	if len(msg) < 6 {
 		return false
