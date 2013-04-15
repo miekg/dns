@@ -1384,8 +1384,7 @@ func (rr *EUI48) Header() *RR_Header { return &rr.Hdr }
 func (rr *EUI48) copy() RR           { return &EUI48{*rr.Hdr.copyHeader(), rr.Address} }
 
 func (rr *EUI48) String() string {
-	s := rr.Hdr.String() + euiToString(rr.Address, 48)
-	return s
+	return rr.Hdr.String() + euiToString(rr.Address, 48)
 }
 
 func (rr *EUI48) len() int {
@@ -1401,8 +1400,7 @@ func (rr *EUI64) Header() *RR_Header { return &rr.Hdr }
 func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Address} }
 
 func (rr *EUI64) String() string {
-	s := rr.Hdr.String() + euiToString(rr.Address, 64)
-	return s
+	return rr.Hdr.String() + euiToString(rr.Address, 64)
 }
 
 func (rr *EUI64) len() int {
@@ -1465,13 +1463,13 @@ func cmToString(mantissa, exponent uint8) string {
 func euiToString(eui uint64, bits int) (hex string) {
 	switch bits {
 	case 64:
-		hex = strconv.FormatUint(eui, 16)
-		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
-			"-" + hex[8:9] + "-" + hex[10:11] + "-" + hex[12:13] + "-" + hex[14:15]
+		hex = fmt.Sprintf("%16.16x", eui)
+		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
+			"-" + hex[8:10] + "-" + hex[10:12] + "-" + hex[12:14] + "-" + hex[14:16]
 	case 48:
-		hex = strconv.FormatUint(eui, 16) // shift here?
-		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
-			"-" + hex[8:9] + "-" + hex[10:11]
+		hex = fmt.Sprintf("%12.12x", eui)
+		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
+			"-" + hex[8:10] + "-" + hex[10:12]
 	}
 	return
 }

@@ -129,6 +129,8 @@ var TypeToString = map[uint16]string{
 	TypeL32:        "L32",
 	TypeL64:        "L64",
 	TypeLP:         "LP",
+	TypeEUI48:	"EUI48",
+	TypeEUI64:	"EUI64",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeAXFR:       "AXFR", // Meta RR
