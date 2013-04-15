@@ -1465,11 +1465,11 @@ func cmToString(mantissa, exponent uint8) string {
 func euiToString(eui uint64, bits int) (hex string) {
 	switch bits {
 	case 64:
-		hex = fmt.Sprintf("%x", eui)
+		hex = strconv.FormatUint(eui, 16)
 		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
 			"-" + hex[8:9] + "-" + hex[10:11] + "-" + hex[12:13] + "-" + hex[14:15]
 	case 48:
-		hex = fmt.Sprintf("%x", eui) // >> 16?
+		hex = strconv.FormatUint(eui, 16) // shift here?
 		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
 			"-" + hex[8:9] + "-" + hex[10:11]
 	}

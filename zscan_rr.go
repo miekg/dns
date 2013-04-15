@@ -1285,13 +1285,23 @@ func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if len(l.token) != 17 {
 		return nil, &ParseError{f, "bad EUI48 Address", l}
 	}
+	addr := make([]byte, 12)
+	dash := 0
+	for i := 0; i < 12; i += 2 {
+		addr[i] = l.token[i+dash]
+		addr[i+1] = l.token[i+1+dash]
+		dash++
+		if l.token[i+1+dash] != '-' {
+			return nil, &ParseError{f, "bad EUI48 Address", l}
+		}
+	}
 
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if i, e := strconv.ParseUint(string(addr), 16, 48); e != nil {
 		return nil, &ParseError{f, "bad EUI48 Address", l}
 	} else {
-		rr.Address = uint64(i)
+		rr.Address = i
 	}
-	return nil, nil
+	return rr, nil
 }
 
 func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
@@ -1302,13 +1312,23 @@ func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	if len(l.token) != 23 {
 		return nil, &ParseError{f, "bad EUI64 Address", l}
 	}
+	addr := make([]byte, 16)
+	dash := 0
+	for i := 0; i < 16; i += 2 {
+		addr[i] = l.token[i+dash]
+		addr[i+1] = l.token[i+1+dash]
+		dash++
+		if l.token[i+1+dash] != '-' {
+			return nil, &ParseError{f, "bad EUI64 Address", l}
+		}
+	}
 
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad EUI64 Address", l}
+	if i, e := strconv.ParseUint(string(addr), 16, 64); e != nil {
+		return nil, &ParseError{f, "bad EUI68 Address", l}
 	} else {
 		rr.Address = uint64(i)
 	}
-	return nil, nil
+	return rr, nil
 }
 
 func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
