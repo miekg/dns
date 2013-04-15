@@ -72,6 +72,8 @@ const (
 	TypeL32        uint16 = 105
 	TypeL64        uint16 = 106
 	TypeLP         uint16 = 107
+	TypeEUI48      uint16 = 108
+	TypeEUI64      uint16 = 109
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -1049,7 +1051,7 @@ func (rr *NSEC3) String() string {
 	s += strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
-		" " + saltString(rr.Salt) +
+		" " + saltToString(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
 		if _, ok := TypeToString[rr.TypeBitMap[i]]; ok {
@@ -1085,7 +1087,7 @@ func (rr *NSEC3PARAM) String() string {
 	s += strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
-		" " + saltString(rr.Salt)
+		" " + saltToString(rr.Salt)
 	return s
 }
 
@@ -1373,6 +1375,40 @@ func (rr *LP) len() int {
 	return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1
 }
 
+type EUI48 struct {
+	Hdr     RR_Header
+	Address uint64 `dns:"uint48"`
+}
+
+func (rr *EUI48) Header() *RR_Header { return &rr.Hdr }
+func (rr *EUI48) copy() RR           { return &EUI48{*rr.Hdr.copyHeader(), rr.Address} }
+
+func (rr *EUI48) String() string {
+	s := rr.Hdr.String() + euiToString(rr.Address, 48)
+	return s
+}
+
+func (rr *EUI48) len() int {
+	return rr.Hdr.len() + 8 // we need a whole uint64
+}
+
+type EUI64 struct {
+	Hdr     RR_Header
+	Address uint64
+}
+
+func (rr *EUI64) Header() *RR_Header { return &rr.Hdr }
+func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Address} }
+
+func (rr *EUI64) String() string {
+	s := rr.Hdr.String() + euiToString(rr.Address, 64)
+	return s
+}
+
+func (rr *EUI64) len() int {
+	return rr.Hdr.len() + 8 // we need a whole uint64
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1385,7 +1421,7 @@ func TimeToString(t uint32) string {
 	return ti.Format("20060102150405")
 }
 
-// StringToTime translates the RRSIG's incep. and expir. times from 
+// StringToTime translates the RRSIG's incep. and expir. times from
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
 func StringToTime(s string) (uint32, error) {
@@ -1400,9 +1436,9 @@ func StringToTime(s string) (uint32, error) {
 	return uint32(t.Unix() - (mod * year68)), nil
 }
 
-// saltString converts a NSECX salt to uppercase and
+// saltToString converts a NSECX salt to uppercase and
 // returns "-" when it is empty
-func saltString(s string) string {
+func saltToString(s string) string {
 	if len(s) == 0 {
 		return "-"
 	}
@@ -1424,6 +1460,20 @@ func cmToString(mantissa, exponent uint8) string {
 		return s
 	}
 	panic("dns: not reached")
+}
+
+func euiToString(eui uint64, bits int) (hex string) {
+	switch bits {
+	case 64:
+		hex = fmt.Sprintf("%x", eui)
+		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
+			"-" + hex[8:9] + "-" + hex[10:11] + "-" + hex[12:13] + "-" + hex[14:15]
+	case 48:
+		hex = fmt.Sprintf("%x", eui) // >> 16?
+		hex = hex[0:1] + "-" + hex[2:3] + "-" + hex[4:5] + "-" + hex[6:7] +
+			"-" + hex[8:9] + "-" + hex[10:11]
+	}
+	return
 }
 
 // Map of constructors for each RR wire type.
@@ -1479,4 +1529,6 @@ var rr_mk = map[uint16]func() RR{
 	TypeL32:        func() RR { return new(L32) },
 	TypeL64:        func() RR { return new(L64) },
 	TypeLP:         func() RR { return new(LP) },
+	TypeEUI48:      func() RR { return new(EUI48) },
+	TypeEUI64:      func() RR { return new(EUI64) },
 }

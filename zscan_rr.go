@@ -100,6 +100,12 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeNSEC3PARAM:
 		r, e = setNSEC3PARAM(h, c, f)
 		goto Slurp
+	case TypeEUI48:
+		r, e = setEUI48(h, c, f)
+		goto Slurp
+	case TypeEUI64:
+		r, e = setEUI64(h, c, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -1269,6 +1275,40 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.SaltLength = uint8(len(l.token))
 	rr.Salt = l.token
 	return rr, nil
+}
+
+func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(EUI48)
+	rr.Hdr = h
+
+	l := <-c
+	if len(l.token) != 17 {
+		return nil, &ParseError{f, "bad EUI48 Address", l}
+	}
+
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad EUI48 Address", l}
+	} else {
+		rr.Address = uint64(i)
+	}
+	return nil, nil
+}
+
+func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(EUI64)
+	rr.Hdr = h
+
+	l := <-c
+	if len(l.token) != 23 {
+		return nil, &ParseError{f, "bad EUI64 Address", l}
+	}
+
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad EUI64 Address", l}
+	} else {
+		rr.Address = uint64(i)
+	}
+	return nil, nil
 }
 
 func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
