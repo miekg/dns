@@ -1388,7 +1388,7 @@ func (rr *EUI48) String() string {
 }
 
 func (rr *EUI48) len() int {
-	return rr.Hdr.len() + 8 // we need a whole uint64
+	return rr.Hdr.len() + 6
 }
 
 type EUI64 struct {
