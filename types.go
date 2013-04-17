@@ -1404,7 +1404,7 @@ func (rr *EUI64) String() string {
 }
 
 func (rr *EUI64) len() int {
-	return rr.Hdr.len() + 8 // we need a whole uint64
+	return rr.Hdr.len() + 8
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the
