@@ -63,7 +63,7 @@
 //
 // For asynchronous queries it is easy to wrap Exchange() in a goroutine.
 //
-// From a birds eye view a dns message consists out of four sections.
+// A dns message consists out of four sections.
 // The question section: in.Question, the answer section: in.Answer,
 // the authority section: in.Ns and the additional section: in.Extra.
 //
