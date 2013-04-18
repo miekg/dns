@@ -100,6 +100,12 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeNSEC3PARAM:
 		r, e = setNSEC3PARAM(h, c, f)
 		goto Slurp
+	case TypeEUI48:
+		r, e = setEUI48(h, c, f)
+		goto Slurp
+	case TypeEUI64:
+		r, e = setEUI64(h, c, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -1268,6 +1274,64 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	l = <-c
 	rr.SaltLength = uint8(len(l.token))
 	rr.Salt = l.token
+	return rr, nil
+}
+
+func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(EUI48)
+	rr.Hdr = h
+
+	l := <-c
+	if len(l.token) != 17 {
+		return nil, &ParseError{f, "bad EUI48 Address", l}
+	}
+	addr := make([]byte, 12)
+	dash := 0
+	for i := 0; i < 10; i += 2 {
+		addr[i] = l.token[i+dash]
+		addr[i+1] = l.token[i+1+dash]
+		dash++
+		if l.token[i+1+dash] != '-' {
+			return nil, &ParseError{f, "bad EUI48 Address", l}
+		}
+	}
+	addr[10] = l.token[15]
+	addr[11] = l.token[16]
+
+	if i, e := strconv.ParseUint(string(addr), 16, 48); e != nil {
+		return nil, &ParseError{f, "bad EUI48 Address", l}
+	} else {
+		rr.Address = i
+	}
+	return rr, nil
+}
+
+func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(EUI64)
+	rr.Hdr = h
+
+	l := <-c
+	if len(l.token) != 23 {
+		return nil, &ParseError{f, "bad EUI64 Address", l}
+	}
+	addr := make([]byte, 16)
+	dash := 0
+	for i := 0; i < 14; i += 2 {
+		addr[i] = l.token[i+dash]
+		addr[i+1] = l.token[i+1+dash]
+		dash++
+		if l.token[i+1+dash] != '-' {
+			return nil, &ParseError{f, "bad EUI64 Address", l}
+		}
+	}
+	addr[14] = l.token[21]
+	addr[15] = l.token[22]
+
+	if i, e := strconv.ParseUint(string(addr), 16, 64); e != nil {
+		return nil, &ParseError{f, "bad EUI68 Address", l}
+	} else {
+		rr.Address = uint64(i)
+	}
 	return rr, nil
 }
 
