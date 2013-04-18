@@ -78,6 +78,7 @@ with: `go build`.
 * 2782 - SRV record
 * 2845 - TSIG record
 * 2915 - NAPTR record
+* 2929 - DNS IANA Considerations
 * 3110 - RSASHA1 DNS keys
 * 3225 - DO bit (DNSSEC OK)
 * 340{1,2,3} - NAPTR record
