@@ -99,8 +99,10 @@ with: `go build`.
 * 5936 - AXFR
 * 6605 - ECDSA
 * 6742 - ILNP DNS
+* 6891 - EDNS0 update
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
+* xxxx - IEU48/IEU64 records (draft)
 
 ## Loosely based upon
 
