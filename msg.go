@@ -184,7 +184,7 @@ var RcodeToString = map[int]string{
 	RcodeNotAuth:        "NOTAUTH",
 	RcodeNotZone:        "NOTZONE",
 	RcodeBadSig:         "BADSIG",
-	RcodeBadVers:        "BADVERS",
+//	RcodeBadVers:        "BADVERS",
 	RcodeBadKey:         "BADKEY",
 	RcodeBadTime:        "BADTIME",
 	RcodeBadMode:        "BADMODE",

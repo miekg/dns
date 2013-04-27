@@ -110,6 +110,7 @@ const (
 	RcodeNotAuth        = 9
 	RcodeNotZone        = 10
 	RcodeBadSig         = 16 // TSIG
+	RcodeBadVers        = 16 // EDNS0
 	RcodeBadKey         = 17
 	RcodeBadTime        = 18
 	RcodeBadMode        = 19 // TKEY
