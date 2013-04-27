@@ -183,7 +183,7 @@ var RcodeToString = map[int]string{
 	RcodeNXRrset:        "NXRRSET",
 	RcodeNotAuth:        "NOTAUTH",
 	RcodeNotZone:        "NOTZONE",
-	RcodeBadSig:         "BADSIG",
+	RcodeBadSig:         "BADSIG",	// Also known as RcodeBadVers, see RFC 6891
 //	RcodeBadVers:        "BADVERS",
 	RcodeBadKey:         "BADKEY",
 	RcodeBadTime:        "BADTIME",
