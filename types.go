@@ -192,14 +192,8 @@ type ANY struct {
 
 func (rr *ANY) Header() *RR_Header { return &rr.Hdr }
 func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
-
-func (rr *ANY) String() string {
-	return rr.Hdr.String()
-}
-
-func (rr *ANY) len() int {
-	return rr.Hdr.len()
-}
+func (rr *ANY) String() string     { return rr.Hdr.String() }
+func (rr *ANY) len() int           { return rr.Hdr.len() }
 
 type CNAME struct {
 	Hdr    RR_Header
@@ -208,15 +202,8 @@ type CNAME struct {
 
 func (rr *CNAME) Header() *RR_Header { return &rr.Hdr }
 func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), rr.Target} }
-
-func (rr *CNAME) String() string {
-	return rr.Hdr.String() + rr.Target
-}
-
-func (rr *CNAME) len() int {
-	l := len(rr.Target) + 1
-	return rr.Hdr.len() + l
-}
+func (rr *CNAME) String() string     { return rr.Hdr.String() + rr.Target }
+func (rr *CNAME) len() int           { return rr.Hdr.len() + len(rr.Target) + 1 }
 
 type HINFO struct {
 	Hdr RR_Header
@@ -226,14 +213,8 @@ type HINFO struct {
 
 func (rr *HINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *HINFO) copy() RR           { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
-
-func (rr *HINFO) String() string {
-	return rr.Hdr.String() + rr.Cpu + " " + rr.Os
-}
-
-func (rr *HINFO) len() int {
-	return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os)
-}
+func (rr *HINFO) String() string     { return rr.Hdr.String() + rr.Cpu + " " + rr.Os }
+func (rr *HINFO) len() int           { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
 
 type MB struct {
 	Hdr RR_Header
@@ -243,14 +224,8 @@ type MB struct {
 func (rr *MB) Header() *RR_Header { return &rr.Hdr }
 func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), rr.Mb} }
 
-func (rr *MB) String() string {
-	return rr.Hdr.String() + rr.Mb
-}
-
-func (rr *MB) len() int {
-	l := len(rr.Mb) + 1
-	return rr.Hdr.len() + l
-}
+func (rr *MB) String() string { return rr.Hdr.String() + rr.Mb }
+func (rr *MB) len() int       { return rr.Hdr.len() + len(rr.Mb) + 1 }
 
 type MG struct {
 	Hdr RR_Header
@@ -1357,16 +1332,10 @@ type LP struct {
 
 func (rr *LP) Header() *RR_Header { return &rr.Hdr }
 func (rr *LP) copy() RR           { return &LP{*rr.Hdr.copyHeader(), rr.Preference, rr.Fqdn} }
-
 func (rr *LP) String() string {
-	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
-		" " + rr.Fqdn
-	return s
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Fqdn
 }
-
-func (rr *LP) len() int {
-	return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1
-}
+func (rr *LP) len() int { return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1 }
 
 type EUI48 struct {
 	Hdr     RR_Header
@@ -1375,14 +1344,8 @@ type EUI48 struct {
 
 func (rr *EUI48) Header() *RR_Header { return &rr.Hdr }
 func (rr *EUI48) copy() RR           { return &EUI48{*rr.Hdr.copyHeader(), rr.Address} }
-
-func (rr *EUI48) String() string {
-	return rr.Hdr.String() + euiToString(rr.Address, 48)
-}
-
-func (rr *EUI48) len() int {
-	return rr.Hdr.len() + 6
-}
+func (rr *EUI48) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 48) }
+func (rr *EUI48) len() int           { return rr.Hdr.len() + 6 }
 
 type EUI64 struct {
 	Hdr     RR_Header
@@ -1391,14 +1354,8 @@ type EUI64 struct {
 
 func (rr *EUI64) Header() *RR_Header { return &rr.Hdr }
 func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Address} }
-
-func (rr *EUI64) String() string {
-	return rr.Hdr.String() + euiToString(rr.Address, 64)
-}
-
-func (rr *EUI64) len() int {
-	return rr.Hdr.len() + 8
-}
+func (rr *EUI64) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 64) }
+func (rr *EUI64) len() int           { return rr.Hdr.len() + 8 }
 
 type CAA struct {
 	Hdr   RR_Header
@@ -1458,7 +1415,7 @@ type UINFO struct {
 func (rr *UINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *UINFO) copy() RR           { return &UINFO{*rr.Hdr.copyHeader(), rr.Uinfo} }
 func (rr *UINFO) String() string     { return rr.Hdr.String() + strconv.QuoteToASCII(rr.Uinfo) }
-func (rr *UINFO) len() int           { return rr.Hdr.len() + len(rr.Uinfo) }
+func (rr *UINFO) len() int           { return rr.Hdr.len() + len(rr.Uinfo) + 1 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
