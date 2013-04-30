@@ -106,6 +106,15 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeEUI64:
 		r, e = setEUI64(h, c, f)
 		goto Slurp
+	case TypeUID:
+		r, e = setUID(h, c, f)
+		goto Slurp
+	case TypeGID:
+		r, e = setGID(h, c, f)
+		goto Slurp
+	case TypeLOC:
+		r, e = setLOC(h, c, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -145,8 +154,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return setDHCID(h, c, f)
 	case TypeIPSECKEY:
 		return setIPSECKEY(h, c, o, f)
-	case TypeLOC:
-		r, e = setLOC(h, c, f)
+	case TypeUINFO:
+		return setUINFO(h, c, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -1870,4 +1879,39 @@ func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	}
 	rr.Locator64 = u
 	return rr, nil
+}
+
+func setUID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(UID)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad UID Uid", l}
+	} else {
+		rr.Uid = uint32(i)
+	}
+	return rr, nil
+}
+
+func setGID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
+	rr := new(GID)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad GID Gid", l}
+	} else {
+		rr.Gid = uint32(i)
+	}
+	return rr, nil
+}
+
+func setUINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+	rr := new(UINFO)
+	rr.Hdr = h
+	s, e, c1 := endingToTxtSlice(c, "bad UINFO Uinfo", f)
+	if e != nil {
+		return nil, e, ""
+	}
+	rr.Uinfo = s[0] // silently discard anything above
+	return rr, nil, c1
 }

@@ -651,14 +651,8 @@ type A struct {
 
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
 func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
-
-func (rr *A) String() string {
-	return rr.Hdr.String() + rr.A.String()
-}
-
-func (rr *A) len() int {
-	return rr.Hdr.len() + net.IPv4len
-}
+func (rr *A) String() string     { return rr.Hdr.String() + rr.A.String() }
+func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
 
 type AAAA struct {
 	Hdr  RR_Header
@@ -667,14 +661,8 @@ type AAAA struct {
 
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
-
-func (rr *AAAA) String() string {
-	return rr.Hdr.String() + rr.AAAA.String()
-}
-
-func (rr *AAAA) len() int {
-	return rr.Hdr.len() + net.IPv6len
-}
+func (rr *AAAA) String() string     { return rr.Hdr.String() + rr.AAAA.String() }
+func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
 
 type LOC struct {
 	Hdr       RR_Header
@@ -890,7 +878,7 @@ func (rr *KX) String() string {
 }
 
 func (rr *KX) len() int {
-	return 0
+	return rr.Hdr.len() + 2 + len(rr.Exchanger)
 }
 
 type TA struct {
@@ -1442,6 +1430,36 @@ func (rr *CAA) len() int {
 	return l
 }
 
+type UID struct {
+	Hdr RR_Header
+	Uid uint32
+}
+
+func (rr *UID) Header() *RR_Header { return &rr.Hdr }
+func (rr *UID) copy() RR           { return &UID{*rr.Hdr.copyHeader(), rr.Uid} }
+func (rr *UID) String() string     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Uid), 10) }
+func (rr *UID) len() int           { return rr.Hdr.len() + 4 }
+
+type GID struct {
+	Hdr RR_Header
+	Gid uint32
+}
+
+func (rr *GID) Header() *RR_Header { return &rr.Hdr }
+func (rr *GID) copy() RR           { return &GID{*rr.Hdr.copyHeader(), rr.Gid} }
+func (rr *GID) String() string     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Gid), 10) }
+func (rr *GID) len() int           { return rr.Hdr.len() + 4 }
+
+type UINFO struct {
+	Hdr   RR_Header
+	Uinfo string
+}
+
+func (rr *UINFO) Header() *RR_Header { return &rr.Hdr }
+func (rr *UINFO) copy() RR           { return &UINFO{*rr.Hdr.copyHeader(), rr.Uinfo} }
+func (rr *UINFO) String() string     { return rr.Hdr.String() + strconv.QuoteToASCII(rr.Uinfo) }
+func (rr *UINFO) len() int           { return rr.Hdr.len() + len(rr.Uinfo) }
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1565,4 +1583,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeEUI48:      func() RR { return new(EUI48) },
 	TypeEUI64:      func() RR { return new(EUI64) },
 	TypeCAA:        func() RR { return new(CAA) },
+	TypeUID:        func() RR { return new(UID) },
+	TypeGID:        func() RR { return new(GID) },
+	TypeUINFO:      func() RR { return new(UINFO) },
 }
