@@ -68,6 +68,10 @@ const (
 	TypeTALINK     uint16 = 58
 	TypeCDS        uint16 = 59
 	TypeSPF        uint16 = 99
+	TypeUINFO      uint16 = 100
+	TypeUID        uint16 = 101
+	TypeGID        uint16 = 102
+	TypeUNSPEC     uint16 = 103
 	TypeNID        uint16 = 104
 	TypeL32        uint16 = 105
 	TypeL64        uint16 = 106

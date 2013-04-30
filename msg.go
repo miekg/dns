@@ -129,8 +129,12 @@ var TypeToString = map[uint16]string{
 	TypeL32:        "L32",
 	TypeL64:        "L64",
 	TypeLP:         "LP",
-	TypeEUI48:	"EUI48",
-	TypeEUI64:	"EUI64",
+	TypeUINFO:      "UINFO",	// lost in history
+	TypeUID:        "UID",		// "
+	TypeGID:        "GID",		// "
+	TypeUNSPEC:     "UNSPEC",	// "
+	TypeEUI48:      "EUI48",
+	TypeEUI64:      "EUI64",
 	TypeTKEY:       "TKEY", // Meta RR
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeAXFR:       "AXFR", // Meta RR
@@ -183,14 +187,14 @@ var RcodeToString = map[int]string{
 	RcodeNXRrset:        "NXRRSET",
 	RcodeNotAuth:        "NOTAUTH",
 	RcodeNotZone:        "NOTZONE",
-	RcodeBadSig:         "BADSIG",	// Also known as RcodeBadVers, see RFC 6891
-//	RcodeBadVers:        "BADVERS",
-	RcodeBadKey:         "BADKEY",
-	RcodeBadTime:        "BADTIME",
-	RcodeBadMode:        "BADMODE",
-	RcodeBadName:        "BADNAME",
-	RcodeBadAlg:         "BADALG",
-	RcodeBadTrunc:       "BADTRUNC",
+	RcodeBadSig:         "BADSIG", // Also known as RcodeBadVers, see RFC 6891
+	//	RcodeBadVers:        "BADVERS",
+	RcodeBadKey:   "BADKEY",
+	RcodeBadTime:  "BADTIME",
+	RcodeBadMode:  "BADMODE",
+	RcodeBadName:  "BADNAME",
+	RcodeBadAlg:   "BADALG",
+	RcodeBadTrunc: "BADTRUNC",
 }
 
 // Rather than write the usual handful of routines to pack and
@@ -639,7 +643,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case `dns:"size"`:
-				// the size is already encoded in the RR, we can safely use the 
+				// the size is already encoded in the RR, we can safely use the
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
 				off += len(s)
@@ -1369,10 +1373,10 @@ func (dns *Msg) String() string {
 
 // Len return the message length when in (un)compressed wire format.
 // If dns.Compress is true compression it is taken into account, currently
-// this only counts owner name compression. There is no check for 
+// this only counts owner name compression. There is no check for
 // nil valued sections (allocated, but contain no RRs).
 func (dns *Msg) Len() int {
-	// Message header is always 12 bytes       
+	// Message header is always 12 bytes
 	l := 12
 	var compression map[string]int
 	if dns.Compress {
