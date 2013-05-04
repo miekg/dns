@@ -169,14 +169,14 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	defer mux.m.RUnlock()
 	var (
 		handler  Handler
-		lastdot  int
+		lastdot  int = -1
 		lastbyte byte
 		seendot  bool = true
 	)
 	// TODO(mg): check for .
 	for i := 0; i < len(q); i++ {
 		if seendot {
-			if h, ok := mux.z[q[lastdot:]]; ok {
+			if h, ok := mux.z[q[lastdot+1:]]; ok {
 				if t != TypeDS {
 					return h
 				} else {
@@ -194,10 +194,12 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 		lastbyte = q[i]
 	}
-	if handler != nil {
-		return handler
+	// Check for the root zone too, this only delays NXDOMAIN, because if we serve . it 
+	// will be catched above.
+	if h, ok := mux.z["."]; ok {
+		return h
 	}
-	return nil
+	return handler
 }
 
 // Handle adds a handler to the ServeMux for pattern.
