@@ -4,7 +4,6 @@ package dns
 
 import (
 	"fmt"
-	"github.com/miekg/radix"
 	"math/rand"
 	"runtime"
 	"sort"
@@ -13,15 +12,15 @@ import (
 	"time"
 )
 
-// Zone represents a DNS zone. It's safe for concurrent use by 
+// Zone represents a DNS zone. It's safe for concurrent use by
 // multilpe goroutines.
 type Zone struct {
-	Origin       string    // Origin of the zone
-	olabels      []string  // origin cut up in labels, just to speed up the isSubDomain method
-	Wildcard     int       // Whenever we see a wildcard name, this is incremented
-	expired      bool      // Slave zone is expired
-	ModTime      time.Time // When is the zone last modified
-	*radix.Radix           // Zone data
+	Origin   string               // Origin of the zone
+	olabels  []string             // origin cut up in labels, just to speed up the isSubDomain method
+	Wildcard int                  // Whenever we see a wildcard name, this is incremented
+	expired  bool                 // Slave zone is expired
+	ModTime  time.Time            // When is the zone last modified
+	Labels   map[string]*ZoneData // Zone data, indexed by label
 	*sync.RWMutex
 }
 
@@ -31,7 +30,7 @@ func (p uint16Slice) Len() int           { return len(p) }
 func (p uint16Slice) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint16Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-// SignatureConfig holds the parameters for zone (re)signing. This 
+// SignatureConfig holds the parameters for zone (re)signing. This
 // is copied from OpenDNSSEC. See:
 // https://wiki.opendnssec.org/display/DOCS/kasp.xml
 type SignatureConfig struct {
@@ -40,7 +39,7 @@ type SignatureConfig struct {
 	// When the end of the validity approaches, how much time should remain
 	// before we start to resign. Typical value is 3 days.
 	Refresh time.Duration
-	// Jitter is an random amount of time added or subtracted from the 
+	// Jitter is an random amount of time added or subtracted from the
 	// expiration time to ensure not all signatures expire a the same time.
 	// Typical value is 12 hours, which means the actual jitter value is
 	// between -12..0..+12.
@@ -65,7 +64,7 @@ func newSignatureConfig() *SignatureConfig {
 	return &SignatureConfig{time.Duration(4*7*24) * time.Hour, time.Duration(3*24) * time.Hour, time.Duration(12) * time.Hour, time.Duration(300) * time.Second, true, runtime.NumCPU() + 1, 0}
 }
 
-// DefaultSignaturePolicy has the following values. Validity is 4 weeks, 
+// DefaultSignaturePolicy has the following values. Validity is 4 weeks,
 // Refresh is set to 3 days, Jitter to 12 hours and InceptionOffset to 300 seconds.
 // HonorSepFlag is set to true, SignerRoutines is set to runtime.NumCPU() + 1. The
 // Minttl value is zero.
@@ -82,7 +81,7 @@ func NewZone(origin string) *Zone {
 	z := new(Zone)
 	z.Origin = Fqdn(strings.ToLower(origin))
 	z.olabels = SplitLabels(z.Origin)
-	z.Radix = radix.New()
+	z.Labels = make(map[string]*ZoneData)
 	z.RWMutex = new(sync.RWMutex)
 	z.ModTime = time.Now().UTC()
 	return z
@@ -90,7 +89,6 @@ func NewZone(origin string) *Zone {
 
 // ZoneData holds all the RRs having their owner name equal to Name.
 type ZoneData struct {
-	Name       string              // Domain name for this node
 	RR         map[uint16][]RR     // Map of the RR type to the RR
 	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
@@ -98,9 +96,8 @@ type ZoneData struct {
 }
 
 // NewZoneData creates a new zone data element.
-func NewZoneData(s string) *ZoneData {
+func NewZoneData() *ZoneData {
 	zd := new(ZoneData)
-	zd.Name = s
 	zd.RR = make(map[uint16][]RR)
 	zd.Signatures = make(map[uint16][]*RRSIG)
 	zd.RWMutex = new(sync.RWMutex)
@@ -404,9 +401,9 @@ func (z *Zone) isSubDomain(child string) bool {
 	return compareLabelsSlice(z.olabels, strings.ToLower(child)) == len(z.olabels)
 }
 
-// Sign (re)signs the zone z with the given keys. 
-// NSECs and RRSIGs are added as needed. 
-// The public keys themselves are not added to the zone. 
+// Sign (re)signs the zone z with the given keys.
+// NSECs and RRSIGs are added as needed.
+// The public keys themselves are not added to the zone.
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
 // should be honored. If signatures approach their expriration time, they
@@ -492,7 +489,7 @@ func signerRoutine(wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[
 // Sign signs a single ZoneData node. The zonedata itself is locked for writing,
 // during the execution. It is important that the nodes' next record does not
 // change. The caller must take care that the zone itself is also locked for writing.
-// For a more complete description see zone.Sign. 
+// For a more complete description see zone.Sign.
 // Note, because this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in *config.
 func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig) error {
@@ -610,7 +607,7 @@ func signatures(signatures []*RRSIG, keytag uint16) (int, *RRSIG) {
 	return 0, nil
 }
 
-// timeToUint32 translates a time.Time to a 32 bit value which                      
+// timeToUint32 translates a time.Time to a 32 bit value which
 // can be used as the RRSIG's inception or expiration times.
 func timeToUint32(t time.Time) uint32 {
 	mod := (t.Unix() / year68) - 1
