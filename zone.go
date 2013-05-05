@@ -234,11 +234,9 @@ func (z *Zone) Remove(r RR) error {
 				remove = true
 			}
 		}
-		if remove {
-			// If every Signature of the covering type is removed, removed the type from the map
-			if len(zd.Signatures[sigtype]) == 0 {
-				delete(zd.Signatures, sigtype)
-			}
+		// If every Signature of the covering type is removed, removed the type from the map
+		if len(zd.Signatures[sigtype]) == 0 {
+			delete(zd.Signatures, sigtype)
 		}
 	default:
 		for i, zr := range zd.RR[t] {
@@ -248,11 +246,9 @@ func (z *Zone) Remove(r RR) error {
 				remove = true
 			}
 		}
-		if remove {
-			// If every RR of this type is removed, removed the type from the map
-			if len(zd.RR[t]) == 0 {
-				delete(zd.RR, t)
-			}
+		// If every RR of this type is removed, removed the type from the map
+		if len(zd.RR[t]) == 0 {
+			delete(zd.RR, t)
 		}
 	}
 	if !remove {
@@ -313,17 +309,23 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 	z.Unlock()
 	zd.Lock()
 	defer zd.Unlock()
+	remove := false
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
 		for cover, _ := range zd.Signatures {
 			delete(zd.Signatures, cover)
+			remove = true
 		}
 	default:
 		// empty all rr maps
 		for t, _ := range zd.RR {
 			delete(zd.RR, t)
+			remove = true
 		}
+	}
+	if !remove {
+		return nil
 	}
 	return nil
 }
