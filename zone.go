@@ -3,10 +3,9 @@ package dns
 // A structure for handling zone data
 
 import (
-	"fmt"
 	"math/rand"
 	"runtime"
-	"sort"
+//	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +19,7 @@ type Zone struct {
 	Wildcard int                  // Whenever we see a wildcard name, this is incremented
 	expired  bool                 // Slave zone is expired
 	ModTime  time.Time            // When is the zone last modified
-	Labels   map[string]*ZoneData // Zone data, indexed by label
+	Names    map[string]*ZoneData // Zone data, indexed by name
 	*sync.RWMutex
 }
 
@@ -81,7 +80,7 @@ func NewZone(origin string) *Zone {
 	z := new(Zone)
 	z.Origin = Fqdn(strings.ToLower(origin))
 	z.olabels = SplitLabels(z.Origin)
-	z.Labels = make(map[string]*ZoneData)
+	z.Names = make(map[string]*ZoneData)
 	z.RWMutex = new(sync.RWMutex)
 	z.ModTime = time.Now().UTC()
 	return z
@@ -102,39 +101,6 @@ func NewZoneData() *ZoneData {
 	zd.Signatures = make(map[uint16][]*RRSIG)
 	zd.RWMutex = new(sync.RWMutex)
 	return zd
-}
-
-// toRadixName reverses a domain name so that when we store it in the radix tree
-// we preserve the nsec ordering of the zone (this idea was stolen from NSD).
-// Each label is also lowercased.
-func toRadixName(d string) string {
-	if d == "" || d == "." {
-		return "."
-	}
-	s := ""
-	ld := len(d)
-	if d[ld-1] != '.' {
-		d = d + "."
-		ld++
-	}
-	var lastdot int
-	var lastbyte byte
-	var lastlastbyte byte
-	for i := 0; i < len(d); i++ {
-		if d[i] == '.' {
-			switch {
-			case lastbyte != '\\':
-				fallthrough
-			case lastbyte == '\\' && lastlastbyte == '\\':
-				s = d[lastdot:i] + "." + s
-				lastdot = i + 1
-				continue
-			}
-		}
-		lastlastbyte = lastbyte
-		lastbyte = d[i]
-	}
-	return "." + strings.ToLower(s[:len(s)-1])
 }
 
 // String returns a string representation of a ZoneData. There is no
@@ -190,25 +156,22 @@ Types:
 	return s
 }
 
-// Insert inserts the RR r into the zone. There is no check for duplicate data, although
-// Remove will remove all duplicates.
+// Insert inserts the RR r into the zone.
 func (z *Zone) Insert(r RR) error {
 	if !z.isSubDomain(r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 
-	key := toRadixName(r.Header().Name)
 	z.Lock()
 	z.ModTime = time.Now().UTC()
-	zd, exact := z.Radix.Find(key)
-	if !exact {
-		// Not an exact match, so insert new value
+	zd, ok := z.Names[r.Header().Name]
+	if !ok {
 		defer z.Unlock()
 		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
 		}
-		zd := NewZoneData(r.Header().Name)
+		zd = NewZoneData()
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RRSIG).TypeCovered
@@ -222,24 +185,24 @@ func (z *Zone) Insert(r RR) error {
 		default:
 			zd.RR[t] = append(zd.RR[t], r)
 		}
-		z.Radix.Insert(key, zd)
+		z.Names[r.Header().Name] = zd
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).Lock()
-	defer zd.Value.(*ZoneData).Unlock()
+	zd.Lock()
+	defer zd.Unlock()
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
-		zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype], r.(*RRSIG))
+		zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RRSIG))
 	case TypeNS:
 		if r.Header().Name != z.Origin {
-			zd.Value.(*ZoneData).NonAuth = true
+			zd.NonAuth = true
 		}
 		fallthrough
 	default:
-		zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t], r)
+		zd.RR[t] = append(zd.RR[t], r)
 	}
 	return nil
 }
@@ -247,45 +210,44 @@ func (z *Zone) Insert(r RR) error {
 // Remove removes the RR r from the zone. If the RR can not be found,
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
-	key := toRadixName(r.Header().Name)
 	z.Lock()
 	z.ModTime = time.Now().UTC()
-	zd, exact := z.Radix.Find(key)
-	if !exact {
+	zd, ok := z.Names[r.Header().Name]
+	if !ok {
 		defer z.Unlock()
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).Lock()
-	defer zd.Value.(*ZoneData).Unlock()
+	zd.Lock()
+	defer zd.Unlock()
 	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
-		for i, zr := range zd.Value.(*ZoneData).Signatures[sigtype] {
+		for i, zr := range zd.Signatures[sigtype] {
 			if r == zr {
-				zd.Value.(*ZoneData).Signatures[sigtype] = append(zd.Value.(*ZoneData).Signatures[sigtype][:i], zd.Value.(*ZoneData).Signatures[sigtype][i+1:]...)
+				zd.Signatures[sigtype] = append(zd.Signatures[sigtype][:i], zd.Signatures[sigtype][i+1:]...)
 				remove = true
 			}
 		}
 		if remove {
 			// If every Signature of the covering type is removed, removed the type from the map
-			if len(zd.Value.(*ZoneData).Signatures[sigtype]) == 0 {
-				delete(zd.Value.(*ZoneData).Signatures, sigtype)
+			if len(zd.Signatures[sigtype]) == 0 {
+				delete(zd.Signatures, sigtype)
 			}
 		}
 	default:
-		for i, zr := range zd.Value.(*ZoneData).RR[t] {
+		for i, zr := range zd.RR[t] {
 			// Matching RR
 			if r == zr {
-				zd.Value.(*ZoneData).RR[t] = append(zd.Value.(*ZoneData).RR[t][:i], zd.Value.(*ZoneData).RR[t][i+1:]...)
+				zd.RR[t] = append(zd.RR[t][:i], zd.RR[t][i+1:]...)
 				remove = true
 			}
 		}
 		if remove {
 			// If every RR of this type is removed, removed the type from the map
-			if len(zd.Value.(*ZoneData).RR[t]) == 0 {
-				delete(zd.Value.(*ZoneData).RR, t)
+			if len(zd.RR[t]) == 0 {
+				delete(zd.RR, t)
 			}
 		}
 	}
@@ -299,9 +261,9 @@ func (z *Zone) Remove(r RR) error {
 			z.Wildcard = 0
 		}
 	}
-	if len(zd.Value.(*ZoneData).RR) == 0 && len(zd.Value.(*ZoneData).Signatures) == 0 {
-		// Entire node is empty, remove it from the Radix tree
-		z.Radix.Remove(key)
+	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
+		// Entire node is empty, remove it from the Zone too
+		delete(z.Names, r.Header().Name)
 	}
 	return nil
 }
@@ -309,11 +271,10 @@ func (z *Zone) Remove(r RR) error {
 // RemoveName removes all the RRs with ownername matching s from the zone. Typical use of this
 // method is when processing a RemoveName dynamic update packet.
 func (z *Zone) RemoveName(s string) error {
-	key := toRadixName(s)
 	z.Lock()
 	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
-	z.Radix.Remove(key)
+	delete(z.Names, s)
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
@@ -328,24 +289,24 @@ func (z *Zone) RemoveName(s string) error {
 func (z *Zone) RemoveRRset(s string, t uint16) error {
 	z.Lock()
 	z.ModTime = time.Now().UTC()
-	zd, exact := z.Radix.Find(toRadixName(s))
-	if !exact {
+	zd, ok := z.Names[s]
+	if !ok {
 		defer z.Unlock()
 		return nil
 	}
 	z.Unlock()
-	zd.Value.(*ZoneData).Lock()
-	defer zd.Value.(*ZoneData).Unlock()
+	zd.Lock()
+	defer zd.Unlock()
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
-		for covert, _ := range zd.Value.(*ZoneData).Signatures {
-			delete(zd.Value.(*ZoneData).Signatures, covert)
+		for cover, _ := range zd.Signatures {
+			delete(zd.Signatures, cover)
 		}
 	default:
 		// empty all rr maps
-		for t, _ := range zd.Value.(*ZoneData).RR {
-			delete(zd.Value.(*ZoneData).RR, t)
+		for t, _ := range zd.RR {
+			delete(zd.RR, t)
 		}
 	}
 	return nil
@@ -360,9 +321,8 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 // Note the a) this increment is not protected by locks and b) if you use DNSSEC
 // you MUST resign the SOA record.
 func (z *Zone) Apex() *ZoneData {
-	apex, e := z.Find(z.Origin)
-	if !e {
-		fmt.Printf("%#v\n", apex)
+	apex, ok := z.Names[z.Origin]
+	if !ok {
 		return nil
 	}
 	return apex
@@ -372,29 +332,14 @@ func (z *Zone) Apex() *ZoneData {
 // data and true when an exact match is found. If an exact find isn't
 // possible the first parent node with a non-nil Value is returned and
 // the boolean is false.
-func (z *Zone) Find(s string) (node *ZoneData, exact bool) {
+func (z *Zone) Find(s string) *ZoneData {
 	z.RLock()
 	defer z.RUnlock()
-	n, e := z.Radix.Find(toRadixName(s))
-	if n == nil {
-		return nil, false
+	node, ok := z.Names[s]
+	if !ok {
+		return nil
 	}
-	node = n.Value.(*ZoneData)
-	exact = e
-	return
-}
-
-// FindFunc works like Find, but the function f is executed on
-// each node which has a non-nil Value during the tree traversal.
-// If f returns true, that node is returned.
-func (z *Zone) FindFunc(s string, f func(interface{}) bool) (*ZoneData, bool, bool) {
-	z.RLock()
-	defer z.RUnlock()
-	zd, e, b := z.Radix.FindFunc(toRadixName(s), f)
-	if zd == nil {
-		return nil, false, false
-	}
-	return zd.Value.(*ZoneData), e, b
+	return node
 }
 
 func (z *Zone) isSubDomain(child string) bool {
@@ -417,6 +362,7 @@ func (z *Zone) isSubDomain(child string) bool {
 //		// signing error
 //	}
 //	// Admire your signed zone...
+/*
 func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
 	z.ModTime = time.Now().UTC()
@@ -431,22 +377,22 @@ func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error 
 	}
 
 	errChan := make(chan error)
-	radChan := make(chan *radix.Radix, config.SignerRoutines*2)
+	zonChan := make(chan *ZoneData, config.SignerRoutines*2)
 
 	// Start the signer goroutines
 	wg := new(sync.WaitGroup)
 	wg.Add(config.SignerRoutines)
 	for i := 0; i < config.SignerRoutines; i++ {
-		go signerRoutine(wg, keys, keytags, config, radChan, errChan)
+		go signerRoutine(wg, keys, keytags, config, zonChan, errChan)
 	}
 
-	apex, e := z.Radix.Find(toRadixName(z.Origin))
-	if !e {
+	apex := z.Apex()
+	if apex == nil {
 		return ErrSoa
 	}
-	config.Minttl = apex.Value.(*ZoneData).RR[TypeSOA][0].(*SOA).Minttl
+	config.Minttl = apex.RR[TypeSOA][0].(*SOA).Minttl
 	next := apex.Next()
-	radChan <- apex
+	zonChan <- apex
 
 	var err error
 Sign:
@@ -455,11 +401,11 @@ Sign:
 		case err = <-errChan:
 			break Sign
 		default:
-			radChan <- next
+			zonChan <- next
 			next = next.Next()
 		}
 	}
-	close(radChan)
+	close(zonChan)
 	close(errChan)
 	if err != nil {
 		return err
@@ -469,7 +415,7 @@ Sign:
 }
 
 // signerRoutine is a small helper routine to make the concurrent signing work.
-func signerRoutine(wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *radix.Radix, err chan error) {
+func signerRoutine(wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *ZoneData, err chan error) {
 	defer wg.Done()
 	for {
 		select {
@@ -595,6 +541,7 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 	}
 	return nil
 }
+*/
 
 // Return the signature for the typecovered and make with the keytag. It
 // returns the index of the RRSIG and the RRSIG itself.
