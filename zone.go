@@ -268,6 +268,11 @@ func (z *Zone) Remove(r RR) error {
 	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
 		// Entire node is empty, remove it from the Zone too
 		delete(z.Names, r.Header().Name)
+		i := sort.SearchStrings(z.sortedNames, r.Header().Name)
+		// we actually removed something if we are here, so i must be something sensible
+		copy(z.sortedNames[i:], z.sortedNames[i+1:])
+		z.sortedNames[len(z.sortedNames)-1] = ""
+		z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
 	}
 	return nil
 }
