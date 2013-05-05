@@ -5,7 +5,7 @@ package dns
 import (
 	"math/rand"
 	"runtime"
-//	"sort"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -86,7 +86,7 @@ func NewZone(origin string) *Zone {
 	return z
 }
 
-// ZoneData holds all the RRs having their owner name equal to Name.
+// ZoneData holds all the RRs for a specific owner name.
 type ZoneData struct {
 	RR         map[uint16][]RR     // Map of the RR type to the RR
 	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
@@ -312,14 +312,8 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 	return nil
 }
 
-// Apex returns the zone's apex records (SOA, NS and possibly other). If the
+// Apex returns the zone's apex records (SOA, NS and possibly others). If the
 // apex can not be found (thereby making it an illegal DNS zone) it returns nil.
-// Updating the zone's SOA serial, provided the apex exists:
-//
-//	z.Apex.RR[TypeSOA][0].(*SOA).Serial++
-//
-// Note the a) this increment is not protected by locks and b) if you use DNSSEC
-// you MUST resign the SOA record.
 func (z *Zone) Apex() *ZoneData {
 	apex, ok := z.Names[z.Origin]
 	if !ok {
