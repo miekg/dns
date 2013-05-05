@@ -284,6 +284,13 @@ func (z *Zone) RemoveName(s string) error {
 	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
 	delete(z.Names, s)
+	i := sort.SearchStrings(z.sortedNames, s)
+	if z.sortedNames[i] == s {
+		copy(z.sortedNames[i:], z.sortedNames[i+1:])
+		z.sortedNames[len(z.sortedNames)-1] = ""
+		z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
+	}
+
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {

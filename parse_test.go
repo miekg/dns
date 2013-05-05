@@ -182,6 +182,11 @@ z2.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 		t.Log("Not all names correct")
 		t.Fail()
 	}
+	z.RemoveName("z2.miek.nl.")
+	if z.sortedNames[0] != "z1.miek.nl." || z.sortedNames[1] != "z3.miek.nl." {
+		t.Logf("Not all names correct %v\n", z.sortedNames)
+		t.Fail()
+	}
 }
 
 func TestDomainName(t *testing.T) {
