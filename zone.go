@@ -14,12 +14,13 @@ import (
 // Zone represents a DNS zone. It's safe for concurrent use by
 // multilpe goroutines.
 type Zone struct {
-	Origin   string               // Origin of the zone
-	olabels  []string             // origin cut up in labels, just to speed up the isSubDomain method
-	Wildcard int                  // Whenever we see a wildcard name, this is incremented
-	expired  bool                 // Slave zone is expired
-	ModTime  time.Time            // When is the zone last modified
-	Names    map[string]*ZoneData // Zone data, indexed by name
+	Origin      string               // Origin of the zone
+	olabels     []string             // origin cut up in labels, just to speed up the isSubDomain method
+	Wildcard    int                  // Whenever we see a wildcard name, this is incremented
+	expired     bool                 // Slave zone is expired
+	ModTime     time.Time            // When is the zone last modified
+	Names       map[string]*ZoneData // Zone data, indexed by name
+	sortedNames []string             // All names in the zone, but sorted (for nsec)
 	*sync.RWMutex
 }
 
@@ -83,8 +84,13 @@ func NewZone(origin string) *Zone {
 	z.Names = make(map[string]*ZoneData)
 	z.RWMutex = new(sync.RWMutex)
 	z.ModTime = time.Now().UTC()
+	z.sortedNames = make([]string, 0)
 	return z
 }
+
+// In theory we can remove the ownernames from the RRs, because they are all the same,
+// however, cutting the RR and possibly copying into a new structure requires memory too.
+// For now: just leave the RRs as-is.
 
 // ZoneData holds all the RRs for a specific owner name.
 type ZoneData struct {
@@ -105,13 +111,7 @@ func NewZoneData() *ZoneData {
 
 // String returns a string representation of a ZoneData. There is no
 // String for the entire zone, because this will (most likely) take up
-// a huge amount of memory. Basic use pattern for printing an entire
-// zone:
-//
-//	// z contains the zone
-//	z.Radix.NextDo(func(i interface{}) {
-//		fmt.Printf("%s", i.(*dns.ZoneData).String()) })
-//
+// a huge amount of memory.
 func (zd *ZoneData) String() string {
 	var (
 		s string
@@ -186,6 +186,10 @@ func (z *Zone) Insert(r RR) error {
 			zd.RR[t] = append(zd.RR[t], r)
 		}
 		z.Names[r.Header().Name] = zd
+		i := sort.SearchStrings(z.sortedNames, r.Header().Name)
+		z.sortedNames = append(z.sortedNames, "")
+		copy(z.sortedNames[i+1:], z.sortedNames[:i])
+		z.sortedNames[i] = r.Header().Name
 		return nil
 	}
 	z.Unlock()
@@ -314,7 +318,10 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 
 // Apex returns the zone's apex records (SOA, NS and possibly others). If the
 // apex can not be found (thereby making it an illegal DNS zone) it returns nil.
+// Apex is safe for concurrent use.
 func (z *Zone) Apex() *ZoneData {
+	z.RLock()
+	defer z.RUnlock()
 	apex, ok := z.Names[z.Origin]
 	if !ok {
 		return nil
@@ -322,10 +329,8 @@ func (z *Zone) Apex() *ZoneData {
 	return apex
 }
 
-// Find looks up the ownername s in the zone and returns the
-// data and true when an exact match is found. If an exact find isn't
-// possible the first parent node with a non-nil Value is returned and
-// the boolean is false.
+// Find looks up the ownername s in the zone and returns the data or nil
+// when nothing can be found. Find is safe for concurrent use.
 func (z *Zone) Find(s string) *ZoneData {
 	z.RLock()
 	defer z.RUnlock()
@@ -356,7 +361,6 @@ func (z *Zone) isSubDomain(child string) bool {
 //		// signing error
 //	}
 //	// Admire your signed zone...
-/*
 func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
 	z.Lock()
 	z.ModTime = time.Now().UTC()
@@ -364,7 +368,7 @@ func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error 
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
-	// Pre-calc the key tag
+	// Pre-calc the key tags
 	keytags := make(map[*DNSKEY]uint16)
 	for k, _ := range keys {
 		keytags[k] = k.KeyTag()
@@ -377,26 +381,22 @@ func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error 
 	wg := new(sync.WaitGroup)
 	wg.Add(config.SignerRoutines)
 	for i := 0; i < config.SignerRoutines; i++ {
-		go signerRoutine(wg, keys, keytags, config, zonChan, errChan)
+		go signerRoutine(z, wg, keys, keytags, config, zonChan, errChan)
 	}
 
+	var err error
 	apex := z.Apex()
 	if apex == nil {
 		return ErrSoa
 	}
 	config.Minttl = apex.RR[TypeSOA][0].(*SOA).Minttl
-	next := apex.Next()
-	zonChan <- apex
-
-	var err error
 Sign:
-	for next.Value.(*ZoneData).Name != z.Origin {
+	for name := range z.Names {
 		select {
 		case err = <-errChan:
 			break Sign
 		default:
-			zonChan <- next
-			next = next.Next()
+			zonChan <- z.Names[name]
 		}
 	}
 	close(zonChan)
@@ -409,15 +409,29 @@ Sign:
 }
 
 // signerRoutine is a small helper routine to make the concurrent signing work.
-func signerRoutine(wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *ZoneData, err chan error) {
+func signerRoutine(z *Zone, wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *ZoneData, err chan error) {
+	next := ""
 	defer wg.Done()
 	for {
 		select {
-		case data, ok := <-in:
+		case node, ok := <-in:
 			if !ok {
 				return
 			}
-			e := data.Value.(*ZoneData).Sign(data.Next().Value.(*ZoneData).Name, keys, keytags, config)
+			name := ""
+			for x := range node.RR {
+				name = node.RR[x][0].Header().Name
+				break
+			}
+			i := sort.SearchStrings(z.sortedNames, name)
+			if z.sortedNames[i] == name {
+				if i+1 > len(z.sortedNames) {
+					next = z.Origin
+				} else {
+					next = z.sortedNames[i+1]
+				}
+			}
+			e := node.Sign(next, keys, keytags, config)
 			if e != nil {
 				err <- e
 				return
@@ -439,7 +453,11 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 	n, nsecok := node.RR[TypeNSEC]
 	bitmap := []uint16{TypeNSEC, TypeRRSIG}
 	bitmapEqual := true
+	name := ""
 	for t, _ := range node.RR {
+		if name == "" {
+			name = node.RR[t][0].Header().Name
+		}
 		if nsecok {
 			// Check if the current (if available) nsec has these types too
 			// Grr O(n^2)
@@ -477,7 +495,7 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 		}
 	} else {
 		// No NSEC at all, create one
-		nsec := &NSEC{Hdr: RR_Header{node.Name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next}
+		nsec := &NSEC{Hdr: RR_Header{name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next}
 		nsec.TypeBitMap = bitmap
 		node.RR[TypeNSEC] = []RR{nsec}
 		node.Signatures[TypeNSEC] = nil // drop all sigs (just in case)
@@ -535,7 +553,6 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 	}
 	return nil
 }
-*/
 
 // Return the signature for the typecovered and make with the keytag. It
 // returns the index of the RRSIG and the RRSIG itself.
