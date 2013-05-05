@@ -188,7 +188,7 @@ func (z *Zone) Insert(r RR) error {
 		z.Names[r.Header().Name] = zd
 		i := sort.SearchStrings(z.sortedNames, r.Header().Name)
 		z.sortedNames = append(z.sortedNames, "")
-		copy(z.sortedNames[i+1:], z.sortedNames[:i])
+		copy(z.sortedNames[i+1:], z.sortedNames[i:])
 		z.sortedNames[i] = r.Header().Name
 		return nil
 	}
