@@ -10,13 +10,13 @@ import (
 )
 
 func (k *DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
-	if s[len(s)-1] != '\n' { // We need a closing newline                                                               
+	if s[len(s)-1] != '\n' { // We need a closing newline
 		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")
 	}
 	return k.ReadPrivateKey(strings.NewReader(s), "")
 }
 
-// NewPrivateKey reads a private key from the io.Reader q. The string file is 
+// NewPrivateKey reads a private key from the io.Reader q. The string file is
 // only used in error reporting.
 // The public key must be
 // known, because some cryptographics algorithms embed the public inside the privatekey.

@@ -127,7 +127,7 @@ func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 	panic("dns: not reached")
 }
 
-// Check if he SOA record exists in the Answer section of 
+// Check if he SOA record exists in the Answer section of
 // the packet. If first is true the first RR must be a SOA
 // if false, the last one should be a SOA.
 func checkXfrSOA(in *Msg, first bool) bool {
@@ -147,7 +147,7 @@ func checkXfrSOA(in *Msg, first bool) bool {
 // Errors are signaled via the error pointer, when an error occurs the function
 // sets the error and returns (it does not close the channel).
 // TSIG and enveloping is handled by TransferOut.
-// 
+//
 // Basic use pattern for sending an AXFR:
 //
 //	// q contains the AXFR request

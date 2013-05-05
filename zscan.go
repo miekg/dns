@@ -84,7 +84,7 @@ func (e *ParseError) Error() (s string) {
 
 type lex struct {
 	token   string // text of the token
-	err     bool   // when true, token text has lexer error 
+	err     bool   // when true, token text has lexer error
 	value   uint8  // value: _STRING, _BLANK, etc.
 	line    int    // line in the file
 	column  int    // column in the file
@@ -119,15 +119,15 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 	return r.RR, nil
 }
 
-// ParseZone reads a RFC 1035 style one from r. It returns Tokens on the 
-// returned channel, which consist out the parsed RR, a potential comment or an error. 
+// ParseZone reads a RFC 1035 style one from r. It returns Tokens on the
+// returned channel, which consist out the parsed RR, a potential comment or an error.
 // If there is an error the RR is nil. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
 // if the file would start with: $ORIGIN origin  .
 // The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are supported.
 // The channel t is closed by ParseZone when the end of r is reached.
 //
-// Basic usage pattern when reading from a string (z) containing the 
+// Basic usage pattern when reading from a string (z) containing the
 // zone data:
 //
 //	for x := range dns.ParseZone(strings.NewReader(z), "", "") {
@@ -137,10 +137,10 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 //	}
 //
 // Comments specified after an RR (and on the same line!) are returned too:
-// 
+//
 //	foo. IN A 10.0.0.1 ; this is a comment
 //
-// The text "; this is comment" is returned in Token.comment . Comments inside the 
+// The text "; this is comment" is returned in Token.comment . Comments inside the
 // RR are discarded. Comments on a line by themselves are discarded too.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	return parseZoneHelper(r, origin, file, 10000)
@@ -776,7 +776,7 @@ func classToInt(token string) (uint16, bool) {
 	return uint16(class), true
 }
 
-// Extract the rr number from TYPExxx 
+// Extract the rr number from TYPExxx
 func typeToInt(token string) (uint16, bool) {
 	typ, ok := strconv.Atoi(token[4:])
 	if ok != nil {
@@ -816,7 +816,7 @@ func stringToTtl(token string) (uint32, bool) {
 	return s + i, true
 }
 
-// Parse LOC records' <digits>[.<digits>][mM] into a 
+// Parse LOC records' <digits>[.<digits>][mM] into a
 // mantissa exponent format. Token should contain the entire
 // string (i.e. no spaces allowed)
 func stringToCm(token string) (e, m uint8, ok bool) {
@@ -866,7 +866,7 @@ func appendOrigin(name, origin string) string {
 	return name + "." + origin
 }
 
-// LOC record helper function                                                                        
+// LOC record helper function
 func locCheckNorth(token string, latitude uint32) (uint32, bool) {
 	switch token {
 	case "n", "N":
@@ -877,7 +877,7 @@ func locCheckNorth(token string, latitude uint32) (uint32, bool) {
 	return latitude, false
 }
 
-// LOC record helper function                                                                        
+// LOC record helper function
 func locCheckEast(token string, longitude uint32) (uint32, bool) {
 	switch token {
 	case "e", "E":

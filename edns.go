@@ -1,7 +1,7 @@
 // EDNS0
 //
-// EDNS0 is an extension mechanism for the DNS defined in RFC 2671. It defines a 
-// standard RR type, the OPT RR, which is then completely abused. 
+// EDNS0 is an extension mechanism for the DNS defined in RFC 2671. It defines a
+// standard RR type, the OPT RR, which is then completely abused.
 // Basic use pattern for creating an (empty) OPT RR:
 //
 //	o := new(dns.OPT)
@@ -296,7 +296,7 @@ func (e *EDNS0_SUBNET) String() (s string) {
 // The UPDATE_LEASE EDNS0 (draft RFC) option is used to tell the server to set
 // an expiration on an update RR. This is helpful for clients that cannot clean
 // up after themselves. This is a draft RFC and more information can be found at
-// http://files.dns-sd.org/draft-sekar-dns-ul.txt 
+// http://files.dns-sd.org/draft-sekar-dns-ul.txt
 //
 //	o := new(dns.OPT)
 //	o.Hdr.Name = "."

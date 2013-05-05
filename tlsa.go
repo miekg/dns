@@ -62,7 +62,7 @@ func (r *TLSA) Sign(usage, selector, matchingType int, cert *x509.Certificate) (
 func (r *TLSA) Verify(cert *x509.Certificate) error {
 	c, err := CertificateToDANE(r.Selector, r.MatchingType, cert)
 	if err != nil {
-		return err	// Not also ErrSig?
+		return err // Not also ErrSig?
 	}
 	if r.Certificate == c {
 		return nil

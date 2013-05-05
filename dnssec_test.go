@@ -220,7 +220,7 @@ Coefficient: UuRoNqe7YHnKmQzE6iDWKTMIWTuoqqrFAmXPmKQnC+Y+BQzOVEHUo9bXdDnoI9hzXP1
 /*
         return
 	// This key was generate with LDNS:
-	// ldns-keygen -a RSASHA256 -r /dev/urandom -b 1024 miek.nl 
+	// ldns-keygen -a RSASHA256 -r /dev/urandom -b 1024 miek.nl
 	// Show that we have al the RSA parameters and can check them
 	// here to see what I came up with
 	key := new(RR_DNSKEY)

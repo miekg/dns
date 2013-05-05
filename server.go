@@ -194,7 +194,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 		lastbyte = q[i]
 	}
-	// Check for the root zone too, this only delays NXDOMAIN, because if we serve . it 
+	// Check for the root zone too, this only delays NXDOMAIN, because if we serve . it
 	// will be catched above.
 	if h, ok := mux.z["."]; ok {
 		return h
