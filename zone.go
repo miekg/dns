@@ -215,26 +215,23 @@ func (z *Zone) Insert(r RR) error {
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
 	z.Lock()
-	z.ModTime = time.Now().UTC()
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
 		defer z.Unlock()
 		return nil
 	}
+	z.ModTime = time.Now().UTC()
 	z.Unlock()
 	zd.Lock()
 	defer zd.Unlock()
-	remove := false
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
 		for i, zr := range zd.Signatures[sigtype] {
 			if r == zr {
 				zd.Signatures[sigtype] = append(zd.Signatures[sigtype][:i], zd.Signatures[sigtype][i+1:]...)
-				remove = true
 			}
 		}
-		// If every Signature of the covering type is removed, removed the type from the map
 		if len(zd.Signatures[sigtype]) == 0 {
 			delete(zd.Signatures, sigtype)
 		}
@@ -243,22 +240,10 @@ func (z *Zone) Remove(r RR) error {
 			// Matching RR
 			if r == zr {
 				zd.RR[t] = append(zd.RR[t][:i], zd.RR[t][i+1:]...)
-				remove = true
 			}
 		}
-		// If every RR of this type is removed, removed the type from the map
 		if len(zd.RR[t]) == 0 {
 			delete(zd.RR, t)
-		}
-	}
-	if !remove {
-		return nil
-	}
-
-	if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
-		z.Wildcard--
-		if z.Wildcard < 0 {
-			z.Wildcard = 0
 		}
 	}
 	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
@@ -269,6 +254,12 @@ func (z *Zone) Remove(r RR) error {
 		copy(z.sortedNames[i:], z.sortedNames[i+1:])
 		z.sortedNames[len(z.sortedNames)-1] = ""
 		z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
+		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+			z.Wildcard--
+			if z.Wildcard < 0 {
+				z.Wildcard = 0
+			}
+		}
 	}
 	return nil
 }
@@ -277,15 +268,18 @@ func (z *Zone) Remove(r RR) error {
 // method is when processing a RemoveName dynamic update packet.
 func (z *Zone) RemoveName(s string) error {
 	z.Lock()
+	_, ok := z.Names[s]
+	if !ok {
+		defer z.Unlock()
+		return nil
+	}
 	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
 	delete(z.Names, s)
 	i := sort.SearchStrings(z.sortedNames, s)
-	if z.sortedNames[i] == s {
-		copy(z.sortedNames[i:], z.sortedNames[i+1:])
-		z.sortedNames[len(z.sortedNames)-1] = ""
-		z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
-	}
+	copy(z.sortedNames[i:], z.sortedNames[i+1:])
+	z.sortedNames[len(z.sortedNames)-1] = ""
+	z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
 
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
@@ -300,32 +294,41 @@ func (z *Zone) RemoveName(s string) error {
 // Typical use of this method is when processing a RemoveRRset dynamic update packet.
 func (z *Zone) RemoveRRset(s string, t uint16) error {
 	z.Lock()
-	z.ModTime = time.Now().UTC()
 	zd, ok := z.Names[s]
 	if !ok {
 		defer z.Unlock()
 		return nil
 	}
+	z.ModTime = time.Now().UTC()
 	z.Unlock()
 	zd.Lock()
 	defer zd.Unlock()
-	remove := false
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
 		for cover, _ := range zd.Signatures {
 			delete(zd.Signatures, cover)
-			remove = true
 		}
 	default:
 		// empty all rr maps
 		for t, _ := range zd.RR {
 			delete(zd.RR, t)
-			remove = true
 		}
 	}
-	if !remove {
-		return nil
+	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
+		// Entire node is empty, remove it from the Zone too
+		delete(z.Names, s)
+		i := sort.SearchStrings(z.sortedNames, s)
+		// we actually removed something if we are here, so i must be something sensible
+		copy(z.sortedNames[i:], z.sortedNames[i+1:])
+		z.sortedNames[len(z.sortedNames)-1] = ""
+		z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
+		if len(s) > 1 && s[0] == '*' && s[1] == '.' {
+			z.Wildcard--
+			if z.Wildcard < 0 {
+				z.Wildcard = 0
+			}
+		}
 	}
 	return nil
 }
