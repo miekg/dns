@@ -96,7 +96,7 @@ type lex struct {
 type Token struct {
 	RR                  // the scanned resource record when error is not nil
 	Error   *ParseError // when an error occured, this has the error specifics
-	Comment string      // A potential comment positioned after the RR, but on the same line
+	Comment string      // A potential comment positioned after the RR and on the same line
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
@@ -140,7 +140,7 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 //
 //	foo. IN A 10.0.0.1 ; this is a comment
 //
-// The text "; this is comment" is returned in Token.comment . Comments inside the
+// The text "; this is comment" is returned in Token.Comment . Comments inside the
 // RR are discarded. Comments on a line by themselves are discarded too.
 func ParseZone(r io.Reader, origin, file string) chan Token {
 	return parseZoneHelper(r, origin, file, 10000)

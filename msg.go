@@ -666,6 +666,7 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
+// PackStruct packs any structure to wire format.
 func PackStruct(any interface{}, msg []byte, off int) (off1 int, err error) {
 	off, err = packStructValue(structValue(any), msg, off, nil, false)
 	return off, err
@@ -1028,6 +1029,8 @@ func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
 	return
 }
 
+// UnpackStruct unpacks a binary message from offset off to the interface
+// value given.
 func UnpackStruct(any interface{}, msg []byte, off int) (off1 int, err error) {
 	off, err = unpackStructValue(structValue(any), msg, off)
 	return off, err
