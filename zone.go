@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// TODO(mg): NSEC3
+
 // Zone represents a DNS zone. It's safe for concurrent use by
 // multilpe goroutines.
 type Zone struct {
@@ -97,7 +99,6 @@ type ZoneData struct {
 	RR         map[uint16][]RR     // Map of the RR type to the RR
 	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
-	*sync.RWMutex
 }
 
 // NewZoneData creates a new zone data element.
@@ -105,7 +106,6 @@ func NewZoneData() *ZoneData {
 	zd := new(ZoneData)
 	zd.RR = make(map[uint16][]RR)
 	zd.Signatures = make(map[uint16][]*RRSIG)
-	zd.RWMutex = new(sync.RWMutex)
 	return zd
 }
 
@@ -158,15 +158,14 @@ Types:
 
 // Insert inserts the RR r into the zone.
 func (z *Zone) Insert(r RR) error {
+	z.Lock()
+	defer z.Unlock()
 	if !z.isSubDomain(r.Header().Name) {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
-
-	z.Lock()
 	z.ModTime = time.Now().UTC()
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
-		defer z.Unlock()
 		// Check if it's a wildcard name
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard++
@@ -192,9 +191,6 @@ func (z *Zone) Insert(r RR) error {
 		z.sortedNames[i] = r.Header().Name
 		return nil
 	}
-	z.Unlock()
-	zd.Lock()
-	defer zd.Unlock()
 	// Name already there
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
@@ -215,15 +211,12 @@ func (z *Zone) Insert(r RR) error {
 // this is a no-op.
 func (z *Zone) Remove(r RR) error {
 	z.Lock()
+	defer z.Unlock()
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
-		defer z.Unlock()
 		return nil
 	}
 	z.ModTime = time.Now().UTC()
-	z.Unlock()
-	zd.Lock()
-	defer zd.Unlock()
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
@@ -268,19 +261,17 @@ func (z *Zone) Remove(r RR) error {
 // method is when processing a RemoveName dynamic update packet.
 func (z *Zone) RemoveName(s string) error {
 	z.Lock()
+	defer z.Unlock()
 	_, ok := z.Names[s]
 	if !ok {
-		defer z.Unlock()
 		return nil
 	}
 	z.ModTime = time.Now().UTC()
-	defer z.Unlock()
 	delete(z.Names, s)
 	i := sort.SearchStrings(z.sortedNames, s)
 	copy(z.sortedNames[i:], z.sortedNames[i+1:])
 	z.sortedNames[len(z.sortedNames)-1] = ""
 	z.sortedNames = z.sortedNames[:len(z.sortedNames)-1]
-
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
@@ -294,15 +285,12 @@ func (z *Zone) RemoveName(s string) error {
 // Typical use of this method is when processing a RemoveRRset dynamic update packet.
 func (z *Zone) RemoveRRset(s string, t uint16) error {
 	z.Lock()
+	defer z.Unlock()
 	zd, ok := z.Names[s]
 	if !ok {
-		defer z.Unlock()
 		return nil
 	}
 	z.ModTime = time.Now().UTC()
-	z.Unlock()
-	zd.Lock()
-	defer zd.Unlock()
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
@@ -457,16 +445,12 @@ func signerRoutine(z *Zone, wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, key
 	}
 }
 
-// Sign signs a single ZoneData node. The zonedata itself is locked for writing,
-// during the execution. It is important that the nodes' next record does not
-// change. The caller must take care that the zone itself is also locked for writing.
+// Sign signs a single ZoneData node.
+// The caller must take care that the zone itself is also locked for writing.
 // For a more complete description see zone.Sign.
 // Note, because this method has no (direct)
 // access to the zone's SOA record, the SOA's Minttl value should be set in *config.
 func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig) error {
-	node.Lock()
-	defer node.Unlock()
-
 	n, nsecok := node.RR[TypeNSEC]
 	bitmap := []uint16{TypeNSEC, TypeRRSIG}
 	bitmapEqual := true
