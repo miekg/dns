@@ -107,7 +107,7 @@ func NewZone(origin string) *Zone {
 // ZoneData holds all the RRs for a specific owner name.
 type ZoneData struct {
 	RR         map[uint16][]RR     // Map of the RR type to the RR
-	Signatures map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
+	Signature map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
 	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
 }
 
@@ -115,7 +115,7 @@ type ZoneData struct {
 func NewZoneData() *ZoneData {
 	zd := new(ZoneData)
 	zd.RR = make(map[uint16][]RR)
-	zd.Signatures = make(map[uint16][]*RRSIG)
+	zd.Signature = make(map[uint16][]*RRSIG)
 	return zd
 }
 
@@ -131,8 +131,8 @@ func (zd *ZoneData) String() string {
 	// There is only one SOA, but it may have multiple sigs
 	if soa, ok := zd.RR[TypeSOA]; ok {
 		s += soa[0].String() + "\n"
-		if _, ok := zd.Signatures[TypeSOA]; ok {
-			for _, sig := range zd.Signatures[TypeSOA] {
+		if _, ok := zd.Signature[TypeSOA]; ok {
+			for _, sig := range zd.Signature[TypeSOA] {
 				s += sig.String() + "\n"
 			}
 		}
@@ -147,8 +147,8 @@ Types:
 			}
 			s += rr.String() + "\n"
 		}
-		if _, ok := zd.Signatures[t]; ok {
-			for _, rr := range zd.Signatures[t] {
+		if _, ok := zd.Signature[t]; ok {
+			for _, rr := range zd.Signature[t] {
 				s += rr.String() + "\n"
 			}
 		}
@@ -157,8 +157,8 @@ Types:
 	// There is only one NSEC, but it may have multiple sigs
 	if soa, ok := zd.RR[TypeNSEC]; ok {
 		s += soa[0].String() + "\n"
-		if _, ok := zd.Signatures[TypeNSEC]; ok {
-			for _, sig := range zd.Signatures[TypeNSEC] {
+		if _, ok := zd.Signature[TypeNSEC]; ok {
+			for _, sig := range zd.Signature[TypeNSEC] {
 				s += sig.String() + "\n"
 			}
 		}
@@ -184,7 +184,7 @@ func (z *Zone) Insert(r RR) error {
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
 			sigtype := r.(*RRSIG).TypeCovered
-			zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RRSIG))
+			zd.Signature[sigtype] = append(zd.Signature[sigtype], r.(*RRSIG))
 		case TypeNS:
 			// NS records with other names than z.Origin are non-auth
 			if r.Header().Name != z.Origin {
@@ -205,7 +205,7 @@ func (z *Zone) Insert(r RR) error {
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
-		zd.Signatures[sigtype] = append(zd.Signatures[sigtype], r.(*RRSIG))
+		zd.Signature[sigtype] = append(zd.Signature[sigtype], r.(*RRSIG))
 	case TypeNS:
 		if r.Header().Name != z.Origin {
 			zd.NonAuth = true
@@ -230,13 +230,13 @@ func (z *Zone) Remove(r RR) error {
 	switch t := r.Header().Rrtype; t {
 	case TypeRRSIG:
 		sigtype := r.(*RRSIG).TypeCovered
-		for i, zr := range zd.Signatures[sigtype] {
+		for i, zr := range zd.Signature[sigtype] {
 			if r == zr {
-				zd.Signatures[sigtype] = append(zd.Signatures[sigtype][:i], zd.Signatures[sigtype][i+1:]...)
+				zd.Signature[sigtype] = append(zd.Signature[sigtype][:i], zd.Signature[sigtype][i+1:]...)
 			}
 		}
-		if len(zd.Signatures[sigtype]) == 0 {
-			delete(zd.Signatures, sigtype)
+		if len(zd.Signature[sigtype]) == 0 {
+			delete(zd.Signature, sigtype)
 		}
 	default:
 		for i, zr := range zd.RR[t] {
@@ -249,7 +249,7 @@ func (z *Zone) Remove(r RR) error {
 			delete(zd.RR, t)
 		}
 	}
-	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
+	if len(zd.RR) == 0 && len(zd.Signature) == 0 {
 		// Entire node is empty, remove it from the Zone too
 		delete(z.Names, r.Header().Name)
 		i := sort.SearchStrings(z.securityConfig.nsecNames, r.Header().Name)
@@ -304,8 +304,8 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 	switch t {
 	case TypeRRSIG:
 		// empty all signature maps
-		for cover, _ := range zd.Signatures {
-			delete(zd.Signatures, cover)
+		for cover, _ := range zd.Signature {
+			delete(zd.Signature, cover)
 		}
 	default:
 		// empty all rr maps
@@ -313,7 +313,7 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 			delete(zd.RR, t)
 		}
 	}
-	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
+	if len(zd.RR) == 0 && len(zd.Signature) == 0 {
 		// Entire node is empty, remove it from the Zone too
 		delete(z.Names, s)
 		i := sort.SearchStrings(z.securityConfig.nsecNames, s)
@@ -508,14 +508,14 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 		if n[0].(*NSEC).NextDomain != next || !bitmapEqual {
 			n[0].(*NSEC).NextDomain = next
 			n[0].(*NSEC).TypeBitMap = bitmap
-			node.Signatures[TypeNSEC] = nil // drop all sigs
+			node.Signature[TypeNSEC] = nil // drop all sigs
 		}
 	} else {
 		// No NSEC at all, create one
 		nsec := &NSEC{Hdr: RR_Header{name, TypeNSEC, ClassINET, config.Minttl, 0}, NextDomain: next}
 		nsec.TypeBitMap = bitmap
 		node.RR[TypeNSEC] = []RR{nsec}
-		node.Signatures[TypeNSEC] = nil // drop all sigs (just in case)
+		node.Signature[TypeNSEC] = nil // drop all sigs (just in case)
 	}
 
 	// Walk all keys, and check the sigs
@@ -536,7 +536,7 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 				}
 			}
 
-			j, q := signatures(node.Signatures[t], keytags[k])
+			j, q := signatures(node.Signature[t], keytags[k])
 			if q == nil || now.Sub(uint32ToTime(q.Expiration)) < config.Refresh { // no there, are almost expired
 				s := new(RRSIG)
 				s.SignerName = k.Hdr.Name
@@ -551,20 +551,20 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 					return e
 				}
 				if q != nil {
-					node.Signatures[t][j] = s // replace the signature
+					node.Signature[t][j] = s // replace the signature
 				} else {
-					node.Signatures[t] = append(node.Signatures[t], s) // add it
+					node.Signature[t] = append(node.Signature[t], s) // add it
 				}
 			}
 		}
 	}
 	// All signatures have been made are refreshed. Now check the all signatures for expiraton
-	for i, s := range node.Signatures {
+	for i, s := range node.Signature {
 		// s is another slice
 		for i1, s1 := range s {
 			if now.Sub(uint32ToTime(s1.Expiration)) < config.Refresh {
 				// can only happen if made with an unknown key, drop the sig
-				node.Signatures[i] = append(node.Signatures[i][:i1], node.Signatures[i][i1+1:]...)
+				node.Signature[i] = append(node.Signature[i][:i1], node.Signature[i][i1+1:]...)
 			}
 		}
 	}
