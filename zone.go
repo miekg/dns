@@ -640,7 +640,7 @@ func jitterDuration(d time.Duration) time.Duration {
 
 // isWildcard returns true when s is a wildcard name (first label is a "*")
 func isWildcard(s string) bool {
-	if s == "*" || s == "*." {
+	if s == "*." {
 		return true
 	}
 	return false

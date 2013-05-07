@@ -179,7 +179,7 @@ z2.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 		t.Fail()
 	}
 	if z.securityConfig.nsecNames[0] != "z1.miek.nl." || z.securityConfig.nsecNames[1] != "z2.miek.nl." || z.securityConfig.nsecNames[2] != "z3.miek.nl." {
-		t.Log("Not all names correct")
+		t.Logf("Not all names correct %v\n", z.securityConfig.nsecNames)
 		t.Fail()
 	}
 	z.RemoveName("z2.miek.nl.")
