@@ -423,6 +423,12 @@ Sign:
 	return nil
 }
 
+// Sign3 (re)signs the zone z with the given keys, NSEC3s and RRSIGs are
+// added as needed. Bla bla Identical to zone.Sign.
+func (z *Zone) Sign3(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
+	return nil
+}
+
 // signerRoutine is a small helper routine to make the concurrent signing work.
 func signerRoutine(z *Zone, wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, keytags map[*DNSKEY]uint16, config *SignatureConfig, in chan *ZoneData, err chan error) {
 	next := ""
