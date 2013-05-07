@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+// TODO(mg): the memory footprint could be reduced when we would chop off the
+// the zone's origin from every RR. However they are given to us as pointers
+// and as such require copies when we fiddle with them...
+
 // Zone represents a DNS zone. It's safe for concurrent use by
 // multilpe goroutines.
 type Zone struct {
@@ -176,8 +180,6 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 	z.ModTime = time.Now().UTC()
-	// Remove the origin from the ownername of the RR
-	r.Header().Name = r.Header().Name[:len(r.Header().Name)-z.olen-1]
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
 		// Check if it's a wildcard name
