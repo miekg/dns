@@ -227,6 +227,11 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 			}
 			ip[i] = a[i]
 		}
+		needLength := e.SourceNetmask / 8
+		if e.SourceNetmask%8 > 0 {
+			needLength++
+		}
+		ip = ip[:needLength]
 		b = append(b, ip...)
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 {
@@ -240,7 +245,11 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 			}
 			ip[i] = a[i]
 		}
-		// chop off ip a SourceNetmask/8: ip = ip[:e.SourceNetmask/8] ?
+		needLength := e.SourceNetmask / 8
+		if e.SourceNetmask%8 > 0 {
+			needLength++
+		}
+		ip = ip[:needLength]
 		b = append(b, ip...)
 	default:
 		return nil, errors.New("dns: bad address family")
