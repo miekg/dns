@@ -19,6 +19,7 @@ import (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
+	TypeNone       uint16 = 0
 	TypeA          uint16 = 1
 	TypeNS         uint16 = 2
 	TypeMD         uint16 = 3

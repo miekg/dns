@@ -11,24 +11,31 @@ import (
 	"time"
 )
 
-// TODO(mg): NSEC3
-
 // Zone represents a DNS zone. It's safe for concurrent use by
 // multilpe goroutines.
 type Zone struct {
-	Origin     string               // Origin of the zone
-	olabels    []string             // origin cut up in labels, just to speed up the isSubDomain method
-	Wildcard   int                  // Whenever we see a wildcard name, this is incremented
-	expired    bool                 // Slave zone is expired
-	Dnssec	   bool			// This zone has signatures 
-	ModTime    time.Time            // When is the zone last modified
-	Names      map[string]*ZoneData // Zone data, indexed by name
-	nextNames  []string             // All names in the zone, but sorted (for NSEC)
-	next3Names []string             // All hashed names in the zone, but sorted (for NSEC3)
-	nsec3Param *NSEC3PARAM		// The NSEC3 parameters for this zone (if applicable), when nil -> NSEC
+	Origin          string               // Origin of the zone
+	olabels         []string             // origin cut up in labels, just to speed up the isSubDomain method
+	Wildcard        int                  // Whenever we see a wildcard name, this is incremented
+	expired         bool                 // Slave zone is expired
+	ModTime         time.Time            // When is the zone last modified
+	Names           map[string]*ZoneData // Zone data, indexed by owner name
+	*securityConfig                      // Sorted names for either NSEC or NSEC3
 	*sync.RWMutex
+	// The zone's security status, supported values are TypeNone for no DNSSEC,
+	// TypeNSEC for an NSEC type zone and TypeNSEC3 for an NSEC3 signed zone.
+	Security int
 }
 
+type securityConfig struct {
+	// A sorted list of all names in the zone.
+	nsecNames []string
+	// A sorted list of all hashed names in the zone, the hash parameters are taken from the NSEC3PARAM
+	// record located in the zone's apex.
+	nsec3Names []string
+}
+
+// Used for nsec(3) bitmap sorting
 type uint16Slice []uint16
 
 func (p uint16Slice) Len() int           { return len(p) }
@@ -89,7 +96,7 @@ func NewZone(origin string) *Zone {
 	z.Names = make(map[string]*ZoneData)
 	z.RWMutex = new(sync.RWMutex)
 	z.ModTime = time.Now().UTC()
-	z.nextNames = make([]string, 0)
+	z.securityConfig = &securityConfig{make([]string, 0), make([]string, 0)}
 	return z
 }
 
@@ -188,10 +195,10 @@ func (z *Zone) Insert(r RR) error {
 			zd.RR[t] = append(zd.RR[t], r)
 		}
 		z.Names[r.Header().Name] = zd
-		i := sort.SearchStrings(z.nextNames, r.Header().Name)
-		z.nextNames = append(z.nextNames, "")
-		copy(z.nextNames[i+1:], z.nextNames[i:])
-		z.nextNames[i] = r.Header().Name
+		i := sort.SearchStrings(z.securityConfig.nsecNames, r.Header().Name)
+		z.securityConfig.nsecNames = append(z.securityConfig.nsecNames, "")
+		copy(z.securityConfig.nsecNames[i+1:], z.securityConfig.nsecNames[i:])
+		z.securityConfig.nsecNames[i] = r.Header().Name
 		return nil
 	}
 	// Name already there
@@ -245,11 +252,11 @@ func (z *Zone) Remove(r RR) error {
 	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
 		// Entire node is empty, remove it from the Zone too
 		delete(z.Names, r.Header().Name)
-		i := sort.SearchStrings(z.nextNames, r.Header().Name)
+		i := sort.SearchStrings(z.securityConfig.nsecNames, r.Header().Name)
 		// we actually removed something if we are here, so i must be something sensible
-		copy(z.nextNames[i:], z.nextNames[i+1:])
-		z.nextNames[len(z.nextNames)-1] = ""
-		z.nextNames = z.nextNames[:len(z.nextNames)-1]
+		copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
+		z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
+		z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
 		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
 			z.Wildcard--
 			if z.Wildcard < 0 {
@@ -271,10 +278,10 @@ func (z *Zone) RemoveName(s string) error {
 	}
 	z.ModTime = time.Now().UTC()
 	delete(z.Names, s)
-	i := sort.SearchStrings(z.nextNames, s)
-	copy(z.nextNames[i:], z.nextNames[i+1:])
-	z.nextNames[len(z.nextNames)-1] = ""
-	z.nextNames = z.nextNames[:len(z.nextNames)-1]
+	i := sort.SearchStrings(z.securityConfig.nsecNames, s)
+	copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
+	z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
+	z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
 	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 		z.Wildcard--
 		if z.Wildcard < 0 {
@@ -309,11 +316,11 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 	if len(zd.RR) == 0 && len(zd.Signatures) == 0 {
 		// Entire node is empty, remove it from the Zone too
 		delete(z.Names, s)
-		i := sort.SearchStrings(z.nextNames, s)
+		i := sort.SearchStrings(z.securityConfig.nsecNames, s)
 		// we actually removed something if we are here, so i must be something sensible
-		copy(z.nextNames[i:], z.nextNames[i+1:])
-		z.nextNames[len(z.nextNames)-1] = ""
-		z.nextNames = z.nextNames[:len(z.nextNames)-1]
+		copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
+		z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
+		z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
 		if len(s) > 1 && s[0] == '*' && s[1] == '.' {
 			z.Wildcard--
 			if z.Wildcard < 0 {
@@ -431,12 +438,12 @@ func signerRoutine(z *Zone, wg *sync.WaitGroup, keys map[*DNSKEY]PrivateKey, key
 				name = node.RR[x][0].Header().Name
 				break
 			}
-			i := sort.SearchStrings(z.nextNames, name)
-			if z.nextNames[i] == name {
-				if i+1 > len(z.nextNames) {
+			i := sort.SearchStrings(z.securityConfig.nsecNames, name)
+			if z.securityConfig.nsecNames[i] == name {
+				if i+1 > len(z.securityConfig.nsecNames) {
 					next = z.Origin
 				} else {
-					next = z.nextNames[i+1]
+					next = z.securityConfig.nsecNames[i+1]
 				}
 			}
 			e := node.Sign(next, keys, keytags, config)
