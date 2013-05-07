@@ -15,7 +15,8 @@ import (
 // multilpe goroutines.
 type Zone struct {
 	Origin          string               // Origin of the zone
-	olabels         []string             // origin cut up in labels, just to speed up the isSubDomain method
+	olen            int                  // Origin length
+	olabels         []string             // Origin cut up in labels, just to speed up the isSubDomain method
 	Wildcard        int                  // Whenever we see a wildcard name, this is incremented
 	expired         bool                 // Slave zone is expired
 	ModTime         time.Time            // When is the zone last modified
@@ -82,7 +83,7 @@ func newSignatureConfig() *SignatureConfig {
 // Minttl value is zero.
 var DefaultSignatureConfig = newSignatureConfig()
 
-// NewZone creates an initialized zone with Origin set to origin.
+// NewZone creates an initialized zone with Origin set to the lower cased origin.
 func NewZone(origin string) *Zone {
 	if origin == "" {
 		origin = "."
@@ -92,6 +93,7 @@ func NewZone(origin string) *Zone {
 	}
 	z := new(Zone)
 	z.Origin = Fqdn(strings.ToLower(origin))
+	z.olen = len(z.Origin)
 	z.olabels = SplitLabels(z.Origin)
 	z.Names = make(map[string]*ZoneData)
 	z.RWMutex = new(sync.RWMutex)
@@ -106,9 +108,9 @@ func NewZone(origin string) *Zone {
 
 // ZoneData holds all the RRs for a specific owner name.
 type ZoneData struct {
-	RR         map[uint16][]RR     // Map of the RR type to the RR
+	RR        map[uint16][]RR     // Map of the RR type to the RR
 	Signature map[uint16][]*RRSIG // DNSSEC signatures for the RRs, stored under type covered
-	NonAuth    bool                // Always false, except for NSsets that differ from z.Origin
+	NonAuth   bool                // Always false, except for NSsets that differ from z.Origin
 }
 
 // NewZoneData creates a new zone data element.
@@ -174,6 +176,8 @@ func (z *Zone) Insert(r RR) error {
 		return &Error{Err: "out of zone data", Name: r.Header().Name}
 	}
 	z.ModTime = time.Now().UTC()
+	// Remove the origin from the ownername of the RR
+	r.Header().Name = r.Header().Name[:len(r.Header().Name)-z.olen-1]
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
 		// Check if it's a wildcard name
@@ -358,6 +362,28 @@ func (z *Zone) Find(s string) *ZoneData {
 
 func (z *Zone) isSubDomain(child string) bool {
 	return compareLabelsSlice(z.olabels, strings.ToLower(child)) == len(z.olabels)
+}
+
+// compareLabels behaves exactly as CompareLabels expect that l1 is already
+// a tokenize (in labels) version of the domain name. This saves memory and is faster.
+func compareLabelsSlice(l1 []string, s2 string) (n int) {
+	l2 := SplitLabels(s2)
+
+	x1 := len(l1) - 1
+	x2 := len(l2) - 1
+	for {
+		if x1 < 0 || x2 < 0 {
+			break
+		}
+		if l1[x1] == l2[x2] {
+			n++
+		} else {
+			break
+		}
+		x1--
+		x2--
+	}
+	return
 }
 
 // Sign (re)signs the zone z with the given keys.
@@ -610,26 +636,4 @@ func jitterDuration(d time.Duration) time.Duration {
 		return time.Duration(jitter)
 	}
 	return -time.Duration(jitter)
-}
-
-// compareLabels behaves exactly as CompareLabels expect that l1 is already
-// a tokenize (in labels) version of the domain name. This saves memory and is faster.
-func compareLabelsSlice(l1 []string, s2 string) (n int) {
-	l2 := SplitLabels(s2)
-
-	x1 := len(l1) - 1
-	x2 := len(l2) - 1
-	for {
-		if x1 < 0 || x2 < 0 {
-			break
-		}
-		if l1[x1] == l2[x2] {
-			n++
-		} else {
-			break
-		}
-		x1--
-		x2--
-	}
-	return
 }
