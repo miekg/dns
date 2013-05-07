@@ -181,7 +181,7 @@ func (z *Zone) Insert(r RR) error {
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
 		// Check if it's a wildcard name
-		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+		if isWildcard(r.Header().Name) {
 			z.Wildcard++
 		}
 		zd = NewZoneData()
@@ -261,7 +261,7 @@ func (z *Zone) Remove(r RR) error {
 		copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
 		z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
 		z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
-		if len(r.Header().Name) > 1 && r.Header().Name[0] == '*' && r.Header().Name[1] == '.' {
+		if isWildcard(r.Header().Name) {
 			z.Wildcard--
 			if z.Wildcard < 0 {
 				z.Wildcard = 0
@@ -286,7 +286,7 @@ func (z *Zone) RemoveName(s string) error {
 	copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
 	z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
 	z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
-	if len(s) > 1 && s[0] == '*' && s[1] == '.' {
+	if isWildcard(s) {
 		z.Wildcard--
 		if z.Wildcard < 0 {
 			z.Wildcard = 0
@@ -597,7 +597,7 @@ func (node *ZoneData) Sign(next string, keys map[*DNSKEY]PrivateKey, keytags map
 	return nil
 }
 
-// Return the signature for the typecovered and make with the keytag. It
+// Return the signature for the typecovered and made with the keytag. It
 // returns the index of the RRSIG and the RRSIG itself.
 func signatures(signatures []*RRSIG, keytag uint16) (int, *RRSIG) {
 	for i, s := range signatures {
@@ -637,3 +637,11 @@ func jitterDuration(d time.Duration) time.Duration {
 	}
 	return -time.Duration(jitter)
 }
+
+// isWildcard returns true when s is a wildcard name (first label is a "*")
+func isWildcard(s string) bool {
+	if s == "*" || s == "*." {
+		return true
+	}
+	return false
+}	
