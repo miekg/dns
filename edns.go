@@ -34,12 +34,11 @@ import (
 
 // EDNS0 Option codes.
 const (
-	EDNS0LLQ         = 0x1    // not used
-	EDNS0UL          = 0x2    // not used
-	EDNS0UPDATELEASE = 0x2    // update lease draft
-	EDNS0NSID        = 0x3    // nsid (RFC5001)
-	EDNS0SUBNET      = 0x50fa // client-subnet draft
-	_DO              = 1 << 7 // dnssec ok
+	EDNS0LLQ    = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
+	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
+	EDNS0NSID   = 0x3    // nsid (RFC5001)
+	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
+	_DO         = 1 << 7 // dnssec ok
 )
 
 type OPT struct {
@@ -74,7 +73,7 @@ func (rr *OPT) String() string {
 			}
 		case *EDNS0_SUBNET:
 			s += "\n; SUBNET: " + o.String()
-		case *EDNS0_UPDATE_LEASE:
+		case *EDNS0_UL:
 			s += "\n; LEASE: " + o.String()
 		}
 	}
@@ -303,7 +302,7 @@ func (e *EDNS0_SUBNET) String() (s string) {
 	return
 }
 
-// The UPDATE_LEASE EDNS0 (draft RFC) option is used to tell the server to set
+// The UL (Update Lease) EDNS0 (draft RFC) option is used to tell the server to set
 // an expiration on an update RR. This is helpful for clients that cannot clean
 // up after themselves. This is a draft RFC and more information can be found at
 // http://files.dns-sd.org/draft-sekar-dns-ul.txt
@@ -311,22 +310,22 @@ func (e *EDNS0_SUBNET) String() (s string) {
 //	o := new(dns.OPT)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.TypeOPT
-//	e := new(dns.EDNS0_UPDATE_LEASE)
-//	e.Code = dns.EDNS0UPDATELEASE
+//	e := new(dns.EDNS0_UL)
+//	e.Code = dns.EDNS0UL
 //	e.Lease = 120 // in seconds
 //	o.Option = append(o.Option, e)
 
-type EDNS0_UPDATE_LEASE struct {
-	Code  uint16 // Always EDNS0UPDATELEASE
+type EDNS0_UL struct {
+	Code  uint16 // Always EDNS0UL
 	Lease uint32
 }
 
-func (e *EDNS0_UPDATE_LEASE) Option() uint16 {
-	return EDNS0UPDATELEASE
+func (e *EDNS0_UL) Option() uint16 {
+	return EDNS0UL
 }
 
 // Copied: http://golang.org/src/pkg/net/dnsmsg.go
-func (e *EDNS0_UPDATE_LEASE) pack() ([]byte, error) {
+func (e *EDNS0_UL) pack() ([]byte, error) {
 	b := make([]byte, 4)
 	b[0] = byte(e.Lease >> 24)
 	b[1] = byte(e.Lease >> 16)
@@ -335,10 +334,10 @@ func (e *EDNS0_UPDATE_LEASE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_UPDATE_LEASE) unpack(b []byte) {
+func (e *EDNS0_UL) unpack(b []byte) {
 	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
 }
 
-func (e *EDNS0_UPDATE_LEASE) String() string {
+func (e *EDNS0_UL) String() string {
 	return strconv.Itoa(int(e.Lease))
 }
