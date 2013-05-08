@@ -70,7 +70,7 @@ var DefaultServeMux = NewServeMux()
 var Authors = []string{"Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
 
 // Version holds the current version.
-var Version = "v1.0"
+var Version = "v1.1"
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
