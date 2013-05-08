@@ -21,7 +21,6 @@ type Zone struct {
 	Origin          string               // Origin of the zone
 	olen            int                  // Origin length
 	olabels         []string             // Origin cut up in labels, just to speed up the isSubDomain method
-	Wildcard        int                  // Whenever we see a wildcard name, this is incremented
 	expired         bool                 // Slave zone is expired
 	ModTime         time.Time            // When is the zone last modified
 	Names           map[string]*ZoneData // Zone data, indexed by owner name
@@ -182,10 +181,6 @@ func (z *Zone) Insert(r RR) error {
 	z.ModTime = time.Now().UTC()
 	zd, ok := z.Names[r.Header().Name]
 	if !ok {
-		// Check if it's a wildcard name
-		if isWildcard(r.Header().Name) {
-			z.Wildcard++
-		}
 		zd = NewZoneData()
 		switch t := r.Header().Rrtype; t {
 		case TypeRRSIG:
@@ -263,12 +258,6 @@ func (z *Zone) Remove(r RR) error {
 		copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
 		z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
 		z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
-		if isWildcard(r.Header().Name) {
-			z.Wildcard--
-			if z.Wildcard < 0 {
-				z.Wildcard = 0
-			}
-		}
 	}
 	return nil
 }
@@ -288,12 +277,6 @@ func (z *Zone) RemoveName(s string) error {
 	copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
 	z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
 	z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
-	if isWildcard(s) {
-		z.Wildcard--
-		if z.Wildcard < 0 {
-			z.Wildcard = 0
-		}
-	}
 	return nil
 }
 
@@ -327,12 +310,6 @@ func (z *Zone) RemoveRRset(s string, t uint16) error {
 		copy(z.securityConfig.nsecNames[i:], z.securityConfig.nsecNames[i+1:])
 		z.securityConfig.nsecNames[len(z.securityConfig.nsecNames)-1] = ""
 		z.securityConfig.nsecNames = z.securityConfig.nsecNames[:len(z.securityConfig.nsecNames)-1]
-		if len(s) > 1 && s[0] == '*' && s[1] == '.' {
-			z.Wildcard--
-			if z.Wildcard < 0 {
-				z.Wildcard = 0
-			}
-		}
 	}
 	return nil
 }
@@ -639,11 +616,3 @@ func jitterDuration(d time.Duration) time.Duration {
 	}
 	return -time.Duration(jitter)
 }
-
-// isWildcard returns true when s is a wildcard name (first label is a "*")
-func isWildcard(s string) bool {
-	if s == "*." {
-		return true
-	}
-	return false
-}	
