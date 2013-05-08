@@ -345,7 +345,12 @@ func (e *EDNS0_UL) String() string {
 //
 //
 type EDNS0_LLQ struct {
-	Code uint16 // Always EDNS0LLQ
+	Code      uint16 // Always EDNS0LLQ
+	Version   uint16
+	Opcode    uint16
+	Error     uint16
+	Id        uint64
+	LeaseLife uint32
 }
 
 func (e *EDNS0_LLQ) Option() uint16 {
@@ -353,16 +358,32 @@ func (e *EDNS0_LLQ) Option() uint16 {
 }
 
 func (e *EDNS0_LLQ) pack() ([]byte, error) {
+	b := make([]byte, 16)
+	b[0], b[1] = packUint16(e.Version)
+	b[2], b[3] = packUint16(e.Opcode)
+	b[2], b[3] = packUint16(e.Error)
+	b[4] = byte(e.Id >> 56)
+	b[5] = byte(e.Id >> 48)
+	b[6] = byte(e.Id >> 40)
+	b[7] = byte(e.Id >> 32)
+	b[8] = byte(e.Id >> 24)
+	b[9] = byte(e.Id >> 16)
+	b[10] = byte(e.Id >> 8)
+	b[11] = byte(e.Id)
+	b[12] = byte(e.LeaseLife >> 24)
+	b[13] = byte(e.LeaseLife >> 16)
+	b[14] = byte(e.LeaseLife >> 8)
+	b[15] = byte(e.LeaseLife)
 	return nil, nil
 }
 
 func (e *EDNS0_LLQ) unpack(b []byte) {
-	
+	e.Version, _ = unpackUint16(b, 0)
+	e.Opcode, _ = unpackUint16(b, 2)
+	e.Error, _ = unpackUint16(b, 4)
+	// ... the rest
 }
 
 func (e *EDNS0_LLQ) String() string {
 	return ""
 }
-
-
-
