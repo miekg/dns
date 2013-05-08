@@ -314,7 +314,6 @@ func (e *EDNS0_SUBNET) String() (s string) {
 //	e.Code = dns.EDNS0UL
 //	e.Lease = 120 // in seconds
 //	o.Option = append(o.Option, e)
-
 type EDNS0_UL struct {
 	Code  uint16 // Always EDNS0UL
 	Lease uint32
@@ -341,3 +340,29 @@ func (e *EDNS0_UL) unpack(b []byte) {
 func (e *EDNS0_UL) String() string {
 	return strconv.Itoa(int(e.Lease))
 }
+
+// Long Lived Queries: ....
+//
+//
+type EDNS0_LLQ struct {
+	Code uint16 // Always EDNS0LLQ
+}
+
+func (e *EDNS0_LLQ) Option() uint16 {
+	return EDNS0LLQ
+}
+
+func (e *EDNS0_LLQ) pack() ([]byte, error) {
+	return nil, nil
+}
+
+func (e *EDNS0_LLQ) unpack(b []byte) {
+	
+}
+
+func (e *EDNS0_LLQ) String() string {
+	return ""
+}
+
+
+
