@@ -174,17 +174,17 @@ z2.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 		i++
 		z.Insert(x.RR)
 	}
-	if len(z.securityConfig.nsecNames) != 3 {
+	if len(z.sortedNames.nsecNames) != 3 {
 		t.Log("Length not 3?")
 		t.Fail()
 	}
-	if z.securityConfig.nsecNames[0] != "z1.miek.nl." || z.securityConfig.nsecNames[1] != "z2.miek.nl." || z.securityConfig.nsecNames[2] != "z3.miek.nl." {
-		t.Logf("Not all names correct %v\n", z.securityConfig.nsecNames)
+	if z.sortedNames.nsecNames[0] != "z1.miek.nl." || z.sortedNames.nsecNames[1] != "z2.miek.nl." || z.sortedNames.nsecNames[2] != "z3.miek.nl." {
+		t.Logf("Not all names correct %v\n", z.sortedNames.nsecNames)
 		t.Fail()
 	}
 	z.RemoveName("z2.miek.nl.")
-	if z.securityConfig.nsecNames[0] != "z1.miek.nl." || z.securityConfig.nsecNames[1] != "z3.miek.nl." {
-		t.Logf("Not all names correct %v\n", z.securityConfig.nsecNames)
+	if z.sortedNames.nsecNames[0] != "z1.miek.nl." || z.sortedNames.nsecNames[1] != "z3.miek.nl." {
+		t.Logf("Not all names correct %v\n", z.sortedNames.nsecNames)
 		t.Fail()
 	}
 }
