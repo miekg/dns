@@ -29,9 +29,8 @@ type Zone struct {
 	// The zone's security status, supported values are TypeNone for no DNSSEC,
 	// TypeNSEC for an NSEC type zone and TypeNSEC3 for an NSEC3 signed zone.
 	Security int
-	// If not nil, this function is called after each modification, with the current
-	// RR and the updated one.
-	NotifyFunc func(current, update RR)
+	// If not nil, this function is called after each modification.
+	NotifyFunc func(inserted, deleted RR)
 }
 
 type sortedNames struct {
