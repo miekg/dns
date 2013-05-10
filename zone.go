@@ -74,7 +74,7 @@ type SignatureConfig struct {
 	// SignerRoutines specifies the number of signing goroutines, if not
 	// set runtime.NumCPU() + 1 is used as the value.
 	SignerRoutines int
-	// SOA Minttl value must be used as the ttl on NSEC/NSEC3 records.
+	// The zone's SOA Minttl value must be used as the ttl on NSEC/NSEC3 records.
 	Minttl uint32
 }
 
