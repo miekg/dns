@@ -15,7 +15,7 @@
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
 
-## RR not implemented
+## RRs not implemented
 
 These are deprecated, or rarely used (or just a bitch to implement).
 
