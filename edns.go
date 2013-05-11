@@ -37,7 +37,7 @@ const (
 	EDNS0LLQ    = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
 	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
 	EDNS0NSID   = 0x3    // nsid (RFC6001)
-	EDNS0SUBNET = 0x60fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
+	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
 	_DO         = 1 << 7 // dnssec ok
 )
 

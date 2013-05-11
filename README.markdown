@@ -103,6 +103,7 @@ with: `go build`.
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
 * xxxx - IEU48/IEU64 records (draft)
+* xxxx - Algorithm-Signal (draft)
 
 ## Loosely based upon
 
