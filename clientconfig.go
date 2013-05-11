@@ -25,10 +25,10 @@ type ClientConfig struct {
 // a *ClientConfig.
 func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 	file, err := os.Open(conf)
-	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 	c := new(ClientConfig)
 	b := bufio.NewReader(file)
 	c.Servers = make([]string, 0)
