@@ -323,7 +323,7 @@ func (e *EDNS0_UL) Option() uint16 {
 	return EDNS0UL
 }
 
-// Copied: http://golang.org/src/pkg/net/dnsb.go
+// Copied: http://golang.org/src/pkg/net/dnsmsg.go
 func (e *EDNS0_UL) pack() ([]byte, error) {
 	b := make([]byte, 4)
 	b[0] = byte(e.Lease >> 24)
