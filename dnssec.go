@@ -8,7 +8,7 @@
 //
 // Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK) bit
 // to an request.
-// 
+//
 //      m := new(dns.Msg)
 //      m.SetEdns0(4096, true)
 //
@@ -61,7 +61,7 @@ const (
 const (
 	_      = iota
 	SHA1   // RFC 4034
-	SHA256 // RFC 4509 
+	SHA256 // RFC 4509
 	GOST94 // RFC 5933
 	SHA384 // Experimental
 	SHA512 // Experimental
@@ -309,7 +309,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 
 // Verify validates an RRSet with the signature and key. This is only the
 // cryptographic test, the signature validity period must be checked separately.
-// This function copies the rdata of some RRs (to lowercase domain names) for the validation to work. 
+// This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
 	if len(rrset) == 0 {
@@ -423,7 +423,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	return ErrAlg
 }
 
-// ValidityPeriod uses RFC1982 serial arithmetic to calculate 
+// ValidityPeriod uses RFC1982 serial arithmetic to calculate
 // if a signature period is valid.
 func (rr *RRSIG) ValidityPeriod() bool {
 	utc := time.Now().UTC().Unix()
@@ -443,7 +443,7 @@ func (s *RRSIG) sigBuf() []byte {
 	return sigbuf
 }
 
-// setPublicKeyInPrivate sets the public key in the private key. 
+// setPublicKeyInPrivate sets the public key in the private key.
 func (k *DNSKEY) setPublicKeyInPrivate(p PrivateKey) bool {
 	switch t := p.(type) {
 	case *dsa.PrivateKey:
@@ -606,7 +606,7 @@ func exponentToBuf(_E int) []byte {
 	return buf
 }
 
-// Set the public key for X and Y for Curve. The two 
+// Set the public key for X and Y for Curve. The two
 // values are just concatenated.
 func curveToBuf(_X, _Y *big.Int) []byte {
 	buf := _X.Bytes()
@@ -614,7 +614,7 @@ func curveToBuf(_X, _Y *big.Int) []byte {
 	return buf
 }
 
-// Set the public key for X and Y for Curve. The two 
+// Set the public key for X and Y for Curve. The two
 // values are just concatenated.
 func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
 	t := byte((len(_G.Bytes()) - 64) / 8)
@@ -720,3 +720,15 @@ var AlgorithmToString = map[uint8]string{
 
 // Map of algorithm strings.
 var StringToAlgorithm = reverseInt8(AlgorithmToString)
+
+// Map for hash names.
+var HashToString = map[uint8]string{
+	SHA1:   "SHA1",
+	SHA256: "SHA256",
+	GOST94: "GOST94",
+	SHA384: "SHA384",
+	SHA512: "SHA512",
+}
+
+// Map of hash strings.
+var StringToHash = reverseInt8(HashToString)

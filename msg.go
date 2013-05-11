@@ -760,6 +760,21 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
+				case EDNS0DAU:
+					e := new(EDNS0_DAU)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0DHU:
+					e := new(EDNS0_DHU)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0N3U:
+					e := new(EDNS0_N3U)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
 				default:
 					// do nothing?
 					off = off1 + int(optlen)

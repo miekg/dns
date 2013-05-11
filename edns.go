@@ -38,6 +38,9 @@ const (
 	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
 	EDNS0NSID   = 0x3    // nsid (RFC5001)
 	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
+	EDNS0DAU    = 0x4    // DNSSEC Algorithm Understood - not the final number!
+	EDNS0DHU    = 0x5    // DS Hash Understood - not the final number!
+	EDNS0N3U    = 0x6    // NSEC3 Hash Understood - not the final number!
 	_DO         = 1 << 7 // dnssec ok
 )
 
@@ -74,7 +77,15 @@ func (rr *OPT) String() string {
 		case *EDNS0_SUBNET:
 			s += "\n; SUBNET: " + o.String()
 		case *EDNS0_UL:
-			s += "\n; LEASE: " + o.String()
+			s += "\n; UPDATE LEASE: " + o.String()
+		case *EDNS0_LLQ:
+			s += "\n; LONG LIVED QUERIES: " + o.String()
+		case *EDNS0_DAU:
+			s += "\n; DNSSEC ALGORITHM UNDERSTOOD: " + o.String()
+		case *EDNS0_DHU:
+			s += "\n; DS HASH UNDERSTOOD: " + o.String()
+		case *EDNS0_N3U:
+			s += "\n; NSEC3 HASH UNDERSTOOD: " + o.String()
 		}
 	}
 	return s
@@ -389,5 +400,91 @@ func (e *EDNS0_LLQ) String() string {
 	s := strconv.FormatUint(uint64(e.Version), 10) + " " + strconv.FormatUint(uint64(e.Opcode), 10) +
 		" " + strconv.FormatUint(uint64(e.Error), 10) + " " + strconv.FormatUint(uint64(e.Id), 10) +
 		" " + strconv.FormatUint(uint64(e.LeaseLife), 10)
+	return s
+}
+
+type EDNS0_DAU struct {
+	Code    uint16 // Always EDNS0DAU
+	AlgCode []uint8
+}
+
+func (e *EDNS0_DAU) Option() uint16 {
+	return EDNS0DAU
+}
+func (e *EDNS0_DAU) pack() ([]byte, error) {
+	return e.AlgCode, nil
+}
+
+func (e *EDNS0_DAU) unpack(b []byte) {
+	e.AlgCode = b
+}
+
+func (e *EDNS0_DAU) String() string {
+	s := ""
+	for i := 0; i < len(e.AlgCode); i++ {
+		if a, ok := AlgorithmToString[e.AlgCode[i]]; ok {
+			s += " " + a
+		} else {
+			s += " " + strconv.Itoa(int(e.AlgCode[i]))
+		}
+	}
+	return s
+
+}
+
+type EDNS0_DHU struct {
+	Code    uint16 // Always EDNS0DHU
+	AlgCode []uint8
+}
+
+func (e *EDNS0_DHU) Option() uint16 {
+	return EDNS0DHU
+}
+func (e *EDNS0_DHU) pack() ([]byte, error) {
+	return e.AlgCode, nil
+}
+
+func (e *EDNS0_DHU) unpack(b []byte) {
+	e.AlgCode = b
+}
+
+func (e *EDNS0_DHU) String() string {
+	s := ""
+	for i := 0; i < len(e.AlgCode); i++ {
+		if a, ok := HashToString[e.AlgCode[i]]; ok {
+			s += " " + a
+		} else {
+			s += " " + strconv.Itoa(int(e.AlgCode[i]))
+		}
+	}
+	return s
+}
+
+type EDNS0_N3U struct {
+	Code    uint16 // Always EDNS0N3U
+	AlgCode []uint8
+}
+
+func (e *EDNS0_N3U) Option() uint16 {
+	return EDNS0N3U
+}
+func (e *EDNS0_N3U) pack() ([]byte, error) {
+	return e.AlgCode, nil
+}
+
+func (e *EDNS0_N3U) unpack(b []byte) {
+	e.AlgCode = b
+}
+
+func (e *EDNS0_N3U) String() string {
+	// Re-use the hash map
+	s := ""
+	for i := 0; i < len(e.AlgCode); i++ {
+		if a, ok := HashToString[e.AlgCode[i]]; ok {
+			s += " " + a
+		} else {
+			s += " " + strconv.Itoa(int(e.AlgCode[i]))
+		}
+	}
 	return s
 }
