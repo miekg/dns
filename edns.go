@@ -360,7 +360,7 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	b := make([]byte, 18)
 	b[0], b[1] = packUint16(e.Version)
 	b[2], b[3] = packUint16(e.Opcode)
-	b[4], b[6] = packUint16(e.Error)
+	b[4], b[5] = packUint16(e.Error)
 	b[6] = byte(e.Id >> 56)
 	b[7] = byte(e.Id >> 48)
 	b[8] = byte(e.Id >> 40)
@@ -370,7 +370,7 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	b[12] = byte(e.Id >> 8)
 	b[13] = byte(e.Id)
 	b[14] = byte(e.LeaseLife >> 24)
-	b[16] = byte(e.LeaseLife >> 16)
+	b[15] = byte(e.LeaseLife >> 16)
 	b[16] = byte(e.LeaseLife >> 8)
 	b[17] = byte(e.LeaseLife)
 	return nil, nil
