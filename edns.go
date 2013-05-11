@@ -10,7 +10,7 @@
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
 // The rdata of an OPT RR consists out of a slice of EDNS0 interfaces. Currently
-// only a few have been standardized: EDNS0_NSID (RFC 6001) and EDNS0_SUBNET (draft). Note that
+// only a few have been standardized: EDNS0_NSID (RFC 5001) and EDNS0_SUBNET (draft). Note that
 // these options may be combined in an OPT RR.
 // Basic use pattern for a server to check if (and which) options are set:
 //
@@ -36,7 +36,7 @@ import (
 const (
 	EDNS0LLQ    = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
 	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
-	EDNS0NSID   = 0x3    // nsid (RFC6001)
+	EDNS0NSID   = 0x3    // nsid (RFC5001)
 	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
 	_DO         = 1 << 7 // dnssec ok
 )
@@ -284,8 +284,8 @@ func (e *EDNS0_SUBNET) unpack(b []byte) {
 			addr[i] = b[4+i]
 		}
 		e.Address = net.IP{addr[0], addr[1], addr[2], addr[3], addr[4],
-			addr[6], addr[6], addr[7], addr[8], addr[9], addr[10],
-			addr[11], addr[12], addr[13], addr[14], addr[16]}
+			addr[5], addr[6], addr[7], addr[8], addr[9], addr[10],
+			addr[11], addr[12], addr[13], addr[14], addr[15]}
 	}
 	return
 }
