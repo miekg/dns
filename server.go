@@ -69,7 +69,7 @@ var DefaultServeMux = NewServeMux()
 var Authors = []string{"Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
 
 // Version holds the current version.
-var Version = "v1.1"
+var Version = "v1.2"
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
@@ -173,7 +173,6 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		lastbyte byte
 		seendot  bool = true
 	)
-	// TODO(mg): check for .
 	for i := 0; i < len(q); i++ {
 		if seendot {
 			if h, ok := mux.z[q[lastdot+1:]]; ok {
@@ -194,8 +193,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 		lastbyte = q[i]
 	}
-	// Check for the root zone too, this only delays NXDOMAIN, because if we serve . it
-	// will be catched above.
+	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		return h
 	}

@@ -96,3 +96,13 @@ func TestDotAsCatchAllWildcard(t *testing.T) {
 		t.Error("boe. match failed")
 	}
 }
+
+func TestRootServer(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", HandlerFunc(HelloServer))
+
+	handler := mux.match(".", TypeNS)
+	if handler == nil {
+		t.Error("root match failed")
+	}
+}
