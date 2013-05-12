@@ -38,9 +38,9 @@ const (
 	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
 	EDNS0NSID   = 0x3    // nsid (RFC5001)
 	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
-	EDNS0DAU    = 0x4    // DNSSEC Algorithm Understood - not the final number!
-	EDNS0DHU    = 0x5    // DS Hash Understood - not the final number!
-	EDNS0N3U    = 0x6    // NSEC3 Hash Understood - not the final number!
+	EDNS0DAU    = 0x5    // DNSSEC Algorithm Understood - not the final number!
+	EDNS0DHU    = 0x6    // DS Hash Understood - not the final number!
+	EDNS0N3U    = 0x7    // NSEC3 Hash Understood - not the final number!
 	_DO         = 1 << 7 // dnssec ok
 )
 
