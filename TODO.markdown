@@ -1,6 +1,6 @@
 # TODO
 
-* Support for on-the-fly-signing
+* Support for on-the-fly-signing or check how to do it
 * Use BIND10 memory efficient zone structure?
 * NSEC3 support propper in the zone structure(s)
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
@@ -11,7 +11,7 @@
 
 ## Nice to have
 
-* Speed, we can always go faster. A simple reflect server now hits 45/50K qps
+* Speed, we can always go faster. A simple reflect server now hits 75/80K qps
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
 
