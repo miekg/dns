@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Reflect is a small name server which sends back the IP address of its client, the
 // recursive resolver. 
 // When queried for type A (resp. AAAA), it sends back the IPv4 (resp. v6) address.
