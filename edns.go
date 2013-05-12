@@ -1,8 +1,12 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // EDNS0
 //
 // EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated
-// by RFC 6891. It defines a
-// standard RR type, the OPT RR, which is then completely abused.
+// by RFC 6891. It defines a standard RR type, the OPT RR, which is then completely 
+// abused.
 // Basic use pattern for creating an (empty) OPT RR:
 //
 //	o := new(dns.OPT)

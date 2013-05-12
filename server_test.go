@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package dns
 
 import (
@@ -94,5 +98,15 @@ func TestDotAsCatchAllWildcard(t *testing.T) {
 	handler = mux.match("boe.", TypeTXT)
 	if handler == nil {
 		t.Error("boe. match failed")
+	}
+}
+
+func TestRootServer(t *testing.T) {
+	mux := NewServeMux()
+	mux.Handle(".", HandlerFunc(HelloServer))
+
+	handler := mux.match(".", TypeNS)
+	if handler == nil {
+		t.Error("root match failed")
 	}
 }

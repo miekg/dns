@@ -1,14 +1,14 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// Extended and bugfixes by Miek Gieben. Copyright 2010-2012.
+// Extensions of the original work are copyright (c) 2011 Miek Gieben
 
 // Package dns implements a full featured interface to the Domain Name System.
 // Server- and client-side programming is supported.
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
 //
-// The package dns supports (asynchronous) querying/replying, incoming/outgoing AXFR/IXFR, 
+// The package dns supports (asynchronous) querying/replying, incoming/outgoing AXFR/IXFR,
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 // Note that domain names MUST be fully qualified, before sending them, unqualified
 // names in a message will result in a packing failure.
@@ -68,7 +68,7 @@
 // the authority section: in.Ns and the additional section: in.Extra.
 //
 // Each of these sections (except the Question section) contain a []RR. Basic
-// use pattern for accessing the rdata of a TXT RR as the first RR in 
+// use pattern for accessing the rdata of a TXT RR as the first RR in
 // the Answer section:
 //
 //	if t, ok := in.Answer[0].(*TXT); ok {
