@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // TRANSACTION SIGNATURE (TSIG)
 //
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
