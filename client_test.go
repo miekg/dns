@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package dns
 
 import (
@@ -98,8 +102,8 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 	lease_rr := new(OPT)
 	lease_rr.Hdr.Name = "."
 	lease_rr.Hdr.Rrtype = TypeOPT
-	e := new(EDNS0_UPDATE_LEASE)
-	e.Code = EDNS0UPDATELEASE
+	e := new(EDNS0_UL)
+	e.Code = EDNS0UL
 	e.Lease = 120
 	lease_rr.Option = append(lease_rr.Option, e)
 	m.Extra = append(m.Extra, lease_rr)

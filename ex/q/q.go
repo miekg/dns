@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Q is a small utility which acts and behaves like 'dig' from BIND.
 // It is meant to stay lean and mean, while having a bunch of handy
 // features, like -check which checks if a packet is correctly signed (without
@@ -47,8 +51,6 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	conf, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-	nameserver := "@" + conf.Servers[0]
 	qtype := uint16(0)
 	qclass := uint16(dns.ClassINET)
 	var qname []string
@@ -69,6 +71,8 @@ func main() {
 			dnskey = k
 		}
 	}
+
+	var nameserver string
 
 Flags:
 	for i := 0; i < flag.NArg(); i++ {
@@ -107,6 +111,15 @@ Flags:
 	}
 	if qtype == 0 {
 		qtype = dns.TypeA
+	}
+
+	if len(nameserver) == 0 {
+		conf, err := dns.ClientConfigFromFile("/etc/resolv.conf")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		nameserver = "@" + conf.Servers[0]
 	}
 
 	nameserver = string([]byte(nameserver)[1:]) // chop off @

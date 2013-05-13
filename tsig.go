@@ -1,10 +1,14 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // TRANSACTION SIGNATURE (TSIG)
 //
-// An TSIG or transaction signature adds a HMAC TSIG record to each message sent. 
+// An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 // The supported algorithms include: HmacMD5, HmacSHA1 and HmacSHA256.
 //
 // Basic use pattern when querying with a TSIG name "axfr." (note that these key names
-// must be fully qualified - as they are domain names) and the base64 secret 
+// must be fully qualified - as they are domain names) and the base64 secret
 // "so6ZGir4GPAqINNh9U5c3A==":
 //
 //	c := new(dns.Client)
@@ -23,7 +27,7 @@
 //	c := new(dns.Client)
 //	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m := new(dns.Msg)
-//	m.SetAxfr("miek.nl.") 
+//	m.SetAxfr("miek.nl.")
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
 //	t, err := c.TransferIn(m, "85.223.71.124:53")
 //	for r := range t { /* ... */ }
@@ -148,12 +152,12 @@ type timerWireFmt struct {
 
 // TsigGenerate fills out the TSIG record attached to the message.
 // The message should contain
-// a "stub" TSIG RR with the algorithm, key name (owner name of the RR), 
+// a "stub" TSIG RR with the algorithm, key name (owner name of the RR),
 // time fudge (defaults to 300 seconds) and the current time
 // The TSIG MAC is saved in that Tsig RR.
 // When TsigGenerate is called for the first time requestMAC is set to the empty string and
 // timersOnly is false.
-// If something goes wrong an error is returned, otherwise it is nil. 
+// If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
@@ -205,7 +209,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	return mbuf, t.MAC, nil
 }
 
-// TsigVerify verifies the TSIG on a message. 
+// TsigVerify verifies the TSIG on a message.
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {

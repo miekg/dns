@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package dns
 
 import (
@@ -17,7 +21,7 @@ const _FORMAT = "Private-key-format: v1.3\n"
 type PrivateKey interface{}
 
 // Generate generates a DNSKEY of the given bit size.
-// The public part is put inside the DNSKEY record. 
+// The public part is put inside the DNSKEY record.
 // The Algorithm in the key must be set as this will define
 // what kind of DNSKEY will be generated.
 // The ECDSA algorithms imply a fixed keysize, in that case
@@ -88,7 +92,7 @@ func (r *DNSKEY) Generate(bits int) (PrivateKey, error) {
 }
 
 // PrivateKeyString converts a PrivateKey to a string. This
-// string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3). 
+// string has the same format as the private-key-file of BIND9 (Private-key-format: v1.3).
 // It needs some info from the key (hashing, keytag), so its a method of the DNSKEY.
 func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {

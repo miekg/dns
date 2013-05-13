@@ -33,8 +33,8 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * UDP/TCP queries, IPv4 and IPv6;
 * RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE [for all record types]
   are supported);
-* Fast: 
-    * Reply speed around ~ 50K qps (faster hardware results in more qps);
+* Fast:
+    * Reply speed around ~ 80K qps (faster hardware results in more qps);
     * Parsing RRs with  ~ 100K RR/s, that's 5M records in about 50 seconds;
 * Server side programming (mimicking the net/http package);
 * Client side programming;
@@ -103,6 +103,7 @@ with: `go build`.
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
 * xxxx - IEU48/IEU64 records (draft)
+* xxxx - Algorithm-Signal (draft)
 
 ## Loosely based upon
 

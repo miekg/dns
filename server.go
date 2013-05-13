@@ -7,7 +7,6 @@
 package dns
 
 import (
-	"github.com/miekg/radix"
 	"net"
 	"sync"
 	"time"
@@ -28,7 +27,7 @@ type ResponseWriter interface {
 	Write([]byte) (int, error)
 	// Close closes the connection.
 	Close() error
-	// TsigStatus returns the status of the Tsig. 
+	// TsigStatus returns the status of the Tsig.
 	TsigStatus() error
 	// TsigTimersOnly sets the tsig timers only boolean.
 	TsigTimersOnly(bool)
@@ -49,19 +48,19 @@ type response struct {
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
-// zone name of each incoming request against a list of 
+// zone name of each incoming request against a list of
 // registered patterns add calls the handler for the pattern
 // that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
 // that queries for the DS record are redirected to the parent zone (if that
 // is also registered), otherwise the child gets the query.
 // ServeMux is also safe for concurrent access from multiple goroutines.
 type ServeMux struct {
-	r *radix.Radix
+	z map[string]Handler
 	m *sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux { return &ServeMux{r: radix.New(), m: new(sync.RWMutex)} }
+func NewServeMux() *ServeMux { return &ServeMux{z: make(map[string]Handler), m: new(sync.RWMutex)} }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
@@ -70,7 +69,7 @@ var DefaultServeMux = NewServeMux()
 var Authors = []string{"Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
 
 // Version holds the current version.
-var Version = "v1.0"
+var Version = "v1.2"
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
@@ -83,7 +82,7 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// FailedHandler returns a HandlerFunc 
+// FailedHandler returns a HandlerFunc
 // returns SERVFAIL for every request it gets.
 func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
@@ -165,27 +164,40 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-func (mux *ServeMux) match(zone string, t uint16) Handler {
+func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
-	if h, e := mux.r.Find(toRadixName(zone)); e {
-		// If we got queried for a DS record, we must see if we
-		// if we also serve the parent. We then redirect the query to it.
-		if t != TypeDS {
-			return h.Value.(Handler)
+	var (
+		handler  Handler
+		lastdot  int = -1
+		lastbyte byte
+		seendot  bool = true
+	)
+	for i := 0; i < len(q); i++ {
+		if seendot {
+			if h, ok := mux.z[q[lastdot+1:]]; ok {
+				if t != TypeDS {
+					return h
+				} else {
+					// Continue for DS to see if we have a parent too, if so delegeate to the parent
+					handler = h
+				}
+			}
 		}
-		if d := h.Up(); d != nil {
-			return d.Value.(Handler)
+
+		if q[i] == '.' && lastbyte != '\\' {
+			lastdot = i
+			seendot = true
+		} else {
+			seendot = false
 		}
-		// No parent zone found, let the original handler take care of it
-		return h.Value.(Handler)
-	} else {
-		if h == nil {
-			return nil
-		}
-		return h.Value.(Handler)
+		lastbyte = q[i]
 	}
-	panic("dns: not reached")
+	// Wildcard match, if we have found nothing try the root zone as a last resort.
+	if h, ok := mux.z["."]; ok {
+		return h
+	}
+	return handler
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -194,7 +206,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
-	mux.r.Insert(toRadixName(Fqdn(pattern)), handler)
+	mux.z[Fqdn(pattern)] = handler
 	mux.m.Unlock()
 }
 
@@ -209,7 +221,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
-	mux.r.Remove(toRadixName(Fqdn(pattern)))
+	delete(mux.z, Fqdn(pattern))
 	mux.m.Unlock()
 }
 
@@ -301,7 +313,7 @@ forever:
 	for {
 		rw, e := l.AcceptTCP()
 		if e != nil {
-			// don't bail out, but wait for a new request  
+			// don't bail out, but wait for a new request
 			continue
 		}
 		if srv.ReadTimeout != 0 {

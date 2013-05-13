@@ -1,3 +1,7 @@
+// Copyright 2011 Miek Gieben. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package dns
 
 import (
@@ -141,28 +145,29 @@ func TestDotInName(t *testing.T) {
 }
 
 func TestParseZone(t *testing.T) {
-	zone := `z1.miek.nl. 86400 IN RRSIG NSEC 8 3 86400 20110823011301 20110724011301 12051 miek.nl. lyRljEQFOmajcdo6bBI67DsTlQTGU3ag9vlE07u7ynqt9aYBXyE9mkasAK4V0oI32YGb2pOSB6RbbdHwUmSt+cYhOA49tl2t0Qoi3pH21dicJiupdZuyjfqUEqJlQoEhNXGtP/pRvWjNA4pQeOsOAoWq/BDcWCSQB9mh2LvUOH4= ; {keyid = sksak}
-z2.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
+	zone := `z3.miek.nl. 86400 IN RRSIG NSEC 8 3 86400 20110823011301 20110724011301 12051 miek.nl. lyRljEQFOmajcdo6bBI67DsTlQTGU3ag9vlE07u7ynqt9aYBXyE9mkasAK4V0oI32YGb2pOSB6RbbdHwUmSt+cYhOA49tl2t0Qoi3pH21dicJiupdZuyjfqUEqJlQoEhNXGtP/pRvWjNA4pQeOsOAoWq/BDcWCSQB9mh2LvUOH4= ; {keyid = sksak}
+z1.miek.nl.  86400   IN      NSEC    miek.nl. TXT RRSIG NSEC
 $TTL 100
-z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
+z2.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 	to := ParseZone(strings.NewReader(zone), "", "")
 	i := 0
+	z := NewZone("miek.nl.")
 	for x := range to {
 		if x.Error == nil {
 			switch i {
-			case 0:
+			case 1:
 				if x.RR.Header().Name != "z1.miek.nl." {
 					t.Log("Failed to parse z1")
 					t.Fail()
 				}
-			case 1:
+			case 2:
 				if x.RR.Header().Name != "z2.miek.nl." {
 					t.Log("Failed to parse z2")
 					t.Fail()
 				}
-			case 2:
-				if x.RR.String() != "z3.miek.nl.\t100\tIN\tNSEC\tmiek.nl. TXT RRSIG NSEC" {
-					t.Logf("Failed to parse z3 %s", x.RR.String())
+			case 0:
+				if x.RR.Header().Name != "z3.miek.nl." {
+					t.Logf("Failed to parse z3 %s")
 					t.Fail()
 				}
 			}
@@ -171,6 +176,20 @@ z3.miek.nl.  IN      NSEC    miek.nl. TXT RRSIG NSEC`
 			t.Fail()
 		}
 		i++
+		z.Insert(x.RR)
+	}
+	if len(z.sortedNames.nsecNames) != 3 {
+		t.Log("Length not 3?")
+		t.Fail()
+	}
+	if z.sortedNames.nsecNames[0] != "z1.miek.nl." || z.sortedNames.nsecNames[1] != "z2.miek.nl." || z.sortedNames.nsecNames[2] != "z3.miek.nl." {
+		t.Logf("Not all names correct %v\n", z.sortedNames.nsecNames)
+		t.Fail()
+	}
+	z.RemoveName("z2.miek.nl.")
+	if z.sortedNames.nsecNames[0] != "z1.miek.nl." || z.sortedNames.nsecNames[1] != "z3.miek.nl." {
+		t.Logf("Not all names correct %v\n", z.sortedNames.nsecNames)
+		t.Fail()
 	}
 }
 

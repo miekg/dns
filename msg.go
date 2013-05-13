@@ -1,6 +1,7 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+// Extensions of the original work are copyright (c) 2011 Miek Gieben
 
 // DNS packet assembly, see RFC 1035. Converting from - Unpack() -
 // and to - Pack() - wire format.
@@ -670,6 +671,7 @@ func structValue(any interface{}) reflect.Value {
 	return reflect.ValueOf(any).Elem()
 }
 
+// PackStruct packs any structure to wire format.
 func PackStruct(any interface{}, msg []byte, off int) (off1 int, err error) {
 	off, err = packStructValue(structValue(any), msg, off, nil, false)
 	return off, err
@@ -750,8 +752,28 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
-				case EDNS0UPDATELEASE:
-					e := new(EDNS0_UPDATE_LEASE)
+				case EDNS0UL:
+					e := new(EDNS0_UL)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0LLQ:
+					e := new(EDNS0_LLQ)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0DAU:
+					e := new(EDNS0_DAU)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0DHU:
+					e := new(EDNS0_DHU)
+					e.unpack(msg[off1 : off1+int(optlen)])
+					edns = append(edns, e)
+					off = off1 + int(optlen)
+				case EDNS0N3U:
+					e := new(EDNS0_N3U)
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
@@ -1032,6 +1054,8 @@ func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
 	return
 }
 
+// UnpackStruct unpacks a binary message from offset off to the interface
+// value given.
 func UnpackStruct(any interface{}, msg []byte, off int) (off1 int, err error) {
 	off, err = unpackStructValue(structValue(any), msg, off)
 	return off, err

@@ -1,7 +1,7 @@
-// copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// Extended and bugfixes by Miek Gieben
+// Extensions of the original work are copyright (c) 2011 Miek Gieben
 
 package dns
 
@@ -19,6 +19,7 @@ import (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
+	TypeNone       uint16 = 0
 	TypeA          uint16 = 1
 	TypeNS         uint16 = 2
 	TypeMD         uint16 = 3
