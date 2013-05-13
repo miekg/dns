@@ -42,8 +42,8 @@ type response struct {
 	tsigTimersOnly bool
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
-	_UDP           *net.UDPConn      // i/o connection if UDP was used
-	_TCP           *net.TCPConn      // i/o connection if TCP was used
+	udp           *net.UDPConn      // i/o connection if UDP was used
+	tcp           *net.TCPConn      // i/o connection if TCP was used
 	remoteAddr     net.Addr          // address of the client
 }
 
@@ -387,8 +387,8 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 		// Request has been read in serveUDP or serveTCP
 		w := new(response)
 		w.tsigSecret = tsigSecret
-		w._UDP = u
-		w._TCP = t
+		w.udp = u
+		w.tcp = t
 		w.remoteAddr = a
 		req := new(Msg)
 		if req.Unpack(m) != nil {
@@ -448,10 +448,10 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m []byte) (int, error) {
 	switch {
-	case w._UDP != nil:
-		n, err := w._UDP.WriteTo(m, w.remoteAddr)
+	case w.udp != nil:
+		n, err := w.udp.WriteTo(m, w.remoteAddr)
 		return n, err
-	case w._TCP != nil:
+	case w.tcp != nil:
 		lm := len(m)
 		if len(m) > MaxMsgSize {
 			return 0, &Error{Err: "message too large"}
@@ -459,13 +459,13 @@ func (w *response) Write(m []byte) (int, error) {
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(lm))
 		m = append(l, m...)
-		n, err := w._TCP.Write(m)
+		n, err := w.tcp.Write(m)
 		if err != nil {
 			return n, err
 		}
 		i := n
 		if i < lm {
-			j, err := w._TCP.Write(m[i:lm])
+			j, err := w.tcp.Write(m[i:lm])
 			if err != nil {
 				return i, err
 			}
@@ -491,14 +491,14 @@ func (w *response) Hijack() { w.hijacked = true }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	if w._UDP != nil {
-		e := w._UDP.Close()
-		w._UDP = nil
+	if w.udp != nil {
+		e := w.udp.Close()
+		w.udp = nil
 		return e
 	}
-	if w._TCP != nil {
-		e := w._TCP.Close()
-		w._TCP = nil
+	if w.tcp != nil {
+		e := w.tcp.Close()
+		w.tcp = nil
 		return e
 	}
 	// no-op

@@ -4,10 +4,11 @@
 * Use BIND10 memory efficient zone structure?
 * NSEC3 support propper in the zone structure(s)
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
-* Ratelimiting?
 * NSEC3/NSEC support function for generating NXDOMAIN respsonse?
 * Actually mimic net/ ? Dial. Read/Write ?
 * Make compare/split labels faster
+* Ratelimiting?
+  * Disallow ANY queries - make a default handler for that
 
 ## Nice to have
 
