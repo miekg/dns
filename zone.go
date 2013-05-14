@@ -7,6 +7,7 @@ package dns
 // A structure for handling zone data
 
 import (
+	"errors"
 	"math/rand"
 	"runtime"
 	"sort"
@@ -91,6 +92,7 @@ func newSignatureConfig() *SignatureConfig {
 var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to the lower cased origin.
+// The Security is set to TypeNone.
 func NewZone(origin string) *Zone {
 	if origin == "" {
 		origin = "."
@@ -370,8 +372,13 @@ func compareLabelsSlice(l1 []string, s2 string) (n int) {
 }
 
 // Sign (re)signs the zone z with the given keys.
-// NSECs and RRSIGs are added as needed.
-// The public keys themselves are not added to the zone.
+// NSECs and RRSIGs are added as needed. The zone's Security must be TypeNone
+// or TypeNSEC.
+// After the signing the Security is set to TypeNSEC. Signing an NSEC3
+// zone with this function will lead to undesirable results, i.e. a zone with NSEC and
+// NSEC3 records in it.
+// 
+// The public keys are not added to the zone.
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
 // should be honored. If signatures approach their expriration time, they
@@ -389,6 +396,9 @@ func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error 
 	z.Lock()
 	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
+	if z.Security != TypeNone || z.Security != TypeNSEC {
+		return errors.New("dns: bad authenticated denial of existence type")
+	}
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
@@ -429,6 +439,7 @@ Sign:
 		return err
 	}
 	wg.Wait()
+	z.Security = TypeNSEC
 	return nil
 }
 
