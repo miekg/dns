@@ -374,10 +374,8 @@ func compareLabelsSlice(l1 []string, s2 string) (n int) {
 // Sign (re)signs the zone z with the given keys.
 // NSECs and RRSIGs are added as needed. The zone's Security must be TypeNone
 // or TypeNSEC.
-// After the signing the Security is set to TypeNSEC. Signing an NSEC3
-// zone with this function will lead to undesirable results, i.e. a zone with NSEC and
-// NSEC3 records in it.
-// 
+// After the signing zone.Security is set to TypeNSEC.
+//
 // The public keys are not added to the zone.
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
@@ -443,8 +441,10 @@ Sign:
 	return nil
 }
 
-// Sign3 (re)signs the zone z with the given keys, NSEC3s and RRSIGs are
-// added as needed. Bla bla Identical to zone.Sign.
+// Sign3 (re)signs the zone z with the given keys.
+// NSEC3s and RRSIGs are added as needed. The zone's Security must be TypeNone
+// or TypeNSEC3.
+// After the signing zone.Security is set to TypeNSEC3. See Sign for more documentation.
 func (z *Zone) Sign3(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
 	return nil
 }
