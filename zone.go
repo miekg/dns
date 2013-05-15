@@ -33,7 +33,7 @@ type Zone struct {
 	*sync.RWMutex
 	// The zone's security status, supported values are TypeNone for no DNSSEC,
 	// TypeNSEC for an NSEC type zone and TypeNSEC3 for an NSEC3 signed zone.
-	Security int
+	Security uint16
 }
 
 type sortedNames struct {
