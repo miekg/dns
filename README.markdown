@@ -16,6 +16,7 @@ If you like this, you may also be interested in:
 # Goals
 
 * KISS;
+* Fast
 * Small API, if its easy to code in Go, don't make a function for it.
 
 # Users
@@ -31,8 +32,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 # Features
 
 * UDP/TCP queries, IPv4 and IPv6;
-* RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE [for all record types]
-  are supported);
+* RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE (for all record types) are supported;
 * Fast:
     * Reply speed around ~ 80K qps (faster hardware results in more qps);
     * Parsing RRs with  ~ 100K RR/s, that's 5M records in about 50 seconds;
