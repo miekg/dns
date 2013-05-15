@@ -8,7 +8,6 @@
 * Actually mimic net/ ? Dial. Read/Write ?
 * Make compare/split labels faster
 * Ratelimiting?
-  * Disallow ANY queries - make a default handler for that
 
 ## Nice to have
 

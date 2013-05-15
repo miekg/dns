@@ -7,6 +7,7 @@ package dns
 // A structure for handling zone data
 
 import (
+	"errors"
 	"math/rand"
 	"runtime"
 	"sort"
@@ -32,7 +33,7 @@ type Zone struct {
 	*sync.RWMutex
 	// The zone's security status, supported values are TypeNone for no DNSSEC,
 	// TypeNSEC for an NSEC type zone and TypeNSEC3 for an NSEC3 signed zone.
-	Security int
+	Security uint16
 }
 
 type sortedNames struct {
@@ -91,6 +92,7 @@ func newSignatureConfig() *SignatureConfig {
 var DefaultSignatureConfig = newSignatureConfig()
 
 // NewZone creates an initialized zone with Origin set to the lower cased origin.
+// The Security is set to TypeNone.
 func NewZone(origin string) *Zone {
 	if origin == "" {
 		origin = "."
@@ -370,8 +372,11 @@ func compareLabelsSlice(l1 []string, s2 string) (n int) {
 }
 
 // Sign (re)signs the zone z with the given keys.
-// NSECs and RRSIGs are added as needed.
-// The public keys themselves are not added to the zone.
+// NSECs and RRSIGs are added as needed. The zone's Security must be TypeNone
+// or TypeNSEC.
+// After the signing zone.Security is set to TypeNSEC.
+//
+// The public keys are not added to the zone.
 // If config is nil DefaultSignatureConfig is used. The signatureConfig
 // describes how the zone must be signed and if the SEP flag (for KSK)
 // should be honored. If signatures approach their expriration time, they
@@ -389,6 +394,9 @@ func (z *Zone) Sign(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error 
 	z.Lock()
 	z.ModTime = time.Now().UTC()
 	defer z.Unlock()
+	if z.Security != TypeNone || z.Security != TypeNSEC {
+		return errors.New("dns: bad authenticated denial of existence type")
+	}
 	if config == nil {
 		config = DefaultSignatureConfig
 	}
@@ -429,11 +437,14 @@ Sign:
 		return err
 	}
 	wg.Wait()
+	z.Security = TypeNSEC
 	return nil
 }
 
-// Sign3 (re)signs the zone z with the given keys, NSEC3s and RRSIGs are
-// added as needed. Bla bla Identical to zone.Sign.
+// Sign3 (re)signs the zone z with the given keys.
+// NSEC3s and RRSIGs are added as needed. The zone's Security must be TypeNone
+// or TypeNSEC3.
+// After the signing zone.Security is set to TypeNSEC3. See Sign for more documentation.
 func (z *Zone) Sign3(keys map[*DNSKEY]PrivateKey, config *SignatureConfig) error {
 	return nil
 }

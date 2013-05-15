@@ -45,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 	localm = new(dns.Msg)
-	localm.MsgHdr.RecursionDesired = true
+	localm.RecursionDesired = true
 	localm.Question = make([]dns.Question, 1)
 	localc = new(dns.Client)
 	localc.ReadTimeout = TIMEOUT * 1e9
@@ -59,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 	m := new(dns.Msg)
-	m.MsgHdr.RecursionDesired = false
+	m.RecursionDesired = false
 	m.Question = make([]dns.Question, 1)
 	c := new(dns.Client)
 	c.ReadTimeout = TIMEOUT * 1e9
@@ -135,7 +135,7 @@ func main() {
 				rsoa := soa.Answer[0]
 				switch rsoa.(type) {
 				case *dns.SOA:
-					if soa.MsgHdr.Authoritative {
+					if soa.Authoritative {
 						// TODO: test if all name servers have the same serial ?
 						fmt.Printf("%s (%d) ", ips, rsoa.(*dns.SOA).Serial)
 					} else {
