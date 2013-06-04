@@ -71,7 +71,7 @@
 // use pattern for accessing the rdata of a TXT RR as the first RR in
 // the Answer section:
 //
-//	if t, ok := in.Answer[0].(*TXT); ok {
+//	if t, ok := in.Answer[0].(*dns.TXT); ok {
 //		// do something with t.Txt
 //	}
 package dns
