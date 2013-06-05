@@ -424,6 +424,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 			rr.Rmail = appendOrigin(rr.Rmail, o)
 		}
 	}
+	<-c     // _BLANK
 	l = <-c
 	rr.Email = l.token
 	if l.token == "@" {
