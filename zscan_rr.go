@@ -163,6 +163,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return setIPSECKEY(h, c, o, f)
 	case TypeUINFO:
 		return setUINFO(h, c, f)
+	case TypeCERT:
+		return setCERT(h, c, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -1053,7 +1055,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, l.comment
 }
 
-func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+func setCERT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(CERT)
 	rr.Hdr = h
 
@@ -1066,18 +1068,18 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c     // _BLANK
 	l = <-c // _STRING
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad NAPTR KeyTag", l}, ""
+		return nil, &ParseError{f, "bad CERT KeyTag", l}, ""
 	} else {
 		rr.KeyTag = uint16(i)
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad NAPTR Algorithm", l}, ""
+		return nil, &ParseError{f, "bad CERT Algorithm", l}, ""
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	s, e, c1 := endingToString(c, "bad NAPTR Certificate", f)
+	s, e, c1 := endingToString(c, "bad CERT Certificate", f)
 	if e != nil {
 		return nil, e, c1
 	}
