@@ -160,7 +160,7 @@ func (dns *Msg) IsEdns0() *OPT {
 // the number of labels, total length and true, when a domain name is valid.
 // When false is returned the labelcount and length are not defined.
 func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
-	// TODO(mg): check for \DDD
+	// TODO(mg): check for \DDD - seems to work fine without though
 	// See RFC 1035, RFC 3696.
 	l := len(s)
 	if l == 0 || l > 255 {
@@ -211,7 +211,6 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		case c == '.':
 			// byte before dot cannot be dot
 			if last == '.' {
-				println("dot dot")
 				return 0, uint8(l - longer), false
 			}
 			if last == '\\' { // Ok, escaped dot.
