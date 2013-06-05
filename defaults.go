@@ -184,16 +184,16 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	ok := false // ok once we've seen a letter or digit
 	partlen := 0
 	labels := uint8(0)
+	var c byte
 	for i := 0; i < l; i++ {
-		c := s[i]
+		c = s[i]
 		switch {
 		default:
 			return 0, uint8(l - longer), false
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*' || c == '/':
 			ok = true
 			partlen++
-		case c == '\\':
-			// Ok
+		case c == '\\': // OK
 		case c == '@':
 			if last != '\\' {
 				return 0, uint8(l - longer), false
@@ -211,10 +211,12 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		case c == '.':
 			// byte before dot cannot be dot
 			if last == '.' {
+				println("dot dot")
 				return 0, uint8(l - longer), false
 			}
 			if last == '\\' { // Ok, escaped dot.
 				partlen++
+				c = 'A' // make current value not scary
 				break
 			}
 			if partlen > 63 || partlen == 0 {
