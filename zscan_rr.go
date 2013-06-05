@@ -29,6 +29,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeHINFO:
 		r, e = setHINFO(h, c, f)
 		goto Slurp
+	case TypeMINFO:
+		r, e = setMINFO(h, c, o, f)
+		goto Slurp
 	case TypeNS:
 		r, e = setNS(h, c, o, f)
 		goto Slurp
