@@ -487,7 +487,10 @@ func (rr *TXT) String() string {
 
 func (rr *TXT) len() int {
 	l := rr.Hdr.len()
-	for _, t := range rr.Txt {
+	for i, t := range rr.Txt {
+		if i > 0 {
+			l += 1
+		}
 		l += len(t)
 	}
 	return l
