@@ -49,3 +49,18 @@ func TestTxtPack(t *testing.T) {
 		}
 	}
 }
+
+func TestRRPack(t *testing.T) {
+	rr, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
+	if err == nil {
+		t.Log("%s\n", rr.String())
+	} else {
+		t.Error("Failed to parse TYPE1234 RR: ", err.Error())
+	}
+	rr, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
+	if err == nil {
+		t.Log("%s\n", rr.String())
+	} else {
+		t.Error("Failed to parse TYPE1 RR: ", err.Error())
+	}
+}

@@ -1672,13 +1672,13 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 	l := <-c
 	if l.token != "\\#" {
-		return nil, &ParseError{f, "unkown RR type", l}, ""
+		return nil, &ParseError{f, "bad RFC3597 Rdata", l}, ""
 	}
 	<-c // _BLANK
 	l = <-c
 	rdlength, e := strconv.Atoi(l.token)
 	if e != nil {
-		return nil, &ParseError{f, "bad RFC3597 Rdata", l}, ""
+		return nil, &ParseError{f, "bad RFC3597 Rdata ", l}, ""
 	}
 
 	s, e1, c1 := endingToString(c, "bad RFC3597 Rdata", f)
