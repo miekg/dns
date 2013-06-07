@@ -58,9 +58,7 @@ func TestRRPack(t *testing.T) {
 		t.Error("Failed to parse TYPE1234 RR: ", err.Error())
 	}
 	rr, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
-	if err == nil {
-		t.Log("%s\n", rr.String())
-	} else {
-		t.Error("Failed to parse TYPE1 RR: ", err.Error())
+	if err != nil {
+		t.Error("This should not work")
 	}
 }
