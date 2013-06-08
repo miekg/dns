@@ -160,19 +160,9 @@ func (h *RR_Header) String() string {
 	} else {
 		s += h.Name + "\t"
 	}
-	s = s + strconv.FormatInt(int64(h.Ttl), 10) + "\t"
-
-	if _, ok := ClassToString[h.Class]; ok {
-		s += ClassToString[h.Class] + "\t"
-	} else {
-		s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
-	}
-
-	if _, ok := TypeToString[h.Rrtype]; ok {
-		s += TypeToString[h.Rrtype] + "\t"
-	} else {
-		s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
-	}
+	s += strconv.FormatInt(int64(h.Ttl), 10) + "\t"
+	s += Class(h.Class).String() + "\t"
+	s += Type(h.Rrtype).String() + "\t"
 	return s
 }
 
