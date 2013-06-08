@@ -282,20 +282,18 @@ func ReverseAddr(addr string) (arpa string, err error) {
 	return string(buf), nil
 }
 
-// TypeToTypeString converts a uint16 RR type to its string equivalent.
-// If the type isn't found the string 'TYPE<number>' is returned.
-func TypeToTypeString(t uint16) string {
-	if t1, ok := TypeToString[t]; ok {
+// String returns the string representation for the type t
+func (t Type) String() string {
+	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1
 	} else {
 		return "TYPE" + strconv.Itoa(int(t))
 	}
 }
 
-// ClassToClassString converts a uint16 RR class to its string equivalent.
-// If the class isn't found the string 'CLASS<number>' is returned.
-func ClassToClassString(c uint16) string {
-	if c1, ok := ClassToString[c]; ok {
+// String returns the string representation for the class c
+func (c Class) String() string {
+	if c1, ok := ClassToString[uint16(c)]; ok {
 		return c1
 	} else {
 		return "CLASS" + strconv.Itoa(int(c))

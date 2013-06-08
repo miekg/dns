@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+type (
+	Type  uint16
+	Class uint16
+)
+
 // Packet formats
 
 // Wire constants and supported types.
@@ -167,8 +172,8 @@ func (q *Question) String() (s string) {
 	} else {
 		s = ";" + q.Name + "\t"
 	}
-	s += ClassToClassString(q.Qclass) + "\t"
-	s += " " + TypeToTypeString(q.Qtype)
+	s += Class(q.Qclass).String() + "\t"
+	s += " " + Type(q.Qtype).String()
 	return s
 }
 
@@ -719,7 +724,7 @@ func (rr *RRSIG) copy() RR {
 
 func (rr *RRSIG) String() string {
 	s := rr.Hdr.String()
-	s += TypeToTypeString(rr.TypeCovered)
+	s += Type(rr.TypeCovered).String()
 	s += " " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
@@ -748,7 +753,7 @@ func (rr *NSEC) copy() RR           { return &NSEC{*rr.Hdr.copyHeader(), rr.Next
 func (rr *NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		s += " " + TypeToTypeString(rr.TypeBitMap[i])
+		s += " " + Type(rr.TypeBitMap[i]).String()
 	}
 	return s
 }
@@ -1015,7 +1020,7 @@ func (rr *NSEC3) String() string {
 		" " + saltToString(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		s += " " + TypeToTypeString(rr.TypeBitMap[i])
+		s += " " + Type(rr.TypeBitMap[i]).String()
 	}
 	return s
 }
