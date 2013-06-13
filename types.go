@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+type (
+	Type  uint16
+	Class uint16
+)
+
 // Packet formats
 
 // Wire constants and supported types.
@@ -167,17 +172,8 @@ func (q *Question) String() (s string) {
 	} else {
 		s = ";" + q.Name + "\t"
 	}
-	if _, ok := ClassToString[q.Qclass]; ok {
-		s += ClassToString[q.Qclass] + "\t"
-	} else {
-		s += "CLASS" + strconv.Itoa(int(q.Qtype))
-	}
-
-	if _, ok := TypeToString[q.Qtype]; ok {
-		s += " " + TypeToString[q.Qtype]
-	} else {
-		s += " " + "TYPE" + strconv.Itoa(int(q.Qtype))
-	}
+	s += Class(q.Qclass).String() + "\t"
+	s += " " + Type(q.Qtype).String()
 	return s
 }
 
@@ -727,8 +723,9 @@ func (rr *RRSIG) copy() RR {
 }
 
 func (rr *RRSIG) String() string {
-	return rr.Hdr.String() + TypeToString[rr.TypeCovered] +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
+	s := rr.Hdr.String()
+	s += Type(rr.TypeCovered).String()
+	s += " " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
 		" " + TimeToString(rr.Expiration) +
@@ -736,6 +733,7 @@ func (rr *RRSIG) String() string {
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + rr.SignerName +
 		" " + rr.Signature
+	return s
 }
 
 func (rr *RRSIG) len() int {
@@ -755,11 +753,7 @@ func (rr *NSEC) copy() RR           { return &NSEC{*rr.Hdr.copyHeader(), rr.Next
 func (rr *NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		if _, ok := TypeToString[rr.TypeBitMap[i]]; ok {
-			s += " " + TypeToString[rr.TypeBitMap[i]]
-		} else {
-			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
-		}
+		s += " " + Type(rr.TypeBitMap[i]).String()
 	}
 	return s
 }
@@ -1026,11 +1020,7 @@ func (rr *NSEC3) String() string {
 		" " + saltToString(rr.Salt) +
 		" " + rr.NextDomain
 	for i := 0; i < len(rr.TypeBitMap); i++ {
-		if _, ok := TypeToString[rr.TypeBitMap[i]]; ok {
-			s += " " + TypeToString[rr.TypeBitMap[i]]
-		} else {
-			s += " " + "TYPE" + strconv.Itoa(int(rr.TypeBitMap[i]))
-		}
+		s += " " + Type(rr.TypeBitMap[i]).String()
 	}
 	return s
 }
