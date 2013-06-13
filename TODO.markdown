@@ -1,13 +1,12 @@
 # TODO
 
 * Support for on-the-fly-signing or check how to do it
-* Use BIND10 memory efficient zone structure?
-* NSEC3 support propper in the zone structure(s)
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
 * NSEC3/NSEC support function for generating NXDOMAIN respsonse?
 * Actually mimic net/ ? Dial. Read/Write ?
 * Make compare/split labels faster
 * Ratelimiting?
+* Have infrastructure to keep track of outbound queries and hold some
 
 ## Nice to have
 
