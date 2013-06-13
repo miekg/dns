@@ -7,6 +7,7 @@
 * Make compare/split labels faster
 * Ratelimiting?
 * Have infrastructure to keep track of outbound queries and hold some
+* Check if \DDD is properly parsed: text/network/etc.
 
 ## Nice to have
 

@@ -189,7 +189,11 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		c = s[i]
 		switch {
 		default:
-			return 0, uint8(l - longer), false
+			// anything escaped is legal
+			if last != '\\' {
+				return 0, uint8(l - longer), false
+			}
+			partlen++
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*' || c == '/':
 			ok = true
 			partlen++
