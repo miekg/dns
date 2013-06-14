@@ -810,14 +810,13 @@ func TestPtrPack(t *testing.T) {
 
 func TestDigit(t *testing.T) {
 	tests := map[string]byte{
-		"miek\\000.nl. 100 IN A 127.0.0.1": 0,
-		"miek\\001.nl. 100 IN A 127.0.0.1": 1,
-		"miek\\004.nl. 100 IN A 127.0.0.1": 4,
-		"miek\\254.nl. 100 IN A 127.0.0.1": 254,
-		"miek\\255.nl. 100 IN A 127.0.0.1": 255,
-		"miek\\256.nl. 100 IN A 127.0.0.1": 0,
-		"miek\\257.nl. 100 IN A 127.0.0.1": 1,
-		"miek4.nl. 100 IN A 127.0.0.1": 52,
+		"miek\\000.nl. 100 IN TXT \"A\"": 0,
+		"miek\\001.nl. 100 IN TXT \"A\"": 1,
+		"miek\\254.nl. 100 IN TXT \"A\"": 254,
+		"miek\\255.nl. 100 IN TXT \"A\"": 255,
+		"miek\\256.nl. 100 IN TXT \"A\"": 0,
+		"miek\\257.nl. 100 IN TXT \"A\"": 1,
+		"miek\\004.nl. 100 IN TXT \"A\"": 4,
 	}
 	for s, i := range tests {
 		r, e := NewRR(s)
@@ -831,6 +830,8 @@ func TestDigit(t *testing.T) {
 			t.Fatalf("5 pos must be %d, is %d", i, buf[5])
 		}
 		r1, _, _ := UnpackRR(buf, 0)
-		t.Logf("%s\n\n", r1)
+		if r1.Header().Ttl != 100 {
+			t.Fatalf("Ttl should %d, is %d", 100, r1.Header().Ttl)
+		}
 	}
 }

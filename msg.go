@@ -245,13 +245,11 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			if i+2 < ls && bs[i] >= '0' && bs[i] <= '9' &&
 				bs[i+1] >= '0' && bs[i+1] <= '9' &&
 				bs[i+2] >= '0' && bs[i+2] <= '9' {
-
 				bs[i] = byte((bs[i]-'0')*100 + (bs[i+1]-'0')*10 + (bs[i+2] - '0'))
 				for j := i + 1; j < ls-2; j++ {
 					bs[j] = bs[j+2]
 				}
 				ls -= 2
-				//fmt.Printf("%10s %v\n", s, msg[:])
 			}
 			continue
 		}
