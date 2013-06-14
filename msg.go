@@ -218,8 +218,6 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	if ls == 0 || s[ls-1] != '.' {
 		return lenmsg, ErrFqdn
 	}
-	// TODO(miek) do I really need to string conversions in here???
-
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots.
@@ -228,7 +226,6 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Compression
 	nameoffset := -1
 	pointer := -1
-
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
@@ -298,7 +295,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 		}
 	}
 	// Root label is special
-	if string(bs) == "." {
+	if len(bs) == 1 && bs[0] == '.' {
 		return off, nil
 	}
 	// If we did compression and we find something at the pointer here
