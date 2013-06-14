@@ -807,3 +807,30 @@ func TestPtrPack(t *testing.T) {
 		t.Error("Failed to parse ", err.Error())
 	}
 }
+
+func TestDigit(t *testing.T) {
+	tests := map[string]byte{
+		"miek\\000.nl. 100 IN A 127.0.0.1": 0,
+		"miek\\001.nl. 100 IN A 127.0.0.1": 1,
+		"miek\\004.nl. 100 IN A 127.0.0.1": 4,
+		"miek\\254.nl. 100 IN A 127.0.0.1": 254,
+		"miek\\255.nl. 100 IN A 127.0.0.1": 255,
+		"miek\\256.nl. 100 IN A 127.0.0.1": 0,
+		"miek\\257.nl. 100 IN A 127.0.0.1": 1,
+		"miek4.nl. 100 IN A 127.0.0.1": 52,
+	}
+	for s, i := range tests {
+		r, e := NewRR(s)
+		buf := make([]byte, 40)
+		if e != nil {
+			t.Fatalf("Failed to parse %s\n", e.Error())
+		}
+		PackRR(r, buf, 0, nil, false)
+		t.Logf("%v\n", buf)
+		if buf[5] != i {
+			t.Fatalf("5 pos must be %d, is %d", i, buf[5])
+		}
+		r1, _, _ := UnpackRR(buf, 0)
+		t.Logf("%s\n\n", r1)
+	}
+}

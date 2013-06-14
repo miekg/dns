@@ -218,6 +218,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 	if ls == 0 || s[ls-1] != '.' {
 		return lenmsg, ErrFqdn
 	}
+	// TODO(miek) do I really need to string conversions in here???
 
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
@@ -237,10 +238,10 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 				bs[j] = bs[j+1]
 			}
 			ls--
-			// check for \DDD
 			if off+1 > lenmsg {
 				return lenmsg, ErrBuf
 			}
+			// check for \DDD
 			if i+2 < ls && bs[i] >= '0' && bs[i] <= '9' &&
 				bs[i+1] >= '0' && bs[i+1] <= '9' &&
 				bs[i+2] >= '0' && bs[i+2] <= '9' {
@@ -250,6 +251,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					bs[j] = bs[j+2]
 				}
 				ls -= 2
+				//fmt.Printf("%10s %v\n", s, msg[:])
 			}
 			continue
 		}
