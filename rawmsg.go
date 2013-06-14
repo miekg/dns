@@ -71,10 +71,10 @@ Loop:
 				// End of the domainname
 				break Loop
 			}
-			if off+c>l {
+			if off+c > l {
 				return false
 			}
-			off +=c
+			off += c
 
 		case 0xC0:
 			// pointer, next byte included, ends domainname

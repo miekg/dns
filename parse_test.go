@@ -729,8 +729,8 @@ func TestEUIxx(t *testing.T) {
 
 func TestUserRR(t *testing.T) {
 	tests := map[string]string{
-		"host.example. IN UID 1234":       "host.example.\t3600\tIN\tUID\t1234",
-		"host.example. IN GID 1234556": "host.example.\t3600\tIN\tGID\t1234556",
+		"host.example. IN UID 1234":              "host.example.\t3600\tIN\tUID\t1234",
+		"host.example. IN GID 1234556":           "host.example.\t3600\tIN\tGID\t1234556",
 		"host.example. IN UINFO \"Miek Gieben\"": "host.example.\t3600\tIN\tUINFO\t\"Miek Gieben\"",
 	}
 	for i, o := range tests {

@@ -5,7 +5,7 @@
 // EDNS0
 //
 // EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated
-// by RFC 6891. It defines a standard RR type, the OPT RR, which is then completely 
+// by RFC 6891. It defines a standard RR type, the OPT RR, which is then completely
 // abused.
 // Basic use pattern for creating an (empty) OPT RR:
 //
