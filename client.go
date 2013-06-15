@@ -32,7 +32,6 @@ type reply struct {
 // Client is usable for sending queries.
 type Client struct {
 	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	Retry        bool              // retry with TCP
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
