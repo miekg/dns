@@ -293,6 +293,7 @@ func (t Type) String() string {
 	} else {
 		return "TYPE" + strconv.Itoa(int(t))
 	}
+	panic("dns: not reached") // go < 1.1 compat
 }
 
 // String returns the string representation for the class c
