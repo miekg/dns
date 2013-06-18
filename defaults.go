@@ -303,4 +303,5 @@ func (c Class) String() string {
 	} else {
 		return "CLASS" + strconv.Itoa(int(c))
 	}
+	panic("dns: not reached")
 }
