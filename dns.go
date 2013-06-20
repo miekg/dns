@@ -77,7 +77,6 @@
 package dns
 
 import (
-	"net"
 	"strconv"
 )
 
@@ -90,22 +89,13 @@ const (
 )
 
 // Error represents a DNS error
-type Error struct {
-	Err     string
-	Name    string
-	Server  net.Addr
-	Timeout bool
-}
+type Error struct{ err string }
 
 func (e *Error) Error() string {
 	if e == nil {
 		return "dns: <nil>"
 	}
-	if e.Name == "" {
-		return "dns: " + e.Err
-	}
-	return "dns: " + e.Name + ": " + e.Err
-
+	return "dns: " + e.err
 }
 
 // An RR represents a resource record.

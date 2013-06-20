@@ -404,7 +404,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
-				return lenmsg, &Error{Name: val.Type().Field(i).Tag.Get("dns"), Err: "bad tag packing slice"}
+				return lenmsg, &Error{"bad tag packing slice: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"domain-name"`:
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
@@ -598,7 +598,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			s := fv.String()
 			switch val.Type().Field(i).Tag {
 			default:
-				return lenmsg, &Error{Name: val.Type().Field(i).Tag.Get("dns"), Err: "bad tag packing string"}
+				return lenmsg, &Error{"bad tag packing string: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"base64"`:
 				b64, err := packBase64([]byte(s))
 				if err != nil {
@@ -691,7 +691,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
-				return lenmsg, &Error{Name: val.Type().Field(i).Tag.Get("dns"), Err: "bad tag unpacking slice"}
+				return lenmsg, &Error{"bad tag unpacking slice: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"domain-name"`:
 				// HIP record slice of name (or none)
 				servers := make([]string, 0)
@@ -941,7 +941,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			var s string
 			switch val.Type().Field(i).Tag {
 			default:
-				return lenmsg, &Error{Name: val.Type().Field(i).Tag.Get("dns"), Err: "bad tag unpacking string"}
+				return lenmsg, &Error{"bad tag unpacking string: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"hex"`:
 				// Rest of the RR is hex encoded, network order an issue here?
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
@@ -1342,9 +1342,8 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		}
 	}
 	if off != len(msg) {
-		// TODO(mg) remove eventually
-		// Err: extra bytes in packet
-		println("dns: extra bytes in dns packet", off, "<", len(msg))
+		// TODO(miek) make this an error?
+		// println("dns: extra bytes in dns packet", off, "<", len(msg))
 	}
 	return nil
 }
