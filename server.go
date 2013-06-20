@@ -298,7 +298,7 @@ func (srv *Server) ListenAndServe() error {
 		}
 		return srv.serveUDP(l)
 	}
-	return &Error{Err: "bad network"}
+	return &Error{err: "bad network"}
 }
 
 // serveTCP starts a TCP listener for the server.
@@ -454,7 +454,7 @@ func (w *response) Write(m []byte) (int, error) {
 	case w.tcp != nil:
 		lm := len(m)
 		if len(m) > MaxMsgSize {
-			return 0, &Error{Err: "message too large"}
+			return 0, &Error{err: "message too large"}
 		}
 		l := make([]byte, 2)
 		l[0], l[1] = packUint16(uint16(lm))

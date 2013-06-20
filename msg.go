@@ -28,27 +28,27 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrFqdn      error = &Error{Err: "domain must be fully qualified"}
-	ErrId        error = &Error{Err: "id mismatch"}
-	ErrRdata     error = &Error{Err: "bad rdata"}
-	ErrBuf       error = &Error{Err: "buffer size too small"}
-	ErrShortRead error = &Error{Err: "short read"}
-	ErrConn      error = &Error{Err: "conn holds both UDP and TCP connection"}
-	ErrConnEmpty error = &Error{Err: "conn has no connection"}
-	ErrServ      error = &Error{Err: "no servers could be reached"}
-	ErrKey       error = &Error{Err: "bad key"}
-	ErrPrivKey   error = &Error{Err: "bad private key"}
-	ErrKeySize   error = &Error{Err: "bad key size"}
-	ErrKeyAlg    error = &Error{Err: "bad key algorithm"}
-	ErrAlg       error = &Error{Err: "bad algorithm"}
-	ErrTime      error = &Error{Err: "bad time"}
-	ErrNoSig     error = &Error{Err: "no signature found"}
-	ErrSig       error = &Error{Err: "bad signature"}
-	ErrSecret    error = &Error{Err: "no secrets defined"}
-	ErrSigGen    error = &Error{Err: "bad signature generation"}
-	ErrAuth      error = &Error{Err: "bad authentication"}
-	ErrSoa       error = &Error{Err: "no SOA"}
-	ErrRRset     error = &Error{Err: "bad rrset"}
+	ErrFqdn      error = &Error{err: "domain must be fully qualified"}
+	ErrId        error = &Error{err: "id mismatch"}
+	ErrRdata     error = &Error{err: "bad rdata"}
+	ErrBuf       error = &Error{err: "buffer size too small"}
+	ErrShortRead error = &Error{err: "short read"}
+	ErrConn      error = &Error{err: "conn holds both UDP and TCP connection"}
+	ErrConnEmpty error = &Error{err: "conn has no connection"}
+	ErrServ      error = &Error{err: "no servers could be reached"}
+	ErrKey       error = &Error{err: "bad key"}
+	ErrPrivKey   error = &Error{err: "bad private key"}
+	ErrKeySize   error = &Error{err: "bad key size"}
+	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
+	ErrAlg       error = &Error{err: "bad algorithm"}
+	ErrTime      error = &Error{err: "bad time"}
+	ErrNoSig     error = &Error{err: "no signature found"}
+	ErrSig       error = &Error{err: "bad signature"}
+	ErrSecret    error = &Error{err: "no secrets defined"}
+	ErrSigGen    error = &Error{err: "bad signature generation"}
+	ErrAuth      error = &Error{err: "bad authentication"}
+	ErrSoa       error = &Error{err: "no SOA"}
+	ErrRRset     error = &Error{err: "bad rrset"}
 )
 
 // A manually-unpacked version of (id, bits).
@@ -379,7 +379,7 @@ Loop:
 				off1 = off
 			}
 			if ptr++; ptr > 10 {
-				return "", lenmsg, &Error{Err: "too many compression pointers"}
+				return "", lenmsg, &Error{err: "too many compression pointers"}
 			}
 			off = (c^0xC0)<<8 | int(c1)
 		default:
@@ -400,7 +400,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 	for i := 0; i < val.NumField(); i++ {
 		switch fv := val.Field(i); fv.Kind() {
 		default:
-			return lenmsg, &Error{Err: "bad kind packing"}
+			return lenmsg, &Error{err: "bad kind packing"}
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
@@ -418,7 +418,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					element := val.Field(i).Index(j).String()
 					// Counted string: 1 byte length.
 					if len(element) > 255 || off+1+len(element) > lenmsg {
-						return lenmsg, &Error{Err: "overflow packing txt"}
+						return lenmsg, &Error{err: "overflow packing txt"}
 					}
 					msg[off] = byte(len(element))
 					off++
@@ -432,7 +432,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					element := val.Field(i).Index(j).Interface()
 					b, e := element.(EDNS0).pack()
 					if e != nil {
-						return lenmsg, &Error{Err: "overflow packing opt"}
+						return lenmsg, &Error{err: "overflow packing opt"}
 					}
 					// Option code
 					msg[off], msg[off+1] = packUint16(element.(EDNS0).Option())
@@ -447,7 +447,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// It must be a slice of 4, even if it is 16, we encode
 				// only the first 4
 				if off+net.IPv4len > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing a"}
+					return lenmsg, &Error{err: "overflow packing a"}
 				}
 				switch fv.Len() {
 				case net.IPv6len:
@@ -465,12 +465,12 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				case 0:
 					// Allowed, for dynamic updates
 				default:
-					return lenmsg, &Error{Err: "overflow packing a"}
+					return lenmsg, &Error{err: "overflow packing a"}
 				}
 			case `dns:"aaaa"`:
 				// fv.Len TODO(mg) dynamisc updates?
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing aaaa"}
+					return lenmsg, &Error{err: "overflow packing aaaa"}
 				}
 				for j := 0; j < net.IPv6len; j++ {
 					msg[off] = byte(fv.Index(j).Uint())
@@ -485,7 +485,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					serv := uint16((fv.Index(j).Uint()))
 					bitmapbyte = uint16(serv / 8)
 					if int(bitmapbyte) > lenmsg {
-						return lenmsg, &Error{Err: "overflow packing wks"}
+						return lenmsg, &Error{err: "overflow packing wks"}
 					}
 					bit := uint16(serv) - bitmapbyte*8
 					msg[bitmapbyte] = byte(1 << (7 - bit))
@@ -501,7 +501,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				lastwindow := uint16(0)
 				length := uint16(0)
 				if off+2 > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing nsecx"}
+					return lenmsg, &Error{err: "overflow packing nsecx"}
 				}
 				for j := 0; j < val.Field(i).Len(); j++ {
 					t := uint16((fv.Index(j).Uint()))
@@ -510,13 +510,13 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 						// New window, jump to the new offset
 						off += int(length) + 3
 						if off > lenmsg {
-							return lenmsg, &Error{Err: "overflow packing nsecx bitmap"}
+							return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
 						}
 					}
 					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
 					if off+2+int(length) > lenmsg {
-						return lenmsg, &Error{Err: "overflow packing nsecx bitmap"}
+						return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
 					}
 
 					// Setting the window #
@@ -530,7 +530,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				off += 2 + int(length)
 				off++
 				if off > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing nsecx bitmap"}
+					return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
 				}
 			}
 		case reflect.Struct:
@@ -540,13 +540,13 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			}
 		case reflect.Uint8:
 			if off+1 > lenmsg {
-				return lenmsg, &Error{Err: "overflow packing uint8"}
+				return lenmsg, &Error{err: "overflow packing uint8"}
 			}
 			msg[off] = byte(fv.Uint())
 			off++
 		case reflect.Uint16:
 			if off+2 > lenmsg {
-				return lenmsg, &Error{Err: "overflow packing uint16"}
+				return lenmsg, &Error{err: "overflow packing uint16"}
 			}
 			i := fv.Uint()
 			msg[off] = byte(i >> 8)
@@ -554,7 +554,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			off += 2
 		case reflect.Uint32:
 			if off+4 > lenmsg {
-				return lenmsg, &Error{Err: "overflow packing uint32"}
+				return lenmsg, &Error{err: "overflow packing uint32"}
 			}
 			i := fv.Uint()
 			msg[off] = byte(i >> 24)
@@ -566,7 +566,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			switch val.Type().Field(i).Tag {
 			default:
 				if off+8 > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing uint64"}
+					return lenmsg, &Error{err: "overflow packing uint64"}
 				}
 				i := fv.Uint()
 				msg[off] = byte(i >> 56)
@@ -581,7 +581,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case `dns:"uint48"`:
 				// Used in TSIG, where it stops at 48 bits, so we discard the upper 16
 				if off+6 > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing uint64 as uint48"}
+					return lenmsg, &Error{err: "overflow packing uint64 as uint48"}
 				}
 				i := fv.Uint()
 				msg[off] = byte(i >> 40)
@@ -602,7 +602,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case `dns:"base64"`:
 				b64, err := packBase64([]byte(s))
 				if err != nil {
-					return lenmsg, &Error{Err: "overflow packing base64"}
+					return lenmsg, &Error{err: "overflow packing base64"}
 				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
@@ -623,7 +623,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case `dns:"base32"`:
 				b32, err := packBase32([]byte(s))
 				if err != nil {
-					return lenmsg, &Error{Err: "overflow packing base32"}
+					return lenmsg, &Error{err: "overflow packing base32"}
 				}
 				copy(msg[off:off+len(b32)], b32)
 				off += len(b32)
@@ -633,10 +633,10 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// There is no length encoded here
 				h, e := hex.DecodeString(s)
 				if e != nil {
-					return lenmsg, &Error{Err: "overflow packing hex"}
+					return lenmsg, &Error{err: "overflow packing hex"}
 				}
 				if off+hex.DecodedLen(len(s)) > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing hex"}
+					return lenmsg, &Error{err: "overflow packing hex"}
 				}
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
@@ -650,7 +650,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case "":
 				// Counted string: 1 byte length.
 				if len(s) > 255 || off+1+len(s) > lenmsg {
-					return lenmsg, &Error{Err: "overflow packing string"}
+					return lenmsg, &Error{err: "overflow packing string"}
 				}
 				msg[off] = byte(len(s))
 				off++
@@ -687,7 +687,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 	for i := 0; i < val.NumField(); i++ {
 		switch fv := val.Field(i); fv.Kind() {
 		default:
-			return lenmsg, &Error{Err: "bad kind unpacking"}
+			return lenmsg, &Error{err: "bad kind unpacking"}
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
@@ -710,7 +710,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			Txts:
 				l := int(msg[off])
 				if off+l+1 > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking txt"}
+					return lenmsg, &Error{err: "overflow unpacking txt"}
 				}
 				txt = append(txt, string(msg[off+1:off+l+1]))
 				off += l + 1
@@ -731,12 +731,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			Option:
 				code := uint16(0)
 				if off+2 > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking opt"}
+					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
 				code, off = unpackUint16(msg, off)
 				optlen, off1 := unpackUint16(msg, off)
 				if off1+int(optlen) > off+rdlength {
-					return lenmsg, &Error{Err: "overflow unpacking opt"}
+					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
 				switch code {
 				case EDNS0NSID:
@@ -784,13 +784,13 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				fv.Set(reflect.ValueOf(edns))
 			case `dns:"a"`:
 				if off+net.IPv4len > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking a"}
+					return lenmsg, &Error{err: "overflow unpacking a"}
 				}
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
 				off += net.IPv4len
 			case `dns:"aaaa"`:
 				if off+net.IPv6len > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking aaaa"}
+					return lenmsg, &Error{err: "overflow unpacking aaaa"}
 				}
 				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
 					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
@@ -839,7 +839,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				endrr := rdstart + rdlength
 
 				if off+2 > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking nsecx"}
+					return lenmsg, &Error{err: "overflow unpacking nsecx"}
 				}
 				nsec := make([]uint16, 0)
 				length := 0
@@ -902,20 +902,20 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			}
 		case reflect.Uint8:
 			if off+1 > lenmsg {
-				return lenmsg, &Error{Err: "overflow unpacking uint8"}
+				return lenmsg, &Error{err: "overflow unpacking uint8"}
 			}
 			fv.SetUint(uint64(uint8(msg[off])))
 			off++
 		case reflect.Uint16:
 			var i uint16
 			if off+2 > lenmsg {
-				return lenmsg, &Error{Err: "overflow unpacking uint16"}
+				return lenmsg, &Error{err: "overflow unpacking uint16"}
 			}
 			i, off = unpackUint16(msg, off)
 			fv.SetUint(uint64(i))
 		case reflect.Uint32:
 			if off+4 > lenmsg {
-				return lenmsg, &Error{Err: "overflow unpacking uint32"}
+				return lenmsg, &Error{err: "overflow unpacking uint32"}
 			}
 			fv.SetUint(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])))
 			off += 4
@@ -923,7 +923,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			switch val.Type().Field(i).Tag {
 			default:
 				if off+8 > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking uint64"}
+					return lenmsg, &Error{err: "overflow unpacking uint64"}
 				}
 				fv.SetUint(uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
 					uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
@@ -931,7 +931,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			case `dns:"uint48"`:
 				// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
 				if off+6 > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking uint64 as uint48"}
+					return lenmsg, &Error{err: "overflow unpacking uint64 as uint48"}
 				}
 				fv.SetUint(uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
 					uint64(msg[off+4])<<8 | uint64(msg[off+5])))
@@ -947,7 +947,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				endrr := rdstart + rdlength
 				if endrr > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking hex"}
+					return lenmsg, &Error{err: "overflow unpacking hex"}
 				}
 				s = hex.EncodeToString(msg[off:endrr])
 				off = endrr
@@ -956,7 +956,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				endrr := rdstart + rdlength
 				if endrr > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking base64"}
+					return lenmsg, &Error{err: "overflow unpacking base64"}
 				}
 				s = unpackBase64(msg[off:endrr])
 				off = endrr
@@ -978,7 +978,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					}
 				}
 				if off+size > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking base32"}
+					return lenmsg, &Error{err: "overflow unpacking base32"}
 				}
 				s = unpackBase32(msg[off : off+size])
 				off += size
@@ -1006,7 +1006,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					}
 				}
 				if off+size > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking hex"}
+					return lenmsg, &Error{err: "overflow unpacking hex"}
 				}
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
@@ -1015,7 +1015,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txt:
 				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking txt"}
+					return lenmsg, &Error{err: "overflow unpacking txt"}
 				}
 				n := int(msg[off])
 				off++
@@ -1029,7 +1029,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 			case "":
 				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
-					return lenmsg, &Error{Err: "overflow unpacking string"}
+					return lenmsg, &Error{err: "overflow unpacking string"}
 				}
 				n := int(msg[off])
 				off++
@@ -1102,7 +1102,7 @@ func packBase32(s []byte) ([]byte, error) {
 // about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	if rr == nil {
-		return len(msg), &Error{Err: "nil rr"}
+		return len(msg), &Error{err: "nil rr"}
 	}
 
 	off1, err = packStructCompress(rr, msg, off, compression, compress)
@@ -1131,7 +1131,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	}
 	off, err = UnpackStruct(rr, msg, off0)
 	if off != end {
-		return &h, end, &Error{Err: "bad rdlength"}
+		return &h, end, &Error{err: "bad rdlength"}
 	}
 	return rr, off, err
 }
