@@ -31,36 +31,46 @@ func TestCompareLabels(t *testing.T) {
 		t.Logf("%s with %s should be %d", s1, s5, 1)
 		t.Fail()
 	}
+	if CompareLabels(s1, ".") != 0 {
+		t.Logf("%s with %s should be %d", s1, s5, 0)
+		t.Fail()
+	}
 	if CompareLabels(".", ".") != 0 {
 		t.Logf("%s with %s should be %d", ".", ".", 0)
 		t.Fail()
 	}
 }
 
-func TestSplitLabels(t *testing.T) {
-	s1 := "www.miek.nl."
-	s2 := "www.miek.nl"
-	s3 := `www\.miek.nl.`
-	s4 := `www\\.miek.nl.`
+func TestSplit(t *testing.T) {
+	splitter := map[string]int{
+		"www.miek.nl.":   3,
+		"www.miek.nl":    3,
+		`www\.miek.nl.`:  2,
+		`www\\.miek.nl.`: 3,
+		".":              0,
+	}
+	for s, i := range splitter {
+		if x := len(Split(s)); x != i {
+			t.Logf("Labels should be %d, got %d: %s\n", i, x, s)
+			t.Fail()
+		}
+	}
+}
 
-	if len(SplitLabels(s1)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s1)
-		t.Fail()
+func TestLenLabels(t *testing.T) {
+	labels := map[string]int{
+		"miek.nl":       2,
+		".":             0,
+		"www.miek.nl.":  3,
+		"www.miek.nl":   3,
+		"www..miek.nl":  4,
+		`www\.miek.nl`:  2,
+		`www\\.miek.nl`: 3,
 	}
-	if len(SplitLabels(s2)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s2)
-		t.Fail()
-	}
-	if len(SplitLabels(s3)) != 2 {
-		t.Logf("Labels should be 2, %s\n", s3)
-		t.Fail()
-	}
-	if len(SplitLabels(s4)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s4)
-		t.Fail()
-	}
-	if len(SplitLabels(".")) != 0 {
-		t.Logf("Labels should be 0, %s\n", ".")
-		t.Fail()
+	for owner, lab := range labels {
+		if l := LenLabels(owner); l != lab {
+			t.Logf("%s should have %d labels, got %d\n", owner, lab, l)
+			t.Fail()
+		}
 	}
 }

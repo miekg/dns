@@ -10,6 +10,7 @@ package dns
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
 func SplitLabels(s string) []string {
+	// TODO(miek): make this use Split
 	if s == "." {
 		return nil
 	}
@@ -36,7 +37,7 @@ func SplitLabels(s string) []string {
 	return labels
 }
 
-// CompareLabels compares the strings s1 and s2 and
+// CompareLabels compares the names s1 and s2 and
 // returns how many labels they have in common starting from the right.
 // The comparison stops at the first inequality. The labels are not downcased
 // before the comparison.
@@ -44,46 +45,39 @@ func SplitLabels(s string) []string {
 // www.miek.nl. and miek.nl. have two labels in common: miek and nl
 // www.miek.nl. and www.bla.nl. have one label in common: nl
 func CompareLabels(s1, s2 string) (n int) {
-	l1 := SplitLabels(s1)
-	l2 := SplitLabels(s2)
+	s1 = Fqdn(s1)
+	s2 = Fqdn(s2)
+	l1 := Split(s1)
+	l2 := Split(s2)
 
-	x1 := len(l1) - 1
-	x2 := len(l2) - 1
+	// the first check
+	if l1 == nil || l2 == nil {
+		return
+	}
+
+	j1 := len(l1) - 1 // end
+	i1 := len(l1) - 2 // start
+	j2 := len(l2) - 1
+	i2 := len(l2) - 2
+	// the second check can be done here, before we fall through into the for-loop below
+	if s1[l1[j1]:] == s2[l2[j2]:] {
+		n++
+	} else {
+		return
+	}
 	for {
-		if x1 < 0 || x2 < 0 {
+		if i1 < 0 || i2 < 0 {
 			break
 		}
-		if l1[x1] == l2[x2] {
+		if s1[l1[i1]:l1[j1]] == s2[l2[i2]:l2[j2]] {
 			n++
 		} else {
 			break
 		}
-		x1--
-		x2--
-	}
-	return
-}
-
-// lenLabels returns the number of labels in a domain name.
-func lenLabels(s string) (labels int) {
-	if s == "." {
-		return
-	}
-	last := byte('.')
-	lastlast := byte('.')
-	s = Fqdn(s)
-	for i := 0; i < len(s); i++ {
-		if s[i] == '.' {
-			if last == '\\' {
-				if lastlast != '\\' {
-					// do nothing
-					continue
-				}
-			}
-			labels++
-		}
-		lastlast = last
-		last = s[i]
+		j1--
+		i1--
+		j2--
+		i2--
 	}
 	return
 }
@@ -93,27 +87,47 @@ func LenLabels(s string) (labels int) {
 	if s == "." {
 		return
 	}
-	s = Fqdn(s)
+	s = Fqdn(s) // TODO(miek): annoyed I need this
 	off := 0
 	end := false
 	for {
-		off, end = nextLabel(s, off+1)
+		off, end = nextLabel(s, off)
+		labels++
 		if end {
 			return
 		}
-		labels++
 	}
 
 }
 
-// NextLabel returns the index of the start of the next label in the 
-// string s. The bool end is true when the end of the string has been 
+// Split splits a name s into its label indexes.
+// www.miek.nl. returns []int{0, 4, 9}. The root name (.) returns nil.
+func Split(s string) []int {
+	if s == "." {
+		return nil
+	}
+	s = Fqdn(s)     // Grrr!
+	idx := []int{0} // TODO(miek): could allocate more (10) and then extend when needed
+	off := 0
+	end := false
+
+	for {
+		off, end = nextLabel(s, off)
+		if end {
+			return idx
+		}
+		idx = append(idx, off)
+	}
+}
+
+// nextLabel returns the index of the start of the next label in the
+// string s. The bool end is true when the end of the string has been
 // reached.
 func nextLabel(s string, offset int) (i int, end bool) {
-	// The other label function are quite generous with memory, 
+	// The other label function are quite generous with memory,
 	// this one does not allocate.
 	quote := false
-	for i = offset; i < len(s); i++ {
+	for i = offset; i < len(s)-1; i++ {
 		switch s[i] {
 		case '\\':
 			quote = !quote
@@ -124,8 +138,8 @@ func nextLabel(s string, offset int) (i int, end bool) {
 				quote = !quote
 				continue
 			}
-			return i, false
+			return i + 1, false
 		}
 	}
-	return i, true
+	return i + 1, true
 }
