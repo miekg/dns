@@ -19,7 +19,7 @@ func TestLenLabels(t *testing.T) {
 		`www\\.miek.nl`: 3,
 	}
 	for owner, lab := range labels {
-		if l := LenLabels2(owner); l != lab {
+		if l := LenLabels(owner); l != lab {
 			t.Logf("%s should have %d labels, got %d\n", owner, lab, l)
 			t.Fail()
 		}
