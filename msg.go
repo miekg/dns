@@ -1343,6 +1343,8 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 	if off != len(msg) {
 		// TODO(miek) make this an error?
+		// use PackOpt to let people tell how detailed the error reporting
+		// should be?
 		// println("dns: extra bytes in dns packet", off, "<", len(msg))
 	}
 	return nil
