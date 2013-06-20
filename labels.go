@@ -64,14 +64,14 @@ func CompareLabels(s1, s2 string) (n int) {
 	return
 }
 
-// LenLabels returns the number of labels in a domain name.
-func LenLabels(s string) (labels int) {
+// lenLabels returns the number of labels in a domain name.
+func lenLabels(s string) (labels int) {
 	if s == "." {
 		return
 	}
 	last := byte('.')
 	lastlast := byte('.')
-	s = Fqdn(s) // Make fully qualified
+	s = Fqdn(s)
 	for i := 0; i < len(s); i++ {
 		if s[i] == '.' {
 			if last == '\\' {
@@ -88,6 +88,24 @@ func LenLabels(s string) (labels int) {
 	return
 }
 
+// LenLabels returns the number of labels in the string s
+func LenLabels(s string) (labels int) {
+	if s == "." {
+		return
+	}
+	s = Fqdn(s)
+	off := 0
+	end := false
+	for {
+		off, end = nextLabel(s, off+1)
+		if end {
+			return
+		}
+		labels++
+	}
+
+}
+
 // NextLabel returns the index of the start of the next label in the 
 // string s. The bool end is true when the end of the string has been 
 // reached.
@@ -95,10 +113,10 @@ func nextLabel(s string, offset int) (i int, end bool) {
 	// The other label function are quite generous with memory, 
 	// this one does not allocate.
 	quote := false
-	for i = 0; i < len(s); i++ {
+	for i = offset; i < len(s); i++ {
 		switch s[i] {
 		case '\\':
-			quote = true
+			quote = !quote
 		default:
 			quote = false
 		case '.':
@@ -110,8 +128,4 @@ func nextLabel(s string, offset int) (i int, end bool) {
 		}
 	}
 	return i, true
-
-
-
-
 }
