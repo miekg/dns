@@ -87,3 +87,31 @@ func LenLabels(s string) (labels int) {
 	}
 	return
 }
+
+// NextLabel returns the index of the start of the next label in the 
+// string s. The bool end is true when the end of the string has been 
+// reached.
+func nextLabel(s string, offset int) (i int, end bool) {
+	// The other label function are quite generous with memory, 
+	// this one does not allocate.
+	quote := false
+	for i = 0; i < len(s); i++ {
+		switch s[i] {
+		case '\\':
+			quote = true
+		default:
+			quote = false
+		case '.':
+			if quote {
+				quote = !quote
+				continue
+			}
+			return i, false
+		}
+	}
+	return i, true
+
+
+
+
+}

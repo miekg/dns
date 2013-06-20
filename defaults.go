@@ -265,7 +265,7 @@ func Fqdn(s string) string {
 func ReverseAddr(addr string) (arpa string, err error) {
 	ip := net.ParseIP(addr)
 	if ip == nil {
-		return "", &Error{Err: "unrecognized address", Name: addr}
+		return "", &Error{err: "unrecognized address: " + addr}
 	}
 	if ip.To4() != nil {
 		return strconv.Itoa(int(ip[15])) + "." + strconv.Itoa(int(ip[14])) + "." + strconv.Itoa(int(ip[13])) + "." +
