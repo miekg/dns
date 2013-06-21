@@ -85,7 +85,7 @@ func LenLabels(s string) (labels int) {
 	off := 0
 	end := false
 	for {
-		off, end = nextLabel(s, off)
+		off, end = NextLabel(s, off)
 		labels++
 		if end {
 			return
@@ -106,7 +106,7 @@ func Split(s string) []int {
 	end := false
 
 	for {
-		off, end = nextLabel(s, off)
+		off, end = NextLabel(s, off)
 		if end {
 			return idx
 		}
@@ -114,7 +114,7 @@ func Split(s string) []int {
 	}
 }
 
-// nextLabel returns the index of the start of the next label in the
+// NextLabel returns the index of the start of the next label in the
 // string s. The bool end is true when the end of the string has been
 // reached.
 func NextLabel(s string, offset int) (i int, end bool) {
