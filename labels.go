@@ -50,7 +50,7 @@ func CompareLabels(s1, s2 string) (n int) {
 	l1 := Split(s1)
 	l2 := Split(s2)
 
-	// the first check
+	// the first check: root label
 	if l1 == nil || l2 == nil {
 		return
 	}
@@ -59,7 +59,8 @@ func CompareLabels(s1, s2 string) (n int) {
 	i1 := len(l1) - 2 // start
 	j2 := len(l2) - 1
 	i2 := len(l2) - 2
-	// the second check can be done here, before we fall through into the for-loop below
+	// the second check can be done here: last/only label
+	// before we fall through into the for-loop below
 	if s1[l1[j1]:] == s2[l2[j2]:] {
 		n++
 	} else {
