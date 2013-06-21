@@ -117,7 +117,7 @@ func Split(s string) []int {
 // nextLabel returns the index of the start of the next label in the
 // string s. The bool end is true when the end of the string has been
 // reached.
-func nextLabel(s string, offset int) (i int, end bool) {
+func NextLabel(s string, offset int) (i int, end bool) {
 	// The other label function are quite generous with memory,
 	// this one does not allocate.
 	quote := false
