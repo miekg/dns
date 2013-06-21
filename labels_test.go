@@ -48,11 +48,17 @@ func TestSplit(t *testing.T) {
 		`www\.miek.nl.`:  2,
 		`www\\.miek.nl.`: 3,
 		".":              0,
+		"nl.":            1,
+		"nl":		  1,
+		"com.":           1,
+		".com.":          2,
 	}
 	for s, i := range splitter {
 		if x := len(Split(s)); x != i {
-			t.Logf("Labels should be %d, got %d: %s\n", i, x, s)
+			t.Logf("Labels should be %d, got %d: %s %v\n", i, x, s, Split(s))
 			t.Fail()
+		} else {
+			t.Logf("%s %v\n", s, Split(s))
 		}
 	}
 }

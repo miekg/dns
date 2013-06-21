@@ -10,31 +10,24 @@ package dns
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
 func SplitLabels(s string) []string {
-	// TODO(miek): make this use Split
-	if s == "." {
+	idx := Split(s)
+	switch len(idx) {
+	case 0:
 		return nil
-	}
-
-	k := 0
-	labels := make([]string, 0)
-	last := byte('.')
-	lastlast := byte('.')
-	s = Fqdn(s) // Make fully qualified
-	for i := 0; i < len(s); i++ {
-		if s[i] == '.' {
-			if last == '\\' {
-				if lastlast != '\\' {
-					// do nothing
-					continue
-				}
-			}
-			labels = append(labels, s[k:i])
-			k = i + 1 // + dot
+	case 1:
+		return []string{s}
+	default:
+		begin := 0
+		end := 0
+		labels := make([]string, 0)
+		for i := 1; i < len(idx); i++ {
+			end = idx[i]
+			labels = append(labels, s[begin:end])
+			begin = end
 		}
-		lastlast = last
-		last = s[i]
+		return labels
 	}
-	return labels
+	panic("dns: not reached")
 }
 
 // CompareLabels compares the names s1 and s2 and
