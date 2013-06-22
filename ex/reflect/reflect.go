@@ -3,12 +3,12 @@
 // license that can be found in the LICENSE file.
 
 // Reflect is a small name server which sends back the IP address of its client, the
-// recursive resolver. 
+// recursive resolver.
 // When queried for type A (resp. AAAA), it sends back the IPv4 (resp. v6) address.
 // In the additional section the port number and transport are shown.
-// 
+//
 // Basic use pattern:
-// 
+//
 //	dig @localhost -p 8053 whoami.miek.nl A
 //
 //	;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2157
@@ -25,9 +25,9 @@
 // Similar services: whoami.ultradns.net, whoami.akamai.net. Also (but it
 // is not their normal goal): rs.dns-oarc.net, porttest.dns-oarc.net,
 // amiopen.openresolvers.org.
-// 
+//
 // Original version is from: Stephane Bortzmeyer <stephane+grong@bortzmeyer.org>.
-// 
+//
 // Adapted to Go (i.e. completely rewritten) by Miek Gieben <miek@miek.nl>.
 package main
 
@@ -39,6 +39,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -77,14 +78,14 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	/*
-	if o := r.IsEdns0(); o != nil {
-		for _, s := range o.Option {
-			switch e := s.(type) {
-			case *dns.EDNS0_SUBNET:
-				log.Printf("Edns0 subnet %s", e.Address)
+		if o := r.IsEdns0(); o != nil {
+			for _, s := range o.Option {
+				switch e := s.(type) {
+				case *dns.EDNS0_SUBNET:
+					log.Printf("Edns0 subnet %s", e.Address)
+				}
 			}
 		}
-	}
 	*/
 
 	if v4 {
@@ -160,6 +161,7 @@ func serve(net, name, secret string) {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU()*2 + 1)
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
 	compress = flag.Bool("compress", false, "compress replies")

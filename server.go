@@ -167,31 +167,22 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
-	var (
-		handler  Handler
-		lastdot  int = -1
-		lastbyte byte
-		seendot  bool = true
-	)
-	for i := 0; i < len(q); i++ {
-		if seendot {
-			if h, ok := mux.z[q[lastdot+1:]]; ok {
-				if t != TypeDS {
-					return h
-				} else {
-					// Continue for DS to see if we have a parent too, if so delegeate to the parent
-					handler = h
-				}
+	var handler Handler
+	off := 0
+	end := false
+	for {
+		if h, ok := mux.z[q[off:]]; ok {
+			if t != TypeDS {
+				return h
+			} else {
+				// Continue for DS to see if we have a parent too, if so delegeate to the parent
+				handler = h
 			}
 		}
-
-		if q[i] == '.' && lastbyte != '\\' {
-			lastdot = i
-			seendot = true
-		} else {
-			seendot = false
+		off, end = NextLabel(q, off)
+		if end {
+			break
 		}
-		lastbyte = q[i]
 	}
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {

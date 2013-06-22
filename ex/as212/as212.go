@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 )
 
@@ -45,6 +46,17 @@ func NewRR(s string) dns.RR {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU()*2 + 1)
+	for z, rr := range zones {
+		rrx := rr.(*dns.SOA) // Some foo needed to created actual RR, on the not a reference
+		dns.HandleFunc(z, func(w dns.ResponseWriter, r *dns.Msg) {
+			m := new(dns.Msg)
+			m.SetReply(r)
+			m.Authoritative = true
+			m.Ns = []dns.RR{rrx}
+			w.WriteMsg(m)
+		})
+	}
 	go func() {
 		err := dns.ListenAndServe(":8053", "tcp", nil)
 		if err != nil {
@@ -57,18 +69,8 @@ func main() {
 			log.Fatal("Failed to set tcp listener %s\n", err.Error())
 		}
 	}()
-	for z, rr := range zones {
-		dns.HandleFunc(z, func(w dns.ResponseWriter, r *dns.Msg) {
-			m := new(dns.Msg)
-			m.SetReply(r)
-			m.Authoritative = true
-			m.Ns = []dns.RR{rr}
-			w.WriteMsg(m)
-		})
-	}
 	sig := make(chan os.Signal)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-
 	for {
 		select {
 		case s := <-sig:
