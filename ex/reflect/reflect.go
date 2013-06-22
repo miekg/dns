@@ -161,7 +161,7 @@ func serve(net, name, secret string) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()*2 + 1)
+	runtime.GOMAXPROCS(runtime.NumCPU()*4)
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
 	compress = flag.Bool("compress", false, "compress replies")

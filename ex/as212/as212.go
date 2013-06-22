@@ -46,7 +46,7 @@ func NewRR(s string) dns.RR {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()*2 + 1)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 	for z, rr := range zones {
 		rrx := rr.(*dns.SOA) // Some foo needed to created actual RR, on the not a reference
 		dns.HandleFunc(z, func(w dns.ResponseWriter, r *dns.Msg) {
