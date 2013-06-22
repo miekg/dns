@@ -8,60 +8,76 @@ import (
 	"testing"
 )
 
-func TestCompareLabels(t *testing.T) {
+func TestCompareDomainName(t *testing.T) {
 	s1 := "www.miek.nl."
 	s2 := "miek.nl."
 	s3 := "www.bla.nl."
 	s4 := "nl.www.bla."
 	s5 := "nl"
 
-	if CompareLabels(s1, s2) != 2 {
+	if CompareDomainName(s1, s2) != 2 {
 		t.Logf("%s with %s should be %d", s1, s2, 2)
 		t.Fail()
 	}
-	if CompareLabels(s1, s3) != 1 {
+	if CompareDomainName(s1, s3) != 1 {
 		t.Logf("%s with %s should be %d", s1, s3, 1)
 		t.Fail()
 	}
-	if CompareLabels(s3, s4) != 0 {
+	if CompareDomainName(s3, s4) != 0 {
 		t.Logf("%s with %s should be %d", s3, s4, 0)
 		t.Fail()
 	}
-	if CompareLabels(s1, s5) != 1 {
+	if CompareDomainName(s1, s5) != 1 {
 		t.Logf("%s with %s should be %d", s1, s5, 1)
 		t.Fail()
 	}
-	if CompareLabels(".", ".") != 0 {
+	if CompareDomainName(s1, ".") != 0 {
+		t.Logf("%s with %s should be %d", s1, s5, 0)
+		t.Fail()
+	}
+	if CompareDomainName(".", ".") != 0 {
 		t.Logf("%s with %s should be %d", ".", ".", 0)
 		t.Fail()
 	}
 }
 
-func TestSplitLabels(t *testing.T) {
-	s1 := "www.miek.nl."
-	s2 := "www.miek.nl"
-	s3 := `www\.miek.nl.`
-	s4 := `www\\.miek.nl.`
+func TestSplit(t *testing.T) {
+	splitter := map[string]int{
+		"www.miek.nl.":   3,
+		"www.miek.nl":    3,
+		`www\.miek.nl.`:  2,
+		`www\\.miek.nl.`: 3,
+		".":              0,
+		"nl.":            1,
+		"nl":             1,
+		"com.":           1,
+		".com.":          2,
+	}
+	for s, i := range splitter {
+		if x := len(Split(s)); x != i {
+			t.Logf("Labels should be %d, got %d: %s %v\n", i, x, s, Split(s))
+			t.Fail()
+		} else {
+			t.Logf("%s %v\n", s, Split(s))
+		}
+	}
+}
 
-	if len(SplitLabels(s1)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s1)
-		t.Fail()
+func TestCountLabel(t *testing.T) {
+	labels := map[string]int{
+		"miek.nl":       2,
+		".":             0,
+		"www.miek.nl.":  3,
+		"www.miek.nl":   3,
+		"www..miek.nl":  4,
+		`www\.miek.nl`:  2,
+		`www\\.miek.nl`: 3,
 	}
-	if len(SplitLabels(s2)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s2)
-		t.Fail()
-	}
-	if len(SplitLabels(s3)) != 2 {
-		t.Logf("Labels should be 2, %s\n", s3)
-		t.Fail()
-	}
-	if len(SplitLabels(s4)) != 3 {
-		t.Logf("Labels should be 3, %s\n", s4)
-		t.Fail()
-	}
-	if len(SplitLabels(".")) != 0 {
-		t.Logf("Labels should be 0, %s\n", ".")
-		t.Fail()
+	for owner, lab := range labels {
+		if l := CountLabel(owner); l != lab {
+			t.Logf("%s should have %d labels, got %d\n", owner, lab, l)
+			t.Fail()
+		}
 	}
 }
 

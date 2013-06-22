@@ -644,7 +644,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 	for i, r := range rrset {
 		r1 := r.copy()
 		r1.Header().Ttl = s.OrigTtl
-		labels := SplitLabels(r1.Header().Name)
+		labels := SplitDomainName(r1.Header().Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
