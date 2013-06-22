@@ -1446,7 +1446,7 @@ func (dns *Msg) Len() int {
 
 func compressionHelper(c map[string]int, s string) {
 	pref := ""
-	lbs := SplitLabels(s)
+	lbs := SplitDomainName(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
 		c[lbs[j]+"."+pref] = 1 + len(pref) + len(lbs[j])
 		pref = lbs[j] + "." + pref

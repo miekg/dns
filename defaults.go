@@ -236,7 +236,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 // IsSubDomain checks if child is indeed a child of the parent.
 func IsSubDomain(parent, child string) bool {
 	// Entire child is contained in parent
-	return CompareLabels(strings.ToLower(parent), strings.ToLower(child)) == LenLabels(parent)
+	return CompareDomainName(strings.ToLower(parent), strings.ToLower(child)) == CountLabel(parent)
 }
 
 // IsFqdn checks if a domain name is fully qualified.

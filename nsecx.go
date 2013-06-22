@@ -67,7 +67,7 @@ func (rr *NSEC3) HashNames(domain string) {
 
 // Implement the Match method of Denialer
 func (rr *NSEC3) Match(domain string) bool {
-	return strings.ToUpper(SplitLabels(rr.Header().Name)[0]) == strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
+	return strings.ToUpper(SplitDomainName(rr.Header().Name)[0]) == strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
 }
 
 // Implement the Match method of Denialer
@@ -105,8 +105,8 @@ func (rr *NSEC) MatchType(rrtype uint16) bool {
 func (rr *NSEC3) Cover(domain string) bool {
 	hashdom := strings.ToUpper(HashName(domain, rr.Hash, rr.Iterations, rr.Salt))
 	nextdom := strings.ToUpper(rr.NextDomain)
-	owner := strings.ToUpper(SplitLabels(rr.Header().Name)[0])                                                                     // The hashed part
-	apex := strings.ToUpper(HashName(strings.Join(SplitLabels(rr.Header().Name)[1:], "."), rr.Hash, rr.Iterations, rr.Salt)) + "." // The name of the zone
+	owner := strings.ToUpper(SplitDomainName(rr.Header().Name)[0])                                                                     // The hashed part
+	apex := strings.ToUpper(HashName(strings.Join(SplitDomainName(rr.Header().Name)[1:], "."), rr.Hash, rr.Iterations, rr.Salt)) + "." // The name of the zone
 	// if nextdomain equals the apex, it is considered The End. So in that case hashdom is always less then nextdomain
 	if hashdom > owner && nextdom == apex {
 		return true

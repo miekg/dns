@@ -6,10 +6,10 @@ package dns
 
 // Holds a bunch of helper functions for dealing with labels.
 
-// SplitLabels splits a domainname string into its labels.
+// SplitDomainName splits a name string into it's labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
-func SplitLabels(s string) []string {
+func SplitDomainName(s string) []string {
 	idx := Split(s)
 	switch len(idx) {
 	case 0:
@@ -30,14 +30,14 @@ func SplitLabels(s string) []string {
 	panic("dns: not reached")
 }
 
-// CompareLabels compares the names s1 and s2 and
-// returns how many labels they have in common starting from the right.
-// The comparison stops at the first inequality. The labels are not downcased
+// CompareDomainName compares the names s1 and s2 and
+// returns how many labels they have in common starting from the *right*.
+// The comparison stops at the first inequality. The names are not downcased
 // before the comparison.
 //
 // www.miek.nl. and miek.nl. have two labels in common: miek and nl
 // www.miek.nl. and www.bla.nl. have one label in common: nl
-func CompareLabels(s1, s2 string) (n int) {
+func CompareDomainName(s1, s2 string) (n int) {
 	s1 = Fqdn(s1)
 	s2 = Fqdn(s2)
 	l1 := Split(s1)
@@ -76,8 +76,28 @@ func CompareLabels(s1, s2 string) (n int) {
 	return
 }
 
-// LenLabels returns the number of labels in the string s
-func LenLabels(s string) (labels int) {
+// SplitLabels splits a domainname string into its labels.
+// www.miek.nl. returns []string{"www", "miek", "nl"}
+// The root label (.) returns nil.
+func SplitLabels(s string) []string {
+	println("SplitLabels is to be removed in future versions, for the better named SplitDomainName")
+	return SplitDomainName(s)
+}
+
+// CompareLabels compares the names s1 and s2 and
+// returns how many labels they have in common starting from the right.
+// The comparison stops at the first inequality. The labels are not downcased
+// before the comparison.
+//
+// www.miek.nl. and miek.nl. have two labels in common: miek and nl
+// www.miek.nl. and www.bla.nl. have one label in common: nl
+func CompareLabels(s1, s2 string) (n int) {
+	println("CompareLabels is to be removed in future versions, for better named CompareDomainName")
+	return CompareDomainName(s1, s2)
+}
+
+// CountLabel counts the the number of labels in the string s.
+func CountLabel(s string) (labels int) {
 	if s == "." {
 		return
 	}
@@ -91,7 +111,12 @@ func LenLabels(s string) (labels int) {
 			return
 		}
 	}
+}
 
+// LenLabels returns the number of labels in the string s.
+func LenLabels(s string) int {
+	println("LenLabels is to be removed in future versions, for the better named CountLabel")
+	return CountLabel(s)
 }
 
 // Split splits a name s into its label indexes.
@@ -118,8 +143,6 @@ func Split(s string) []int {
 // string s. The bool end is true when the end of the string has been
 // reached.
 func NextLabel(s string, offset int) (i int, end bool) {
-	// The other label function are quite generous with memory,
-	// this one does not allocate.
 	quote := false
 	for i = offset; i < len(s)-1; i++ {
 		switch s[i] {
