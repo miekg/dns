@@ -18,6 +18,8 @@ import (
 
 const SOA string = "@ SOA prisoner.iana.org. hostmaster.root-servers.org. 2002040800 1800 900 0604800 604800"
 
+func NewRR(s string) dns.RR { r, _ := dns.NewRR(s); return r }
+
 var zones = map[string]dns.RR{
 	"10.in-addr.arpa.":      NewRR("$ORIGIN 10.in-addr.arpa.\n" + SOA),
 	"254.169.in-addr.arpa.": NewRR("$ORIGIN 254.169.in-addr.arpa.\n" + SOA),
@@ -38,11 +40,6 @@ var zones = map[string]dns.RR{
 	"29.172.in-addr.arpa.":  NewRR("$ORIGIN 29.172.in-addr.arpa.\n" + SOA),
 	"30.172.in-addr.arpa.":  NewRR("$ORIGIN 30.172.in-addr.arpa.\n" + SOA),
 	"31.172.in-addr.arpa.":  NewRR("$ORIGIN 31.172.in-addr.arpa.\n" + SOA),
-}
-
-func NewRR(s string) dns.RR {
-	r, _ := dns.NewRR(s)
-	return r
 }
 
 func main() {
