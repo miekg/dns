@@ -371,7 +371,8 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
-// A bit useless, how to use b.N?
+/*
+// A bit useless, how to use b.N?. It always returns 0
 func BenchmarkZoneParsing(b *testing.B) {
 	b.StopTimer()
 	f, err := os.Open("t/miek.nl.signed_test")
@@ -386,6 +387,7 @@ func BenchmarkZoneParsing(b *testing.B) {
 		}
 	}
 }
+*/
 
 func TestZoneParsing(t *testing.T) {
 	f, err := os.Open("t/miek.nl.signed_test")

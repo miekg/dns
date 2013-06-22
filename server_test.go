@@ -5,6 +5,7 @@
 package dns
 
 import (
+	"runtime"
 	"testing"
 	"time"
 )
@@ -59,8 +60,8 @@ func TestServing(t *testing.T) {
 
 func BenchmarkServing(b *testing.B) {
 	b.StopTimer()
-	// Again start a server
 	HandleFunc("miek.nl.", HelloServer)
+	a := runtime.GOMAXPROCS(4)
 	go func() {
 		ListenAndServe("127.0.0.1:8053", "udp", nil)
 	}()
@@ -73,6 +74,7 @@ func BenchmarkServing(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c.Exchange(m, "127.0.0.1:8053")
 	}
+	runtime.GOMAXPROCS(a)
 }
 
 func TestDotAsCatchAllWildcard(t *testing.T) {
