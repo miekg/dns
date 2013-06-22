@@ -64,3 +64,21 @@ func TestSplitLabels(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func BenchmarkSplitLabels(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		SplitLabels("www.example.com")
+	}
+}
+
+func BenchmarkLenLabels(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		LenLabels("www.example.com")
+	}
+}
+
+func BenchmarkCompareLabels(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		CompareLabels("www.example.com", "aa.example.com")
+	}
+}
