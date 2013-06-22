@@ -7,7 +7,6 @@ package dns
 import (
 	"net"
 	"strconv"
-	"strings"
 )
 
 const hexDigit = "0123456789abcdef"
@@ -233,10 +232,11 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	return labels, uint8(l - longer), ok
 }
 
-// IsSubDomain checks if child is indeed a child of the parent.
+// IsSubDomain checks if child is indeed a child of the parent. Both child and
+// parent are *not* downcased before doing the comparison.
 func IsSubDomain(parent, child string) bool {
 	// Entire child is contained in parent
-	return CompareDomainName(strings.ToLower(parent), strings.ToLower(child)) == CountLabel(parent)
+	return CompareDomainName(parent, child) == CountLabel(parent)
 }
 
 // IsFqdn checks if a domain name is fully qualified.
