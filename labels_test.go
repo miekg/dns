@@ -83,18 +83,18 @@ func TestCountLabel(t *testing.T) {
 
 func BenchmarkSplitLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		SplitLabels("www.example.com")
+		Split("www.example.com")
 	}
 }
 
 func BenchmarkLenLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		LenLabels("www.example.com")
+		CountLabel("www.example.com")
 	}
 }
 
 func BenchmarkCompareLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		CompareLabels("www.example.com", "aa.example.com")
+		CompareDomainName("www.example.com", "aa.example.com")
 	}
 }
