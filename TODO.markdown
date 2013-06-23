@@ -4,8 +4,8 @@
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
 * NSEC3/NSEC support function for generating NXDOMAIN response?
 * Actually mimic net/ ? Dial. Read/Write ?
-* Ratelimiting?
-* Have infrastructure to keep track of outbound queries and hold some
+* Ratelimiting? server side (rrl)
+* Ratelimiting? client side (outstanding queries)
 
 ## Nice to have
 
