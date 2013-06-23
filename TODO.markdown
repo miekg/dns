@@ -2,16 +2,15 @@
 
 * Support for on-the-fly-signing or check how to do it
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
-* NSEC3/NSEC support function for generating NXDOMAIN respsonse?
+* NSEC3/NSEC support function for generating NXDOMAIN response?
 * Actually mimic net/ ? Dial. Read/Write ?
-* Make compare/split labels faster
 * Ratelimiting?
 * Have infrastructure to keep track of outbound queries and hold some
-* Check if \DDD is properly parsed: text/network/etc.
 
 ## Nice to have
 
-* Speed, we can always go faster. A simple reflect server now hits 75/80K qps
+* Speed, we can always go faster. A simple reflect server now hits 75/80K qps on
+    moderate hardware
 * go test; only works correct on my machine
 * privatekey.Precompute() when signing? 
 

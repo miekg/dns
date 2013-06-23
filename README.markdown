@@ -10,7 +10,7 @@ can build servers and resolvers with it.
 
 If you like this, you may also be interested in:
 
-* https://github.com/miekg/fks -- a complete nameserver written in Go;
+* https://github.com/miekg/fks -- a (in)complete nameserver written in Go;
 * https://github.com/miekg/unbound -- Go wrapper for the Unbound resolver.
 
 # Goals
@@ -54,7 +54,7 @@ Building is done with the `go` tool. If you have setup your GOPATH
 correctly, the following should work:
 
     go get github.com/miekg/dns
-    go build dns
+    go build github/com/miekg/dns
 
 A short "how to use the API" is at the beginning of dns.go (this also will show
 when you call `go doc github.com/miekg/dns`. Sample
