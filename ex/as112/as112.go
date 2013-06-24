@@ -63,7 +63,7 @@ func main() {
 	go func() {
 		err := dns.ListenAndServe(":8053", "udp", nil)
 		if err != nil {
-			log.Fatal("Failed to set tcp listener %s\n", err.Error())
+			log.Fatal("Failed to set udp listener %s\n", err.Error())
 		}
 	}()
 	sig := make(chan os.Signal)
