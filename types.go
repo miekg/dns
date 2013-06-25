@@ -177,9 +177,12 @@ func (q *Question) String() (s string) {
 	return s
 }
 
-func (q *Question) len() int {
-	l := len(q.Name) + 1
-	return l + 4
+func (q *Question) len(compression map[string]int) int {
+	l := len(q.Name) + 1 + 4
+	if compressLen, found := compression[q.Name]; found {
+		l = l - compressLen + 1
+	}
+	return l
 }
 
 type ANY struct {
@@ -187,10 +190,10 @@ type ANY struct {
 	// Does not have any rdata
 }
 
-func (rr *ANY) Header() *RR_Header { return &rr.Hdr }
-func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
-func (rr *ANY) String() string     { return rr.Hdr.String() }
-func (rr *ANY) len() int           { return rr.Hdr.len() }
+func (rr *ANY) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *ANY) copy() RR                           { return &ANY{*rr.Hdr.copyHeader()} }
+func (rr *ANY) String() string                     { return rr.Hdr.String() }
+func (rr *ANY) len(compression map[string]int) int { return rr.Hdr.len(compression) }
 
 type CNAME struct {
 	Hdr    RR_Header
@@ -200,7 +203,12 @@ type CNAME struct {
 func (rr *CNAME) Header() *RR_Header { return &rr.Hdr }
 func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), rr.Target} }
 func (rr *CNAME) String() string     { return rr.Hdr.String() + rr.Target }
-func (rr *CNAME) len() int           { return rr.Hdr.len() + len(rr.Target) + 1 }
+func (rr *CNAME) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Target]; found {
+		return rr.Hdr.len(compression) + len(rr.Target) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Target) + 1
+}
 
 type HINFO struct {
 	Hdr RR_Header
@@ -211,7 +219,9 @@ type HINFO struct {
 func (rr *HINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *HINFO) copy() RR           { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
 func (rr *HINFO) String() string     { return rr.Hdr.String() + rr.Cpu + " " + rr.Os }
-func (rr *HINFO) len() int           { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
+func (rr *HINFO) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.Cpu) + len(rr.Os)
+}
 
 type MB struct {
 	Hdr RR_Header
@@ -222,7 +232,12 @@ func (rr *MB) Header() *RR_Header { return &rr.Hdr }
 func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), rr.Mb} }
 
 func (rr *MB) String() string { return rr.Hdr.String() + rr.Mb }
-func (rr *MB) len() int       { return rr.Hdr.len() + len(rr.Mb) + 1 }
+func (rr *MB) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Mb]; found {
+		return rr.Hdr.len(compression) + len(rr.Mb) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Mb) + 1
+}
 
 type MG struct {
 	Hdr RR_Header
@@ -236,9 +251,11 @@ func (rr *MG) String() string {
 	return rr.Hdr.String() + rr.Mg
 }
 
-func (rr *MG) len() int {
-	l := len(rr.Mg) + 1
-	return rr.Hdr.len() + l
+func (rr *MG) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Mg]; found {
+		return rr.Hdr.len(compression) + len(rr.Mg) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Mg) + 1
 }
 
 type MINFO struct {
@@ -254,10 +271,16 @@ func (rr *MINFO) String() string {
 	return rr.Hdr.String() + rr.Rmail + " " + rr.Email
 }
 
-func (rr *MINFO) len() int {
+func (rr *MINFO) len(compression map[string]int) int {
 	l := len(rr.Rmail) + 1
+	if compressLen, found := compression[rr.Rmail]; found {
+		l = l - compressLen + 1
+	}
 	n := len(rr.Email) + 1
-	return rr.Hdr.len() + l + n
+	if compressLen, found := compression[rr.Email]; found {
+		n = n - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l + n
 }
 
 type MR struct {
@@ -272,9 +295,11 @@ func (rr *MR) String() string {
 	return rr.Hdr.String() + rr.Mr
 }
 
-func (rr *MR) len() int {
-	l := len(rr.Mr) + 1
-	return rr.Hdr.len() + l
+func (rr *MR) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Mr]; found {
+		return rr.Hdr.len(compression) + len(rr.Mr) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Mr) + 1
 }
 
 type MF struct {
@@ -289,8 +314,11 @@ func (rr *MF) String() string {
 	return rr.Hdr.String() + " " + rr.Mf
 }
 
-func (rr *MF) len() int {
-	return rr.Hdr.len() + len(rr.Mf) + 1
+func (rr *MF) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Mf]; found {
+		return rr.Hdr.len(compression) + len(rr.Mf) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Mf) + 1
 }
 
 type MD struct {
@@ -305,8 +333,11 @@ func (rr *MD) String() string {
 	return rr.Hdr.String() + " " + rr.Md
 }
 
-func (rr *MD) len() int {
-	return rr.Hdr.len() + len(rr.Md) + 1
+func (rr *MD) len(compression map[string]int) int {
+	if compressLen, found := compression[rr.Md]; found {
+		return rr.Hdr.len(compression) + len(rr.Md) + 1 - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + len(rr.Md) + 1
 }
 
 type MX struct {
@@ -322,9 +353,12 @@ func (rr *MX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Mx
 }
 
-func (rr *MX) len() int {
+func (rr *MX) len(compression map[string]int) int {
 	l := len(rr.Mx) + 1
-	return rr.Hdr.len() + l + 2
+	if compressLen, found := compression[rr.Mx]; found {
+		l = l - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l + 2
 }
 
 type AFSDB struct {
@@ -340,9 +374,12 @@ func (rr *AFSDB) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + rr.Hostname
 }
 
-func (rr *AFSDB) len() int {
+func (rr *AFSDB) len(compression map[string]int) int {
 	l := len(rr.Hostname) + 1
-	return rr.Hdr.len() + l + 2
+	if compressLen, found := compression[rr.Hostname]; found {
+		l = l - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l + 2
 }
 
 type X25 struct {
@@ -357,8 +394,8 @@ func (rr *X25) String() string {
 	return rr.Hdr.String() + rr.PSDNAddress
 }
 
-func (rr *X25) len() int {
-	return rr.Hdr.len() + len(rr.PSDNAddress)
+func (rr *X25) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.PSDNAddress)
 }
 
 type RT struct {
@@ -374,9 +411,12 @@ func (rr *RT) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Host
 }
 
-func (rr *RT) len() int {
+func (rr *RT) len(compression map[string]int) int {
 	l := len(rr.Host) + 1
-	return rr.Hdr.len() + l + 2
+	if compressLen, found := compression[rr.Host]; found {
+		l = l - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l + 2
 }
 
 type NS struct {
@@ -391,9 +431,12 @@ func (rr *NS) String() string {
 	return rr.Hdr.String() + rr.Ns
 }
 
-func (rr *NS) len() int {
+func (rr *NS) len(compression map[string]int) int {
 	l := len(rr.Ns) + 1
-	return rr.Hdr.len() + l
+	if compressLen, found := compression[rr.Ns]; found {
+		l = l - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l
 }
 
 type PTR struct {
@@ -408,9 +451,12 @@ func (rr *PTR) String() string {
 	return rr.Hdr.String() + rr.Ptr
 }
 
-func (rr *PTR) len() int {
+func (rr *PTR) len(compression map[string]int) int {
 	l := len(rr.Ptr) + 1
-	return rr.Hdr.len() + l
+	if compressLen, found := compression[rr.Ptr]; found {
+		l = l - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l
 }
 
 type RP struct {
@@ -426,8 +472,9 @@ func (rr *RP) String() string {
 	return rr.Hdr.String() + rr.Mbox + " " + rr.Txt
 }
 
-func (rr *RP) len() int {
-	return rr.Hdr.len() + len(rr.Mbox) + 1 + len(rr.Txt) + 1
+func (rr *RP) len(compression map[string]int) int {
+	l := len(rr.Mbox) + 1 + len(rr.Txt) + 1
+	return rr.Hdr.len(compression) + l
 }
 
 type SOA struct {
@@ -455,10 +502,16 @@ func (rr *SOA) String() string {
 		" " + strconv.FormatInt(int64(rr.Minttl), 10)
 }
 
-func (rr *SOA) len() int {
+func (rr *SOA) len(compression map[string]int) int {
 	l := len(rr.Ns) + 1
+	if compressLen, found := compression[rr.Ns]; found {
+		l = l - compressLen + 1
+	}
 	n := len(rr.Mbox) + 1
-	return rr.Hdr.len() + l + n + 20
+	if compressLen, found := compression[rr.Mbox]; found {
+		n = n - compressLen + 1
+	}
+	return rr.Hdr.len(compression) + l + n + 20
 }
 
 type TXT struct {
@@ -481,13 +534,10 @@ func (rr *TXT) String() string {
 	return s
 }
 
-func (rr *TXT) len() int {
-	l := rr.Hdr.len()
-	for i, t := range rr.Txt {
-		if i > 0 {
-			l += 1
-		}
-		l += len(t)
+func (rr *TXT) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression)
+	for _, t := range rr.Txt {
+		l += 1 + len(t)
 	}
 	return l
 }
@@ -512,8 +562,8 @@ func (rr *SPF) String() string {
 	return s
 }
 
-func (rr *SPF) len() int {
-	l := rr.Hdr.len()
+func (rr *SPF) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression)
 	for _, t := range rr.Txt {
 		l += len(t)
 	}
@@ -540,9 +590,9 @@ func (rr *SRV) String() string {
 		strconv.Itoa(int(rr.Port)) + " " + rr.Target
 }
 
-func (rr *SRV) len() int {
+func (rr *SRV) len(compression map[string]int) int {
 	l := len(rr.Target) + 1
-	return rr.Hdr.len() + l + 6
+	return rr.Hdr.len(compression) + l + 6
 }
 
 type NAPTR struct {
@@ -570,8 +620,8 @@ func (rr *NAPTR) String() string {
 		rr.Replacement
 }
 
-func (rr *NAPTR) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Flags) + len(rr.Service) +
+func (rr *NAPTR) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Flags) + len(rr.Service) +
 		len(rr.Regexp) + len(rr.Replacement) + 1
 }
 
@@ -596,8 +646,8 @@ func (rr *CERT) String() string {
 		" " + rr.Certificate
 }
 
-func (rr *CERT) len() int {
-	return rr.Hdr.len() + 5 +
+func (rr *CERT) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 5 +
 		base64.StdEncoding.DecodedLen(len(rr.Certificate))
 }
 
@@ -614,9 +664,9 @@ func (rr *DNAME) String() string {
 	return rr.Hdr.String() + rr.Target
 }
 
-func (rr *DNAME) len() int {
+func (rr *DNAME) len(compression map[string]int) int {
 	l := len(rr.Target) + 1
-	return rr.Hdr.len() + l
+	return rr.Hdr.len(compression) + l
 }
 
 type A struct {
@@ -624,20 +674,20 @@ type A struct {
 	A   net.IP `dns:"a"`
 }
 
-func (rr *A) Header() *RR_Header { return &rr.Hdr }
-func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
-func (rr *A) String() string     { return rr.Hdr.String() + rr.A.String() }
-func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
+func (rr *A) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *A) copy() RR                           { return &A{*rr.Hdr.copyHeader(), rr.A} }
+func (rr *A) String() string                     { return rr.Hdr.String() + rr.A.String() }
+func (rr *A) len(compression map[string]int) int { return rr.Hdr.len(compression) + net.IPv4len }
 
 type AAAA struct {
 	Hdr  RR_Header
 	AAAA net.IP `dns:"aaaa"`
 }
 
-func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
-func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
-func (rr *AAAA) String() string     { return rr.Hdr.String() + rr.AAAA.String() }
-func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
+func (rr *AAAA) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *AAAA) copy() RR                           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
+func (rr *AAAA) String() string                     { return rr.Hdr.String() + rr.AAAA.String() }
+func (rr *AAAA) len(compression map[string]int) int { return rr.Hdr.len(compression) + net.IPv6len }
 
 type LOC struct {
 	Hdr       RR_Header
@@ -700,8 +750,8 @@ func (rr *LOC) String() string {
 	return s
 }
 
-func (rr *LOC) len() int {
-	return rr.Hdr.len() + 4 + 12
+func (rr *LOC) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + 12
 }
 
 type RRSIG struct {
@@ -736,8 +786,8 @@ func (rr *RRSIG) String() string {
 	return s
 }
 
-func (rr *RRSIG) len() int {
-	return rr.Hdr.len() + len(rr.SignerName) + 1 +
+func (rr *RRSIG) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.SignerName) + 1 +
 		base64.StdEncoding.DecodedLen(len(rr.Signature)) + 18
 }
 
@@ -758,9 +808,9 @@ func (rr *NSEC) String() string {
 	return s
 }
 
-func (rr *NSEC) len() int {
+func (rr *NSEC) len(compression map[string]int) int {
 	l := len(rr.NextDomain) + 1
-	return rr.Hdr.len() + l + 32 + 1
+	return rr.Hdr.len(compression) + l + 32 + 1
 	// TODO: +32 is max type bitmap
 }
 
@@ -784,8 +834,8 @@ func (rr *DS) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *DS) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Digest)/2
+func (rr *DS) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Digest)/2
 }
 
 type CDS struct {
@@ -808,8 +858,8 @@ func (rr *CDS) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *CDS) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Digest)/2
+func (rr *CDS) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Digest)/2
 }
 
 type DLV struct {
@@ -832,8 +882,8 @@ func (rr *DLV) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *DLV) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Digest)/2
+func (rr *DLV) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Digest)/2
 }
 
 type KX struct {
@@ -850,8 +900,8 @@ func (rr *KX) String() string {
 		" " + rr.Exchanger
 }
 
-func (rr *KX) len() int {
-	return rr.Hdr.len() + 2 + len(rr.Exchanger)
+func (rr *KX) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + len(rr.Exchanger)
 }
 
 type TA struct {
@@ -874,8 +924,8 @@ func (rr *TA) String() string {
 		" " + strings.ToUpper(rr.Digest)
 }
 
-func (rr *TA) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Digest)/2
+func (rr *TA) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Digest)/2
 }
 
 type TALINK struct {
@@ -892,8 +942,8 @@ func (rr *TALINK) String() string {
 		" " + rr.PreviousName + " " + rr.NextName
 }
 
-func (rr *TALINK) len() int {
-	return rr.Hdr.len() + len(rr.PreviousName) + len(rr.NextName) + 2
+func (rr *TALINK) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.PreviousName) + len(rr.NextName) + 2
 }
 
 type SSHFP struct {
@@ -914,8 +964,8 @@ func (rr *SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
-func (rr *SSHFP) len() int {
-	return rr.Hdr.len() + 2 + len(rr.FingerPrint)/2
+func (rr *SSHFP) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + len(rr.FingerPrint)/2
 }
 
 type IPSECKEY struct {
@@ -940,8 +990,8 @@ func (rr *IPSECKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *IPSECKEY) len() int {
-	return rr.Hdr.len() + 3 + len(rr.Gateway) + 1 +
+func (rr *IPSECKEY) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 3 + len(rr.Gateway) + 1 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -965,8 +1015,8 @@ func (rr *DNSKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *DNSKEY) len() int {
-	return rr.Hdr.len() + 4 +
+func (rr *DNSKEY) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -990,8 +1040,8 @@ func (rr *RKEY) String() string {
 		" " + rr.PublicKey
 }
 
-func (rr *RKEY) len() int {
-	return rr.Hdr.len() + 4 +
+func (rr *RKEY) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
@@ -1025,8 +1075,8 @@ func (rr *NSEC3) String() string {
 	return s
 }
 
-func (rr *NSEC3) len() int {
-	return rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + 32
+func (rr *NSEC3) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + 32
 	// TODO: +32 is MAX type bit map
 }
 
@@ -1053,8 +1103,8 @@ func (rr *NSEC3PARAM) String() string {
 	return s
 }
 
-func (rr *NSEC3PARAM) len() int {
-	return rr.Hdr.len() + 2 + 4 + 1 + len(rr.Salt)/2
+func (rr *NSEC3PARAM) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + 4 + 1 + len(rr.Salt)/2
 }
 
 type TKEY struct {
@@ -1080,8 +1130,8 @@ func (rr *TKEY) String() string {
 	return ""
 }
 
-func (rr *TKEY) len() int {
-	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
+func (rr *TKEY) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.Algorithm) + 1 + 4 + 4 + 6 +
 		len(rr.Key) + 2 + len(rr.OtherData)
 }
 
@@ -1100,8 +1150,8 @@ func (rr *RFC3597) String() string {
 	return s
 }
 
-func (rr *RFC3597) len() int {
-	return rr.Hdr.len() + len(rr.Rdata)/2
+func (rr *RFC3597) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.Rdata)/2
 }
 
 type URI struct {
@@ -1127,8 +1177,8 @@ func (rr *URI) String() string {
 	return s
 }
 
-func (rr *URI) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Target) + 1
+func (rr *URI) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 4 + len(rr.Target) + 1
 }
 
 type DHCID struct {
@@ -1143,8 +1193,8 @@ func (rr *DHCID) String() string {
 	return rr.Hdr.String() + rr.Digest
 }
 
-func (rr *DHCID) len() int {
-	return rr.Hdr.len() +
+func (rr *DHCID) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) +
 		base64.StdEncoding.DecodedLen(len(rr.Digest))
 }
 
@@ -1169,8 +1219,8 @@ func (rr *TLSA) String() string {
 		" " + rr.Certificate
 }
 
-func (rr *TLSA) len() int {
-	return rr.Hdr.len() + 3 + len(rr.Certificate)/2
+func (rr *TLSA) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 3 + len(rr.Certificate)/2
 }
 
 type HIP struct {
@@ -1199,8 +1249,8 @@ func (rr *HIP) String() string {
 	return s
 }
 
-func (rr *HIP) len() int {
-	l := rr.Hdr.len() + 4 +
+func (rr *HIP) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression) + 4 +
 		len(rr.Hit)/2 +
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	for _, d := range rr.RendezvousServers {
@@ -1229,8 +1279,8 @@ func (rr *NINFO) String() string {
 	return s
 }
 
-func (rr *NINFO) len() int {
-	l := rr.Hdr.len()
+func (rr *NINFO) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression)
 	for _, t := range rr.ZSData {
 		l += len(t)
 	}
@@ -1256,8 +1306,8 @@ func (rr *WKS) String() string {
 	return s
 }
 
-func (rr *WKS) len() int {
-	return rr.Hdr.len() + net.IPv4len + 1
+func (rr *WKS) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + net.IPv4len + 1
 }
 
 type NID struct {
@@ -1276,8 +1326,8 @@ func (rr *NID) String() string {
 	return s
 }
 
-func (rr *NID) len() int {
-	return rr.Hdr.len() + 2 + 8
+func (rr *NID) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + 8
 }
 
 type L32 struct {
@@ -1294,8 +1344,8 @@ func (rr *L32) String() string {
 		" " + rr.Locator32.String()
 }
 
-func (rr *L32) len() int {
-	return rr.Hdr.len() + net.IPv4len
+func (rr *L32) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + net.IPv4len
 }
 
 type L64 struct {
@@ -1314,8 +1364,8 @@ func (rr *L64) String() string {
 	return s
 }
 
-func (rr *L64) len() int {
-	return rr.Hdr.len() + 2 + 8
+func (rr *L64) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + 8
 }
 
 type LP struct {
@@ -1329,7 +1379,9 @@ func (rr *LP) copy() RR           { return &LP{*rr.Hdr.copyHeader(), rr.Preferen
 func (rr *LP) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Fqdn
 }
-func (rr *LP) len() int { return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1 }
+func (rr *LP) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 2 + len(rr.Fqdn) + 1
+}
 
 type EUI48 struct {
 	Hdr     RR_Header
@@ -1339,17 +1391,19 @@ type EUI48 struct {
 func (rr *EUI48) Header() *RR_Header { return &rr.Hdr }
 func (rr *EUI48) copy() RR           { return &EUI48{*rr.Hdr.copyHeader(), rr.Address} }
 func (rr *EUI48) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 48) }
-func (rr *EUI48) len() int           { return rr.Hdr.len() + 6 }
+func (rr *EUI48) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + 6
+}
 
 type EUI64 struct {
 	Hdr     RR_Header
 	Address uint64
 }
 
-func (rr *EUI64) Header() *RR_Header { return &rr.Hdr }
-func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Address} }
-func (rr *EUI64) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 64) }
-func (rr *EUI64) len() int           { return rr.Hdr.len() + 8 }
+func (rr *EUI64) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *EUI64) copy() RR                           { return &EUI64{*rr.Hdr.copyHeader(), rr.Address} }
+func (rr *EUI64) String() string                     { return rr.Hdr.String() + euiToString(rr.Address, 64) }
+func (rr *EUI64) len(compression map[string]int) int { return rr.Hdr.len(compression) + 8 }
 
 type CAA struct {
 	Hdr   RR_Header
@@ -1373,8 +1427,8 @@ func (rr *CAA) String() string {
 	return s
 }
 
-func (rr *CAA) len() int {
-	l := rr.Hdr.len() + 1 + len(rr.Tag)
+func (rr *CAA) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression) + 1 + len(rr.Tag)
 	for _, t := range rr.Value {
 		l += len(t)
 	}
@@ -1386,20 +1440,20 @@ type UID struct {
 	Uid uint32
 }
 
-func (rr *UID) Header() *RR_Header { return &rr.Hdr }
-func (rr *UID) copy() RR           { return &UID{*rr.Hdr.copyHeader(), rr.Uid} }
-func (rr *UID) String() string     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Uid), 10) }
-func (rr *UID) len() int           { return rr.Hdr.len() + 4 }
+func (rr *UID) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *UID) copy() RR                           { return &UID{*rr.Hdr.copyHeader(), rr.Uid} }
+func (rr *UID) String() string                     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Uid), 10) }
+func (rr *UID) len(compression map[string]int) int { return rr.Hdr.len(compression) + 4 }
 
 type GID struct {
 	Hdr RR_Header
 	Gid uint32
 }
 
-func (rr *GID) Header() *RR_Header { return &rr.Hdr }
-func (rr *GID) copy() RR           { return &GID{*rr.Hdr.copyHeader(), rr.Gid} }
-func (rr *GID) String() string     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Gid), 10) }
-func (rr *GID) len() int           { return rr.Hdr.len() + 4 }
+func (rr *GID) Header() *RR_Header                 { return &rr.Hdr }
+func (rr *GID) copy() RR                           { return &GID{*rr.Hdr.copyHeader(), rr.Gid} }
+func (rr *GID) String() string                     { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Gid), 10) }
+func (rr *GID) len(compression map[string]int) int { return rr.Hdr.len(compression) + 4 }
 
 type UINFO struct {
 	Hdr   RR_Header
@@ -1409,7 +1463,9 @@ type UINFO struct {
 func (rr *UINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *UINFO) copy() RR           { return &UINFO{*rr.Hdr.copyHeader(), rr.Uinfo} }
 func (rr *UINFO) String() string     { return rr.Hdr.String() + strconv.QuoteToASCII(rr.Uinfo) }
-func (rr *UINFO) len() int           { return rr.Hdr.len() + len(rr.Uinfo) + 1 }
+func (rr *UINFO) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.Uinfo) + 1
+}
 
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.

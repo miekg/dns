@@ -687,7 +687,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
-		wire := make([]byte, r.len()*2) // TODO(mg): *2 ?
+		wire := make([]byte, r.len(nil)*2) // TODO(mg): *2 ?
 		off, err1 := PackRR(r1, wire, 0, nil, false)
 		if err1 != nil {
 			return nil

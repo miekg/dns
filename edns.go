@@ -95,8 +95,8 @@ func (rr *OPT) String() string {
 	return s
 }
 
-func (rr *OPT) len() int {
-	l := rr.Hdr.len()
+func (rr *OPT) len(compression map[string]int) int {
+	l := rr.Hdr.len(compression)
 	for i := 0; i < len(rr.Option); i++ {
 		lo, _ := rr.Option[i].pack()
 		l += 2 + len(lo)
