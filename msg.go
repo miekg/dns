@@ -49,6 +49,8 @@ var (
 	ErrAuth      error = &Error{err: "bad authentication"}
 	ErrSoa       error = &Error{err: "no SOA"}
 	ErrRRset     error = &Error{err: "bad rrset"}
+
+	maxId = big.NewInt(0xFFFF)
 )
 
 // A manually-unpacked version of (id, bits).
@@ -1456,7 +1458,7 @@ func compressionHelper(c map[string]int, s string) {
 // Id return a 16 bits true random number to be used as a
 // message id.
 func Id() uint16 {
-	id, err := rand.Int(rand.Reader, big.NewInt(0xFFFF))
+	id, err := rand.Int(rand.Reader, maxId)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot generate random id: %s", err))
 	}
