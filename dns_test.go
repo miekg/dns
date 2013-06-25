@@ -171,7 +171,7 @@ func TestMsgLenTest(t *testing.T) {
 			return &msg
 		}
 
-		name     = "miek.nl."
+		name     = "12345678901234567890123456789012345.12345678.123."
 		rrA, _   = NewRR(name + " 3600 IN A 192.0.2.1")
 		rrMx, _  = NewRR(name + " 3600 IN MX 10 " + name)
 		rrTxt, _ = NewRR(name + ` 3600 IN TXT "I am a TXT"`)
