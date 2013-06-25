@@ -14,15 +14,15 @@
 package dns
 
 import (
+	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"net"
 	"reflect"
 	"strconv"
-	"time"
 )
 
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
@@ -1453,8 +1453,12 @@ func compressionHelper(c map[string]int, s string) {
 	}
 }
 
-// Id return a 16 bits random number to be used as a
-// message id. The random provided should be good enough.
+// Id return a 16 bits true random number to be used as a
+// message id.
 func Id() uint16 {
-	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
+	id, err := rand.Int(rand.Reader, big.NewInt(0xFFFF))
+	if err != nil {
+		panic(fmt.Sprintf("Cannot generate random id: %s", err))
+	}
+	return uint16(id.Uint64())
 }
