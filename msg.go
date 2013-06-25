@@ -1406,40 +1406,28 @@ func (dns *Msg) Len() int {
 	}
 
 	for i := 0; i < len(dns.Question); i++ {
-		l += dns.Question[i].len()
+		l += dns.Question[i].len(nil)
 		if dns.Compress {
 			compressionHelper(compression, dns.Question[i].Name)
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
+		l += dns.Answer[i].len(compression)
 		if dns.Compress {
-			if v, ok := compression[dns.Answer[i].Header().Name]; ok {
-				l += dns.Answer[i].len() - v
-				continue
-			}
 			compressionHelper(compression, dns.Answer[i].Header().Name)
 		}
-		l += dns.Answer[i].len()
 	}
 	for i := 0; i < len(dns.Ns); i++ {
+		l += dns.Ns[i].len(compression)
 		if dns.Compress {
-			if v, ok := compression[dns.Ns[i].Header().Name]; ok {
-				l += dns.Ns[i].len() - v
-				continue
-			}
 			compressionHelper(compression, dns.Ns[i].Header().Name)
 		}
-		l += dns.Ns[i].len()
 	}
 	for i := 0; i < len(dns.Extra); i++ {
+		l += dns.Extra[i].len(compression)
 		if dns.Compress {
-			if v, ok := compression[dns.Extra[i].Header().Name]; ok {
-				l += dns.Extra[i].len() - v
-				continue
-			}
 			compressionHelper(compression, dns.Extra[i].Header().Name)
 		}
-		l += dns.Extra[i].len()
 	}
 	return l
 }

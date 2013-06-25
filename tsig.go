@@ -111,8 +111,8 @@ func (rr *TSIG) String() string {
 	return s
 }
 
-func (rr *TSIG) len() int {
-	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 6 +
+func (rr *TSIG) len(compression map[string]int) int {
+	return rr.Hdr.len(compression) + len(rr.Algorithm) + 1 + 6 +
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
@@ -198,7 +198,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.Algorithm = rr.Algorithm
 	t.OrigId = m.Id
 
-	tbuf := make([]byte, t.len())
+	tbuf := make([]byte, t.len(nil))
 	if off, err := PackRR(t, tbuf, 0, nil, false); err == nil {
 		tbuf = tbuf[:off] // reset to actual size used
 	} else {

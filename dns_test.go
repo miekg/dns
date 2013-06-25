@@ -147,13 +147,63 @@ func TestPack(t *testing.T) {
 	}
 }
 
-func TestCompressLenght(t *testing.T) {
+func TestCompressLength(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeMX)
 	ul := m.Len()
 	m.Compress = true
 	if ul != m.Len() {
 		t.Fatalf("Should be equal")
+	}
+}
+
+// Does the predicted length match final packed length
+func TestMsgLenTest(t *testing.T) {
+	var (
+		// util function to build messages
+		makeMsg = func(question string, ans, ns, e []RR) *Msg {
+			var msg Msg
+			msg.SetQuestion(Fqdn(question), TypeANY)
+			msg.Answer = append(msg.Answer, ans...)
+			msg.Ns = append(msg.Ns, ns...)
+			msg.Extra = append(msg.Extra, e...)
+			msg.Compress = true
+			return &msg
+		}
+
+		name     = "miek.nl."
+		rrA, _   = NewRR(name + " 3600 IN A 192.0.2.1")
+		rrMx, _  = NewRR(name + " 3600 IN MX 10 " + name)
+		rrTxt, _ = NewRR(name + ` 3600 IN TXT "I am a TXT"`)
+		tests    = []*Msg{
+			makeMsg(name, nil, nil, nil),
+			makeMsg(name, []RR{rrA}, nil, nil),
+			makeMsg(name, []RR{rrMx}, nil, nil),
+			makeMsg(name, []RR{rrTxt}, nil, nil),
+			makeMsg(name, []RR{rrA, rrA}, nil, nil),
+			makeMsg(name, []RR{rrMx, rrMx}, nil, nil),
+			makeMsg(name, []RR{rrTxt, rrTxt}, nil, nil),
+			makeMsg(name, []RR{rrA}, []RR{rrA}, nil),
+			makeMsg(name, []RR{rrMx}, []RR{rrMx}, nil),
+			makeMsg(name, []RR{rrTxt}, []RR{rrTxt}, nil),
+			makeMsg(name, []RR{rrA, rrMx, rrTxt}, []RR{rrA, rrMx, rrTxt}, nil),
+			makeMsg(name, []RR{rrA, rrMx, rrTxt}, []RR{rrA, rrMx, rrTxt}, []RR{rrA, rrMx, rrTxt})}
+	)
+
+	for _, msg := range tests {
+		var (
+			predicted = msg.Len()
+			buf, err  = msg.Pack()
+			actual    = len(buf)
+		)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+		if predicted != actual {
+			t.Errorf("Predicted length is wrong: predicted %d, actual %d\n%s", predicted, actual, msg)
+			t.Fail()
+		}
 	}
 }
 
