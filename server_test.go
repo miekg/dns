@@ -41,7 +41,6 @@ func TestServing(t *testing.T) {
 	time.Sleep(4e8)
 	c := new(Client)
 	m := new(Msg)
-
 	m.SetQuestion("miek.nl.", TypeTXT)
 	r, _, _ := c.Exchange(m, "127.0.0.1:8053")
 	txt := r.Extra[0].(*TXT).Txt[0]
@@ -65,11 +64,37 @@ func BenchmarkServing(b *testing.B) {
 	go func() {
 		ListenAndServe("127.0.0.1:8053", "udp", nil)
 	}()
-
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeSOA)
 
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		c.Exchange(m, "127.0.0.1:8053")
+	}
+	runtime.GOMAXPROCS(a)
+}
+
+func HelloServerCompress(w ResponseWriter, req *Msg) {
+	m := new(Msg)
+	m.SetReply(req)
+	m.Extra = make([]RR, 1)
+	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
+	m.Compress = true
+	w.WriteMsg(m)
+}
+
+func BenchmarkServingCompress(b *testing.B) {
+	b.StopTimer()
+	HandleFunc("miek.nl.", HelloServerCompress)
+	a := runtime.GOMAXPROCS(4)
+	go func() {
+		ListenAndServe("127.0.0.1:8053", "udp", nil)
+	}()
+
+	c := new(Client)
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeSOA)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		c.Exchange(m, "127.0.0.1:8053")
