@@ -9,13 +9,10 @@ package dns
 // SplitDomainName splits a name string into it's labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
-func SplitDomainName(s string) []string {
-	var (
-		labels  []string
-		fqdnEnd int // offset of the final '.' or the length of the name
-		idx     = Split(s)
-		begin   = 0
-	)
+func SplitDomainName(s string) (labels []string) {
+	fqdnEnd := 0 // offset of the final '.' or the length of the name
+	idx := Split(s)
+	begin := 0
 
 	if s[len(s)-1] == '.' {
 		fqdnEnd = len(s) - 1

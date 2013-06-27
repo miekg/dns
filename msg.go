@@ -1255,7 +1255,7 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	msg = make([]byte, dns.packLen()+10) // TODO(miekg): +10 should go sometimses
+	msg = make([]byte, dns.packLen()+10) // TODO(miekg): +10 should go soon
 	// Pack it in: header and then the pieces.
 	off := 0
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
