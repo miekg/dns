@@ -1411,8 +1411,9 @@ func (dns *Msg) packLen() int {
 }
 
 // Len returns the message length when in (un)compressed wire format.
-// If dns.Compress is true compression it is taken into account, currently
-// this only counts owner name compression.
+// If dns.Compress is true compression it is taken into account. Len()
+// is provided to be a faster way to get the size of the resulting packet,
+// than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int {
 	// Message header is always 12 bytes
 	l := 12
@@ -1424,49 +1425,186 @@ func (dns *Msg) Len() int {
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].len()
 		if dns.Compress {
-			compressionHelper(compression, dns.Question[i].Name)
+			compressionLenHelper(compression, dns.Question[i].Name)
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		if dns.Compress {
-			if _, ok := compression[dns.Answer[i].Header().Name]; ok {
-				l += dns.Answer[i].len() - len(dns.Answer[i].Header().Name) + 2
-				continue
-			}
-			compressionHelper(compression, dns.Answer[i].Header().Name)
-		}
 		l += dns.Answer[i].len()
+		if dns.Compress {
+			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
+			if ok {
+				l += 1 - k
+			} else {
+				compressionLenHelper(compression, dns.Answer[i].Header().Name)
+			}
+			l += 1 - compressionLenType(compression, dns.Answer[i])
+		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		if dns.Compress {
-			if _, ok := compression[dns.Ns[i].Header().Name]; ok {
-				l += dns.Ns[i].len() - len(dns.Ns[i].Header().Name) + 2
-				continue
-			}
-			compressionHelper(compression, dns.Ns[i].Header().Name)
-		}
 		l += dns.Ns[i].len()
+		if dns.Compress {
+			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
+			if ok {
+				l += 1 - k
+			} else {
+				compressionLenHelper(compression, dns.Ns[i].Header().Name)
+			}
+			l += 1 - compressionLenType(compression, dns.Ns[i])
+		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
 		if dns.Compress {
-			if _, ok := compression[dns.Extra[i].Header().Name]; ok {
-				l += dns.Extra[i].len() - len(dns.Extra[i].Header().Name) + 2
-				continue
+			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
+			if ok {
+				l += 1 - k
+			} else {
+				compressionLenHelper(compression, dns.Extra[i].Header().Name)
 			}
-			compressionHelper(compression, dns.Extra[i].Header().Name)
+			l += 1 - compressionLenType(compression, dns.Extra[i])
 		}
-		l += dns.Extra[i].len()
 	}
 	return l
 }
 
-func compressionHelper(c map[string]int, s string) {
+// Put the parts of the name in the compression map.
+func compressionLenHelper(c map[string]int, s string) {
 	pref := ""
 	lbs := SplitDomainName(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
 		c[lbs[j]+"."+pref] = 1 + len(pref) + len(lbs[j])
 		pref = lbs[j] + "." + pref
 	}
+}
+
+// Look for each part in the compression map and returns its length
+func compressionLenSearch(c map[string]int, s string) (int, bool) {
+	off := 0
+	end := false
+	for {
+		if end {
+			break
+		}
+		if _, ok := c[s[off:]]; ok {
+			return len(s[off:]), true
+		}
+		off, end = NextLabel(s, off)
+	}
+	if _, ok := c[s[off:]]; ok {
+		println("HIERO", s[off:]) // TODO(miek): remove this println
+		return len(s[off:]), true
+	}
+	return 0, false
+}
+
+// Check the ownernames too of the types that have cdomain, do
+// this manually to avoid reflection.
+func compressionLenType(c map[string]int, r RR) int {
+	switch x := r.(type) {
+	case *NS:
+		k, ok := compressionLenSearch(c, x.Ns)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Ns)
+		}
+	case *MX:
+		k, ok := compressionLenSearch(c, x.Mx)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mx)
+		}
+	case *CNAME:
+		k, ok := compressionLenSearch(c, x.Target)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Target)
+		}
+	case *PTR:
+		k, ok := compressionLenSearch(c, x.Ptr)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Ptr)
+		}
+	case *SOA:
+		k, ok := compressionLenSearch(c, x.Ns)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Ns)
+		}
+		k, ok = compressionLenSearch(c, x.Mbox)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mbox)
+		}
+	case *MB:
+		k, ok := compressionLenSearch(c, x.Mb)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mb)
+		}
+	case *MG:
+		k, ok := compressionLenSearch(c, x.Mg)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mg)
+		}
+	case *MR:
+		k, ok := compressionLenSearch(c, x.Mr)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mr)
+		}
+	case *MF:
+		k, ok := compressionLenSearch(c, x.Mf)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Mf)
+		}
+	case *MD:
+		k, ok := compressionLenSearch(c, x.Md)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Md)
+		}
+	case *RT:
+		k, ok := compressionLenSearch(c, x.Host)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Host)
+		}
+	case *MINFO:
+		k, ok := compressionLenSearch(c, x.Rmail)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Rmail)
+		}
+		k, ok = compressionLenSearch(c, x.Email)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Email)
+		}
+	case *AFSDB:
+		k, ok := compressionLenSearch(c, x.Hostname)
+		if ok {
+			return k
+		} else {
+			compressionLenHelper(c, x.Hostname)
+		}
+	}
+	return 1 // noop when nothing is found
 }
 
 // Id return a 16 bits random number to be used as a
