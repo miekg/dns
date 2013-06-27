@@ -117,7 +117,7 @@ func TestPack(t *testing.T) {
 			continue
 		}
 		if _, err := m.Pack(); err != nil {
-			t.Log("Packing failed")
+			t.Logf("Packing failed: %s\n", err.Error())
 			t.Fail()
 		}
 	}
