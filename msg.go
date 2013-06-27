@@ -1255,7 +1255,7 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	msg = make([]byte, dns.packLen()+10) // TODO(miekg): +10 should go soon
+	msg = make([]byte, dns.packLen()+1) // TODO(miekg): +10 should go soon
 	// Pack it in: header and then the pieces.
 	off := 0
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
@@ -1489,8 +1489,8 @@ func compressionLenSearch(c map[string]int, s string) (int, bool) {
 		}
 		off, end = NextLabel(s, off)
 	}
+	// TODO(miek): not sure if need, leave this for later debugging
 	if _, ok := c[s[off:]]; ok {
-		println("HIERO", s[off:]) // TODO(miek): remove this println
 		return len(s[off:]), true
 	}
 	return 0, false
