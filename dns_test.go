@@ -117,7 +117,7 @@ func TestPack(t *testing.T) {
 			continue
 		}
 		if _, err := m.Pack(); err != nil {
-			t.Log("Packing failed")
+			t.Logf("Packing failed: %s\n", err.Error())
 			t.Fail()
 		}
 	}
@@ -147,13 +147,88 @@ func TestPack(t *testing.T) {
 	}
 }
 
-func TestCompressLenght(t *testing.T) {
+func TestCompressLength(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeMX)
 	ul := m.Len()
 	m.Compress = true
 	if ul != m.Len() {
 		t.Fatalf("Should be equal")
+	}
+}
+
+// Does the predicted length match final packed length
+func TestMsgLenTest(t *testing.T) {
+	makeMsg := func(question string, ans, ns, e []RR) *Msg {
+		msg := new(Msg)
+		msg.SetQuestion(Fqdn(question), TypeANY)
+		msg.Answer = append(msg.Answer, ans...)
+		msg.Ns = append(msg.Ns, ns...)
+		msg.Extra = append(msg.Extra, e...)
+		msg.Compress = true
+		return msg
+	}
+
+	name1 := "12345678901234567890123456789012345.12345678.123."
+	rrA, _ := NewRR(name1 + " 3600 IN A 192.0.2.1")
+	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
+	tests := []*Msg{
+		makeMsg(name1, []RR{rrA}, nil, nil),
+		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)}
+
+	for _, msg := range tests {
+		predicted := msg.Len()
+		buf, err := msg.Pack()
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+		if predicted != len(buf) {
+			t.Errorf("Predicted length is wrong: predicted %s (len=%d) %d, actual %d\n",
+				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
+			t.Fail()
+		}
+	}
+}
+
+func BenchmarkMsgLen(b *testing.B) {
+	b.StopTimer()
+	makeMsg := func(question string, ans, ns, e []RR) *Msg {
+		msg := new(Msg)
+		msg.SetQuestion(Fqdn(question), TypeANY)
+		msg.Answer = append(msg.Answer, ans...)
+		msg.Ns = append(msg.Ns, ns...)
+		msg.Extra = append(msg.Extra, e...)
+		msg.Compress = true
+		return msg
+	}
+	name1 := "12345678901234567890123456789012345.12345678.123."
+	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
+	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		msg.Len()
+	}
+}
+
+func BenchmarkMsgLenPack(b *testing.B) {
+	b.StopTimer()
+	makeMsg := func(question string, ans, ns, e []RR) *Msg {
+		msg := new(Msg)
+		msg.SetQuestion(Fqdn(question), TypeANY)
+		msg.Answer = append(msg.Answer, ans...)
+		msg.Ns = append(msg.Ns, ns...)
+		msg.Extra = append(msg.Extra, e...)
+		msg.Compress = true
+		return msg
+	}
+	name1 := "12345678901234567890123456789012345.12345678.123."
+	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
+	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		b, _ := msg.Pack()
+		_ = len(b)
 	}
 }
 

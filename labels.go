@@ -9,25 +9,33 @@ package dns
 // SplitDomainName splits a name string into it's labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
-func SplitDomainName(s string) []string {
+func SplitDomainName(s string) (labels []string) {
+	fqdnEnd := 0 // offset of the final '.' or the length of the name
 	idx := Split(s)
+	begin := 0
+
+	if s[len(s)-1] == '.' {
+		fqdnEnd = len(s) - 1
+	} else {
+		fqdnEnd = len(s)
+	}
+
 	switch len(idx) {
 	case 0:
 		return nil
 	case 1:
-		return []string{s}
+		// no-op
 	default:
-		begin := 0
 		end := 0
-		labels := make([]string, 0)
 		for i := 1; i < len(idx); i++ {
 			end = idx[i]
-			labels = append(labels, s[begin:end])
+			labels = append(labels, s[begin:end-1])
 			begin = end
 		}
-		return labels
 	}
-	panic("dns: not reached")
+
+	labels = append(labels, s[begin:fqdnEnd])
+	return labels
 }
 
 // CompareDomainName compares the names s1 and s2 and

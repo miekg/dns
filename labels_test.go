@@ -45,6 +45,7 @@ func TestSplit(t *testing.T) {
 	splitter := map[string]int{
 		"www.miek.nl.":   3,
 		"www.miek.nl":    3,
+		"www..miek.nl":   4,
 		`www\.miek.nl.`:  2,
 		`www\\.miek.nl.`: 3,
 		".":              0,
@@ -63,20 +64,30 @@ func TestSplit(t *testing.T) {
 	}
 }
 
-func TestCountLabel(t *testing.T) {
-	labels := map[string]int{
-		"miek.nl":       2,
-		".":             0,
-		"www.miek.nl.":  3,
-		"www.miek.nl":   3,
-		"www..miek.nl":  4,
-		`www\.miek.nl`:  2,
-		`www\\.miek.nl`: 3,
+func TestSplitDomainName(t *testing.T) {
+	labels := map[string][]string{
+		"miek.nl":       []string{"miek", "nl"},
+		".":             nil,
+		"www.miek.nl.":  []string{"www", "miek", "nl"},
+		"www.miek.nl":   []string{"www", "miek", "nl"},
+		"www..miek.nl":  []string{"www", "", "miek", "nl"},
+		`www\.miek.nl`:  []string{`www\.miek`, "nl"},
+		`www\\.miek.nl`: []string{`www\\`, "miek", "nl"},
 	}
-	for owner, lab := range labels {
-		if l := CountLabel(owner); l != lab {
-			t.Logf("%s should have %d labels, got %d\n", owner, lab, l)
+domainLoop:
+	for domain, splits := range labels {
+		parts := SplitDomainName(domain)
+		if len(parts) != len(splits) {
+			t.Logf("SplitDomainName returned %v for %s, expected %v", parts, domain, splits)
 			t.Fail()
+			continue domainLoop
+		}
+		for i := range parts {
+			if parts[i] != splits[i] {
+				t.Logf("SplitDomainName returned %v for %s, expected %v", parts, domain, splits)
+				t.Fail()
+				continue domainLoop
+			}
 		}
 	}
 }

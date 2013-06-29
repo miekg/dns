@@ -483,11 +483,8 @@ func (rr *TXT) String() string {
 
 func (rr *TXT) len() int {
 	l := rr.Hdr.len()
-	for i, t := range rr.Txt {
-		if i > 0 {
-			l += 1
-		}
-		l += len(t)
+	for _, t := range rr.Txt {
+		l += len(t) + 1
 	}
 	return l
 }
@@ -759,9 +756,16 @@ func (rr *NSEC) String() string {
 }
 
 func (rr *NSEC) len() int {
-	l := len(rr.NextDomain) + 1
-	return rr.Hdr.len() + l + 32 + 1
-	// TODO: +32 is max type bitmap
+	l := rr.Hdr.len() + len(rr.NextDomain) + 1
+	lastwindow := uint32(2^32+1)
+	for _, t := range rr.TypeBitMap {
+		window := t / 256
+		if uint32(window) != lastwindow {
+			l += 1 + 32
+		}
+		lastwindow = uint32(window)
+	}
+	return l
 }
 
 type DS struct {
@@ -1026,8 +1030,16 @@ func (rr *NSEC3) String() string {
 }
 
 func (rr *NSEC3) len() int {
-	return rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1 + 32
-	// TODO: +32 is MAX type bit map
+	l := rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
+	lastwindow := uint32(2^32+1)
+	for _, t := range rr.TypeBitMap {
+		window := t / 256
+		if uint32(window) != lastwindow {
+			l += 1 + 32
+		}
+		lastwindow = uint32(window)
+	}
+	return l
 }
 
 type NSEC3PARAM struct {
