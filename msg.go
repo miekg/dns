@@ -468,7 +468,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					return lenmsg, &Error{err: "overflow packing a"}
 				}
 			case `dns:"aaaa"`:
-				// fv.Len TODO(mg) dynamisc updates?
+				// fv.Len TODO(mg) dynamic updates?
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					return lenmsg, &Error{err: "overflow packing aaaa"}
 				}
@@ -1255,7 +1255,7 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	msg = make([]byte, dns.packLen()+1) // TODO(miekg): +10 should go soon
+	msg = make([]byte, dns.packLen()+1)
 	// Pack it in: header and then the pieces.
 	off := 0
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
@@ -1341,8 +1341,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 	if off != len(msg) {
 		// TODO(miek) make this an error?
-		// use PackOpt to let people tell how detailed the error reporting
-		// should be?
+		// use PackOpt to let people tell how detailed the error reporting should be?
 		// println("dns: extra bytes in dns packet", off, "<", len(msg))
 	}
 	return nil
