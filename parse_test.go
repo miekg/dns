@@ -641,8 +641,12 @@ func TestSRVPacking(t *testing.T) {
 }
 
 func TestParseBackslash(t *testing.T) {
-	r, e := NewRR("nul\\000gap.test.globnix.net. 600 IN	A	192.0.2.10")
-	if e != nil {
+	if r, e := NewRR("nul\\000gap.test.globnix.net. 600 IN	A 192.0.2.10"); e != nil {
+		t.Fatalf("Could not create RR with \\000 in it")
+	} else {
+		t.Logf("Parsed %s\n", r.String())
+	}
+	if r, e := NewRR(`nul\000gap.test.globnix.net. 600 IN TXT "Hello\123"`); e != nil {
 		t.Fatalf("Could not create RR with \\000 in it")
 	} else {
 		t.Logf("Parsed %s\n", r.String())
@@ -748,7 +752,7 @@ func TestUserRR(t *testing.T) {
 	}
 }
 
-func TestTxtPack(t *testing.T) {
+func TestTXT(t *testing.T) {
 	// Test single entry TXT record
 	rr, err := NewRR(`_raop._tcp.local. 60 IN TXT "single value"`)
 	if err != nil {
@@ -790,7 +794,7 @@ func TestTxtPack(t *testing.T) {
 	}
 }
 
-func TestRRPack(t *testing.T) {
+func TestRR(t *testing.T) {
 	rr, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
 	if err == nil {
 		t.Log("%s\n", rr.String())
@@ -803,7 +807,7 @@ func TestRRPack(t *testing.T) {
 	}
 }
 
-func TestPtrPack(t *testing.T) {
+func TestPTR(t *testing.T) {
 	_, err := NewRR("144.2.0.192.in-addr.arpa. 900 IN PTR ilouse03146p0\\(.example.com.")
 	if err != nil {
 		t.Error("Failed to parse ", err.Error())
