@@ -119,6 +119,7 @@ func CountLabel(s string) (labels int) {
 			return
 		}
 	}
+	panic("dns: not reached")
 }
 
 // LenLabels returns the number of labels in the string s.
@@ -145,6 +146,7 @@ func Split(s string) []int {
 		}
 		idx = append(idx, off)
 	}
+	panic("dns: not reached")
 }
 
 // NextLabel returns the index of the start of the next label in the
