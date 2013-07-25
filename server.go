@@ -168,10 +168,15 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
 	var handler Handler
+	b := make([]byte, len(q)) // worst case, one label of length q
 	off := 0
 	end := false
 	for {
-		if h, ok := mux.z[q[off:]]; ok {
+		l := len(q[off:])
+		for i := 0; i < l; i++ {
+			b[i] = q[off+i] | ( 'a' - 'A')
+		}
+		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
 			if t != TypeDS {
 				return h
 			} else {
