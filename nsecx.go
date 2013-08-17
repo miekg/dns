@@ -11,12 +11,6 @@ import (
 	"strings"
 )
 
-const (
-	_ = iota
-	_NSEC3_NXDOMAIN
-	_NSEC3_NODATA
-)
-
 type saltWireFmt struct {
 	Salt string `dns:"size-hex"`
 }
