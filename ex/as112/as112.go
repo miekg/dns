@@ -45,7 +45,7 @@ var zones = map[string]dns.RR{
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 	for z, rr := range zones {
-		rrx := rr.(*dns.SOA) // Some foo needed to created actual RR, on the not a reference
+		rrx := rr.(*dns.SOA) // Needed to create the actual RR, and not an reference.
 		dns.HandleFunc(z, func(w dns.ResponseWriter, r *dns.Msg) {
 			m := new(dns.Msg)
 			m.SetReply(r)
