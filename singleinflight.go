@@ -2,14 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Adapted for dns package usage by Miek Gieben.
+
 package dns
 
 import "sync"
+import "time"
 
 // call is an in-flight or completed singleflight.Do call
 type call struct {
 	wg   sync.WaitGroup
-	val  interface{}
+	val  *Msg
+	rtt  time.Duration
 	err  error
 	dups int
 }
@@ -17,8 +21,8 @@ type call struct {
 // singleflight represents a class of work and forms a namespace in
 // which units of work can be executed with duplicate suppression.
 type singleflight struct {
-	mu sync.Mutex       // protects m
-	m  map[string]*call // lazily initialized
+	sync.Mutex                  // protects m
+	m          map[string]*call // lazily initialized
 }
 
 // Do executes and returns the results of the given function, making
@@ -26,28 +30,28 @@ type singleflight struct {
 // time. If a duplicate comes in, the duplicate caller waits for the
 // original to complete and receives the same results.
 // The return value shared indicates whether v was given to multiple callers.
-func (g *singleflight) Do(key string, fn func() (interface{}, error)) (v interface{}, err error, shared bool) {
-	g.mu.Lock()
+func (g *singleflight) Do(key string, fn func() (*Msg, time.Duration, error)) (v *Msg, rtt time.Duration, err error, shared bool) {
+	g.Lock()
 	if g.m == nil {
 		g.m = make(map[string]*call)
 	}
 	if c, ok := g.m[key]; ok {
 		c.dups++
-		g.mu.Unlock()
+		g.Unlock()
 		c.wg.Wait()
-		return c.val, c.err, true
+		return c.val, c.rtt, c.err, true
 	}
 	c := new(call)
 	c.wg.Add(1)
 	g.m[key] = c
-	g.mu.Unlock()
+	g.Unlock()
 
-	c.val, c.err = fn()
+	c.val, rtt, c.err = fn()
 	c.wg.Done()
 
-	g.mu.Lock()
+	g.Lock()
 	delete(g.m, key)
-	g.mu.Unlock()
+	g.Unlock()
 
-	return c.val, c.err, c.dups > 0
+	return c.val, c.rtt, c.err, c.dups > 0
 }
