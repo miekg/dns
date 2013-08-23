@@ -29,6 +29,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/chuangbo/jianbing-dictionary-dns/tree/master/golang
 * http://www.dns-lg.com/
 * https://github.com/fcambus/rrda
+* https://github.com/kenshinx/godns
 * more?
 
 # Features
