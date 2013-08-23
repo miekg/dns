@@ -92,6 +92,28 @@ domainLoop:
 	}
 }
 
+func TestIsDomainName(t *testing.T) {
+	type ret struct {
+		ok  bool
+		lab uint8
+		l   uint8
+	}
+	names := map[string]*ret{
+		"www.example.com":  &ret{true, 3, 15},
+		"www.example.com.": &ret{true, 3, 16},
+		"mi\\k.nl.":        &ret{true, 2, 8},
+		"mi\\k.nl":         &ret{true, 2, 7},
+	}
+	for d, ok := range names {
+		l1, l2, k := IsDomainName(d)
+		if ok.ok != k || ok.lab != l1 || ok.l != l2 {
+			t.Logf("Got %v %d %d for %s ", k, l1, l2, d)
+			t.Logf("    %v %d %d for %s ", ok.ok, ok.lab, ok.l, d)
+			t.Fail()
+		}
+	}
+}
+
 func BenchmarkSplitLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Split("www.example.com")

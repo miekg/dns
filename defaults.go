@@ -157,22 +157,14 @@ func (dns *Msg) IsEdns0() *OPT {
 
 // IsDomainName checks if s is a valid domainname, it returns
 // the number of labels, total length and true, when a domain name is valid.
+// Note that unfully qualified domain name is considered valid, in this case the
+// last label is counted in the number of labels.
 // When false is returned the labelcount and length are not defined.
 func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
-	// TODO(mg): check for \DDD - seems to work fine without though
 	// See RFC 1035, RFC 3696.
 	l := len(s)
 	if l == 0 || l > 255 {
 		return 0, 0, false
-	}
-	longer := 0
-	// Simplify checking loop: make the name end in a dot.
-	// Don't call Fqdn() to save another len(s).
-	// Keep in mind that if we do this, otherwise we report a length+1
-	if s[l-1] != '.' {
-		s += "."
-		l++
-		longer = 1
 	}
 	// Preloop check for root label
 	if s == "." {
@@ -180,7 +172,7 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 	}
 
 	last := byte('.')
-	ok := false // ok once we've seen a letter or digit
+	ok := false // Ok once we've seen a letter or digit.
 	partlen := 0
 	labels := uint8(0)
 	var c byte
@@ -190,46 +182,50 @@ func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
 		default:
 			// anything escaped is legal
 			if last != '\\' {
-				return 0, uint8(l - longer), false
+				return 0, uint8(l), false
 			}
 			partlen++
 		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*' || c == '/':
 			ok = true
 			partlen++
-		case c == '\\': // OK
+		case c == '\\': // OK.
 		case c == '@':
 			if last != '\\' {
-				return 0, uint8(l - longer), false
+				return 0, uint8(l), false
 			}
 			partlen++
 		case '0' <= c && c <= '9':
 			ok = true
 			partlen++
 		case c == '-':
-			// byte before dash cannot be dot
 			if last == '.' {
-				return 0, uint8(l - longer), false
+				return 0, uint8(l), false
 			}
 			partlen++
 		case c == '.':
 			// byte before dot cannot be dot
 			if last == '.' {
-				return 0, uint8(l - longer), false
+				return 0, uint8(l), false
 			}
 			if last == '\\' { // Ok, escaped dot.
 				partlen++
-				c = 'A' // make current value not scary
+				c = 'A' // Make current value not scary.
 				break
 			}
 			if partlen > 63 || partlen == 0 {
-				return 0, uint8(l - longer), false
+				return 0, uint8(l), false
 			}
 			partlen = 0
 			labels++
 		}
 		last = c
 	}
-	return labels, uint8(l - longer), ok
+	// If last isn't a dot, the name was unqualified, but we still want to count
+	// the last label.
+	if last == '.' {
+		return labels, uint8(l), ok
+	}
+	return labels + 1, uint8(l), ok
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. Both child and
