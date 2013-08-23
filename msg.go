@@ -1465,6 +1465,21 @@ func (dns *Msg) Len() int {
 	return l
 }
 
+func (dns *Msg) copy() *Msg {
+	r1 := new(Msg)
+	r1.MsgHdr = dns.MsgHdr
+	r1.Compress = dns.Compress
+	r1.Question = make([]Question, len(dns.Question))
+	r1.Answer = make([]RR, len(dns.Answer))
+	r1.Ns = make([]RR, len(dns.Ns))
+	r1.Extra = make([]RR, len(dns.Extra))
+	copy(r1.Question, dns.Question)
+	copy(r1.Answer, dns.Answer)
+	copy(r1.Ns, dns.Ns)
+	copy(r1.Extra, dns.Extra)
+	return r1
+}
+
 // Put the parts of the name in the compression map.
 func compressionLenHelper(c map[string]int, s string) {
 	pref := ""
