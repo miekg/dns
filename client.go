@@ -35,6 +35,7 @@ type Client struct {
 	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
 	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	Inflight     bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 }
 
 // Exchange performs an synchronous query. It sends the message m to the address
