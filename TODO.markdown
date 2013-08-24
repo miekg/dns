@@ -5,7 +5,7 @@
 * NSEC3/NSEC support function for generating NXDOMAIN response?
 * Actually mimic net/ ? Dial. Read/Write ?
 * Ratelimiting? server side (rrl)
-* Ratelimiting? client side (outstanding queries)
+* Ratelimiting? client side
 
 ## Nice to have
 
