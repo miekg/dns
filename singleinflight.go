@@ -46,7 +46,7 @@ func (g *singleflight) Do(key string, fn func() (*Msg, time.Duration, error)) (v
 	g.m[key] = c
 	g.Unlock()
 
-	c.val, rtt, c.err = fn()
+	c.val, c.rtt, c.err = fn()
 	c.wg.Done()
 
 	g.Lock()

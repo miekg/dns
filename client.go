@@ -48,15 +48,14 @@ func (c *Client) exchangeMerge(m *Msg, a string, s net.Conn) (r *Msg, rtt time.D
 	}
 	// This adds a bunch of garbage, TODO(miek).
 	t := "nop"
-	if t1, ok := TypeToString[r.Question[0].Qtype]; ok {
+	if t1, ok := TypeToString[m.Question[0].Qtype]; ok {
 		t = t1
 	}
 	cl := "nop"
-	if cl1, ok := ClassToString[r.Question[0].Qclass]; ok {
+	if cl1, ok := ClassToString[m.Question[0].Qclass]; ok {
 		cl = cl1
 	}
-	key := r.Question[0].Name + t + cl
-	r, rtt, err, shared := c.group.Do(key, func() (*Msg, time.Duration, error) {
+	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
 		if s == nil {
 			return c.exchange(m, a)
 		}

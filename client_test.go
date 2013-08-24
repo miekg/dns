@@ -41,6 +41,44 @@ func TestClientEDNS0(t *testing.T) {
 	}
 }
 
+func TestInflight(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeDNSKEY)
+
+	c := new(Client)
+	c.Inflight = true
+	nr := 10
+	ch := make(chan time.Duration)
+	for i := 0; i < nr; i++ {
+		go func() {
+			_, rtt, _ := c.Exchange(m, "37.251.95.53:53")
+			ch <- rtt
+		}()
+	}
+	i := 0
+	var first time.Duration
+	// With inflight *all* rtt are identical, and by doing actual lookups
+	// the changes that this is a coincidence is small.
+Loop:
+	for {
+		select {
+		case rtt := <-ch:
+			if i == 0 {
+				first = rtt
+			} else {
+				if first != rtt {
+					t.Log("All rtt should be equal")
+					t.Fail()
+				}
+			}
+			i++
+			if i == 10 {
+				break Loop
+			}
+		}
+	}
+}
+
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
