@@ -90,8 +90,7 @@ func TestClientTsigAXFR(t *testing.T) {
 
 	if a, err := c.TransferIn(m, "37.251.95.53:53"); err != nil {
 		t.Log("Failed to setup axfr: " + err.Error())
-		t.Fail()
-		return
+		t.Fatal()
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
