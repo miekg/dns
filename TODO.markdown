@@ -2,7 +2,6 @@
 
 * Support for on-the-fly-signing or check how to do it
 * Test all rdata packing with zero rdata -- allowed for dynamic updates
-* NSEC3/NSEC support function for generating NXDOMAIN response?
 * Actually mimic net/ ? Dial. Read/Write ?
 * Ratelimiting? server side (rrl)
 * Ratelimiting? client side
