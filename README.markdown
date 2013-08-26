@@ -26,11 +26,11 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/abh/geodns
 * http://www.statdns.com/
 * http://www.dnsinspect.com/
-* https://github.com/chuangbo/jianbing-dictionary-dns/tree/master/golang
+* https://github.com/chuangbo/jianbing-dictionary-dns
 * http://www.dns-lg.com/
 * https://github.com/fcambus/rrda
 * https://github.com/kenshinx/godns
-* more?
+* more? (send pull request if you want to be listed here)
 
 # Features
 
