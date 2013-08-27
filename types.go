@@ -884,8 +884,8 @@ func (rr *TA) len() int {
 
 type TALINK struct {
 	Hdr          RR_Header
-	PreviousName string `dns:"domain"`
-	NextName     string `dns:"domain"`
+	PreviousName string `dns:"domain-name"`
+	NextName     string `dns:"domain-name"`
 }
 
 func (rr *TALINK) Header() *RR_Header { return &rr.Hdr }

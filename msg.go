@@ -214,8 +214,11 @@ var RcodeToString = map[int]string{
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
 	ls := len(s)
+	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
+		return off, nil
+	}
 	// If not fully qualified, error out
-	if ls == 0 || s[ls-1] != '.' {
+	if s[ls-1] != '.' {
 		return lenmsg, ErrFqdn
 	}
 	// Each dot ends a segment of the name.
@@ -468,7 +471,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					return lenmsg, &Error{err: "overflow packing a"}
 				}
 			case `dns:"aaaa"`:
-				// fv.Len TODO(mg) dynamic updates?
+				if fv.Len() == 0 {
+					break
+				}
 				if fv.Len() > net.IPv6len || off+fv.Len() > lenmsg {
 					return lenmsg, &Error{err: "overflow packing aaaa"}
 				}

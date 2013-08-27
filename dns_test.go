@@ -243,12 +243,12 @@ func TestToRFC3597(t *testing.T) {
 
 func TestNoRdata(t *testing.T) {
 	data := make([]byte, 1024)
-	for typ, _ := range TypeToString {
-		r := rr_mk[typ]()
+	for typ, fn := range rr_mk {
+		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
 		_, e := PackRR(r, data, 0, nil, false)
 		if e != nil {
-			t.Logf("Failed to pack rdata zero RR %d: %s\n", typ, e.Error())
+			t.Logf("Failed to pack rdata zero RR %s: %s\n", TypeToString[typ], e.Error())
 			t.Fail()
 		}
 	}
