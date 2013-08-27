@@ -241,15 +241,35 @@ func TestToRFC3597(t *testing.T) {
 	}
 }
 
-func TestNoRdata(t *testing.T) {
+func TestNoRdataPack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range rr_mk {
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
 		_, e := PackRR(r, data, 0, nil, false)
 		if e != nil {
-			t.Logf("Failed to pack rdata zero RR %s: %s\n", TypeToString[typ], e.Error())
+			t.Logf("Failed to pack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
 			t.Fail()
 		}
+	}
+}
+
+// TODO(miek): fix dns buffer too small errors this throws
+func testNoRdataUnpack(t *testing.T) {
+	data := make([]byte, 1024)
+	for typ, fn := range rr_mk {
+		r := fn()
+		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
+		off, e := PackRR(r, data, 0, nil, false)
+		if e != nil {
+			// Should always works, TestNoDataPack should have catched this
+			continue
+		}
+		rr, _, e := UnpackRR(data[:off], 0)
+		if e != nil {
+			t.Logf("Failed to unpack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
+			t.Fail()
+		}
+		t.Logf("%s\n", rr)
 	}
 }
