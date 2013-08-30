@@ -467,7 +467,7 @@ type TXT struct {
 }
 
 func (rr *TXT) Header() *RR_Header { return &rr.Hdr }
-func (rr *TXT) copy() RR           { return &TXT{*rr.Hdr.copyHeader(), rr.Txt} } // this doesn't really copy Txt does it? (TODO?(mg))
+func (rr *TXT) copy() RR           { return &TXT{*rr.Hdr.copyHeader(), rr.Txt} } // this doesn't really copy Txt does it? TODO(mg)
 
 func (rr *TXT) String() string {
 	s := rr.Hdr.String()
