@@ -1271,8 +1271,11 @@ type WKS struct {
 func (rr *WKS) Header() *RR_Header { return &rr.Hdr }
 func (rr *WKS) copy() RR           { return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, rr.BitMap} }
 
-func (rr *WKS) String() string {
-	s := rr.Hdr.String() + rr.Address.String()
+func (rr *WKS) String() (s string) {
+	s = rr.Hdr.String()
+	if rr.Address != nil {
+		s += rr.Address.String()
+	}
 	for i := 0; i < len(rr.BitMap); i++ {
 		// should lookup the port
 		s += " " + strconv.Itoa(int(rr.BitMap[i]))
@@ -1314,6 +1317,9 @@ func (rr *L32) Header() *RR_Header { return &rr.Hdr }
 func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, rr.Locator32} }
 
 func (rr *L32) String() string {
+	if rr.Locator32 == nil {
+		return rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+	}
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Locator32.String()
 }

@@ -482,6 +482,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off++
 				}
 			case `dns:"wks"`:
+				if off == lenmsg {
+					break // dyn. updates
+				}
 				if val.Field(i).Len() == 0 {
 					break
 				}
@@ -684,6 +687,8 @@ func packStructCompress(any interface{}, msg []byte, off int, compression map[st
 	return off, err
 }
 
+// TODO(mg): Fix use of rdlength here
+
 // Unpack a reflect.StructValue from msg.
 // Same restrictions as packStructValue.
 func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err error) {
@@ -713,6 +718,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				txt := make([]string, 0)
 				rdlength := off + int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txts:
+				if off == lenmsg { // dyn. updates, no rdata is OK
+					break
+				}
 				l := int(msg[off])
 				if off+l+1 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking txt"}
@@ -788,12 +796,18 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 				fv.Set(reflect.ValueOf(edns))
 			case `dns:"a"`:
+				if off == lenmsg {
+					break // dyn. update
+				}
 				if off+net.IPv4len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking a"}
 				}
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
 				off += net.IPv4len
 			case `dns:"aaaa"`:
+				if off == lenmsg {
+					break
+				}
 				if off+net.IPv6len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking aaaa"}
 				}
@@ -839,10 +853,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 				fv.Set(reflect.ValueOf(serv))
 			case `dns:"nsec"`: // NSEC/NSEC3
+				if off == lenmsg {
+					break
+				}
 				// Rest of the record is the type bitmap
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 				endrr := rdstart + rdlength
-
 				if off+2 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking nsecx"}
 				}
@@ -906,12 +922,18 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				rdstart = off
 			}
 		case reflect.Uint8:
+			if off == lenmsg {
+				break
+			}
 			if off+1 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint8"}
 			}
 			fv.SetUint(uint64(uint8(msg[off])))
 			off++
 		case reflect.Uint16:
+			if off == lenmsg {
+				break
+			}
 			var i uint16
 			if off+2 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint16"}
@@ -919,6 +941,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			i, off = unpackUint16(msg, off)
 			fv.SetUint(uint64(i))
 		case reflect.Uint32:
+			if off == lenmsg {
+				break
+			}
 			if off+4 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint32"}
 			}
@@ -944,6 +969,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			}
 		case reflect.String:
 			var s string
+			if off == lenmsg {
+				break
+			}
 			switch val.Type().Field(i).Tag {
 			default:
 				return lenmsg, &Error{"bad tag unpacking string: " + val.Type().Field(i).Tag.Get("dns")}
@@ -968,6 +996,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			case `dns:"cdomain-name"`:
 				fallthrough
 			case `dns:"domain-name"`:
+				if off == lenmsg {
+					// zero rdata foo, OK for dyn. updates
+					break
+				}
 				s, off, err = UnpackDomainName(msg, off)
 				if err != nil {
 					return lenmsg, err
