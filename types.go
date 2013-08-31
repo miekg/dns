@@ -623,8 +623,14 @@ type A struct {
 
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
 func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
-func (rr *A) String() string     { return rr.Hdr.String() + rr.A.String() }
 func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
+
+func (rr *A) String() string {
+	if rr.A == nil {
+		return rr.Hdr.String()
+	}
+	return rr.Hdr.String() + rr.A.String()
+}
 
 type AAAA struct {
 	Hdr  RR_Header
@@ -633,8 +639,14 @@ type AAAA struct {
 
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
-func (rr *AAAA) String() string     { return rr.Hdr.String() + rr.AAAA.String() }
 func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
+
+func (rr *AAAA) String() string {
+	if rr.AAAA == nil {
+		return rr.Hdr.String()
+	}
+	return rr.Hdr.String() + rr.AAAA.String()
+}
 
 type LOC struct {
 	Hdr       RR_Header
@@ -757,7 +769,7 @@ func (rr *NSEC) String() string {
 
 func (rr *NSEC) len() int {
 	l := rr.Hdr.len() + len(rr.NextDomain) + 1
-	lastwindow := uint32(2^32+1)
+	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
 		if uint32(window) != lastwindow {
@@ -1031,7 +1043,7 @@ func (rr *NSEC3) String() string {
 
 func (rr *NSEC3) len() int {
 	l := rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
-	lastwindow := uint32(2^32+1)
+	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
 		if uint32(window) != lastwindow {
