@@ -259,7 +259,7 @@ func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range rr_mk {
 		if typ == TypeSOA || typ == TypeTSIG || typ == TypeWKS {
-			// SOA, TSIG will not be seen in dyn. updates?
+			// SOA, TSIG will not be seen (like this) in dyn. updates?
 			// WKS is an bug, but...deprecated record.
 			continue
 		}
