@@ -41,12 +41,12 @@ func TestClientEDNS0(t *testing.T) {
 	}
 }
 
-func TestInflight(t *testing.T) {
+func TestSingleSingleInflight(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeDNSKEY)
 
 	c := new(Client)
-	c.Inflight = true
+	c.SingleInflight = true
 	nr := 10
 	ch := make(chan time.Duration)
 	for i := 0; i < nr; i++ {
