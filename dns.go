@@ -61,7 +61,10 @@
 //      c := new(Client)
 //      in, rtt, err := c.Exchange(m1, "127.0.0.1:53")
 //
-// For asynchronous queries it is easy to wrap Exchange() in a goroutine.
+// For asynchronous queries it is easy to wrap Exchange() in a goroutine. Suppressing
+// multiple outstanding queries (with the same question, type and class) is as easy as setting:
+//
+//	c.Inflight = true
 //
 // A dns message consists out of four sections.
 // The question section: in.Question, the answer section: in.Answer,

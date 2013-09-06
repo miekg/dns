@@ -1,10 +1,6 @@
 # TODO
 
 * Support for on-the-fly-signing or check how to do it
-* Test all rdata packing with zero rdata -- allowed for dynamic updates
-* Actually mimic net/ ? Dial. Read/Write ?
-    - if I want this i need to work on something else than \*Client, because a single client
-      can have multiple oustanding qeuries
 * Ratelimiting? server side (rrl)
 * Ratelimiting? client side
 
