@@ -89,6 +89,7 @@ with: `go build`.
 * 3597 - Unkown RRs
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP record
+* 4343 - Case insensitivity 
 * 4408 - SPF record
 * 4509 - SHA256 Hash in DS
 * 4592 - Wildcards in the DNS
