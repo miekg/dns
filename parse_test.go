@@ -5,7 +5,6 @@
 package dns
 
 import (
-	"crypto/rsa"
 	"fmt"
 	"net"
 	"os"

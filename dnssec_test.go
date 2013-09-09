@@ -5,6 +5,7 @@
 package dns
 
 import (
+	"crypto/rsa"
 	"strings"
 	"testing"
 )
