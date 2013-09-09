@@ -221,53 +221,6 @@ Coefficient: UuRoNqe7YHnKmQzE6iDWKTMIWTuoqqrFAmXPmKQnC+Y+BQzOVEHUo9bXdDnoI9hzXP1
 	t.Logf("%s", pubkey.(*DNSKEY).PrivateKeyString(privkey))
 }
 
-/*
-        return
-	// This key was generate with LDNS:
-	// ldns-keygen -a RSASHA256 -r /dev/urandom -b 1024 miek.nl
-	// Show that we have al the RSA parameters and can check them
-	// here to see what I came up with
-	key := new(RR_DNSKEY)
-	key.Hdr.Name = "miek.nl."
-	key.Hdr.Rrtype = TypeDNSKEY
-	key.Hdr.Class = ClassINET
-	key.Hdr.Ttl = 3600
-	key.Flags = 256
-	key.Protocol = 3
-	key.Algorithm = RSASHA256
-	key.PublicKey = "AwEAAcELcuxHosJX3LjbR6EFzsqI3mKivwvO6Y5Kzt/OXYmLQUI8tnOrX9ilT/0qGraxoONayVX3A6bl1pG3h/xOxVEGcJGqbrZnhr2+4S9tW2GWQwevV+NhinE7v6MCCCheVCnAPh0KFb/u14ng3DQizP1spBU/NoAN31l678snBpZX"
-
-	soa := new(RR_SOA)
-	soa.Hdr = RR_Header{"Miek.nl.", TypeSOA, ClassINET, 875, 0}
-	soa.Ns = "open.nlnetlabs.nl."
-	soa.Mbox = "miekg.atoom.net."
-	soa.Serial = 1293513905
-	soa.Refresh = 14400
-	soa.Retry = 3600
-	soa.Expire = 604800
-	soa.Minttl = 86400
-
-	sig := new(RR_RRSIG)
-	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
-	sig.TypeCovered = TypeSOA
-	sig.Algorithm = RSASHA256
-	sig.Labels = 2
-	sig.Expiration = 1296098705 // date '+%s' -d"2011-01-27 04:25:05
-	sig.Inception = 1293506705
-	sig.OrigTtl = 14400
-	//sig.KeyTag = 12051
-	sig.KeyTag = 12273 //faked
-	sig.SignerName = "miek.nl."
-	sig.Signature = "kLq/5oFy3Sh5ZxPGFMCyHq8MtN6E17R1Ln9+bJ2Q76YYAxFE8Xlie33A1GFctH2uhzRzJKuP/JSjUkrvGk2rjBm32z9zXtZsKx/4yV0da2nLRm44NOmX6gsP4Yia8mdqPUajjkyLzAzU2bevtesJm0Z65AcmPdq3tUZODdRAcng="
-
-	sig.Verify(key, []RR{soa})
-
-	// From Kmiek.nl*.private
-        openssl := "135560614087352210480379313279722604826647214111257577861451621491284835543707521986085999189597017237768514876957888744370440811423088511394629855684615382349190289731989185193184712980579812986523080792122141528583964882610028199770199112837017606561901919812183422914622295620927795008308854924436086101591"
-        println("OPENSSL key: what should be is: ",openssl)
-}
-*/
-
 func TestTag(t *testing.T) {
 	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
@@ -343,6 +296,114 @@ func TestKeyToDS(t *testing.T) {
 	ds := key.ToDS(SHA1)
 	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
 		t.Logf("Wrong DS digest for SHA1\n%v\n", ds)
+		t.Fail()
+	}
+}
+
+func TestSignRSA(t *testing.T) {
+	pub := "miek.nl. IN DNSKEY 256 3 5 AwEAAb+8lGNCxJgLS8rYVer6EnHVuIkQDghdjdtewDzU3G5R7PbMbKVRvH2Ma7pQyYceoaqWZQirSj72euPWfPxQnMy9ucCylA+FuH9cSjIcPf4PqJfdupHk9X6EBYjxrCLY4p1/yBwgyBIRJtZtAqM3ceAH2WovEJD6rTtOuHo5AluJ"
+
+	priv := `Private-key-format: v1.3
+Algorithm: 5 (RSASHA1)
+Modulus: v7yUY0LEmAtLythV6voScdW4iRAOCF2N217APNTcblHs9sxspVG8fYxrulDJhx6hqpZlCKtKPvZ649Z8/FCczL25wLKUD4W4f1xKMhw9/g+ol926keT1foQFiPGsItjinX/IHCDIEhEm1m0Cozdx4AfZai8QkPqtO064ejkCW4k=
+PublicExponent: AQAB
+PrivateExponent: YPwEmwjk5HuiROKU4xzHQ6l1hG8Iiha4cKRG3P5W2b66/EN/GUh07ZSf0UiYB67o257jUDVEgwCuPJz776zfApcCB4oGV+YDyEu7Hp/rL8KcSN0la0k2r9scKwxTp4BTJT23zyBFXsV/1wRDK1A5NxsHPDMYi2SoK63Enm/1ptk=
+Prime1: /wjOG+fD0ybNoSRn7nQ79udGeR1b0YhUA5mNjDx/x2fxtIXzygYk0Rhx9QFfDy6LOBvz92gbNQlzCLz3DJt5hw==
+Prime2: wHZsJ8OGhkp5p3mrJFZXMDc2mbYusDVTA+t+iRPdS797Tj0pjvU2HN4vTnTj8KBQp6hmnY7dLp9Y1qserySGbw==
+Exponent1: N0A7FsSRIg+IAN8YPQqlawoTtG1t1OkJ+nWrurPootScApX6iMvn8fyvw3p2k51rv84efnzpWAYiC8SUaQDNxQ==
+Exponent2: SvuYRaGyvo0zemE3oS+WRm2scxR8eiA8WJGeOc+obwOKCcBgeZblXzfdHGcEC1KaOcetOwNW/vwMA46lpLzJNw==
+Coefficient: 8+7ZN/JgByqv0NfULiFKTjtyegUcijRuyij7yNxYbCBneDvZGxJwKNi4YYXWx743pcAj4Oi4Oh86gcmxLs+hGw==
+Created: 20110302104537
+Publish: 20110302104537
+Activate: 20110302104537`
+
+	xk, _ := NewRR(pub)
+	k := xk.(*DNSKEY)
+	p, err := k.NewPrivateKey(priv)
+	if err != nil {
+		t.Logf("%v\n", err)
+		t.Fail()
+	}
+	switch priv := p.(type) {
+	case *rsa.PrivateKey:
+		if 65537 != priv.PublicKey.E {
+			t.Log("Exponenent should be 65537")
+			t.Fail()
+		}
+	default:
+		t.Logf("We should have read an RSA key: %v", priv)
+		t.Fail()
+	}
+	if k.KeyTag() != 37350 {
+		t.Logf("%d %v\n", k.KeyTag(), k)
+		t.Log("Keytag should be 37350")
+		t.Fail()
+	}
+
+	soa := new(SOA)
+	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}
+	soa.Ns = "open.nlnetlabs.nl."
+	soa.Mbox = "miekg.atoom.net."
+	soa.Serial = 1293945905
+	soa.Refresh = 14400
+	soa.Retry = 3600
+	soa.Expire = 604800
+	soa.Minttl = 86400
+
+	sig := new(RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.KeyTag = k.KeyTag()
+	sig.SignerName = k.Hdr.Name
+	sig.Algorithm = k.Algorithm
+
+	sig.Sign(p, []RR{soa})
+	if sig.Signature != "D5zsobpQcmMmYsUMLxCVEtgAdCvTu8V/IEeP4EyLBjqPJmjt96bwM9kqihsccofA5LIJ7DN91qkCORjWSTwNhzCv7bMyr2o5vBZElrlpnRzlvsFIoAZCD9xg6ZY7ZyzUJmU6IcTwG4v3xEYajcpbJJiyaw/RqR90MuRdKPiBzSo=" {
+		t.Log("Signature is not correct")
+		t.Logf("%v\n", sig)
+		t.Fail()
+	}
+}
+
+func TestSignECDSA(t *testing.T) {
+	pub := `example.net. 3600 IN DNSKEY 257 3 14 (
+	xKYaNhWdGOfJ+nPrL8/arkwf2EY3MDJ+SErKivBVSum1
+	w/egsXvSADtNJhyem5RCOpgQ6K8X1DRSEkrbYQ+OB+v8
+	/uX45NBwY8rp65F6Glur8I/mlVNgF6W/qTI37m40 )`
+	priv := `Private-key-format: v1.2
+Algorithm: 14 (ECDSAP384SHA384)
+PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
+
+	eckey, err := NewRR(pub)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	privkey, err := eckey.(*DNSKEY).NewPrivateKey(priv)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	ds := eckey.(*DNSKEY).ToDS(SHA384)
+	if ds.KeyTag != 10771 {
+		t.Fatal("Wrong keytag on DS")
+	}
+	if ds.Digest != "72d7b62976ce06438e9c0bf319013cf801f09ecc84b8d7e9495f27e305c6a9b0563a9b5f4d288405c3008a946df983d6" {
+		t.Fatal("Wrong DS Digest")
+	}
+	a, _ := NewRR("www.example.net. 3600 IN A 192.0.2.1")
+	sig := new(RRSIG)
+	sig.Hdr = RR_Header{"example.net.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.Expiration, _ = StringToTime("20100909102025")
+	sig.Inception, _ = StringToTime("20100812102025")
+	sig.KeyTag = eckey.(*DNSKEY).KeyTag()
+	sig.SignerName = eckey.(*DNSKEY).Hdr.Name
+	sig.Algorithm = eckey.(*DNSKEY).Algorithm
+
+	sig.Sign(privkey, []RR{a})
+
+	t.Logf("%s", sig.String())
+	if e := sig.Verify(eckey.(*DNSKEY), []RR{a}); e != nil {
+		t.Logf("Failure to validate: %s", e.Error())
 		t.Fail()
 	}
 }
