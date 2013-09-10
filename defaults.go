@@ -156,7 +156,7 @@ func (dns *Msg) IsEdns0() *OPT {
 }
 
 // IsDomainName checks if s is a valid domainname, it returns
-// the number of labels  and true, when a domain name is valid.
+// the number of labels and true, when a domain name is valid.
 // Note that non fully qualified domain name is considered valid, in this case the
 // last label is counted in the number of labels.
 // When false is returned the number of labels is not defined.
