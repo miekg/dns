@@ -160,40 +160,9 @@ func (dns *Msg) IsEdns0() *OPT {
 // Note that non fully qualified domain name is considered valid, in this case the
 // last label is counted in the number of labels.
 // When false is returned the number of labels is not defined.
-func IsDomainName(s string) (int, bool) {
-	// use PackDomainName
-	if buf == nil {
-		buf = make([]byte, 256)
-	}
-	lenmsg, err := PackDomainName(s, buf, 0, nil, false)
-	if err != nil {
-		return 0, false
-	}
-	// There are no compression pointers, because the map was nil, so
-	// walk the binary name and count the length bits - this is the number
-	// of labels.
-	off := 0
-	labels := 0
-Loop:
-	for {
-		if off >= lenmsg {
-			return labels, false
-		}
-		c := int(buf[off])
-		switch c & 0xC0 {
-		case 0x00:
-			if c == 0x00 {
-				// end of name
-				break
-			}
-			if off+c > lenmsg {
-				return labels, false
-			}
-			labels++
-			off += c
-		}
-	}
-	return labels, true
+func IsDomainName(s string) (labels int, ok bool) {
+	_, labels, err := packDomainName(s, nil, 0, nil, false)
+	return labels, err == nil
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. Both child and
