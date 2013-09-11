@@ -35,6 +35,25 @@ func TestDotInName(t *testing.T) {
 	}
 }
 
+func TestTooLongDomainName(t *testing.T) {
+	l := "aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrsssttt."
+	dom := l + l + l + l + l + l + l
+	_, e := NewRR(dom + " IN A 127.0.0.1")
+	if e == nil {
+		t.Log("Should be too long")
+		t.Fatal()
+	} else {
+		t.Logf("Error is %s", e.Error())
+	}
+	_, e = NewRR("@.com. IN A 127.0.0.1")
+	if e == nil {
+		t.Log("Should fail")
+		t.Fatal()
+	} else {
+		t.Logf("Error is %s", e.Error())
+	}
+}
+
 func TestDomainName(t *testing.T) {
 	tests := []string{"r\\.gieben.miek.nl.", "www\\.www.miek.nl.",
 		"www.*.miek.nl.", "www.*.miek.nl.",
