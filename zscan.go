@@ -88,6 +88,7 @@ func (e *ParseError) Error() (s string) {
 
 type lex struct {
 	token   string // text of the token
+	length  int    // lenght of the token
 	err     bool   // when true, token text has lexer error
 	value   uint8  // value: _STRING, _BLANK, etc.
 	line    int    // line in the file
@@ -179,11 +180,11 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 	if origin == "" {
 		origin = "."
 	}
-	if _, _, ok := IsDomainName(origin); !ok {
+	origin = Fqdn(origin)
+	if _, ok := IsDomainName(origin); !ok {
 		t <- Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
 		return
 	}
-	origin = Fqdn(origin)
 
 	st := _EXPECT_OWNER_DIR // initial state
 	var h RR_Header
@@ -212,13 +213,13 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 					st = _EXPECT_OWNER_BL
 					break
 				}
-				_, ld, ok := IsDomainName(l.token)
+				if h.Name[l.length-1] != '.' {
+					h.Name = appendOrigin(h.Name, origin)
+				}
+				_, ok := IsDomainName(l.token)
 				if !ok {
 					t <- Token{Error: &ParseError{f, "bad owner name", l}}
 					return
-				}
-				if h.Name[ld-1] != '.' {
-					h.Name = appendOrigin(h.Name, origin)
 				}
 				prevName = h.Name
 				st = _EXPECT_OWNER_BL
@@ -273,12 +274,12 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			case _BLANK:
 				l := <-c
 				if l.value == _STRING {
-					if _, _, ok := IsDomainName(l.token); !ok {
+					if _, ok := IsDomainName(l.token); !ok {
 						t <- Token{Error: &ParseError{f, "bad origin name", l}}
 						return
 					}
 					// a new origin is specified.
-					if !IsFqdn(l.token) {
+					if l.token[l.length-1] != '.' {
 						if origin != "." { // Prevent .. endings
 							neworigin = l.token + "." + origin
 						} else {
@@ -342,11 +343,11 @@ func parseZone(r io.Reader, origin, f string, t chan Token, include int) {
 			if e, _ := slurpRemainder(c, f); e != nil {
 				t <- Token{Error: e}
 			}
-			if _, _, ok := IsDomainName(l.token); !ok {
+			if _, ok := IsDomainName(l.token); !ok {
 				t <- Token{Error: &ParseError{f, "bad origin name", l}}
 				return
 			}
-			if !IsFqdn(l.token) {
+			if l.token[l.length-1] != '.' {
 				if origin != "." { // Prevent .. endings
 					origin = l.token + "." + origin
 				} else {
@@ -527,6 +528,7 @@ func zlexer(s *scan, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = string(str[:stri])
+				l.length = stri
 				// escape $... start with a \ not a $, so this will work
 				switch l.token {
 				case "$TTL":
@@ -543,7 +545,7 @@ func zlexer(s *scan, c chan lex) {
 			} else {
 				l.value = _STRING
 				l.token = string(str[:stri])
-
+				l.length = stri
 				if !rrtype {
 					if t, ok := StringToType[l.token]; ok {
 						l.value = _RRTYPE
@@ -589,6 +591,7 @@ func zlexer(s *scan, c chan lex) {
 			if !space && !commt {
 				l.value = _BLANK
 				l.token = " "
+				l.length = 1
 				debug.Printf("[5 %+v]", l.token)
 				c <- l
 			}
@@ -610,6 +613,7 @@ func zlexer(s *scan, c chan lex) {
 			if stri > 0 {
 				l.value = _STRING
 				l.token = string(str[:stri])
+				l.length = stri
 				debug.Printf("[4 %+v]", l.token)
 				c <- l
 				stri = 0
@@ -640,6 +644,7 @@ func zlexer(s *scan, c chan lex) {
 					owner = true
 					l.value = _NEWLINE
 					l.token = "\n"
+					l.length = 1
 					l.comment = string(com[:comi])
 					debug.Printf("[3 %+v %+v]", l.token, l.comment)
 					c <- l
@@ -657,6 +662,7 @@ func zlexer(s *scan, c chan lex) {
 				if stri != 0 {
 					l.value = _STRING
 					l.token = string(str[:stri])
+					l.length = stri
 					if !rrtype {
 						if t, ok := StringToType[strings.ToUpper(l.token)]; ok {
 							l.value = _RRTYPE
@@ -669,6 +675,7 @@ func zlexer(s *scan, c chan lex) {
 				}
 				l.value = _NEWLINE
 				l.token = "\n"
+				l.length = 1
 				debug.Printf("[1 %+v]", l.token)
 				c <- l
 				stri = 0
@@ -710,12 +717,14 @@ func zlexer(s *scan, c chan lex) {
 			if stri != 0 {
 				l.value = _STRING
 				l.token = string(str[:stri])
+				l.length = stri
 				debug.Printf("[%+v]", l.token)
 				c <- l
 				stri = 0
 			}
 			l.value = _QUOTE
 			l.token = "\""
+			l.length = 1
 			c <- l
 			quote = !quote
 		case '(', ')':
@@ -761,10 +770,10 @@ func zlexer(s *scan, c chan lex) {
 		}
 		x, err = s.tokenText()
 	}
-	// Hmm.
 	if stri > 0 {
 		// Send remainder
 		l.token = string(str[:stri])
+		l.length = stri
 		l.value = _STRING
 		debug.Printf("[%+v]", l.token)
 		c <- l

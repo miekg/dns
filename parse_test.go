@@ -267,7 +267,8 @@ func TestParseFailure(t *testing.T) {
 		"miek.nl. IN AAAA ::x",
 		"miek.nl. IN MX a0 miek.nl.",
 		"miek.nl aap IN MX mx.miek.nl.",
-		"miek.nl. IN CNAME ",
+		// "miek.nl. IN CNAME ", // actually valid nowadays, zero size rdata
+		"miek.nl. IN CNAME ..",
 		"miek.nl. PA MX 10 miek.nl.",
 		"miek.nl. ) IN MX 10 miek.nl.",
 	}
@@ -275,7 +276,7 @@ func TestParseFailure(t *testing.T) {
 	for _, s := range tests {
 		_, err := NewRR(s)
 		if err == nil {
-			t.Log("Should have triggered an error")
+			t.Logf("Should have triggered an error: \"%s\"", s)
 			t.Fail()
 		}
 	}

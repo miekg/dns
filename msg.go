@@ -212,14 +212,31 @@ var RcodeToString = map[int]string{
 // map needs to hold a mapping between domain names and offsets
 // pointing into msg[].
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	lenmsg := len(msg)
+	off1, _, err = packDomainName(s, msg, off, compression, compress)
+	return
+}
+
+func packDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, labels int, err error) {
+	// special case if msg == nil
+	lenmsg := 256
+	if msg != nil {
+		lenmsg = len(msg)
+	}
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
-		return off, nil
+		return off, 0, nil
 	}
-	// If not fully qualified, error out
-	if s[ls-1] != '.' {
-		return lenmsg, ErrFqdn
+	// If not fully qualified, error out, but only if msg == nil #ugly
+	switch {
+	case msg == nil:
+		if s[ls-1] != '.' {
+			s += "."
+			ls++
+		}
+	case msg != nil:
+		if s[ls-1] != '.' {
+			return lenmsg, 0, ErrFqdn
+		}
 	}
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
@@ -239,7 +256,7 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 			}
 			ls--
 			if off+1 > lenmsg {
-				return lenmsg, ErrBuf
+				return lenmsg, labels, ErrBuf
 			}
 			// check for \DDD
 			if i+2 < ls && bs[i] >= '0' && bs[i] <= '9' &&
@@ -255,22 +272,30 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 		}
 
 		if bs[i] == '.' {
+			if i > 0 && bs[i-1] == '.' {
+				// two dots back to back is not legal
+				return lenmsg, labels, ErrRdata
+			}
 			if i-begin >= 1<<6 { // top two bits of length must be clear
-				return lenmsg, ErrRdata
+				return lenmsg, labels, ErrRdata
 			}
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1 > lenmsg {
-				return lenmsg, ErrBuf
+				return lenmsg, labels, ErrBuf
 			}
-			msg[off] = byte(i - begin)
+			if msg != nil {
+				msg[off] = byte(i - begin)
+			}
 			offset := off
 			off++
 			for j := begin; j < i; j++ {
 				if off+1 > lenmsg {
-					return lenmsg, ErrBuf
+					return lenmsg, labels, ErrBuf
 				}
-				msg[off] = bs[j]
+				if msg != nil {
+					msg[off] = bs[j]
+				}
 				off++
 			}
 			// Dont try to compress '.'
@@ -294,24 +319,28 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 					}
 				}
 			}
+			labels++
 			begin = i + 1
 		}
 	}
 	// Root label is special
 	if len(bs) == 1 && bs[0] == '.' {
-		return off, nil
+		return off, labels, nil
 	}
 	// If we did compression and we find something add the pointer here
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
+		// if msg == nil, we will never do compression
 		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
 		off = nameoffset + 1
 		goto End
 	}
-	msg[off] = 0
+	if msg != nil {
+		msg[off] = 0
+	}
 End:
 	off++
-	return off, nil
+	return off, labels, nil
 }
 
 // Unpack a domain name.

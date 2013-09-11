@@ -31,16 +31,16 @@ type reply struct {
 // A Client defines parameter for a DNS client. A nil
 // Client is usable for sending queries.
 type Client struct {
-	Net          string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
-	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
-	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
-	Inflight     bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
-	group        singleflight
+	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	ReadTimeout    time.Duration     // the net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
+	WriteTimeout   time.Duration     // the net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
+	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
+	group          singleflight
 }
 
 func (c *Client) exchangeMerge(m *Msg, a string, s net.Conn) (r *Msg, rtt time.Duration, err error) {
-	if !c.Inflight {
+	if !c.SingleInflight {
 		if s == nil {
 			return c.exchange(m, a)
 		}

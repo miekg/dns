@@ -70,7 +70,7 @@ func (w *reply) axfrIn(q *Msg, c chan *Envelope) {
 			}
 			first = !first
 			// only one answer that is SOA, receive more
-			if (len(in.Answer) == 1) {
+			if len(in.Answer) == 1 {
 				w.tsigTimersOnly = true
 				c <- &Envelope{in.Answer, nil}
 				continue

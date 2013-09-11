@@ -95,20 +95,21 @@ domainLoop:
 func TestIsDomainName(t *testing.T) {
 	type ret struct {
 		ok  bool
-		lab uint8
-		l   uint8
+		lab int
 	}
 	names := map[string]*ret{
-		"www.example.com":  &ret{true, 3, 15},
-		"www.example.com.": &ret{true, 3, 16},
-		"mi\\k.nl.":        &ret{true, 2, 8},
-		"mi\\k.nl":         &ret{true, 2, 7},
+		"..":               &ret{false, 1},
+		"@.":               &ret{true, 1},
+		"www.example.com":  &ret{true, 3},
+		"www.example.com.": &ret{true, 3},
+		"mi\\k.nl.":        &ret{true, 2},
+		"mi\\k.nl":         &ret{true, 2},
 	}
 	for d, ok := range names {
-		l1, l2, k := IsDomainName(d)
-		if ok.ok != k || ok.lab != l1 || ok.l != l2 {
-			t.Logf("Got %v %d %d for %s ", k, l1, l2, d)
-			t.Logf("    %v %d %d for %s ", ok.ok, ok.lab, ok.l, d)
+		l, k := IsDomainName(d)
+		if ok.ok != k || ok.lab != l {
+			t.Logf(" got %v %d for %s ", k, l, d)
+			t.Logf("have %v %d for %s ", ok.ok, ok.lab, d)
 			t.Fail()
 		}
 	}

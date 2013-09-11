@@ -156,76 +156,13 @@ func (dns *Msg) IsEdns0() *OPT {
 }
 
 // IsDomainName checks if s is a valid domainname, it returns
-// the number of labels, total length and true, when a domain name is valid.
-// Note that unfully qualified domain name is considered valid, in this case the
+// the number of labels and true, when a domain name is valid.
+// Note that non fully qualified domain name is considered valid, in this case the
 // last label is counted in the number of labels.
-// When false is returned the labelcount and length are not defined.
-func IsDomainName(s string) (uint8, uint8, bool) { // copied from net package.
-	// See RFC 1035, RFC 3696.
-	l := len(s)
-	if l == 0 || l > 255 {
-		return 0, 0, false
-	}
-	// Preloop check for root label
-	if s == "." {
-		return 0, 1, true
-	}
-
-	last := byte('.')
-	ok := false // Ok once we've seen a letter or digit.
-	partlen := 0
-	labels := uint8(0)
-	var c byte
-	for i := 0; i < l; i++ {
-		c = s[i]
-		switch {
-		default:
-			// anything escaped is legal
-			if last != '\\' {
-				return 0, uint8(l), false
-			}
-			partlen++
-		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_' || c == '*' || c == '/':
-			ok = true
-			partlen++
-		case c == '\\': // OK.
-		case c == '@':
-			if last != '\\' {
-				return 0, uint8(l), false
-			}
-			partlen++
-		case '0' <= c && c <= '9':
-			ok = true
-			partlen++
-		case c == '-':
-			if last == '.' {
-				return 0, uint8(l), false
-			}
-			partlen++
-		case c == '.':
-			// byte before dot cannot be dot
-			if last == '.' {
-				return 0, uint8(l), false
-			}
-			if last == '\\' { // Ok, escaped dot.
-				partlen++
-				c = 'A' // Make current value not scary.
-				break
-			}
-			if partlen > 63 || partlen == 0 {
-				return 0, uint8(l), false
-			}
-			partlen = 0
-			labels++
-		}
-		last = c
-	}
-	// If last isn't a dot, the name was unqualified, but we still want to count
-	// the last label.
-	if last == '.' {
-		return labels, uint8(l), ok
-	}
-	return labels + 1, uint8(l), ok
+// When false is returned the number of labels is not defined.
+func IsDomainName(s string) (labels int, ok bool) {
+	_, labels, err := packDomainName(s, nil, 0, nil, false)
+	return labels, err == nil
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. Both child and
@@ -253,7 +190,7 @@ func Fqdn(s string) string {
 	return s + "."
 }
 
-// Copied from the official Go code
+// Copied from the official Go code.
 
 // ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
 // address addr suitable for rDNS (PTR) record lookup or an error if it fails

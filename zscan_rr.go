@@ -271,11 +271,11 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Ns = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad NS Ns", l}
 	}
-	if rr.Ns[ld-1] != '.' {
+	if rr.Ns[l.length-1] != '.' {
 		rr.Ns = appendOrigin(rr.Ns, o)
 	}
 	return rr, nil
@@ -291,11 +291,11 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Ptr = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad PTR Ptr", l}
 	}
-	if rr.Ptr[ld-1] != '.' {
+	if rr.Ptr[l.length-1] != '.' {
 		rr.Ptr = appendOrigin(rr.Ptr, o)
 	}
 	return rr, nil
@@ -310,11 +310,11 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.Mbox = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad RP Mbox", l}
 		}
-		if rr.Mbox[ld-1] != '.' {
+		if rr.Mbox[l.length-1] != '.' {
 			rr.Mbox = appendOrigin(rr.Mbox, o)
 		}
 	}
@@ -325,14 +325,13 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Txt = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad RP Txt", l}
 	}
-	if rr.Txt[ld-1] != '.' {
+	if rr.Txt[l.length-1] != '.' {
 		rr.Txt = appendOrigin(rr.Txt, o)
 	}
-
 	return rr, nil
 }
 
@@ -346,11 +345,11 @@ func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mr = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MR Mr", l}
 	}
-	if rr.Mr[ld-1] != '.' {
+	if rr.Mr[l.length-1] != '.' {
 		rr.Mr = appendOrigin(rr.Mr, o)
 	}
 	return rr, nil
@@ -366,11 +365,11 @@ func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mb = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MB Mb", l}
 	}
-	if rr.Mb[ld-1] != '.' {
+	if rr.Mb[l.length-1] != '.' {
 		rr.Mb = appendOrigin(rr.Mb, o)
 	}
 	return rr, nil
@@ -386,11 +385,11 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mg = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MG Mg", l}
 	}
-	if rr.Mg[ld-1] != '.' {
+	if rr.Mg[l.length-1] != '.' {
 		rr.Mg = appendOrigin(rr.Mg, o)
 	}
 	return rr, nil
@@ -418,11 +417,11 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.Rmail = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad MINFO Rmail", l}
 		}
-		if rr.Rmail[ld-1] != '.' {
+		if rr.Rmail[l.length-1] != '.' {
 			rr.Rmail = appendOrigin(rr.Rmail, o)
 		}
 	}
@@ -433,11 +432,11 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Email = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MINFO Email", l}
 	}
-	if rr.Email[ld-1] != '.' {
+	if rr.Email[l.length-1] != '.' {
 		rr.Email = appendOrigin(rr.Email, o)
 	}
 	return rr, nil
@@ -453,11 +452,11 @@ func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mf = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MF Mf", l}
 	}
-	if rr.Mf[ld-1] != '.' {
+	if rr.Mf[l.length-1] != '.' {
 		rr.Mf = appendOrigin(rr.Mf, o)
 	}
 	return rr, nil
@@ -473,11 +472,11 @@ func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Md = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MD Md", l}
 	}
-	if rr.Md[ld-1] != '.' {
+	if rr.Md[l.length-1] != '.' {
 		rr.Md = appendOrigin(rr.Md, o)
 	}
 	return rr, nil
@@ -500,11 +499,11 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mx = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad MX Mx", l}
 	}
-	if rr.Mx[ld-1] != '.' {
+	if rr.Mx[l.length-1] != '.' {
 		rr.Mx = appendOrigin(rr.Mx, o)
 	}
 	return rr, nil
@@ -527,11 +526,11 @@ func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Host = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad RT Host", l}
 	}
-	if rr.Host[ld-1] != '.' {
+	if rr.Host[l.length-1] != '.' {
 		rr.Host = appendOrigin(rr.Host, o)
 	}
 	return rr, nil
@@ -554,11 +553,11 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Hostname = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad AFSDB Hostname", l}
 	}
-	if rr.Hostname[ld-1] != '.' {
+	if rr.Hostname[l.length-1] != '.' {
 		rr.Hostname = appendOrigin(rr.Hostname, o)
 	}
 	return rr, nil
@@ -590,11 +589,11 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Exchanger = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad KX Exchanger", l}
 	}
-	if rr.Exchanger[ld-1] != '.' {
+	if rr.Exchanger[l.length-1] != '.' {
 		rr.Exchanger = appendOrigin(rr.Exchanger, o)
 	}
 	return rr, nil
@@ -610,11 +609,11 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Target = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
-	if rr.Target[ld-1] != '.' {
+	if rr.Target[l.length-1] != '.' {
 		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
@@ -630,11 +629,11 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Target = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
-	if rr.Target[ld-1] != '.' {
+	if rr.Target[l.length-1] != '.' {
 		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
@@ -650,11 +649,11 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.Ns = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad SOA Ns", l}
 		}
-		if rr.Ns[ld-1] != '.' {
+		if rr.Ns[l.length-1] != '.' {
 			rr.Ns = appendOrigin(rr.Ns, o)
 		}
 	}
@@ -664,11 +663,11 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.Mbox = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad SOA Mbox", l}
 		}
-		if rr.Mbox[ld-1] != '.' {
+		if rr.Mbox[l.length-1] != '.' {
 			rr.Mbox = appendOrigin(rr.Mbox, o)
 		}
 	}
@@ -743,11 +742,11 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Target = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad SRV Target", l}
 	}
-	if rr.Target[ld-1] != '.' {
+	if rr.Target[l.length-1] != '.' {
 		rr.Target = appendOrigin(rr.Target, o)
 	}
 	return rr, nil
@@ -834,11 +833,11 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Replacement = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}
 	}
-	if rr.Replacement[ld-1] != '.' {
+	if rr.Replacement[l.length-1] != '.' {
 		rr.Replacement = appendOrigin(rr.Replacement, o)
 	}
 	return rr, nil
@@ -853,11 +852,11 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	if l.token == "@" {
 		rr.PreviousName = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad TALINK PreviousName", l}
 		}
-		if rr.PreviousName[ld-1] != '.' {
+		if rr.PreviousName[l.length-1] != '.' {
 			rr.PreviousName = appendOrigin(rr.PreviousName, o)
 		}
 	}
@@ -868,11 +867,11 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.NextName = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad TALINK NextName", l}
 	}
-	if rr.NextName[ld-1] != '.' {
+	if rr.NextName[l.length-1] != '.' {
 		rr.NextName = appendOrigin(rr.NextName, o)
 	}
 	return rr, nil
@@ -1036,11 +1035,11 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 				xs = append(xs, o)
 				continue
 			}
-			_, ld, ok := IsDomainName(l.token)
+			_, ok := IsDomainName(l.token)
 			if !ok {
 				return nil, &ParseError{f, "bad HIP RendezvousServers", l}, ""
 			}
-			if l.token[ld-1] != '.' {
+			if l.token[l.length-1] != '.' {
 				l.token = appendOrigin(l.token, o)
 			}
 			xs = append(xs, l.token)
@@ -1144,11 +1143,11 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.token == "@" {
 		rr.SignerName = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad RRSIG SignerName", l}, ""
 		}
-		if rr.SignerName[ld-1] != '.' {
+		if rr.SignerName[l.length-1] != '.' {
 			rr.SignerName = appendOrigin(rr.SignerName, o)
 		}
 	}
@@ -1169,11 +1168,11 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.token == "@" {
 		rr.NextDomain = o
 	} else {
-		_, ld, ok := IsDomainName(l.token)
+		_, ok := IsDomainName(l.token)
 		if !ok {
 			return nil, &ParseError{f, "bad NSEC NextDomain", l}, ""
 		}
-		if rr.NextDomain[ld-1] != '.' {
+		if rr.NextDomain[l.length-1] != '.' {
 			rr.NextDomain = appendOrigin(rr.NextDomain, o)
 		}
 	}
@@ -1861,11 +1860,11 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Fqdn = o
 		return rr, nil
 	}
-	_, ld, ok := IsDomainName(l.token)
+	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad LP Fqdn", l}
 	}
-	if rr.Fqdn[ld-1] != '.' {
+	if rr.Fqdn[l.length-1] != '.' {
 		rr.Fqdn = appendOrigin(rr.Fqdn, o)
 	}
 	return rr, nil
