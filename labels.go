@@ -146,13 +146,16 @@ func NextLabel(s string, offset int) (i int, end bool) {
 
 // PrevLabel returns the index of the label when starting from the right and
 // jumping n labels to the left.
-// The bool start is true when the start of the string has been reached.
+// The bool start is true when the start of the string has been overshot.
 func PrevLabel(s string, n int) (i int, start bool) {
+	if n == 0 {
+		return len(s), false
+	}
 	lab := Split(s)
 	if lab == nil {
 		return 0, true
 	}
-	if len(lab) < n {
+	if n > len(lab) {
 		return 0, true
 	}
 	return lab[len(lab)-n], false
