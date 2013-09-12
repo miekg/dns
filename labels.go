@@ -129,7 +129,7 @@ func LenLabels(s string) int {
 }
 
 // Split splits a name s into its label indexes.
-// www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}
+// www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
 // The root name (.) returns nil.
 func Split(s string) []int {
 	if s == "." {
