@@ -89,7 +89,7 @@ func CountLabel(s string) (labels int) {
 	if s == "." {
 		return
 	}
-	s = Fqdn(s) // TODO(miek): annoyed I need this
+//	s = Fqdn(s) // TODO(miek): annoyed I need this
 	off := 0
 	end := false
 	for {

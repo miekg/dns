@@ -78,6 +78,21 @@ func TestSplit2(t *testing.T) {
 	}
 }
 
+func TestCountLabel(t *testing.T) {
+	splitter := map[string]int{
+		"www.miek.nl.": 3,
+		"www.miek.nl":  3,
+		".": 0,
+	}
+	for s, i := range splitter {
+		x := CountLabel(s)
+		if x != i {
+			t.Logf("CountLabel should have %d, got %d\n", i, x)
+			t.Fail()
+		}
+	}
+}
+
 func TestSplitDomainName(t *testing.T) {
 	labels := map[string][]string{
 		"miek.nl":       []string{"miek", "nl"},
