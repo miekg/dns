@@ -41,14 +41,14 @@ func TestTooLongDomainName(t *testing.T) {
 	_, e := NewRR(dom + " IN A 127.0.0.1")
 	if e == nil {
 		t.Log("Should be too long")
-		t.Fatal()
+		t.Fail()
 	} else {
 		t.Logf("Error is %s", e.Error())
 	}
-	_, e = NewRR("@.com. IN A 127.0.0.1")
+	_, e = NewRR("..com. IN A 127.0.0.1")
 	if e == nil {
 		t.Log("Should fail")
-		t.Fatal()
+		t.Fail()
 	} else {
 		t.Logf("Error is %s", e.Error())
 	}
