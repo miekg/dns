@@ -14,6 +14,7 @@ func TestCompareDomainName(t *testing.T) {
 	s3 := "www.bla.nl."
 	s4 := "nl.www.bla."
 	s5 := "nl"
+	s6 := "miek.nl"
 
 	if CompareDomainName(s1, s2) != 2 {
 		t.Logf("%s with %s should be %d", s1, s2, 2)
@@ -27,10 +28,16 @@ func TestCompareDomainName(t *testing.T) {
 		t.Logf("%s with %s should be %d", s3, s4, 0)
 		t.Fail()
 	}
+	// Non qualified tests
 	if CompareDomainName(s1, s5) != 1 {
 		t.Logf("%s with %s should be %d", s1, s5, 1)
 		t.Fail()
 	}
+	if CompareDomainName(s1, s6) != 2 {
+		t.Logf("%s with %s should be %d", s1, s5, 2)
+		t.Fail()
+	}
+
 	if CompareDomainName(s1, ".") != 0 {
 		t.Logf("%s with %s should be %d", s1, s5, 0)
 		t.Fail()
@@ -68,12 +75,21 @@ func TestSplit2(t *testing.T) {
 	splitter := map[string][]int{
 		"www.miek.nl.": []int{0, 4, 9},
 		"www.miek.nl":  []int{0, 4, 9},
+		"nl":           []int{0},
 	}
 	for s, i := range splitter {
 		x := Split(s)
-		if x[0] != i[0] || x[1] != i[1] || x[2] != i[2] {
-			t.Logf("Labels should be %v, got %v: %s\n", i, x, s)
-			t.Fail()
+		switch len(i) {
+		case 1:
+			if x[0] != i[0] {
+				t.Logf("Labels should be %v, got %v: %s\n", i, x, s)
+				t.Fail()
+			}
+		default:
+			if x[0] != i[0] || x[1] != i[1] || x[2] != i[2] {
+				t.Logf("Labels should be %v, got %v: %s\n", i, x, s)
+				t.Fail()
+			}
 		}
 	}
 }
@@ -82,7 +98,8 @@ func TestCountLabel(t *testing.T) {
 	splitter := map[string]int{
 		"www.miek.nl.": 3,
 		"www.miek.nl":  3,
-		".": 0,
+		"nl":           1,
+		".":            0,
 	}
 	for s, i := range splitter {
 		x := CountLabel(s)
