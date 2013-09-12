@@ -123,7 +123,7 @@ func Split(s string) []int {
 }
 
 // NextLabel returns the index of the start of the next label in the
-// string s starting at offset. 
+// string s starting at offset.
 // The bool end is true when the end of the string has been reached.
 func NextLabel(s string, offset int) (i int, end bool) {
 	quote := false
@@ -144,6 +144,20 @@ func NextLabel(s string, offset int) (i int, end bool) {
 	return i + 1, true
 }
 
+// PrevLabel returns the index of the label when starting from the right and
+// jumping n labels to the left.
+// The bool start is true when the start of the string has been reached.
+func PrevLabel(s string, n int) (i int, start bool) {
+	lab := Split(s)
+	if lab == nil {
+		return 0, true
+	}
+	if len(lab) < n {
+		return 0, true
+	}
+	return lab[len(lab)-n], false
+}
+
 func LenLabels(s string) int {
 	println("LenLabels is to be removed in future versions, for the better named CountLabel")
 	return CountLabel(s)
@@ -157,4 +171,3 @@ func CompareLabels(s1, s2 string) (n int) {
 	println("CompareLabels is to be removed in future versions, for better named CompareDomainName")
 	return CompareDomainName(s1, s2)
 }
-
