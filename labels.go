@@ -84,26 +84,6 @@ func CompareDomainName(s1, s2 string) (n int) {
 	return
 }
 
-// SplitLabels splits a domainname string into its labels.
-// www.miek.nl. returns []string{"www", "miek", "nl"}
-// The root label (.) returns nil.
-func SplitLabels(s string) []string {
-	println("SplitLabels is to be removed in future versions, for the better named SplitDomainName")
-	return SplitDomainName(s)
-}
-
-// CompareLabels compares the names s1 and s2 and
-// returns how many labels they have in common starting from the right.
-// The comparison stops at the first inequality. The labels are not lower cased
-// before the comparison, the caller should take care of this.
-//
-// www.miek.nl. and miek.nl. have two labels in common: miek and nl
-// www.miek.nl. and www.bla.nl. have one label in common: nl
-func CompareLabels(s1, s2 string) (n int) {
-	println("CompareLabels is to be removed in future versions, for better named CompareDomainName")
-	return CompareDomainName(s1, s2)
-}
-
 // CountLabel counts the the number of labels in the string s.
 func CountLabel(s string) (labels int) {
 	if s == "." {
@@ -120,12 +100,6 @@ func CountLabel(s string) (labels int) {
 		}
 	}
 	panic("dns: not reached")
-}
-
-// LenLabels returns the number of labels in the string s.
-func LenLabels(s string) int {
-	println("LenLabels is to be removed in future versions, for the better named CountLabel")
-	return CountLabel(s)
 }
 
 // Split splits a name s into its label indexes.
@@ -150,8 +124,8 @@ func Split(s string) []int {
 }
 
 // NextLabel returns the index of the start of the next label in the
-// string s. The bool end is true when the end of the string has been
-// reached.
+// string s starting at offset. 
+// The bool end is true when the end of the string has been reached.
 func NextLabel(s string, offset int) (i int, end bool) {
 	quote := false
 	for i = offset; i < len(s)-1; i++ {
@@ -170,3 +144,18 @@ func NextLabel(s string, offset int) (i int, end bool) {
 	}
 	return i + 1, true
 }
+
+func LenLabels(s string) int {
+	println("LenLabels is to be removed in future versions, for the better named CountLabel")
+	return CountLabel(s)
+}
+func SplitLabels(s string) []string {
+	println("SplitLabels is to be removed in future versions, for the better named SplitDomainName")
+	return SplitDomainName(s)
+}
+
+func CompareLabels(s1, s2 string) (n int) {
+	println("CompareLabels is to be removed in future versions, for better named CompareDomainName")
+	return CompareDomainName(s1, s2)
+}
+
