@@ -64,6 +64,20 @@ func TestSplit(t *testing.T) {
 	}
 }
 
+func TestSplit2(t *testing.T) {
+	splitter := map[string][]int{
+		"www.miek.nl.": []int{0, 4, 9},
+		"www.miek.nl":  []int{0, 4, 9},
+	}
+	for s, i := range splitter {
+		x := Split(s)
+		if x[0] != i[0] || x[1] != i[1] || x[2] != i[2] {
+			t.Logf("Labels should be %v, got %v: %s\n", i, x, s)
+			t.Fail()
+		}
+	}
+}
+
 func TestSplitDomainName(t *testing.T) {
 	labels := map[string][]string{
 		"miek.nl":       []string{"miek", "nl"},
