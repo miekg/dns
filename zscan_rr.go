@@ -1360,7 +1360,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	l := <-c
 	rr.Address = net.ParseIP(l.token)
 	if rr.Address == nil {
-		return nil, &ParseError{f, "bad WKS Adress", l}, ""
+		return nil, &ParseError{f, "bad WKS Address", l}, ""
 	}
 
 	<-c // _BLANK
