@@ -230,9 +230,8 @@ type EDNS0_SUBNET struct {
 func (e *EDNS0_SUBNET) Option() uint16 {
 	if e.DraftOption {
 		return EDNS0SUBNETDRAFT
-	} else {
-		return EDNS0SUBNET
 	}
+	return EDNS0SUBNET
 }
 
 func (e *EDNS0_SUBNET) pack() ([]byte, error) {
