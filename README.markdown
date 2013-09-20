@@ -63,7 +63,7 @@ A short "how to use the API" is at the beginning of dns.go (this also will show
 when you call `go doc github.com/miekg/dns`. Sample
 programs can be found in the `ex` directory. They can also be build
 with: `go build`.
- 
+
 ## Supported RFCs
 
 *all of them*
@@ -89,14 +89,14 @@ with: `go build`.
 * 3597 - Unkown RRs
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP record
-* 4343 - Case insensitivity 
+* 4343 - Case insensitivity
 * 4408 - SPF record
 * 4509 - SHA256 Hash in DS
 * 4592 - Wildcards in the DNS
 * 4635 - HMAC SHA TSIG
 * 4701 - DHCID
 * 4892 - id.server
-* 5001 - NSID 
+* 5001 - NSID
 * 5155 - NSEC3 record
 * 5205 - HIP record
 * 5702 - SHA2 in the DNS
