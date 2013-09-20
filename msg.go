@@ -786,11 +786,14 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
-				case EDNS0SUBNET:
+				case EDNS0SUBNET, EDNS0SUBNETDRAFT:
 					e := new(EDNS0_SUBNET)
 					e.unpack(msg[off1 : off1+int(optlen)])
 					edns = append(edns, e)
 					off = off1 + int(optlen)
+					if code == EDNS0SUBNETDRAFT {
+						e.DraftOption = true
+					}
 				case EDNS0UL:
 					e := new(EDNS0_UL)
 					e.unpack(msg[off1 : off1+int(optlen)])

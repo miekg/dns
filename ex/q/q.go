@@ -44,6 +44,7 @@ func main() {
 	tcp := flag.Bool("tcp", false, "TCP mode")
 	nsid := flag.Bool("nsid", false, "set edns nsid option")
 	client := flag.String("client", "", "set edns client-subnet option")
+	clientdraftcode := flag.Bool("clientdraft", false, "set edns client-subnet option using the draft option code")
 	//serial := flag.Int("serial", 0, "perform an IXFR with this serial")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] [@server] [qtype] [qclass] [name ...]\n", os.Args[0])
@@ -177,6 +178,9 @@ Flags:
 		if *client != "" {
 			e := new(dns.EDNS0_SUBNET)
 			e.Code = dns.EDNS0SUBNET
+			if *clientdraftcode {
+				e.DraftOption = true
+			}
 			e.SourceScope = 0
 			e.Address = net.ParseIP(*client)
 			if e.Address == nil {

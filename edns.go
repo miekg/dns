@@ -14,7 +14,7 @@
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
 // The rdata of an OPT RR consists out of a slice of EDNS0 interfaces. Currently
-// only a few have been standardized: EDNS0_NSID (RFC 5001) and EDNS0_SUBNET (draft). Note that
+// only a few have been standardized: EDNS0_NSID (RFC 5001) and EDNS0_SUBNET (RFC 6891). Note that
 // these options may be combined in an OPT RR.
 // Basic use pattern for a server to check if (and which) options are set:
 //
@@ -38,14 +38,15 @@ import (
 
 // EDNS0 Option codes.
 const (
-	EDNS0LLQ    = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
-	EDNS0UL     = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
-	EDNS0NSID   = 0x3    // nsid (RFC5001)
-	EDNS0SUBNET = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
-	EDNS0DAU    = 0x5    // DNSSEC Algorithm Understood
-	EDNS0DHU    = 0x6    // DS Hash Understood
-	EDNS0N3U    = 0x7    // NSEC3 Hash Understood
-	_DO         = 1 << 7 // dnssec ok
+	EDNS0LLQ         = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
+	EDNS0UL          = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
+	EDNS0NSID        = 0x3    // nsid (RFC5001)
+	EDNS0DAU         = 0x5    // DNSSEC Algorithm Understood
+	EDNS0DHU         = 0x6    // DS Hash Understood
+	EDNS0N3U         = 0x7    // NSEC3 Hash Understood
+	EDNS0SUBNET      = 0x8    // client-subnet (RFC6891)
+	EDNS0SUBNETDRAFT = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
+	_DO              = 1 << 7 // dnssec ok
 )
 
 type OPT struct {
@@ -80,6 +81,9 @@ func (rr *OPT) String() string {
 			}
 		case *EDNS0_SUBNET:
 			s += "\n; SUBNET: " + o.String()
+			if o.(*EDNS0_SUBNET).DraftOption {
+				s += " (draft)"
+			}
 		case *EDNS0_UL:
 			s += "\n; UPDATE LEASE: " + o.String()
 		case *EDNS0_LLQ:
@@ -220,10 +224,15 @@ type EDNS0_SUBNET struct {
 	SourceNetmask uint8
 	SourceScope   uint8
 	Address       net.IP
+	DraftOption   bool
 }
 
 func (e *EDNS0_SUBNET) Option() uint16 {
-	return EDNS0SUBNET
+	if e.DraftOption {
+		return EDNS0SUBNETDRAFT
+	} else {
+		return EDNS0SUBNET
+	}
 }
 
 func (e *EDNS0_SUBNET) pack() ([]byte, error) {
