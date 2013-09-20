@@ -316,7 +316,7 @@ func sectionCheck(set []dns.RR, server string, tcp bool) {
 	}
 }
 
-// Check the sigs in the msg, get the signer's key (additional query), get the 
+// Check the sigs in the msg, get the signer's key (additional query), get the
 // rrset from the message, check the signature(s)
 func sigCheck(in *dns.Msg, server string, tcp bool) {
 	sectionCheck(in.Answer, server, tcp)
