@@ -224,7 +224,7 @@ type EDNS0_SUBNET struct {
 	SourceNetmask uint8
 	SourceScope   uint8
 	Address       net.IP
-	DraftOption   bool
+	DraftOption   bool // Set to true if using the old (0x50fa) option code
 }
 
 func (e *EDNS0_SUBNET) Option() uint16 {
