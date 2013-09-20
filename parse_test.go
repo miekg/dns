@@ -220,11 +220,11 @@ func TestParseBrace(t *testing.T) {
 		"_ssh._tcp.local. 60 IN (PTR) stora._ssh._tcp.local.": "_ssh._tcp.local.\t60\tIN\tPTR\tstora._ssh._tcp.local.",
 		"miek.nl. NS ns.miek.nl":                              "miek.nl.\t3600\tIN\tNS\tns.miek.nl.",
 		`(miek.nl.) (
-                        (IN) 
+                        (IN)
                         (AAAA)
                         (::1) )`: "miek.nl.\t3600\tIN\tAAAA\t::1",
 		`(miek.nl.) (
-                        (IN) 
+                        (IN)
                         (AAAA)
                         (::1))`: "miek.nl.\t3600\tIN\tAAAA\t::1",
 		"miek.nl. IN AAAA ::2": "miek.nl.\t3600\tIN\tAAAA\t::2",
@@ -339,7 +339,7 @@ name.	10800	IN	NS	name.
                         NS      d6.nstld.com.
                         NS      f6.nstld.com.
                         NS      m6.nstld.com.
-( 
+(
 			NS	m7.nstld.com.
 )
 $ORIGIN name.
@@ -419,7 +419,7 @@ func TestLineNumberError2(t *testing.T) {
 		"example.com. 1000 SO master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100": "dns: expecting RR type or class, not this...: \"SO\" at line: 1:21",
 		"example.com 1000 IN TALINK a.example.com. b..example.com.":                                          "dns: bad TALINK NextName: \"b..example.com.\" at line: 1:57",
 		"example.com 1000 IN TALINK ( a.example.com. b..example.com. )":                                      "dns: bad TALINK NextName: \"b..example.com.\" at line: 1:60",
-		`example.com 1000 IN TALINK ( a.example.com. 
+		`example.com 1000 IN TALINK ( a.example.com.
 	bb..example.com. )`: "dns: bad TALINK NextName: \"bb..example.com.\" at line: 2:18",
 		// This is a bug, it should report an error on line 1, but the new is already processed.
 		`example.com 1000 IN TALINK ( a.example.com.  b...example.com.
