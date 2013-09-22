@@ -471,6 +471,11 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					// Length
 					msg[off+2], msg[off+3] = packUint16(uint16(len(b)))
 					off += 4
+					if off+len(b) > lenmsg {
+						copy(msg[off:], b)
+						off = lenmsg
+						continue
+					}
 					// Actual data
 					copy(msg[off:off+len(b)], b)
 					off += len(b)
