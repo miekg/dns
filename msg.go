@@ -756,7 +756,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					break
 				}
 				l := int(msg[off])
-				if off+l+1 > lenmsg {
+				if off+l+1 > lenmsg { // TODO(miek): +1 or ... not ...
 					return lenmsg, &Error{err: "overflow unpacking txt"}
 				}
 				txt = append(txt, string(msg[off+1:off+l+1]))

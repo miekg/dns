@@ -1385,7 +1385,7 @@ type CAA struct {
 	Hdr   RR_Header
 	Flag  uint8
 	Tag   string
-	Value []string `dns:"txt"`
+	Value string `dns:"octet"`
 }
 
 func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
@@ -1393,21 +1393,13 @@ func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, 
 
 func (rr *CAA) String() string {
 	s := rr.Hdr.String() + strconv.FormatInt(int64(rr.Flag), 10) + " " + rr.Tag
-	for i, s1 := range rr.Value {
-		if i > 0 {
-			s += " " + strconv.QuoteToASCII(s1)
-		} else {
-			s += strconv.QuoteToASCII(s1)
-		}
-	}
+	s += strconv.QuoteToASCII(rr.Value)
 	return s
 }
 
 func (rr *CAA) len() int {
 	l := rr.Hdr.len() + 1 + len(rr.Tag)
-	for _, t := range rr.Value {
-		l += len(t)
-	}
+	l += len(rr.Value)
 	return l
 }
 
