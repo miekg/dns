@@ -4,6 +4,8 @@
 
 package dns
 
+// New Transfer
+
 // Envelope is used when doing [IA]XFR with a remote server.
 type Envelope struct {
 	RR    []RR  // The set of RRs in the answer section of the AXFR reply message.
