@@ -15,12 +15,14 @@ import (
 // Order of events:
 // *client -> *reply -> Exchange() -> dial()/send()->write()/receive()->read()
 
-// Do I want make this an interface thingy?
-type reply struct {
+
+// A Conn represents a connection (which may be short lived) to a DNS
+// server.
+type Conn struct {
+	net.Conn
 	client         *Client
 	addr           string
 	req            *Msg
-	conn           net.Conn
 	tsigRequestMAC string
 	tsigTimersOnly bool
 	tsigStatus     error
@@ -37,6 +39,10 @@ type Client struct {
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
+}
+
+func Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err) {
+
 }
 
 func (c *Client) exchangeMerge(m *Msg, a string, s net.Conn) (r *Msg, rtt time.Duration, err error) {
