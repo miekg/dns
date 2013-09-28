@@ -396,6 +396,7 @@ func shortRR(r dns.RR) dns.RR {
 }
 
 func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
+	/*
 	if t, e := c.TransferIn(m, nameserver); e == nil {
 		for r := range t {
 			if r.Error == nil {
@@ -412,4 +413,5 @@ func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
 	} else {
 		fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
 	}
+	*/
 }

@@ -10,6 +10,7 @@ type Envelope struct {
 	Error error // If something went wrong, this contains the error.
 }
 
+/*
 // TransferIn performs a [AI]XFR request (depends on the message's Qtype). It returns
 // a channel of *Envelope on which the replies from the server are sent. At the end of
 // the transfer the channel is closed.
@@ -201,3 +202,4 @@ func xfrOut(w ResponseWriter, req *Msg, c chan *Envelope, e *error) {
 		rep.Answer = nil
 	}
 }
+*/
