@@ -66,6 +66,11 @@
 //
 //	c.SingleInflight = true
 //
+// If these "advanced" features are not needed, a simple UDP query can be send,
+// with:
+//
+//	in, err := dns.Exchange(m1, "127.0.0.1:53")
+//
 // A dns message consists out of four sections.
 // The question section: in.Question, the answer section: in.Answer,
 // the authority section: in.Ns and the additional section: in.Extra.
