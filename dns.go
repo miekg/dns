@@ -36,7 +36,7 @@
 // In the DNS messages are exchanged, these messages contain resource
 // records (sets).  Use pattern for creating a message:
 //
-//      m := dns.new(Msg)
+//      m := new(dns.Msg)
 //      m.SetQuestion("miek.nl.", dns.TypeMX)
 //
 // Or when not certain if the domain name is fully qualified:
