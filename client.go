@@ -17,7 +17,7 @@ const dnsTimeout time.Duration = 2 * 1e9
 // A Conn represents a connection (which may be short lived) to a DNS server.
 type Conn struct {
 	net.Conn
-	UDPSize    uint16               // Minimum reveive buffer for UDP messages, if > 512 EDNS0, 0 MinMsgSize.
+	UDPSize    uint16            // Minimum reveive buffer for UDP messages, if > 512 EDNS0, 0 MinMsgSize.
 	TsigSecret map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	rtt        time.Duration
 	t          time.Time

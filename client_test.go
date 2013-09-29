@@ -131,7 +131,6 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 }
 */
 
-/*
 // not really a test, but shows how to use update leases
 func TestUpdateLeaseTSIG(t *testing.T) {
 	m := new(Msg)
@@ -154,16 +153,8 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 	m.SetTsig("polvi.", HmacMD5, 300, time.Now().Unix())
 	c.TsigSecret = map[string]string{"polvi.": "pRZgBrBvI4NAHZYhxmhs/Q=="}
 
-	co := new(Conn)
-	w.client = c
-	w.addr = "127.0.0.1:53"
-	w.req = m
-
-	if err := w.dial(); err != nil {
-		t.Fail()
-	}
-	if err := w.send(m); err != nil {
+	_, _, err := c.Exchange(m, "127.0.0.1:53")
+	if err != nil {
 		t.Fail()
 	}
 }
-*/
