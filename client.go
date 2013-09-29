@@ -15,11 +15,9 @@ import (
 // A Conn represents a connection (which may be short lived) to a DNS server.
 type Conn struct {
 	net.Conn
-	tsigRequestMAC string
-	tsigTimersOnly bool
-	tsigStatus     error
-	rtt            time.Duration
-	t              time.Time
+	rtt        time.Duration
+	t          time.Time
+	requestMAC string
 }
 
 // A Client defines parameters for a DNS client. A nil Client is usable for sending queries.
@@ -32,7 +30,7 @@ type Client struct {
 	group          singleflight
 }
 
-// Exchange performs an synchronous UDP query. It sends the message m to the address
+// Exchange performs a synchronous UDP query. It sends the message m to the address
 // contained in a and waits for an reply.
 func Exchange(m *Msg, a string) (r *Msg, err error) {
 	co := new(Conn)
@@ -41,10 +39,10 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 		return nil, err
 	}
 	defer co.Close()
-	if err = co.WriteMsg(m); err != nil {
+	if err = co.WriteMsg(m, nil); err != nil {
 		return nil, err
 	}
-	r, err = co.ReadMsg()
+	r, err = co.ReadMsg(nil)
 	return r, err
 }
 
@@ -75,7 +73,6 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 	if shared {
 		r1 := r.copy()
-// not needed		r1.Id = r.Id // Copy Id!
 		r = r1
 	}
 	return r, rtt, nil
@@ -92,20 +89,21 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		return nil, 0, err
 	}
 	defer co.Close()
-	if err = co.WriteMsg(m); err != nil {
+	if err = co.WriteMsg(m, c.TsigSecret); err != nil {
 		return nil, 0, err
 	}
-	r, err = co.ReadMsg()
+	r, err = co.ReadMsg(c.TsigSecret)
 	return r, co.rtt, err
 }
 
-func (co *Conn) ReadMsg() (*Msg, error) {
+// Add bufsize
+func (co *Conn) ReadMsg(tsigSecret map[string]string) (*Msg, error) {
 	var p []byte
 	m := new(Msg)
 	if _, ok := co.Conn.(*net.TCPConn); ok {
 		p = make([]byte, MaxMsgSize)
 	} else {
-		// OPT! TODO(mg)
+		// OPT! TODO(miek): needs function change
 		p = make([]byte, DefaultMsgSize)
 	}
 	n, err := co.Read(p)
@@ -117,16 +115,14 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		return nil, err
 	}
 	co.rtt = time.Since(co.t)
-//	if t := m.IsTsig(); t != nil {
-//		secret := t.Hdr.Name
-//		if _, ok := w.client.TsigSecret[secret]; !ok {
-//			w.tsigStatus = ErrSecret
-//			return m, ErrSecret
-//		}
-//		// Need to work on the original message p, as that was used to calculate the tsig.
-//		w.tsigStatus = TsigVerify(p, w.client.TsigSecret[secret], w.tsigRequestMAC, w.tsigTimersOnly)
-//	}
-	return m, nil
+	if t := m.IsTsig(); t != nil {
+		if _, ok := tsigSecret[t.Hdr.Name]; !ok {
+			return m, ErrSecret
+		}
+		// Need to work on the original message p, as that was used to calculate the tsig.
+		err = TsigVerify(p, tsigSecret[t.Hdr.Name], co.requestMAC, false)
+	}
+	return m, err
 }
 
 func (co *Conn) Read(p []byte) (n int, err error) {
@@ -174,19 +170,19 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 // send sends a dns msg to the address specified in w.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
-func (co *Conn) WriteMsg(m *Msg) (err error) {
+func (co *Conn) WriteMsg(m *Msg, tsigSecret map[string]string) (err error) {
 	var out []byte
-//	if t := m.IsTsig(); t != nil {
-//		mac := ""
-//		name := t.Hdr.Name
-//		if _, ok := w.client.TsigSecret[name]; !ok {
-//			return ErrSecret
-//		}
-//		out, mac, err = TsigGenerate(m, w.client.TsigSecret[name], w.tsigRequestMAC, w.tsigTimersOnly)
-//		w.tsigRequestMAC = mac
-//	} else {
-	out, err = m.Pack()
-//	}
+	if t := m.IsTsig(); t != nil {
+		mac := ""
+		if _, ok := tsigSecret[t.Hdr.Name]; !ok {
+			return ErrSecret
+		}
+		out, mac, err = TsigGenerate(m, tsigSecret[t.Hdr.Name], co.requestMAC, false)
+		// Set for the next read
+		co.requestMAC = mac
+	} else {
+		out, err = m.Pack()
+	}
 	if err != nil {
 		return err
 	}

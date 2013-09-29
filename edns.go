@@ -443,7 +443,6 @@ func (e *EDNS0_DAU) String() string {
 		}
 	}
 	return s
-
 }
 
 type EDNS0_DHU struct {
