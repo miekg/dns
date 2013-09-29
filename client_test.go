@@ -155,6 +155,7 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 
 	_, _, err := c.Exchange(m, "127.0.0.1:53")
 	if err != nil {
+		t.Log(err.Error())
 		t.Fail()
 	}
 }
