@@ -43,7 +43,10 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer co.Close()
+	co.SetReadDeadline(time.Now().Add(dnsTimeout))
+	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
 	if err = co.WriteMsg(m); err != nil {
 		return nil, err
 	}
@@ -97,6 +100,16 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	if err != nil {
 		return nil, 0, err
 	}
+	timeout = dnsTimeout
+	if c.ReadTimeout != 0 {
+		timeout = c.ReadTimeout
+	}
+	co.SetReadDeadline(time.Now().Add(dnsTimeout))
+	timeout = dnsTimeout
+	if c.WriteTimeout != 0 {
+		timeout = c.ReadTimeout
+	}
+	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
 	defer co.Close()
 	opt := m.IsEdns0()
 	if opt != nil && opt.UDPSize() >= MinMsgSize {
