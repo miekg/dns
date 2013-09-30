@@ -160,17 +160,3 @@ func PrevLabel(s string, n int) (i int, start bool) {
 	}
 	return lab[len(lab)-n], false
 }
-
-func LenLabels(s string) int {
-	println("LenLabels is to be removed in future versions, for the better named CountLabel")
-	return CountLabel(s)
-}
-func SplitLabels(s string) []string {
-	println("SplitLabels is to be removed in future versions, for the better named SplitDomainName")
-	return SplitDomainName(s)
-}
-
-func CompareLabels(s1, s2 string) (n int) {
-	println("CompareLabels is to be removed in future versions, for better named CompareDomainName")
-	return CompareDomainName(s1, s2)
-}
