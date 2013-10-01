@@ -445,6 +445,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 						return lenmsg, err
 					}
 				}
+			case `dns:"octect"`:
+				println("TODO")
+
 			case `dns:"txt"`:
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
@@ -1084,8 +1087,11 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 				s = hex.EncodeToString(msg[off : off+size])
 				off += size
+			case `dns:"octet"`:
+				// used in CAA
+				// rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
+				// TODO(miek): finish
 			case `dns:"txt"`:
-				// 1 txt piece
 				rdlength := int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txt:
 				if off >= lenmsg || off+1+int(msg[off]) > lenmsg {
