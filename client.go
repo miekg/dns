@@ -166,7 +166,7 @@ func (w *reply) read(p []byte) (n int, err error) {
 	switch w.client.Net {
 	case "tcp", "tcp4", "tcp6":
 		setTimeouts(w)
-		n, err = w.conn.(*net.TCPConn).Read(p[0:2])
+		n, err = w.conn.Read(p[0:2])
 		if err != nil || n != 2 {
 			return n, err
 		}
@@ -177,13 +177,13 @@ func (w *reply) read(p []byte) (n int, err error) {
 		if int(l) > len(p) {
 			return int(l), io.ErrShortBuffer
 		}
-		n, err = w.conn.(*net.TCPConn).Read(p[:l])
+		n, err = w.conn.Read(p[:l])
 		if err != nil {
 			return n, err
 		}
 		i := n
 		for i < int(l) {
-			j, err := w.conn.(*net.TCPConn).Read(p[i:int(l)])
+			j, err := w.conn.Read(p[i:int(l)])
 			if err != nil {
 				return i, err
 			}
@@ -192,7 +192,7 @@ func (w *reply) read(p []byte) (n int, err error) {
 		n = i
 	case "", "udp", "udp4", "udp6":
 		setTimeouts(w)
-		n, _, err = w.conn.(*net.UDPConn).ReadFromUDP(p)
+		n, err = w.conn.Read(p)
 		if err != nil {
 			return n, err
 		}
@@ -251,7 +251,7 @@ func (w *reply) write(p []byte) (n int, err error) {
 		n = i
 	case "", "udp", "udp4", "udp6":
 		setTimeouts(w)
-		n, err = w.conn.(*net.UDPConn).Write(p)
+		n, err = w.conn.Write(p)
 		if err != nil {
 			return n, err
 		}
