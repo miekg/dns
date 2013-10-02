@@ -16,7 +16,7 @@ const dnsTimeout time.Duration = 2 * 1e9
 
 // A Conn represents a connection (which may be short lived) to a DNS server.
 type Conn struct {
-	net.Conn
+	net.Conn                     // a net.Conn holding the connection
 	UDPSize    uint16            // Minimum receive buffer for UDP messages
 	TsigSecret map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	rtt        time.Duration
@@ -28,8 +28,8 @@ type Conn struct {
 type Client struct {
 	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
-	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for new connections (ns), defaults to 2 * 1e9
-	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for new connections (ns), defaults to 2 * 1e9
+	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
+	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
@@ -107,7 +107,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	co.SetReadDeadline(time.Now().Add(dnsTimeout))
 	timeout = dnsTimeout
 	if c.WriteTimeout != 0 {
-		timeout = c.ReadTimeout
+		timeout = c.WriteTimeout
 	}
 	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
 	defer co.Close()
@@ -198,7 +198,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-// WriteMsg send a dns message throught the connection co.
+// WriteMsg send a message throught the connection co.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
 func (co *Conn) WriteMsg(m *Msg) (err error) {

@@ -4,38 +4,138 @@
 
 package dns
 
+import (
+	"net"
+	"time"
+)
+
 // Envelope is used when doing [IA]XFR with a remote server.
 type Envelope struct {
 	RR    []RR  // The set of RRs in the answer section of the AXFR reply message.
 	Error error // If something went wrong, this contains the error.
 }
 
-/*
-// TransferIn performs a [AI]XFR request (depends on the message's Qtype). It returns
-// a channel of *Envelope on which the replies from the server are sent. At the end of
-// the transfer the channel is closed.
-// The messages are TSIG checked if
-// needed, no other post-processing is performed. The caller must dissect the returned
-// messages.
+type Transfer struct {
+	Conn
+	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
+	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
+	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
+	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	tsigTimersOnly bool
+}
+
+// In performs a [AI]XFR request (depends on the message's Qtype). It returns
+// a channel of *Envelope on which the replies from the server are sent.
+// At the end of the transfer the channel is closed.
+// The messages are TSIG checked if needed, no other post-processing is performed.
+// The caller must dissect the returned messages.
 //
 // Basic use pattern for receiving an AXFR:
 //
 //	// m contains the AXFR request
-//	t, e := c.TransferIn(m, "127.0.0.1:53")
-//	for r := range t {
-//		// ... deal with r.RR or r.Error
+//	t := new(dns.Transfer)
+//	c, e := t.In(m, "127.0.0.1:53")
+//	for env := range c
+//		// ... deal with env.RR or env.Error
 //	}
+
+func (t *Transfer) In(q *Msg, a string, env chan *Envelope) (err error) {
+	co := new(Conn)
+	timeout := dnsTimeout
+	if t.DialTimeout != 0 {
+		timeout = t.DialTimeout
+	}
+	co.Conn, err = net.DialTimeout("tcp", a, timeout)
+	if err != nil {
+		return err
+	}
+	// re-read 'n stuff must be pushed down
+	timeout = dnsTimeout
+	if t.ReadTimeout != 0 {
+		timeout = t.ReadTimeout
+	}
+	co.SetReadDeadline(time.Now().Add(dnsTimeout))
+	timeout = dnsTimeout
+	if t.WriteTimeout != 0 {
+		timeout = t.WriteTimeout
+	}
+	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
+	defer co.Close()
+	return nil
+}
+
+// Out performs an outgoing [AI]XFR depending on the request message. The
+// caller is responsible for sending the correct sequence of RR sets through
+// the channel c. For reasons of symmetry Envelope is re-used.
+// Errors are signaled via the error pointer, when an error occurs the function
+// sets the error and returns (it does not close the channel).
+// TSIG and enveloping is handled by TransferOut.
+//
+// Basic use pattern for sending an AXFR:
+//
+//	// m contains the AXFR request
+//	t := new(dns.Transfer)
+//	env := make(chan *dns.Envelope)
+//	err := t.Out(m, c, e)
+//	for rrset := range rrsets {	// rrsets is a []RR
+//		c <- &{Envelope{RR: rrset}
+//		if e != nil {
+//			close(c)
+//			break
+//		}
+//	}
+//	// w.Close() // Don't! Let the client close the connection
+func (t *Transfer) Out(q *Msg, a string) (chan *Envelope, error) {
+	return nil, nil
+}
+
+// ReadMsg reads a message from the transfer connection t.
+func (t *Transfer) ReadMsg() (*Msg, error) {
+	m := new(Msg)
+	p := make([]byte, MaxMsgSize)
+	n, err := t.Conn.Read(p)
+	if err != nil && n == 0 {
+		return nil, err
+	}
+	p = p[:n]
+	if err := m.Unpack(p); err != nil {
+		return nil, err
+	}
+	if ts := m.IsTsig(); t != nil {
+		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+			return m, ErrSecret
+		}
+		// Need to work on the original message p, as that was used to calculate the tsig.
+		err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.requestMAC, false)
+	}
+	return m, err
+}
+
+// WriteMsg write a message throught the transfer connection t.
+func (t *Transfer) WriteMsg(m *Msg) (err error) {
+	var out []byte
+	if ts := m.IsTsig(); t != nil {
+		mac := ""
+		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+			return ErrSecret
+		}
+		out, mac, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.requestMAC, false)
+		// Set for the next read, allthough only used in zone transfers
+		t.requestMAC = mac
+	} else {
+		out, err = m.Pack()
+	}
+	if err != nil {
+		return err
+	}
+	if _, err = t.Conn.Write(out); err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
 func (c *Client) TransferIn(q *Msg, a string) (chan *Envelope, error) {
-	w := new(reply)
-	w.client = c
-	w.addr = a
-	w.req = q
-	if err := w.dial(); err != nil {
-		return nil, err
-	}
-	if err := w.send(q); err != nil {
-		return nil, err
-	}
 	e := make(chan *Envelope)
 	switch q.Question[0].Qtype {
 	case TypeAXFR:
@@ -65,7 +165,7 @@ func (w *reply) axfrIn(q *Msg, c chan *Envelope) {
 			return
 		}
 		if first {
-			if !checkXfrSOA(in, true) {
+			if !checkSOA(in, true) {
 				c <- &Envelope{in.Answer, ErrSoa}
 				return
 			}
@@ -80,7 +180,7 @@ func (w *reply) axfrIn(q *Msg, c chan *Envelope) {
 
 		if !first {
 			w.tsigTimersOnly = true // Subsequent envelopes use this.
-			if checkXfrSOA(in, false) {
+			if checkSOA(in, false) {
 				c <- &Envelope{in.Answer, nil}
 				return
 			}
@@ -107,13 +207,13 @@ func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 		}
 		if first {
 			// A single SOA RR signals "no changes"
-			if len(in.Answer) == 1 && checkXfrSOA(in, true) {
+			if len(in.Answer) == 1 && checkSOA(in, true) {
 				c <- &Envelope{in.Answer, nil}
 				return
 			}
 
 			// Check if the returned answer is ok
-			if !checkXfrSOA(in, true) {
+			if !checkSOA(in, true) {
 				c <- &Envelope{in.Answer, ErrSoa}
 				return
 			}
@@ -141,7 +241,7 @@ func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
 // Check if he SOA record exists in the Answer section of
 // the packet. If first is true the first RR must be a SOA
 // if false, the last one should be a SOA.
-func checkXfrSOA(in *Msg, first bool) bool {
+func checkSOA(in *Msg, first bool) bool {
 	if len(in.Answer) > 0 {
 		if first {
 			return in.Answer[0].Header().Rrtype == TypeSOA
@@ -152,28 +252,6 @@ func checkXfrSOA(in *Msg, first bool) bool {
 	return false
 }
 
-// TransferOut performs an outgoing [AI]XFR depending on the request message. The
-// caller is responsible for sending the correct sequence of RR sets through
-// the channel c. For reasons of symmetry Envelope is re-used.
-// Errors are signaled via the error pointer, when an error occurs the function
-// sets the error and returns (it does not close the channel).
-// TSIG and enveloping is handled by TransferOut.
-//
-// Basic use pattern for sending an AXFR:
-//
-//	// q contains the AXFR request
-//	c := make(chan *Envelope)
-//	var e *error
-//	err := TransferOut(w, q, c, e)
-//	w.Hijack()		// hijack the connection so that the package doesn't close it
-//	for _, rrset := range rrsets {	// rrsets is a []RR
-//		c <- &{Envelope{RR: rrset}
-//		if e != nil {
-//			close(c)
-//			break
-//		}
-//	}
-//	// w.Close() // Don't! Let the client close the connection
 func TransferOut(w ResponseWriter, q *Msg, c chan *Envelope, e *error) error {
 	switch q.Question[0].Qtype {
 	case TypeAXFR, TypeIXFR:
