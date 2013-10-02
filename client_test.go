@@ -79,6 +79,7 @@ Loop:
 	}
 }
 
+/*
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
@@ -126,6 +127,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 		}
 	}
 }
+*/
 
 // not really a test, but shows how to use update leases
 func TestUpdateLeaseTSIG(t *testing.T) {
