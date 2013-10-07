@@ -6,6 +6,12 @@
 // It is meant to stay lean and mean, while having a bunch of handy
 // features, like -check which checks if a packet is correctly signed (without
 // checking the chain of trust).
+// When using -check a comment is printed:
+//
+// ;+ Secure signature, miek.nl. RRSIG(SOA) validates (DNSKEY miek.nl./4155/net)
+//
+// which says the SOA has a valid RRSIG and it validated with the DNSKEY of miek.nl,
+// which has key id 4155 and is retrieved from the server. Other values are 'disk'.
 package main
 
 import (
