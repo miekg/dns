@@ -49,17 +49,17 @@ func (t *Transfer) In(q *Msg, a string, env chan *Envelope) (err error) {
 		return err
 	}
 	if q.Question[0].Qtype == TypeAXFR {
-		go t.InAxfr(q.Id, env)
+		go t.inAxfr(q.Id, env)
 		return nil
 	}
 	if q.Question[0].Qtype == TypeIXFR {
-		go t.InAxfr(q.Id, env)
+		go t.inIxfr(q.Id, env)
 		return nil
 	}
 	return nil // TODO(miek): some error
 }
 
-func (t *Transfer) InAxfr(id uint16, c chan *Envelope) {
+func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 	first := true
 	defer t.Close()
 	defer close(c)
@@ -104,7 +104,7 @@ func (t *Transfer) InAxfr(id uint16, c chan *Envelope) {
 	panic("dns: not reached")
 }
 
-func (t *Transfer) InIxfr(id uint16, c chan *Envelope) {
+func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 	serial := uint32(0) // The first serial seen is the current server serial
 	first := true
 	defer t.Close()
