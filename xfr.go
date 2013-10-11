@@ -23,22 +23,8 @@ type Transfer struct {
 	tsigTimersOnly bool
 }
 
-// In performs a [AI]XFR request (depends on the message's Qtype). It returns
-// a channel of *Envelope on which the replies from the server are sent.
-// At the end of the transfer the channel is closed.
-// The messages are TSIG checked if needed, no other post-processing is performed.
-// The caller must dissect the returned messages.
-//
-// Basic use pattern for receiving an AXFR:
-//
-//	// m contains the AXFR request
-//	t := new(dns.Transfer)
-//	c, e := t.In(m, "127.0.0.1:53")
-//	for env := range c
-//		// ... deal with env.RR or env.Error
-//	}
-
-func (t *Transfer) In(q *Msg, a string, env chan *Envelope) (err error) {
+// In performs an incoming transfer with the server in a.
+func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	co := new(Conn)
 	timeout := dnsTimeout
 	if t.DialTimeout != 0 {
@@ -46,17 +32,20 @@ func (t *Transfer) In(q *Msg, a string, env chan *Envelope) (err error) {
 	}
 	co.Conn, err = net.DialTimeout("tcp", a, timeout)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if q.Question[0].Qtype == TypeAXFR {
-		go t.inAxfr(q.Id, env)
-		return nil
-	}
-	if q.Question[0].Qtype == TypeIXFR {
-		go t.inIxfr(q.Id, env)
-		return nil
-	}
-	return nil // TODO(miek): some error
+	env = make(chan *Envelope)
+	go func() {
+		if q.Question[0].Qtype == TypeAXFR {
+			go t.inAxfr(q.Id, env)
+			return
+		}
+		if q.Question[0].Qtype == TypeIXFR {
+			go t.inIxfr(q.Id, env)
+			return
+		}
+	}()
+	return env, nil
 }
 
 func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
@@ -114,7 +103,6 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 		timeout = t.ReadTimeout
 	}
 	for {
-		// re-read 'n stuff must be pushed down
 		t.SetReadDeadline(time.Now().Add(timeout))
 		in, err := t.ReadMsg()
 		if err != nil {
@@ -171,8 +159,8 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, a string) (chan *Envelope, erro
 				return
 			}
 		}
-		//		w.TsigTimersOnly(true)
-		//		rep.Answer = nil
+		w.TsigTimersOnly(true)
+		r.Answer = nil
 	}()
 	return ch, nil
 }
