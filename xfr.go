@@ -17,10 +17,10 @@ type Envelope struct {
 
 type Transfer struct {
 	Conn
-	DialTimeout  time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
-	ReadTimeout  time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
-	WriteTimeout time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
-	tsigTimersOnly   bool
+	DialTimeout    time.Duration // net.DialTimeout (ns), defaults to 2 * 1e9
+	ReadTimeout    time.Duration // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
+	WriteTimeout   time.Duration // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
+	tsigTimersOnly bool
 }
 
 // In performs a [AI]XFR request (depends on the message's Qtype). It returns
@@ -63,7 +63,12 @@ func (t *Transfer) InAxfr(id uint16, c chan *Envelope) {
 	first := true
 	defer t.Close()
 	defer close(c)
+	timeout := dnsTimeout
+	if t.ReadTimeout != 0 {
+		timeout = t.ReadTimeout
+	}
 	for {
+		t.SetReadDeadline(time.Now().Add(timeout))
 		in, err := t.ReadMsg()
 		if err != nil {
 			c <- &Envelope{nil, err}
@@ -99,21 +104,59 @@ func (t *Transfer) InAxfr(id uint16, c chan *Envelope) {
 	panic("dns: not reached")
 }
 
-/*
-	// re-read 'n stuff must be pushed down
-	timeout = dnsTimeout
+func (t *Transfer) InIxfr(id uint16, c chan *Envelope) {
+	serial := uint32(0) // The first serial seen is the current server serial
+	first := true
+	defer t.Close()
+	defer close(c)
+	timeout := dnsTimeout
 	if t.ReadTimeout != 0 {
 		timeout = t.ReadTimeout
 	}
-	co.SetReadDeadline(time.Now().Add(dnsTimeout))
-	timeout = dnsTimeout
-	if t.WriteTimeout != 0 {
-		timeout = t.WriteTimeout
+	for {
+		// re-read 'n stuff must be pushed down
+		t.SetReadDeadline(time.Now().Add(timeout))
+		in, err := t.ReadMsg()
+		if err != nil {
+			c <- &Envelope{in.Answer, err}
+			return
+		}
+		if id != in.Id {
+			c <- &Envelope{in.Answer, ErrId}
+			return
+		}
+		if first {
+			// A single SOA RR signals "no changes"
+			if len(in.Answer) == 1 && isSOAFirst(in) {
+				c <- &Envelope{in.Answer, nil}
+				return
+			}
+
+			// Check if the returned answer is ok
+			if !isSOAFirst(in) {
+				c <- &Envelope{in.Answer, ErrSoa}
+				return
+			}
+			// This serial is important
+			serial = in.Answer[0].(*SOA).Serial
+			first = !first
+			// continue // TODO(miek)
+		}
+
+		// Now we need to check each message for SOA records, to see what we need to do
+		if !first {
+			t.tsigTimersOnly = true
+			// If the last record in the IXFR contains the servers' SOA,  we should quit
+			if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
+				if v.Serial == serial {
+					c <- &Envelope{in.Answer, nil}
+					return
+				}
+			}
+			c <- &Envelope{in.Answer, nil}
+		}
 	}
-	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
-	defer co.Close()
-	return nil
-*/
+}
 
 func (t *Transfer) Out(w ResponseWriter, q *Msg, a string) (chan *Envelope, error) {
 	ch := make(chan *Envelope)
@@ -121,15 +164,15 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, a string) (chan *Envelope, erro
 	r.SetReply(q)
 	r.Authoritative = true
 	go func() {
-	for x := range ch {
-		// assume it fits TODO(miek): fix
-		r.Answer = append(r.Answer, x.RR...)
-		if err := w.WriteMsg(r); err != nil {
-			return
+		for x := range ch {
+			// assume it fits TODO(miek): fix
+			r.Answer = append(r.Answer, x.RR...)
+			if err := w.WriteMsg(r); err != nil {
+				return
+			}
 		}
-	}
-//		w.TsigTimersOnly(true)
-//		rep.Answer = nil
+		//		w.TsigTimersOnly(true)
+		//		rep.Answer = nil
 	}()
 	return ch, nil
 }
@@ -178,53 +221,6 @@ func (t *Transfer) WriteMsg(m *Msg) (err error) {
 
 /*
 
-func (w *reply) ixfrIn(q *Msg, c chan *Envelope) {
-	var serial uint32 // The first serial seen is the current server serial
-	first := true
-	defer w.conn.Close()
-	defer close(c)
-	for {
-		in, err := w.receive()
-		if err != nil {
-			c <- &Envelope{in.Answer, err}
-			return
-		}
-		if q.Id != in.Id {
-			c <- &Envelope{in.Answer, ErrId}
-			return
-		}
-		if first {
-			// A single SOA RR signals "no changes"
-			if len(in.Answer) == 1 && checkSOA(in, true) {
-				c <- &Envelope{in.Answer, nil}
-				return
-			}
-
-			// Check if the returned answer is ok
-			if !checkSOA(in, true) {
-				c <- &Envelope{in.Answer, ErrSoa}
-				return
-			}
-			// This serial is important
-			serial = in.Answer[0].(*SOA).Serial
-			first = !first
-		}
-
-		// Now we need to check each message for SOA records, to see what we need to do
-		if !first {
-			w.tsigTimersOnly = true
-			// If the last record in the IXFR contains the servers' SOA,  we should quit
-			if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
-				if v.Serial == serial {
-					c <- &Envelope{in.Answer, nil}
-					return
-				}
-			}
-			c <- &Envelope{in.Answer, nil}
-		}
-	}
-	panic("dns: not reached")
-}
 */
 
 func isSOAFirst(in *Msg) bool {

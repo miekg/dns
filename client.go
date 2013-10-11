@@ -104,12 +104,12 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	if c.ReadTimeout != 0 {
 		timeout = c.ReadTimeout
 	}
-	co.SetReadDeadline(time.Now().Add(dnsTimeout))
+	co.SetReadDeadline(time.Now().Add(timeout))
 	timeout = dnsTimeout
 	if c.WriteTimeout != 0 {
 		timeout = c.WriteTimeout
 	}
-	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
+	co.SetWriteDeadline(time.Now().Add(timeout))
 	defer co.Close()
 	opt := m.IsEdns0()
 	if opt != nil && opt.UDPSize() >= MinMsgSize {
