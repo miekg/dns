@@ -16,12 +16,12 @@ const dnsTimeout time.Duration = 2 * 1e9
 
 // A Conn represents a connection (which may be short lived) to a DNS server.
 type Conn struct {
-	net.Conn                     // a net.Conn holding the connection
-	UDPSize    uint16            // Minimum receive buffer for UDP messages
-	TsigSecret map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
-	rtt        time.Duration
-	t          time.Time
-	requestMAC string
+	net.Conn                         // a net.Conn holding the connection
+	UDPSize        uint16            // Minimum receive buffer for UDP messages
+	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	rtt            time.Duration
+	t              time.Time
+	tsigRequestMAC string
 }
 
 // A Client defines parameters for a DNS client. A nil Client is usable for sending queries.
@@ -150,7 +150,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 			return m, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.requestMAC, false)
+		err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 	}
 	return m, err
 }
@@ -208,9 +208,9 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return ErrSecret
 		}
-		out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.requestMAC, false)
+		out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 		// Set for the next read, allthough only used in zone transfers
-		co.requestMAC = mac
+		co.tsigRequestMAC = mac
 	} else {
 		out, err = m.Pack()
 	}
