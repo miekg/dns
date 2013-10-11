@@ -135,6 +135,14 @@ Flags:
 		nameserver = dns.Fqdn(nameserver) + ":" + strconv.Itoa(*port)
 	}
 	c := new(dns.Client)
+	t := new(dns.Transfer)
+	c.Net = "udp"
+	if *four {
+		c.Net = "udp4"
+	}
+	if *six {
+		c.Net = "udp6"
+	}
 	if *tcp {
 		c.Net = "tcp"
 		if *four {
@@ -142,14 +150,6 @@ Flags:
 		}
 		if *six {
 			c.Net = "tcp6"
-		}
-	} else {
-		c.Net = "udp"
-		if *four {
-			c.Net = "udp4"
-		}
-		if *six {
-			c.Net = "udp6"
 		}
 	}
 
@@ -206,6 +206,7 @@ Flags:
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
 				m.SetTsig(name, algo, 300, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
+				t.TsigSecret = map[string]string{name: secret}
 			} else {
 				fmt.Fprintf(os.Stderr, "TSIG key data error\n")
 				return
@@ -215,13 +216,15 @@ Flags:
 			fmt.Printf("%s", m.String())
 			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
 		}
-		if qtype == dns.TypeAXFR {
-			c.Net = "tcp"
-			doXfr(c, m, nameserver)
-			continue
-		}
-		if qtype == dns.TypeIXFR {
-			doXfr(c, m, nameserver)
+		if qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+			env, err := t.In(m, nameserver)
+			if err != nil {
+				fmt.Printf(";; %s\n", err.Error())
+				continue
+			}
+			for e := range env {
+				fmt.Printf("%s\n", e.RR)
+			}
 			continue
 		}
 		r, rtt, e := c.Exchange(m, nameserver)
@@ -397,21 +400,21 @@ func shortRR(r dns.RR) dns.RR {
 
 func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
 	/*
-	if t, e := c.TransferIn(m, nameserver); e == nil {
-		for r := range t {
-			if r.Error == nil {
-				for _, rr := range r.RR {
-					if *short {
-						rr = shortRR(rr)
+		if t, e := c.TransferIn(m, nameserver); e == nil {
+			for r := range t {
+				if r.Error == nil {
+					for _, rr := range r.RR {
+						if *short {
+							rr = shortRR(rr)
+						}
+						fmt.Printf("%v\n", rr)
 					}
-					fmt.Printf("%v\n", rr)
+				} else {
+					fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", r.Error.Error())
 				}
-			} else {
-				fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", r.Error.Error())
 			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
 		}
-	} else {
-		fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
-	}
 	*/
 }

@@ -16,7 +16,7 @@ type Envelope struct {
 }
 
 type Transfer struct {
-	Conn
+	*Conn
 	DialTimeout    time.Duration // net.DialTimeout (ns), defaults to 2 * 1e9
 	ReadTimeout    time.Duration // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
 	WriteTimeout   time.Duration // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
@@ -25,12 +25,12 @@ type Transfer struct {
 
 // In performs an incoming transfer with the server in a.
 func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
-	co := new(Conn)
+	t.Conn = new(Conn)
 	timeout := dnsTimeout
 	if t.DialTimeout != 0 {
 		timeout = t.DialTimeout
 	}
-	co.Conn, err = net.DialTimeout("tcp", a, timeout)
+	t.Conn, err = net.DialTimeout("tcp", a, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 			// This serial is important
 			serial = in.Answer[0].(*SOA).Serial
 			first = !first
-			// continue // TODO(miek)
+			// continue // TODO(miek): ?
 		}
 
 		// Now we need to check each message for SOA records, to see what we need to do
@@ -206,10 +206,6 @@ func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	}
 	return nil
 }
-
-/*
-
-*/
 
 func isSOAFirst(in *Msg) bool {
 	if len(in.Answer) > 0 {
