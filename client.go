@@ -185,10 +185,8 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
-	switch w.client.Net {
-	case "tcp", "tcp4", "tcp6":
-		setTimeouts(w)
-		n, err = w.conn.Read(p[0:2])
+	if t, ok := co.Conn.(*net.TCPConn); ok {
+		n, err = t.Read(p[0:2])
 		if err != nil || n != 2 {
 			return n, err
 		}
@@ -199,25 +197,25 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		if int(l) > len(p) {
 			return int(l), io.ErrShortBuffer
 		}
-		n, err = w.conn.Read(p[:l])
+		n, err = t.Read(p[:l])
 		if err != nil {
 			return n, err
 		}
 		i := n
 		for i < int(l) {
-			j, err := w.conn.Read(p[i:int(l)])
+			j, err := t.Read(p[i:int(l)])
 			if err != nil {
 				return i, err
 			}
 			i += j
 		}
 		n = i
-	case "", "udp", "udp4", "udp6":
-		setTimeouts(w)
-		n, err = w.conn.Read(p)
-		if err != nil {
-			return n, err
-		}
+		return n, err
+	}
+	// assume udp connection
+	n, _, err = co.Conn.(*net.UDPConn).ReadFromUDP(p)
+	if err != nil {
+		return n, err
 	}
 	return n, err
 }
@@ -270,16 +268,7 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 			i += j
 		}
 		n = i
-<<<<<<< HEAD
-	case "", "udp", "udp4", "udp6":
-		setTimeouts(w)
-		n, err = w.conn.Write(p)
-		if err != nil {
-			return n, err
-		}
-=======
 		return n, err
->>>>>>> net
 	}
 	n, err = co.Conn.(*net.UDPConn).Write(p)
 	return n, err
