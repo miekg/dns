@@ -54,8 +54,19 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 	return r, err
 }
 
-// ExchangeConn performs a sync
+// ExchangeConn performs a synchronous query. It sends the message m via the connection
+// c and waits for a reply. The connection c is not closed by ExchangeConn.
+// This function is going away, but can easily be mimicked:
+//
+//	co := new(dns.Conn)
+//	co.Conn = c // c is your net.Conn
+//	co.WriteMsg(m)
+//	in, _  := co.ReadMsg()
+//
 func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
+	println("dns: this function is deprecated")
+	co := new(Conn)
+	co.Conn = c
 	if err = co.WriteMsg(m); err != nil {
 		return nil, err
 	}

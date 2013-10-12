@@ -224,22 +224,3 @@ func isSOALast(in *Msg) bool {
 	}
 	return false
 }
-/*
-// Close implements the net.Conn Close method.
-func (t *Transfer) Close() error { return t.Conn.Close() }
-
-// LocalAddr implements the net.Conn LocalAddr method.
-func (t *Transfer) LocalAddr() net.Addr { return t.Conn.LocalAddr() }
-
-// RemoteAddr implements the net.Conn RemoteAddr method.
-func (t *Transfer) RemoteAddr() net.Addr { return t.Conn.RemoteAddr() }
-
-// SetDeadline implements the net.Conn SetDeadline method.
-func (t *Transfer) SetDeadline(t1 time.Time) error { return t.Conn.SetDeadline(t1) }
-
-// SetReadDeadline implements the net.Conn SetReadDeadline method.
-func (t *Transfer) SetReadDeadline(t1 time.Time) error { return t.Conn.SetReadDeadline(t1) }
-
-// SetWriteDeadline implements the net.Conn SetWriteDeadline method.
-func (t *Transfer) SetWriteDeadline(t1 time.Time) error { return t.Conn.SetWriteDeadline(t1) }
-*/
