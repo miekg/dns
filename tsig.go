@@ -24,13 +24,13 @@
 // miek.nl. with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
 // and using the server 176.58.119.54:
 //
-//	tr := new(dns.Transfer)
-//	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+//	t := new(dns.Transfer)
 //	m := new(dns.Msg)
+//	t.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m.SetAxfr("miek.nl.")
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
-//	t, err := tr.In(m, "176.58.119.54:53")
-//	for r := range t { /* ... */ }
+//	c, err := tr.In(m, "176.58.119.54:53")
+//	for r := range c { /* r.RR */ }
 //
 // You can now read the records from the transfer as they come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
