@@ -19,20 +19,20 @@
 //	...
 //	// When sending the TSIG RR is calculated and filled in before sending
 //
-// When requesting an AXFR (almost all TSIG usage is when requesting zone transfers), with
+// When requesting an zone transfer (almost all TSIG usage is when requesting zone transfers), with
 // TSIG, this is the basic use pattern. In this example we request an AXFR for
 // miek.nl. with TSIG key named "axfr." and secret "so6ZGir4GPAqINNh9U5c3A=="
-// and using the server 85.223.71.124
+// and using the server 176.58.119.54:
 //
-//	c := new(dns.Client)
-//	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+//	tr := new(dns.Transfer)
+//	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m := new(dns.Msg)
 //	m.SetAxfr("miek.nl.")
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
-//	t, err := c.TransferIn(m, "85.223.71.124:53")
+//	t, err := tr.In(m, "176.58.119.54:53")
 //	for r := range t { /* ... */ }
 //
-// You can now read the records from the AXFR as they come in. Each envelope is checked with TSIG.
+// You can now read the records from the transfer as they come in. Each envelope is checked with TSIG.
 // If something is not correct an error is returned.
 //
 // Basic use pattern validating and replying to a message that has TSIG set.
