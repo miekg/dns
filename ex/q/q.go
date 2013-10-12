@@ -201,7 +201,6 @@ Flags:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
-		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
 				m.SetTsig(name, algo, 300, time.Now().Unix())
@@ -288,15 +287,15 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 	s1 := strings.SplitN(s, ":", 3)
 	switch len(s1) {
 	case 2:
-		return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+		return "hmac-md5.sig-alg.reg.int.", s1[0], dns.Fqdn(s1[1]), true
 	case 3:
 		switch s1[0] {
 		case "hmac-md5":
-			return "hmac-md5.sig-alg.reg.int.", s1[1], s1[2], true
+			return "hmac-md5.sig-alg.reg.int.", dns.Fqdn(s1[1]), s1[2], true
 		case "hmac-sha1":
-			return "hmac-sha1.", s1[1], s1[2], true
+			return "hmac-sha1.", dns.Fqdn(s1[1]), s1[2], true
 		case "hmac-sha256":
-			return "hmac-sha256.", s1[1], s1[2], true
+			return "hmac-sha256.", dns.Fqdn(s1[1]), s1[2], true
 		}
 	}
 	return
