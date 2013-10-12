@@ -15,6 +15,7 @@ type Envelope struct {
 	Error error // If something went wrong, this contains the error.
 }
 
+// A Transfer defines parameters that are used during a zone transfer. 
 type Transfer struct {
 	*Conn
 	DialTimeout    time.Duration // net.DialTimeout (ns), defaults to 2 * 1e9
@@ -149,6 +150,21 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 	}
 }
 
+
+
+// Out performs an outgoing transfer with the client connecting in w.
+// Basic use pattern:
+//
+//	ch := make(chan *dns.Envelope)
+//	tr := new(dns.Transfer)
+//	tr.Out(w, r, ch)
+//	c <- &dns.Envelope{RR: []dns.RR{soa, rr1, rr2, rr3, soa}}
+//	close(ch)
+//	w.Hijack()
+//	// w.Close() // Client closes connection
+//
+// The server is responsible for sending the correct sequence of RRs through the
+// channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	r := new(Msg)
 	// Compress?
