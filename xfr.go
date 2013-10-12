@@ -20,6 +20,7 @@ type Transfer struct {
 	DialTimeout    time.Duration // net.DialTimeout (ns), defaults to 2 * 1e9
 	ReadTimeout    time.Duration // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
 	WriteTimeout   time.Duration // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
+	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	tsigTimersOnly bool
 }
 
@@ -70,7 +71,6 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
-		println("ok")
 		if first {
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}

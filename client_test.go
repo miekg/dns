@@ -79,17 +79,15 @@ Loop:
 	}
 }
 
-/*
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
 
-	c := new(Client)
-	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	c.Net = "tcp"
+	tr := new(Transfer)
+	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 
-	if a, err := c.TransferIn(m, "37.251.95.53:53"); err != nil {
+	if a, err := tr.n(m, "176.58.119.54:53"); err != nil {
 		t.Log("Failed to setup axfr: " + err.Error())
 		t.Fatal()
 	} else {
