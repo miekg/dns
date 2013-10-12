@@ -103,24 +103,6 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	t.Txt = []string{str}
 
 	switch r.Question[0].Qtype {
-	case dns.TypeAXFR:
-		c := make(chan *dns.Envelope)
-		var e *error
-		if err := dns.TransferOut(w, r, c, e); err != nil {
-			close(c)
-			return
-		}
-		soa, _ := dns.NewRR(`whoami.miek.nl. IN SOA elektron.atoom.net. miekg.atoom.net. (
-			2009032802 
-			21600 
-			7200 
-			604800 
-			3600)`)
-		c <- &dns.Envelope{RR: []dns.RR{soa, t, rr, soa}}
-		close(c)
-		w.Hijack()
-		// w.Close() // Client closes
-		return
 	case dns.TypeTXT:
 		m.Answer = append(m.Answer, t)
 		m.Extra = append(m.Extra, rr)
@@ -129,6 +111,21 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	case dns.TypeAAAA, dns.TypeA:
 		m.Answer = append(m.Answer, rr)
 		m.Extra = append(m.Extra, t)
+
+	case dns.TypeAXFR, dns.TypeIXFR:
+		c := make(chan *dns.Envelope)
+		tr := new(dns.Transfer)
+		defer close(c)
+		err := tr.Out(w, r, c)
+		if err != nil {
+			return
+		}
+		soa, _ := dns.NewRR(`whoami.miek.nl. 0 IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600`)
+		c <- &dns.Envelope{RR: []dns.RR{soa, t, rr, soa}}
+		w.Hijack()
+		// w.Close() // Client closes connection
+		return
+
 	}
 
 	if r.IsTsig() != nil {
@@ -161,7 +158,7 @@ func serve(net, name, secret string) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()*4)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	printf = flag.Bool("print", false, "print replies")
 	compress = flag.Bool("compress", false, "compress replies")

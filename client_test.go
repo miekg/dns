@@ -82,14 +82,13 @@ Loop:
 /*
 func TestClientTsigAXFR(t *testing.T) {
 	m := new(Msg)
-	m.SetAxfr("miek.nl.")
+	m.SetAxfr("example.nl.")
 	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
 
-	c := new(Client)
-	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	c.Net = "tcp"
+	tr := new(Transfer)
+	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 
-	if a, err := c.TransferIn(m, "37.251.95.53:53"); err != nil {
+	if a, err := tr.In(m, "176.58.119.54:53"); err != nil {
 		t.Log("Failed to setup axfr: " + err.Error())
 		t.Fatal()
 	} else {
@@ -106,14 +105,12 @@ func TestClientTsigAXFR(t *testing.T) {
 	}
 }
 
-func TestClientAXFRMultipleMessages(t *testing.T) {
+func TestClientAXFRMultipleEnvelopes(t *testing.T) {
 	m := new(Msg)
-	m.SetAxfr("dnsex.nl.")
+	m.SetAxfr("nlnetlabs.nl.")
 
-	c := new(Client)
-	c.Net = "tcp"
-
-	if a, err := c.TransferIn(m, "37.251.95.53:53"); err != nil {
+	tr := new(Transfer)
+	if a, err := tr.In(m, "213.154.224.1:53"); err != nil {
 		t.Log("Failed to setup axfr" + err.Error())
 		t.Fail()
 		return
@@ -130,7 +127,7 @@ func TestClientAXFRMultipleMessages(t *testing.T) {
 */
 
 // not really a test, but shows how to use update leases
-func TestUpdateLeaseTSIG(t *testing.T) {
+func ExampleUpdateLeaseTSIG(t *testing.T) {
 	m := new(Msg)
 	m.SetUpdate("t.local.ip6.io.")
 	rr, _ := NewRR("t.local.ip6.io. 30 A 127.0.0.1")
@@ -151,16 +148,9 @@ func TestUpdateLeaseTSIG(t *testing.T) {
 	m.SetTsig("polvi.", HmacMD5, 300, time.Now().Unix())
 	c.TsigSecret = map[string]string{"polvi.": "pRZgBrBvI4NAHZYhxmhs/Q=="}
 
-	w := new(reply)
-	w.client = c
-	w.addr = "127.0.0.1:53"
-	w.req = m
-
-	if err := w.dial(); err != nil {
+	_, _, err := c.Exchange(m, "127.0.0.1:53")
+	if err != nil {
+		t.Log(err.Error())
 		t.Fail()
 	}
-	if err := w.send(m); err != nil {
-		t.Fail()
-	}
-
 }

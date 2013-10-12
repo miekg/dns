@@ -9,9 +9,6 @@ import (
 	"testing"
 )
 
-// Query with way to long name
-//./q mx bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.bla.miek.nl.miek.nl.miek123.nl.
-
 func TestPackUnpack(t *testing.T) {
 	out := new(Msg)
 	out.Answer = make([]RR, 1)
@@ -245,7 +242,7 @@ func TestNoRdataPack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range rr_mk {
 		if typ == TypeCAA {
-			continue // known broken, will fix. TODO(miek)
+			continue // TODO(miek): known ommision
 		}
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}

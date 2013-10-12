@@ -141,6 +141,14 @@ Flags:
 		nameserver = dns.Fqdn(nameserver) + ":" + strconv.Itoa(*port)
 	}
 	c := new(dns.Client)
+	t := new(dns.Transfer)
+	c.Net = "udp"
+	if *four {
+		c.Net = "udp4"
+	}
+	if *six {
+		c.Net = "udp6"
+	}
 	if *tcp {
 		c.Net = "tcp"
 		if *four {
@@ -148,14 +156,6 @@ Flags:
 		}
 		if *six {
 			c.Net = "tcp6"
-		}
-	} else {
-		c.Net = "udp"
-		if *four {
-			c.Net = "udp4"
-		}
-		if *six {
-			c.Net = "udp6"
 		}
 	}
 
@@ -204,14 +204,15 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
+query:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
-		// Add tsig
 		if *tsig != "" {
 			if algo, name, secret, ok := tsigKeyParse(*tsig); ok {
 				m.SetTsig(name, algo, 300, time.Now().Unix())
 				c.TsigSecret = map[string]string{name: secret}
+				t.TsigSecret = map[string]string{name: secret}
 			} else {
 				fmt.Fprintf(os.Stderr, "TSIG key data error\n")
 				return
@@ -221,13 +222,26 @@ Flags:
 			fmt.Printf("%s", m.String())
 			fmt.Printf("\n;; size: %d bytes\n\n", m.Len())
 		}
-		if qtype == dns.TypeAXFR {
-			c.Net = "tcp"
-			doXfr(c, m, nameserver)
-			continue
-		}
-		if qtype == dns.TypeIXFR {
-			doXfr(c, m, nameserver)
+		if qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+			env, err := t.In(m, nameserver)
+			if err != nil {
+				fmt.Printf(";; %s\n", err.Error())
+				continue
+			}
+			envelope := 0
+			record := 0
+			for e := range env {
+				if e.Error != nil {
+					fmt.Printf(";; %s\n", e.Error.Error())
+					continue query
+				}
+				for _, r := range e.RR {
+					fmt.Printf("%s\n", r)
+				}
+				record+=len(e.RR)
+				envelope++
+			}
+			fmt.Printf("\n;; xfr size: %d records (envelopes %d)\n", record, envelope)
 			continue
 		}
 		r, rtt, e := c.Exchange(m, nameserver)
@@ -280,15 +294,15 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 	s1 := strings.SplitN(s, ":", 3)
 	switch len(s1) {
 	case 2:
-		return "hmac-md5.sig-alg.reg.int.", s1[0], s1[1], true
+		return "hmac-md5.sig-alg.reg.int.", dns.Fqdn(s1[0]), s1[1], true
 	case 3:
 		switch s1[0] {
 		case "hmac-md5":
-			return "hmac-md5.sig-alg.reg.int.", s1[1], s1[2], true
+			return "hmac-md5.sig-alg.reg.int.", dns.Fqdn(s1[1]), s1[2], true
 		case "hmac-sha1":
-			return "hmac-sha1.", s1[1], s1[2], true
+			return "hmac-sha1.", dns.Fqdn(s1[1]), s1[2], true
 		case "hmac-sha256":
-			return "hmac-sha256.", s1[1], s1[2], true
+			return "hmac-sha256.", dns.Fqdn(s1[1]), s1[2], true
 		}
 	}
 	return
@@ -402,20 +416,22 @@ func shortRR(r dns.RR) dns.RR {
 }
 
 func doXfr(c *dns.Client, m *dns.Msg, nameserver string) {
-	if t, e := c.TransferIn(m, nameserver); e == nil {
-		for r := range t {
-			if r.Error == nil {
-				for _, rr := range r.RR {
-					if *short {
-						rr = shortRR(rr)
+	/*
+		if t, e := c.TransferIn(m, nameserver); e == nil {
+			for r := range t {
+				if r.Error == nil {
+					for _, rr := range r.RR {
+						if *short {
+							rr = shortRR(rr)
+						}
+						fmt.Printf("%v\n", rr)
 					}
-					fmt.Printf("%v\n", rr)
+				} else {
+					fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", r.Error.Error())
 				}
-			} else {
-				fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", r.Error.Error())
 			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
 		}
-	} else {
-		fmt.Fprintf(os.Stderr, "Failure to read XFR: %s\n", e.Error())
-	}
+	*/
 }

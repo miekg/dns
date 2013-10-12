@@ -36,7 +36,7 @@
 // In the DNS messages are exchanged, these messages contain resource
 // records (sets).  Use pattern for creating a message:
 //
-//      m := dns.new(Msg)
+//      m := new(dns.Msg)
 //      m.SetQuestion("miek.nl.", dns.TypeMX)
 //
 // Or when not certain if the domain name is fully qualified:
@@ -66,6 +66,11 @@
 //
 //	c.SingleInflight = true
 //
+// If these "advanced" features are not needed, a simple UDP query can be send,
+// with:
+//
+//	in, err := dns.Exchange(m1, "127.0.0.1:53")
+//
 // A dns message consists out of four sections.
 // The question section: in.Question, the answer section: in.Answer,
 // the authority section: in.Ns and the additional section: in.Extra.
@@ -86,7 +91,7 @@ import (
 const (
 	year68         = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	DefaultMsgSize = 4096    // Standard default for larger than 512 packets.
-	udpMsgSize     = 512     // Default buffer size for servers receiving UDP packets.
+	MinMsgSize     = 512     // Minimal size of a DNS packet.
 	MaxMsgSize     = 65536   // Largest possible DNS packet.
 	defaultTtl     = 3600    // Default TTL.
 )

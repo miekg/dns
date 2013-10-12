@@ -357,7 +357,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		handler = DefaultServeMux
 	}
 	if srv.UDPSize == 0 {
-		srv.UDPSize = udpMsgSize
+		srv.UDPSize = MinMsgSize
 	}
 	for {
 		if srv.ReadTimeout != 0 {
