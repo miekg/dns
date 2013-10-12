@@ -149,11 +149,12 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 	}
 }
 
-func (t *Transfer) Out(w ResponseWriter, q *Msg, a string) (chan *Envelope, error) {
-	ch := make(chan *Envelope)
+func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	r := new(Msg)
+	// Compress?
 	r.SetReply(q)
 	r.Authoritative = true
+
 	go func() {
 		for x := range ch {
 			// assume it fits TODO(miek): fix
@@ -165,7 +166,7 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, a string) (chan *Envelope, erro
 		w.TsigTimersOnly(true)
 		r.Answer = nil
 	}()
-	return ch, nil
+	return nil
 }
 
 // ReadMsg reads a message from the transfer connection t.
