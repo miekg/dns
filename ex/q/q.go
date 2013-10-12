@@ -222,6 +222,8 @@ Flags:
 				fmt.Printf(";; %s\n", err.Error())
 				continue
 			}
+			envelope := 0
+			record := 0
 			for e := range env {
 				if e.Error != nil {
 					fmt.Printf(";; %s\n", e.Error.Error())
@@ -230,7 +232,10 @@ Flags:
 				for _, r := range e.RR {
 					fmt.Printf("%s\n", r)
 				}
+				record+=len(e.RR)
+				envelope++
 			}
+			fmt.Printf("\n;; xfr size: %d records (envelopes %d)\n", record, envelope)
 			continue
 		}
 		r, rtt, e := c.Exchange(m, nameserver)

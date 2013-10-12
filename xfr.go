@@ -132,7 +132,6 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 			// This serial is important
 			serial = in.Answer[0].(*SOA).Serial
 			first = !first
-			// continue // TODO(miek): ?
 		}
 
 		// Now we need to check each message for SOA records, to see what we need to do
