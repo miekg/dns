@@ -54,6 +54,15 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 	return r, err
 }
 
+// ExchangeConn performs a sync
+func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
+	if err = co.WriteMsg(m); err != nil {
+		return nil, err
+	}
+	r, err = co.ReadMsg()
+	return r, err
+}
+
 // Exchange performs an synchronous query. It sends the message m to the address
 // contained in a and waits for an reply. Basic use pattern with a *dns.Client:
 //
