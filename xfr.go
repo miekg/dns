@@ -11,18 +11,18 @@ import (
 	"time"
 )
 
-// Envelope is used when doing a transfer with a remote server.
+// Envelope is used when doing a zone transfer with a remote server.
 type Envelope struct {
-	RR    []RR  // The set of RRs in the answer section of the AXFR reply message.
+	RR    []RR  // The set of RRs in the answer section of the xfr reply message.
 	Error error // If something went wrong, this contains the error.
 }
 
-// A Transfer defines parameters that are used during a zone transfer. 
+// A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Conn
-	DialTimeout    time.Duration // net.DialTimeout (ns), defaults to 2 * 1e9
-	ReadTimeout    time.Duration // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
-	WriteTimeout   time.Duration // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
+	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
+	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
+	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	tsigTimersOnly bool
 }
@@ -152,8 +152,6 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 	}
 }
 
-
-
 // Out performs an outgoing transfer with the client connecting in w.
 // Basic use pattern:
 //
@@ -209,7 +207,7 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 	return m, err
 }
 
-// WriteMsg write a message throught the transfer connection t.
+// WriteMsg writes a message through the transfer connection t.
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
