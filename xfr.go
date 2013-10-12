@@ -30,8 +30,11 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	if t.DialTimeout != 0 {
 		timeout = t.DialTimeout
 	}
-	t.Conn, err = net.DialTimeout("tcp", a, timeout)
+	t.Conn.Conn, err = net.DialTimeout("tcp", a, timeout)
 	if err != nil {
+		return nil, err
+	}
+	if err := t.WriteMsg(q); err != nil {
 		return nil, err
 	}
 	env = make(chan *Envelope)
@@ -57,7 +60,7 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 		timeout = t.ReadTimeout
 	}
 	for {
-		t.SetReadDeadline(time.Now().Add(timeout))
+		t.Conn.SetReadDeadline(time.Now().Add(timeout))
 		in, err := t.ReadMsg()
 		if err != nil {
 			c <- &Envelope{nil, err}
@@ -67,6 +70,7 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
+		println("ok")
 		if first {
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}
@@ -177,7 +181,7 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
-	if ts := m.IsTsig(); t != nil {
+	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
 		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
 			return m, ErrSecret
 		}
@@ -190,7 +194,7 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 // WriteMsg write a message throught the transfer connection t.
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
-	if ts := m.IsTsig(); t != nil {
+	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
 		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
 			return ErrSecret
 		}
@@ -220,3 +224,22 @@ func isSOALast(in *Msg) bool {
 	}
 	return false
 }
+/*
+// Close implements the net.Conn Close method.
+func (t *Transfer) Close() error { return t.Conn.Close() }
+
+// LocalAddr implements the net.Conn LocalAddr method.
+func (t *Transfer) LocalAddr() net.Addr { return t.Conn.LocalAddr() }
+
+// RemoteAddr implements the net.Conn RemoteAddr method.
+func (t *Transfer) RemoteAddr() net.Addr { return t.Conn.RemoteAddr() }
+
+// SetDeadline implements the net.Conn SetDeadline method.
+func (t *Transfer) SetDeadline(t1 time.Time) error { return t.Conn.SetDeadline(t1) }
+
+// SetReadDeadline implements the net.Conn SetReadDeadline method.
+func (t *Transfer) SetReadDeadline(t1 time.Time) error { return t.Conn.SetReadDeadline(t1) }
+
+// SetWriteDeadline implements the net.Conn SetWriteDeadline method.
+func (t *Transfer) SetWriteDeadline(t1 time.Time) error { return t.Conn.SetWriteDeadline(t1) }
+*/

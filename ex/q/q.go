@@ -223,7 +223,13 @@ Flags:
 				continue
 			}
 			for e := range env {
-				fmt.Printf("%s\n", e.RR)
+				if e.Error != nil {
+					fmt.Printf(";; %s\n", e.Error.Error())
+					break
+				}
+				for _, r := range e.RR {
+					fmt.Printf("%s\n", r)
+				}
 			}
 			continue
 		}
