@@ -287,7 +287,7 @@ func tsigKeyParse(s string) (algo, name, secret string, ok bool) {
 	s1 := strings.SplitN(s, ":", 3)
 	switch len(s1) {
 	case 2:
-		return "hmac-md5.sig-alg.reg.int.", s1[0], dns.Fqdn(s1[1]), true
+		return "hmac-md5.sig-alg.reg.int.", dns.Fqdn(s1[0]), s1[1], true
 	case 3:
 		switch s1[0] {
 		case "hmac-md5":
