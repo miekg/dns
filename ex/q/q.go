@@ -198,6 +198,7 @@ Flags:
 		m.Extra = append(m.Extra, o)
 	}
 
+query:
 	for _, v := range qname {
 		m.Question[0] = dns.Question{dns.Fqdn(v), qtype, qclass}
 		m.Id = dns.Id()
@@ -226,7 +227,7 @@ Flags:
 			for e := range env {
 				if e.Error != nil {
 					fmt.Printf(";; %s\n", e.Error.Error())
-					break
+					continue query
 				}
 				for _, r := range e.RR {
 					fmt.Printf("%s\n", r)
