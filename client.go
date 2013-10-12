@@ -213,7 +213,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		return n, err
 	}
 	// assume udp connection
-	n, _, err = co.Conn.(*net.UDPConn).ReadFromUDP(p)
+	n, err = co.Conn.Read(p)
 	if err != nil {
 		return n, err
 	}
