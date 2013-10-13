@@ -30,6 +30,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * http://www.dns-lg.com/
 * https://github.com/fcambus/rrda
 * https://github.com/kenshinx/godns
+* https://github.com/skydns
 * more? (send pull request if you want to be listed here)
 
 # Features
