@@ -615,6 +615,27 @@ func TestNSAPGPOS(t *testing.T) {
 	}
 }
 
+func TestPX(t *testing.T) {
+	dt := map[string]string{
+		"*.net2.it. IN PX 10 net2.it. PRMD-net2.ADMD-p400.C-it.": "*.net2.it.\t3600\tIN\tPX\t10 net2.it. PRMD-net2.ADMD-p400.C-it.",
+		"ab.net2.it. IN PX 10 ab.net2.it. O-ab.PRMD-net2.ADMDb.C-it.": "ab.net2.it.\t3600\tIN\tPX\t10 ab.net2.it. O-ab.PRMD-net2.ADMDb.C-it.",
+	}
+	for i, o := range dt {
+		rr, e := NewRR(i)
+		if e != nil {
+			t.Log("Failed to parse RR: " + e.Error())
+			t.Fail()
+			continue
+		}
+		if rr.String() != o {
+			t.Logf("`%s' should be equal to\n`%s', but is     `%s'\n", i, o, rr.String())
+			t.Fail()
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+}
+
 func TestComment(t *testing.T) {
 	// Comments we must see
 	comments := map[string]bool{"; this is comment 1": true,

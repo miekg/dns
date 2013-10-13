@@ -128,6 +128,9 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeGPOS:
 		r, e = setGPOS(h, c, f)
 		goto Slurp
+	case TypePX:
+		r, e = setPX(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
@@ -1996,3 +1999,45 @@ func setUINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Uinfo = s[0] // silently discard anything above
 	return rr, nil, c1
 }
+
+func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(PX)
+	rr.Hdr = h
+
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad PX Preference", l}
+	} else {
+		rr.Preference = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Map822 = l.token
+	if l.token == "@" {
+		rr.Map822 = o
+		return rr, nil
+	}
+	_, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad PX Map822", l}
+	}
+	if rr.Map822[l.length-1] != '.' {
+		rr.Map822 = appendOrigin(rr.Map822, o)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	rr.Mapx400 = l.token
+	if l.token == "@" {
+		rr.Mapx400 = o
+		return rr, nil
+	}
+	_, ok = IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad PX Mapx400", l}
+	}
+	if rr.Mapx400[l.length-1] != '.' {
+		rr.Mapx400 = appendOrigin(rr.Mapx400, o)
+	}
+	return rr, nil
+}
+

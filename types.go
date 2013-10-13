@@ -50,6 +50,7 @@ const (
 	TypeNSAPPTR    uint16 = 23
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
+	TypePX         uint16 = 26
 	TypeGPOS       uint16 = 27
 	TypeAAAA       uint16 = 28
 	TypeLOC        uint16 = 29
@@ -650,6 +651,20 @@ func (rr *AAAA) String() string {
 	}
 	return rr.Hdr.String() + rr.AAAA.String()
 }
+
+type PX struct {
+	Hdr        RR_Header
+	Preference uint16
+	Map822     string `dns:"domain-name"`
+	Mapx400    string `dns:"domain-name"`
+}
+
+func (rr *PX) Header() *RR_Header { return &rr.Hdr }
+func (rr *PX) copy() RR           { return &PX{*rr.Hdr.copyHeader(), rr.Preference, rr.Map822, rr.Mapx400} }
+func (rr *PX) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Map822 + " " + rr.Mapx400
+}
+func (rr *PX) len() int { return rr.Hdr.len() + 2 + len(rr.Map822) + len(rr.Mapx400) }
 
 type GPOS struct {
 	Hdr       RR_Header
@@ -1585,6 +1600,7 @@ var rr_mk = map[uint16]func() RR{
 	TypePTR:        func() RR { return new(PTR) },
 	TypeRKEY:       func() RR { return new(RKEY) },
 	TypeRP:         func() RR { return new(RP) },
+	TypePX:         func() RR { return new(PX) },
 	TypeRRSIG:      func() RR { return new(RRSIG) },
 	TypeRT:         func() RR { return new(RT) },
 	TypeSOA:        func() RR { return new(SOA) },
