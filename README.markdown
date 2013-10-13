@@ -108,6 +108,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 6605 - ECDSA
 * 6742 - ILNP DNS
 * 6891 - EDNS0 update
+* 6895 - DNS IANA considerations
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
 * xxxx - IEU48/IEU64 records (draft)
