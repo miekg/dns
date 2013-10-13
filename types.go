@@ -46,6 +46,8 @@ const (
 	TypeX25        uint16 = 19
 	TypeISDN       uint16 = 20
 	TypeRT         uint16 = 21
+	TypeNSAP       uint16 = 22
+	TypeNSAPPTR    uint16 = 23
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
 	TypeAAAA       uint16 = 28
@@ -1011,6 +1013,27 @@ func (rr *RKEY) len() int {
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
+type NSAP struct {
+	Hdr    RR_Header
+	Length uint8
+	Nsap   string
+}
+
+func (rr *NSAP) Header() *RR_Header { return &rr.Hdr }
+func (rr *NSAP) copy() RR           { return &NSAP{*rr.Hdr.copyHeader(), rr.Length, rr.Nsap} }
+func (rr *NSAP) String() string     { return rr.Hdr.String() + strconv.Itoa(int(rr.Length)) + " " + rr.Nsap }
+func (rr *NSAP) len() int           { return rr.Hdr.len() + 1 + len(rr.Nsap) }
+
+type NSAPPTR struct {
+	Hdr RR_Header
+	Ptr string `dns:"domain-name"`
+}
+
+func (rr *NSAPPTR) Header() *RR_Header { return &rr.Hdr }
+func (rr *NSAPPTR) copy() RR           { return &NSAPPTR{*rr.Hdr.copyHeader(), rr.Ptr} }
+func (rr *NSAPPTR) String() string     { return rr.Hdr.String() + rr.Ptr }
+func (rr *NSAPPTR) len() int           { return rr.Hdr.len() + len(rr.Ptr) }
+
 type NSEC3 struct {
 	Hdr        RR_Header
 	Hash       uint8
@@ -1504,6 +1527,8 @@ func euiToString(eui uint64, bits int) (hex string) {
 var rr_mk = map[uint16]func() RR{
 	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeHINFO:      func() RR { return new(HINFO) },
+	TypeNSAP:       func() RR { return new(NSAP) },
+	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },
 	TypeMB:         func() RR { return new(MB) },
 	TypeMG:         func() RR { return new(MG) },
 	TypeMD:         func() RR { return new(MD) },

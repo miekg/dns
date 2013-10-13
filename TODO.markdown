@@ -13,8 +13,6 @@
 
 These are deprecated, or rarely used (or just a bitch to implement).
 
-NSAP
-NSAP-PTR
 PX
 GPOS
 NIMLOC

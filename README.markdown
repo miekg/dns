@@ -72,6 +72,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 *all of them*
 
 * 103{4,5} - DNS standard
+* 1348 - NSAP record
 * 1982 - Serial Arithmetic
 * 1876 - LOC record
 * 1995 - IXFR

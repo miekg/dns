@@ -93,6 +93,8 @@ var TypeToString = map[uint16]string{
 	TypeWKS:        "WKS",
 	TypeNS:         "NS",
 	TypeNULL:       "NULL",
+	TypeNSAP:	"NSAP",
+	TypeNSAPPTR:    "NSAP-PTR",
 	TypeAFSDB:      "AFSDB",
 	TypeX25:        "X25",
 	TypeISDN:       "ISDN",

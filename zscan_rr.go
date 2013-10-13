@@ -122,9 +122,14 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeLOC:
 		r, e = setLOC(h, c, f)
 		goto Slurp
+	case TypeNSAPPTR:
+		r, e = setNSAPPTR(h, c, o, f)
+		goto Slurp
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
+	case TypeNSAP:
+		return setNSAP(h, c, f)
 	case TypeDNSKEY:
 		return setDNSKEY(h, c, f)
 	case TypeRKEY:
@@ -294,6 +299,26 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	_, ok := IsDomainName(l.token)
 	if !ok {
 		return nil, &ParseError{f, "bad PTR Ptr", l}
+	}
+	if rr.Ptr[l.length-1] != '.' {
+		rr.Ptr = appendOrigin(rr.Ptr, o)
+	}
+	return rr, nil
+}
+
+func setNSAPPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
+	rr := new(NSAPPTR)
+	rr.Hdr = h
+
+	l := <-c
+	rr.Ptr = l.token
+	if l.token == "@" {
+		rr.Ptr = o
+		return rr, nil
+	}
+	_, ok := IsDomainName(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad NSAP-PTR Ptr", l}
 	}
 	if rr.Ptr[l.length-1] != '.' {
 		rr.Ptr = appendOrigin(rr.Ptr, o)
@@ -1527,6 +1552,24 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 		return nil, e, c1
 	}
 	rr.Digest = s
+	return rr, nil, c1
+}
+
+func setNSAP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+	rr := new(NSAP)
+	rr.Hdr = h
+	l := <-c
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad NSAP Length", l}, ""
+	} else {
+		rr.Length = uint8(i)
+	}
+	<-c // _BLANK
+	s, e, c1 := endingToString(c, "bad NSAP Nsap", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.Nsap = s
 	return rr, nil, c1
 }
 
