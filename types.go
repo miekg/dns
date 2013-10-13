@@ -50,6 +50,7 @@ const (
 	TypeNSAPPTR    uint16 = 23
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
+	TypeGPOS       uint16 = 27
 	TypeAAAA       uint16 = 28
 	TypeLOC        uint16 = 29
 	TypeNXT        uint16 = 30
@@ -648,6 +649,22 @@ func (rr *AAAA) String() string {
 		return rr.Hdr.String()
 	}
 	return rr.Hdr.String() + rr.AAAA.String()
+}
+
+type GPOS struct {
+	Hdr       RR_Header
+	Longitude string
+	Latitude  string
+	Altitude  string
+}
+
+func (rr *GPOS) Header() *RR_Header { return &rr.Hdr }
+func (rr *GPOS) copy() RR           { return &GPOS{*rr.Hdr.copyHeader(), rr.Longitude, rr.Latitude, rr.Altitude} }
+func (rr *GPOS) len() int {
+	return rr.Hdr.len() + len(rr.Longitude) + len(rr.Latitude) + len(rr.Altitude) + 3
+}
+func (rr *GPOS) String() string {
+	return rr.Hdr.String() + rr.Longitude + " " + rr.Latitude + " " + rr.Altitude
 }
 
 type LOC struct {
@@ -1525,63 +1542,64 @@ func euiToString(eui uint64, bits int) (hex string) {
 
 // Map of constructors for each RR wire type.
 var rr_mk = map[uint16]func() RR{
-	TypeCNAME:      func() RR { return new(CNAME) },
-	TypeHINFO:      func() RR { return new(HINFO) },
-	TypeNSAP:       func() RR { return new(NSAP) },
-	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },
-	TypeMB:         func() RR { return new(MB) },
-	TypeMG:         func() RR { return new(MG) },
-	TypeMD:         func() RR { return new(MD) },
-	TypeMF:         func() RR { return new(MF) },
-	TypeMINFO:      func() RR { return new(MINFO) },
-	TypeRP:         func() RR { return new(RP) },
-	TypeAFSDB:      func() RR { return new(AFSDB) },
-	TypeX25:        func() RR { return new(X25) },
-	TypeMR:         func() RR { return new(MR) },
-	TypeMX:         func() RR { return new(MX) },
-	TypeRKEY:       func() RR { return new(RKEY) },
-	TypeNINFO:      func() RR { return new(NINFO) },
-	TypeNS:         func() RR { return new(NS) },
-	TypePTR:        func() RR { return new(PTR) },
-	TypeSOA:        func() RR { return new(SOA) },
-	TypeRT:         func() RR { return new(RT) },
-	TypeTXT:        func() RR { return new(TXT) },
-	TypeSRV:        func() RR { return new(SRV) },
-	TypeNAPTR:      func() RR { return new(NAPTR) },
-	TypeDNAME:      func() RR { return new(DNAME) },
 	TypeA:          func() RR { return new(A) },
-	TypeWKS:        func() RR { return new(WKS) },
 	TypeAAAA:       func() RR { return new(AAAA) },
-	TypeLOC:        func() RR { return new(LOC) },
-	TypeOPT:        func() RR { return new(OPT) },
-	TypeDS:         func() RR { return new(DS) },
+	TypeAFSDB:      func() RR { return new(AFSDB) },
+	TypeCAA:        func() RR { return new(CAA) },
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
-	TypeKX:         func() RR { return new(KX) },
-	TypeSPF:        func() RR { return new(SPF) },
-	TypeTALINK:     func() RR { return new(TALINK) },
-	TypeSSHFP:      func() RR { return new(SSHFP) },
-	TypeRRSIG:      func() RR { return new(RRSIG) },
-	TypeNSEC:       func() RR { return new(NSEC) },
-	TypeDNSKEY:     func() RR { return new(DNSKEY) },
-	TypeNSEC3:      func() RR { return new(NSEC3) },
+	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeDHCID:      func() RR { return new(DHCID) },
-	TypeNSEC3PARAM: func() RR { return new(NSEC3PARAM) },
-	TypeTKEY:       func() RR { return new(TKEY) },
-	TypeTSIG:       func() RR { return new(TSIG) },
-	TypeURI:        func() RR { return new(URI) },
-	TypeTA:         func() RR { return new(TA) },
 	TypeDLV:        func() RR { return new(DLV) },
-	TypeTLSA:       func() RR { return new(TLSA) },
-	TypeHIP:        func() RR { return new(HIP) },
-	TypeNID:        func() RR { return new(NID) },
-	TypeL32:        func() RR { return new(L32) },
-	TypeL64:        func() RR { return new(L64) },
-	TypeLP:         func() RR { return new(LP) },
+	TypeDNAME:      func() RR { return new(DNAME) },
+	TypeDNSKEY:     func() RR { return new(DNSKEY) },
+	TypeDS:         func() RR { return new(DS) },
 	TypeEUI48:      func() RR { return new(EUI48) },
 	TypeEUI64:      func() RR { return new(EUI64) },
-	TypeCAA:        func() RR { return new(CAA) },
-	TypeUID:        func() RR { return new(UID) },
 	TypeGID:        func() RR { return new(GID) },
+	TypeGPOS:       func() RR { return new(GPOS) },
+	TypeHINFO:      func() RR { return new(HINFO) },
+	TypeHIP:        func() RR { return new(HIP) },
+	TypeKX:         func() RR { return new(KX) },
+	TypeL32:        func() RR { return new(L32) },
+	TypeL64:        func() RR { return new(L64) },
+	TypeLOC:        func() RR { return new(LOC) },
+	TypeLP:         func() RR { return new(LP) },
+	TypeMB:         func() RR { return new(MB) },
+	TypeMD:         func() RR { return new(MD) },
+	TypeMF:         func() RR { return new(MF) },
+	TypeMG:         func() RR { return new(MG) },
+	TypeMINFO:      func() RR { return new(MINFO) },
+	TypeMR:         func() RR { return new(MR) },
+	TypeMX:         func() RR { return new(MX) },
+	TypeNAPTR:      func() RR { return new(NAPTR) },
+	TypeNID:        func() RR { return new(NID) },
+	TypeNINFO:      func() RR { return new(NINFO) },
+	TypeNS:         func() RR { return new(NS) },
+	TypeNSAP:       func() RR { return new(NSAP) },
+	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },
+	TypeNSEC3:      func() RR { return new(NSEC3) },
+	TypeNSEC3PARAM: func() RR { return new(NSEC3PARAM) },
+	TypeNSEC:       func() RR { return new(NSEC) },
+	TypeOPT:        func() RR { return new(OPT) },
+	TypePTR:        func() RR { return new(PTR) },
+	TypeRKEY:       func() RR { return new(RKEY) },
+	TypeRP:         func() RR { return new(RP) },
+	TypeRRSIG:      func() RR { return new(RRSIG) },
+	TypeRT:         func() RR { return new(RT) },
+	TypeSOA:        func() RR { return new(SOA) },
+	TypeSPF:        func() RR { return new(SPF) },
+	TypeSRV:        func() RR { return new(SRV) },
+	TypeSSHFP:      func() RR { return new(SSHFP) },
+	TypeTA:         func() RR { return new(TA) },
+	TypeTALINK:     func() RR { return new(TALINK) },
+	TypeTKEY:       func() RR { return new(TKEY) },
+	TypeTLSA:       func() RR { return new(TLSA) },
+	TypeTSIG:       func() RR { return new(TSIG) },
+	TypeTXT:        func() RR { return new(TXT) },
+	TypeUID:        func() RR { return new(UID) },
 	TypeUINFO:      func() RR { return new(UINFO) },
+	TypeURI:        func() RR { return new(URI) },
+	TypeWKS:        func() RR { return new(WKS) },
+	TypeX25:        func() RR { return new(X25) },
 }

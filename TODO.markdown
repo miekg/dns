@@ -14,7 +14,6 @@
 These are deprecated, or rarely used (or just a bitch to implement).
 
 PX
-GPOS
 NIMLOC
 ATMA
 A6
