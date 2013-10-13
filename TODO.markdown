@@ -1,14 +1,12 @@
 # TODO
 
 * Support for on-the-fly-signing or check how to do it
-* Ratelimiting? server side (rrl)
-* Ratelimiting? client side
+* Ratelimiting? server side (RRL)
 
 ## Nice to have
 
 * Speed, we can always go faster. A simple reflect server now hits 75/80K qps on
     moderate hardware
-* go test; only works correct on my machine
 * privatekey.Precompute() when signing?
 
 ## RRs not implemented
