@@ -98,10 +98,11 @@ const (
 	TypeMAILA uint16 = 254
 	TypeANY   uint16 = 255
 
-	TypeURI uint16 = 256
-	TypeCAA uint16 = 257
-	TypeTA  uint16 = 32768
-	TypeDLV uint16 = 32769
+	TypeURI      uint16 = 256
+	TypeCAA      uint16 = 257
+	TypeTA       uint16 = 32768
+	TypeDLV      uint16 = 32769
+	TypeReserved uint16 = 65535
 
 	// valid Question.Qclass
 	ClassINET   = 1
