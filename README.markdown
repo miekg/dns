@@ -59,10 +59,12 @@ correctly, the following should work:
     go get github.com/miekg/dns
     go build github.com/miekg/dns
 
+## Examples
+
 A short "how to use the API" is at the beginning of dns.go (this also will show
-when you call `go doc github.com/miekg/dns`. Sample
-programs can be found in the `ex` directory. They can also be build
-with: `go build`.
+when you call `go doc github.com/miekg/dns`.
+
+Example programs can be found in the `github.com/miekg/exdns` repository.
 
 ## Supported RFCs
 
