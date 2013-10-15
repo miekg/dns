@@ -9,3 +9,4 @@
     moderate hardware
 * privatekey.Precompute() when signing?
 * Last remaining RRs: APL, NIMLOC & EID, ATMA, A6, KEY, SIG and NXT
+* CAA parsing is broken

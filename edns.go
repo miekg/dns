@@ -5,7 +5,7 @@
 // EDNS0
 //
 // EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated
-// by RFC 6891. It defines a standard RR type, the OPT RR, which is then completely
+// by RFC 6891. It defines an new RR type, the OPT RR, which is then completely
 // abused.
 // Basic use pattern for creating an (empty) OPT RR:
 //
@@ -150,10 +150,7 @@ func (rr *OPT) SetDo() {
 }
 
 // EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to
-// it. Basic use pattern for adding an option to and OPT RR:
-//
-//	// o is the OPT RR, e is the EDNS0 option
-//	o.Option = append(o.Option, e)
+// it.
 type EDNS0 interface {
 	// Option returns the option code for the option.
 	Option() uint16
@@ -166,8 +163,8 @@ type EDNS0 interface {
 	String() string
 }
 
-// The nsid EDNS0 option is used to retrieve some sort of nameserver
-// identifier. When seding a request Nsid must be set to the empty string
+// The nsid EDNS0 option is used to retrieve a nameserver
+// identifier. When sending a request Nsid must be set to the empty string
 // The identifier is an opaque string encoded as hex.
 // Basic use pattern for creating an nsid option:
 //
@@ -182,10 +179,6 @@ type EDNS0_NSID struct {
 	Nsid string // This string needs to be hex encoded
 }
 
-func (e *EDNS0_NSID) Option() uint16 {
-	return EDNS0NSID
-}
-
 func (e *EDNS0_NSID) pack() ([]byte, error) {
 	h, err := hex.DecodeString(e.Nsid)
 	if err != nil {
@@ -194,13 +187,9 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_NSID) unpack(b []byte) {
-	e.Nsid = hex.EncodeToString(b)
-}
-
-func (e *EDNS0_NSID) String() string {
-	return string(e.Nsid)
-}
+func (e *EDNS0_NSID) Option() uint16  { return EDNS0NSID }
+func (e *EDNS0_NSID) unpack(b []byte) { e.Nsid = hex.EncodeToString(b) }
+func (e *EDNS0_NSID) String() string  { return string(e.Nsid) }
 
 // The subnet EDNS0 option is used to give the remote nameserver
 // an idea of where the client lives. It can then give back a different
@@ -344,10 +333,6 @@ type EDNS0_UL struct {
 	Lease uint32
 }
 
-func (e *EDNS0_UL) Option() uint16 {
-	return EDNS0UL
-}
-
 // Copied: http://golang.org/src/pkg/net/dnsmsg.go
 func (e *EDNS0_UL) pack() ([]byte, error) {
 	b := make([]byte, 4)
@@ -358,13 +343,11 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 	return b, nil
 }
 
+func (e *EDNS0_UL) Option() uint16 { return EDNS0UL }
 func (e *EDNS0_UL) unpack(b []byte) {
 	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
 }
-
-func (e *EDNS0_UL) String() string {
-	return strconv.FormatUint(uint64(e.Lease), 10)
-}
+func (e *EDNS0_UL) String() string { return strconv.FormatUint(uint64(e.Lease), 10) }
 
 // Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
 // Implemented for completeness, as the EDNS0 type code is assigned.
@@ -377,9 +360,7 @@ type EDNS0_LLQ struct {
 	LeaseLife uint32
 }
 
-func (e *EDNS0_LLQ) Option() uint16 {
-	return EDNS0LLQ
-}
+func (e *EDNS0_LLQ) Option() uint16 { return EDNS0LLQ }
 
 func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	b := make([]byte, 18)
@@ -450,16 +431,9 @@ type EDNS0_DHU struct {
 	AlgCode []uint8
 }
 
-func (e *EDNS0_DHU) Option() uint16 {
-	return EDNS0DHU
-}
-func (e *EDNS0_DHU) pack() ([]byte, error) {
-	return e.AlgCode, nil
-}
-
-func (e *EDNS0_DHU) unpack(b []byte) {
-	e.AlgCode = b
-}
+func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
+func (e *EDNS0_DHU) pack() ([]byte, error) { return e.AlgCode, nil }
+func (e *EDNS0_DHU) unpack(b []byte)       { e.AlgCode = b }
 
 func (e *EDNS0_DHU) String() string {
 	s := ""
@@ -478,16 +452,9 @@ type EDNS0_N3U struct {
 	AlgCode []uint8
 }
 
-func (e *EDNS0_N3U) Option() uint16 {
-	return EDNS0N3U
-}
-func (e *EDNS0_N3U) pack() ([]byte, error) {
-	return e.AlgCode, nil
-}
-
-func (e *EDNS0_N3U) unpack(b []byte) {
-	e.AlgCode = b
-}
+func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
+func (e *EDNS0_N3U) pack() ([]byte, error) { return e.AlgCode, nil }
+func (e *EDNS0_N3U) unpack(b []byte)       { e.AlgCode = b }
 
 func (e *EDNS0_N3U) String() string {
 	// Re-use the hash map
