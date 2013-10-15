@@ -156,8 +156,6 @@ func modToPrintf(s string) (string, int, string) {
 		return "", offset, "bad width in $GENERATE"
 	case width == 0:
 		return "%" + xs[1] + xs[2], offset, ""
-	default:
-		return "%0" + xs[1] + xs[2], offset, ""
 	}
-	panic("dns: not reached")
+	return "%0" + xs[1] + xs[2], offset, ""
 }

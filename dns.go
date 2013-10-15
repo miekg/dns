@@ -8,7 +8,7 @@
 // The package allows complete control over what is send out to the DNS. The package
 // API follows the less-is-more principle, by presenting a small, clean interface.
 //
-// The package dns supports (asynchronous) querying/replying, incoming/outgoing AXFR/IXFR,
+// The package dns supports (asynchronous) querying/replying, incoming/outgoing zone transfers,
 // TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 // Note that domain names MUST be fully qualified, before sending them, unqualified
 // names in a message will result in a packing failure.
@@ -61,7 +61,7 @@
 //      c := new(Client)
 //      in, rtt, err := c.Exchange(m1, "127.0.0.1:53")
 //
-// For asynchronous queries it is easy to wrap Exchange() in a goroutine. Suppressing
+// Suppressing
 // multiple outstanding queries (with the same question, type and class) is as easy as setting:
 //
 //	c.SingleInflight = true
@@ -71,7 +71,8 @@
 //
 //	in, err := dns.Exchange(m1, "127.0.0.1:53")
 //
-// A dns message consists out of four sections.
+// When this functions returns you will get dns message. A dns message consists
+// out of four sections.
 // The question section: in.Question, the answer section: in.Answer,
 // the authority section: in.Ns and the additional section: in.Extra.
 //

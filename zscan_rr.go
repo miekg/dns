@@ -2040,4 +2040,3 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	}
 	return rr, nil
 }
-

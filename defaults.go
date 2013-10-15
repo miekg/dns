@@ -223,18 +223,14 @@ func ReverseAddr(addr string) (arpa string, err error) {
 func (t Type) String() string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1
-	} else {
-		return "TYPE" + strconv.Itoa(int(t))
 	}
-	panic("dns: not reached") // go < 1.1 compat
+	return "TYPE" + strconv.Itoa(int(t))
 }
 
 // String returns the string representation for the class c
 func (c Class) String() string {
 	if c1, ok := ClassToString[uint16(c)]; ok {
 		return c1
-	} else {
-		return "CLASS" + strconv.Itoa(int(c))
 	}
-	panic("dns: not reached")
+	return "CLASS" + strconv.Itoa(int(c))
 }

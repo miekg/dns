@@ -141,7 +141,7 @@ var TypeToString = map[uint16]string{
 	TypeTLSA:       "TLSA",
 	TypeTSIG:       "TSIG", // Meta RR
 	TypeTXT:        "TXT",
-	TypePX:		"PX",
+	TypePX:         "PX",
 	TypeUID:        "UID",
 	TypeUINFO:      "UINFO",
 	TypeUNSPEC:     "UNSPEC",
