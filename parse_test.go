@@ -596,8 +596,8 @@ func TestNSAPGPOS(t *testing.T) {
 		"foo.bar.com.    IN  NSAP   21 47000580ffff000000321099991111222233334444": "foo.bar.com.\t3600\tIN\tNSAP\t21 47000580ffff000000321099991111222233334444",
 		"host.school.de  IN  NSAP   17 39276f3100111100002222333344449876":         "host.school.de.\t3600\tIN\tNSAP\t17 39276f3100111100002222333344449876",
 		"444433332222111199990123000000ff. NSAP-PTR foo.bar.com.":                  "444433332222111199990123000000ff.\t3600\tIN\tNSAP-PTR\tfoo.bar.com.",
-		"lillee. IN  GPOS -32.6882 116.8652 10.0": "lillee.\t3600\tIN\tGPOS\t-32.6882 116.8652 10.0",
-		"hinault. IN GPOS -22.6882 116.8652 250.0": "hinault.\t3600\tIN\tGPOS\t-22.6882 116.8652 250.0",
+		"lillee. IN  GPOS -32.6882 116.8652 10.0":                                  "lillee.\t3600\tIN\tGPOS\t-32.6882 116.8652 10.0",
+		"hinault. IN GPOS -22.6882 116.8652 250.0":                                 "hinault.\t3600\tIN\tGPOS\t-22.6882 116.8652 250.0",
 	}
 	for i, o := range dt {
 		rr, e := NewRR(i)
@@ -617,7 +617,7 @@ func TestNSAPGPOS(t *testing.T) {
 
 func TestPX(t *testing.T) {
 	dt := map[string]string{
-		"*.net2.it. IN PX 10 net2.it. PRMD-net2.ADMD-p400.C-it.": "*.net2.it.\t3600\tIN\tPX\t10 net2.it. PRMD-net2.ADMD-p400.C-it.",
+		"*.net2.it. IN PX 10 net2.it. PRMD-net2.ADMD-p400.C-it.":      "*.net2.it.\t3600\tIN\tPX\t10 net2.it. PRMD-net2.ADMD-p400.C-it.",
 		"ab.net2.it. IN PX 10 ab.net2.it. O-ab.PRMD-net2.ADMDb.C-it.": "ab.net2.it.\t3600\tIN\tPX\t10 ab.net2.it. O-ab.PRMD-net2.ADMDb.C-it.",
 	}
 	for i, o := range dt {
