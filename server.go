@@ -380,45 +380,43 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 
 // Serve a new connection.
 func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsigSecret map[string]string) {
-	// for block to make it easy to break out to close the tcp connection
-	for {
-		// Request has been read in serveUDP or serveTCP
-		w := new(response)
-		w.tsigSecret = tsigSecret
-		w.udp = u
-		w.tcp = t
-		w.remoteAddr = a
-		req := new(Msg)
-		if req.Unpack(m) != nil {
-			// Send a format error back
-			x := new(Msg)
-			x.SetRcodeFormatError(req)
-			w.WriteMsg(x)
-			break
-		}
-
-		w.tsigStatus = nil
-		if w.tsigSecret != nil {
-			if t := req.IsTsig(); t != nil {
-				secret := t.Hdr.Name
-				if _, ok := tsigSecret[secret]; !ok {
-					w.tsigStatus = ErrKeyAlg
-				}
-				w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
-				w.tsigTimersOnly = false
-				w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
-			}
-		}
-		h.ServeDNS(w, req) // this does the writing back to the client
+	// Request has been read in serveUDP or serveTCP
+	w := new(response)
+	w.tsigSecret = tsigSecret
+	w.udp = u
+	w.tcp = t
+	w.remoteAddr = a
+	req := new(Msg)
+	if req.Unpack(m) != nil {
+		// Send a format error back
+		x := new(Msg)
+		x.SetRcodeFormatError(req)
+		w.WriteMsg(x)
+		return
+	}
+	defer func() {
 		if w.hijacked {
 			// client takes care of the connection, i.e. calls Close()
-			break
+			return
 		}
 		if t != nil {
 			w.Close()
 		}
-		break
+	}()
+
+	w.tsigStatus = nil
+	if w.tsigSecret != nil {
+		if t := req.IsTsig(); t != nil {
+			secret := t.Hdr.Name
+			if _, ok := tsigSecret[secret]; !ok {
+				w.tsigStatus = ErrKeyAlg
+			}
+			w.tsigStatus = TsigVerify(m, tsigSecret[secret], "", false)
+			w.tsigTimersOnly = false
+			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
+		}
 	}
+	h.ServeDNS(w, req) // this does the writing back to the client
 	return
 }
 
@@ -489,16 +487,11 @@ func (w *response) Hijack() { w.hijacked = true }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	if w.udp != nil {
-		e := w.udp.Close()
-		w.udp = nil
-		return e
-	}
+	// Can't close the udp conn, as that is actually the listener.
 	if w.tcp != nil {
 		e := w.tcp.Close()
 		w.tcp = nil
 		return e
 	}
-	// no-op
 	return nil
 }
