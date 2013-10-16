@@ -381,17 +381,14 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 // Serve a new connection.
 func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsigSecret map[string]string) {
 	// Request has been read in serveUDP or serveTCP
-	w := new(response)
-	w.tsigSecret = tsigSecret
-	w.udp = u
-	w.tcp = t
-	w.remoteAddr = a
+	w := &response{tsigSecret: tsigSecret, udp: u, tcp: t, remoteAddr: a}
 	req := new(Msg)
 	if req.Unpack(m) != nil {
 		// Send a format error back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
 		w.WriteMsg(x)
+		w.Close()
 		return
 	}
 	defer func() {
@@ -399,9 +396,7 @@ func serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn, tsig
 			// client takes care of the connection, i.e. calls Close()
 			return
 		}
-		if t != nil {
-			w.Close()
-		}
+		w.Close()
 	}()
 
 	w.tsigStatus = nil
