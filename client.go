@@ -58,8 +58,7 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 // c and waits for a reply. The connection c is not closed by ExchangeConn.
 // This function is going away, but can easily be mimicked:
 //
-//	co := new(dns.Conn)
-//	co.Conn = c // c is your net.Conn
+//	co := &dns.Conn{Conn: c} // c is your net.Conn
 //	co.WriteMsg(m)
 //	in, _  := co.ReadMsg()
 //
