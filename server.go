@@ -67,12 +67,6 @@ func NewServeMux() *ServeMux { return &ServeMux{z: make(map[string]Handler), m: 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
-// Authors is a list of authors that helped create or make Go DNS better.
-var Authors = []string{"Miek Gieben", "Ask Bjørn Hansen", "Dave Cheney", "Dusty Wilson", "Peter van Dijk"}
-
-// Version holds the current version.
-var Version = "v1.2"
-
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
@@ -93,71 +87,7 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 	w.WriteMsg(m)
 }
 
-// AuthorHandler returns a HandlerFunc that returns the authors
-// of Go DNS for 'authors.bind' or 'authors.server' queries in the
-// CHAOS Class. Note with:
-//
-//	dns.HandleFunc("authors.bind.", dns.HandleAuthors)
-//
-// the handler is registered for all DNS classes, thereby potentially
-// hijacking the authors.bind. zone in the IN class. If you need the
-// authors.bind zone to exist in the IN class, you need to register
-// some other handler, check the class in there and then call HandleAuthors.
-func HandleAuthors(w ResponseWriter, r *Msg) {
-	if len(r.Question) != 1 {
-		HandleFailed(w, r)
-		return
-	}
-	if r.Question[0].Qtype != ClassCHAOS && r.Question[0].Qtype != TypeTXT {
-		HandleFailed(w, r)
-		return
-	}
-	if r.Question[0].Name != "authors.server." && r.Question[0].Name != "authors.bind." {
-		HandleFailed(w, r)
-		return
-	}
-	m := new(Msg)
-	m.SetReply(r)
-	for _, author := range Authors {
-		h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
-		m.Answer = append(m.Answer, &TXT{h, []string{author}})
-	}
-	w.WriteMsg(m)
-}
-
-// VersionHandler returns a HandlerFunc that returns the version
-// of Go DNS for 'version.bind' or 'version.server' queries in the
-// CHAOS Class. Note with:
-//
-//	dns.HandleFunc("version.bind.", dns.HandleVersion)
-//
-// the handler is registered for all DNS classes, thereby potentially
-// hijacking the version.bind. zone in the IN class. If you need the
-// version.bind zone to exist in the IN class, you need to register
-// some other handler, check the class in there and then call HandleVersion.
-func HandleVersion(w ResponseWriter, r *Msg) {
-	if len(r.Question) != 1 {
-		HandleFailed(w, r)
-		return
-	}
-	if r.Question[0].Qtype != ClassCHAOS && r.Question[0].Qtype != TypeTXT {
-		HandleFailed(w, r)
-		return
-	}
-	if r.Question[0].Name != "version.server." && r.Question[0].Name != "version.bind." {
-		HandleFailed(w, r)
-		return
-	}
-	m := new(Msg)
-	m.SetReply(r)
-	h := RR_Header{r.Question[0].Name, TypeTXT, ClassCHAOS, 0, 0}
-	m.Answer = append(m.Answer, &TXT{h, []string{Version}})
-	w.WriteMsg(m)
-}
-
-func authorHandler() Handler  { return HandlerFunc(HandleAuthors) }
 func failedHandler() Handler  { return HandlerFunc(HandleFailed) }
-func versionHandler() Handler { return HandlerFunc(HandleVersion) }
 
 // Start a server on addresss and network speficied. Invoke handler
 // for incoming queries.

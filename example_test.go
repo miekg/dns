@@ -55,19 +55,3 @@ func ExampleDS(zone string) {
 		}
 	}
 }
-
-// Show how to setup the authors for 'authors.bind. CH TXT' or 'authors.server. CH  TXT'
-// queries.
-func ExampleAuthors() {
-	// ... server setup is out of scope ...
-
-	// Register the handle funcs.
-	HandleFunc("authors.bind.", HandleAuthors)
-	HandleFunc("authors.server.", HandleAuthors)
-
-	// To extend the authors list, just append to dns.Authors (a []string)
-	Authors = append(Authors, "G. I. Joe")
-
-	// Or ...
-	Authors = []string{"Just Me"}
-}
