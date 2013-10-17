@@ -434,6 +434,9 @@ Loop:
 func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
 	for i := 0; i < val.NumField(); i++ {
+		if val.Type().Field(i).Tag == `dns:"-"` {
+			continue
+		}
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
@@ -451,7 +454,6 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				}
 			case `dns:"octect"`:
 				println("TODO")
-
 			case `dns:"txt"`:
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
