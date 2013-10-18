@@ -61,6 +61,7 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 //	co := &dns.Conn{Conn: c} // c is your net.Conn
 //	co.WriteMsg(m)
 //	in, _  := co.ReadMsg()
+//	co.Close()
 //
 func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 	println("dns: this function is deprecated")
