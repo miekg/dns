@@ -13,6 +13,7 @@ import (
 )
 
 const dnsTimeout time.Duration = 2 * 1e9
+const tcpIdleTimeout time.Duration = 1 * time.Minute
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {

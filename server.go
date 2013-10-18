@@ -87,7 +87,7 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 	w.WriteMsg(m)
 }
 
-func failedHandler() Handler  { return HandlerFunc(HandleFailed) }
+func failedHandler() Handler { return HandlerFunc(HandleFailed) }
 
 // Start a server on addresss and network speficied. Invoke handler
 // for incoming queries.
@@ -189,13 +189,14 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
-	Addr         string            // address to listen on, ":dns" if empty
-	Net          string            // if "tcp" it will invoke a TCP listener, otherwise an UDP one
-	Handler      Handler           // handler to invoke, dns.DefaultServeMux if nil
-	UDPSize      int               // default buffer size to use to read incoming UDP messages
-	ReadTimeout  time.Duration     // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout time.Duration     // the net.Conn.SetWriteTimeout value for new connections
-	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>
+	Addr         string               // address to listen on, ":dns" if empty
+	Net          string               // if "tcp" it will invoke a TCP listener, otherwise an UDP one
+	Handler      Handler              // handler to invoke, dns.DefaultServeMux if nil
+	UDPSize      int                  // default buffer size to use to read incoming UDP messages
+	ReadTimeout  time.Duration        // the net.Conn.SetReadTimeout value for new connections
+	WriteTimeout time.Duration        // the net.Conn.SetWriteTimeout value for new connections
+	TsigSecret   map[string]string    // secret(s) for Tsig map[<zonename>]<base64 secret>
+	IdleTimeout  func() time.Duration // TCP idle timeout, see RFC 5966, if nil, default to 1 time.Minute
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.

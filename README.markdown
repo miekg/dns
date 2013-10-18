@@ -105,6 +105,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 5205 - HIP record
 * 5702 - SHA2 in the DNS
 * 5936 - AXFR
+* 5966 - TCP implementations
 * 6605 - ECDSA
 * 6742 - ILNP DNS
 * 6891 - EDNS0 update
