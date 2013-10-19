@@ -195,7 +195,7 @@ type Server struct {
 	UDPSize      int                  // default buffer size to use to read incoming UDP messages
 	ReadTimeout  time.Duration        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout time.Duration        // the net.Conn.SetWriteTimeout value for new connections
-	IdleTimeout  func() time.Duration // TCP idle timeout for multilpe queries, if nil, defaults to 1 time.Minute (RFC 5966)
+	IdleTimeout  func() time.Duration // TCP idle timeout for multilpe queries, if nil, defaults to 8 * time.Second (RFC 5966)
 	TsigSecret   map[string]string    // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
