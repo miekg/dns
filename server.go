@@ -287,8 +287,7 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net
 	q := 0
 Redo:
 	req := new(Msg)
-	if req.Unpack(m) != nil {
-		// Send a format error back
+	if req.Unpack(m) != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
 		w.WriteMsg(x)
@@ -307,11 +306,11 @@ Redo:
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
-	h.ServeDNS(w, req) // this does the writing back to the client
+	h.ServeDNS(w, req) // Writes back to the client
 
 Exit:
 	if w.hijacked {
-		return // client takes care of the connection, i.e. calls Close()
+		return // client calls Close()
 	}
 	if u != nil { // UDP, "close" and return
 		w.Close()
