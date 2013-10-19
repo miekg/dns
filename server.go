@@ -324,6 +324,7 @@ Exit:
 	m, e := srv.readTCP(w.tcp, idleTimeout)
 	if e == nil {
 		q++
+		// TODO(miek): make this number configurable?
 		if q > 128 { // close socket after this many queries
 			w.Close()
 			return
