@@ -37,7 +37,7 @@ func TestServing(t *testing.T) {
 		err := ListenAndServe(":8053", "udp", nil)
 		if err != nil {
 			t.Log("ListenAndServe: ", err.Error())
-			t.Fail()
+			t.Fatal()
 		}
 	}()
 	time.Sleep(4e8)
