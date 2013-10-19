@@ -55,6 +55,8 @@ const (
 	TypeAAAA       uint16 = 28
 	TypeLOC        uint16 = 29
 	TypeNXT        uint16 = 30
+	TypeEID        uint16 = 31
+	TypeNIMLOC     uint16 = 32
 	TypeSRV        uint16 = 33
 	TypeATMA       uint16 = 34
 	TypeNAPTR      uint16 = 35
@@ -1489,6 +1491,26 @@ func (rr *UINFO) copy() RR           { return &UINFO{*rr.Hdr.copyHeader(), rr.Ui
 func (rr *UINFO) String() string     { return rr.Hdr.String() + strconv.QuoteToASCII(rr.Uinfo) }
 func (rr *UINFO) len() int           { return rr.Hdr.len() + len(rr.Uinfo) + 1 }
 
+type EID struct {
+	Hdr      RR_Header
+	Endpoint string `dns:"hex"`
+}
+
+func (rr *EID) Header() *RR_Header { return &rr.Hdr }
+func (rr *EID) copy() RR           { return &EID{*rr.Hdr.copyHeader(), rr.Endpoint} }
+func (rr *EID) String() string     { return rr.Hdr.String() + strings.ToUpper(rr.Endpoint) }
+func (rr *EID) len() int           { return rr.Hdr.len() + len(rr.Endpoint)/2 }
+
+type NIMLOC struct {
+	Hdr     RR_Header
+	Locator string `dns:"hex"`
+}
+
+func (rr *NIMLOC) Header() *RR_Header { return &rr.Hdr }
+func (rr *NIMLOC) copy() RR           { return &NIMLOC{*rr.Hdr.copyHeader(), rr.Locator} }
+func (rr *NIMLOC) String() string     { return rr.Hdr.String() + strings.ToUpper(rr.Locator) }
+func (rr *NIMLOC) len() int           { return rr.Hdr.len() + len(rr.Locator)/2 }
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1574,6 +1596,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeEUI64:      func() RR { return new(EUI64) },
 	TypeGID:        func() RR { return new(GID) },
 	TypeGPOS:       func() RR { return new(GPOS) },
+	TypeEID:        func() RR { return new(EID) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeHIP:        func() RR { return new(HIP) },
 	TypeKX:         func() RR { return new(KX) },
@@ -1591,6 +1614,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeNAPTR:      func() RR { return new(NAPTR) },
 	TypeNID:        func() RR { return new(NID) },
 	TypeNINFO:      func() RR { return new(NINFO) },
+	TypeNIMLOC:     func() RR { return new(NIMLOC) },
 	TypeNS:         func() RR { return new(NS) },
 	TypeNSAP:       func() RR { return new(NSAP) },
 	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },

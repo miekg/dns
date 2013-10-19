@@ -37,7 +37,7 @@ func TestServing(t *testing.T) {
 		err := ListenAndServe(":8053", "udp", nil)
 		if err != nil {
 			t.Log("ListenAndServe: ", err.Error())
-			t.Fail()
+			t.Fatal()
 		}
 	}()
 	time.Sleep(4e8)
@@ -57,7 +57,7 @@ func TestServing(t *testing.T) {
 		t.Log("Unexpected result for example.com", txt, "!= Hello example")
 		t.Fail()
 	}
-	// Test Mixes cased as notices by Ask.
+	// Test Mixes cased as noticed by Ask.
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
 	r, _, _ = c.Exchange(m, "127.0.0.1:8053")
 	txt = r.Extra[0].(*TXT).Txt[0]
