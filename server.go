@@ -195,7 +195,7 @@ type Server struct {
 	UDPSize      int                  // default buffer size to use to read incoming UDP messages
 	ReadTimeout  time.Duration        // the net.Conn.SetReadTimeout value for new connections
 	WriteTimeout time.Duration        // the net.Conn.SetWriteTimeout value for new connections
-	IdleTimeout  func() time.Duration // TCP idle timeout, see RFC 5966, if nil, defaults to 1 time.Minute
+	IdleTimeout  func() time.Duration // TCP idle timeout for multilpe queries, if nil, defaults to 1 time.Minute (RFC 5966)
 	TsigSecret   map[string]string    // secret(s) for Tsig map[<zonename>]<base64 secret>
 }
 
@@ -284,6 +284,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 // Serve a new connection.
 func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net.TCPConn) {
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a}
+	q := 0
 Redo:
 	req := new(Msg)
 	if req.Unpack(m) != nil {
@@ -322,6 +323,11 @@ Exit:
 	}
 	m, e := srv.readTCP(w.tcp, idleTimeout)
 	if e == nil {
+		q++
+		if q > 128 { // close socket after this many queries
+			w.Close()
+			return
+		}
 		goto Redo
 	}
 	w.Close()
