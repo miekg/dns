@@ -134,6 +134,10 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
+	case TypeEID:
+		return setEID(h, c, f)
+	case TypeNIMLOC:
+		return setNIMLOC(h, c, f)
 	case TypeNSAP:
 		return setNSAP(h, c, f)
 	case TypeDNSKEY:
@@ -1558,6 +1562,28 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 		return nil, e, c1
 	}
 	rr.Digest = s
+	return rr, nil, c1
+}
+
+func setEID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+	rr := new(EID)
+	rr.Hdr = h
+	s, e, c1 := endingToString(c, "bad EID Endpoint", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.Endpoint = s
+	return rr, nil, c1
+}
+
+func setNIMLOC(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+	rr := new(NIMLOC)
+	rr.Hdr = h
+	s, e, c1 := endingToString(c, "bad NIMLOC Locator", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.Locator = s
 	return rr, nil, c1
 }
 

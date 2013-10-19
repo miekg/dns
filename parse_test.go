@@ -591,13 +591,15 @@ func TestILNP(t *testing.T) {
 	}
 }
 
-func TestNSAPGPOS(t *testing.T) {
+func TestNsapGposEidNimloc(t *testing.T) {
 	dt := map[string]string{
 		"foo.bar.com.    IN  NSAP   21 47000580ffff000000321099991111222233334444": "foo.bar.com.\t3600\tIN\tNSAP\t21 47000580ffff000000321099991111222233334444",
 		"host.school.de  IN  NSAP   17 39276f3100111100002222333344449876":         "host.school.de.\t3600\tIN\tNSAP\t17 39276f3100111100002222333344449876",
 		"444433332222111199990123000000ff. NSAP-PTR foo.bar.com.":                  "444433332222111199990123000000ff.\t3600\tIN\tNSAP-PTR\tfoo.bar.com.",
 		"lillee. IN  GPOS -32.6882 116.8652 10.0":                                  "lillee.\t3600\tIN\tGPOS\t-32.6882 116.8652 10.0",
 		"hinault. IN GPOS -22.6882 116.8652 250.0":                                 "hinault.\t3600\tIN\tGPOS\t-22.6882 116.8652 250.0",
+		"VENERA.   IN NIMLOC  75234159EAC457800920":                                "VENERA.\t3600\tIN\tNIMLOC\t75234159EAC457800920",
+		"VAXA.     IN EID     3141592653589793":                                    "VAXA.\t3600\tIN\tEID\t3141592653589793",
 	}
 	for i, o := range dt {
 		rr, e := NewRR(i)
