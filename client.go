@@ -275,6 +275,25 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
+// Dial connects to the address on the named network.
+func Dial(network, address string) (conn *Conn, err error) {
+	conn.Conn, err = net.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// Dialtimeout acts like Dial but takes a timeout.
+func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
+	conn.Conn, err = net.DialTimeout(network, address, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+
+}
+
 // Close implements the net.Conn Close method.
 func (co *Conn) Close() error { return co.Conn.Close() }
 
