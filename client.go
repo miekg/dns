@@ -293,7 +293,6 @@ func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, er
 		return nil, err
 	}
 	return conn, nil
-
 }
 
 // Close implements the net.Conn Close method.
