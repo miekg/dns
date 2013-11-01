@@ -277,6 +277,7 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 
 // Dial connects to the address on the named network.
 func Dial(network, address string) (conn *Conn, err error) {
+	conn = new(Conn)
 	conn.Conn, err = net.Dial(network, address)
 	if err != nil {
 		return nil, err
@@ -286,6 +287,7 @@ func Dial(network, address string) (conn *Conn, err error) {
 
 // Dialtimeout acts like Dial but takes a timeout.
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
+	conn = new(Conn)
 	conn.Conn, err = net.DialTimeout(network, address, timeout)
 	if err != nil {
 		return nil, err
