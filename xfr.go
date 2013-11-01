@@ -7,7 +7,6 @@
 package dns
 
 import (
-	"net"
 	"time"
 )
 
@@ -29,12 +28,11 @@ type Transfer struct {
 
 // In performs an incoming transfer with the server in a.
 func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
-	t.Conn = new(Conn)
 	timeout := dnsTimeout
 	if t.DialTimeout != 0 {
 		timeout = t.DialTimeout
 	}
-	t.Conn.Conn, err = net.DialTimeout("tcp", a, timeout)
+	t.Conn, err = DialTimeout("tcp", a, timeout)
 	if err != nil {
 		return nil, err
 	}
