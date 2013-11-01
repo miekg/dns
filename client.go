@@ -39,8 +39,8 @@ type Client struct {
 // Exchange performs a synchronous UDP query. It sends the message m to the address
 // contained in a and waits for an reply.
 func Exchange(m *Msg, a string) (r *Msg, err error) {
-	co := new(Conn)
-	co.Conn, err = net.DialTimeout("udp", a, dnsTimeout)
+	var co *Conn
+	co, err = DialTimeout("udp", a, dnsTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -108,15 +108,15 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 }
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	co := new(Conn)
 	timeout := dnsTimeout
+	var co *Conn
 	if c.DialTimeout != 0 {
 		timeout = c.DialTimeout
 	}
 	if c.Net == "" {
-		co.Conn, err = net.DialTimeout("udp", a, timeout)
+		co, err = DialTimeout("udp", a, timeout)
 	} else {
-		co.Conn, err = net.DialTimeout(c.Net, a, timeout)
+		co, err = DialTimeout(c.Net, a, timeout)
 	}
 	if err != nil {
 		return nil, 0, err
