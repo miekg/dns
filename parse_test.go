@@ -282,35 +282,18 @@ func TestParseFailure(t *testing.T) {
 	}
 }
 
-/*
-// A bit useless, how to use b.N?. It always returns 0
-func BenchmarkZoneParsing(b *testing.B) {
-	b.StopTimer()
-	f, err := os.Open("t/miek.nl.signed_test")
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		to := ParseZone(f, "", "t/miek.nl.signed_test")
-		for _ = range to {
-		}
-	}
-}
-*/
-
 func TestZoneParsing(t *testing.T) {
-	f, err := os.Open("t/miek.nl.signed_test")
+	f, err := os.Open("test.db")
 	if err != nil {
 		return
 	}
 	defer f.Close()
 	start := time.Now().UnixNano()
-	to := ParseZone(f, "", "t/miek.nl.signed_test")
+	to := ParseZone(f, "", "test.db")
 	var i int
 	for x := range to {
-		t.Logf("%s\n", x.RR)
+		x = x
+		//t.Logf("%s\n", x.RR)
 		i++
 	}
 	delta := time.Now().UnixNano() - start

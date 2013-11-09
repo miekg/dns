@@ -22,7 +22,7 @@ import (
 // of $ after that are interpreted.
 // Any error are returned as a string value, the empty string signals
 // "no error".
-func generate(l lex, c chan lex, t chan Token, o string) string {
+func generate(l lex, c chan lex, t chan *Token, o string) string {
 	step := 1
 	if i := strings.IndexAny(l.token, "/"); i != -1 {
 		if i+1 == len(l.token) {
@@ -126,7 +126,7 @@ BuildRR:
 		if e != nil {
 			return e.(*ParseError).err
 		}
-		t <- Token{RR: rx}
+		t <- &Token{RR: rx}
 		// Its more efficient to first built the rrlist and then parse it in
 		// one go! But is this a problem?
 	}
