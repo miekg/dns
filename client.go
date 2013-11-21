@@ -25,7 +25,7 @@ type Conn struct {
 	tsigRequestMAC string
 }
 
-// A Client defines parameters for a DNS client. A nil Client is usable for sending queries.
+// A Client defines parameters for a DNS client.
 type Client struct {
 	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
