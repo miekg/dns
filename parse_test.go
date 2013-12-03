@@ -545,6 +545,11 @@ func TestParseBackslash(t *testing.T) {
 	} else {
 		t.Logf("Parsed %s\n", r.String())
 	}
+	if r, e := NewRR(`m\ @\ iek.nl. IN 3600 A 127.0.0.1`); e != nil {
+		t.Fatalf("Could not create RR with \\ and \\@ in it")
+	} else {
+		t.Logf("Parsed %s\n", r.String())
+	}
 }
 
 func TestILNP(t *testing.T) {

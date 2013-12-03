@@ -510,6 +510,12 @@ func zlexer(s *scan, c chan lex) {
 
 		switch x {
 		case ' ', '\t':
+			if escape {
+				escape = false
+				str[stri] = x
+				stri++
+				break
+			}
 			if quote {
 				// Inside quotes this is legal
 				str[stri] = x
