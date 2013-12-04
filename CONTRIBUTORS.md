@@ -5,3 +5,4 @@ CONTRIBUTORS
 * Dave Cheney
 * Dusty Wilson
 * Peter van Dijk
+* Alex A Skinner
