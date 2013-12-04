@@ -654,7 +654,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
 		//   SRV, DNAME, A6
-		switch x := r.(type) {
+		switch x := r1.(type) {
 		case *NS:
 			x.Ns = strings.ToLower(x.Ns)
 		case *CNAME:
