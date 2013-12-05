@@ -563,7 +563,6 @@ func zlexer(s *scan, c chan lex) {
 							if t, ok := typeToInt(l.token); !ok {
 								l.token = "unknown RR type"
 								l.err = true
-								// no lexer debug
 								c <- l
 								return
 							} else {
@@ -580,7 +579,6 @@ func zlexer(s *scan, c chan lex) {
 							if t, ok := classToInt(l.token); !ok {
 								l.token = "unknown class"
 								l.err = true
-								// no lexer debug
 								c <- l
 								return
 							} else {
