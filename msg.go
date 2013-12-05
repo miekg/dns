@@ -150,6 +150,7 @@ var TypeToString = map[uint16]string{
 	TypeURI:        "URI",
 	TypeWKS:        "WKS",
 	TypeX25:        "X25",
+	Type65534:      "TYPE65534",
 }
 
 // Reverse, needed for string parsing.
