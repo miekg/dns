@@ -740,7 +740,7 @@ func TestTXT(t *testing.T) {
 	}
 }
 
-func TestRR(t *testing.T) {
+func TestTypeXXXX(t *testing.T) {
 	rr, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
 	if err == nil {
 		t.Logf("%s\n", rr.String())
