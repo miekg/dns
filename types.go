@@ -104,7 +104,6 @@ const (
 	TypeCAA      uint16 = 257
 	TypeTA       uint16 = 32768
 	TypeDLV      uint16 = 32769
-	Type65534    uint16 = 65534
 	TypeReserved uint16 = 65535
 
 	// valid Question.Qclass
