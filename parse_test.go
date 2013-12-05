@@ -741,15 +741,20 @@ func TestTXT(t *testing.T) {
 }
 
 func TestRR(t *testing.T) {
-	rr, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
-	if err == nil {
-		t.Logf("%s\n", rr.String())
-	} else {
-		t.Error("Failed to parse TYPE1234 RR: ", err.Error())
+	_, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
+	if err != nil {
+		t.Logf("Failed to parse TYPE1234 RR: ", err.Error())
+		t.Fail()
 	}
-	rr, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
+	_, err = NewRR("example.com IN TYPE655341 \\# 8 aabbccddaabbccdd")
 	if err == nil {
-		t.Error("This should not work")
+		t.Logf("This should not work, for TYPE655341")
+		t.Fail()
+	}
+	_, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
+	if err == nil {
+		t.Logf("This should not work")
+		t.Fail()
 	}
 }
 

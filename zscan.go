@@ -23,6 +23,7 @@ func (d debugging) Printf(format string, args ...interface{}) {
 }
 
 const maxTok = 2048 // Largest token we can return.
+const maxUint16 = 1<<16 - 1
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -789,7 +790,7 @@ func zlexer(s *scan, c chan lex) {
 // Extract the class number from CLASSxx
 func classToInt(token string) (uint16, bool) {
 	class, ok := strconv.Atoi(token[5:])
-	if ok != nil {
+	if ok != nil || class > maxUint16 {
 		return 0, false
 	}
 	return uint16(class), true
@@ -798,7 +799,7 @@ func classToInt(token string) (uint16, bool) {
 // Extract the rr number from TYPExxx
 func typeToInt(token string) (uint16, bool) {
 	typ, ok := strconv.Atoi(token[4:])
-	if ok != nil {
+	if ok != nil || typ > maxUint16 {
 		return 0, false
 	}
 	return uint16(typ), true
