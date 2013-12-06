@@ -199,6 +199,16 @@ func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
 func (rr *ANY) String() string     { return rr.Hdr.String() }
 func (rr *ANY) len() int           { return rr.Hdr.len() }
 
+type GENERIC struct {
+	Hdr   RR_Header
+	Rdata string
+}
+
+func (rr *GENERIC) Header() *RR_Header { return &rr.Hdr }
+func (rr *GENERIC) copy() RR           { return &GENERIC{*rr.Hdr.copyHeader(), rr.Rdata} }
+func (rr *GENERIC) String() string     { return rr.Hdr.String() + " " + string(rr.Rdata) }
+func (rr *GENERIC) len() int           { return rr.Hdr.len() + len(rr.Rdata) + 1 }
+
 type CNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"cdomain-name"`
@@ -474,7 +484,11 @@ type TXT struct {
 }
 
 func (rr *TXT) Header() *RR_Header { return &rr.Hdr }
-func (rr *TXT) copy() RR           { return &TXT{*rr.Hdr.copyHeader(), rr.Txt} } // this doesn't really copy Txt does it? TODO(mg)
+func (rr *TXT) copy() RR {
+	cp := make([]string, len(rr.Txt), cap(rr.Txt))
+	copy(cp, rr.Txt)
+	return &TXT{*rr.Hdr.copyHeader(), cp}
+}
 
 func (rr *TXT) String() string {
 	s := rr.Hdr.String()
@@ -502,7 +516,11 @@ type SPF struct {
 }
 
 func (rr *SPF) Header() *RR_Header { return &rr.Hdr }
-func (rr *SPF) copy() RR           { return &SPF{*rr.Hdr.copyHeader(), rr.Txt} }
+func (rr *SPF) copy() RR {
+	cp := make([]string, len(rr.Txt), cap(rr.Txt))
+	copy(cp, rr.Txt)
+	return &SPF{*rr.Hdr.copyHeader(), cp}
+}
 
 func (rr *SPF) String() string {
 	s := rr.Hdr.String()
@@ -794,7 +812,11 @@ type NSEC struct {
 }
 
 func (rr *NSEC) Header() *RR_Header { return &rr.Hdr }
-func (rr *NSEC) copy() RR           { return &NSEC{*rr.Hdr.copyHeader(), rr.NextDomain, rr.TypeBitMap} }
+func (rr *NSEC) copy() RR {
+	cp := make([]uint16, len(rr.TypeBitMap), cap(rr.TypeBitMap))
+	copy(cp, rr.TypeBitMap)
+	return &NSEC{*rr.Hdr.copyHeader(), rr.NextDomain, cp}
+}
 
 func (rr *NSEC) String() string {
 	s := rr.Hdr.String() + rr.NextDomain
@@ -1083,7 +1105,9 @@ type NSEC3 struct {
 
 func (rr *NSEC3) Header() *RR_Header { return &rr.Hdr }
 func (rr *NSEC3) copy() RR {
-	return &NSEC3{*rr.Hdr.copyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, rr.TypeBitMap}
+	cp := make([]uint16, len(rr.TypeBitMap), cap(rr.TypeBitMap))
+	copy(cp, rr.TypeBitMap)
+	return &NSEC3{*rr.Hdr.copyHeader(), rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, cp}
 }
 
 func (rr *NSEC3) String() string {
@@ -1194,7 +1218,11 @@ type URI struct {
 }
 
 func (rr *URI) Header() *RR_Header { return &rr.Hdr }
-func (rr *URI) copy() RR           { return &URI{*rr.Hdr.copyHeader(), rr.Weight, rr.Priority, rr.Target} }
+func (rr *URI) copy() RR {
+	cp := make([]string, len(rr.Target), cap(rr.Target))
+	copy(cp, rr.Target)
+	return &URI{*rr.Hdr.copyHeader(), rr.Weight, rr.Priority, cp}
+}
 
 func (rr *URI) String() string {
 	s := rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
@@ -1267,7 +1295,9 @@ type HIP struct {
 
 func (rr *HIP) Header() *RR_Header { return &rr.Hdr }
 func (rr *HIP) copy() RR {
-	return &HIP{*rr.Hdr.copyHeader(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
+	cp := make([]string, len(rr.RendezvousServers), cap(rr.RendezvousServers))
+	copy(cp, rr.RendezvousServers)
+	return &HIP{*rr.Hdr.copyHeader(), rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, cp}
 }
 
 func (rr *HIP) String() string {
@@ -1297,7 +1327,11 @@ type NINFO struct {
 }
 
 func (rr *NINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *NINFO) copy() RR           { return &NINFO{*rr.Hdr.copyHeader(), rr.ZSData} }
+func (rr *NINFO) copy() RR {
+	cp := make([]string, len(rr.ZSData), cap(rr.ZSData))
+	copy(cp, rr.ZSData)
+	return &NINFO{*rr.Hdr.copyHeader(), cp}
+}
 
 func (rr *NINFO) String() string {
 	s := rr.Hdr.String()
@@ -1327,7 +1361,11 @@ type WKS struct {
 }
 
 func (rr *WKS) Header() *RR_Header { return &rr.Hdr }
-func (rr *WKS) copy() RR           { return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, rr.BitMap} }
+func (rr *WKS) copy() RR {
+	cp := make([]uint16, len(rr.BitMap), cap(rr.BitMap))
+	copy(cp, rr.BitMap)
+	return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, cp}
+}
 
 func (rr *WKS) String() (s string) {
 	s = rr.Hdr.String()
