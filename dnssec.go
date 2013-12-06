@@ -244,9 +244,9 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		return err
 	}
 	signdata = signdata[:n]
-	wire := rawSignatureData(rrset, rr)
-	if wire == nil {
-		return ErrSigGen
+	wire, err := rawSignatureData(rrset, rr)
+	if err != nil {
+		return err
 	}
 	signdata = append(signdata, wire...)
 
@@ -356,9 +356,9 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		return err
 	}
 	signeddata = signeddata[:n]
-	wire := rawSignatureData(rrset, rr)
-	if wire == nil {
-		return ErrSigGen
+	wire, err := rawSignatureData(rrset, rr)
+	if err != nil {
+		return err
 	}
 	signeddata = append(signeddata, wire...)
 
@@ -628,16 +628,16 @@ func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
 
 type wireSlice [][]byte
 
-func (p wireSlice) Len() int { return len(p) }
+func (p wireSlice) Len() int      { return len(p) }
+func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p wireSlice) Less(i, j int) bool {
 	_, ioff, _ := UnpackDomainName(p[i], 0)
 	_, joff, _ := UnpackDomainName(p[j], 0)
 	return bytes.Compare(p[i][ioff+10:], p[j][joff+10:]) < 0
 }
-func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 // Return the raw signature data.
-func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
+func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
 		r1 := r.copy()
@@ -685,10 +685,10 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 			x.Target = strings.ToLower(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
-		wire := make([]byte, r.len()*2) // TODO(mg): *2 ?
+		wire := make([]byte, r1.len()*2) // TODO(mg): *2 ?
 		off, err1 := PackRR(r1, wire, 0, nil, false)
 		if err1 != nil {
-			return nil
+			return nil, err1
 		}
 		wire = wire[:off]
 		wires[i] = wire
@@ -697,7 +697,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte) {
 	for _, wire := range wires {
 		buf = append(buf, wire...)
 	}
-	return
+	return buf, nil
 }
 
 // Map for algorithm names.

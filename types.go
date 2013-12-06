@@ -1197,7 +1197,7 @@ func (rr *RFC3597) String() string {
 }
 
 func (rr *RFC3597) len() int {
-	return rr.Hdr.len() + len(rr.Rdata)/2
+	return rr.Hdr.len() + len(rr.Rdata)/2 + 2
 }
 
 type URI struct {

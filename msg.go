@@ -653,9 +653,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			default:
 				return lenmsg, &Error{"bad tag packing string: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"base64"`:
-				b64, err := packBase64([]byte(s))
-				if err != nil {
-					return lenmsg, &Error{err: "overflow packing base64"}
+				b64, e := packBase64([]byte(s))
+				if e != nil {
+					return lenmsg, e
 				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
@@ -674,9 +674,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				msg[off-1] = 20
 				fallthrough
 			case `dns:"base32"`:
-				b32, err := packBase32([]byte(s))
-				if err != nil {
-					return lenmsg, &Error{err: "overflow packing base32"}
+				b32, e := packBase32([]byte(s))
+				if e != nil {
+					return lenmsg, e
 				}
 				copy(msg[off:off+len(b32)], b32)
 				off += len(b32)
@@ -686,7 +686,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				// There is no length encoded here
 				h, e := hex.DecodeString(s)
 				if e != nil {
-					return lenmsg, &Error{err: "overflow packing hex"}
+					return lenmsg, e
 				}
 				if off+hex.DecodedLen(len(s)) > lenmsg {
 					return lenmsg, &Error{err: "overflow packing hex"}
