@@ -197,6 +197,43 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
+func Test65534(t *testing.T) {
+	t6 := new(GENERIC)
+	t6.Hdr = RR_Header{"miek.nl.", 65534, ClassINET, 14400, 0}
+	t6.Rdata = `\# 505D8700001`
+	key := new(DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = RSASHA256
+	privkey, _ := key.Generate(512)
+
+	sig := new(RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.TypeCovered = t6.Hdr.Rrtype
+	sig.Labels = uint8(CountLabel(t6.Hdr.Name))
+	sig.OrigTtl = t6.Hdr.Ttl
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.KeyTag = key.KeyTag()   // Get the keyfrom the Key
+	sig.SignerName = key.Hdr.Name
+	sig.Algorithm = RSASHA256
+	if err := sig.Sign(privkey, []RR{t6}); err != nil {
+		t.Log(err)
+		t.Log("Failure to sign the TYPE65534 record")
+		t.Fail()
+	}
+	if err := sig.Verify(key, []RR{t6}); err != nil {
+		t.Log(err)
+		t.Log("Failure to validate")
+		t.Fail()
+	}
+	t.Logf("Validated: %s\n", t6.Header().Name)
+}
+
 func TestDnskey(t *testing.T) {
 	//	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
 	pubkey, _ := ReadRR(strings.NewReader(`
