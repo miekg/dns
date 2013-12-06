@@ -1126,7 +1126,15 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 	l := <-c
 	if t, ok := StringToType[strings.ToUpper(l.token)]; !ok {
-		return nil, &ParseError{f, "bad RRSIG Typecovered", l}, ""
+		if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
+			if t, ok = typeToInt(l.token); !ok {
+				return nil, &ParseError{f, "bad RRSIG Typecovered", l}, ""
+			} else {
+				rr.TypeCovered = t
+			}
+		} else {
+			return nil, &ParseError{f, "bad RRSIG Typecovered", l}, ""
+		}
 	} else {
 		rr.TypeCovered = t
 	}
