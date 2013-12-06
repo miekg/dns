@@ -197,8 +197,8 @@ func TestSignVerify(t *testing.T) {
 	}
 }
 
-func Test65534(t *testing.T) {
-	t6 := new(GENERIC)
+func test65534(t *testing.T) {
+	t6 := new(RFC3597)
 	t6.Hdr = RR_Header{"miek.nl.", 65534, ClassINET, 14400, 0}
 	t6.Rdata = `\# 505D8700001`
 	key := new(DNSKEY)

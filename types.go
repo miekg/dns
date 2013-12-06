@@ -199,16 +199,6 @@ func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
 func (rr *ANY) String() string     { return rr.Hdr.String() }
 func (rr *ANY) len() int           { return rr.Hdr.len() }
 
-type GENERIC struct {
-	Hdr   RR_Header
-	Rdata string
-}
-
-func (rr *GENERIC) Header() *RR_Header { return &rr.Hdr }
-func (rr *GENERIC) copy() RR           { return &GENERIC{*rr.Hdr.copyHeader(), rr.Rdata} }
-func (rr *GENERIC) String() string     { return rr.Hdr.String() + " " + string(rr.Rdata) }
-func (rr *GENERIC) len() int           { return rr.Hdr.len() + len(rr.Rdata) + 1 }
-
 type CNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"cdomain-name"`
@@ -1191,7 +1181,7 @@ func (rr *TKEY) len() int {
 		len(rr.Key) + 2 + len(rr.OtherData)
 }
 
-// RFC3597 representes an unknown RR.
+// RFC3597 representes an unknown/generic RR.
 type RFC3597 struct {
 	Hdr   RR_Header
 	Rdata string `dns:"hex"`
