@@ -106,7 +106,10 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	for {
 		l := len(q[off:])
 		for i := 0; i < l; i++ {
-			b[i] = q[off+i] | ('a' - 'A')
+			b[i] = q[off+i]
+			if b[i] >= 'A' && b[i] <= 'Z' {
+				b[i] |= ('a' - 'A')
+			}
 		}
 		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
 			if t != TypeDS {
