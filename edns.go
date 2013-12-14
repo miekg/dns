@@ -379,7 +379,7 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	b[15] = byte(e.LeaseLife >> 16)
 	b[16] = byte(e.LeaseLife >> 8)
 	b[17] = byte(e.LeaseLife)
-	return nil, nil
+	return b, nil
 }
 
 func (e *EDNS0_LLQ) unpack(b []byte) {
