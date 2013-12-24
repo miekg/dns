@@ -62,11 +62,15 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 
 // Cover implements the Denialer interface.
 func (rr *NSEC) Cover(name string) bool {
-
 	return true
 }
 
-// Cover implements the Denialer interface. 
+// Match implements the Denialer interface.
+func (rr *NSEC) Match(name string) bool {
+	return true
+}
+
+// Cover implements the Denialer interface.
 func (rr *NSEC3) Cover(name string) bool {
 	// FIXME(miek): check if the zones match
 	// FIXME(miek): check if we're not dealing with parent nsec3
@@ -76,7 +80,7 @@ func (rr *NSEC3) Cover(name string) bool {
 		return false
 	}
 	hash := strings.ToUpper(rr.Hdr.Name[labels[0] : labels[1]-1]) // -1 to remove the .
-	if hash == rr.NextDomain { // empty interval
+	if hash == rr.NextDomain {                                    // empty interval
 		return false
 	}
 	if hash > rr.NextDomain { // last name, points to apex
@@ -94,7 +98,7 @@ func (rr *NSEC3) Cover(name string) bool {
 	return true
 }
 
-// Match implements the Denialer interface.   
+// Match implements the Denialer interface.
 func (rr *NSEC3) Match(name string) bool {
 	// FIXME(miek): Check if we are in the same zone
 	hname := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
