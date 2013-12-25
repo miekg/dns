@@ -128,17 +128,53 @@ func Proof(nsecx []RR, qname string, qtype uint16) error {
 			nsec++
 		}
 	}
-	if nsec3 == len(nsecx)-1 {
+	if nsec3 == len(nsecx) {
 		return proofNSEC3(nsecx, qname, qtype)
 	}
-	if nsec == len(nsecx)-1 {
+	if nsec == len(nsecx) {
 		return proofNSEC(nsecx, qname, qtype)
 	}
 	return ErrSig // ErrNotRRset?
 }
 
 // NSEC3 Helper
-func proofNSEC3(nsecx []RR, qname string, qtype uint16) error { return nil }
+func proofNSEC3(nsec3 []RR, qname string, qtype uint16) error {
+	indx := Split(qname)
+	ce := "" // Closest Encloser
+	nc := "" // Next Closer
+	wc := "" // Source of Synthesis (wildcard)
+ClosestEncloser:
+	for i := 0; i < len(indx); i++ {
+		for j := 0; j < len(nsec3); j++ {
+			if nsec3[j].(*NSEC3).Match(qname[indx[i]:]) {
+				ce = qname[indx[i]:]
+				wc = "*." + ce
+				if i == 0 {
+					nc = qname
+				} else {
+					nc = qname[indx[i-1]:]
+				}
+				break ClosestEncloser
+			}
+		}
+	}
+	if ce == "" {
+		return ErrSig // ErrNoMatchingNSEC3
+	}
+	covered := 0 // Both nc and wc must be covered
+	for i := 0; i < len(nsec3); i++ {
+		if nsec3[i].(*NSEC3).Cover(nc) {
+			covered++
+		}
+		if nsec3[i].(*NSEC3).Cover(wc) {
+			covered++
+		}
+	}
+	if covered != 2 {
+		return ErrSig
+	}
+	return nil
+}
 
 // NSEC Helper
 func proofNSEC(nsecx []RR, qname string, qtype uint16) error { return nil }
