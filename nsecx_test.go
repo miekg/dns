@@ -48,7 +48,7 @@ func TestNsec3Proof(t *testing.T) {
 		newNSEC3("39p91242oslggest5e6a7cci4iaeqvnk.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 39P99DCGG0MDLARTCRMCF6OFLLUL7PR6 NS DS RRSIG"),
 		newNSEC3("t98kg1p1cjtdoc4ksb7g57jc9vulltcd.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 T98MULSKU3E499AGCTTRJK6H0L3E5T92 NS DS RRSIG")}
 
-	err := Proof(nsec3, "snasajsksasasa.nl.", TypeA)
+	err := VerifyNameError(nsec3, "snasajsksasasa.nl.", TypeA)
 	if err != nil {
 		t.Logf("Failed to validate NSEC3")
 		t.Fail()
@@ -58,7 +58,7 @@ func TestNsec3Proof(t *testing.T) {
 		newNSEC3("39p91242oslggest5e6a7cci4iaeqvnk.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 39P99DCGG0MDLARTCRMCF6OFLLUL7PR6 NS DS RRSIG"),
 		newNSEC3("t98kg1p1cjtdoc4ksb7g57jc9vulltcd.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 T98MULSKU3E499AGCTTRJK6H0L3E5T92 NS DS RRSIG")}
 
-	err = Proof(nsec3, "snasajsksasasa.nl.", TypeA)
+	err = VerifyNameError(nsec3, "snasajsksasasa.nl.", TypeA)
 	if err == nil {
 		t.Logf("Should fail validate NSEC3")
 		t.Fail()
@@ -68,7 +68,7 @@ func TestNsec3Proof(t *testing.T) {
 		newNSEC3("39p91242oslggest5e6a7cci4iaeqvnk.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 39P99DCGG0MDLARTCRMCF6OFLLUL7PR6 NS DS RRSIG"),
 		newNSEC3("t98kg1p1cjtdoc4ksb7g57jc9vulltcd.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 T98LULSKU3E499AGCTTRJK6H0L3E5T92 NS DS RRSIG")}
 
-	err = Proof(nsec3, "snasajsksasasa.nl.", TypeA)
+	err = VerifyNameError(nsec3, "snasajsksasasa.nl.", TypeA)
 	if err == nil {
 		t.Logf("Should fail validate NSEC3")
 		t.Fail()
@@ -78,7 +78,7 @@ func TestNsec3Proof(t *testing.T) {
 		newNSEC3("39p91242oslggest5e6a7cci4iaeqvnk.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 39P89DCGG0MDLARTCRMCF6OFLLUL7PR6 NS DS RRSIG"),
 		newNSEC3("t98kg1p1cjtdoc4ksb7g57jc9vulltcd.nl. IN NSEC3 1 1 5 F10E9F7EA83FC8F3 T98LULSKU3E499AGCTTRJK6H0L3E5T92 NS DS RRSIG")}
 
-	err = Proof(nsec3, "snasajsksasasa.nl.", TypeA)
+	err = VerifyNameError(nsec3, "snasajsksasasa.nl.", TypeA)
 	if err == nil {
 		t.Logf("Should fail validate NSEC3")
 		t.Fail()

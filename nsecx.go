@@ -113,7 +113,7 @@ func (rr *NSEC3) Match(name string) bool {
 }
 
 // VerifyNameError takes a slice of NSEC or NSEC3 RR, the qname and the qtype and tries
-// to proof the authenticated denial of existence. If nil is returned the proof
+// to verify the authenticated denial of existence. If nil is returned the proof
 // succeeded otherwise the error will indicated what was wrong.
 func VerifyNameError(nsecx []RR, qname string, qtype uint16) error {
 	// TODO(miek): wildcard expanded reply
@@ -177,3 +177,6 @@ ClosestEncloser:
 
 // NSEC Helper
 func verifyNameError(nsecx []RR, qname string, qtype uint16) error { return nil }
+
+// VerifyNoData 
+func VerifyNoData(nsecx []RR, qname string, qtype uint16) error { return nil}
