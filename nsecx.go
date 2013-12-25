@@ -112,10 +112,10 @@ func (rr *NSEC3) Match(name string) bool {
 	return false
 }
 
-// Proof takes a slice of NSEC or NSEC3 RR, the qname and the qtype and tries
+// VerifyNameError takes a slice of NSEC or NSEC3 RR, the qname and the qtype and tries
 // to proof the authenticated denial of existence. If nil is returned the proof
 // succeeded otherwise the error will indicated what was wrong.
-func Proof(nsecx []RR, qname string, qtype uint16) error {
+func VerifyNameError(nsecx []RR, qname string, qtype uint16) error {
 	// TODO(miek): wildcard expanded reply
 	nsec3 := 0
 	nsec := 0
@@ -128,16 +128,16 @@ func Proof(nsecx []RR, qname string, qtype uint16) error {
 		}
 	}
 	if nsec3 == len(nsecx) {
-		return proofNSEC3(nsecx, qname, qtype)
+		return verifyNameError3(nsecx, qname, qtype)
 	}
 	if nsec == len(nsecx) {
-		return proofNSEC(nsecx, qname, qtype)
+		return verifyNameError(nsecx, qname, qtype)
 	}
 	return ErrSig // ErrNotRRset?
 }
 
 // NSEC3 Helper
-func proofNSEC3(nsec3 []RR, qname string, qtype uint16) error {
+func verifyNameError3(nsec3 []RR, qname string, qtype uint16) error {
 	indx := Split(qname)
 	ce := "" // Closest Encloser
 	nc := "" // Next Closer
@@ -176,4 +176,4 @@ ClosestEncloser:
 }
 
 // NSEC Helper
-func proofNSEC(nsecx []RR, qname string, qtype uint16) error { return nil }
+func verifyNameError(nsecx []RR, qname string, qtype uint16) error { return nil }
