@@ -11,13 +11,6 @@ import (
 	"strings"
 )
 
-type Denialer interface {
-	// Cover will check if the (unhashed) name is being covered by this NSEC or NSEC3.
-	Cover(name string) bool
-	// Match will check if the ownername matches the (unhashed) name for this NSEC3 or NSEC3.
-	Match(name string) bool
-}
-
 type saltWireFmt struct {
 	Salt string `dns:"size-hex"`
 }
@@ -60,6 +53,13 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 	return unpackBase32(nsec3)
 }
 
+type Denialer interface {
+	// Cover will check if the (unhashed) name is being covered by this NSEC or NSEC3.
+	Cover(name string) bool
+	// Match will check if the ownername matches the (unhashed) name for this NSEC3 or NSEC3.
+	Match(name string) bool
+}
+
 // Cover implements the Denialer interface.
 func (rr *NSEC) Cover(name string) bool {
 	return true
@@ -79,9 +79,9 @@ func (rr *NSEC3) Cover(name string) bool {
 	if len(labels) < 2 {
 		return false
 	}
-	hash := strings.ToUpper(rr.Hdr.Name[labels[0] : labels[1]-1]) // -1 to remove the .
-	if hash == rr.NextDomain {                                    // empty interval
-		return false
+	hash := strings.ToUpper(rr.Hdr.Name[labels[0] : labels[1]-1]) // -1 to remove the dot
+	if hash == rr.NextDomain {
+		return false // empty interval
 	}
 	if hash > rr.NextDomain { // last name, points to apex
 		// hname > hash
@@ -112,3 +112,33 @@ func (rr *NSEC3) Match(name string) bool {
 	}
 	return false
 }
+
+// Proof takes a slice of NSEC or NSEC3 RR, the qname and the qtype and tries
+// to proof the authenticated denial of existence. If nil is returned the proof
+// succeeded otherwise the error will indicated what was wrong.
+func Proof(nsecx []RR, qname string, qtype uint16) error {
+	// TODO(miek): wildcard expanded reply
+	nsec3 := 0
+	nsec := 0
+	for i := 0; i < len(nsecx); i++ {
+		if _, ok := nsecx[0].(*NSEC3); ok {
+			nsec3++
+		}
+		if _, ok := nsecx[0].(*NSEC); ok {
+			nsec++
+		}
+	}
+	if nsec3 == len(nsecx)-1 {
+		return proofNSEC3(nsecx, qname, qtype)
+	}
+	if nsec == len(nsecx)-1 {
+		return proofNSEC(nsecx, qname, qtype)
+	}
+	return ErrSig // ErrNotRRset?
+}
+
+// NSEC3 Helper
+func proofNSEC3(nsecx []RR, qname string, qtype uint16) error { return nil }
+
+// NSEC Helper
+func proofNSEC(nsecx []RR, qname string, qtype uint16) error { return nil }
