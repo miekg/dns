@@ -88,7 +88,6 @@ func (rr *NSEC3) Cover(name string) bool {
 		// hname > rr.NextDomain
 		// TODO(miek)
 	}
-
 	if hname <= hash {
 		return false
 	}
