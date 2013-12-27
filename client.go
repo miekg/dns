@@ -37,7 +37,8 @@ type Client struct {
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
-// contained in a and waits for an reply.
+// contained in a and waits for an reply. Exchange does not retry a failed query, nor
+// will it fallback to TCP in case of truncation.
 func Exchange(m *Msg, a string) (r *Msg, err error) {
 	var co *Conn
 	co, err = DialTimeout("udp", a, dnsTimeout)
@@ -81,6 +82,8 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 //	c := new(dns.Client)
 //	in, rtt, err := c.Exchange(message, "127.0.0.1:53")
 //
+// Exchange does not retry a failed query, nor will it fallback to TCP in 
+// case of truncation.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	if !c.SingleInflight {
 		return c.exchange(m, a)
