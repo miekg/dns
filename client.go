@@ -7,6 +7,7 @@ package dns
 // A client implementation.
 
 import (
+	"bytes"
 	"io"
 	"net"
 	"time"
@@ -82,7 +83,7 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 //	c := new(dns.Client)
 //	in, rtt, err := c.Exchange(message, "127.0.0.1:53")
 //
-// Exchange does not retry a failed query, nor will it fall back to TCP in 
+// Exchange does not retry a failed query, nor will it fall back to TCP in
 // case of truncation.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	if !c.SingleInflight {
@@ -256,23 +257,15 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 		if len(p) < 2 {
 			return 0, io.ErrShortBuffer
 		}
-		l := make([]byte, 2)
-		l[0], l[1] = packUint16(uint16(len(p)))
+		lp := len(p)
+		if lp > MaxMsgSize {
+			return 0, &Error{err: "message too large"}
+		}
+		l := make([]byte, 2, lp+2)
+		l[0], l[1] = packUint16(uint16(lp))
 		p = append(l, p...)
-		n, err := t.Write(p)
-		if err != nil {
-			return n, err
-		}
-		i := n
-		if i < len(p) {
-			j, err := t.Write(p[i:len(p)])
-			if err != nil {
-				return i, err
-			}
-			i += j
-		}
-		n = i
-		return n, err
+		n, err := io.Copy(t, bytes.NewReader(p))
+		return int(n), err
 	}
 	n, err = co.Conn.(*net.UDPConn).Write(p)
 	return n, err

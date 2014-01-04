@@ -420,7 +420,7 @@ func (w *response) Write(m []byte) (int, error) {
 		l := make([]byte, 2, 2+lm)
 		l[0], l[1] = packUint16(uint16(lm))
 		m = append(l, m...)
-		
+
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
 		return int(n), err
 	}
