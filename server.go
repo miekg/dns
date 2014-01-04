@@ -9,6 +9,8 @@
 package dns
 
 import (
+	"bytes"
+	"io"
 	"net"
 	"sync"
 	"time"
@@ -412,26 +414,15 @@ func (w *response) Write(m []byte) (int, error) {
 		return n, err
 	case w.tcp != nil:
 		lm := len(m)
-		if len(m) > MaxMsgSize {
+		if lm > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
 		}
-		l := make([]byte, 2)
+		l := make([]byte, 2, 2+lm)
 		l[0], l[1] = packUint16(uint16(lm))
 		m = append(l, m...)
-		n, err := w.tcp.Write(m)
-		if err != nil {
-			return n, err
-		}
-		i := n
-		if i < lm {
-			j, err := w.tcp.Write(m[i:lm])
-			if err != nil {
-				return i, err
-			}
-			i += j
-		}
-		n = i
-		return i, nil
+		
+		n, err := io.Copy(w.tcp, bytes.NewReader(m))
+		return int(n), err
 	}
 	panic("not reached")
 }
