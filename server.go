@@ -414,6 +414,9 @@ func (w *response) Write(m []byte) (int, error) {
 		return n, err
 	case w.tcp != nil:
 		lm := len(m)
+		if lm < 2 {
+			return 0, io.ErrShortBuffer
+		}
 		if lm > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
 		}
