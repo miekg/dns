@@ -763,7 +763,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				txt := make([]string, 0)
 				rdlength := off + int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint())
 			Txts:
-				if off == lenmsg { // dyn. updates, no rdata is OK
+				if off == lenmsg || rdlength == off { // dyn. updates, no rdata is OK
 					break
 				}
 				l := int(msg[off])
