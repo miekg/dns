@@ -260,7 +260,7 @@ func TestNoRdataPack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range rr_mk {
 		if typ == TypeCAA {
-			continue // TODO(miek): known ommision
+			continue // TODO(miek): known omission
 		}
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
