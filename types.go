@@ -583,8 +583,8 @@ func (rr *NAPTR) String() string {
 }
 
 func (rr *NAPTR) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Flags) + len(rr.Service) +
-		len(rr.Regexp) + len(rr.Replacement) + 1
+	return rr.Hdr.len() + 4 + len(rr.Flags) + 1 + len(rr.Service) + 1 +
+		len(rr.Regexp) + 1 + len(rr.Replacement) + 1
 }
 
 // See RFC 4398.

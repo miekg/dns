@@ -144,6 +144,24 @@ func TestPack(t *testing.T) {
 	}
 }
 
+func TestPackNAPTR(t *testing.T) {
+	for _, n := range []string{
+		`apple.com. IN NAPTR   100 50 "se" "SIP+D2U" "" _sip._udp.apple.com.`,
+		`apple.com. IN NAPTR   90 50 "se" "SIP+D2T" "" _sip._tcp.apple.com.`,
+		`apple.com. IN NAPTR   50 50 "se" "SIPS+D2T" "" _sips._tcp.apple.com.`,
+	} {
+		rr, _ := NewRR(n)
+		msg := make([]byte, rr.len())
+		if off, err := PackRR(rr, msg, 0, nil, false); err != nil {
+			t.Logf("Packing failed: %s", err.Error())
+			t.Logf("Length %d, need more than %d\n", rr.len(), off)
+			t.Fail()
+		} else {
+			t.Logf("Buf size needed: %d\n", off)
+		}
+	}
+}
+
 func TestCompressLength(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeMX)
