@@ -1357,7 +1357,6 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 		}
 	}
 	for i := 0; i < len(answer); i++ {
-		println(i, off, len(msg))
 		off, err = PackRR(answer[i], msg, off, compression, dns.Compress)
 		if err != nil {
 			return nil, err
