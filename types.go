@@ -365,7 +365,7 @@ func (rr *X25) String() string {
 }
 
 func (rr *X25) len() int {
-	return rr.Hdr.len() + len(rr.PSDNAddress)
+	return rr.Hdr.len() + len(rr.PSDNAddress) + 1
 }
 
 type RT struct {
@@ -527,7 +527,7 @@ func (rr *SPF) String() string {
 func (rr *SPF) len() int {
 	l := rr.Hdr.len()
 	for _, t := range rr.Txt {
-		l += len(t)
+		l += len(t) + 1
 	}
 	return l
 }
@@ -675,7 +675,7 @@ func (rr *PX) copy() RR           { return &PX{*rr.Hdr.copyHeader(), rr.Preferen
 func (rr *PX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + rr.Map822 + " " + rr.Mapx400
 }
-func (rr *PX) len() int { return rr.Hdr.len() + 2 + len(rr.Map822) + len(rr.Mapx400) }
+func (rr *PX) len() int { return rr.Hdr.len() + 2 + len(rr.Map822) + 1 + len(rr.Mapx400) + 1}
 
 type GPOS struct {
 	Hdr       RR_Header
@@ -916,7 +916,7 @@ func (rr *KX) String() string {
 }
 
 func (rr *KX) len() int {
-	return rr.Hdr.len() + 2 + len(rr.Exchanger)
+	return rr.Hdr.len() + 2 + len(rr.Exchanger) + 1
 }
 
 type TA struct {
@@ -1069,7 +1069,7 @@ type NSAP struct {
 func (rr *NSAP) Header() *RR_Header { return &rr.Hdr }
 func (rr *NSAP) copy() RR           { return &NSAP{*rr.Hdr.copyHeader(), rr.Length, rr.Nsap} }
 func (rr *NSAP) String() string     { return rr.Hdr.String() + strconv.Itoa(int(rr.Length)) + " " + rr.Nsap }
-func (rr *NSAP) len() int           { return rr.Hdr.len() + 1 + len(rr.Nsap) }
+func (rr *NSAP) len() int           { return rr.Hdr.len() + 1 + len(rr.Nsap) + 1}
 
 type NSAPPTR struct {
 	Hdr RR_Header
@@ -1228,7 +1228,11 @@ func (rr *URI) String() string {
 }
 
 func (rr *URI) len() int {
-	return rr.Hdr.len() + 4 + len(rr.Target) + 1
+	l := rr.Hdr.len() + 4
+	for _, t := range rr.Target {
+		l += len(t) + 1
+	}
+	return l
 }
 
 type DHCID struct {
@@ -1338,7 +1342,7 @@ func (rr *NINFO) String() string {
 func (rr *NINFO) len() int {
 	l := rr.Hdr.len()
 	for _, t := range rr.ZSData {
-		l += len(t)
+		l += len(t) + 1
 	}
 	return l
 }
@@ -1484,7 +1488,7 @@ func (rr *CAA) String() string {
 }
 
 func (rr *CAA) len() int {
-	l := rr.Hdr.len() + 1 + len(rr.Tag)
+	l := rr.Hdr.len() + 1 + len(rr.Tag) + 1
 	l += len(rr.Value)
 	return l
 }
