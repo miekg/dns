@@ -1300,8 +1300,6 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	var compression map[string]int
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
-	} else {
-		compression = nil
 	}
 
 	// Convert convenient Msg into wire-like Header.
