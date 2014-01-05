@@ -49,15 +49,8 @@ func (dns *Msg) SetNotify(z string) *Msg {
 
 // SetRcode creates an error packet suitable for the request.
 func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
+	dns.SetReply(request)
 	dns.Rcode = rcode
-	dns.Opcode = OpcodeQuery
-	dns.Response = true
-	dns.Id = request.Id
-	// Note that this is actually a FORMERR
-	if len(request.Question) > 0 {
-		dns.Question = make([]Question, 1)
-		dns.Question[0] = request.Question[0]
-	}
 	return dns
 }
 
