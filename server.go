@@ -163,7 +163,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // is used the correct thing for DS queries is done: a possible parent
 // is sought.
 // If no handler is found a standard SERVFAIL message is returned
-// If the request message does not have a single question in the
+// If the request message does not have exactly one question in the
 // question section a SERVFAIL is returned.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	var h Handler
