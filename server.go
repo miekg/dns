@@ -202,6 +202,8 @@ type Server struct {
 	WriteTimeout time.Duration        // the net.Conn.SetWriteTimeout value for new connections
 	IdleTimeout  func() time.Duration // TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966)
 	TsigSecret   map[string]string    // secret(s) for Tsig map[<zonename>]<base64 secret>
+	Pool         bool                 // if true use a pool to recycle buffers for UDP queries
+	get, give    chan []byte          // channels for the pool
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
@@ -209,6 +211,9 @@ func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
+	}
+	if srv.Pool {
+		srv.get, srv.give = pool(srv.UDPSize)
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -279,6 +284,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	for {
 		m, a, e := srv.readUDP(l, rtimeout)
 		if e != nil {
+			println(e.Error())
 			continue
 		}
 		go srv.serve(a, handler, m, l, nil)
@@ -292,7 +298,12 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net
 	q := 0
 Redo:
 	req := new(Msg)
-	if req.Unpack(m) != nil { // Send a FormatError back
+	err := req.Unpack(m)
+	println("GONNT")
+	if srv.Pool && u != nil {
+		srv.give <- m[:srv.UDPSize]
+	}
+	if err != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
 		w.WriteMsg(x)
@@ -347,11 +358,11 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrConn
+		return nil, ErrShortRead
 	}
 	length, _ := unpackUint16(l, 0)
 	if length == 0 {
-		return nil, ErrConn
+		return nil, ErrShortRead
 	}
 	m := make([]byte, int(length))
 	n, err = conn.Read(m[:int(length)])
@@ -359,7 +370,7 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrConn
+		return nil, ErrShortRead
 	}
 	i := n
 	for i < int(length) {
@@ -376,10 +387,18 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, net.Addr, error) {
 	conn.SetReadDeadline(time.Now().Add(timeout))
-	m := make([]byte, srv.UDPSize)
+	var m []byte
+	if srv.Pool {
+		m = <-srv.get
+	} else {
+		m = make([]byte, srv.UDPSize)
+	}
 	n, a, e := conn.ReadFromUDP(m)
 	if e != nil || n == 0 {
-		return nil, nil, ErrConn
+		if e != nil {
+			return nil, nil, e
+		}
+		return nil, nil, ErrShortRead
 	}
 	m = m[:n]
 	return m, a, nil
