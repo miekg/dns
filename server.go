@@ -212,6 +212,9 @@ func (srv *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":domain"
 	}
+	if srv.UDPSize == 0 {
+		srv.UDPSize = MinMsgSize
+	}
 	if srv.Pool {
 		srv.get, srv.give = pool(srv.UDPSize)
 	}
@@ -274,9 +277,6 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	if srv.UDPSize == 0 {
-		srv.UDPSize = MinMsgSize
-	}
 	rtimeout := dnsTimeout
 	if srv.ReadTimeout != 0 {
 		rtimeout = srv.ReadTimeout
@@ -284,7 +284,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	for {
 		m, a, e := srv.readUDP(l, rtimeout)
 		if e != nil {
-			println(e.Error())
+			// TODO(miek): logging?
 			continue
 		}
 		go srv.serve(a, handler, m, l, nil)
@@ -299,7 +299,6 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net
 Redo:
 	req := new(Msg)
 	err := req.Unpack(m)
-	println("GONNT")
 	if srv.Pool && u != nil {
 		srv.give <- m[:srv.UDPSize]
 	}
