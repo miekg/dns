@@ -227,7 +227,7 @@ func (srv *Server) ListenAndServe() error {
 		srv.UDPSize = MinMsgSize
 	}
 	if srv.Pool {
-		srv.get, srv.give = pool(srv.UDPSize)
+		srv.get, srv.give = pool(srv.UDPSize, 400) // Arbitrary number.
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -361,6 +361,7 @@ Exit:
 }
 
 func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, error) {
+	conn.SetReadDeadline(time.Now().Add(timeout))
 	l := make([]byte, 2)
 	n, err := conn.Read(l)
 	if err != nil || n != 2 {

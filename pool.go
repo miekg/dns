@@ -12,9 +12,9 @@ type queued struct {
 	buf  []byte
 }
 
-func pool(size int) (get, give chan []byte) {
-	get = make(chan []byte, 400) // TODO(miek): this number is arbitrary
-	give = make(chan []byte, 400)
+func pool(size, bufsize int) (get, give chan []byte) {
+	get = make(chan []byte, bufsize)
+	give = make(chan []byte, bufsize)
 
 	go func() {
 		q := new(list.List)
