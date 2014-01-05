@@ -340,7 +340,6 @@ Exit:
 }
 
 func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
 	l := make([]byte, 2)
 	n, err := conn.Read(l)
 	if err != nil || n != 2 {
@@ -375,7 +374,6 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 }
 
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, net.Addr, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
 	n, a, e := conn.ReadFromUDP(m)
 	if e != nil || n == 0 {
