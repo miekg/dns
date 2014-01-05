@@ -13,8 +13,8 @@ type queued struct {
 }
 
 func pool(size int) (get, give chan []byte) {
-	get = make(chan []byte)
-	give = make(chan []byte)
+	get = make(chan []byte, 200) // TODO(miek): this number is arbitrary
+	give = make(chan []byte, 200)
 
 	go func() {
 		q := new(list.List)
