@@ -194,16 +194,27 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
-	Addr         string               // address to listen on, ":dns" if empty
-	Net          string               // if "tcp" it will invoke a TCP listener, otherwise an UDP one
-	Handler      Handler              // handler to invoke, dns.DefaultServeMux if nil
-	UDPSize      int                  // default buffer size to use to read incoming UDP messages
-	ReadTimeout  time.Duration        // the net.Conn.SetReadTimeout value for new connections
-	WriteTimeout time.Duration        // the net.Conn.SetWriteTimeout value for new connections
-	IdleTimeout  func() time.Duration // TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966)
-	TsigSecret   map[string]string    // secret(s) for Tsig map[<zonename>]<base64 secret>
-	Pool         bool                 // if true use a pool to recycle buffers for UDP queries
-	get, give    chan []byte          // channels for the pool
+	// Address to listen on, ":dns" if empty.
+	Addr string
+	// if "tcp" it will invoke a TCP listener, otherwise an UDP one.
+	Net string
+	// Handler to invoke, dns.DefaultServeMux if nil.
+	Handler Handler
+	// Default buffer size to use to read incoming UDP messages. If not set
+	// it defaults to MinMsgSize (512 B).
+	UDPSize int
+	// The net.Conn.SetReadTimeout value for new connections.
+	ReadTimeout time.Duration
+	// The net.Conn.SetWriteTimeout value for new connections.
+	WriteTimeout time.Duration
+	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
+	IdleTimeout func() time.Duration
+	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
+	TsigSecret map[string]string
+	// If true use a pool to recycle buffers for UDP queries.
+	Pool bool
+	// channels for the pool
+	get, give chan []byte
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
