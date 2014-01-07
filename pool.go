@@ -6,7 +6,7 @@ package dns
 
 // Inspired copied from:
 // http://blog.cloudflare.com/recycling-memory-buffers-in-go
-// ... carries no lisence
+// ... carries no license ...
 
 import (
 	"container/list"
