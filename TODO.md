@@ -2,6 +2,7 @@
 
 * Support for on-the-fly-signing or check how to do it;
 * Ratelimiting? server side (RRL).
+* Make a srv.Stop() that stops the server.
 
 ## Nice to have
 
