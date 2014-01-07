@@ -1478,13 +1478,13 @@ func (dns *Msg) packLen() int {
 		l += dns.Question[i].len()
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		l += dns.Answer[i].len()
+		l += dns.Answer[i].Len()
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		l += dns.Ns[i].len()
+		l += dns.Ns[i].Len()
 	}
 	for i := 0; i < len(dns.Extra); i++ {
-		l += dns.Extra[i].len()
+		l += dns.Extra[i].Len()
 	}
 	return l
 }
@@ -1508,7 +1508,7 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		l += dns.Answer[i].len()
+		l += dns.Answer[i].Len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
 			if ok {
@@ -1520,7 +1520,7 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		l += dns.Ns[i].len()
+		l += dns.Ns[i].Len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
 			if ok {
