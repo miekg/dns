@@ -1365,6 +1365,8 @@ func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Ad
 func (rr *EUI64) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 64) }
 func (rr *EUI64) len() int           { return rr.Hdr.len() + 8 }
 
+// Support in incomplete - just handle it as unknown record
+/*
 type CAA struct {
 	Hdr   RR_Header
 	Flag  uint8
@@ -1381,6 +1383,7 @@ func (rr *CAA) String() string {
 	s += strconv.QuoteToASCII(rr.Value)
 	return s
 }
+*/
 
 type UID struct {
 	Hdr RR_Header
@@ -1504,7 +1507,7 @@ var rr_mk = map[uint16]func() RR{
 	TypeA:          func() RR { return new(A) },
 	TypeAAAA:       func() RR { return new(AAAA) },
 	TypeAFSDB:      func() RR { return new(AFSDB) },
-	TypeCAA:        func() RR { return new(CAA) },
+//	TypeCAA:        func() RR { return new(CAA) },
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
 	TypeCNAME:      func() RR { return new(CNAME) },
