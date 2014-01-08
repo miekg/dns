@@ -105,8 +105,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		return r, rtt, err
 	}
 	if shared {
-		r1 := r.copy()
-		r = r1
+		return r.copy(), rtt, nil
 	}
 	return r, rtt, nil
 }
