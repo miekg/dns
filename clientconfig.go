@@ -50,14 +50,7 @@ func ClientConfigFromFile(conf string) (*ClientConfig, error) {
 				// just an IP address.  Otherwise we need DNS
 				// to look it up.
 				name := f[1]
-				// Don't use this. net.JoinHostPort will fix this for you
-				//				switch x := net.ParseIP(name); true {
-				//				case x.To4() != nil:
-				//					c.Servers = append(c.Servers, name)
-				//				case x.To16() != nil:
-				//					name = "[" + name + "]"
 				c.Servers = append(c.Servers, name)
-				//				}
 			}
 
 		case "domain": // set search path to just this domain
