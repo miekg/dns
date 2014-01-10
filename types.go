@@ -165,6 +165,14 @@ const (
 	_LOC_EQUATOR = 1 << 31 // RFC 1876, Section 2.
 )
 
+// helper: duplicate net.IP structure (it's a []byte)
+func dupIP(ip net.IP) net.IP {
+	var ip2 net.IP
+	ip2 = make([]byte, len(ip))
+	copy(ip2, ip)
+	return ip2
+}
+
 // DNS queries.
 type Question struct {
 	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
@@ -586,7 +594,7 @@ type A struct {
 }
 
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
-func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
+func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), dupIP(rr.A)} }
 func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
 
 func (rr *A) String() string {
@@ -602,7 +610,7 @@ type AAAA struct {
 }
 
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
-func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
+func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), dupIP(rr.AAAA)} }
 func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
 
 func (rr *AAAA) String() string {
@@ -1264,7 +1272,7 @@ func (rr *WKS) len() int           { return rr.Hdr.len() + net.IPv4len + 1 }
 func (rr *WKS) copy() RR {
 	cp := make([]uint16, len(rr.BitMap), cap(rr.BitMap))
 	copy(cp, rr.BitMap)
-	return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, cp}
+	return &WKS{*rr.Hdr.copyHeader(), dupIP(rr.Address), rr.Protocol, cp}
 }
 
 func (rr *WKS) String() (s string) {
@@ -1303,7 +1311,7 @@ type L32 struct {
 }
 
 func (rr *L32) Header() *RR_Header { return &rr.Hdr }
-func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, rr.Locator32} }
+func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, dupIP(rr.Locator32)} }
 func (rr *L32) len() int           { return rr.Hdr.len() + net.IPv4len }
 
 func (rr *L32) String() string {
