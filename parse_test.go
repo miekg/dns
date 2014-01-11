@@ -714,7 +714,7 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	"single value"` {
 			t.Error("Bad representation of TXT record:", rr.String())
 		}
-		if rr.len() == 10 {
+		if rr.len() != 28+1+12 {
 			t.Error("Bad size of serialized record:", rr.len())
 		}
 	}
