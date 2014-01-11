@@ -239,8 +239,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 					s = append(s, "")
 				}
 				quote = !quote
-				// TODO(miek): remove, next line
-				empty = quote
+				empty = true
 			default:
 				return nil, &ParseError{f, errstr, l}, ""
 			}
