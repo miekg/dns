@@ -738,6 +738,26 @@ func TestTXT(t *testing.T) {
 			t.Error("Bad size of serialized multi value record:", rr.len())
 		}
 	}
+
+	// Test empty-string in TXT record
+	rr, err = NewRR(`_raop._tcp.local. 60 IN TXT ""`)
+	if err != nil {
+		t.Error("Failed to parse empty-string TXT record", err)
+	} else if rr, ok := rr.(*TXT); !ok {
+		t.Error("Wrong type, record should be of type TXT")
+	} else {
+		if len(rr.Txt) != 1 {
+			t.Error("Bad size of TXT empty-string value:", len(rr.Txt))
+		} else if rr.Txt[0] != "" {
+			t.Error("Bad value for empty-string TXT record")
+		}
+		if rr.String() != `_raop._tcp.local.	60	IN	TXT	""` {
+			t.Error("Bad representation of empty-string TXT record:", rr.String())
+		}
+		if rr.len() != 28+1 {
+			t.Error("Bad size of serialized record:", rr.len())
+		}
+	}
 }
 
 func TestTypeXXXX(t *testing.T) {
