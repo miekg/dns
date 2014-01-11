@@ -179,6 +179,7 @@ func TestQuotes(t *testing.T) {
 		`t.example.com. IN TXT "a bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
 		`t.example.com. IN TXT "a
  bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a\\n bc\"",
+		`t.example.com. IN TXT ""`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"\"",
 		`t.example.com. IN TXT "a"`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"a\"",
 		`t.example.com. IN TXT "aa"`:                                                         "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
 		`t.example.com. IN TXT "aaa" ;`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
