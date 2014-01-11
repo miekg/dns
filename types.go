@@ -1502,16 +1502,12 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
-func quoteString(s string) string {
-	return "\"" + s +  "\""
-}
-
 // Map of constructors for each RR wire type.
 var rr_mk = map[uint16]func() RR{
-	TypeA:          func() RR { return new(A) },
-	TypeAAAA:       func() RR { return new(AAAA) },
-	TypeAFSDB:      func() RR { return new(AFSDB) },
-//	TypeCAA:        func() RR { return new(CAA) },
+	TypeA:     func() RR { return new(A) },
+	TypeAAAA:  func() RR { return new(AAAA) },
+	TypeAFSDB: func() RR { return new(AFSDB) },
+	//	TypeCAA:        func() RR { return new(CAA) },
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
 	TypeCNAME:      func() RR { return new(CNAME) },
