@@ -1168,14 +1168,24 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, err := StringToTime(l.token); err != nil {
-		return nil, &ParseError{f, "bad RRSIG Expiration", l}, ""
+		// Try to see if all numeric and use it as epoch
+		if i, err := strconv.ParseInt(l.token, 10, 64); err == nil {
+			// TODO(miek): error out on > MAX_UINT32, same below
+			rr.Expiration = uint32(i)
+		} else {
+			return nil, &ParseError{f, "bad RRSIG Expiration", l}, ""
+		}
 	} else {
 		rr.Expiration = i
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, err := StringToTime(l.token); err != nil {
-		return nil, &ParseError{f, "bad RRSIG Inception", l}, ""
+		if i, err := strconv.ParseInt(l.token, 10, 64); err == nil {
+			rr.Inception = uint32(i)
+		} else {
+			return nil, &ParseError{f, "bad RRSIG Inception", l}, ""
+		}
 	} else {
 		rr.Inception = i
 	}
