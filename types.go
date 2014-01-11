@@ -1502,6 +1502,10 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
+func quoteString(s string) string {
+	return "\"" + s +  "\""
+}
+
 // Map of constructors for each RR wire type.
 var rr_mk = map[uint16]func() RR{
 	TypeA:          func() RR { return new(A) },

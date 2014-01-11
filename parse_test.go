@@ -834,8 +834,8 @@ func TestTxtEqual(t *testing.T) {
 	rr1.Txt = []string{"a\"a", "\"", "b"}
 	rr2, _ := NewRR(rr1.String())
 	if rr1.String() != rr2.String() {
-//		t.Fail() // Is this a bug?
-		t.Logf("Two TXT records should match")
+		t.Fail()
+		t.Logf("These two TXT records should match")
 		t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
 	}
 }
