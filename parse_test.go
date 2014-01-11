@@ -827,3 +827,15 @@ func TestParseRRSIGTimestamp(t *testing.T) {
 		}
 	}
 }
+
+func TestTxtEqual(t *testing.T) {
+	rr1 := new(TXT)
+	rr1.Hdr = RR_Header{Name: ".", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}
+	rr1.Txt = []string{"a\"a", "\"", "b"}
+	rr2, _ := NewRR(rr1.String())
+	if rr1.String() != rr2.String() {
+//		t.Fail() // Is this a bug?
+		t.Logf("Two TXT records should match")
+		t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
+	}
+}
