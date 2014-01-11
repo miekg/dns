@@ -223,9 +223,11 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	switch l.value == _QUOTE {
 	case true: // A number of quoted string
 		s = make([]string, 0)
+		empty := true
 		for l.value != _NEWLINE && l.value != _EOF {
 			switch l.value {
 			case _STRING:
+				empty = false
 				s = append(s, l.token)
 			case _BLANK:
 				if quote {
@@ -233,7 +235,11 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 					return nil, &ParseError{f, errstr, l}, ""
 				}
 			case _QUOTE:
+				if empty && quote {
+					s = append(s, "")
+				}
 				quote = !quote
+				empty = quote
 			default:
 				return nil, &ParseError{f, errstr, l}, ""
 			}
