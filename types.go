@@ -165,13 +165,6 @@ const (
 	_LOC_EQUATOR = 1 << 31 // RFC 1876, Section 2.
 )
 
-// copyID returns a copy of ip. 
-func copyIP(ip net.IP) net.IP {
-	p := make(net.IP, len(ip))
-	copy(p, ip)
-	return p
-}
-
 // DNS queries.
 type Question struct {
 	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
@@ -1507,6 +1500,13 @@ func euiToString(eui uint64, bits int) (hex string) {
 			"-" + hex[8:10] + "-" + hex[10:12]
 	}
 	return
+}
+
+// copyIP returns a copy of ip.
+func copyIP(ip net.IP) net.IP {
+	p := make(net.IP, len(ip))
+	copy(p, ip)
+	return p
 }
 
 // Map of constructors for each RR wire type.
