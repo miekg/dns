@@ -1342,7 +1342,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	dh.Arcount = uint16(len(extra))
 
 	msg = buf
-	if packLen := dns.packLen()+1; len(msg) < packLen {
+	if packLen := dns.packLen() + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
 
