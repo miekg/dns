@@ -186,7 +186,7 @@ func Fqdn(s string) string {
 // Copied from the official Go code.
 
 // ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
-// address addr suitable for rDNS (PTR) record lookup or an error if it fails
+// address suitable for reverse DNS (PTR) record lookups or an error if it fails
 // to parse the IP address.
 func ReverseAddr(addr string) (arpa string, err error) {
 	ip := net.ParseIP(addr)
