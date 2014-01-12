@@ -1293,7 +1293,8 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	return dns.PackBuffer(nil)
 }
 
-// PackWithBuffer packs a Msg, reusing a given buffer if possible to reduce memory allocations
+// PackBuffer packs a Msg, using the given buffer buf. If buf is too small
+// a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	var dh Header
 	var compression map[string]int
@@ -1341,8 +1342,8 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	dh.Arcount = uint16(len(extra))
 
 	msg = buf
-	if packLen := dns.packLen(); len(msg) <= packLen {
-		msg = make([]byte, packLen+1)
+	if packLen := dns.packLen()+1; len(msg) < packLen {
+		msg = make([]byte, packLen)
 	}
 
 	// Pack it in: header and then the pieces.
