@@ -1545,18 +1545,30 @@ func (dns *Msg) Len() int {
 	return l
 }
 
-func (dns *Msg) copy() *Msg {
+// Create a deep-copy
+func (dns *Msg) Copy() *Msg {
 	r1 := new(Msg)
 	r1.MsgHdr = dns.MsgHdr
 	r1.Compress = dns.Compress
+
 	r1.Question = make([]Question, len(dns.Question))
+	copy(r1.Question, dns.Question) // Question is an immutable value, ok to do a shallow-copy
+
 	r1.Answer = make([]RR, len(dns.Answer))
+	for i := 0; i < len(dns.Answer); i++ {
+		r1.Answer[i] = dns.Answer[i].copy()
+	}
+
 	r1.Ns = make([]RR, len(dns.Ns))
+	for i := 0; i < len(dns.Ns); i++ {
+		r1.Ns[i] = dns.Ns[i].copy()
+	}
+
 	r1.Extra = make([]RR, len(dns.Extra))
-	copy(r1.Question, dns.Question)
-	copy(r1.Answer, dns.Answer)
-	copy(r1.Ns, dns.Ns)
-	copy(r1.Extra, dns.Extra)
+	for i := 0; i < len(dns.Extra); i++ {
+		r1.Extra[i] = dns.Extra[i].copy()
+	}
+
 	return r1
 }
 
