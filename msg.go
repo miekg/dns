@@ -1290,6 +1290,11 @@ func (h *MsgHdr) String() string {
 // Pack packs a Msg: it is converted to to wire format.
 // If the dns.Compress is true the message will be in compressed wire format.
 func (dns *Msg) Pack() (msg []byte, err error) {
+	return dns.PackBuffer(nil)
+}
+
+// PackWithBuffer packs a Msg, reusing a given buffer if possible to reduce memory allocations
+func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	var dh Header
 	var compression map[string]int
 	if dns.Compress {
@@ -1335,7 +1340,11 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	dh.Nscount = uint16(len(ns))
 	dh.Arcount = uint16(len(extra))
 
-	msg = make([]byte, dns.packLen()+1)
+	msg = buf
+	if packLen := dns.packLen(); len(msg) <= packLen {
+		msg = make([]byte, packLen+1)
+	}
+
 	// Pack it in: header and then the pieces.
 	off := 0
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
