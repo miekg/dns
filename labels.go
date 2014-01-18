@@ -10,10 +10,12 @@ package dns
 // www.miek.nl. returns []string{"www", "miek", "nl"}
 // The root label (.) returns nil.
 func SplitDomainName(s string) (labels []string) {
+	if len(s) == 0 {
+		return nil
+	}
 	fqdnEnd := 0 // offset of the final '.' or the length of the name
 	idx := Split(s)
 	begin := 0
-
 	if s[len(s)-1] == '.' {
 		fqdnEnd = len(s) - 1
 	} else {
