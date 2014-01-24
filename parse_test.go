@@ -179,6 +179,7 @@ func TestQuotes(t *testing.T) {
 		`t.example.com. IN TXT "a bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
 		`t.example.com. IN TXT "a
  bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a\\n bc\"",
+		`t.example.com. IN TXT ""`:                                                           "t.example.com.\t3600\tIN\tTXT\t\"\"",
 		`t.example.com. IN TXT "a"`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"a\"",
 		`t.example.com. IN TXT "aa"`:                                                         "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
 		`t.example.com. IN TXT "aaa" ;`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
@@ -714,7 +715,7 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	"single value"` {
 			t.Error("Bad representation of TXT record:", rr.String())
 		}
-		if rr.len() == 10 {
+		if rr.len() != 28+1+12 {
 			t.Error("Bad size of serialized record:", rr.len())
 		}
 	}
@@ -734,8 +735,28 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	"a=1" "b=2" "c=3" "d=4"` {
 			t.Error("Bad representation of TXT multi value record:", rr.String())
 		}
-		if rr.len() != 44 {
+		if rr.len() != 28+1+3+1+3+1+3+1+3 {
 			t.Error("Bad size of serialized multi value record:", rr.len())
+		}
+	}
+
+	// Test empty-string in TXT record
+	rr, err = NewRR(`_raop._tcp.local. 60 IN TXT ""`)
+	if err != nil {
+		t.Error("Failed to parse empty-string TXT record", err)
+	} else if rr, ok := rr.(*TXT); !ok {
+		t.Error("Wrong type, record should be of type TXT")
+	} else {
+		if len(rr.Txt) != 1 {
+			t.Error("Bad size of TXT empty-string value:", len(rr.Txt))
+		} else if rr.Txt[0] != "" {
+			t.Error("Bad value for empty-string TXT record")
+		}
+		if rr.String() != `_raop._tcp.local.	60	IN	TXT	""` {
+			t.Error("Bad representation of empty-string TXT record:", rr.String())
+		}
+		if rr.len() != 28+1 {
+			t.Error("Bad size of serialized record:", rr.len())
 		}
 	}
 }
@@ -790,5 +811,31 @@ func TestDigit(t *testing.T) {
 		if r1.Header().Ttl != 100 {
 			t.Fatalf("Ttl should %d, is %d", 100, r1.Header().Ttl)
 		}
+	}
+}
+
+func TestParseRRSIGTimestamp(t *testing.T) {
+	tests := map[string]bool{
+		`miek.nl.  IN RRSIG SOA 8 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2BvuNiUJjSYlJAgzyAE6CF875BMvvZa+Sb0 RlSCL7WODQSQHhCx/fegHhVVF+Iz8N8kOLrmXD1+jO3Bm6Prl5UhcsPx WTBsg/kmxbp8sR1kvH4oZJtVfakG3iDerrxNaf0sQwhZzyfJQAqpC7pcBoc=`: true,
+		`miek.nl.  IN RRSIG SOA 8 2 43200 315565800 4102477800 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2BvuNiUJjSYlJAgzyAE6CF875BMvvZa+Sb0 RlSCL7WODQSQHhCx/fegHhVVF+Iz8N8kOLrmXD1+jO3Bm6Prl5UhcsPx WTBsg/kmxbp8sR1kvH4oZJtVfakG3iDerrxNaf0sQwhZzyfJQAqpC7pcBoc=`:          true,
+	}
+	for r, _ := range tests {
+		_, e := NewRR(r)
+		if e != nil {
+			t.Fail()
+			t.Logf("%s\n", e.Error())
+		}
+	}
+}
+
+func TestTxtEqual(t *testing.T) {
+	rr1 := new(TXT)
+	rr1.Hdr = RR_Header{Name: ".", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}
+	rr1.Txt = []string{"a\"a", "\"", "b"}
+	rr2, _ := NewRR(rr1.String())
+	if rr1.String() != rr2.String() {
+		// t.Fail() // This is not an error, but keep this test.
+		t.Logf("These two TXT records should match")
+		t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
 	}
 }

@@ -223,9 +223,11 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	switch l.value == _QUOTE {
 	case true: // A number of quoted string
 		s = make([]string, 0)
+		empty := true
 		for l.value != _NEWLINE && l.value != _EOF {
 			switch l.value {
 			case _STRING:
+				empty = false
 				s = append(s, l.token)
 			case _BLANK:
 				if quote {
@@ -233,7 +235,11 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 					return nil, &ParseError{f, errstr, l}, ""
 				}
 			case _QUOTE:
+				if empty && quote {
+					s = append(s, "")
+				}
 				quote = !quote
+				empty = true
 			default:
 				return nil, &ParseError{f, errstr, l}, ""
 			}
@@ -1162,14 +1168,24 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, err := StringToTime(l.token); err != nil {
-		return nil, &ParseError{f, "bad RRSIG Expiration", l}, ""
+		// Try to see if all numeric and use it as epoch
+		if i, err := strconv.ParseInt(l.token, 10, 64); err == nil {
+			// TODO(miek): error out on > MAX_UINT32, same below
+			rr.Expiration = uint32(i)
+		} else {
+			return nil, &ParseError{f, "bad RRSIG Expiration", l}, ""
+		}
 	} else {
 		rr.Expiration = i
 	}
 	<-c // _BLANK
 	l = <-c
 	if i, err := StringToTime(l.token); err != nil {
-		return nil, &ParseError{f, "bad RRSIG Inception", l}, ""
+		if i, err := strconv.ParseInt(l.token, 10, 64); err == nil {
+			rr.Inception = uint32(i)
+		} else {
+			return nil, &ParseError{f, "bad RRSIG Inception", l}, ""
+		}
 	} else {
 		rr.Inception = i
 	}

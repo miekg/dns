@@ -1,4 +1,4 @@
-# Alternative (more granular) approach to a DNS library.
+# Alternative (more granular) approach to a DNS library
 
 > Less is more.
 

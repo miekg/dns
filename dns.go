@@ -91,7 +91,7 @@ import (
 
 const (
 	year68         = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
-	DefaultMsgSize = 4096    // Standard default for larger than 512 packets.
+	DefaultMsgSize = 4096    // Standard default for larger than 512 bytes.
 	MinMsgSize     = 512     // Minimal size of a DNS packet.
 	MaxMsgSize     = 65536   // Largest possible DNS packet.
 	defaultTtl     = 3600    // Default TTL.

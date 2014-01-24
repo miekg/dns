@@ -29,7 +29,7 @@
 //	t.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 //	m.SetAxfr("miek.nl.")
 //	m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
-//	c, err := tr.In(m, "176.58.119.54:53")
+//	c, err := t.In(m, "176.58.119.54:53")
 //	for r := range c { /* r.RR */ }
 //
 // You can now read the records from the transfer as they come in. Each envelope is checked with TSIG.
@@ -217,8 +217,13 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	if err != nil {
 		return err
 	}
-	// Srtip the TSIG from the incoming msg
+	// Strip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
+	if err != nil {
+		return err
+	}
+
+	msgMAC, err := hex.DecodeString(tsig.MAC)
 	if err != nil {
 		return err
 	}
@@ -232,16 +237,16 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	var h hash.Hash
 	switch tsig.Algorithm {
 	case HmacMD5:
-		h = hmac.New(md5.New, []byte(rawsecret))
+		h = hmac.New(md5.New, rawsecret)
 	case HmacSHA1:
-		h = hmac.New(sha1.New, []byte(rawsecret))
+		h = hmac.New(sha1.New, rawsecret)
 	case HmacSHA256:
-		h = hmac.New(sha256.New, []byte(rawsecret))
+		h = hmac.New(sha256.New, rawsecret)
 	default:
 		return ErrKeyAlg
 	}
-	io.WriteString(h, string(buf))
-	if strings.ToUpper(hex.EncodeToString(h.Sum(nil))) != strings.ToUpper(tsig.MAC) {
+	h.Write(buf)
+	if !hmac.Equal(h.Sum(nil), msgMAC) {
 		return ErrSig
 	}
 	return nil

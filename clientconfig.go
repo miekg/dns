@@ -24,8 +24,8 @@ type ClientConfig struct {
 
 // ClientConfigFromFile parses a resolv.conf(5) like file and returns
 // a *ClientConfig.
-func ClientConfigFromFile(conf string) (*ClientConfig, error) {
-	file, err := os.Open(conf)
+func ClientConfigFromFile(resolvconf string) (*ClientConfig, error) {
+	file, err := os.Open(resolvconf)
 	if err != nil {
 		return nil, err
 	}

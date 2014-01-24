@@ -586,7 +586,7 @@ type A struct {
 }
 
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
-func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), rr.A} }
+func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), copyIP(rr.A)} }
 func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
 
 func (rr *A) String() string {
@@ -602,7 +602,7 @@ type AAAA struct {
 }
 
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
-func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), rr.AAAA} }
+func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), copyIP(rr.AAAA)} }
 func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
 
 func (rr *AAAA) String() string {
@@ -1264,7 +1264,7 @@ func (rr *WKS) len() int           { return rr.Hdr.len() + net.IPv4len + 1 }
 func (rr *WKS) copy() RR {
 	cp := make([]uint16, len(rr.BitMap), cap(rr.BitMap))
 	copy(cp, rr.BitMap)
-	return &WKS{*rr.Hdr.copyHeader(), rr.Address, rr.Protocol, cp}
+	return &WKS{*rr.Hdr.copyHeader(), copyIP(rr.Address), rr.Protocol, cp}
 }
 
 func (rr *WKS) String() (s string) {
@@ -1303,7 +1303,7 @@ type L32 struct {
 }
 
 func (rr *L32) Header() *RR_Header { return &rr.Hdr }
-func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, rr.Locator32} }
+func (rr *L32) copy() RR           { return &L32{*rr.Hdr.copyHeader(), rr.Preference, copyIP(rr.Locator32)} }
 func (rr *L32) len() int           { return rr.Hdr.len() + net.IPv4len }
 
 func (rr *L32) String() string {
@@ -1502,12 +1502,19 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
+// copyIP returns a copy of ip.
+func copyIP(ip net.IP) net.IP {
+	p := make(net.IP, len(ip))
+	copy(p, ip)
+	return p
+}
+
 // Map of constructors for each RR wire type.
 var rr_mk = map[uint16]func() RR{
-	TypeA:          func() RR { return new(A) },
-	TypeAAAA:       func() RR { return new(AAAA) },
-	TypeAFSDB:      func() RR { return new(AFSDB) },
-//	TypeCAA:        func() RR { return new(CAA) },
+	TypeA:     func() RR { return new(A) },
+	TypeAAAA:  func() RR { return new(AAAA) },
+	TypeAFSDB: func() RR { return new(AFSDB) },
+	//	TypeCAA:        func() RR { return new(CAA) },
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
 	TypeCNAME:      func() RR { return new(CNAME) },
