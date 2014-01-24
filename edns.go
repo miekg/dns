@@ -345,6 +345,9 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 
 func (e *EDNS0_UL) Option() uint16 { return EDNS0UL }
 func (e *EDNS0_UL) unpack(b []byte) {
+	if len(b) < 4 {
+		return
+	}
 	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
 }
 func (e *EDNS0_UL) String() string { return strconv.FormatUint(uint64(e.Lease), 10) }
@@ -383,6 +386,9 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_LLQ) unpack(b []byte) {
+	if len(b) < 18 {
+		return
+	}
 	e.Version, _ = unpackUint16(b, 0)
 	e.Opcode, _ = unpackUint16(b, 2)
 	e.Error, _ = unpackUint16(b, 4)
