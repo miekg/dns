@@ -797,12 +797,16 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				switch code {
 				case EDNS0NSID:
 					e := new(EDNS0_NSID)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				case EDNS0SUBNET, EDNS0SUBNETDRAFT:
 					e := new(EDNS0_SUBNET)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 					if code == EDNS0SUBNETDRAFT {
@@ -810,27 +814,37 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					}
 				case EDNS0UL:
 					e := new(EDNS0_UL)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				case EDNS0LLQ:
 					e := new(EDNS0_LLQ)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				case EDNS0DAU:
 					e := new(EDNS0_DAU)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				case EDNS0DHU:
 					e := new(EDNS0_DHU)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				case EDNS0N3U:
 					e := new(EDNS0_N3U)
-					e.unpack(msg[off1 : off1+int(optlen)])
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				default:

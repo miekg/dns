@@ -158,7 +158,7 @@ type EDNS0 interface {
 	pack() ([]byte, error)
 	// unpack sets the data as found in the buffer. Is also sets
 	// the length of the slice as the length of the option data.
-	unpack([]byte)
+	unpack([]byte) error
 	// String returns the string representation of the option.
 	String() string
 }
@@ -187,9 +187,9 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_NSID) Option() uint16  { return EDNS0NSID }
-func (e *EDNS0_NSID) unpack(b []byte) { e.Nsid = hex.EncodeToString(b) }
-func (e *EDNS0_NSID) String() string  { return string(e.Nsid) }
+func (e *EDNS0_NSID) Option() uint16        { return EDNS0NSID }
+func (e *EDNS0_NSID) unpack(b []byte) error { e.Nsid = hex.EncodeToString(b); return nil }
+func (e *EDNS0_NSID) String() string        { return string(e.Nsid) }
 
 // The subnet EDNS0 option is used to give the remote nameserver
 // an idea of where the client lives. It can then give back a different
@@ -271,10 +271,10 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_SUBNET) unpack(b []byte) {
+func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	lb := len(b)
 	if lb < 4 {
-		return
+		return ErrBuf
 	}
 	e.Family, _ = unpackUint16(b, 0)
 	e.SourceNetmask = b[2]
@@ -284,7 +284,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) {
 		addr := make([]byte, 4)
 		for i := 0; i < int(e.SourceNetmask/8); i++ {
 			if 4+i > len(b) {
-				break
+				return ErrBuf
 			}
 			addr[i] = b[4+i]
 		}
@@ -293,7 +293,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) {
 		addr := make([]byte, 16)
 		for i := 0; i < int(e.SourceNetmask/8); i++ {
 			if 4+i > len(b) {
-				break
+				return ErrBuf
 			}
 			addr[i] = b[4+i]
 		}
@@ -301,7 +301,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) {
 			addr[5], addr[6], addr[7], addr[8], addr[9], addr[10],
 			addr[11], addr[12], addr[13], addr[14], addr[15]}
 	}
-	return
+	return nil
 }
 
 func (e *EDNS0_SUBNET) String() (s string) {
@@ -344,11 +344,12 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_UL) Option() uint16 { return EDNS0UL }
-func (e *EDNS0_UL) unpack(b []byte) {
+func (e *EDNS0_UL) unpack(b []byte) error {
 	if len(b) < 4 {
-		return
+		return ErrBuf
 	}
 	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+	return nil
 }
 func (e *EDNS0_UL) String() string { return strconv.FormatUint(uint64(e.Lease), 10) }
 
@@ -385,9 +386,9 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_LLQ) unpack(b []byte) {
+func (e *EDNS0_LLQ) unpack(b []byte) error {
 	if len(b) < 18 {
-		return
+		return ErrBuf
 	}
 	e.Version, _ = unpackUint16(b, 0)
 	e.Opcode, _ = unpackUint16(b, 2)
@@ -395,6 +396,7 @@ func (e *EDNS0_LLQ) unpack(b []byte) {
 	e.Id = uint64(b[6])<<56 | uint64(b[6+1])<<48 | uint64(b[6+2])<<40 |
 		uint64(b[6+3])<<32 | uint64(b[6+4])<<24 | uint64(b[6+5])<<16 | uint64(b[6+6])<<8 | uint64(b[6+7])
 	e.LeaseLife = uint32(b[14])<<24 | uint32(b[14+1])<<16 | uint32(b[14+2])<<8 | uint32(b[14+3])
+	return nil
 }
 
 func (e *EDNS0_LLQ) String() string {
@@ -409,16 +411,9 @@ type EDNS0_DAU struct {
 	AlgCode []uint8
 }
 
-func (e *EDNS0_DAU) Option() uint16 {
-	return EDNS0DAU
-}
-func (e *EDNS0_DAU) pack() ([]byte, error) {
-	return e.AlgCode, nil
-}
-
-func (e *EDNS0_DAU) unpack(b []byte) {
-	e.AlgCode = b
-}
+func (e *EDNS0_DAU) Option() uint16        { return EDNS0DAU }
+func (e *EDNS0_DAU) pack() ([]byte, error) { return e.AlgCode, nil }
+func (e *EDNS0_DAU) unpack(b []byte) error { e.AlgCode = b; return nil }
 
 func (e *EDNS0_DAU) String() string {
 	s := ""
@@ -439,7 +434,7 @@ type EDNS0_DHU struct {
 
 func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
 func (e *EDNS0_DHU) pack() ([]byte, error) { return e.AlgCode, nil }
-func (e *EDNS0_DHU) unpack(b []byte)       { e.AlgCode = b }
+func (e *EDNS0_DHU) unpack(b []byte) error { e.AlgCode = b; return nil }
 
 func (e *EDNS0_DHU) String() string {
 	s := ""
@@ -460,7 +455,7 @@ type EDNS0_N3U struct {
 
 func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
 func (e *EDNS0_N3U) pack() ([]byte, error) { return e.AlgCode, nil }
-func (e *EDNS0_N3U) unpack(b []byte)       { e.AlgCode = b }
+func (e *EDNS0_N3U) unpack(b []byte) error { e.AlgCode = b; return nil }
 
 func (e *EDNS0_N3U) String() string {
 	// Re-use the hash map
