@@ -255,6 +255,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
+	ro_bs, bs_fresh := s, true
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
 			for j := i; j < ls-1; j++ {
@@ -274,6 +275,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 				ls -= 2
 			}
+			bs_fresh = false
 			continue
 		}
 
@@ -304,12 +306,16 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 				off++
 			}
+			if compress && !bs_fresh {
+				ro_bs = string(bs)
+				bs_fresh = true
+			}
 			// Dont try to compress '.'
-			if compression != nil && string(bs[begin:]) != "." {
-				if p, ok := compression[string(bs[begin:])]; !ok {
+			if compress && ro_bs[begin:] != "." {
+				if p, ok := compression[ro_bs[begin:]]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
-						compression[string(bs[begin:])] = offset
+						compression[ro_bs[begin:]] = offset
 					}
 				} else {
 					// The first hit is the longest matching dname
