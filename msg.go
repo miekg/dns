@@ -441,17 +441,19 @@ Loop:
 // slices and other (often anonymous) structs.
 func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
-	for i := 0; i < val.NumField(); i++ {
-		if val.Type().Field(i).Tag == `dns:"-"` {
+	numfield := val.NumField()
+	for i := 0; i < numfield; i++ {
+		typefield := val.Type().Field(i)
+		if typefield.Tag == `dns:"-"` {
 			continue
 		}
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
 		case reflect.Slice:
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
-				return lenmsg, &Error{"bad tag packing slice: " + val.Type().Field(i).Tag.Get("dns")}
+				return lenmsg, &Error{"bad tag packing slice: " + typefield.Tag.Get("dns")}
 			case `dns:"domain-name"`:
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
@@ -620,7 +622,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			msg[off+3] = byte(i)
 			off += 4
 		case reflect.Uint64:
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
 				if off+8 > lenmsg {
 					return lenmsg, &Error{err: "overflow packing uint64"}
@@ -653,9 +655,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
 			s := fv.String()
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
-				return lenmsg, &Error{"bad tag packing string: " + val.Type().Field(i).Tag.Get("dns")}
+				return lenmsg, &Error{"bad tag packing string: " + typefield.Tag.Get("dns")}
 			case `dns:"base64"`:
 				b64, e := packBase64([]byte(s))
 				if e != nil {
