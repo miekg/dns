@@ -217,7 +217,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	rr.Hdr.Rrtype = TypeRRSIG
 	rr.Hdr.Name = rrset[0].Header().Name
 	rr.Hdr.Class = rrset[0].Header().Class
-	if rr.OrigTtl != 0 { // If set don't override
+	if rr.OrigTtl == 0 { // If set don't override
 		rr.OrigTtl = rrset[0].Header().Ttl
 	}
 	rr.TypeCovered = rrset[0].Header().Rrtype
