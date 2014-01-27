@@ -1593,6 +1593,12 @@ func (dns *Msg) Copy() *Msg {
 	return r1
 }
 
+// Copy returns a new RR which is a deep-copy of r.
+func Copy(r RR) RR {
+	r1 := r.copy()
+	return r1
+}
+
 // Put the parts of the name in the compression map.
 func compressionLenHelper(c map[string]int, s string) {
 	pref := ""
