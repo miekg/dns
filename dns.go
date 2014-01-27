@@ -18,7 +18,7 @@
 //
 //      r := new(dns.MX)
 //      r.Hdr = dns.RR_Header{Name: "miek.nl.", Rrtype: dns.TypeMX, Class: dns.ClassINET, Ttl: 3600}
-//      r.Pref = 10
+//      r.Preference = 10
 //      r.Mx = "mx.miek.nl."
 //
 // Or directly from a string:

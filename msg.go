@@ -1602,10 +1602,12 @@ func Copy(r RR) RR {
 // Put the parts of the name in the compression map.
 func compressionLenHelper(c map[string]int, s string) {
 	pref := ""
-	lbs := SplitDomainName(s)
+	lbs := Split(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
-		c[lbs[j]+"."+pref] = 1 + len(pref) + len(lbs[j])
-		pref = lbs[j] + "." + pref
+		l := 1 + len(pref)
+		pref = s[lbs[j]:]
+		l += len(pref)
+		c[pref] = l
 	}
 }
 

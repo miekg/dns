@@ -110,7 +110,7 @@ func Split(s string) []int {
 	if s == "." {
 		return nil
 	}
-	idx := []int{0}
+	idx := make([]int, 1, 3)
 	off := 0
 	end := false
 
