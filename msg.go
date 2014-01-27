@@ -1526,44 +1526,55 @@ func (dns *Msg) Len() int {
 	}
 
 	for i := 0; i < len(dns.Question); i++ {
-		l += dns.Question[i].len()
+		f := dns.Question[i]
+		l += f.len()
 		if dns.Compress {
-			compressionLenHelper(compression, dns.Question[i].Name)
+			compressionLenHelper(compression, f.Name)
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
-		l += dns.Answer[i].len()
+		f := dns.Answer[i]
+		l += f.len()
 		if dns.Compress {
-			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
+			hName := f.Header().Name
+			k, ok := compressionLenSearch(compression, hName)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Answer[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Answer[i])
+			if k != len(hName) {
+				compressionLenHelper(compression, hName)
+			}
+			l += 1 - compressionLenType(compression, f)
 		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
-		l += dns.Ns[i].len()
+		f := dns.Ns[i]
+		l += f.len()
 		if dns.Compress {
-			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
+			hName := f.Header().Name
+			k, ok := compressionLenSearch(compression, hName)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Ns[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Ns[i])
+			if k != len(hName) {
+				compressionLenHelper(compression, hName)
+			}
+			l += 1 - compressionLenType(compression, f)
 		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
+		f := dns.Extra[i]
+		l += f.len()
 		if dns.Compress {
-			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
+			hName := f.Header().Name
+			k, ok := compressionLenSearch(compression, hName)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Extra[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Extra[i])
+			if k != len(hName) {
+				compressionLenHelper(compression, hName)
+			}
+			l += 1 - compressionLenType(compression, f)
 		}
 	}
 	return l
