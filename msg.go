@@ -254,7 +254,15 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	pointer := -1
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
-	bs := []byte(s)
+	// We can share the message buffer because we don't need to look back.
+	// Keeping close makes tests more sensitive to failure (only 1 byte of room).
+	var bs []byte
+	if len(s) < len(msg) {
+		bs = msg[off+1:]
+		copy(bs, s)
+	} else {
+		bs = []byte(s)
+	}
 	ro_bs, bs_fresh := s, true
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
