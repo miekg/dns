@@ -254,7 +254,16 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	pointer := -1
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
-	bs := []byte(s)
+	// We can share the message buffer because we don't need to look back.
+	// Keeping close makes tests more sensitive to failure (only 1 byte of room).
+	var bs []byte
+	if len(s) < len(msg) {
+		bs = msg[off+1:]
+		copy(bs, s)
+	} else {
+		bs = []byte(s)
+	}
+	ro_bs, bs_fresh := s, true
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
 			for j := i; j < ls-1; j++ {
@@ -274,6 +283,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 				ls -= 2
 			}
+			bs_fresh = false
 			continue
 		}
 
@@ -304,12 +314,16 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 				off++
 			}
+			if compress && !bs_fresh {
+				ro_bs = string(bs)
+				bs_fresh = true
+			}
 			// Dont try to compress '.'
-			if compression != nil && string(bs[begin:]) != "." {
-				if p, ok := compression[string(bs[begin:])]; !ok {
+			if compress && ro_bs[begin:] != "." {
+				if p, ok := compression[ro_bs[begin:]]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
-						compression[string(bs[begin:])] = offset
+						compression[ro_bs[begin:]] = offset
 					}
 				} else {
 					// The first hit is the longest matching dname
@@ -435,17 +449,19 @@ Loop:
 // slices and other (often anonymous) structs.
 func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	lenmsg := len(msg)
-	for i := 0; i < val.NumField(); i++ {
-		if val.Type().Field(i).Tag == `dns:"-"` {
+	numfield := val.NumField()
+	for i := 0; i < numfield; i++ {
+		typefield := val.Type().Field(i)
+		if typefield.Tag == `dns:"-"` {
 			continue
 		}
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
 		case reflect.Slice:
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
-				return lenmsg, &Error{"bad tag packing slice: " + val.Type().Field(i).Tag.Get("dns")}
+				return lenmsg, &Error{"bad tag packing slice: " + typefield.Tag.Get("dns")}
 			case `dns:"domain-name"`:
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).String()
@@ -614,7 +630,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			msg[off+3] = byte(i)
 			off += 4
 		case reflect.Uint64:
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
 				if off+8 > lenmsg {
 					return lenmsg, &Error{err: "overflow packing uint64"}
@@ -647,9 +663,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			// There are multiple string encodings.
 			// The tag distinguishes ordinary strings from domain names.
 			s := fv.String()
-			switch val.Type().Field(i).Tag {
+			switch typefield.Tag {
 			default:
-				return lenmsg, &Error{"bad tag packing string: " + val.Type().Field(i).Tag.Get("dns")}
+				return lenmsg, &Error{"bad tag packing string: " + typefield.Tag.Get("dns")}
 			case `dns:"base64"`:
 				b64, e := packBase64([]byte(s))
 				if e != nil {
