@@ -63,7 +63,7 @@ correctly, the following should work:
 ## Examples
 
 A short "how to use the API" is at the beginning of dns.go (this also will show
-when you call `go doc github.com/miekg/dns`.
+when you call `godoc github.com/miekg/dns`).
 
 Example programs can be found in the `github.com/miekg/exdns` repository.
 
