@@ -242,8 +242,7 @@ func TestMsgLenTest(t *testing.T) {
 	}
 }
 
-// Padded to fix alignment
-func BenchmarkMsgLen____(b *testing.B) {
+func BenchmarkMsgLen(b *testing.B) {
 	b.StopTimer()
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
