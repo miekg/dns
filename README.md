@@ -78,7 +78,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 1995 - IXFR
 * 1996 - DNS notify
 * 2136 - DNS Update (dynamic updates)
-* 2181 - RRset definition
+* 2181 - RRset definition - there is no RRset type though, just []RR
 * 2537 - RSAMD5 DNS keys
 * 2065 - DNSSEC (updated in later RFCs)
 * 2671 - EDNS record
