@@ -65,8 +65,7 @@ func TestServing(t *testing.T) {
 	}
 }
 
-// Padded to fix alignment
-func BenchmarkServe____(b *testing.B) {
+func BenchmarkServe(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
 	a := runtime.GOMAXPROCS(4)
