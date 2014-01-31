@@ -370,8 +370,9 @@ End:
 // We let them jump anywhere and stop jumping after a while.
 
 // UnpackDomainName unpacks a domain name into a string.
-func UnpackDomainName(msg []byte, off int) (s string, off1 int, err error) {
-	s = ""
+func UnpackDomainName(msg []byte, off int) (string, int, error) {
+	s := make([]byte, 0, 64)
+	off1 := 0
 	lenmsg := len(msg)
 	ptr := 0 // number of pointers followed
 Loop:
@@ -385,7 +386,7 @@ Loop:
 		case 0x00:
 			if c == 0x00 {
 				// end of name
-				if s == "" {
+				if len(s) == 0 {
 					return ".", off, nil
 				}
 				break Loop
@@ -397,16 +398,18 @@ Loop:
 			for j := off; j < off+c; j++ {
 				switch {
 				case msg[j] == '.': // literal dots
-					s += "\\."
+					s = append(s, '\\', '.')
 				case msg[j] < 32: // unprintable use \DDD
 					fallthrough
 				case msg[j] >= 127:
-					s += fmt.Sprintf("\\%03d", msg[j])
+					for _, b := range fmt.Sprintf("\\%03d", msg[j]) {
+						s = append(s, byte(b))
+					}
 				default:
-					s += string(msg[j])
+					s = append(s, msg[j])
 				}
 			}
-			s += "."
+			s = append(s, '.')
 			off += c
 		case 0xC0:
 			// pointer to somewhere else in msg.
@@ -434,7 +437,7 @@ Loop:
 	if ptr == 0 {
 		off1 = off
 	}
-	return s, off1, nil
+	return string(s), off1, nil
 }
 
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
