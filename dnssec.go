@@ -201,10 +201,12 @@ func (k *DNSKEY) ToDS(h int) *DS {
 }
 
 // Sign signs an RRSet. The signature needs to be filled in with
-// the values: OrigTtl, Inception, Expiration, KeyTag, SignerName and Algorithm.
+// the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
 // otherwise false.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.
+// If OrigTTL is non zero, it is used as-is, otherwise the TTL of the RRset
+// is used as the OrigTTL.
 func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if k == nil {
 		return ErrPrivKey
@@ -220,7 +222,6 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	if rr.OrigTtl == 0 { // If set don't override
 		rr.OrigTtl = rrset[0].Header().Ttl
 	}
-	rr.TypeCovered = rrset[0].Header().Rrtype
 	rr.TypeCovered = rrset[0].Header().Rrtype
 	rr.Labels = uint8(CountLabel(rrset[0].Header().Name))
 
