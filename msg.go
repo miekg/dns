@@ -1205,7 +1205,7 @@ func packBase32(s []byte) ([]byte, error) {
 	return buf, nil
 }
 
-// PackRR packs a resource record rr into msg[off:]. 
+// PackRR packs a resource record rr into msg[off:].
 // See PackDomainName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	if rr == nil {
@@ -1435,6 +1435,15 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		if err != nil {
 			return err
 		}
+	}
+	// If we have seen a TC bit being set, we return here, without
+	// an error, because technically it isn't an error. So we return
+	// without parsing, the potentially corrupt packet.
+	if dns.Truncated {
+		dns.Answer = nil
+		dns.Ns = nil
+		dns.Extra = nil
+		return nil
 	}
 	for i := 0; i < len(dns.Answer); i++ {
 		dns.Answer[i], off, err = UnpackRR(msg, off)
