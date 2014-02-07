@@ -176,6 +176,7 @@ func TestIsDomainName(t *testing.T) {
 		"..":               &ret{false, 1},
 		"@.":               &ret{true, 1},
 		"www.example.com":  &ret{true, 3},
+		"www.e%ample.com":  &ret{true, 3},
 		"www.example.com.": &ret{true, 3},
 		"mi\\k.nl.":        &ret{true, 2},
 		"mi\\k.nl":         &ret{true, 2},
