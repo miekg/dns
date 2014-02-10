@@ -1615,7 +1615,6 @@ func compressionLenHelper(c map[string]int, s string) {
 		l += len(pref)
 		c[pref] = l
 	}
-	fmt.Printf("%+v -> %+v\n", s, c)
 }
 
 // Look for each part in the compression map and returns its length, 
