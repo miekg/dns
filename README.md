@@ -121,3 +121,12 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * `NSD`
 * `Net::DNS`
 * `GRONG`
+
+## TODO
+
+* Support for on-the-fly-signing or check how to do it;
+* Ratelimiting? server side (RRL);
+* Make a srv.Stop() that stops the server;
+* privatekey.Precompute() when signing?
+* Last remaining RRs: APL, ATMA, A6, KEY, SIG and NXT;
+* CAA parsing is broken.
