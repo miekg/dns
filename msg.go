@@ -1615,9 +1615,11 @@ func compressionLenHelper(c map[string]int, s string) {
 		l += len(pref)
 		c[pref] = l
 	}
+	fmt.Printf("%+v -> %+v\n", s, c)
 }
 
-// Look for each part in the compression map and returns its length
+// Look for each part in the compression map and returns its length, 
+// keep on searching so we get the longest match.
 func compressionLenSearch(c map[string]int, s string) (int, bool) {
 	off := 0
 	end := false
@@ -1632,13 +1634,15 @@ func compressionLenSearch(c map[string]int, s string) (int, bool) {
 	}
 	// TODO(miek): not sure if need, leave this for later debugging
 	if _, ok := c[s[off:]]; ok {
+		println("dns: not reached")
 		return len(s[off:]), true
 	}
 	return 0, false
 }
 
 // Check the ownernames too of the types that have cdomain, do
-// this manually to avoid reflection.
+// this manually to avoid reflection, and no new ones will be
+// added (ever).
 func compressionLenType(c map[string]int, r RR) int {
 	switch x := r.(type) {
 	case *NS:
