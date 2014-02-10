@@ -65,7 +65,7 @@ func TestPackUnpack2(t *testing.T) {
 	m.Answer[0] = rr
 	_, err := m.Pack()
 	if err != nil {
-		t.Log("Packing failed")
+		t.Log("Packing failed: " + err.Error())
 		t.Fail()
 		return
 	}
@@ -93,7 +93,7 @@ func TestPackUnpack3(t *testing.T) {
 	m.Answer[0] = rr
 	b, err := m.Pack()
 	if err != nil {
-		t.Log("Packing failed")
+		t.Log("Packing failed: " + err.Error())
 		t.Fail()
 		return
 	}
