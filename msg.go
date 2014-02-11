@@ -1523,6 +1523,8 @@ func (dns *Msg) String() string {
 // is provided to be a faster way to get the size of the resulting packet,
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int {
+	// TODO(miek) Len() returns one more than the size of actually
+	// packing it...
 	// Message header is always 12 bytes
 	l := 12
 	var compression map[string]int
@@ -1542,10 +1544,13 @@ func (dns *Msg) Len() int {
 			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Answer[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Answer[i])
+			compressionLenHelper(compression, dns.Answer[i].Header().Name)
+			k, ok = compressionLenSearchType(compression, dns.Answer[i])
+			if ok {
+				l += 1 - k
+			}
+			compressionLenHelperType(compression, dns.Answer[i])
 		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
@@ -1554,10 +1559,13 @@ func (dns *Msg) Len() int {
 			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Ns[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Ns[i])
+			compressionLenHelper(compression, dns.Ns[i].Header().Name)
+			k, ok = compressionLenSearchType(compression, dns.Ns[i])
+			if ok {
+				l += 1 - k
+			}
+			compressionLenHelperType(compression, dns.Ns[i])
 		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
@@ -1566,13 +1574,134 @@ func (dns *Msg) Len() int {
 			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
 			if ok {
 				l += 1 - k
-			} else {
-				compressionLenHelper(compression, dns.Extra[i].Header().Name)
 			}
-			l += 1 - compressionLenType(compression, dns.Extra[i])
+			compressionLenHelper(compression, dns.Extra[i].Header().Name)
+			k, ok = compressionLenSearchType(compression, dns.Extra[i])
+			if ok {
+				l += 1 - k
+			}
+			compressionLenHelperType(compression, dns.Extra[i])
 		}
 	}
 	return l
+}
+
+// Put the parts of the name in the compression map.
+func compressionLenHelper(c map[string]int, s string) {
+	pref := ""
+	lbs := Split(s)
+	for j := len(lbs) - 1; j >= 0; j-- {
+		pref = s[lbs[j]:]
+		if _, ok := c[pref]; !ok {
+			c[pref] = len(pref)
+		}
+	}
+}
+
+// Look for each part in the compression map and returns its length,
+// keep on searching so we get the longest match.
+func compressionLenSearch(c map[string]int, s string) (int, bool) {
+	off := 0
+	end := false
+	for {
+		if _, ok := c[s[off:]]; ok {
+			return len(s[off:]), true
+		}
+		if end {
+			break
+		}
+		off, end = NextLabel(s, off)
+	}
+	return 0, false
+}
+
+// TODO(miek): should add all types, because the all can be *used* for compression.
+func compressionLenHelperType(c map[string]int, r RR) {
+	switch x := r.(type) {
+	case *NS:
+		compressionLenHelper(c, x.Ns)
+	case *MX:
+		compressionLenHelper(c, x.Mx)
+	case *CNAME:
+		compressionLenHelper(c, x.Target)
+	case *PTR:
+		compressionLenHelper(c, x.Ptr)
+	case *SOA:
+		compressionLenHelper(c, x.Ns)
+		compressionLenHelper(c, x.Mbox)
+	case *MB:
+		compressionLenHelper(c, x.Mb)
+	case *MG:
+		compressionLenHelper(c, x.Mg)
+	case *MR:
+		compressionLenHelper(c, x.Mr)
+	case *MF:
+		compressionLenHelper(c, x.Mf)
+	case *MD:
+		compressionLenHelper(c, x.Md)
+	case *RT:
+		compressionLenHelper(c, x.Host)
+	case *MINFO:
+		compressionLenHelper(c, x.Rmail)
+		compressionLenHelper(c, x.Email)
+	case *AFSDB:
+		compressionLenHelper(c, x.Hostname)
+	}
+}
+
+// Only search on compressing these types.
+func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
+	switch x := r.(type) {
+	case *NS:
+		return compressionLenSearch(c, x.Ns)
+	case *MX:
+		return compressionLenSearch(c, x.Mx)
+	case *CNAME:
+		return compressionLenSearch(c, x.Target)
+	case *PTR:
+		return compressionLenSearch(c, x.Ptr)
+	case *SOA:
+		k, ok := compressionLenSearch(c, x.Ns)
+		k1, ok1 := compressionLenSearch(c, x.Mbox)
+		if !ok && !ok1 {
+			return 0, false
+		}
+		return k + k1, true
+	case *MB:
+		return compressionLenSearch(c, x.Mb)
+	case *MG:
+		return compressionLenSearch(c, x.Mg)
+	case *MR:
+		return compressionLenSearch(c, x.Mr)
+	case *MF:
+		return compressionLenSearch(c, x.Mf)
+	case *MD:
+		return compressionLenSearch(c, x.Md)
+	case *RT:
+		return compressionLenSearch(c, x.Host)
+	case *MINFO:
+		k, ok := compressionLenSearch(c, x.Rmail)
+		k1, ok1 := compressionLenSearch(c, x.Email)
+		if !ok && !ok1 {
+			return 0, false
+		}
+		return k + k1, true
+	case *AFSDB:
+		return compressionLenSearch(c, x.Hostname)
+	}
+	return 0, false
+}
+
+// Id return a 16 bits random number to be used as a
+// message id. The random provided should be good enough.
+func Id() uint16 {
+	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
+}
+
+// Copy returns a new RR which is a deep-copy of r.
+func Copy(r RR) RR {
+	r1 := r.copy()
+	return r1
 }
 
 // Copy returns a new *Msg which is a deep-copy of dns.
@@ -1597,162 +1726,4 @@ func (dns *Msg) Copy() *Msg {
 		r1.Extra[i] = dns.Extra[i].copy()
 	}
 	return r1
-}
-
-// Copy returns a new RR which is a deep-copy of r.
-func Copy(r RR) RR {
-	r1 := r.copy()
-	return r1
-}
-
-// Put the parts of the name in the compression map.
-func compressionLenHelper(c map[string]int, s string) {
-	pref := ""
-	lbs := Split(s)
-	for j := len(lbs) - 1; j >= 0; j-- {
-		l := 1 + len(pref)
-		pref = s[lbs[j]:]
-		l += len(pref)
-		c[pref] = l
-	}
-}
-
-// Look for each part in the compression map and returns its length, 
-// keep on searching so we get the longest match.
-func compressionLenSearch(c map[string]int, s string) (int, bool) {
-	off := 0
-	end := false
-	for {
-		if end {
-			break
-		}
-		if _, ok := c[s[off:]]; ok {
-			return len(s[off:]), true
-		}
-		off, end = NextLabel(s, off)
-	}
-	// TODO(miek): not sure if need, leave this for later debugging
-	if _, ok := c[s[off:]]; ok {
-		println("dns: not reached")
-		return len(s[off:]), true
-	}
-	return 0, false
-}
-
-// Check the ownernames too of the types that have cdomain, do
-// this manually to avoid reflection, and no new ones will be
-// added (ever).
-func compressionLenType(c map[string]int, r RR) int {
-	switch x := r.(type) {
-	case *NS:
-		k, ok := compressionLenSearch(c, x.Ns)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Ns)
-		}
-	case *MX:
-		k, ok := compressionLenSearch(c, x.Mx)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mx)
-		}
-	case *CNAME:
-		k, ok := compressionLenSearch(c, x.Target)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Target)
-		}
-	case *PTR:
-		k, ok := compressionLenSearch(c, x.Ptr)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Ptr)
-		}
-	case *SOA:
-		k, ok := compressionLenSearch(c, x.Ns)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Ns)
-		}
-		k, ok = compressionLenSearch(c, x.Mbox)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mbox)
-		}
-	case *MB:
-		k, ok := compressionLenSearch(c, x.Mb)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mb)
-		}
-	case *MG:
-		k, ok := compressionLenSearch(c, x.Mg)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mg)
-		}
-	case *MR:
-		k, ok := compressionLenSearch(c, x.Mr)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mr)
-		}
-	case *MF:
-		k, ok := compressionLenSearch(c, x.Mf)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Mf)
-		}
-	case *MD:
-		k, ok := compressionLenSearch(c, x.Md)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Md)
-		}
-	case *RT:
-		k, ok := compressionLenSearch(c, x.Host)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Host)
-		}
-	case *MINFO:
-		k, ok := compressionLenSearch(c, x.Rmail)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Rmail)
-		}
-		k, ok = compressionLenSearch(c, x.Email)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Email)
-		}
-	case *AFSDB:
-		k, ok := compressionLenSearch(c, x.Hostname)
-		if ok {
-			return k
-		} else {
-			compressionLenHelper(c, x.Hostname)
-		}
-	}
-	return 1 // noop when nothing is found
-}
-
-// Id return a 16 bits random number to be used as a
-// message id. The random provided should be good enough.
-func Id() uint16 {
-	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
 }
