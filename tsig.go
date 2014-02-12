@@ -112,7 +112,7 @@ func (rr *TSIG) String() string {
 }
 
 func (rr *TSIG) len() int {
-	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 6 +
+	return rr.Hdr.len() + dLen(rr.Algorithm) + 6 +
 		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
