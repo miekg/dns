@@ -210,7 +210,7 @@ func TestCompressLength(t *testing.T) {
 }
 
 // Does the predicted length match final packed length?
-func TestMsgCompressLenTest(t *testing.T) {
+func TestMsgCompressLength(t *testing.T) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
 		msg.SetQuestion(Fqdn(question), TypeANY)
@@ -243,7 +243,7 @@ func TestMsgCompressLenTest(t *testing.T) {
 	}
 }
 
-func TestMsgLenTest(t *testing.T) {
+func TestMsgLength(t *testing.T) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
 		msg.SetQuestion(Fqdn(question), TypeANY)
@@ -275,7 +275,7 @@ func TestMsgLenTest(t *testing.T) {
 	}
 }
 
-func TestMsgLenTest2(t *testing.T) {
+func TestMsgLength2(t *testing.T) {
 	// Serialized replies
 	var testMessages = []string{
 		// google.com. IN A?
@@ -315,7 +315,7 @@ func TestMsgLenTest2(t *testing.T) {
 	}
 }
 
-func BenchmarkMsgLen(b *testing.B) {
+func BenchmarkMsgLength(b *testing.B) {
 	b.StopTimer()
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
@@ -335,7 +335,7 @@ func BenchmarkMsgLen(b *testing.B) {
 	}
 }
 
-func BenchmarkMsgLenPack(b *testing.B) {
+func BenchmarkMsgLengthPack(b *testing.B) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
 		msg.SetQuestion(Fqdn(question), TypeANY)
