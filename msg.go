@@ -1523,10 +1523,8 @@ func (dns *Msg) String() string {
 // is provided to be a faster way to get the size of the resulting packet,
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int {
-	// TODO(miek) Len() returns one more than the size of actually
-	// packing it...
-	// Message header is always 12 bytes
-	l := 12
+	// We always return one more than needed.
+	l := 12 // Message header is always 12 bytes
 	var compression map[string]int
 	if dns.Compress {
 		compression = make(map[string]int)
@@ -1583,7 +1581,7 @@ func (dns *Msg) Len() int {
 			compressionLenHelperType(compression, dns.Extra[i])
 		}
 	}
-	return l
+	return l+1
 }
 
 // Put the parts of the name in the compression map.

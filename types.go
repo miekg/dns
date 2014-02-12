@@ -1514,7 +1514,6 @@ func copyIP(ip net.IP) net.IP {
 // representation of dname only make this name longer.
 func dLen(s string) int {
 	if s == "." {
-		println("Called with root")
 		return 0
 	}
 	return len(s) + 1
