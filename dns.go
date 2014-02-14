@@ -166,7 +166,7 @@ func (h *RR_Header) String() string {
 }
 
 func (h *RR_Header) len() int {
-	l := dLen(h.Name)
+	l := len(h.Name) + 1
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
 }

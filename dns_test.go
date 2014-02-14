@@ -229,14 +229,14 @@ func TestMsgCompressLength(t *testing.T) {
 		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)}
 
 	for _, msg := range tests {
-		predicted := msg.Len() - 1
+		predicted := msg.Len()
 		buf, err := msg.Pack()
 		if err != nil {
 			t.Error(err)
 			t.Fail()
 		}
-		if predicted != len(buf) {
-			t.Errorf("Predicted length is wrong: predicted %s (len=%d) %d, actual %d\n",
+		if predicted < len(buf) {
+			t.Errorf("Predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d\n",
 				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 			t.Fail()
 		}
@@ -261,14 +261,14 @@ func TestMsgLength(t *testing.T) {
 		makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)}
 
 	for _, msg := range tests {
-		predicted := msg.Len() - 1 // Because we add one in Len()
+		predicted := msg.Len()
 		buf, err := msg.Pack()
 		if err != nil {
 			t.Error(err)
 			t.Fail()
 		}
-		if predicted != len(buf) {
-			t.Errorf("Predicted length is wrong: predicted %s (len=%d) %d, actual %d\n",
+		if predicted < len(buf) {
+			t.Errorf("Predicted length is wrong: predicted %s (len=%d), actual %d\n",
 				msg.Question[0].Name, predicted, len(buf))
 			t.Fail()
 		}
@@ -298,6 +298,7 @@ func TestMsgLength2(t *testing.T) {
 		input, _ := hex.DecodeString(hexData)
 		m := new(Msg)
 		m.Unpack(input)
+		//println(m.String())
 		m.Compress = true
 		lenComp := m.Len()
 		b, _ := m.Pack()
@@ -306,10 +307,10 @@ func TestMsgLength2(t *testing.T) {
 		lenUnComp := m.Len()
 		b, _ = m.Pack()
 		pacUnComp := len(b)
-		if pacComp != lenComp {
+		if pacComp+1 != lenComp {
 			t.Errorf("msg.Len(compressed)=%d actual=%d for test %d", lenComp, pacComp, i)
 		}
-		if pacUnComp != lenUnComp {
+		if pacUnComp+1 != lenUnComp {
 			t.Errorf("msg.Len(uncompressed)=%d actual=%d for test %d", lenUnComp, pacUnComp, i)
 		}
 	}

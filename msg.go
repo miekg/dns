@@ -1581,7 +1581,7 @@ func (dns *Msg) Len() int {
 			compressionLenHelperType(compression, dns.Extra[i])
 		}
 	}
-	return l+1
+	return l
 }
 
 // Put the parts of the name in the compression map.
