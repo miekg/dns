@@ -5,6 +5,8 @@
 package dns
 
 import (
+	"fmt"
+	"net"
 	"runtime"
 	"testing"
 	"time"
@@ -158,5 +160,62 @@ func TestRootServer(t *testing.T) {
 	handler := mux.match(".", TypeNS)
 	if handler == nil {
 		t.Error("root match failed")
+	}
+}
+
+var MAXREC = 0
+
+func handleQuery(resp ResponseWriter, req *Msg) {
+	m := new(Msg)
+	m.SetReply(req)
+	m.Authoritative = true
+	for i := 0; i < MAXREC; i++ {
+		aRec := &A{
+			Hdr: RR_Header{
+				Name:   req.Question[0].Name,
+				Rrtype: TypeA,
+				Class:  ClassINET,
+				Ttl:    0,
+			},
+			A: net.ParseIP(fmt.Sprintf("127.0.0.%d", i+1)).To4(),
+		}
+		m.Answer = append(m.Answer, aRec)
+	}
+	resp.WriteMsg(m)
+}
+
+func TestServingLargeResponses(t *testing.T) {
+	mux := NewServeMux()
+	mux.HandleFunc("example.", handleQuery)
+
+	server := &Server{
+		Addr:    "127.0.0.1:10000",
+		Net:     "udp",
+		Handler: mux,
+	}
+
+	go func() {
+		server.ListenAndServe()
+	}()
+	time.Sleep(50 * time.Millisecond)
+
+	// Create request
+	m := new(Msg)
+	m.SetQuestion("web.service.example.", TypeANY)
+
+	c := new(Client)
+	c.Net = "udp"
+	MAXREC = 2
+	_, _, err := c.Exchange(m, "127.0.0.1:10000")
+	if err != nil {
+		t.Logf("Failed to exchange: %s", err.Error())
+		t.Fail()
+	}
+	// This must fail
+	MAXREC = 20
+	_, _, err = c.Exchange(m, "127.0.0.1:10000")
+	if err == nil {
+		t.Logf("Failed to fail exchange, this should generate packet error")
+		t.Fail()
 	}
 }
