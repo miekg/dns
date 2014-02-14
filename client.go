@@ -173,9 +173,6 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		return nil, err
 	}
 	p = p[:n]
-	if n > 512 {
-		println("HALLO")
-	}
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
@@ -225,7 +222,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		n = i
 		return n, err
 	}
-	// assume udp connection
+	// UDP connection
 	n, err = co.Conn.Read(p)
 	if err != nil {
 		return n, err
