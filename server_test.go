@@ -218,4 +218,11 @@ func TestServingLargeResponses(t *testing.T) {
 		t.Logf("Failed to fail exchange, this should generate packet error")
 		t.Fail()
 	}
+	// But this must work again
+	c.UDPSize = 7000
+	_, _, err = c.Exchange(m, "127.0.0.1:10000")
+	if err != nil {
+		t.Logf("Failed to exchange: %s", err.Error())
+		t.Fail()
+	}
 }
