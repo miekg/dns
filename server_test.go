@@ -165,7 +165,7 @@ func TestRootServer(t *testing.T) {
 
 var MAXREC = 0
 
-func handleQuery(resp ResponseWriter, req *Msg) {
+func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Authoritative = true
@@ -186,7 +186,7 @@ func handleQuery(resp ResponseWriter, req *Msg) {
 
 func TestServingLargeResponses(t *testing.T) {
 	mux := NewServeMux()
-	mux.HandleFunc("example.", handleQuery)
+	mux.HandleFunc("example.", HelloServerLargeResponse)
 
 	server := &Server{
 		Addr:    "127.0.0.1:10000",

@@ -9,12 +9,26 @@ import (
 	"time"
 )
 
+func newTestServer(t *testing.T) {
+	// Defined in server_test.go
+	HandleFunc("miek.nl.", HelloServer)
+	HandleFunc("example.com.", AnotherHelloServer)
+	go func() {
+		err := ListenAndServe(":8063", "udp", nil)
+		if err != nil {
+			t.Log("ListenAndServe: ", err.Error())
+			t.Fatal()
+		}
+	}()
+	time.Sleep(4e8)
+}
+
 func TestClientSync(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "37.251.95.53:53")
+	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -28,11 +42,9 @@ func TestClientEDNS0(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeDNSKEY)
 
 	m.SetEdns0(2048, true)
-	//edns.Option = make([]Option, 1)
-	//edns.SetNsid("") // Empty to request it
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "37.251.95.53:53")
+	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("Failed to get an valid answer")
@@ -51,7 +63,7 @@ func TestSingleSingleInflight(t *testing.T) {
 	ch := make(chan time.Duration)
 	for i := 0; i < nr; i++ {
 		go func() {
-			_, rtt, _ := c.Exchange(m, "37.251.95.53:53")
+			_, rtt, _ := c.Exchange(m, "127.0.0.1:6053")
 			ch <- rtt
 		}()
 	}
@@ -126,7 +138,7 @@ func TestClientAXFRMultipleEnvelopes(t *testing.T) {
 }
 */
 
-// not really a test, but shows how to use update leases
+// ExapleUpdateLeaseTSIG shows how to update a lease signed with TSIG.
 func ExampleUpdateLeaseTSIG(t *testing.T) {
 	m := new(Msg)
 	m.SetUpdate("t.local.ip6.io.")
