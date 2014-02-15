@@ -255,7 +255,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	bs := []byte(s)
-	ro_bs, bs_fresh := s, true
+	ro_bs, bs_fresh, escaped_dot := s, true, false
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
 			for j := i; j < ls-1; j++ {
@@ -275,12 +275,13 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				}
 				ls -= 2
 			}
+			escaped_dot = bs[i] == '.'
 			bs_fresh = false
 			continue
 		}
 
 		if bs[i] == '.' {
-			if i > 0 && bs[i-1] == '.' {
+			if i > 0 && bs[i-1] == '.' && !escaped_dot {
 				// two dots back to back is not legal
 				return lenmsg, labels, ErrRdata
 			}
@@ -334,6 +335,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 			labels++
 			begin = i + 1
 		}
+		escaped_dot = false
 	}
 	// Root label is special
 	if len(bs) == 1 && bs[0] == '.' {

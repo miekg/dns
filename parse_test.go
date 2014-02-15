@@ -35,6 +35,19 @@ func TestDotInName(t *testing.T) {
 	}
 }
 
+func TestDotLastInLabel(t *testing.T) {
+	sample := "aa\\..au."
+	buf := make([]byte, 20)
+	_, err := PackDomainName(sample, buf, 0, nil, false)
+	if err != nil {
+		t.Fatalf("Unexpected error packing domain: %s", err)
+	}
+	dom, _, _ := UnpackDomainName(buf, 0)
+	if dom != sample {
+		t.Fatalf("Unpacked domain `%s' doesn't match packed domain", dom)
+	}
+}
+
 func TestTooLongDomainName(t *testing.T) {
 	l := "aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrsssttt."
 	dom := l + l + l + l + l + l + l
