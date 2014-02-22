@@ -391,6 +391,44 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
 	// www.example.com.	3600	IN	HIP	 2 200100107B1A74DF365639CC39F1D578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.example.com.
 }
 
+func TestHIP(t *testing.T) {
+	h := `www.example.com.      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
+                                AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
+9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQ
+b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
+                                rvs1.example.com.
+                                rvs2.example.com. )`
+	rr, err := NewRR(h)
+	if err != nil {
+		t.Fatalf("Failed to parse RR: %s", err)
+	}
+	t.Logf("RR: %s", rr)
+	msg := new(Msg)
+	msg.Answer = []RR{rr, rr}
+	bytes, err := msg.Pack()
+	if err != nil {
+		t.Fatalf("Failed to pack msg: %s", err)
+	}
+	if err := msg.Unpack(bytes); err != nil {
+		t.Fatalf("Failed to unpack msg: %s", err)
+	}
+	if len(msg.Answer) != 2 {
+		t.Fatalf("2 answers expected: %V", msg)
+	}
+	for i, rr := range msg.Answer {
+		rr := rr.(*HIP)
+		t.Logf("RR: %s", rr)
+		if l := len(rr.RendezvousServers); l != 2 {
+			t.Fatalf("2 servers expected, only %d in record %d:\n%V", l, i, msg)
+		}
+		for j, s := range []string{"rvs1.example.com.", "rvs2.example.com."} {
+			if rr.RendezvousServers[j] != s {
+				t.Fatalf("Expected server %d of record %d to be %s:\n%V", j, i, s, msg)
+			}
+		}
+	}
+}
+
 func ExampleSOA() {
 	s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
 	if soa, err := NewRR(s); err == nil {
