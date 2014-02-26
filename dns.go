@@ -154,11 +154,7 @@ func (h *RR_Header) String() string {
 		// and maybe other things
 	}
 
-	if len(h.Name) == 0 {
-		s += ".\t"
-	} else {
-		s += h.Name + "\t"
-	}
+	s += sprintDomain(h.Name) + "\t"
 	s += strconv.FormatInt(int64(h.Ttl), 10) + "\t"
 	s += Class(h.Class).String() + "\t"
 	s += Type(h.Rrtype).String() + "\t"
