@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 )
@@ -163,13 +164,22 @@ func TestRootServer(t *testing.T) {
 	}
 }
 
-var MAXREC = 0
+type maxRec struct {
+	max int
+	sync.RWMutex
+}
+
+var M = new(maxRec)
 
 func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Authoritative = true
-	for i := 0; i < MAXREC; i++ {
+	m1 := 0
+	M.RLock()
+	m1 = M.max
+	M.RUnlock()
+	for i := 0; i < m1; i++ {
 		aRec := &A{
 			Hdr: RR_Header{
 				Name:   req.Question[0].Name,
@@ -205,14 +215,18 @@ func TestServingLargeResponses(t *testing.T) {
 
 	c := new(Client)
 	c.Net = "udp"
-	MAXREC = 2
+	M.Lock()
+	M.max = 2
+	M.Unlock()
 	_, _, err := c.Exchange(m, "127.0.0.1:10000")
 	if err != nil {
 		t.Logf("Failed to exchange: %s", err.Error())
 		t.Fail()
 	}
 	// This must fail
-	MAXREC = 20
+	M.Lock()
+	M.max = 20
+	M.Unlock()
 	_, _, err = c.Exchange(m, "127.0.0.1:10000")
 	if err == nil {
 		t.Logf("Failed to fail exchange, this should generate packet error")
