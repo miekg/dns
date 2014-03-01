@@ -458,28 +458,23 @@ func sprintDomain(s string) string {
 }
 
 func sprintTxt(txt []string) string {
-	const maxLen = 256*4 + 3
 	var out []byte
-	srcTmp := make([]byte, maxLen)
-	dstTmp := make([]byte, maxLen)
 	for i, s := range txt {
-		src := srcTmp[0:len(s)]
-		copy(src, s)
-		dst := dstTmp[0:0:maxLen]
 		if i > 0 {
-			dst = append(dst, ' ')
+			out = append(out, ` "`...)
+		} else {
+			out = append(out, '"')
 		}
-		dst = append(dst, '"')
-		for j := 0; j < len(s); {
-			b, n := nextByte(src, j)
+		bs := []byte(s)
+		for j := 0; j < len(bs); {
+			b, n := nextByte(bs, j)
 			if n == 0 {
 				break
 			}
-			dst = appendTXTStringByte(dst, b)
+			out = appendTXTStringByte(out, b)
 			j += n
 		}
-		dst = append(dst, '"')
-		out = append(out, dst...)
+		out = append(out, '"')
 	}
 	return string(out)
 }
