@@ -403,7 +403,7 @@ Loop:
 			}
 			for j := off; j < off+c; j++ {
 				switch b := msg[j]; b {
-				case '.', '(', ')', ';', ' ':
+				case '.', '(', ')', ';', ' ', '@':
 					fallthrough
 				case '"', '\\':
 					s = append(s, '\\', b)

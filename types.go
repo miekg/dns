@@ -480,7 +480,7 @@ func sprintTxt(txt []string) string {
 }
 
 func appendDomainNameByte(s []byte, b byte) []byte {
-	if b == '.' || b == '(' || b == ')' || b == ';' || b == ' ' || b == '\'' {
+	if b == '.' || b == '(' || b == ')' || b == ';' || b == ' ' || b == '\'' || b == '@' {
 		return append(s, '\\', b)
 	}
 	return appendTXTStringByte(s, b)
