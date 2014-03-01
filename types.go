@@ -509,7 +509,7 @@ func appendTXTStringByte(s []byte, b byte) []byte {
 }
 
 func nextByte(b []byte, offset int) (byte, int) {
-	if offset > len(b) {
+	if offset >= len(b) {
 		return 0, 0
 	}
 	if b[offset] != '\\' {
