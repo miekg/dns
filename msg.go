@@ -450,7 +450,7 @@ Loop:
 	return string(s), off1, nil
 }
 
-func packTXT(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
+func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 	var err error
 	if len(txt) == 0 {
 		if offset >= len(msg) {
@@ -463,7 +463,7 @@ func packTXT(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 		if len(txt[i]) > len(tmp) {
 			return offset, ErrBuf
 		}
-		offset, err = packTXTString(txt[i], msg, offset, tmp)
+		offset, err = packTxtString(txt[i], msg, offset, tmp)
 		if err != nil {
 			return offset, err
 		}
@@ -471,7 +471,7 @@ func packTXT(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 	return offset, err
 }
 
-func packTXTString(s string, msg []byte, offset int, tmp []byte) (int, error) {
+func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 	lenByteOffset := offset
 	if offset >= len(msg) {
 		return offset, ErrBuf
@@ -514,12 +514,12 @@ func packTXTString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 	return offset, nil
 }
 
-func unpackTXT(msg []byte, offset, rdend int) ([]string, int, error) {
+func unpackTxt(msg []byte, offset, rdend int) ([]string, int, error) {
 	var err error
 	var ss []string
 	var s string
 	for offset < rdend && err == nil {
-		s, offset, err = unpackTXTString(msg, offset)
+		s, offset, err = unpackTxtString(msg, offset)
 		if err == nil {
 			ss = append(ss, s)
 		}
@@ -527,7 +527,7 @@ func unpackTXT(msg []byte, offset, rdend int) ([]string, int, error) {
 	return ss, offset, err
 }
 
-func unpackTXTString(msg []byte, offset int) (string, int, error) {
+func unpackTxtString(msg []byte, offset int) (string, int, error) {
 	l := int(msg[offset])
 	if offset+l+1 > len(msg) {
 		return "", offset, &Error{err: "TXT string truncated"}
@@ -585,7 +585,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if txtTmp == nil {
 					txtTmp = make([]byte, 256*4+1)
 				}
-				off, err = packTXT(fv.Interface().([]string), msg, off, txtTmp)
+				off, err = packTxt(fv.Interface().([]string), msg, off, txtTmp)
 				if err != nil {
 					return lenmsg, err
 				}
@@ -823,7 +823,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if txtTmp == nil {
 					txtTmp = make([]byte, 256*4+1)
 				}
-				off, err = packTXTString(fv.String(), msg, off, txtTmp)
+				off, err = packTxtString(fv.String(), msg, off, txtTmp)
 				if err != nil {
 					return lenmsg, err
 				}
@@ -880,7 +880,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					break
 				}
 				var txt []string
-				txt, off, err = unpackTXT(msg, off, rdend)
+				txt, off, err = unpackTxt(msg, off, rdend)
 				if err != nil {
 					return lenmsg, err
 				}
@@ -1218,7 +1218,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			case `dns:"txt"`:
 				fallthrough
 			case "":
-				s, off, err = unpackTXTString(msg, off)
+				s, off, err = unpackTxtString(msg, off)
 			}
 			fv.SetString(s)
 		}
