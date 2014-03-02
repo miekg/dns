@@ -251,7 +251,8 @@ func TestTXTRRQuick(t *testing.T) {
 		}
 		return true
 	}
-	if err := quick.Check(f, nil); err != nil {
+	c := &quick.Config{MaxCountScale: 10}
+	if err := quick.Check(f, c); err != nil {
 		t.Error(err)
 	}
 }
