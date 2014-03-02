@@ -885,10 +885,11 @@ func TestTxtEqual(t *testing.T) {
 	rr1.Txt = []string{"a\"a", "\"", "b"}
 	rr2, _ := NewRR(rr1.String())
 	if rr1.String() != rr2.String() {
-		// t.Fail() // This is not an error, but keep this test.
 		t.Logf("These two TXT records should match")
 		t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
+		t.Fail() // This is not an error, but keep this test.
 	}
+	t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
 }
 func TestTxtLong(t *testing.T) {
 	rr1 := new(TXT)
