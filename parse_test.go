@@ -95,6 +95,47 @@ func TestDomainName(t *testing.T) {
 	}
 }
 
+func TestDomainNameAndTXTEscapes(t *testing.T) {
+	tests := []byte{'.', '(', ')', ';', ' ', '@', '"', '\\', '\t', '\r', '\n', 0, 255}
+	for _, b := range tests {
+		rrbytes := []byte{
+			1, b, 0, // owner
+			byte(TypeTXT >> 8), byte(TypeTXT),
+			byte(ClassINET >> 8), byte(ClassINET),
+			0, 0, 0, 1, // TTL
+			0, 2, 1, b, // Data
+		}
+		rr1, _, err := UnpackRR(rrbytes, 0)
+		if err != nil {
+			panic(err)
+		}
+		s := rr1.String()
+		rr2, err := NewRR(s)
+		if err != nil {
+			t.Logf("Error parsing unpacked RR's string: %v", err)
+			t.Logf(" Bytes: %v\n", rrbytes)
+			t.Logf("String: %v\n", s)
+			t.Fail()
+		}
+		repacked := make([]byte, len(rrbytes))
+		if _, err := PackRR(rr2, repacked, 0, nil, false); err != nil {
+			t.Logf("Error packing parsed RR: %v", err)
+			t.Logf(" Original Bytes: %v\n", rrbytes)
+			t.Logf("Unpacked Struct: %V\n", rr1)
+			t.Logf("  Parsed Struct: %V\n", rr2)
+			t.Fail()
+		}
+		if !bytes.Equal(repacked, rrbytes) {
+			t.Log("Packed bytes don't match original bytes")
+			t.Logf(" Original bytes: %v", rrbytes)
+			t.Logf("   Packed bytes: %v", repacked)
+			t.Logf("Unpacked struct: %V", rr1)
+			t.Logf("  Parsed struct: %V", rr2)
+			t.Fail()
+		}
+	}
+}
+
 func GenerateDomain(r *rand.Rand, size int) []byte {
 	dnLen := size % 70 // artificially limit size so there's less to intrepret if a failure occurs
 	var dn []byte
