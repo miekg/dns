@@ -5,12 +5,15 @@
 package dns
 
 import (
+	"bytes"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
+	"testing/quick"
 	"time"
 )
 
@@ -89,6 +92,209 @@ func TestDomainName(t *testing.T) {
 			t.Logf("Must be equal: in: %s, out: %s\n", ts, n)
 			t.Fail()
 		}
+	}
+}
+
+func TestDomainNameAndTXTEscapes(t *testing.T) {
+	tests := []byte{'.', '(', ')', ';', ' ', '@', '"', '\\', '\t', '\r', '\n', 0, 255}
+	for _, b := range tests {
+		rrbytes := []byte{
+			1, b, 0, // owner
+			byte(TypeTXT >> 8), byte(TypeTXT),
+			byte(ClassINET >> 8), byte(ClassINET),
+			0, 0, 0, 1, // TTL
+			0, 2, 1, b, // Data
+		}
+		rr1, _, err := UnpackRR(rrbytes, 0)
+		if err != nil {
+			panic(err)
+		}
+		s := rr1.String()
+		rr2, err := NewRR(s)
+		if err != nil {
+			t.Logf("Error parsing unpacked RR's string: %v", err)
+			t.Logf(" Bytes: %v\n", rrbytes)
+			t.Logf("String: %v\n", s)
+			t.Fail()
+		}
+		repacked := make([]byte, len(rrbytes))
+		if _, err := PackRR(rr2, repacked, 0, nil, false); err != nil {
+			t.Logf("Error packing parsed RR: %v", err)
+			t.Logf(" Original Bytes: %v\n", rrbytes)
+			t.Logf("Unpacked Struct: %V\n", rr1)
+			t.Logf("  Parsed Struct: %V\n", rr2)
+			t.Fail()
+		}
+		if !bytes.Equal(repacked, rrbytes) {
+			t.Log("Packed bytes don't match original bytes")
+			t.Logf(" Original bytes: %v", rrbytes)
+			t.Logf("   Packed bytes: %v", repacked)
+			t.Logf("Unpacked struct: %V", rr1)
+			t.Logf("  Parsed struct: %V", rr2)
+			t.Fail()
+		}
+	}
+}
+
+func GenerateDomain(r *rand.Rand, size int) []byte {
+	dnLen := size % 70 // artificially limit size so there's less to intrepret if a failure occurs
+	var dn []byte
+	done := false
+	for i := 0; i < dnLen && !done; {
+		max := dnLen - i
+		if max > 63 {
+			max = 63
+		}
+		lLen := max
+		if lLen != 0 {
+			lLen = int(r.Uint32()) % max
+		}
+		done = lLen == 0
+		if done {
+			continue
+		}
+		l := make([]byte, lLen+1)
+		l[0] = byte(lLen)
+		for j := 0; j < lLen; j++ {
+			l[j+1] = byte(rand.Uint32())
+		}
+		dn = append(dn, l...)
+		i += 1 + lLen
+	}
+	return append(dn, 0)
+}
+
+func TestDomainQuick(t *testing.T) {
+	r := rand.New(rand.NewSource(0))
+	f := func(l int) bool {
+		db := GenerateDomain(r, l)
+		ds, _, err := UnpackDomainName(db, 0)
+		if err != nil {
+			panic(err)
+		}
+		buf := make([]byte, 255)
+		off, err := PackDomainName(ds, buf, 0, nil, false)
+		if err != nil {
+			t.Logf("Error packing domain: %s", err.Error())
+			t.Logf(" Bytes: %v\n", db)
+			t.Logf("String: %v\n", ds)
+			return false
+		}
+		if !bytes.Equal(db, buf[:off]) {
+			t.Logf("Repacked domain doesn't match original:")
+			t.Logf("Src Bytes: %v", db)
+			t.Logf("   String: %v", ds)
+			t.Logf("Out Bytes: %v", buf[:off])
+			return false
+		}
+		return true
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func GenerateTXT(r *rand.Rand, size int) []byte {
+	rdLen := size % 300 // artificially limit size so there's less to intrepret if a failure occurs
+	var rd []byte
+	for i := 0; i < rdLen; {
+		max := rdLen - 1
+		if max > 255 {
+			max = 255
+		}
+		sLen := max
+		if max != 0 {
+			sLen = int(r.Uint32()) % max
+		}
+		s := make([]byte, sLen+1)
+		s[0] = byte(sLen)
+		for j := 0; j < sLen; j++ {
+			s[j+1] = byte(rand.Uint32())
+		}
+		rd = append(rd, s...)
+		i += 1 + sLen
+	}
+	return rd
+}
+
+func TestTXTRRQuick(t *testing.T) {
+	s := rand.NewSource(0)
+	r := rand.New(s)
+	typeAndClass := []byte{
+		byte(TypeTXT >> 8), byte(TypeTXT),
+		byte(ClassINET >> 8), byte(ClassINET),
+		0, 0, 0, 1, // TTL
+	}
+	f := func(l int) bool {
+		owner := GenerateDomain(r, l)
+		rdata := GenerateTXT(r, l)
+		rrbytes := make([]byte, 0, len(owner)+2+2+4+2+len(rdata))
+		rrbytes = append(rrbytes, owner...)
+		rrbytes = append(rrbytes, typeAndClass...)
+		rrbytes = append(rrbytes, byte(len(rdata)>>8))
+		rrbytes = append(rrbytes, byte(len(rdata)))
+		rrbytes = append(rrbytes, rdata...)
+		rr, _, err := UnpackRR(rrbytes, 0)
+		if err != nil {
+			panic(err)
+		}
+		buf := make([]byte, len(rrbytes)*3)
+		off, err := PackRR(rr, buf, 0, nil, false)
+		if err != nil {
+			t.Logf("Pack Error: %s\nRR: %V", err.Error(), rr)
+			return false
+		}
+		buf = buf[:off]
+		if !bytes.Equal(buf, rrbytes) {
+			t.Logf("Packed bytes don't match original bytes")
+			t.Logf("Src Bytes: %v", rrbytes)
+			t.Logf("   Struct: %V", rr)
+			t.Logf("Out Bytes: %v", buf)
+			return false
+		}
+		if len(rdata) == 0 {
+			// string'ing won't produce any data to parse
+			return true
+		}
+		rrString := rr.String()
+		rr2, err := NewRR(rrString)
+		if err != nil {
+			t.Logf("Error parsing own output: %s", err.Error())
+			t.Logf("Struct: %V", rr)
+			t.Logf("String: %v", rrString)
+			return false
+		}
+		if rr2.String() != rrString {
+			t.Logf("Parsed rr.String() doesn't match original string")
+			t.Logf("Original: %v", rrString)
+			t.Logf("  Parsed: %v", rr2.String())
+			return false
+		}
+
+		buf = make([]byte, len(rrbytes)*3)
+		off, err = PackRR(rr2, buf, 0, nil, false)
+		if err != nil {
+			t.Logf("Error packing parsed rr: %s", err.Error())
+			t.Logf("Unpacked Struct: %V", rr)
+			t.Logf("         String: %v", rrString)
+			t.Logf("  Parsed Struct: %V", rr2)
+			return false
+		}
+		buf = buf[:off]
+		if !bytes.Equal(buf, rrbytes) {
+			t.Logf("Parsed packed bytes don't match original bytes")
+			t.Logf("   Source Bytes: %v", rrbytes)
+			t.Logf("Unpacked Struct: %V", rr)
+			t.Logf("         String: %v", rrString)
+			t.Logf("  Parsed Struct: %V", rr2)
+			t.Logf(" Repacked Bytes: %v", buf)
+			return false
+		}
+		return true
+	}
+	c := &quick.Config{MaxCountScale: 10}
+	if err := quick.Check(f, c); err != nil {
+		t.Error(err)
 	}
 }
 
