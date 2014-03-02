@@ -83,6 +83,20 @@
 //	if t, ok := in.Answer[0].(*dns.TXT); ok {
 //		// do something with t.Txt
 //	}
+//
+// Domain Name and TXT Character String Representations
+//
+// Both domain names and TXT character strings are converted to presentation
+// form both when unpacked and when converted to strings.
+//
+// For TXT character strings, tabs, carriage returns and line feeds will be
+// converted to \t, \r and \n respectively. Back slashes and quotations marks
+// will be escaped. Bytes below 32 and above 127 will be converted to \DDD
+// form.
+//
+// For domain names, in addition to the above rules brackets, periods,
+// spaces, semicolons and the at symbol are escaped.
+//
 package dns
 
 import (
