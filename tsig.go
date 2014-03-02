@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// TRANSACTION SIGNATURE (TSIG)
+// TRANSACTION SIGNATURE
 //
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 // The supported algorithms include: HmacMD5, HmacSHA1 and HmacSHA256.
