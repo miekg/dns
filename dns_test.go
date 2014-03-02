@@ -463,3 +463,37 @@ func TestNoRdataUnpack(t *testing.T) {
 		t.Logf("%s\n", rr)
 	}
 }
+
+func TestUnpackExtraData(t *testing.T) {
+	m := new(Msg)
+	m.Answer = make([]RR, 1)
+	rr := new(A)
+	rr.Hdr = RR_Header{Name: "miek.nl.", Rrtype: TypeA, Class: ClassINET, Ttl: 0}
+	rr.A = net.IPv4(127, 0, 0, 1)
+	m.Answer[0] = rr
+
+	buf, err := m.Pack()
+	if err != nil {
+		t.Log("Packing failed")
+		t.Fail()
+		return
+	}
+
+	err = m.Unpack(buf)
+	if err != nil {
+		t.Log("Unpacking failed")
+		t.Fail()
+		return
+	}
+	err = m.Unpack(append(buf, 'X'))
+	if err == nil {
+		t.Log("Unpacking not failed")
+		t.Fail()
+		return
+	} else {
+		if err.(*Error).err != "extra bytes found in the dns packet" {
+			t.Logf("Wrong error message %#v", err)
+			t.Fail()
+		}
+	}
+}
