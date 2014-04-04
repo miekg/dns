@@ -6,6 +6,7 @@ package dns
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"net"
@@ -1097,6 +1098,7 @@ func TestTxtEqual(t *testing.T) {
 	}
 	t.Logf("\n%s\n%s\n", rr1.String(), rr2.String())
 }
+
 func TestTxtLong(t *testing.T) {
 	rr1 := new(TXT)
 	rr1.Hdr = RR_Header{Name: ".", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}
@@ -1111,4 +1113,13 @@ func TestTxtLong(t *testing.T) {
 		t.Logf("String conversion should just work")
 		t.Fail()
 	}
+}
+
+func TestMalformedPacket1(t *testing.T) {
+	packet := "00441553000000010000000000010563646e6a730a636c6f7564666c61726503636f6d0363646e0a636c6f7564666c617265036e657400001c00010000291000000080000000"
+	data, _ := hex.DecodeString(packet)
+
+	// This crashes godns
+	var msg Msg
+	msg.Unpack(data)
 }
