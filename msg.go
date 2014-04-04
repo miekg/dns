@@ -1140,12 +1140,11 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			default:
 				return lenmsg, &Error{"bad tag unpacking string: " + val.Type().Field(i).Tag.Get("dns")}
 			case `dns:"hex"`:
-				// Rest of the RR is hex encoded, network order an issue here?
 				hexend := rdend
 				if val.FieldByName("Hdr").FieldByName("Rrtype").Uint() == uint64(TypeHIP) {
 					hexend = off + int(val.FieldByName("HitLength").Uint())
 				}
-				if hexend > rdend {
+				if hexend > rdend || hexend > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking hex"}
 				}
 				s = hex.EncodeToString(msg[off:hexend])
@@ -1156,7 +1155,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if val.FieldByName("Hdr").FieldByName("Rrtype").Uint() == uint64(TypeHIP) {
 					b64end = off + int(val.FieldByName("PublicKeyLength").Uint())
 				}
-				if b64end > rdend {
+				if b64end > rdend || b64end > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking base64"}
 				}
 				s = unpackBase64(msg[off:b64end])
