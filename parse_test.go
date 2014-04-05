@@ -1115,11 +1115,14 @@ func TestTxtLong(t *testing.T) {
 	}
 }
 
-func TestMalformedPacket1(t *testing.T) {
-	packet := "00441553000000010000000000010563646e6a730a636c6f7564666c61726503636f6d0363646e0a636c6f7564666c617265036e657400001c00010000291000000080000000"
-	data, _ := hex.DecodeString(packet)
+func TestMalformedPackets(t *testing.T) {
+	var packets = []string{
+		"0021641c000000010000000000000b757361706f6f6c70726f7303636f6d0000100001",
+	}
 
-	// This crashes godns
-	var msg Msg
-	msg.Unpack(data)
+	for _, packet := range packets {
+		data, _ := hex.DecodeString(packet)
+		var msg Msg
+		msg.Unpack(data)
+	}
 }

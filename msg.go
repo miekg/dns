@@ -976,7 +976,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off == rdend {
 					break
 				}
-				if off+net.IPv6len > rdend {
+				if off+net.IPv6len > rdend || off+net.IPv6len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking aaaa"}
 				}
 				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
@@ -988,6 +988,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				serv := make([]uint16, 0)
 				j := 0
 				for off < rdend {
+					if off+1 > lenmsg {
+						return lenmsg, &Error{err: "overflow unpacking wks"}
+					}
 					b := msg[off]
 					// Check the bits one by one, and set the type
 					if b&0x80 == 0x80 {
@@ -1023,7 +1026,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					break
 				}
 				// Rest of the record is the type bitmap
-				if off+2 > rdend {
+				if off+2 > rdend || off+2 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking nsecx"}
 				}
 				nsec := make([]uint16, 0)
@@ -1037,15 +1040,18 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 						// A length window of zero is strange. If there
 						// the window should not have been specified. Bail out
 						// println("dns: length == 0 when unpacking NSEC")
-						return lenmsg, ErrRdata
+						return lenmsg, &Error{err: "overflow unpacking nsecx"}
 					}
 					if length > 32 {
-						return lenmsg, ErrRdata
+						return lenmsg, &Error{err: "overflow unpacking nsecx"}
 					}
 
 					// Walk the bytes in the window - and check the bit settings...
 					off += 2
 					for j := 0; j < length; j++ {
+						if off+j+1 > lenmsg {
+							return lenmsg, &Error{err: "overflow unpacking nsecx"}
+						}
 						b := msg[off+j]
 						// Check the bits one by one, and set the type
 						if b&0x80 == 0x80 {
