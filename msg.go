@@ -508,7 +508,7 @@ func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 	}
 	l := offset - lenByteOffset - 1
 	if l > 255 {
-		return offset, &Error{err: "TXT string exceeded 255 bytes"}
+		return offset, &Error{err: "string exceeded 255 bytes in txt"}
 	}
 	msg[lenByteOffset] = byte(l)
 	return offset, nil
@@ -528,9 +528,12 @@ func unpackTxt(msg []byte, offset, rdend int) ([]string, int, error) {
 }
 
 func unpackTxtString(msg []byte, offset int) (string, int, error) {
+	if offset + 1 > len(msg) {
+		return "", offset, &Error{err: "overflow unpacking txt"}
+	}
 	l := int(msg[offset])
 	if offset+l+1 > len(msg) {
-		return "", offset, &Error{err: "TXT string truncated"}
+		return "", offset, &Error{err: "overflow unpacking txt"}
 	}
 	s := make([]byte, 0, l)
 	for _, b := range msg[offset+1 : offset+1+l] {
