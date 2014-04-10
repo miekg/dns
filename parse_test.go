@@ -148,7 +148,7 @@ func GenerateDomain(r *rand.Rand, size int) []byte {
 		}
 		lLen := max
 		if lLen != 0 {
-			lLen = int(r.Uint32()) % max
+			lLen = int(r.Int31()) % max
 		}
 		done = lLen == 0
 		if done {
@@ -157,7 +157,7 @@ func GenerateDomain(r *rand.Rand, size int) []byte {
 		l := make([]byte, lLen+1)
 		l[0] = byte(lLen)
 		for j := 0; j < lLen; j++ {
-			l[j+1] = byte(rand.Uint32())
+			l[j+1] = byte(rand.Int31())
 		}
 		dn = append(dn, l...)
 		i += 1 + lLen
@@ -205,12 +205,12 @@ func GenerateTXT(r *rand.Rand, size int) []byte {
 		}
 		sLen := max
 		if max != 0 {
-			sLen = int(r.Uint32()) % max
+			sLen = int(r.Int31()) % max
 		}
 		s := make([]byte, sLen+1)
 		s[0] = byte(sLen)
 		for j := 0; j < sLen; j++ {
-			s[j+1] = byte(rand.Uint32())
+			s[j+1] = byte(rand.Int31())
 		}
 		rd = append(rd, s...)
 		i += 1 + sLen
