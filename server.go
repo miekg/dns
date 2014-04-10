@@ -209,10 +209,8 @@ type Server struct {
 	IdleTimeout func() time.Duration
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
-	// If true use a pool to recycle buffers for UDP queries.
+	// If true use a pool to recycle buffers for UDP queries, this is now a noop.
 	Pool bool
-	// channels for the pool
-	get, give chan []byte
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
@@ -223,9 +221,6 @@ func (srv *Server) ListenAndServe() error {
 	}
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
-	}
-	if srv.Pool {
-		srv.get, srv.give = pool(srv.UDPSize, 400) // Arbitrary number.
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -308,9 +303,6 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, t *net
 Redo:
 	req := new(Msg)
 	err := req.Unpack(m)
-	if srv.Pool && u != nil {
-		srv.give <- m[:srv.UDPSize]
-	}
 	if err != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
@@ -394,12 +386,7 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 }
 
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, net.Addr, error) {
-	var m []byte
-	if srv.Pool {
-		m = <-srv.get
-	} else {
-		m = make([]byte, srv.UDPSize)
-	}
+	m := make([]byte, srv.UDPSize)
 	n, a, e := conn.ReadFromUDP(m)
 	if e != nil || n == 0 {
 		if e != nil {
