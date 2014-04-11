@@ -10,13 +10,12 @@ can build servers and resolvers with it.
 
 If you like this, you may also be interested in:
 
-* https://github.com/miekg/fks -- a (in)complete nameserver written in Go;
 * https://github.com/miekg/unbound -- Go wrapper for the Unbound resolver.
 
 # Goals
 
 * KISS;
-* Fast
+* Fast;
 * Small API, if its easy to code in Go, don't make a function for it.
 
 # Users
@@ -31,7 +30,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/fcambus/rrda
 * https://github.com/kenshinx/godns
 * https://github.com/skynetservices/skydns
-* more? (send pull request if you want to be listed here)
+* ... (send pull request if you want to be listed here)
 
 # Features
 
@@ -39,7 +38,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE (for all record types) are supported;
 * Fast:
     * Reply speed around ~ 80K qps (faster hardware results in more qps);
-    * Parsing RRs with  ~ 100K RR/s, that's 5M records in about 50 seconds;
+    * Parsing RRs ~ 100K RR/s, that's 5M records in about 50 seconds;
 * Server side programming (mimicking the net/http package);
 * Client side programming;
 * DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
@@ -129,4 +128,5 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * Make a srv.Stop() that stops the server;
 * privatekey.Precompute() when signing?
 * Last remaining RRs: APL, ATMA, A6, KEY, SIG and NXT;
-* CAA parsing is broken.
+* CAA parsing is broken;
+* Replies with TC bit are not parsed to the end.
