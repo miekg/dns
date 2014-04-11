@@ -166,7 +166,7 @@ func (k *DNSKEY) ToDS(h int) *DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, err1 := PackDomainName(k.Hdr.Name, owner, 0, nil, false)
+	off, err1 := PackDomainName(strings.ToLower(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
 	}
