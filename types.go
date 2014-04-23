@@ -435,6 +435,8 @@ func (rr *TXT) copy() RR {
 
 func (rr *TXT) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
 
+// TODO(miek): this needs to be public I think, but with another name
+// DomainNameToString ?
 func sprintDomain(s string) string {
 	src := []byte(s)
 	dst := make([]byte, 0, len(src))
