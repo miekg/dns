@@ -168,7 +168,7 @@ func (h *RR_Header) String() string {
 		// and maybe other things
 	}
 
-	s += NameToString(h.Name) + "\t"
+	s += sprintName(h.Name) + "\t"
 	s += strconv.FormatInt(int64(h.Ttl), 10) + "\t"
 	s += Class(h.Class).String() + "\t"
 	s += Type(h.Rrtype).String() + "\t"

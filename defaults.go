@@ -212,7 +212,7 @@ func ReverseAddr(addr string) (arpa string, err error) {
 	return string(buf), nil
 }
 
-// String returns the string representation for the type t
+// String returns the string representation for the type t.
 func (t Type) String() string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1
@@ -220,10 +220,15 @@ func (t Type) String() string {
 	return "TYPE" + strconv.Itoa(int(t))
 }
 
-// String returns the string representation for the class c
+// String returns the string representation for the class c.
 func (c Class) String() string {
 	if c1, ok := ClassToString[uint16(c)]; ok {
 		return c1
 	}
 	return "CLASS" + strconv.Itoa(int(c))
+}
+
+// String returns the string representation for the name n.
+func (n Name) String() string {
+	return sprintName(string(n))
 }

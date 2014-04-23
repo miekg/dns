@@ -528,7 +528,7 @@ func unpackTxt(msg []byte, offset, rdend int) ([]string, int, error) {
 }
 
 func unpackTxtString(msg []byte, offset int) (string, int, error) {
-	if offset + 1 > len(msg) {
+	if offset+1 > len(msg) {
 		return "", offset, &Error{err: "overflow unpacking txt"}
 	}
 	l := int(msg[offset])

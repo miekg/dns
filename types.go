@@ -15,8 +15,9 @@ import (
 )
 
 type (
-	Type  uint16
-	Class uint16
+	Type  uint16 // Type is a DNS type.
+	Class uint16 // Class is a DNS class.
+	Name  string // Name is a DNS domain name.
 )
 
 // Packet formats
@@ -174,7 +175,7 @@ type Question struct {
 
 func (q *Question) String() (s string) {
 	// prefix with ; (as in dig)
-	s = ";" + NameToString(q.Name) + "\t"
+	s = ";" + sprintName(q.Name) + "\t"
 	s += Class(q.Qclass).String() + "\t"
 	s += " " + Type(q.Qtype).String()
 	return s
@@ -201,7 +202,7 @@ type CNAME struct {
 }
 
 func (rr *CNAME) Header() *RR_Header { return &rr.Hdr }
-func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), NameToString(rr.Target)} }
+func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), sprintName(rr.Target)} }
 func (rr *CNAME) String() string     { return rr.Hdr.String() + rr.Target }
 func (rr *CNAME) len() int           { return rr.Hdr.len() + len(rr.Target) + 1 }
 
@@ -222,7 +223,7 @@ type MB struct {
 }
 
 func (rr *MB) Header() *RR_Header { return &rr.Hdr }
-func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), NameToString(rr.Mb)} }
+func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), sprintName(rr.Mb)} }
 
 func (rr *MB) String() string { return rr.Hdr.String() + rr.Mb }
 func (rr *MB) len() int       { return rr.Hdr.len() + len(rr.Mb) + 1 }
@@ -235,7 +236,7 @@ type MG struct {
 func (rr *MG) Header() *RR_Header { return &rr.Hdr }
 func (rr *MG) copy() RR           { return &MG{*rr.Hdr.copyHeader(), rr.Mg} }
 func (rr *MG) len() int           { l := len(rr.Mg) + 1; return rr.Hdr.len() + l }
-func (rr *MG) String() string     { return rr.Hdr.String() + NameToString(rr.Mg) }
+func (rr *MG) String() string     { return rr.Hdr.String() + sprintName(rr.Mg) }
 
 type MINFO struct {
 	Hdr   RR_Header
@@ -247,7 +248,7 @@ func (rr *MINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *MINFO) copy() RR           { return &MINFO{*rr.Hdr.copyHeader(), rr.Rmail, rr.Email} }
 
 func (rr *MINFO) String() string {
-	return rr.Hdr.String() + NameToString(rr.Rmail) + " " + NameToString(rr.Email)
+	return rr.Hdr.String() + sprintName(rr.Rmail) + " " + sprintName(rr.Email)
 }
 
 func (rr *MINFO) len() int {
@@ -266,7 +267,7 @@ func (rr *MR) copy() RR           { return &MR{*rr.Hdr.copyHeader(), rr.Mr} }
 func (rr *MR) len() int           { l := len(rr.Mr) + 1; return rr.Hdr.len() + l }
 
 func (rr *MR) String() string {
-	return rr.Hdr.String() + NameToString(rr.Mr)
+	return rr.Hdr.String() + sprintName(rr.Mr)
 }
 
 type MF struct {
@@ -279,7 +280,7 @@ func (rr *MF) copy() RR           { return &MF{*rr.Hdr.copyHeader(), rr.Mf} }
 func (rr *MF) len() int           { return rr.Hdr.len() + len(rr.Mf) + 1 }
 
 func (rr *MF) String() string {
-	return rr.Hdr.String() + " " + NameToString(rr.Mf)
+	return rr.Hdr.String() + " " + sprintName(rr.Mf)
 }
 
 type MD struct {
@@ -292,7 +293,7 @@ func (rr *MD) copy() RR           { return &MD{*rr.Hdr.copyHeader(), rr.Md} }
 func (rr *MD) len() int           { return rr.Hdr.len() + len(rr.Md) + 1 }
 
 func (rr *MD) String() string {
-	return rr.Hdr.String() + " " + NameToString(rr.Md)
+	return rr.Hdr.String() + " " + sprintName(rr.Md)
 }
 
 type MX struct {
@@ -306,7 +307,7 @@ func (rr *MX) copy() RR           { return &MX{*rr.Hdr.copyHeader(), rr.Preferen
 func (rr *MX) len() int           { l := len(rr.Mx) + 1; return rr.Hdr.len() + l + 2 }
 
 func (rr *MX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + NameToString(rr.Mx)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Mx)
 }
 
 type AFSDB struct {
@@ -320,7 +321,7 @@ func (rr *AFSDB) copy() RR           { return &AFSDB{*rr.Hdr.copyHeader(), rr.Su
 func (rr *AFSDB) len() int           { l := len(rr.Hostname) + 1; return rr.Hdr.len() + l + 2 }
 
 func (rr *AFSDB) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + NameToString(rr.Hostname)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + sprintName(rr.Hostname)
 }
 
 type X25 struct {
@@ -347,7 +348,7 @@ func (rr *RT) copy() RR           { return &RT{*rr.Hdr.copyHeader(), rr.Preferen
 func (rr *RT) len() int           { l := len(rr.Host) + 1; return rr.Hdr.len() + l + 2 }
 
 func (rr *RT) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + NameToString(rr.Host)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Host)
 }
 
 type NS struct {
@@ -360,7 +361,7 @@ func (rr *NS) len() int           { l := len(rr.Ns) + 1; return rr.Hdr.len() + l
 func (rr *NS) copy() RR           { return &NS{*rr.Hdr.copyHeader(), rr.Ns} }
 
 func (rr *NS) String() string {
-	return rr.Hdr.String() + NameToString(rr.Ns)
+	return rr.Hdr.String() + sprintName(rr.Ns)
 }
 
 type PTR struct {
@@ -373,7 +374,7 @@ func (rr *PTR) copy() RR           { return &PTR{*rr.Hdr.copyHeader(), rr.Ptr} }
 func (rr *PTR) len() int           { l := len(rr.Ptr) + 1; return rr.Hdr.len() + l }
 
 func (rr *PTR) String() string {
-	return rr.Hdr.String() + NameToString(rr.Ptr)
+	return rr.Hdr.String() + sprintName(rr.Ptr)
 }
 
 type RP struct {
@@ -407,7 +408,7 @@ func (rr *SOA) copy() RR {
 }
 
 func (rr *SOA) String() string {
-	return rr.Hdr.String() + NameToString(rr.Ns) + " " + NameToString(rr.Mbox) +
+	return rr.Hdr.String() + sprintName(rr.Ns) + " " + sprintName(rr.Mbox) +
 		" " + strconv.FormatInt(int64(rr.Serial), 10) +
 		" " + strconv.FormatInt(int64(rr.Refresh), 10) +
 		" " + strconv.FormatInt(int64(rr.Retry), 10) +
@@ -435,7 +436,7 @@ func (rr *TXT) copy() RR {
 
 func (rr *TXT) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
 
-func NameToString(s string) string {
+func sprintName(s string) string {
 	src := []byte(s)
 	dst := make([]byte, 0, len(src))
 	for i := 0; i < len(src); {
@@ -581,7 +582,7 @@ func (rr *SRV) String() string {
 	return rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
 		strconv.Itoa(int(rr.Weight)) + " " +
-		strconv.Itoa(int(rr.Port)) + " " + NameToString(rr.Target)
+		strconv.Itoa(int(rr.Port)) + " " + sprintName(rr.Target)
 }
 
 type NAPTR struct {
@@ -651,7 +652,7 @@ func (rr *DNAME) copy() RR           { return &DNAME{*rr.Hdr.copyHeader(), rr.Ta
 func (rr *DNAME) len() int           { l := len(rr.Target) + 1; return rr.Hdr.len() + l }
 
 func (rr *DNAME) String() string {
-	return rr.Hdr.String() + NameToString(rr.Target)
+	return rr.Hdr.String() + sprintName(rr.Target)
 }
 
 type A struct {
@@ -696,7 +697,7 @@ type PX struct {
 func (rr *PX) Header() *RR_Header { return &rr.Hdr }
 func (rr *PX) copy() RR           { return &PX{*rr.Hdr.copyHeader(), rr.Preference, rr.Map822, rr.Mapx400} }
 func (rr *PX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + NameToString(rr.Map822) + " " + NameToString(rr.Mapx400)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Map822) + " " + sprintName(rr.Mapx400)
 }
 func (rr *PX) len() int { return rr.Hdr.len() + 2 + len(rr.Map822) + 1 + len(rr.Mapx400) + 1 }
 
@@ -805,7 +806,7 @@ func (rr *RRSIG) String() string {
 		" " + TimeToString(rr.Expiration) +
 		" " + TimeToString(rr.Inception) +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
-		" " + NameToString(rr.SignerName) +
+		" " + sprintName(rr.SignerName) +
 		" " + rr.Signature
 	return s
 }
@@ -829,7 +830,7 @@ func (rr *NSEC) copy() RR {
 }
 
 func (rr *NSEC) String() string {
-	s := rr.Hdr.String() + NameToString(rr.NextDomain)
+	s := rr.Hdr.String() + sprintName(rr.NextDomain)
 	for i := 0; i < len(rr.TypeBitMap); i++ {
 		s += " " + Type(rr.TypeBitMap[i]).String()
 	}
@@ -924,7 +925,7 @@ func (rr *KX) copy() RR           { return &KX{*rr.Hdr.copyHeader(), rr.Preferen
 
 func (rr *KX) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
-		" " + NameToString(rr.Exchanger)
+		" " + sprintName(rr.Exchanger)
 }
 
 type TA struct {
@@ -960,7 +961,7 @@ func (rr *TALINK) len() int           { return rr.Hdr.len() + len(rr.PreviousNam
 
 func (rr *TALINK) String() string {
 	return rr.Hdr.String() +
-		" " + NameToString(rr.PreviousName) + " " + NameToString(rr.NextName)
+		" " + sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
 }
 
 type SSHFP struct {
@@ -1071,7 +1072,7 @@ type NSAPPTR struct {
 
 func (rr *NSAPPTR) Header() *RR_Header { return &rr.Hdr }
 func (rr *NSAPPTR) copy() RR           { return &NSAPPTR{*rr.Hdr.copyHeader(), rr.Ptr} }
-func (rr *NSAPPTR) String() string     { return rr.Hdr.String() + NameToString(rr.Ptr) }
+func (rr *NSAPPTR) String() string     { return rr.Hdr.String() + sprintName(rr.Ptr) }
 func (rr *NSAPPTR) len() int           { return rr.Hdr.len() + len(rr.Ptr) }
 
 type NSEC3 struct {
@@ -1270,7 +1271,7 @@ func (rr *HIP) String() string {
 		" " + rr.Hit +
 		" " + rr.PublicKey
 	for _, d := range rr.RendezvousServers {
-		s += " " + NameToString(d)
+		s += " " + sprintName(d)
 	}
 	return s
 }
@@ -1398,7 +1399,7 @@ func (rr *LP) copy() RR           { return &LP{*rr.Hdr.copyHeader(), rr.Preferen
 func (rr *LP) len() int           { return rr.Hdr.len() + 2 + len(rr.Fqdn) + 1 }
 
 func (rr *LP) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + NameToString(rr.Fqdn)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Fqdn)
 }
 
 type EUI48 struct {

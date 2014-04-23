@@ -116,7 +116,7 @@ func NewRR(s string) (RR, error) {
 	return ReadRR(strings.NewReader(s), "")
 }
 
-// ReadRR reads the RR contained in q. 
+// ReadRR reads the RR contained in q.
 // See NewRR for more documentation.
 func ReadRR(q io.Reader, filename string) (RR, error) {
 	r := <-parseZoneHelper(q, ".", filename, 1)
