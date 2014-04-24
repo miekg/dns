@@ -108,7 +108,7 @@ type Token struct {
 // NewRR reads the RR contained in the string s. Only the first RR is returned.
 // The class defaults to IN and TTL defaults to 3600. The full zone file
 // syntax like $TTL, $ORIGIN, etc. is supported.
-// All fields of the returned RR are set, except RR.Header().Rdlength wich is 0.
+// All fields of the returned RR are set, except RR.Header().Rdlength which is set to 0.
 func NewRR(s string) (RR, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline
 		return ReadRR(strings.NewReader(s+"\n"), "")
@@ -116,7 +116,7 @@ func NewRR(s string) (RR, error) {
 	return ReadRR(strings.NewReader(s), "")
 }
 
-// ReadRR reads the RR contained in q. 
+// ReadRR reads the RR contained in q.
 // See NewRR for more documentation.
 func ReadRR(q io.Reader, filename string) (RR, error) {
 	r := <-parseZoneHelper(q, ".", filename, 1)
