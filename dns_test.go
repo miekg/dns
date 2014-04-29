@@ -463,3 +463,19 @@ func TestNoRdataUnpack(t *testing.T) {
 		t.Logf("%s\n", rr)
 	}
 }
+
+func TestRdataOverflow(t *testing.T) {
+	rr := new(RFC3597)
+	rr.Hdr.Name = "."
+	rr.Hdr.Class = ClassINET
+	rr.Hdr.Rrtype = 65280
+	rr.Rdata = hex.EncodeToString(make([]byte, 0xFFFF))
+	buf := make([]byte, 0xFFFF*2)
+	if _, err := PackRR(rr, buf, 0, nil, false); err != nil {
+		t.Fatalf("Maximum size rrdata pack failed: %v", err)
+	}
+	rr.Rdata += "00"
+	if _, err := PackRR(rr, buf, 0, nil, false); err != ErrRdata {
+		t.Fatalf("Oversize rrdata pack didn't return ErrRdata - instead: %v", err)
+	}
+}

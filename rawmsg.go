@@ -89,7 +89,11 @@ Loop:
 		return false
 	}
 	//off+1 is the end of the header, 'end' is the end of the rr
-	//so 'end' - 'off+2' is the lenght of the rdata
-	msg[off], msg[off+1] = packUint16(uint16(end - (off + 2)))
+	//so 'end' - 'off+2' is the length of the rdata
+	rdatalen := end - (off + 2)
+	if rdatalen > 0xFFFF {
+		return false
+	}
+	msg[off], msg[off+1] = packUint16(uint16(rdatalen))
 	return true
 }

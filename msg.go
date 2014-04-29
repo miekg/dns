@@ -1306,8 +1306,10 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return len(msg), err
 	}
-	rawSetRdlength(msg, off, off1)
-	return off1, nil
+	if rawSetRdlength(msg, off, off1) {
+		return off1, nil
+	}
+	return off, ErrRdata
 }
 
 // UnpackRR unpacks msg[off:] into an RR.
