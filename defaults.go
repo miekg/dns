@@ -5,14 +5,14 @@
 package dns
 
 import (
+	"errors"
 	"net"
 	"strconv"
 )
 
 const hexDigit = "0123456789abcdef"
 
-// Everything is assumed in the ClassINET class. If
-// you need other classes you are on your own.
+// Everything is assumed in ClassINET.
 
 // SetReply creates a reply packet from a request message.
 func (dns *Msg) SetReply(request *Msg) *Msg {
@@ -163,6 +163,18 @@ func IsDomainName(s string) (labels int, ok bool) {
 func IsSubDomain(parent, child string) bool {
 	// Entire child is contained in parent
 	return CompareDomainName(parent, child) == CountLabel(parent)
+}
+
+// IsMsg sanity checks buf and returns an error if it isn't a valid DNS packet.
+// The checking is performed on the binary payload.
+func IsMsg(buf []byte) error {
+	// Header
+	if len(buf) < 12 {
+		return errors.New("dns: bad message header")
+	}
+	// Header: Opcode
+
+	return nil
 }
 
 // IsFqdn checks if a domain name is fully qualified.

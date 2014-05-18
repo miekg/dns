@@ -1535,6 +1535,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	// If we see a TC bit being set we return here, without
 	// an error, because technically it isn't an error. So return
 	// without parsing the potentially corrupt packet and hitting an error.
+	// TODO(miek): this isn't the best strategy!
 	if dns.Truncated {
 		dns.Answer = nil
 		dns.Ns = nil
