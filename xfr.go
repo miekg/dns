@@ -24,6 +24,8 @@ type Transfer struct {
 	tsigTimersOnly bool
 }
 
+// Think we need to away to stop the transfer
+
 // In performs an incoming transfer with the server in a.
 func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	timeout := dnsTimeout
