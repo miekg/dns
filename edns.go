@@ -45,6 +45,7 @@ const (
 	EDNS0DHU         = 0x6    // DS Hash Understood
 	EDNS0N3U         = 0x7    // NSEC3 Hash Understood
 	EDNS0SUBNET      = 0x8    // client-subnet (RFC6891)
+	EDNS0EXPIRE      = 0x9    // EDNS0 expire
 	EDNS0SUBNETDRAFT = 0x50fa // client-subnet draft: http://tools.ietf.org/html/draft-vandergaast-edns-client-subnet-01
 	_DO              = 1 << 7 // dnssec ok
 )
