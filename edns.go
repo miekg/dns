@@ -174,6 +174,7 @@ type EDNS0 interface {
 //	o.Hdr.Rrtype = dns.TypeOPT
 //	e := new(dns.EDNS0_NSID)
 //	e.Code = dns.EDNS0NSID
+//	e.Nsid = "AA"
 //	o.Option = append(o.Option, e)
 type EDNS0_NSID struct {
 	Code uint16 // Always EDNS0NSID
