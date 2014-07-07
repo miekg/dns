@@ -27,7 +27,7 @@ func NewUDPConn(conn *net.UDPConn) (newconn *UDPConn, err error) {
 }
 
 func (conn *UDPConn) ReadFromSessionUDP(b []byte) (n int, session *UDPSession, err error) {
-	oob := make([]byte, 1024)
+	oob := make([]byte, 40)
 
 	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
 	if err != nil {
