@@ -2,6 +2,7 @@ package dns
 
 import (
 	"net"
+	"syscall"
 )
 
 type UDPSession struct {
@@ -22,7 +23,7 @@ type UDPConn struct {
 // Sessions solve https://github.com/miekg/dns/issues/95
 func NewUDPConn(conn *net.UDPConn) (newconn *UDPConn, err error) {
 	// this function is implemented on a per platform basis. See udp_*.go for more details
-	err = udpSocketOobData(conn)
+	err = udpPatchSocket(conn)
 
 	if err != nil {
 		return
@@ -50,4 +51,33 @@ func (conn *UDPConn) ReadFromSessionUDP(b []byte) (n int, session *UDPSession, e
 func (conn *UDPConn) WriteToSessionUDP(b []byte, session *UDPSession) (n int, err error) {
 	n, _, err = conn.WriteMsgUDP(b, session.context, session.raddr)
 	return
+}
+
+func udpPatchSocket(conn *net.UDPConn) (err error) {
+	file, err := conn.File()
+	if err != nil {
+		return
+	}
+
+	sa, err := syscall.Getsockname(int(file.Fd()))
+
+	ipv4, ipv6 := false, false
+	switch sa.(type) {
+	case *syscall.SockaddrInet6:
+		ipv6 = true
+
+		// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
+		v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
+		if err != nil {
+			return err
+		}
+
+		if v6only == 0 {
+			ipv4 = true
+		}
+	case *syscall.SockaddrInet4:
+		ipv4 = true
+	}
+
+	return udpPatchSocketTypes(conn, ipv4, ipv6)
 }
