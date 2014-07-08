@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/miekg/dns.svg?branch=master)](https://travis-ci.org/miekg/dns)
+
 # Alternative (more granular) approach to a DNS library
 
 > Less is more.
