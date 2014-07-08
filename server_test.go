@@ -86,6 +86,24 @@ func BenchmarkServe(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
+func BenchmarkServe6(b *testing.B) {
+	b.StopTimer()
+	HandleFunc("miek.nl.", HelloServer)
+	a := runtime.GOMAXPROCS(4)
+	go func() {
+		ListenAndServe("[::1]:8053", "udp", nil)
+	}()
+	c := new(Client)
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeSOA)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		c.Exchange(m, "[::1]:8053")
+	}
+	runtime.GOMAXPROCS(a)
+}
+
 func HelloServerCompress(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
