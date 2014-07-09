@@ -21,7 +21,7 @@ import (
 
 // setUDPSocketOptions4 prepares the v4 socket for sessions.
 func setUDPSocketOptions4(conn *net.UDPConn) error {
-	// We got the .File() in NewUDPConn, this this will work.
+	// We got the .File() in NewUDPConn, this will work.
 	file, _ := conn.File()
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1); err != nil {
 		return err
@@ -31,7 +31,7 @@ func setUDPSocketOptions4(conn *net.UDPConn) error {
 
 // setUDPSocketOptions6 prepares the v6 socket for sessions.
 func setUDPSocketOptions6(conn *net.UDPConn) error {
-	// We got the .File() in NewUDPConn, this this will work.
+	// We got the .File() in NewUDPConn, this will work.
 	file, _ := conn.File()
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_RECVPKTINFO, 1); err != nil {
 		return err
