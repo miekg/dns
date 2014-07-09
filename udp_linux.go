@@ -23,8 +23,7 @@ import (
 func setUDPSocketOptions4(conn *net.UDPConn) error {
 	// We got the .File() in NewUDPConn, this this will work.
 	file, _ := conn.File()
-	err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1)
-	if err != nil {
+	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1); err != nil {
 		return err
 	}
 	return nil
@@ -34,8 +33,7 @@ func setUDPSocketOptions4(conn *net.UDPConn) error {
 func setUDPSocketOptions6(conn *net.UDPConn) error {
 	// We got the .File() in NewUDPConn, this this will work.
 	file, _ := conn.File()
-	err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_RECVPKTINFO, 1)
-	if err != nil {
+	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_RECVPKTINFO, 1); err != nil {
 		return err
 	}
 	return nil
