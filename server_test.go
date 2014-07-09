@@ -86,7 +86,7 @@ func BenchmarkServe(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
-func BenchmarkServe6(b *testing.B) {
+func benchmarkServe6(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
 	a := runtime.GOMAXPROCS(4)
