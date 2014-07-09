@@ -28,10 +28,9 @@ type UDPConn struct {
 // Sessions solve https://github.com/miekg/dns/issues/95
 func NewUDPConn(conn *net.UDPConn) (*UDPConn, error) {
 	// this function is implemented on a per platform basis. See udp_*.go for more details
-	conn := new(net.UDPConn)
 	file, err := conn.File()
 	if err != nil {
-		return
+		return nil,err
 	}
 
 	sa, err := syscall.Getsockname(int(file.Fd()))
@@ -40,7 +39,7 @@ func NewUDPConn(conn *net.UDPConn) (*UDPConn, error) {
 		// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
 		v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		SetUDPSocketOptions6(conn)
 
@@ -59,7 +58,7 @@ func (conn *UDPConn) ReadFromSessionUDP(b []byte) (int, *UDPSession, error) {
 	oob := make([]byte, 40)
 	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
 	if err != nil {
-		return
+		return n, nil, err
 	}
 
 	session := &UDPSession{raddr, oob[:oobn]}
@@ -68,6 +67,6 @@ func (conn *UDPConn) ReadFromSessionUDP(b []byte) (int, *UDPSession, error) {
 
 // WriteToSessionUDP Just like net.UDPConn.WritetTo(), but uses a session object instead of net.Addr
 func (conn *UDPConn) WriteToSessionUDP(b []byte, session *UDPSession) (int, error) {
-	n, _, err = conn.WriteMsgUDP(b, session.context, session.raddr)
+	n, _, err := conn.WriteMsgUDP(b, session.context, session.raddr)
 	return n, err
 }
