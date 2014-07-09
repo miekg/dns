@@ -33,7 +33,6 @@ func setUDPSocketOptions(conn *net.UDPConn) error {
 			return err
 		}
 		setUDPSocketOptions6(conn)
-
 		if v6only == 0 {
 			setUDPSocketOptions4(conn)
 		}
@@ -43,20 +42,19 @@ func setUDPSocketOptions(conn *net.UDPConn) error {
 	return nil
 }
 
-// readFromSessionUDP ... Just like net.UDPConn.ReadFrom(), but returns a session object instead of net.UDPAddr
-// (RemoteAddr() is available from the UDPSession object)
+// readFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
+// net.UDPAddr.
 func readFromSessionUDP(conn *net.UDPConn, b []byte) (int, *sessionUDP, error) {
 	oob := make([]byte, 40)
 	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
 	if err != nil {
 		return n, nil, err
 	}
-
 	session := &sessionUDP{raddr, oob[:oobn]}
 	return n, session, err
 }
 
-// writeToSessionUDP Just like net.UDPConn.WritetTo(), but uses a session object instead of net.Addr
+// writeToSessionUDP acts just like net.UDPConn.WritetTo(), but uses a *sessionUDP instead of a net.Addr.
 func writeToSessionUDP(conn *net.UDPConn, b []byte, session *sessionUDP) (int, error) {
 	n, _, err := conn.WriteMsgUDP(b, session.context, session.raddr)
 	return n, err

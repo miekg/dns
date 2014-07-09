@@ -10,7 +10,7 @@ import (
 	"net"
 )
 
-// These actually do nothing. See udp_linux.go for an example of how to implement this.
+// These do nothing. See udp_linux.go for an example of how to implement this.
 
 func setUDPSocketOptions4(conn *net.UDPConn) error { return nil }
 func setUDPSocketOptions6(conn *net.UDPConn) error { return nil }
