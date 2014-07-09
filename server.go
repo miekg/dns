@@ -44,10 +44,10 @@ type response struct {
 	tsigTimersOnly bool
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
-	udp            *UDPConn          // i/o connection if UDP was used
-	udpSession     *UDPSession
-	tcp            *net.TCPConn // i/o connection if TCP was used
-	remoteAddr     net.Addr     // address of the client
+	udp            *net.UDPConn      // i/o connection if UDP was used
+	tcp            *net.TCPConn      // i/o connection if TCP was used
+	udpSession     *sessionUDP       // oob data to get egress interface right
+	remoteAddr     net.Addr          // address of the client
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -244,12 +244,10 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 
-		ll, e := NewUDPConn(l)
-		if e != nil {
+		if e := setUDPSocketOptions(l); e != nil {
 			return e
 		}
-
-		return srv.serveUDP(ll)
+		return srv.serveUDP(l)
 	}
 	return &Error{err: "bad network"}
 }
@@ -282,7 +280,7 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 
 // serveUDP starts a UDP listener for the server.
 // Each request is handled in a seperate goroutine.
-func (srv *Server) serveUDP(l *UDPConn) error {
+func (srv *Server) serveUDP(l *net.UDPConn) error {
 	defer l.Close()
 	handler := srv.Handler
 	if handler == nil {
@@ -304,7 +302,7 @@ func (srv *Server) serveUDP(l *UDPConn) error {
 }
 
 // Serve a new connection.
-func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *UDPConn, s *UDPSession, t *net.TCPConn) {
+func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *sessionUDP, t *net.TCPConn) {
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
 	q := 0
 Redo:
@@ -392,9 +390,9 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 	return m, nil
 }
 
-func (srv *Server) readUDP(conn *UDPConn, timeout time.Duration) ([]byte, *UDPSession, error) {
+func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *sessionUDP, error) {
 	m := make([]byte, srv.UDPSize)
-	n, s, e := conn.ReadFromSessionUDP(m)
+	n, s, e := readFromSessionUDP(conn, m)
 	if e != nil || n == 0 {
 		if e != nil {
 			return nil, nil, e
@@ -430,7 +428,7 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 func (w *response) Write(m []byte) (int, error) {
 	switch {
 	case w.udp != nil:
-		n, err := w.udp.WriteToSessionUDP(m, w.udpSession)
+		n, err := writeToSessionUDP(w.udp, m, w.udpSession)
 		return n, err
 	case w.tcp != nil:
 		lm := len(m)

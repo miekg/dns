@@ -12,5 +12,5 @@ import (
 
 // These actually do nothing. See udp_linux.go for an example of how to implement this.
 
-func SetUDPSocketOptions4(conn *net.UDPConn) error { return nil }
-func SetUDPSocketOptions6(conn *net.UDPConn) error { return nil }
+func setUDPSocketOptions4(conn *net.UDPConn) error { return nil }
+func setUDPSocketOptions6(conn *net.UDPConn) error { return nil }
