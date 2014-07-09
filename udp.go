@@ -18,70 +18,56 @@ func (session *UDPSession) RemoteAddr() net.Addr {
 	return session.raddr
 }
 
+// UDPConn wrap a net.UDPConn with dns.UDPConn struct
 type UDPConn struct {
 	*net.UDPConn
 }
 
-// Wrap a net.UDPConn with dns.UDPConn struct
+// NewUDPConn return a new UDPConn.
 // Initialize the underlying net.UDPConn for supporting "sessions"
 // Sessions solve https://github.com/miekg/dns/issues/95
-func NewUDPConn(conn *net.UDPConn) (newconn *UDPConn, err error) {
+func NewUDPConn(conn *net.UDPConn) (*UDPConn, error) {
 	// this function is implemented on a per platform basis. See udp_*.go for more details
-	err = udpPatchSocket(conn)
-
-	if err != nil {
-		return
-	}
-
-	return &UDPConn{conn}, nil
-}
-
-// Just like net.UDPConn.ReadFrom(), but returns a session object instead of net.UDPAddr
-// (RemoteAddr() is available from the UDPSession object)
-func (conn *UDPConn) ReadFromSessionUDP(b []byte) (n int, session *UDPSession, err error) {
-	oob := make([]byte, 40)
-
-	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
-	if err != nil {
-		return
-	}
-
-	session = &UDPSession{raddr, oob[:oobn]}
-
-	return
-}
-
-// Just like net.UDPConn.WritetTo(), but uses a session object instead of net.Addr
-func (conn *UDPConn) WriteToSessionUDP(b []byte, session *UDPSession) (n int, err error) {
-	n, _, err = conn.WriteMsgUDP(b, session.context, session.raddr)
-	return
-}
-
-func udpPatchSocket(conn *net.UDPConn) (err error) {
+	conn := new(net.UDPConn)
 	file, err := conn.File()
 	if err != nil {
 		return
 	}
 
 	sa, err := syscall.Getsockname(int(file.Fd()))
-
-	ipv4, ipv6 := false, false
 	switch sa.(type) {
 	case *syscall.SockaddrInet6:
-		ipv6 = true
-
 		// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
 		v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
 		if err != nil {
 			return err
 		}
+		SetUDPSocketOptions6(conn)
 
 		if v6only == 0 {
-			ipv4 = true
+			SetUDPSocketOptions4(conn)
 		}
 	case *syscall.SockaddrInet4:
-		ipv4 = true
+		SetUDPSocketOptions4(conn)
+	}
+	return &UDPConn{conn}, nil
+}
+
+// ReadFromSessionUDP ... Just like net.UDPConn.ReadFrom(), but returns a session object instead of net.UDPAddr
+// (RemoteAddr() is available from the UDPSession object)
+func (conn *UDPConn) ReadFromSessionUDP(b []byte) (int, *UDPSession, error) {
+	oob := make([]byte, 40)
+	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
+	if err != nil {
+		return
 	}
 
-	return udpPatchSocketTypes(conn, ipv4, ipv6)
+	session := &UDPSession{raddr, oob[:oobn]}
+	return n, session, err
+}
+
+// WriteToSessionUDP Just like net.UDPConn.WritetTo(), but uses a session object instead of net.Addr
+func (conn *UDPConn) WriteToSessionUDP(b []byte, session *UDPSession) (int, error) {
+	n, _, err = conn.WriteMsgUDP(b, session.context, session.raddr)
+	return n, err
 }
