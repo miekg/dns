@@ -21,8 +21,10 @@ import (
 
 // setUDPSocketOptions4 prepares the v4 socket for sessions.
 func setUDPSocketOptions4(conn *net.UDPConn) error {
-	// We got the .File() in NewUDPConn, this this will work.
-	file, _ := conn.File()
+	file, err := conn.File()
+	if err != nil {
+		return err
+	}
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1); err != nil {
 		return err
 	}
@@ -31,8 +33,10 @@ func setUDPSocketOptions4(conn *net.UDPConn) error {
 
 // setUDPSocketOptions6 prepares the v6 socket for sessions.
 func setUDPSocketOptions6(conn *net.UDPConn) error {
-	// We got the .File() in NewUDPConn, this this will work.
-	file, _ := conn.File()
+	file, err := conn.File()
+	if err != nil {
+		return err
+	}
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_RECVPKTINFO, 1); err != nil {
 		return err
 	}
@@ -41,13 +45,23 @@ func setUDPSocketOptions6(conn *net.UDPConn) error {
 
 // getUDPSocketOption6Only return true if the socket is v6 only and false when it is v4/v6 combined
 // (dualstack).
-func getUDPSocketOption6Only(conn *net.UDPConn) (bool, error) {
-	// We got the .File() in NewUDPConn, this this will work.
-	file, _ := conn.File()
+func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error) {
+	file, err := conn.File()
+	if err != nil {
+		return false, err
+	}
 	// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
 	v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
 	if err != nil {
 		return false, err
 	}
 	return v6only == 1, nil
+}
+
+func getUDPSocketName(conn *net.UDPConn) (syscall.Sockaddr, error) {
+	file, err := conn.File()
+	if err != nil {
+		return nil, err
+	}
+	return syscall.Getsockname(int(file.Fd()))
 }

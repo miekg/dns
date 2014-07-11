@@ -19,15 +19,13 @@ func (s *sessionUDP) RemoteAddr() net.Addr { return s.raddr }
 // setUDPSocketOptions sets the UDP socket options.
 // This function is implemented on a per platform basis. See udp_*.go for more details
 func setUDPSocketOptions(conn *net.UDPConn) error {
-	file, err := conn.File()
+	sa, err := getUDPSocketName(conn)
 	if err != nil {
 		return err
 	}
-
-	sa, err := syscall.Getsockname(int(file.Fd()))
 	switch sa.(type) {
 	case *syscall.SockaddrInet6:
-		v6only, err := getUDPSocketOption6Only(conn)
+		v6only, err := getUDPSocketOptions6Only(conn)
 		if err != nil {
 			return err
 		}
