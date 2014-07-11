@@ -27,13 +27,12 @@ func setUDPSocketOptions(conn *net.UDPConn) error {
 	sa, err := syscall.Getsockname(int(file.Fd()))
 	switch sa.(type) {
 	case *syscall.SockaddrInet6:
-		// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
-		v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
+		v6only, err := getUDPSocketOption6Only(conn)
 		if err != nil {
 			return err
 		}
 		setUDPSocketOptions6(conn)
-		if v6only == 0 {
+		if !v6only {
 			setUDPSocketOptions4(conn)
 		}
 	case *syscall.SockaddrInet4:

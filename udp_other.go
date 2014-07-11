@@ -14,3 +14,5 @@ import (
 
 func setUDPSocketOptions4(conn *net.UDPConn) error { return nil }
 func setUDPSocketOptions6(conn *net.UDPConn) error { return nil }
+
+func getUDPSocketOption6Only(conn *net.UDPConn) (bool, error) { return false, nil }
