@@ -8,6 +8,7 @@ package dns
 
 import (
 	"net"
+	"syscall"
 )
 
 // These do nothing. See udp_linux.go for an example of how to implement this.
