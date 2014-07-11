@@ -17,4 +17,4 @@ import (
 func setUDPSocketOptions4(conn *net.UDPConn) error                { return nil }
 func setUDPSocketOptions6(conn *net.UDPConn) error                { return nil }
 func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error)    { return false, nil }
-func getUDPSocketName(conn *net.UDPConn) (syscal.Sockaddr, error) { return nil, nil }
+func getUDPSocketName(conn *net.UDPConn) (syscall.Sockaddr, error) { return nil, nil }
