@@ -19,6 +19,24 @@ import (
 	"syscall"
 )
 
+// readFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
+// net.UDPAddr.
+func readFromSessionUDP(conn *net.UDPConn, b []byte) (int, *sessionUDP, error) {
+	oob := make([]byte, 40)
+	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
+	if err != nil {
+		return n, nil, err
+	}
+	session := &sessionUDP{raddr, oob[:oobn]}
+	return n, session, err
+}
+
+// writeToSessionUDP acts just like net.UDPConn.WritetTo(), but uses a *sessionUDP instead of a net.Addr.
+func writeToSessionUDP(conn *net.UDPConn, b []byte, session *sessionUDP) (int, error) {
+	n, _, err := conn.WriteMsgUDP(b, session.context, session.raddr)
+	return n, err
+}
+
 // setUDPSocketOptions4 prepares the v4 socket for sessions.
 func setUDPSocketOptions4(conn *net.UDPConn) error {
 	file, err := conn.File()
