@@ -6,10 +6,11 @@
 
 package dns
 
-import (
-	"net"
-	"syscall"
-)
+import "net"
+
+type sessionUDP struct {
+	raddr *net.UDPAddr
+}
 
 // readFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
@@ -18,7 +19,7 @@ func readFromSessionUDP(conn *net.UDPConn, b []byte) (int, *sessionUDP, error) {
 	if err != nil {
 		return n, nil, err
 	}
-	session := &sessionUDP{raddr.(*net.UDPAddr), nil}
+	session := &sessionUDP{raddr.(*net.UDPAddr)}
 	return n, session, err
 }
 
@@ -28,11 +29,10 @@ func writeToSessionUDP(conn *net.UDPConn, b []byte, session *sessionUDP) (int, e
 	return n, err
 }
 
-// These do nothing. See udp_linux.go for an example of how to implement this.
+func (s *sessionUDP) RemoteAddr() net.Addr { return s.raddr }
 
-// We tried to adhire to some kind of naming scheme.
-
-func setUDPSocketOptions4(conn *net.UDPConn) error                 { return nil }
-func setUDPSocketOptions6(conn *net.UDPConn) error                 { return nil }
-func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error)     { return false, nil }
-func getUDPSocketName(conn *net.UDPConn) (syscall.Sockaddr, error) { return nil, nil }
+// setUDPSocketOptions sets the UDP socket options.
+// This function is implemented on a per platform basis. See udp_*.go for more details
+func setUDPSocketOptions(conn *net.UDPConn) error {
+	return nil
+}

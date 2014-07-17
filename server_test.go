@@ -44,36 +44,41 @@ func TestServing(t *testing.T) {
 	time.Sleep(4e8)
 	c := new(Client)
 	m := new(Msg)
-
 	m.SetQuestion("miek.nl.", TypeTXT)
 	r, _, err := c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Fatal("Failed to exchange miek.nl", err)
+		t.Log("Failed to exchange miek.nl", err)
+		t.Fail()
 	}
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello world" {
-		t.Fatal("Unexpected result for miek.nl", txt, "!= Hello world")
+		t.Log("Unexpected result for miek.nl", txt, "!= Hello world")
+		t.Fail()
 	}
 
 	m.SetQuestion("example.com.", TypeTXT)
 	r, _, err = c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Fatal("Failed to exchange example.com", err)
+		t.Log("Failed to exchange example.com", err)
+		t.Fail()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
-		t.Fatal("Unexpected result for example.com", txt, "!= Hello example")
+		t.Log("Unexpected result for example.com", txt, "!= Hello example")
+		t.Fail()
 	}
 
 	// Test Mixes cased as noticed by Ask.
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
 	r, _, err = c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Fatal("Failed to exchange eXaMplE.cOm", err)
+		t.Log("Failed to exchange eXaMplE.cOm", err)
+		t.Fail()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
-		t.Fatal("Unexpected result for example.com", txt, "!= Hello example")
+		t.Log("Unexpected result for example.com", txt, "!= Hello example")
+		t.Fail()
 	}
 }
 
@@ -247,7 +252,8 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err := c.Exchange(m, "127.0.0.1:10000")
 	if err != nil {
-		t.Fatalf("Failed to exchange: %s", err.Error())
+		t.Logf("Failed to exchange: %s", err.Error())
+		t.Fail()
 	}
 	// This must fail
 	M.Lock()
@@ -255,12 +261,14 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err = c.Exchange(m, "127.0.0.1:10000")
 	if err == nil {
-		t.Fatalf("Failed to fail exchange, this should generate packet error")
+		t.Logf("Failed to fail exchange, this should generate packet error")
+		t.Fail()
 	}
 	// But this must work again
 	c.UDPSize = 7000
 	_, _, err = c.Exchange(m, "127.0.0.1:10000")
 	if err != nil {
-		t.Fatalf("Failed to exchange: %s", err.Error())
+		t.Logf("Failed to exchange: %s", err.Error())
+		t.Fail()
 	}
 }
