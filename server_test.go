@@ -45,22 +45,36 @@ func TestServing(t *testing.T) {
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
-	r, _, _ := c.Exchange(m, "127.0.0.1:8053")
+	r, _, err := c.Exchange(m, "127.0.0.1:8053")
+	if err != nil {
+		t.Log("Failed to exchange miek.nl", err)
+		t.Fail()
+	}
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello world" {
 		t.Log("Unexpected result for miek.nl", txt, "!= Hello world")
 		t.Fail()
 	}
+
 	m.SetQuestion("example.com.", TypeTXT)
-	r, _, _ = c.Exchange(m, "127.0.0.1:8053")
+	r, _, err = c.Exchange(m, "127.0.0.1:8053")
+	if err != nil {
+		t.Log("Failed to exchange example.com", err)
+		t.Fail()
+	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
 		t.Log("Unexpected result for example.com", txt, "!= Hello example")
 		t.Fail()
 	}
+
 	// Test Mixes cased as noticed by Ask.
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
-	r, _, _ = c.Exchange(m, "127.0.0.1:8053")
+	r, _, err = c.Exchange(m, "127.0.0.1:8053")
+	if err != nil {
+		t.Log("Failed to exchange eXaMplE.cOm", err)
+		t.Fail()
+	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
 		t.Log("Unexpected result for example.com", txt, "!= Hello example")
