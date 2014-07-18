@@ -15,7 +15,7 @@ import (
 
 // We tried to adhire to some kind of naming scheme.
 
-func setUDPSocketOptions4(conn *net.UDPConn) error                { return nil }
-func setUDPSocketOptions6(conn *net.UDPConn) error                { return nil }
-func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error)    { return false, nil }
+func setUDPSocketOptions4(conn *net.UDPConn) error                 { return nil }
+func setUDPSocketOptions6(conn *net.UDPConn) error                 { return nil }
+func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error)     { return false, nil }
 func getUDPSocketName(conn *net.UDPConn) (syscall.Sockaddr, error) { return nil, nil }
