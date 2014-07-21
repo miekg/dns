@@ -114,6 +114,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 6891 - EDNS0 update
 * 6895 - DNS IANA considerations
 * 7043 - EUI48/EUI64 records
+* 7314 - DNS (EDNS) EXPIRE Option
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
 * xxxx - Algorithm-Signal (draft)
@@ -129,7 +130,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 
 * Support for on-the-fly-signing or check how to do it;
 * Ratelimiting? server side (RRL);
-* Make a srv.Stop() that stops the server;
+* Make a srv.Shutdown() that stops the server;
 * privatekey.Precompute() when signing?
 * Last remaining RRs: APL, ATMA, A6, KEY, SIG and NXT;
 * CAA parsing is broken;
