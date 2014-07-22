@@ -97,9 +97,10 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ActivateAndServe activates a server with a listener, l and p should not both be non-nil.
+// ActivateAndServe activates a server with a listener from systemd, 
+// l and p should not both be non-nil.
 // If both l and p are not nil only p will be used.
-// Invoke handler for incoming queries.
+// Invoke handler for incoming queries. 
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	server := &Server{Listener: l, PacketConn: p, Handler: handler}
 	return server.ActivateAndServe()
@@ -265,7 +266,7 @@ func (srv *Server) ListenAndServe() error {
 }
 
 // ActivateAndServe starts a nameserver with the PacketConn or Listener
-// configured in *Server.
+// configured in *Server. Its main use is to start a server from systemd.
 func (srv *Server) ActivateAndServe() error {
 	if srv.PacketConn != nil {
 		if srv.UDPSize == 0 {
