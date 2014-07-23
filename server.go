@@ -90,11 +90,20 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 
 func failedHandler() Handler { return HandlerFunc(HandleFailed) }
 
-// Start a server on addresss and network speficied. Invoke handler
+// ListenAndServe Starts a server on addresss and network speficied. Invoke handler
 // for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
+}
+
+// ActivateAndServe activates a server with a listener from systemd, 
+// l and p should not both be non-nil.
+// If both l and p are not nil only p will be used.
+// Invoke handler for incoming queries. 
+func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
+	server := &Server{Listener: l, PacketConn: p, Handler: handler}
+	return server.ActivateAndServe()
 }
 
 func (mux *ServeMux) match(q string, t uint16) Handler {
@@ -197,6 +206,10 @@ type Server struct {
 	Addr string
 	// if "tcp" it will invoke a TCP listener, otherwise an UDP one.
 	Net string
+	// TCP Listener to use, this is to aid in systemd's socket activation.
+	Listener net.Listener
+	// UDP "Listener" to use, this is to aid in systemd's socket activation.
+	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
 	// Default buffer size to use to read incoming UDP messages. If not set
@@ -250,6 +263,28 @@ func (srv *Server) ListenAndServe() error {
 		return srv.serveUDP(l)
 	}
 	return &Error{err: "bad network"}
+}
+
+// ActivateAndServe starts a nameserver with the PacketConn or Listener
+// configured in *Server. Its main use is to start a server from systemd.
+func (srv *Server) ActivateAndServe() error {
+	if srv.PacketConn != nil {
+		if srv.UDPSize == 0 {
+			srv.UDPSize = MinMsgSize
+		}
+		if t, ok := srv.PacketConn.(*net.UDPConn); ok {
+			if e := setUDPSocketOptions(t); e != nil {
+				return e
+			}
+			return srv.serveUDP(t)
+		}
+	}
+	if srv.Listener != nil {
+		if t, ok := srv.Listener.(*net.TCPListener); ok {
+			return srv.serveTCP(t)
+		}
+	}
+	return &Error{err: "bad listeners"}
 }
 
 // serveTCP starts a TCP listener for the server.
