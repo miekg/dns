@@ -489,9 +489,8 @@ func (w *response) Write(m []byte) (int, error) {
 func (w *response) LocalAddr() net.Addr { 
 	if w.tcp != nil {
 		return w.tcp.LocalAddr()
-	} else {
-		return w.udp.LocalAddr()
 	}
+	return w.udp.LocalAddr()
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
