@@ -99,10 +99,10 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ActivateAndServe activates a server with a listener from systemd, 
+// ActivateAndServe activates a server with a listener from systemd,
 // l and p should not both be non-nil.
 // If both l and p are not nil only p will be used.
-// Invoke handler for incoming queries. 
+// Invoke handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	server := &Server{Listener: l, PacketConn: p, Handler: handler}
 	return server.ActivateAndServe()
@@ -486,7 +486,7 @@ func (w *response) Write(m []byte) (int, error) {
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
-func (w *response) LocalAddr() net.Addr { 
+func (w *response) LocalAddr() net.Addr {
 	if w.tcp != nil {
 		return w.tcp.LocalAddr()
 	}
