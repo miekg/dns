@@ -21,6 +21,8 @@ type Handler interface {
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
+	// LocalAddr returns the net.Addr of the server
+	LocalAddr() net.Addr
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
 	// WriteMsg writes a reply back to the client.
@@ -481,6 +483,15 @@ func (w *response) Write(m []byte) (int, error) {
 		return int(n), err
 	}
 	panic("not reached")
+}
+
+// LocalAddr implements the ResponseWriter.LocalAddr method.
+func (w *response) LocalAddr() net.Addr { 
+	if w.tcp != nil {
+		return w.tcp.LocalAddr()
+	} else {
+		return w.udp.LocalAddr()
+	}
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
