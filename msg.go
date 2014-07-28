@@ -14,15 +14,14 @@
 package dns
 
 import (
+	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"net"
 	"reflect"
 	"strconv"
-	"time"
 )
 
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
@@ -1783,9 +1782,14 @@ func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
 }
 
 // Id return a 16 bits random number to be used as a
-// message id. The random provided should be good enough.
+// message id. Use cryptographic random generator.
 func Id() uint16 {
-	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
+	var buf [2]byte
+	_, e := rand.Read(buf[:])
+	if e != nil {
+		panic(e)
+	}
+	return uint16(buf[0]) | (uint16(buf[1]) << 8)
 }
 
 // Copy returns a new RR which is a deep-copy of r.
