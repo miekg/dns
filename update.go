@@ -17,11 +17,11 @@
 //
 //   CLASS    TYPE     RDATA    Meaning                    Function
 //   --------------------------------------------------------------
-//   ANY      ANY      empty    Name is in use             NameUsed
-//   ANY      rrset    empty    RRset exists (value indep) RRsetUsed
-//   NONE     ANY      empty    Name is not in use         NameNotUsed
-//   NONE     rrset    empty    RRset does not exist       RRsetNotUsed
-//   zone     rrset    rr       RRset exists (value dep)   Used
+//   ANY      ANY      empty    Name is in use             dns.NameUsed
+//   ANY      rrset    empty    RRset exists (value indep) dns.RRsetUsed
+//   NONE     ANY      empty    Name is not in use         dns.NameNotUsed
+//   NONE     rrset    empty    RRset does not exist       dns.RRsetNotUsed
+//   zone     rrset    rr       RRset exists (value dep)   dns.Used
 //
 // The prerequisite section can also be left empty.
 // If you have decided on the prerequisites you can tell what RRs should
@@ -32,10 +32,10 @@
 //
 //   CLASS    TYPE     RDATA    Meaning                     Function
 //   ---------------------------------------------------------------
-//   ANY      ANY      empty    Delete all RRsets from name RemoveName
-//   ANY      rrset    empty    Delete an RRset             RemoveRRset
-//   NONE     rrset    rr       Delete an RR from RRset     Remove
-//   zone     rrset    rr       Add to an RRset             Insert
+//   ANY      ANY      empty    Delete all RRsets from name dns.RemoveName
+//   ANY      rrset    empty    Delete an RRset             dns.RemoveRRset
+//   NONE     rrset    rr       Delete an RR from RRset     dns.Remove
+//   zone     rrset    rr       Add to an RRset             dns.Insert
 //
 package dns
 

@@ -53,7 +53,10 @@ var (
 
 // Id, by default, returns a 16 bits random number to be used as a
 // message id. The random provided should be good enough. This being a
-// variable the function can be overridden with another implementation.
+// variable the function can be reassigned to a custom function.
+// For instance, to make it return a static value:
+//
+//	dns.Id = func() uint16 { return 3 }
 var Id func() uint16 = id
 
 // A manually-unpacked version of (id, bits).

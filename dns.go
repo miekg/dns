@@ -49,7 +49,7 @@
 // The following is slightly more verbose, but more flexible:
 //
 //      m1 := new(dns.Msg)
-//      m1.Id = Id()
+//      m1.Id = dns.Id()
 //      m1.RecursionDesired = true
 //      m1.Question = make([]Question, 1)
 //      m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
@@ -58,7 +58,7 @@
 // Basic use pattern for synchronous querying the DNS at a
 // server configured on 127.0.0.1 and port 53:
 //
-//      c := new(Client)
+//      c := new(dns.Client)
 //      in, rtt, err := c.Exchange(m1, "127.0.0.1:53")
 //
 // Suppressing
@@ -96,7 +96,6 @@
 //
 // For domain names, in addition to the above rules brackets, periods,
 // spaces, semicolons and the at symbol are escaped.
-//
 package dns
 
 import (
@@ -181,7 +180,7 @@ func (h *RR_Header) len() int {
 	return l
 }
 
-// find best matching pattern for zone
+// Find best matching pattern for zone.
 func zoneMatch(pattern, zone string) (ok bool) {
 	if len(pattern) == 0 {
 		return
