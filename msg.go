@@ -51,6 +51,11 @@ var (
 	ErrRRset     error = &Error{err: "bad rrset"}
 )
 
+// Id, by default, returns a 16 bits random number to be used as a
+// message id. The random provided should be good enough. This being a
+// variable the function can be overridden with another implementation.
+var Id func() uint16 = id
+
 // A manually-unpacked version of (id, bits).
 // This is in its own struct for easy printing.
 type MsgHdr struct {
@@ -1782,9 +1787,9 @@ func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
 	return 0, false
 }
 
-// Id return a 16 bits random number to be used as a
+// id returns a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
-func Id() uint16 {
+func id() uint16 {
 	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
 }
 
