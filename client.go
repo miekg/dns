@@ -19,8 +19,8 @@ const tcpIdleTimeout time.Duration = 8 * time.Second
 // A Conn represents a connection to a DNS server.
 type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
-	UDPSize        uint16            // Minimum receive buffer for UDP messages
-	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	UDPSize        uint16            // minimum receive buffer for UDP messages
+	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	rtt            time.Duration
 	t              time.Time
 	tsigRequestMAC string
@@ -29,7 +29,7 @@ type Conn struct {
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	UDPSize        uint16            // Minimum receive buffer for UDP messages
+	UDPSize        uint16            // minimum receive buffer for UDP messages
 	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
@@ -41,6 +41,14 @@ type Client struct {
 // Exchange performs a synchronous UDP query. It sends the message m to the address
 // contained in a and waits for an reply. Exchange does not retry a failed query, nor
 // will it fall back to TCP in case of truncation.
+// If you need to send a DNS message on an already existing connection, you can use the
+// following:
+//
+//	co := &dns.Conn{Conn: c} // c is your net.Conn
+//	co.WriteMsg(m)
+//	in, err  := co.ReadMsg()
+//	co.Close()
+//
 func Exchange(m *Msg, a string) (r *Msg, err error) {
 	var co *Conn
 	co, err = DialTimeout("udp", a, dnsTimeout)
@@ -137,11 +145,11 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	co.SetWriteDeadline(time.Now().Add(timeout))
 	defer co.Close()
 	opt := m.IsEdns0()
-	// If EDNS0 is used use that for size
+	// If EDNS0 is used use that for size.
 	if opt != nil && opt.UDPSize() >= MinMsgSize {
 		co.UDPSize = opt.UDPSize()
 	}
-	// Otherwise use the client's configured UDP size
+	// Otherwise use the client's configured UDP size.
 	if opt == nil && c.UDPSize >= MinMsgSize {
 		co.UDPSize = c.UDPSize
 	}
