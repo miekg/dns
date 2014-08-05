@@ -53,7 +53,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 
 Have fun!
 
-Miek Gieben  -  2010-2012  -  miek@miek.nl
+Miek Gieben  -  2010-2012  -  <miek@miek.nl>
 
 # Building
 
@@ -135,3 +135,4 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * Last remaining RRs: APL, ATMA, A6, KEY, SIG and NXT;
 * CAA parsing is broken;
 * Replies with TC bit are not parsed to the end.
+* SIG(0)
