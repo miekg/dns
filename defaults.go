@@ -18,6 +18,7 @@ const hexDigit = "0123456789abcdef"
 func (dns *Msg) SetReply(request *Msg) *Msg {
 	dns.Id = request.Id
 	dns.RecursionDesired = request.RecursionDesired // Copy rd bit
+	dns.CheckingDisabled = request.CheckingDisabled // Copy cd bit
 	dns.Response = true
 	dns.Opcode = OpcodeQuery
 	dns.Rcode = RcodeSuccess
