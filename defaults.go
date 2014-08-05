@@ -14,7 +14,7 @@ const hexDigit = "0123456789abcdef"
 
 // Everything is assumed in ClassINET.
 
-// SetReply creates a reply packet from a request message.
+// SetReply creates a reply message from a request message.
 func (dns *Msg) SetReply(request *Msg) *Msg {
 	dns.Id = request.Id
 	dns.RecursionDesired = request.RecursionDesired // Copy rd bit
@@ -28,7 +28,7 @@ func (dns *Msg) SetReply(request *Msg) *Msg {
 	return dns
 }
 
-// SetQuestion creates a question packet.
+// SetQuestion creates a question message.
 func (dns *Msg) SetQuestion(z string, t uint16) *Msg {
 	dns.Id = Id()
 	dns.RecursionDesired = true
@@ -37,7 +37,7 @@ func (dns *Msg) SetQuestion(z string, t uint16) *Msg {
 	return dns
 }
 
-// SetNotify creates a notify packet.
+// SetNotify creates a notify message.
 func (dns *Msg) SetNotify(z string) *Msg {
 	dns.Opcode = OpcodeNotify
 	dns.Authoritative = true
@@ -47,14 +47,14 @@ func (dns *Msg) SetNotify(z string) *Msg {
 	return dns
 }
 
-// SetRcode creates an error packet suitable for the request.
+// SetRcode creates an error message suitable for the request.
 func (dns *Msg) SetRcode(request *Msg, rcode int) *Msg {
 	dns.SetReply(request)
 	dns.Rcode = rcode
 	return dns
 }
 
-// SetRcodeFormatError creates a packet with FormError set.
+// SetRcodeFormatError creates a message with FormError set.
 func (dns *Msg) SetRcodeFormatError(request *Msg) *Msg {
 	dns.Rcode = RcodeFormatError
 	dns.Opcode = OpcodeQuery
@@ -64,7 +64,7 @@ func (dns *Msg) SetRcodeFormatError(request *Msg) *Msg {
 	return dns
 }
 
-// SetUpdate makes the message a dynamic update packet. It
+// SetUpdate makes the message a dynamic update message. It
 // sets the ZONE section to: z, TypeSOA, ClassINET.
 func (dns *Msg) SetUpdate(z string) *Msg {
 	dns.Id = Id()
@@ -76,7 +76,7 @@ func (dns *Msg) SetUpdate(z string) *Msg {
 	return dns
 }
 
-// SetIxfr creates dns.Msg for requesting an IXFR.
+// SetIxfr creates message for requesting an IXFR.
 func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	dns.Id = Id()
 	dns.Question = make([]Question, 1)
@@ -89,7 +89,7 @@ func (dns *Msg) SetIxfr(z string, serial uint32) *Msg {
 	return dns
 }
 
-// SetAxfr creates dns.Msg for requesting an AXFR.
+// SetAxfr creates message for requesting an AXFR.
 func (dns *Msg) SetAxfr(z string) *Msg {
 	dns.Id = Id()
 	dns.Question = make([]Question, 1)
