@@ -136,6 +136,7 @@ var TypeToString = map[uint16]string{
 	TypeNSEC:       "NSEC",
 	TypeNULL:       "NULL",
 	TypeOPT:        "OPT",
+	TypeOPENPGPKEY: "OPENPGPKEY",
 	TypePTR:        "PTR",
 	TypeRKEY:       "RKEY",
 	TypeRP:         "RP",

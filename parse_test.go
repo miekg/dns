@@ -529,18 +529,22 @@ func TestParseFailure(t *testing.T) {
 }
 
 func TestZoneParsing(t *testing.T) {
-	f, err := os.Open("test.db")
+	f, err := os.Open("parse_test.db")
 	if err != nil {
 		return
 	}
 	defer f.Close()
 	start := time.Now().UnixNano()
-	to := ParseZone(f, "", "test.db")
+	to := ParseZone(f, "", "parse_test.db")
 	var i int
 	for x := range to {
-		x = x
-		//t.Logf("%s\n", x.RR)
 		i++
+		if x.Error != nil {
+			t.Logf("%s\n", x.Error)
+			t.Fail()
+			continue
+		}
+		t.Logf("%s\n", x.RR)
 	}
 	delta := time.Now().UnixNano() - start
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))

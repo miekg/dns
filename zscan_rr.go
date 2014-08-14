@@ -180,6 +180,8 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return setUINFO(h, c, f)
 	case TypeCERT:
 		return setCERT(h, c, f)
+	case TypeOPENPGPKEY:
+		return setOPENPGPKEY(h, c, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
 		return setRFC3597(h, c, f)
@@ -1124,6 +1126,18 @@ func setCERT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 		return nil, e, c1
 	}
 	rr.Certificate = s
+	return rr, nil, c1
+}
+
+func setOPENPGPKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+	rr := new(OPENPGPKEY)
+	rr.Hdr = h
+
+	s, e, c1 := endingToString(c, "bad OPENPGPKEY PublicKey", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.PublicKey = s
 	return rr, nil, c1
 }
 
