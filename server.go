@@ -302,8 +302,8 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-// Shutdown shuts down a server. When Shutdown returns all currently in progress
-// queries have been answered and all started goroutines have been stopped.
+// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
+// ActivateAndServe will return.
 func (srv *Server) Shutdown() {
 	srv.stopTCP <- true
 	srv.stopUDP <- true
