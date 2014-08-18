@@ -217,13 +217,13 @@ type Server struct {
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
-	// The net.Conn.SetReadTimeout value for new connections, defaults to 2 seconds.
+	// The net.Conn.SetReadTimeout value for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
-	// The net.Conn.SetWriteTimeout value for new connections, defaults to 2 seconds.
+	// The net.Conn.SetWriteTimeout value for new connections, defaults to 2 * time.Second.
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// Listener deadline timeout, defaults to 2 seconds.
+	// Listener deadline timeout, defaults to 1 * time.Second.
 	Deadline time.Duration
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
@@ -321,7 +321,12 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	if srv.ReadTimeout != 0 {
 		rtimeout = srv.ReadTimeout
 	}
+	deadline := 1 * time.Second
+	if srv.Deadline != 0 {
+		deadline = srv.Deadline
+	}
 	for {
+		l.SetDeadline(time.Now().Add(deadline))
 		rw, e := l.AcceptTCP()
 		select {
 		case <-srv.stopTCP:
@@ -355,7 +360,12 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	if srv.ReadTimeout != 0 {
 		rtimeout = srv.ReadTimeout
 	}
+	deadline := 1 * time.Second
+	if srv.Deadline != 0 {
+		deadline = srv.Deadline
+	}
 	for {
+		l.SetDeadline(time.Now().Add(deadline))
 		m, s, e := srv.readUDP(l, rtimeout)
 		select {
 		case <-srv.stopUDP:
