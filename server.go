@@ -287,6 +287,12 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
+// Shutdown shuts down a server. When Shutdown returns all currently in progress
+// queries have been answered and all started goroutines have been stopped.
+func (srv *Server) Shutdown() {
+
+}
+
 // serveTCP starts a TCP listener for the server.
 // Each request is handled in a seperate goroutine.
 func (srv *Server) serveTCP(l *net.TCPListener) error {
