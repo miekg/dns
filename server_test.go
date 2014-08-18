@@ -48,7 +48,7 @@ func TestServing(t *testing.T) {
 	r, _, err := c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
 		t.Log("Failed to exchange miek.nl", err)
-		t.Fail()
+		t.Fatal()
 	}
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello world" {
@@ -60,7 +60,7 @@ func TestServing(t *testing.T) {
 	r, _, err = c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
 		t.Log("Failed to exchange example.com", err)
-		t.Fail()
+		t.Fatal()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
