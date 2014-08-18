@@ -225,8 +225,6 @@ type Server struct {
 	IdleTimeout func() time.Duration
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
-	// If true use a pool to recycle buffers for UDP queries, this is now a noop.
-	Pool bool
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
