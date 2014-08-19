@@ -287,7 +287,7 @@ func TestShutdownTCP(t *testing.T) {
 	}()
 	time.Sleep(4e8)
 	server.Shutdown()
-	time.Sleep(4e8)
+	time.Sleep(1e9)
 }
 
 func TestShutdownUDP(t *testing.T) {
@@ -302,5 +302,5 @@ func TestShutdownUDP(t *testing.T) {
 	}()
 	time.Sleep(4e8)
 	server.Shutdown()
-	time.Sleep(4e8)
+	time.Sleep(1e9)
 }

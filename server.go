@@ -304,15 +304,14 @@ func (srv *Server) ActivateAndServe() error {
 // ActivateAndServe will return.
 func (srv *Server) Shutdown() {
 	c := new(Client)
+	c.Net = srv.Net
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		c.Net = "tcp"
 		go func() { srv.stopTCP <- true }()
-		c.Exchange(new(Msg), srv.Addr)
 	case "udp", "udp4", "udp6":
 		go func() { srv.stopUDP <- true }()
-		c.Exchange(new(Msg), srv.Addr)
 	}
+	c.Exchange(new(Msg), srv.Addr)
 }
 
 // serveTCP starts a TCP listener for the server.
