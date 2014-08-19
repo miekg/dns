@@ -274,7 +274,7 @@ func TestServingLargeResponses(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	server := Server{Addr: ":8053", Net: "tcp"}
+	server := Server{Addr: ":8055", Net: "tcp"}
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
@@ -290,7 +290,7 @@ func TestShutdownTCP(t *testing.T) {
 
 // TODO(miek): does not work for udp
 func TestShutdownUDP(t *testing.T) {
-	server := Server{Addr: ":8053", Net: "udp"}
+	server := Server{Addr: ":8054", Net: "udp"}
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
