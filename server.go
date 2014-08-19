@@ -223,8 +223,6 @@ type Server struct {
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// Listener deadline timeout, defaults to 1 * time.Second.
-	Deadline time.Duration
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
 
@@ -305,12 +303,15 @@ func (srv *Server) ActivateAndServe() error {
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
 func (srv *Server) Shutdown() {
+	c := new(Client)
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		srv.stopTCP <- true
+		c.Net = "tcp"
+		go func() { srv.stopTCP <- true }()
+		c.Exchange(new(Msg), srv.Addr)
 	case "udp", "udp4", "udp6":
-		// TODO(miek): does not work for udp
-	//		srv.stopUDP <- true
+		go func() { srv.stopUDP <- true }()
+		c.Exchange(new(Msg), srv.Addr)
 	}
 }
 
@@ -326,12 +327,7 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	if srv.ReadTimeout != 0 {
 		rtimeout = srv.ReadTimeout
 	}
-	deadline := 1 * time.Second
-	if srv.Deadline != 0 {
-		deadline = srv.Deadline
-	}
 	for {
-		l.SetDeadline(time.Now().Add(deadline))
 		rw, e := l.AcceptTCP()
 		select {
 		case <-srv.stopTCP:
@@ -365,12 +361,8 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	if srv.ReadTimeout != 0 {
 		rtimeout = srv.ReadTimeout
 	}
-	deadline := 1 * time.Second
-	if srv.Deadline != 0 {
-		deadline = srv.Deadline
-	}
+	// deadline is not used here
 	for {
-		l.SetDeadline(time.Now().Add(deadline))
 		m, s, e := srv.readUDP(l, rtimeout)
 		select {
 		case <-srv.stopUDP:
@@ -488,7 +480,6 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *sessionUDP, error) {
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
-	// TODO(miek): deadline and timeout seem not to be honered
 	n, s, e := readFromSessionUDP(conn, m)
 	if e != nil || n == 0 {
 		if e != nil {

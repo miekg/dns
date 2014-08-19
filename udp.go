@@ -49,8 +49,7 @@ func readFromSessionUDP(conn *net.UDPConn, b []byte) (int, *sessionUDP, error) {
 	if err != nil {
 		return n, nil, err
 	}
-	session := &sessionUDP{raddr, oob[:oobn]}
-	return n, session, err
+	return n, &sessionUDP{raddr, oob[:oobn]}, err
 }
 
 // writeToSessionUDP acts just like net.UDPConn.WritetTo(), but uses a *sessionUDP instead of a net.Addr.

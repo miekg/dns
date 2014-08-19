@@ -273,6 +273,8 @@ func TestServingLargeResponses(t *testing.T) {
 	}
 }
 
+// TODO(miek): These tests should actually fail when the server does
+// not shut down.
 func TestShutdownTCP(t *testing.T) {
 	server := Server{Addr: ":8055", Net: "tcp"}
 	go func() {
@@ -285,10 +287,9 @@ func TestShutdownTCP(t *testing.T) {
 	}()
 	time.Sleep(4e8)
 	server.Shutdown()
-	time.Sleep(1 * time.Second)
+	time.Sleep(4e8)
 }
 
-// TODO(miek): does not work for udp
 func TestShutdownUDP(t *testing.T) {
 	server := Server{Addr: ":8054", Net: "udp"}
 	go func() {
@@ -301,5 +302,5 @@ func TestShutdownUDP(t *testing.T) {
 	}()
 	time.Sleep(4e8)
 	server.Shutdown()
-	time.Sleep(1 * time.Second)
+	time.Sleep(4e8)
 }
