@@ -47,7 +47,7 @@ func TestServing(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeTXT)
 	r, _, err := c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Log("Failed to exchange miek.nl", err)
+		t.Log("failed to exchange miek.nl", err)
 		t.Fatal()
 	}
 	txt := r.Extra[0].(*TXT).Txt[0]
@@ -59,7 +59,7 @@ func TestServing(t *testing.T) {
 	m.SetQuestion("example.com.", TypeTXT)
 	r, _, err = c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Log("Failed to exchange example.com", err)
+		t.Log("failed to exchange example.com", err)
 		t.Fatal()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
@@ -72,7 +72,7 @@ func TestServing(t *testing.T) {
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
 	r, _, err = c.Exchange(m, "127.0.0.1:8053")
 	if err != nil {
-		t.Log("Failed to exchange eXaMplE.cOm", err)
+		t.Log("failed to exchange eXaMplE.cOm", err)
 		t.Fail()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
@@ -252,7 +252,7 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err := c.Exchange(m, "127.0.0.1:10000")
 	if err != nil {
-		t.Logf("Failed to exchange: %s", err.Error())
+		t.Logf("failed to exchange: %s", err.Error())
 		t.Fail()
 	}
 	// This must fail
@@ -261,14 +261,28 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err = c.Exchange(m, "127.0.0.1:10000")
 	if err == nil {
-		t.Logf("Failed to fail exchange, this should generate packet error")
+		t.Logf("failed to fail exchange, this should generate packet error")
 		t.Fail()
 	}
 	// But this must work again
 	c.UDPSize = 7000
 	_, _, err = c.Exchange(m, "127.0.0.1:10000")
 	if err != nil {
-		t.Logf("Failed to exchange: %s", err.Error())
+		t.Logf("failed to exchange: %s", err.Error())
 		t.Fail()
 	}
+}
+
+func TestShutdown(t *testing.T) {
+	server := Server{Addr: ":8053", Net: "udp"}
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			t.Logf("failed to setup the udp server: %s\n", err.Error())
+			t.Fail()
+		}
+		t.Logf("successfully stopped the server")
+	}()
+	time.Sleep(4e8)
+	server.Shutdown()
 }

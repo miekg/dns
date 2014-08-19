@@ -21,12 +21,12 @@ func TestPackUnpack(t *testing.T) {
 	out.Answer[0] = key
 	msg, err := out.Pack()
 	if err != nil {
-		t.Log("Failed to pack msg with DNSKEY")
+		t.Log("failed to pack msg with DNSKEY")
 		t.Fail()
 	}
 	in := new(Msg)
 	if in.Unpack(msg) != nil {
-		t.Log("Failed to unpack msg with DNSKEY")
+		t.Log("failed to unpack msg with DNSKEY")
 		t.Fail()
 	}
 
@@ -39,12 +39,12 @@ func TestPackUnpack(t *testing.T) {
 	out.Answer[0] = sig
 	msg, err = out.Pack()
 	if err != nil {
-		t.Log("Failed to pack msg with RRSIG")
+		t.Log("failed to pack msg with RRSIG")
 		t.Fail()
 	}
 
 	if in.Unpack(msg) != nil {
-		t.Log("Failed to unpack msg with RRSIG")
+		t.Log("failed to unpack msg with RRSIG")
 		t.Fail()
 	}
 }
@@ -94,7 +94,7 @@ func TestPackUnpack3(t *testing.T) {
 	m.Answer[0] = rr
 	b, err := m.Pack()
 	if err != nil {
-		t.Log("Packing failed: " + err.Error())
+		t.Log("packing failed: " + err.Error())
 		t.Fail()
 		return
 	}
@@ -102,7 +102,7 @@ func TestPackUnpack3(t *testing.T) {
 	var unpackMsg Msg
 	err = unpackMsg.Unpack(b)
 	if err != nil {
-		t.Log("UnPacking failed")
+		t.Log("unpacking failed")
 		t.Fail()
 		return
 	}
@@ -146,12 +146,12 @@ func TestPack(t *testing.T) {
 	for _, r := range rr {
 		m.Answer[0], err = NewRR(r)
 		if err != nil {
-			t.Logf("Failed to create RR: %s\n", err.Error())
+			t.Logf("failed to create RR: %s\n", err.Error())
 			t.Fail()
 			continue
 		}
 		if _, err := m.Pack(); err != nil {
-			t.Logf("Packing failed: %s\n", err.Error())
+			t.Logf("packing failed: %s\n", err.Error())
 			t.Fail()
 		}
 	}
@@ -164,19 +164,19 @@ func TestPack(t *testing.T) {
 	// This crashes due to the fact the a.ntpns.org isn't a FQDN
 	// How to recover() from a remove panic()?
 	if _, err := x.Pack(); err == nil {
-		t.Log("Packing should fail")
+		t.Log("packing should fail")
 		t.Fail()
 	}
 	x.Answer = make([]RR, 1)
 	x.Answer[0], err = NewRR(rr[0])
 	if _, err := x.Pack(); err == nil {
-		t.Log("Packing should fail")
+		t.Log("packing should fail")
 		t.Fail()
 	}
 	x.Question = make([]Question, 1)
 	x.Question[0] = Question{";sd#eddddséâèµâââ¥âxzztsestxssweewwsssstx@s@Zåµe@cn.pool.ntp.org.", TypeA, ClassINET}
 	if _, err := x.Pack(); err == nil {
-		t.Log("Packing should fail")
+		t.Log("packing should fail")
 		t.Fail()
 	}
 }
@@ -190,11 +190,11 @@ func TestPackNAPTR(t *testing.T) {
 		rr, _ := NewRR(n)
 		msg := make([]byte, rr.len())
 		if off, err := PackRR(rr, msg, 0, nil, false); err != nil {
-			t.Logf("Packing failed: %s", err.Error())
-			t.Logf("Length %d, need more than %d\n", rr.len(), off)
+			t.Logf("packing failed: %s", err.Error())
+			t.Logf("length %d, need more than %d\n", rr.len(), off)
 			t.Fail()
 		} else {
-			t.Logf("Buf size needed: %d\n", off)
+			t.Logf("buf size needed: %d\n", off)
 		}
 	}
 }
@@ -205,7 +205,7 @@ func TestCompressLength(t *testing.T) {
 	ul := m.Len()
 	m.Compress = true
 	if ul != m.Len() {
-		t.Fatalf("Should be equal")
+		t.Fatalf("should be equal")
 	}
 }
 
@@ -236,7 +236,7 @@ func TestMsgCompressLength(t *testing.T) {
 			t.Fail()
 		}
 		if predicted < len(buf) {
-			t.Errorf("Predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d\n",
+			t.Errorf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d\n",
 				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 			t.Fail()
 		}
@@ -268,7 +268,7 @@ func TestMsgLength(t *testing.T) {
 			t.Fail()
 		}
 		if predicted < len(buf) {
-			t.Errorf("Predicted length is wrong: predicted %s (len=%d), actual %d\n",
+			t.Errorf("predicted length is wrong: predicted %s (len=%d), actual %d\n",
 				msg.Question[0].Name, predicted, len(buf))
 			t.Fail()
 		}
@@ -433,7 +433,7 @@ func TestNoRdataPack(t *testing.T) {
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
 		_, e := PackRR(r, data, 0, nil, false)
 		if e != nil {
-			t.Logf("Failed to pack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
+			t.Logf("failed to pack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
 			t.Fail()
 		}
 	}
@@ -457,7 +457,7 @@ func TestNoRdataUnpack(t *testing.T) {
 		}
 		rr, _, e := UnpackRR(data[:off], 0)
 		if e != nil {
-			t.Logf("Failed to unpack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
+			t.Logf("failed to unpack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
 			t.Fail()
 		}
 		t.Logf("%s\n", rr)
@@ -472,11 +472,11 @@ func TestRdataOverflow(t *testing.T) {
 	rr.Rdata = hex.EncodeToString(make([]byte, 0xFFFF))
 	buf := make([]byte, 0xFFFF*2)
 	if _, err := PackRR(rr, buf, 0, nil, false); err != nil {
-		t.Fatalf("Maximum size rrdata pack failed: %v", err)
+		t.Fatalf("maximum size rrdata pack failed: %v", err)
 	}
 	rr.Rdata += "00"
 	if _, err := PackRR(rr, buf, 0, nil, false); err != ErrRdata {
-		t.Fatalf("Oversize rrdata pack didn't return ErrRdata - instead: %v", err)
+		t.Fatalf("oversize rrdata pack didn't return ErrRdata - instead: %v", err)
 	}
 }
 

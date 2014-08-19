@@ -31,7 +31,7 @@ func TestClientSync(t *testing.T) {
 	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("Failed to get an valid answer")
+		t.Log("failed to get an valid answer")
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
@@ -47,7 +47,7 @@ func TestClientEDNS0(t *testing.T) {
 	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("Failed to get an valid answer")
+		t.Log("failed to get an valid answer")
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
@@ -79,7 +79,7 @@ Loop:
 				first = rtt
 			} else {
 				if first != rtt {
-					t.Log("All rtt should be equal")
+					t.Log("all rtts should be equal")
 					t.Fail()
 				}
 			}
@@ -101,12 +101,12 @@ func TestClientTsigAXFR(t *testing.T) {
 	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 
 	if a, err := tr.In(m, "176.58.119.54:53"); err != nil {
-		t.Log("Failed to setup axfr: " + err.Error())
+		t.Log("failed to setup axfr: " + err.Error())
 		t.Fatal()
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Logf("Error %s\n", ex.Error.Error())
+				t.Logf("error %s\n", ex.Error.Error())
 				t.Fail()
 				break
 			}
