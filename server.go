@@ -300,8 +300,9 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return.
+// Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
+// ActivateAndServe will return. All in progress queries are completed before the server
+// is taken down.
 func (srv *Server) Shutdown() {
 	c := new(Client)
 	c.Net = srv.Net
