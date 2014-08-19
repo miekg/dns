@@ -305,8 +305,13 @@ func (srv *Server) ActivateAndServe() error {
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
 func (srv *Server) Shutdown() {
-	srv.stopTCP <- true
-	srv.stopUDP <- true
+	switch srv.Net {
+	case "tcp", "tcp4", "tcp6":
+		srv.stopTCP <- true
+	case "udp", "udp4", "udp6":
+		// TODO(miek): does not work for udp
+	//		srv.stopUDP <- true
+	}
 }
 
 // serveTCP starts a TCP listener for the server.
@@ -481,7 +486,9 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 }
 
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *sessionUDP, error) {
+	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
+	// TODO(miek): deadline and timeout seem not to be honered
 	n, s, e := readFromSessionUDP(conn, m)
 	if e != nil || n == 0 {
 		if e != nil {

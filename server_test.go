@@ -273,7 +273,23 @@ func TestServingLargeResponses(t *testing.T) {
 	}
 }
 
-func TestShutdown(t *testing.T) {
+func TestShutdownTCP(t *testing.T) {
+	server := Server{Addr: ":8053", Net: "tcp"}
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			t.Logf("failed to setup the tcp server: %s\n", err.Error())
+			t.Fail()
+		}
+		t.Logf("successfully stopped the tcp server")
+	}()
+	time.Sleep(4e8)
+	server.Shutdown()
+	time.Sleep(1 * time.Second)
+}
+
+// TODO(miek): does not work for udp
+func TestShutdownUDP(t *testing.T) {
 	server := Server{Addr: ":8053", Net: "udp"}
 	go func() {
 		err := server.ListenAndServe()
@@ -281,8 +297,9 @@ func TestShutdown(t *testing.T) {
 			t.Logf("failed to setup the udp server: %s\n", err.Error())
 			t.Fail()
 		}
-		t.Logf("successfully stopped the server")
+		t.Logf("successfully stopped the udp server")
 	}()
 	time.Sleep(4e8)
 	server.Shutdown()
+	time.Sleep(1 * time.Second)
 }
