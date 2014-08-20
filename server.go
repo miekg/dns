@@ -302,8 +302,8 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return. All in progress queries are completed before the server
-// is taken down.
-func (srv *Server) Shutdown() {
+// is taken down. If the Shutdown was not succesful an error is returned.
+func (srv *Server) Shutdown() error {
 	c := new(Client)
 	c.Net = srv.Net
 	switch srv.Net {
@@ -313,6 +313,7 @@ func (srv *Server) Shutdown() {
 		go func() { srv.stopUDP <- true }()
 	}
 	c.Exchange(new(Msg), srv.Addr)
+	return nil
 }
 
 // serveTCP starts a TCP listener for the server.
