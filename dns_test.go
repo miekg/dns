@@ -316,7 +316,7 @@ func TestMsgLength2(t *testing.T) {
 	}
 }
 
-func testMsgLengthCompressionMalformed(t *testing.T) {
+func TestMsgLengthCompressionMalformed(t *testing.T) {
 	// SOA with empty hostmaster, which is illegal
 	soa := &SOA{Hdr: RR_Header{Name: ".", Rrtype: TypeSOA, Class: ClassINET, Ttl: 12345},
         Ns:      ".",
@@ -329,7 +329,7 @@ func testMsgLengthCompressionMalformed(t *testing.T) {
 	m := new(Msg)
 	m.Compress = true
 	m.Ns = []RR{soa}
-	m.Len()
+	m.Len() // Should not crash.
 }
 
 func BenchmarkMsgLength(b *testing.B) {

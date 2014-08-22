@@ -1702,6 +1702,9 @@ func compressionLenHelper(c map[string]int, s string) {
 func compressionLenSearch(c map[string]int, s string) (int, bool) {
 	off := 0
 	end := false
+	if s == "" { // don't bork on bogus data
+		return 0, false
+	}
 	for {
 		if _, ok := c[s[off:]]; ok {
 			return len(s[off:]), true
