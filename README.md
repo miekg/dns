@@ -128,11 +128,9 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 
 ## TODO
 
-* Support for on-the-fly-signing or check how to do it;
-* Ratelimiting? server side (RRL);
-* Make a srv.Shutdown() that stops the server;
 * privatekey.Precompute() when signing?
-* Last remaining RRs: APL, ATMA, A6, KEY, SIG and NXT;
+* Last remaining RRs: APL, ATMA, A6 and NXT;
 * CAA parsing is broken;
 * Replies with TC bit are not parsed to the end.
 * SIG(0)
+* Make tests run faster by removing the time.Sleep()s
