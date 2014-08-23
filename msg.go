@@ -860,7 +860,7 @@ func packStructCompress(any interface{}, msg []byte, off int, compression map[st
 	return off, err
 }
 
-// TODO(mg): Fix use of rdlength here
+// TODO(miek): Fix use of rdlength here
 
 // Unpack a reflect.StructValue from msg.
 // Same restrictions as packStructValue.
@@ -868,6 +868,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 	var rdend int
 	lenmsg := len(msg)
 	for i := 0; i < val.NumField(); i++ {
+		if off > lenmsg {
+			return lenmsg, &Error{"bad offset unpacking"}
+		}
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind unpacking"}
