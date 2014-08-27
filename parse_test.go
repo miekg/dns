@@ -761,6 +761,21 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
+func TestLowercaseClassOrType(t *testing.T) {
+	var testrecords = []string{
+		"example.org. IN a 1.2.3.4",
+		"example.org. in A 1.2.3.4",
+		"example.org. in a 1.2.3.4",
+		"example.org. a 1.2.3.4",
+	}
+	for _, testrr := range testrecords {
+		_, err := NewRR(testrr)
+		if err != nil {
+			t.Errorf("failed to parse %#v, got %s", testrr, err.Error())
+		}
+	}
+}
+
 func ExampleGenerate() {
 	// From the manual: http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#id2566761
 	zone := "$GENERATE 1-2 0 NS SERVER$.EXAMPLE.\n$GENERATE 1-8 $ CNAME $.0"
@@ -1051,7 +1066,12 @@ func TestTXT(t *testing.T) {
 func TestTypeXXXX(t *testing.T) {
 	_, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
 	if err != nil {
-		t.Logf("failed to parse TYPE1234 RR: ", err.Error())
+		t.Logf("failed to parse TYPE1234 RR: %s", err.Error())
+		t.Fail()
+	}
+	_, err = NewRR("example.com IN type1234 \\# 4 aabbccdd")
+	if err != nil {
+		t.Logf("failed to parse type1234 RR: %s", err.Error())
 		t.Fail()
 	}
 	_, err = NewRR("example.com IN TYPE655341 \\# 8 aabbccddaabbccdd")
