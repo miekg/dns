@@ -767,9 +767,12 @@ func TestLowercaseClassOrType(t *testing.T) {
 		"example.org. 300 in A 1.2.3.4",
 		"example.org. 300 in a 1.2.3.4",
 		"example.org. 300 a 1.2.3.4",
+		"example.org. 300 A 1.2.3.4",
 		"example.org. IN a 1.2.3.4",
 		"example.org. in A 1.2.3.4",
 		"example.org. in a 1.2.3.4",
+		"example.org. a 1.2.3.4",
+		"example.org. A 1.2.3.4",
 		"example.org. a 1.2.3.4",
 	}
 	for _, testrr := range testrecords {
