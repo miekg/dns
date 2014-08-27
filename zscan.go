@@ -496,14 +496,14 @@ func zlexer(s *scan, c chan lex) {
 		l.column = s.position.Column
 		l.line = s.position.Line
 		if stri > maxTok {
-			l.token = "tok length insufficient for parsing"
+			l.token = "token length insufficient for parsing"
 			l.err = true
 			debug.Printf("[%+v]", l.token)
 			c <- l
 			return
 		}
 		if comi > maxTok {
-			l.token = "com length insufficient for parsing"
+			l.token = "comment length insufficient for parsing"
 			l.err = true
 			debug.Printf("[%+v]", l.token)
 			c <- l
