@@ -763,6 +763,10 @@ func TestEmpty(t *testing.T) {
 
 func TestLowercaseClassOrType(t *testing.T) {
 	var testrecords = []string{
+		"example.org. 300 IN a 1.2.3.4",
+		"example.org. 300 in A 1.2.3.4",
+		"example.org. 300 in a 1.2.3.4",
+		"example.org. 300 a 1.2.3.4",
 		"example.org. IN a 1.2.3.4",
 		"example.org. in A 1.2.3.4",
 		"example.org. in a 1.2.3.4",
