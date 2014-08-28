@@ -537,9 +537,10 @@ func zlexer(s *scan, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = string(str[:stri])
+				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				// escape $... start with a \ not a $, so this will work
-				switch l.token {
+				switch l.tokenUpper {
 				case "$TTL":
 					l.value = _DIRTTL
 				case "$ORIGIN":
