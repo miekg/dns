@@ -304,6 +304,8 @@ func (srv *Server) ActivateAndServe() error {
 // ActivateAndServe will return. All in progress queries are completed before the server
 // is taken down. If the Shutdown was not succesful an error is returned.
 func (srv *Server) Shutdown() error {
+	// TODO(miek): does this work with socket activation? Double check if we set the 
+	// address there. And... is it needed?
 	c := new(Client)
 	c.Net = srv.Net
 	switch srv.Net {
