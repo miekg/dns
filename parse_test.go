@@ -1071,7 +1071,7 @@ func TestTXT(t *testing.T) {
 }
 
 func TestTypeXXXX(t *testing.T) {
-	_, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
+	_, err := NewRR("example.com IN type1234 \\# 4 aabbccdd")
 	if err != nil {
 		t.Logf("failed to parse TYPE1234 RR: %s", err.Error())
 		t.Fail()
