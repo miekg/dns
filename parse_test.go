@@ -764,7 +764,7 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
-func TestLowercaseTockens(t *testing.T) {
+func TestLowercaseTokens(t *testing.T) {
 	var testrecords = []string{
 		"example.org. 300 IN a 1.2.3.4",
 		"example.org. 300 in A 1.2.3.4",
