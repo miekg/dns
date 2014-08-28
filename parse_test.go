@@ -780,6 +780,7 @@ func TestLowercaseTokens(t *testing.T) {
 		"$ORIGIN example.org.\n a 1.2.3.4",
 		"$Origin example.org.\n a 1.2.3.4",
 		"$origin example.org.\n a 1.2.3.4",
+		"example.org. Class1 Type1 1.2.3.4",
 	}
 	for _, testrr := range testrecords {
 		_, err := NewRR(testrr)
@@ -1077,14 +1078,9 @@ func TestTXT(t *testing.T) {
 }
 
 func TestTypeXXXX(t *testing.T) {
-	_, err := NewRR("example.com IN type1234 \\# 4 aabbccdd")
+	_, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
 	if err != nil {
 		t.Logf("failed to parse TYPE1234 RR: %s", err.Error())
-		t.Fail()
-	}
-	_, err = NewRR("example.com IN type1234 \\# 4 aabbccdd")
-	if err != nil {
-		t.Logf("failed to parse type1234 RR: %s", err.Error())
 		t.Fail()
 	}
 	_, err = NewRR("example.com IN TYPE655341 \\# 8 aabbccddaabbccdd")
