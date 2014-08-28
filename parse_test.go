@@ -336,6 +336,7 @@ func TestNSEC(t *testing.T) {
 		"p2209hipbpnm681knjnu0m1febshlv4e.nl. IN NSEC3 1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM": "p2209hipbpnm681knjnu0m1febshlv4e.nl.\t3600\tIN\tNSEC3\t1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC":                                                                                 "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC TYPE65534":                                                                       "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC TYPE65534",
+		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSec Type65534":                                                                       "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC TYPE65534",
 	}
 	for i, o := range nsectests {
 		rr, e := NewRR(i)
@@ -513,6 +514,8 @@ func TestParseFailure(t *testing.T) {
 		"miek.nl. IN AAAA ::x",
 		"miek.nl. IN MX a0 miek.nl.",
 		"miek.nl aap IN MX mx.miek.nl.",
+		"miek.nl 200 IN mxx 10 mx.miek.nl.",
+		"miek.nl. inn MX 10 mx.miek.nl.",
 		// "miek.nl. IN CNAME ", // actually valid nowadays, zero size rdata
 		"miek.nl. IN CNAME ..",
 		"miek.nl. PA MX 10 miek.nl.",
@@ -758,6 +761,32 @@ func TestEmpty(t *testing.T) {
 	for _ = range ParseZone(strings.NewReader(""), "", "") {
 		t.Logf("should be empty")
 		t.Fail()
+	}
+}
+
+func TestLowercaseTokens(t *testing.T) {
+	var testrecords = []string{
+		"example.org. 300 IN a 1.2.3.4",
+		"example.org. 300 in A 1.2.3.4",
+		"example.org. 300 in a 1.2.3.4",
+		"example.org. 300 a 1.2.3.4",
+		"example.org. 300 A 1.2.3.4",
+		"example.org. IN a 1.2.3.4",
+		"example.org. in A 1.2.3.4",
+		"example.org. in a 1.2.3.4",
+		"example.org. a 1.2.3.4",
+		"example.org. A 1.2.3.4",
+		"example.org. a 1.2.3.4",
+		"$ORIGIN example.org.\n a 1.2.3.4",
+		"$Origin example.org.\n a 1.2.3.4",
+		"$origin example.org.\n a 1.2.3.4",
+		"example.org. Class1 Type1 1.2.3.4",
+	}
+	for _, testrr := range testrecords {
+		_, err := NewRR(testrr)
+		if err != nil {
+			t.Errorf("failed to parse %#v, got %s", testrr, err.Error())
+		}
 	}
 }
 
@@ -1051,7 +1080,7 @@ func TestTXT(t *testing.T) {
 func TestTypeXXXX(t *testing.T) {
 	_, err := NewRR("example.com IN TYPE1234 \\# 4 aabbccdd")
 	if err != nil {
-		t.Logf("failed to parse TYPE1234 RR: ", err.Error())
+		t.Logf("failed to parse TYPE1234 RR: %s", err.Error())
 		t.Fail()
 	}
 	_, err = NewRR("example.com IN TYPE655341 \\# 8 aabbccddaabbccdd")

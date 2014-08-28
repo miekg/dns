@@ -1145,9 +1145,9 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RRSIG)
 	rr.Hdr = h
 	l := <-c
-	if t, ok := StringToType[strings.ToUpper(l.token)]; !ok {
-		if strings.HasPrefix(strings.ToUpper(l.token), "TYPE") {
-			if t, ok = typeToInt(l.token); !ok {
+	if t, ok := StringToType[l.tokenUpper]; !ok {
+		if strings.HasPrefix(l.tokenUpper, "TYPE") {
+			if t, ok = typeToInt(l.tokenUpper); !ok {
 				return nil, &ParseError{f, "bad RRSIG Typecovered", l}, ""
 			} else {
 				rr.TypeCovered = t
@@ -1261,8 +1261,8 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok = StringToType[strings.ToUpper(l.token)]; !ok {
-				if k, ok = typeToInt(l.token); !ok {
+			if k, ok = StringToType[l.tokenUpper]; !ok {
+				if k, ok = typeToInt(l.tokenUpper); !ok {
 					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}, ""
 				}
 			}
@@ -1323,8 +1323,8 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		case _BLANK:
 			// Ok
 		case _STRING:
-			if k, ok = StringToType[strings.ToUpper(l.token)]; !ok {
-				if k, ok = typeToInt(l.token); !ok {
+			if k, ok = StringToType[l.tokenUpper]; !ok {
+				if k, ok = typeToInt(l.tokenUpper); !ok {
 					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}, ""
 				}
 			}
@@ -1580,7 +1580,7 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
 			return nil, &ParseError{f, "bad DS Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
@@ -1681,7 +1681,7 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
 			return nil, &ParseError{f, "bad CDS Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
@@ -1716,7 +1716,7 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
 			return nil, &ParseError{f, "bad DLV Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
@@ -1751,7 +1751,7 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[strings.ToUpper(l.token)]; !ok {
+		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
 			return nil, &ParseError{f, "bad TA Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
