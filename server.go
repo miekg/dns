@@ -11,7 +11,6 @@ import (
 	"io"
 	"net"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -306,12 +305,14 @@ func (srv *Server) ActivateAndServe() error {
 // is taken down. If the Shutdown was not succesful an error is taking longer than reading
 // timeout.
 func (srv *Server) Shutdown() error {
-	net := srv.Net
+	net, addr := srv.Net, srv.Addr
 	switch {
 	case srv.Listener != nil:
-		net = srv.Listener.Addr().Network()
+		a := srv.Listener.Addr()
+		net, addr = a.Network(), a.String()
 	case srv.PacketConn != nil:
-		net = srv.PacketConn.LocalAddr().Network()
+		a := srv.PacketConn.LocalAddr()
+		net, addr = a.Network(), a.String()
 	}
 
 	fin := make(chan bool)
@@ -330,6 +331,9 @@ func (srv *Server) Shutdown() error {
 			fin <- true
 		}()
 	}
+
+	c := &Client{Net: net}
+	go c.Exchange(new(Msg), addr) // extra query to help ReadXXX loop to pass
 
 	select {
 	case <-time.After(srv.getReadTimeout()):
@@ -358,25 +362,24 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	}
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
-	done := int32(0)
-	go func() {
-		<-srv.stopTCP // there is no way out of serving but to receive stop
-		l.SetDeadline(time.Now())
-		atomic.StoreInt32(&done, 1)
-	}()
-	for done == 0 {
+	for {
 		rw, e := l.AcceptTCP()
 		if e != nil {
 			continue
 		}
 		m, e := srv.readTCP(rw, rtimeout)
+		select {
+		case <-srv.stopTCP:
+			return nil
+		default:
+		}
 		if e != nil {
 			continue
 		}
 		srv.wgTCP.Add(1)
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
 	}
-	return nil
+	panic("dns: not reached")
 }
 
 // serveUDP starts a UDP listener for the server.
@@ -390,22 +393,20 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	}
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
-	done := int32(0)
-	go func() {
-		<-srv.stopUDP // there is no way out of serving but to receive stop
-		l.SetDeadline(time.Now())
-		atomic.StoreInt32(&done, 1)
-	}()
-	for done == 0 {
+	for {
 		m, s, e := srv.readUDP(l, rtimeout)
+		select {
+		case <-srv.stopUDP:
+			return nil
+		default:
+		}
 		if e != nil {
 			continue
 		}
 		srv.wgUDP.Add(1)
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
-	srv.wgUDP.Wait()
-	return nil
+	panic("dns: not reached")
 }
 
 // Serve a new connection.
