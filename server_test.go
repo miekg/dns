@@ -304,6 +304,8 @@ func TestServingLargeResponses(t *testing.T) {
 
 // TODO(miek): These tests should actually fail when the server does
 // not shut down.
+// (asergeyev) I put err check logic which is not yet in use but IMO
+// this test will not change as shutdown internals improve.
 func TestShutdownTCP(t *testing.T) {
 	s, _, err := RunLocalTCPServer("127.0.0.1:0")
 	if err != nil {
