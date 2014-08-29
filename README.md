@@ -133,4 +133,3 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * CAA parsing is broken;
 * Replies with TC bit are not parsed to the end.
 * SIG(0)
-* Make tests run faster by removing the time.Sleep()s
