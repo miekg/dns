@@ -333,7 +333,7 @@ func (srv *Server) Shutdown() error {
 
 	select {
 	case <-time.After(srv.getReadTimeout()):
-		return &Error{err: "shutdown is pending"}
+		return &Error{err: "server shutdown is pending"}
 	case <-fin:
 		return nil
 	}

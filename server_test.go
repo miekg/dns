@@ -40,6 +40,10 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		pc.Close()
 	}()
+	// in order to let all Server internals to finish before test will touch
+	// server's internal fields, we need to cycle thru other goroutinges for
+	// one more time
+	runtime.Gosched()
 	return server, pc.LocalAddr().String(), nil
 }
 
@@ -53,6 +57,10 @@ func RunLocalTCPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		l.Close()
 	}()
+	// in order to let all Server internals to finish before test will touch
+	// server's internal fields, we need to cycle thru other goroutinges for
+	// one more time
+	runtime.Gosched()
 	return server, l.Addr().String(), nil
 }
 
@@ -260,15 +268,13 @@ func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
 }
 
 func TestServingLargeResponses(t *testing.T) {
-	mux := NewServeMux()
-	mux.HandleFunc("example.", HelloServerLargeResponse)
+	HandleFunc("example.", HelloServerLargeResponse)
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
 	defer s.Shutdown()
-	s.Handler = mux
 
 	// Create request
 	m := new(Msg)
