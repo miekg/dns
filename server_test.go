@@ -31,21 +31,33 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
+func RunLocalUDPServer() (*Server, string, error) {
+	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
+	if err != nil {
+		return nil, "", err
+	}
+	server := &Server{PacketConn: pc}
+	go func() {
+		server.ActivateAndServe()
+		pc.Close()
+	}()
+	return server, pc.LocalAddr().String(), nil
+}
+
 func TestServing(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
-	go func() {
-		err := ListenAndServe(":8053", "udp", nil)
-		if err != nil {
-			t.Log("ListenAndServe: ", err.Error())
-			t.Fatal()
-		}
-	}()
-	time.Sleep(4e8)
+
+	s, addrstr, err := RunLocalUDPServer()
+	if err != nil {
+		t.Fatalf("Unable to run test server on port 8053: %s", err)
+	}
+	defer s.Shutdown()
+
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
-	r, _, err := c.Exchange(m, "127.0.0.1:8053")
+	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("failed to exchange miek.nl", err)
 		t.Fatal()
@@ -57,7 +69,7 @@ func TestServing(t *testing.T) {
 	}
 
 	m.SetQuestion("example.com.", TypeTXT)
-	r, _, err = c.Exchange(m, "127.0.0.1:8053")
+	r, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("failed to exchange example.com", err)
 		t.Fatal()
@@ -70,7 +82,7 @@ func TestServing(t *testing.T) {
 
 	// Test Mixes cased as noticed by Ask.
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
-	r, _, err = c.Exchange(m, "127.0.0.1:8053")
+	r, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("failed to exchange eXaMplE.cOm", err)
 		t.Fail()

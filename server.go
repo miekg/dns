@@ -304,17 +304,27 @@ func (srv *Server) ActivateAndServe() error {
 // ActivateAndServe will return. All in progress queries are completed before the server
 // is taken down. If the Shutdown was not succesful an error is returned.
 func (srv *Server) Shutdown() error {
-	// TODO(miek): does this work with socket activation? Double check if we set the 
-	// address there. And... is it needed?
-	c := new(Client)
-	c.Net = srv.Net
-	switch srv.Net {
+	// Client sends fake request here to not wait for timeout in readUDP/readTCP loop
+	// and trap to stop event ASAP.
+	net, addr := srv.Net, srv.Addr
+
+	if srv.Listener != nil {
+		a := srv.Listener.Addr()
+		net, addr = a.Network(), a.String()
+	} else if srv.PacketConn != nil {
+		a := srv.PacketConn.LocalAddr()
+		net, addr = a.Network(), a.String()
+	}
+
+	switch net {
 	case "tcp", "tcp4", "tcp6":
 		go func() { srv.stopTCP <- true }()
 	case "udp", "udp4", "udp6":
 		go func() { srv.stopUDP <- true }()
 	}
-	c.Exchange(new(Msg), srv.Addr)
+	c := &Client{Net: net}
+	c.Exchange(new(Msg), addr)
+
 	return nil
 }
 
