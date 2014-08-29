@@ -265,6 +265,9 @@ func setA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 { // Dynamic updates.
+		return rr, nil
+	}
 	rr.A = net.ParseIP(l.token)
 	if rr.A == nil {
 		return nil, &ParseError{f, "bad A A", l}
@@ -277,6 +280,9 @@ func setAAAA(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	rr.AAAA = net.ParseIP(l.token)
 	if rr.AAAA == nil {
 		return nil, &ParseError{f, "bad AAAA AAAA", l}
@@ -310,6 +316,9 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Ptr = l.token
+	if l.length == 0 { // dynamic update rr.
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Ptr = o
 		return rr, nil

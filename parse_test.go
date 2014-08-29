@@ -1160,3 +1160,18 @@ func TestMalformedPackets(t *testing.T) {
 		//		println(msg.String())
 	}
 }
+
+func TestDynamicUpdateParsing(t *testing.T) {
+	prefix := "example.com. IN "
+	// TODO(miek): extend to all types.
+	//for _, typ := range TypeToString {
+	for _, typ := range []string{"PTR", "A"} {
+		r, e := NewRR(prefix + typ)
+		if e != nil {
+			t.Log("failure to parse: " + prefix + typ)
+			t.Fail()
+		} else {
+			t.Logf("parsed: %s", r.String())
+		}
+	}
+}
