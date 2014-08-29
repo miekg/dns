@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"sync"
 	"testing"
-	"time"
 )
 
 func HelloServer(w ResponseWriter, req *Msg) {
@@ -31,8 +30,8 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func RunLocalUDPServer() (*Server, string, error) {
-	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
+func RunLocalUDPServer(laddr string) (*Server, string, error) {
+	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", err
 	}
@@ -44,13 +43,26 @@ func RunLocalUDPServer() (*Server, string, error) {
 	return server, pc.LocalAddr().String(), nil
 }
 
+func RunLocalTCPServer(laddr string) (*Server, string, error) {
+	l, err := net.Listen("tcp", laddr)
+	if err != nil {
+		return nil, "", err
+	}
+	server := &Server{Listener: l}
+	go func() {
+		server.ActivateAndServe()
+		l.Close()
+	}()
+	return server, l.Addr().String(), nil
+}
+
 func TestServing(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
 
-	s, addrstr, err := RunLocalUDPServer()
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server on port 8053: %s", err)
+		t.Fatalf("Unable to run test server: %s", err)
 	}
 	defer s.Shutdown()
 
@@ -98,16 +110,20 @@ func BenchmarkServe(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
 	a := runtime.GOMAXPROCS(4)
-	go func() {
-		ListenAndServe("127.0.0.1:8053", "udp", nil)
-	}()
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		b.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, "127.0.0.1:8053")
+		c.Exchange(m, addrstr)
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -116,16 +132,19 @@ func benchmarkServe6(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
 	a := runtime.GOMAXPROCS(4)
-	go func() {
-		ListenAndServe("[::1]:8053", "udp", nil)
-	}()
+	s, addrstr, err := RunLocalUDPServer("[::1]:0")
+	if err != nil {
+		b.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, "[::1]:8053")
+		c.Exchange(m, addrstr)
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -143,16 +162,18 @@ func BenchmarkServeCompress(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServerCompress)
 	a := runtime.GOMAXPROCS(4)
-	go func() {
-		ListenAndServe("127.0.0.1:8053", "udp", nil)
-	}()
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		b.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
 
 	c := new(Client)
 	m := new(Msg)
 	m.SetQuestion("miek.nl", TypeSOA)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, "127.0.0.1:8053")
+		c.Exchange(m, addrstr)
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -242,16 +263,12 @@ func TestServingLargeResponses(t *testing.T) {
 	mux := NewServeMux()
 	mux.HandleFunc("example.", HelloServerLargeResponse)
 
-	server := &Server{
-		Addr:    "127.0.0.1:10000",
-		Net:     "udp",
-		Handler: mux,
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
 	}
-
-	go func() {
-		server.ListenAndServe()
-	}()
-	time.Sleep(50 * time.Millisecond)
+	defer s.Shutdown()
+	s.Handler = mux
 
 	// Create request
 	m := new(Msg)
@@ -262,7 +279,7 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Lock()
 	M.max = 2
 	M.Unlock()
-	_, _, err := c.Exchange(m, "127.0.0.1:10000")
+	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Logf("failed to exchange: %s", err.Error())
 		t.Fail()
@@ -271,14 +288,14 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Lock()
 	M.max = 20
 	M.Unlock()
-	_, _, err = c.Exchange(m, "127.0.0.1:10000")
+	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
 		t.Logf("failed to fail exchange, this should generate packet error")
 		t.Fail()
 	}
 	// But this must work again
 	c.UDPSize = 7000
-	_, _, err = c.Exchange(m, "127.0.0.1:10000")
+	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Logf("failed to exchange: %s", err.Error())
 		t.Fail()
@@ -288,31 +305,23 @@ func TestServingLargeResponses(t *testing.T) {
 // TODO(miek): These tests should actually fail when the server does
 // not shut down.
 func TestShutdownTCP(t *testing.T) {
-	server := Server{Addr: ":8055", Net: "tcp"}
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil {
-			t.Logf("failed to setup the tcp server: %s\n", err.Error())
-			t.Fail()
-		}
-		t.Logf("successfully stopped the tcp server")
-	}()
-	time.Sleep(4e8)
-	server.Shutdown()
-	time.Sleep(1e9)
+	s, _, err := RunLocalTCPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	err = s.Shutdown()
+	if err != nil {
+		t.Error("Could not shutdown test TCP server, %s", err)
+	}
 }
 
 func TestShutdownUDP(t *testing.T) {
-	server := Server{Addr: ":8054", Net: "udp"}
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil {
-			t.Logf("failed to setup the udp server: %s\n", err.Error())
-			t.Fail()
-		}
-		t.Logf("successfully stopped the udp server")
-	}()
-	time.Sleep(4e8)
-	server.Shutdown()
-	time.Sleep(1e9)
+	s, _, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	err = s.Shutdown()
+	if err != nil {
+		t.Error("Could not shutdown test UDP server, %s", err)
+	}
 }

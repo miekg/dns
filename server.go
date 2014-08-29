@@ -304,16 +304,17 @@ func (srv *Server) ActivateAndServe() error {
 // ActivateAndServe will return. All in progress queries are completed before the server
 // is taken down. If the Shutdown was not succesful an error is returned.
 func (srv *Server) Shutdown() error {
-	// Client sends fake request here to not wait for timeout in readUDP/readTCP loop
-	// and trap to stop event ASAP.
-	net, addr := srv.Net, srv.Addr
+	var net, addr string
 
-	if srv.Listener != nil {
+	switch {
+	case srv.Listener != nil:
 		a := srv.Listener.Addr()
 		net, addr = a.Network(), a.String()
-	} else if srv.PacketConn != nil {
+	case srv.PacketConn != nil:
 		a := srv.PacketConn.LocalAddr()
 		net, addr = a.Network(), a.String()
+	default:
+		net, addr = srv.Net, srv.Addr
 	}
 
 	switch net {
@@ -322,8 +323,11 @@ func (srv *Server) Shutdown() error {
 	case "udp", "udp4", "udp6":
 		go func() { srv.stopUDP <- true }()
 	}
+
+	// Send packet to server socket in order to force readUDP or readTCP to finish waiting for data.
+	// TODO(asergeyev): Alternative concurrent watchdog is possible to create in "serve*" in future
 	c := &Client{Net: net}
-	c.Exchange(new(Msg), addr)
+	go c.Exchange(new(Msg), addr)
 
 	return nil
 }
@@ -342,13 +346,6 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	}
 	for {
 		rw, e := l.AcceptTCP()
-		select {
-		case <-srv.stopTCP:
-			// Asked to shutdown
-			srv.wgTCP.Wait()
-			return nil
-		default:
-		}
 		if e != nil {
 			continue
 		}
@@ -358,6 +355,13 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 		}
 		srv.wgTCP.Add(1)
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
+		select {
+		case <-srv.stopTCP:
+			// Asked to shutdown
+			srv.wgTCP.Wait()
+			return nil
+		default:
+		}
 	}
 	panic("dns: not reached")
 }
@@ -377,6 +381,11 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	// deadline is not used here
 	for {
 		m, s, e := srv.readUDP(l, rtimeout)
+		if e != nil {
+			continue
+		}
+		srv.wgUDP.Add(1)
+		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 		select {
 		case <-srv.stopUDP:
 			// Asked to shutdown
@@ -384,11 +393,6 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			return nil
 		default:
 		}
-		if e != nil {
-			continue
-		}
-		srv.wgUDP.Add(1)
-		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 	panic("dns: not reached")
 }
