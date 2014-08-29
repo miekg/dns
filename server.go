@@ -356,10 +356,7 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	rtimeout := dnsTimeout
-	if srv.ReadTimeout != 0 {
-		rtimeout = srv.ReadTimeout
-	}
+	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	done := int32(0)
 	go func() {
@@ -391,10 +388,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	rtimeout := dnsTimeout
-	if srv.ReadTimeout != 0 {
-		rtimeout = srv.ReadTimeout
-	}
+	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	done := int32(0)
 	go func() {
