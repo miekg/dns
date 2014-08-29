@@ -88,14 +88,15 @@ func (e *ParseError) Error() (s string) {
 }
 
 type lex struct {
-	token   string // text of the token
-	length  int    // lenght of the token
-	err     bool   // when true, token text has lexer error
-	value   uint8  // value: _STRING, _BLANK, etc.
-	line    int    // line in the file
-	column  int    // column in the file
-	torc    uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	comment string // any comment text seen
+	token      string // text of the token
+	tokenUpper string // uppercase text of the token
+	length     int    // lenght of the token
+	err        bool   // when true, token text has lexer error
+	value      uint8  // value: _STRING, _BLANK, etc.
+	line       int    // line in the file
+	column     int    // column in the file
+	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
+	comment    string // any comment text seen
 }
 
 // *Tokens are returned when a zone file is parsed.
@@ -536,9 +537,10 @@ func zlexer(s *scan, c chan lex) {
 				// If we have a string and its the first, make it an owner
 				l.value = _OWNER
 				l.token = string(str[:stri])
+				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				// escape $... start with a \ not a $, so this will work
-				switch l.token {
+				switch l.tokenUpper {
 				case "$TTL":
 					l.value = _DIRTTL
 				case "$ORIGIN":
@@ -553,14 +555,15 @@ func zlexer(s *scan, c chan lex) {
 			} else {
 				l.value = _STRING
 				l.token = string(str[:stri])
+				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				if !rrtype {
-					if t, ok := StringToType[l.token]; ok {
+					if t, ok := StringToType[l.tokenUpper]; ok {
 						l.value = _RRTYPE
 						l.torc = t
 						rrtype = true
 					} else {
-						if strings.HasPrefix(l.token, "TYPE") {
+						if strings.HasPrefix(l.tokenUpper, "TYPE") {
 							if t, ok := typeToInt(l.token); !ok {
 								l.token = "unknown RR type"
 								l.err = true
@@ -572,11 +575,11 @@ func zlexer(s *scan, c chan lex) {
 							}
 						}
 					}
-					if t, ok := StringToClass[l.token]; ok {
+					if t, ok := StringToClass[l.tokenUpper]; ok {
 						l.value = _CLASS
 						l.torc = t
 					} else {
-						if strings.HasPrefix(l.token, "CLASS") {
+						if strings.HasPrefix(l.tokenUpper, "CLASS") {
 							if t, ok := classToInt(l.token); !ok {
 								l.token = "unknown class"
 								l.err = true
@@ -668,9 +671,11 @@ func zlexer(s *scan, c chan lex) {
 				if stri != 0 {
 					l.value = _STRING
 					l.token = string(str[:stri])
+					l.tokenUpper = strings.ToUpper(l.token)
+
 					l.length = stri
 					if !rrtype {
-						if t, ok := StringToType[strings.ToUpper(l.token)]; ok {
+						if t, ok := StringToType[l.tokenUpper]; ok {
 							l.value = _RRTYPE
 							l.torc = t
 							rrtype = true
