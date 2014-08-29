@@ -313,7 +313,7 @@ func TestShutdownTCP(t *testing.T) {
 	}
 	err = s.Shutdown()
 	if err != nil {
-		t.Error("Could not shutdown test TCP server, %s", err)
+		t.Errorf("Could not shutdown test TCP server, %s", err)
 	}
 }
 
@@ -324,6 +324,6 @@ func TestShutdownUDP(t *testing.T) {
 	}
 	err = s.Shutdown()
 	if err != nil {
-		t.Error("Could not shutdown test UDP server, %s", err)
+		t.Errorf("Could not shutdown test UDP server, %s", err)
 	}
 }
