@@ -114,11 +114,11 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 6742 - ILNP DNS
 * 6891 - EDNS0 update
 * 6895 - DNS IANA considerations
+* 6975 - Algorithm Understanding in DNSSEC
 * 7043 - EUI48/EUI64 records
 * 7314 - DNS (EDNS) EXPIRE Option
 * xxxx - URI record (draft)
 * xxxx - EDNS0 DNS Update Lease (draft)
-* xxxx - Algorithm-Signal (draft)
 
 ## Loosely based upon
 
