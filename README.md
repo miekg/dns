@@ -49,7 +49,8 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * EDNS0, NSID;
 * AXFR/IXFR;
 * TSIG;
-* DNS name compression.
+* DNS name compression;
+* Depends only on the standard library.
 
 Have fun!
 
