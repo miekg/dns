@@ -566,6 +566,9 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad MX Pref", l}
 	} else {
@@ -579,7 +582,7 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MX Mx", l}
 	}
 	if rr.Mx[l.length-1] != '.' {
@@ -591,8 +594,10 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr := new(RT)
 	rr.Hdr = h
-
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad RT Preference", l}
 	} else {
@@ -606,7 +611,7 @@ func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad RT Host", l}
 	}
 	if rr.Host[l.length-1] != '.' {
@@ -620,6 +625,9 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad AFSDB Subtype", l}
 	} else {
@@ -633,7 +641,7 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad AFSDB Hostname", l}
 	}
 	if rr.Hostname[l.length-1] != '.' {
@@ -656,6 +664,9 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad KX Pref", l}
 	} else {
@@ -669,7 +680,7 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad KX Exchanger", l}
 	}
 	if rr.Exchanger[l.length-1] != '.' {
@@ -692,7 +703,7 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad CNAME Target", l}
 	}
 	if rr.Target[l.length-1] != '.' {
@@ -752,7 +763,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		rr.Mbox = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad SOA Mbox", l}
 		}
 		if rr.Mbox[l.length-1] != '.' {
@@ -804,6 +815,9 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad SRV Priority", l}
 	} else {
@@ -831,7 +845,7 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad SRV Target", l}
 	}
 	if rr.Target[l.length-1] != '.' {
@@ -845,6 +859,9 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NAPTR Order", l}
 	} else {
@@ -922,7 +939,7 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}
 	}
 	if rr.Replacement[l.length-1] != '.' {
@@ -959,7 +976,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad TALINK NextName", l}
 	}
 	if rr.NextName[l.length-1] != '.' {
@@ -978,6 +995,9 @@ func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	ok := false
 	// North
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad LOC Latitude", l}
 	} else {
@@ -1101,6 +1121,9 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 
 	// HitLength is not represented
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad HIP PublicKeyAlgorithm", l}, ""
 	} else {
@@ -1127,7 +1150,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 				continue
 			}
 			_, ok := IsDomainName(l.token)
-			if !ok {
+			if !ok || l.length == 0 {
 				return nil, &ParseError{f, "bad HIP RendezvousServers", l}, ""
 			}
 			if l.token[l.length-1] != '.' {
@@ -1150,6 +1173,9 @@ func setCERT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad CERT Type", l}, ""
 	} else {
@@ -1193,6 +1219,9 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RRSIG)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if t, ok := StringToType[l.tokenUpper]; !ok {
 		if strings.HasPrefix(l.tokenUpper, "TYPE") {
 			if t, ok = typeToInt(l.tokenUpper); !ok {
@@ -1265,7 +1294,7 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.SignerName = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad RRSIG SignerName", l}, ""
 		}
 		if rr.SignerName[l.length-1] != '.' {
@@ -1331,6 +1360,9 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NSEC3 Hash", l}, ""
 	} else {
@@ -1393,6 +1425,9 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NSEC3PARAM Hash", l}
 	} else {
@@ -1424,7 +1459,10 @@ func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
-	if len(l.token) != 17 {
+	if l.length == 0 {
+		return rr, nil
+	}
+	if l.length != 17 {
 		return nil, &ParseError{f, "bad EUI48 Address", l}
 	}
 	addr := make([]byte, 12)
@@ -1453,7 +1491,10 @@ func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
-	if len(l.token) != 23 {
+	if l.length == 0 {
+		return rr, nil
+	}
+	if l.length != 23 {
 		return nil, &ParseError{f, "bad EUI64 Address", l}
 	}
 	addr := make([]byte, 16)
@@ -1482,6 +1523,9 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	rr.Address = net.ParseIP(l.token)
 	if rr.Address == nil {
 		return nil, &ParseError{f, "bad WKS Address", l}, ""
@@ -1537,6 +1581,9 @@ func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad SSHFP Algorithm", l}
 	} else {
@@ -1560,6 +1607,9 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad DNSKEY Flags", l}, ""
 	} else {
@@ -1592,6 +1642,9 @@ func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad RKEY Flags", l}, ""
 	} else {
@@ -1623,6 +1676,9 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(DS)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad DS KeyTag", l}, ""
 	} else {
@@ -1680,6 +1736,9 @@ func setNSAP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(NSAP)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NSAP Length", l}, ""
 	} else {
@@ -1698,6 +1757,9 @@ func setGPOS(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(GPOS)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if _, e := strconv.ParseFloat(l.token, 64); e != nil {
 		return nil, &ParseError{f, "bad GPOS Longitude", l}
 	} else {
@@ -1724,6 +1786,9 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(CDS)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad CDS KeyTag", l}, ""
 	} else {
@@ -1759,6 +1824,9 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(DLV)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad DLV KeyTag", l}, ""
 	} else {
@@ -1794,6 +1862,9 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(TA)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad TA KeyTag", l}, ""
 	} else {
@@ -1829,6 +1900,9 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr := new(TLSA)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad TLSA Usage", l}, ""
 	} else {
@@ -1924,6 +1998,9 @@ func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad URI Priority", l}, ""
 	} else {
@@ -1951,6 +2028,9 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string)
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad IPSECKEY Precedence", l}, ""
 	} else {
@@ -1999,6 +2079,9 @@ func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad NID Preference", l}
 	} else {
@@ -2019,6 +2102,9 @@ func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad L32 Preference", l}
 	} else {
@@ -2038,6 +2124,9 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad LP Preference", l}
 	} else {
@@ -2054,7 +2143,7 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad LP Fqdn", l}
 	}
 	if rr.Fqdn[l.length-1] != '.' {
@@ -2068,6 +2157,9 @@ func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad L64 Preference", l}
 	} else {
@@ -2087,6 +2179,9 @@ func setUID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(UID)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad UID Uid", l}
 	} else {
@@ -2099,6 +2194,9 @@ func setGID(h RR_Header, c chan lex, f string) (RR, *ParseError) {
 	rr := new(GID)
 	rr.Hdr = h
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad GID Gid", l}
 	} else {
@@ -2123,6 +2221,9 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 {
+		return rr, nil
+	}
 	if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad PX Preference", l}
 	} else {
@@ -2153,7 +2254,7 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 		return rr, nil
 	}
 	_, ok = IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad PX Mapx400", l}
 	}
 	if rr.Mapx400[l.length-1] != '.' {
