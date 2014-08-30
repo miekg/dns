@@ -180,32 +180,6 @@ func (h *RR_Header) len() int {
 	return l
 }
 
-// Find best matching pattern for zone.
-func zoneMatch(pattern, zone string) (ok bool) {
-	if len(pattern) == 0 {
-		return
-	}
-	if len(zone) == 0 {
-		zone = "."
-	}
-	// pattern = Fqdn(pattern) // should already be a fqdn
-	zone = Fqdn(zone)
-	i := 0
-	for {
-		ok = pattern[len(pattern)-1-i] == zone[len(zone)-1-i]
-		i++
-
-		if !ok {
-			break
-		}
-		if len(pattern)-1-i < 0 || len(zone)-1-i < 0 {
-			break
-		}
-
-	}
-	return
-}
-
 // ToRFC3597 converts a known RR to the unknown RR representation
 // from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
