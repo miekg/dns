@@ -59,6 +59,8 @@ func RunLocalTCPServer(laddr string) (*Server, string, error) {
 func TestServing(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("miek.nl.")
+	defer HandleRemove("example.com.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
@@ -109,6 +111,7 @@ func TestServing(t *testing.T) {
 func BenchmarkServe(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
@@ -131,6 +134,7 @@ func BenchmarkServe(b *testing.B) {
 func benchmarkServe6(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 	s, addrstr, err := RunLocalUDPServer("[::1]:0")
 	if err != nil {
@@ -161,6 +165,7 @@ func HelloServerCompress(w ResponseWriter, req *Msg) {
 func BenchmarkServeCompress(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServerCompress)
+	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
@@ -261,6 +266,7 @@ func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
 
 func TestServingLargeResponses(t *testing.T) {
 	HandleFunc("example.", HelloServerLargeResponse)
+	defer HandleRemove("example.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
