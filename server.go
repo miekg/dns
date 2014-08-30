@@ -302,20 +302,54 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return. All in progress queries are completed before the server
-// is taken down. If the Shutdown was not succesful an error is returned.
+// is taken down. If the Shutdown was not succesful an error is taking longer than reading
+// timeout.
 func (srv *Server) Shutdown() error {
-	// TODO(miek): does this work with socket activation? Double check if we set the 
-	// address there. And... is it needed?
-	c := new(Client)
-	c.Net = srv.Net
-	switch srv.Net {
-	case "tcp", "tcp4", "tcp6":
-		go func() { srv.stopTCP <- true }()
-	case "udp", "udp4", "udp6":
-		go func() { srv.stopUDP <- true }()
+	net, addr := srv.Net, srv.Addr
+	switch {
+	case srv.Listener != nil:
+		a := srv.Listener.Addr()
+		net, addr = a.Network(), a.String()
+	case srv.PacketConn != nil:
+		a := srv.PacketConn.LocalAddr()
+		net, addr = a.Network(), a.String()
 	}
-	c.Exchange(new(Msg), srv.Addr)
-	return nil
+
+	fin := make(chan bool)
+	switch net {
+	case "tcp", "tcp4", "tcp6":
+		go func() {
+			srv.stopTCP <- true
+			srv.wgTCP.Wait()
+			fin <- true
+		}()
+
+	case "udp", "udp4", "udp6":
+		go func() {
+			srv.stopUDP <- true
+			srv.wgUDP.Wait()
+			fin <- true
+		}()
+	}
+
+	c := &Client{Net: net}
+	go c.Exchange(new(Msg), addr) // extra query to help ReadXXX loop to pass
+
+	select {
+	case <-time.After(srv.getReadTimeout()):
+		return &Error{err: "server shutdown is pending"}
+	case <-fin:
+		return nil
+	}
+}
+
+// getReadTimeout is a helper func to use system timeout if server did not intend to change it.
+func (srv *Server) getReadTimeout() time.Duration {
+	rtimeout := dnsTimeout
+	if srv.ReadTimeout != 0 {
+		rtimeout = srv.ReadTimeout
+	}
+	return rtimeout
 }
 
 // serveTCP starts a TCP listener for the server.
@@ -326,23 +360,19 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	rtimeout := dnsTimeout
-	if srv.ReadTimeout != 0 {
-		rtimeout = srv.ReadTimeout
-	}
+	rtimeout := srv.getReadTimeout()
+	// deadline is not used here
 	for {
 		rw, e := l.AcceptTCP()
-		select {
-		case <-srv.stopTCP:
-			// Asked to shutdown
-			srv.wgTCP.Wait()
-			return nil
-		default:
-		}
 		if e != nil {
 			continue
 		}
 		m, e := srv.readTCP(rw, rtimeout)
+		select {
+		case <-srv.stopTCP:
+			return nil
+		default:
+		}
 		if e != nil {
 			continue
 		}
@@ -356,21 +386,17 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 // Each request is handled in a seperate goroutine.
 func (srv *Server) serveUDP(l *net.UDPConn) error {
 	defer l.Close()
+
 	handler := srv.Handler
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	rtimeout := dnsTimeout
-	if srv.ReadTimeout != 0 {
-		rtimeout = srv.ReadTimeout
-	}
+	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
 		m, s, e := srv.readUDP(l, rtimeout)
 		select {
 		case <-srv.stopUDP:
-			// Asked to shutdown
-			srv.wgUDP.Wait()
 			return nil
 		default:
 		}

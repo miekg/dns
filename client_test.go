@@ -9,27 +9,25 @@ import (
 	"time"
 )
 
-func newTestServer(t *testing.T) {
-	// Defined in server_test.go
+func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
-	go func() {
-		err := ListenAndServe(":8063", "udp", nil)
-		if err != nil {
-			t.Log("ListenAndServe: ", err.Error())
-			t.Fatal()
-		}
-	}()
-	time.Sleep(4e8)
-}
 
-func TestClientSync(t *testing.T) {
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
-
+	r, _, e := c.Exchange(m, addrstr)
+	if e != nil {
+		t.Logf("failed to exchange: %s", e.Error())
+		t.Fail()
+	}
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("failed to get an valid answer")
 		t.Fail()
@@ -38,13 +36,26 @@ func TestClientSync(t *testing.T) {
 }
 
 func TestClientEDNS0(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	HandleFunc("example.com.", AnotherHelloServer)
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeDNSKEY)
 
 	m.SetEdns0(2048, true)
 
 	c := new(Client)
-	r, _, _ := c.Exchange(m, "127.0.0.1:6053")
+	r, _, e := c.Exchange(m, addrstr)
+	if e != nil {
+		t.Logf("failed to exchange: %s", e.Error())
+		t.Fail()
+	}
 
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Log("failed to get an valid answer")
@@ -54,6 +65,15 @@ func TestClientEDNS0(t *testing.T) {
 }
 
 func TestSingleSingleInflight(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	HandleFunc("example.com.", AnotherHelloServer)
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeDNSKEY)
 
@@ -63,7 +83,7 @@ func TestSingleSingleInflight(t *testing.T) {
 	ch := make(chan time.Duration)
 	for i := 0; i < nr; i++ {
 		go func() {
-			_, rtt, _ := c.Exchange(m, "127.0.0.1:6053")
+			_, rtt, _ := c.Exchange(m, addrstr)
 			ch <- rtt
 		}()
 	}
