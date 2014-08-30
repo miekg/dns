@@ -40,10 +40,6 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		pc.Close()
 	}()
-	// in order to let all Server internals to finish before test will touch
-	// server's internal fields, we need to cycle thru other goroutinges for
-	// one more time
-	runtime.Gosched()
 	return server, pc.LocalAddr().String(), nil
 }
 
@@ -57,10 +53,6 @@ func RunLocalTCPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		l.Close()
 	}()
-	// in order to let all Server internals to finish before test will touch
-	// server's internal fields, we need to cycle thru other goroutinges for
-	// one more time
-	runtime.Gosched()
 	return server, l.Addr().String(), nil
 }
 
@@ -308,15 +300,14 @@ func TestServingLargeResponses(t *testing.T) {
 	}
 }
 
-// TODO(miek): These tests should actually fail when the server does
-// not shut down.
-// (asergeyev) I put err check logic which is not yet in use but IMO
-// this test will not change as shutdown internals improve.
 func TestShutdownTCP(t *testing.T) {
 	s, _, err := RunLocalTCPServer("127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
+	// it normally is too early to shutting down because server
+	// activates in goroutine.
+	runtime.Gosched()
 	err = s.Shutdown()
 	if err != nil {
 		t.Errorf("Could not shutdown test TCP server, %s", err)
@@ -328,6 +319,9 @@ func TestShutdownUDP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
+	// it normally is too early to shutting down because server
+	// activates in goroutine.
+	runtime.Gosched()
 	err = s.Shutdown()
 	if err != nil {
 		t.Errorf("Could not shutdown test UDP server, %s", err)
