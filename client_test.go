@@ -33,6 +33,17 @@ func TestClientSync(t *testing.T) {
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
+	// And now with plain Exchange().
+	r, e = Exchange(m, addrstr)
+	if e != nil {
+		t.Logf("failed to exchange: %s", e.Error())
+		t.Fail()
+	}
+	if r != nil && r.Rcode != RcodeSuccess {
+		t.Log("failed to get an valid answer")
+		t.Fail()
+		t.Logf("%v\n", r)
+	}
 }
 
 func TestClientEDNS0(t *testing.T) {
