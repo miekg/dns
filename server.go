@@ -231,10 +231,21 @@ type Server struct {
 	stopTCP chan bool
 	wgUDP   sync.WaitGroup
 	wgTCP   sync.WaitGroup
+
+	// make start/shutdown not racy
+	lock    sync.Mutex
+	started bool
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
+	srv.lock.Lock()
+	if srv.started {
+		return &Error{err: "server already started"}
+	}
+	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
+	srv.started = true
+	srv.lock.Unlock()
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
@@ -244,7 +255,6 @@ func (srv *Server) ListenAndServe() error {
 	}
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		srv.stopTCP = make(chan bool)
 		a, e := net.ResolveTCPAddr(srv.Net, addr)
 		if e != nil {
 			return e
@@ -255,7 +265,6 @@ func (srv *Server) ListenAndServe() error {
 		}
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
-		srv.stopUDP = make(chan bool)
 		a, e := net.ResolveUDPAddr(srv.Net, addr)
 		if e != nil {
 			return e
@@ -264,7 +273,6 @@ func (srv *Server) ListenAndServe() error {
 		if e != nil {
 			return e
 		}
-
 		if e := setUDPSocketOptions(l); e != nil {
 			return e
 		}
@@ -276,11 +284,17 @@ func (srv *Server) ListenAndServe() error {
 // ActivateAndServe starts a nameserver with the PacketConn or Listener
 // configured in *Server. Its main use is to start a server from systemd.
 func (srv *Server) ActivateAndServe() error {
+	srv.lock.Lock()
+	if srv.started {
+		return &Error{err: "server already started"}
+	}
+	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
+	srv.started = true
+	srv.lock.Unlock()
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
 	if srv.PacketConn != nil {
-		srv.stopUDP = make(chan bool)
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
 		}
@@ -292,7 +306,6 @@ func (srv *Server) ActivateAndServe() error {
 		}
 	}
 	if srv.Listener != nil {
-		srv.stopTCP = make(chan bool)
 		if t, ok := srv.Listener.(*net.TCPListener); ok {
 			return srv.serveTCP(t)
 		}
@@ -305,6 +318,12 @@ func (srv *Server) ActivateAndServe() error {
 // is taken down. If the Shutdown was not succesful an error is taking longer than reading
 // timeout.
 func (srv *Server) Shutdown() error {
+	srv.lock.Lock()
+	if !srv.started {
+		return &Error{err: "server not started"}
+	}
+	srv.started = false
+	srv.lock.Unlock()
 	net, addr := srv.Net, srv.Addr
 	switch {
 	case srv.Listener != nil:
