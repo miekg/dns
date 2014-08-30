@@ -11,7 +11,7 @@ import (
 
 func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
-	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
@@ -37,7 +37,7 @@ func TestClientSync(t *testing.T) {
 
 func TestClientEDNS0(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
-	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
@@ -66,7 +66,7 @@ func TestClientEDNS0(t *testing.T) {
 
 func TestSingleSingleInflight(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
-	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
