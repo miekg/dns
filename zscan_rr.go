@@ -296,6 +296,9 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Ns = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Ns = o
 		return rr, nil
@@ -339,6 +342,9 @@ func setNSAPPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Ptr = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Ptr = o
 		return rr, nil
@@ -359,6 +365,9 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Mbox = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Mbox = o
 	} else {
@@ -393,6 +402,9 @@ func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Mr = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Mr = o
 		return rr, nil
@@ -413,6 +425,9 @@ func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Mb = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Mb = o
 		return rr, nil
@@ -433,6 +448,9 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Mg = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Mg = o
 		return rr, nil
@@ -466,6 +484,9 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Rmail = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Rmail = o
 	} else {
@@ -500,6 +521,9 @@ func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Mf = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Mf = o
 		return rr, nil
@@ -520,6 +544,9 @@ func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Md = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Md = o
 		return rr, nil
@@ -657,6 +684,9 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Target = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Target = o
 		return rr, nil
@@ -677,6 +707,9 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Target = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Target = o
 		return rr, nil
@@ -697,6 +730,9 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.Ns = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	<-c // _BLANK
 	if l.token == "@" {
 		rr.Ns = o
@@ -901,6 +937,9 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 
 	l := <-c
 	rr.PreviousName = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.PreviousName = o
 	} else {
@@ -1247,6 +1286,9 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 
 	l := <-c
 	rr.NextDomain = l.token
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
 	if l.token == "@" {
 		rr.NextDomain = o
 	} else {
@@ -2004,6 +2046,9 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Fqdn = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Fqdn = o
 		return rr, nil
@@ -2086,6 +2131,9 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError) {
 	<-c     // _BLANK
 	l = <-c // _STRING
 	rr.Map822 = l.token
+	if l.length == 0 {
+		return rr, nil
+	}
 	if l.token == "@" {
 		rr.Map822 = o
 		return rr, nil

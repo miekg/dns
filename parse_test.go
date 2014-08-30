@@ -1173,6 +1173,7 @@ func TestTxtLong(t *testing.T) {
 	}
 }
 
+// Basically, don't crash.
 func TestMalformedPackets(t *testing.T) {
 	var packets = []string{
 		"0021641c0000000100000000000078787878787878787878787303636f6d0000100001",
@@ -1192,9 +1193,7 @@ func TestMalformedPackets(t *testing.T) {
 
 func TestDynamicUpdateParsing(t *testing.T) {
 	prefix := "example.com. IN "
-	// TODO(miek): extend to all types.
-	//for _, typ := range TypeToString {
-	for _, typ := range []string{"PTR", "A"} {
+	for _, typ := range TypeToString {
 		r, e := NewRR(prefix + typ)
 		if e != nil {
 			t.Log("failure to parse: " + prefix + typ)
