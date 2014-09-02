@@ -315,8 +315,8 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return. All in progress queries are completed before the server
-// is taken down. If the Shutdown was not succesful an error is taking longer than reading
-// timeout.
+// is taken down. If the Shutdown is taking longer than the reading timeout and error
+// is returned.
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()
 	if !srv.started {

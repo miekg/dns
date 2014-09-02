@@ -133,5 +133,6 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * Last remaining RRs: APL, ATMA, A6 and NXT;
 * Missing in parsing: ISDN, UNSPEC, ATMA;
 * CAA parsing is broken;
+* NSEC(3) cover/match/closest enclose;
 * Replies with TC bit are not parsed to the end.
 * SIG(0)
