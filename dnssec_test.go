@@ -104,7 +104,7 @@ func TestSecure(t *testing.T) {
 
 	// It should validate. Period is checked seperately, so this will keep on working
 	if sig.Verify(key, []RR{soa}) != nil {
-		t.Log("Failure to validate")
+		t.Log("failure to validate")
 		t.Fail()
 	}
 }
@@ -126,14 +126,14 @@ func TestSignature(t *testing.T) {
 
 	// Should not be valid
 	if sig.ValidityPeriod(time.Now()) {
-		t.Log("Should not be valid")
+		t.Log("should not be valid")
 		t.Fail()
 	}
 
 	sig.Inception = 315565800   //Tue Jan  1 10:10:00 CET 1980
 	sig.Expiration = 4102477800 //Fri Jan  1 10:10:00 CET 2100
 	if !sig.ValidityPeriod(time.Now()) {
-		t.Log("Should be valid")
+		t.Log("should be valid")
 		t.Fail()
 	}
 }
@@ -191,16 +191,16 @@ func TestSignVerify(t *testing.T) {
 
 	for _, r := range []RR{soa, soa1, srv} {
 		if sig.Sign(privkey, []RR{r}) != nil {
-			t.Log("Failure to sign the record")
+			t.Log("failure to sign the record")
 			t.Fail()
 			continue
 		}
 		if sig.Verify(key, []RR{r}) != nil {
-			t.Log("Failure to validate")
+			t.Log("failure to validate")
 			t.Fail()
 			continue
 		}
-		t.Logf("Validated: %s\n", r.Header().Name)
+		t.Logf("validated: %s\n", r.Header().Name)
 	}
 }
 
@@ -230,15 +230,15 @@ func Test65534(t *testing.T) {
 	sig.Algorithm = RSASHA256
 	if err := sig.Sign(privkey, []RR{t6}); err != nil {
 		t.Log(err)
-		t.Log("Failure to sign the TYPE65534 record")
+		t.Log("failure to sign the TYPE65534 record")
 		t.Fail()
 	}
 	if err := sig.Verify(key, []RR{t6}); err != nil {
 		t.Log(err)
-		t.Log("Failure to validate")
+		t.Log("failure to validate")
 		t.Fail()
 	} else {
-		t.Logf("Validated: %s\n", t6.Header().Name)
+		t.Logf("validated: %s\n", t6.Header().Name)
 	}
 }
 
@@ -260,7 +260,7 @@ Exponent2: Pu5+mCEb7T5F+kFNZhQadHUklt0JUHbi3hsEvVoHpEGSw3BGDQrtIflDde0/rbWHgDPM4
 Coefficient: UuRoNqe7YHnKmQzE6iDWKTMIWTuoqqrFAmXPmKQnC+Y+BQzOVEHUo9bXdDnoI9hzXP1gf8zENMYwYLeWpuYlFQ==
 `), "Kmiek.nl.+010+05240.private")
 	if pubkey.(*DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
-		t.Log("Pubkey is not what we've read")
+		t.Log("pubkey is not what we've read")
 		t.Fail()
 	}
 	// Coefficient looks fishy...
@@ -280,7 +280,7 @@ func TestTag(t *testing.T) {
 
 	tag := key.KeyTag()
 	if tag != 12051 {
-		t.Logf("Wrong key tag: %d for key %v\n", tag, key)
+		t.Logf("wrong key tag: %d for key %v\n", tag, key)
 		t.Fail()
 	}
 }
@@ -318,12 +318,12 @@ func TestKeyRSA(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 
 	if err := sig.Sign(priv, []RR{soa}); err != nil {
-		t.Logf("Failed to sign")
+		t.Logf("failed to sign")
 		t.Fail()
 		return
 	}
 	if err := sig.Verify(key, []RR{soa}); err != nil {
-		t.Logf("Failed to verify")
+		t.Logf("failed to verify")
 		t.Fail()
 	}
 }
@@ -341,7 +341,7 @@ func TestKeyToDS(t *testing.T) {
 
 	ds := key.ToDS(SHA1)
 	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
-		t.Logf("Wrong DS digest for SHA1\n%v\n", ds)
+		t.Logf("wrong DS digest for SHA1\n%v\n", ds)
 		t.Fail()
 	}
 }
@@ -373,16 +373,16 @@ Activate: 20110302104537`
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
 		if 65537 != priv.PublicKey.E {
-			t.Log("Exponenent should be 65537")
+			t.Log("exponenent should be 65537")
 			t.Fail()
 		}
 	default:
-		t.Logf("We should have read an RSA key: %v", priv)
+		t.Logf("we should have read an RSA key: %v", priv)
 		t.Fail()
 	}
 	if k.KeyTag() != 37350 {
 		t.Logf("%d %v\n", k.KeyTag(), k)
-		t.Log("Keytag should be 37350")
+		t.Log("keytag should be 37350")
 		t.Fail()
 	}
 
@@ -406,7 +406,7 @@ Activate: 20110302104537`
 
 	sig.Sign(p, []RR{soa})
 	if sig.Signature != "D5zsobpQcmMmYsUMLxCVEtgAdCvTu8V/IEeP4EyLBjqPJmjt96bwM9kqihsccofA5LIJ7DN91qkCORjWSTwNhzCv7bMyr2o5vBZElrlpnRzlvsFIoAZCD9xg6ZY7ZyzUJmU6IcTwG4v3xEYajcpbJJiyaw/RqR90MuRdKPiBzSo=" {
-		t.Log("Signature is not correct")
+		t.Log("signature is not correct")
 		t.Logf("%v\n", sig)
 		t.Fail()
 	}
@@ -431,10 +431,10 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	}
 	ds := eckey.(*DNSKEY).ToDS(SHA384)
 	if ds.KeyTag != 10771 {
-		t.Fatal("Wrong keytag on DS")
+		t.Fatal("wrong keytag on DS")
 	}
 	if ds.Digest != "72d7b62976ce06438e9c0bf319013cf801f09ecc84b8d7e9495f27e305c6a9b0563a9b5f4d288405c3008a946df983d6" {
-		t.Fatal("Wrong DS Digest")
+		t.Fatal("wrong DS Digest")
 	}
 	a, _ := NewRR("www.example.net. 3600 IN A 192.0.2.1")
 	sig := new(RRSIG)
@@ -449,7 +449,49 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 
 	t.Logf("%s", sig.String())
 	if e := sig.Verify(eckey.(*DNSKEY), []RR{a}); e != nil {
-		t.Logf("Failure to validate: %s", e.Error())
+		t.Logf("failure to validate: %s", e.Error())
 		t.Fail()
+	}
+}
+
+func testSignVerifyECDSA2(t *testing.T) {
+	// The record we want to sign
+	srv := new(SRV)
+	srv.Hdr = RR_Header{"srv.miek.nl.", TypeSRV, ClassINET, 14400, 0}
+	srv.Port = 1000
+	srv.Weight = 800
+	srv.Target = "web1.miek.nl."
+
+	// With this key
+	key := new(DNSKEY)
+	key.Hdr.Rrtype = TypeDNSKEY
+	key.Hdr.Name = "miek.nl."
+	key.Hdr.Class = ClassINET
+	key.Hdr.Ttl = 14400
+	key.Flags = 256
+	key.Protocol = 3
+	key.Algorithm = ECDSAP256SHA256
+	privkey, err := key.Generate(256)
+	if err != nil {
+		t.Fatal("failure to generate key")
+	}
+
+	// Fill in the values of the Sig, before signing
+	sig := new(RRSIG)
+	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
+	sig.TypeCovered = srv.Hdr.Rrtype
+	sig.Labels = uint8(CountLabel(srv.Hdr.Name)) // works for all 3
+	sig.OrigTtl = srv.Hdr.Ttl
+	sig.Expiration = 1296534305 // date -u '+%s' -d"2011-02-01 04:25:05"
+	sig.Inception = 1293942305  // date -u '+%s' -d"2011-01-02 04:25:05"
+	sig.KeyTag = key.KeyTag()   // Get the keyfrom the Key
+	sig.SignerName = key.Hdr.Name
+	sig.Algorithm = ECDSAP256SHA256
+
+	if sig.Sign(privkey, []RR{srv}) != nil {
+		t.Fatal("failure to sign the record")
+	}
+	if sig.Verify(key, []RR{srv}) != nil {
+		t.Fatal("failure to validate")
 	}
 }
