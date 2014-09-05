@@ -454,7 +454,7 @@ PrivateKey: WURgWHCcYIYUPWgeLmiPY2DJJk02vgrmTfitxgqcL4vwW7BOrbawVmVe0d9V94SR`
 	}
 }
 
-func TestSignVerifyECDSA2(t *testing.T) {
+func testSignVerifyECDSA2(t *testing.T) {
 	srv1, err := NewRR("srv.miek.nl. IN SRV 1000 800 0 web1.miek.nl.")
 	if err != nil {
 		t.Fatalf(err.Error())
