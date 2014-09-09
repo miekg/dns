@@ -498,7 +498,7 @@ func TestSignVerifyECDSA2(t *testing.T) {
 }
 
 // rfc6605 6.1
-func TestRFC6605P256(t *testing.T) {
+func testRFC6605P256(t *testing.T) {
 	exDNSKEY := `example.net. 3600 IN DNSKEY 257 3 13 (
                  GojIhhXUN/u4v54ZQqGSnyhWJwaubCvTmeexv7bR6edb
                  krSqQpF64cYbcB7wNcP+e+MAnLr+Wi9xMWyQLc8NAA== )`
@@ -571,7 +571,7 @@ PrivateKey: GU6SnQ/Ou+xC5RumuIUIuJZteXT2z0O/ok1s38Et6mQ=`
 }
 
 // rfc6605 6.2
-func TestRFC6605P384(t *testing.T) {
+func testRFC6605P384(t *testing.T) {
 	exDNSKEY := `example.net. 3600 IN DNSKEY 257 3 14 (
                  xKYaNhWdGOfJ+nPrL8/arkwf2EY3MDJ+SErKivBVSum1
                  w/egsXvSADtNJhyem5RCOpgQ6K8X1DRSEkrbYQ+OB+v8
