@@ -13,9 +13,10 @@
 //	o.Hdr.Name = "." // MUST be the root zone, per definition.
 //	o.Hdr.Rrtype = dns.TypeOPT
 //
-// The rdata of an OPT RR consists out of a slice of EDNS0 interfaces. Currently
-// only a few have been standardized: EDNS0_NSID (RFC 5001) and EDNS0_SUBNET (RFC 6891). Note that
-// these options may be combined in an OPT RR.
+// The rdata of an OPT RR consists out of a slice of EDNS0 (RFC 6891)
+// interfaces. Currently only a few have been standardized: EDNS0_NSID
+// (RFC 5001) and EDNS0_SUBNET (draft-vandergaast-edns-client-subnet-02). Note
+// that these options may be combined in an OPT RR.
 // Basic use pattern for a server to check if (and which) options are set:
 //
 //	// o is a dns.OPT
