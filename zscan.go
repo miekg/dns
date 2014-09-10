@@ -525,7 +525,6 @@ func zlexer(s *scan, c chan lex) {
 				stri++
 				break
 			}
-			escape = false
 			if commt {
 				com[comi] = x
 				comi++
@@ -607,14 +606,14 @@ func zlexer(s *scan, c chan lex) {
 			owner = false
 			space = true
 		case ';':
-			if quote {
-				// Inside quotes this is legal
+			if escape {
+				escape = false
 				str[stri] = x
 				stri++
 				break
 			}
-			if escape {
-				escape = false
+			if quote {
+				// Inside quotes this is legal
 				str[stri] = x
 				stri++
 				break
@@ -631,9 +630,15 @@ func zlexer(s *scan, c chan lex) {
 			com[comi] = ';'
 			comi++
 		case '\r':
-			// discard
-			// this means it can also not be used as rdata
+			escape = false
+			if quote {
+				str[stri] = x
+				stri++
+				break
+			}
+			// discard if outside of quotes
 		case '\n':
+			escape = false
 			// Escaped newline
 			if quote {
 				str[stri] = x
@@ -641,7 +646,6 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 			// inside quotes this is legal
-			escape = false
 			if commt {
 				// Reset a comment
 				commt = false
@@ -696,18 +700,20 @@ func zlexer(s *scan, c chan lex) {
 				comi = 0
 			}
 		case '\\':
-			// quote?
+			// comments do not get escaped chars, everything is copied
 			if commt {
 				com[comi] = x
 				comi++
 				break
 			}
+			// something already escaped must be in string
 			if escape {
 				str[stri] = x
 				stri++
 				escape = false
 				break
 			}
+			// something escaped outside of string gets added to string
 			str[stri] = x
 			stri++
 			escape = true
@@ -729,21 +735,19 @@ func zlexer(s *scan, c chan lex) {
 				l.value = _STRING
 				l.token = string(str[:stri])
 				l.length = stri
+
 				debug.Printf("[%+v]", l.token)
 				c <- l
 				stri = 0
 			}
+
+			// send quote itself as separate token
 			l.value = _QUOTE
 			l.token = "\""
 			l.length = 1
 			c <- l
 			quote = !quote
 		case '(', ')':
-			if quote {
-				str[stri] = x
-				stri++
-				break
-			}
 			if commt {
 				com[comi] = x
 				comi++
@@ -753,6 +757,11 @@ func zlexer(s *scan, c chan lex) {
 				str[stri] = x
 				stri++
 				escape = false
+				break
+			}
+			if quote {
+				str[stri] = x
+				stri++
 				break
 			}
 			switch x {
@@ -769,12 +778,12 @@ func zlexer(s *scan, c chan lex) {
 				brace++
 			}
 		default:
+			escape = false
 			if commt {
 				com[comi] = x
 				comi++
 				break
 			}
-			escape = false
 			str[stri] = x
 			stri++
 			space = false

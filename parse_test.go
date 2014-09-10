@@ -137,6 +137,39 @@ func TestDomainNameAndTXTEscapes(t *testing.T) {
 	}
 }
 
+func TestTXTEscapeParsing(t *testing.T) {
+	test := [][]string{
+		{`";"`, `";"`},
+		{`\;`, `";"`},
+		{`"\t"`, `"\t"`},
+		{`"\r"`, `"\r"`},
+		{`"\ "`, `" "`},
+		{`"\;"`, `";"`},
+		{`"\;\""`, `";\""`},
+		{`"\(a\)"`, `"(a)"`},
+		{`"\(a)"`, `"(a)"`},
+		{`"(a\)"`, `"(a)"`},
+		{`"(a)"`, `"(a)"`},
+		{`"\048"`, `"0"`},
+		{`"\` + "\n" + `"`, `"\n"`},
+		{`"\` + "\r" + `"`, `"\r"`},
+		{`"\` + "\x11" + `"`, `"\017"`},
+		{`"\'"`, `"'"`},
+	}
+	for _, s := range test {
+		rr, err := NewRR(fmt.Sprintf("example.com. IN TXT %v", s[0]))
+		if err != nil {
+			t.Errorf("Could not parse %v TXT: %s", s[0], err)
+			continue
+		}
+
+		txt := sprintTxt(rr.(*TXT).Txt)
+		if txt != s[1] {
+			t.Errorf("Mismatch after parsing `%v` TXT record: `%v` != `%v`", s[0], txt, s[1])
+		}
+	}
+}
+
 func GenerateDomain(r *rand.Rand, size int) []byte {
 	dnLen := size % 70 // artificially limit size so there's less to intrepret if a failure occurs
 	var dn []byte

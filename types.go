@@ -482,24 +482,25 @@ func sprintTxt(txt []string) string {
 }
 
 func appendDomainNameByte(s []byte, b byte) []byte {
-	if b == '.' || b == '(' || b == ')' || b == ';' || b == ' ' || b == '\'' || b == '@' {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')': // additional chars to escape
 		return append(s, '\\', b)
 	}
 	return appendTXTStringByte(s, b)
 }
 
 func appendTXTStringByte(s []byte, b byte) []byte {
-	if b == '"' {
-		return append(s, `\"`...)
-	} else if b == '\\' {
-		return append(s, `\\`...)
-	} else if b == '\t' {
-		return append(s, `\t`...)
-	} else if b == '\r' {
-		return append(s, `\r`...)
-	} else if b == '\n' {
-		return append(s, `\n`...)
-	} else if b < ' ' || b > '~' {
+	switch b {
+	case '\t':
+		return append(s, '\\', 't')
+	case '\r':
+		return append(s, '\\', 'r')
+	case '\n':
+		return append(s, '\\', 'n')
+	case '"', '\\':
+		return append(s, '\\', b)
+	}
+	if b < ' ' || b > '~' {
 		return append(s, fmt.Sprintf("\\%03d", b)...)
 	}
 	return append(s, b)
