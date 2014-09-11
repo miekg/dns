@@ -161,21 +161,7 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 }
 
 func readPrivateKeyGOST(m map[string]string) (PrivateKey, error) {
-	/* TODO(miek)
-	for k, v := range m {
-		switch k {
-		case "gostasn1:":
-			v1, err := packBase64([]byte(v))
-			if err != nil {
-				return nil, err
-			}
-			v1 = v1
-			//p.D.SetBytes(v1)
-		case "created:", "publish:", "activate:":
-			// not used in Go (yet)
-		}
-	}
-	*/
+	// TODO(miek)
 	return nil, nil
 }
 
