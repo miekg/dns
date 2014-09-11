@@ -51,7 +51,7 @@
 //      m1 := new(dns.Msg)
 //      m1.Id = dns.Id()
 //      m1.RecursionDesired = true
-//      m1.Question = make([]Question, 1)
+//      m1.Question = make([]dns.Question, 1)
 //      m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
 //
 // After creating a message it can be send.
