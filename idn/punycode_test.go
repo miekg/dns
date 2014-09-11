@@ -1,4 +1,4 @@
-package dns
+package idn
 
 import (
 	"strings"
@@ -27,13 +27,22 @@ var testcases = [][2]string{
 
 func TestEncodePunycode(t *testing.T) {
 	for _, tst := range testcases {
-		enc := encode_punycode([]byte(tst[0]))
+		enc := encodeBytes([]byte(tst[0]))
 		if string(enc) != tst[1] {
 			t.Errorf("%s encodeded as %s but should be %s", tst[0], enc, tst[1])
 		}
-		dec := decode_punycode([]byte(tst[1]))
+		dec := decodeBytes([]byte(tst[1]))
 		if string(dec) != strings.ToLower(tst[0]) {
 			t.Errorf("%s decoded as %s but should be %s", tst[1], dec, strings.ToLower(tst[0]))
+		}
+
+		full := ToPunycode(tst[0] + ".com")
+		if full != tst[1]+".com" {
+			t.Errorf("invalid result from string conversion to punycode, %s and should be %s.com", full, tst[1])
+		}
+		decoded := FromPunycode(tst[1] + "." + tst[1])
+		if decoded != strings.ToLower(tst[0]+"."+tst[0]) {
+			t.Errorf("invalid result from string conversion to punycode, %s and should be %s.%s", decoded, tst[0], tst[0])
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package dns
+package idn
 
 import (
 	"bytes"
@@ -7,31 +7,40 @@ import (
 
 // See http://tools.ietf.org/html/rfc3492
 // Implementation idea from RFC itself and from from IDNA::Punycode created by
-// Tatsuhiko Miyagawa <miyagawa@bulknews.net> in 2002
+// Tatsuhiko Miyagawa <miyagawa@bulknews.net> and released under Perl Artistic
+// License in 2002
 
 const (
-	_MIN  = '\u0001'
-	_MAX  = '\u001a' // 26
-	_SKEW = '\u0026' // 38
-	_DAMP = '\u02BC' // 700
-	_BASE = '\u0024' // 36
-	_BIAS = '\u0048' // 72
-	_N    = '\u0080' // 128
+	_MIN  rune = 1
+	_MAX  rune = 26
+	_SKEW rune = 38
+	_DAMP rune = 700
+	_BASE rune = 36
+	_BIAS rune = 72
+	_N    rune = 128
 
-	Delimiter = '-'
-	Prefix    = "xn--"
+	_DELIMITER = '-'
+	_PREFIX    = "xn--"
 )
 
-func IdnToASCII(string) string {
-	return ""
+func ToPunycode(s string) string {
+	tokens := bytes.Split([]byte(s), []byte{'.'})
+	for i := range tokens {
+		tokens[i] = encodeBytes(tokens[i])
+	}
+	return string(bytes.Join(tokens, []byte{'.'}))
 }
 
-func IdnFromASCII(string) string {
-	return ""
+func FromPunycode(s string) string {
+	tokens := bytes.Split([]byte(s), []byte{'.'})
+	for i := range tokens {
+		tokens[i] = decodeBytes(tokens[i])
+	}
+	return string(bytes.Join(tokens, []byte{'.'}))
 }
 
-// digit_value convert single byte into meaningful value that's used to calculate decoded unicode character.
-func digit_value(code rune) rune {
+// digitval converts single byte into meaningful value that's used to calculate decoded unicode character.
+func digitval(code rune) rune {
 	switch {
 	case code >= 'A' && code <= 'Z':
 		return code - 'A'
@@ -43,8 +52,8 @@ func digit_value(code rune) rune {
 	panic("never happens")
 }
 
-// code_point finds BASE36 byte (a-z0-9) based on calculated number.
-func code_point(digit rune) rune {
+// lettercode finds BASE36 byte (a-z0-9) based on calculated number.
+func lettercode(digit rune) rune {
 	switch {
 	case digit >= 0 && digit <= 25:
 		return digit + 'a'
@@ -55,7 +64,7 @@ func code_point(digit rune) rune {
 }
 
 // adapt calculates next bias to be used for next iteration delta
-func adapt_bias(delta rune, numpoints rune, firsttime bool) rune {
+func adapt(delta rune, numpoints rune, firsttime bool) rune {
 	if firsttime {
 		delta /= _DAMP
 	} else {
@@ -106,8 +115,8 @@ func tfunc(k, bias rune) rune {
 	return k - bias
 }
 
-// encode_punycode transforms Unicode input bytes (that represent DNS label) into punycode bytestream
-func encode_punycode(input []byte) []byte {
+// encodeBytes transforms Unicode input bytes (that represent DNS label) into punycode bytestream
+func encodeBytes(input []byte) []byte {
 	n, delta, bias := _N, rune(0), _BIAS
 
 	b := bytes.Runes(input)
@@ -129,10 +138,10 @@ func encode_punycode(input []byte) []byte {
 
 	var out bytes.Buffer
 
-	out.WriteString(Prefix)
+	out.WriteString(_PREFIX)
 	if basiclen > 0 {
 		out.Write(basic)
-		out.WriteByte(Delimiter)
+		out.WriteByte(_DELIMITER)
 	}
 
 	for h := basiclen; h < fulllen; n, delta = n+1, delta+1 {
@@ -153,13 +162,13 @@ func encode_punycode(input []byte) []byte {
 						break
 					}
 					cp := t + ((q - t) % (_BASE - t))
-					out.WriteRune(code_point(cp))
+					out.WriteRune(lettercode(cp))
 					q = (q - t) / (_BASE - t)
 				}
 
-				out.WriteRune(code_point(q))
+				out.WriteRune(lettercode(q))
 
-				bias = adapt_bias(delta, h+1, h == basiclen)
+				bias = adapt(delta, h+1, h == basiclen)
 				h, delta = h+1, 0
 			}
 		}
@@ -167,15 +176,15 @@ func encode_punycode(input []byte) []byte {
 	return out.Bytes()
 }
 
-// encode_punycode transforms punycode input bytes (that represent DNS label) into Unicode bytestream
-func decode_punycode(b []byte) []byte {
+// decodeBytes transforms punycode input bytes (that represent DNS label) into Unicode bytestream
+func decodeBytes(b []byte) []byte {
 	n, bias := _N, _BIAS
-	if !bytes.HasPrefix(b, []byte(Prefix)) {
+	if !bytes.HasPrefix(b, []byte(_PREFIX)) {
 		return b
 	}
 	out := make([]rune, 0, len(b))
-	b = b[len(Prefix):]
-	pos := bytes.Index(b, []byte{Delimiter})
+	b = b[len(_PREFIX):]
+	pos := bytes.Index(b, []byte{_DELIMITER})
 	if pos >= 0 {
 		out = append(out, bytes.Runes(b[:pos])...)
 		b = b[pos+1:] // trim source string
@@ -184,7 +193,7 @@ func decode_punycode(b []byte) []byte {
 		oldi, w, ch := i, rune(1), byte(0)
 		for k := _BASE; ; k += _BASE {
 			ch, b = b[0], b[1:]
-			digit := digit_value(rune(ch))
+			digit := digitval(rune(ch))
 			i += digit * w
 
 			t := tfunc(k, bias)
@@ -195,7 +204,7 @@ func decode_punycode(b []byte) []byte {
 			w *= _BASE - t
 		}
 		ln := rune(len(out) + 1)
-		bias = adapt_bias(i-oldi, ln, oldi == 0)
+		bias = adapt(i-oldi, ln, oldi == 0)
 		n += i / ln
 		i = i % ln
 		// insert
