@@ -499,12 +499,7 @@ func TestSignVerifyECDSA2(t *testing.T) {
 	}
 }
 
-// Copyright 2014 CloudFlare. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 // Here the test vectors from the relevant RFCs are checked.
-
 // rfc6605 6.1
 func TestRFC6605P256(t *testing.T) {
 	exDNSKEY := `example.net. 3600 IN DNSKEY 257 3 13 (
