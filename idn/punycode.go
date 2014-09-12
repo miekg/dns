@@ -49,7 +49,7 @@ func digitval(code rune) rune {
 	case code >= '0' && code <= '9':
 		return code - '0' + 26
 	}
-	panic("never happens")
+	panic("dns: not reached")
 }
 
 // lettercode finds BASE36 byte (a-z0-9) based on calculated number.
@@ -60,7 +60,7 @@ func lettercode(digit rune) rune {
 	case digit >= 26 && digit <= 36:
 		return digit - 26 + '0'
 	}
-	panic("never happens")
+	panic("dns: not reached")
 }
 
 // adapt calculates next bias to be used for next iteration delta
@@ -73,9 +73,6 @@ func adapt(delta rune, numpoints rune, firsttime bool) rune {
 
 	var k rune
 	for delta = delta + delta/numpoints; delta > (_BASE-_MIN)*_MAX/2; k += _BASE {
-		if _BASE <= _MIN {
-			panic("1")
-		}
 		delta /= _BASE - _MIN
 	}
 
