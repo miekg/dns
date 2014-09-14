@@ -23,6 +23,9 @@ const (
 	_PREFIX    = "xn--"
 )
 
+// ToPunycode converts unicode domain names to DNS-appropriate punycode names.
+// This function would return incorrect result for strings for non-canonical
+// unicode strings.
 func ToPunycode(s string) string {
 	tokens := bytes.Split([]byte(s), []byte{'.'})
 	for i := range tokens {
@@ -31,6 +34,7 @@ func ToPunycode(s string) string {
 	return string(bytes.Join(tokens, []byte{'.'}))
 }
 
+// FromPunycode returns uncode domain name from provided punycode string.
 func FromPunycode(s string) string {
 	tokens := bytes.Split([]byte(s), []byte{'.'})
 	for i := range tokens {
@@ -40,6 +44,8 @@ func FromPunycode(s string) string {
 }
 
 // digitval converts single byte into meaningful value that's used to calculate decoded unicode character.
+const errdigit = 0xffff
+
 func digitval(code rune) rune {
 	switch {
 	case code >= 'A' && code <= 'Z':
@@ -49,7 +55,7 @@ func digitval(code rune) rune {
 	case code >= '0' && code <= '9':
 		return code - '0' + 26
 	}
-	panic("dns: not reached")
+	return errdigit
 }
 
 // lettercode finds BASE36 byte (a-z0-9) based on calculated number.
@@ -93,8 +99,9 @@ func next(b []rune, boundary rune) rune {
 	return m
 }
 
-// PrepRune should do actions recommended by stringprep (RFC3491) for each unicode char. TODO(asergeyev): work on actual implementation, currently just lowercases Unicode chars.
-func PrepRune(r rune) rune {
+// preprune converts unicode rune to lower case. At this time it's not
+// supporting all things described RFC3454.
+func preprune(r rune) rune {
 	if unicode.IsUpper(r) {
 		r = unicode.ToLower(r)
 	}
@@ -118,7 +125,7 @@ func encodeBytes(input []byte) []byte {
 
 	b := bytes.Runes(input)
 	for i := range b {
-		b[i] = PrepRune(b[i])
+		b[i] = preprune(b[i])
 	}
 
 	basic := make([]byte, 0, len(b))
@@ -175,22 +182,32 @@ func encodeBytes(input []byte) []byte {
 
 // decodeBytes transforms punycode input bytes (that represent DNS label) into Unicode bytestream
 func decodeBytes(b []byte) []byte {
+	src := b // b would move and we need to keep it
+
 	n, bias := _N, _BIAS
 	if !bytes.HasPrefix(b, []byte(_PREFIX)) {
 		return b
 	}
 	out := make([]rune, 0, len(b))
 	b = b[len(_PREFIX):]
-	pos := bytes.Index(b, []byte{_DELIMITER})
-	if pos >= 0 {
-		out = append(out, bytes.Runes(b[:pos])...)
-		b = b[pos+1:] // trim source string
+	for pos, x := range b {
+		if x == _DELIMITER {
+			out = append(out, bytes.Runes(b[:pos])...)
+			b = b[pos+1:] // trim source string
+			break
+		}
+	}
+	if len(b) == 0 {
+		return src
 	}
 	for i := rune(0); len(b) > 0; i++ {
 		oldi, w, ch := i, rune(1), byte(0)
-		for k := _BASE; ; k += _BASE {
+		for k := _BASE; len(b) > 0; k += _BASE {
 			ch, b = b[0], b[1:]
 			digit := digitval(rune(ch))
+			if digit == errdigit {
+				return src
+			}
 			i += digit * w
 
 			t := tfunc(k, bias)
