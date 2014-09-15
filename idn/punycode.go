@@ -87,7 +87,7 @@ func lettercode(digit rune) rune {
 }
 
 // adapt calculates next bias to be used for next iteration delta
-func adapt(delta rune, numpoints rune, firsttime bool) rune {
+func adapt(delta rune, numpoints int, firsttime bool) rune {
 	if firsttime {
 		delta /= _DAMP
 	} else {
@@ -95,7 +95,7 @@ func adapt(delta rune, numpoints rune, firsttime bool) rune {
 	}
 
 	var k rune
-	for delta = delta + delta/numpoints; delta > (_BASE-_MIN)*_MAX/2; k += _BASE {
+	for delta = delta + delta/rune(numpoints); delta > (_BASE-_MIN)*_MAX/2; k += _BASE {
 		delta /= _BASE - _MIN
 	}
 
@@ -151,8 +151,8 @@ func encodeBytes(input []byte) []byte {
 			basic = append(basic, byte(ltr))
 		}
 	}
-	basiclen := rune(len(basic))
-	fulllen := rune(len(b))
+	basiclen := len(basic)
+	fulllen := len(b)
 	if basiclen == fulllen {
 		return basic
 	}
@@ -176,7 +176,7 @@ func encodeBytes(input []byte) []byte {
 		nextltr = next(b, n)
 		s.Truncate(0)
 		s.WriteRune(nextltr)
-		delta, n = delta+(nextltr-n)*(h+1), nextltr
+		delta, n = delta+(nextltr-n)*rune(h+1), nextltr
 
 		for _, ltr = range b {
 			if ltr < n {
@@ -225,9 +225,10 @@ func decodeBytes(b []byte) []byte {
 		return src
 	}
 	var (
-		i, oldi, w   rune
-		ch           byte
-		t, digit, ln rune
+		i, oldi, w rune
+		ch         byte
+		t, digit   rune
+		ln         int
 	)
 
 	for i = 0; len(b) > 0; i++ {
@@ -247,10 +248,10 @@ func decodeBytes(b []byte) []byte {
 
 			w *= _BASE - t
 		}
-		ln = rune(len(out) + 1)
+		ln = len(out) + 1
 		bias = adapt(i-oldi, ln, oldi == 0)
-		n += i / ln
-		i = i % ln
+		n += i / rune(ln)
+		i = i % rune(ln)
 		// insert
 		out = append(out, 0)
 		copy(out[i+1:], out[i:])
