@@ -31,31 +31,34 @@ const (
 // unicode strings.
 func ToPunycode(s string) string {
 	tokens := dns.SplitDomainName(s)
-	if s[len(s)-1] == '.' {
-		if tokens == nil {
-			tokens = []string{"", ""}
-		} else {
-			tokens = append(tokens, "")
-		}
+	switch {
+	case s == "":
+		return ""
+	case tokens == nil: // s == .
+		return "."
+	case s[len(s)-1] == '.':
+		tokens = append(tokens, "")
 	}
+
 	for i := range tokens {
-		tokens[i] = string(encodeBytes([]byte(tokens[i])))
+		tokens[i] = string(encode([]byte(tokens[i])))
 	}
 	return strings.Join(tokens, ".")
 }
 
-// FromPunycode returns uncode domain name from provided punycode string.
+// FromPunycode returns unicode domain name from provided punycode string.
 func FromPunycode(s string) string {
 	tokens := dns.SplitDomainName(s)
-	if s[len(s)-1] == '.' {
-		if tokens == nil {
-			tokens = []string{"", ""}
-		} else {
-			tokens = append(tokens, "")
-		}
+	switch {
+	case s == "":
+		return ""
+	case tokens == nil: // s == .
+		return "."
+	case s[len(s)-1] == '.':
+		tokens = append(tokens, "")
 	}
 	for i := range tokens {
-		tokens[i] = string(decodeBytes([]byte(tokens[i])))
+		tokens[i] = string(decode([]byte(tokens[i])))
 	}
 	return strings.Join(tokens, ".")
 }
@@ -117,7 +120,7 @@ func next(b []rune, boundary rune) rune {
 }
 
 // preprune converts unicode rune to lower case. At this time it's not
-// supporting all things described RFC3454.
+// supporting all things described in RFCs
 func preprune(r rune) rune {
 	if unicode.IsUpper(r) {
 		r = unicode.ToLower(r)
@@ -136,8 +139,8 @@ func tfunc(k, bias rune) rune {
 	return k - bias
 }
 
-// encodeBytes transforms Unicode input bytes (that represent DNS label) into punycode bytestream
-func encodeBytes(input []byte) []byte {
+// encode transforms Unicode input bytes (that represent DNS label) into punycode bytestream
+func encode(input []byte) []byte {
 	n, bias := _N, _BIAS
 
 	b := bytes.Runes(input)
@@ -204,8 +207,8 @@ func encodeBytes(input []byte) []byte {
 	return out.Bytes()
 }
 
-// decodeBytes transforms punycode input bytes (that represent DNS label) into Unicode bytestream
-func decodeBytes(b []byte) []byte {
+// decode transforms punycode input bytes (that represent DNS label) into Unicode bytestream
+func decode(b []byte) []byte {
 	src := b // b would move and we need to keep it
 
 	n, bias := _N, _BIAS

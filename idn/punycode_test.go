@@ -28,11 +28,11 @@ var testcases = [][2]string{
 
 func TestEncodeDecodePunycode(t *testing.T) {
 	for _, tst := range testcases {
-		enc := encodeBytes([]byte(tst[0]))
+		enc := encode([]byte(tst[0]))
 		if string(enc) != tst[1] {
 			t.Errorf("%s encodeded as %s but should be %s", tst[0], enc, tst[1])
 		}
-		dec := decodeBytes([]byte(tst[1]))
+		dec := decode([]byte(tst[1]))
 		if string(dec) != strings.ToLower(tst[0]) {
 			t.Errorf("%s decoded as %s but should be %s", tst[1], dec, strings.ToLower(tst[0]))
 		}
@@ -65,6 +65,15 @@ func TestEncodeDecodeFinalPeriod(t *testing.T) {
 		decoded := FromPunycode(tst[1] + ".")
 		if decoded != strings.ToLower(tst[0]+".") {
 			t.Errorf("invalid result from string conversion to punycode when period added, %#v and should be %#v", decoded, tst[0]+".")
+		}
+		full = ToPunycode(tst[0])
+		if full != tst[1] {
+			t.Errorf("invalid result from string conversion to punycode when no period added at the end, %#v and should be %#v", full, tst[1]+".")
+		}
+		// assert punycode.com. == unicode.com.
+		decoded = FromPunycode(tst[1])
+		if decoded != strings.ToLower(tst[0]) {
+			t.Errorf("invalid result from string conversion to punycode when no period added, %#v and should be %#v", decoded, tst[0]+".")
 		}
 	}
 }
