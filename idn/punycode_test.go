@@ -6,6 +6,7 @@ import (
 )
 
 var testcases = [][2]string{
+	{"", ""},
 	{"a", "a"},
 	{"A-B", "a-b"},
 	{"AbC", "abc"},
@@ -49,6 +50,21 @@ func TestToFromPunycode(t *testing.T) {
 		decoded := FromPunycode(tst[1] + "." + tst[1])
 		if decoded != strings.ToLower(tst[0]+"."+tst[0]) {
 			t.Errorf("invalid result from string conversion to punycode, %s and should be %s.%s", decoded, tst[0], tst[0])
+		}
+	}
+}
+
+func TestEncodeDecodeFinalPeriod(t *testing.T) {
+	for _, tst := range testcases {
+		// assert unicode.com. == punycode.com.
+		full := ToPunycode(tst[0] + ".")
+		if full != tst[1]+"." {
+			t.Errorf("invalid result from string conversion to punycode when period added at the end, %#v and should be %#v", full, tst[1]+".")
+		}
+		// assert punycode.com. == unicode.com.
+		decoded := FromPunycode(tst[1] + ".")
+		if decoded != strings.ToLower(tst[0]+".") {
+			t.Errorf("invalid result from string conversion to punycode when period added, %#v and should be %#v", decoded, tst[0]+".")
 		}
 	}
 }

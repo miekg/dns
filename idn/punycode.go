@@ -3,6 +3,8 @@ package idn
 
 import (
 	"bytes"
+	"github.com/miekg/dns"
+	"strings"
 	"unicode"
 )
 
@@ -28,20 +30,34 @@ const (
 // This function would return incorrect result for strings for non-canonical
 // unicode strings.
 func ToPunycode(s string) string {
-	tokens := bytes.Split([]byte(s), []byte{'.'})
-	for i := range tokens {
-		tokens[i] = encodeBytes(tokens[i])
+	tokens := dns.SplitDomainName(s)
+	if s[len(s)-1] == '.' {
+		if tokens == nil {
+			tokens = []string{"", ""}
+		} else {
+			tokens = append(tokens, "")
+		}
 	}
-	return string(bytes.Join(tokens, []byte{'.'}))
+	for i := range tokens {
+		tokens[i] = string(encodeBytes([]byte(tokens[i])))
+	}
+	return strings.Join(tokens, ".")
 }
 
 // FromPunycode returns uncode domain name from provided punycode string.
 func FromPunycode(s string) string {
-	tokens := bytes.Split([]byte(s), []byte{'.'})
-	for i := range tokens {
-		tokens[i] = decodeBytes(tokens[i])
+	tokens := dns.SplitDomainName(s)
+	if s[len(s)-1] == '.' {
+		if tokens == nil {
+			tokens = []string{"", ""}
+		} else {
+			tokens = append(tokens, "")
+		}
 	}
-	return string(bytes.Join(tokens, []byte{'.'}))
+	for i := range tokens {
+		tokens[i] = string(decodeBytes([]byte(tokens[i])))
+	}
+	return strings.Join(tokens, ".")
 }
 
 // digitval converts single byte into meaningful value that's used to calculate decoded unicode character.
