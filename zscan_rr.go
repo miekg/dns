@@ -17,13 +17,13 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	e := new(ParseError)
 	switch h.Rrtype {
 	case TypeA:
-		r, e, _ = setA(h, c, f)
+		r, e, _ = setA(h, c, o, f)
 		goto Slurp
 	case TypeAAAA:
-		r, e , _= setAAAA(h, c, f)
+		r, e, _ = setAAAA(h, c, o, f)
 		goto Slurp
 	case TypeHINFO:
-		r, e, _ = setHINFO(h, c, f)
+		r, e, _ = setHINFO(h, c, o, f)
 		goto Slurp
 	case TypeMINFO:
 		r, e, _ = setMINFO(h, c, o, f)
@@ -50,7 +50,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		r, e, _ = setAFSDB(h, c, o, f)
 		goto Slurp
 	case TypeX25:
-		r, e, _ = setX25(h, c, f)
+		r, e, _ = setX25(h, c, o, f)
 		goto Slurp
 	case TypeMX:
 		r, e, _ = setMX(h, c, o, f)
@@ -65,7 +65,7 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		r, e, _ = setSOA(h, c, o, f)
 		goto Slurp
 	case TypeSSHFP:
-		r, e, _ = setSSHFP(h, c, f)
+		r, e, _ = setSSHFP(h, c, o, f)
 		goto Slurp
 	case TypeSRV:
 		r, e, _ = setSRV(h, c, o, f)
@@ -89,40 +89,40 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		r, e, _ = setKX(h, c, o, f)
 		goto Slurp
 	case TypeNID:
-		r, e, _ = setNID(h, c, f)
+		r, e, _ = setNID(h, c, o, f)
 		goto Slurp
 	case TypeL32:
-		r, e, _ = setL32(h, c, f)
+		r, e, _ = setL32(h, c, o, f)
 		goto Slurp
 	case TypeL64:
-		r, e, _ = setL64(h, c, f)
+		r, e, _ = setL64(h, c, o, f)
 		goto Slurp
 	case TypeLP:
 		r, e, _ = setLP(h, c, o, f)
 		goto Slurp
 	case TypeNSEC3PARAM:
-		r, e, _ = setNSEC3PARAM(h, c, f)
+		r, e, _ = setNSEC3PARAM(h, c, o, f)
 		goto Slurp
 	case TypeEUI48:
-		r, e, _ = setEUI48(h, c, f)
+		r, e, _ = setEUI48(h, c, o, f)
 		goto Slurp
 	case TypeEUI64:
-		r, e, _ = setEUI64(h, c, f)
+		r, e, _ = setEUI64(h, c, o, f)
 		goto Slurp
 	case TypeUID:
-		r, e, _ = setUID(h, c, f)
+		r, e, _ = setUID(h, c, o, f)
 		goto Slurp
 	case TypeGID:
-		r, e, _ = setGID(h, c, f)
+		r, e, _ = setGID(h, c, o, f)
 		goto Slurp
 	case TypeLOC:
-		r, e, _ = setLOC(h, c, f)
+		r, e, _ = setLOC(h, c, o, f)
 		goto Slurp
 	case TypeNSAPPTR:
 		r, e, _ = setNSAPPTR(h, c, o, f)
 		goto Slurp
 	case TypeGPOS:
-		r, e, _ = setGPOS(h, c, f)
+		r, e, _ = setGPOS(h, c, o, f)
 		goto Slurp
 	case TypePX:
 		r, e, _ = setPX(h, c, o, f)
@@ -131,15 +131,15 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// They need to search for the end of the RR themselves, hence they look for the ending
 	// newline. Thus there is no need to slurp the remainder, because there is none.
 	case TypeEID:
-		return setEID(h, c, f)
+		return setEID(h, c, o, f)
 	case TypeNIMLOC:
-		return setNIMLOC(h, c, f)
+		return setNIMLOC(h, c, o, f)
 	case TypeNSAP:
-		return setNSAP(h, c, f)
+		return setNSAP(h, c, o, f)
 	case TypeDNSKEY:
-		return setDNSKEY(h, c, f)
+		return setDNSKEY(h, c, o, f)
 	case TypeRKEY:
-		return setRKEY(h, c, f)
+		return setRKEY(h, c, o, f)
 	case TypeRRSIG:
 		return setRRSIG(h, c, o, f)
 	case TypeNSEC:
@@ -147,40 +147,40 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	case TypeNSEC3:
 		return setNSEC3(h, c, o, f)
 	case TypeWKS:
-		return setWKS(h, c, f)
+		return setWKS(h, c, o, f)
 	case TypeDS:
-		return setDS(h, c, f)
+		return setDS(h, c, o, f)
 	case TypeCDS:
-		return setCDS(h, c, f)
+		return setCDS(h, c, o, f)
 	case TypeDLV:
-		return setDLV(h, c, f)
+		return setDLV(h, c, o, f)
 	case TypeTA:
-		return setTA(h, c, f)
+		return setTA(h, c, o, f)
 	case TypeTLSA:
-		return setTLSA(h, c, f)
+		return setTLSA(h, c, o, f)
 	case TypeTXT:
-		return setTXT(h, c, f)
+		return setTXT(h, c, o, f)
 	case TypeURI:
-		return setURI(h, c, f)
+		return setURI(h, c, o, f)
 	case TypeNINFO:
-		return setNINFO(h, c, f)
+		return setNINFO(h, c, o, f)
 	case TypeHIP:
 		return setHIP(h, c, o, f)
 	case TypeSPF:
-		return setSPF(h, c, f)
+		return setSPF(h, c, o, f)
 	case TypeDHCID:
-		return setDHCID(h, c, f)
+		return setDHCID(h, c, o, f)
 	case TypeIPSECKEY:
 		return setIPSECKEY(h, c, o, f)
 	case TypeUINFO:
-		return setUINFO(h, c, f)
+		return setUINFO(h, c, o, f)
 	case TypeCERT:
-		return setCERT(h, c, f)
+		return setCERT(h, c, o, f)
 	case TypeOPENPGPKEY:
-		return setOPENPGPKEY(h, c, f)
+		return setOPENPGPKEY(h, c, o, f)
 	default:
 		// RFC3957 RR (Unknown RR handling)
-		return setRFC3597(h, c, f)
+		return setRFC3597(h, c, o, f)
 	}
 Slurp:
 	if e != nil {
@@ -256,7 +256,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	return s, nil, l.comment
 }
 
-func setA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(A)
 	rr.Hdr = h
 
@@ -271,7 +271,7 @@ func setA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setAAAA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setAAAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(AAAA)
 	rr.Hdr = h
 
@@ -461,7 +461,7 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setHINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setHINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(HINFO)
 	rr.Hdr = h
 
@@ -646,7 +646,7 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setX25(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setX25(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(X25)
 	rr.Hdr = h
 
@@ -981,7 +981,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setLOC(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setLOC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(LOC)
 	rr.Hdr = h
 	// Non zero defaults for LOC record, see RFC 1876, Section 3.
@@ -1164,7 +1164,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, l.comment
 }
 
-func setCERT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(CERT)
 	rr.Hdr = h
 
@@ -1199,7 +1199,7 @@ func setCERT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setOPENPGPKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setOPENPGPKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(OPENPGPKEY)
 	rr.Hdr = h
 
@@ -1416,7 +1416,7 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, l.comment
 }
 
-func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNSEC3PARAM(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(NSEC3PARAM)
 	rr.Hdr = h
 
@@ -1450,7 +1450,7 @@ func setNSEC3PARAM(h RR_Header, c chan lex, f string) (RR, *ParseError, string) 
 	return rr, nil, ""
 }
 
-func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setEUI48(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(EUI48)
 	rr.Hdr = h
 
@@ -1482,7 +1482,7 @@ func setEUI48(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setEUI64(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(EUI64)
 	rr.Hdr = h
 
@@ -1514,7 +1514,7 @@ func setEUI64(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setWKS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(WKS)
 	rr.Hdr = h
 
@@ -1572,7 +1572,7 @@ func setWKS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, l.comment
 }
 
-func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setSSHFP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(SSHFP)
 	rr.Hdr = h
 
@@ -1598,7 +1598,7 @@ func setSSHFP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(DNSKEY)
 	rr.Hdr = h
 
@@ -1633,7 +1633,7 @@ func setDNSKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setRKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RKEY)
 	rr.Hdr = h
 
@@ -1668,7 +1668,7 @@ func setRKEY(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(DS)
 	rr.Hdr = h
 	l := <-c
@@ -1706,7 +1706,7 @@ func setDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setEID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setEID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(EID)
 	rr.Hdr = h
 	s, e, c1 := endingToString(c, "bad EID Endpoint", f)
@@ -1717,7 +1717,7 @@ func setEID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setNIMLOC(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNIMLOC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(NIMLOC)
 	rr.Hdr = h
 	s, e, c1 := endingToString(c, "bad NIMLOC Locator", f)
@@ -1728,7 +1728,7 @@ func setNIMLOC(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setNSAP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNSAP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(NSAP)
 	rr.Hdr = h
 	l := <-c
@@ -1749,7 +1749,7 @@ func setNSAP(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setGPOS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setGPOS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(GPOS)
 	rr.Hdr = h
 	l := <-c
@@ -1778,7 +1778,7 @@ func setGPOS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(CDS)
 	rr.Hdr = h
 	l := <-c
@@ -1816,7 +1816,7 @@ func setCDS(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setDLV(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(DLV)
 	rr.Hdr = h
 	l := <-c
@@ -1854,7 +1854,7 @@ func setDLV(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setTA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(TA)
 	rr.Hdr = h
 	l := <-c
@@ -1892,7 +1892,7 @@ func setTA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setTLSA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(TLSA)
 	rr.Hdr = h
 	l := <-c
@@ -1926,7 +1926,7 @@ func setTLSA(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setRFC3597(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RFC3597)
 	rr.Hdr = h
 	l := <-c
@@ -1951,7 +1951,7 @@ func setRFC3597(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setSPF(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(SPF)
 	rr.Hdr = h
 
@@ -1963,7 +1963,7 @@ func setSPF(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setTXT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(TXT)
 	rr.Hdr = h
 
@@ -1977,7 +1977,7 @@ func setTXT(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 }
 
 // identical to setTXT
-func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(NINFO)
 	rr.Hdr = h
 
@@ -1989,7 +1989,7 @@ func setNINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setURI(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(URI)
 	rr.Hdr = h
 
@@ -2057,7 +2057,7 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string)
 	return rr, nil, c1
 }
 
-func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setDHCID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// awesome record to parse!
 	rr := new(DHCID)
 	rr.Hdr = h
@@ -2070,7 +2070,7 @@ func setDHCID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setNID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(NID)
 	rr.Hdr = h
 
@@ -2093,7 +2093,7 @@ func setNID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setL32(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setL32(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(L32)
 	rr.Hdr = h
 
@@ -2148,7 +2148,7 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setL64(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(L64)
 	rr.Hdr = h
 
@@ -2171,7 +2171,7 @@ func setL64(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setUID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setUID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(UID)
 	rr.Hdr = h
 	l := <-c
@@ -2186,7 +2186,7 @@ func setUID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setGID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setGID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(GID)
 	rr.Hdr = h
 	l := <-c
@@ -2201,7 +2201,7 @@ func setGID(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setUINFO(h RR_Header, c chan lex, f string) (RR, *ParseError, string) {
+func setUINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(UINFO)
 	rr.Hdr = h
 	s, e, c1 := endingToTxtSlice(c, "bad UINFO Uinfo", f)
