@@ -17,10 +17,10 @@ const (
 	_MIN  rune = 1
 	_MAX  rune = 26
 	_SKEW rune = 38
-	_DAMP rune = 700
 	_BASE rune = 36
 	_BIAS rune = 72
 	_N    rune = 128
+	_DAMP rune = 700
 
 	_DELIMITER = '-'
 	_PREFIX    = "xn--"
@@ -138,7 +138,7 @@ func tfunc(k, bias rune) rune {
 
 // encodeBytes transforms Unicode input bytes (that represent DNS label) into punycode bytestream
 func encodeBytes(input []byte) []byte {
-	n, delta, bias := _N, rune(0), _BIAS
+	n, bias := _N, _BIAS
 
 	b := bytes.Runes(input)
 	for i := range b {
@@ -165,24 +165,31 @@ func encodeBytes(input []byte) []byte {
 		out.WriteByte(_DELIMITER)
 	}
 
-	for h := basiclen; h < fulllen; n, delta = n+1, delta+1 {
-		next := next(b, n)
-		s := &bytes.Buffer{}
-		s.WriteRune(next)
-		delta, n = delta+(next-n)*(h+1), next
+	var (
+		ltr, nextltr rune
+		delta, q     rune // delta calculation (see rfc)
+		t, k, cp     rune // weight and codepoint calculation
+	)
 
-		for _, ltr := range b {
+	s := &bytes.Buffer{}
+	for h := basiclen; h < fulllen; n, delta = n+1, delta+1 {
+		nextltr = next(b, n)
+		s.Truncate(0)
+		s.WriteRune(nextltr)
+		delta, n = delta+(nextltr-n)*(h+1), nextltr
+
+		for _, ltr = range b {
 			if ltr < n {
 				delta++
 			}
 			if ltr == n {
-				q := delta
-				for k := _BASE; ; k += _BASE {
-					t := tfunc(k, bias)
+				q = delta
+				for k = _BASE; ; k += _BASE {
+					t = tfunc(k, bias)
 					if q < t {
 						break
 					}
-					cp := t + ((q - t) % (_BASE - t))
+					cp = t + ((q - t) % (_BASE - t))
 					out.WriteRune(lettercode(cp))
 					q = (q - t) / (_BASE - t)
 				}
@@ -217,24 +224,30 @@ func decodeBytes(b []byte) []byte {
 	if len(b) == 0 {
 		return src
 	}
-	for i := rune(0); len(b) > 0; i++ {
-		oldi, w, ch := i, rune(1), byte(0)
+	var (
+		i, oldi, w   rune
+		ch           byte
+		t, digit, ln rune
+	)
+
+	for i = 0; len(b) > 0; i++ {
+		oldi, w = i, 1
 		for k := _BASE; len(b) > 0; k += _BASE {
 			ch, b = b[0], b[1:]
-			digit := digitval(rune(ch))
+			digit = digitval(rune(ch))
 			if digit == errdigit {
 				return src
 			}
 			i += digit * w
 
-			t := tfunc(k, bias)
+			t = tfunc(k, bias)
 			if digit < t {
 				break
 			}
 
 			w *= _BASE - t
 		}
-		ln := rune(len(out) + 1)
+		ln = rune(len(out) + 1)
 		bias = adapt(i-oldi, ln, oldi == 0)
 		n += i / ln
 		i = i % ln
