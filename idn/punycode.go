@@ -1,3 +1,4 @@
+// Package idn implements encoding from and to punycode as speficied by RFC 3492.
 package idn
 
 import (
