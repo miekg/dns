@@ -24,184 +24,27 @@ type ParserFunc struct {
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
 func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	//var TypeToParserFunc = map[uint16]ParserFunc{
 	var r RR
 	e := new(ParseError)
-	switch h.Rrtype {
-	case TypeA:
-		r, e, _ = setA(h, c, o, f)
-		goto Slurp
-	case TypeAAAA:
-		r, e, _ = setAAAA(h, c, o, f)
-		goto Slurp
-	case TypeHINFO:
-		r, e, _ = setHINFO(h, c, o, f)
-		goto Slurp
-	case TypeMINFO:
-		r, e, _ = setMINFO(h, c, o, f)
-		goto Slurp
-	case TypeNS:
-		r, e, _ = setNS(h, c, o, f)
-		goto Slurp
-	case TypePTR:
-		r, e, _ = setPTR(h, c, o, f)
-		goto Slurp
-	case TypeMF:
-		r, e, _ = setMF(h, c, o, f)
-		goto Slurp
-	case TypeMD:
-		r, e, _ = setMD(h, c, o, f)
-		goto Slurp
-	case TypeMG:
-		r, e, _ = setMG(h, c, o, f)
-		goto Slurp
-	case TypeRT:
-		r, e, _ = setRT(h, c, o, f)
-		goto Slurp
-	case TypeAFSDB:
-		r, e, _ = setAFSDB(h, c, o, f)
-		goto Slurp
-	case TypeX25:
-		r, e, _ = setX25(h, c, o, f)
-		goto Slurp
-	case TypeMX:
-		r, e, _ = setMX(h, c, o, f)
-		goto Slurp
-	case TypeCNAME:
-		r, e, _ = setCNAME(h, c, o, f)
-		goto Slurp
-	case TypeDNAME:
-		r, e, _ = setDNAME(h, c, o, f)
-		goto Slurp
-	case TypeSOA:
-		r, e, _ = setSOA(h, c, o, f)
-		goto Slurp
-	case TypeSSHFP:
-		r, e, _ = setSSHFP(h, c, o, f)
-		goto Slurp
-	case TypeSRV:
-		r, e, _ = setSRV(h, c, o, f)
-		goto Slurp
-	case TypeNAPTR:
-		r, e, _ = setNAPTR(h, c, o, f)
-		goto Slurp
-	case TypeTALINK:
-		r, e, _ = setTALINK(h, c, o, f)
-		goto Slurp
-	case TypeRP:
-		r, e, _ = setRP(h, c, o, f)
-		goto Slurp
-	case TypeMR:
-		r, e, _ = setMR(h, c, o, f)
-		goto Slurp
-	case TypeMB:
-		r, e, _ = setMB(h, c, o, f)
-		goto Slurp
-	case TypeKX:
-		r, e, _ = setKX(h, c, o, f)
-		goto Slurp
-	case TypeNID:
-		r, e, _ = setNID(h, c, o, f)
-		goto Slurp
-	case TypeL32:
-		r, e, _ = setL32(h, c, o, f)
-		goto Slurp
-	case TypeL64:
-		r, e, _ = setL64(h, c, o, f)
-		goto Slurp
-	case TypeLP:
-		r, e, _ = setLP(h, c, o, f)
-		goto Slurp
-	case TypeNSEC3PARAM:
-		r, e, _ = setNSEC3PARAM(h, c, o, f)
-		goto Slurp
-	case TypeEUI48:
-		r, e, _ = setEUI48(h, c, o, f)
-		goto Slurp
-	case TypeEUI64:
-		r, e, _ = setEUI64(h, c, o, f)
-		goto Slurp
-	case TypeUID:
-		r, e, _ = setUID(h, c, o, f)
-		goto Slurp
-	case TypeGID:
-		r, e, _ = setGID(h, c, o, f)
-		goto Slurp
-	case TypeLOC:
-		r, e, _ = setLOC(h, c, o, f)
-		goto Slurp
-	case TypeNSAPPTR:
-		r, e, _ = setNSAPPTR(h, c, o, f)
-		goto Slurp
-	case TypeGPOS:
-		r, e, _ = setGPOS(h, c, o, f)
-		goto Slurp
-	case TypePX:
-		r, e, _ = setPX(h, c, o, f)
-		goto Slurp
-	// These types have a variable ending: either chunks of txt or chunks/base64 or hex.
-	// They need to search for the end of the RR themselves, hence they look for the ending
-	// newline. Thus there is no need to slurp the remainder, because there is none.
-	case TypeEID:
-		return setEID(h, c, o, f)
-	case TypeNIMLOC:
-		return setNIMLOC(h, c, o, f)
-	case TypeNSAP:
-		return setNSAP(h, c, o, f)
-	case TypeDNSKEY:
-		return setDNSKEY(h, c, o, f)
-	case TypeRKEY:
-		return setRKEY(h, c, o, f)
-	case TypeRRSIG:
-		return setRRSIG(h, c, o, f)
-	case TypeNSEC:
-		return setNSEC(h, c, o, f)
-	case TypeNSEC3:
-		return setNSEC3(h, c, o, f)
-	case TypeWKS:
-		return setWKS(h, c, o, f)
-	case TypeDS:
-		return setDS(h, c, o, f)
-	case TypeCDS:
-		return setCDS(h, c, o, f)
-	case TypeDLV:
-		return setDLV(h, c, o, f)
-	case TypeTA:
-		return setTA(h, c, o, f)
-	case TypeTLSA:
-		return setTLSA(h, c, o, f)
-	case TypeTXT:
-		return setTXT(h, c, o, f)
-	case TypeURI:
-		return setURI(h, c, o, f)
-	case TypeNINFO:
-		return setNINFO(h, c, o, f)
-	case TypeHIP:
-		return setHIP(h, c, o, f)
-	case TypeSPF:
-		return setSPF(h, c, o, f)
-	case TypeDHCID:
-		return setDHCID(h, c, o, f)
-	case TypeIPSECKEY:
-		return setIPSECKEY(h, c, o, f)
-	case TypeUINFO:
-		return setUINFO(h, c, o, f)
-	case TypeCERT:
-		return setCERT(h, c, o, f)
-	case TypeOPENPGPKEY:
-		return setOPENPGPKEY(h, c, o, f)
-	default:
-		// RFC3957 RR (Unknown RR handling)
-		return setRFC3597(h, c, o, f)
+
+	parserfunc, ok := TypeToParserFunc[h.Rrtype]
+	if ok {
+		if parserfunc.Variable {
+			r, e, _ = parserfunc.Func(h, c, o, f)
+			if e != nil {
+				return nil, e, ""
+			}
+			se, com := slurpRemainder(c, f)
+			if se != nil {
+				return nil, se, ""
+			}
+			return r, e, com
+		}
+		return parserfunc.Func(h, c, o, f)
 	}
-Slurp:
-	if e != nil {
-		return nil, e, ""
-	}
-	se, com := slurpRemainder(c, f)
-	if se != nil {
-		return nil, se, ""
-	}
-	return r, e, com
+	// RFC3957 RR (Unknown RR handling)
+	return setRFC3597(h, c, o, f)
 }
 
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
