@@ -437,7 +437,7 @@ func TestToRFC3597(t *testing.T) {
 
 func TestNoRdataPack(t *testing.T) {
 	data := make([]byte, 1024)
-	for typ, fn := range TypeToRR {
+	for typ, fn := range typeToRR {
 		if typ == TypeCAA {
 			continue // TODO(miek): known omission
 		}
@@ -454,7 +454,7 @@ func TestNoRdataPack(t *testing.T) {
 // TODO(miek): fix dns buffer too small errors this throws
 func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
-	for typ, fn := range TypeToRR {
+	for typ, fn := range typeToRR {
 		if typ == TypeSOA || typ == TypeTSIG || typ == TypeWKS {
 			// SOA, TSIG will not be seen (like this) in dyn. updates?
 			// WKS is an bug, but...deprecated record.

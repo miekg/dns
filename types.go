@@ -1576,7 +1576,7 @@ func copyIP(ip net.IP) net.IP {
 }
 
 // Map of constructors for each RR type.
-var TypeToRR = map[uint16]func() RR{
+var typeToRR = map[uint16]func() RR{
 	TypeA:     func() RR { return new(A) },
 	TypeAAAA:  func() RR { return new(AAAA) },
 	TypeAFSDB: func() RR { return new(AFSDB) },
