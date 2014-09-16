@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type ParserFunc struct {
+type parserFunc struct {
 	// Func defines the function that parses the tokens and returns the RR
 	// or an error. The last string contains any comments in the line as
 	// they returned by the lexer as well.
 	Func func(h RR_Header, c chan lex, origin string, file string) (RR, *ParseError, string)
-	// Signals if the RR is ending is of variable length, like TXT or records
+	// Signals if the RR ending is of variable length, like TXT or records
 	// that have Hexadecimal or Base64 as their last element in the Rdata. Records
 	// that have a fixed ending or for instance A, AAAA, SOA and etc.
 	Variable bool
@@ -24,11 +24,10 @@ type ParserFunc struct {
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
 func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	//var TypeToParserFunc = map[uint16]ParserFunc{
 	var r RR
 	e := new(ParseError)
 
-	parserfunc, ok := TypeToParserFunc[h.Rrtype]
+	parserfunc, ok := typeToparserFunc[h.Rrtype]
 	if ok {
 		if parserfunc.Variable {
 			r, e, _ = parserfunc.Func(h, c, o, f)
@@ -2113,66 +2112,66 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-var TypeToParserFunc = map[uint16]ParserFunc{
-	TypeAAAA:       ParserFunc{setAAAA, false},
-	TypeAFSDB:      ParserFunc{setAFSDB, false},
-	TypeA:          ParserFunc{setA, false},
-	TypeCDS:        ParserFunc{setCDS, true},
-	TypeCERT:       ParserFunc{setCERT, true},
-	TypeCNAME:      ParserFunc{setCNAME, false},
-	TypeDHCID:      ParserFunc{setDHCID, true},
-	TypeDLV:        ParserFunc{setDLV, true},
-	TypeDNAME:      ParserFunc{setDNAME, false},
-	TypeDNSKEY:     ParserFunc{setDNSKEY, true},
-	TypeDS:         ParserFunc{setDS, true},
-	TypeEID:        ParserFunc{setEID, true},
-	TypeEUI48:      ParserFunc{setEUI48, false},
-	TypeEUI64:      ParserFunc{setEUI64, false},
-	TypeGID:        ParserFunc{setGID, false},
-	TypeGPOS:       ParserFunc{setGPOS, false},
-	TypeHINFO:      ParserFunc{setHINFO, false},
-	TypeHIP:        ParserFunc{setHIP, true},
-	TypeIPSECKEY:   ParserFunc{setIPSECKEY, true},
-	TypeKX:         ParserFunc{setKX, false},
-	TypeL32:        ParserFunc{setL32, false},
-	TypeL64:        ParserFunc{setL64, false},
-	TypeLOC:        ParserFunc{setLOC, false},
-	TypeLP:         ParserFunc{setLP, false},
-	TypeMB:         ParserFunc{setMB, false},
-	TypeMD:         ParserFunc{setMD, false},
-	TypeMF:         ParserFunc{setMF, false},
-	TypeMG:         ParserFunc{setMG, false},
-	TypeMINFO:      ParserFunc{setMINFO, false},
-	TypeMR:         ParserFunc{setMR, false},
-	TypeMX:         ParserFunc{setMX, false},
-	TypeNAPTR:      ParserFunc{setNAPTR, false},
-	TypeNID:        ParserFunc{setNID, false},
-	TypeNIMLOC:     ParserFunc{setNIMLOC, true},
-	TypeNINFO:      ParserFunc{setNINFO, true},
-	TypeNSAP:       ParserFunc{setNSAP, true},
-	TypeNSAPPTR:    ParserFunc{setNSAPPTR, false},
-	TypeNSEC3PARAM: ParserFunc{setNSEC3PARAM, false},
-	TypeNSEC3:      ParserFunc{setNSEC3, true},
-	TypeNSEC:       ParserFunc{setNSEC, true},
-	TypeNS:         ParserFunc{setNS, false},
-	TypeOPENPGPKEY: ParserFunc{setOPENPGPKEY, true},
-	TypePTR:        ParserFunc{setPTR, false},
-	TypePX:         ParserFunc{setPX, false},
-	TypeRKEY:       ParserFunc{setRKEY, true},
-	TypeRP:         ParserFunc{setRP, false},
-	TypeRRSIG:      ParserFunc{setRRSIG, true},
-	TypeRT:         ParserFunc{setRT, false},
-	TypeSOA:        ParserFunc{setSOA, false},
-	TypeSPF:        ParserFunc{setSPF, true},
-	TypeSRV:        ParserFunc{setSRV, false},
-	TypeSSHFP:      ParserFunc{setSSHFP, false},
-	TypeTALINK:     ParserFunc{setTALINK, false},
-	TypeTA:         ParserFunc{setTA, true},
-	TypeTLSA:       ParserFunc{setTLSA, true},
-	TypeTXT:        ParserFunc{setTXT, true},
-	TypeUID:        ParserFunc{setUID, false},
-	TypeUINFO:      ParserFunc{setUINFO, true},
-	TypeURI:        ParserFunc{setURI, true},
-	TypeWKS:        ParserFunc{setWKS, true},
-	TypeX25:        ParserFunc{setX25, false},
+var typeToparserFunc = map[uint16]parserFunc{
+	TypeAAAA:       parserFunc{setAAAA, false},
+	TypeAFSDB:      parserFunc{setAFSDB, false},
+	TypeA:          parserFunc{setA, false},
+	TypeCDS:        parserFunc{setCDS, true},
+	TypeCERT:       parserFunc{setCERT, true},
+	TypeCNAME:      parserFunc{setCNAME, false},
+	TypeDHCID:      parserFunc{setDHCID, true},
+	TypeDLV:        parserFunc{setDLV, true},
+	TypeDNAME:      parserFunc{setDNAME, false},
+	TypeDNSKEY:     parserFunc{setDNSKEY, true},
+	TypeDS:         parserFunc{setDS, true},
+	TypeEID:        parserFunc{setEID, true},
+	TypeEUI48:      parserFunc{setEUI48, false},
+	TypeEUI64:      parserFunc{setEUI64, false},
+	TypeGID:        parserFunc{setGID, false},
+	TypeGPOS:       parserFunc{setGPOS, false},
+	TypeHINFO:      parserFunc{setHINFO, false},
+	TypeHIP:        parserFunc{setHIP, true},
+	TypeIPSECKEY:   parserFunc{setIPSECKEY, true},
+	TypeKX:         parserFunc{setKX, false},
+	TypeL32:        parserFunc{setL32, false},
+	TypeL64:        parserFunc{setL64, false},
+	TypeLOC:        parserFunc{setLOC, false},
+	TypeLP:         parserFunc{setLP, false},
+	TypeMB:         parserFunc{setMB, false},
+	TypeMD:         parserFunc{setMD, false},
+	TypeMF:         parserFunc{setMF, false},
+	TypeMG:         parserFunc{setMG, false},
+	TypeMINFO:      parserFunc{setMINFO, false},
+	TypeMR:         parserFunc{setMR, false},
+	TypeMX:         parserFunc{setMX, false},
+	TypeNAPTR:      parserFunc{setNAPTR, false},
+	TypeNID:        parserFunc{setNID, false},
+	TypeNIMLOC:     parserFunc{setNIMLOC, true},
+	TypeNINFO:      parserFunc{setNINFO, true},
+	TypeNSAP:       parserFunc{setNSAP, true},
+	TypeNSAPPTR:    parserFunc{setNSAPPTR, false},
+	TypeNSEC3PARAM: parserFunc{setNSEC3PARAM, false},
+	TypeNSEC3:      parserFunc{setNSEC3, true},
+	TypeNSEC:       parserFunc{setNSEC, true},
+	TypeNS:         parserFunc{setNS, false},
+	TypeOPENPGPKEY: parserFunc{setOPENPGPKEY, true},
+	TypePTR:        parserFunc{setPTR, false},
+	TypePX:         parserFunc{setPX, false},
+	TypeRKEY:       parserFunc{setRKEY, true},
+	TypeRP:         parserFunc{setRP, false},
+	TypeRRSIG:      parserFunc{setRRSIG, true},
+	TypeRT:         parserFunc{setRT, false},
+	TypeSOA:        parserFunc{setSOA, false},
+	TypeSPF:        parserFunc{setSPF, true},
+	TypeSRV:        parserFunc{setSRV, false},
+	TypeSSHFP:      parserFunc{setSSHFP, false},
+	TypeTALINK:     parserFunc{setTALINK, false},
+	TypeTA:         parserFunc{setTA, true},
+	TypeTLSA:       parserFunc{setTLSA, true},
+	TypeTXT:        parserFunc{setTXT, true},
+	TypeUID:        parserFunc{setUID, false},
+	TypeUINFO:      parserFunc{setUINFO, true},
+	TypeURI:        parserFunc{setURI, true},
+	TypeWKS:        parserFunc{setWKS, true},
+	TypeX25:        parserFunc{setX25, false},
 }
