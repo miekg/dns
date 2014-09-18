@@ -8,10 +8,9 @@ import (
 	"unicode"
 )
 
-// See http://tools.ietf.org/html/rfc3492
 // Implementation idea from RFC itself and from from IDNA::Punycode created by
 // Tatsuhiko Miyagawa <miyagawa@bulknews.net> and released under Perl Artistic
-// License in 2002
+// License in 2002.
 
 const (
 	_MIN  rune = 1
@@ -89,7 +88,7 @@ func lettercode(digit rune) rune {
 	panic("dns: not reached")
 }
 
-// adapt calculates next bias to be used for next iteration delta
+// adapt calculates next bias to be used for next iteration delta.
 func adapt(delta rune, numpoints int, firsttime bool) rune {
 	if firsttime {
 		delta /= _DAMP
@@ -108,7 +107,7 @@ func adapt(delta rune, numpoints int, firsttime bool) rune {
 // next finds minimal rune (one with lowest codepoint value) that should be equal or above boundary.
 func next(b []rune, boundary rune) rune {
 	if len(b) == 0 {
-		panic("invalid set of runes to determine next one")
+		panic("dns: invalid set of runes to determine next one")
 	}
 	m := b[0]
 	for _, x := range b[1:] {
