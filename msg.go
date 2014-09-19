@@ -577,7 +577,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
 		case reflect.Interface:
-			if data, ok := fv.Interface().(CustomRData); ok {
+			if data, ok := fv.Interface().(PrivateRData); ok {
 				n, err := data.Write(msg[off:])
 				if err != nil {
 					return lenmsg, err
@@ -880,7 +880,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 		default:
 			return lenmsg, &Error{err: "bad kind unpacking"}
 		case reflect.Interface:
-			if data, ok := fv.Interface().(CustomRData); ok {
+			if data, ok := fv.Interface().(PrivateRData); ok {
 				n, err := data.Read(msg[off:rdend])
 				if err != nil {
 					return lenmsg, err

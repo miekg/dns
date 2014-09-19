@@ -1,56 +1,69 @@
 package dns
 
-type CustomRData interface {
+import (
+	"strings"
+)
+
+// PrivateRData is an interface to implement non-RFC dictated resource records. See also dns.PrivateRR, dns.RegisterPrivateRR and dns.UnregisterPrivateRR
+type PrivateRData interface {
 	String() string
 	ReadText([]string) error
 	Write([]byte) (int, error)
 	Read([]byte) (int, error)
-	CopyTo(CustomRData) error
+	CopyTo(PrivateRData) error
+	RdataLen() int
 }
 
-// CopyTo needs to be here to avoid write/read pass that would require make([]byte, xxxxxx)
-
-type CustomRR struct {
+// PrivateRR represents RR that uses PrivateRData user-defined type. It mocks normal RRs and implements dns.RR interface.
+type PrivateRR struct {
 	Hdr  RR_Header
-	Data CustomRData
+	Data PrivateRData
 }
 
-func (r *CustomRR) Header() *RR_Header { return &r.Hdr }
-func (r *CustomRR) String() string     { return r.Hdr.String() + r.Data.String() }
-func (r *CustomRR) copy() RR {
+// Header returns Private RR header.
+func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
+
+// String returns text representation of a Private Resource Record.
+func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
+
+// Private len and copy parts to satisfy RR interface.
+func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.RdataLen() }
+func (r *PrivateRR) copy() RR {
 	// make new RR like this:
 	rrfunc, ok := typeToRR[r.Hdr.Rrtype]
 	if !ok {
-		panic("dns: invalid operation with custom RR " + r.Hdr.String())
+		panic("dns: invalid operation with Private RR " + r.Hdr.String())
 	}
 	rr := rrfunc()
 	r.Header().CopyTo(rr)
 
-	rrcust, ok := rr.(*CustomRR)
+	rrcust, ok := rr.(*PrivateRR)
 	if !ok {
-		panic("dns: custom RR generator returned wrong interface value")
+		panic("dns: Private RR generator returned wrong interface value")
 	}
 
 	err := r.Data.CopyTo(rrcust.Data)
 	if err != nil {
-		panic("dns: got value that could not be used to copy custom rdata")
+		panic("dns: got value that could not be used to copy Private rdata")
 	}
 
 	return rr
 }
 
-func (r *CustomRR) len() int { panic("TODO: WHERE THIS IS USED?"); return 0 }
+// RegisterPrivateRR adds support for user-defined resource record type to internals of dns library. Requires
+// string and numeric representation of RR type and generator function as argument.
+func RegisterPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRData) {
+	rtypestr = strings.ToUpper(rtypestr)
 
-func RegisterCustomRR(rtypestr string, rtype uint16, generator func() CustomRData) {
-	typeToRR[rtype] = func() RR { return &CustomRR{RR_Header{}, generator()} }
+	typeToRR[rtype] = func() RR { return &PrivateRR{RR_Header{}, generator()} }
 	TypeToString[rtype] = rtypestr
 	StringToType[rtypestr] = rtype
 
-	setCustomRR := func(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	setPrivateRR := func(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rrfunc := typeToRR[h.Rrtype]
-		rr, ok := rrfunc().(*CustomRR)
+		rr, ok := rrfunc().(*PrivateRR)
 		if !ok {
-			panic("dns: invalid handler registered for custom RR " + rtypestr)
+			panic("dns: invalid handler registered for Private RR " + rtypestr)
 		}
 		h.CopyTo(rr)
 
@@ -75,10 +88,11 @@ func RegisterCustomRR(rtypestr string, rtype uint16, generator func() CustomRDat
 		return rr, nil, ""
 	}
 
-	typeToparserFunc[rtype] = parserFunc{setCustomRR, false}
+	typeToparserFunc[rtype] = parserFunc{setPrivateRR, false}
 }
 
-func UnregisterCustomRR(rtype uint16) {
+// UnregisterPrivateRR removes defenitions required to support user RR type.
+func UnregisterPrivateRR(rtype uint16) {
 	rtypestr, ok := TypeToString[rtype]
 	if ok {
 		delete(typeToRR, rtype)
