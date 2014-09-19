@@ -576,6 +576,16 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
+		case reflect.Interface:
+			if data, ok := fv.Interface().(CustomRData); ok {
+				n, err := data.Write(msg[off:])
+				if err != nil {
+					return lenmsg, err
+				}
+				off += n
+			} else {
+				return lenmsg, &Error{err: "bad kind interface packing"}
+			}
 		case reflect.Slice:
 			switch typefield.Tag {
 			default:
@@ -869,6 +879,16 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind unpacking"}
+		case reflect.Interface:
+			if data, ok := fv.Interface().(CustomRData); ok {
+				n, err := data.Read(msg[off:rdend])
+				if err != nil {
+					return lenmsg, err
+				}
+				off += n
+			} else {
+				return lenmsg, &Error{err: "bad kind interface unpacking"}
+			}
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:

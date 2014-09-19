@@ -154,6 +154,16 @@ func (h *RR_Header) copyHeader() *RR_Header {
 	return r
 }
 
+func (h *RR_Header) CopyTo(rr RR) *RR_Header {
+	rrh := rr.Header()
+	rrh.Name = h.Name
+	rrh.Rrtype = h.Rrtype
+	rrh.Class = h.Class
+	rrh.Ttl = h.Ttl
+	rrh.Rdlength = h.Rdlength
+	return rrh
+}
+
 func (h *RR_Header) String() string {
 	var s string
 
