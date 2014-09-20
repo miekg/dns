@@ -14,15 +14,15 @@ type ISBN struct {
 	x string // rdata with 10 or 13 numbers, dashes or spaces allowed
 }
 
-func NewISBN() dns.PrivateRData { return &ISBN{""} }
+func NewISBN() dns.PrivateRdata { return &ISBN{""} }
 
 func (rd *ISBN) String() string { return rd.x }
-func (rd *ISBN) ReadText(txt []string) error {
+func (rd *ISBN) ParseTextSlice(txt []string) error {
 	rd.x = strings.TrimSpace(strings.Join(txt, " "))
 	return nil
 }
 
-func (rd *ISBN) Write(buf []byte) (int, error) {
+func (rd *ISBN) WriteByteSlice(buf []byte) (int, error) {
 	b := []byte(rd.x)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -31,12 +31,12 @@ func (rd *ISBN) Write(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *ISBN) Read(buf []byte) (int, error) {
+func (rd *ISBN) ParseByteSlice(buf []byte) (int, error) {
 	rd.x = string(buf)
 	return len(buf), nil
 }
 
-func (rd *ISBN) CopyTo(dest dns.PrivateRData) error {
+func (rd *ISBN) PasteRdata(dest dns.PrivateRdata) error {
 	isbn, ok := dest.(*ISBN)
 	if !ok {
 		return dns.ErrRdata
@@ -49,11 +49,11 @@ func (rd *ISBN) RdataLen() int {
 	return len([]byte(rd.x))
 }
 
-var testrecord = "example.org.\t3600\tIN\tISBN\t12-3 456789-0-123"
+var testrecord = strings.Join([]string{"example.org.", "3600", "IN", "ISBN", "12-3 456789-0-123"}, "\t")
 
 func TestPrivateText(t *testing.T) {
-	dns.RegisterPrivateRR("ISBN", TypeISBN, NewISBN)
-	defer dns.UnregisterPrivateRR(TypeISBN)
+	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
+	defer dns.DelPrivateRR(TypeISBN)
 
 	rr, err := dns.NewRR(testrecord)
 	if err != nil {
@@ -66,9 +66,9 @@ func TestPrivateText(t *testing.T) {
 	}
 }
 
-func TestPrivateWire(t *testing.T) {
-	dns.RegisterPrivateRR("ISBN", TypeISBN, NewISBN)
-	defer dns.UnregisterPrivateRR(TypeISBN)
+func TestPrivateByteSlice(t *testing.T) {
+	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
+	defer dns.DelPrivateRR(TypeISBN)
 
 	rr, err := dns.NewRR(testrecord)
 	if err != nil {
@@ -105,18 +105,18 @@ func TestPrivateWire(t *testing.T) {
 const TypeVERSION uint16 = 0x0F02
 
 type VERSION struct {
-	x string // to make it simpler it's just as simple as ISBN but ignoring
+	x string
 }
 
-func NewVersion() dns.PrivateRData { return &VERSION{""} }
+func NewVersion() dns.PrivateRdata { return &VERSION{""} }
 
 func (rd *VERSION) String() string { return rd.x }
-func (rd *VERSION) ReadText(txt []string) error {
+func (rd *VERSION) ParseTextSlice(txt []string) error {
 	rd.x = strings.TrimSpace(strings.Join(txt, " "))
 	return nil
 }
 
-func (rd *VERSION) Write(buf []byte) (int, error) {
+func (rd *VERSION) WriteByteSlice(buf []byte) (int, error) {
 	b := []byte(rd.x)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -125,12 +125,12 @@ func (rd *VERSION) Write(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *VERSION) Read(buf []byte) (int, error) {
+func (rd *VERSION) ParseByteSlice(buf []byte) (int, error) {
 	rd.x = string(buf)
 	return len(buf), nil
 }
 
-func (rd *VERSION) CopyTo(dest dns.PrivateRData) error {
+func (rd *VERSION) PasteRdata(dest dns.PrivateRdata) error {
 	isbn, ok := dest.(*VERSION)
 	if !ok {
 		return dns.ErrRdata
@@ -157,10 +157,10 @@ www ISBN 1231-92110-16
 `
 
 func TestPrivateZoneParser(t *testing.T) {
-	dns.RegisterPrivateRR("ISBN", TypeISBN, NewISBN)
-	dns.RegisterPrivateRR("VERSION", TypeVERSION, NewVersion)
-	defer dns.UnregisterPrivateRR(TypeISBN)
-	defer dns.UnregisterPrivateRR(TypeVERSION)
+	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
+	dns.NewPrivateRR("VERSION", TypeVERSION, NewVersion)
+	defer dns.DelPrivateRR(TypeISBN)
+	defer dns.DelPrivateRR(TypeVERSION)
 
 	r := strings.NewReader(smallzone)
 	for x := range dns.ParseZone(r, ".", "") {

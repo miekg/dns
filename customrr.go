@@ -1,48 +1,53 @@
 package dns
 
 import (
+	"fmt"
 	"strings"
 )
 
-// PrivateRData is an interface to implement non-RFC dictated resource records. See also dns.PrivateRR, dns.RegisterPrivateRR and dns.UnregisterPrivateRR
-type PrivateRData interface {
+// PrivateRdata is an interface to implement non-RFC dictated resource records. See also dns.PrivateRR, dns.NewPrivateRR and dns.DelPrivateRR
+type PrivateRdata interface {
 	String() string
-	ReadText([]string) error
-	Write([]byte) (int, error)
-	Read([]byte) (int, error)
-	CopyTo(PrivateRData) error
+	ParseTextSlice([]string) error
+	WriteByteSlice([]byte) (int, error)
+	ParseByteSlice([]byte) (int, error)
+	PasteRdata(PrivateRdata) error
 	RdataLen() int
 }
 
-// PrivateRR represents RR that uses PrivateRData user-defined type. It mocks normal RRs and implements dns.RR interface.
+// PrivateRR represents RR that uses PrivateRdata user-defined type. It mocks normal RRs and implements dns.RR interface.
 type PrivateRR struct {
 	Hdr  RR_Header
-	Data PrivateRData
+	Data PrivateRdata
 }
 
-// Header returns Private RR header.
-func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
+// Panics if RR is not an instance of PrivateRR
+func mkPrivateRR(rrtype uint16) *PrivateRR {
+	rrfunc, ok := typeToRR[rrtype]
+	if !ok {
+		panic(fmt.Sprintf("dns: invalid operation with Private RR type %d", rrtype))
+	}
 
-// String returns text representation of a Private Resource Record.
-func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
+	anyrr := rrfunc()
+	switch rr := anyrr.(type) {
+	case *PrivateRR:
+		return rr
+	}
+	panic(fmt.Sprintf("dns: RR is not a PrivateRR, typeToRR[%d] generator returned %T", rrtype, anyrr))
+}
+
+func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
+func (r *PrivateRR) String() string     { return r.Hdr.String() + r.Data.String() }
 
 // Private len and copy parts to satisfy RR interface.
 func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.RdataLen() }
 func (r *PrivateRR) copy() RR {
 	// make new RR like this:
-	rrfunc, ok := typeToRR[r.Hdr.Rrtype]
-	if !ok {
-		panic("dns: invalid operation with Private RR " + r.Hdr.String())
-	}
-	rr := rrfunc()
-	r.Header().CopyTo(rr)
+	rr := mkPrivateRR(r.Hdr.Rrtype)
+	newh := r.Hdr.copyHeader()
+	rr.Hdr = *newh
 
-	rrcust, ok := rr.(*PrivateRR)
-	if !ok {
-		panic("dns: Private RR generator returned wrong interface value")
-	}
-
-	err := r.Data.CopyTo(rrcust.Data)
+	err := r.Data.PasteRdata(rr.Data)
 	if err != nil {
 		panic("dns: got value that could not be used to copy Private rdata")
 	}
@@ -50,9 +55,9 @@ func (r *PrivateRR) copy() RR {
 	return rr
 }
 
-// RegisterPrivateRR adds support for user-defined resource record type to internals of dns library. Requires
+// NewPrivateRR adds support for user-defined resource record type to internals of dns library. Requires
 // string and numeric representation of RR type and generator function as argument.
-func RegisterPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRData) {
+func NewPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRdata) {
 	rtypestr = strings.ToUpper(rtypestr)
 
 	typeToRR[rtype] = func() RR { return &PrivateRR{RR_Header{}, generator()} }
@@ -60,27 +65,22 @@ func RegisterPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRD
 	StringToType[rtypestr] = rtype
 
 	setPrivateRR := func(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-		rrfunc := typeToRR[h.Rrtype]
-		rr, ok := rrfunc().(*PrivateRR)
-		if !ok {
-			panic("dns: invalid handler registered for Private RR " + rtypestr)
-		}
-		h.CopyTo(rr)
+		rr := mkPrivateRR(h.Rrtype)
+		rr.Hdr = h
 
 		var l lex
-		text := make([]string, 0)
-		for end := false; !end; {
+		text := make([]string, 0, 2) // could be 0..N elements, median is probably 1
+	FETCH:
+		for {
 			switch l = <-c; l.value {
 			case _NEWLINE, _EOF:
-				end = true
+				break FETCH
 			case _STRING:
 				text = append(text, l.token)
-			case _BLANK:
-				continue
 			}
 		}
 
-		err := rr.Data.ReadText(text)
+		err := rr.Data.ParseTextSlice(text)
 		if err != nil {
 			return nil, &ParseError{f, err.Error(), l}, ""
 		}
@@ -91,8 +91,8 @@ func RegisterPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRD
 	typeToparserFunc[rtype] = parserFunc{setPrivateRR, false}
 }
 
-// UnregisterPrivateRR removes defenitions required to support user RR type.
-func UnregisterPrivateRR(rtype uint16) {
+// DelPrivateRR removes defenitions required to support user RR type.
+func DelPrivateRR(rtype uint16) {
 	rtypestr, ok := TypeToString[rtype]
 	if ok {
 		delete(typeToRR, rtype)

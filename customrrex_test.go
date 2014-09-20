@@ -14,10 +14,10 @@ type APAIR struct {
 	addr [2]net.IP
 }
 
-func NewAPAIR() dns.PrivateRData { return new(APAIR) }
+func NewAPAIR() dns.PrivateRdata { return new(APAIR) }
 
 func (rd *APAIR) String() string { return rd.addr[0].String() + " " + rd.addr[1].String() }
-func (rd *APAIR) ReadText(txt []string) error {
+func (rd *APAIR) ParseTextSlice(txt []string) error {
 	if len(txt) != 2 {
 		return errors.New("Two addresses required for APAIR")
 	}
@@ -31,7 +31,7 @@ func (rd *APAIR) ReadText(txt []string) error {
 	return nil
 }
 
-func (rd *APAIR) Write(buf []byte) (int, error) {
+func (rd *APAIR) WriteByteSlice(buf []byte) (int, error) {
 	b := append([]byte(rd.addr[0]), []byte(rd.addr[1])...)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -40,7 +40,7 @@ func (rd *APAIR) Write(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *APAIR) Read(buf []byte) (int, error) {
+func (rd *APAIR) ParseByteSlice(buf []byte) (int, error) {
 	ln := net.IPv4len * 2
 	if len(buf) != ln {
 		return 0, errors.New("Invalid length of APAIR rdata")
@@ -54,9 +54,9 @@ func (rd *APAIR) Read(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-func (rd *APAIR) CopyTo(dest dns.PrivateRData) error {
+func (rd *APAIR) PasteRdata(dest dns.PrivateRdata) error {
 	cp := make([]byte, rd.RdataLen())
-	_, err := rd.Write(cp)
+	_, err := rd.WriteByteSlice(cp)
 	if err != nil {
 		return err
 	}
@@ -71,9 +71,9 @@ func (rd *APAIR) RdataLen() int {
 	return net.IPv4len * 2
 }
 
-func ExampleRegisterPrivateRR() {
-	dns.RegisterPrivateRR("APAIR", TypeAPAIR, NewAPAIR)
-	defer dns.UnregisterPrivateRR(TypeAPAIR)
+func ExampleNewPrivateRR() {
+	dns.NewPrivateRR("APAIR", TypeAPAIR, NewAPAIR)
+	defer dns.DelPrivateRR(TypeAPAIR)
 
 	rr, err := dns.NewRR("miek.nl. APAIR (1.2.3.4    1.2.3.5)")
 	if err != nil {
