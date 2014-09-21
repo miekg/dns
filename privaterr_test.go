@@ -18,7 +18,7 @@ func NewISBN() dns.PrivateRdata { return &ISBN{""} }
 func (rd *ISBN) Len() int  { return len([]byte(rd.x)) }
 func (rd *ISBN) String() string { return rd.x }
 
-func (rd *ISBN) ParseTextSlice(txt []string) error {
+func (rd *ISBN) Parse(txt []string) error {
 	rd.x = strings.TrimSpace(strings.Join(txt, " "))
 	return nil
 }
@@ -108,7 +108,7 @@ type VERSION struct {
 func NewVersion() dns.PrivateRdata { return &VERSION{""} }
 
 func (rd *VERSION) String() string { return rd.x }
-func (rd *VERSION) ParseTextSlice(txt []string) error {
+func (rd *VERSION) Parse(txt []string) error {
 	rd.x = strings.TrimSpace(strings.Join(txt, " "))
 	return nil
 }

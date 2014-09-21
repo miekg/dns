@@ -65,7 +65,7 @@ type APAIR struct {
 func NewAPAIR() dns.PrivateRdata { return new(APAIR) }
 
 func (rd *APAIR) String() string { return rd.addr[0].String() + " " + rd.addr[1].String() }
-func (rd *APAIR) ParseTextSlice(txt []string) error {
+func (rd *APAIR) Parse(txt []string) error {
 	if len(txt) != 2 {
 		return errors.New("two addresses required for APAIR")
 	}

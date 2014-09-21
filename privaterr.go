@@ -18,8 +18,8 @@ import (
 type PrivateRdata interface {
 	// String returns the text presentaton of the Rdata of the Private RR.
 	String() string
-	// ParseTextSlice parses the Rdata of the private RR.
-	ParseTextSlice([]string) error
+	// Parse parses the Rdata of the private RR.
+	Parse([]string) error
 	// Pack is used when packing a private RR into a buffer.
 	Pack([]byte) (int, error)
 	// Unpack is used when unpacking a private RR from a buffer.
@@ -98,7 +98,7 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 			}
 		}
 
-		err := rr.Data.ParseTextSlice(text)
+		err := rr.Data.Parse(text)
 		if err != nil {
 			return nil, &ParseError{f, err.Error(), l}, ""
 		}
