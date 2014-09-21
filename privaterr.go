@@ -4,7 +4,6 @@ PRIVATE RR
 RFC 6895 sets aside a range of type codes for private use. This range
 is 65,280 - 65,534 (0xFF00 - 0xFFFE). When experimenting with new Resource Records these
 can be used, before requesting an official type code from IANA.
-
 */
 package dns
 
