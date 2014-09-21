@@ -576,6 +576,19 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind packing"}
+		case reflect.Interface:
+			// PrivateRR is the only RR implementation that has interface field.
+			// therefore it's expected that this interface would be PrivateRdata
+			switch data := fv.Interface().(type) {
+			case PrivateRdata:
+				n, err := data.WriteByteSlice(msg[off:])
+				if err != nil {
+					return lenmsg, err
+				}
+				off += n
+			default:
+				return lenmsg, &Error{err: "bad kind interface packing"}
+			}
 		case reflect.Slice:
 			switch typefield.Tag {
 			default:
@@ -869,6 +882,19 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 		switch fv := val.Field(i); fv.Kind() {
 		default:
 			return lenmsg, &Error{err: "bad kind unpacking"}
+		case reflect.Interface:
+			// PrivateRR is the only RR implementation that has interface field.
+			// therefore it's expected that this interface would be PrivateRdata
+			switch data := fv.Interface().(type) {
+			case PrivateRdata:
+				n, err := data.ParseByteSlice(msg[off:rdend])
+				if err != nil {
+					return lenmsg, err
+				}
+				off += n
+			default:
+				return lenmsg, &Error{err: "bad kind interface unpacking"}
+			}
 		case reflect.Slice:
 			switch val.Type().Field(i).Tag {
 			default:
