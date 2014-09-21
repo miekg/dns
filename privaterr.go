@@ -5,24 +5,31 @@ import (
 	"strings"
 )
 
-// PrivateRdata is an interface to implement non-RFC dictated resource records. See also dns.PrivateRR, dns.NewPrivateRR and dns.DelPrivateRR
+// PrivateRdata is an interface used for implementing "Private Use" RR types, see
+// RFC 6895. This allows one to experiment with new RR types, without requesting an
+// official type code. Also see dns.PrivateHandle and dns.PrivateHandleRemove.
 type PrivateRdata interface {
+	// String returns the text presentaton of the Rdata of the Private RR.
 	String() string
 	ParseTextSlice([]string) error
-	WriteByteSlice([]byte) (int, error)
-	ParseByteSlice([]byte) (int, error)
+	// Pack is used when packing a private RR into a buffer.
+	Pack([]byte) (int, error)
+	// Unpack is used when unpacking a private RR from a buffer.
+	Unpack([]byte) (int, error)
 	PasteRdata(PrivateRdata) error
+	// RdataLen returns the length in octets of the Rdata.
 	RdataLen() int
 }
 
-// PrivateRR represents RR that uses PrivateRdata user-defined type. It mocks normal RRs and implements dns.RR interface.
+// PrivateRR represents an RR that uses a PrivateRdata user-defined type.
+// It mocks normal RRs and implements dns.RR interface.
 type PrivateRR struct {
 	Hdr  RR_Header
 	Data PrivateRdata
 }
 
-// Panics if RR is not an instance of PrivateRR
 func mkPrivateRR(rrtype uint16) *PrivateRR {
+	// Panics if RR is not an instance of PrivateRR.
 	rrfunc, ok := typeToRR[rrtype]
 	if !ok {
 		panic(fmt.Sprintf("dns: invalid operation with Private RR type %d", rrtype))
@@ -51,13 +58,12 @@ func (r *PrivateRR) copy() RR {
 	if err != nil {
 		panic("dns: got value that could not be used to copy Private rdata")
 	}
-
 	return rr
 }
 
-// NewPrivateRR adds support for user-defined resource record type to internals of dns library. Requires
-// string and numeric representation of RR type and generator function as argument.
-func NewPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRdata) {
+// PrivateHandle registers a private resource record type. It requires
+// string and numeric representation of private RR type and generator function as argument.
+func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata) {
 	rtypestr = strings.ToUpper(rtypestr)
 
 	typeToRR[rtype] = func() RR { return &PrivateRR{RR_Header{}, generator()} }
@@ -72,6 +78,8 @@ func NewPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRdata) 
 		text := make([]string, 0, 2) // could be 0..N elements, median is probably 1
 	FETCH:
 		for {
+			// TODO(miek): we could also be returning _QUOTE, this might or might not
+			// be an issue (basically parsing TXT becomes hard)
 			switch l = <-c; l.value {
 			case _NEWLINE, _EOF:
 				break FETCH
@@ -91,8 +99,8 @@ func NewPrivateRR(rtypestr string, rtype uint16, generator func() PrivateRdata) 
 	typeToparserFunc[rtype] = parserFunc{setPrivateRR, false}
 }
 
-// DelPrivateRR removes defenitions required to support user RR type.
-func DelPrivateRR(rtype uint16) {
+// PrivateHandleRemove removes defenitions required to support private RR type.
+func PrivateHandleRemove(rtype uint16) {
 	rtypestr, ok := TypeToString[rtype]
 	if ok {
 		delete(typeToRR, rtype)

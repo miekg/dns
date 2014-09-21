@@ -581,7 +581,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			// therefore it's expected that this interface would be PrivateRdata
 			switch data := fv.Interface().(type) {
 			case PrivateRdata:
-				n, err := data.WriteByteSlice(msg[off:])
+				n, err := data.Pack(msg[off:])
 				if err != nil {
 					return lenmsg, err
 				}
@@ -887,7 +887,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			// therefore it's expected that this interface would be PrivateRdata
 			switch data := fv.Interface().(type) {
 			case PrivateRdata:
-				n, err := data.ParseByteSlice(msg[off:rdend])
+				n, err := data.Unpack(msg[off:rdend])
 				if err != nil {
 					return lenmsg, err
 				}

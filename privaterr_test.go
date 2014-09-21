@@ -1,4 +1,4 @@
-package dns
+package dns_test
 
 import (
 	"github.com/miekg/dns"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const typeISBN uint16 = 0x0F01
+const TypeISBN uint16 = 0x0F01
 
 // A crazy new RR type :)
 type ISBN struct {
@@ -15,13 +15,15 @@ type ISBN struct {
 
 func NewISBN() dns.PrivateRdata { return &ISBN{""} }
 
+func (rd *ISBN) RdataLen() int  { return len([]byte(rd.x)) }
 func (rd *ISBN) String() string { return rd.x }
+
 func (rd *ISBN) ParseTextSlice(txt []string) error {
 	rd.x = strings.TrimSpace(strings.Join(txt, " "))
 	return nil
 }
 
-func (rd *ISBN) WriteByteSlice(buf []byte) (int, error) {
+func (rd *ISBN) Pack(buf []byte) (int, error) {
 	b := []byte(rd.x)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -30,7 +32,7 @@ func (rd *ISBN) WriteByteSlice(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *ISBN) ParseByteSlice(buf []byte) (int, error) {
+func (rd *ISBN) Unpack(buf []byte) (int, error) {
 	rd.x = string(buf)
 	return len(buf), nil
 }
@@ -42,10 +44,6 @@ func (rd *ISBN) PasteRdata(dest dns.PrivateRdata) error {
 	}
 	isbn.x = rd.x
 	return nil
-}
-
-func (rd *ISBN) RdataLen() int {
-	return len([]byte(rd.x))
 }
 
 var testrecord = strings.Join([]string{"example.org.", "3600", "IN", "ISBN", "12-3 456789-0-123"}, "\t")
