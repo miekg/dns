@@ -25,8 +25,8 @@ type PrivateRdata interface {
 	// Unpack is used when unpacking a private RR from a buffer.
 	// TODO(miek): diff. signature than Pack, see edns0.go for instance.
 	Unpack([]byte) (int, error)
-	// CopyRdata copies the Rdata.
-	CopyRdata(PrivateRdata) error
+	// Copy copies the Rdata.
+	Copy(PrivateRdata) error
 	// Len returns the length in octets of the Rdata.
 	Len() int
 }
@@ -64,7 +64,7 @@ func (r *PrivateRR) copy() RR {
 	newh := r.Hdr.copyHeader()
 	rr.Hdr = *newh
 
-	err := r.Data.CopyRdata(rr.Data)
+	err := r.Data.Copy(rr.Data)
 	if err != nil {
 		panic("dns: got value that could not be used to copy Private rdata")
 	}

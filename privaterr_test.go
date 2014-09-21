@@ -37,7 +37,7 @@ func (rd *ISBN) Unpack(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-func (rd *ISBN) CopyRdata(dest dns.PrivateRdata) error {
+func (rd *ISBN) Copy(dest dns.PrivateRdata) error {
 	isbn, ok := dest.(*ISBN)
 	if !ok {
 		return dns.ErrRdata
@@ -127,7 +127,7 @@ func (rd *VERSION) Unpack(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-func (rd *VERSION) CopyRdata(dest dns.PrivateRdata) error {
+func (rd *VERSION) Copy(dest dns.PrivateRdata) error {
 	isbn, ok := dest.(*VERSION)
 	if !ok {
 		return dns.ErrRdata

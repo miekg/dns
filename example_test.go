@@ -102,7 +102,7 @@ func (rd *APAIR) Unpack(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-func (rd *APAIR) CopyRdata(dest dns.PrivateRdata) error {
+func (rd *APAIR) Copy(dest dns.PrivateRdata) error {
 	cp := make([]byte, rd.Len())
 	_, err := rd.Pack(cp)
 	if err != nil {
