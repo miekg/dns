@@ -1,3 +1,11 @@
+/*
+PRIVATE RR
+
+RFC 6895 sets aside a range of type codes for private use. This range
+is 65,280 - 65,534 (0xFF00 - 0xFFFE). When experimenting with new Resource Records these
+can be used, before requesting an official type code from IANA.
+
+*/
 package dns
 
 import (
@@ -11,13 +19,15 @@ import (
 type PrivateRdata interface {
 	// String returns the text presentaton of the Rdata of the Private RR.
 	String() string
+	// ParseTextSlice parses the Rdata of the private RR.
 	ParseTextSlice([]string) error
 	// Pack is used when packing a private RR into a buffer.
 	Pack([]byte) (int, error)
 	// Unpack is used when unpacking a private RR from a buffer.
 	// TODO(miek): diff. signature than Pack, see edns0.go for instance.
 	Unpack([]byte) (int, error)
-	PasteRdata(PrivateRdata) error
+	// CopyRdata copies the Rdata.
+	CopyRdata(PrivateRdata) error
 	// RdataLen returns the length in octets of the Rdata.
 	RdataLen() int
 }
@@ -55,7 +65,7 @@ func (r *PrivateRR) copy() RR {
 	newh := r.Hdr.copyHeader()
 	rr.Hdr = *newh
 
-	err := r.Data.PasteRdata(rr.Data)
+	err := r.Data.CopyRdata(rr.Data)
 	if err != nil {
 		panic("dns: got value that could not be used to copy Private rdata")
 	}
