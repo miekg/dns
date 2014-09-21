@@ -1,4 +1,4 @@
-package dns_test
+package dns
 
 import (
 	"github.com/miekg/dns"
@@ -6,10 +6,9 @@ import (
 	"testing"
 )
 
-const TypeISBN uint16 = 0x0F01
+const typeISBN uint16 = 0x0F01
 
-// sorry DNS RFC writers, here we go with crazy idea test :)
-
+// A crazy new RR type :)
 type ISBN struct {
 	x string // rdata with 10 or 13 numbers, dashes or spaces allowed
 }
@@ -60,7 +59,7 @@ func TestPrivateText(t *testing.T) {
 		t.Fatal(err)
 	}
 	if rr.String() != testrecord {
-		t.Errorf("Record string representation did not match original %#v != %#v", rr.String(), testrecord)
+		t.Errorf("record string representation did not match original %#v != %#v", rr.String(), testrecord)
 	} else {
 		t.Log(rr.String())
 	}
@@ -78,17 +77,17 @@ func TestPrivateByteSlice(t *testing.T) {
 	buf := make([]byte, 100)
 	off, err := dns.PackRR(rr, buf, 0, nil, false)
 	if err != nil {
-		t.Errorf("Got error packing ISBN: %s", err)
+		t.Errorf("got error packing ISBN: %s", err)
 	}
 
 	custrr := rr.(*dns.PrivateRR)
 	if ln := custrr.Data.RdataLen() + len(custrr.Header().Name) + 11; ln != off {
-		t.Errorf("Offset is not matching to length of Private RR: %d!=%d", off, ln)
+		t.Errorf("offset is not matching to length of Private RR: %d!=%d", off, ln)
 	}
 
 	rr1, off1, err := dns.UnpackRR(buf[:off], 0)
 	if err != nil {
-		t.Errorf("Got error unpacking ISBN: %s", err)
+		t.Errorf("got error unpacking ISBN: %s", err)
 	}
 
 	if off1 != off {
