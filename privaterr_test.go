@@ -15,7 +15,7 @@ type ISBN struct {
 
 func NewISBN() dns.PrivateRdata { return &ISBN{""} }
 
-func (rd *ISBN) RdataLen() int  { return len([]byte(rd.x)) }
+func (rd *ISBN) Len() int  { return len([]byte(rd.x)) }
 func (rd *ISBN) String() string { return rd.x }
 
 func (rd *ISBN) ParseTextSlice(txt []string) error {
@@ -79,7 +79,7 @@ func TestPrivateByteSlice(t *testing.T) {
 	}
 
 	custrr := rr.(*dns.PrivateRR)
-	if ln := custrr.Data.RdataLen() + len(custrr.Header().Name) + 11; ln != off {
+	if ln := custrr.Data.Len() + len(custrr.Header().Name) + 11; ln != off {
 		t.Errorf("offset is not matching to length of Private RR: %d!=%d", off, ln)
 	}
 
@@ -136,7 +136,7 @@ func (rd *VERSION) CopyRdata(dest dns.PrivateRdata) error {
 	return nil
 }
 
-func (rd *VERSION) RdataLen() int {
+func (rd *VERSION) Len() int {
 	return len([]byte(rd.x))
 }
 

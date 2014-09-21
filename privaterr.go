@@ -27,8 +27,8 @@ type PrivateRdata interface {
 	Unpack([]byte) (int, error)
 	// CopyRdata copies the Rdata.
 	CopyRdata(PrivateRdata) error
-	// RdataLen returns the length in octets of the Rdata.
-	RdataLen() int
+	// Len returns the length in octets of the Rdata.
+	Len() int
 }
 
 // PrivateRR represents an RR that uses a PrivateRdata user-defined type.
@@ -57,7 +57,7 @@ func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
 func (r *PrivateRR) String() string     { return r.Hdr.String() + r.Data.String() }
 
 // Private len and copy parts to satisfy RR interface.
-func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.RdataLen() }
+func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.Len() }
 func (r *PrivateRR) copy() RR {
 	// make new RR like this:
 	rr := mkPrivateRR(r.Hdr.Rrtype)
