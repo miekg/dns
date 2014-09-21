@@ -67,12 +67,12 @@ func NewAPAIR() dns.PrivateRdata { return new(APAIR) }
 func (rd *APAIR) String() string { return rd.addr[0].String() + " " + rd.addr[1].String() }
 func (rd *APAIR) ParseTextSlice(txt []string) error {
 	if len(txt) != 2 {
-		return errors.New("Two addresses required for APAIR")
+		return errors.New("two addresses required for APAIR")
 	}
 	for i, s := range txt {
 		ip := net.ParseIP(s)
 		if ip == nil {
-			return errors.New("Invalid IP in APAIR text representation")
+			return errors.New("invalid IP in APAIR text representation")
 		}
 		rd.addr[i] = ip
 	}
@@ -91,7 +91,7 @@ func (rd *APAIR) Pack(buf []byte) (int, error) {
 func (rd *APAIR) Unpack(buf []byte) (int, error) {
 	ln := net.IPv4len * 2
 	if len(buf) != ln {
-		return 0, errors.New("Invalid length of APAIR rdata")
+		return 0, errors.New("invalid length of APAIR rdata")
 	}
 	cp := make([]byte, ln)
 	copy(cp, buf) // clone bytes to use them in IPs
@@ -125,7 +125,7 @@ func ExampleNewPrivateRR() {
 
 	rr, err := dns.NewRR("miek.nl. APAIR (1.2.3.4    1.2.3.5)")
 	if err != nil {
-		log.Fatal("Could not parse APAIR record: ", err)
+		log.Fatal("could not parse APAIR record: ", err)
 	}
 	fmt.Println(rr)
 	// Output: miek.nl.	3600	IN	APAIR	1.2.3.4 1.2.3.5
