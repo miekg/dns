@@ -79,7 +79,7 @@ func (rd *APAIR) ParseTextSlice(txt []string) error {
 	return nil
 }
 
-func (rd *APAIR) WriteByteSlice(buf []byte) (int, error) {
+func (rd *APAIR) Pack(buf []byte) (int, error) {
 	b := append([]byte(rd.addr[0]), []byte(rd.addr[1])...)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -88,7 +88,7 @@ func (rd *APAIR) WriteByteSlice(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *APAIR) ParseByteSlice(buf []byte) (int, error) {
+func (rd *APAIR) Unpack(buf []byte) (int, error) {
 	ln := net.IPv4len * 2
 	if len(buf) != ln {
 		return 0, errors.New("Invalid length of APAIR rdata")
@@ -104,7 +104,7 @@ func (rd *APAIR) ParseByteSlice(buf []byte) (int, error) {
 
 func (rd *APAIR) PasteRdata(dest dns.PrivateRdata) error {
 	cp := make([]byte, rd.RdataLen())
-	_, err := rd.WriteByteSlice(cp)
+	_, err := rd.Pack(cp)
 	if err != nil {
 		return err
 	}
@@ -120,8 +120,8 @@ func (rd *APAIR) RdataLen() int {
 }
 
 func ExampleNewPrivateRR() {
-	dns.NewPrivateRR("APAIR", TypeAPAIR, NewAPAIR)
-	defer dns.DelPrivateRR(TypeAPAIR)
+	dns.PrivateHandle("APAIR", TypeAPAIR, NewAPAIR)
+	defer dns.PrivateHandleRemove(TypeAPAIR)
 
 	rr, err := dns.NewRR("miek.nl. APAIR (1.2.3.4    1.2.3.5)")
 	if err != nil {

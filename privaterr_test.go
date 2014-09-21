@@ -49,8 +49,8 @@ func (rd *ISBN) PasteRdata(dest dns.PrivateRdata) error {
 var testrecord = strings.Join([]string{"example.org.", "3600", "IN", "ISBN", "12-3 456789-0-123"}, "\t")
 
 func TestPrivateText(t *testing.T) {
-	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
-	defer dns.DelPrivateRR(TypeISBN)
+	dns.PrivateHandle("ISBN", TypeISBN, NewISBN)
+	defer dns.PrivateHandleRemove(TypeISBN)
 
 	rr, err := dns.NewRR(testrecord)
 	if err != nil {
@@ -64,8 +64,8 @@ func TestPrivateText(t *testing.T) {
 }
 
 func TestPrivateByteSlice(t *testing.T) {
-	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
-	defer dns.DelPrivateRR(TypeISBN)
+	dns.PrivateHandle("ISBN", TypeISBN, NewISBN)
+	defer dns.PrivateHandleRemove(TypeISBN)
 
 	rr, err := dns.NewRR(testrecord)
 	if err != nil {
@@ -113,7 +113,7 @@ func (rd *VERSION) ParseTextSlice(txt []string) error {
 	return nil
 }
 
-func (rd *VERSION) WriteByteSlice(buf []byte) (int, error) {
+func (rd *VERSION) Pack(buf []byte) (int, error) {
 	b := []byte(rd.x)
 	n := copy(buf, b)
 	if n != len(b) {
@@ -122,7 +122,7 @@ func (rd *VERSION) WriteByteSlice(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (rd *VERSION) ParseByteSlice(buf []byte) (int, error) {
+func (rd *VERSION) Unpack(buf []byte) (int, error) {
 	rd.x = string(buf)
 	return len(buf), nil
 }
@@ -154,10 +154,10 @@ www ISBN 1231-92110-16
 `
 
 func TestPrivateZoneParser(t *testing.T) {
-	dns.NewPrivateRR("ISBN", TypeISBN, NewISBN)
-	dns.NewPrivateRR("VERSION", TypeVERSION, NewVersion)
-	defer dns.DelPrivateRR(TypeISBN)
-	defer dns.DelPrivateRR(TypeVERSION)
+	dns.PrivateHandle("ISBN", TypeISBN, NewISBN)
+	dns.PrivateHandle("VERSION", TypeVERSION, NewVersion)
+	defer dns.PrivateHandleRemove(TypeISBN)
+	defer dns.PrivateHandleRemove(TypeVERSION)
 
 	r := strings.NewReader(smallzone)
 	for x := range dns.ParseZone(r, ".", "") {
