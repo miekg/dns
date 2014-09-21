@@ -119,7 +119,7 @@ func (rd *APAIR) RdataLen() int {
 	return net.IPv4len * 2
 }
 
-func ExampleNewPrivateRR() {
+func ExamplePrivateHandle() {
 	dns.PrivateHandle("APAIR", TypeAPAIR, NewAPAIR)
 	defer dns.PrivateHandleRemove(TypeAPAIR)
 
