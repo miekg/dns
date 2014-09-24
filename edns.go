@@ -35,16 +35,16 @@ import (
 
 // EDNS0 Option codes.
 const (
-	EDNS0LLQ         = 0x1    // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
-	EDNS0UL          = 0x2    // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
-	EDNS0NSID        = 0x3    // nsid (RFC5001)
-	EDNS0DAU         = 0x5    // DNSSEC Algorithm Understood
-	EDNS0DHU         = 0x6    // DS Hash Understood
-	EDNS0N3U         = 0x7    // NSEC3 Hash Understood
-	EDNS0SUBNET      = 0x8    // client-subnet (RFC6891)
-	EDNS0EXPIRE      = 0x9    // EDNS0 expire
-	EDNS0SUBNETDRAFT = 0x50fa // Don't use! Use EDNS0SUBNET
-	_DO              = 1 << 7 // dnssec ok
+	EDNS0LLQ         = 0x1     // long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
+	EDNS0UL          = 0x2     // update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
+	EDNS0NSID        = 0x3     // nsid (RFC5001)
+	EDNS0DAU         = 0x5     // DNSSEC Algorithm Understood
+	EDNS0DHU         = 0x6     // DS Hash Understood
+	EDNS0N3U         = 0x7     // NSEC3 Hash Understood
+	EDNS0SUBNET      = 0x8     // client-subnet (RFC6891)
+	EDNS0EXPIRE      = 0x9     // EDNS0 expire
+	EDNS0SUBNETDRAFT = 0x50fa  // Don't use! Use EDNS0SUBNET
+	_DO              = 1 << 15 // dnssec ok
 )
 
 type OPT struct {
@@ -114,12 +114,12 @@ func (rr *OPT) copy() RR {
 
 // Version returns the EDNS version used. Only zero is defined.
 func (rr *OPT) Version() uint8 {
-	return uint8(rr.Hdr.Ttl & 0x00FF00FFFF)
+	return uint8((rr.Hdr.Ttl & 0x00FF0000) >> 16)
 }
 
 // SetVersion sets the version of EDNS. This is usually zero.
 func (rr *OPT) SetVersion(v uint8) {
-	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | uint32(v)
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | (uint32(v) << 16)
 }
 
 // UDPSize returns the UDP buffer size.
@@ -134,17 +134,12 @@ func (rr *OPT) SetUDPSize(size uint16) {
 
 // Do returns the value of the DO (DNSSEC OK) bit.
 func (rr *OPT) Do() bool {
-	return byte(rr.Hdr.Ttl>>8)&_DO == _DO
+	return rr.Hdr.Ttl&_DO == _DO
 }
 
 // SetDo sets the DO (DNSSEC OK) bit.
 func (rr *OPT) SetDo() {
-	b1 := byte(rr.Hdr.Ttl >> 24)
-	b2 := byte(rr.Hdr.Ttl >> 16)
-	b3 := byte(rr.Hdr.Ttl >> 8)
-	b4 := byte(rr.Hdr.Ttl)
-	b3 |= _DO // Set it
-	rr.Hdr.Ttl = uint32(b1)<<24 | uint32(b2)<<16 | uint32(b3)<<8 | uint32(b4)
+	rr.Hdr.Ttl |= _DO
 }
 
 // EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to
