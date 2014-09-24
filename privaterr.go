@@ -106,7 +106,7 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 		return rr, nil, ""
 	}
 
-	typeToparserFunc[rtype] = parserFunc{setPrivateRR, false}
+	typeToparserFunc[rtype] = parserFunc{setPrivateRR, true}
 }
 
 // PrivateHandleRemove removes defenitions required to support private RR type.
