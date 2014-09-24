@@ -24,23 +24,20 @@ type parserFunc struct {
 // or immediately a _NEWLINE. If this is not the case we flag
 // an *ParseError: garbage after rdata.
 func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	var r RR
-	e := new(ParseError)
-
 	parserfunc, ok := typeToparserFunc[h.Rrtype]
 	if ok {
+		r, e, cm := parserfunc.Func(h, c, o, f)
 		if parserfunc.Variable {
-			r, e, _ = parserfunc.Func(h, c, o, f)
-			if e != nil {
-				return nil, e, ""
-			}
-			se, com := slurpRemainder(c, f)
-			if se != nil {
-				return nil, se, ""
-			}
-			return r, e, com
+			return r, e, cm
 		}
-		return parserfunc.Func(h, c, o, f)
+		if e != nil {
+			return nil, e, ""
+		}
+		e, cm = slurpRemainder(c, f)
+		if e != nil {
+			return nil, e, ""
+		}
+		return r, nil, cm
 	}
 	// RFC3957 RR (Unknown RR handling)
 	return setRFC3597(h, c, o, f)
