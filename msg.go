@@ -12,6 +12,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -1450,6 +1451,19 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	var compression map[string]int
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
+	}
+
+	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
+		return nil, errors.New("Invalid RCODE")
+	}
+	if dns.Rcode > 0xF {
+		// Regular RCODE field is 4 bits
+		opt := dns.IsEdns0()
+		if opt == nil {
+			return nil, errors.New("RCODE >= 16 but no EDNS record")
+		}
+		opt.SetExtRcode(uint8(dns.Rcode >> 4))
+		dns.Rcode &= 0xF
 	}
 
 	// Convert convenient Msg into wire-like Header.

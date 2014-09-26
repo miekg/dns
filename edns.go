@@ -122,6 +122,16 @@ func (rr *OPT) SetVersion(v uint8) {
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | (uint32(v) << 16)
 }
 
+// ExtRcode returns the EDNS extended RCODE field (the upper 8 bits of the RCODE).
+func (rr *OPT) ExtRcode() uint8 {
+	return uint8((rr.Hdr.Ttl & 0xFF000000) >> 24)
+}
+
+// SetExtRcode sets the EDNS extended RCODE field.
+func (rr *OPT) SetExtRcode(v uint8) {
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | (uint32(v) << 24)
+}
+
 // UDPSize returns the UDP buffer size.
 func (rr *OPT) UDPSize() uint16 {
 	return rr.Hdr.Class

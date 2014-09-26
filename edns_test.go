@@ -31,4 +31,18 @@ func TestOPTTtl(t *testing.T) {
 	if e.Hdr.Ttl != oldTtl {
 		t.Fail()
 	}
+
+	if e.ExtRcode() != 0 {
+		t.Fail()
+	}
+
+	e.SetExtRcode(42)
+	if e.ExtRcode() != 42 {
+		t.Fail()
+	}
+
+	e.SetExtRcode(0)
+	if e.Hdr.Ttl != oldTtl {
+		t.Fail()
+	}
 }
