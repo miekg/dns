@@ -15,7 +15,7 @@ type ISBN struct {
 
 func NewISBN() dns.PrivateRdata { return &ISBN{""} }
 
-func (rd *ISBN) Len() int  { return len([]byte(rd.x)) }
+func (rd *ISBN) Len() int       { return len([]byte(rd.x)) }
 func (rd *ISBN) String() string { return rd.x }
 
 func (rd *ISBN) Parse(txt []string) error {
