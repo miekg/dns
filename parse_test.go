@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -563,13 +562,17 @@ func TestParseFailure(t *testing.T) {
 }
 
 func TestZoneParsing(t *testing.T) {
-	f, err := os.Open("parse_test.db")
-	if err != nil {
-		return
-	}
-	defer f.Close()
+	// parse_test.db
+	db := `
+a.example.com.                IN A 127.0.0.1
+8db7._openpgpkey.example.com. IN OPENPGPKEY mQCNAzIG
+$ORIGIN a.example.com.
+test                          IN A 127.0.0.1
+$ORIGIN b.example.com.
+test                          IN CNAME test.a.example.com.
+`
 	start := time.Now().UnixNano()
-	to := ParseZone(f, "", "parse_test.db")
+	to := ParseZone(strings.NewReader(db), "", "parse_test.db")
 	var i int
 	for x := range to {
 		i++

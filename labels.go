@@ -4,7 +4,9 @@ package dns
 
 // SplitDomainName splits a name string into it's labels.
 // www.miek.nl. returns []string{"www", "miek", "nl"}
-// The root label (.) returns nil.
+// The root label (.) returns nil. Note that using
+// strings.Split(s) will work in most cases, but does not handle
+// escaped dots (\.) for instance.
 func SplitDomainName(s string) (labels []string) {
 	if len(s) == 0 {
 		return nil
@@ -101,7 +103,7 @@ func CountLabel(s string) (labels int) {
 
 // Split splits a name s into its label indexes.
 // www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
-// The root name (.) returns nil.
+// The root name (.) returns nil. Also see dns.SplitDomainName.
 func Split(s string) []int {
 	if s == "." {
 		return nil
