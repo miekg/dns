@@ -134,5 +134,6 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * Missing in parsing: ISDN, UNSPEC, ATMA;
 * CAA parsing is broken;
 * NSEC(3) cover/match/closest enclose;
-* Replies with TC bit are not parsed to the end.
-* SIG(0)
+* Replies with TC bit are not parsed to the end;
+* SIG(0);
+* Create IsMsg to validate a message before fully parsing it.
