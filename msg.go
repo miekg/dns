@@ -12,7 +12,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -24,27 +23,28 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrFqdn      error = &Error{err: "domain must be fully qualified"}
-	ErrId        error = &Error{err: "id mismatch"}
-	ErrRdata     error = &Error{err: "bad rdata"}
-	ErrBuf       error = &Error{err: "buffer size too small"}
-	ErrShortRead error = &Error{err: "short read"}
-	ErrConn      error = &Error{err: "conn holds both UDP and TCP connection"}
-	ErrConnEmpty error = &Error{err: "conn has no connection"}
-	ErrServ      error = &Error{err: "no servers could be reached"}
-	ErrKey       error = &Error{err: "bad key"}
-	ErrPrivKey   error = &Error{err: "bad private key"}
-	ErrKeySize   error = &Error{err: "bad key size"}
-	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
-	ErrAlg       error = &Error{err: "bad algorithm"}
-	ErrTime      error = &Error{err: "bad time"}
-	ErrNoSig     error = &Error{err: "no signature found"}
-	ErrSig       error = &Error{err: "bad signature"}
-	ErrSecret    error = &Error{err: "no secrets defined"}
-	ErrSigGen    error = &Error{err: "bad signature generation"}
-	ErrAuth      error = &Error{err: "bad authentication"}
-	ErrSoa       error = &Error{err: "no SOA"}
-	ErrRRset     error = &Error{err: "bad rrset"}
+	ErrFqdn          error = &Error{err: "domain must be fully qualified"}
+	ErrId            error = &Error{err: "id mismatch"}
+	ErrRdata         error = &Error{err: "bad rdata"}
+	ErrBuf           error = &Error{err: "buffer size too small"}
+	ErrShortRead     error = &Error{err: "short read"}
+	ErrConn          error = &Error{err: "conn holds both UDP and TCP connection"}
+	ErrConnEmpty     error = &Error{err: "conn has no connection"}
+	ErrServ          error = &Error{err: "no servers could be reached"}
+	ErrKey           error = &Error{err: "bad key"}
+	ErrPrivKey       error = &Error{err: "bad private key"}
+	ErrKeySize       error = &Error{err: "bad key size"}
+	ErrKeyAlg        error = &Error{err: "bad key algorithm"}
+	ErrAlg           error = &Error{err: "bad algorithm"}
+	ErrTime          error = &Error{err: "bad time"}
+	ErrNoSig         error = &Error{err: "no signature found"}
+	ErrSig           error = &Error{err: "bad signature"}
+	ErrSecret        error = &Error{err: "no secrets defined"}
+	ErrSigGen        error = &Error{err: "bad signature generation"}
+	ErrAuth          error = &Error{err: "bad authentication"}
+	ErrSoa           error = &Error{err: "no SOA"}
+	ErrRRset         error = &Error{err: "bad rrset"}
+	ErrExtendedRcode error = &Error{err: "bad extended rcode"}
 )
 
 // Id, by default, returns a 16 bits random number to be used as a
@@ -1460,9 +1460,9 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 		// Regular RCODE field is 4 bits
 		opt := dns.IsEdns0()
 		if opt == nil {
-			return nil, errors.New("RCODE >= 16 but no EDNS record")
+			return nil, ErrExtendedRcode
 		}
-		opt.SetExtRcode(uint8(dns.Rcode >> 4))
+		opt.SetExtendedRcode(uint8(dns.Rcode >> 4))
 		dns.Rcode &= 0xF
 	}
 
