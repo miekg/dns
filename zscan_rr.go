@@ -1022,7 +1022,9 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.length == 0 {
 		return rr, nil, l.comment
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if v, ok := StringToCertType[l.token]; ok {
+		rr.Type = v
+	} else if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad CERT Type", l}, ""
 	} else {
 		rr.Type = uint16(i)
@@ -1036,7 +1038,9 @@ func setCERT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
-	if i, e := strconv.Atoi(l.token); e != nil {
+	if v, ok := StringToAlgorithm[l.token]; ok {
+		rr.Algorithm = v
+	} else if i, e := strconv.Atoi(l.token); e != nil {
 		return nil, &ParseError{f, "bad CERT Algorithm", l}, ""
 	} else {
 		rr.Algorithm = uint8(i)
