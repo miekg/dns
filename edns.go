@@ -110,7 +110,7 @@ func (rr *OPT) copy() RR {
 	return &OPT{*rr.Hdr.copyHeader(), rr.Option}
 }
 
-// return the old value -> delete SetVersion
+// return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.
 func (rr *OPT) Version() uint8 {
@@ -122,13 +122,13 @@ func (rr *OPT) SetVersion(v uint8) {
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFF00FFFF | (uint32(v) << 16)
 }
 
-// ExtRcode returns the EDNS extended RCODE field (the upper 8 bits of the RCODE).
-func (rr *OPT) ExtRcode() uint8 {
+// ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
+func (rr *OPT) ExtendedRcode() uint8 {
 	return uint8((rr.Hdr.Ttl & 0xFF000000) >> 24)
 }
 
-// SetExtRcode sets the EDNS extended RCODE field.
-func (rr *OPT) SetExtRcode(v uint8) {
+// SetExtendedRcode sets the EDNS extended RCODE field.
+func (rr *OPT) SetExtendedRcode(v uint8) {
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | (uint32(v) << 24)
 }
 
