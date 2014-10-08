@@ -159,8 +159,39 @@ const (
 	_AD = 1 << 5  // authticated data
 	_CD = 1 << 4  // checking disabled
 
-	_LOC_EQUATOR = 1 << 31 // RFC 1876, Section 2.
 )
+
+// RFC 1876, Section 2
+const _LOC_EQUATOR = 1 << 31
+
+// RFC 4398, Section 2.1
+const (
+	CertPKIX = 1 + iota
+	CertSPKI
+	CertPGP
+	CertIPIX
+	CertISPKI
+	CertIPGP
+	CertACPKIX
+	CertIACPKIX
+	CertURI = 253
+	CertOID = 254
+)
+
+var CertTypeToString = map[uint16]string{
+	CertPKIX:    "PKIX",
+	CertSPKI:    "SPKI",
+	CertPGP:     "PGP",
+	CertIPIX:    "IPIX",
+	CertISPKI:   "ISPKI",
+	CertIPGP:    "IPGP",
+	CertACPKIX:  "ACPKIX",
+	CertIACPKIX: "IACPKIX",
+	CertURI:     "URI",
+	CertOID:     "OID",
+}
+
+var StringToCertType = reverseInt16(CertTypeToString)
 
 // DNS queries.
 type Question struct {
@@ -627,9 +658,19 @@ func (rr *CERT) copy() RR {
 }
 
 func (rr *CERT) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Type)) +
+	var (
+		ok                  bool
+		certtype, algorithm string
+	)
+	if certtype, ok = CertTypeToString[rr.Type]; !ok {
+		certtype = strconv.Itoa(int(rr.Type))
+	}
+	if algorithm, ok = AlgorithmToString[rr.Algorithm]; !ok {
+		algorithm = strconv.Itoa(int(rr.Algorithm))
+	}
+	return rr.Hdr.String() + certtype +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + algorithm +
 		" " + rr.Certificate
 }
 
