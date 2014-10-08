@@ -2132,7 +2132,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeKX:         parserFunc{setKX, false},
 	TypeL32:        parserFunc{setL32, false},
 	TypeL64:        parserFunc{setL64, false},
-	TypeLOC:        parserFunc{setLOC, false},
+	TypeLOC:        parserFunc{setLOC, true},
 	TypeLP:         parserFunc{setLP, false},
 	TypeMB:         parserFunc{setMB, false},
 	TypeMD:         parserFunc{setMD, false},
