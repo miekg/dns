@@ -302,6 +302,31 @@ func TestServingLargeResponses(t *testing.T) {
 	}
 }
 
+func TestServingResponse(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	c := new(Client)
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+	m.Response = false
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Log("failed to exchange", err)
+		t.Fatal()
+	}
+	m.Response = true
+	_, _, err = c.Exchange(m, addrstr)
+	if err == nil {
+		t.Log("exchanged response message", err)
+		t.Fatal()
+	}
+}
+
 func TestShutdownTCP(t *testing.T) {
 	s, _, err := RunLocalTCPServer("127.0.0.1:0")
 	if err != nil {

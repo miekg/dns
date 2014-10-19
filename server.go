@@ -77,8 +77,7 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// FailedHandler returns a HandlerFunc
-// returns SERVFAIL for every request it gets.
+// FailedHandler returns a HandlerFunc that returns SERVFAIL for every request it gets.
 func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
@@ -437,12 +436,16 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *ses
 		}
 	}()
 Redo:
+	// Ideally we want use isMsg here before we allocate memory to actually parse the packet.
 	req := new(Msg)
 	err := req.Unpack(m)
 	if err != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
 		w.WriteMsg(x)
+		goto Exit
+	}
+	if req.Response {
 		goto Exit
 	}
 
