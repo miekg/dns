@@ -1005,7 +1005,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off == lenmsg {
 					break // dyn. update
 				}
-				if off+net.IPv4len > rdend {
+				if off+net.IPv4len > rdend || off+net.IPv4len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking a"}
 				}
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
