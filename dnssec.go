@@ -40,14 +40,14 @@ const (
 	RSAMD5
 	DH
 	DSA
-	ECC
+	_ // Skip 4, RFC 6725, section 2.1
 	RSASHA1
 	DSANSEC3SHA1
 	RSASHA1NSEC3SHA1
 	RSASHA256
-	_ // Skip 9
+	_ // Skip 9, RFC 6725, section 2.1
 	RSASHA512
-	_ // Skip 11
+	_ // Skip 11, RFC 6725, section 2.1
 	ECCGOST
 	ECDSAP256SHA256
 	ECDSAP384SHA384

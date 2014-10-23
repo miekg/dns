@@ -112,6 +112,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 5936 - AXFR
 * 5966 - TCP implementation recommendations
 * 6605 - ECDSA
+* 6725 - IANA Registry Update
 * 6742 - ILNP DNS
 * 6891 - EDNS0 update
 * 6895 - DNS IANA considerations
