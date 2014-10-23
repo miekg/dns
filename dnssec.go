@@ -36,31 +36,34 @@ import (
 
 // DNSSEC encryption algorithm codes.
 const (
-	RSAMD5           = 1
-	DH               = 2
-	DSA              = 3
-	ECC              = 4
-	RSASHA1          = 5
-	DSANSEC3SHA1     = 6
-	RSASHA1NSEC3SHA1 = 7
-	RSASHA256        = 8
-	RSASHA512        = 10
-	ECCGOST          = 12
-	ECDSAP256SHA256  = 13
-	ECDSAP384SHA384  = 14
-	INDIRECT         = 252
-	PRIVATEDNS       = 253 // Private (experimental keys)
-	PRIVATEOID       = 254
+	_ uint8 = iota
+	RSAMD5
+	DH
+	DSA
+	ECC
+	RSASHA1
+	DSANSEC3SHA1
+	RSASHA1NSEC3SHA1
+	RSASHA256
+	_ // Skip 9
+	RSASHA512
+	_ // Skip 11
+	ECCGOST
+	ECDSAP256SHA256
+	ECDSAP384SHA384
+	INDIRECT   uint8 = 252
+	PRIVATEDNS uint8 = 253 // Private (experimental keys)
+	PRIVATEOID uint8 = 254
 )
 
 // DNSSEC hashing algorithm codes.
 const (
-	_      = iota
-	SHA1   // RFC 4034
-	SHA256 // RFC 4509
-	GOST94 // RFC 5933
-	SHA384 // Experimental
-	SHA512 // Experimental
+	_      uint8 = iota
+	SHA1         // RFC 4034
+	SHA256       // RFC 4509
+	GOST94       // RFC 5933
+	SHA384       // Experimental
+	SHA512       // Experimental
 )
 
 // DNSKEY flag values.
@@ -136,7 +139,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 }
 
 // ToDS converts a DNSKEY record to a DS record.
-func (k *DNSKEY) ToDS(h int) *DS {
+func (k *DNSKEY) ToDS(h uint8) *DS {
 	if k == nil {
 		return nil
 	}
@@ -146,7 +149,7 @@ func (k *DNSKEY) ToDS(h int) *DS {
 	ds.Hdr.Rrtype = TypeDS
 	ds.Hdr.Ttl = k.Hdr.Ttl
 	ds.Algorithm = k.Algorithm
-	ds.DigestType = uint8(h)
+	ds.DigestType = h
 	ds.KeyTag = k.KeyTag()
 
 	keywire := new(dnskeyWireFmt)
