@@ -75,6 +75,7 @@ const (
 	TypeRKEY       uint16 = 57
 	TypeTALINK     uint16 = 58
 	TypeCDS        uint16 = 59
+	TypeCDNSKEY    uint16 = 60
 	TypeOPENPGPKEY uint16 = 61
 	TypeSPF        uint16 = 99
 	TypeUINFO      uint16 = 100
@@ -1065,6 +1066,29 @@ func (rr *DNSKEY) copy() RR {
 }
 
 func (rr *DNSKEY) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+		" " + strconv.Itoa(int(rr.Protocol)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + rr.PublicKey
+}
+
+type CDNSKEY struct {
+	Hdr       RR_Header
+	Flags     uint16
+	Protocol  uint8
+	Algorithm uint8
+	PublicKey string `dns:"base64"`
+}
+
+func (rr *CDNSKEY) Header() *RR_Header { return &rr.Hdr }
+func (rr *CDNSKEY) len() int {
+	return rr.Hdr.len() + 4 + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+}
+func (rr *CDNSKEY) copy() RR {
+	return &DNSKEY{*rr.Hdr.copyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+}
+
+func (rr *CDNSKEY) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +

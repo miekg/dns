@@ -1487,6 +1487,41 @@ func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
+func setCDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	rr := new(CDNSKEY)
+	rr.Hdr = h
+
+	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDNSKEY Flags", l}, ""
+	} else {
+		rr.Flags = uint16(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDNSKEY Protocol", l}, ""
+	} else {
+		rr.Protocol = uint8(i)
+	}
+	<-c     // _BLANK
+	l = <-c // _STRING
+	if i, e := strconv.Atoi(l.token); e != nil {
+		return nil, &ParseError{f, "bad CDNSKEY Algorithm", l}, ""
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+	s, e, c1 := endingToString(c, "bad CDNSKEY PublicKey", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.PublicKey = s
+	return rr, nil, c1
+}
+
 func setRKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RKEY)
 	rr.Hdr = h
@@ -2118,6 +2153,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeAFSDB:      parserFunc{setAFSDB, false},
 	TypeA:          parserFunc{setA, false},
 	TypeCDS:        parserFunc{setCDS, true},
+	TypeCDNSKEY:    parserFunc{setCDNSKEY, true},
 	TypeCERT:       parserFunc{setCERT, true},
 	TypeCNAME:      parserFunc{setCNAME, false},
 	TypeDHCID:      parserFunc{setDHCID, true},

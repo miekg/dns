@@ -91,6 +91,7 @@ var TypeToString = map[uint16]string{
 	TypeATMA:       "ATMA",
 	TypeAXFR:       "AXFR", // Meta RR
 	TypeCAA:        "CAA",
+	TypeCDNSKEY:    "CDNSKEY",
 	TypeCDS:        "CDS",
 	TypeCERT:       "CERT",
 	TypeCNAME:      "CNAME",
