@@ -842,6 +842,8 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				off += len(s)
 			case `dns:"txt"`:
 				fallthrough
+			case `dns:"ipseckey"`:
+				fallthrough
 			case "":
 				if txtTmp == nil {
 					txtTmp = make([]byte, 256*4+1)
