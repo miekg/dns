@@ -110,6 +110,7 @@ var TypeToString = map[uint16]string{
 	TypeIPSECKEY:   "IPSECKEY",
 	TypeISDN:       "ISDN",
 	TypeIXFR:       "IXFR", // Meta RR
+	TypeKEY:        "KEY",
 	TypeKX:         "KX",
 	TypeL32:        "L32",
 	TypeL64:        "L64",
@@ -140,6 +141,7 @@ var TypeToString = map[uint16]string{
 	TypeRP:         "RP",
 	TypeRRSIG:      "RRSIG",
 	TypeRT:         "RT",
+	TypeSIG:        "SIG",
 	TypeSOA:        "SOA",
 	TypeSPF:        "SPF",
 	TypeSRV:        "SRV",
