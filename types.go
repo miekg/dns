@@ -1245,8 +1245,20 @@ func (rr *RFC3597) copy() RR           { return &RFC3597{*rr.Hdr.copyHeader(), r
 func (rr *RFC3597) len() int           { return rr.Hdr.len() + len(rr.Rdata)/2 + 2 }
 
 func (rr *RFC3597) String() string {
-	s := rr.Hdr.String()
+	// Let's call it a hack
+	s := rfc3597Header(rr.Hdr)
+
 	s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+	return s
+}
+
+func rfc3597Header(h RR_Header) string {
+	var s string
+
+	s += sprintName(h.Name) + "\t"
+	s += strconv.FormatInt(int64(h.Ttl), 10) + "\t"
+	s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
+	s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
 	return s
 }
 
