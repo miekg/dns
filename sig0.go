@@ -10,7 +10,8 @@
 //     ... protection for glue records, DNS requests, protection for message headers
 //     on requests and responses, and protection of the overall integrity of a response.
 //
-//
+// It works like TSIG, except that SIG(0) uses public key cryptography, instead of the shared
+// secret approach in TSIG.
 package dns
 
 import (
@@ -25,8 +26,8 @@ import (
 	"time"
 )
 
-// Sign signs a dns.Msg it fills the signature data with the appropriate data.
-// The SIG records should have the SignerName, KeyTag, Algorithm, Inception
+// Sign signs a dns.Msg. It fills the signature with the appropriate data.
+// The SIG record should have the SignerName, KeyTag, Algorithm, Inception
 // and Expiration set.
 func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	if k == nil {
