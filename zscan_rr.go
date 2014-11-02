@@ -1065,6 +1065,14 @@ func setOPENPGPKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, strin
 	return rr, nil, c1
 }
 
+func setSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+    r, e, s := setRRSIG(h, c, o, f)
+    if r != nil {
+        return &SIG{*r.(*RRSIG)} , e, s
+    }
+    return nil, e, s
+}
+
 func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(RRSIG)
 	rr.Hdr = h
@@ -1450,6 +1458,14 @@ func setSSHFP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	rr.FingerPrint = l.token
 	return rr, nil, ""
+}
+
+func setKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+    r, e, s := setDNSKEY(h, c, o, f)
+    if r != nil {
+        return &KEY{*r.(*DNSKEY)} , e, s
+    }
+    return nil, e, s
 }
 
 func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
@@ -2159,6 +2175,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeDHCID:      parserFunc{setDHCID, true},
 	TypeDLV:        parserFunc{setDLV, true},
 	TypeDNAME:      parserFunc{setDNAME, false},
+	TypeKEY:        parserFunc{setKEY, true},
 	TypeDNSKEY:     parserFunc{setDNSKEY, true},
 	TypeDS:         parserFunc{setDS, true},
 	TypeEID:        parserFunc{setEID, true},
@@ -2194,6 +2211,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeOPENPGPKEY: parserFunc{setOPENPGPKEY, true},
 	TypePTR:        parserFunc{setPTR, false},
 	TypePX:         parserFunc{setPX, false},
+	TypeSIG:        parserFunc{setSIG, true},
 	TypeRKEY:       parserFunc{setRKEY, true},
 	TypeRP:         parserFunc{setRP, false},
 	TypeRRSIG:      parserFunc{setRRSIG, true},
