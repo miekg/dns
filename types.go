@@ -894,6 +894,14 @@ func (rr *NSEC) len() int {
 	return l
 }
 
+type DLV struct {
+	DS
+}
+
+type CDS struct {
+	DS
+}
+
 type DS struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -909,48 +917,6 @@ func (rr *DS) copy() RR {
 }
 
 func (rr *DS) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + strconv.Itoa(int(rr.DigestType)) +
-		" " + strings.ToUpper(rr.Digest)
-}
-
-type CDS struct {
-	Hdr        RR_Header
-	KeyTag     uint16
-	Algorithm  uint8
-	DigestType uint8
-	Digest     string `dns:"hex"`
-}
-
-func (rr *CDS) Header() *RR_Header { return &rr.Hdr }
-func (rr *CDS) len() int           { return rr.Hdr.len() + 4 + len(rr.Digest)/2 }
-func (rr *CDS) copy() RR {
-	return &CDS{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
-}
-
-func (rr *CDS) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + strconv.Itoa(int(rr.DigestType)) +
-		" " + strings.ToUpper(rr.Digest)
-}
-
-type DLV struct {
-	Hdr        RR_Header
-	KeyTag     uint16
-	Algorithm  uint8
-	DigestType uint8
-	Digest     string `dns:"hex"`
-}
-
-func (rr *DLV) Header() *RR_Header { return &rr.Hdr }
-func (rr *DLV) len() int           { return rr.Hdr.len() + 4 + len(rr.Digest)/2 }
-func (rr *DLV) copy() RR {
-	return &DLV{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
-}
-
-func (rr *DLV) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
@@ -1058,6 +1024,10 @@ type KEY struct {
     DNSKEY
 }
 
+type CDNSKEY struct {
+    DNSKEY
+}
+
 type DNSKEY struct {
 	Hdr       RR_Header
 	Flags     uint16
@@ -1075,29 +1045,6 @@ func (rr *DNSKEY) copy() RR {
 }
 
 func (rr *DNSKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
-		" " + strconv.Itoa(int(rr.Protocol)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + rr.PublicKey
-}
-
-type CDNSKEY struct {
-	Hdr       RR_Header
-	Flags     uint16
-	Protocol  uint8
-	Algorithm uint8
-	PublicKey string `dns:"base64"`
-}
-
-func (rr *CDNSKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *CDNSKEY) len() int {
-	return rr.Hdr.len() + 4 + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-}
-func (rr *CDNSKEY) copy() RR {
-	return &DNSKEY{*rr.Hdr.copyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
-}
-
-func (rr *CDNSKEY) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +

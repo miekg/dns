@@ -1066,11 +1066,11 @@ func setOPENPGPKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, strin
 }
 
 func setSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-    r, e, s := setRRSIG(h, c, o, f)
-    if r != nil {
-        return &SIG{*r.(*RRSIG)} , e, s
-    }
-    return nil, e, s
+	r, e, s := setRRSIG(h, c, o, f)
+	if r != nil {
+		return &SIG{*r.(*RRSIG)}, e, s
+	}
+	return nil, e, s
 }
 
 func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
@@ -1460,15 +1460,7 @@ func setSSHFP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-    r, e, s := setDNSKEY(h, c, o, f)
-    if r != nil {
-        return &KEY{*r.(*DNSKEY)} , e, s
-    }
-    return nil, e, s
-}
-
-func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+func setDNSKEYs(h RR_Header, c chan lex, o, f, typ string) (RR, *ParseError, string) {
 	rr := new(DNSKEY)
 	rr.Hdr = h
 
@@ -1477,25 +1469,25 @@ func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, l.comment
 	}
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DNSKEY Flags", l}, ""
+		return nil, &ParseError{f, "bad " + typ + " Flags", l}, ""
 	} else {
 		rr.Flags = uint16(i)
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DNSKEY Protocol", l}, ""
+		return nil, &ParseError{f, "bad " + typ + " Protocol", l}, ""
 	} else {
 		rr.Protocol = uint8(i)
 	}
 	<-c     // _BLANK
 	l = <-c // _STRING
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DNSKEY Algorithm", l}, ""
+		return nil, &ParseError{f, "bad " + typ + " Algorithm", l}, ""
 	} else {
 		rr.Algorithm = uint8(i)
 	}
-	s, e, c1 := endingToString(c, "bad DNSKEY PublicKey", f)
+	s, e, c1 := endingToString(c, "bad "+typ+" PublicKey", f)
 	if e != nil {
 		return nil, e, c1
 	}
@@ -1503,39 +1495,25 @@ func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setCDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(CDNSKEY)
-	rr.Hdr = h
+func setKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	r, e, s := setDNSKEYs(h, c, o, f, "KEY")
+	if r != nil {
+		return &KEY{*r.(*DNSKEY)}, e, s
+	}
+	return nil, e, s
+}
 
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
+func setDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	r, e, s := setDNSKEYs(h, c, o, f, "DNSKEY")
+	return r, e, s
+}
+
+func setCDNSKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	r, e, s := setDNSKEYs(h, c, o, f, "CDNSKEY")
+	if r != nil {
+		return &CDNSKEY{*r.(*DNSKEY)}, e, s
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad CDNSKEY Flags", l}, ""
-	} else {
-		rr.Flags = uint16(i)
-	}
-	<-c     // _BLANK
-	l = <-c // _STRING
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad CDNSKEY Protocol", l}, ""
-	} else {
-		rr.Protocol = uint8(i)
-	}
-	<-c     // _BLANK
-	l = <-c // _STRING
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad CDNSKEY Algorithm", l}, ""
-	} else {
-		rr.Algorithm = uint8(i)
-	}
-	s, e, c1 := endingToString(c, "bad CDNSKEY PublicKey", f)
-	if e != nil {
-		return nil, e, c1
-	}
-	rr.PublicKey = s
-	return rr, nil, c1
+	return nil, e, s
 }
 
 func setRKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
@@ -1570,44 +1548,6 @@ func setRKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, e, c1
 	}
 	rr.PublicKey = s
-	return rr, nil, c1
-}
-
-func setDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(DS)
-	rr.Hdr = h
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
-	}
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DS KeyTag", l}, ""
-	} else {
-		rr.KeyTag = uint16(i)
-	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
-			return nil, &ParseError{f, "bad DS Algorithm", l}, ""
-		} else {
-			rr.Algorithm = i
-		}
-	} else {
-		rr.Algorithm = uint8(i)
-	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DS DigestType", l}, ""
-	} else {
-		rr.DigestType = uint8(i)
-	}
-	s, e, c1 := endingToString(c, "bad DS Digest", f)
-	if e != nil {
-		return nil, e, c1
-	}
-	rr.Digest = s
 	return rr, nil, c1
 }
 
@@ -1683,15 +1623,15 @@ func setGPOS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(CDS)
+func setDSs(h RR_Header, c chan lex, o, f, typ string) (RR, *ParseError, string) {
+	rr := new(DS)
 	rr.Hdr = h
 	l := <-c
 	if l.length == 0 {
 		return rr, nil, l.comment
 	}
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad CDS KeyTag", l}, ""
+		return nil, &ParseError{f, "bad " + typ + " KeyTag", l}, ""
 	} else {
 		rr.KeyTag = uint16(i)
 	}
@@ -1699,7 +1639,7 @@ func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
 		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
-			return nil, &ParseError{f, "bad CDS Algorithm", l}, ""
+			return nil, &ParseError{f, "bad " + typ + " Algorithm", l}, ""
 		} else {
 			rr.Algorithm = i
 		}
@@ -1709,11 +1649,11 @@ func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c // _BLANK
 	l = <-c
 	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad CDS DigestType", l}, ""
+		return nil, &ParseError{f, "bad " + typ + " DigestType", l}, ""
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	s, e, c1 := endingToString(c, "bad CDS Digest", f)
+	s, e, c1 := endingToString(c, "bad " + typ + " Digest", f)
 	if e != nil {
 		return nil, e, c1
 	}
@@ -1721,42 +1661,25 @@ func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
+func setDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	r, e, s := setDSs(h, c, o, f, "DS")
+	return r, e, s
+}
+
 func setDLV(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(DLV)
-	rr.Hdr = h
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
+	r, e, s := setDSs(h, c, o, f, "DLV")
+	if r != nil {
+		return &DLV{*r.(*DS)}, e, s
 	}
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DLV KeyTag", l}, ""
-	} else {
-		rr.KeyTag = uint16(i)
+	return nil, e, s
+}
+
+func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	r, e, s := setDSs(h, c, o, f, "DLV")
+	if r != nil {
+		return &CDS{*r.(*DS)}, e, s
 	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		if i, ok := StringToAlgorithm[l.tokenUpper]; !ok {
-			return nil, &ParseError{f, "bad DLV Algorithm", l}, ""
-		} else {
-			rr.Algorithm = i
-		}
-	} else {
-		rr.Algorithm = uint8(i)
-	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad DLV DigestType", l}, ""
-	} else {
-		rr.DigestType = uint8(i)
-	}
-	s, e, c1 := endingToString(c, "bad DLV Digest", f)
-	if e != nil {
-		return nil, e, c1
-	}
-	rr.Digest = s
-	return rr, nil, c1
+	return nil, e, s
 }
 
 func setTA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
