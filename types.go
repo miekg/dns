@@ -818,6 +818,11 @@ func (rr *LOC) String() string {
 	return s
 }
 
+// SIG is identical to RRSIG and nowadays only used for SIG(0), RFC2931.
+type SIG struct {
+        RRSIG
+}
+
 type RRSIG struct {
 	Hdr         RR_Header
 	TypeCovered uint16
@@ -889,6 +894,14 @@ func (rr *NSEC) len() int {
 	return l
 }
 
+type DLV struct {
+	DS
+}
+
+type CDS struct {
+	DS
+}
+
 type DS struct {
 	Hdr        RR_Header
 	KeyTag     uint16
@@ -904,48 +917,6 @@ func (rr *DS) copy() RR {
 }
 
 func (rr *DS) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + strconv.Itoa(int(rr.DigestType)) +
-		" " + strings.ToUpper(rr.Digest)
-}
-
-type CDS struct {
-	Hdr        RR_Header
-	KeyTag     uint16
-	Algorithm  uint8
-	DigestType uint8
-	Digest     string `dns:"hex"`
-}
-
-func (rr *CDS) Header() *RR_Header { return &rr.Hdr }
-func (rr *CDS) len() int           { return rr.Hdr.len() + 4 + len(rr.Digest)/2 }
-func (rr *CDS) copy() RR {
-	return &CDS{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
-}
-
-func (rr *CDS) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + strconv.Itoa(int(rr.DigestType)) +
-		" " + strings.ToUpper(rr.Digest)
-}
-
-type DLV struct {
-	Hdr        RR_Header
-	KeyTag     uint16
-	Algorithm  uint8
-	DigestType uint8
-	Digest     string `dns:"hex"`
-}
-
-func (rr *DLV) Header() *RR_Header { return &rr.Hdr }
-func (rr *DLV) len() int           { return rr.Hdr.len() + 4 + len(rr.Digest)/2 }
-func (rr *DLV) copy() RR {
-	return &DLV{*rr.Hdr.copyHeader(), rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
-}
-
-func (rr *DLV) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
@@ -1049,6 +1020,14 @@ func (rr *IPSECKEY) len() int {
 		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
+type KEY struct {
+    DNSKEY
+}
+
+type CDNSKEY struct {
+    DNSKEY
+}
+
 type DNSKEY struct {
 	Hdr       RR_Header
 	Flags     uint16
@@ -1066,29 +1045,6 @@ func (rr *DNSKEY) copy() RR {
 }
 
 func (rr *DNSKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
-		" " + strconv.Itoa(int(rr.Protocol)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + rr.PublicKey
-}
-
-type CDNSKEY struct {
-	Hdr       RR_Header
-	Flags     uint16
-	Protocol  uint8
-	Algorithm uint8
-	PublicKey string `dns:"base64"`
-}
-
-func (rr *CDNSKEY) Header() *RR_Header { return &rr.Hdr }
-func (rr *CDNSKEY) len() int {
-	return rr.Hdr.len() + 4 + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-}
-func (rr *CDNSKEY) copy() RR {
-	return &DNSKEY{*rr.Hdr.copyHeader(), rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
-}
-
-func (rr *CDNSKEY) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
@@ -1245,8 +1201,20 @@ func (rr *RFC3597) copy() RR           { return &RFC3597{*rr.Hdr.copyHeader(), r
 func (rr *RFC3597) len() int           { return rr.Hdr.len() + len(rr.Rdata)/2 + 2 }
 
 func (rr *RFC3597) String() string {
-	s := rr.Hdr.String()
+	// Let's call it a hack
+	s := rfc3597Header(rr.Hdr)
+
 	s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+	return s
+}
+
+func rfc3597Header(h RR_Header) string {
+	var s string
+
+	s += sprintName(h.Name) + "\t"
+	s += strconv.FormatInt(int64(h.Ttl), 10) + "\t"
+	s += "CLASS" + strconv.Itoa(int(h.Class)) + "\t"
+	s += "TYPE" + strconv.Itoa(int(h.Rrtype)) + "\t"
 	return s
 }
 
@@ -1652,6 +1620,7 @@ var typeToRR = map[uint16]func() RR{
 	TypeDHCID:      func() RR { return new(DHCID) },
 	TypeDLV:        func() RR { return new(DLV) },
 	TypeDNAME:      func() RR { return new(DNAME) },
+	TypeKEY:        func() RR { return new(KEY) },
 	TypeDNSKEY:     func() RR { return new(DNSKEY) },
 	TypeDS:         func() RR { return new(DS) },
 	TypeEUI48:      func() RR { return new(EUI48) },
@@ -1689,6 +1658,7 @@ var typeToRR = map[uint16]func() RR{
 	TypeRKEY:       func() RR { return new(RKEY) },
 	TypeRP:         func() RR { return new(RP) },
 	TypePX:         func() RR { return new(PX) },
+	TypeSIG:        func() RR { return new(SIG) },
 	TypeRRSIG:      func() RR { return new(RRSIG) },
 	TypeRT:         func() RR { return new(RT) },
 	TypeSOA:        func() RR { return new(SOA) },

@@ -430,7 +430,7 @@ func TestToRFC3597(t *testing.T) {
 	a, _ := NewRR("miek.nl. IN A 10.0.1.1")
 	x := new(RFC3597)
 	x.ToRFC3597(a)
-	if x.String() != `miek.nl.	3600	IN	A	\# 4 0a000101` {
+	if x.String() != `miek.nl.	3600	CLASS1	TYPE1	\# 4 0a000101` {
 		t.Fail()
 	}
 }

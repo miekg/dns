@@ -547,20 +547,22 @@ func (k *DNSKEY) publicKeyDSA() *dsa.PublicKey {
 	if err != nil {
 		return nil
 	}
-	if len(keybuf) < 22 { // TODO: check
+	if len(keybuf) < 22 {
 		return nil
 	}
-	t := int(keybuf[0])
+	t, keybuf := int(keybuf[0]), keybuf[1:]
 	size := 64 + t*8
+	q, keybuf := keybuf[:20], keybuf[20:]
+	if len(keybuf) != 3*size {
+		return nil
+	}
+	p, keybuf := keybuf[:size], keybuf[size:]
+	g, y := keybuf[:size], keybuf[size:]
 	pubkey := new(dsa.PublicKey)
-	pubkey.Parameters.Q = big.NewInt(0)
-	pubkey.Parameters.Q.SetBytes(keybuf[1:21]) // +/- 1 ?
-	pubkey.Parameters.P = big.NewInt(0)
-	pubkey.Parameters.P.SetBytes(keybuf[22 : 22+size])
-	pubkey.Parameters.G = big.NewInt(0)
-	pubkey.Parameters.G.SetBytes(keybuf[22+size+1 : 22+size*2])
-	pubkey.Y = big.NewInt(0)
-	pubkey.Y.SetBytes(keybuf[22+size*2+1 : 22+size*3])
+	pubkey.Parameters.Q = big.NewInt(0).SetBytes(q)
+	pubkey.Parameters.P = big.NewInt(0).SetBytes(p)
+	pubkey.Parameters.G = big.NewInt(0).SetBytes(g)
+	pubkey.Y = big.NewInt(0).SetBytes(y)
 	return pubkey
 }
 
