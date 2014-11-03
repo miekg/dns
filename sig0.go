@@ -8,6 +8,11 @@
 //
 // It works like TSIG, except that SIG(0) uses public key cryptography, instead of the shared
 // secret approach in TSIG.
+// Supported algorithms: DSA, ECDSAP256SHA256, ECDSAP384SHA384, RSASHA1, RSASHA256 and
+// RSASHA512.
+//
+// Signing subsequent messages in multi-message sessions is not implemented.
+//
 package dns
 
 import (
@@ -16,7 +21,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
-	"fmt"
 	"math/big"
 	"strings"
 	"time"
@@ -160,29 +164,34 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	adc, offset := unpackUint16(buf, 10)
 	var err error
 	for i := uint16(0); i < qdc && offset < buflen; i++ {
-		// decode a name
 		_, offset, err = UnpackDomainName(buf, offset)
 		if err != nil {
 			return err
 		}
-		// skip past Type and Class
+		// Skip past Type and Class
 		offset += 2 + 2
 	}
 	for i := uint16(1); i < anc+auc+adc && offset < buflen; i++ {
-		// decode a name
 		_, offset, err = UnpackDomainName(buf, offset)
 		if err != nil {
 			return err
 		}
-		// skip past Type, Class and TTL
+		// Skip past Type, Class and TTL
 		offset += 2 + 2 + 4
+		if offset+1 >= buflen {
+			continue
+		}
 		var rdlen uint16
 		rdlen, offset = unpackUint16(buf, offset)
 		offset += int(rdlen)
 	}
+	if offset >= buflen {
+		return &Error{err: "overflowing unpacking signed message"}
+	}
+
 	// offset should be just prior to SIG
 	bodyend := offset
-	// Owner name SHOULD be root
+	// owner name SHOULD be root
 	_, offset, err = UnpackDomainName(buf, offset)
 	if err != nil {
 		return err
@@ -190,20 +199,21 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	// Skip Type, Class, TTL, RDLen
 	offset += 2 + 2 + 4 + 2
 	sigstart := offset
-	offset += 2 + 1 + 1 + 4 // skip Type Covered, Algorithm, Labels, Original TTL
-	// TODO: This should be moved out and used elsewhere
-	unpackUint32 := func(buf []byte, off int) (uint32, int) {
-		r := uint32(buf[off])<<24 | uint32(buf[off+1])<<16 | uint32(buf[off+2])<<8 | uint32(buf[off+3])
-		return r, off + 4
+	// Skip Type Covered, Algorithm, Labels, Original TTL
+	offset += 2 + 1 + 1 + 4
+	if offset+4+4 >= buflen {
+		return &Error{err: "overflow unpacking signed message"}
 	}
-	var expire, incept uint32
-	expire, offset = unpackUint32(buf, offset)
-	incept, offset = unpackUint32(buf, offset)
+	expire := uint32(buf[offset])<<24 | uint32(buf[offset+1])<<16 | uint32(buf[offset+2])<<8 | uint32(buf[offset+3])
+	offset += 4
+	incept := uint32(buf[offset])<<24 | uint32(buf[offset+1])<<16 | uint32(buf[offset+2])<<8 | uint32(buf[offset+3])
+	offset += 4
 	now := uint32(time.Now().Unix())
 	if now < incept || now > expire {
 		return ErrTime
 	}
-	offset += 2 // skip key tag
+	// Skip key tag
+	offset += 2
 	var signername string
 	signername, offset, err = UnpackDomainName(buf, offset)
 	if err != nil {
@@ -212,7 +222,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	// If key has come from the DNS name compression might
 	// have mangled the case of the name
 	if strings.ToLower(signername) != strings.ToLower(k.Header().Name) {
-		return fmt.Errorf("Signer name doesn't match key name")
+		return &Error{err: "signer name doesn't match key name"}
 	}
 	sigend := offset
 	hasher.Write(buf[sigstart:sigend])
