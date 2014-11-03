@@ -1,7 +1,3 @@
-// Copyright 2011 Miek Gieben. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 // SIG(0)
 //
 // From RFC 2931:
