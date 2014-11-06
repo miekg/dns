@@ -426,6 +426,16 @@ func BenchmarkUnpackDomainName(b *testing.B) {
 	}
 }
 
+func BenchmarkUnpackDomainNameUnprintable(b *testing.B) {
+	name1 := "\x02\x02\x02\x025\x02\x02\x02\x02.12345678.123."
+	buf := make([]byte, len(name1)+1)
+	_, _ = PackDomainName(name1, buf, 0, nil, false)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = UnpackDomainName(buf, 0)
+	}
+}
+
 func TestToRFC3597(t *testing.T) {
 	a, _ := NewRR("miek.nl. IN A 10.0.1.1")
 	x := new(RFC3597)
