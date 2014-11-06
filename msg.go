@@ -422,7 +422,15 @@ Loop:
 					s = append(s, '\\', 'r')
 				default:
 					if b < 32 || b >= 127 { // unprintable use \DDD
-						s = append(s, fmt.Sprintf("\\%03d", b)...)
+						var buf [3]byte
+						bufs := strconv.AppendInt(buf[:0], int64(b), 10)
+						s = append(s, '\\')
+						for i := 0; i < 3-len(bufs); i++ {
+							s = append(s, '0')
+						}
+						for _, r := range bufs {
+							s = append(s, r)
+						}
 					} else {
 						s = append(s, b)
 					}
