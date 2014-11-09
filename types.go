@@ -830,7 +830,7 @@ func (rr *LOC) String() string {
 
 // SIG is identical to RRSIG and nowadays only used for SIG(0), RFC2931.
 type SIG struct {
-        RRSIG
+	RRSIG
 }
 
 type RRSIG struct {
@@ -1031,11 +1031,11 @@ func (rr *IPSECKEY) len() int {
 }
 
 type KEY struct {
-    DNSKEY
+	DNSKEY
 }
 
 type CDNSKEY struct {
-    DNSKEY
+	DNSKEY
 }
 
 type DNSKEY struct {

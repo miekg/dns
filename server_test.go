@@ -68,7 +68,7 @@ func TestServing(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
 	r, _, err := c.Exchange(m, addrstr)
-	if err != nil {
+	if err != nil || len(r.Extra) == 0 {
 		t.Log("failed to exchange miek.nl", err)
 		t.Fatal()
 	}

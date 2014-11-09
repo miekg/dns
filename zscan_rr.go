@@ -1653,7 +1653,7 @@ func setDSs(h RR_Header, c chan lex, o, f, typ string) (RR, *ParseError, string)
 	} else {
 		rr.DigestType = uint8(i)
 	}
-	s, e, c1 := endingToString(c, "bad " + typ + " Digest", f)
+	s, e, c1 := endingToString(c, "bad "+typ+" Digest", f)
 	if e != nil {
 		return nil, e, c1
 	}
