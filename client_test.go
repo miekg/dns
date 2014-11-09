@@ -165,7 +165,7 @@ func TestClientAXFRMultipleEnvelopes(t *testing.T) {
 }
 */
 
-// ExapleUpdateLeaseTSIG shows how to update a lease signed with TSIG.
+// ExampleUpdateLeaseTSIG shows how to update a lease signed with TSIG.
 func ExampleUpdateLeaseTSIG(t *testing.T) {
 	m := new(Msg)
 	m.SetUpdate("t.local.ip6.io.")
