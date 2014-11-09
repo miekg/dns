@@ -30,7 +30,7 @@ func TestDynamicUpdateUnpack(t *testing.T) {
 	msg := new(Msg)
 	err := msg.Unpack(buf)
 	if err != nil {
-		t.Log("failed to unpack: " + err.Error() + "\n" + msg.String()))
+		t.Log("failed to unpack: " + err.Error() + "\n" + msg.String())
 		t.Fail()
 	}
 }
