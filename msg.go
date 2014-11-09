@@ -12,7 +12,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"net"
 	"reflect"
@@ -565,11 +564,19 @@ func unpackTxtString(msg []byte, offset int) (string, int, error) {
 			s = append(s, `\n`...)
 		default:
 			if b < 32 || b > 127 { // unprintable
-				s = append(s, fmt.Sprintf("\\%03d", b)...)
-			} else {
-				s = append(s, b)
+			var buf [3]byte
+			bufs := strconv.AppendInt(buf[:0], int64(b), 10)
+			s = append(s, '\\')
+			for i := 0; i < 3-len(bufs); i++ {
+				s = append(s, '0')
 			}
+			for _, r := range bufs {
+				s = append(s, r)
+			}
+		} else {
+			s = append(s, b)
 		}
+	}
 	}
 	offset += 1 + l
 	return string(s), offset, nil
