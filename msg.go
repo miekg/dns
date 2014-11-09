@@ -1016,24 +1016,24 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					// do nothing?
 					off = off1 + int(optlen)
 				}
-				if off < rdend {
+				if off < lenrd {
 					goto Option
 				}
 				fv.Set(reflect.ValueOf(edns))
 			case `dns:"a"`:
-				if off == lenmsg {
+				if off == lenrd {
 					break // dyn. update
 				}
-				if off+net.IPv4len > rdend || off+net.IPv4len > lenmsg {
+				if off+net.IPv4len > lenrd || off+net.IPv4len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking a"}
 				}
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
 				off += net.IPv4len
 			case `dns:"aaaa"`:
-				if off == rdend {
+				if off == lenrd {
 					break
 				}
-				if off+net.IPv6len > rdend || off+net.IPv6len > lenmsg {
+				if off+net.IPv6len > lenrd || off+net.IPv6len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking aaaa"}
 				}
 				fv.Set(reflect.ValueOf(net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
