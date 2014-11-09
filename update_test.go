@@ -1,5 +1,9 @@
 package dns
 
+import (
+	"testing"
+)
+
 func TestDynamicUpdateParsing(t *testing.T) {
 	prefix := "example.com. IN "
 	for _, typ := range TypeToString {
