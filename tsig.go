@@ -225,7 +225,14 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	}
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
-	ti := uint64(time.Now().Unix()) - tsig.TimeSigned
+
+	// Fudge factor works both ways. A message can arrive before it was signed because
+	// of clock skew.
+	now := uint64(time.Now().Unix())
+	ti := now - tsig.TimeSigned
+	if now < tsig.TimeSigned {
+		ti = tsig.TimeSigned - now
+	}
 	if uint64(tsig.Fudge) < ti {
 		return ErrTime
 	}
