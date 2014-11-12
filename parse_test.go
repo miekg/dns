@@ -1231,6 +1231,9 @@ type algorithm struct {
 }
 
 func TestNewPrivateKeyECDSA(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	algorithms := []algorithm{
 		algorithm{ECDSAP256SHA256, 256},
 		algorithm{ECDSAP384SHA384, 384},

@@ -6,6 +6,9 @@ import (
 )
 
 func TestSIG0(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	m := new(Msg)
 	m.SetQuestion("example.org.", TypeSOA)
 	for _, alg := range []uint8{DSA, ECDSAP256SHA256, ECDSAP384SHA384, RSASHA1, RSASHA256, RSASHA512} {

@@ -303,6 +303,9 @@ func TestServingLargeResponses(t *testing.T) {
 }
 
 func TestServingResponse(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	HandleFunc("miek.nl.", HelloServer)
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {

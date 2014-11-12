@@ -34,6 +34,9 @@ func getSoa() *SOA {
 }
 
 func TestGenerateEC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
@@ -48,6 +51,9 @@ func TestGenerateEC(t *testing.T) {
 }
 
 func TestGenerateDSA(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
@@ -62,6 +68,9 @@ func TestGenerateDSA(t *testing.T) {
 }
 
 func TestGenerateRSA(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	key := new(DNSKEY)
 	key.Hdr.Rrtype = TypeDNSKEY
 	key.Hdr.Name = "miek.nl."
@@ -283,6 +292,9 @@ func TestTag(t *testing.T) {
 }
 
 func TestKeyRSA(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	key := new(DNSKEY)
 	key.Hdr.Name = "miek.nl."
 	key.Hdr.Rrtype = TypeDNSKEY
