@@ -897,6 +897,9 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 	var lenrd int
 	lenmsg := len(msg)
 	for i := 0; i < val.NumField(); i++ {
+		if lenrd != 0 && lenrd == off {
+			break
+		}
 		if off > lenmsg {
 			return lenmsg, &Error{"bad offset unpacking"}
 		}
