@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -31,6 +32,74 @@ func TestDynamicUpdateUnpack(t *testing.T) {
 	err := msg.Unpack(buf)
 	if err != nil {
 		t.Log("failed to unpack: " + err.Error() + "\n" + msg.String())
+		t.Fail()
+	}
+}
+
+func TestDynamicUpdateZeroRdataUnpack(t *testing.T) {
+	m := new(Msg)
+	rr := &RR_Header{Name: ".", Rrtype: 0, Class: 1, Ttl: ^uint32(0), Rdlength: 0}
+	m.Answer = []RR{rr, rr, rr, rr, rr}
+	m.Ns = m.Answer
+	for n, s := range TypeToString {
+		rr.Rrtype = n
+		bytes, err := m.Pack()
+		if err != nil {
+			t.Logf("failed to pack %s: %v", s, err)
+			t.Fail()
+			continue
+		}
+		if err := new(Msg).Unpack(bytes); err != nil {
+			t.Logf("failed to unpack %s: %v", s, err)
+			t.Fail()
+		}
+	}
+}
+
+func TestRemoveRRset(t *testing.T) {
+	// Should add a zero data RR in Class ANY with a TTL of 0
+	// for each set mentioned in the RRs provided to it.
+	rr, err := NewRR(". 100 IN A 127.0.0.1")
+	if err != nil {
+		t.Fatalf("Error constructing RR: %v", err)
+	}
+	m := new(Msg)
+	m.Ns = []RR{&RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY, Ttl: 0, Rdlength: 0}}
+	expectstr := m.String()
+	expect, err := m.Pack()
+	if err != nil {
+		t.Fatalf("Error packing expected msg: %v", err)
+	}
+
+	m.Ns = nil
+	m.RemoveRRset([]RR{rr})
+	actual, err := m.Pack()
+	if err != nil {
+		t.Fatalf("Error packing actual msg: %v", err)
+	}
+	if !bytes.Equal(actual, expect) {
+		tmp := new(Msg)
+		if err := tmp.Unpack(actual); err != nil {
+			t.Fatalf("Error unpacking actual msg: %v", err)
+		}
+		t.Logf("Expected msg:\n%s", expectstr)
+		t.Logf("Actual msg:\n%v", tmp)
+		t.Fail()
+	}
+
+	m.Ns = nil
+	m.RemoveRRset([]RR{rr, rr})
+	actual, err = m.Pack()
+	if err != nil {
+		t.Fatalf("Error packing actual msg: %v", err)
+	}
+	if !bytes.Equal(actual, expect) {
+		tmp := new(Msg)
+		if err := tmp.Unpack(actual); err != nil {
+			t.Fatalf("Error unpacking actual msg: %v", err)
+		}
+		t.Logf("Expected msg:\n%v", expectstr)
+		t.Logf("Actual msg:\n%v", tmp)
 		t.Fail()
 	}
 }
