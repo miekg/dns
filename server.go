@@ -286,9 +286,6 @@ func (srv *Server) ActivateAndServe() error {
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
 	srv.started = true
 	srv.lock.Unlock()
-	if srv.UDPSize == 0 {
-		srv.UDPSize = MinMsgSize
-	}
 	if srv.PacketConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
