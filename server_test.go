@@ -325,7 +325,14 @@ func TestServingResponse(t *testing.T) {
 	m.Response = true
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
-		t.Log("exchanged response message", err)
+		t.Log("exchanged response message")
+		t.Fatal()
+	}
+	s.Unsafe = true
+	m.Response = true
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Log("could exchanged response message in Unsafe mode")
 		t.Fatal()
 	}
 }

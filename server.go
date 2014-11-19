@@ -169,10 +169,10 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // is sought.
 // If no handler is found a standard SERVFAIL message is returned
 // If the request message does not have exactly one question in the
-// question section a SERVFAIL is returned.
+// question section a SERVFAIL is returned, unlesss Unsafe is true.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	var h Handler
-	if len(request.Question) != 1 {
+	if len(request.Question) < 1 { // allow more than one question
 		h = failedHandler()
 	} else {
 		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
@@ -220,6 +220,9 @@ type Server struct {
 	IdleTimeout func() time.Duration
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
+	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
+	// the handler. It will specfically not check if the query has the QR bit not set.
+	Unsafe bool
 
 	// For graceful shutdown.
 	stopUDP chan bool
@@ -442,7 +445,7 @@ Redo:
 		w.WriteMsg(x)
 		goto Exit
 	}
-	if req.Response {
+	if !srv.Unsafe && req.Response {
 		goto Exit
 	}
 
