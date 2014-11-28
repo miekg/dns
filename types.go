@@ -308,7 +308,7 @@ func (rr *MF) copy() RR           { return &MF{*rr.Hdr.copyHeader(), rr.Mf} }
 func (rr *MF) len() int           { return rr.Hdr.len() + len(rr.Mf) + 1 }
 
 func (rr *MF) String() string {
-	return rr.Hdr.String() + " " + sprintName(rr.Mf)
+	return rr.Hdr.String() + sprintName(rr.Mf)
 }
 
 type MD struct {
@@ -321,7 +321,7 @@ func (rr *MD) copy() RR           { return &MD{*rr.Hdr.copyHeader(), rr.Md} }
 func (rr *MD) len() int           { return rr.Hdr.len() + len(rr.Md) + 1 }
 
 func (rr *MD) String() string {
-	return rr.Hdr.String() + " " + sprintName(rr.Md)
+	return rr.Hdr.String() + sprintName(rr.Md)
 }
 
 type MX struct {
@@ -981,7 +981,7 @@ func (rr *TALINK) len() int           { return rr.Hdr.len() + len(rr.PreviousNam
 
 func (rr *TALINK) String() string {
 	return rr.Hdr.String() +
-		" " + sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
+		sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
 }
 
 type SSHFP struct {
@@ -1282,7 +1282,7 @@ func (rr *TLSA) copy() RR {
 
 func (rr *TLSA) String() string {
 	return rr.Hdr.String() +
-		" " + strconv.Itoa(int(rr.Usage)) +
+		strconv.Itoa(int(rr.Usage)) +
 		" " + strconv.Itoa(int(rr.Selector)) +
 		" " + strconv.Itoa(int(rr.MatchingType)) +
 		" " + rr.Certificate
@@ -1307,7 +1307,7 @@ func (rr *HIP) copy() RR {
 
 func (rr *HIP) String() string {
 	s := rr.Hdr.String() +
-		" " + strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
+		strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
 		" " + rr.Hit +
 		" " + rr.PublicKey
 	for _, d := range rr.RendezvousServers {
