@@ -12,6 +12,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
 	"math/rand"
 	"net"
 	"reflect"
@@ -1305,6 +1306,16 @@ func UnpackStruct(any interface{}, msg []byte, off int) (int, error) {
 }
 
 // Helper function for packing and unpacking
+func intToBytes(i *big.Int, length int) []byte {
+	buf := i.Bytes()
+	if len(buf) < length {
+		b := make([]byte, length)
+		copy(b[length-len(buf):], buf)
+		return b
+	}
+	return buf
+}
+
 func unpackUint16(msg []byte, off int) (uint16, int) {
 	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
 }

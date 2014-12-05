@@ -126,7 +126,14 @@ func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
-		private := toBase64(t.D.Bytes())
+		var intlen int
+		switch r.Algorithm {
+		case ECDSAP256SHA256:
+			intlen = 32
+		case ECDSAP384SHA384:
+			intlen = 48
+		}
+		private := toBase64(intToBytes(t.D, intlen))
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"

@@ -255,6 +255,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	var sighash []byte
 	var h hash.Hash
 	var ch crypto.Hash // Only need for RSA
+	var intlen int
 	switch rr.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		// Implicit in the ParameterSizes
@@ -264,8 +265,10 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	case RSASHA256, ECDSAP256SHA256:
 		h = sha256.New()
 		ch = crypto.SHA256
+		intlen = 32
 	case ECDSAP384SHA384:
 		h = sha512.New384()
+		intlen = 48
 	case RSASHA512:
 		h = sha512.New()
 		ch = crypto.SHA512
@@ -299,8 +302,8 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 		if err != nil {
 			return err
 		}
-		signature := r1.Bytes()
-		signature = append(signature, s1.Bytes()...)
+		signature := intToBytes(r1, intlen)
+		signature = append(signature, intToBytes(s1, intlen)...)
 		rr.Signature = toBase64(signature)
 	default:
 		// Not given the correct key
@@ -582,9 +585,14 @@ func (k *DNSKEY) setPublicKeyCurve(_X, _Y *big.Int) bool {
 	if _X == nil || _Y == nil {
 		return false
 	}
-	buf := curveToBuf(_X, _Y)
-	// Check the length of the buffer, either 64 or 92 bytes
-	k.PublicKey = toBase64(buf)
+	var intlen int
+	switch k.Algorithm {
+	case ECDSAP256SHA256:
+		intlen = 32
+	case ECDSAP384SHA384:
+		intlen = 48
+	}
+	k.PublicKey = toBase64(curveToBuf(_X, _Y, intlen))
 	return true
 }
 
@@ -618,9 +626,9 @@ func exponentToBuf(_E int) []byte {
 
 // Set the public key for X and Y for Curve. The two
 // values are just concatenated.
-func curveToBuf(_X, _Y *big.Int) []byte {
-	buf := _X.Bytes()
-	buf = append(buf, _Y.Bytes()...)
+func curveToBuf(_X, _Y *big.Int, intlen int) []byte {
+	buf := intToBytes(_X, intlen)
+	buf = append(buf, intToBytes(_Y, intlen)...)
 	return buf
 }
 
