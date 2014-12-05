@@ -39,7 +39,7 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 			return nil, e
 		}
 		if !k.setPublicKeyInPrivate(p) {
-			return nil, ErrPrivKey
+			return nil, ErrKey
 		}
 		return p, e
 	case "1 (RSAMD5)":
@@ -56,7 +56,7 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 			return nil, e
 		}
 		if !k.setPublicKeyInPrivate(p) {
-			return nil, ErrPrivKey
+			return nil, ErrKey
 		}
 		return p, e
 	case "12 (ECC-GOST)":
@@ -74,7 +74,7 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (PrivateKey, error) {
 			return nil, e
 		}
 		if !k.setPublicKeyInPrivate(p) {
-			return nil, ErrPrivKey
+			return nil, ErrKey
 		}
 		return p, e
 	}

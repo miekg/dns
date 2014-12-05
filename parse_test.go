@@ -1258,6 +1258,9 @@ func TestNewPrivateKeyECDSA(t *testing.T) {
 
 		newPrivKey, err := key.NewPrivateKey(key.PrivateKeyString(privkey))
 		if err != nil {
+			t.Log(key.String())
+			t.Log(key.PrivateKeyString(privkey))
+
 			t.Fatal(err.Error())
 		}
 
