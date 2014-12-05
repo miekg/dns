@@ -159,7 +159,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		panic("dns: TSIG not last RR in additional")
 	}
 	// If we barf here, the caller is to blame
-	rawsecret, err := packBase64([]byte(secret))
+	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return nil, "", err
 	}
@@ -209,7 +209,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
-	rawsecret, err := packBase64([]byte(secret))
+	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err
 	}

@@ -88,7 +88,7 @@ func readPrivateKeyRSA(m map[string]string) (PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "modulus", "publicexponent", "privateexponent", "prime1", "prime2":
-			v1, err := packBase64([]byte(v))
+			v1, err := fromBase64([]byte(v))
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +125,7 @@ func readPrivateKeyDSA(m map[string]string) (PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "private_value(x)":
-			v1, err := packBase64([]byte(v))
+			v1, err := fromBase64([]byte(v))
 			if err != nil {
 				return nil, err
 			}
@@ -144,7 +144,7 @@ func readPrivateKeyECDSA(m map[string]string) (PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "privatekey":
-			v1, err := packBase64([]byte(v))
+			v1, err := fromBase64([]byte(v))
 			if err != nil {
 				return nil, err
 			}

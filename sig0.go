@@ -115,7 +115,7 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	default:
 		return nil, ErrAlg
 	}
-	rr.Signature = unpackBase64(sig)
+	rr.Signature = toBase64(sig)
 	buf = append(buf, sig...)
 	if len(buf) > int(^uint16(0)) {
 		return nil, ErrBuf
