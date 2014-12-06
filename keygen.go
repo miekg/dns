@@ -139,11 +139,12 @@ func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"PrivateKey: " + private + "\n"
 	case *dsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
-		prime := toBase64(t.PublicKey.Parameters.P.Bytes())
-		subprime := toBase64(t.PublicKey.Parameters.Q.Bytes())
-		base := toBase64(t.PublicKey.Parameters.G.Bytes())
-		priv := toBase64(t.X.Bytes())
-		pub := toBase64(t.PublicKey.Y.Bytes())
+		T := divRoundUp(divRoundUp(t.PublicKey.Parameters.G.BitLen(), 8)-64, 8)
+		prime := toBase64(intToBytes(t.PublicKey.Parameters.P, 64+T*8))
+		subprime := toBase64(intToBytes(t.PublicKey.Parameters.Q, 20))
+		base := toBase64(intToBytes(t.PublicKey.Parameters.G, 64+T*8))
+		priv := toBase64(intToBytes(t.X, 20))
+		pub := toBase64(intToBytes(t.PublicKey.Y, 64+T*8))
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"Prime(p): " + prime + "\n" +

@@ -97,6 +97,10 @@ type dnskeyWireFmt struct {
 	/* Nothing is left out */
 }
 
+func divRoundUp(a, b int) int {
+	return (a + b - 1) / b
+}
+
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.
 func (k *DNSKEY) KeyTag() uint16 {
 	if k == nil {
@@ -287,8 +291,8 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 			return err
 		}
 		signature := []byte{0x4D} // T value, here the ASCII M for Miek (not used in DNSSEC)
-		signature = append(signature, r1.Bytes()...)
-		signature = append(signature, s1.Bytes()...)
+		signature = append(signature, intToBytes(r1, 20)...)
+		signature = append(signature, intToBytes(s1, 20)...)
 		rr.Signature = toBase64(signature)
 	case *rsa.PrivateKey:
 		// We can use nil as rand.Reader here (says AGL)
@@ -635,12 +639,12 @@ func curveToBuf(_X, _Y *big.Int, intlen int) []byte {
 // Set the public key for X and Y for Curve. The two
 // values are just concatenated.
 func dsaToBuf(_Q, _P, _G, _Y *big.Int) []byte {
-	t := byte((len(_G.Bytes()) - 64) / 8)
-	buf := []byte{t}
-	buf = append(buf, _Q.Bytes()...)
-	buf = append(buf, _P.Bytes()...)
-	buf = append(buf, _G.Bytes()...)
-	buf = append(buf, _Y.Bytes()...)
+	t := divRoundUp(divRoundUp(_G.BitLen(), 8)-64, 8)
+	buf := []byte{byte(t)}
+	buf = append(buf, intToBytes(_Q, 20)...)
+	buf = append(buf, intToBytes(_P, 64+t*8)...)
+	buf = append(buf, intToBytes(_G, 64+t*8)...)
+	buf = append(buf, intToBytes(_Y, 64+t*8)...)
 	return buf
 }
 
