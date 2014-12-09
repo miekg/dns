@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 func HelloServer(w ResponseWriter, req *Msg) {
@@ -36,6 +37,25 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		pc.Close()
 	}()
+
+	time.Sleep(50 * time.Millisecond)
+
+	return server, pc.LocalAddr().String(), nil
+}
+
+func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
+	pc, err := net.ListenPacket("udp", laddr)
+	if err != nil {
+		return nil, "", err
+	}
+	server := &Server{PacketConn: pc, Unsafe: true}
+	go func() {
+		server.ActivateAndServe()
+		pc.Close()
+	}()
+
+	time.Sleep(50 * time.Millisecond)
+
 	return server, pc.LocalAddr().String(), nil
 }
 
@@ -49,6 +69,19 @@ func RunLocalTCPServer(laddr string) (*Server, string, error) {
 		server.ActivateAndServe()
 		l.Close()
 	}()
+
+	for i := 0; ; i++ {
+		conn, err := net.Dial("tcp", l.Addr().String())
+		if err == nil {
+			conn.Close()
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+		if i > 50 {
+			return nil, "", fmt.Errorf("failed to start server: ", err)
+		}
+	}
+
 	return server, l.Addr().String(), nil
 }
 
@@ -311,7 +344,6 @@ func TestServingResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
-	defer s.Shutdown()
 
 	c := new(Client)
 	m := new(Msg)
@@ -328,7 +360,14 @@ func TestServingResponse(t *testing.T) {
 		t.Log("exchanged response message")
 		t.Fatal()
 	}
-	s.Unsafe = true
+
+	s.Shutdown()
+	s, addrstr, err = RunLocalUDPServerUnsafe("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
 	m.Response = true
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
@@ -342,9 +381,6 @@ func TestShutdownTCP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
-	// it normally is too early to shutting down because server
-	// activates in goroutine.
-	runtime.Gosched()
 	err = s.Shutdown()
 	if err != nil {
 		t.Errorf("Could not shutdown test TCP server, %s", err)
@@ -356,9 +392,6 @@ func TestShutdownUDP(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to run test server: %s", err)
 	}
-	// it normally is too early to shutting down because server
-	// activates in goroutine.
-	runtime.Gosched()
 	err = s.Shutdown()
 	if err != nil {
 		t.Errorf("Could not shutdown test UDP server, %s", err)

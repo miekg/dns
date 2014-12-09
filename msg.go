@@ -12,6 +12,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
 	"math/rand"
 	"net"
 	"reflect"
@@ -813,7 +814,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			default:
 				return lenmsg, &Error{"bad tag packing string: " + typefield.Tag.Get("dns")}
 			case `dns:"base64"`:
-				b64, e := packBase64([]byte(s))
+				b64, e := fromBase64([]byte(s))
 				if e != nil {
 					return lenmsg, e
 				}
@@ -834,7 +835,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				msg[off-1] = 20
 				fallthrough
 			case `dns:"base32"`:
-				b32, e := packBase32([]byte(s))
+				b32, e := fromBase32([]byte(s))
 				if e != nil {
 					return lenmsg, e
 				}
@@ -1224,7 +1225,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if b64end > lenrd || b64end > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking base64"}
 				}
-				s = unpackBase64(msg[off:b64end])
+				s = toBase64(msg[off:b64end])
 				off = b64end
 			case `dns:"cdomain-name"`:
 				fallthrough
@@ -1250,7 +1251,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off+size > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking base32"}
 				}
-				s = unpackBase32(msg[off : off+size])
+				s = toBase32(msg[off : off+size])
 				off += size
 			case `dns:"size-hex"`:
 				// a "size" string, but it must be encoded in hex in the string
@@ -1298,58 +1299,53 @@ func dddToByte(s []byte) byte {
 	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
 }
 
-// Helper function for unpacking
-func unpackUint16(msg []byte, off int) (v uint16, off1 int) {
-	v = uint16(msg[off])<<8 | uint16(msg[off+1])
-	off1 = off + 2
-	return
-}
-
 // UnpackStruct unpacks a binary message from offset off to the interface
 // value given.
-func UnpackStruct(any interface{}, msg []byte, off int) (off1 int, err error) {
-	off, err = unpackStructValue(structValue(any), msg, off)
-	return off, err
+func UnpackStruct(any interface{}, msg []byte, off int) (int, error) {
+	return unpackStructValue(structValue(any), msg, off)
 }
 
-func unpackBase32(b []byte) string {
-	b32 := make([]byte, base32.HexEncoding.EncodedLen(len(b)))
-	base32.HexEncoding.Encode(b32, b)
-	return string(b32)
+// Helper function for packing and unpacking
+func intToBytes(i *big.Int, length int) []byte {
+	buf := i.Bytes()
+	if len(buf) < length {
+		b := make([]byte, length)
+		copy(b[length-len(buf):], buf)
+		return b
+	}
+	return buf
 }
 
-func unpackBase64(b []byte) string {
-	b64 := make([]byte, base64.StdEncoding.EncodedLen(len(b)))
-	base64.StdEncoding.Encode(b64, b)
-	return string(b64)
+func unpackUint16(msg []byte, off int) (uint16, int) {
+	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
 }
 
-// Helper function for packing
 func packUint16(i uint16) (byte, byte) {
 	return byte(i >> 8), byte(i)
 }
 
-func packBase64(s []byte) ([]byte, error) {
-	b64len := base64.StdEncoding.DecodedLen(len(s))
-	buf := make([]byte, b64len)
-	n, err := base64.StdEncoding.Decode(buf, []byte(s))
-	if err != nil {
-		return nil, err
-	}
-	buf = buf[:n]
-	return buf, nil
+func toBase32(b []byte) string {
+	return base32.HexEncoding.EncodeToString(b)
 }
 
-// Helper function for packing, mostly used in dnssec.go
-func packBase32(s []byte) ([]byte, error) {
-	b32len := base32.HexEncoding.DecodedLen(len(s))
-	buf := make([]byte, b32len)
-	n, err := base32.HexEncoding.Decode(buf, []byte(s))
-	if err != nil {
-		return nil, err
-	}
+func fromBase32(s []byte) (buf []byte, err error) {
+	buflen := base32.HexEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base32.HexEncoding.Decode(buf, s)
 	buf = buf[:n]
-	return buf, nil
+	return
+}
+
+func toBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func fromBase64(s []byte) (buf []byte, err error) {
+	buflen := base64.StdEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base64.StdEncoding.Decode(buf, s)
+	buf = buf[:n]
+	return
 }
 
 // PackRR packs a resource record rr into msg[off:].

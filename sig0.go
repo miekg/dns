@@ -44,18 +44,7 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	rr.TypeCovered = 0
 	rr.Labels = 0
 
-	buflen := m.Len() + rr.len()
-	switch k := k.(type) {
-	case *rsa.PrivateKey:
-		buflen += len(k.N.Bytes())
-	case *dsa.PrivateKey:
-		buflen += 40
-	case *ecdsa.PrivateKey:
-		buflen += 96
-	default:
-		return nil, ErrPrivKey
-	}
-	buf := make([]byte, m.Len()+rr.len()+buflen)
+	buf := make([]byte, m.Len()+rr.len())
 	mbuf, err := m.PackBuffer(buf)
 	if err != nil {
 		return nil, err
@@ -69,13 +58,16 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	}
 	buf = buf[:off:cap(buf)]
 	var hash crypto.Hash
+	var intlen int
 	switch rr.Algorithm {
 	case DSA, RSASHA1:
 		hash = crypto.SHA1
 	case RSASHA256, ECDSAP256SHA256:
 		hash = crypto.SHA256
+		intlen = 32
 	case ECDSAP384SHA384:
 		hash = crypto.SHA384
+		intlen = 48
 	case RSASHA512:
 		hash = crypto.SHA512
 	default:
@@ -91,15 +83,14 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	var sig []byte
 	switch p := k.(type) {
 	case *dsa.PrivateKey:
-		t := byte((len(p.PublicKey.Y.Bytes()) - 64) / 8)
+		t := divRoundUp(divRoundUp(p.PublicKey.Y.BitLen(), 8)-64, 8)
 		r1, s1, err := dsa.Sign(rand.Reader, p, hashed)
 		if err != nil {
 			return nil, err
 		}
-		sig = make([]byte, 0, 1+len(r1.Bytes())+len(s1.Bytes()))
-		sig = append(sig, t)
-		sig = append(sig, r1.Bytes()...)
-		sig = append(sig, s1.Bytes()...)
+		sig = append(sig, byte(t))
+		sig = append(sig, intToBytes(r1, 20)...)
+		sig = append(sig, intToBytes(s1, 20)...)
 	case *rsa.PrivateKey:
 		sig, err = rsa.SignPKCS1v15(rand.Reader, p, hash, hashed)
 		if err != nil {
@@ -110,12 +101,12 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		sig = r1.Bytes()
-		sig = append(sig, s1.Bytes()...)
+		sig = intToBytes(r1, intlen)
+		sig = append(sig, intToBytes(s1, intlen)...)
 	default:
 		return nil, ErrAlg
 	}
-	rr.Signature = unpackBase64(sig)
+	rr.Signature = toBase64(sig)
 	buf = append(buf, sig...)
 	if len(buf) > int(^uint16(0)) {
 		return nil, ErrBuf

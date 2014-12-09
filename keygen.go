@@ -94,12 +94,12 @@ func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 	switch t := p.(type) {
 	case *rsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
-		modulus := unpackBase64(t.PublicKey.N.Bytes())
+		modulus := toBase64(t.PublicKey.N.Bytes())
 		e := big.NewInt(int64(t.PublicKey.E))
-		publicExponent := unpackBase64(e.Bytes())
-		privateExponent := unpackBase64(t.D.Bytes())
-		prime1 := unpackBase64(t.Primes[0].Bytes())
-		prime2 := unpackBase64(t.Primes[1].Bytes())
+		publicExponent := toBase64(e.Bytes())
+		privateExponent := toBase64(t.D.Bytes())
+		prime1 := toBase64(t.Primes[0].Bytes())
+		prime2 := toBase64(t.Primes[1].Bytes())
 		// Calculate Exponent1/2 and Coefficient as per: http://en.wikipedia.org/wiki/RSA#Using_the_Chinese_remainder_algorithm
 		// and from: http://code.google.com/p/go/issues/detail?id=987
 		one := big.NewInt(1)
@@ -110,9 +110,9 @@ func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 		exp2 := big.NewInt(0).Mod(t.D, q_1)
 		coeff := big.NewInt(0).Exp(t.Primes[1], minusone, t.Primes[0])
 
-		exponent1 := unpackBase64(exp1.Bytes())
-		exponent2 := unpackBase64(exp2.Bytes())
-		coefficient := unpackBase64(coeff.Bytes())
+		exponent1 := toBase64(exp1.Bytes())
+		exponent2 := toBase64(exp2.Bytes())
+		coefficient := toBase64(coeff.Bytes())
 
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
@@ -126,17 +126,25 @@ func (r *DNSKEY) PrivateKeyString(p PrivateKey) (s string) {
 			"Coefficient: " + coefficient + "\n"
 	case *ecdsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
-		private := unpackBase64(t.D.Bytes())
+		var intlen int
+		switch r.Algorithm {
+		case ECDSAP256SHA256:
+			intlen = 32
+		case ECDSAP384SHA384:
+			intlen = 48
+		}
+		private := toBase64(intToBytes(t.D, intlen))
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"
 	case *dsa.PrivateKey:
 		algorithm := strconv.Itoa(int(r.Algorithm)) + " (" + AlgorithmToString[r.Algorithm] + ")"
-		prime := unpackBase64(t.PublicKey.Parameters.P.Bytes())
-		subprime := unpackBase64(t.PublicKey.Parameters.Q.Bytes())
-		base := unpackBase64(t.PublicKey.Parameters.G.Bytes())
-		priv := unpackBase64(t.X.Bytes())
-		pub := unpackBase64(t.PublicKey.Y.Bytes())
+		T := divRoundUp(divRoundUp(t.PublicKey.Parameters.G.BitLen(), 8)-64, 8)
+		prime := toBase64(intToBytes(t.PublicKey.Parameters.P, 64+T*8))
+		subprime := toBase64(intToBytes(t.PublicKey.Parameters.Q, 20))
+		base := toBase64(intToBytes(t.PublicKey.Parameters.G, 64+T*8))
+		priv := toBase64(intToBytes(t.X, 20))
+		pub := toBase64(intToBytes(t.PublicKey.Y, 64+T*8))
 		s = _FORMAT +
 			"Algorithm: " + algorithm + "\n" +
 			"Prime(p): " + prime + "\n" +

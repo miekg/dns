@@ -1230,7 +1230,7 @@ type algorithm struct {
 	bits int
 }
 
-func TestNewPrivateKeyECDSA(t *testing.T) {
+func TestNewPrivateKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
@@ -1239,7 +1239,7 @@ func TestNewPrivateKeyECDSA(t *testing.T) {
 		algorithm{ECDSAP384SHA384, 384},
 		algorithm{RSASHA1, 1024},
 		algorithm{RSASHA256, 2048},
-		// algorithm{DSA, 1024},  // TODO: STILL BROKEN!
+		algorithm{DSA, 1024},
 	}
 
 	for _, algo := range algorithms {
@@ -1258,6 +1258,9 @@ func TestNewPrivateKeyECDSA(t *testing.T) {
 
 		newPrivKey, err := key.NewPrivateKey(key.PrivateKeyString(privkey))
 		if err != nil {
+			t.Log(key.String())
+			t.Log(key.PrivateKeyString(privkey))
+
 			t.Fatal(err.Error())
 		}
 
