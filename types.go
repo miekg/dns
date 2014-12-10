@@ -160,10 +160,14 @@ const (
 	_AD = 1 << 5  // authticated data
 	_CD = 1 << 4  // checking disabled
 
-)
+	LOC_EQUATOR       = 1 << 31 // RFC 1876, Section 2.
+	LOC_PRIMEMERIDIAN = 1 << 31 // RFC 1876, Section 2.
 
-// RFC 1876, Section 2
-const _LOC_EQUATOR = 1 << 31
+	LOC_HOURS   = 60 * 1000
+	LOC_DEGREES = 60 * LOC_HOURS
+
+	LOC_ALTITUDEBASE = 100000
+)
 
 // RFC 4398, Section 2.1
 const (
@@ -783,48 +787,69 @@ func (rr *LOC) copy() RR {
 	return &LOC{*rr.Hdr.copyHeader(), rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
 }
 
+// cmToM takes a cm value expressed in RFC1876 SIZE mantissa/exponent
+// format and returns a string in m (two decimals for the cm)
+func cmToM(m, e uint8) string {
+	if e < 2 {
+		if e == 1 {
+			m *= 10
+		}
+
+		return fmt.Sprintf("0.%02d", m)
+	}
+
+	s := fmt.Sprintf("%d", m)
+	for e > 2 {
+		s += "0"
+		e -= 1
+	}
+	return s
+}
+
+// String returns a string version of a LOC
 func (rr *LOC) String() string {
 	s := rr.Hdr.String()
-	// Copied from ldns
-	// Latitude
-	lat := rr.Latitude
-	north := "N"
-	if lat > _LOC_EQUATOR {
-		lat = lat - _LOC_EQUATOR
-	} else {
-		north = "S"
-		lat = _LOC_EQUATOR - lat
-	}
-	h := lat / (1000 * 60 * 60)
-	lat = lat % (1000 * 60 * 60)
-	m := lat / (1000 * 60)
-	lat = lat % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float32(lat) / 1000), north)
-	// Longitude
-	lon := rr.Longitude
-	east := "E"
-	if lon > _LOC_EQUATOR {
-		lon = lon - _LOC_EQUATOR
-	} else {
-		east = "W"
-		lon = _LOC_EQUATOR - lon
-	}
-	h = lon / (1000 * 60 * 60)
-	lon = lon % (1000 * 60 * 60)
-	m = lon / (1000 * 60)
-	lon = lon % (1000 * 60)
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float32(lon) / 1000), east)
 
-	s1 := rr.Altitude / 100.00
-	s1 -= 100000
-	if rr.Altitude%100 == 0 {
-		s += fmt.Sprintf("%.2fm ", float32(s1))
+	lat := rr.Latitude
+	ns := "N"
+	if lat > LOC_EQUATOR {
+		lat = lat - LOC_EQUATOR
 	} else {
-		s += fmt.Sprintf("%.0fm ", float32(s1))
+		ns = "S"
+		lat = LOC_EQUATOR - lat
 	}
-	s += cmToString((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
-	s += cmToString((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
-	s += cmToString((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
+	h := lat / LOC_DEGREES
+	lat = lat % LOC_DEGREES
+	m := lat / LOC_HOURS
+	lat = lat % LOC_HOURS
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lat) / 1000), ns)
+
+	lon := rr.Longitude
+	ew := "E"
+	if lon > LOC_PRIMEMERIDIAN {
+		lon = lon - LOC_PRIMEMERIDIAN
+	} else {
+		ew = "W"
+		lon = LOC_PRIMEMERIDIAN - lon
+	}
+	h = lon / LOC_DEGREES
+	lon = lon % LOC_DEGREES
+	m = lon / LOC_HOURS
+	lon = lon % LOC_HOURS
+	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lon) / 1000), ew)
+
+	var alt float64 = float64(rr.Altitude) / 100
+	alt -= LOC_ALTITUDEBASE
+	if rr.Altitude%100 != 0 {
+		s += fmt.Sprintf("%.2fm ", alt)
+	} else {
+		s += fmt.Sprintf("%.0fm ", alt)
+	}
+
+	s += cmToM((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
+	s += cmToM((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
+	s += cmToM((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
+
 	return s
 }
 
@@ -1578,23 +1603,6 @@ func saltToString(s string) string {
 		return "-"
 	}
 	return strings.ToUpper(s)
-}
-
-func cmToString(mantissa, exponent uint8) string {
-	switch exponent {
-	case 0, 1:
-		if exponent == 1 {
-			mantissa *= 10
-		}
-		return fmt.Sprintf("%.02f", float32(mantissa))
-	default:
-		s := fmt.Sprintf("%d", mantissa)
-		for i := uint8(0); i < exponent-2; i++ {
-			s += "0"
-		}
-		return s
-	}
-	panic("dns: not reached")
 }
 
 func euiToString(eui uint64, bits int) (hex string) {
