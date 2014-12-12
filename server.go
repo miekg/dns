@@ -223,6 +223,9 @@ type Server struct {
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
 	// the handler. It will specfically not check if the query has the QR bit not set.
 	Unsafe bool
+	// If set, called once the server has started listening. This is useful if
+	// you need to drop privileges only after binding.
+	NotifyStartedFunc func()
 
 	// For graceful shutdown.
 	stopUDP chan bool
@@ -370,6 +373,11 @@ func (srv *Server) getReadTimeout() time.Duration {
 // Each request is handled in a seperate goroutine.
 func (srv *Server) serveTCP(l *net.TCPListener) error {
 	defer l.Close()
+
+	if srv.NotifyStartedFunc != nil {
+		srv.NotifyStartedFunc()
+	}
+
 	handler := srv.Handler
 	if handler == nil {
 		handler = DefaultServeMux
@@ -400,6 +408,10 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 // Each request is handled in a seperate goroutine.
 func (srv *Server) serveUDP(l *net.UDPConn) error {
 	defer l.Close()
+
+	if srv.NotifyStartedFunc != nil {
+		srv.NotifyStartedFunc()
+	}
 
 	handler := srv.Handler
 	if handler == nil {
