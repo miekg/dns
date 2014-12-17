@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"sync"
 	"testing"
-	"time"
 )
 
 func HelloServer(w ResponseWriter, req *Msg) {
@@ -33,13 +32,17 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 		return nil, "", err
 	}
 	server := &Server{PacketConn: pc}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
 	go func() {
 		server.ActivateAndServe()
 		pc.Close()
 	}()
 
-	time.Sleep(50 * time.Millisecond)
-
+	waitLock.Lock()
 	return server, pc.LocalAddr().String(), nil
 }
 
@@ -49,13 +52,17 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 		return nil, "", err
 	}
 	server := &Server{PacketConn: pc, Unsafe: true}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
 	go func() {
 		server.ActivateAndServe()
 		pc.Close()
 	}()
 
-	time.Sleep(50 * time.Millisecond)
-
+	waitLock.Lock()
 	return server, pc.LocalAddr().String(), nil
 }
 
@@ -64,24 +71,19 @@ func RunLocalTCPServer(laddr string) (*Server, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
 	server := &Server{Listener: l}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
 	go func() {
 		server.ActivateAndServe()
 		l.Close()
 	}()
 
-	for i := 0; ; i++ {
-		conn, err := net.Dial("tcp", l.Addr().String())
-		if err == nil {
-			conn.Close()
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-		if i > 50 {
-			return nil, "", fmt.Errorf("failed to start server: ", err)
-		}
-	}
-
+	waitLock.Lock()
 	return server, l.Addr().String(), nil
 }
 
