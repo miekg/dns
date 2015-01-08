@@ -447,7 +447,6 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *ses
 		}
 	}()
 Redo:
-	// Ideally we want use isMsg here before we allocate memory to actually parse the packet.
 	req := new(Msg)
 	err := req.Unpack(m)
 	if err != nil { // Send a FormatError back
