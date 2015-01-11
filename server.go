@@ -241,6 +241,7 @@ type Server struct {
 func (srv *Server) ListenAndServe() error {
 	srv.lock.Lock()
 	if srv.started {
+		srv.lock.Unlock()
 		return &Error{err: "server already started"}
 	}
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
