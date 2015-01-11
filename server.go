@@ -223,7 +223,7 @@ type Server struct {
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
 	// the handler. It will specfically not check if the query has the QR bit not set.
 	Unsafe bool
-	// If NotifyStartedFunc is set is is called, once the server has started listening. 
+	// If NotifyStartedFunc is set is is called, once the server has started listening.
 	NotifyStartedFunc func()
 
 	// For graceful shutdown.
