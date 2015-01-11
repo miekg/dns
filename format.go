@@ -1,14 +1,14 @@
 // FORMAT
 //
 // The dns package implements String() for all RR types, but sometimes you will
-// need more flexibility. The functions Printf, Sprintf, etc. implemented formatted I/O
-// for the RR type.
+// need more flexibility. Here we define an extra set of formatting verbs that
+// can be used in the formatted I/O package fmt.
 //
 // Printing
 //
 // The verbs:
 //
-// Generic part of RRs:
+// Generic parts of RRs:
 //
 //	%N	the owner name of the RR
 //	%C	the class: IN, CH, CLASS15, etc.
@@ -25,6 +25,8 @@
 //	..	...
 //	%9      the nineth rdata field
 //	%R	all rdata fields
+//
+// Non exsiting rdata fields will be printed as the empty string.
 //
 package dns
 
