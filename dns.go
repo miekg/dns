@@ -94,6 +94,7 @@
 package dns
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -122,9 +123,11 @@ type RR interface {
 	Header() *RR_Header
 	// String returns the text representation of the resource record.
 	String() string
+	// Formatted output
+	Format(f fmt.State, c rune)
 	// copy returns a copy of the RR
 	copy() RR
-	// len returns the length (in octects) of the uncompressed RR in wire format.
+	// len returns the length (in octets) of the uncompressed RR in wire format.
 	len() int
 }
 

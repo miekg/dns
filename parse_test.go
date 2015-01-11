@@ -1286,54 +1286,74 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("; comment")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("$ORIGIN foo.")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR(" ")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("\n")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("foo. A 1.1.1.1\nbar. A 2.2.2.2")
 	expect = "foo.\t3600\tIN\tA\t1.1.1.1"
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr == nil || rr.String() != expect {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
+}
+
+func TestPrintfVerbs(t *testing.T) {
+	x, _ := NewRR("www.miek.nl. IN A 127.0.0.1")
+	if fmt.Sprintf("%N", x) != "www.miek.nl." {
+		t.Errorf("%N does return name")
+	}
+	if fmt.Sprintf("%C", x) != "IN" {
+		t.Errorf("%C does return class")
+	}
+	if fmt.Sprintf("%D", x) != "3600" {
+		t.Errorf("%D does return ttl")
+	}
+	if fmt.Sprintf("%Y", x) != "A" {
+		t.Errorf("%Y does return type")
+	}
+	if fmt.Sprintf("%Y %d", x, 5) != "A 5" {
+		t.Errorf("%N does return name")
+	}
+	// TODO(miek): RDATA
 }
