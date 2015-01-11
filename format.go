@@ -27,6 +27,7 @@ import (
 )
 
 // Field returns the rdata field i as a string. Fields are indexed starting from 1.
+// Non existing fields will return the empty string.
 func Field(r RR, i int) string {
 	if i == 0 {
 		return ""
@@ -39,6 +40,7 @@ func Field(r RR, i int) string {
 		return strconv.FormatInt(d.Int(), 10)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return strconv.FormatUint(d.Uint(), 10)
+		// more to be added
 	}
 	return ""
 }
