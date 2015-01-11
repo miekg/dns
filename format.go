@@ -43,6 +43,9 @@ func format(r RR, f fmt.State, c rune) {
 		f.Write([]byte(strconv.Itoa(int(r.Header().Ttl))))
 	case 'Y':
 		f.Write([]byte(Type(r.Header().Rrtype).String()))
+	case 's':
+		f.Write([]byte(r.String()))
+
 	}
 }
 
@@ -56,6 +59,8 @@ func format_Header(h *RR_Header, f fmt.State, c rune) {
 		f.Write([]byte(strconv.Itoa(int(h.Ttl))))
 	case 'Y':
 		f.Write([]byte(Type(h.Rrtype).String()))
+	case 's':
+		f.Write([]byte(h.String()))
 	}
 }
 
