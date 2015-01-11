@@ -15,25 +15,38 @@
 //	%D	the TTL in seconds
 //	%Y	the type: MX, A, etc.
 //
-// The rdata of each RR differs, we allow each field to be printed as a string.
-//
-// Rdata: (TODO)
-//
-//	%0	the first rdata field
-//	%1	the second rdata field
-//	%2	the third rdata field
-//	..	...
-//	%9      the nineth rdata field
-//	%R	all rdata fields
-//
-// Non exsiting rdata fields will be printed as the empty string.
+// The rdata of each RR differs, we allow each field to be accessed as a string with
+// the Field function.
 //
 package dns
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 )
+
+// Field returns the rdata field i as a string. Fields are indexed starting from 1.
+func Field(r RR, i int) string {
+	if i == 0 {
+		return ""
+	}
+	d := reflect.ValueOf(r).Elem().Field(i)
+	switch d.Kind() {
+	case reflect.String:
+		return d.String()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(d.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(d.Uint(), 10)
+	}
+	return ""
+}
+
+// NumField returns the number of rdata fields r has.
+func NumField(r RR) int {
+	return reflect.ValueOf(r).Elem().NumField() - 1 // Remove RR_Header
+}
 
 func format(r RR, f fmt.State, c rune) {
 	switch c {
@@ -47,7 +60,6 @@ func format(r RR, f fmt.State, c rune) {
 		f.Write([]byte(Type(r.Header().Rrtype).String()))
 	case 's':
 		f.Write([]byte(r.String()))
-
 	}
 }
 
