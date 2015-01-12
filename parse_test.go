@@ -1358,6 +1358,13 @@ func TestPrintfVerbs(t *testing.T) {
 	if fmt.Sprintf("%s", x) != "www.miek.nl.\t3600\tIN\tA\t127.0.0.1" {
 		t.Errorf("%%s does return the correct string")
 	}
+	if fmt.Sprintf("%T", x) != "*dns.A" {
+		t.Errorf("%%T does return the correct string")
+	}
+	if fmt.Sprintf("%v", x) != "" {
+		t.Errorf("%v", x)
+		t.Errorf("%%v does return the correct string")
+	}
 }
 
 func TestPrintfVerbsRdata(t *testing.T) {

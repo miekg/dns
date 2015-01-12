@@ -62,6 +62,9 @@ func format(r RR, f fmt.State, c rune) {
 		f.Write([]byte(Type(r.Header().Rrtype).String()))
 	case 's':
 		f.Write([]byte(r.String()))
+	default:
+		println(string(c))
+		f.Write([]byte("TODO"))
 	}
 }
 
@@ -77,6 +80,9 @@ func format_Header(h *RR_Header, f fmt.State, c rune) {
 		f.Write([]byte(Type(h.Rrtype).String()))
 	case 's':
 		f.Write([]byte(h.String()))
+	default:
+		println(string(c))
+		f.Write([]byte("TODO"))
 	}
 }
 
