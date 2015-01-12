@@ -1375,4 +1375,9 @@ func TestPrintfVerbsRdata(t *testing.T) {
 	if Field(x, 2) != "mx.miek.nl." {
 		t.Errorf("should be mx.miek.nl.")
 	}
+	x, _ = NewRR("www.miek.nl. IN A 127.0.0.1")
+	println(Field(x, 1))
+
+	x, _ = NewRR("www.miek.nl. IN AAAA ::1")
+	println(Field(x, 1))
 }

@@ -22,6 +22,7 @@ package dns
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"strconv"
 )
@@ -33,15 +34,51 @@ func Field(r RR, i int) string {
 		return ""
 	}
 	d := reflect.ValueOf(r).Elem().Field(i)
-	switch d.Kind() {
+	switch k := d.Kind(); k {
 	case reflect.String:
 		return d.String()
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return strconv.FormatInt(d.Int(), 10)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return strconv.FormatUint(d.Uint(), 10)
-		// more to be added
+	case reflect.Slice:
+		switch reflect.ValueOf(r).Elem().Type().Field(i).Tag {
+		case `dns:"a"`:
+			// println(d.Len()), Hmm store this as 16 bytes
+			if d.Len() < net.IPv6len {
+				return ""
+			}
+			ip := net.IPv4(byte(d.Index(12).Uint()),
+				byte(d.Index(13).Uint()),
+				byte(d.Index(14).Uint()),
+				byte(d.Index(15).Uint()))
+			return ip.String()
+		case `dns:"aaaa"`:
+			return net.IP{
+				byte(d.Index(0).Uint()),
+				byte(d.Index(1).Uint()),
+				byte(d.Index(2).Uint()),
+				byte(d.Index(3).Uint()),
+				byte(d.Index(4).Uint()),
+				byte(d.Index(5).Uint()),
+				byte(d.Index(6).Uint()),
+				byte(d.Index(7).Uint()),
+				byte(d.Index(8).Uint()),
+				byte(d.Index(9).Uint()),
+				byte(d.Index(10).Uint()),
+				byte(d.Index(11).Uint()),
+				byte(d.Index(12).Uint()),
+				byte(d.Index(13).Uint()),
+				byte(d.Index(14).Uint()),
+				byte(d.Index(15).Uint()),
+			}.String()
+			// []uint16 (nsec,wks)
+			// []string
+		}
+	default:
+		println("dns: unknown field kind", k.String())
 	}
+
 	return ""
 }
 
