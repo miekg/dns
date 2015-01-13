@@ -1369,4 +1369,7 @@ func TestPrintfVerbsRdata(t *testing.T) {
 	if Field(x, 1) != "first second" {
 		t.Errorf("should be first second")
 	}
+	if Field(x, 0) != "" {
+		t.Errorf("should be empty")
+	}
 }
