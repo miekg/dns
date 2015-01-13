@@ -104,18 +104,9 @@ func (u *Msg) Insert(rr []RR) {
 
 // RemoveRRset creates a dynamic update packet that deletes an RRset, see RFC 2136 section 2.5.2.
 func (u *Msg) RemoveRRset(rr []RR) {
-	m := make(map[RR_Header]struct{})
-	u.Ns = make([]RR, 0, len(rr))
-	for _, r := range rr {
-		h := *r.Header().copyHeader()
-		h.Class = ClassANY
-		h.Ttl = 0
-		h.Rdlength = 0
-		if _, ok := m[h]; ok {
-			continue
-		}
-		m[h] = struct{}{}
-		u.Ns = append(u.Ns, &ANY{h})
+	u.Ns = make([]RR, len(rr))
+	for i, r := range rr {
+		u.Ns[i] = &ANY{Hdr: RR_Header{Name: r.Header().Name, Ttl: 0, Rrtype: r.Header().Rrtype, Class: ClassANY}}
 	}
 }
 

@@ -86,20 +86,4 @@ func TestRemoveRRset(t *testing.T) {
 		t.Logf("Actual msg:\n%v", tmp)
 		t.Fail()
 	}
-
-	m.Ns = nil
-	m.RemoveRRset([]RR{rr, rr})
-	actual, err = m.Pack()
-	if err != nil {
-		t.Fatalf("Error packing actual msg: %v", err)
-	}
-	if !bytes.Equal(actual, expect) {
-		tmp := new(Msg)
-		if err := tmp.Unpack(actual); err != nil {
-			t.Fatalf("Error unpacking actual msg: %v", err)
-		}
-		t.Logf("Expected msg:\n%v", expectstr)
-		t.Logf("Actual msg:\n%v", tmp)
-		t.Fail()
-	}
 }
