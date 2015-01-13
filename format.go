@@ -1,34 +1,15 @@
-// FORMAT
-//
-// The dns package implements String() for all RR types, but sometimes you will
-// need more flexibility. Here we define an extra set of formatting verbs that
-// can be used in the formatted I/O package fmt.
-//
-// Printing
-//
-// The verbs:
-//
-// Generic parts of RRs:
-//
-//	%N	the owner name of the RR
-//	%C	the class: IN, CH, CLASS15, etc.
-//	%D	the TTL in seconds
-//	%Y	the type: MX, A, etc.
-//
-// The rdata of each RR differs, we allow each field to be accessed as a string with
-// the Field function.
-//
 package dns
 
 import (
-	"fmt"
 	"net"
 	"reflect"
 	"strconv"
 )
 
 // Field returns the rdata field i as a string. Fields are indexed starting from 1.
-// Non existing fields will return the empty string.
+// Non existing fields will return the empty string. RR types that holds slice data,
+// for instance the NSEC type bitmap will return a single string where the types
+// are concatenated using a space.
 func Field(r RR, i int) string {
 	if i == 0 {
 		return ""
@@ -44,15 +25,17 @@ func Field(r RR, i int) string {
 	case reflect.Slice:
 		switch reflect.ValueOf(r).Elem().Type().Field(i).Tag {
 		case `dns:"a"`:
-			// println(d.Len()), Hmm store this as 16 bytes
+			// TODO(miek): We hmm store this as 16 bytes
 			if d.Len() < net.IPv6len {
-				return ""
+				return net.IPv4(byte(d.Index(0).Uint()),
+					byte(d.Index(1).Uint()),
+					byte(d.Index(2).Uint()),
+					byte(d.Index(3).Uint())).String()
 			}
-			ip := net.IPv4(byte(d.Index(12).Uint()),
+			return net.IPv4(byte(d.Index(12).Uint()),
 				byte(d.Index(13).Uint()),
 				byte(d.Index(14).Uint()),
-				byte(d.Index(15).Uint()))
-			return ip.String()
+				byte(d.Index(15).Uint())).String()
 		case `dns:"aaaa"`:
 			return net.IP{
 				byte(d.Index(0).Uint()),
@@ -72,13 +55,38 @@ func Field(r RR, i int) string {
 				byte(d.Index(14).Uint()),
 				byte(d.Index(15).Uint()),
 			}.String()
-			// []uint16 (nsec,wks)
-			// []string
+		case `dns:"nsec"`:
+			if d.Len() == 0 {
+				return ""
+			}
+			s := Type(d.Index(0).Uint()).String()
+			for i := 1; i < d.Len(); i++ {
+				s += " " + Type(d.Index(i).Uint()).String()
+			}
+			return s
+		case `dns:"wks"`:
+			if d.Len() == 0 {
+				return ""
+			}
+			s := strconv.Itoa(int(d.Index(0).Uint()))
+			for i := 0; i < d.Len(); i++ {
+				s += " " + strconv.Itoa(int(d.Index(i).Uint()))
+			}
+			return s
+		default:
+			// if it does not have a tag its a string slice
+			fallthrough
+		case `dns:"txt"`:
+			if d.Len() == 0 {
+				return ""
+			}
+			s := d.Index(0).String()
+			for i := 1; i < d.Len(); i++ {
+				s += " " + d.Index(i).String()
+			}
+			return s
 		}
-	default:
-		println("dns: unknown field kind", k.String())
 	}
-
 	return ""
 }
 
@@ -87,6 +95,7 @@ func NumField(r RR) int {
 	return reflect.ValueOf(r).Elem().NumField() - 1 // Remove RR_Header
 }
 
+/*
 func format(r RR, f fmt.State, c rune) {
 	switch c {
 	case 'N':
@@ -118,7 +127,6 @@ func format_Header(h *RR_Header, f fmt.State, c rune) {
 	case 's':
 		f.Write([]byte(h.String()))
 	default:
-		println(string(c))
 		f.Write([]byte("TODO"))
 	}
 }
@@ -198,3 +206,4 @@ func (rr *UINFO) Format(f fmt.State, c rune)      { format(rr, f, c) }
 func (rr *URI) Format(f fmt.State, c rune)        { format(rr, f, c) }
 func (rr *WKS) Format(f fmt.State, c rune)        { format(rr, f, c) }
 func (rr *X25) Format(f fmt.State, c rune)        { format(rr, f, c) }
+*/

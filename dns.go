@@ -93,10 +93,7 @@
 // spaces, semicolons and the at symbol are escaped.
 package dns
 
-import (
-	"fmt"
-	"strconv"
-)
+import "strconv"
 
 const (
 	year68         = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
@@ -123,8 +120,6 @@ type RR interface {
 	Header() *RR_Header
 	// String returns the text representation of the resource record.
 	String() string
-	// Formatted output
-	Format(f fmt.State, c rune)
 	// copy returns a copy of the RR
 	copy() RR
 	// len returns the length (in octets) of the uncompressed RR in wire format.
