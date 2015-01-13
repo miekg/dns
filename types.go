@@ -1394,7 +1394,7 @@ func (rr *WKS) String() (s string) {
 	if rr.Address != nil {
 		s += rr.Address.String()
 	}
-	// TODO(miek): missing protocol here.
+	// TODO(miek): missing protocol here, see /etc/protocols
 	for i := 0; i < len(rr.BitMap); i++ {
 		// should lookup the port
 		s += " " + strconv.Itoa(int(rr.BitMap[i]))
