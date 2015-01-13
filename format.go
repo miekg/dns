@@ -30,7 +30,7 @@ func Field(r RR, i int) string {
 	case reflect.Slice:
 		switch reflect.ValueOf(r).Elem().Type().Field(i).Tag {
 		case `dns:"a"`:
-			// TODO(miek): We hmm store this as 16 bytes
+			// TODO(miek): Hmm store this as 16 bytes
 			if d.Len() < net.IPv6len {
 				return net.IPv4(byte(d.Index(0).Uint()),
 					byte(d.Index(1).Uint()),
