@@ -1286,54 +1286,90 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("; comment")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("$ORIGIN foo.")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR(" ")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("\n")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr != nil {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
 	}
 
 	rr, err = NewRR("foo. A 1.1.1.1\nbar. A 2.2.2.2")
 	expect = "foo.\t3600\tIN\tA\t1.1.1.1"
 	if err != nil {
-		t.Errorf("unexpect err: %s", err)
+		t.Errorf("unexpected err: %s", err)
 	}
 	if rr == nil || rr.String() != expect {
-		t.Errorf("unexpect result: [%s] != [%s]", rr, expect)
+		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
+	}
+}
+
+func TestPrintfVerbsRdata(t *testing.T) {
+	x, _ := NewRR("www.miek.nl. IN MX 20 mx.miek.nl.")
+	if Field(x, 1) != "20" {
+		t.Errorf("should be 20")
+	}
+	if Field(x, 2) != "mx.miek.nl." {
+		t.Errorf("should be mx.miek.nl.")
+	}
+
+	x, _ = NewRR("www.miek.nl. IN A 127.0.0.1")
+	if Field(x, 1) != "127.0.0.1" {
+		t.Errorf("should be 127.0.0.1")
+	}
+
+	x, _ = NewRR("www.miek.nl. IN AAAA ::1")
+	if Field(x, 1) != "::1" {
+		t.Errorf("should be ::1")
+	}
+
+	x, _ = NewRR("www.miek.nl. IN NSEC a.miek.nl. A NS SOA MX AAAA")
+	if Field(x, 1) != "a.miek.nl." {
+		t.Errorf("should be a.miek.nl.")
+	}
+	if Field(x, 2) != "A NS SOA MX AAAA" {
+		t.Errorf("should be A NS SOA MX AAAA")
+	}
+
+	x, _ = NewRR("www.miek.nl. IN TXT \"first\" \"second\"")
+	if Field(x, 1) != "first second" {
+		t.Errorf("should be first second")
+	}
+	if Field(x, 0) != "" {
+		t.Errorf("should be empty")
 	}
 }
