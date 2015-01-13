@@ -287,6 +287,7 @@ func (srv *Server) ListenAndServe() error {
 func (srv *Server) ActivateAndServe() error {
 	srv.lock.Lock()
 	if srv.started {
+		srv.lock.Unlock()
 		return &Error{err: "server already started"}
 	}
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
@@ -318,6 +319,7 @@ func (srv *Server) ActivateAndServe() error {
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()
 	if !srv.started {
+		srv.lock.Unlock()
 		return &Error{err: "server not started"}
 	}
 	srv.started = false
