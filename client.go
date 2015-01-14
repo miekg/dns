@@ -154,7 +154,18 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		return nil, 0, err
 	}
 	r, err = co.ReadMsg()
-	return r, co.rtt, err
+	rtt = co.rtt
+	for {
+		p, err := co.ReadMsg()
+		if err != nil {
+			break
+		}
+		r.Answer = append(r.Answer, p.Answer...)
+		r.Ns = append(r.Ns, p.Ns...)
+		r.Extra = append(r.Extra, p.Extra...)
+		rtt += co.rtt
+	}
+	return r, rtt, err
 }
 
 // ReadMsg reads a message from the connection co.
