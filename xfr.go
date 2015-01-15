@@ -13,9 +13,9 @@ type Envelope struct {
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Conn
-	DialTimeout    time.Duration     // net.DialTimeout (ns), defaults to 2 * 1e9
-	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections (ns), defaults to 2 * 1e9
-	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections (ns), defaults to 2 * 1e9
+	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
+	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
+	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	tsigTimersOnly bool
 }
