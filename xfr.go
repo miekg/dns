@@ -160,12 +160,11 @@ func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 // The server is responsible for sending the correct sequence of RRs through the
 // channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
-	r := new(Msg)
-	// Compress?
-	r.SetReply(q)
-	r.Authoritative = true
-
 	for x := range ch {
+		r := new(Msg)
+		// Compress?
+		r.SetReply(q)
+		r.Authoritative = true
 		// assume it fits TODO(miek): fix
 		r.Answer = append(r.Answer, x.RR...)
 		if err := w.WriteMsg(r); err != nil {
@@ -173,7 +172,6 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 		}
 	}
 	w.TsigTimersOnly(true)
-	r.Answer = nil
 	return nil
 }
 
