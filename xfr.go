@@ -165,17 +165,15 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	r.SetReply(q)
 	r.Authoritative = true
 
-	go func() {
-		for x := range ch {
-			// assume it fits TODO(miek): fix
-			r.Answer = append(r.Answer, x.RR...)
-			if err := w.WriteMsg(r); err != nil {
-				return
-			}
+	for x := range ch {
+		// assume it fits TODO(miek): fix
+		r.Answer = append(r.Answer, x.RR...)
+		if err := w.WriteMsg(r); err != nil {
+			return err
 		}
-		w.TsigTimersOnly(true)
-		r.Answer = nil
-	}()
+	}
+	w.TsigTimersOnly(true)
+	r.Answer = nil
 	return nil
 }
 
