@@ -15,6 +15,9 @@ func getIP(s string) string {
 }
 
 func TestClientAXFR(t *testing.T) {
+	if testing.Short() {
+		return
+	}
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 
@@ -41,6 +44,9 @@ func TestClientAXFR(t *testing.T) {
 
 // fails.
 func testClientAXFRMultipleEnvelopes(t *testing.T) {
+	if testing.Short() {
+		return
+	}
 	m := new(Msg)
 	m.SetAxfr("nlnetlabs.nl.")
 
@@ -63,6 +69,9 @@ func testClientAXFRMultipleEnvelopes(t *testing.T) {
 }
 
 func testClientTsigAXFR(t *testing.T) {
+	if testing.Short() {
+		return
+	}
 	m := new(Msg)
 	m.SetAxfr("example.nl.")
 	m.SetTsig("axfr.", HmacMD5, 300, time.Now().Unix())
