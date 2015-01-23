@@ -14,7 +14,9 @@ func getIP(s string) string {
 	return a[0]
 }
 
-func TestClientAXFR(t *testing.T) {
+// flaky, need to setup local server and test from
+// that.
+func testClientAXFR(t *testing.T) {
 	if testing.Short() {
 		return
 	}
