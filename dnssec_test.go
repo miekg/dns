@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"crypto/rsa"
 	"reflect"
 	"strings"
 	"testing"
@@ -389,7 +388,7 @@ Activate: 20110302104537`
 		t.Fail()
 	}
 	switch priv := p.(type) {
-	case *rsa.PrivateKey:
+	case *RSAPrivateKey:
 		if 65537 != priv.PublicKey.E {
 			t.Log("exponenent should be 65537")
 			t.Fail()
