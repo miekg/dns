@@ -1,7 +1,7 @@
 // TRANSACTION SIGNATURE
 //
 // An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
-// The supported algorithms include: HmacMD5, HmacSHA1 and HmacSHA256.
+// The supported algorithms include: HmacMD5, HmacSHA1, HmacSHA256 and HmacSHA512.
 //
 // Basic use pattern when querying with a TSIG name "axfr." (note that these key names
 // must be fully qualified - as they are domain names) and the base64 secret
@@ -58,6 +58,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"hash"
 	"io"
@@ -71,6 +72,7 @@ const (
 	HmacMD5    = "hmac-md5.sig-alg.reg.int."
 	HmacSHA1   = "hmac-sha1."
 	HmacSHA256 = "hmac-sha256."
+	HmacSHA512 = "hmac-sha512."
 )
 
 type TSIG struct {
@@ -181,6 +183,8 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		h = hmac.New(sha1.New, []byte(rawsecret))
 	case HmacSHA256:
 		h = hmac.New(sha256.New, []byte(rawsecret))
+	case HmacSHA512:
+		h = hmac.New(sha512.New, []byte(rawsecret))
 	default:
 		return nil, "", ErrKeyAlg
 	}
@@ -245,6 +249,8 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 		h = hmac.New(sha1.New, rawsecret)
 	case HmacSHA256:
 		h = hmac.New(sha256.New, rawsecret)
+	case HmacSHA512:
+		h = hmac.New(sha512.New, rawsecret)
 	default:
 		return ErrKeyAlg
 	}
