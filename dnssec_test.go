@@ -249,12 +249,13 @@ func Test65534(t *testing.T) {
 }
 
 func TestDnskey(t *testing.T) {
-	//	f, _ := os.Open("t/Kmiek.nl.+010+05240.key")
-	pubkey, _ := ReadRR(strings.NewReader(`
+	pubkey, err := ReadRR(strings.NewReader(`
 miek.nl.	IN	DNSKEY	256 3 10 AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL ;{id = 5240 (zsk), size = 1024b}
 `), "Kmiek.nl.+010+05240.key")
-	privkey, _ := pubkey.(*DNSKEY).ReadPrivateKey(strings.NewReader(`
-Private-key-format: v1.2
+	if err != nil {
+		t.Fatal(err)
+	}
+	privStr := `Private-key-format: v1.3
 Algorithm: 10 (RSASHA512)
 Modulus: m4wK7YV26AeROtdiCXmqLG9wPDVoMOW8vjr/EkpscEAdjXp81RvZvrlzCSjYmz9onFRgltmTl3AINnFh+t9tlW0M9C5zejxBoKFXELv8ljPYAdz2oe+pDWPhWsfvVFYg2VCjpViPM38EakyE5mhk4TDOnUd+w4TeU1hyhZTWyYs=
 PublicExponent: AQAB
@@ -264,13 +265,21 @@ Prime2: xA1bF8M0RTIQ6+A11AoVG6GIR/aPGg5sogRkIZ7ID/sF6g9HMVU/CM2TqVEBJLRPp73cv6Ze
 Exponent1: xzkblyZ96bGYxTVZm2/vHMOXswod4KWIyMoOepK6B/ZPcZoIT6omLCgtypWtwHLfqyCz3MK51Nc0G2EGzg8rFQ==
 Exponent2: Pu5+mCEb7T5F+kFNZhQadHUklt0JUHbi3hsEvVoHpEGSw3BGDQrtIflDde0/rbWHgDPM4WQY+hscd8UuTXrvLw==
 Coefficient: UuRoNqe7YHnKmQzE6iDWKTMIWTuoqqrFAmXPmKQnC+Y+BQzOVEHUo9bXdDnoI9hzXP1gf8zENMYwYLeWpuYlFQ==
-`), "Kmiek.nl.+010+05240.private")
+`
+	privkey, err := pubkey.(*DNSKEY).ReadPrivateKey(strings.NewReader(privStr),
+		"Kmiek.nl.+010+05240.private")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if pubkey.(*DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
 		t.Log("pubkey is not what we've read")
 		t.Fail()
 	}
-	// Coefficient looks fishy...
-	t.Logf("%s", pubkey.(*DNSKEY).PrivateKeyString(privkey))
+	if pubkey.(*DNSKEY).PrivateKeyString(privkey) != privStr {
+		t.Log("privkey is not what we've read")
+		t.Logf("%v", pubkey.(*DNSKEY).PrivateKeyString(privkey))
+		t.Fail()
+	}
 }
 
 func TestTag(t *testing.T) {
