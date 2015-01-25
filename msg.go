@@ -1044,6 +1044,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 				fv.Set(reflect.ValueOf(edns))
 			case `dns:"a"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, must be 1
+					if val.Field(2).Uint() != 1 {
+						continue
+					}
+				}
 				if off == lenrd {
 					break // dyn. update
 				}
@@ -1053,6 +1059,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
 				off += net.IPv4len
 			case `dns:"aaaa"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, must be 2
+					if val.Field(2).Uint() != 2 {
+						continue
+					}
+				}
 				if off == lenrd {
 					break
 				}
@@ -1249,6 +1261,13 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			case `dns:"cdomain-name"`:
 				fallthrough
 			case `dns:"domain-name"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, 1 and 2 or used for addresses
+					x := val.Field(2).Uint()
+					if x == 1 || x == 2 {
+						continue
+					}
+				}
 				if off == lenmsg {
 					// zero rdata foo, OK for dyn. updates
 					break

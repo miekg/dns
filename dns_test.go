@@ -511,7 +511,6 @@ func TestCopy(t *testing.T) {
 }
 
 func TestPackIPSECKEY(t *testing.T) {
-	// TODO(miek): finish
 	tests := []string{
 		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
 		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 0 2 .  AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
@@ -520,6 +519,20 @@ func TestPackIPSECKEY(t *testing.T) {
 		"0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0 7200 IN     IPSECKEY ( 10 2 2 2001:0DB8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
 	}
 	buf := make([]byte, 1024)
-	rr, _ := NewRR(tests[0])
-	PackRR(rr, buf, 0, nil, false)
+	for _, t1 := range tests {
+		rr, _ := NewRR(t1)
+		off, e := PackRR(rr, buf, 0, nil, false)
+		if e != nil {
+			t.Logf("failed to pack IPSECKEY %s: %s\n", e, t1)
+			t.Fail()
+			continue
+		}
+
+		rr, _, e = UnpackRR(buf[:off], 0)
+		if e != nil {
+			t.Logf("failed to unpack IPSECKEY %s: %s\n", e, t1)
+			t.Fail()
+		}
+		t.Logf("%s\n", rr)
+	}
 }

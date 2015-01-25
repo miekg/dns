@@ -1678,6 +1678,7 @@ var typeToRR = map[uint16]func() RR{
 	TypeEID:        func() RR { return new(EID) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeHIP:        func() RR { return new(HIP) },
+	TypeIPSECKEY:   func() RR { return new(IPSECKEY) },
 	TypeKX:         func() RR { return new(KX) },
 	TypeL32:        func() RR { return new(L32) },
 	TypeL64:        func() RR { return new(L64) },
