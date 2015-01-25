@@ -34,7 +34,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/skynetservices/skydns
 * https://github.com/DevelopersPL/godnsagent
 * https://github.com/duedil-ltd/discodns
-* https://github.com/StalkR/misc/tree/master/dns/proxy
+* https://github.com/StalkR/dns-reverse-proxy
 
 Send pull request if you want to be listed here.
 
