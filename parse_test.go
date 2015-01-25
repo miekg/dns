@@ -1265,8 +1265,8 @@ func TestNewPrivateKey(t *testing.T) {
 		}
 
 		switch newPrivKey := newPrivKey.(type) {
-		case *rsa.PrivateKey:
-			newPrivKey.Precompute()
+		case *RSAPrivateKey:
+			(*rsa.PrivateKey)(newPrivKey).Precompute()
 		}
 
 		if !reflect.DeepEqual(privkey, newPrivKey) {
