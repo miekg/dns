@@ -652,6 +652,12 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					off += len(b)
 				}
 			case `dns:"a"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, must be 1
+					if val.Field(2).Uint() != 1 {
+						continue
+					}
+				}
 				// It must be a slice of 4, even if it is 16, we encode
 				// only the first 4
 				if off+net.IPv4len > lenmsg {
@@ -676,6 +682,12 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					return lenmsg, &Error{err: "overflow packing a"}
 				}
 			case `dns:"aaaa"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, must be 2
+					if val.Field(2).Uint() != 2 {
+						continue
+					}
+				}
 				if fv.Len() == 0 {
 					break
 				}
@@ -821,6 +833,13 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case `dns:"domain-name"`:
+				if val.Type().String() == "dns.IPSECKEY" {
+					// Field(2) is GatewayType, 1 and 2 or used for addresses
+					x := val.Field(2).Uint()
+					if x == 1 || x == 2 {
+						continue
+					}
+				}
 				if off, err = PackDomainName(s, msg, off, compression, false && compress); err != nil {
 					return lenmsg, err
 				}

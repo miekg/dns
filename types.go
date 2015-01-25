@@ -1029,30 +1029,59 @@ func (rr *SSHFP) String() string {
 }
 
 type IPSECKEY struct {
-	Hdr         RR_Header
-	Precedence  uint8
+	Hdr        RR_Header
+	Precedence uint8
+	// GatewayType: 1: A record, 2: AAAA record, 3: domainname.
+	// 0 is use for no type and GatewayName should be "." then.
 	GatewayType uint8
 	Algorithm   uint8
-	Gateway     string `dns:"ipseckey"`
+	// Gateway can be an A record, AAAA record or a domain name.
+	GatewayA    net.IP `dns:"a"`
+	GatewayAAAA net.IP `dns:"aaaa"`
+	GatewayName string `dns:"domain-name"`
 	PublicKey   string `dns:"base64"`
 }
 
 func (rr *IPSECKEY) Header() *RR_Header { return &rr.Hdr }
 func (rr *IPSECKEY) copy() RR {
-	return &IPSECKEY{*rr.Hdr.copyHeader(), rr.Precedence, rr.GatewayType, rr.Algorithm, rr.Gateway, rr.PublicKey}
+	return &IPSECKEY{*rr.Hdr.copyHeader(), rr.Precedence, rr.GatewayType, rr.Algorithm, rr.GatewayA, rr.GatewayAAAA, rr.GatewayName, rr.PublicKey}
 }
 
 func (rr *IPSECKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
+	s := rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
 		" " + strconv.Itoa(int(rr.GatewayType)) +
-		" " + strconv.Itoa(int(rr.Algorithm)) +
-		" " + rr.Gateway +
-		" " + rr.PublicKey
+		" " + strconv.Itoa(int(rr.Algorithm))
+	switch rr.GatewayType {
+	case 0:
+		fallthrough
+	case 3:
+		s += " " + rr.GatewayName
+	case 1:
+		s += " " + rr.GatewayA.String()
+	case 2:
+		s += " " + rr.GatewayAAAA.String()
+	default:
+		s += " ."
+	}
+	s += " " + rr.PublicKey
+	return s
 }
 
 func (rr *IPSECKEY) len() int {
-	return rr.Hdr.len() + 3 + len(rr.Gateway) + 1 +
-		base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l := rr.Hdr.len() + 3 + 1
+	switch rr.GatewayType {
+	default:
+		fallthrough
+	case 0:
+		fallthrough
+	case 3:
+		l += len(rr.GatewayName)
+	case 1:
+		l += 4
+	case 2:
+		l += 16
+	}
+	return l + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 }
 
 type KEY struct {

@@ -1373,3 +1373,37 @@ func TestPrintfVerbsRdata(t *testing.T) {
 		t.Errorf("should be empty")
 	}
 }
+
+func TestParseIPSECKEY(t *testing.T) {
+	tests := []string{
+		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
+		"38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+
+		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 0 2 .  AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
+		"38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+
+		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 1 2 192.0.2.3 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
+		"38.2.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10 1 2 192.0.2.3 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+
+		"38.1.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 3 2 mygateway.example.com.  AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
+		"38.1.0.192.in-addr.arpa.\t7200\tIN\tIPSECKEY\t10 3 2 mygateway.example.com. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+
+		"0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0 7200 IN     IPSECKEY ( 10 2 2 2001:0DB8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
+		"0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0.\t7200\tIN\tIPSECKEY\t10 2 2 2001:db8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+	}
+	for i := 0; i < len(tests)-1; i++ {
+		t1 := tests[i]
+		e1 := tests[i+1]
+		r, e := NewRR(t1)
+		if e != nil {
+			t.Logf("failed to parse IPSECKEY %s", e)
+			continue
+		}
+		if r.String() != e1 {
+			t.Logf("these two IPSECKEY records should match")
+			t.Logf("\n%s\n%s\n", r.String(), e1)
+			t.Fail()
+		}
+		i++
+	}
+}
