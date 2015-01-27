@@ -96,7 +96,8 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 3225 - DO bit (DNSSEC OK)
 * 340{1,2,3} - NAPTR record
 * 3445 - Limiting the scope of (DNS)KEY
-* 3597 - Unkown RRs
+* 3597 - Unknown RRs
+* 4025 - IPSECKEY
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP record
 * 4343 - Case insensitivity

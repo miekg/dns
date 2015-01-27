@@ -1847,44 +1847,6 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(IPSECKEY)
-	rr.Hdr = h
-
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
-	}
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad IPSECKEY Precedence", l}, ""
-	} else {
-		rr.Precedence = uint8(i)
-	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}, ""
-	} else {
-		rr.GatewayType = uint8(i)
-	}
-	<-c // _BLANK
-	l = <-c
-	if i, e := strconv.Atoi(l.token); e != nil {
-		return nil, &ParseError{f, "bad IPSECKEY Algorithm", l}, ""
-	} else {
-		rr.Algorithm = uint8(i)
-	}
-	<-c
-	l = <-c
-	rr.Gateway = l.token
-	s, e, c1 := endingToString(c, "bad IPSECKEY PublicKey", f)
-	if e != nil {
-		return nil, e, c1
-	}
-	rr.PublicKey = s
-	return rr, nil, c1
-}
-
 func setDHCID(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// awesome record to parse!
 	rr := new(DHCID)
@@ -2085,6 +2047,73 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.Mapx400 = appendOrigin(rr.Mapx400, o)
 	}
 	return rr, nil, ""
+}
+
+func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	rr := new(IPSECKEY)
+	rr.Hdr = h
+	l := <-c
+	if l.length == 0 {
+		return rr, nil, l.comment
+	}
+	if i, err := strconv.Atoi(l.token); err != nil {
+		return nil, &ParseError{f, "bad IPSECKEY Precedence", l}, ""
+	} else {
+		rr.Precedence = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, err := strconv.Atoi(l.token); err != nil {
+		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}, ""
+	} else {
+		rr.GatewayType = uint8(i)
+	}
+	<-c // _BLANK
+	l = <-c
+	if i, err := strconv.Atoi(l.token); err != nil {
+		return nil, &ParseError{f, "bad IPSECKEY Algorithm", l}, ""
+	} else {
+		rr.Algorithm = uint8(i)
+	}
+
+	// Now according to GatewayType we can have different elements here
+	<-c // _BLANK
+	l = <-c
+	switch rr.GatewayType {
+	case 0:
+		fallthrough
+	case 3:
+		rr.GatewayName = l.token
+		if l.token == "@" {
+			rr.GatewayName = o
+		}
+		_, ok := IsDomainName(l.token)
+		if !ok {
+			return nil, &ParseError{f, "bad IPSECKEY GatewayName", l}, ""
+		}
+		if rr.GatewayName[l.length-1] != '.' {
+			rr.GatewayName = appendOrigin(rr.GatewayName, o)
+		}
+	case 1:
+		rr.GatewayA = net.ParseIP(l.token)
+		if rr.GatewayA == nil {
+			return nil, &ParseError{f, "bad IPSECKEY GatewayA", l}, ""
+		}
+	case 2:
+		rr.GatewayAAAA = net.ParseIP(l.token)
+		if rr.GatewayAAAA == nil {
+			return nil, &ParseError{f, "bad IPSECKEY GatewayAAAA", l}, ""
+		}
+	default:
+		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}, ""
+	}
+
+	s, e, c1 := endingToString(c, "bad IPSECKEY PublicKey", f)
+	if e != nil {
+		return nil, e, c1
+	}
+	rr.PublicKey = s
+	return rr, nil, c1
 }
 
 var typeToparserFunc = map[uint16]parserFunc{
