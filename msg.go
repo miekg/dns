@@ -1912,25 +1912,34 @@ func (dns *Msg) Copy() *Msg {
 		copy(r1.Question, dns.Question) // TODO(miek): Question is an immutable value, ok to do a shallow-copy
 	}
 
+	rrArr := make([]RR, len(dns.Answer)+len(dns.Ns)+len(dns.Extra))
+	var rri int
+
 	if len(dns.Answer) > 0 {
-		r1.Answer = make([]RR, len(dns.Answer))
+		rrbegin := rri
 		for i := 0; i < len(dns.Answer); i++ {
-			r1.Answer[i] = dns.Answer[i].copy()
+			rrArr[rri] = dns.Answer[i].copy()
+			rri++
 		}
+		r1.Answer = rrArr[rrbegin:rri:rri]
 	}
 
 	if len(dns.Ns) > 0 {
-		r1.Ns = make([]RR, len(dns.Ns))
+		rrbegin := rri
 		for i := 0; i < len(dns.Ns); i++ {
-			r1.Ns[i] = dns.Ns[i].copy()
+			rrArr[rri] = dns.Ns[i].copy()
+			rri++
 		}
+		r1.Ns = rrArr[rrbegin:rri:rri]
 	}
 
 	if len(dns.Extra) > 0 {
-		r1.Extra = make([]RR, len(dns.Extra))
+		rrbegin := rri
 		for i := 0; i < len(dns.Extra); i++ {
-			r1.Extra[i] = dns.Extra[i].copy()
+			rrArr[rri] = dns.Extra[i].copy()
+			rri++
 		}
+		r1.Extra = rrArr[rrbegin:rri:rri]
 	}
 
 	return r1
