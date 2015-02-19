@@ -250,14 +250,14 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
 			case zString:
-				if ttl, ok := stringToTtl(l.token); !ok {
+				ttl, ok := stringToTtl(l.token)
+				if !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
-				} else {
-					h.Ttl = ttl
-					// Don't about the defttl, we should take the $TTL value
-					// defttl = ttl
 				}
+				h.Ttl = ttl
+				// Don't about the defttl, we should take the $TTL value
+				// defttl = ttl
 				st = zExpectAnyNoTtlBl
 
 			default:
@@ -329,12 +329,12 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				t <- &Token{Error: e}
 				return
 			}
-			if ttl, ok := stringToTtl(l.token); !ok {
+			ttl, ok := stringToTtl(l.token)
+			if !ok {
 				t <- &Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
-			} else {
-				defttl = ttl
 			}
+			defttl = ttl
 			st = zExpectOwnerDir
 		case zExpectDirOriginBl:
 			if l.value != zBlank {
@@ -395,13 +395,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				h.Class = l.torc
 				st = zExpectAnyNoClassBl
 			case zString:
-				if ttl, ok := stringToTtl(l.token); !ok {
+				ttl, ok := stringToTtl(l.token)
+				if !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
-				} else {
-					h.Ttl = ttl
-					// defttl = ttl // don't set the defttl here
 				}
+				h.Ttl = ttl
+				// defttl = ttl // don't set the defttl here
 				st = zExpectAnyNoTtlBl
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type, TTL or class, not this...", l}}
@@ -434,13 +434,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 		case zExpectAnyNoClass:
 			switch l.value {
 			case zString:
-				if ttl, ok := stringToTtl(l.token); !ok {
+				ttl, ok := stringToTtl(l.token)
+				if !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
-				} else {
-					h.Ttl = ttl
-					// defttl = ttl // don't set the def ttl anymore
 				}
+				h.Ttl = ttl
+				// defttl = ttl // don't set the def ttl anymore
 				st = zExpectRrtypeBl
 			case zRrtpe:
 				h.Rrtype = l.torc
@@ -567,15 +567,15 @@ func zlexer(s *scan, c chan lex) {
 						rrtype = true
 					} else {
 						if strings.HasPrefix(l.tokenUpper, "TYPE") {
-							if t, ok := typeToInt(l.token); !ok {
+							t, ok := typeToInt(l.token)
+							if !ok {
 								l.token = "unknown RR type"
 								l.err = true
 								c <- l
 								return
-							} else {
-								l.value = zRrtpe
-								l.torc = t
 							}
+							l.value = zRrtpe
+							l.torc = t
 						}
 					}
 					if t, ok := StringToClass[l.tokenUpper]; ok {
@@ -583,15 +583,15 @@ func zlexer(s *scan, c chan lex) {
 						l.torc = t
 					} else {
 						if strings.HasPrefix(l.tokenUpper, "CLASS") {
-							if t, ok := classToInt(l.token); !ok {
+							t, ok := classToInt(l.token)
+							if !ok {
 								l.token = "unknown class"
 								l.err = true
 								c <- l
 								return
-							} else {
-								l.value = zClass
-								l.torc = t
 							}
+							l.value = zClass
+							l.torc = t
 						}
 					}
 				}
