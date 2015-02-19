@@ -841,7 +841,7 @@ func (rr *LOC) String() string {
 	lon = lon % LOC_HOURS
 	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, (float64(lon) / 1000), ew)
 
-	var alt float64 = float64(rr.Altitude) / 100
+	var alt = float64(rr.Altitude) / 100
 	alt -= LOC_ALTITUDEBASE
 	if rr.Altitude%100 != 0 {
 		s += fmt.Sprintf("%.2fm ", alt)
