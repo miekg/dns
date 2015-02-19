@@ -91,9 +91,9 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 			// TODO(miek): we could also be returning _QUOTE, this might or might not
 			// be an issue (basically parsing TXT becomes hard)
 			switch l = <-c; l.value {
-			case _NEWLINE, _EOF:
+			case zNewline, zEOF:
 				break FETCH
-			case _STRING:
+			case zString:
 				text = append(text, l.token)
 			}
 		}

@@ -29,22 +29,22 @@ const maxUint16 = 1<<16 - 1
 // * Handle braces - anywhere.
 const (
 	// Zonefile
-	_EOF = iota
-	_STRING
-	_BLANK
-	_QUOTE
-	_NEWLINE
-	_RRTYPE
-	_OWNER
-	_CLASS
-	_DIRORIGIN   // $ORIGIN
-	_DIRTTL      // $TTL
-	_DIRINCLUDE  // $INCLUDE
-	_DIRGENERATE // $GENERATE
+	zEOF = iota
+	zString
+	zBlank
+	zQuote
+	zNewline
+	zRrtpe
+	zOwner
+	zClass
+	zDirOrigin   // $ORIGIN
+	zDirTtl      // $TTL
+	zDirInclude  // $INCLUDE
+	zDirGenerate // $GENERATE
 
 	// Privatekey file
-	_VALUE
-	_KEY
+	zValue
+	zKey
 
 	_EXPECT_OWNER_DIR      // Ownername
 	_EXPECT_OWNER_BL       // Whitespace after the ownername
@@ -210,9 +210,9 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			h.Ttl = defttl
 			h.Class = ClassINET
 			switch l.value {
-			case _NEWLINE: // Empty line
+			case zNewline:
 				st = _EXPECT_OWNER_DIR
-			case _OWNER:
+			case zOwner:
 				h.Name = l.token
 				if l.token[0] == '@' {
 					h.Name = origin
@@ -230,26 +230,26 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				}
 				prevName = h.Name
 				st = _EXPECT_OWNER_BL
-			case _DIRTTL:
+			case zDirTtl:
 				st = _EXPECT_DIRTTL_BL
-			case _DIRORIGIN:
+			case zDirOrigin:
 				st = _EXPECT_DIRORIGIN_BL
-			case _DIRINCLUDE:
+			case zDirInclude:
 				st = _EXPECT_DIRINCLUDE_BL
-			case _DIRGENERATE:
+			case zDirGenerate:
 				st = _EXPECT_DIRGENERATE_BL
-			case _RRTYPE: // Everthing has been omitted, this is the first thing on the line
+			case zRrtpe:
 				h.Name = prevName
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
-			case _CLASS: // First thing on the line is the class
+			case zClass:
 				h.Name = prevName
 				h.Class = l.torc
 				st = _EXPECT_ANY_NOCLASS_BL
-			case _BLANK:
+			case zBlank:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
-			case _STRING: // First thing on the is the ttl
+			case zString:
 				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
@@ -265,22 +265,22 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				return
 			}
 		case _EXPECT_DIRINCLUDE_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $INCLUDE-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRINCLUDE
 		case _EXPECT_DIRINCLUDE:
-			if l.value != _STRING {
+			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $INCLUDE value, not this...", l}}
 				return
 			}
 			neworigin := origin // There may be optionally a new origin set after the filename, if not use current one
 			l := <-c
 			switch l.value {
-			case _BLANK:
+			case zBlank:
 				l := <-c
-				if l.value == _STRING {
+				if l.value == zString {
 					if _, ok := IsDomainName(l.token); !ok {
 						t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 						return
@@ -296,7 +296,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 						neworigin = l.token
 					}
 				}
-			case _NEWLINE, _EOF:
+			case zNewline, zEOF:
 				// Ok
 			default:
 				t <- &Token{Error: &ParseError{f, "garbage after $INCLUDE", l}}
@@ -315,13 +315,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			parseZone(r1, l.token, neworigin, t, include+1)
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRTTL_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $TTL-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRTTL
 		case _EXPECT_DIRTTL:
-			if l.value != _STRING {
+			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			}
@@ -337,13 +337,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			}
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRORIGIN_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $ORIGIN-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRORIGIN
 		case _EXPECT_DIRORIGIN:
-			if l.value != _STRING {
+			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $ORIGIN value, not this...", l}}
 				return
 			}
@@ -365,13 +365,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			}
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_DIRGENERATE_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $GENERATE-directive", l}}
 				return
 			}
 			st = _EXPECT_DIRGENERATE
 		case _EXPECT_DIRGENERATE:
-			if l.value != _STRING {
+			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $GENERATE value, not this...", l}}
 				return
 			}
@@ -381,20 +381,20 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			}
 			st = _EXPECT_OWNER_DIR
 		case _EXPECT_OWNER_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after owner", l}}
 				return
 			}
 			st = _EXPECT_ANY
 		case _EXPECT_ANY:
 			switch l.value {
-			case _RRTYPE:
+			case zRrtpe:
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
-			case _CLASS:
+			case zClass:
 				h.Class = l.torc
 				st = _EXPECT_ANY_NOCLASS_BL
-			case _STRING: // TTL is this case
+			case zString:
 				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
@@ -408,23 +408,23 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				return
 			}
 		case _EXPECT_ANY_NOCLASS_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before class", l}}
 				return
 			}
 			st = _EXPECT_ANY_NOCLASS
 		case _EXPECT_ANY_NOTTL_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before TTL", l}}
 				return
 			}
 			st = _EXPECT_ANY_NOTTL
 		case _EXPECT_ANY_NOTTL:
 			switch l.value {
-			case _CLASS:
+			case zClass:
 				h.Class = l.torc
 				st = _EXPECT_RRTYPE_BL
-			case _RRTYPE:
+			case zRrtpe:
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
 			default:
@@ -433,7 +433,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			}
 		case _EXPECT_ANY_NOCLASS:
 			switch l.value {
-			case _STRING: // TTL
+			case zString:
 				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
 					return
@@ -442,7 +442,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					// defttl = ttl // don't set the def ttl anymore
 				}
 				st = _EXPECT_RRTYPE_BL
-			case _RRTYPE:
+			case zRrtpe:
 				h.Rrtype = l.torc
 				st = _EXPECT_RDATA
 			default:
@@ -450,13 +450,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				return
 			}
 		case _EXPECT_RRTYPE_BL:
-			if l.value != _BLANK {
+			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before RR type", l}}
 				return
 			}
 			st = _EXPECT_RRTYPE
 		case _EXPECT_RRTYPE:
-			if l.value != _RRTYPE {
+			if l.value != zRrtpe {
 				t <- &Token{Error: &ParseError{f, "unknown RR type", l}}
 				return
 			}
@@ -538,31 +538,31 @@ func zlexer(s *scan, c chan lex) {
 				// Space directly in the beginning, handled in the grammar
 			} else if owner {
 				// If we have a string and its the first, make it an owner
-				l.value = _OWNER
+				l.value = zOwner
 				l.token = string(str[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				// escape $... start with a \ not a $, so this will work
 				switch l.tokenUpper {
 				case "$TTL":
-					l.value = _DIRTTL
+					l.value = zDirTtl
 				case "$ORIGIN":
-					l.value = _DIRORIGIN
+					l.value = zDirOrigin
 				case "$INCLUDE":
-					l.value = _DIRINCLUDE
+					l.value = zDirInclude
 				case "$GENERATE":
-					l.value = _DIRGENERATE
+					l.value = zDirGenerate
 				}
 				debug.Printf("[7 %+v]", l.token)
 				c <- l
 			} else {
-				l.value = _STRING
+				l.value = zString
 				l.token = string(str[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				if !rrtype {
 					if t, ok := StringToType[l.tokenUpper]; ok {
-						l.value = _RRTYPE
+						l.value = zRrtpe
 						l.torc = t
 						rrtype = true
 					} else {
@@ -573,13 +573,13 @@ func zlexer(s *scan, c chan lex) {
 								c <- l
 								return
 							} else {
-								l.value = _RRTYPE
+								l.value = zRrtpe
 								l.torc = t
 							}
 						}
 					}
 					if t, ok := StringToClass[l.tokenUpper]; ok {
-						l.value = _CLASS
+						l.value = zClass
 						l.torc = t
 					} else {
 						if strings.HasPrefix(l.tokenUpper, "CLASS") {
@@ -589,7 +589,7 @@ func zlexer(s *scan, c chan lex) {
 								c <- l
 								return
 							} else {
-								l.value = _CLASS
+								l.value = zClass
 								l.torc = t
 							}
 						}
@@ -601,7 +601,7 @@ func zlexer(s *scan, c chan lex) {
 			stri = 0
 			// I reverse space stuff here
 			if !space && !commt {
-				l.value = _BLANK
+				l.value = zBlank
 				l.token = " "
 				l.length = 1
 				debug.Printf("[5 %+v]", l.token)
@@ -623,7 +623,7 @@ func zlexer(s *scan, c chan lex) {
 				break
 			}
 			if stri > 0 {
-				l.value = _STRING
+				l.value = zString
 				l.token = string(str[:stri])
 				l.length = stri
 				debug.Printf("[4 %+v]", l.token)
@@ -659,7 +659,7 @@ func zlexer(s *scan, c chan lex) {
 				if brace == 0 {
 					owner = true
 					owner = true
-					l.value = _NEWLINE
+					l.value = zNewline
 					l.token = "\n"
 					l.length = 1
 					l.comment = string(com[:comi])
@@ -677,14 +677,14 @@ func zlexer(s *scan, c chan lex) {
 			if brace == 0 {
 				// If there is previous text, we should output it here
 				if stri != 0 {
-					l.value = _STRING
+					l.value = zString
 					l.token = string(str[:stri])
 					l.tokenUpper = strings.ToUpper(l.token)
 
 					l.length = stri
 					if !rrtype {
 						if t, ok := StringToType[l.tokenUpper]; ok {
-							l.value = _RRTYPE
+							l.value = zRrtpe
 							l.torc = t
 							rrtype = true
 						}
@@ -692,7 +692,7 @@ func zlexer(s *scan, c chan lex) {
 					debug.Printf("[2 %+v]", l.token)
 					c <- l
 				}
-				l.value = _NEWLINE
+				l.value = zNewline
 				l.token = "\n"
 				l.length = 1
 				debug.Printf("[1 %+v]", l.token)
@@ -736,7 +736,7 @@ func zlexer(s *scan, c chan lex) {
 			space = false
 			// send previous gathered text and the quote
 			if stri != 0 {
-				l.value = _STRING
+				l.value = zString
 				l.token = string(str[:stri])
 				l.length = stri
 
@@ -746,7 +746,7 @@ func zlexer(s *scan, c chan lex) {
 			}
 
 			// send quote itself as separate token
-			l.value = _QUOTE
+			l.value = zQuote
 			l.token = "\""
 			l.length = 1
 			c <- l
@@ -798,7 +798,7 @@ func zlexer(s *scan, c chan lex) {
 		// Send remainder
 		l.token = string(str[:stri])
 		l.length = stri
-		l.value = _STRING
+		l.value = zString
 		debug.Printf("[%+v]", l.token)
 		c <- l
 	}
@@ -930,15 +930,15 @@ func slurpRemainder(c chan lex, f string) (*ParseError, string) {
 	l := <-c
 	com := ""
 	switch l.value {
-	case _BLANK:
+	case zBlank:
 		l = <-c
 		com = l.comment
-		if l.value != _NEWLINE && l.value != _EOF {
+		if l.value != zNewline && l.value != zEOF {
 			return &ParseError{f, "garbage after rdata", l}, ""
 		}
-	case _NEWLINE:
+	case zNewline:
 		com = l.comment
-	case _EOF:
+	case zEOF:
 	default:
 		return &ParseError{f, "garbage after rdata", l}, ""
 	}

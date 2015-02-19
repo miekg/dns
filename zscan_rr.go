@@ -48,11 +48,11 @@ func setRR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 func endingToString(c chan lex, errstr, f string) (string, *ParseError, string) {
 	s := ""
 	l := <-c // _STRING
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _STRING:
+		case zString:
 			s += l.token
-		case _BLANK: // Ok
+		case zBlank: // Ok
 		default:
 			return "", &ParseError{f, errstr, l}, ""
 		}
@@ -68,21 +68,21 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	quote := false
 	l := <-c
 	var s []string
-	switch l.value == _QUOTE {
+	switch l.value == zQuote {
 	case true: // A number of quoted string
 		s = make([]string, 0)
 		empty := true
-		for l.value != _NEWLINE && l.value != _EOF {
+		for l.value != zNewline && l.value != zEOF {
 			switch l.value {
-			case _STRING:
+			case zString:
 				empty = false
 				s = append(s, l.token)
-			case _BLANK:
+			case zBlank:
 				if quote {
 					// _BLANK can only be seen in between txt parts.
 					return nil, &ParseError{f, errstr, l}, ""
 				}
-			case _QUOTE:
+			case zQuote:
 				if empty && quote {
 					s = append(s, "")
 				}
@@ -98,7 +98,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 		}
 	case false: // Unquoted text record
 		s = make([]string, 1)
-		for l.value != _NEWLINE && l.value != _EOF {
+		for l.value != zNewline && l.value != zEOF {
 			s[0] += l.token
 			l = <-c
 		}
@@ -723,17 +723,17 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// Flags
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-	if l.value != _QUOTE {
+	if l.value != zQuote {
 		return nil, &ParseError{f, "bad NAPTR Flags", l}, ""
 	}
 	l = <-c // Either String or Quote
-	if l.value == _STRING {
+	if l.value == zString {
 		rr.Flags = l.token
 		l = <-c // _QUOTE
-		if l.value != _QUOTE {
+		if l.value != zQuote {
 			return nil, &ParseError{f, "bad NAPTR Flags", l}, ""
 		}
-	} else if l.value == _QUOTE {
+	} else if l.value == zQuote {
 		rr.Flags = ""
 	} else {
 		return nil, &ParseError{f, "bad NAPTR Flags", l}, ""
@@ -742,17 +742,17 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// Service
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-	if l.value != _QUOTE {
+	if l.value != zQuote {
 		return nil, &ParseError{f, "bad NAPTR Service", l}, ""
 	}
 	l = <-c // Either String or Quote
-	if l.value == _STRING {
+	if l.value == zString {
 		rr.Service = l.token
 		l = <-c // _QUOTE
-		if l.value != _QUOTE {
+		if l.value != zQuote {
 			return nil, &ParseError{f, "bad NAPTR Service", l}, ""
 		}
-	} else if l.value == _QUOTE {
+	} else if l.value == zQuote {
 		rr.Service = ""
 	} else {
 		return nil, &ParseError{f, "bad NAPTR Service", l}, ""
@@ -761,17 +761,17 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// Regexp
 	<-c     // _BLANK
 	l = <-c // _QUOTE
-	if l.value != _QUOTE {
+	if l.value != zQuote {
 		return nil, &ParseError{f, "bad NAPTR Regexp", l}, ""
 	}
 	l = <-c // Either String or Quote
-	if l.value == _STRING {
+	if l.value == zString {
 		rr.Regexp = l.token
 		l = <-c // _QUOTE
-		if l.value != _QUOTE {
+		if l.value != zQuote {
 			return nil, &ParseError{f, "bad NAPTR Regexp", l}, ""
 		}
-	} else if l.value == _QUOTE {
+	} else if l.value == zQuote {
 		rr.Regexp = ""
 	} else {
 		return nil, &ParseError{f, "bad NAPTR Regexp", l}, ""
@@ -927,9 +927,9 @@ Altitude:
 	// And now optionally the other values
 	l = <-c
 	count := 0
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _STRING:
+		case zString:
 			switch count {
 			case 0: // Size
 				if e, m, ok := stringToCm(l.token); !ok {
@@ -951,7 +951,7 @@ Altitude:
 				}
 			}
 			count++
-		case _BLANK:
+		case zBlank:
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}, ""
@@ -988,9 +988,9 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	// RendezvousServers (if any)
 	l = <-c
 	var xs []string
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _STRING:
+		case zString:
 			if l.token == "@" {
 				xs = append(xs, o)
 				continue
@@ -1003,7 +1003,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 				l.token = appendOrigin(l.token, o)
 			}
 			xs = append(xs, l.token)
-		case _BLANK:
+		case zBlank:
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad HIP RendezvousServers", l}, ""
@@ -1194,11 +1194,11 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		ok bool
 	)
 	l = <-c
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _BLANK:
+		case zBlank:
 			// Ok
-		case _STRING:
+		case zString:
 			if k, ok = StringToType[l.tokenUpper]; !ok {
 				if k, ok = typeToInt(l.tokenUpper); !ok {
 					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}, ""
@@ -1259,11 +1259,11 @@ func setNSEC3(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		ok bool
 	)
 	l = <-c
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _BLANK:
+		case zBlank:
 			// Ok
-		case _STRING:
+		case zString:
 			if k, ok = StringToType[l.tokenUpper]; !ok {
 				if k, ok = typeToInt(l.tokenUpper); !ok {
 					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}, ""
@@ -1413,11 +1413,11 @@ func setWKS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		k   int
 		err error
 	)
-	for l.value != _NEWLINE && l.value != _EOF {
+	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		case _BLANK:
+		case zBlank:
 			// Ok
-		case _STRING:
+		case zString:
 			if k, err = net.LookupPort(proto, l.token); err != nil {
 				if i, e := strconv.Atoi(l.token); e != nil { // If a number use that
 					rr.BitMap = append(rr.BitMap, uint16(i))

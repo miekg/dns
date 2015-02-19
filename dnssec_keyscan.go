@@ -172,9 +172,9 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 	for l := range c {
 		// It should alternate
 		switch l.value {
-		case _KEY:
+		case zKey:
 			k = l.token
-		case _VALUE:
+		case zValue:
 			if k == "" {
 				return nil, &ParseError{file, "no private key seen", l}
 			}
@@ -204,14 +204,14 @@ func klexer(s *scan, c chan lex) {
 			}
 			l.token = str
 			if key {
-				l.value = _KEY
+				l.value = zKey
 				c <- l
 				// Next token is a space, eat it
 				s.tokenText()
 				key = false
 				str = ""
 			} else {
-				l.value = _VALUE
+				l.value = zValue
 			}
 		case ';':
 			commt = true
@@ -220,7 +220,7 @@ func klexer(s *scan, c chan lex) {
 				// Reset a comment
 				commt = false
 			}
-			l.value = _VALUE
+			l.value = zValue
 			l.token = str
 			c <- l
 			str = ""
@@ -237,7 +237,7 @@ func klexer(s *scan, c chan lex) {
 	if len(str) > 0 {
 		// Send remainder
 		l.token = str
-		l.value = _VALUE
+		l.value = zValue
 		c <- l
 	}
 }

@@ -55,7 +55,7 @@ func generate(l lex, c chan lex, t chan *Token, o string) string {
 	s := ""
 BuildRR:
 	l = <-c
-	if l.value != _NEWLINE && l.value != _EOF {
+	if l.value != zNewline && l.value != zEOF {
 		s += l.token
 		goto BuildRR
 	}
