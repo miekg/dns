@@ -46,24 +46,24 @@ const (
 	zValue
 	zKey
 
-	_EXPECT_OWNER_DIR      // Ownername
-	_EXPECT_OWNER_BL       // Whitespace after the ownername
-	_EXPECT_ANY            // Expect rrtype, ttl or class
-	_EXPECT_ANY_NOCLASS    // Expect rrtype or ttl
-	_EXPECT_ANY_NOCLASS_BL // The whitespace after _EXPECT_ANY_NOCLASS
-	_EXPECT_ANY_NOTTL      // Expect rrtype or class
-	_EXPECT_ANY_NOTTL_BL   // Whitespace after _EXPECT_ANY_NOTTL
-	_EXPECT_RRTYPE         // Expect rrtype
-	_EXPECT_RRTYPE_BL      // Whitespace BEFORE rrtype
-	_EXPECT_RDATA          // The first element of the rdata
-	_EXPECT_DIRTTL_BL      // Space after directive $TTL
-	_EXPECT_DIRTTL         // Directive $TTL
-	_EXPECT_DIRORIGIN_BL   // Space after directive $ORIGIN
-	_EXPECT_DIRORIGIN      // Directive $ORIGIN
-	_EXPECT_DIRINCLUDE_BL  // Space after directive $INCLUDE
-	_EXPECT_DIRINCLUDE     // Directive $INCLUDE
-	_EXPECT_DIRGENERATE    // Directive $GENERATE
-	_EXPECT_DIRGENERATE_BL // Space after directive $GENERATE
+	zExpectOwnerDir      // Ownername
+	zExpectOwnerBl       // Whitespace after the ownername
+	zExpectAny           // Expect rrtype, ttl or class
+	zExpectAnyNoClass    // Expect rrtype or ttl
+	zExpectAnyNoClassBl  // The whitespace after _EXPECT_ANY_NOCLASS
+	zExpectAnyNoTtl      // Expect rrtype or class
+	zExpectAnyNoTtlBl    // Whitespace after _EXPECT_ANY_NOTTL
+	zExpectRrtype        // Expect rrtype
+	zExpectRrtypeBl      // Whitespace BEFORE rrtype
+	zExpectRdata         // The first element of the rdata
+	zExpectDirTtlBl      // Space after directive $TTL
+	zExpectDirTtl        // Directive $TTL
+	zExpectDirOriginBl   // Space after directive $ORIGIN
+	zExpectDirOrigin     // Directive $ORIGIN
+	zExpectDirIncludeBl  // Space after directive $INCLUDE
+	zExpectDirInclude    // Directive $INCLUDE
+	zExpectDirGenerate   // Directive $GENERATE
+	zExpectDirGenerateBl // Space after directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -193,7 +193,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 		return
 	}
 
-	st := _EXPECT_OWNER_DIR // initial state
+	st := zExpectOwnerDir // initial state
 	var h RR_Header
 	var defttl uint32 = defaultTtl
 	var prevName string
@@ -205,19 +205,19 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 
 		}
 		switch st {
-		case _EXPECT_OWNER_DIR:
+		case zExpectOwnerDir:
 			// We can also expect a directive, like $TTL or $ORIGIN
 			h.Ttl = defttl
 			h.Class = ClassINET
 			switch l.value {
 			case zNewline:
-				st = _EXPECT_OWNER_DIR
+				st = zExpectOwnerDir
 			case zOwner:
 				h.Name = l.token
 				if l.token[0] == '@' {
 					h.Name = origin
 					prevName = h.Name
-					st = _EXPECT_OWNER_BL
+					st = zExpectOwnerBl
 					break
 				}
 				if h.Name[l.length-1] != '.' {
@@ -229,23 +229,23 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					return
 				}
 				prevName = h.Name
-				st = _EXPECT_OWNER_BL
+				st = zExpectOwnerBl
 			case zDirTtl:
-				st = _EXPECT_DIRTTL_BL
+				st = zExpectDirTtlBl
 			case zDirOrigin:
-				st = _EXPECT_DIRORIGIN_BL
+				st = zExpectDirOriginBl
 			case zDirInclude:
-				st = _EXPECT_DIRINCLUDE_BL
+				st = zExpectDirIncludeBl
 			case zDirGenerate:
-				st = _EXPECT_DIRGENERATE_BL
+				st = zExpectDirGenerateBl
 			case zRrtpe:
 				h.Name = prevName
 				h.Rrtype = l.torc
-				st = _EXPECT_RDATA
+				st = zExpectRdata
 			case zClass:
 				h.Name = prevName
 				h.Class = l.torc
-				st = _EXPECT_ANY_NOCLASS_BL
+				st = zExpectAnyNoClassBl
 			case zBlank:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
@@ -258,19 +258,19 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					// Don't about the defttl, we should take the $TTL value
 					// defttl = ttl
 				}
-				st = _EXPECT_ANY_NOTTL_BL
+				st = zExpectAnyNoTtlBl
 
 			default:
 				t <- &Token{Error: &ParseError{f, "syntax error at beginning", l}}
 				return
 			}
-		case _EXPECT_DIRINCLUDE_BL:
+		case zExpectDirIncludeBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $INCLUDE-directive", l}}
 				return
 			}
-			st = _EXPECT_DIRINCLUDE
-		case _EXPECT_DIRINCLUDE:
+			st = zExpectDirInclude
+		case zExpectDirInclude:
 			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $INCLUDE value, not this...", l}}
 				return
@@ -313,14 +313,14 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				return
 			}
 			parseZone(r1, l.token, neworigin, t, include+1)
-			st = _EXPECT_OWNER_DIR
-		case _EXPECT_DIRTTL_BL:
+			st = zExpectOwnerDir
+		case zExpectDirTtlBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $TTL-directive", l}}
 				return
 			}
-			st = _EXPECT_DIRTTL
-		case _EXPECT_DIRTTL:
+			st = zExpectDirTtl
+		case zExpectDirTtl:
 			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
@@ -335,14 +335,14 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			} else {
 				defttl = ttl
 			}
-			st = _EXPECT_OWNER_DIR
-		case _EXPECT_DIRORIGIN_BL:
+			st = zExpectOwnerDir
+		case zExpectDirOriginBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $ORIGIN-directive", l}}
 				return
 			}
-			st = _EXPECT_DIRORIGIN
-		case _EXPECT_DIRORIGIN:
+			st = zExpectDirOrigin
+		case zExpectDirOrigin:
 			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $ORIGIN value, not this...", l}}
 				return
@@ -363,14 +363,14 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			} else {
 				origin = l.token
 			}
-			st = _EXPECT_OWNER_DIR
-		case _EXPECT_DIRGENERATE_BL:
+			st = zExpectOwnerDir
+		case zExpectDirGenerateBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after $GENERATE-directive", l}}
 				return
 			}
-			st = _EXPECT_DIRGENERATE
-		case _EXPECT_DIRGENERATE:
+			st = zExpectDirGenerate
+		case zExpectDirGenerate:
 			if l.value != zString {
 				t <- &Token{Error: &ParseError{f, "expecting $GENERATE value, not this...", l}}
 				return
@@ -379,21 +379,21 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				t <- &Token{Error: &ParseError{f, e, l}}
 				return
 			}
-			st = _EXPECT_OWNER_DIR
-		case _EXPECT_OWNER_BL:
+			st = zExpectOwnerDir
+		case zExpectOwnerBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank after owner", l}}
 				return
 			}
-			st = _EXPECT_ANY
-		case _EXPECT_ANY:
+			st = zExpectAny
+		case zExpectAny:
 			switch l.value {
 			case zRrtpe:
 				h.Rrtype = l.torc
-				st = _EXPECT_RDATA
+				st = zExpectRdata
 			case zClass:
 				h.Class = l.torc
-				st = _EXPECT_ANY_NOCLASS_BL
+				st = zExpectAnyNoClassBl
 			case zString:
 				if ttl, ok := stringToTtl(l.token); !ok {
 					t <- &Token{Error: &ParseError{f, "not a TTL", l}}
@@ -402,36 +402,36 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					h.Ttl = ttl
 					// defttl = ttl // don't set the defttl here
 				}
-				st = _EXPECT_ANY_NOTTL_BL
+				st = zExpectAnyNoTtlBl
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type, TTL or class, not this...", l}}
 				return
 			}
-		case _EXPECT_ANY_NOCLASS_BL:
+		case zExpectAnyNoClassBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before class", l}}
 				return
 			}
-			st = _EXPECT_ANY_NOCLASS
-		case _EXPECT_ANY_NOTTL_BL:
+			st = zExpectAnyNoClass
+		case zExpectAnyNoTtlBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before TTL", l}}
 				return
 			}
-			st = _EXPECT_ANY_NOTTL
-		case _EXPECT_ANY_NOTTL:
+			st = zExpectAnyNoTtl
+		case zExpectAnyNoTtl:
 			switch l.value {
 			case zClass:
 				h.Class = l.torc
-				st = _EXPECT_RRTYPE_BL
+				st = zExpectRrtypeBl
 			case zRrtpe:
 				h.Rrtype = l.torc
-				st = _EXPECT_RDATA
+				st = zExpectRdata
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type or class, not this...", l}}
 				return
 			}
-		case _EXPECT_ANY_NOCLASS:
+		case zExpectAnyNoClass:
 			switch l.value {
 			case zString:
 				if ttl, ok := stringToTtl(l.token); !ok {
@@ -441,28 +441,28 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					h.Ttl = ttl
 					// defttl = ttl // don't set the def ttl anymore
 				}
-				st = _EXPECT_RRTYPE_BL
+				st = zExpectRrtypeBl
 			case zRrtpe:
 				h.Rrtype = l.torc
-				st = _EXPECT_RDATA
+				st = zExpectRdata
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type or TTL, not this...", l}}
 				return
 			}
-		case _EXPECT_RRTYPE_BL:
+		case zExpectRrtypeBl:
 			if l.value != zBlank {
 				t <- &Token{Error: &ParseError{f, "no blank before RR type", l}}
 				return
 			}
-			st = _EXPECT_RRTYPE
-		case _EXPECT_RRTYPE:
+			st = zExpectRrtype
+		case zExpectRrtype:
 			if l.value != zRrtpe {
 				t <- &Token{Error: &ParseError{f, "unknown RR type", l}}
 				return
 			}
 			h.Rrtype = l.torc
-			st = _EXPECT_RDATA
-		case _EXPECT_RDATA:
+			st = zExpectRdata
+		case zExpectRdata:
 			r, e, c1 := setRR(h, c, origin, f)
 			if e != nil {
 				// If e.lex is nil than we have encounter a unknown RR type
@@ -474,7 +474,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				return
 			}
 			t <- &Token{RR: r, Comment: c1}
-			st = _EXPECT_OWNER_DIR
+			st = zExpectOwnerDir
 		}
 	}
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
