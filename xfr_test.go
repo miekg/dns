@@ -29,7 +29,7 @@ func testClientAXFR(t *testing.T) {
 
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
 		t.Log("failed to setup axfr: " + err.Error())
-		t.Fatal()
+		t.FailNow()
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
@@ -83,7 +83,7 @@ func testClientTsigAXFR(t *testing.T) {
 
 	if a, err := tr.In(m, "176.58.119.54:53"); err != nil {
 		t.Log("failed to setup axfr: " + err.Error())
-		t.Fatal()
+		t.FailNow()
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
