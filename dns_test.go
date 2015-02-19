@@ -595,7 +595,7 @@ func TestMsgPackBuffer(t *testing.T) {
 		input, _ := hex.DecodeString(hexData)
 		m := new(Msg)
 		if e := m.Unpack(input); e != nil {
-			t.Logf("packet %d failed to unpack")
+			t.Logf("packet %d failed to unpack", i)
 			t.Fail()
 			continue
 		}
