@@ -23,29 +23,39 @@ import (
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	ErrAlg           error = &Error{err: "bad algorithm"}
-	ErrAuth          error = &Error{err: "bad authentication"}
-	ErrBuf           error = &Error{err: "buffer size too small"}
-	ErrConnEmpty     error = &Error{err: "conn has no connection"}
-	ErrConn          error = &Error{err: "conn holds both UDP and TCP connection"}
+	// ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrAlg error = &Error{err: "bad algorithm"}
+	// ErrAuth indicates an error in the TSIG authentication.
+	ErrAuth error = &Error{err: "bad authentication"}
+	// ErrBuf indicates that the buffer used it too small for the message.
+	ErrBuf error = &Error{err: "buffer size too small"}
+	// ErrConn indicates that a connection has both a TCP and UDP socket.
+	ErrConn error = &Error{err: "conn holds both UDP and TCP connection"}
+	// ErrConnEmpty indicates a connection is being uses before it is initialized.
+	ErrConnEmpty error = &Error{err: "conn has no connection"}
+	// ErrExtendedRcode ...
 	ErrExtendedRcode error = &Error{err: "bad extended rcode"}
-	ErrFqdn          error = &Error{err: "domain must be fully qualified"}
-	ErrId            error = &Error{err: "id mismatch"}
-	ErrKeyAlg        error = &Error{err: "bad key algorithm"}
-	ErrKey           error = &Error{err: "bad key"}
-	ErrKeySize       error = &Error{err: "bad key size"}
-	ErrNoSig         error = &Error{err: "no signature found"}
-	ErrPrivKey       error = &Error{err: "bad private key"}
-	ErrRcode         error = &Error{err: "bad rcode"}
-	ErrRdata         error = &Error{err: "bad rdata"}
-	ErrRRset         error = &Error{err: "bad rrset"}
-	ErrSecret        error = &Error{err: "no secrets defined"}
-	ErrServ          error = &Error{err: "no servers could be reached"}
-	ErrShortRead     error = &Error{err: "short read"}
-	ErrSig           error = &Error{err: "bad signature"}
-	ErrSigGen        error = &Error{err: "bad signature generation"}
-	ErrSoa           error = &Error{err: "no SOA"}
-	ErrTime          error = &Error{err: "bad time"}
+	// ErrFqdn indicates that a domain name does not have a closing dot.
+	ErrFqdn      error = &Error{err: "domain must be fully qualified"}
+	ErrId        error = &Error{err: "id mismatch"}
+	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
+	ErrKey       error = &Error{err: "bad key"}
+	ErrKeySize   error = &Error{err: "bad key size"}
+	ErrNoSig     error = &Error{err: "no signature found"}
+	ErrPrivKey   error = &Error{err: "bad private key"}
+	ErrRcode     error = &Error{err: "bad rcode"}
+	ErrRdata     error = &Error{err: "bad rdata"}
+	ErrRRset     error = &Error{err: "bad rrset"}
+	ErrSecret    error = &Error{err: "no secrets defined"}
+	ErrShortRead error = &Error{err: "short read"}
+	// ErrSig indicates that a signature can not be cryptographically validated.
+	ErrSig error = &Error{err: "bad signature"}
+	// ErrSigGen indicates a faulure to generate a signature.
+	ErrSigGen error = &Error{err: "bad signature generation"}
+	// ErrSOA indicates that no SOA RR was seen when doing zone transfers.
+	ErrSoa error = &Error{err: "no SOA"}
+	// ErrTime indicates a timing error in TSIG authentication.
+	ErrTime error = &Error{err: "bad time"}
 )
 
 // Id, by default, returns a 16 bits random number to be used as a
