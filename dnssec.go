@@ -422,8 +422,8 @@ func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
 }
 
 // Return the signatures base64 encodedig sigdata as a byte slice.
-func (s *RRSIG) sigBuf() []byte {
-	sigbuf, err := fromBase64([]byte(s.Signature))
+func (rr *RRSIG) sigBuf() []byte {
+	sigbuf, err := fromBase64([]byte(rr.Signature))
 	if err != nil {
 		return nil
 	}

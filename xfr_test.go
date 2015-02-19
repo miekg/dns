@@ -57,8 +57,7 @@ func testClientAXFRMultipleEnvelopes(t *testing.T) {
 	tr := new(Transfer)
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
 		t.Log("Failed to setup axfr" + err.Error() + "for server: " + server)
-		t.Fail()
-		return
+		t.FailNow()
 	} else {
 		for ex := range a {
 			if ex.Error != nil {

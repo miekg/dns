@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 }
@@ -72,12 +73,12 @@ var DefaultServeMux = NewServeMux()
 // Handler object that calls f.
 type HandlerFunc func(ResponseWriter, *Msg)
 
-// ServerDNS calls f(w, r)
+// ServeDNS calls f(w, r).
 func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
-// FailedHandler returns a HandlerFunc that returns SERVFAIL for every request it gets.
+// HandleFailed returns a HandlerFunc that returns SERVFAIL for every request it gets.
 func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
@@ -121,10 +122,9 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
 			if t != TypeDS {
 				return h
-			} else {
-				// Continue for DS to see if we have a parent too, if so delegeate to the parent
-				handler = h
 			}
+			// Continue for DS to see if we have a parent too, if so delegeate to the parent
+			handler = h
 		}
 		off, end = NextLabel(q, off)
 		if end {
@@ -148,7 +148,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	mux.m.Unlock()
 }
 
-// Handle adds a handler to the ServeMux for pattern.
+// HandleFunc adds a handler function to the ServeMux for pattern.
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }

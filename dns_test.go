@@ -400,10 +400,10 @@ func BenchmarkMsgUnpack(b *testing.B) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
 	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
-	msg_buf, _ := msg.Pack()
+	msgBuf, _ := msg.Pack()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = msg.Unpack(msg_buf)
+		_ = msg.Unpack(msgBuf)
 	}
 }
 

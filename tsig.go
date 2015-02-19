@@ -75,6 +75,8 @@ const (
 	HmacSHA512 = "hmac-sha512."
 )
 
+// TSIG is the RR the holds the transaction signature of a message.
+// See RFC 2845 and RFC 4635.
 type TSIG struct {
 	Hdr        RR_Header
 	Algorithm  string `dns:"domain-name"`

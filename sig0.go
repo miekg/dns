@@ -92,7 +92,7 @@ func (rr *SIG) Sign(k PrivateKey, m *Msg) ([]byte, error) {
 	buf[rdoff], buf[rdoff+1] = packUint16(rdlen)
 	// Adjust additional count
 	adc, _ := unpackUint16(buf, 10)
-	adc += 1
+	adc++
 	buf[10], buf[11] = packUint16(adc)
 	return buf, nil
 }

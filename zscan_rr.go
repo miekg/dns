@@ -987,7 +987,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 
 	// RendezvousServers (if any)
 	l = <-c
-	xs := make([]string, 0)
+	var xs []string
 	for l.value != _NEWLINE && l.value != _EOF {
 		switch l.value {
 		case _STRING:

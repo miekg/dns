@@ -127,14 +127,14 @@ func ExampleUpdateLeaseTSIG(t *testing.T) {
 	rrs[0] = rr
 	m.Insert(rrs)
 
-	lease_rr := new(OPT)
-	lease_rr.Hdr.Name = "."
-	lease_rr.Hdr.Rrtype = TypeOPT
+	leaseRr := new(OPT)
+	leaseRr.Hdr.Name = "."
+	leaseRr.Hdr.Rrtype = TypeOPT
 	e := new(EDNS0_UL)
 	e.Code = EDNS0UL
 	e.Lease = 120
-	lease_rr.Option = append(lease_rr.Option, e)
-	m.Extra = append(m.Extra, lease_rr)
+	leaseRr.Option = append(leaseRr.Option, e)
+	m.Extra = append(m.Extra, leaseRr)
 
 	c := new(Client)
 	m.SetTsig("polvi.", HmacMD5, 300, time.Now().Unix())

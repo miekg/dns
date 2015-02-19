@@ -10,9 +10,12 @@ import (
 )
 
 type (
-	Type  uint16 // Type is a DNS type.
-	Class uint16 // Class is a DNS class.
-	Name  string // Name is a DNS domain name.
+	// Type is a DNS type.
+	Type uint16
+	// Class is a DNS class.
+	Class uint16
+	// Name is a DNS domain name.
+	Name string
 )
 
 // Packet formats
@@ -801,7 +804,7 @@ func cmToM(m, e uint8) string {
 	s := fmt.Sprintf("%d", m)
 	for e > 2 {
 		s += "0"
-		e -= 1
+		e--
 	}
 	return s
 }

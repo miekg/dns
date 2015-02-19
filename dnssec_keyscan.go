@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// NewPrivateKey returns a PrivateKey by parsing the string s.
+// s should be in the same form of the BIND private key files.
 func (k *DNSKEY) NewPrivateKey(s string) (PrivateKey, error) {
 	if s[len(s)-1] != '\n' { // We need a closing newline
 		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")

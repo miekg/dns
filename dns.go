@@ -96,11 +96,14 @@ package dns
 import "strconv"
 
 const (
-	year68         = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
-	DefaultMsgSize = 4096    // Standard default for larger than 512 bytes.
-	MinMsgSize     = 512     // Minimal size of a DNS packet.
-	MaxMsgSize     = 65536   // Largest possible DNS packet.
-	defaultTtl     = 3600    // Default TTL.
+	year68 = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
+	// DefaultMsgSize is the standard default for messages larger than 512 bytes.
+	DefaultMsgSize = 4096
+	// MinMsgSize is the minimal size of a DNS packet.
+	MinMsgSize = 512
+	// MaxMsgSize is the largest possible DNS packet.
+	MaxMsgSize = 65536
+	defaultTtl = 3600 // Default internal TTL.
 )
 
 // Error represents a DNS error

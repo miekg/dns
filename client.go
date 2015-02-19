@@ -290,7 +290,7 @@ func Dial(network, address string) (conn *Conn, err error) {
 	return conn, nil
 }
 
-// Dialtimeout acts like Dial but takes a timeout.
+// DialTimeout acts like Dial but takes a timeout.
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
 	conn = new(Conn)
 	conn.Conn, err = net.DialTimeout(network, address, timeout)

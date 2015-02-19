@@ -24,13 +24,13 @@ func generate(l lex, c chan lex, t chan *Token, o string) string {
 		if i+1 == len(l.token) {
 			return "bad step in $GENERATE range"
 		}
-		if s, e := strconv.Atoi(l.token[i+1:]); e != nil {
-			return "bad step in $GENERATE range"
-		} else {
+		if s, e := strconv.Atoi(l.token[i+1:]); e == nil {
 			if s < 0 {
 				return "bad step in $GENERATE range"
 			}
 			step = s
+		} else {
+			return "bad step in $GENERATE range"
 		}
 		l.token = l.token[:i]
 	}

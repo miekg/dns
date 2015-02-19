@@ -95,11 +95,14 @@ type lex struct {
 	comment    string // any comment text seen
 }
 
-// *Tokens are returned when a zone file is parsed.
+// Token holds the token that are returned when a zone file is parsed.
 type Token struct {
-	RR                  // the scanned resource record when error is not nil
-	Error   *ParseError // when an error occured, this has the error specifics
-	Comment string      // a potential comment positioned after the RR and on the same line
+	// The scanned resource record when error is not nil.
+	RR
+	// When an error occured, this has the error specifics.
+	Error *ParseError
+	// A potential comment positioned after the RR and on the same line.
+	Comment string
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is
