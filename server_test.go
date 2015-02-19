@@ -105,7 +105,7 @@ func TestServing(t *testing.T) {
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil || len(r.Extra) == 0 {
 		t.Log("failed to exchange miek.nl", err)
-		t.Fatal()
+		t.FailNow()
 	}
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello world" {
@@ -117,7 +117,7 @@ func TestServing(t *testing.T) {
 	r, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("failed to exchange example.com", err)
-		t.Fatal()
+		t.FailNow()
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
@@ -354,13 +354,13 @@ func TestServingResponse(t *testing.T) {
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("failed to exchange", err)
-		t.Fatal()
+		t.FailNow()
 	}
 	m.Response = true
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
 		t.Log("exchanged response message")
-		t.Fatal()
+		t.FailNow()
 	}
 
 	s.Shutdown()
@@ -374,7 +374,7 @@ func TestServingResponse(t *testing.T) {
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Log("could exchanged response message in Unsafe mode")
-		t.Fatal()
+		t.FailNow()
 	}
 }
 
