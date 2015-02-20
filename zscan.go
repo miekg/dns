@@ -88,7 +88,7 @@ type lex struct {
 	tokenUpper string // uppercase text of the token
 	length     int    // lenght of the token
 	err        bool   // when true, token text has lexer error
-	value      uint8  // value: _STRING, _BLANK, etc.
+	value      uint8  // value: zString, _BLANK, etc.
 	line       int    // line in the file
 	column     int    // column in the file
 	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
@@ -175,13 +175,13 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 	// Start the lexer
 	go zlexer(s, c)
 	// 6 possible beginnings of a line, _ is a space
-	// 0. _RRTYPE                              -> all omitted until the rrtype
-	// 1. _OWNER _ _RRTYPE                     -> class/ttl omitted
-	// 2. _OWNER _ _STRING _ _RRTYPE           -> class omitted
-	// 3. _OWNER _ _STRING _ _CLASS  _ _RRTYPE -> ttl/class
-	// 4. _OWNER _ _CLASS  _ _RRTYPE           -> ttl omitted
-	// 5. _OWNER _ _CLASS  _ _STRING _ _RRTYPE -> class/ttl (reversed)
-	// After detecting these, we know the _RRTYPE so we can jump to functions
+	// 0. zRRTYPE                              -> all omitted until the rrtype
+	// 1. zOwner _ zRrtype                     -> class/ttl omitted
+	// 2. zOwner _ zString _ zRrtype           -> class omitted
+	// 3. zOwner _ zString _ zClass  _ zRrtype -> ttl/class
+	// 4. zOwner _ zClass  _ zRrtype           -> ttl omitted
+	// 5. zOwner _ zClass  _ zString _ zRrtype -> class/ttl (reversed)
+	// After detecting these, we know the zRrtype so we can jump to functions
 	// handling the rdata for each of these types.
 
 	if origin == "" {
