@@ -36,7 +36,8 @@ var (
 	// ErrExtendedRcode ...
 	ErrExtendedRcode error = &Error{err: "bad extended rcode"}
 	// ErrFqdn indicates that a domain name does not have a closing dot.
-	ErrFqdn      error = &Error{err: "domain must be fully qualified"}
+	ErrFqdn error = &Error{err: "domain must be fully qualified"}
+	// ErrId indicates there is a mismatch with the message's ID.
 	ErrId        error = &Error{err: "id mismatch"}
 	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
 	ErrKey       error = &Error{err: "bad key"}

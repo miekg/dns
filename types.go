@@ -23,6 +23,7 @@ type (
 // Wire constants and supported types.
 const (
 	// valid RR_Header.Rrtype and Question.qtype
+
 	TypeNone       uint16 = 0
 	TypeA          uint16 = 1
 	TypeNS         uint16 = 2
@@ -94,7 +95,9 @@ const (
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
+
 	// valid Question.Qtype only
+
 	TypeIXFR  uint16 = 251
 	TypeAXFR  uint16 = 252
 	TypeMAILB uint16 = 253
@@ -108,6 +111,7 @@ const (
 	TypeReserved uint16 = 65535
 
 	// valid Question.Qclass
+
 	ClassINET   = 1
 	ClassCSNET  = 2
 	ClassCHAOS  = 3
@@ -116,6 +120,7 @@ const (
 	ClassANY    = 255
 
 	// Msg.rcode
+
 	RcodeSuccess        = 0
 	RcodeFormatError    = 1
 	RcodeServerFailure  = 2
@@ -136,11 +141,11 @@ const (
 	RcodeBadAlg         = 21
 	RcodeBadTrunc       = 22 // TSIG
 
-	// Opcode
+	// Opcode, there is no 3
+
 	OpcodeQuery  = 0
 	OpcodeIQuery = 1
 	OpcodeStatus = 2
-	// There is no 3
 	OpcodeNotify = 4
 	OpcodeUpdate = 5
 )
