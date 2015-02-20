@@ -206,7 +206,8 @@ var CertTypeToString = map[uint16]string{
 
 var StringToCertType = reverseInt16(CertTypeToString)
 
-// DNS queries.
+// Question holds a DNS question. There can be multiple questions in the
+// question section of a message. Usually there is just one.
 type Question struct {
 	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
