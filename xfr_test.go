@@ -28,13 +28,11 @@ func testClientAXFR(t *testing.T) {
 	tr := new(Transfer)
 
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
-		t.Log("failed to setup axfr: " + err.Error())
-		t.FailNow()
+		t.Fatal("failed to setup axfr: ", err)
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Logf("error %s\n", ex.Error.Error())
-				t.Fail()
+				t.Errorf("error %s\n", ex.Error.Error())
 				break
 			}
 			for _, rr := range ex.RR {
@@ -56,13 +54,12 @@ func testClientAXFRMultipleEnvelopes(t *testing.T) {
 
 	tr := new(Transfer)
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
-		t.Log("Failed to setup axfr" + err.Error() + "for server: " + server)
-		t.FailNow()
+		t.Fatal("Failed to setup axfr" + err.Error() + "for server: " + server)
+		return
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Logf("Error %s\n", ex.Error.Error())
-				t.Fail()
+				t.Errorf("Error %s\n", ex.Error.Error())
 				break
 			}
 		}
@@ -81,13 +78,11 @@ func testClientTsigAXFR(t *testing.T) {
 	tr.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
 
 	if a, err := tr.In(m, "176.58.119.54:53"); err != nil {
-		t.Log("failed to setup axfr: " + err.Error())
-		t.FailNow()
+		t.Fatal("failed to setup axfr: ", err)
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Logf("error %s\n", ex.Error.Error())
-				t.Fail()
+				t.Errorf("error %s\n", ex.Error.Error())
 				break
 			}
 			for _, rr := range ex.RR {

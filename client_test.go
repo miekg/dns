@@ -21,24 +21,20 @@ func TestClientSync(t *testing.T) {
 	c := new(Client)
 	r, _, e := c.Exchange(m, addrstr)
 	if e != nil {
-		t.Logf("failed to exchange: %s", e.Error())
-		t.Fail()
+		t.Errorf("failed to exchange: %s", e.Error())
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("failed to get an valid answer")
-		t.Fail()
-		t.Logf("%v\n", r)
+		t.Error("failed to get an valid answer")
+		t.Errorf("%v\n", r)
 	}
 	// And now with plain Exchange().
 	r, e = Exchange(m, addrstr)
 	if e != nil {
-		t.Logf("failed to exchange: %s", e.Error())
-		t.Fail()
+		t.Errorf("failed to exchange: %s", e.Error())
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("failed to get an valid answer")
-		t.Fail()
-		t.Logf("%v\n", r)
+		t.Error("failed to get an valid answer")
+		t.Errorf("%v\n", r)
 	}
 }
 
@@ -60,14 +56,12 @@ func TestClientEDNS0(t *testing.T) {
 	c := new(Client)
 	r, _, e := c.Exchange(m, addrstr)
 	if e != nil {
-		t.Logf("failed to exchange: %s", e.Error())
-		t.Fail()
+		t.Errorf("failed to exchange: %s", e.Error())
 	}
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("failed to get an valid answer")
-		t.Fail()
-		t.Logf("%v\n", r)
+		t.Error("failed to get an valid answer")
+		t.Errorf("%v\n", r)
 	}
 }
 
@@ -106,8 +100,7 @@ Loop:
 				first = rtt
 			} else {
 				if first != rtt {
-					t.Log("all rtts should be equal")
-					t.Fail()
+					t.Error("all rtts should be equal")
 				}
 			}
 			i++
@@ -142,7 +135,6 @@ func ExampleUpdateLeaseTSIG(t *testing.T) {
 
 	_, _, err := c.Exchange(m, "127.0.0.1:53")
 	if err != nil {
-		t.Log(err.Error())
-		t.Fail()
+		t.Error(err.Error())
 	}
 }

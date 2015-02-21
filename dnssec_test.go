@@ -109,8 +109,7 @@ func TestSecure(t *testing.T) {
 
 	// It should validate. Period is checked separately, so this will keep on working
 	if sig.Verify(key, []RR{soa}) != nil {
-		t.Log("failure to validate")
-		t.Fail()
+		t.Error("failure to validate")
 	}
 }
 
@@ -131,15 +130,13 @@ func TestSignature(t *testing.T) {
 
 	// Should not be valid
 	if sig.ValidityPeriod(time.Now()) {
-		t.Log("should not be valid")
-		t.Fail()
+		t.Error("should not be valid")
 	}
 
 	sig.Inception = 315565800   //Tue Jan  1 10:10:00 CET 1980
 	sig.Expiration = 4102477800 //Fri Jan  1 10:10:00 CET 2100
 	if !sig.ValidityPeriod(time.Now()) {
-		t.Log("should be valid")
-		t.Fail()
+		t.Error("should be valid")
 	}
 }
 
@@ -196,13 +193,11 @@ func TestSignVerify(t *testing.T) {
 
 	for _, r := range []RR{soa, soa1, srv} {
 		if sig.Sign(privkey, []RR{r}) != nil {
-			t.Log("failure to sign the record")
-			t.Fail()
+			t.Error("failure to sign the record")
 			continue
 		}
 		if sig.Verify(key, []RR{r}) != nil {
-			t.Log("failure to validate")
-			t.Fail()
+			t.Error("failure to validate")
 			continue
 		}
 		t.Logf("validated: %s\n", r.Header().Name)
@@ -234,14 +229,12 @@ func Test65534(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 	sig.Algorithm = RSASHA256
 	if err := sig.Sign(privkey, []RR{t6}); err != nil {
-		t.Log(err)
-		t.Log("failure to sign the TYPE65534 record")
-		t.Fail()
+		t.Error(err)
+		t.Error("failure to sign the TYPE65534 record")
 	}
 	if err := sig.Verify(key, []RR{t6}); err != nil {
-		t.Log(err)
-		t.Log("failure to validate")
-		t.Fail()
+		t.Error(err)
+		t.Error("failure to validate")
 	} else {
 		t.Logf("validated: %s\n", t6.Header().Name)
 	}
@@ -271,13 +264,11 @@ Coefficient: UuRoNqe7YHnKmQzE6iDWKTMIWTuoqqrFAmXPmKQnC+Y+BQzOVEHUo9bXdDnoI9hzXP1
 		t.Fatal(err)
 	}
 	if pubkey.(*DNSKEY).PublicKey != "AwEAAZuMCu2FdugHkTrXYgl5qixvcDw1aDDlvL46/xJKbHBAHY16fNUb2b65cwko2Js/aJxUYJbZk5dwCDZxYfrfbZVtDPQuc3o8QaChVxC7/JYz2AHc9qHvqQ1j4VrH71RWINlQo6VYjzN/BGpMhOZoZOEwzp1HfsOE3lNYcoWU1smL" {
-		t.Log("pubkey is not what we've read")
-		t.Fail()
+		t.Error("pubkey is not what we've read")
 	}
 	if pubkey.(*DNSKEY).PrivateKeyString(privkey) != privStr {
-		t.Log("privkey is not what we've read")
-		t.Logf("%v", pubkey.(*DNSKEY).PrivateKeyString(privkey))
-		t.Fail()
+		t.Error("privkey is not what we've read")
+		t.Errorf("%v", pubkey.(*DNSKEY).PrivateKeyString(privkey))
 	}
 }
 
@@ -294,8 +285,7 @@ func TestTag(t *testing.T) {
 
 	tag := key.KeyTag()
 	if tag != 12051 {
-		t.Logf("wrong key tag: %d for key %v\n", tag, key)
-		t.Fail()
+		t.Errorf("wrong key tag: %d for key %v\n", tag, key)
 	}
 }
 
@@ -335,13 +325,11 @@ func TestKeyRSA(t *testing.T) {
 	sig.SignerName = key.Hdr.Name
 
 	if err := sig.Sign(priv, []RR{soa}); err != nil {
-		t.Logf("failed to sign")
-		t.Fail()
+		t.Error("failed to sign")
 		return
 	}
 	if err := sig.Verify(key, []RR{soa}); err != nil {
-		t.Logf("failed to verify")
-		t.Fail()
+		t.Error("failed to verify")
 	}
 }
 
@@ -358,8 +346,7 @@ func TestKeyToDS(t *testing.T) {
 
 	ds := key.ToDS(SHA1)
 	if strings.ToUpper(ds.Digest) != "B5121BDB5B8D86D0CC5FFAFBAAABE26C3E20BAC1" {
-		t.Logf("wrong DS digest for SHA1\n%v\n", ds)
-		t.Fail()
+		t.Errorf("wrong DS digest for SHA1\n%v\n", ds)
 	}
 }
 
@@ -384,23 +371,19 @@ Activate: 20110302104537`
 	k := xk.(*DNSKEY)
 	p, err := k.NewPrivateKey(priv)
 	if err != nil {
-		t.Logf("%v\n", err)
-		t.Fail()
+		t.Errorf("%v\n", err)
 	}
 	switch priv := p.(type) {
 	case *RSAPrivateKey:
 		if 65537 != priv.PublicKey.E {
-			t.Log("exponenent should be 65537")
-			t.Fail()
+			t.Error("exponenent should be 65537")
 		}
 	default:
-		t.Logf("we should have read an RSA key: %v", priv)
-		t.Fail()
+		t.Errorf("we should have read an RSA key: %v", priv)
 	}
 	if k.KeyTag() != 37350 {
-		t.Logf("%d %v\n", k.KeyTag(), k)
-		t.Log("keytag should be 37350")
-		t.Fail()
+		t.Errorf("%d %v\n", k.KeyTag(), k)
+		t.Error("keytag should be 37350")
 	}
 
 	soa := new(SOA)
@@ -423,9 +406,8 @@ Activate: 20110302104537`
 
 	sig.Sign(p, []RR{soa})
 	if sig.Signature != "D5zsobpQcmMmYsUMLxCVEtgAdCvTu8V/IEeP4EyLBjqPJmjt96bwM9kqihsccofA5LIJ7DN91qkCORjWSTwNhzCv7bMyr2o5vBZElrlpnRzlvsFIoAZCD9xg6ZY7ZyzUJmU6IcTwG4v3xEYajcpbJJiyaw/RqR90MuRdKPiBzSo=" {
-		t.Log("signature is not correct")
-		t.Logf("%v\n", sig)
-		t.Fail()
+		t.Error("signature is not correct")
+		t.Errorf("%v\n", sig)
 	}
 }
 
