@@ -104,38 +104,32 @@ func TestServing(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeTXT)
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil || len(r.Extra) == 0 {
-		t.Log("failed to exchange miek.nl", err)
-		t.FailNow()
+		t.Fatal("failed to exchange miek.nl", err)
 	}
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello world" {
-		t.Log("Unexpected result for miek.nl", txt, "!= Hello world")
-		t.Fail()
+		t.Error("Unexpected result for miek.nl", txt, "!= Hello world")
 	}
 
 	m.SetQuestion("example.com.", TypeTXT)
 	r, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Log("failed to exchange example.com", err)
-		t.FailNow()
+		t.Fatal("failed to exchange example.com", err)
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
-		t.Log("Unexpected result for example.com", txt, "!= Hello example")
-		t.Fail()
+		t.Error("Unexpected result for example.com", txt, "!= Hello example")
 	}
 
 	// Test Mixes cased as noticed by Ask.
 	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
 	r, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Log("failed to exchange eXaMplE.cOm", err)
-		t.Fail()
+		t.Error("failed to exchange eXaMplE.cOm", err)
 	}
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
-		t.Log("Unexpected result for example.com", txt, "!= Hello example")
-		t.Fail()
+		t.Error("Unexpected result for example.com", txt, "!= Hello example")
 	}
 }
 
@@ -316,8 +310,7 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Logf("failed to exchange: %s", err.Error())
-		t.Fail()
+		t.Errorf("failed to exchange: %s", err.Error())
 	}
 	// This must fail
 	M.Lock()
@@ -325,15 +318,13 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
-		t.Logf("failed to fail exchange, this should generate packet error")
-		t.Fail()
+		t.Error("failed to fail exchange, this should generate packet error")
 	}
 	// But this must work again
 	c.UDPSize = 7000
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Logf("failed to exchange: %s", err.Error())
-		t.Fail()
+		t.Errorf("failed to exchange: %s", err.Error())
 	}
 }
 
@@ -353,14 +344,12 @@ func TestServingResponse(t *testing.T) {
 	m.Response = false
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Log("failed to exchange", err)
-		t.FailNow()
+		t.Fatal("failed to exchange", err)
 	}
 	m.Response = true
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
-		t.Log("exchanged response message")
-		t.FailNow()
+		t.Fatal("exchanged response message")
 	}
 
 	s.Shutdown()
@@ -373,8 +362,7 @@ func TestServingResponse(t *testing.T) {
 	m.Response = true
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Log("could exchanged response message in Unsafe mode")
-		t.FailNow()
+		t.Fatal("could exchanged response message in Unsafe mode")
 	}
 }
 
