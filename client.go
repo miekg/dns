@@ -55,6 +55,13 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 	defer co.Close()
 	co.SetReadDeadline(time.Now().Add(dnsTimeout))
 	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
+
+	opt := m.IsEdns0()
+	// If EDNS0 is used use that for size.
+	if opt != nil && opt.UDPSize() >= MinMsgSize {
+		co.UDPSize = opt.UDPSize()
+	}
+
 	if err = co.WriteMsg(m); err != nil {
 		return nil, err
 	}
