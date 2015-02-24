@@ -1915,7 +1915,11 @@ func Copy(r RR) RR {
 
 // Copy returns a new *Msg which is a deep-copy of dns.
 func (dns *Msg) Copy() *Msg {
-	r1 := new(Msg)
+	return dns.CopyTo(new(Msg))
+}
+
+// CopyTo copies the contents to the provided message using a deep-copy and returns the copy.
+func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	r1.MsgHdr = dns.MsgHdr
 	r1.Compress = dns.Compress
 
