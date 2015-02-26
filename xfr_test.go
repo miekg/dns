@@ -36,7 +36,7 @@ func testClientAXFR(t *testing.T) {
 				break
 			}
 			for _, rr := range ex.RR {
-				t.Logf("%s\n", rr.String())
+				t.Log(rr.String())
 			}
 		}
 	}
@@ -85,7 +85,7 @@ func testClientTsigAXFR(t *testing.T) {
 				break
 			}
 			for _, rr := range ex.RR {
-				t.Logf("%s\n", rr.String())
+				t.Log(rr.String())
 			}
 		}
 	}

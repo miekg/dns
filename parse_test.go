@@ -1168,7 +1168,7 @@ func TestMalformedPackets(t *testing.T) {
 	for _, packet := range packets {
 		data, _ := hex.DecodeString(packet)
 		//		for _, v := range data {
-		//			t.Logf("%s ", string(v))
+		//			t.Log(v)
 		//		}
 		var msg Msg
 		msg.Unpack(data)
