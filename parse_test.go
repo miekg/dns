@@ -38,7 +38,7 @@ func TestDotLastInLabel(t *testing.T) {
 	buf := make([]byte, 20)
 	_, err := PackDomainName(sample, buf, 0, nil, false)
 	if err != nil {
-		t.Fatalf("unexpected error packing domain: %s", err)
+		t.Fatalf("unexpected error packing domain: %v", err)
 	}
 	dom, _, _ := UnpackDomainName(buf, 0)
 	if dom != sample {
@@ -646,17 +646,17 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
                                 rvs2.example.com. )`
 	rr, err := NewRR(h)
 	if err != nil {
-		t.Fatalf("failed to parse RR: %s", err)
+		t.Fatalf("failed to parse RR: %v", err)
 	}
 	t.Logf("RR: %s", rr)
 	msg := new(Msg)
 	msg.Answer = []RR{rr, rr}
 	bytes, err := msg.Pack()
 	if err != nil {
-		t.Fatalf("failed to pack msg: %s", err)
+		t.Fatalf("failed to pack msg: %v", err)
 	}
 	if err := msg.Unpack(bytes); err != nil {
-		t.Fatalf("failed to unpack msg: %s", err)
+		t.Fatalf("failed to unpack msg: %v", err)
 	}
 	if len(msg.Answer) != 2 {
 		t.Fatalf("2 answers expected: %v", msg)
@@ -981,7 +981,7 @@ func TestEUIxx(t *testing.T) {
 	for i, o := range tests {
 		r, err := NewRR(i)
 		if err != nil {
-			t.Errorf("failed to parse %s: %s", i, err)
+			t.Errorf("failed to parse %s: %v", i, err)
 		}
 		if r.String() != o {
 			t.Errorf("want %s, got %s", o, r.String())
@@ -998,7 +998,7 @@ func TestUserRR(t *testing.T) {
 	for i, o := range tests {
 		r, err := NewRR(i)
 		if err != nil {
-			t.Errorf("failed to parse %s: %s", i, err)
+			t.Errorf("failed to parse %s: %v", i, err)
 		}
 		if r.String() != o {
 			t.Errorf("want %s, got %s", o, r.String())
@@ -1236,7 +1236,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("; comment")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr != nil {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
@@ -1245,7 +1245,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr != nil {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
@@ -1254,7 +1254,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("$ORIGIN foo.")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr != nil {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
@@ -1263,7 +1263,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR(" ")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr != nil {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
@@ -1272,7 +1272,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("\n")
 	expect = ""
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr != nil {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
@@ -1281,7 +1281,7 @@ func TestNewRRSpecial(t *testing.T) {
 	rr, err = NewRR("foo. A 1.1.1.1\nbar. A 2.2.2.2")
 	expect = "foo.\t3600\tIN\tA\t1.1.1.1"
 	if err != nil {
-		t.Errorf("unexpected err: %s", err)
+		t.Errorf("unexpected err: %v", err)
 	}
 	if rr == nil || rr.String() != expect {
 		t.Errorf("unexpected result: [%s] != [%s]", rr, expect)
