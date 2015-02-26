@@ -759,7 +759,7 @@ func TestRfc1982(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	for range ParseZone(strings.NewReader(""), "", "") {
+	for _ = range ParseZone(strings.NewReader(""), "", "") {
 		t.Errorf("should be empty")
 	}
 }
@@ -1186,11 +1186,11 @@ func TestNewPrivateKey(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 	algorithms := []algorithm{
-		{ECDSAP256SHA256, 256},
-		{ECDSAP384SHA384, 384},
-		{RSASHA1, 1024},
-		{RSASHA256, 2048},
-		{DSA, 1024},
+		algorithm{ECDSAP256SHA256, 256},
+		algorithm{ECDSAP384SHA384, 384},
+		algorithm{RSASHA1, 1024},
+		algorithm{RSASHA256, 2048},
+		algorithm{DSA, 1024},
 	}
 
 	for _, algo := range algorithms {
