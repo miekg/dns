@@ -7,8 +7,8 @@ import (
 )
 
 func getIP(s string) string {
-	a, e := net.LookupAddr(s)
-	if e != nil {
+	a, err := net.LookupAddr(s)
+	if err != nil {
 		return ""
 	}
 	return a[0]
@@ -32,7 +32,7 @@ func testClientAXFR(t *testing.T) {
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Errorf("error %s\n", ex.Error.Error())
+				t.Errorf("error %v", ex.Error)
 				break
 			}
 			for _, rr := range ex.RR {
@@ -54,12 +54,11 @@ func testClientAXFRMultipleEnvelopes(t *testing.T) {
 
 	tr := new(Transfer)
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
-		t.Fatal("Failed to setup axfr" + err.Error() + "for server: " + server)
-		return
+		t.Fatalf("Failed to setup axfr %v for server: %v", err, server)
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Errorf("Error %s\n", ex.Error.Error())
+				t.Errorf("Error %v", ex.Error)
 				break
 			}
 		}
@@ -82,7 +81,7 @@ func testClientTsigAXFR(t *testing.T) {
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Errorf("error %s\n", ex.Error.Error())
+				t.Errorf("error %v", ex.Error)
 				break
 			}
 			for _, rr := range ex.RR {

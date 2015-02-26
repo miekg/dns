@@ -58,7 +58,7 @@ func TestPackUnpack2(t *testing.T) {
 	m.Answer[0] = rr
 	_, err := m.Pack()
 	if err != nil {
-		t.Error("Packing failed: ", err.Error())
+		t.Error("Packing failed: ", err)
 		return
 	}
 }
@@ -85,7 +85,7 @@ func TestPackUnpack3(t *testing.T) {
 	m.Answer[0] = rr
 	b, err := m.Pack()
 	if err != nil {
-		t.Error("packing failed: " + err.Error())
+		t.Error("packing failed: ", err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func TestBailiwick(t *testing.T) {
 	}
 	for parent, child := range yes {
 		if !IsSubDomain(parent, child) {
-			t.Errorf("%s should be child of %s\n", child, parent)
+			t.Errorf("%s should be child of %s", child, parent)
 			t.Errorf("comparelabels %d", CompareDomainName(parent, child))
 			t.Errorf("lenlabels %d %d", CountLabel(parent), CountLabel(child))
 		}
@@ -118,7 +118,7 @@ func TestBailiwick(t *testing.T) {
 	}
 	for parent, child := range no {
 		if IsSubDomain(parent, child) {
-			t.Errorf("%s should not be child of %s\n", child, parent)
+			t.Errorf("%s should not be child of %s", child, parent)
 			t.Errorf("comparelabels %d", CompareDomainName(parent, child))
 			t.Errorf("lenlabels %d %d", CountLabel(parent), CountLabel(child))
 		}
@@ -133,11 +133,11 @@ func TestPack(t *testing.T) {
 	for _, r := range rr {
 		m.Answer[0], err = NewRR(r)
 		if err != nil {
-			t.Errorf("failed to create RR: %s\n", err.Error())
+			t.Errorf("failed to create RR: %v", err)
 			continue
 		}
 		if _, err := m.Pack(); err != nil {
-			t.Errorf("packing failed: %s\n", err.Error())
+			t.Errorf("packing failed: %v", err)
 		}
 	}
 	x := new(Msg)
@@ -172,10 +172,10 @@ func TestPackNAPTR(t *testing.T) {
 		rr, _ := NewRR(n)
 		msg := make([]byte, rr.len())
 		if off, err := PackRR(rr, msg, 0, nil, false); err != nil {
-			t.Errorf("packing failed: %s", err.Error())
-			t.Errorf("length %d, need more than %d\n", rr.len(), off)
+			t.Errorf("packing failed: %v", err)
+			t.Errorf("length %d, need more than %d", rr.len(), off)
 		} else {
-			t.Logf("buf size needed: %d\n", off)
+			t.Logf("buf size needed: %d", off)
 		}
 	}
 }
@@ -216,7 +216,7 @@ func TestMsgCompressLength(t *testing.T) {
 			t.Error(err)
 		}
 		if predicted < len(buf) {
-			t.Errorf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d\n",
+			t.Errorf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d",
 				msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 		}
 	}
@@ -246,7 +246,7 @@ func TestMsgLength(t *testing.T) {
 			t.Error(err)
 		}
 		if predicted < len(buf) {
-			t.Errorf("predicted length is wrong: predicted %s (len=%d), actual %d\n",
+			t.Errorf("predicted length is wrong: predicted %s (len=%d), actual %d",
 				msg.Question[0].Name, predicted, len(buf))
 		}
 	}
@@ -434,9 +434,9 @@ func TestNoRdataPack(t *testing.T) {
 		}
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
-		_, e := PackRR(r, data, 0, nil, false)
-		if e != nil {
-			t.Errorf("failed to pack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
+		_, err := PackRR(r, data, 0, nil, false)
+		if err != nil {
+			t.Errorf("failed to pack RR with zero rdata: %s: %v", TypeToString[typ], err)
 		}
 	}
 }
@@ -452,16 +452,17 @@ func TestNoRdataUnpack(t *testing.T) {
 		}
 		r := fn()
 		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
-		off, e := PackRR(r, data, 0, nil, false)
-		if e != nil {
-			// Should always works, TestNoDataPack should have catched this
+		off, err := PackRR(r, data, 0, nil, false)
+		if err != nil {
+			// Should always works, TestNoDataPack should have caught this
+			t.Errorf("failed to pack RR: %v", err)
 			continue
 		}
-		rr, _, e := UnpackRR(data[:off], 0)
-		if e != nil {
-			t.Errorf("failed to unpack RR with zero rdata: %s: %s\n", TypeToString[typ], e.Error())
+		rr, _, err := UnpackRR(data[:off], 0)
+		if err != nil {
+			t.Errorf("failed to unpack RR with zero rdata: %s: %v", TypeToString[typ], err)
 		}
-		t.Logf("%s\n", rr)
+		t.Log(rr)
 	}
 }
 
@@ -542,17 +543,17 @@ func TestPackIPSECKEY(t *testing.T) {
 	buf := make([]byte, 1024)
 	for _, t1 := range tests {
 		rr, _ := NewRR(t1)
-		off, e := PackRR(rr, buf, 0, nil, false)
-		if e != nil {
-			t.Errorf("failed to pack IPSECKEY %s: %s\n", e, t1)
+		off, err := PackRR(rr, buf, 0, nil, false)
+		if err != nil {
+			t.Errorf("failed to pack IPSECKEY %v: %s", err, t1)
 			continue
 		}
 
-		rr, _, e = UnpackRR(buf[:off], 0)
-		if e != nil {
-			t.Errorf("failed to unpack IPSECKEY %s: %s\n", e, t1)
+		rr, _, err = UnpackRR(buf[:off], 0)
+		if err != nil {
+			t.Errorf("failed to unpack IPSECKEY %v: %s", err, t1)
 		}
-		t.Logf("%s\n", rr)
+		t.Log(rr)
 	}
 }
 
@@ -571,10 +572,10 @@ func TestMsgPackBuffer(t *testing.T) {
 		// we won't fail the decoding of the hex
 		input, _ := hex.DecodeString(hexData)
 		m := new(Msg)
-		if e := m.Unpack(input); e != nil {
+		if err := m.Unpack(input); err != nil {
 			t.Errorf("packet %d failed to unpack", i)
 			continue
 		}
-		t.Logf("packet %d %s\n", i, m.String())
+		t.Logf("packet %d %s", i, m.String())
 	}
 }

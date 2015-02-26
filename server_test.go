@@ -310,7 +310,7 @@ func TestServingLargeResponses(t *testing.T) {
 	M.Unlock()
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %s", err.Error())
+		t.Errorf("failed to exchange: %v", err)
 	}
 	// This must fail
 	M.Lock()
@@ -324,7 +324,7 @@ func TestServingLargeResponses(t *testing.T) {
 	c.UDPSize = 7000
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %s", err.Error())
+		t.Errorf("failed to exchange: %v", err)
 	}
 }
 

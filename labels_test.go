@@ -52,9 +52,9 @@ func TestSplit(t *testing.T) {
 	}
 	for s, i := range splitter {
 		if x := len(Split(s)); x != i {
-			t.Errorf("labels should be %d, got %d: %s %v\n", i, x, s, Split(s))
+			t.Errorf("labels should be %d, got %d: %s %v", i, x, s, Split(s))
 		} else {
-			t.Logf("%s %v\n", s, Split(s))
+			t.Logf("%s %v", s, Split(s))
 		}
 	}
 }
@@ -70,11 +70,11 @@ func TestSplit2(t *testing.T) {
 		switch len(i) {
 		case 1:
 			if x[0] != i[0] {
-				t.Errorf("labels should be %v, got %v: %s\n", i, x, s)
+				t.Errorf("labels should be %v, got %v: %s", i, x, s)
 			}
 		default:
 			if x[0] != i[0] || x[1] != i[1] || x[2] != i[2] {
-				t.Errorf("labels should be %v, got %v: %s\n", i, x, s)
+				t.Errorf("labels should be %v, got %v: %s", i, x, s)
 			}
 		}
 	}
@@ -103,7 +103,7 @@ func TestPrevLabel(t *testing.T) {
 	for s, i := range prever {
 		x, ok := PrevLabel(s.string, s.int)
 		if i != x {
-			t.Errorf("label should be %d, got %d, %t: preving %d, %s\n", i, x, ok, s.int, s.string)
+			t.Errorf("label should be %d, got %d, %t: preving %d, %s", i, x, ok, s.int, s.string)
 		}
 	}
 }
@@ -118,7 +118,7 @@ func TestCountLabel(t *testing.T) {
 	for s, i := range splitter {
 		x := CountLabel(s)
 		if x != i {
-			t.Errorf("CountLabel should have %d, got %d\n", i, x)
+			t.Errorf("CountLabel should have %d, got %d", i, x)
 		}
 	}
 }

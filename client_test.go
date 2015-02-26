@@ -11,7 +11,7 @@ func TestClientSync(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %s", err)
+		t.Fatalf("Unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -19,22 +19,20 @@ func TestClientSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	r, _, e := c.Exchange(m, addrstr)
-	if e != nil {
-		t.Errorf("failed to exchange: %s", e.Error())
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Error("failed to get an valid answer")
-		t.Errorf("%v\n", r)
+		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 	// And now with plain Exchange().
-	r, e = Exchange(m, addrstr)
-	if e != nil {
-		t.Errorf("failed to exchange: %s", e.Error())
+	r, err = Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Error("failed to get an valid answer")
-		t.Errorf("%v\n", r)
+		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 }
 
@@ -44,7 +42,7 @@ func TestClientEDNS0(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %s", err)
+		t.Fatalf("Unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -54,14 +52,13 @@ func TestClientEDNS0(t *testing.T) {
 	m.SetEdns0(2048, true)
 
 	c := new(Client)
-	r, _, e := c.Exchange(m, addrstr)
-	if e != nil {
-		t.Errorf("failed to exchange: %s", e.Error())
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
 	}
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Error("failed to get an valid answer")
-		t.Errorf("%v\n", r)
+		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 }
 
@@ -71,7 +68,7 @@ func TestSingleSingleInflight(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %s", err)
+		t.Fatalf("Unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -100,7 +97,7 @@ Loop:
 				first = rtt
 			} else {
 				if first != rtt {
-					t.Error("all rtts should be equal")
+					t.Errorf("all rtts should be equal.  got %d want %d", rtt, first)
 				}
 			}
 			i++
@@ -135,6 +132,6 @@ func ExampleUpdateLeaseTSIG(t *testing.T) {
 
 	_, _, err := c.Exchange(m, "127.0.0.1:53")
 	if err != nil {
-		t.Error(err.Error())
+		t.Error(err)
 	}
 }

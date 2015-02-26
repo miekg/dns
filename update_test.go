@@ -12,9 +12,9 @@ func TestDynamicUpdateParsing(t *testing.T) {
 			typ == "TSIG" || typ == "ISDN" || typ == "UNSPEC" || typ == "NULL" || typ == "ATMA" {
 			continue
 		}
-		r, e := NewRR(prefix + typ)
-		if e != nil {
-			t.Error("failure to parse: " + prefix + typ)
+		r, err := NewRR(prefix + typ)
+		if err != nil {
+			t.Errorf("failure to parse: %s %s: %v", prefix, typ, err)
 		} else {
 			t.Logf("parsed: %s", r.String())
 		}
@@ -30,7 +30,7 @@ func TestDynamicUpdateUnpack(t *testing.T) {
 	msg := new(Msg)
 	err := msg.Unpack(buf)
 	if err != nil {
-		t.Error("failed to unpack: " + err.Error() + "\n" + msg.String())
+		t.Error("failed to unpack: %v\n%s", err, msg.String())
 	}
 }
 
