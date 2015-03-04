@@ -76,6 +76,24 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 			switch l.value {
 			case zString:
 				empty = false
+				if len(l.token) > 255 {
+					// split up tokens that are larger than 255 into 255-chunks
+					sx := []string{}
+					p, i := 0, 255
+					for {
+						if i <= len(l.token) {
+							sx = append(sx, l.token[p:i])
+						} else {
+							sx = append(sx, l.token[p:])
+							break
+
+						}
+						p, i = p+255, i+255
+					}
+					s = append(s, sx...)
+					break;
+				}
+
 				s = append(s, l.token)
 			case zBlank:
 				if quote {
@@ -1795,7 +1813,7 @@ func setTXT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(TXT)
 	rr.Hdr = h
 
-	// No zBlank reading here, because this is all rdata is TXT
+	// no zBlank reading here, because all this rdata is TXT
 	s, e, c1 := endingToTxtSlice(c, "bad TXT Txt", f)
 	if e != nil {
 		return nil, e, ""
