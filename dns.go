@@ -9,7 +9,7 @@ const (
 	// MinMsgSize is the minimal size of a DNS packet.
 	MinMsgSize = 512
 	// MaxMsgSize is the largest possible DNS packet.
-	MaxMsgSize = 65536
+	MaxMsgSize = 65535
 	defaultTtl = 3600 // Default internal TTL.
 )
 
