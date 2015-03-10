@@ -45,7 +45,7 @@ type response struct {
 	tsigSecret     map[string]string // the tsig secrets
 	udp            *net.UDPConn      // i/o connection if UDP was used
 	tcp            *net.TCPConn      // i/o connection if TCP was used
-	udpSession     *sessionUDP       // oob data to get egress interface right
+	udpSession     *SessionUDP       // oob data to get egress interface right
 	remoteAddr     net.Addr          // address of the client
 }
 
@@ -438,7 +438,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 }
 
 // Serve a new connection.
-func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *sessionUDP, t *net.TCPConn) {
+func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t *net.TCPConn) {
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
 	q := 0
 	defer func() {
@@ -537,10 +537,10 @@ func (srv *Server) readTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, er
 	return m, nil
 }
 
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *sessionUDP, error) {
+func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
-	n, s, e := readFromSessionUDP(conn, m)
+	n, s, e := ReadFromSessionUDP(conn, m)
 	if e != nil || n == 0 {
 		if e != nil {
 			return nil, nil, e
@@ -576,7 +576,7 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 func (w *response) Write(m []byte) (int, error) {
 	switch {
 	case w.udp != nil:
-		n, err := writeToSessionUDP(w.udp, m, w.udpSession)
+		n, err := WriteToSessionUDP(w.udp, m, w.udpSession)
 		return n, err
 	case w.tcp != nil:
 		lm := len(m)
