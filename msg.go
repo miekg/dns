@@ -1048,7 +1048,12 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					edns = append(edns, e)
 					off = off1 + int(optlen)
 				default:
-					// do nothing?
+					e := new(EDNS0_CUSTOM)
+					e.Code = code
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
+					edns = append(edns, e)
 					off = off1 + int(optlen)
 				}
 				if off < lenrd {

@@ -62,6 +62,79 @@ func TestClientEDNS0(t *testing.T) {
 	}
 }
 
+// Validates the transmission and parsing of custom EDNS0 options.
+func TestClientEDNS0Custom(t *testing.T) {
+	handler := func(w ResponseWriter, req *Msg) {
+		m := new(Msg)
+		m.SetReply(req)
+
+		m.Extra = make([]RR, 1, 2)
+		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello custom edns"}}
+
+		// If the custom options are what we expect, then reflect them back.
+		ec1 := req.Extra[0].(*OPT).Option[0].(*EDNS0_CUSTOM).String()
+		ec2 := req.Extra[0].(*OPT).Option[1].(*EDNS0_CUSTOM).String()
+		if ec1 == "1979:0x0707" && ec2 == "1997:0x0601" {
+			m.Extra = append(m.Extra, req.Extra[0])
+		}
+
+		w.WriteMsg(m)
+	}
+
+	HandleFunc("miek.nl.", handler)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+
+	ec1 := &EDNS0_CUSTOM{Code: 1979, Data: []byte{7, 7}}
+	ec2 := &EDNS0_CUSTOM{Code: 1997, Data: []byte{6, 1}}
+	o := &OPT{Hdr: RR_Header{Name: ".", Rrtype: TypeOPT}, Option: []EDNS0{ec1, ec2}}
+	m.Extra = append(m.Extra, o)
+
+	c := new(Client)
+	r, _, e := c.Exchange(m, addrstr)
+	if e != nil {
+		t.Logf("failed to exchange: %s", e.Error())
+		t.Fail()
+	}
+
+	if r != nil && r.Rcode != RcodeSuccess {
+		t.Log("failed to get a valid answer")
+		t.Fail()
+		t.Logf("%v\n", r)
+	}
+
+	txt := r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello custom edns" {
+		t.Log("Unexpected result for miek.nl", txt, "!= Hello custom edns")
+		t.Fail()
+	}
+
+	// Validate the custom options in the reply.
+	exp := "1979:0x0707"
+	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_CUSTOM).String()
+	if got != exp {
+		t.Log("failed to get custom edns0 answer; got %s, expected %s", got, exp)
+		t.Fail()
+		t.Logf("%v\n", r)
+	}
+
+	exp = "1997:0x0601"
+	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_CUSTOM).String()
+	if got != exp {
+		t.Log("failed to get custom edns0 answer; got %s, expected %s", got, exp)
+		t.Fail()
+		t.Logf("%v\n", r)
+	}
+}
+
 func TestSingleSingleInflight(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")

@@ -68,6 +68,8 @@ func (rr *OPT) String() string {
 			s += "\n; DS HASH UNDERSTOOD: " + o.String()
 		case *EDNS0_N3U:
 			s += "\n; NSEC3 HASH UNDERSTOOD: " + o.String()
+		case *EDNS0_CUSTOM:
+			s += "\n; CUSTOM OPT: " + o.String()
 		}
 	}
 	return s
@@ -76,8 +78,9 @@ func (rr *OPT) String() string {
 func (rr *OPT) len() int {
 	l := rr.Hdr.len()
 	for i := 0; i < len(rr.Option); i++ {
+		l += 4 // Account for 2-byte option code and 2-byte option length.
 		lo, _ := rr.Option[i].pack()
-		l += 2 + len(lo)
+		l += len(lo)
 	}
 	return l
 }
@@ -473,5 +476,33 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 		return ErrBuf
 	}
 	e.Expire = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+	return nil
+}
+
+type EDNS0_CUSTOM struct {
+	Code uint16
+	Data []byte
+}
+
+func (e *EDNS0_CUSTOM) Option() uint16 { return e.Code }
+func (e *EDNS0_CUSTOM) String() string {
+	return strconv.FormatInt(int64(e.Code), 10) + ":0x" + hex.EncodeToString(e.Data)
+}
+
+func (e *EDNS0_CUSTOM) pack() ([]byte, error) {
+	b := make([]byte, len(e.Data))
+	copied := copy(b, e.Data)
+	if copied != len(e.Data) {
+		return nil, ErrBuf
+	}
+	return b, nil
+}
+
+func (e *EDNS0_CUSTOM) unpack(b []byte) error {
+	e.Data = make([]byte, len(b))
+	copied := copy(e.Data, b)
+	if copied != len(b) {
+		return ErrBuf
+	}
 	return nil
 }
