@@ -575,7 +575,10 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 		wires[i] = wire
 	}
 	sort.Sort(wires)
-	for _, wire := range wires {
+	for i, wire := range wires {
+		if i > 0 && bytes.Equal(wire, wires[i-1]) {
+			continue
+		}
 		buf = append(buf, wire...)
 	}
 	return buf, nil
