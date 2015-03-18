@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"strconv"
 	"testing"
 	"time"
 )
@@ -62,19 +63,23 @@ func TestClientEDNS0(t *testing.T) {
 	}
 }
 
-// Validates the transmission and parsing of custom EDNS0 options.
-func TestClientEDNS0Custom(t *testing.T) {
+// Validates the transmission and parsing of local EDNS0 options.
+func TestClientEDNS0Local(t *testing.T) {
+
+	optStr1 := "1979:0x0707"
+	optStr2 := strconv.Itoa(EDNS0LOCALSTART) + ":0x0601"
+
 	handler := func(w ResponseWriter, req *Msg) {
 		m := new(Msg)
 		m.SetReply(req)
 
 		m.Extra = make([]RR, 1, 2)
-		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello custom edns"}}
+		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello local edns"}}
 
-		// If the custom options are what we expect, then reflect them back.
-		ec1 := req.Extra[0].(*OPT).Option[0].(*EDNS0_CUSTOM).String()
-		ec2 := req.Extra[0].(*OPT).Option[1].(*EDNS0_CUSTOM).String()
-		if ec1 == "1979:0x0707" && ec2 == "1997:0x0601" {
+		// If the local options are what we expect, then reflect them back.
+		ec1 := req.Extra[0].(*OPT).Option[0].(*EDNS0_LOCAL).String()
+		ec2 := req.Extra[0].(*OPT).Option[1].(*EDNS0_LOCAL).String()
+		if ec1 == optStr1 && ec2 == optStr2 {
 			m.Extra = append(m.Extra, req.Extra[0])
 		}
 
@@ -93,8 +98,9 @@ func TestClientEDNS0Custom(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
 
-	ec1 := &EDNS0_CUSTOM{Code: 1979, Data: []byte{7, 7}}
-	ec2 := &EDNS0_CUSTOM{Code: 1997, Data: []byte{6, 1}}
+	// Add two local edns options to the query.
+	ec1 := &EDNS0_LOCAL{Code: 1979, Data: []byte{7, 7}}
+	ec2 := &EDNS0_LOCAL{Code: EDNS0LOCALSTART, Data: []byte{6, 1}}
 	o := &OPT{Hdr: RR_Header{Name: ".", Rrtype: TypeOPT}, Option: []EDNS0{ec1, ec2}}
 	m.Extra = append(m.Extra, o)
 
@@ -112,24 +118,22 @@ func TestClientEDNS0Custom(t *testing.T) {
 	}
 
 	txt := r.Extra[0].(*TXT).Txt[0]
-	if txt != "Hello custom edns" {
-		t.Log("Unexpected result for miek.nl", txt, "!= Hello custom edns")
+	if txt != "Hello local edns" {
+		t.Log("Unexpected result for miek.nl", txt, "!= Hello local edns")
 		t.Fail()
 	}
 
-	// Validate the custom options in the reply.
-	exp := "1979:0x0707"
-	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_CUSTOM).String()
-	if got != exp {
-		t.Log("failed to get custom edns0 answer; got %s, expected %s", got, exp)
+	// Validate the local options in the reply.
+	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_LOCAL).String()
+	if got != optStr1 {
+		t.Log("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
 
-	exp = "1997:0x0601"
-	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_CUSTOM).String()
-	if got != exp {
-		t.Log("failed to get custom edns0 answer; got %s, expected %s", got, exp)
+	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_LOCAL).String()
+	if got != optStr2 {
+		t.Log("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
 		t.Fail()
 		t.Logf("%v\n", r)
 	}

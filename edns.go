@@ -18,6 +18,8 @@ const (
 	EDNS0SUBNET      = 0x8     // client-subnet (RFC6891)
 	EDNS0EXPIRE      = 0x9     // EDNS0 expire
 	EDNS0SUBNETDRAFT = 0x50fa  // Don't use! Use EDNS0SUBNET
+	EDNS0LOCALSTART  = 0xFDE9  // Beginning of range reserved for local/experimental use (RFC6891)
+	EDNS0LOCALEND    = 0xFFFE  // End of range reserved for local/experimental use (RFC6891)
 	_DO              = 1 << 15 // dnssec ok
 )
 
@@ -68,8 +70,8 @@ func (rr *OPT) String() string {
 			s += "\n; DS HASH UNDERSTOOD: " + o.String()
 		case *EDNS0_N3U:
 			s += "\n; NSEC3 HASH UNDERSTOOD: " + o.String()
-		case *EDNS0_CUSTOM:
-			s += "\n; CUSTOM OPT: " + o.String()
+		case *EDNS0_LOCAL:
+			s += "\n; LOCAL OPT: " + o.String()
 		}
 	}
 	return s
@@ -479,17 +481,30 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	return nil
 }
 
-type EDNS0_CUSTOM struct {
+// The local EDNS0 option is used for local/experimental purposes.  The option
+// code is recommended to be within the range [EDNS0LOCALSTART, EDNS0LOCALEND]
+// (RFC6891), although any unassigned code can actually be used.  The content of
+// the option is made available in Data, unaltered.
+// Basic use pattern for creating a local option:
+//
+//	o := new(dns.OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
+//	e := new(dns.EDNS0_LOCAL)
+//	e.Code = dns.EDNS0LOCALSTART
+//	e.Data = []byte{72, 82, 74}
+//	o.Option = append(o.Option, e)
+type EDNS0_LOCAL struct {
 	Code uint16
 	Data []byte
 }
 
-func (e *EDNS0_CUSTOM) Option() uint16 { return e.Code }
-func (e *EDNS0_CUSTOM) String() string {
+func (e *EDNS0_LOCAL) Option() uint16 { return e.Code }
+func (e *EDNS0_LOCAL) String() string {
 	return strconv.FormatInt(int64(e.Code), 10) + ":0x" + hex.EncodeToString(e.Data)
 }
 
-func (e *EDNS0_CUSTOM) pack() ([]byte, error) {
+func (e *EDNS0_LOCAL) pack() ([]byte, error) {
 	b := make([]byte, len(e.Data))
 	copied := copy(b, e.Data)
 	if copied != len(e.Data) {
@@ -498,7 +513,7 @@ func (e *EDNS0_CUSTOM) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_CUSTOM) unpack(b []byte) error {
+func (e *EDNS0_LOCAL) unpack(b []byte) error {
 	e.Data = make([]byte, len(b))
 	copied := copy(e.Data, b)
 	if copied != len(b) {
