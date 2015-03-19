@@ -171,7 +171,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 		}
 	}()
 	s := scanInit(r)
-	c := make(chan lex, 1000)
+	c := make(chan lex)
 	// Start the lexer
 	go zlexer(s, c)
 	// 6 possible beginnings of a line, _ is a space
