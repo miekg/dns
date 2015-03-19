@@ -47,7 +47,7 @@ func generate(l lex, c chan lex, t chan *Token, o string) string {
 	if err != nil {
 		return "bad stop in $GENERATE range"
 	}
-	if end < 0 || start < 0 || end <= start {
+	if end < 0 || start < 0 || end < start {
 		return "bad range in $GENERATE range"
 	}
 
