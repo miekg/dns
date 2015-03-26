@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -15,7 +16,7 @@ import (
 // what kind of DNSKEY will be generated.
 // The ECDSA algorithms imply a fixed keysize, in that case
 // bits should be set to the size of the algorithm.
-func (k *DNSKEY) Generate(bits int) (PrivateKey, error) {
+func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 	switch k.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		if bits != 1024 {
@@ -52,14 +53,14 @@ func (k *DNSKEY) Generate(bits int) (PrivateKey, error) {
 			return nil, err
 		}
 		k.setPublicKeyDSA(params.Q, params.P, params.G, priv.PublicKey.Y)
-		return (*DSAPrivateKey)(priv), nil
+		return priv, nil
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
 		if err != nil {
 			return nil, err
 		}
 		k.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
-		return (*RSAPrivateKey)(priv), nil
+		return priv, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		var c elliptic.Curve
 		switch k.Algorithm {
@@ -73,7 +74,7 @@ func (k *DNSKEY) Generate(bits int) (PrivateKey, error) {
 			return nil, err
 		}
 		k.setPublicKeyECDSA(priv.PublicKey.X, priv.PublicKey.Y)
-		return (*ECDSAPrivateKey)(priv), nil
+		return priv, nil
 	default:
 		return nil, ErrAlg
 	}
