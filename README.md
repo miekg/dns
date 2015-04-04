@@ -35,6 +35,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/DevelopersPL/godnsagent
 * https://github.com/duedil-ltd/discodns
 * https://github.com/StalkR/dns-reverse-proxy
+* https://github.com/tianon/rawdns
 
 Send pull request if you want to be listed here.
 
