@@ -1693,7 +1693,7 @@ func setDLV(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 }
 
 func setCDS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	r, e, s := setDSs(h, c, o, f, "DLV")
+	r, e, s := setDSs(h, c, o, f, "CDS")
 	if r != nil {
 		return &CDS{*r.(*DS)}, e, s
 	}
