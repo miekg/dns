@@ -46,27 +46,9 @@ type Client struct {
 //	co.Close()
 //
 func Exchange(m *Msg, a string) (r *Msg, err error) {
-	var co *Conn
-	co, err = DialTimeout("udp", a, dnsTimeout)
-	if err != nil {
-		return nil, err
-	}
-
-	defer co.Close()
-	co.SetReadDeadline(time.Now().Add(dnsTimeout))
-	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
-
-	opt := m.IsEdns0()
-	// If EDNS0 is used use that for size.
-	if opt != nil && opt.UDPSize() >= MinMsgSize {
-		co.UDPSize = opt.UDPSize()
-	}
-
-	if err = co.WriteMsg(m); err != nil {
-		return nil, err
-	}
-	r, err = co.ReadMsg()
-	return r, err
+	c := Client{}
+	r, _, err = c.Exchange(m, a)
+	return
 }
 
 // ExchangeConn performs a synchronous query. It sends the message m via the connection
@@ -86,6 +68,9 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 		return nil, err
 	}
 	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
 	return r, err
 }
 
@@ -161,6 +146,9 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		return nil, 0, err
 	}
 	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
 	return r, co.rtt, err
 }
 
