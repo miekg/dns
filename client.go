@@ -46,9 +46,30 @@ type Client struct {
 //	co.Close()
 //
 func Exchange(m *Msg, a string) (r *Msg, err error) {
-	c := Client{}
-	r, _, err = c.Exchange(m, a)
-	return
+	var co *Conn
+	co, err = DialTimeout("udp", a, dnsTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	defer co.Close()
+	co.SetReadDeadline(time.Now().Add(dnsTimeout))
+	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
+
+	opt := m.IsEdns0()
+	// If EDNS0 is used use that for size.
+	if opt != nil && opt.UDPSize() >= MinMsgSize {
+		co.UDPSize = opt.UDPSize()
+	}
+
+	if err = co.WriteMsg(m); err != nil {
+		return nil, err
+	}
+	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
+	return r, err
 }
 
 // ExchangeConn performs a synchronous query. It sends the message m via the connection
