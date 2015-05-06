@@ -66,6 +66,9 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 		return nil, err
 	}
 	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
 	return r, err
 }
 
@@ -86,6 +89,9 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 		return nil, err
 	}
 	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
 	return r, err
 }
 
@@ -161,6 +167,9 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		return nil, 0, err
 	}
 	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
 	return r, co.rtt, err
 }
 
