@@ -548,6 +548,9 @@ a.example.com.                IN A 127.0.0.1
 8db7._openpgpkey.example.com. IN OPENPGPKEY mQCNAzIG
 $ORIGIN a.example.com.
 test                          IN A 127.0.0.1
+                              IN SSHFP   1 2 (
+                                           BC6533CDC95A79078A39A56EA7635984ED655318ADA9
+                                           B6159E30723665DA95BB )
 $ORIGIN b.example.com.
 test                          IN CNAME test.a.example.com.
 `
@@ -904,8 +907,9 @@ func TestILNP(t *testing.T) {
 
 func TestNsapGposEidNimloc(t *testing.T) {
 	dt := map[string]string{
-		"foo.bar.com.    IN  NSAP   21 47000580ffff000000321099991111222233334444": "foo.bar.com.\t3600\tIN\tNSAP\t21 47000580ffff000000321099991111222233334444",
-		"host.school.de  IN  NSAP   17 39276f3100111100002222333344449876":         "host.school.de.\t3600\tIN\tNSAP\t17 39276f3100111100002222333344449876",
+		"foo.bar.com.    IN  NSAP   21 47000580ffff000000321099991111222233334444": "foo.bar.com.\t3600\tIN\tNSAP\t0x47000580ffff000000321099991111222233334444",
+		"foo.bar.com.    IN  NSAP   0x47000580ffff000000321099991111222233334444":  "foo.bar.com.\t3600\tIN\tNSAP\t0x47000580ffff000000321099991111222233334444",
+		"host.school.de  IN  NSAP   17 39276f3100111100002222333344449876":         "host.school.de.\t3600\tIN\tNSAP\t0x39276f3100111100002222333344449876",
 		"444433332222111199990123000000ff. NSAP-PTR foo.bar.com.":                  "444433332222111199990123000000ff.\t3600\tIN\tNSAP-PTR\tfoo.bar.com.",
 		"lillee. IN  GPOS -32.6882 116.8652 10.0":                                  "lillee.\t3600\tIN\tGPOS\t-32.6882 116.8652 10.0",
 		"hinault. IN GPOS -22.6882 116.8652 250.0":                                 "hinault.\t3600\tIN\tGPOS\t-22.6882 116.8652 250.0",
@@ -1397,12 +1401,55 @@ func TestParseTLSA(t *testing.T) {
 			t.Error("failed to parse RR: ", err)
 			continue
 		}
-		if rr == nil {
-			t.Errorf("TLSA RR `%s` not parsed!", o)
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o, o, rr.String())
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+}
+
+func TestParseSSHFP(t *testing.T) {
+	lt := []string{
+		"test.example.org.\t300\tSSHFP\t1 2 (\n" +
+			"\t\t\t\t\tBC6533CDC95A79078A39A56EA7635984ED655318ADA9\n" +
+			"\t\t\t\t\tB6159E30723665DA95BB )",
+		"test.example.org.\t300\tSSHFP\t1 2 ( BC6533CDC  95A79078A39A56EA7635984ED655318AD  A9B6159E3072366 5DA95BB )",
+	}
+	result := "test.example.org.\t300\tIN\tSSHFP\t1 2 BC6533CDC95A79078A39A56EA7635984ED655318ADA9B6159E30723665DA95BB"
+	for _, o := range lt {
+		rr, err := NewRR(o)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != result {
+			t.Errorf("`%s' should be equal to\n\n`%s', but is     \n`%s'", o, result, rr.String())
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+}
+
+func TestParseHINFO(t *testing.T) {
+	dt := map[string]string{
+		"example.net. HINFO A B": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO \"A\" \"B\"": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO A B C D E F": "example.net.	3600	IN	HINFO	\"A\" \"B C D E F\"",
+		"example.net. HINFO AB": "example.net.	3600	IN	HINFO	\"AB\" \"\"",
+		// "example.net. HINFO PC-Intel-700mhz \"Redhat Linux 7.1\"": "example.net.	3600	IN	HINFO	\"PC-Intel-700mhz\" \"Redhat Linux 7.1\"",
+		// This one is recommended in Pro Bind book http://www.zytrax.com/books/dns/ch8/hinfo.html
+		// but effectively, even Bind would replace it to correctly formed text when you AXFR
+		// TODO: remove this set of comments or figure support for quoted/unquoted combinations in endingToTxtSlice function
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
 			continue
 		}
 		if rr.String() != o {
-			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o, o, rr.String())
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
 		} else {
 			t.Logf("RR is OK: `%s'", rr.String())
 		}
