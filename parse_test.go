@@ -1430,3 +1430,25 @@ func TestParseSSHFP(t *testing.T) {
 		}
 	}
 }
+
+func TestParseHINFO(t *testing.T) {
+	dt := map[string]string{
+		"example.net. HINFO A B": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO \"A\" \"B\"": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO A B C D E F": "example.net.	3600	IN	HINFO	\"A\" \"B C D E F\"",
+		"example.net. HINFO AB": "example.net.	3600	IN	HINFO	\"AB\" \"\"",
+		// "example.net. HINFO PC-Intel-700mhz \"Redhat Linux 7.1\"": "example.net.	3600	IN	HINFO	\"PC-Intel-700mhz\" \"Redhat Linux 7.1\"",
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		} else {
+			t.Logf("RR is OK: `%s'", rr.String())
+		}
+	}
+}

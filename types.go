@@ -255,8 +255,10 @@ type HINFO struct {
 
 func (rr *HINFO) Header() *RR_Header { return &rr.Hdr }
 func (rr *HINFO) copy() RR           { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
-func (rr *HINFO) String() string     { return rr.Hdr.String() + rr.Cpu + " " + rr.Os }
-func (rr *HINFO) len() int           { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
+func (rr *HINFO) String() string {
+	return rr.Hdr.String() + sprintTxt([]string{rr.Cpu, rr.Os})
+}
+func (rr *HINFO) len() int { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
 
 type MB struct {
 	Hdr RR_Header

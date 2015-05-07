@@ -345,11 +345,24 @@ func setHINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(HINFO)
 	rr.Hdr = h
 
-	l := <-c
-	rr.Cpu = l.token
-	<-c     // zBlank
-	l = <-c // zString
-	rr.Os = l.token
+	chunks, e, c1 := endingToTxtSlice(c, "bad HINFO Fields", f)
+	if e != nil {
+		return nil, e, c1
+	}
+
+	if ln := len(chunks); ln == 0 {
+		return rr, nil, ""
+	} else if ln == 1 {
+		// Can we split it?
+		if out := strings.Fields(chunks[0]); len(out) > 1 {
+			chunks = out
+		} else {
+			chunks = append(chunks, "")
+		}
+	}
+
+	rr.Cpu = chunks[0]
+	rr.Os = strings.Join(chunks[1:], " ")
 
 	return rr, nil, ""
 }
@@ -2176,7 +2189,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeEUI64:      parserFunc{setEUI64, false},
 	TypeGID:        parserFunc{setGID, false},
 	TypeGPOS:       parserFunc{setGPOS, false},
-	TypeHINFO:      parserFunc{setHINFO, false},
+	TypeHINFO:      parserFunc{setHINFO, true},
 	TypeHIP:        parserFunc{setHIP, true},
 	TypeIPSECKEY:   parserFunc{setIPSECKEY, true},
 	TypeKX:         parserFunc{setKX, false},
