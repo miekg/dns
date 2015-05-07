@@ -788,6 +788,7 @@ func zlexer(s *scan, c chan lex) {
 				comi++
 				break
 			}
+			println(stri)
 			str[stri] = x
 			stri++
 			space = false
