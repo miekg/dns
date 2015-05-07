@@ -1485,8 +1485,11 @@ func setSSHFP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	rr.Type = uint8(i)
 	<-c // zBlank
-	l = <-c
-	rr.FingerPrint = l.token
+	s, e1, c1 := endingToString(c, "bad SSHFP Fingerprint", f)
+	if e1 != nil {
+		return nil, e1, c1
+	}
+	rr.FingerPrint = s
 	return rr, nil, ""
 }
 
@@ -1610,14 +1613,8 @@ func setNSAP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.length == 0 {
 		return rr, nil, l.comment
 	}
-	i, e := strconv.Atoi(l.token)
-	if e != nil {
-		return nil, &ParseError{f, "bad NSAP Length", l}, ""
-	}
-	rr.Length = uint8(i)
-	<-c // zBlank
 	s, e1, c1 := endingToString(c, "bad NSAP Nsap", f)
-	if e != nil {
+	if e1 != nil {
 		return nil, e1, c1
 	}
 	rr.Nsap = s
@@ -2202,7 +2199,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeSOA:        parserFunc{setSOA, false},
 	TypeSPF:        parserFunc{setSPF, true},
 	TypeSRV:        parserFunc{setSRV, false},
-	TypeSSHFP:      parserFunc{setSSHFP, false},
+	TypeSSHFP:      parserFunc{setSSHFP, true},
 	TypeTALINK:     parserFunc{setTALINK, false},
 	TypeTA:         parserFunc{setTA, true},
 	TypeTLSA:       parserFunc{setTLSA, true},
