@@ -49,6 +49,9 @@ func endingToString(c chan lex, errstr, f string) (string, *ParseError, string) 
 	s := ""
 	l := <-c // zString
 	for l.value != zNewline && l.value != zEOF {
+		if l.err {
+			return s, &ParseError{f, errstr, l}, ""
+		}
 		switch l.value {
 		case zString:
 			s += l.token
@@ -68,11 +71,17 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	quote := false
 	l := <-c
 	var s []string
+	if l.err {
+		return s, &ParseError{f, errstr, l}, ""
+	}
 	switch l.value == zQuote {
 	case true: // A number of quoted string
 		s = make([]string, 0)
 		empty := true
 		for l.value != zNewline && l.value != zEOF {
+			if l.err {
+				return nil, &ParseError{f, errstr, l}, ""
+			}
 			switch l.value {
 			case zString:
 				empty = false
@@ -91,7 +100,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 						p, i = p+255, i+255
 					}
 					s = append(s, sx...)
-					break;
+					break
 				}
 
 				s = append(s, l.token)
@@ -117,6 +126,9 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	case false: // Unquoted text record
 		s = make([]string, 1)
 		for l.value != zNewline && l.value != zEOF {
+			if l.err {
+				return s, &ParseError{f, errstr, l}, ""
+			}
 			s[0] += l.token
 			l = <-c
 		}
@@ -1764,9 +1776,10 @@ func setTLSA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, &ParseError{f, "bad TLSA MatchingType", l}, ""
 	}
 	rr.MatchingType = uint8(i)
-	s, e, c1 := endingToString(c, "bad TLSA Certificate", f)
-	if e != nil {
-		return nil, e.(*ParseError), c1
+	// So this needs be e2 (i.e. different than e), because...??t
+	s, e2, c1 := endingToString(c, "bad TLSA Certificate", f)
+	if e2 != nil {
+		return nil, e2, c1
 	}
 	rr.Certificate = s
 	return rr, nil, c1
