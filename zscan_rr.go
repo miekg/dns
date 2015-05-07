@@ -1450,9 +1450,9 @@ func setWKS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		case zString:
 			if k, err = net.LookupPort(proto, l.token); err != nil {
 				if i, e := strconv.Atoi(l.token); e != nil { // If a number use that
-					rr.BitMap = append(rr.BitMap, uint16(i))
-				} else {
 					return nil, &ParseError{f, "bad WKS BitMap", l}, ""
+				} else {
+					rr.BitMap = append(rr.BitMap, uint16(i))
 				}
 			}
 			rr.BitMap = append(rr.BitMap, uint16(k))
