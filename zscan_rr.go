@@ -136,7 +136,7 @@ func endingToTxtSlice(c chan lex, errstr, f string) ([]string, *ParseError, stri
 	return s, nil, l.comment
 }
 
-func setA(h RR_Header, c chan lex, o, f string) (_ RR, e *ParseError, _ string) {
+func setA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(A)
 	rr.Hdr = h
 
@@ -144,6 +144,7 @@ func setA(h RR_Header, c chan lex, o, f string) (_ RR, e *ParseError, _ string) 
 	if l.length == 0 { // Dynamic updates.
 		return rr, nil, ""
 	}
+	var e *ParseError
 	rr.A, e = stringToIPv4(l)
 	if e != nil {
 		return nil, e, ""
