@@ -3,48 +3,58 @@ package dns
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"runtime"
 	"testing"
 	"time"
 )
 
-func getzonememcost(t *testing.T) []RR {
-	const LENGTH = 1000000
+var testbuffer []byte
 
-	buf := bytes.NewBuffer(nil)
-	for i := 0; i < LENGTH; i++ {
-		fmt.Fprintf(buf, "node%d.example.org 3600 IN A 1.2.3.4\n", i)
+const testzonelength = 50
+
+func testreader() io.Reader {
+	if testbuffer == nil {
+		buf := bytes.NewBuffer(nil)
+		for i := 0; i < testzonelength; i++ {
+			fmt.Fprintf(buf, "node%d.example.org 3600 IN A 1.2.3.4\n", i)
+		}
+		testbuffer = buf.Bytes()
 	}
+	return bytes.NewBuffer(testbuffer)
+}
 
-	var rr_storage = make([]RR, LENGTH)
+func zoneparserbenchmark(b *testing.B) []RR {
+	zoneinput := testreader()
+	rr_storage := make([]RR, testzonelength*300000)
 
 	// garbage-collect now to avoid delays in test
 	runtime.GC()
 	time.Sleep(100 * time.Millisecond)
 
-	var memBefore, memAfter runtime.MemStats
-	runtime.ReadMemStats(&memBefore)
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
 
-	start := time.Now().UnixNano()
-	to := ParseZone(buf, "", "parse_test.db")
-	var i int
-	for x := range to {
-		if x.Error != nil {
-			t.Error(x.Error)
-			continue
+	item, alloc, lastalloc := 0, uint64(0), mem.TotalAlloc
+	for bnum := 0; bnum < b.N; bnum++ {
+
+		to := ParseZone(zoneinput, "", "parse_test.db")
+		for x := range to {
+			if x.Error != nil {
+				b.Fatal(x.Error)
+				continue
+			}
+			rr_storage[item] = x.RR
+			item++
 		}
-		rr_storage[i] = x.RR
-		i++
+		runtime.ReadMemStats(&mem)
+		alloc += mem.TotalAlloc - lastalloc
+		lastalloc = mem.TotalAlloc
+
 	}
-	delta := time.Now().UnixNano() - start
 
-	time.Sleep(10 * time.Millisecond)
-	runtime.ReadMemStats(&memAfter)
-	t.Log("TotalAlloc:", memAfter.TotalAlloc-memBefore.TotalAlloc, "  HeapInuse:", memAfter.HeapInuse-memBefore.HeapInuse, "  HeapObjects:", memAfter.HeapObjects-memBefore.HeapObjects)
-
-	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
-
+	b.Logf("Average alloc growth per iteration: %d (%d parsing rounds)", int(float64(alloc)/float64(b.N)), b.N)
 	return rr_storage
 }
 
@@ -63,21 +73,15 @@ func oldSetA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func TestZoneMemCostNew(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode.")
-	}
-	_ = getzonememcost(t)
+func BenchmarkZoneParseWithStringToIPv4(b *testing.B) {
+	_ = zoneparserbenchmark(b)
 }
 
-func TestZoneMemCostOld(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode.")
-	}
+func BenchmarkZoneParseWithNetParseIP(b *testing.B) {
 	oldParser := typeToparserFunc[TypeA]
 	defer func() {
 		typeToparserFunc[TypeA] = oldParser
 	}()
 	typeToparserFunc[TypeA] = parserFunc{oldSetA, false}
-	_ = getzonememcost(t)
+	_ = zoneparserbenchmark(b)
 }
