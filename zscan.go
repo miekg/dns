@@ -969,12 +969,11 @@ func stringToIPv4(l lex) (net.IP, *ParseError) {
 	var (
 		ip  uint64
 		oct uint32
-		b   rune
 		num byte
 	)
 
 	// not checking len upfront, error will be obvious in soon anyway
-	for _, b = range l.token {
+	for _, b := range l.token {
 		switch {
 		case b == '.':
 			if num++; num > 3 {
@@ -1001,6 +1000,5 @@ func stringToIPv4(l lex) (net.IP, *ParseError) {
 	if ip > 0xffffffff {
 		return nil, &ParseError{l.token, "bad IP address", l}
 	}
-
 	return net.IP([]byte{byte(ip >> 24), byte(ip >> 16), byte(ip >> 8), byte(ip)}), nil
 }

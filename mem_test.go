@@ -10,7 +10,7 @@ import (
 )
 
 func getzonememcost(t *testing.T) []RR {
-	const LENGTH = 100000
+	const LENGTH = 1000000
 
 	buf := bytes.NewBuffer(nil)
 	for i := 0; i < LENGTH; i++ {
@@ -19,7 +19,7 @@ func getzonememcost(t *testing.T) []RR {
 
 	var rr_storage = make([]RR, LENGTH)
 
-	// collect now to avoid delay
+	// garbage-collect now to avoid delays in test
 	runtime.GC()
 	time.Sleep(100 * time.Millisecond)
 
@@ -39,8 +39,9 @@ func getzonememcost(t *testing.T) []RR {
 	}
 	delta := time.Now().UnixNano() - start
 
+	time.Sleep(10 * time.Millisecond)
 	runtime.ReadMemStats(&memAfter)
-	t.Log("HeapAlloc:", (memAfter.HeapAlloc-memBefore.HeapAlloc)/1024, "  HeapInuse:", (memAfter.HeapInuse-memBefore.HeapInuse)/1024)
+	t.Log("TotalAlloc:", memAfter.TotalAlloc-memBefore.TotalAlloc, "  HeapInuse:", memAfter.HeapInuse-memBefore.HeapInuse, "  HeapObjects:", memAfter.HeapObjects-memBefore.HeapObjects)
 
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 
@@ -55,11 +56,18 @@ func oldSetA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.length == 0 { // Dynamic updates.
 		return rr, nil, ""
 	}
-	rr.A = net.ParseIP(l.token).To4()
+	rr.A = net.ParseIP(l.token)
 	if rr.A == nil {
 		return nil, &ParseError{f, "bad A A", l}, ""
 	}
 	return rr, nil, ""
+}
+
+func TestZoneMemCostNew(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+	_ = getzonememcost(t)
 }
 
 func TestZoneMemCostOld(t *testing.T) {
@@ -71,12 +79,5 @@ func TestZoneMemCostOld(t *testing.T) {
 		typeToparserFunc[TypeA] = oldParser
 	}()
 	typeToparserFunc[TypeA] = parserFunc{oldSetA, false}
-	_ = getzonememcost(t)
-}
-
-func TestZoneMemCostNew(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test in short mode.")
-	}
 	_ = getzonememcost(t)
 }
