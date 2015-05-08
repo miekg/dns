@@ -30,17 +30,20 @@ func Field(r RR, i int) string {
 	case reflect.Slice:
 		switch reflect.ValueOf(r).Elem().Type().Field(i).Tag {
 		case `dns:"a"`:
-			// TODO(miek): Hmm store this as 16 bytes
 			if d.Len() < net.IPv6len {
-				return net.IPv4(byte(d.Index(0).Uint()),
+				return net.IP([]byte{
+					byte(d.Index(0).Uint()),
 					byte(d.Index(1).Uint()),
 					byte(d.Index(2).Uint()),
-					byte(d.Index(3).Uint())).String()
+					byte(d.Index(3).Uint()),
+				}).String()
 			}
-			return net.IPv4(byte(d.Index(12).Uint()),
+			return net.IP([]byte{
+				byte(d.Index(12).Uint()),
 				byte(d.Index(13).Uint()),
 				byte(d.Index(14).Uint()),
-				byte(d.Index(15).Uint())).String()
+				byte(d.Index(15).Uint()),
+			}).String()
 		case `dns:"aaaa"`:
 			return net.IP{
 				byte(d.Index(0).Uint()),

@@ -1073,7 +1073,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off+net.IPv4len > lenrd || off+net.IPv4len > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking a"}
 				}
-				fv.Set(reflect.ValueOf(net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])))
+				fv.Set(reflect.ValueOf(net.IP(msg[off : off+4])))
 				off += net.IPv4len
 			case `dns:"aaaa"`:
 				if val.Type().String() == "dns.IPSECKEY" {

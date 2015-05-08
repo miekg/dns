@@ -3,6 +3,7 @@ package dns
 import (
 	"io"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -961,4 +962,43 @@ func stringToNodeID(l lex) (uint64, *ParseError) {
 		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
 	}
 	return u, nil
+}
+
+// parse IPv4 address to four-byte slice under net.IP to save memory (see #166)
+func stringToIPv4(l lex) (net.IP, *ParseError) {
+	var (
+		ip  uint64
+		oct uint32
+		num byte
+	)
+
+	// not checking len upfront, error will be obvious in soon anyway
+	for _, b := range l.token {
+		switch {
+		case b == '.':
+			if num++; num > 3 {
+				return nil, &ParseError{l.token, "bad IP address", l}
+			}
+			ip = ip<<8 + uint64(oct)
+			if ip > 0xffffffff {
+				return nil, &ParseError{l.token, "bad IP address", l}
+			}
+			oct = 0
+		case b >= '0' && b <= '9':
+			oct = oct*10 + uint32(b-'0')
+			if oct > 255 {
+				return nil, &ParseError{l.token, "bad IP address", l}
+			}
+		default:
+			return nil, &ParseError{l.token, "bad IP address", l}
+		}
+	}
+	if num < 3 {
+		return nil, &ParseError{l.token, "bad IP address", l}
+	}
+	ip = ip<<8 + uint64(oct)
+	if ip > 0xffffffff {
+		return nil, &ParseError{l.token, "bad IP address", l}
+	}
+	return net.IP([]byte{byte(ip >> 24), byte(ip >> 16), byte(ip >> 8), byte(ip)}), nil
 }

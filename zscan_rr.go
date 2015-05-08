@@ -144,9 +144,10 @@ func setA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.length == 0 { // Dynamic updates.
 		return rr, nil, ""
 	}
-	rr.A = net.ParseIP(l.token)
-	if rr.A == nil {
-		return nil, &ParseError{f, "bad A A", l}, ""
+	var e *ParseError
+	rr.A, e = stringToIPv4(l)
+	if e != nil {
+		return nil, e, ""
 	}
 	return rr, nil, ""
 }
