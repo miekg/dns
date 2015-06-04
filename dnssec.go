@@ -205,11 +205,39 @@ func (d *DS) ToCDS() *CDS {
 	return c
 }
 
+// isValidRRSet checks if a set of RRs is a valid RRset as defined by RFC 2181.
+// This means the RRs need to have the same type, name, and class. Returns true
+// if the RR set is valid, otherwise false.
+func isValidRRSet(rrset []RR) bool {
+	if len(rrset) == 0 {
+		return false
+	}
+	if len(rrset) == 1 {
+		return true
+	}
+	rrHeader := rrset[0].Header()
+	rrType := rrHeader.Rrtype
+	rrClass := rrHeader.Class
+	rrName := rrHeader.Name
+
+	for _, rr := range rrset[1:] {
+		curRRHeader := rr.Header()
+		if curRRHeader.Rrtype != rrType || curRRHeader.Class != rrClass || curRRHeader.Name != rrName {
+			// Mismatch between the records, so this is not a valid rrset for
+			//signing/verifying
+			return false
+		}
+	}
+
+	return true
+}
+
 // Sign signs an RRSet. The signature needs to be filled in with
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
 // otherwise false.
-// There is no check if RRSet is a proper (RFC 2181) RRSet.
+// This function checks if RRSet is a proper (RFC 2181) RRSet, and returns
+// ErrRRSet if it is not.
 // If OrigTTL is non zero, it is used as-is, otherwise the TTL of the RRset
 // is used as the OrigTTL.
 func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
@@ -219,6 +247,10 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
+	}
+
+	if !isValidRRSet(rrset) {
+		return ErrRRset
 	}
 
 	rr.Hdr.Rrtype = TypeRRSIG
@@ -296,7 +328,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
-	if len(rrset) == 0 {
+	if !isValidRRSet(rrset) {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
@@ -314,14 +346,17 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	if k.Protocol != 3 {
 		return ErrKey
 	}
-	for _, r := range rrset {
-		if r.Header().Class != rr.Hdr.Class {
-			return ErrRRset
-		}
-		if r.Header().Rrtype != rr.TypeCovered {
-			return ErrRRset
-		}
+
+	// isValidRRSet checked that we have at least one RR and that the RRs in
+	// the set have consistent type, class, and name. Also check that type and
+	// class matches the RRSIG record.
+	if rrset[0].Header().Class != rr.Hdr.Class {
+		return ErrRRset
 	}
+	if rrset[0].Header().Rrtype != rr.TypeCovered {
+		return ErrRRset
+	}
+
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
@@ -409,7 +444,8 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate
 // if a signature period is valid. If t is the zero time, the
-// current time is taken other t is.
+// current time is taken other t is. Returns true if the signature
+// is valid at the given time, otherwise returns false.
 func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
 	var utc int64
 	if t.IsZero() {
