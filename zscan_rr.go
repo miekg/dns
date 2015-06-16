@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"net"
 	"strconv"
 	"strings"
@@ -2170,10 +2171,57 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string)
 	return rr, nil, c1
 }
 
+func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	rr := new(CAA)
+	rr.Hdr = h
+	l := <-c
+	if l.token != "\\#" {
+		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
+	}
+	<-c // zBlank
+	l = <-c
+	rdlength, e := strconv.Atoi(l.token)
+	if e != nil {
+		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
+	}
+	s, e1, c1 := endingToString(c, "bad CAA Rdata", f)
+	if e1 != nil {
+		return nil, e1, c1
+	}
+	if rdlength*2 != len(s) || rdlength*2 < 4 {
+		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
+	}
+
+	flagbyte, e := hex.DecodeString(s[0:2])
+	if e != nil {
+		return nil, &ParseError{f, "bad CAA Flag", l}, ""
+	}
+	rr.Flag = uint8(flagbyte[0])
+
+	tagbyte, e := hex.DecodeString(s[2:4])
+	if e != nil {
+		return nil, &ParseError{f, "bad CAA Tag length", l}, ""
+	}
+	taglength := int(tagbyte[0])
+
+	if rdlength*2 < (4 + taglength) {
+		return nil, &ParseError{f, "bad CAA Tag length", l}, ""
+	}
+
+	tag, e := hex.DecodeString(s[4:4+taglength])
+	if e != nil {
+		return nil, &ParseError{f, "bad CAA Tag", l}, ""
+	}
+	rr.Tag = string(tag)
+
+	return rr, nil, c1
+}
+
 var typeToparserFunc = map[uint16]parserFunc{
 	TypeAAAA:       parserFunc{setAAAA, false},
 	TypeAFSDB:      parserFunc{setAFSDB, false},
 	TypeA:          parserFunc{setA, false},
+	TypeCAA:        parserFunc{setCAA, true},
 	TypeCDS:        parserFunc{setCDS, true},
 	TypeCDNSKEY:    parserFunc{setCDNSKEY, true},
 	TypeCERT:       parserFunc{setCERT, true},

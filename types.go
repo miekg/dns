@@ -1527,25 +1527,25 @@ func (rr *EUI64) copy() RR           { return &EUI64{*rr.Hdr.copyHeader(), rr.Ad
 func (rr *EUI64) String() string     { return rr.Hdr.String() + euiToString(rr.Address, 64) }
 func (rr *EUI64) len() int           { return rr.Hdr.len() + 8 }
 
-// Support in incomplete - just handle it as unknown record
-/*
 type CAA struct {
 	Hdr   RR_Header
 	Flag  uint8
 	Tag   string
-	Value string `dns:"octet"`
+	Value string `dns:"hex"`
 }
 
 func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, rr.Tag, rr.Value} }
-func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + 1 + len(rr.Value) }
+func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + len(rr.Value)/2 }
 
 func (rr *CAA) String() string {
-	s := rr.Hdr.String() + strconv.FormatInt(int64(rr.Flag), 10) + " " + rr.Tag
-	s += strconv.QuoteToASCII(rr.Value)
+	s := rr.Hdr.String()
+
+	s += "\\# " + strconv.Itoa(2 + len(rr.Tag) + len(rr.Value)) + " "
+	s += fmt.Sprintf("%02X%02X%X%s", rr.Flag, len(rr.Tag), rr.Tag, strings.ToUpper(rr.Value))
 	return s
 }
-*/
+
 
 type UID struct {
 	Hdr RR_Header
@@ -1668,10 +1668,10 @@ func copyIP(ip net.IP) net.IP {
 
 // Map of constructors for each RR type.
 var typeToRR = map[uint16]func() RR{
-	TypeA:     func() RR { return new(A) },
-	TypeAAAA:  func() RR { return new(AAAA) },
-	TypeAFSDB: func() RR { return new(AFSDB) },
-	//	TypeCAA:        func() RR { return new(CAA) },
+	TypeA:          func() RR { return new(A) },
+	TypeAAAA:       func() RR { return new(AAAA) },
+	TypeAFSDB:      func() RR { return new(AFSDB) },
+	TypeCAA:        func() RR { return new(CAA) },
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
 	TypeCNAME:      func() RR { return new(CNAME) },
