@@ -2188,7 +2188,7 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if e1 != nil {
 		return nil, e1, c1
 	}
-	if rdlength*2 != len(s) || rdlength*2 < 4 {
+	if rdlength*2 != len(s) || len(s) < 4 {
 		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
 	}
 
