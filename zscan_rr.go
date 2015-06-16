@@ -2208,11 +2208,13 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, &ParseError{f, "bad CAA Tag length", l}, ""
 	}
 
-	tag, e := hex.DecodeString(s[4:4+taglength])
+	tag, e := hex.DecodeString(s[4:4+(taglength*2)])
 	if e != nil {
 		return nil, &ParseError{f, "bad CAA Tag", l}, ""
 	}
 	rr.Tag = string(tag)
+
+	rr.Value = s[4+(taglength*2):]
 
 	return rr, nil, c1
 }

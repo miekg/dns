@@ -1541,7 +1541,7 @@ func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + len
 func (rr *CAA) String() string {
 	s := rr.Hdr.String()
 
-	s += "\\# " + strconv.Itoa(2 + len(rr.Tag) + len(rr.Value)) + " "
+	s += "\\# " + strconv.Itoa(2 + len(rr.Tag) + len(rr.Value)/2) + " "
 	s += fmt.Sprintf("%02X%02X%X%s", rr.Flag, len(rr.Tag), rr.Tag, strings.ToUpper(rr.Value))
 	return s
 }
