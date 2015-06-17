@@ -194,7 +194,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	if _, ok := co.Conn.(*net.TCPConn); ok {
 		p = make([]byte, MaxMsgSize)
 	} else {
-		if co.UDPSize >= 512 {
+		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
 			p = make([]byte, MinMsgSize)
