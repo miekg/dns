@@ -194,7 +194,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	if _, ok := co.Conn.(*net.TCPConn); ok {
 		p = make([]byte, MaxMsgSize)
 	} else {
-		if co.UDPSize >= 512 {
+		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
 			p = make([]byte, MinMsgSize)
@@ -327,21 +327,3 @@ func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, er
 	}
 	return conn, nil
 }
-
-// Close implements the net.Conn Close method.
-func (co *Conn) Close() error { return co.Conn.Close() }
-
-// LocalAddr implements the net.Conn LocalAddr method.
-func (co *Conn) LocalAddr() net.Addr { return co.Conn.LocalAddr() }
-
-// RemoteAddr implements the net.Conn RemoteAddr method.
-func (co *Conn) RemoteAddr() net.Addr { return co.Conn.RemoteAddr() }
-
-// SetDeadline implements the net.Conn SetDeadline method.
-func (co *Conn) SetDeadline(t time.Time) error { return co.Conn.SetDeadline(t) }
-
-// SetReadDeadline implements the net.Conn SetReadDeadline method.
-func (co *Conn) SetReadDeadline(t time.Time) error { return co.Conn.SetReadDeadline(t) }
-
-// SetWriteDeadline implements the net.Conn SetWriteDeadline method.
-func (co *Conn) SetWriteDeadline(t time.Time) error { return co.Conn.SetWriteDeadline(t) }
