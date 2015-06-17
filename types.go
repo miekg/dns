@@ -501,6 +501,34 @@ func sprintName(s string) string {
 	return string(dst)
 }
 
+func sprintCAAValue(s string) string {
+	src := []byte(s)
+	dst := make([]byte, 0, len(src))
+	dst = append(dst, '"')
+	for i := 0; i < len(src); {
+		if i+1 < len(src) && src[i] == '\\' && src[i+1] == '.' {
+			dst = append(dst, src[i:i+2]...)
+			i += 2
+		} else {
+			b, n := nextByte(src, i)
+			if n == 0 {
+				i++ // dangling back slash
+			} else if b == '.' {
+				dst = append(dst, b)
+			} else {
+				if b < ' ' || b > '~' {
+					dst = appendByte(dst, b)
+				} else {
+					dst = append(dst, b)
+				}
+			}
+			i += n
+		}
+	}
+	dst = append(dst, '"')
+	return string(dst)
+}
+
 func sprintTxt(txt []string) string {
 	var out []byte
 	for i, s := range txt {
@@ -543,19 +571,22 @@ func appendTXTStringByte(s []byte, b byte) []byte {
 		return append(s, '\\', b)
 	}
 	if b < ' ' || b > '~' {
-		var buf [3]byte
-		bufs := strconv.AppendInt(buf[:0], int64(b), 10)
-		s = append(s, '\\')
-		for i := 0; i < 3-len(bufs); i++ {
-			s = append(s, '0')
-		}
-		for _, r := range bufs {
-			s = append(s, r)
-		}
-		return s
-
+		return appendByte(s, b)
 	}
 	return append(s, b)
+}
+
+func appendByte(s []byte, b byte) []byte {
+	var buf [3]byte
+	bufs := strconv.AppendInt(buf[:0], int64(b), 10)
+	s = append(s, '\\')
+	for i := 0; i < 3-len(bufs); i++ {
+		s = append(s, '0')
+	}
+	for _, r := range bufs {
+		s = append(s, r)
+	}
+	return s
 }
 
 func nextByte(b []byte, offset int) (byte, int) {
@@ -1531,20 +1562,13 @@ type CAA struct {
 	Hdr   RR_Header
 	Flag  uint8
 	Tag   string
-	Value string `dns:"hex"`
+	Value string `dns:"octet"`
 }
 
 func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, rr.Tag, rr.Value} }
 func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + len(rr.Value)/2 }
-
-func (rr *CAA) String() string {
-	s := rr.Hdr.String()
-
-	s += "\\# " + strconv.Itoa(2 + len(rr.Tag) + len(rr.Value)/2) + " "
-	s += fmt.Sprintf("%02X%02X%X%s", rr.Flag, len(rr.Tag), rr.Tag, strings.ToUpper(rr.Value))
-	return s
-}
+func (rr *CAA) String() string     { return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintCAAValue(rr.Value) }
 
 
 type UID struct {

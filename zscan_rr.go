@@ -2,7 +2,6 @@ package dns
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"net"
 	"strconv"
 	"strings"
@@ -2175,47 +2174,34 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(CAA)
 	rr.Hdr = h
 	l := <-c
-	if l.token != "\\#" {
-		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
+	if l.length == 0 {
+		return rr, nil, l.comment
 	}
-	<-c // zBlank
-	l = <-c
-	rdlength, e := strconv.Atoi(l.token)
-	if e != nil {
-		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
-	}
-	s, e1, c1 := endingToString(c, "bad CAA Rdata", f)
-	if e1 != nil {
-		return nil, e1, c1
-	}
-	if rdlength*2 != len(s) || len(s) < 4 {
-		return nil, &ParseError{f, "bad CAA Rdata", l}, ""
-	}
-
-	flagbyte, e := hex.DecodeString(s[0:2])
-	if e != nil {
+	i, err := strconv.Atoi(l.token)
+	if err != nil {
 		return nil, &ParseError{f, "bad CAA Flag", l}, ""
 	}
-	rr.Flag = uint8(flagbyte[0])
+	rr.Flag = uint8(i)
 
-	tagbyte, e := hex.DecodeString(s[2:4])
-	if e != nil {
-		return nil, &ParseError{f, "bad CAA Tag length", l}, ""
-	}
-	taglength := int(tagbyte[0])
-
-	if rdlength*2 < (4 + taglength) {
-		return nil, &ParseError{f, "bad CAA Tag length", l}, ""
-	}
-
-	tag, e := hex.DecodeString(s[4:4+(taglength*2)])
-	if e != nil {
+	<-c // zBlank
+	l = <-c // zString
+	if l.value != zString {
 		return nil, &ParseError{f, "bad CAA Tag", l}, ""
 	}
-	rr.Tag = string(tag)
+	rr.Tag = l.token
 
-	rr.Value = s[4+(taglength*2):]
-
+	<-c // zBlank
+	s, e, c1 := endingToTxtSlice(c, "bad CAA Value", f)
+	if e != nil {
+		return nil, e, ""
+	}
+	if len(s) > 1 {
+		return nil, &ParseError{f, "bad CAA Value", l}, ""
+	} else if len(s) == 0 {
+		rr.Value = ""
+	} else {
+		rr.Value = s[0]
+	}
 	return rr, nil, c1
 }
 
