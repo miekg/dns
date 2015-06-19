@@ -921,8 +921,8 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+len(s)], s)
 				off += len(s)
 			case `dns:"octet"`:
-				var varstrTmp []byte
-				off, err = packOctetString(fv.String(), msg, off, varstrTmp)
+				bytesTmp := make([]byte, 0)
+				off, err = packOctetString(fv.String(), msg, off, bytesTmp)
 				if err != nil {
 					return lenmsg, err
 				}

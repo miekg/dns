@@ -2197,8 +2197,6 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	if len(s) > 1 {
 		return nil, &ParseError{f, "bad CAA Value", l}, ""
-	} else if len(s) == 0 {
-		rr.Value = ""
 	} else {
 		rr.Value = s[0]
 	}
