@@ -201,14 +201,16 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		}
 	}
 	n, err := co.Read(p)
-	if err != nil && n == 0 {
+	if err != nil {
 		return nil, err
+	} else if n < 12 {
+		return nil, ErrShortRead
 	}
+
 	p = p[:n]
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
-	co.rtt = time.Since(co.t)
 	if t := m.IsTsig(); t != nil {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return m, ErrSecret
@@ -217,6 +219,40 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 	}
 	return m, err
+}
+
+// ReadMsgBytes reads a message bytes from the connection. Parses and fills
+// dns message wire header (passing nil would skip header parsing) and
+// returns message bytes to process them later.
+//
+// Note that this function would not be able to report TSIG error or
+// check it got actual DNS payload.
+func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
+	var p []byte
+	if _, ok := co.Conn.(*net.TCPConn); ok {
+		p = make([]byte, MaxMsgSize)
+	} else {
+		if co.UDPSize > MinMsgSize {
+			p = make([]byte, co.UDPSize)
+		} else {
+			p = make([]byte, MinMsgSize)
+		}
+	}
+
+	n, err := co.Read(p)
+	if err != nil {
+		return nil, err
+	} else if n < 12 {
+		return nil, ErrShortRead
+	}
+
+	p = p[:n]
+	if hdr != nil {
+		if _, err = UnpackStruct(hdr, p, 0); err != nil {
+			return nil, err
+		}
+	}
+	return p, err
 }
 
 // Read implements the net.Conn read method.
@@ -259,6 +295,8 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if err != nil {
 		return n, err
 	}
+
+	co.rtt = time.Since(co.t)
 	return n, err
 }
 
