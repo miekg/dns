@@ -236,8 +236,7 @@ func isValidRRSet(rrset []RR) bool {
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
 // otherwise false.
-// This function checks if RRSet is a proper (RFC 2181) RRSet, and returns
-// ErrRRSet if it is not.
+// There is no check if RRSet is a proper (RFC 2181) RRSet.
 // If OrigTTL is non zero, it is used as-is, otherwise the TTL of the RRset
 // is used as the OrigTTL.
 func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
@@ -247,10 +246,6 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
-	}
-
-	if !isValidRRSet(rrset) {
-		return ErrRRset
 	}
 
 	rr.Hdr.Rrtype = TypeRRSIG

@@ -690,22 +690,22 @@ func TestInvalidRRSet(t *testing.T) {
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &TXT{Hdr: RR_Header{Name: "nama.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"_o/"}}
 
-	if err := signature.Sign(privatekey, badRecords); err != ErrRRset {
-		t.Fatal("Sign returned no error for record set with inconsistent names")
+	if isValidRRSet(badRecords) {
+		t.Fatal("Record set with inconsistent names considered valid")
 	}
 
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &A{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeA, Class: ClassINET, Ttl: 0}}
 
-	if err := signature.Sign(privatekey, badRecords); err != ErrRRset {
-		t.Fatal("Sign returned no error for record set with inconsistent record types")
+	if isValidRRSet(badRecords) {
+		t.Fatal("Record set with inconsistent record types considered valid")
 	}
 
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassCHAOS, Ttl: 0}, Txt: []string{"_o/"}}
 
-	if err := signature.Sign(privatekey, badRecords); err != ErrRRset {
-		t.Fatal("Sign returned no error for record set with inconsistent record class")
+	if isValidRRSet(badRecords) {
+		t.Fatal("Record set with inconsistent record class considered valid")
 	}
 
 	// Sign the good record set and then make sure verification fails on the bad record set
