@@ -189,25 +189,12 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 // If the received message contains a TSIG record the transaction
 // signature is verified.
 func (co *Conn) ReadMsg() (*Msg, error) {
-	var p []byte
-	m := new(Msg)
-	if _, ok := co.Conn.(*net.TCPConn); ok {
-		p = make([]byte, MaxMsgSize)
-	} else {
-		if co.UDPSize > MinMsgSize {
-			p = make([]byte, co.UDPSize)
-		} else {
-			p = make([]byte, MinMsgSize)
-		}
-	}
-	n, err := co.Read(p)
+	p, err := co.ReadMsgBytes(nil)
 	if err != nil {
 		return nil, err
-	} else if n < 12 {
-		return nil, ErrShortRead
 	}
 
-	p = p[:n]
+	m := new(Msg)
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
@@ -221,15 +208,17 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	return m, err
 }
 
-// ReadMsgBytes reads a message bytes from the connection. Parses and fills
-// dns message wire header (passing nil would skip header parsing) and
-// returns message bytes to process them later.
+// ReadMsgBytes reads DNS packet, parses and fills wire header (passing nil
+// would cause skipping that). Returns message in byte format to parse with
+// Msg.Unpack later on.
 //
 // Note that this function would not be able to report TSIG error or
 // check it got actual DNS payload.
 func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 	var p []byte
+
 	if _, ok := co.Conn.(*net.TCPConn); ok {
+		// we got two byte
 		p = make([]byte, MaxMsgSize)
 	} else {
 		if co.UDPSize > MinMsgSize {
@@ -242,7 +231,7 @@ func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 	n, err := co.Read(p)
 	if err != nil {
 		return nil, err
-	} else if n < 12 {
+	} else if n < _HBytes {
 		return nil, ErrShortRead
 	}
 
