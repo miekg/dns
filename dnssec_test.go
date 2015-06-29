@@ -690,21 +690,21 @@ func TestInvalidRRSet(t *testing.T) {
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &TXT{Hdr: RR_Header{Name: "nama.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"_o/"}}
 
-	if isValidRRSet(badRecords) {
+	if IsRRset(badRecords) {
 		t.Fatal("Record set with inconsistent names considered valid")
 	}
 
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &A{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeA, Class: ClassINET, Ttl: 0}}
 
-	if isValidRRSet(badRecords) {
+	if IsRRset(badRecords) {
 		t.Fatal("Record set with inconsistent record types considered valid")
 	}
 
 	badRecords[0] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 	badRecords[1] = &TXT{Hdr: RR_Header{Name: "name.cloudflare.com.", Rrtype: TypeTXT, Class: ClassCHAOS, Ttl: 0}, Txt: []string{"_o/"}}
 
-	if isValidRRSet(badRecords) {
+	if IsRRset(badRecords) {
 		t.Fatal("Record set with inconsistent record class considered valid")
 	}
 

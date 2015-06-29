@@ -205,33 +205,6 @@ func (d *DS) ToCDS() *CDS {
 	return c
 }
 
-// isValidRRSet checks if a set of RRs is a valid RRset as defined by RFC 2181.
-// This means the RRs need to have the same type, name, and class. Returns true
-// if the RR set is valid, otherwise false.
-func isValidRRSet(rrset []RR) bool {
-	if len(rrset) == 0 {
-		return false
-	}
-	if len(rrset) == 1 {
-		return true
-	}
-	rrHeader := rrset[0].Header()
-	rrType := rrHeader.Rrtype
-	rrClass := rrHeader.Class
-	rrName := rrHeader.Name
-
-	for _, rr := range rrset[1:] {
-		curRRHeader := rr.Header()
-		if curRRHeader.Rrtype != rrType || curRRHeader.Class != rrClass || curRRHeader.Name != rrName {
-			// Mismatch between the records, so this is not a valid rrset for
-			//signing/verifying
-			return false
-		}
-	}
-
-	return true
-}
-
 // Sign signs an RRSet. The signature needs to be filled in with
 // the values: Inception, Expiration, KeyTag, SignerName and Algorithm.
 // The rest is copied from the RRset. Sign returns true when the signing went OK,
@@ -323,7 +296,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
-	if !isValidRRSet(rrset) {
+	if !IsRRset(rrset) {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
@@ -342,7 +315,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		return ErrKey
 	}
 
-	// isValidRRSet checked that we have at least one RR and that the RRs in
+	// IsRRset checked that we have at least one RR and that the RRs in
 	// the set have consistent type, class, and name. Also check that type and
 	// class matches the RRSIG record.
 	if rrset[0].Header().Class != rr.Hdr.Class {
