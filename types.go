@@ -158,6 +158,9 @@ type Header struct {
 }
 
 const (
+	// Header Size
+	_DNSHeaderSize = 12
+
 	// Header.Bits
 	_QR = 1 << 15 // query/response (response=1)
 	_AA = 1 << 10 // authoritative
@@ -1568,8 +1571,9 @@ type CAA struct {
 func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, rr.Tag, rr.Value} }
 func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + len(rr.Value)/2 }
-func (rr *CAA) String() string     { return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintCAAValue(rr.Value) }
-
+func (rr *CAA) String() string {
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintCAAValue(rr.Value)
+}
 
 type UID struct {
 	Hdr RR_Header
