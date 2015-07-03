@@ -269,12 +269,12 @@ func TestClientConn(t *testing.T) {
 		t.Errorf("failed to exchange: %v", err)
 	}
 	h := new(Header)
-	buf, err := cn.ReadMsgBytes(h)
+	buf, err := cn.ReadMsgHeader(h)
 	if buf == nil {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 	if int(h.Bits&0xF) != RcodeSuccess {
-		t.Errorf("failed to get an valid answer in ReadMsgBytes\n%v", r)
+		t.Errorf("failed to get an valid answer in ReadMsgHeader\n%v", r)
 	}
 	if h.Ancount != 0 || h.Qdcount != 1 || h.Nscount != 0 || h.Arcount != 1 {
 		t.Errorf("expected to have question and additional in response; got something else: %+v", h)
