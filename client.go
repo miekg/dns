@@ -189,7 +189,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 // If the received message contains a TSIG record the transaction
 // signature is verified.
 func (co *Conn) ReadMsg() (*Msg, error) {
-	p, err := co.ReadMsgBytes(nil)
+	p, err := co.ReadMsgHeader(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +208,10 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	return m, err
 }
 
-// ReadMsgBytes reads a DNS message, parses and populates hdr (when hdr is not nil).
-// Returns message as a byte slice to pasrse with Msg.Unpack later on.
+// ReadMsgHeader reads a DNS message, parses and populates hdr (when hdr is not nil).
+// Returns message as a byte slice to be parsed with Msg.Unpack later on.
 // Note that error handling on the message body is not possible as only the header is parsed.
-func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
+func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 	var (
 		p   []byte
 		n   int
@@ -237,7 +237,7 @@ func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 
 	if err != nil {
 		return nil, err
-	} else if n < _DNSHeaderSize {
+	} else if n < headerSize {
 		return nil, ErrShortRead
 	}
 
