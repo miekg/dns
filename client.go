@@ -208,12 +208,9 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	return m, err
 }
 
-// ReadMsgBytes reads DNS packet, parses and fills wire header (passing nil
-// would cause skipping that). Returns message in byte format to parse with
-// Msg.Unpack later on.
-//
-// Note that this function would not be able to report TSIG error or
-// check it got actual DNS payload.
+// ReadMsgBytes reads a DNS message, parses and populates hdr (when hdr is not nil).
+// Returns message as a byte slice to pasrse with Msg.Unpack later on.
+// Note that error handling on the message body is not possible as only the header is parsed.
 func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 	var (
 		p   []byte
@@ -222,7 +219,7 @@ func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 	)
 
 	if t, ok := co.Conn.(*net.TCPConn); ok {
-		// we got two byte header to know how much to receive...
+		// First two bytes specify the length of the entire message.
 		l, err := tcpMsgLen(t)
 		if err != nil {
 			return nil, err
@@ -240,7 +237,7 @@ func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 
 	if err != nil {
 		return nil, err
-	} else if n < _HBytes {
+	} else if n < _DNSHeaderSize {
 		return nil, ErrShortRead
 	}
 
@@ -253,23 +250,24 @@ func (co *Conn) ReadMsgBytes(hdr *Header) ([]byte, error) {
 	return p, err
 }
 
-// tcpMsgLen - helper func to read first two bytes of stream as uint16 packet length
+// tcpMsgLen is a helper func to read first two bytes of stream as uint16 packet length.
 func tcpMsgLen(t *net.TCPConn) (int, error) {
-	p := [2]byte{0, 0}
-	n, err := t.Read(p[:])
+	p := []byte{0, 0}
+	n, err := t.Read(p)
 	if err != nil {
 		return 0, err
-	} else if n != 2 {
+	}
+	if n != 2 {
 		return 0, ErrShortRead
 	}
-	l, _ := unpackUint16(p[:], 0)
+	l, _ := unpackUint16(p, 0)
 	if l == 0 {
 		return 0, ErrShortRead
 	}
 	return int(l), nil
 }
 
-// tcpRead - calls TCPConn.Read enough times to fill allocated buffer
+// tcpRead calls TCPConn.Read enough times to fill allocated buffer.
 func tcpRead(t *net.TCPConn, p []byte) (int, error) {
 	n, err := t.Read(p)
 	if err != nil {

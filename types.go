@@ -159,7 +159,7 @@ type Header struct {
 
 const (
 	// Header Size
-	_HBytes = 12
+	_DNSHeaderSize = 12
 
 	// Header.Bits
 	_QR = 1 << 15 // query/response (response=1)
