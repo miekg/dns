@@ -1569,7 +1569,7 @@ type CAA struct {
 
 func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, rr.Tag, rr.Value} }
-func (rr *CAA) len() int           { return rr.Hdr.len() + 1 + len(rr.Tag) + len(rr.Value)/2 }
+func (rr *CAA) len() int           { return rr.Hdr.len() + 2 + len(rr.Tag) + len(rr.Value) }
 func (rr *CAA) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintCAAValue(rr.Value)
 }
