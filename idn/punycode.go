@@ -272,3 +272,32 @@ func decode(b []byte) []byte {
 	}
 	return ret.Bytes()
 }
+
+// isValidRune checks if the character is valid. We will look for the
+// character property in the IDNA table. For now we aren't checking special
+// rules in case of contextual property
+func isValidRune(r rune) bool {
+	return findProperty(r) == idnaPropertyPVALID
+}
+
+// findIDNProperty will try to check the code point property of the give
+// character. It will use a binary search algorithm as we have a slice of
+// ordered ranges (average case performance O(log n))
+func findProperty(r rune) idnaProperty {
+	imin, imax := 0, len(idnaTable)
+
+	for imax >= imin {
+		imid := (imin + imax) / 2
+
+		codePoint := idnaTable[imid]
+		if (codePoint.start == r && codePoint.end == 0) || (codePoint.start <= r && codePoint.end >= r) {
+			return codePoint.state
+		} else if (codePoint.end > 0 && codePoint.end < r) || (codePoint.end == 0 && codePoint.start < r) {
+			imin = imid + 1
+		} else {
+			imax = imid - 1
+		}
+	}
+
+	return idnaPropertyUnknown
+}
