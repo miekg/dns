@@ -3,9 +3,10 @@ package idn
 
 import (
 	"bytes"
-	"github.com/miekg/dns"
 	"strings"
 	"unicode"
+
+	"github.com/miekg/dns"
 )
 
 // Implementation idea from RFC itself and from from IDNA::Punycode created by
@@ -144,6 +145,10 @@ func encode(input []byte) []byte {
 
 	b := bytes.Runes(input)
 	for i := range b {
+		if !isValidRune(b[i]) {
+			return input
+		}
+
 		b[i] = preprune(b[i])
 	}
 
