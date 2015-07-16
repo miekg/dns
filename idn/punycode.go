@@ -3,9 +3,10 @@ package idn
 
 import (
 	"bytes"
-	"github.com/miekg/dns"
 	"strings"
 	"unicode"
+
+	"github.com/miekg/dns"
 )
 
 // Implementation idea from RFC itself and from from IDNA::Punycode created by
@@ -144,6 +145,10 @@ func encode(input []byte) []byte {
 
 	b := bytes.Runes(input)
 	for i := range b {
+		if !isValidRune(b[i]) {
+			return input
+		}
+
 		b[i] = preprune(b[i])
 	}
 
@@ -266,4 +271,35 @@ func decode(b []byte) []byte {
 		ret.WriteRune(r)
 	}
 	return ret.Bytes()
+}
+
+// isValidRune checks if the character is valid. We will look for the
+// character property in the code points list. For now we aren't checking special
+// rules in case of contextual property
+func isValidRune(r rune) bool {
+	return findProperty(r) == propertyPVALID
+}
+
+// findProperty will try to check the code point property of the given
+// character. It will use a binary search algorithm as we have a slice of
+// ordered ranges (average case performance O(log n))
+func findProperty(r rune) property {
+	imin, imax := 0, len(codePoints)
+
+	for imax >= imin {
+		imid := (imin + imax) / 2
+
+		codePoint := codePoints[imid]
+		if (codePoint.start == r && codePoint.end == 0) || (codePoint.start <= r && codePoint.end >= r) {
+			return codePoint.state
+		}
+
+		if (codePoint.end > 0 && codePoint.end < r) || (codePoint.end == 0 && codePoint.start < r) {
+			imin = imid + 1
+		} else {
+			imax = imid - 1
+		}
+	}
+
+	return propertyUnknown
 }
