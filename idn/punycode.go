@@ -27,8 +27,8 @@ const (
 )
 
 // ToPunycode converts unicode domain names to DNS-appropriate punycode names.
-// This function would return incorrect result for strings for non-canonical
-// unicode strings.
+// This function would return an empty string result for domain names with
+// invalid unicode strings. This function expects domain names in lowercase.
 func ToPunycode(s string) string {
 	tokens := dns.SplitDomainName(s)
 	switch {
@@ -41,7 +41,11 @@ func ToPunycode(s string) string {
 	}
 
 	for i := range tokens {
-		tokens[i] = string(encode([]byte(tokens[i])))
+		t := encode([]byte(tokens[i]))
+		if t == nil {
+			return ""
+		}
+		tokens[i] = string(t)
 	}
 	return strings.Join(tokens, ".")
 }
@@ -139,14 +143,16 @@ func tfunc(k, bias rune) rune {
 	return k - bias
 }
 
-// encode transforms Unicode input bytes (that represent DNS label) into punycode bytestream
+// encode transforms Unicode input bytes (that represent DNS label) into
+// punycode bytestream. This function would return nil if there's an invalid
+// character in the label
 func encode(input []byte) []byte {
 	n, bias := _N, _BIAS
 
 	b := bytes.Runes(input)
 	for i := range b {
 		if !isValidRune(b[i]) {
-			return input
+			return nil
 		}
 
 		b[i] = preprune(b[i])

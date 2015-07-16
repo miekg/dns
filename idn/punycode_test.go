@@ -108,7 +108,7 @@ var invalidUnicodes = []string{
 func TestInvalidUnicodes(t *testing.T) {
 	for _, d := range invalidUnicodes {
 		s := ToPunycode(d)
-		if s != d {
+		if s != "" {
 			t.Errorf("Changed invalid name %s to %#v", d, s)
 		}
 	}
