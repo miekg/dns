@@ -145,7 +145,7 @@ func tfunc(k, bias rune) rune {
 
 // encode transforms Unicode input bytes (that represent DNS label) into
 // punycode bytestream. This function would return nil if there's an invalid
-// character in the label
+// character in the label.
 func encode(input []byte) []byte {
 	n, bias := _N, _BIAS
 
