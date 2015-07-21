@@ -1876,9 +1876,6 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
-	}
 	i, e := strconv.Atoi(l.token)
 	if e != nil {
 		return nil, &ParseError{f, "bad URI Priority", l}, ""
@@ -1897,7 +1894,7 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if e != nil {
 		return nil, e.(*ParseError), ""
 	}
-	rr.Target = s
+	rr.Target = s[0]
 	return rr, nil, c1
 }
 
@@ -2197,9 +2194,8 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	if len(s) > 1 {
 		return nil, &ParseError{f, "bad CAA Value", l}, ""
-	} else {
-		rr.Value = s[0]
 	}
+	rr.Value = s[0]
 	return rr, nil, c1
 }
 

@@ -125,7 +125,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 6975 - Algorithm Understanding in DNSSEC
 * 7043 - EUI48/EUI64 records
 * 7314 - DNS (EDNS) EXPIRE Option
-* xxxx - URI record (draft)
+* 7553 - URI record
 * xxxx - EDNS0 DNS Update Lease (draft)
 
 ## Loosely based upon
@@ -138,7 +138,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 ## TODO
 
 * privatekey.Precompute() when signing?
-* Last remaining RRs: APL, ATMA, A6 and NXT and IPSECKEY;
-* Missing in parsing: ISDN, UNSPEC, ATMA;
-* NSEC(3) cover/match/closest enclose;
-* Replies with TC bit are not parsed to the end;
+* Last remaining RRs: APL, ATMA, A6 and NXT.
+* Missing in parsing: ISDN, UNSPEC, ATMA.
+* NSEC(3) cover/match/closest enclose.
+* Replies with TC bit are not parsed to the end.
