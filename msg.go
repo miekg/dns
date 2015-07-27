@@ -1181,6 +1181,10 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				length := 0
 				window := 0
 				for off+2 < lenrd {
+					if off+2 > lenmsg {
+						return lenmsg, &Error{err: "overflow unpacking nsecx"}
+					}
+
 					window = int(msg[off])
 					length = int(msg[off+1])
 					//println("off, windows, length, end", off, window, length, endrr)
