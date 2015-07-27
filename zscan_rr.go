@@ -1876,6 +1876,10 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l := <-c
+	if l.length == 0 { // Dynamic updates.
+		return rr, nil, ""
+	}
+
 	i, e := strconv.Atoi(l.token)
 	if e != nil {
 		return nil, &ParseError{f, "bad URI Priority", l}, ""
