@@ -1337,7 +1337,7 @@ func (rr *URI) copy() RR           { return &URI{*rr.Hdr.copyHeader(), rr.Weight
 func (rr *URI) len() int           { return rr.Hdr.len() + 4 + len(rr.Target) }
 func (rr *URI) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
-		" " + strconv.Itoa(int(rr.Weight)) + sprintTxtOctet(rr.Target)
+		" " + strconv.Itoa(int(rr.Weight)) + " " + sprintTxtOctet(rr.Target)
 }
 
 type DHCID struct {

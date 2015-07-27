@@ -1890,9 +1890,9 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Weight = uint16(i)
 
 	<-c // zBlank
-	s, e, c1 := endingToTxtSlice(c, "bad URI Target", f)
-	if e != nil {
-		return nil, e.(*ParseError), ""
+	s, err, c1 := endingToTxtSlice(c, "bad URI Target", f)
+	if err != nil {
+		return nil, err, ""
 	}
 	rr.Target = s[0]
 	return rr, nil, c1
@@ -2180,7 +2180,7 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	}
 	rr.Flag = uint8(i)
 
-	<-c // zBlank
+	<-c     // zBlank
 	l = <-c // zString
 	if l.value != zString {
 		return nil, &ParseError{f, "bad CAA Tag", l}, ""
