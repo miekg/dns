@@ -414,7 +414,10 @@ Loop:
 			if c == 0x00 {
 				// end of name
 				if len(s) == 0 {
-					return ".", off, nil
+					if ptr == 0 {
+						off1 = off
+					}
+					return ".", off1, nil
 				}
 				break Loop
 			}
