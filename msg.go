@@ -1691,17 +1691,26 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
 
-	// Arrays.
-	dns.Question = make([]Question, dh.Qdcount)
-	dns.Answer = make([]RR, dh.Ancount)
-	dns.Ns = make([]RR, dh.Nscount)
-	dns.Extra = make([]RR, dh.Arcount)
+	// Don't pre-alloc these arrays, the incoming lengths are from the network.
+	dns.Question = make([]Question, 0, 1)
+	dns.Answer = make([]RR, 0, 10)
+	dns.Ns = make([]RR, 0, 10)
+	dns.Extra = make([]RR, 0, 10)
 
-	for i := 0; i < len(dns.Question); i++ {
-		off, err = UnpackStruct(&dns.Question[i], msg, off)
+	var q Question
+	for i := 0; i < int(dh.Qdcount); i++ {
+		off1 := off
+		off, err = UnpackStruct(&q, msg, off)
 		if err != nil {
 			return err
 		}
+		if off1 == off { // Offset does not increase anymore, dh.Qdcount is a lie!
+			dh.Qdcount = uint16(i)
+			break
+		}
+
+		dns.Question = append(dns.Question, q)
+
 	}
 	// If we see a TC bit being set we return here, without
 	// an error, because technically it isn't an error. So return
@@ -1713,23 +1722,43 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		dns.Extra = nil
 		return nil
 	}
-	for i := 0; i < len(dns.Answer); i++ {
-		dns.Answer[i], off, err = UnpackRR(msg, off)
+
+	var r RR
+	for i := 0; i < int(dh.Ancount); i++ {
+		off1 := off
+		r, off, err = UnpackRR(msg, off)
 		if err != nil {
 			return err
 		}
+		if off1 == off { // Offset does not increase anymore, dh.Ancount is a lie!
+			dh.Ancount = uint16(i)
+			break
+		}
+		dns.Answer = append(dns.Answer, r)
 	}
-	for i := 0; i < len(dns.Ns); i++ {
-		dns.Ns[i], off, err = UnpackRR(msg, off)
+	for i := 0; i < int(dh.Nscount); i++ {
+		off1 := off
+		r, off, err = UnpackRR(msg, off)
 		if err != nil {
 			return err
 		}
+		if off1 == off { // Offset does not increase anymore, dh.Nscount is a lie!
+			dh.Nscount = uint16(i)
+			break
+		}
+		dns.Ns = append(dns.Ns, r)
 	}
-	for i := 0; i < len(dns.Extra); i++ {
-		dns.Extra[i], off, err = UnpackRR(msg, off)
+	for i := 0; i < int(dh.Arcount); i++ {
+		off1 := off
+		r, off, err = UnpackRR(msg, off)
 		if err != nil {
 			return err
 		}
+		if off1 == off { // Offset does not increase anymore, dh.Arcount is a lie!
+			dh.Arcount = uint16(i)
+			break
+		}
+		dns.Extra = append(dns.Extra, r)
 	}
 	if off != len(msg) {
 		// TODO(miek) make this an error?
