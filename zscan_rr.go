@@ -1898,6 +1898,9 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if err != nil {
 		return nil, err, ""
 	}
+	if len(s) > 1 {
+		return nil, &ParseError{f, "bad URI Target", l}, ""
+	}
 	rr.Target = s[0]
 	return rr, nil, c1
 }
