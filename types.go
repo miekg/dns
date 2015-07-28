@@ -503,7 +503,7 @@ func sprintName(s string) string {
 	return string(dst)
 }
 
-func sprintCAAValue(s string) string {
+func sprintTxtOctet(s string) string {
 	src := []byte(s)
 	dst := make([]byte, 0, len(src))
 	dst = append(dst, '"')
@@ -1329,27 +1329,15 @@ type URI struct {
 	Hdr      RR_Header
 	Priority uint16
 	Weight   uint16
-	Target   []string `dns:"txt"`
+	Target   string `dns:"octet"`
 }
 
 func (rr *URI) Header() *RR_Header { return &rr.Hdr }
-func (rr *URI) copy() RR {
-	cp := make([]string, len(rr.Target), cap(rr.Target))
-	copy(cp, rr.Target)
-	return &URI{*rr.Hdr.copyHeader(), rr.Weight, rr.Priority, cp}
-}
-
+func (rr *URI) copy() RR           { return &URI{*rr.Hdr.copyHeader(), rr.Weight, rr.Priority, rr.Target} }
+func (rr *URI) len() int           { return rr.Hdr.len() + 4 + len(rr.Target) }
 func (rr *URI) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
-		" " + strconv.Itoa(int(rr.Weight)) + sprintTxt(rr.Target)
-}
-
-func (rr *URI) len() int {
-	l := rr.Hdr.len() + 4
-	for _, t := range rr.Target {
-		l += len(t) + 1
-	}
-	return l
+		" " + strconv.Itoa(int(rr.Weight)) + " " + sprintTxtOctet(rr.Target)
 }
 
 type DHCID struct {
@@ -1571,7 +1559,7 @@ func (rr *CAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *CAA) copy() RR           { return &CAA{*rr.Hdr.copyHeader(), rr.Flag, rr.Tag, rr.Value} }
 func (rr *CAA) len() int           { return rr.Hdr.len() + 2 + len(rr.Tag) + len(rr.Value) }
 func (rr *CAA) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintCAAValue(rr.Value)
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintTxtOctet(rr.Value)
 }
 
 type UID struct {
