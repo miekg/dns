@@ -188,6 +188,33 @@ func IsFqdn(s string) bool {
 	return s[l-1] == '.'
 }
 
+// IsRRset checks if a set of RRs is a valid RRset as defined by RFC 2181.
+// This means the RRs need to have the same type, name, and class. Returns true
+// if the RR set is valid, otherwise false.
+func IsRRset(rrset []RR) bool {
+	if len(rrset) == 0 {
+		return false
+	}
+	if len(rrset) == 1 {
+		return true
+	}
+	rrHeader := rrset[0].Header()
+	rrType := rrHeader.Rrtype
+	rrClass := rrHeader.Class
+	rrName := rrHeader.Name
+
+	for _, rr := range rrset[1:] {
+		curRRHeader := rr.Header()
+		if curRRHeader.Rrtype != rrType || curRRHeader.Class != rrClass || curRRHeader.Name != rrName {
+			// Mismatch between the records, so this is not a valid rrset for
+			//signing/verifying
+			return false
+		}
+	}
+
+	return true
+}
+
 // Fqdn return the fully qualified domain name from s.
 // If s is already fully qualified, it behaves as the identity function.
 func Fqdn(s string) string {

@@ -296,7 +296,7 @@ func (rr *RRSIG) Sign(k PrivateKey, rrset []RR) error {
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
-	if len(rrset) == 0 {
+	if !IsRRset(rrset) {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
@@ -314,14 +314,17 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	if k.Protocol != 3 {
 		return ErrKey
 	}
-	for _, r := range rrset {
-		if r.Header().Class != rr.Hdr.Class {
-			return ErrRRset
-		}
-		if r.Header().Rrtype != rr.TypeCovered {
-			return ErrRRset
-		}
+
+	// IsRRset checked that we have at least one RR and that the RRs in
+	// the set have consistent type, class, and name. Also check that type and
+	// class matches the RRSIG record.
+	if rrset[0].Header().Class != rr.Hdr.Class {
+		return ErrRRset
 	}
+	if rrset[0].Header().Rrtype != rr.TypeCovered {
+		return ErrRRset
+	}
+
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
@@ -409,7 +412,8 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 
 // ValidityPeriod uses RFC1982 serial arithmetic to calculate
 // if a signature period is valid. If t is the zero time, the
-// current time is taken other t is.
+// current time is taken other t is. Returns true if the signature
+// is valid at the given time, otherwise returns false.
 func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
 	var utc int64
 	if t.IsZero() {
