@@ -1025,7 +1025,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				var edns []EDNS0
 			Option:
 				code := uint16(0)
-				if off+2 > lenmsg {
+				if off+4 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
 				code, off = unpackUint16(msg, off)
