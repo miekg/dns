@@ -198,15 +198,23 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
+// Writer writes DNS data frames; each call to Write should send an entire frame.
 type Writer interface {
 	io.Writer
 }
 
+// Reader reads DNS data frames; each call to ReadTCP or ReadUDP should return an entire frame.
 type Reader interface {
+	// ReadTCP reads a data frame from a TCP connection. Implementations may alter
+	// connection properties, for example the read-deadline.
 	ReadTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, error)
+	// ReadUDP reads a data frame from a UDP connection. Implementations may alter
+	// connection properties, for example the read-deadline.
 	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
 }
 
+// defaultReader is an adapter for the Server struct that implements the Reader interface
+// using the readTCP and readUDP func of the embedded Server.
 type defaultReader struct {
 	*Server
 }
@@ -219,9 +227,13 @@ func (dr *defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]by
 	return dr.readUDP(conn, timeout)
 }
 
-type ReaderBuilder func(Reader) Reader
+// DecorateReader is a decorator hook for extending or supplanting the functionality of a Reader.
+// Implementations should never return a nil Reader.
+type DecorateReader func(Reader) Reader
 
-type WriterBuilder func(Writer) Writer
+// DecorateWriter is a decorator hook for extending or supplanting the functionality of a Writer.
+// Implementations should never return a nil Writer.
+type DecorateWriter func(Writer) Writer
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
@@ -251,10 +263,10 @@ type Server struct {
 	Unsafe bool
 	// If NotifyStartedFunc is set is is called, once the server has started listening.
 	NotifyStartedFunc func()
-	// ReaderBuilder is optional, allows customization of the process that reads DNS frames
-	ReaderBuilder ReaderBuilder
-	// WriterBuilder is optional, allows customization of the process that writes DNS frames
-	WriterBuilder WriterBuilder
+	// DecorateReader is optional, allows customization of the process that reads DNS frames.
+	DecorateReader DecorateReader
+	// DecorateWriter is optional, allows customization of the process that writes DNS frames.
+	DecorateWriter DecorateWriter
 
 	// For graceful shutdown.
 	stopUDP chan bool
@@ -413,8 +425,8 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	}
 
 	reader := Reader(&defaultReader{srv})
-	if srv.ReaderBuilder != nil {
-		reader = srv.ReaderBuilder(reader)
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
 	}
 
 	handler := srv.Handler
@@ -453,8 +465,8 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	}
 
 	reader := Reader(&defaultReader{srv})
-	if srv.ReaderBuilder != nil {
-		reader = srv.ReaderBuilder(reader)
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
 	}
 
 	handler := srv.Handler
@@ -482,8 +494,8 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 // Serve a new connection.
 func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t *net.TCPConn) {
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
-	if srv.WriterBuilder != nil {
-		w.writer = srv.WriterBuilder(w)
+	if srv.DecorateWriter != nil {
+		w.writer = srv.DecorateWriter(w)
 	} else {
 		w.writer = w
 	}
@@ -499,8 +511,8 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *Ses
 	}()
 
 	reader := Reader(&defaultReader{srv})
-	if srv.ReaderBuilder != nil {
-		reader = srv.ReaderBuilder(reader)
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
 	}
 Redo:
 	req := new(Msg)
