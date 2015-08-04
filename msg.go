@@ -785,7 +785,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					}
 					length = (t - window*256) / 8
 					bit := t - (window * 256) - (length * 8)
-					if off+2+int(length) > lenmsg {
+					if off+2+int(length)+1 > lenmsg {
 						return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
 					}
 
