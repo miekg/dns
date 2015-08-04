@@ -765,41 +765,31 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					// Do absolutely nothing
 					break
 				}
-
-				lastwindow := uint16(0)
-				length := uint16(0)
-				if off+2 > lenmsg {
-					return lenmsg, &Error{err: "overflow packing nsecx"}
-				}
+				var lastwindow, lastlength uint16
 				for j := 0; j < val.Field(i).Len(); j++ {
-					t := uint16((fv.Index(j).Uint()))
-					window := uint16(t / 256)
-					if lastwindow != window {
+					t := uint16(fv.Index(j).Uint())
+					window := t / 256
+					length := (t-window*256)/8 + 1
+					if window > lastwindow && lastlength != 0 {
 						// New window, jump to the new offset
-						off += int(length) + 3
-						if off > lenmsg {
-							return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
-						}
+						off += int(lastlength) + 2
+						lastlength = 0
 					}
-					length = (t - window*256) / 8
-					bit := t - (window * 256) - (length * 8)
-					if off+2+int(length)+1 > lenmsg {
-						return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
+					if window < lastwindow || length < lastlength {
+						return len(msg), &Error{err: "nsec bits out of order"}
 					}
-
+					if off+2+int(length) > len(msg) {
+						return len(msg), &Error{err: "overflow packing nsec"}
+					}
 					// Setting the window #
 					msg[off] = byte(window)
 					// Setting the octets length
-					msg[off+1] = byte(length + 1)
+					msg[off+1] = byte(length)
 					// Setting the bit value for the type in the right octet
-					msg[off+2+int(length)] |= byte(1 << (7 - bit))
-					lastwindow = window
+					msg[off+1+int(length)] |= byte(1 << (7 - (t % 8)))
+					lastwindow, lastlength = window, length
 				}
-				off += 2 + int(length)
-				off++
-				if off > lenmsg {
-					return lenmsg, &Error{err: "overflow packing nsecx bitmap"}
-				}
+				off += int(lastlength) + 2
 			}
 		case reflect.Struct:
 			off, err = packStructValue(fv, msg, off, compression, compress)
@@ -1161,36 +1151,39 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				}
 				fv.Set(reflect.ValueOf(serv))
 			case `dns:"nsec"`: // NSEC/NSEC3
-				if off == lenmsg {
+				if off == len(msg) {
 					break
 				}
 				// Rest of the record is the type bitmap
-				if off+2 > lenmsg {
-					return lenmsg, &Error{err: "overflow unpacking nsecx"}
-				}
 				var nsec []uint16
 				length := 0
 				window := 0
-				for off+2 < lenmsg {
+				lastwindow := -1
+				for off < len(msg) {
+					if off+2 > len(msg) {
+						return len(msg), &Error{err: "overflow unpacking nsecx"}
+					}
 					window = int(msg[off])
 					length = int(msg[off+1])
-					//println("off, windows, length, end", off, window, length, endrr)
+					off += 2
+					if window <= lastwindow {
+						// RFC 4034: Blocks are present in the NSEC RR RDATA in
+						// increasing numerical order.
+						return len(msg), &Error{err: "out of order NSEC block"}
+					}
 					if length == 0 {
-						// A length window of zero is strange. If there
-						// the window should not have been specified. Bail out
-						// println("dns: length == 0 when unpacking NSEC")
-						return lenmsg, &Error{err: "overflow unpacking nsecx"}
+						// RFC 4034: Blocks with no types present MUST NOT be included.
+						return len(msg), &Error{err: "empty NSEC block"}
 					}
 					if length > 32 {
-						return lenmsg, &Error{err: "overflow unpacking nsecx"}
+						return len(msg), &Error{err: "NSEC block too long"}
+					}
+					if off+length > len(msg) {
+						return len(msg), &Error{err: "overflowing NSEC block"}
 					}
 
-					// Walk the bytes in the window - and check the bit settings...
-					off += 2
+					// Walk the bytes in the window and extract the type bits
 					for j := 0; j < length; j++ {
-						if off+j+1 > lenmsg {
-							return lenmsg, &Error{err: "overflow unpacking nsecx"}
-						}
 						b := msg[off+j]
 						// Check the bits one by one, and set the type
 						if b&0x80 == 0x80 {
@@ -1219,6 +1212,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 						}
 					}
 					off += length
+					lastwindow = window
 				}
 				fv.Set(reflect.ValueOf(nsec))
 			}
