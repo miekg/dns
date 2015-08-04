@@ -750,17 +750,18 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if val.Field(i).Len() == 0 {
 					break
 				}
-				var bitmapbyte uint16
+				off1 := off
 				for j := 0; j < val.Field(i).Len(); j++ {
-					serv := uint16((fv.Index(j).Uint()))
-					bitmapbyte = uint16(serv / 8)
-					if int(bitmapbyte) > lenmsg {
-						return lenmsg, &Error{err: "overflow packing wks"}
+					serv := int(fv.Index(j).Uint())
+					if off+serv/8+1 > len(msg) {
+						return len(msg), &Error{err: "overflow packing wks"}
 					}
-					bit := uint16(serv) - bitmapbyte*8
-					msg[bitmapbyte] = byte(1 << (7 - bit))
+					msg[off+serv/8] |= byte(1 << (7 - uint(serv%8)))
+					if off+serv/8+1 > off1 {
+						off1 = off + serv/8 + 1
+					}
 				}
-				off += int(bitmapbyte)
+				off = off1
 			case `dns:"nsec"`: // NSEC/NSEC3
 				// This is the uint16 type bitmap
 				if val.Field(i).Len() == 0 {
