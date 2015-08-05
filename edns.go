@@ -192,6 +192,11 @@ func (e *EDNS0_NSID) String() string        { return string(e.Nsid) }
 //	e.Address = net.ParseIP("127.0.0.1").To4()	// for IPv4
 //	// e.Address = net.ParseIP("2001:7b8:32a::2")	// for IPV6
 //	o.Option = append(o.Option, e)
+//
+// Note: the spec (draft-ietf-dnsop-edns-client-subnet-00) has some insane logic
+// for which netmask applies to the address. This code will parse all the
+// available bits when unpacking (up to optlen). When packing it will apply
+// SourceNetmask. If you need more advanced logic, patches welcome and good luck.
 type EDNS0_SUBNET struct {
 	Code          uint16 // Always EDNS0SUBNET
 	Family        uint16 // 1 for IP, 2 for IP6
@@ -218,38 +223,22 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 		if e.SourceNetmask > net.IPv4len*8 {
 			return nil, errors.New("dns: bad netmask")
 		}
-		ip := make([]byte, net.IPv4len)
-		a := e.Address.To4().Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
-		for i := 0; i < net.IPv4len; i++ {
-			if i+1 > len(e.Address) {
-				break
-			}
-			ip[i] = a[i]
+		if len(e.Address.To4()) != net.IPv4len {
+			return nil, errors.New("dns: bad address")
 		}
-		needLength := e.SourceNetmask / 8
-		if e.SourceNetmask%8 > 0 {
-			needLength++
-		}
-		ip = ip[:needLength]
-		b = append(b, ip...)
+		ip := e.Address.To4().Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv4len*8))
+		needLength := (e.SourceNetmask + 8 - 1) / 8 // division rounding up
+		b = append(b, ip[:needLength]...)
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 {
 			return nil, errors.New("dns: bad netmask")
 		}
-		ip := make([]byte, net.IPv6len)
-		a := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
-		for i := 0; i < net.IPv6len; i++ {
-			if i+1 > len(e.Address) {
-				break
-			}
-			ip[i] = a[i]
+		if len(e.Address) != net.IPv6len {
+			return nil, errors.New("dns: bad address")
 		}
-		needLength := e.SourceNetmask / 8
-		if e.SourceNetmask%8 > 0 {
-			needLength++
-		}
-		ip = ip[:needLength]
-		b = append(b, ip...)
+		ip := e.Address.Mask(net.CIDRMask(int(e.SourceNetmask), net.IPv6len*8))
+		needLength := (e.SourceNetmask + 8 - 1) / 8 // division rounding up
+		b = append(b, ip[:needLength]...)
 	default:
 		return nil, errors.New("dns: bad address family")
 	}
@@ -257,8 +246,7 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_SUBNET) unpack(b []byte) error {
-	lb := len(b)
-	if lb < 4 {
+	if len(b) < 4 {
 		return ErrBuf
 	}
 	e.Family, _ = unpackUint16(b, 0)
@@ -266,25 +254,27 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	e.SourceScope = b[3]
 	switch e.Family {
 	case 1:
-		addr := make([]byte, 4)
-		for i := 0; i < int(e.SourceNetmask/8); i++ {
-			if i >= len(addr) || 4+i >= len(b) {
-				return ErrBuf
-			}
+		if e.SourceNetmask > net.IPv4len*8 || e.SourceScope > net.IPv4len*8 {
+			return errors.New("dns: bad netmask")
+		}
+		addr := make([]byte, net.IPv4len)
+		for i := 0; i < net.IPv4len && 4+i < len(b); i++ {
 			addr[i] = b[4+i]
 		}
 		e.Address = net.IPv4(addr[0], addr[1], addr[2], addr[3])
 	case 2:
-		addr := make([]byte, 16)
-		for i := 0; i < int(e.SourceNetmask/8); i++ {
-			if i >= len(addr) || 4+i >= len(b) {
-				return ErrBuf
-			}
+		if e.SourceNetmask > net.IPv6len*8 || e.SourceScope > net.IPv6len*8 {
+			return errors.New("dns: bad netmask")
+		}
+		addr := make([]byte, net.IPv6len)
+		for i := 0; i < net.IPv6len && 4+i < len(b); i++ {
 			addr[i] = b[4+i]
 		}
 		e.Address = net.IP{addr[0], addr[1], addr[2], addr[3], addr[4],
 			addr[5], addr[6], addr[7], addr[8], addr[9], addr[10],
 			addr[11], addr[12], addr[13], addr[14], addr[15]}
+	default:
+		return errors.New("dns: bad address family")
 	}
 	return nil
 }
