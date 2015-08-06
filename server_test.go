@@ -403,12 +403,12 @@ type ExampleFrameLengthWriter struct {
 }
 
 func (e *ExampleFrameLengthWriter) Write(m []byte) (int, error) {
-	fmt.Println("writing DNS data frame of length", len(m))
+	fmt.Println("writing raw DNS message of length", len(m))
 	return e.Writer.Write(m)
 }
 
 func ExampleDecorateWriter() {
-	// instrument DNS data frame writing
+	// instrument raw DNS message writing
 	wf := DecorateWriter(func(w Writer) Writer {
 		return &ExampleFrameLengthWriter{w}
 	})
@@ -446,5 +446,5 @@ func ExampleDecorateWriter() {
 		fmt.Println("failed to exchange", err.Error())
 		return
 	}
-	// Output: writing DNS data frame of length 56
+	// Output: writing raw DNS message of length 56
 }

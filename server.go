@@ -198,17 +198,17 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
-// Writer writes DNS data frames; each call to Write should send an entire frame.
+// Writer writes raw DNS messages; each call to Write should send an entire message.
 type Writer interface {
 	io.Writer
 }
 
-// Reader reads DNS data frames; each call to ReadTCP or ReadUDP should return an entire frame.
+// Reader reads raw DNS messages; each call to ReadTCP or ReadUDP should return an entire message.
 type Reader interface {
-	// ReadTCP reads a data frame from a TCP connection. Implementations may alter
+	// ReadTCP reads a raw message from a TCP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
 	ReadTCP(conn *net.TCPConn, timeout time.Duration) ([]byte, error)
-	// ReadUDP reads a data frame from a UDP connection. Implementations may alter
+	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
 	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
 }
@@ -263,9 +263,9 @@ type Server struct {
 	Unsafe bool
 	// If NotifyStartedFunc is set is is called, once the server has started listening.
 	NotifyStartedFunc func()
-	// DecorateReader is optional, allows customization of the process that reads DNS frames.
+	// DecorateReader is optional, allows customization of the process that reads raw DNS messages.
 	DecorateReader DecorateReader
-	// DecorateWriter is optional, allows customization of the process that writes DNS frames.
+	// DecorateWriter is optional, allows customization of the process that writes raw DNS messages.
 	DecorateWriter DecorateWriter
 
 	// For graceful shutdown.
