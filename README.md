@@ -24,6 +24,7 @@ If you like this, you may also be interested in:
 
 A not-so-up-to-date-list-that-may-be-actually-current:
 
+* https://cloudflare.com
 * https://github.com/abh/geodns
 * http://www.statdns.com/
 * http://www.dnsinspect.com/
