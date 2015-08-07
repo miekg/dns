@@ -1054,6 +1054,7 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		case zString:
 			if l.token == "@" {
 				xs = append(xs, o)
+				l = <-c
 				continue
 			}
 			_, ok := IsDomainName(l.token)
