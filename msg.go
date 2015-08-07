@@ -237,7 +237,7 @@ var RcodeToString = map[int]string{
 // PackDomainName packs a domain name s into msg[off:].
 // If compression is wanted compress must be true and the compression
 // map needs to hold a mapping between domain names and offsets
-// pointing into msg[].
+// pointing into msg.
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	off1, _, err = packDomainName(s, msg, off, compression, compress)
 	return
