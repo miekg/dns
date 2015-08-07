@@ -39,6 +39,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/tianon/rawdns
 * https://mesosphere.github.io/mesos-dns/
 * https://pulse.turbobytes.com/
+* https://play.google.com/store/apps/details?id=com.turbobytes.dig
 
 Send pull request if you want to be listed here.
 
