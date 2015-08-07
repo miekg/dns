@@ -2168,7 +2168,7 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string)
 			rr.GatewayName = o
 		}
 		_, ok := IsDomainName(l.token)
-		if !ok || l.length == 0 {
+		if !ok || l.length == 0 || l.err {
 			return nil, &ParseError{f, "bad IPSECKEY GatewayName", l}, ""
 		}
 		if rr.GatewayName[l.length-1] != '.' {
