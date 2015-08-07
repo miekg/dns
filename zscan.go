@@ -806,7 +806,11 @@ func zlexer(s *scan, c chan lex) {
 
 // Extract the class number from CLASSxx
 func classToInt(token string) (uint16, bool) {
-	class, ok := strconv.Atoi(token[5:])
+	offset := 5
+	if len(token) < offset+1 {
+		return 0, false
+	}
+	class, ok := strconv.Atoi(token[offset:])
 	if ok != nil || class > maxUint16 {
 		return 0, false
 	}
@@ -815,7 +819,11 @@ func classToInt(token string) (uint16, bool) {
 
 // Extract the rr number from TYPExxx
 func typeToInt(token string) (uint16, bool) {
-	typ, ok := strconv.Atoi(token[4:])
+	offset := 4
+	if len(token) < offset+1 {
+		return 0, false
+	}
+	typ, ok := strconv.Atoi(token[offset:])
 	if ok != nil || typ > maxUint16 {
 		return 0, false
 	}

@@ -180,7 +180,7 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad NS Ns", l}, ""
 	}
 	if rr.Ns[l.length-1] != '.' {
@@ -226,7 +226,7 @@ func setNSAPPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) 
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad NSAP-PTR Ptr", l}, ""
 	}
 	if rr.Ptr[l.length-1] != '.' {
@@ -248,7 +248,7 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.Mbox = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad RP Mbox", l}, ""
 		}
 		if rr.Mbox[l.length-1] != '.' {
@@ -263,7 +263,7 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad RP Txt", l}, ""
 	}
 	if rr.Txt[l.length-1] != '.' {
@@ -286,7 +286,7 @@ func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MR Mr", l}, ""
 	}
 	if rr.Mr[l.length-1] != '.' {
@@ -309,7 +309,7 @@ func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MB Mb", l}, ""
 	}
 	if rr.Mb[l.length-1] != '.' {
@@ -332,7 +332,7 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MG Mg", l}, ""
 	}
 	if rr.Mg[l.length-1] != '.' {
@@ -380,7 +380,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.Rmail = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad MINFO Rmail", l}, ""
 		}
 		if rr.Rmail[l.length-1] != '.' {
@@ -395,7 +395,7 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MINFO Email", l}, ""
 	}
 	if rr.Email[l.length-1] != '.' {
@@ -418,7 +418,7 @@ func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MF Mf", l}, ""
 	}
 	if rr.Mf[l.length-1] != '.' {
@@ -441,7 +441,7 @@ func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad MD Md", l}, ""
 	}
 	if rr.Md[l.length-1] != '.' {
@@ -615,7 +615,7 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad CNAME Target", l}, ""
 	}
 	if rr.Target[l.length-1] != '.' {
@@ -638,7 +638,7 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.Ns = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad SOA Ns", l}, ""
 		}
 		if rr.Ns[l.length-1] != '.' {
@@ -850,7 +850,7 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.PreviousName = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad TALINK PreviousName", l}, ""
 		}
 		if rr.PreviousName[l.length-1] != '.' {
@@ -958,6 +958,9 @@ East:
 Altitude:
 	<-c // zBlank
 	l = <-c
+	if l.length == 0 {
+		return nil, &ParseError{f, "bad LOC Altitude", l}, ""
+	}
 	if l.token[len(l.token)-1] == 'M' || l.token[len(l.token)-1] == 'm' {
 		l.token = l.token[0 : len(l.token)-1]
 	}
@@ -1223,7 +1226,7 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		rr.NextDomain = o
 	} else {
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad NSEC NextDomain", l}, ""
 		}
 		if rr.NextDomain[l.length-1] != '.' {
@@ -2084,7 +2087,7 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 	_, ok := IsDomainName(l.token)
-	if !ok {
+	if !ok || l.length == 0 {
 		return nil, &ParseError{f, "bad PX Map822", l}, ""
 	}
 	if rr.Map822[l.length-1] != '.' {
@@ -2146,7 +2149,7 @@ func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string)
 			rr.GatewayName = o
 		}
 		_, ok := IsDomainName(l.token)
-		if !ok {
+		if !ok || l.length == 0 {
 			return nil, &ParseError{f, "bad IPSECKEY GatewayName", l}, ""
 		}
 		if rr.GatewayName[l.length-1] != '.' {
