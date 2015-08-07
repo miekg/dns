@@ -1635,7 +1635,7 @@ func setNSAP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if len(s) == 0 {
 		return rr, nil, c1
 	}
-	if len(s[0]) >= 2 && s[0][0:2] == "0x" || s[0][0:2] == "0X" {
+	if len(s[0]) >= 2 && ( s[0][0:2] == "0x" || s[0][0:2] == "0X" ) {
 		// although RFC only suggests 0x there is no clarification that X is not allowed
 		rr.Nsap = strings.Join(s, "")[2:]
 	} else {
