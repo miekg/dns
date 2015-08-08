@@ -141,11 +141,11 @@ func modToPrintf(s string) (string, int, string) {
 		return "", 0, "bad base in $GENERATE"
 	}
 	offset, err := strconv.Atoi(xs[0])
-	if err != nil {
+	if err != nil || offset > 255 {
 		return "", 0, "bad offset in $GENERATE"
 	}
 	width, err := strconv.Atoi(xs[1])
-	if err != nil {
+	if err != nil || width > 255 {
 		return "", offset, "bad width in $GENERATE"
 	}
 	switch {

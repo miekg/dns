@@ -8,6 +8,7 @@ func TestFuzzString(t *testing.T) {
 		"	NSAP O ", "  NSAP N ",
 		" TYPE4 TYPE6a789a3bc0045c8a5fb42c7d1bd998f5444 IN 9579b47d46817afbd17273e6",
 		" TYPE45 3 3 4147994 TYPE\\(\\)\\)\\(\\)\\(\\(\\)\\(\\)\\)\\)\\(\\)\\(\\)\\(\\(\\R 948\"\")\\(\\)\\)\\)\\(\\ ",
+		"$GENERATE 0-3 ${441189,5039418474430,o}",
 	}
 	for i, tc := range testcases {
 		rr, err := NewRR(tc)
