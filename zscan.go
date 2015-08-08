@@ -281,7 +281,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 			case zBlank:
 				l := <-c
 				if l.value == zString {
-					if _, ok := IsDomainName(l.token); !ok {
+					if _, ok := IsDomainName(l.token); !ok || l.length == 0 || l.err {
 						t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 						return
 					}
