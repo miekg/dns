@@ -261,7 +261,7 @@ type Server struct {
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
 	// the handler. It will specfically not check if the query has the QR bit not set.
 	Unsafe bool
-	// If NotifyStartedFunc is set is is called, once the server has started listening.
+	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
 	// DecorateReader is optional, allows customization of the process that reads raw DNS messages.
 	DecorateReader DecorateReader
@@ -358,7 +358,7 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown gracefully shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return. All in progress queries are completed before the server
-// is taken down. If the Shutdown is taking longer than the reading timeout and error
+// is taken down. If the Shutdown is taking longer than the reading timeout an error
 // is returned.
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()

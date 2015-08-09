@@ -850,7 +850,6 @@ func cmToM(m, e uint8) string {
 	return s
 }
 
-// String returns a string version of a LOC
 func (rr *LOC) String() string {
 	s := rr.Hdr.String()
 
