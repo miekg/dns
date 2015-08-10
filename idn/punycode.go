@@ -124,7 +124,7 @@ func next(b []rune, boundary rune) rune {
 }
 
 // preprune converts unicode rune to lower case. At this time it's not
-// supporting all things described in RFCs
+// supporting all things described in RFCs.
 func preprune(r rune) rune {
 	if unicode.IsUpper(r) {
 		r = unicode.ToLower(r)
@@ -132,7 +132,7 @@ func preprune(r rune) rune {
 	return r
 }
 
-// tfunc is a function that helps calculate each character weight
+// tfunc is a function that helps calculate each character weight.
 func tfunc(k, bias rune) rune {
 	switch {
 	case k <= bias:
@@ -217,7 +217,7 @@ func encode(input []byte) []byte {
 	return out.Bytes()
 }
 
-// decode transforms punycode input bytes (that represent DNS label) into Unicode bytestream
+// decode transforms punycode input bytes (that represent DNS label) into Unicode bytestream.
 func decode(b []byte) []byte {
 	src := b // b would move and we need to keep it
 
