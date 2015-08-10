@@ -254,6 +254,10 @@ func decode(b []byte) []byte {
 				return src
 			}
 			i += digit * w
+			if i < 0 {
+				// safety check for rune overflow
+				return src
+			}
 
 			t = tfunc(k, bias)
 			if digit < t {
