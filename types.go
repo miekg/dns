@@ -46,7 +46,6 @@ const (
 	TypeX25        uint16 = 19
 	TypeISDN       uint16 = 20
 	TypeRT         uint16 = 21
-	TypeNSAP       uint16 = 22
 	TypeNSAPPTR    uint16 = 23
 	TypeSIG        uint16 = 24
 	TypeKEY        uint16 = 25
@@ -1179,16 +1178,6 @@ func (rr *RKEY) String() string {
 		" " + rr.PublicKey
 }
 
-type NSAP struct {
-	Hdr  RR_Header
-	Nsap string
-}
-
-func (rr *NSAP) Header() *RR_Header { return &rr.Hdr }
-func (rr *NSAP) copy() RR           { return &NSAP{*rr.Hdr.copyHeader(), rr.Nsap} }
-func (rr *NSAP) String() string     { return rr.Hdr.String() + "0x" + rr.Nsap }
-func (rr *NSAP) len() int           { return rr.Hdr.len() + 1 + len(rr.Nsap) + 1 }
-
 type NSAPPTR struct {
 	Hdr RR_Header
 	Ptr string `dns:"domain-name"`
@@ -1720,7 +1709,6 @@ var typeToRR = map[uint16]func() RR{
 	TypeNINFO:      func() RR { return new(NINFO) },
 	TypeNIMLOC:     func() RR { return new(NIMLOC) },
 	TypeNS:         func() RR { return new(NS) },
-	TypeNSAP:       func() RR { return new(NSAP) },
 	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },
 	TypeNSEC3:      func() RR { return new(NSEC3) },
 	TypeNSEC3PARAM: func() RR { return new(NSEC3PARAM) },

@@ -134,7 +134,6 @@ var TypeToString = map[uint16]string{
 	TypeNINFO:      "NINFO",
 	TypeNIMLOC:     "NIMLOC",
 	TypeNS:         "NS",
-	TypeNSAP:       "NSAP",
 	TypeNSAPPTR:    "NSAP-PTR",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM",

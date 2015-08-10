@@ -1641,34 +1641,6 @@ func setNIMLOC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
-func setNSAP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(NSAP)
-	rr.Hdr = h
-	chunks, e1, c1 := endingToTxtSlice(c, "bad NSAP Nsap", f)
-	if e1 != nil {
-		return nil, e1, c1
-	}
-	// data would come as one string or multiple... Just to ignore possible
-	// variety let's merge things back together and split to actual "words"
-	s := strings.Fields(strings.Join(chunks, " "))
-	if len(s) == 0 {
-		return rr, nil, c1
-	}
-	if len(s[0]) >= 2 && (s[0][0:2] == "0x" || s[0][0:2] == "0X") {
-		// although RFC only suggests 0x there is no clarification that X is not allowed
-		rr.Nsap = strings.Join(s, "")[2:]
-	} else {
-		// since we do not know what to do with this data, and, we would not use original length
-		// in formatting, it's moot to check correctness of the length
-		_, err := strconv.Atoi(s[0])
-		if err != nil {
-			return nil, &ParseError{f, "bad NSAP Length", lex{token: s[0]}}, ""
-		}
-		rr.Nsap = strings.Join(s[1:], "")
-	}
-	return rr, nil, c1
-}
-
 func setGPOS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(GPOS)
 	rr.Hdr = h
@@ -2267,7 +2239,6 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeNID:        parserFunc{setNID, false},
 	TypeNIMLOC:     parserFunc{setNIMLOC, true},
 	TypeNINFO:      parserFunc{setNINFO, true},
-	TypeNSAP:       parserFunc{setNSAP, true},
 	TypeNSAPPTR:    parserFunc{setNSAPPTR, false},
 	TypeNSEC3PARAM: parserFunc{setNSEC3PARAM, false},
 	TypeNSEC3:      parserFunc{setNSEC3, true},
