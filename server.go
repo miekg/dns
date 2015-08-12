@@ -286,6 +286,7 @@ func (srv *Server) ListenAndServe() error {
 		srv.lock.Unlock()
 		return &Error{err: "server already started"}
 	}
+	defer srv.lock.Unlock()
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
 	srv.started = true
 	addr := srv.Addr
@@ -306,7 +307,6 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.Listener = l
-		srv.lock.Unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
 		a, e := net.ResolveUDPAddr(srv.Net, addr)
@@ -321,10 +321,8 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
-		srv.lock.Unlock()
 		return srv.serveUDP(l)
 	}
-	srv.lock.Unlock()
 	return &Error{err: "bad network"}
 }
 
