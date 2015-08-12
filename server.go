@@ -288,7 +288,6 @@ func (srv *Server) ListenAndServe() error {
 	}
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
 	srv.started = true
-	srv.lock.Unlock()
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
@@ -307,6 +306,7 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.Listener = l
+		srv.lock.Unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
 		a, e := net.ResolveUDPAddr(srv.Net, addr)
@@ -321,8 +321,10 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
+		srv.lock.Unlock()
 		return srv.serveUDP(l)
 	}
+	srv.lock.Unlock()
 	return &Error{err: "bad network"}
 }
 
@@ -336,20 +338,22 @@ func (srv *Server) ActivateAndServe() error {
 	}
 	srv.stopUDP, srv.stopTCP = make(chan bool), make(chan bool)
 	srv.started = true
+	pConn := srv.PacketConn
+	l := srv.Listener
 	srv.lock.Unlock()
-	if srv.PacketConn != nil {
+	if pConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
 		}
-		if t, ok := srv.PacketConn.(*net.UDPConn); ok {
+		if t, ok := pConn.(*net.UDPConn); ok {
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
 			return srv.serveUDP(t)
 		}
 	}
-	if srv.Listener != nil {
-		if t, ok := srv.Listener.(*net.TCPListener); ok {
+	if l != nil {
+		if t, ok := l.(*net.TCPListener); ok {
 			return srv.serveTCP(t)
 		}
 	}
@@ -367,7 +371,6 @@ func (srv *Server) Shutdown() error {
 		return &Error{err: "server not started"}
 	}
 	srv.started = false
-	srv.lock.Unlock()
 	net, addr := srv.Net, srv.Addr
 	switch {
 	case srv.Listener != nil:
@@ -377,6 +380,7 @@ func (srv *Server) Shutdown() error {
 		a := srv.PacketConn.LocalAddr()
 		net, addr = a.Network(), a.String()
 	}
+	srv.lock.Unlock()
 
 	fin := make(chan bool)
 	switch net {
