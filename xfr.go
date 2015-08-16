@@ -28,7 +28,7 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	if t.DialTimeout != 0 {
 		timeout = t.DialTimeout
 	}
-	t.Conn, err = DialTimeout("tcp", a, timeout)
+	t.Conn, err = DialTimeout("tcp", "", a, timeout)
 	if err != nil {
 		return nil, err
 	}
