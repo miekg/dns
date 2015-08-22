@@ -162,7 +162,7 @@ func TestClientEDNS0Local(t *testing.T) {
 	}
 }
 
-func TestSingleSingleInflight(t *testing.T) {
+func TestSingleInflight(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
@@ -188,7 +188,7 @@ func TestSingleSingleInflight(t *testing.T) {
 	i := 0
 	var first time.Duration
 	// With inflight *all* rtt are identical, and by doing actual lookups
-	// the changes that this is a coincidence is small.
+	// the chances that this is a coincidence is small.
 Loop:
 	for {
 		select {
@@ -197,7 +197,7 @@ Loop:
 				first = rtt
 			} else {
 				if first != rtt {
-					t.Errorf("all rtts should be equal.  got %d want %d", rtt, first)
+					t.Errorf("all rtts should be equal, got %d want %d", rtt, first)
 				}
 			}
 			i++
