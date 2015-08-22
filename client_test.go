@@ -88,7 +88,6 @@ func TestClientEDNS0(t *testing.T) {
 
 // Validates the transmission and parsing of local EDNS0 options.
 func TestClientEDNS0Local(t *testing.T) {
-
 	optStr1 := "1979:0x0707"
 	optStr2 := strconv.Itoa(EDNS0LOCALSTART) + ":0x0601"
 
@@ -149,14 +148,14 @@ func TestClientEDNS0Local(t *testing.T) {
 	// Validate the local options in the reply.
 	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_LOCAL).String()
 	if got != optStr1 {
-		t.Log("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
+		t.Logf("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
 
 	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_LOCAL).String()
 	if got != optStr2 {
-		t.Log("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
+		t.Logf("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
 		t.Fail()
 		t.Logf("%v\n", r)
 	}
@@ -286,5 +285,4 @@ func TestClientConn(t *testing.T) {
 	if err = r.Unpack(buf); err != nil {
 		t.Errorf("unable to unpack message fully: %v", err)
 	}
-
 }
