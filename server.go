@@ -159,9 +159,9 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	// don't need a mutex here, because deleting is OK, even if the
-	// entry is note there.
+	mux.m.Lock()
 	delete(mux.z, Fqdn(pattern))
+	mux.m.Unlock()
 }
 
 // ServeDNS dispatches the request to the handler whose
