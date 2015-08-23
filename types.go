@@ -149,7 +149,7 @@ const (
 	OpcodeUpdate = 5
 )
 
-// The wire format for the DNS packet header.
+// Headers is the wire format for the DNS packet header.
 type Header struct {
 	Id                                 uint16
 	Bits                               uint16
@@ -178,7 +178,7 @@ const (
 	LOC_ALTITUDEBASE = 100000
 )
 
-// RFC 4398, Section 2.1
+// Different Certificate Types, see RFC 4398, Section 2.1
 const (
 	CertPKIX = 1 + iota
 	CertSPKI
@@ -192,6 +192,8 @@ const (
 	CertOID = 254
 )
 
+// CertTypeToString converts the Cert Type to its string representation.
+// See RFC 4398 and RFC 6944.
 var CertTypeToString = map[uint16]string{
 	CertPKIX:    "PKIX",
 	CertSPKI:    "SPKI",
@@ -205,6 +207,7 @@ var CertTypeToString = map[uint16]string{
 	CertOID:     "OID",
 }
 
+// StringToCertType is the reverseof CertTypeToString.
 var StringToCertType = reverseInt16(CertTypeToString)
 
 // Question holds a DNS question. There can be multiple questions in the
@@ -228,6 +231,8 @@ func (q *Question) len() int {
 	return l + 4
 }
 
+// ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY
+// is named "*" there.
 type ANY struct {
 	Hdr RR_Header
 	// Does not have any rdata
