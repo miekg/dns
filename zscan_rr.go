@@ -896,22 +896,24 @@ func setLOC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if l.length == 0 {
 		return rr, nil, ""
 	}
-	if i, e := strconv.Atoi(l.token); e != nil || l.err {
+	i, e := strconv.Atoi(l.token)
+	if e != nil || l.err {
 		return nil, &ParseError{f, "bad LOC Latitude", l}, ""
-	} else {
-		rr.Latitude = 1000 * 60 * 60 * uint32(i)
 	}
+	rr.Latitude = 1000 * 60 * 60 * uint32(i)
+
 	<-c // zBlank
 	// Either number, 'N' or 'S'
 	l = <-c
 	if rr.Latitude, ok = locCheckNorth(l.token, rr.Latitude); ok {
 		goto East
 	}
-	if i, e := strconv.Atoi(l.token); e != nil || l.err {
+	i, e = strconv.Atoi(l.token)
+	if e != nil || l.err {
 		return nil, &ParseError{f, "bad LOC Latitude minutes", l}, ""
-	} else {
-		rr.Latitude += 1000 * 60 * uint32(i)
 	}
+	rr.Latitude += 1000 * 60 * uint32(i)
+
 	<-c // zBlank
 	l = <-c
 	if i, e := strconv.ParseFloat(l.token, 32); e != nil || l.err {
@@ -1484,11 +1486,11 @@ func setWKS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 			// Ok
 		case zString:
 			if k, err = net.LookupPort(proto, l.token); err != nil {
-				if i, e := strconv.Atoi(l.token); e != nil { // If a number use that
+				i, e := strconv.Atoi(l.token) // If a number use that
+				if e != nil {
 					return nil, &ParseError{f, "bad WKS BitMap", l}, ""
-				} else {
-					rr.BitMap = append(rr.BitMap, uint16(i))
 				}
+				rr.BitMap = append(rr.BitMap, uint16(i))
 			}
 			rr.BitMap = append(rr.BitMap, uint16(k))
 		default:

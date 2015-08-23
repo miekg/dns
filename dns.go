@@ -36,9 +36,7 @@ type RR interface {
 	len() int
 }
 
-// DNS resource records.
-// There are many types of RRs,
-// but they all share the same header.
+// RR_Header is the header all DNS resource records share.
 type RR_Header struct {
 	Name     string `dns:"cdomain-name"`
 	Rrtype   uint16

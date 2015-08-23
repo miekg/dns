@@ -37,6 +37,7 @@ var (
 	ErrFqdn error = &Error{err: "domain must be fully qualified"}
 	// ErrId indicates there is a mismatch with the message's ID.
 	ErrId        error = &Error{err: "id mismatch"}
+	// ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
 	ErrKey       error = &Error{err: "bad key"}
 	ErrKeySize   error = &Error{err: "bad key size"}

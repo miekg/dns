@@ -701,7 +701,7 @@ func (rr *NAPTR) len() int {
 		len(rr.Regexp) + 1 + len(rr.Replacement) + 1
 }
 
-// See RFC 4398.
+// The CERT resource record, see RFC 4398.
 type CERT struct {
 	Hdr         RR_Header
 	Type        uint16
@@ -737,7 +737,7 @@ func (rr *CERT) len() int {
 		base64.StdEncoding.DecodedLen(len(rr.Certificate))
 }
 
-// See RFC 2672.
+// The DNAME resource record, see RFC 2672.
 type DNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"domain-name"`

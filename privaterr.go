@@ -46,7 +46,9 @@ func mkPrivateRR(rrtype uint16) *PrivateRR {
 	panic(fmt.Sprintf("dns: RR is not a PrivateRR, typeToRR[%d] generator returned %T", rrtype, anyrr))
 }
 
+// Header return the RR header of r.
 func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
+
 func (r *PrivateRR) String() string     { return r.Hdr.String() + r.Data.String() }
 
 // Private len and copy parts to satisfy RR interface.
