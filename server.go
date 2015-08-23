@@ -456,7 +456,6 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 		srv.wgTCP.Add(1)
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
 	}
-	panic("dns: not reached")
 }
 
 // serveUDP starts a UDP listener for the server.
@@ -492,7 +491,6 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		srv.wgUDP.Add(1)
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
-	panic("dns: not reached")
 }
 
 // Serve a new connection.

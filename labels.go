@@ -98,7 +98,6 @@ func CountLabel(s string) (labels int) {
 			return
 		}
 	}
-	panic("dns: not reached")
 }
 
 // Split splits a name s into its label indexes.
@@ -119,7 +118,6 @@ func Split(s string) []int {
 		}
 		idx = append(idx, off)
 	}
-	panic("dns: not reached")
 }
 
 // NextLabel returns the index of the start of the next label in the

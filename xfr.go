@@ -91,7 +91,6 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 			c <- &Envelope{in.Answer, nil}
 		}
 	}
-	panic("dns: not reached")
 }
 
 func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
