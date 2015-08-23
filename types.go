@@ -91,26 +91,24 @@ const (
 	TypeLP         uint16 = 107
 	TypeEUI48      uint16 = 108
 	TypeEUI64      uint16 = 109
+	TypeURI        uint16 = 256
+	TypeCAA        uint16 = 257
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
 
 	// valid Question.Qtype only
-
 	TypeIXFR  uint16 = 251
 	TypeAXFR  uint16 = 252
 	TypeMAILB uint16 = 253
 	TypeMAILA uint16 = 254
 	TypeANY   uint16 = 255
 
-	TypeURI      uint16 = 256
-	TypeCAA      uint16 = 257
 	TypeTA       uint16 = 32768
 	TypeDLV      uint16 = 32769
 	TypeReserved uint16 = 65535
 
 	// valid Question.Qclass
-
 	ClassINET   = 1
 	ClassCSNET  = 2
 	ClassCHAOS  = 3
@@ -118,8 +116,7 @@ const (
 	ClassNONE   = 254
 	ClassANY    = 255
 
-	// Msg.rcode
-
+	// Message Response Codes.
 	RcodeSuccess        = 0
 	RcodeFormatError    = 1
 	RcodeServerFailure  = 2
@@ -140,8 +137,7 @@ const (
 	RcodeBadAlg         = 21
 	RcodeBadTrunc       = 22 // TSIG
 
-	// Opcode, there is no 3
-
+	// Message Opcodes. There is no 3.
 	OpcodeQuery  = 0
 	OpcodeIQuery = 1
 	OpcodeStatus = 2

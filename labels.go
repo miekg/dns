@@ -102,7 +102,7 @@ func CountLabel(s string) (labels int) {
 
 // Split splits a name s into its label indexes.
 // www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
-// The root name (.) returns nil. Also see dns.SplitDomainName.
+// The root name (.) returns nil. Also see SplitDomainName.
 func Split(s string) []int {
 	if s == "." {
 		return nil
@@ -123,6 +123,7 @@ func Split(s string) []int {
 // NextLabel returns the index of the start of the next label in the
 // string s starting at offset.
 // The bool end is true when the end of the string has been reached.
+// Also see PrevLabel.
 func NextLabel(s string, offset int) (i int, end bool) {
 	quote := false
 	for i = offset; i < len(s)-1; i++ {
@@ -145,6 +146,7 @@ func NextLabel(s string, offset int) (i int, end bool) {
 // PrevLabel returns the index of the label when starting from the right and
 // jumping n labels to the left.
 // The bool start is true when the start of the string has been overshot.
+// Also see NextLabel.
 func PrevLabel(s string, n int) (i int, start bool) {
 	if n == 0 {
 		return len(s), false
