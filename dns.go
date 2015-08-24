@@ -30,6 +30,9 @@ type RR interface {
 	Header() *RR_Header
 	// String returns the text representation of the resource record.
 	String() string
+
+	// rdataString returns the text representation of the rdata of record.
+//	rdataString() string
 	// copy returns a copy of the RR
 	copy() RR
 	// len returns the length (in octets) of the uncompressed RR in wire format.
