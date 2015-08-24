@@ -54,31 +54,12 @@ func rawSetExtraLen(msg []byte, i uint16) bool {
 // end of the RR.
 func rawSetRdlength(msg []byte, off, end int) bool {
 	l := len(msg)
-Loop:
-	for {
-		if off+1 > l {
-			return false
-		}
-		c := int(msg[off])
-		off++
-		switch c & 0xC0 {
-		case 0x00:
-			if c == 0x00 {
-				// End of the domainname
-				break Loop
-			}
-			if off+c > l {
-				return false
-			}
-			off += c
 
-		case 0xC0:
-			// pointer, next byte included, ends domainname
-			off++
-			break Loop
-		}
+	off, ok := rawDomainNameIndex(msg, off)
+	if !ok {
+		return false
 	}
-	// The domainname has been seen, we at the start of the fixed part in the header.
+	// The domainname has been seen, we are at the start of the fixed part in the header.
 	// Type is 2 bytes, class is 2 bytes, ttl 4 and then 2 bytes for the length.
 	off += 2 + 2 + 4
 	if off+2 > l {
@@ -92,4 +73,43 @@ Loop:
 	}
 	msg[off], msg[off+1] = packUint16(uint16(rdatalen))
 	return true
+}
+
+// rawSetBytes replaces the bytes msg[off:end] with
+// the byte slice returned from f. The number bytes copied is equal to the
+// length of the byte slice f returns.
+func rawSetBytes(msg []byte, off, end int, f func([]byte) []byte) {
+	b := f(msg[off:end])
+	copy(msg[off:], b)
+}
+
+// rawDomainNameIndex returns the offset where the domain end, off must be positioned
+// on the start of the name, and it will return the offset after the name. If we
+// overshoot the buffer length the boolean is false.
+func rawDomainNameIndex(msg []byte, off int) (int, bool) {
+	l := len(msg)
+Loop:
+	for {
+		if off+1 > l {
+			return off, true
+		}
+		c := int(msg[off])
+		off++
+		switch c & 0xC0 {
+		case 0x00:
+			if c == 0x00 {
+				// End of the domainname
+				break Loop
+			}
+			if off+c > l {
+				return off, true
+			}
+			off += c
+		case 0xC0:
+			// pointer, next byte included, ends domainname
+			off++
+			break Loop
+		}
+	}
+	return off, false
 }
