@@ -106,7 +106,7 @@ func Field(r RR, i int) string {
 //	%r	the rdata
 //	%%	literal percent sign
 //
-// In the future modifiers and more verbs might be added.
+// In the future more modifiers and verbs can be added.
 func Sprintf(format string, r RR) string {
 	s := ""
 	verb := false
@@ -131,9 +131,12 @@ func Sprintf(format string, r RR) string {
 			case '%':
 				s += "%"
 			}
-		} else {
-			s += string(f)
+
+			verb = false
+			continue
 		}
+
+		s += string(f)
 		verb = false
 	}
 
