@@ -234,20 +234,22 @@ type ANY struct {
 	// Does not have any rdata
 }
 
-func (rr *ANY) Header() *RR_Header { return &rr.Hdr }
-func (rr *ANY) copy() RR           { return &ANY{*rr.Hdr.copyHeader()} }
-func (rr *ANY) String() string     { return rr.Hdr.String() }
-func (rr *ANY) len() int           { return rr.Hdr.len() }
+func (rr *ANY) Header() *RR_Header  { return &rr.Hdr }
+func (rr *ANY) copy() RR            { return &ANY{*rr.Hdr.copyHeader()} }
+func (rr *ANY) len() int            { return rr.Hdr.len() }
+func (rr *ANY) String() string      { return rr.Hdr.String() }
+func (rr *ANY) rdataString() string { return "" }
 
 type CNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"cdomain-name"`
 }
 
-func (rr *CNAME) Header() *RR_Header { return &rr.Hdr }
-func (rr *CNAME) copy() RR           { return &CNAME{*rr.Hdr.copyHeader(), sprintName(rr.Target)} }
-func (rr *CNAME) String() string     { return rr.Hdr.String() + rr.Target }
-func (rr *CNAME) len() int           { return rr.Hdr.len() + len(rr.Target) + 1 }
+func (rr *CNAME) Header() *RR_Header  { return &rr.Hdr }
+func (rr *CNAME) copy() RR            { return &CNAME{*rr.Hdr.copyHeader(), sprintName(rr.Target)} }
+func (rr *CNAME) len() int            { return rr.Hdr.len() + len(rr.Target) + 1 }
+func (rr *CNAME) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *CNAME) rdataString() string { return rr.Target }
 
 type HINFO struct {
 	Hdr RR_Header
@@ -255,33 +257,33 @@ type HINFO struct {
 	Os  string
 }
 
-func (rr *HINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *HINFO) copy() RR           { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
-func (rr *HINFO) String() string {
-	return rr.Hdr.String() + sprintTxt([]string{rr.Cpu, rr.Os})
-}
-func (rr *HINFO) len() int { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
+func (rr *HINFO) Header() *RR_Header  { return &rr.Hdr }
+func (rr *HINFO) copy() RR            { return &HINFO{*rr.Hdr.copyHeader(), rr.Cpu, rr.Os} }
+func (rr *HINFO) len() int            { return rr.Hdr.len() + len(rr.Cpu) + len(rr.Os) }
+func (rr *HINFO) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *HINFO) rdataString() string { return sprintTxt([]string{rr.Cpu, rr.Os}) }
 
 type MB struct {
 	Hdr RR_Header
 	Mb  string `dns:"cdomain-name"`
 }
 
-func (rr *MB) Header() *RR_Header { return &rr.Hdr }
-func (rr *MB) copy() RR           { return &MB{*rr.Hdr.copyHeader(), sprintName(rr.Mb)} }
-
-func (rr *MB) String() string { return rr.Hdr.String() + rr.Mb }
-func (rr *MB) len() int       { return rr.Hdr.len() + len(rr.Mb) + 1 }
+func (rr *MB) Header() *RR_Header  { return &rr.Hdr }
+func (rr *MB) copy() RR            { return &MB{*rr.Hdr.copyHeader(), sprintName(rr.Mb)} }
+func (rr *MB) len() int            { return rr.Hdr.len() + len(rr.Mb) + 1 }
+func (rr *MB) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *MB) rdataString() string { return rr.Mb }
 
 type MG struct {
 	Hdr RR_Header
 	Mg  string `dns:"cdomain-name"`
 }
 
-func (rr *MG) Header() *RR_Header { return &rr.Hdr }
-func (rr *MG) copy() RR           { return &MG{*rr.Hdr.copyHeader(), rr.Mg} }
-func (rr *MG) len() int           { l := len(rr.Mg) + 1; return rr.Hdr.len() + l }
-func (rr *MG) String() string     { return rr.Hdr.String() + sprintName(rr.Mg) }
+func (rr *MG) Header() *RR_Header  { return &rr.Hdr }
+func (rr *MG) copy() RR            { return &MG{*rr.Hdr.copyHeader(), rr.Mg} }
+func (rr *MG) len() int            { l := len(rr.Mg) + 1; return rr.Hdr.len() + l }
+func (rr *MG) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *MG) rdataString() string { return sprintName(rr.Mg) }
 
 type MINFO struct {
 	Hdr   RR_Header
@@ -289,13 +291,10 @@ type MINFO struct {
 	Email string `dns:"cdomain-name"`
 }
 
-func (rr *MINFO) Header() *RR_Header { return &rr.Hdr }
-func (rr *MINFO) copy() RR           { return &MINFO{*rr.Hdr.copyHeader(), rr.Rmail, rr.Email} }
-
-func (rr *MINFO) String() string {
-	return rr.Hdr.String() + sprintName(rr.Rmail) + " " + sprintName(rr.Email)
-}
-
+func (rr *MINFO) Header() *RR_Header  { return &rr.Hdr }
+func (rr *MINFO) copy() RR            { return &MINFO{*rr.Hdr.copyHeader(), rr.Rmail, rr.Email} }
+func (rr *MINFO) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *MINFO) rdataString() string { return sprintName(rr.Rmail) + " " + sprintName(rr.Email) }
 func (rr *MINFO) len() int {
 	l := len(rr.Rmail) + 1
 	n := len(rr.Email) + 1
@@ -307,26 +306,22 @@ type MR struct {
 	Mr  string `dns:"cdomain-name"`
 }
 
-func (rr *MR) Header() *RR_Header { return &rr.Hdr }
-func (rr *MR) copy() RR           { return &MR{*rr.Hdr.copyHeader(), rr.Mr} }
-func (rr *MR) len() int           { l := len(rr.Mr) + 1; return rr.Hdr.len() + l }
-
-func (rr *MR) String() string {
-	return rr.Hdr.String() + sprintName(rr.Mr)
-}
+func (rr *MR) Header() *RR_Header  { return &rr.Hdr }
+func (rr *MR) copy() RR            { return &MR{*rr.Hdr.copyHeader(), rr.Mr} }
+func (rr *MR) len() int            { l := len(rr.Mr) + 1; return rr.Hdr.len() + l }
+func (rr *MR) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *MR) rdataString() string { return sprintName(rr.Mr) }
 
 type MF struct {
 	Hdr RR_Header
 	Mf  string `dns:"cdomain-name"`
 }
 
-func (rr *MF) Header() *RR_Header { return &rr.Hdr }
-func (rr *MF) copy() RR           { return &MF{*rr.Hdr.copyHeader(), rr.Mf} }
-func (rr *MF) len() int           { return rr.Hdr.len() + len(rr.Mf) + 1 }
-
-func (rr *MF) String() string {
-	return rr.Hdr.String() + sprintName(rr.Mf)
-}
+func (rr *MF) Header() *RR_Header  { return &rr.Hdr }
+func (rr *MF) copy() RR            { return &MF{*rr.Hdr.copyHeader(), rr.Mf} }
+func (rr *MF) len() int            { return rr.Hdr.len() + len(rr.Mf) + 1 }
+func (rr *MF) String() string      { return rr.Hdr.String() + rr.rdataString() }
+func (rr *MF) rdataString() string { return sprintName(rr.Mf) }
 
 type MD struct {
 	Hdr RR_Header
@@ -760,12 +755,13 @@ type A struct {
 func (rr *A) Header() *RR_Header { return &rr.Hdr }
 func (rr *A) copy() RR           { return &A{*rr.Hdr.copyHeader(), copyIP(rr.A)} }
 func (rr *A) len() int           { return rr.Hdr.len() + net.IPv4len }
+func (rr *A) String() string     { return rr.Hdr.String() + rr.rdataString() }
 
-func (rr *A) String() string {
+func (rr *A) rdataString() string {
 	if rr.A == nil {
-		return rr.Hdr.String()
+		return ""
 	}
-	return rr.Hdr.String() + rr.A.String()
+	return rr.A.String()
 }
 
 type AAAA struct {
@@ -776,12 +772,13 @@ type AAAA struct {
 func (rr *AAAA) Header() *RR_Header { return &rr.Hdr }
 func (rr *AAAA) copy() RR           { return &AAAA{*rr.Hdr.copyHeader(), copyIP(rr.AAAA)} }
 func (rr *AAAA) len() int           { return rr.Hdr.len() + net.IPv6len }
+func (rr *AAAA) String() string     { return rr.Hdr.String() + rr.rdataString() }
 
-func (rr *AAAA) String() string {
+func (rr *AAAA) rdataString() string {
 	if rr.AAAA == nil {
-		return rr.Hdr.String()
+		return ""
 	}
-	return rr.Hdr.String() + rr.AAAA.String()
+	return rr.AAAA.String()
 }
 
 type PX struct {

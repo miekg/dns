@@ -94,3 +94,51 @@ func Field(r RR, i int) string {
 	}
 	return ""
 }
+
+// Sprintf formats according to the format specifier and returns the
+// resulting string. The following verbs are understood by this
+// function:
+//
+//	%n	the ownername
+//	%c	the class
+//	%t	the type
+//	%T	the ttl
+//	%r	the rdata
+//	%%	literal percent sign
+//
+// In the future more modifiers and verbs can be added.
+func Sprintf(format string, r RR) string {
+	s := ""
+	verb := false
+	for _, f := range format {
+		if f == '%' {
+			verb = true
+			continue
+		}
+		if verb {
+			switch f {
+			case 'n':
+				s += r.Header().Name
+			case 'c':
+				s += Class(r.Header().Class).String()
+			case 't':
+				s += Type(r.Header().Class).String()
+			case 'T':
+				s += strconv.Itoa(int(r.Header().Ttl))
+			case 'r':
+				// s+=r.rdataString() // later
+				s+=""
+			case '%':
+				s += "%"
+			}
+
+			verb = false
+			continue
+		}
+
+		s += string(f)
+		verb = false
+	}
+
+	return string(s)
+}
