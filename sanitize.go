@@ -84,7 +84,7 @@ func normalizedString(r RR) string {
 // dropCNAMEAndDNAME drops records from rrs that are not allowed, taking the rules
 // for CNAME and DNAME into account.
 func dropCNAMEAndDNAME(rrs []RR) []RR {
-	ret := make([]RR, 0, len(rrs)
+	ret := make([]RR, 0, len(rrs))
 
 
 	return nil
