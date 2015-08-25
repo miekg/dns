@@ -1,10 +1,11 @@
 package dns
 
 // Dedup removes identical RRs from rrs. It preserves the original ordering.
+// The lowest TTL of any duplicates is used in the remaining one.
 // TODO(miek): CNAME, DNAME 'n stuff.
 func Dedup(rrs []RR) []RR {
 	m := make(map[string]RR)
-	keys := []string{}
+	keys := make([]string, 0, len(rrs))
 
 	for _, r := range rrs {
 		key := normalizedString(r)
@@ -19,8 +20,7 @@ func Dedup(rrs []RR) []RR {
 		m[key] = r
 	}
 	// If the length of the result map equals the amount of RRs we got,
-	// it means they were all different. We can then just return the original
-	// rrset.
+	// it means they were all different. We can then just return the original rrset.
 	if len(m) == len(rrs) {
 		return rrs
 	}
