@@ -13,22 +13,6 @@ func Dedup(rrs []RR) []RR {
 	m := make(map[string]RR)
 	keys := make([]string, 0, len(rrs))
 
-	/*
-		make separate step that remove cname, dname
-		switch r.Header().Rrtype {
-		case TypeCNAME:
-			cname = append(cname, strings.ToLower(r.Header().Name))
-		case TypeDNAME:
-			dname = append(dname, strings.ToLower(r.Header().Name))
-		default:
-			if len(cname) == 0 && len(dname) == 0 {
-				break
-			}
-			if strings.EqualFold
-		}
-	*/
-
-
 	for _, r := range rrs {
 		key := normalizedString(r)
 		keys = append(keys, key)
@@ -95,4 +79,29 @@ func normalizedString(r RR) string {
 	copy(b[ttlStart:], b[ttlEnd:])
 	cut := ttlEnd - ttlStart
 	return string(b[:len(b)-cut])
+}
+
+// dropCNAMEAndDNAME drops records from rrs that are not allowed, taking the rules
+// for CNAME and DNAME into account.
+func dropCNAMEAndDNAME(rrs []RR) []RR {
+	ret := make([]RR, 0, len(rrs)
+
+
+	return nil
+	/*
+		make separate step that remove cname, dname
+		switch r.Header().Rrtype {
+		case TypeCNAME:
+			cname = append(cname, strings.ToLower(r.Header().Name))
+		case TypeDNAME:
+			dname = append(dname, strings.ToLower(r.Header().Name))
+		default:
+			if len(cname) == 0 && len(dname) == 0 {
+				break
+			}
+			if strings.EqualFold
+		}
+	*/
+
+
 }
