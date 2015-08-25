@@ -6,12 +6,30 @@ package dns
 // TODO(miek): This function will be extended to also look for CNAMEs and DNAMEs.
 // if found, it will prune rrs from the "other data" that can exist. Example:
 // if it finds a: a.miek.nl. CNAME foo, all other RRs with the ownername a.miek.nl.
-// will be removed.
+// will be removed. When a DNAME is found all RRs with an ownername below that of
+// the DNAME will be removed.
 func Dedup(rrs []RR) []RR {
 	m := make(map[string]RR)
 	keys := make([]string, 0, len(rrs))
+	var cname map[nameClass]bool
+	var dname map[nameClass]bool
 
 	for _, r := range rrs {
+		switch r.Header().Rrtype {
+		case TypeCNAME:
+			if cname == nil {
+				cname = make(map[nameClass]bool)
+			}
+			cname[nameClass{r.Header().Name, r.Header().Class}] = true
+		case TypeDNAME:
+			if dname == nil {
+				dname = make(map[nameClass]bool)
+			}
+			dname[nameClass{r.Header().Name, r.Header().Class}] = true
+		default:
+			if
+		}
+
 		key := normalizedString(r)
 		keys = append(keys, key)
 		if _, ok := m[key]; ok {
@@ -37,6 +55,12 @@ func Dedup(rrs []RR) []RR {
 		delete(m, keys[i])
 	}
 	return rrs[:i]
+}
+
+// nameClass is used to index the CNAME and DNAME maps.
+type nameClass struct {
+	name string
+	class uint16
 }
 
 // normalizedString returns a normalized string from r. The TTL
