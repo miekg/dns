@@ -2,7 +2,11 @@ package dns
 
 // Dedup removes identical RRs from rrs. It preserves the original ordering.
 // The lowest TTL of any duplicates is used in the remaining one.
-// TODO(miek): CNAME, DNAME 'n stuff.
+//
+// TODO(miek): This function will be extended to also look for CNAMEs and DNAMEs.
+// if found, it will prune rrs from the "other data" that can exist. Example:
+// if it finds a: a.miek.nl. CNAME foo, all other RRs with the ownername a.miek.nl.
+// will be removed.
 func Dedup(rrs []RR) []RR {
 	m := make(map[string]RR)
 	keys := make([]string, 0, len(rrs))
