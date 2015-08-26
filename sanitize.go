@@ -114,6 +114,8 @@ func normalizedString(r RR) (string, int) {
 	return string(b[:len(b)-cut]), ttlStart
 }
 
+// needsDeletion checks if the RR is masked by either a CNAME or a DNAME.
+// If so it return true.
 func needsDeletion(r RR, s string, cname, dname []string) bool {
 	if r.Header().Rrtype == TypeCNAME || r.Header().Rrtype == TypeDNAME {
 		return false
