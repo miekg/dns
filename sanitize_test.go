@@ -70,14 +70,14 @@ func TestDedupWithCNAMEDNAME(t *testing.T) {
 			newRR(t, "a.miek.nl. CNAME a."),
 			newRR(t, "a.miek.nl. CNAME a."),
 		}: []string{"miek.nl.\t3600\tIN\tCNAME\ta.",
-		"a.miek.nl.\t3600\tIN\tCNAME\ta."},
+			"a.miek.nl.\t3600\tIN\tCNAME\ta."},
 		[...]RR{
 			newRR(t, "miek.nl. DNAME a."),
 			newRR(t, "a.miek.nl. CNAME a."),
 			newRR(t, "b.miek.nl. IN A 127.0.0.1"),
 			newRR(t, "a.miek.de. IN A 127.0.0.1"),
 		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta.",
-		"a.miek.de.\t3600\tIN\tA\t127.0.0.1"},
+			"a.miek.de.\t3600\tIN\tA\t127.0.0.1"},
 		[...]RR{
 			newRR(t, "miek.nl. DNAME a."),
 			newRR(t, "a.miek.nl. DNAME a."),
