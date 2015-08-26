@@ -54,6 +54,8 @@ func Dedup(rrs []RR) []RR {
 		// it from the map.
 		if _, ok := m[keys[i]]; ok {
 			if needsDeletion(r, keys[i], cname, dname) {
+				// It the RR is masked by an CNAME or DNAME, we only
+				// delete it from the map, but don't copy it.
 				delete(m, keys[i])
 				continue
 			}

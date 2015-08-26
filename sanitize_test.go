@@ -1,9 +1,6 @@
 package dns
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
 func TestDedup(t *testing.T) {
 	// make it []string
@@ -30,34 +27,57 @@ func TestDedup(t *testing.T) {
 			newRR(t, "miek.nl. IN A 127.0.0.1"),
 			newRR(t, "miek.de. IN A 127.0.0.1"),
 		}: []string{"miek.nl.\t3600\tCH\tA\t127.0.0.1",
+			"miek.nl.\t3600\tIN\tA\t127.0.0.1",
 			"miek.de.\t3600\tIN\tA\t127.0.0.1",
 		},
 		[...]RR{
 			newRR(t, "miek.de. IN A 127.0.0.1"),
-			newRR(t, "miek.nl. IN A 127.0.0.1"),
-			newRR(t, "miek.nl. IN A 127.0.0.1"),
+			newRR(t, "miek.nl. 200 IN A 127.0.0.1"),
+			newRR(t, "miek.nl. 300 IN A 127.0.0.1"),
 		}: []string{"miek.de.\t3600\tIN\tA\t127.0.0.1",
-			"miek.de.\t3600\tIN\tA\t127.0.0.1",
+			"miek.nl.\t200\tIN\tA\t127.0.0.1",
 		},
 	}
 
+	T := 0
 	for rr, expected := range testcases {
 		out := Dedup([]RR{rr[0], rr[1], rr[2]})
-		if !reflect.DeepEqual(out, expected) {
-			t.Fatalf("expected %v, got %v", expected, out)
+		for i, o := range out {
+			if o.String() != expected[i] {
+				t.Fatalf("test %d, expected %v, got %v", T, expected[i], o.String())
+			}
 		}
+		T++
 	}
 }
 
-func TestDedupWithCNAME(t *testing.T) {
-	in := []RR{
-		newRR(t, "miek.Nl. CNAME a."),
-		newRR(t, "miEk.nl. IN A 127.0.0.1"),
-		newRR(t, "miek.Nl. IN A 127.0.0.1"),
-		newRR(t, "miek.de. IN A 127.0.0.1"),
+func TestDedupWithCNAMEDNAME(t *testing.T) {
+	testcases := map[[4]RR][]string{
+		[...]RR{
+			newRR(t, "miek.Nl. CNAME a."),
+			newRR(t, "miEk.nl. IN A 127.0.0.1"),
+			newRR(t, "miek.Nl. IN A 127.0.0.1"),
+			newRR(t, "miek.de. IN A 127.0.0.1"),
+		}: []string{"miek.Nl.\t3600\tIN\tCNAME\ta.",
+			"miek.de.\t3600\tIN\tA\t127.0.0.1"},
+		[...]RR{
+			newRR(t, "Miek.nl. CNAME a."),
+			newRR(t, "mIek.nl. CNAME a."),
+			newRR(t, "miEk.nl. CNAME a."),
+			newRR(t, "mieK.nl. CNAME a."),
+		}: []string{"Miek.nl.\t3600\tIN\tCNAME\ta."},
 	}
-	out := Dedup(in)
-	t.Logf("%+v\n", out)
+
+	T := 0
+	for rr, expected := range testcases {
+		out := Dedup([]RR{rr[0], rr[1], rr[2]})
+		for i, o := range out {
+			if o.String() != expected[i] {
+				t.Fatalf("test %d, expected %v, got %v", T, expected[i], o.String())
+			}
+		}
+		T++
+	}
 }
 
 func TestNormalizedString(t *testing.T) {
