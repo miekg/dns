@@ -44,7 +44,8 @@ func Dedup(rrs []RR) []RR {
 	}
 	// If the length of the result map equals the amount of RRs we got,
 	// it means they were all different. We can then just return the original rrset.
-	if len(m) == len(rrs) {
+	// We can only do this when we haven't found a CNAME or DNAME.
+	if len(m) == len(rrs) && len(cname) == 0 && len(dname) == 0 {
 		return rrs
 	}
 
@@ -117,22 +118,24 @@ func normalizedString(r RR) (string, int) {
 // needsDeletion checks if the RR is masked by either a CNAME or a DNAME.
 // If so it return true.
 func needsDeletion(r RR, s string, cname, dname []string) bool {
-	// TODO(miek): fix.
-	// This is too broad, but we have to be care full not to delete ourselves.
-	if r.Header().Rrtype == TypeCNAME || r.Header().Rrtype == TypeDNAME {
-		return false
-	}
-
 	// For CNAME we can do strings.HasPrefix with s.
 	// For DNAME we can do strings.Contains with s.
 	// Either signals a removal of this RR.
 	for _, c := range cname {
 		if strings.HasPrefix(s, c) {
+			if r.Header().Rrtype == TypeCNAME {
+				// don't delete yourself
+				continue
+			}
 			return true
 		}
 	}
 	for _, d := range dname {
 		if strings.Contains(s, d) {
+			if r.Header().Rrtype == TypeDNAME && strings.HasPrefix(s, d) {
+				// don't delete yourself
+				continue
+			}
 			return true
 		}
 	}

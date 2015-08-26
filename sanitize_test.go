@@ -39,15 +39,13 @@ func TestDedup(t *testing.T) {
 		},
 	}
 
-	T := 0
 	for rr, expected := range testcases {
 		out := Dedup([]RR{rr[0], rr[1], rr[2]})
 		for i, o := range out {
 			if o.String() != expected[i] {
-				t.Fatalf("test %d, expected %v, got %v", T, expected[i], o.String())
+				t.Fatalf("expected %v, got %v", expected[i], o.String())
 			}
 		}
-		T++
 	}
 }
 
@@ -88,17 +86,17 @@ func TestDedupWithCNAMEDNAME(t *testing.T) {
 		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta."},
 	}
 
-	T := 0
 	for rr, expected := range testcases {
 		out := Dedup([]RR{rr[0], rr[1], rr[2], rr[3]})
 		for i, o := range out {
 			if o.String() != expected[i] {
-				t.Fatalf("test %d, expected %v, got %v", T, expected[i], o.String())
+				t.Fatalf("expected %v, got %v", expected[i], o.String())
 			}
 		}
-		T++
 	}
 }
+
+// BenchMark test as well TODO(miek)
 
 func TestNormalizedString(t *testing.T) {
 	tests := map[RR]string{
