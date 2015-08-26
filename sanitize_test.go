@@ -66,11 +66,31 @@ func TestDedupWithCNAMEDNAME(t *testing.T) {
 			newRR(t, "miEk.nl. CNAME a."),
 			newRR(t, "mieK.nl. CNAME a."),
 		}: []string{"Miek.nl.\t3600\tIN\tCNAME\ta."},
+		[...]RR{
+			newRR(t, "miek.nl. CNAME a."),
+			newRR(t, "a.miek.nl. CNAME a."),
+			newRR(t, "a.miek.nl. CNAME a."),
+			newRR(t, "a.miek.nl. CNAME a."),
+		}: []string{"miek.nl.\t3600\tIN\tCNAME\ta.",
+		"a.miek.nl.\t3600\tIN\tCNAME\ta."},
+		[...]RR{
+			newRR(t, "miek.nl. DNAME a."),
+			newRR(t, "a.miek.nl. CNAME a."),
+			newRR(t, "b.miek.nl. IN A 127.0.0.1"),
+			newRR(t, "a.miek.de. IN A 127.0.0.1"),
+		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta.",
+		"a.miek.de.\t3600\tIN\tA\t127.0.0.1"},
+		[...]RR{
+			newRR(t, "miek.nl. DNAME a."),
+			newRR(t, "a.miek.nl. DNAME a."),
+			newRR(t, "b.miek.nl. DNAME b."),
+			newRR(t, "a.b.miek.nl. DNAME a.b"),
+		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta."},
 	}
 
 	T := 0
 	for rr, expected := range testcases {
-		out := Dedup([]RR{rr[0], rr[1], rr[2]})
+		out := Dedup([]RR{rr[0], rr[1], rr[2], rr[3]})
 		for i, o := range out {
 			if o.String() != expected[i] {
 				t.Fatalf("test %d, expected %v, got %v", T, expected[i], o.String())
