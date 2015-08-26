@@ -49,54 +49,16 @@ func TestDedup(t *testing.T) {
 	}
 }
 
-func TestDedupWithCNAMEDNAME(t *testing.T) {
-	testcases := map[[4]RR][]string{
-		[...]RR{
-			newRR(t, "miek.Nl. CNAME a."),
-			newRR(t, "miEk.nl. IN A 127.0.0.1"),
-			newRR(t, "miek.Nl. IN A 127.0.0.1"),
-			newRR(t, "miek.de. IN A 127.0.0.1"),
-		}: []string{"miek.Nl.\t3600\tIN\tCNAME\ta.",
-			"miek.de.\t3600\tIN\tA\t127.0.0.1"},
-		[...]RR{
-			newRR(t, "Miek.nl. CNAME a."),
-			newRR(t, "mIek.nl. CNAME a."),
-			newRR(t, "miEk.nl. CNAME a."),
-			newRR(t, "mieK.nl. CNAME a."),
-		}: []string{"Miek.nl.\t3600\tIN\tCNAME\ta."},
-		[...]RR{
-			newRR(t, "miek.nl. CNAME a."),
-			newRR(t, "a.miek.nl. CNAME a."),
-			newRR(t, "a.miek.nl. CNAME a."),
-			newRR(t, "a.miek.nl. CNAME a."),
-		}: []string{"miek.nl.\t3600\tIN\tCNAME\ta.",
-			"a.miek.nl.\t3600\tIN\tCNAME\ta."},
-		[...]RR{
-			newRR(t, "miek.nl. DNAME a."),
-			newRR(t, "a.miek.nl. CNAME a."),
-			newRR(t, "b.miek.nl. IN A 127.0.0.1"),
-			newRR(t, "a.miek.de. IN A 127.0.0.1"),
-		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta.",
-			"a.miek.de.\t3600\tIN\tA\t127.0.0.1"},
-		[...]RR{
-			newRR(t, "miek.nl. DNAME a."),
-			newRR(t, "a.miek.nl. DNAME a."),
-			newRR(t, "b.miek.nl. DNAME b."),
-			newRR(t, "a.b.miek.nl. DNAME a.b"),
-		}: []string{"miek.nl.\t3600\tIN\tDNAME\ta."},
+func BenchmarkDedup(b *testing.B) {
+	rrs := []RR{
+		newRR(nil, "miEk.nl. 2000 IN A 127.0.0.1"),
+		newRR(nil, "mieK.Nl. 1000 IN A 127.0.0.1"),
+		newRR(nil, "Miek.nL. 500 IN A 127.0.0.1"),
 	}
-
-	for rr, expected := range testcases {
-		out := Dedup([]RR{rr[0], rr[1], rr[2], rr[3]})
-		for i, o := range out {
-			if o.String() != expected[i] {
-				t.Fatalf("expected %v, got %v", expected[i], o.String())
-			}
-		}
+	for i := 0; i < b.N; i++ {
+		Dedup(rrs)
 	}
 }
-
-// BenchMark test as well TODO(miek)
 
 func TestNormalizedString(t *testing.T) {
 	tests := map[RR]string{
@@ -105,9 +67,9 @@ func TestNormalizedString(t *testing.T) {
 		newRR(t, "m\\\tIeK.nl. 3600 in A 127.0.0.1"): "m\\tiek.nl.\tIN\tA\t127.0.0.1",
 	}
 	for tc, expected := range tests {
-		a1, _ := normalizedString(tc)
-		if a1 != expected {
-			t.Logf("expected %s, got %s", expected, a1)
+		n := normalizedString(tc)
+		if n != expected {
+			t.Logf("expected %s, got %s", expected, n)
 			t.Fail()
 		}
 	}
