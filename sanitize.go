@@ -1,14 +1,20 @@
 package dns
 
 // Dedup removes identical RRs from rrs. It preserves the original ordering.
-// The lowest TTL of any duplicates is used in the remaining one.
-func Dedup(rrs []RR) []RR {
-	m := make(map[string]RR)
-	keys := make([]string, 0, len(rrs))
+// The lowest TTL of any duplicates is used in the remaining one. Dedup modifies
+// rrs.
+// m is used to store the RRs temporay. If it is nil a new map will be allocated.
+func Dedup(rrs []RR, m map[string]RR) []RR {
+	if m == nil {
+		m = make(map[string]RR)
+	}
+	// We need a (ordered) slice of keys to preserve the original ordering.
+	// Otherwise we could just range of the map directly.
+	keys := make([]*string, 0, len(rrs))
 
 	for _, r := range rrs {
 		key := normalizedString(r)
-		keys = append(keys, key)
+		keys = append(keys, &key)
 		if _, ok := m[key]; ok {
 			// Shortest TTL wins.
 			if m[key].Header().Ttl > r.Header().Ttl {
@@ -25,12 +31,13 @@ func Dedup(rrs []RR) []RR {
 		return rrs
 	}
 
-	ret := make([]RR, 0, len(rrs))
+	j := 0
 	for i, r := range rrs {
 		// If keys[i] lives in the map, we should copy and remove it.
-		if _, ok := m[keys[i]]; ok {
-			delete(m, keys[i])
-			ret = append(ret, r)
+		if _, ok := m[*keys[i]]; ok {
+			delete(m, *keys[i])
+			rrs[j] = r
+			j++
 		}
 
 		if len(m) == 0 {
@@ -38,7 +45,7 @@ func Dedup(rrs []RR) []RR {
 		}
 	}
 
-	return ret
+	return rrs[:j]
 }
 
 // normalizedString returns a normalized string from r. The TTL

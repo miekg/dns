@@ -40,7 +40,7 @@ func TestDedup(t *testing.T) {
 	}
 
 	for rr, expected := range testcases {
-		out := Dedup([]RR{rr[0], rr[1], rr[2]})
+		out := Dedup([]RR{rr[0], rr[1], rr[2]}, nil)
 		for i, o := range out {
 			if o.String() != expected[i] {
 				t.Fatalf("expected %v, got %v", expected[i], o.String())
@@ -55,8 +55,9 @@ func BenchmarkDedup(b *testing.B) {
 		newRR(nil, "mieK.Nl. 1000 IN A 127.0.0.1"),
 		newRR(nil, "Miek.nL. 500 IN A 127.0.0.1"),
 	}
+	m := make(map[string]RR)
 	for i := 0; i < b.N; i++ {
-		Dedup(rrs)
+		Dedup(rrs,m )
 	}
 }
 
