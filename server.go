@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+// Maximum number of TCP queries before we close the socket.
+const maxTCPQueries = 128
+
 // Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
@@ -502,7 +505,8 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *Ses
 		w.writer = w
 	}
 
-	q := 0
+	q := 0 // counter for the amount of TCP queries we get
+
 	defer func() {
 		if u != nil {
 			srv.wgUDP.Done()
@@ -544,6 +548,12 @@ Redo:
 	h.ServeDNS(w, req) // Writes back to the client
 
 Exit:
+	// TODO(miek): make this number configurable?
+	if q > maxTCPQueries { // close socket after this many queries
+		w.Close()
+		return
+	}
+
 	if w.hijacked {
 		return // client calls Close()
 	}
@@ -558,11 +568,6 @@ Exit:
 	m, e := reader.ReadTCP(w.tcp, idleTimeout)
 	if e == nil {
 		q++
-		// TODO(miek): make this number configurable?
-		if q > 128 { // close socket after this many queries
-			w.Close()
-			return
-		}
 		goto Redo
 	}
 	w.Close()
