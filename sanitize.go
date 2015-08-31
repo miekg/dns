@@ -8,8 +8,7 @@ func Dedup(rrs []RR, m map[string]RR) []RR {
 	if m == nil {
 		m = make(map[string]RR)
 	}
-	// We need a (ordered) slice of keys to preserve the original ordering.
-	// Otherwise we could just range of the map directly.
+	// Save the keys, so we don't have to call normalizedString twice.
 	keys := make([]*string, 0, len(rrs))
 
 	for _, r := range rrs {
