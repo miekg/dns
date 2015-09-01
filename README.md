@@ -41,6 +41,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://pulse.turbobytes.com/
 * https://play.google.com/store/apps/details?id=com.turbobytes.dig
 * https://github.com/fcambus/statzone
+* https://github.com/benschw/dns-clb-go
 
 Send pull request if you want to be listed here.
 
