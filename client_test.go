@@ -161,56 +161,6 @@ func TestClientEDNS0Local(t *testing.T) {
 	}
 }
 
-func TestSingleInflight(t *testing.T) {
-	// Test is inherently racy, because queries might actually be returned before the test
-	// is over, leading to multiple queries even with SingleInflight. This ofcourse then
-	// leads to diff. rrts and the test fails. Number of tests is now 3, to lower the chance
-	// for the race to hit.
-	HandleFunc("miek.nl.", HelloServer)
-	defer HandleRemove("miek.nl.")
-
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("Unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-
-	m := new(Msg)
-	m.SetQuestion("miek.nl.", TypeDNSKEY)
-
-	c := new(Client)
-	c.SingleInflight = true
-	nr := 3
-	ch := make(chan time.Duration)
-	for i := 0; i < nr; i++ {
-		go func() {
-			_, rtt, _ := c.Exchange(m, addrstr)
-			ch <- rtt
-		}()
-	}
-	i := 0
-	var first time.Duration
-	// With inflight *all* rtt are identical, and by doing actual lookups
-	// the chances that this is a coincidence is small.
-Loop:
-	for {
-		select {
-		case rtt := <-ch:
-			if i == 0 {
-				first = rtt
-			} else {
-				if first != rtt {
-					t.Errorf("all rtts should be equal, got %d want %d", rtt, first)
-				}
-			}
-			i++
-			if i == nr {
-				break Loop
-			}
-		}
-	}
-}
-
 // ExampleUpdateLeaseTSIG shows how to update a lease signed with TSIG.
 func ExampleUpdateLeaseTSIG(t *testing.T) {
 	m := new(Msg)
