@@ -4,8 +4,14 @@ package dns
 
 import (
 	"bytes"
+	"errors"
+	"golang.org/x/net/proxy"
 	"io"
+	"log"
 	"net"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -25,6 +31,7 @@ type Conn struct {
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	Proxy          string            // proxy server for TCP query
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
@@ -47,7 +54,7 @@ type Client struct {
 //
 func Exchange(m *Msg, a string) (r *Msg, err error) {
 	var co *Conn
-	co, err = DialTimeout("udp", a, dnsTimeout)
+	co, err = DialTimeout("udp", "", a, dnsTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +159,9 @@ func (c *Client) writeTimeout() time.Duration {
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var co *Conn
 	if c.Net == "" {
-		co, err = DialTimeout("udp", a, c.dialTimeout())
+		co, err = DialTimeout("udp", "", a, c.dialTimeout())
 	} else {
-		co, err = DialTimeout(c.Net, a, c.dialTimeout())
+		co, err = DialTimeout(c.Net, c.Proxy, a, c.dialTimeout())
 	}
 	if err != nil {
 		return nil, 0, err
@@ -367,10 +374,58 @@ func Dial(network, address string) (conn *Conn, err error) {
 	return conn, nil
 }
 
-// DialTimeout acts like Dial but takes a timeout.
-func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
+func DialHttpProxy(proxy, address string, timeout time.Duration) (conn net.Conn, err error) {
+	conn, err = net.DialTimeout("tcp", proxy, timeout)
+	if err != nil {
+		return nil, err
+	}
+	_, portStr, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil, err
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return nil, errors.New("proxy: failed to parse port number: " + portStr)
+	}
+	if port < 1 || port > 0xffff {
+		return nil, errors.New("proxy: port number out of range: " + portStr)
+	}
+	if _, err := io.WriteString(conn, "CONNECT "+address+" HTTP/1.0\n\n"); err != nil {
+		return nil, errors.New("proxy: failed to write connect request to HTTP proxy at " + address + ": " + err.Error())
+	}
+	buf := make([]byte, 20)
+	if _, err := io.ReadFull(conn, buf); err != nil {
+		return nil, errors.New("proxy: failed to read connect reply from HTTP proxy at " + address + ": " + err.Error())
+	}
+
+	if strings.Index(string(buf), " 200 ") > 0 {
+		log.Println("proxy connected")
+		return conn, nil
+	}
+
+	return nil, errors.New("proxy disconnect")
+}
+
+func DialTimeout(network, proxy_url, address string, timeout time.Duration) (conn *Conn, err error) {
 	conn = new(Conn)
-	conn.Conn, err = net.DialTimeout(network, address, timeout)
+	if network != "tcp" || proxy_url == "" {
+		conn.Conn, err = net.DialTimeout(network, address, timeout)
+	} else {
+		url, err := url.Parse(proxy_url)
+		if err != nil {
+			return nil, err
+		}
+		if url.Scheme == "http" {
+			conn.Conn, err = DialHttpProxy(url.Host, address, timeout)
+		} else { //socks5 proxy
+			dialer, err := proxy.FromURL(url, proxy.Direct)
+			if err != nil {
+				return nil, err
+			}
+			conn.Conn, err = dialer.Dial(network, address)
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
