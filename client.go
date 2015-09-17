@@ -116,16 +116,9 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	if cl1, ok := ClassToString[m.Question[0].Qclass]; ok {
 		cl = cl1
 	}
-	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
+	return c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
 		return c.exchange(m, a)
 	})
-	if err != nil {
-		return r, rtt, err
-	}
-	if shared {
-		return r.Copy(), rtt, nil
-	}
-	return r, rtt, nil
 }
 
 func (c *Client) dialTimeout() time.Duration {

@@ -6,16 +6,18 @@
 
 package dns
 
-import "sync"
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // call is an in-flight or completed singleflight.Do call
 type call struct {
-	wg   sync.WaitGroup
-	val  *Msg
-	rtt  time.Duration
-	err  error
-	dups int
+	val *Msg
+	rtt time.Duration
+	err error
+	dup bool
+	sync.WaitGroup
 }
 
 // singleflight represents a class of work and forms a namespace in
@@ -30,28 +32,42 @@ type singleflight struct {
 // time. If a duplicate comes in, the duplicate caller waits for the
 // original to complete and receives the same results.
 // The return value shared indicates whether v was given to multiple callers.
-func (g *singleflight) Do(key string, fn func() (*Msg, time.Duration, error)) (v *Msg, rtt time.Duration, err error, shared bool) {
+func (g *singleflight) Do(key string, fn func() (*Msg, time.Duration, error)) (v *Msg, rtt time.Duration, err error) {
+
 	g.Lock()
+	// initialize
 	if g.m == nil {
 		g.m = make(map[string]*call)
 	}
-	if c, ok := g.m[key]; ok {
-		c.dups++
+	// see if there is line at the gate we need
+	c, ok := g.m[key]
+	if ok { // wait in line and copy the result
+		c.dup = true
 		g.Unlock()
-		c.wg.Wait()
-		return c.val, c.rtt, c.err, true
+		c.Wait()
+		if c.val == nil {
+			return c.val, c.rtt, c.err
+		}
+		return c.val.Copy(), c.rtt, c.err
 	}
-	c := new(call)
-	c.wg.Add(1)
+
+	// leader falls here
+	c = new(call)
+	c.Add(1)
+	defer c.Done()
+
 	g.m[key] = c
 	g.Unlock()
 
 	c.val, c.rtt, c.err = fn()
-	c.wg.Done()
 
 	g.Lock()
-	delete(g.m, key)
-	g.Unlock()
+	defer g.Unlock()
 
-	return c.val, c.rtt, c.err, c.dups > 0
+	delete(g.m, key)
+	if !c.dup || c.val == nil {
+		// nobody can join anymore
+		return c.val, c.rtt, c.err
+	}
+	return c.val.Copy(), c.rtt, c.err
 }
