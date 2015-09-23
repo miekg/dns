@@ -285,6 +285,7 @@ type Server struct {
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
 	srv.lock.Lock()
+	// We can't use defer() becasue serveTCP/serveUDP don't return.
 	if srv.started {
 		srv.lock.Unlock()
 		return &Error{err: "server already started"}
@@ -302,10 +303,14 @@ func (srv *Server) ListenAndServe() error {
 	case "tcp", "tcp4", "tcp6":
 		a, e := net.ResolveTCPAddr(srv.Net, addr)
 		if e != nil {
+			srv.lock.Unlock()
+			srv.started = false
 			return e
 		}
 		l, e := net.ListenTCP(srv.Net, a)
 		if e != nil {
+			srv.lock.Unlock()
+			srv.started = false
 			return e
 		}
 		srv.Listener = l
@@ -314,13 +319,19 @@ func (srv *Server) ListenAndServe() error {
 	case "udp", "udp4", "udp6":
 		a, e := net.ResolveUDPAddr(srv.Net, addr)
 		if e != nil {
+			srv.lock.Unlock()
+			srv.started = false
 			return e
 		}
 		l, e := net.ListenUDP(srv.Net, a)
 		if e != nil {
+			srv.lock.Unlock()
+			srv.started = false
 			return e
 		}
 		if e := setUDPSocketOptions(l); e != nil {
+			srv.lock.Unlock()
+			srv.started = false
 			return e
 		}
 		srv.PacketConn = l
@@ -328,6 +339,7 @@ func (srv *Server) ListenAndServe() error {
 		return srv.serveUDP(l)
 	}
 	srv.lock.Unlock()
+	srv.started = false
 	return &Error{err: "bad network"}
 }
 
@@ -343,23 +355,28 @@ func (srv *Server) ActivateAndServe() error {
 	srv.started = true
 	pConn := srv.PacketConn
 	l := srv.Listener
-	srv.lock.Unlock()
 	if pConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
 		}
 		if t, ok := pConn.(*net.UDPConn); ok {
 			if e := setUDPSocketOptions(t); e != nil {
+				srv.lock.Unlock()
+				srv.started = false
 				return e
 			}
+			srv.lock.Unlock()
 			return srv.serveUDP(t)
 		}
 	}
 	if l != nil {
 		if t, ok := l.(*net.TCPListener); ok {
+			srv.lock.Unlock()
 			return srv.serveTCP(t)
 		}
 	}
+	srv.lock.Unlock()
+	srv.started = false
 	return &Error{err: "bad listeners"}
 }
 

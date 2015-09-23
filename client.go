@@ -42,7 +42,7 @@ type Client struct {
 //
 //	co := &dns.Conn{Conn: c} // c is your net.Conn
 //	co.WriteMsg(m)
-//	in, err  := co.ReadMsg()
+//	in, err := co.ReadMsg()
 //	co.Close()
 //
 func Exchange(m *Msg, a string) (r *Msg, err error) {
