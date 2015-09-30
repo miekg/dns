@@ -36,7 +36,7 @@ func ExampleDS() {
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	zone = "miek.nl"
+	zone := "miek.nl"
 	m.SetQuestion(dns.Fqdn(zone), dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
 	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
