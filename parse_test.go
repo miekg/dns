@@ -569,7 +569,7 @@ test                          IN CNAME test.a.example.com.
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 
-func ExampleZone() {
+func ExampleParseZone() {
 	zone := `$ORIGIN .
 $TTL 3600       ; 1 hour
 name                    IN SOA  a6.nstld.com. hostmaster.nic.name. (
@@ -633,7 +633,7 @@ moutamassey             NS      ns01.yahoodomains.jp.
 	// moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
 }
 
-func ExampleHIP() {
+func ExampleNewRR_hip() {
 	h := `www.example.com     IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
 9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQ
@@ -684,7 +684,7 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
 	}
 }
 
-func ExampleSOA() {
+func ExampleNewRR_soa() {
 	s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
 	if soa, err := NewRR(s); err == nil {
 		fmt.Println(soa.String())
@@ -799,7 +799,7 @@ func TestLowercaseTokens(t *testing.T) {
 	}
 }
 
-func ExampleGenerate() {
+func ExampleParseZone_generate() {
 	// From the manual: http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#id2566761
 	zone := "$GENERATE 1-2 0 NS SERVER$.EXAMPLE.\n$GENERATE 1-8 $ CNAME $.0"
 	to := ParseZone(strings.NewReader(zone), "0.0.192.IN-ADDR.ARPA.", "")

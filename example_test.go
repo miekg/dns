@@ -31,13 +31,11 @@ func ExampleMX() {
 
 // Retrieve the DNSKEY records of a zone and convert them
 // to DS records for SHA1, SHA256 and SHA384.
-func ExampleDS(zone string) {
+func ExampleDNSKEY() {
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	if zone == "" {
-		zone = "miek.nl"
-	}
+    zone := "miek.nl"
 	m.SetQuestion(dns.Fqdn(zone), dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
 	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
