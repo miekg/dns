@@ -633,7 +633,7 @@ moutamassey             NS      ns01.yahoodomains.jp.
 	// moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
 }
 
-func ExampleNewRR_hip() {
+func ExampleHIP() {
 	h := `www.example.com     IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
 9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQ
@@ -684,7 +684,7 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
 	}
 }
 
-func ExampleNewRR_soa() {
+func ExampleSOA() {
 	s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
 	if soa, err := NewRR(s); err == nil {
 		fmt.Println(soa.String())

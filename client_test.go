@@ -161,8 +161,8 @@ func TestClientEDNS0Local(t *testing.T) {
 	}
 }
 
-// Example_updateLeaseTSIG shows how to update a lease signed with TSIG.
-func Example_updateLeaseTSIG() {
+// ExampleTsigSecret_updateLeaseTSIG shows how to update a lease signed with TSIG.
+func ExampleTsigSecret_updateLeaseTSIG() {
 	m := new(Msg)
 	m.SetUpdate("t.local.ip6.io.")
 	rr, _ := NewRR("t.local.ip6.io. 30 A 127.0.0.1")
