@@ -638,6 +638,9 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 			x.Target = strings.ToLower(x.Target)
 		case *DNAME:
 			x.Target = strings.ToLower(x.Target)
+		case *HINFO:
+			x.Os = strings.ToLower(x.Os)
+			x.Cpu = strings.ToLower(x.Cpu)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		wire := make([]byte, r1.len()+1) // +1 to be safe(r)
