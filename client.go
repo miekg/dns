@@ -53,8 +53,6 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 	}
 
 	defer co.Close()
-	co.SetReadDeadline(time.Now().Add(dnsTimeout))
-	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
 
 	opt := m.IsEdns0()
 	// If EDNS0 is used use that for size.
@@ -62,9 +60,12 @@ func Exchange(m *Msg, a string) (r *Msg, err error) {
 		co.UDPSize = opt.UDPSize()
 	}
 
+	co.SetWriteDeadline(time.Now().Add(dnsTimeout))
 	if err = co.WriteMsg(m); err != nil {
 		return nil, err
 	}
+
+	co.SetReadDeadline(time.Now().Add(dnsTimeout))
 	r, err = co.ReadMsg()
 	if err == nil && r.Id != m.Id {
 		err = ErrId
@@ -171,13 +172,13 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		co.UDPSize = c.UDPSize
 	}
 
-	co.SetReadDeadline(time.Now().Add(c.readTimeout()))
-	co.SetWriteDeadline(time.Now().Add(c.writeTimeout()))
-
 	co.TsigSecret = c.TsigSecret
+	co.SetWriteDeadline(time.Now().Add(c.writeTimeout()))
 	if err = co.WriteMsg(m); err != nil {
 		return nil, 0, err
 	}
+
+	co.SetReadDeadline(time.Now().Add(c.readTimeout()))
 	r, err = co.ReadMsg()
 	if err == nil && r.Id != m.Id {
 		err = ErrId
