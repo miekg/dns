@@ -83,10 +83,6 @@ func (rr *OPT) len() int {
 	return l
 }
 
-func (rr *OPT) copy() RR {
-	return &OPT{*rr.Hdr.copyHeader(), rr.Option}
-}
-
 // return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.

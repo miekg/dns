@@ -15,10 +15,6 @@ import (
 	"golang.org/x/tools/go/types"
 )
 
-var skip = map[string]struct{}{
-	"PrivateRR": struct{}{},
-}
-
 var skipLen = map[string]struct{}{
 	"NSEC":     struct{}{},
 	"NSEC3":    struct{}{},
@@ -101,7 +97,7 @@ func main() {
 			continue
 		}
 		name := strings.TrimPrefix(o.Name(), "Type")
-		if _, ok := skip[name]; ok {
+		if name == "PrivateRR" {
 			continue
 		}
 		numberedTypes = append(numberedTypes, name)
@@ -117,7 +113,7 @@ func main() {
 		if st, _ := getTypeStruct(o.Type(), scope); st == nil {
 			continue
 		}
-		if _, ok := skip[o.Name()]; ok {
+		if name == "PrivateRR" {
 			continue
 		}
 
@@ -210,8 +206,42 @@ func main() {
 		fmt.Fprintf(b, "return l }\n")
 	}
 
+	// Generate copy()
+	fmt.Fprint(b, "// copy() functions\n")
+	for _, name := range namedTypes {
+		o := scope.Lookup(name)
+		st, isEmbedded := getTypeStruct(o.Type(), scope)
+		if isEmbedded {
+			continue
+		}
+		fmt.Fprintf(b, "func (rr *%s) copy() RR {\n", name)
+		fields := []string{"*rr.Hdr.copyHeader()"}
+		for i := 1; i < st.NumFields(); i++ {
+			f := st.Field(i).Name()
+			if sl, ok := st.Field(i).Type().(*types.Slice); ok {
+				t := sl.Underlying().String()
+				t = strings.TrimPrefix(t, "[]")
+				t = strings.TrimPrefix(t, "github.com/miekg/dns.")
+				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
+					f, t, f, f, f)
+				fields = append(fields, f)
+				continue
+			}
+			if st.Field(i).Type().String() == "net.IP" {
+				fields = append(fields, "copyIP(rr."+f+")")
+				continue
+			}
+			fields = append(fields, "rr."+f)
+		}
+		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		fmt.Fprintf(b, "}\n")
+	}
+
 	res, err := format.Source(b.Bytes())
-	fatalIfErr(err)
+	if err != nil {
+		b.WriteTo(os.Stderr)
+		log.Fatal(err)
+	}
 
 	f, err := os.Create("types_auto.go")
 	fatalIfErr(err)
