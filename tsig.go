@@ -37,10 +37,6 @@ type TSIG struct {
 	OtherData  string `dns:"size-hex"`
 }
 
-func (rr *TSIG) Header() *RR_Header {
-	return &rr.Hdr
-}
-
 // TSIG has no official presentation format, but this will suffice.
 
 func (rr *TSIG) String() string {
@@ -56,11 +52,6 @@ func (rr *TSIG) String() string {
 		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
 	return s
-}
-
-func (rr *TSIG) len() int {
-	return rr.Hdr.len() + len(rr.Algorithm) + 1 + 6 +
-		4 + len(rr.MAC)/2 + 1 + 6 + len(rr.OtherData)/2 + 1
 }
 
 func (rr *TSIG) copy() RR {

@@ -30,11 +30,6 @@ type OPT struct {
 	Option []EDNS0 `dns:"opt"`
 }
 
-// Header implements the RR interface.
-func (rr *OPT) Header() *RR_Header {
-	return &rr.Hdr
-}
-
 func (rr *OPT) String() string {
 	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
 	if rr.Do() {
