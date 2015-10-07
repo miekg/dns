@@ -1,5 +1,10 @@
 //+build ignore
 
+// types_generate.go is meant to run with go generate. It will use
+// go/{loader,types} to track down all the RR struct types. Then for each type
+// it will generate conversion tables (typeToRR and TypeToString) and banal
+// methods (len, Header, copy) based on the struct tags. The generated source is
+// written to ztypes.go, and is meant to be checked into git.
 package main
 
 import (
@@ -60,6 +65,11 @@ var headerFunc = template.Must(template.New("headerFunc").Parse(`
 
 `))
 
+// getTypeStruct will take a type and the package scope, and return the
+// (innermost) struct if the type is considered a RR type (currently defined as
+// those structs beginning with a RR_Header, could be redefined as implementing
+// the RR interface). The bool return value indicates if embedded structs were
+// resolved.
 func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	st, ok := t.Underlying().(*types.Struct)
 	if !ok {
@@ -237,13 +247,15 @@ func main() {
 		fmt.Fprintf(b, "}\n")
 	}
 
+	// gofmt
 	res, err := format.Source(b.Bytes())
 	if err != nil {
 		b.WriteTo(os.Stderr)
 		log.Fatal(err)
 	}
 
-	f, err := os.Create("types_auto.go")
+	// write result
+	f, err := os.Create("ztypes.go")
 	fatalIfErr(err)
 	defer f.Close()
 	f.Write(res)
