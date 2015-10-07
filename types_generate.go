@@ -1,7 +1,7 @@
 //+build ignore
 
 // types_generate.go is meant to run with go generate. It will use
-// go/{loader,types} to track down all the RR struct types. Then for each type
+// go/{importer,types} to track down all the RR struct types. Then for each type
 // it will generate conversion tables (typeToRR and TypeToString) and banal
 // methods (len, Header, copy) based on the struct tags. The generated source is
 // written to ztypes.go, and is meant to be checked into git.
@@ -11,13 +11,12 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"go/importer"
+	"go/types"
 	"log"
 	"os"
 	"strings"
 	"text/template"
-
-	"golang.org/x/tools/go/loader"
-	"golang.org/x/tools/go/types"
 )
 
 var skipLen = map[string]struct{}{
@@ -86,11 +85,10 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 }
 
 func main() {
-	var conf loader.Config
-	conf.Import(".")
-	prog, err := conf.Load()
+	// Import and type-check the package
+	pkg, err := importer.Default().Import("github.com/miekg/dns")
 	fatalIfErr(err)
-	scope := prog.Package(".").Pkg.Scope()
+	scope := pkg.Scope()
 
 	// Collect constants like TypeX
 	var numberedTypes []string
