@@ -43,6 +43,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/fcambus/statzone
 * https://github.com/benschw/dns-clb-go
 * https://github.com/corny/dnscheck for http://public-dns.tk/
+* https://namesmith.io
 
 Send pull request if you want to be listed here.
 
