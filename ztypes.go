@@ -8,8 +8,8 @@ import (
 	"net"
 )
 
-// Map of constructors for each RR type.
-var typeToRR = map[uint16]func() RR{
+// TypeToRR is a map of constructors for each RR type.
+var TypeToRR = map[uint16]func() RR{
 	TypeA:          func() RR { return new(A) },
 	TypeAAAA:       func() RR { return new(AAAA) },
 	TypeAFSDB:      func() RR { return new(AFSDB) },
@@ -80,7 +80,7 @@ var typeToRR = map[uint16]func() RR{
 	TypeX25:        func() RR { return new(X25) },
 }
 
-// TypeToString is a map of strings for each RR wire type.
+// TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
 	TypeA:          "A",
 	TypeAAAA:       "AAAA",

@@ -2,7 +2,7 @@
 
 // types_generate.go is meant to run with go generate. It will use
 // go/{importer,types} to track down all the RR struct types. Then for each type
-// it will generate conversion tables (typeToRR and TypeToString) and banal
+// it will generate conversion tables (TypeToRR and TypeToString) and banal
 // methods (len, Header, copy) based on the struct tags. The generated source is
 // written to ztypes.go, and is meant to be checked into git.
 package main
@@ -40,16 +40,16 @@ import (
 
 `
 
-var typeToRR = template.Must(template.New("typeToRR").Parse(`
-// Map of constructors for each RR type.
-var typeToRR = map[uint16]func() RR{
+var TypeToRR = template.Must(template.New("TypeToRR").Parse(`
+// TypeToRR is a map of constructors for each RR type.
+var TypeToRR = map[uint16]func() RR{
 {{range .}}{{if ne . "RFC3597"}}  Type{{.}}:  func() RR { return new({{.}}) },
 {{end}}{{end}}                    }
 
 `))
 
 var typeToString = template.Must(template.New("typeToString").Parse(`
-// TypeToString is a map of strings for each RR wire type.
+// TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
 {{range .}}{{if ne . "NSAPPTR"}}  Type{{.}}: "{{.}}",
 {{end}}{{end}}                    TypeNSAPPTR:    "NSAP-PTR",
@@ -136,8 +136,8 @@ func main() {
 	b := &bytes.Buffer{}
 	b.WriteString(packageHdr)
 
-	// Generate typeToRR
-	fatalIfErr(typeToRR.Execute(b, namedTypes))
+	// Generate TypeToRR
+	fatalIfErr(TypeToRR.Execute(b, namedTypes))
 
 	// Generate typeToString
 	fatalIfErr(typeToString.Execute(b, numberedTypes))
