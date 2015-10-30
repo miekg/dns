@@ -434,7 +434,10 @@ func (srv *Server) serveTCP(l *net.TCPListener) error {
 	for {
 		rw, e := l.AcceptTCP()
 		if e != nil {
-			continue
+			if neterr, ok := e.(net.Error); ok && neterr.Temporary() {
+				continue
+			}
+			return e
 		}
 		m, e := reader.ReadTCP(rw, rtimeout)
 		srv.lock.RLock()
