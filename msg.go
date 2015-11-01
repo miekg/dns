@@ -54,6 +54,9 @@ var (
 	ErrSoa error = &Error{err: "no SOA"}
 	// ErrTime indicates a timing error in TSIG authentication.
 	ErrTime error = &Error{err: "bad time"}
+	// ErrTruncated indicates that we failed to unpack a truncated message.
+	// We unpacked as much as we had so Msg can still be used, if desired.
+	ErrTruncated error = &Error{err: "failed to unpack truncated message"}
 )
 
 // Id, by default, returns a 16 bits random number to be used as a
@@ -1238,8 +1241,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 						continue
 					}
 				}
-				if off == lenmsg {
-					// zero rdata foo, OK for dyn. updates
+				if off == lenmsg && int(val.FieldByName("Hdr").FieldByName("Rdlength").Uint()) == 0 {
+					// zero rdata is ok for dyn updates, but only if rdlength is 0
 					break
 				}
 				s, off, err = UnpackDomainName(msg, off)
@@ -1394,6 +1397,32 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 		return &h, end, &Error{err: "bad rdlength"}
 	}
 	return rr, off, err
+}
+
+// unpackRRslice unpacks msg[off:] into an []RR.
+// If we cannot unpack the whole array, then it will return nil
+func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) {
+	var r RR
+	// Optimistically make dst be the length that was sent
+	dst := make([]RR, 0, l)
+	for i := 0; i < l; i++ {
+		off1 := off
+		r, off, err = UnpackRR(msg, off)
+		if err != nil {
+			off = len(msg)
+			break
+		}
+		// If offset does not increase anymore, l is a lie
+		if off1 == off {
+			l = i
+			break
+		}
+		dst = append(dst, r)
+	}
+	if err != nil && off == len(msg) {
+		dst = nil
+	}
+	return dst, off, err
 }
 
 // Reverse a map
@@ -1594,84 +1623,48 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
 
-	// Don't pre-alloc these arrays, the incoming lengths are from the network.
-	dns.Question = make([]Question, 0, 1)
-	dns.Answer = make([]RR, 0, 10)
-	dns.Ns = make([]RR, 0, 10)
-	dns.Extra = make([]RR, 0, 10)
+	// Optimistically use the count given to us in the header
+	dns.Question = make([]Question, 0, int(dh.Qdcount))
 
 	var q Question
 	for i := 0; i < int(dh.Qdcount); i++ {
 		off1 := off
 		off, err = UnpackStruct(&q, msg, off)
 		if err != nil {
+			// Even if Truncated is set, we only will set ErrTruncated if we
+			// actually got the questions
 			return err
 		}
 		if off1 == off { // Offset does not increase anymore, dh.Qdcount is a lie!
 			dh.Qdcount = uint16(i)
 			break
 		}
-
 		dns.Question = append(dns.Question, q)
-
-	}
-	// If we see a TC bit being set we return here, without
-	// an error, because technically it isn't an error. So return
-	// without parsing the potentially corrupt packet and hitting an error.
-	// TODO(miek): this isn't the best strategy!
-	// Better stragey would be: set boolean indicating truncated message, go forth and parse
-	// until we hit an error, return the message without the latest parsed rr if this boolean
-	// is true.
-	if dns.Truncated {
-		dns.Answer = nil
-		dns.Ns = nil
-		dns.Extra = nil
-		return nil
 	}
 
-	var r RR
-	for i := 0; i < int(dh.Ancount); i++ {
-		off1 := off
-		r, off, err = UnpackRR(msg, off)
-		if err != nil {
-			return err
-		}
-		if off1 == off { // Offset does not increase anymore, dh.Ancount is a lie!
-			dh.Ancount = uint16(i)
-			break
-		}
-		dns.Answer = append(dns.Answer, r)
+	dns.Answer, off, err = unpackRRslice(int(dh.Ancount), msg, off)
+	// The header counts might have been wrong so we need to update it
+	dh.Ancount = uint16(len(dns.Answer))
+	if err == nil {
+		dns.Ns, off, err = unpackRRslice(int(dh.Nscount), msg, off)
 	}
-	for i := 0; i < int(dh.Nscount); i++ {
-		off1 := off
-		r, off, err = UnpackRR(msg, off)
-		if err != nil {
-			return err
-		}
-		if off1 == off { // Offset does not increase anymore, dh.Nscount is a lie!
-			dh.Nscount = uint16(i)
-			break
-		}
-		dns.Ns = append(dns.Ns, r)
+	// The header counts might have been wrong so we need to update it
+	dh.Nscount = uint16(len(dns.Ns))
+	if err == nil {
+		dns.Extra, off, err = unpackRRslice(int(dh.Arcount), msg, off)
 	}
-	for i := 0; i < int(dh.Arcount); i++ {
-		off1 := off
-		r, off, err = UnpackRR(msg, off)
-		if err != nil {
-			return err
-		}
-		if off1 == off { // Offset does not increase anymore, dh.Arcount is a lie!
-			dh.Arcount = uint16(i)
-			break
-		}
-		dns.Extra = append(dns.Extra, r)
-	}
+	// The header counts might have been wrong so we need to update it
+	dh.Arcount = uint16(len(dns.Extra))
 	if off != len(msg) {
 		// TODO(miek) make this an error?
 		// use PackOpt to let people tell how detailed the error reporting should be?
 		// println("dns: extra bytes in dns packet", off, "<", len(msg))
+	} else if dns.Truncated {
+		// Whether we ran into a an error or not, we want to return that it
+		// was truncated
+		err = ErrTruncated
 	}
-	return nil
+	return err
 }
 
 // Convert a complete message to a string with dig-like output.

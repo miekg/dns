@@ -197,6 +197,12 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 
 	m := new(Msg)
 	if err := m.Unpack(p); err != nil {
+		// If ErrTruncated was returned, we still want to allow the user to use
+		// the message, but naively they can just check err if they don't want
+		// to use a truncated message
+		if err == ErrTruncated {
+			return m, err
+		}
 		return nil, err
 	}
 	if t := m.IsTsig(); t != nil {
