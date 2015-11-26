@@ -390,7 +390,24 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
+type trigger struct {
+	done bool
+	sync.RWMutex
+}
+
+func (t *trigger) Set() {
+	t.Lock()
+	defer t.Unlock()
+	t.done = true
+}
+func (t *trigger) Get() bool {
+	t.RLock()
+	defer t.RUnlock()
+	return t.done
+}
+
 func TestHandlerCloseTCP(t *testing.T) {
+
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err)
@@ -400,9 +417,9 @@ func TestHandlerCloseTCP(t *testing.T) {
 	server := &Server{Addr: addr, Net: "tcp", Listener: ln}
 
 	hname := "testhandlerclosetcp."
-	h_triggered := false
+	triggered := &trigger{}
 	HandleFunc(hname, func(w ResponseWriter, r *Msg) {
-		h_triggered = true
+		triggered.Set()
 		w.Close()
 	})
 	defer HandleRemove(hname)
@@ -415,7 +432,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 	exchange:
 		_, _, err := c.Exchange(m, addr)
 		if err != nil && err != io.EOF {
-			t.Logf("Exchange failed: %s\n", err)
+			t.Logf("exchange failed: %s\n", err)
 			if tries == 3 {
 				return
 			}
@@ -425,8 +442,8 @@ func TestHandlerCloseTCP(t *testing.T) {
 		}
 	}()
 	server.ActivateAndServe()
-	if !h_triggered {
-		t.Fatalf("Handler never called")
+	if !triggered.Get() {
+		t.Fatalf("handler never called")
 	}
 }
 
