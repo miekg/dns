@@ -145,13 +145,13 @@ func TestTXTEscapeParsing(t *testing.T) {
 	for _, s := range test {
 		rr, err := NewRR(fmt.Sprintf("example.com. IN TXT %v", s[0]))
 		if err != nil {
-			t.Errorf("Could not parse %v TXT: %s", s[0], err)
+			t.Errorf("could not parse %v TXT: %s", s[0], err)
 			continue
 		}
 
 		txt := sprintTxt(rr.(*TXT).Txt)
 		if txt != s[1] {
-			t.Errorf("Mismatch after parsing `%v` TXT record: `%v` != `%v`", s[0], txt, s[1])
+			t.Errorf("mismatch after parsing `%v` TXT record: `%v` != `%v`", s[0], txt, s[1])
 		}
 	}
 }

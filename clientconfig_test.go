@@ -22,13 +22,13 @@ nameserver 11.28.10.1` // <- NOTE: NO newline.
 func testConfig(t *testing.T, data string) {
 	tempDir, err := ioutil.TempDir("", "")
 	if err != nil {
-		t.Fatalf("TempDir: %v", err)
+		t.Fatalf("tempDir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	path := filepath.Join(tempDir, "resolv.conf")
 	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-		t.Fatalf("WriteFile: %v", err)
+		t.Fatalf("writeFile: %v", err)
 	}
 	cc, err := ClientConfigFromFile(path)
 	if err != nil {
@@ -46,10 +46,5 @@ func testConfig(t *testing.T, data string) {
 	}
 }
 
-func TestNameserver(t *testing.T) {
-	testConfig(t, normal)
-}
-
-func TestMissingFinalNewLine(t *testing.T) {
-	testConfig(t, missingNewline)
-}
+func TestNameserver(t *testing.T)          { testConfig(t, normal) }
+func TestMissingFinalNewLine(t *testing.T) { testConfig(t, missingNewline) }

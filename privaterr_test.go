@@ -90,11 +90,11 @@ func TestPrivateByteSlice(t *testing.T) {
 	}
 
 	if off1 != off {
-		t.Errorf("Offset after unpacking differs: %d != %d", off1, off)
+		t.Errorf("offset after unpacking differs: %d != %d", off1, off)
 	}
 
 	if rr1.String() != testrecord {
-		t.Errorf("Record string representation did not match original %#v != %#v", rr1.String(), testrecord)
+		t.Errorf("record string representation did not match original %#v != %#v", rr1.String(), testrecord)
 	} else {
 		t.Log(rr1.String())
 	}

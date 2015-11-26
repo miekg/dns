@@ -58,28 +58,28 @@ func TestRemoveRRset(t *testing.T) {
 	// for each set mentioned in the RRs provided to it.
 	rr, err := NewRR(". 100 IN A 127.0.0.1")
 	if err != nil {
-		t.Fatalf("Error constructing RR: %v", err)
+		t.Fatalf("error constructing RR: %v", err)
 	}
 	m := new(Msg)
 	m.Ns = []RR{&RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY, Ttl: 0, Rdlength: 0}}
 	expectstr := m.String()
 	expect, err := m.Pack()
 	if err != nil {
-		t.Fatalf("Error packing expected msg: %v", err)
+		t.Fatalf("error packing expected msg: %v", err)
 	}
 
 	m.Ns = nil
 	m.RemoveRRset([]RR{rr})
 	actual, err := m.Pack()
 	if err != nil {
-		t.Fatalf("Error packing actual msg: %v", err)
+		t.Fatalf("error packing actual msg: %v", err)
 	}
 	if !bytes.Equal(actual, expect) {
 		tmp := new(Msg)
 		if err := tmp.Unpack(actual); err != nil {
-			t.Fatalf("Error unpacking actual msg: %v", err)
+			t.Fatalf("error unpacking actual msg: %v", err)
 		}
-		t.Errorf("Expected msg:\n%s", expectstr)
-		t.Errorf("Actual msg:\n%v", tmp)
+		t.Errorf("expected msg:\n%s", expectstr)
+		t.Errorf("actual msg:\n%v", tmp)
 	}
 }

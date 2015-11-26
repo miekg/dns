@@ -14,7 +14,7 @@ func TestClientSync(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %v", err)
+		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -45,7 +45,7 @@ func TestClientSyncBadId(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %v", err)
+		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -68,7 +68,7 @@ func TestClientEDNS0(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %v", err)
+		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
@@ -115,7 +115,7 @@ func TestClientEDNS0Local(t *testing.T) {
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %s", err)
+		t.Fatalf("unable to run test server: %s", err)
 	}
 	defer s.Shutdown()
 
@@ -198,7 +198,7 @@ func TestClientConn(t *testing.T) {
 	// This uses TCP just to make it slightly different than TestClientSync
 	s, addrstr, err := RunLocalTCPServer("127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("Unable to run test server: %v", err)
+		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 

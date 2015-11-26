@@ -58,11 +58,11 @@ func TestAXFR_NLNL_MultipleEnvelopes(t *testing.T) {
 
 	tr := new(Transfer)
 	if a, err := tr.In(m, net.JoinHostPort(server, "53")); err != nil {
-		t.Fatalf("Failed to setup axfr %v for server: %v", err, server)
+		t.Fatalf("failed to setup axfr %v for server: %v", err, server)
 	} else {
 		for ex := range a {
 			if ex.Error != nil {
-				t.Errorf("Error %v", ex.Error)
+				t.Errorf("error %v", ex.Error)
 				break
 			}
 		}
