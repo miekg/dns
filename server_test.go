@@ -39,9 +39,15 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 }
 
 func RunLocalUDPServer(laddr string) (*Server, string, error) {
+	server, l, _, err := RunLocalUDPServerWithFinChan(laddr)
+
+	return server, l, err
+}
+
+func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan struct{}, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, err
 	}
 	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
@@ -49,13 +55,16 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
+	fin := make(chan struct{}, 0)
+
 	go func() {
 		server.ActivateAndServe()
+		close(fin)
 		pc.Close()
 	}()
 
 	waitLock.Lock()
-	return server, pc.LocalAddr().String(), nil
+	return server, pc.LocalAddr().String(), fin, nil
 }
 
 func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
@@ -448,13 +457,18 @@ func TestHandlerCloseTCP(t *testing.T) {
 }
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, err := RunLocalUDPServer("127.0.0.1:0")
+	s, _, fin, err := RunLocalUDPServerWithFinChan("127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	err = s.Shutdown()
 	if err != nil {
 		t.Errorf("could not shutdown test UDP server, %v", err)
+	}
+	select {
+	case <-fin:
+	case <-time.After(2 * time.Second):
+		t.Error("Could not shutdown test UDP server. Gave up waiting")
 	}
 }
 
