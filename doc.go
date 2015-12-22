@@ -186,7 +186,7 @@ Basic use pattern validating and replying to a message that has TSIG set.
 	func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 		m := new(dns.Msg)
 		m.SetReply(r)
-		if r.IsTsig() {
+		if r.IsTsig() != nil {
 			if w.TsigStatus() == nil {
 				// *Msg r has an TSIG record and it was validated
 				m.SetTsig("axfr.", dns.HmacMD5, 300, time.Now().Unix())
