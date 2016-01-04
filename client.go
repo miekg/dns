@@ -161,6 +161,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		network = c.Net
 	}
 
+connect:
 	if c.TLS {
 		// TLS connection is always TCP
 		co, err = DialTimeoutWithTLS("tcp", a, c.TLSConfig, c.dialTimeout())
@@ -168,7 +169,23 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		co, err = DialTimeout(network, a, c.dialTimeout())
 	}
 
-	if err != nil {
+	// TODO(rafaeljusto)
+	//
+	// draft-ietf-dprive-dns-over-tls (section 3.1)
+	//
+	// DNS clients SHOULD remember server IP addresses that don't support
+	// DNS-over-TLS, including timeouts, connection refusals, and TLS
+	// handshake failures, and not request DNS-over-TLS from them for a
+	// reasonable period (such as one hour per server).  DNS clients
+	// following an out-of-band key-pinned privacy profile MAY be more
+	// aggressive about retrying DNS-over-TLS connection failures.
+	if err != nil && c.TLS {
+		// TODO(rafaeljusto)
+		// Log the error somewhere or just ignore it?
+		c.TLS = false
+		goto connect
+
+	} else if err != nil {
 		return nil, 0, err
 	}
 	defer co.Close()
