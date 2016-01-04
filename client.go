@@ -162,7 +162,8 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 
 	if c.TLS {
-		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, c.dialTimeout())
+		// TLS connection is always TCP
+		co, err = DialTimeoutWithTLS("tcp", a, c.TLSConfig, c.dialTimeout())
 	} else {
 		co, err = DialTimeout(network, a, c.dialTimeout())
 	}
