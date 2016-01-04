@@ -28,6 +28,7 @@ type Client struct {
 	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	TLS            bool              // enables TLS connection (port 853)
+	TLSConfig      *tls.Config       // TLS connection configuration (TLS flag should be enabled)
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
@@ -161,7 +162,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 
 	if c.TLS {
-		co, err = DialTimeoutWithTLS(network, a, c.dialTimeout())
+		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, c.dialTimeout())
 	} else {
 		co, err = DialTimeout(network, a, c.dialTimeout())
 	}
@@ -394,9 +395,9 @@ func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, er
 }
 
 // DialWithTLS connects to the address on the named network with TLS.
-func DialWithTLS(network, address string) (conn *Conn, err error) {
+func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
 	conn = new(Conn)
-	conn.Conn, err = tls.Dial(network, address, nil)
+	conn.Conn, err = tls.Dial(network, address, tlsConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -404,12 +405,12 @@ func DialWithTLS(network, address string) (conn *Conn, err error) {
 }
 
 // DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
-func DialTimeoutWithTLS(network, address string, timeout time.Duration) (conn *Conn, err error) {
+func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
 	var dialer net.Dialer
 	dialer.Timeout = timeout
 
 	conn = new(Conn)
-	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, nil)
+	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, tlsConfig)
 	if err != nil {
 		return nil, err
 	}
