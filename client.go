@@ -25,10 +25,9 @@ type Conn struct {
 
 // A Client defines parameters for a DNS client.
 type Client struct {
-	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	Net            string            // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	UDPSize        uint16            // minimum receive buffer for UDP messages
-	TLS            bool              // enables TLS connection (port 853)
-	TLSConfig      *tls.Config       // TLS connection configuration (TLS flag should be enabled)
+	TLSConfig      *tls.Config       // TLS connection configuration
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
@@ -155,15 +154,27 @@ func (c *Client) writeTimeout() time.Duration {
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var co *Conn
-
 	network := "udp"
-	if c.Net != "" {
-		network = c.Net
+	tls := false
+
+	switch c.Net {
+	case "tcp-tls":
+		network = "tcp"
+		tls = true
+	case "tcp4-tls":
+		network = "tcp4"
+		tls = true
+	case "tcp6-tls":
+		network = "tcp6"
+		tls = true
+	default:
+		if c.Net != "" {
+			network = c.Net
+		}
 	}
 
-	if c.TLS {
-		// TLS connection is always TCP
-		co, err = DialTimeoutWithTLS("tcp", a, c.TLSConfig, c.dialTimeout())
+	if tls {
+		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, c.dialTimeout())
 	} else {
 		co, err = DialTimeout(network, a, c.dialTimeout())
 	}
