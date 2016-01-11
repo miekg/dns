@@ -100,11 +100,8 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ListenAndServeTLS acts identically to ListenAndServe, except that it
-// expects TLS connections. Additionally, files containing a certificate and
-// matching private key for the server must be provided. If the certificate
-// is signed by a certificate authority, the certFile should be the concatenation
-// of the server's certificate, any intermediates, and the CA's certificate.
+// ListenAndServeTLS acts like http.ListenAndServeTLS, more information in
+// http://golang.org/pkg/net/http/#ListenAndServeTLS
 func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {

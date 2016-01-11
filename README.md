@@ -62,7 +62,7 @@ Send pull request if you want to be listed here.
 * EDNS0, NSID;
 * AXFR/IXFR;
 * TSIG, SIG(0);
-* DNS over TLS;
+* DNS over TLS: optional encrypted connection between client and server;
 * DNS name compression;
 * Depends only on the standard library.
 
