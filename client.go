@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"crypto/tls"
 	"io"
 	"net"
 	"time"
@@ -24,8 +25,9 @@ type Conn struct {
 
 // A Client defines parameters for a DNS client.
 type Client struct {
-	Net            string            // if "tcp" a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	Net            string            // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	UDPSize        uint16            // minimum receive buffer for UDP messages
+	TLSConfig      *tls.Config       // TLS connection configuration
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
@@ -152,11 +154,31 @@ func (c *Client) writeTimeout() time.Duration {
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	var co *Conn
-	if c.Net == "" {
-		co, err = DialTimeout("udp", a, c.dialTimeout())
-	} else {
-		co, err = DialTimeout(c.Net, a, c.dialTimeout())
+	network := "udp"
+	tls := false
+
+	switch c.Net {
+	case "tcp-tls":
+		network = "tcp"
+		tls = true
+	case "tcp4-tls":
+		network = "tcp4"
+		tls = true
+	case "tcp6-tls":
+		network = "tcp6"
+		tls = true
+	default:
+		if c.Net != "" {
+			network = c.Net
+		}
 	}
+
+	if tls {
+		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, c.dialTimeout())
+	} else {
+		co, err = DialTimeout(network, a, c.dialTimeout())
+	}
+
 	if err != nil {
 		return nil, 0, err
 	}
@@ -225,15 +247,19 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		err error
 	)
 
-	if t, ok := co.Conn.(*net.TCPConn); ok {
+	switch t := co.Conn.(type) {
+	case *net.TCPConn, *tls.Conn:
+		r := t.(io.Reader)
+
 		// First two bytes specify the length of the entire message.
-		l, err := tcpMsgLen(t)
+		l, err := tcpMsgLen(r)
 		if err != nil {
 			return nil, err
 		}
 		p = make([]byte, l)
-		n, err = tcpRead(t, p)
-	} else {
+		n, err = tcpRead(r, p)
+
+	default:
 		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
@@ -258,7 +284,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 }
 
 // tcpMsgLen is a helper func to read first two bytes of stream as uint16 packet length.
-func tcpMsgLen(t *net.TCPConn) (int, error) {
+func tcpMsgLen(t io.Reader) (int, error) {
 	p := []byte{0, 0}
 	n, err := t.Read(p)
 	if err != nil {
@@ -275,7 +301,7 @@ func tcpMsgLen(t *net.TCPConn) (int, error) {
 }
 
 // tcpRead calls TCPConn.Read enough times to fill allocated buffer.
-func tcpRead(t *net.TCPConn, p []byte) (int, error) {
+func tcpRead(t io.Reader, p []byte) (int, error) {
 	n, err := t.Read(p)
 	if err != nil {
 		return n, err
@@ -298,15 +324,18 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
-	if t, ok := co.Conn.(*net.TCPConn); ok {
-		l, err := tcpMsgLen(t)
+	switch t := co.Conn.(type) {
+	case *net.TCPConn, *tls.Conn:
+		r := t.(io.Reader)
+
+		l, err := tcpMsgLen(r)
 		if err != nil {
 			return 0, err
 		}
 		if l > len(p) {
 			return int(l), io.ErrShortBuffer
 		}
-		return tcpRead(t, p[:l])
+		return tcpRead(r, p[:l])
 	}
 	// UDP connection
 	n, err = co.Conn.Read(p)
@@ -346,7 +375,10 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 
 // Write implements the net.Conn Write method.
 func (co *Conn) Write(p []byte) (n int, err error) {
-	if t, ok := co.Conn.(*net.TCPConn); ok {
+	switch t := co.Conn.(type) {
+	case *net.TCPConn, *tls.Conn:
+		w := t.(io.Writer)
+
 		lp := len(p)
 		if lp < 2 {
 			return 0, io.ErrShortBuffer
@@ -357,7 +389,7 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 		l := make([]byte, 2, lp+2)
 		l[0], l[1] = packUint16(uint16(lp))
 		p = append(l, p...)
-		n, err := io.Copy(t, bytes.NewReader(p))
+		n, err := io.Copy(w, bytes.NewReader(p))
 		return int(n), err
 	}
 	n, err = co.Conn.(*net.UDPConn).Write(p)
@@ -378,6 +410,29 @@ func Dial(network, address string) (conn *Conn, err error) {
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
 	conn = new(Conn)
 	conn.Conn, err = net.DialTimeout(network, address, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialWithTLS connects to the address on the named network with TLS.
+func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
+	conn = new(Conn)
+	conn.Conn, err = tls.Dial(network, address, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
+func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
+	var dialer net.Dialer
+	dialer.Timeout = timeout
+
+	conn = new(Conn)
+	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, tlsConfig)
 	if err != nil {
 		return nil, err
 	}

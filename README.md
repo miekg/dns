@@ -62,6 +62,7 @@ Send pull request if you want to be listed here.
 * EDNS0, NSID;
 * AXFR/IXFR;
 * TSIG, SIG(0);
+* DNS over TLS: optional encrypted connection between client and server;
 * DNS name compression;
 * Depends only on the standard library.
 
@@ -136,6 +137,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7314 - DNS (EDNS) EXPIRE Option
 * 7553 - URI record
 * xxxx - EDNS0 DNS Update Lease (draft)
+* yyyy - DNS over TLS: Initiation and Performance Considerations (draft)
 
 ## Loosely based upon
 
