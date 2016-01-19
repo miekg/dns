@@ -347,7 +347,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-// WriteMsg sends a message thought the connection co.
+// WriteMsg sends a message through the connection co.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
 func (co *Conn) WriteMsg(m *Msg) (err error) {
