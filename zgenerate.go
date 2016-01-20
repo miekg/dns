@@ -15,7 +15,7 @@ import (
 // * [[ttl][class]]
 // * type
 // * rhs (rdata)
-// But we are lazy here, only the range is parsed *all* occurences
+// But we are lazy here, only the range is parsed *all* occurrences
 // of $ after that are interpreted.
 // Any error are returned as a string value, the empty string signals
 // "no error".

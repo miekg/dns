@@ -287,7 +287,7 @@ type Server struct {
 	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
 	TsigSecret map[string]string
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
-	// the handler. It will specfically not check if the query has the QR bit not set.
+	// the handler. It will specifically not check if the query has the QR bit not set.
 	Unsafe bool
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()

@@ -347,7 +347,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-// WriteMsg sends a message throught the connection co.
+// WriteMsg sends a message through the connection co.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
 func (co *Conn) WriteMsg(m *Msg) (err error) {
@@ -358,7 +358,7 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 			return ErrSecret
 		}
 		out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
-		// Set for the next read, allthough only used in zone transfers
+		// Set for the next read, although only used in zone transfers
 		co.tsigRequestMAC = mac
 	} else {
 		out, err = m.Pack()
