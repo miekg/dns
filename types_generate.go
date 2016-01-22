@@ -20,11 +20,11 @@ import (
 )
 
 var skipLen = map[string]struct{}{
-	"NSEC":     struct{}{},
-	"NSEC3":    struct{}{},
-	"OPT":      struct{}{},
-	"WKS":      struct{}{},
-	"IPSECKEY": struct{}{},
+	"NSEC":     {},
+	"NSEC3":    {},
+	"OPT":      {},
+	"WKS":      {},
+	"IPSECKEY": {},
 }
 
 var packageHdr = `
