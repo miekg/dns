@@ -1,8 +1,6 @@
 package dns
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestCompareDomainName(t *testing.T) {
 	s1 := "www.miek.nl."
@@ -132,6 +130,7 @@ func TestSplitDomainName(t *testing.T) {
 		"www..miek.nl":  {"www", "", "miek", "nl"},
 		`www\.miek.nl`:  {`www\.miek`, "nl"},
 		`www\\.miek.nl`: {`www\\`, "miek", "nl"},
+		".www.miek.nl.": {"", "www", "miek", "nl"},
 	}
 domainLoop:
 	for domain, splits := range labels {
