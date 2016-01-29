@@ -46,6 +46,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://namesmith.io
 * https://github.com/miekg/unbound
 * https://github.com/miekg/exdns
+* https://dnslookup.org
 
 Send pull request if you want to be listed here.
 
