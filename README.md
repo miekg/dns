@@ -33,6 +33,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/fcambus/rrda
 * https://github.com/kenshinx/godns
 * https://github.com/skynetservices/skydns
+* https://github.com/hashicorp/consul
 * https://github.com/DevelopersPL/godnsagent
 * https://github.com/duedil-ltd/discodns
 * https://github.com/StalkR/dns-reverse-proxy
@@ -42,7 +43,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://play.google.com/store/apps/details?id=com.turbobytes.dig
 * https://github.com/fcambus/statzone
 * https://github.com/benschw/dns-clb-go
-* https://github.com/corny/dnscheck for http://public-dns.tk/
+* https://github.com/corny/dnscheck for http://public-dns.info/
 * https://namesmith.io
 * https://github.com/miekg/unbound
 * https://github.com/miekg/exdns
