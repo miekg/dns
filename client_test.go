@@ -419,3 +419,42 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Fail()
 	}
 }
+
+// Issue #312.
+func TestClientBufferSize(t *testing.T) {
+	c := new(Client)
+	type Test struct {
+		bufsize uint16
+		expected uint16
+	}
+	tests := []Test{
+		{0, 0},
+		{511, 0},
+		{512, 512},
+		{4096, 4096},
+	}
+
+	for _, tc := range tests {
+		m := new(Msg)
+		m.SetQuestion("miek.nl", TypeMX)
+
+		if tc.bufsize > 0 {
+			c.UDPSize = tc.bufsize
+		}
+		c.exchange(m, "localhost:53")
+		switch tc.expected {
+		case 0:
+			if o := m.IsEdns0(); o != nil {
+				t.Fatalf("OPT RR should not have been added")
+			}
+		default:
+			o := m.IsEdns0()
+			if o == nil {
+				t.Fatalf("OPT RR should have been added")
+			}
+			if o.UDPSize() != tc.expected {
+				t.Fatalf("bufsize: expected %d, got %d", tc.expected, o.UDPSize())
+			}
+		}
+	}
+}
