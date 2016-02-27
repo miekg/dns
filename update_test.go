@@ -6,7 +6,6 @@ import (
 )
 
 func TestDynamicUpdateParsing(t *testing.T) {
-	// This does nothing with dynamic updates, move elsewhere?
 	prefix := "example.com. IN "
 	for _, typ := range TypeToString {
 		if typ == "OPT" || typ == "AXFR" || typ == "IXFR" || typ == "ANY" || typ == "TKEY" ||
@@ -89,7 +88,7 @@ func TestPreReqAndRemovals(t *testing.T) {
 	// Build a list of multiple prereqs and then somes removes followed by an insert.
 	// We should be able to add multiple prereqs and updates.
 	m := new(Msg)
-	m.SetUpdate("some_zone.")
+	m.SetUpdate("example.org.")
 	m.Id = 1234
 
 	// Use a full set of RRs each time, so we are sure the rdata is stripped.
@@ -120,7 +119,7 @@ func TestPreReqAndRemovals(t *testing.T) {
 ;; flags:; QUERY: 1, ANSWER: 5, AUTHORITY: 4, ADDITIONAL: 0
 
 ;; QUESTION SECTION:
-;some_zone.	IN	 SOA
+;example.org.	IN	 SOA
 
 ;; ANSWER SECTION:
 name_used.	0	ANY	ANY	
