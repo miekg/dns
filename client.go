@@ -33,7 +33,11 @@ type Client struct {
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
-	group          singleflight
+	// When true SetUDPSize will use UDPSize and will *add* an EDNS0 OPT RR to the message when sending
+	// it. If there already is an OPT RR it will use the UDP size specified in there.
+	SetUDPSize bool
+
+	group singleflight
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -47,6 +51,8 @@ type Client struct {
 //	in, err := co.ReadMsg()
 //	co.Close()
 //
+// By default Exchange will send an UDP message with a 512B buffer. If you need a larger
+// buffer you will need to add an EDNS0 (OPT RR) to the message, with the larger UDPSize.
 func Exchange(m *Msg, a string) (r *Msg, err error) {
 	var co *Conn
 	co, err = DialTimeout("udp", a, dnsTimeout)
@@ -192,6 +198,10 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	// Otherwise use the client's configured UDP size.
 	if opt == nil && c.UDPSize >= MinMsgSize {
 		co.UDPSize = c.UDPSize
+		// In this case also set the the EDNS0 bufsize to allow for larger responses.
+		if c.SetUDPSize {
+			m.SetEdns0(c.UDPSize, true /* dnssec */)
+		}
 	}
 
 	co.TsigSecret = c.TsigSecret
