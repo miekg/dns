@@ -26,14 +26,15 @@ type Conn struct {
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net            string            // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	UDPSize        uint16            // minimum receive buffer for UDP messages
+	UDPSize        uint16            // minimum receive buffer for UDP messages, should be set to 2048 or 4096 in modern applications.
 	TLSConfig      *tls.Config       // TLS connection configuration
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
-	// When true SetUDPSize will use UDPSize and will *add* an EDNS0 OPT RR to the message when sending
+
+	// When true SetUDPSize will *add* an EDNS0 OPT RR with UDPSize to the message when sending
 	// it. If there already is an OPT RR it will use the UDP size specified in there.
 	SetUDPSize bool
 
