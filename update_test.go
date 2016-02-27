@@ -6,6 +6,7 @@ import (
 )
 
 func TestDynamicUpdateParsing(t *testing.T) {
+	// This does nothing with dynamic updates, move elsewhere?
 	prefix := "example.com. IN "
 	for _, typ := range TypeToString {
 		if typ == "OPT" || typ == "AXFR" || typ == "IXFR" || typ == "ANY" || typ == "TKEY" ||
@@ -81,5 +82,62 @@ func TestRemoveRRset(t *testing.T) {
 		}
 		t.Errorf("expected msg:\n%s", expectstr)
 		t.Errorf("actual msg:\n%v", tmp)
+	}
+}
+
+func TestPreReqAndRemovals(t *testing.T) {
+	// Build a list of multiple prereqs and then somes removes followed by an insert.
+	// We should be able to add multiple prereqs and updates.
+	m := new(Msg)
+	m.SetUpdate("some_zone.")
+	m.Id = 1234
+
+	// Use a full set of RRs each time, so we are sure the rdata is stripped.
+	rr_name1, _ := NewRR("name_used. 3600 IN A 127.0.0.1")
+	rr_name2, _ := NewRR("name_not_used. 3600 IN A 127.0.0.1")
+	rr_remove1, _ := NewRR("remove1. 3600 IN A 127.0.0.1")
+	rr_remove2, _ := NewRR("remove2. 3600 IN A 127.0.0.1")
+	rr_remove3, _ := NewRR("remove3. 3600 IN A 127.0.0.1")
+	rr_insert, _ := NewRR("insert. 3600 IN A 127.0.0.1")
+	rr_rrset1, _ := NewRR("rrset_used1. 3600 IN A 127.0.0.1")
+	rr_rrset2, _ := NewRR("rrset_used2. 3600 IN A 127.0.0.1")
+	rr_rrset3, _ := NewRR("rrset_not_used. 3600 IN A 127.0.0.1")
+
+	// Handle the prereqs.
+	m.NameUsed([]RR{rr_name1})
+	m.NameNotUsed([]RR{rr_name2})
+	m.RRsetUsed([]RR{rr_rrset1})
+	m.Used([]RR{rr_rrset2})
+	m.RRsetNotUsed([]RR{rr_rrset3})
+
+	// and now the updates.
+	m.RemoveName([]RR{rr_remove1})
+	m.RemoveRRset([]RR{rr_remove2})
+	m.Remove([]RR{rr_remove3})
+	m.Insert([]RR{rr_insert})
+
+	expect := `;; opcode: UPDATE, status: NOERROR, id: 1234
+;; flags:; QUERY: 1, ANSWER: 5, AUTHORITY: 4, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;some_zone.	IN	 SOA
+
+;; ANSWER SECTION:
+name_used.	0	ANY	ANY	
+name_not_used.	0	NONE	ANY	
+rrset_used1.	0	ANY	A	
+rrset_used2.	3600	IN	A	127.0.0.1
+rrset_not_used.	0	NONE	A	
+
+;; AUTHORITY SECTION:
+remove1.	0	ANY	ANY	
+remove2.	0	ANY	A	
+remove3.	0	NONE	A	127.0.0.1
+insert.	3600	IN	A	127.0.0.1
+`
+
+	if m.String() != expect {
+		t.Errorf("expected msg:\n%s", expect)
+		t.Errorf("actual msg:\n%v", m.String())
 	}
 }
