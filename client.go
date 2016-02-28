@@ -258,7 +258,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		}
 		p = make([]byte, l)
 		n, err = tcpRead(r, p)
-
+		co.rtt = time.Since(co.t)
 	default:
 		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
@@ -266,6 +266,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 			p = make([]byte, MinMsgSize)
 		}
 		n, err = co.Read(p)
+		co.rtt = time.Since(co.t)
 	}
 
 	if err != nil {
@@ -342,8 +343,6 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if err != nil {
 		return n, err
 	}
-
-	co.rtt = time.Since(co.t)
 	return n, err
 }
 

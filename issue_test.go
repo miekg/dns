@@ -10,22 +10,14 @@ func TestTCPRtt(t *testing.T) {
 	m.SetQuestion("example.org.", TypeA)
 
 	c := &Client{}
-	in, rtt, err := c.Exchange(m, "8.8.4.4:53")
-	if err != nil {
-		t.Fatal(err)
+	for _, proto := range []string{"udp", "tcp"} {
+		c.Net = proto
+		_, rtt, err := c.Exchange(m, "8.8.4.4:53")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rtt == 0 {
+			t.Fatalf("expecting non zero rtt %s, got zero", c.Net)
+		}
 	}
-	if rtt == 0 {
-		t.Fatalf("expecting non zero rtt, got zero")
-	}
-	t.Logf("%s", in)
-
-	c.Net = "tcp"
-	in, rtt, err = c.Exchange(m, "8.8.4.4:53")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if rtt == 0 {
-		t.Fatalf("expecting non zero rtt, got zero")
-	}
-	t.Logf("%s", in)
 }
