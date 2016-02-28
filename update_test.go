@@ -115,6 +115,9 @@ func TestPreReqAndRemovals(t *testing.T) {
 	m.Remove([]RR{rr_remove3})
 	m.Insert([]RR{rr_insert})
 
+	// This test function isn't a Example function because we print these RR with tabs at the
+	// end and the Example function trim these, thus they never match.
+	// TODO(miek): don't print these tabs and make this into an Example function.
 	expect := `;; opcode: UPDATE, status: NOERROR, id: 1234
 ;; flags:; QUERY: 1, ANSWER: 5, AUTHORITY: 4, ADDITIONAL: 0
 
