@@ -1,8 +1,8 @@
 package dns
 
-import "testing"
+// Tests that solve that an specific issue.
 
-// Tests that solve that a specific issue has been solved.
+import "testing"
 
 func TestTCPRtt(t *testing.T) {
 	m := new(Msg)
