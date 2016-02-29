@@ -234,108 +234,108 @@ func (rr *URI) Header() *RR_Header        { return &rr.Hdr }
 func (rr *WKS) Header() *RR_Header        { return &rr.Hdr }
 func (rr *X25) Header() *RR_Header        { return &rr.Hdr }
 
-// len() functions
-func (rr *A) len() int {
-	l := rr.Hdr.len()
+// Len() functions
+func (rr *A) Len() int {
+	l := rr.Hdr.Len()
 	l += net.IPv4len // A
 	return l
 }
-func (rr *AAAA) len() int {
-	l := rr.Hdr.len()
+func (rr *AAAA) Len() int {
+	l := rr.Hdr.Len()
 	l += net.IPv6len // AAAA
 	return l
 }
-func (rr *AFSDB) len() int {
-	l := rr.Hdr.len()
+func (rr *AFSDB) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Subtype
 	l += len(rr.Hostname) + 1
 	return l
 }
-func (rr *ANY) len() int {
-	l := rr.Hdr.len()
+func (rr *ANY) Len() int {
+	l := rr.Hdr.Len()
 	return l
 }
-func (rr *CAA) len() int {
-	l := rr.Hdr.len()
+func (rr *CAA) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // Flag
 	l += len(rr.Tag) + 1
 	l += len(rr.Value)
 	return l
 }
-func (rr *CERT) len() int {
-	l := rr.Hdr.len()
+func (rr *CERT) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Type
 	l += 2 // KeyTag
 	l += 1 // Algorithm
 	l += base64.StdEncoding.DecodedLen(len(rr.Certificate))
 	return l
 }
-func (rr *CNAME) len() int {
-	l := rr.Hdr.len()
+func (rr *CNAME) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Target) + 1
 	return l
 }
-func (rr *DHCID) len() int {
-	l := rr.Hdr.len()
+func (rr *DHCID) Len() int {
+	l := rr.Hdr.Len()
 	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
 	return l
 }
-func (rr *DNAME) len() int {
-	l := rr.Hdr.len()
+func (rr *DNAME) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Target) + 1
 	return l
 }
-func (rr *DNSKEY) len() int {
-	l := rr.Hdr.len()
+func (rr *DNSKEY) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Flags
 	l += 1 // Protocol
 	l += 1 // Algorithm
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	return l
 }
-func (rr *DS) len() int {
-	l := rr.Hdr.len()
+func (rr *DS) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // KeyTag
 	l += 1 // Algorithm
 	l += 1 // DigestType
 	l += len(rr.Digest)/2 + 1
 	return l
 }
-func (rr *EID) len() int {
-	l := rr.Hdr.len()
+func (rr *EID) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Endpoint)/2 + 1
 	return l
 }
-func (rr *EUI48) len() int {
-	l := rr.Hdr.len()
+func (rr *EUI48) Len() int {
+	l := rr.Hdr.Len()
 	l += 6 // Address
 	return l
 }
-func (rr *EUI64) len() int {
-	l := rr.Hdr.len()
+func (rr *EUI64) Len() int {
+	l := rr.Hdr.Len()
 	l += 8 // Address
 	return l
 }
-func (rr *GID) len() int {
-	l := rr.Hdr.len()
+func (rr *GID) Len() int {
+	l := rr.Hdr.Len()
 	l += 4 // Gid
 	return l
 }
-func (rr *GPOS) len() int {
-	l := rr.Hdr.len()
+func (rr *GPOS) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Longitude) + 1
 	l += len(rr.Latitude) + 1
 	l += len(rr.Altitude) + 1
 	return l
 }
-func (rr *HINFO) len() int {
-	l := rr.Hdr.len()
+func (rr *HINFO) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Cpu) + 1
 	l += len(rr.Os) + 1
 	return l
 }
-func (rr *HIP) len() int {
-	l := rr.Hdr.len()
+func (rr *HIP) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // HitLength
 	l += 1 // PublicKeyAlgorithm
 	l += 2 // PublicKeyLength
@@ -346,26 +346,26 @@ func (rr *HIP) len() int {
 	}
 	return l
 }
-func (rr *KX) len() int {
-	l := rr.Hdr.len()
+func (rr *KX) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += len(rr.Exchanger) + 1
 	return l
 }
-func (rr *L32) len() int {
-	l := rr.Hdr.len()
+func (rr *L32) Len() int {
+	l := rr.Hdr.Len()
 	l += 2           // Preference
 	l += net.IPv4len // Locator32
 	return l
 }
-func (rr *L64) len() int {
-	l := rr.Hdr.len()
+func (rr *L64) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += 8 // Locator64
 	return l
 }
-func (rr *LOC) len() int {
-	l := rr.Hdr.len()
+func (rr *LOC) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // Version
 	l += 1 // Size
 	l += 1 // HorizPre
@@ -375,51 +375,51 @@ func (rr *LOC) len() int {
 	l += 4 // Altitude
 	return l
 }
-func (rr *LP) len() int {
-	l := rr.Hdr.len()
+func (rr *LP) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += len(rr.Fqdn) + 1
 	return l
 }
-func (rr *MB) len() int {
-	l := rr.Hdr.len()
+func (rr *MB) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Mb) + 1
 	return l
 }
-func (rr *MD) len() int {
-	l := rr.Hdr.len()
+func (rr *MD) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Md) + 1
 	return l
 }
-func (rr *MF) len() int {
-	l := rr.Hdr.len()
+func (rr *MF) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Mf) + 1
 	return l
 }
-func (rr *MG) len() int {
-	l := rr.Hdr.len()
+func (rr *MG) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Mg) + 1
 	return l
 }
-func (rr *MINFO) len() int {
-	l := rr.Hdr.len()
+func (rr *MINFO) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Rmail) + 1
 	l += len(rr.Email) + 1
 	return l
 }
-func (rr *MR) len() int {
-	l := rr.Hdr.len()
+func (rr *MR) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Mr) + 1
 	return l
 }
-func (rr *MX) len() int {
-	l := rr.Hdr.len()
+func (rr *MX) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += len(rr.Mx) + 1
 	return l
 }
-func (rr *NAPTR) len() int {
-	l := rr.Hdr.len()
+func (rr *NAPTR) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Order
 	l += 2 // Preference
 	l += len(rr.Flags) + 1
@@ -428,36 +428,36 @@ func (rr *NAPTR) len() int {
 	l += len(rr.Replacement) + 1
 	return l
 }
-func (rr *NID) len() int {
-	l := rr.Hdr.len()
+func (rr *NID) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += 8 // NodeID
 	return l
 }
-func (rr *NIMLOC) len() int {
-	l := rr.Hdr.len()
+func (rr *NIMLOC) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Locator)/2 + 1
 	return l
 }
-func (rr *NINFO) len() int {
-	l := rr.Hdr.len()
+func (rr *NINFO) Len() int {
+	l := rr.Hdr.Len()
 	for _, x := range rr.ZSData {
 		l += len(x) + 1
 	}
 	return l
 }
-func (rr *NS) len() int {
-	l := rr.Hdr.len()
+func (rr *NS) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Ns) + 1
 	return l
 }
-func (rr *NSAPPTR) len() int {
-	l := rr.Hdr.len()
+func (rr *NSAPPTR) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Ptr) + 1
 	return l
 }
-func (rr *NSEC3PARAM) len() int {
-	l := rr.Hdr.len()
+func (rr *NSEC3PARAM) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // Hash
 	l += 1 // Flags
 	l += 2 // Iterations
@@ -465,44 +465,44 @@ func (rr *NSEC3PARAM) len() int {
 	l += len(rr.Salt)/2 + 1
 	return l
 }
-func (rr *OPENPGPKEY) len() int {
-	l := rr.Hdr.len()
+func (rr *OPENPGPKEY) Len() int {
+	l := rr.Hdr.Len()
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	return l
 }
-func (rr *PTR) len() int {
-	l := rr.Hdr.len()
+func (rr *PTR) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Ptr) + 1
 	return l
 }
-func (rr *PX) len() int {
-	l := rr.Hdr.len()
+func (rr *PX) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += len(rr.Map822) + 1
 	l += len(rr.Mapx400) + 1
 	return l
 }
-func (rr *RFC3597) len() int {
-	l := rr.Hdr.len()
+func (rr *RFC3597) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Rdata)/2 + 1
 	return l
 }
-func (rr *RKEY) len() int {
-	l := rr.Hdr.len()
+func (rr *RKEY) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Flags
 	l += 1 // Protocol
 	l += 1 // Algorithm
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	return l
 }
-func (rr *RP) len() int {
-	l := rr.Hdr.len()
+func (rr *RP) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Mbox) + 1
 	l += len(rr.Txt) + 1
 	return l
 }
-func (rr *RRSIG) len() int {
-	l := rr.Hdr.len()
+func (rr *RRSIG) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // TypeCovered
 	l += 1 // Algorithm
 	l += 1 // Labels
@@ -514,14 +514,14 @@ func (rr *RRSIG) len() int {
 	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
 	return l
 }
-func (rr *RT) len() int {
-	l := rr.Hdr.len()
+func (rr *RT) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Preference
 	l += len(rr.Host) + 1
 	return l
 }
-func (rr *SOA) len() int {
-	l := rr.Hdr.len()
+func (rr *SOA) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Ns) + 1
 	l += len(rr.Mbox) + 1
 	l += 4 // Serial
@@ -531,44 +531,44 @@ func (rr *SOA) len() int {
 	l += 4 // Minttl
 	return l
 }
-func (rr *SPF) len() int {
-	l := rr.Hdr.len()
+func (rr *SPF) Len() int {
+	l := rr.Hdr.Len()
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
 	return l
 }
-func (rr *SRV) len() int {
-	l := rr.Hdr.len()
+func (rr *SRV) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Priority
 	l += 2 // Weight
 	l += 2 // Port
 	l += len(rr.Target) + 1
 	return l
 }
-func (rr *SSHFP) len() int {
-	l := rr.Hdr.len()
+func (rr *SSHFP) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // Algorithm
 	l += 1 // Type
 	l += len(rr.FingerPrint)/2 + 1
 	return l
 }
-func (rr *TA) len() int {
-	l := rr.Hdr.len()
+func (rr *TA) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // KeyTag
 	l += 1 // Algorithm
 	l += 1 // DigestType
 	l += len(rr.Digest)/2 + 1
 	return l
 }
-func (rr *TALINK) len() int {
-	l := rr.Hdr.len()
+func (rr *TALINK) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.PreviousName) + 1
 	l += len(rr.NextName) + 1
 	return l
 }
-func (rr *TKEY) len() int {
-	l := rr.Hdr.len()
+func (rr *TKEY) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Algorithm) + 1
 	l += 4 // Inception
 	l += 4 // Expiration
@@ -580,16 +580,16 @@ func (rr *TKEY) len() int {
 	l += len(rr.OtherData) + 1
 	return l
 }
-func (rr *TLSA) len() int {
-	l := rr.Hdr.len()
+func (rr *TLSA) Len() int {
+	l := rr.Hdr.Len()
 	l += 1 // Usage
 	l += 1 // Selector
 	l += 1 // MatchingType
 	l += len(rr.Certificate)/2 + 1
 	return l
 }
-func (rr *TSIG) len() int {
-	l := rr.Hdr.len()
+func (rr *TSIG) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Algorithm) + 1
 	l += 6 // TimeSigned
 	l += 2 // Fudge
@@ -601,32 +601,32 @@ func (rr *TSIG) len() int {
 	l += len(rr.OtherData)/2 + 1
 	return l
 }
-func (rr *TXT) len() int {
-	l := rr.Hdr.len()
+func (rr *TXT) Len() int {
+	l := rr.Hdr.Len()
 	for _, x := range rr.Txt {
 		l += len(x) + 1
 	}
 	return l
 }
-func (rr *UID) len() int {
-	l := rr.Hdr.len()
+func (rr *UID) Len() int {
+	l := rr.Hdr.Len()
 	l += 4 // Uid
 	return l
 }
-func (rr *UINFO) len() int {
-	l := rr.Hdr.len()
+func (rr *UINFO) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.Uinfo) + 1
 	return l
 }
-func (rr *URI) len() int {
-	l := rr.Hdr.len()
+func (rr *URI) Len() int {
+	l := rr.Hdr.Len()
 	l += 2 // Priority
 	l += 2 // Weight
 	l += len(rr.Target)
 	return l
 }
-func (rr *X25) len() int {
-	l := rr.Hdr.len()
+func (rr *X25) Len() int {
+	l := rr.Hdr.Len()
 	l += len(rr.PSDNAddress) + 1
 	return l
 }

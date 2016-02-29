@@ -28,7 +28,7 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 	rr.TypeCovered = 0
 	rr.Labels = 0
 
-	buf := make([]byte, m.Len()+rr.len())
+	buf := make([]byte, m.Len()+rr.Len())
 	mbuf, err := m.PackBuffer(buf)
 	if err != nil {
 		return nil, err

@@ -51,8 +51,10 @@ func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
 
 func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
 
-// Private len and copy parts to satisfy RR interface.
-func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.Len() }
+// Len part to satisfy RR interface.
+func (r *PrivateRR) Len() int { return r.Hdr.Len() + r.Data.Len() }
+
+// Private copy part to satisfy RR interface.
 func (r *PrivateRR) copy() RR {
 	// make new RR like this:
 	rr := mkPrivateRR(r.Hdr.Rrtype)

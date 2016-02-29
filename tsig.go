@@ -134,7 +134,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.Algorithm = rr.Algorithm
 	t.OrigId = m.Id
 
-	tbuf := make([]byte, t.len())
+	tbuf := make([]byte, t.Len())
 	if off, err := PackRR(t, tbuf, 0, nil, false); err == nil {
 		tbuf = tbuf[:off] // reset to actual size used
 	} else {
