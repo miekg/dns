@@ -785,8 +785,8 @@ func (rr *NSEC) String() string {
 	return s
 }
 
-func (rr *NSEC) len() int {
-	l := rr.Hdr.len() + len(rr.NextDomain) + 1
+func (rr *NSEC) Len() int {
+	l := rr.Hdr.Len() + len(rr.NextDomain) + 1
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
@@ -905,8 +905,8 @@ func (rr *IPSECKEY) String() string {
 	return s
 }
 
-func (rr *IPSECKEY) len() int {
-	l := rr.Hdr.len() + 3 + 1
+func (rr *IPSECKEY) Len() int {
+	l := rr.Hdr.Len() + 3 + 1
 	switch rr.GatewayType {
 	default:
 		fallthrough
@@ -992,8 +992,8 @@ func (rr *NSEC3) String() string {
 	return s
 }
 
-func (rr *NSEC3) len() int {
-	l := rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
+func (rr *NSEC3) Len() int {
+	l := rr.Hdr.Len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
@@ -1135,9 +1135,9 @@ type WKS struct {
 	BitMap   []uint16 `dns:"wks"`
 }
 
-func (rr *WKS) len() int {
+func (rr *WKS) Len() int {
 	// TODO: this is missing something...
-	return rr.Hdr.len() + net.IPv4len + 1
+	return rr.Hdr.Len() + net.IPv4len + 1
 }
 
 func (rr *WKS) String() (s string) {

@@ -1029,8 +1029,8 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	"single value"` {
 			t.Error("bad representation of TXT record:", rr.String())
 		}
-		if rr.len() != 28+1+12 {
-			t.Error("bad size of serialized record:", rr.len())
+		if rr.Len() != 28+1+12 {
+			t.Error("bad size of serialized record:", rr.Len())
 		}
 	}
 
@@ -1049,8 +1049,8 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	"a=1" "b=2" "c=3" "d=4"` {
 			t.Error("bad representation of TXT multi value record:", rr.String())
 		}
-		if rr.len() != 28+1+3+1+3+1+3+1+3 {
-			t.Error("bad size of serialized multi value record:", rr.len())
+		if rr.Len() != 28+1+3+1+3+1+3+1+3 {
+			t.Error("bad size of serialized multi value record:", rr.Len())
 		}
 	}
 
@@ -1069,8 +1069,8 @@ func TestTXT(t *testing.T) {
 		if rr.String() != `_raop._tcp.local.	60	IN	TXT	""` {
 			t.Error("bad representation of empty-string TXT record:", rr.String())
 		}
-		if rr.len() != 28+1 {
-			t.Error("bad size of serialized record:", rr.len())
+		if rr.Len() != 28+1 {
+			t.Error("bad size of serialized record:", rr.Len())
 		}
 	}
 
