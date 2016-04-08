@@ -142,9 +142,13 @@ func (dns *Msg) IsTsig() *TSIG {
 // record in the additional section will do. It returns the OPT record
 // found or nil.
 func (dns *Msg) IsEdns0() *OPT {
-	for _, r := range dns.Extra {
-		if r.Header().Rrtype == TypeOPT {
-			return r.(*OPT)
+	// EDNS0 is at the end of the additional section, start there.
+	// We might want to change this to *only* look at the last two
+	// records. So we see TSIG and/or OPT - this a slightly bigger
+	// change though.
+	for i := len(dns.Extra) - 1; i >= 0; i-- {
+		if dns.Extra[i].Header().Rrtype == TypeOPT {
+			return dns.Extra[i].(*OPT)
 		}
 	}
 	return nil
