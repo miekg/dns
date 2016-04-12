@@ -167,8 +167,8 @@ func IsDomainName(s string) (labels int, ok bool) {
 	return labels, err == nil
 }
 
-// IsSubDomain checks if child is indeed a child of the parent. Both child and
-// parent are *not* downcased before doing the comparison.
+// IsSubDomain checks if child is indeed a child of the parent. If child and parent
+// are the same domain true is returned as well.
 func IsSubDomain(parent, child string) bool {
 	// Entire child is contained in parent
 	return CompareDomainName(parent, child) == CountLabel(parent)
