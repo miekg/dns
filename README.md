@@ -12,7 +12,7 @@ can build servers and resolvers with it.
 
 We try to keep the "master" branch as sane as possible and at the bleeding edge
 of standards, avoiding breaking changes wherever reasonable. We support the last
-two versions of Go, currently: 1.4 and 1.5.
+two versions of Go, currently: 1.5 and 1.6.
 
 # Goals
 
