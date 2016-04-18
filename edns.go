@@ -96,8 +96,8 @@ func (rr *OPT) SetVersion(v uint8) {
 }
 
 // ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
-func (rr *OPT) ExtendedRcode() uint8 {
-	return uint8((rr.Hdr.Ttl&0xFF000000)>>24) + 15
+func (rr *OPT) ExtendedRcode() int {
+	return int((rr.Hdr.Ttl&0xFF000000)>>24) + 15
 }
 
 // SetExtendedRcode sets the EDNS extended RCODE field.
