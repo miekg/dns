@@ -291,13 +291,14 @@ func (e *EDNS0_SUBNET) String() (s string) {
 
 // The Cookie EDNS0 option
 //
-//o := new(dns.OPT)
-//o.Hdr.Name = "."
-//o.Hdr.Rrtype = dns.TypeOPT
-//e := new(dns.EDNS0_COOKIE)
-//e.Code = dns.EDNS0COOKIE
-//e.Cookie = "24a5ac.."
-//o.Option = append(o.Option, e)
+//	o := new(dns.OPT)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeOPT
+//	e := new(dns.EDNS0_COOKIE)
+//	e.Code = dns.EDNS0COOKIE
+//	e.Cookie = "24a5ac.."
+//	o.Option = append(o.Option, e)
+//
 type EDNS0_COOKIE struct {
 	Code   uint16 // Always EDNS0COOKIE
 	Cookie string // Hex-encoded cookie data
