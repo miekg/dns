@@ -61,7 +61,7 @@ Send pull request if you want to be listed here.
 * Server side programming (mimicking the net/http package);
 * Client side programming;
 * DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
-* EDNS0, NSID;
+* EDNS0, NSID, Cookies;
 * AXFR/IXFR;
 * TSIG, SIG(0);
 * DNS over TLS: optional encrypted connection between client and server;
@@ -140,6 +140,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7553 - URI record
 * xxxx - EDNS0 DNS Update Lease (draft)
 * yyyy - DNS over TLS: Initiation and Performance Considerations (draft)
+* xxxx - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)
 
 ## Loosely based upon
 
