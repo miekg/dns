@@ -953,6 +953,13 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					if code == EDNS0SUBNETDRAFT {
 						e.DraftOption = true
 					}
+				case EDNS0COOKIE:
+					e := new(EDNS0_COOKIE)
+					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
+						return lenmsg, err
+					}
+					edns = append(edns, e)
+					off = off1 + int(optlen)
 				case EDNS0UL:
 					e := new(EDNS0_UL)
 					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
