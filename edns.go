@@ -299,8 +299,8 @@ func (e *EDNS0_SUBNET) String() (s string) {
 //e.Cookie = "24a5ac.."
 //o.Option = append(o.Option, e)
 type EDNS0_COOKIE struct {
-	Code uint16                   // Always EDNS0COOKIE
-	Cookie string                 // Hex-encoded cookie data
+	Code   uint16 // Always EDNS0COOKIE
+	Cookie string // Hex-encoded cookie data
 }
 
 func (e *EDNS0_COOKIE) pack() ([]byte, error) {
@@ -313,7 +313,7 @@ func (e *EDNS0_COOKIE) pack() ([]byte, error) {
 
 func (e *EDNS0_COOKIE) Option() uint16        { return EDNS0COOKIE }
 func (e *EDNS0_COOKIE) unpack(b []byte) error { e.Cookie = hex.EncodeToString(b); return nil }
-func (e *EDNS0_COOKIE) String() string        { return string(e.Cookie) }
+func (e *EDNS0_COOKIE) String() string        { return e.Cookie }
 
 // The EDNS0_UL (Update Lease) (draft RFC) option is used to tell the server to set
 // an expiration on an update RR. This is helpful for clients that cannot clean
