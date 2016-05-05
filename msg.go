@@ -596,7 +596,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).Interface()
 					b, e := element.(EDNS0).pack()
-					if e != nil {
+					if e != nil || off+3 > lenmsg {
 						return lenmsg, &Error{err: "overflow packing opt"}
 					}
 					// Option code
