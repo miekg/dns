@@ -49,6 +49,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/miekg/exdns
 * https://dnslookup.org
 * https://github.com/looterz/grimd
+* https://github.com/phamhongviet/serf-dns
 
 Send pull request if you want to be listed here.
 
