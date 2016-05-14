@@ -67,13 +67,13 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 	}
 	// Adjust sig data length
 	rdoff := len(mbuf) + 1 + 2 + 2 + 4
-	rdlen, _ := unpackUint16(buf, rdoff)
+	rdlen, _ := unpackUint16Msg(buf, rdoff)
 	rdlen += uint16(len(sig))
-	buf[rdoff], buf[rdoff+1] = packUint16(rdlen)
+	buf[rdoff], buf[rdoff+1] = packUint16Msg(rdlen)
 	// Adjust additional count
-	adc, _ := unpackUint16(buf, 10)
+	adc, _ := unpackUint16Msg(buf, 10)
 	adc++
-	buf[10], buf[11] = packUint16(adc)
+	buf[10], buf[11] = packUint16Msg(adc)
 	return buf, nil
 }
 
@@ -103,10 +103,10 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	hasher := hash.New()
 
 	buflen := len(buf)
-	qdc, _ := unpackUint16(buf, 4)
-	anc, _ := unpackUint16(buf, 6)
-	auc, _ := unpackUint16(buf, 8)
-	adc, offset := unpackUint16(buf, 10)
+	qdc, _ := unpackUint16Msg(buf, 4)
+	anc, _ := unpackUint16Msg(buf, 6)
+	auc, _ := unpackUint16Msg(buf, 8)
+	adc, offset := unpackUint16Msg(buf, 10)
 	var err error
 	for i := uint16(0); i < qdc && offset < buflen; i++ {
 		_, offset, err = UnpackDomainName(buf, offset)
@@ -127,7 +127,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 			continue
 		}
 		var rdlen uint16
-		rdlen, offset = unpackUint16(buf, offset)
+		rdlen, offset = unpackUint16Msg(buf, offset)
 		offset += int(rdlen)
 	}
 	if offset >= buflen {

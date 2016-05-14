@@ -274,9 +274,9 @@ func TestMsgLength2(t *testing.T) {
 	for i, hexData := range testMessages {
 		// we won't fail the decoding of the hex
 		input, _ := hex.DecodeString(hexData)
+
 		m := new(Msg)
 		m.Unpack(input)
-		//println(m.String())
 		m.Compress = true
 		lenComp := m.Len()
 		b, _ := m.Pack()
@@ -310,114 +310,6 @@ func TestMsgLengthCompressionMalformed(t *testing.T) {
 	m.Len() // Should not crash.
 }
 
-func BenchmarkMsgLength(b *testing.B) {
-	b.StopTimer()
-	makeMsg := func(question string, ans, ns, e []RR) *Msg {
-		msg := new(Msg)
-		msg.SetQuestion(Fqdn(question), TypeANY)
-		msg.Answer = append(msg.Answer, ans...)
-		msg.Ns = append(msg.Ns, ns...)
-		msg.Extra = append(msg.Extra, e...)
-		msg.Compress = true
-		return msg
-	}
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
-	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
-	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		msg.Len()
-	}
-}
-
-func BenchmarkMsgLengthPack(b *testing.B) {
-	makeMsg := func(question string, ans, ns, e []RR) *Msg {
-		msg := new(Msg)
-		msg.SetQuestion(Fqdn(question), TypeANY)
-		msg.Answer = append(msg.Answer, ans...)
-		msg.Ns = append(msg.Ns, ns...)
-		msg.Extra = append(msg.Extra, e...)
-		msg.Compress = true
-		return msg
-	}
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
-	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = msg.Pack()
-	}
-}
-
-func BenchmarkMsgPackBuffer(b *testing.B) {
-	makeMsg := func(question string, ans, ns, e []RR) *Msg {
-		msg := new(Msg)
-		msg.SetQuestion(Fqdn(question), TypeANY)
-		msg.Answer = append(msg.Answer, ans...)
-		msg.Ns = append(msg.Ns, ns...)
-		msg.Extra = append(msg.Extra, e...)
-		msg.Compress = true
-		return msg
-	}
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
-	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
-	buf := make([]byte, 512)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = msg.PackBuffer(buf)
-	}
-}
-
-func BenchmarkMsgUnpack(b *testing.B) {
-	makeMsg := func(question string, ans, ns, e []RR) *Msg {
-		msg := new(Msg)
-		msg.SetQuestion(Fqdn(question), TypeANY)
-		msg.Answer = append(msg.Answer, ans...)
-		msg.Ns = append(msg.Ns, ns...)
-		msg.Extra = append(msg.Extra, e...)
-		msg.Compress = true
-		return msg
-	}
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	rrMx, _ := NewRR(name1 + " 3600 IN MX 10 " + name1)
-	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
-	msgBuf, _ := msg.Pack()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = msg.Unpack(msgBuf)
-	}
-}
-
-func BenchmarkPackDomainName(b *testing.B) {
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	buf := make([]byte, len(name1)+1)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = PackDomainName(name1, buf, 0, nil, false)
-	}
-}
-
-func BenchmarkUnpackDomainName(b *testing.B) {
-	name1 := "12345678901234567890123456789012345.12345678.123."
-	buf := make([]byte, len(name1)+1)
-	_, _ = PackDomainName(name1, buf, 0, nil, false)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, _ = UnpackDomainName(buf, 0)
-	}
-}
-
-func BenchmarkUnpackDomainNameUnprintable(b *testing.B) {
-	name1 := "\x02\x02\x02\x025\x02\x02\x02\x02.12345678.123."
-	buf := make([]byte, len(name1)+1)
-	_, _ = PackDomainName(name1, buf, 0, nil, false)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, _ = UnpackDomainName(buf, 0)
-	}
-}
-
 func TestToRFC3597(t *testing.T) {
 	a, _ := NewRR("miek.nl. IN A 10.0.1.1")
 	x := new(RFC3597)
@@ -431,7 +323,7 @@ func TestNoRdataPack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {
 		r := fn()
-		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
+		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 16}
 		_, err := PackRR(r, data, 0, nil, false)
 		if err != nil {
 			t.Errorf("failed to pack RR with zero rdata: %s: %v", TypeToString[typ], err)
@@ -439,7 +331,6 @@ func TestNoRdataPack(t *testing.T) {
 	}
 }
 
-// TODO(miek): fix dns buffer too small errors this throws
 func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {
@@ -449,7 +340,7 @@ func TestNoRdataUnpack(t *testing.T) {
 			continue
 		}
 		r := fn()
-		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 3600}
+		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 16}
 		off, err := PackRR(r, data, 0, nil, false)
 		if err != nil {
 			// Should always works, TestNoDataPack should have caught this
@@ -510,23 +401,6 @@ func TestMsgCopy(t *testing.T) {
 	m1.Answer = append(m1.Answer, rr)
 	if m1.Ns[0].String() == m1.Answer[1].String() {
 		t.Fatalf("Msg.Copy() failed; append changed underlying array %s", m1.Ns[0].String())
-	}
-}
-
-func BenchmarkCopy(b *testing.B) {
-	b.ReportAllocs()
-	m := new(Msg)
-	m.SetQuestion("miek.nl.", TypeA)
-	rr, _ := NewRR("miek.nl. 2311 IN A 127.0.0.1")
-	m.Answer = []RR{rr}
-	rr, _ = NewRR("miek.nl. 2311 IN NS 127.0.0.1")
-	m.Ns = []RR{rr}
-	rr, _ = NewRR("miek.nl. 2311 IN A 127.0.0.1")
-	m.Extra = []RR{rr}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		m.Copy()
 	}
 }
 
