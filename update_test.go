@@ -77,7 +77,7 @@ func TestRemoveRRset(t *testing.T) {
 	if !bytes.Equal(actual, expect) {
 		tmp := new(Msg)
 		if err := tmp.Unpack(actual); err != nil {
-			t.Fatalf("error unpacking actual msg: %v", err)
+			t.Fatalf("error unpacking actual msg: %v\nexpected: %v\ngot: %v\n", err, expect, actual)
 		}
 		t.Errorf("expected msg:\n%s", expectstr)
 		t.Errorf("actual msg:\n%v", tmp)
