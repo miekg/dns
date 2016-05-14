@@ -8,9 +8,9 @@
 
 package dns
 
+//go:generate go run msg_generate.go
+
 import (
-	"encoding/base32"
-	"encoding/base64"
 	"encoding/hex"
 	"math/big"
 	"math/rand"
@@ -1332,38 +1332,6 @@ func intToBytes(i *big.Int, length int) []byte {
 		return b
 	}
 	return buf
-}
-
-func unpackUint16(msg []byte, off int) (uint16, int) {
-	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
-}
-
-func packUint16(i uint16) (byte, byte) {
-	return byte(i >> 8), byte(i)
-}
-
-func toBase32(b []byte) string {
-	return base32.HexEncoding.EncodeToString(b)
-}
-
-func fromBase32(s []byte) (buf []byte, err error) {
-	buflen := base32.HexEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base32.HexEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
-}
-
-func toBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func fromBase64(s []byte) (buf []byte, err error) {
-	buflen := base64.StdEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base64.StdEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
 }
 
 // PackRR packs a resource record rr into msg[off:].
