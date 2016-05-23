@@ -91,7 +91,7 @@ func main() {
 		if isEmbedded {
 			continue
 		}
-		fmt.Fprintf(b, "func pack%s(rr %s) (int, error) {\n", name)
+		fmt.Fprintf(b, "func (rr %s) pack(rr %s) (int, error) {\n", name)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) { fmt.Fprintf(b, s, st.Field(i).Name()) }
 
