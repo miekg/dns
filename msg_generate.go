@@ -14,7 +14,6 @@ import (
 	"go/types"
 	"log"
 	"os"
-	"strings"
 )
 
 // For later: IPSECKEY is weird.
@@ -91,9 +90,21 @@ func main() {
 		if isEmbedded {
 			continue
 		}
-		fmt.Fprintf(b, "func (rr %s) pack(rr %s) (int, error) {\n", name)
+		fmt.Fprintf(b, "func (rr %s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
 		for i := 1; i < st.NumFields(); i++ {
+			fmt.Fprint(b, `off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+if err != nil {
+	return off, err
+}
+`)
+
 			o := func(s string) { fmt.Fprintf(b, s, st.Field(i).Name()) }
+			e := func() {
+				fmt.Fprint(b, `if err != nil {
+return off, err
+}
+`)
+			}
 
 			fmt.Fprintf(b, "rr := new(%s)\n", name)
 
@@ -113,11 +124,13 @@ func main() {
 			case `dns:"-"`:
 				// ignored
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-				o("l += len(rr.%s) + 1\n")
+
 			case `dns:"a"`:
-				o("off, err := packData%s \n")
+				o("off, err = packDataA(rr.%s, msg, off)\n")
+				e()
 			case `dns:"aaaa"`:
-				o("l += net.IPv6len // %s\n")
+				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
+				e()
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -133,45 +146,11 @@ func main() {
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
-			default:
-				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+				//default:
+				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
 		fmt.Fprintf(b, "return l }\n")
-	}
-
-	// Generate unpack*()
-	fmt.Fprint(b, "// unpack*() functions\n")
-	for _, name := range namedTypes {
-		o := scope.Lookup(name)
-		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
-		fmt.Fprintf(b, "func (rr *%s) copy() RR {\n", name)
-		fields := []string{"*rr.Hdr.copyHeader()"}
-		for i := 1; i < st.NumFields(); i++ {
-			f := st.Field(i).Name()
-			if sl, ok := st.Field(i).Type().(*types.Slice); ok {
-				t := sl.Underlying().String()
-				t = strings.TrimPrefix(t, "[]")
-				if strings.Contains(t, ".") {
-					splits := strings.Split(t, ".")
-					t = splits[len(splits)-1]
-				}
-				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
-					f, t, f, f, f)
-				fields = append(fields, f)
-				continue
-			}
-			if st.Field(i).Type().String() == "net.IP" {
-				fields = append(fields, "copyIP(rr."+f+")")
-				continue
-			}
-			fields = append(fields, "rr."+f)
-		}
-		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
-		fmt.Fprintf(b, "}\n")
 	}
 
 	// gofmt
@@ -182,7 +161,7 @@ func main() {
 	}
 
 	// write result
-	f, err := os.Create("ztypes.go")
+	f, err := os.Create("zmsg.go")
 	fatalIfErr(err)
 	defer f.Close()
 	f.Write(res)
