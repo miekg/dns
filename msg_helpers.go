@@ -83,33 +83,36 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 
 // unpackHeader unpacks an RR header, returning the offset to the end of the header and a
 // re-sliced msg according to the expected length of the RR.
-func unpackHeader(hdr *RR_Header, msg []byte, off int) (off1 int, truncmsg []byte, err error) {
+func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte, err error) {
+	hdr := RR_Header{}
+
 	lenmsg := len(msg)
 	if off == lenmsg {
-		return off, msg, nil
+		return hdr, off, msg, nil
 	}
+
 	hdr.Name, off, err = UnpackDomainName(msg, off)
 	if err != nil {
-		return lenmsg, msg, err
+		return hdr, lenmsg, msg, err
 	}
 	hdr.Rrtype, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
-		return lenmsg, msg, err
+		return hdr, lenmsg, msg, err
 	}
 	hdr.Class, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
-		return lenmsg, msg, err
+		return hdr, lenmsg, msg, err
 	}
 	hdr.Ttl, off, err = unpackUint32(msg, off, lenmsg)
 	if err != nil {
-		return lenmsg, msg, err
+		return hdr, lenmsg, msg, err
 	}
 	hdr.Rdlength, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
-		return lenmsg, msg, err
+		return hdr, lenmsg, msg, err
 	}
 	msg, err = truncateMsgFromRdlength(msg, off, hdr.Rdlength)
-	return off, msg, nil
+	return hdr, off, msg, nil
 }
 
 // packHeader packs an RR header, returning the offset to the end of the header.

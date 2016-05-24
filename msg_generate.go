@@ -24,10 +24,10 @@ var packageHdr = `
 
 package dns
 
-import (
-	"encoding/base64"
-	"net"
-)
+//import (
+	//"encoding/base64"
+	//"net"
+//)
 
 `
 
@@ -82,7 +82,6 @@ func main() {
 	b := &bytes.Buffer{}
 	b.WriteString(packageHdr)
 
-	// Generate pack*()
 	fmt.Fprint(b, "// pack*() functions\n\n")
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
@@ -96,8 +95,7 @@ func main() {
 		}
 
 		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
-		fmt.Fprint(b, "lenmsg := len(msg)\n")
-		fmt.Fprint(b, `off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+		fmt.Fprint(b, `off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 if err != nil {
 	return off, err
 }
@@ -138,9 +136,9 @@ return off, err
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
 				case types.Uint16:
-					o("off, err = packUint16(rr.%s, msg, off, lenmsg)\n")
+					o("off, err = packUint16(rr.%s, msg, off, len(msg))\n")
 				case types.Uint32:
-					o("off, err = packUint32(rr.%s, msg, off, lenmsg)\n")
+					o("off, err = packUint32(rr.%s, msg, off, len(msg))\n")
 				case types.Uint64:
 
 				case types.String:
@@ -153,6 +151,74 @@ return off, err
 			}
 		}
 		fmt.Fprintf(b, "return off, nil }\n\n")
+	}
+
+	fmt.Fprint(b, "// unpack*() functions\n\n")
+	for _, name := range namedTypes {
+		o := scope.Lookup(name)
+		st, isEmbedded := getTypeStruct(o.Type(), scope)
+		if isEmbedded {
+			continue
+		}
+		// TODO(miek): temp. subset of types
+		if name != "L32" && name != "A" && name != "AAAA" && name != "MX" {
+			continue
+		}
+
+		fmt.Fprintf(b, "func unpack%s(msg []byte, off int) (*%s, int, error) {\n", name, name)
+		fmt.Fprintln(b, "var err error")
+		fmt.Fprintf(b, "rr := new(%s)\n", name)
+		for i := 1; i < st.NumFields(); i++ {
+			o := func(s string) {
+				fmt.Fprintf(b, s, st.Field(i).Name())
+				fmt.Fprint(b, `if err != nil {
+return rr, off, err
+}
+`)
+			}
+
+			//if _, ok := st.Field(i).Type().(*types.Slice); ok {
+			//switch st.Tag(i) {
+			//case `dns:"-"`:
+			//// ignored
+			//case `dns:"cdomain-name"`, `dns:"domain-name"`, `dns:"txt"`:
+			//o("for _, x := range rr.%s { l += len(x) + 1 }\n")
+			//default:
+			//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			//}
+			//continue
+			//}
+
+			switch st.Tag(i) {
+			case `dns:"-"`:
+				// ignored
+			case `dns:"cdomain-name"`:
+				fallthrough
+			case `dns:"domain-name"`:
+				o("rr.%s, off, err = UnpackDomainName(msg, off)\n")
+			case `dns:"a"`:
+				o("rr.%s, off, err = unpackDataA(msg, off)\n")
+			case `dns:"aaaa"`:
+				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
+			case "":
+				switch st.Field(i).Type().(*types.Basic).Kind() {
+				case types.Uint8:
+				case types.Uint16:
+					o("rr.%s, off, err = unpackUint16(msg, off, len(msg))\n")
+				case types.Uint32:
+					o("rr.%s, off, err = unpackUint32(msg, off, len(msg))\n")
+				case types.Uint64:
+
+				case types.String:
+
+				default:
+					log.Fatalln(name, st.Field(i).Name())
+				}
+				//default:
+				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			}
+		}
+		fmt.Fprintf(b, "return rr, off, nil }\n\n")
 	}
 
 	// gofmt

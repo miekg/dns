@@ -3,16 +3,15 @@
 
 package dns
 
-import (
-	"encoding/base64"
-	"net"
-)
+//import (
+//"encoding/base64"
+//"net"
+//)
 
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	lenmsg := len(msg)
-	off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -24,8 +23,7 @@ func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool
 }
 
 func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	lenmsg := len(msg)
-	off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -37,12 +35,11 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress b
 }
 
 func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	lenmsg := len(msg)
-	off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Preference, msg, off, lenmsg)
+	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
 		return off, err
 	}
@@ -54,12 +51,11 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 }
 
 func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	lenmsg := len(msg)
-	off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Preference, msg, off, lenmsg)
+	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
 		return off, err
 	}
@@ -68,4 +64,54 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 		return off, err
 	}
 	return off, nil
+}
+
+// unpack*() functions
+
+func unpackA(msg []byte, off int) (*A, int, error) {
+	var err error
+	rr := new(A)
+	rr.A, off, err = unpackDataA(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
+}
+
+func unpackAAAA(msg []byte, off int) (*AAAA, int, error) {
+	var err error
+	rr := new(AAAA)
+	rr.AAAA, off, err = unpackDataAAAA(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
+}
+
+func unpackL32(msg []byte, off int) (*L32, int, error) {
+	var err error
+	rr := new(L32)
+	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
+	if err != nil {
+		return rr, off, err
+	}
+	rr.Locator32, off, err = unpackDataA(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
+}
+
+func unpackMX(msg []byte, off int) (*MX, int, error) {
+	var err error
+	rr := new(MX)
+	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
+	if err != nil {
+		return rr, off, err
+	}
+	rr.Mx, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
 }
