@@ -45,7 +45,7 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 		msg[off+3] = a[3]
 		off += net.IPv4len
 	case 0:
-		// Allowed, for dynamic updates
+		// Allowed, for dynamic updates.
 	default:
 		return lenmsg, &Error{err: "overflow packing a"}
 	}
@@ -69,8 +69,10 @@ func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 
 func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	lenmsg := len(msg)
+	if len(aaaa) < net.IPv6len { // Allowed, for dynamic updates.
+		return off, nil
+	}
 	laaaa := len(aaaa)
-
 	if laaaa > net.IPv6len || off+laaaa > lenmsg {
 		return lenmsg, &Error{err: "overflow packing aaaa"}
 	}
