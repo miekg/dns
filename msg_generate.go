@@ -166,7 +166,11 @@ return off, err
 		}
 
 		fmt.Fprintf(b, "func unpack%s(msg []byte, off int) (*%s, int, error) {\n", name, name)
-		fmt.Fprintln(b, "var err error")
+		fmt.Fprint(b, `if dynamicUpdate(off, len(msg)) {
+return nil, off, nil
+	}
+var err error
+`)
 		fmt.Fprintf(b, "rr := new(%s)\n", name)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {

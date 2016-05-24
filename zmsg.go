@@ -69,6 +69,9 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 // unpack*() functions
 
 func unpackA(msg []byte, off int) (*A, int, error) {
+	if dynamicUpdate(off, len(msg)) {
+		return nil, off, nil
+	}
 	var err error
 	rr := new(A)
 	rr.A, off, err = unpackDataA(msg, off)
@@ -79,6 +82,9 @@ func unpackA(msg []byte, off int) (*A, int, error) {
 }
 
 func unpackAAAA(msg []byte, off int) (*AAAA, int, error) {
+	if dynamicUpdate(off, len(msg)) {
+		return nil, off, nil
+	}
 	var err error
 	rr := new(AAAA)
 	rr.AAAA, off, err = unpackDataAAAA(msg, off)
@@ -89,6 +95,9 @@ func unpackAAAA(msg []byte, off int) (*AAAA, int, error) {
 }
 
 func unpackL32(msg []byte, off int) (*L32, int, error) {
+	if dynamicUpdate(off, len(msg)) {
+		return nil, off, nil
+	}
 	var err error
 	rr := new(L32)
 	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
@@ -103,6 +112,9 @@ func unpackL32(msg []byte, off int) (*L32, int, error) {
 }
 
 func unpackMX(msg []byte, off int) (*MX, int, error) {
+	if dynamicUpdate(off, len(msg)) {
+		return nil, off, nil
+	}
 	var err error
 	rr := new(MX)
 	rr.Preference, off, err = unpackUint16(msg, off, len(msg))

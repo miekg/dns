@@ -14,9 +14,6 @@ import (
 
 func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 	lenmsg := len(msg)
-	if dynamicUpdate(off, lenmsg) {
-		return nil, off, nil
-	}
 	if off+net.IPv4len > lenmsg {
 		return nil, lenmsg, &Error{err: "overflow unpacking a"}
 	}
@@ -54,9 +51,6 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 
 func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 	lenmsg := len(msg)
-	if dynamicUpdate(off, lenmsg) {
-		return nil, off, nil
-	}
 	if off+net.IPv6len > lenmsg {
 		return nil, lenmsg, &Error{err: "overflow unpacking aaaa"}
 	}
@@ -124,6 +118,7 @@ func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, 
 	if off == lenmsg {
 		return off, nil
 	}
+
 	off, err = PackDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
 		return lenmsg, err
