@@ -1340,8 +1340,18 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if rr == nil {
 		return len(msg), &Error{err: "nil rr"}
 	}
-
-	off1, err = packStructCompress(rr, msg, off, compression, compress)
+	switch t := rr.(type) {
+	case *A:
+		off1, err = t.pack(msg, off, compression, compress)
+	case *AAAA:
+		off1, err = t.pack(msg, off, compression, compress)
+	case *MX:
+		off1, err = t.pack(msg, off, compression, compress)
+	case *L32:
+		off1, err = t.pack(msg, off, compression, compress)
+	default:
+		off1, err = packStructCompress(rr, msg, off, compression, compress)
+	}
 	if err != nil {
 		return len(msg), err
 	}
@@ -1353,21 +1363,31 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	// unpack just the header, to find the rr type and length
-	var h RR_Header
 	off0 := off
-	if off, err = UnpackStruct(&h, msg, off); err != nil {
+	h, off, msg, err := unpackHeader(msg, off)
+	if err != nil {
 		return nil, len(msg), err
 	}
 	end := off + int(h.Rdlength)
-	// make an rr of that type and re-unpack.
-	mk, known := TypeToRR[h.Rrtype]
-	if !known {
-		rr = new(RFC3597)
-	} else {
-		rr = mk()
+	switch h.Rrtype {
+	// TODO(miek): temporary list, see msg_generate.go's TODO.
+	case TypeA:
+		return unpackA(msg, off)
+	case TypeAAAA:
+		return unpackAAAA(msg, off)
+	case TypeMX:
+		return unpackMX(msg, off)
+	case TypeL32:
+		return unpackL32(msg, off)
+	default:
+		mk, known := TypeToRR[h.Rrtype]
+		if !known {
+			rr = new(RFC3597)
+		} else {
+			rr = mk()
+		}
+		off, err = UnpackStruct(rr, msg, off0)
 	}
-	off, err = UnpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, &Error{err: "bad rdlength"}
 	}
