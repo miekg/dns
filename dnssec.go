@@ -144,7 +144,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 		// at the base64 values. But I'm lazy.
 		modulus, _ := fromBase64([]byte(k.PublicKey))
 		if len(modulus) > 1 {
-			x, _ := unpackUint16(modulus, len(modulus)-2)
+			x, _ := unpackUint16Msg(modulus, len(modulus)-2)
 			keytag = int(x)
 		}
 	default:

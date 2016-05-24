@@ -291,7 +291,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		// if msg == nil, we will never do compression
-		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
+		msg[nameoffset], msg[nameoffset+1] = packUint16Msg(uint16(pointer ^ 0xC000))
 		off = nameoffset + 1
 		goto End
 	}
@@ -600,9 +600,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 						return lenmsg, &Error{err: "overflow packing opt"}
 					}
 					// Option code
-					msg[off], msg[off+1] = packUint16(element.(EDNS0).Option())
+					msg[off], msg[off+1] = packUint16Msg(element.(EDNS0).Option())
 					// Length
-					msg[off+2], msg[off+3] = packUint16(uint16(len(b)))
+					msg[off+2], msg[off+3] = packUint16Msg(uint16(len(b)))
 					off += 4
 					if off+len(b) > lenmsg {
 						copy(msg[off:], b)
@@ -930,8 +930,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off+4 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
-				code, off = unpackUint16(msg, off)
-				optlen, off1 := unpackUint16(msg, off)
+				code, off = unpackUint16Msg(msg, off)
+				optlen, off1 := unpackUint16Msg(msg, off)
 				if off1+int(optlen) > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
@@ -1174,7 +1174,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			if off+2 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint16"}
 			}
-			i, off = unpackUint16(msg, off)
+			i, off = unpackUint16Msg(msg, off)
 			fv.SetUint(uint64(i))
 		case reflect.Uint32:
 			if off == lenmsg {

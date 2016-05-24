@@ -8,7 +8,7 @@ func rawSetId(msg []byte, i uint16) bool {
 	if len(msg) < 2 {
 		return false
 	}
-	msg[0], msg[1] = packUint16(i)
+	msg[0], msg[1] = packUint16Msg(i)
 	return true
 }
 
@@ -17,7 +17,7 @@ func rawSetQuestionLen(msg []byte, i uint16) bool {
 	if len(msg) < 6 {
 		return false
 	}
-	msg[4], msg[5] = packUint16(i)
+	msg[4], msg[5] = packUint16Msg(i)
 	return true
 }
 
@@ -26,7 +26,7 @@ func rawSetAnswerLen(msg []byte, i uint16) bool {
 	if len(msg) < 8 {
 		return false
 	}
-	msg[6], msg[7] = packUint16(i)
+	msg[6], msg[7] = packUint16Msg(i)
 	return true
 }
 
@@ -35,7 +35,7 @@ func rawSetNsLen(msg []byte, i uint16) bool {
 	if len(msg) < 10 {
 		return false
 	}
-	msg[8], msg[9] = packUint16(i)
+	msg[8], msg[9] = packUint16Msg(i)
 	return true
 }
 
@@ -44,7 +44,7 @@ func rawSetExtraLen(msg []byte, i uint16) bool {
 	if len(msg) < 12 {
 		return false
 	}
-	msg[10], msg[11] = packUint16(i)
+	msg[10], msg[11] = packUint16Msg(i)
 	return true
 }
 
@@ -90,6 +90,6 @@ Loop:
 	if rdatalen > 0xFFFF {
 		return false
 	}
-	msg[off], msg[off+1] = packUint16(uint16(rdatalen))
+	msg[off], msg[off+1] = packUint16Msg(uint16(rdatalen))
 	return true
 }

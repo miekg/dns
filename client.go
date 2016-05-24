@@ -300,7 +300,7 @@ func tcpMsgLen(t io.Reader) (int, error) {
 	if n != 2 {
 		return 0, ErrShortRead
 	}
-	l, _ := unpackUint16(p, 0)
+	l, _ := unpackUint16Msg(p, 0)
 	if l == 0 {
 		return 0, ErrShortRead
 	}
@@ -392,7 +392,7 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 			return 0, &Error{err: "message too large"}
 		}
 		l := make([]byte, 2, lp+2)
-		l[0], l[1] = packUint16(uint16(lp))
+		l[0], l[1] = packUint16Msg(uint16(lp))
 		p = append(l, p...)
 		n, err := io.Copy(w, bytes.NewReader(p))
 		return int(n), err

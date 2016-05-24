@@ -92,19 +92,19 @@ func unpackHeader(hdr *RR_Header, msg []byte, off int) (off1 int, truncmsg []byt
 	if err != nil {
 		return lenmsg, msg, err
 	}
-	hdr.Rrtype, off, err = unpackUint162(msg, off, lenmsg)
+	hdr.Rrtype, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, msg, err
 	}
-	hdr.Class, off, err = unpackUint162(msg, off, lenmsg)
+	hdr.Class, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, msg, err
 	}
-	hdr.Ttl, off, err = unpackUint322(msg, off, lenmsg)
+	hdr.Ttl, off, err = unpackUint32(msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, msg, err
 	}
-	hdr.Rdlength, off, err = unpackUint162(msg, off, lenmsg)
+	hdr.Rdlength, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, msg, err
 	}
@@ -123,19 +123,19 @@ func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, 
 	if err != nil {
 		return lenmsg, err
 	}
-	off, err = packUint162(hdr.Rrtype, msg, off, lenmsg)
+	off, err = packUint16(hdr.Rrtype, msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, err
 	}
-	off, err = packUint162(hdr.Class, msg, off, lenmsg)
+	off, err = packUint16(hdr.Class, msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, err
 	}
-	off, err = packUint322(hdr.Ttl, msg, off, lenmsg)
+	off, err = packUint32(hdr.Ttl, msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, err
 	}
-	off, err = packUint162(hdr.Rdlength, msg, off, lenmsg)
+	off, err = packUint16(hdr.Rdlength, msg, off, lenmsg)
 	if err != nil {
 		return lenmsg, err
 	}
@@ -160,17 +160,17 @@ func fromBase64(s []byte) (buf []byte, err error) {
 	return
 }
 
-func unpackUint16(msg []byte, off int) (uint16, int) {
+func unpackUint16Msg(msg []byte, off int) (uint16, int) {
 	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
 }
 
-func packUint16(i uint16) (byte, byte) { return byte(i >> 8), byte(i) }
+func packUint16Msg(i uint16) (byte, byte) { return byte(i >> 8), byte(i) }
 
-func unpackUint32(msg []byte, off int) (uint32, int) {
+func unpackUint32Msg(msg []byte, off int) (uint32, int) {
 	return uint32(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]))), off + 4
 }
 
-func packUint32(i uint32) (byte, byte, byte, byte) {
+func packUint32Msg(i uint32) (byte, byte, byte, byte) {
 	return byte(i >> 24), byte(i >> 16), byte(i >> 8), byte(i)
 }
 
@@ -181,38 +181,38 @@ func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 func dynamicUpdate(off, len int) bool { return off == len }
 
 // unpackUint16 unpacks a uint16, computing the new offset and handling errors.
-func unpackUint162(msg []byte, off int, lenmsg int) (i uint16, off1 int, err error) {
+func unpackUint16(msg []byte, off int, lenmsg int) (i uint16, off1 int, err error) {
 	if off+2 > lenmsg {
 		return 0, lenmsg, &Error{err: "overflow unpacking uint16"}
 	}
-	i, off = unpackUint16(msg, off)
+	i, off = unpackUint16Msg(msg, off)
 	return i, off, nil
 }
 
 // packUint16 packs an uint16, computing the new offset and handling errors.
-func packUint162(i uint16, msg []byte, off int, lenmsg int) (off1 int, err error) {
+func packUint16(i uint16, msg []byte, off int, lenmsg int) (off1 int, err error) {
 	if off+2 > lenmsg {
 		return lenmsg, &Error{err: "overflow packing uint16"}
 	}
-	msg[off], msg[off+1] = packUint16(i)
+	msg[off], msg[off+1] = packUint16Msg(i)
 	return off + 2, nil
 }
 
 // unpackuint32 packs an uint32, computing the new offset and handling errors.
-func unpackUint322(msg []byte, off int, lenmsg int) (i uint32, off1 int, err error) {
+func unpackUint32(msg []byte, off int, lenmsg int) (i uint32, off1 int, err error) {
 	if off+4 > lenmsg {
 		return 0, lenmsg, &Error{err: "overflow unpacking uint32"}
 	}
-	i, off = unpackUint32(msg, off)
+	i, off = unpackUint32Msg(msg, off)
 	return i, off, nil
 }
 
 // packUint32 packs an uint32 into a struct, computing the new offset and handling errors.
-func packUint322(i uint32, msg []byte, off int, lenmsg int) (off1 int, err error) {
+func packUint32(i uint32, msg []byte, off int, lenmsg int) (off1 int, err error) {
 	if off+4 > lenmsg {
 		return lenmsg, &Error{err: "overflow packing uint32"}
 	}
-	msg[off], msg[off+1], msg[off+2], msg[off+3] = packUint32(i)
+	msg[off], msg[off+1], msg[off+2], msg[off+3] = packUint32Msg(i)
 	return off + 4, nil
 }
 
