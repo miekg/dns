@@ -83,30 +83,33 @@ func main() {
 	b.WriteString(packageHdr)
 
 	// Generate pack*()
-	fmt.Fprint(b, "// pack*() functions\n")
+	fmt.Fprint(b, "// pack*() functions\n\n")
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
 		st, isEmbedded := getTypeStruct(o.Type(), scope)
 		if isEmbedded {
 			continue
 		}
-		fmt.Fprintf(b, "func (rr %s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
-		for i := 1; i < st.NumFields(); i++ {
-			fmt.Fprint(b, `off, err = packHeader(rr.Hdr, msg, off, compression, compress)
+		// TODO(miek): temp. subset of types
+		if name != "L32" && name != "A" && name != "AAAA" && name != "MX" {
+			continue
+		}
+
+		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
+		fmt.Fprint(b, "lenmsg := len(msg)\n")
+		fmt.Fprint(b, `off, err = packHeader(rr.Hdr, msg, off, compression, compress)
 if err != nil {
 	return off, err
 }
 `)
-
-			o := func(s string) { fmt.Fprintf(b, s, st.Field(i).Name()) }
-			e := func() {
+		for i := 1; i < st.NumFields(); i++ {
+			o := func(s string) {
+				fmt.Fprintf(b, s, st.Field(i).Name())
 				fmt.Fprint(b, `if err != nil {
 return off, err
 }
 `)
 			}
-
-			fmt.Fprintf(b, "rr := new(%s)\n", name)
 
 			//if _, ok := st.Field(i).Type().(*types.Slice); ok {
 			//switch st.Tag(i) {
@@ -123,26 +126,25 @@ return off, err
 			switch st.Tag(i) {
 			case `dns:"-"`:
 				// ignored
-			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-
+			case `dns:"cdomain-name"`:
+				fallthrough
+			case `dns:"domain-name"`:
+				o("off, err = PackDomainName(rr.%s, msg, off, compression, compress)\n")
 			case `dns:"a"`:
 				o("off, err = packDataA(rr.%s, msg, off)\n")
-				e()
 			case `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
-				e()
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
-					o("l += 1 // %s\n")
 				case types.Uint16:
-					o("l += 2 // %s\n")
+					o("off, err = packUint16(rr.%s, msg, off, lenmsg)\n")
 				case types.Uint32:
-					o("l += 4 // %s\n")
+					o("off, err = packUint32(rr.%s, msg, off, lenmsg)\n")
 				case types.Uint64:
-					o("l += 8 // %s\n")
+
 				case types.String:
-					o("l += len(rr.%s) + 1\n")
+
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
@@ -150,7 +152,7 @@ return off, err
 				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintf(b, "return l }\n")
+		fmt.Fprintf(b, "return off, nil }\n\n")
 	}
 
 	// gofmt
