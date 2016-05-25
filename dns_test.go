@@ -274,9 +274,9 @@ func TestMsgLength2(t *testing.T) {
 	for i, hexData := range testMessages {
 		// we won't fail the decoding of the hex
 		input, _ := hex.DecodeString(hexData)
+
 		m := new(Msg)
 		m.Unpack(input)
-		println(m.String())
 		m.Compress = true
 		lenComp := m.Len()
 		b, _ := m.Pack()
@@ -575,40 +575,5 @@ func TestMsgPackBuffer(t *testing.T) {
 			continue
 		}
 		t.Logf("packet %d %s", i, m.String())
-	}
-}
-
-func makeRRAForBenchmark() *A {
-	return &A{
-		Hdr: RR_Header{
-			Name:     ".",
-			Rrtype:   TypeA,
-			Class:    ClassANY,
-			Ttl:      0,
-			Rdlength: 0,
-		},
-		A: net.IPv4(127, 0, 0, 1),
-	}
-}
-
-func BenchmarkPackRRA(b *testing.B) {
-	a := makeRRAForBenchmark()
-	buf := make([]byte, a.len())
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = PackRR(a, buf, 0, nil, false)
-	}
-}
-
-func BenchmarkUnpackRRA(b *testing.B) {
-	a := makeRRAForBenchmark()
-	buf := make([]byte, a.len())
-	PackRR(a, buf, 0, nil, false)
-	a = nil
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, _ = UnpackRR(buf, 0)
 	}
 }

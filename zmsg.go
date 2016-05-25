@@ -68,12 +68,13 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 
 // unpack*() functions
 
-func unpackA(msg []byte, off int) (*A, int, error) {
+func unpackA(h RR_Header, msg []byte, off int) (*A, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
 	var err error
 	rr := new(A)
+	rr.Hdr = h
 	rr.A, off, err = unpackDataA(msg, off)
 	if err != nil {
 		return rr, off, err
@@ -81,12 +82,13 @@ func unpackA(msg []byte, off int) (*A, int, error) {
 	return rr, off, nil
 }
 
-func unpackAAAA(msg []byte, off int) (*AAAA, int, error) {
+func unpackAAAA(h RR_Header, msg []byte, off int) (*AAAA, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
 	var err error
 	rr := new(AAAA)
+	rr.Hdr = h
 	rr.AAAA, off, err = unpackDataAAAA(msg, off)
 	if err != nil {
 		return rr, off, err
@@ -94,12 +96,13 @@ func unpackAAAA(msg []byte, off int) (*AAAA, int, error) {
 	return rr, off, nil
 }
 
-func unpackL32(msg []byte, off int) (*L32, int, error) {
+func unpackL32(h RR_Header, msg []byte, off int) (*L32, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
 	var err error
 	rr := new(L32)
+	rr.Hdr = h
 	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
 	if err != nil {
 		return rr, off, err
@@ -111,12 +114,13 @@ func unpackL32(msg []byte, off int) (*L32, int, error) {
 	return rr, off, nil
 }
 
-func unpackMX(msg []byte, off int) (*MX, int, error) {
+func unpackMX(h RR_Header, msg []byte, off int) (*MX, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
 	var err error
 	rr := new(MX)
+	rr.Hdr = h
 	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
 	if err != nil {
 		return rr, off, err

@@ -165,13 +165,14 @@ return off, err
 			continue
 		}
 
-		fmt.Fprintf(b, "func unpack%s(msg []byte, off int) (*%s, int, error) {\n", name, name)
+		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (*%s, int, error) {\n", name, name)
 		fmt.Fprint(b, `if dynamicUpdate(off, len(msg)) {
 return nil, off, nil
 	}
 var err error
 `)
 		fmt.Fprintf(b, "rr := new(%s)\n", name)
+		fmt.Fprintln(b, "rr.Hdr = h")
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())

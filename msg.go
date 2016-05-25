@@ -1369,16 +1369,17 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 		return nil, len(msg), err
 	}
 	end := off + int(h.Rdlength)
+
 	switch h.Rrtype {
 	// TODO(miek): temporary list, see msg_generate.go's TODO.
 	case TypeA:
-		return unpackA(msg, off)
+		rr, off, err = unpackA(h, msg, off)
 	case TypeAAAA:
-		return unpackAAAA(msg, off)
+		rr, off, err = unpackAAAA(h, msg, off)
 	case TypeMX:
-		return unpackMX(msg, off)
+		rr, off, err = unpackMX(h, msg, off)
 	case TypeL32:
-		return unpackL32(msg, off)
+		rr, off, err = unpackL32(h, msg, off)
 	default:
 		mk, known := TypeToRR[h.Rrtype]
 		if !known {
