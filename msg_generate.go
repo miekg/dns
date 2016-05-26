@@ -165,7 +165,7 @@ return off, err
 			continue
 		}
 
-		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (*%s, int, error) {\n", name, name)
+		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
 		fmt.Fprint(b, `if dynamicUpdate(off, len(msg)) {
 return nil, off, nil
 	}

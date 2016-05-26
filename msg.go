@@ -1340,15 +1340,23 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if rr == nil {
 		return len(msg), &Error{err: "nil rr"}
 	}
-	switch t := rr.(type) {
-	case *A:
-		off1, err = t.pack(msg, off, compression, compress)
-	case *AAAA:
-		off1, err = t.pack(msg, off, compression, compress)
-	case *MX:
-		off1, err = t.pack(msg, off, compression, compress)
-	case *L32:
-		off1, err = t.pack(msg, off, compression, compress)
+
+	_, ok := typeToUnpack[rr.Header().Rrtype]
+	switch ok {
+	case true:
+		// Shortcut reflection, `pack' needs to be added to the RR interface so we can just do this:
+		// off1, err = t.pack(msg, off, compression, compress)
+		switch t := rr.(type) {
+		case *A:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *AAAA:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MX:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *L32:
+			off1, err = t.pack(msg, off, compression, compress)
+		}
+
 	default:
 		off1, err = packStructCompress(rr, msg, off, compression, compress)
 	}
@@ -1370,16 +1378,11 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	}
 	end := off + int(h.Rdlength)
 
-	switch h.Rrtype {
-	// TODO(miek): temporary list, see msg_generate.go's TODO.
-	case TypeA:
-		rr, off, err = unpackA(h, msg, off)
-	case TypeAAAA:
-		rr, off, err = unpackAAAA(h, msg, off)
-	case TypeMX:
-		rr, off, err = unpackMX(h, msg, off)
-	case TypeL32:
-		rr, off, err = unpackL32(h, msg, off)
+	fn, ok := typeToUnpack[h.Rrtype]
+	switch ok {
+	case true:
+		// Shortcut reflection.
+		rr, off, err = fn(h, msg, off)
 	default:
 		mk, known := TypeToRR[h.Rrtype]
 		if !known {

@@ -68,7 +68,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 
 // unpack*() functions
 
-func unpackA(h RR_Header, msg []byte, off int) (*A, int, error) {
+func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
@@ -82,7 +82,7 @@ func unpackA(h RR_Header, msg []byte, off int) (*A, int, error) {
 	return rr, off, nil
 }
 
-func unpackAAAA(h RR_Header, msg []byte, off int) (*AAAA, int, error) {
+func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
@@ -96,7 +96,7 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (*AAAA, int, error) {
 	return rr, off, nil
 }
 
-func unpackL32(h RR_Header, msg []byte, off int) (*L32, int, error) {
+func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
@@ -114,7 +114,7 @@ func unpackL32(h RR_Header, msg []byte, off int) (*L32, int, error) {
 	return rr, off, nil
 }
 
-func unpackMX(h RR_Header, msg []byte, off int) (*MX, int, error) {
+func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if dynamicUpdate(off, len(msg)) {
 		return nil, off, nil
 	}
