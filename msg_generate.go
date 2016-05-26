@@ -89,7 +89,7 @@ func main() {
 		if isEmbedded {
 			continue
 		}
-		// TODO(miek): temp. subset of types
+		// TODO(miek): temp. subset of types, see typeToUnpack in msg.go (bottom).
 		if name != "L32" && name != "A" && name != "AAAA" && name != "MX" {
 			continue
 		}
@@ -99,6 +99,7 @@ func main() {
 if err != nil {
 	return off, err
 }
+headerEnd := off
 `)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
@@ -150,7 +151,9 @@ return off, err
 				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintf(b, "return off, nil }\n\n")
+		// We have packed everything, only now we know the rdlength of this RR
+		fmt.Fprintln(b, "rr.Header().Rdlength = uint16(off- headerEnd)")
+		fmt.Fprintln(b, "return off, nil }\n")
 	}
 
 	fmt.Fprint(b, "// unpack*() functions\n\n")
@@ -172,7 +175,8 @@ return nil, off, nil
 var err error
 `)
 		fmt.Fprintf(b, "rr := new(%s)\n", name)
-		fmt.Fprintln(b, "rr.Hdr = h")
+		fmt.Fprintln(b, "lenmsg := len(msg); _ = lenmsg\n")
+		fmt.Fprintln(b, "rr.Hdr = h\n")
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
@@ -209,9 +213,9 @@ return rr, off, err
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
 				case types.Uint16:
-					o("rr.%s, off, err = unpackUint16(msg, off, len(msg))\n")
+					o("rr.%s, off, err = unpackUint16(msg, off, lenmsg)\n")
 				case types.Uint32:
-					o("rr.%s, off, err = unpackUint32(msg, off, len(msg))\n")
+					o("rr.%s, off, err = unpackUint32(msg, off, lenmsg)\n")
 				case types.Uint64:
 
 				case types.String:
@@ -221,6 +225,13 @@ return rr, off, err
 				}
 				//default:
 				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			}
+			// If we've hit len(msg) we return without error.
+			if i < st.NumFields()-1 {
+				fmt.Fprintf(b, `if off == lenmsg {
+return rr, off, nil
+	}
+`)
 			}
 		}
 		fmt.Fprintf(b, "return rr, off, nil }\n\n")

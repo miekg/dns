@@ -15,13 +15,12 @@ func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool
 	if err != nil {
 		return off, err
 	}
-	if len(msg) == off {
-		return off, nil
-	}
+	headerEnd := off
 	off, err = packDataA(rr.A, msg, off)
 	if err != nil {
 		return off, err
 	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -30,13 +29,12 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
-	if len(msg) == off {
-		return off, nil
-	}
+	headerEnd := off
 	off, err = packDataAAAA(rr.AAAA, msg, off)
 	if err != nil {
 		return off, err
 	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -45,9 +43,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 	if err != nil {
 		return off, err
 	}
-	if len(msg) == off {
-		return off, nil
-	}
+	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
 		return off, err
@@ -56,6 +52,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 	if err != nil {
 		return off, err
 	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -64,9 +61,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return off, err
 	}
-	if len(msg) == off {
-		return off, nil
-	}
+	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
 		return off, err
@@ -75,6 +70,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return off, err
 	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -86,7 +82,11 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(A)
+	lenmsg := len(msg)
+	_ = lenmsg
+
 	rr.Hdr = h
+
 	rr.A, off, err = unpackDataA(msg, off)
 	if err != nil {
 		return rr, off, err
@@ -100,7 +100,11 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(AAAA)
+	lenmsg := len(msg)
+	_ = lenmsg
+
 	rr.Hdr = h
+
 	rr.AAAA, off, err = unpackDataAAAA(msg, off)
 	if err != nil {
 		return rr, off, err
@@ -114,10 +118,17 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(L32)
+	lenmsg := len(msg)
+	_ = lenmsg
+
 	rr.Hdr = h
-	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
+
+	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
 		return rr, off, err
+	}
+	if off == lenmsg {
+		return rr, off, nil
 	}
 	rr.Locator32, off, err = unpackDataA(msg, off)
 	if err != nil {
@@ -132,10 +143,17 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(MX)
+	lenmsg := len(msg)
+	_ = lenmsg
+
 	rr.Hdr = h
-	rr.Preference, off, err = unpackUint16(msg, off, len(msg))
+
+	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
 	if err != nil {
 		return rr, off, err
+	}
+	if off == lenmsg {
+		return rr, off, nil
 	}
 	rr.Mx, off, err = UnpackDomainName(msg, off)
 	if err != nil {
