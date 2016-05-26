@@ -439,7 +439,6 @@ func TestNoRdataPack(t *testing.T) {
 	}
 }
 
-// TODO(miek): fix dns buffer too small errors this throws
 func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {

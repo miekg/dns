@@ -1947,3 +1947,11 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 
 	return r1
 }
+
+// Which types have type specific unpack functions.
+var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
+	TypeA:    unpackA,
+	TypeAAAA: unpackAAAA,
+	TypeMX:   unpackMX,
+	TypeL32:  unpackL32,
+}

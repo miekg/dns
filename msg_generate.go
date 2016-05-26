@@ -99,6 +99,10 @@ func main() {
 if err != nil {
 	return off, err
 }
+
+if dynamicUpdate(rr.Hdr) {
+	return off, nil
+}
 `)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
@@ -166,7 +170,7 @@ return off, err
 		}
 
 		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
-		fmt.Fprint(b, `if dynamicUpdate(off, len(msg)) {
+		fmt.Fprint(b, `if dynamicUpdate(h) {
 return nil, off, nil
 	}
 var err error

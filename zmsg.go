@@ -15,6 +15,10 @@ func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool
 	if err != nil {
 		return off, err
 	}
+
+	if dynamicUpdate(rr.Hdr) {
+		return off, nil
+	}
 	off, err = packDataA(rr.A, msg, off)
 	if err != nil {
 		return off, err
@@ -27,6 +31,10 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
+
+	if dynamicUpdate(rr.Hdr) {
+		return off, nil
+	}
 	off, err = packDataAAAA(rr.AAAA, msg, off)
 	if err != nil {
 		return off, err
@@ -38,6 +46,10 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
+	}
+
+	if dynamicUpdate(rr.Hdr) {
+		return off, nil
 	}
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
@@ -55,6 +67,10 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return off, err
 	}
+
+	if dynamicUpdate(rr.Hdr) {
+		return off, nil
+	}
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
 	if err != nil {
 		return off, err
@@ -69,7 +85,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 // unpack*() functions
 
 func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(off, len(msg)) {
+	if dynamicUpdate(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -83,7 +99,7 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(off, len(msg)) {
+	if dynamicUpdate(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -97,7 +113,7 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(off, len(msg)) {
+	if dynamicUpdate(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -115,7 +131,7 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(off, len(msg)) {
+	if dynamicUpdate(h) {
 		return nil, off, nil
 	}
 	var err error

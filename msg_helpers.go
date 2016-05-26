@@ -63,16 +63,34 @@ func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 
 func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	lenmsg := len(msg)
-	if len(aaaa) < net.IPv6len { // Allowed, for dynamic updates.
-		return off, nil
-	}
-	laaaa := len(aaaa)
-	if laaaa > net.IPv6len || off+laaaa > lenmsg {
+	if off+net.IPv6len > lenmsg {
 		return lenmsg, &Error{err: "overflow packing aaaa"}
 	}
-	for i := 0; i < net.IPv6len; i++ {
-		msg[off] = aaaa[i]
-		off++
+
+	switch len(aaaa) {
+	case net.IPv6len:
+		msg[off] = aaaa[0]
+		msg[off+1] = aaaa[1]
+		msg[off+2] = aaaa[2]
+		msg[off+3] = aaaa[3]
+		msg[off+4] = aaaa[4]
+		msg[off+5] = aaaa[5]
+		msg[off+6] = aaaa[6]
+		msg[off+7] = aaaa[7]
+		msg[off+8] = aaaa[8]
+		msg[off+9] = aaaa[9]
+		msg[off+10] = aaaa[10]
+		msg[off+11] = aaaa[11]
+		msg[off+12] = aaaa[12]
+		msg[off+13] = aaaa[13]
+		msg[off+14] = aaaa[14]
+		msg[off+15] = aaaa[15]
+		off += net.IPv6len
+	case 0:
+		// Allowed, dynamic updates.
+	default:
+		return lenmsg, &Error{err: "overflow packing aaaa"}
+
 	}
 	return off, nil
 }
@@ -177,8 +195,8 @@ func packUint32Msg(i uint32) (byte, byte, byte, byte) {
 func toBase32(b []byte) string { return base32.HexEncoding.EncodeToString(b) }
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
-// dynamicUpdate returns true of off equals len.
-func dynamicUpdate(off, len int) bool { return off == len }
+// dynamicUpdate returns true if the Rdlength is zero.
+func dynamicUpdate(h RR_Header) bool { return h.Rdlength == 0 }
 
 // unpackUint16 unpacks a uint16, computing the new offset and handling errors.
 func unpackUint16(msg []byte, off int, lenmsg int) (i uint16, off1 int, err error) {
