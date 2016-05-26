@@ -15,8 +15,7 @@ func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool
 	if err != nil {
 		return off, err
 	}
-
-	if dynamicUpdate(rr.Hdr) {
+	if len(msg) == off {
 		return off, nil
 	}
 	off, err = packDataA(rr.A, msg, off)
@@ -31,8 +30,7 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
-
-	if dynamicUpdate(rr.Hdr) {
+	if len(msg) == off {
 		return off, nil
 	}
 	off, err = packDataAAAA(rr.AAAA, msg, off)
@@ -47,8 +45,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 	if err != nil {
 		return off, err
 	}
-
-	if dynamicUpdate(rr.Hdr) {
+	if len(msg) == off {
 		return off, nil
 	}
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
@@ -67,8 +64,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return off, err
 	}
-
-	if dynamicUpdate(rr.Hdr) {
+	if len(msg) == off {
 		return off, nil
 	}
 	off, err = packUint16(rr.Preference, msg, off, len(msg))
