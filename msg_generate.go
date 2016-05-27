@@ -16,6 +16,20 @@ import (
 	"os"
 )
 
+// What types are we generating, should be kept in sync with typeToUnpack in msg.go
+var generate = map[string]bool{
+	"AAAA": true,
+	"A":    true,
+	"L32":  true,
+	"MX":   true,
+	"NID":  true,
+}
+
+func shouldGenerate(name string) bool {
+	_, ok := generate[name]
+	return ok
+}
+
 // For later: IPSECKEY is weird.
 
 var packageHdr = `
@@ -86,11 +100,7 @@ func main() {
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
 		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
-		// TODO(miek): temp. subset of types, see typeToUnpack in msg.go (bottom).
-		if name != "L32" && name != "A" && name != "AAAA" && name != "MX" {
+		if isEmbedded || !shouldGenerate(name) {
 			continue
 		}
 
@@ -133,6 +143,8 @@ return off, err
 				o("off, err = packDataA(rr.%s, msg, off)\n")
 			case `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
+			case `dns:"uint64"`:
+				o("off, err = packUint64(rr.%s, msg, off, len(msg), true)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -141,7 +153,7 @@ return off, err
 				case types.Uint32:
 					o("off, err = packUint32(rr.%s, msg, off, len(msg))\n")
 				case types.Uint64:
-
+					o("off, err = packUint64(rr.%s, msg, off, len(msg), false)\n")
 				case types.String:
 
 				default:
@@ -160,11 +172,7 @@ return off, err
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
 		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
-		// TODO(miek): temp. subset of types
-		if name != "L32" && name != "A" && name != "AAAA" && name != "MX" {
+		if isEmbedded || !shouldGenerate(name) {
 			continue
 		}
 
@@ -209,6 +217,8 @@ return rr, off, err
 				o("rr.%s, off, err = unpackDataA(msg, off)\n")
 			case `dns:"aaaa"`:
 				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
+			case `dns:"uint48"`:
+				o("rr.%s, off, err = unpackUint64(msg, off, lenmsg, true)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -217,7 +227,7 @@ return rr, off, err
 				case types.Uint32:
 					o("rr.%s, off, err = unpackUint32(msg, off, lenmsg)\n")
 				case types.Uint64:
-
+					o("rr.%s, off, err = unpackUint64(msg, off, lenmsg, false)\n")
 				case types.String:
 
 				default:

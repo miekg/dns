@@ -1954,4 +1954,5 @@ var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
 	TypeAAAA: unpackAAAA,
 	TypeMX:   unpackMX,
 	TypeL32:  unpackL32,
+	TypeNID:  unpackNID,
 }

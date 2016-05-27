@@ -74,6 +74,24 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 	return off, nil
 }
 
+func (rr *NID) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	headerEnd := off
+	off, err = packUint16(rr.Preference, msg, off, len(msg))
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint64(rr.NodeID, msg, off, len(msg), false)
+	if err != nil {
+		return off, err
+	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
+	return off, nil
+}
+
 // unpack*() functions
 
 func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -156,6 +174,31 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	rr.Mx, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
+}
+
+func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
+	if dynamicUpdate(h) {
+		return nil, off, nil
+	}
+	var err error
+	rr := new(NID)
+	lenmsg := len(msg)
+	_ = lenmsg
+
+	rr.Hdr = h
+
+	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == lenmsg {
+		return rr, off, nil
+	}
+	rr.NodeID, off, err = unpackUint64(msg, off, lenmsg, false)
 	if err != nil {
 		return rr, off, err
 	}

@@ -162,6 +162,17 @@ func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, 
 
 // helper helper functions.
 
+// truncateMsgFromRdLength truncates msg to match the expected length of the RR.
+// Returns an error if msg is smaller than the expected size.
+func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
+	lenmsg := len(msg)
+	lenrd := off + int(rdlength)
+	if lenrd > lenmsg {
+		return msg, &Error{err: "overflowing header size"}
+	}
+	return msg[:lenrd], nil
+}
+
 func fromBase32(s []byte) (buf []byte, err error) {
 	buflen := base32.HexEncoding.DecodedLen(len(s))
 	buf = make([]byte, buflen)
@@ -234,13 +245,53 @@ func packUint32(i uint32, msg []byte, off int, lenmsg int) (off1 int, err error)
 	return off + 4, nil
 }
 
-// truncateMsgFromRdLength truncates msg to match the expected length of the RR.
-// Returns an error if msg is smaller than the expected size.
-func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
-	lenmsg := len(msg)
-	lenrd := off + int(rdlength)
-	if lenrd > lenmsg {
-		return msg, &Error{err: "overflowing header size"}
+func unpackUint64(msg []byte, off int, lenmsg int, uint48 bool) (i uint64, off1 int, err error) {
+	if !uint48 && off+8 > lenmsg {
+		return 0, lenmsg, &Error{err: "overflow unpacking uint64"}
 	}
-	return msg[:lenrd], nil
+	if uint48 && off+6 > lenmsg {
+		return 0, lenmsg, &Error{err: "overflow unpacking uint64 as uint48"}
+	}
+	if uint48 {
+		// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
+		i = (uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+			uint64(msg[off+4])<<8 | uint64(msg[off+5])))
+		off += 6
+		return i, off, nil
+	}
+	i = (uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
+		uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
+	off += 8
+	return i, off, nil
+}
+
+// packUint64 packs an uint64 into a struct, computing the new offset and handling errors.
+// If uint48 is true only the first 6 bytes are packed
+func packUint64(i uint64, msg []byte, off int, lenmsg int, uint48 bool) (off1 int, err error) {
+	if !uint48 && off+8 > lenmsg {
+		return lenmsg, &Error{err: "overflow packing uint64"}
+	}
+	if uint48 && off+6 > lenmsg {
+		return lenmsg, &Error{err: "overflow packing uint64 as uint48"}
+	}
+	if uint48 {
+		msg[off] = byte(i >> 40)
+		msg[off+1] = byte(i >> 32)
+		msg[off+2] = byte(i >> 24)
+		msg[off+3] = byte(i >> 16)
+		msg[off+4] = byte(i >> 8)
+		msg[off+5] = byte(i)
+		off += 6
+		return off, nil
+	}
+	msg[off] = byte(i >> 56)
+	msg[off+1] = byte(i >> 48)
+	msg[off+2] = byte(i >> 40)
+	msg[off+3] = byte(i >> 32)
+	msg[off+4] = byte(i >> 24)
+	msg[off+5] = byte(i >> 16)
+	msg[off+6] = byte(i >> 8)
+	msg[off+7] = byte(i)
+	off += 8
+	return off, nil
 }
