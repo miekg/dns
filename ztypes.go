@@ -236,26 +236,41 @@ func (rr *X25) Header() *RR_Header        { return &rr.Hdr }
 
 // len() functions
 func (rr *A) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += net.IPv4len // A
 	return l
 }
 func (rr *AAAA) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += net.IPv6len // AAAA
 	return l
 }
 func (rr *AFSDB) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Subtype
 	l += len(rr.Hostname) + 1
 	return l
 }
 func (rr *ANY) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	return l
 }
 func (rr *CAA) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // Flag
 	l += len(rr.Tag) + 1
@@ -263,6 +278,9 @@ func (rr *CAA) len() int {
 	return l
 }
 func (rr *CERT) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Type
 	l += 2 // KeyTag
@@ -271,21 +289,33 @@ func (rr *CERT) len() int {
 	return l
 }
 func (rr *CNAME) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Target) + 1
 	return l
 }
 func (rr *DHCID) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
 	return l
 }
 func (rr *DNAME) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Target) + 1
 	return l
 }
 func (rr *DNSKEY) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Flags
 	l += 1 // Protocol
@@ -294,6 +324,9 @@ func (rr *DNSKEY) len() int {
 	return l
 }
 func (rr *DS) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // KeyTag
 	l += 1 // Algorithm
@@ -302,26 +335,41 @@ func (rr *DS) len() int {
 	return l
 }
 func (rr *EID) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Endpoint)/2 + 1
 	return l
 }
 func (rr *EUI48) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 6 // Address
 	return l
 }
 func (rr *EUI64) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 8 // Address
 	return l
 }
 func (rr *GID) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 4 // Gid
 	return l
 }
 func (rr *GPOS) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Longitude) + 1
 	l += len(rr.Latitude) + 1
@@ -329,12 +377,18 @@ func (rr *GPOS) len() int {
 	return l
 }
 func (rr *HINFO) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Cpu) + 1
 	l += len(rr.Os) + 1
 	return l
 }
 func (rr *HIP) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // HitLength
 	l += 1 // PublicKeyAlgorithm
@@ -347,24 +401,36 @@ func (rr *HIP) len() int {
 	return l
 }
 func (rr *KX) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += len(rr.Exchanger) + 1
 	return l
 }
 func (rr *L32) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2           // Preference
 	l += net.IPv4len // Locator32
 	return l
 }
 func (rr *L64) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += 8 // Locator64
 	return l
 }
 func (rr *LOC) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // Version
 	l += 1 // Size
@@ -376,49 +442,76 @@ func (rr *LOC) len() int {
 	return l
 }
 func (rr *LP) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += len(rr.Fqdn) + 1
 	return l
 }
 func (rr *MB) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Mb) + 1
 	return l
 }
 func (rr *MD) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Md) + 1
 	return l
 }
 func (rr *MF) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Mf) + 1
 	return l
 }
 func (rr *MG) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Mg) + 1
 	return l
 }
 func (rr *MINFO) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Rmail) + 1
 	l += len(rr.Email) + 1
 	return l
 }
 func (rr *MR) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Mr) + 1
 	return l
 }
 func (rr *MX) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += len(rr.Mx) + 1
 	return l
 }
 func (rr *NAPTR) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Order
 	l += 2 // Preference
@@ -429,17 +522,26 @@ func (rr *NAPTR) len() int {
 	return l
 }
 func (rr *NID) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += 8 // NodeID
 	return l
 }
 func (rr *NIMLOC) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Locator)/2 + 1
 	return l
 }
 func (rr *NINFO) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	for _, x := range rr.ZSData {
 		l += len(x) + 1
@@ -447,16 +549,25 @@ func (rr *NINFO) len() int {
 	return l
 }
 func (rr *NS) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Ns) + 1
 	return l
 }
 func (rr *NSAPPTR) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Ptr) + 1
 	return l
 }
 func (rr *NSEC3PARAM) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // Hash
 	l += 1 // Flags
@@ -466,16 +577,25 @@ func (rr *NSEC3PARAM) len() int {
 	return l
 }
 func (rr *OPENPGPKEY) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	return l
 }
 func (rr *PTR) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Ptr) + 1
 	return l
 }
 func (rr *PX) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += len(rr.Map822) + 1
@@ -483,11 +603,17 @@ func (rr *PX) len() int {
 	return l
 }
 func (rr *RFC3597) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Rdata)/2 + 1
 	return l
 }
 func (rr *RKEY) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Flags
 	l += 1 // Protocol
@@ -496,12 +622,18 @@ func (rr *RKEY) len() int {
 	return l
 }
 func (rr *RP) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Mbox) + 1
 	l += len(rr.Txt) + 1
 	return l
 }
 func (rr *RRSIG) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // TypeCovered
 	l += 1 // Algorithm
@@ -515,12 +647,18 @@ func (rr *RRSIG) len() int {
 	return l
 }
 func (rr *RT) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Preference
 	l += len(rr.Host) + 1
 	return l
 }
 func (rr *SOA) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Ns) + 1
 	l += len(rr.Mbox) + 1
@@ -532,6 +670,9 @@ func (rr *SOA) len() int {
 	return l
 }
 func (rr *SPF) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	for _, x := range rr.Txt {
 		l += len(x) + 1
@@ -539,6 +680,9 @@ func (rr *SPF) len() int {
 	return l
 }
 func (rr *SRV) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Priority
 	l += 2 // Weight
@@ -547,6 +691,9 @@ func (rr *SRV) len() int {
 	return l
 }
 func (rr *SSHFP) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // Algorithm
 	l += 1 // Type
@@ -554,6 +701,9 @@ func (rr *SSHFP) len() int {
 	return l
 }
 func (rr *TA) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // KeyTag
 	l += 1 // Algorithm
@@ -562,12 +712,18 @@ func (rr *TA) len() int {
 	return l
 }
 func (rr *TALINK) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.PreviousName) + 1
 	l += len(rr.NextName) + 1
 	return l
 }
 func (rr *TKEY) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Algorithm) + 1
 	l += 4 // Inception
@@ -581,6 +737,9 @@ func (rr *TKEY) len() int {
 	return l
 }
 func (rr *TLSA) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 1 // Usage
 	l += 1 // Selector
@@ -589,6 +748,9 @@ func (rr *TLSA) len() int {
 	return l
 }
 func (rr *TSIG) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Algorithm) + 1
 	l += 6 // TimeSigned
@@ -602,6 +764,9 @@ func (rr *TSIG) len() int {
 	return l
 }
 func (rr *TXT) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	for _, x := range rr.Txt {
 		l += len(x) + 1
@@ -609,16 +774,25 @@ func (rr *TXT) len() int {
 	return l
 }
 func (rr *UID) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 4 // Uid
 	return l
 }
 func (rr *UINFO) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.Uinfo) + 1
 	return l
 }
 func (rr *URI) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += 2 // Priority
 	l += 2 // Weight
@@ -626,6 +800,9 @@ func (rr *URI) len() int {
 	return l
 }
 func (rr *X25) len() int {
+	if rr == nil {
+		return 0
+	}
 	l := rr.Hdr.len()
 	l += len(rr.PSDNAddress) + 1
 	return l

@@ -295,7 +295,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 		off = nameoffset + 1
 		goto End
 	}
-	if msg != nil {
+	if msg != nil && len(msg) > 0 {
 		msg[off] = 0
 	}
 End:
@@ -1727,6 +1727,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
+		if dns.Answer[i] == nil {
+			continue
+		}
 		l += dns.Answer[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
@@ -1742,6 +1745,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
+		if dns.Ns[i] == nil {
+			continue
+		}
 		l += dns.Ns[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
@@ -1757,6 +1763,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
+		if dns.Extra[i] == nil {
+			continue
+		}
 		l += dns.Extra[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
