@@ -811,6 +811,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if e != nil {
 					return lenmsg, e
 				}
+				if off+len(b32) > lenmsg {
+					return lenmsg, &Error{err: "overflow packing base32"}
+				}
 				copy(msg[off:off+len(b32)], b32)
 				off += len(b32)
 			case `dns:"size-hex"`:
