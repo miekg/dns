@@ -13,9 +13,8 @@ import (
 // packDataDomainName.
 
 func unpackDataA(msg []byte, off int) (net.IP, int, error) {
-	lenmsg := len(msg)
-	if off+net.IPv4len > lenmsg {
-		return nil, lenmsg, &Error{err: "overflow unpacking a"}
+	if off+net.IPv4len > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking a"}
 	}
 	a := net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])
 	off += net.IPv4len
@@ -23,10 +22,9 @@ func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 }
 
 func packDataA(a net.IP, msg []byte, off int) (int, error) {
-	lenmsg := len(msg)
 	// It must be a slice of 4, even if it is 16, we encode only the first 4
-	if off+net.IPv4len > lenmsg {
-		return lenmsg, &Error{err: "overflow packing a"}
+	if off+net.IPv4len > len(msg) {
+		return len(msg), &Error{err: "overflow packing a"}
 	}
 	switch len(a) {
 	case net.IPv6len:
@@ -44,15 +42,14 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 	case 0:
 		// Allowed, for dynamic updates.
 	default:
-		return lenmsg, &Error{err: "overflow packing a"}
+		return len(msg), &Error{err: "overflow packing a"}
 	}
 	return off, nil
 }
 
 func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
-	lenmsg := len(msg)
-	if off+net.IPv6len > lenmsg {
-		return nil, lenmsg, &Error{err: "overflow unpacking aaaa"}
+	if off+net.IPv6len > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking aaaa"}
 	}
 	aaaa := net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
 		msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
@@ -62,9 +59,8 @@ func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 }
 
 func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
-	lenmsg := len(msg)
-	if off+net.IPv6len > lenmsg {
-		return lenmsg, &Error{err: "overflow packing aaaa"}
+	if off+net.IPv6len > len(msg) {
+		return len(msg), &Error{err: "overflow packing aaaa"}
 	}
 
 	switch len(aaaa) {
@@ -89,7 +85,7 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	case 0:
 		// Allowed, dynamic updates.
 	default:
-		return lenmsg, &Error{err: "overflow packing aaaa"}
+		return len(msg), &Error{err: "overflow packing aaaa"}
 
 	}
 	return off, nil
@@ -99,31 +95,29 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 // re-sliced msg according to the expected length of the RR.
 func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte, err error) {
 	hdr := RR_Header{}
-
-	lenmsg := len(msg)
-	if off == lenmsg {
+	if off == len(msg) {
 		return hdr, off, msg, nil
 	}
 
 	hdr.Name, off, err = UnpackDomainName(msg, off)
 	if err != nil {
-		return hdr, lenmsg, msg, err
+		return hdr, len(msg), msg, err
 	}
-	hdr.Rrtype, off, err = unpackUint16(msg, off, lenmsg)
+	hdr.Rrtype, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return hdr, lenmsg, msg, err
+		return hdr, len(msg), msg, err
 	}
-	hdr.Class, off, err = unpackUint16(msg, off, lenmsg)
+	hdr.Class, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return hdr, lenmsg, msg, err
+		return hdr, len(msg), msg, err
 	}
-	hdr.Ttl, off, err = unpackUint32(msg, off, lenmsg)
+	hdr.Ttl, off, err = unpackUint32(msg, off)
 	if err != nil {
-		return hdr, lenmsg, msg, err
+		return hdr, len(msg), msg, err
 	}
-	hdr.Rdlength, off, err = unpackUint16(msg, off, lenmsg)
+	hdr.Rdlength, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return hdr, lenmsg, msg, err
+		return hdr, len(msg), msg, err
 	}
 	msg, err = truncateMsgFromRdlength(msg, off, hdr.Rdlength)
 	return hdr, off, msg, nil
@@ -132,30 +126,29 @@ func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte,
 // packHeader packs an RR header, returning the offset to the end of the header.
 // See PackDomainName for documentation about the compression.
 func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	lenmsg := len(msg)
-	if off == lenmsg {
+	if off == len(msg) {
 		return off, nil
 	}
 
 	off, err = PackDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
-		return lenmsg, err
+		return len(msg), err
 	}
-	off, err = packUint16(hdr.Rrtype, msg, off, lenmsg)
+	off, err = packUint16(hdr.Rrtype, msg, off)
 	if err != nil {
-		return lenmsg, err
+		return len(msg), err
 	}
-	off, err = packUint16(hdr.Class, msg, off, lenmsg)
+	off, err = packUint16(hdr.Class, msg, off)
 	if err != nil {
-		return lenmsg, err
+		return len(msg), err
 	}
-	off, err = packUint32(hdr.Ttl, msg, off, lenmsg)
+	off, err = packUint32(hdr.Ttl, msg, off)
 	if err != nil {
-		return lenmsg, err
+		return len(msg), err
 	}
-	off, err = packUint16(hdr.Rdlength, msg, off, lenmsg)
+	off, err = packUint16(hdr.Rdlength, msg, off)
 	if err != nil {
-		return lenmsg, err
+		return len(msg), err
 	}
 	return off, nil
 }
@@ -165,9 +158,8 @@ func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, 
 // truncateMsgFromRdLength truncates msg to match the expected length of the RR.
 // Returns an error if msg is smaller than the expected size.
 func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
-	lenmsg := len(msg)
 	lenrd := off + int(rdlength)
-	if lenrd > lenmsg {
+	if lenrd > len(msg) {
 		return msg, &Error{err: "overflowing header size"}
 	}
 	return msg[:lenrd], nil
@@ -209,48 +201,63 @@ func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 // dynamicUpdate returns true if the Rdlength is zero.
 func dynamicUpdate(h RR_Header) bool { return h.Rdlength == 0 }
 
+func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
+	if off+1 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint8"}
+	}
+	return uint8(msg[off]), off + 1, nil
+}
+
+func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
+	if off+2 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint16"}
+	}
+	msg[off] = byte(i)
+	return off + 1, nil
+}
+
 // unpackUint16 unpacks a uint16, computing the new offset and handling errors.
-func unpackUint16(msg []byte, off int, lenmsg int) (i uint16, off1 int, err error) {
-	if off+2 > lenmsg {
-		return 0, lenmsg, &Error{err: "overflow unpacking uint16"}
+func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
+	if off+2 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
 	}
 	i, off = unpackUint16Msg(msg, off)
 	return i, off, nil
 }
 
 // packUint16 packs an uint16, computing the new offset and handling errors.
-func packUint16(i uint16, msg []byte, off int, lenmsg int) (off1 int, err error) {
-	if off+2 > lenmsg {
-		return lenmsg, &Error{err: "overflow packing uint16"}
+func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
+	if off+2 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint16"}
 	}
 	msg[off], msg[off+1] = packUint16Msg(i)
 	return off + 2, nil
 }
 
 // unpackuint32 packs an uint32, computing the new offset and handling errors.
-func unpackUint32(msg []byte, off int, lenmsg int) (i uint32, off1 int, err error) {
-	if off+4 > lenmsg {
-		return 0, lenmsg, &Error{err: "overflow unpacking uint32"}
+func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
+	if off+4 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
 	}
 	i, off = unpackUint32Msg(msg, off)
 	return i, off, nil
 }
 
 // packUint32 packs an uint32 into a struct, computing the new offset and handling errors.
-func packUint32(i uint32, msg []byte, off int, lenmsg int) (off1 int, err error) {
-	if off+4 > lenmsg {
-		return lenmsg, &Error{err: "overflow packing uint32"}
+func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
+	if off+4 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint32"}
 	}
 	msg[off], msg[off+1], msg[off+2], msg[off+3] = packUint32Msg(i)
 	return off + 4, nil
 }
 
-func unpackUint64(msg []byte, off int, lenmsg int, uint48 bool) (i uint64, off1 int, err error) {
-	if !uint48 && off+8 > lenmsg {
-		return 0, lenmsg, &Error{err: "overflow unpacking uint64"}
+func unpackUint64(msg []byte, off int, uint48 bool) (i uint64, off1 int, err error) {
+	if !uint48 && off+8 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
 	}
-	if uint48 && off+6 > lenmsg {
-		return 0, lenmsg, &Error{err: "overflow unpacking uint64 as uint48"}
+	if uint48 && off+6 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint64 as uint48"}
 	}
 	if uint48 {
 		// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
@@ -267,12 +274,12 @@ func unpackUint64(msg []byte, off int, lenmsg int, uint48 bool) (i uint64, off1 
 
 // packUint64 packs an uint64 into a struct, computing the new offset and handling errors.
 // If uint48 is true only the first 6 bytes are packed
-func packUint64(i uint64, msg []byte, off int, lenmsg int, uint48 bool) (off1 int, err error) {
-	if !uint48 && off+8 > lenmsg {
-		return lenmsg, &Error{err: "overflow packing uint64"}
+func packUint64(i uint64, msg []byte, off int, uint48 bool) (off1 int, err error) {
+	if !uint48 && off+8 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint64"}
 	}
-	if uint48 && off+6 > lenmsg {
-		return lenmsg, &Error{err: "overflow packing uint64 as uint48"}
+	if uint48 && off+6 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
 	}
 	if uint48 {
 		msg[off] = byte(i >> 40)

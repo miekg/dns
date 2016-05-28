@@ -100,9 +100,6 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(A)
-	lenmsg := len(msg)
-	_ = lenmsg
-
 	rr.Hdr = h
 
 	rr.A, off, err = unpackDataA(msg, off)
@@ -118,9 +115,6 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(AAAA)
-	lenmsg := len(msg)
-	_ = lenmsg
-
 	rr.Hdr = h
 
 	rr.AAAA, off, err = unpackDataAAAA(msg, off)
@@ -136,16 +130,13 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(L32)
-	lenmsg := len(msg)
-	_ = lenmsg
-
 	rr.Hdr = h
 
-	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
+	rr.Preference, off, err = unpackUint16(msg, off)
 	if err != nil {
 		return rr, off, err
 	}
-	if off == lenmsg {
+	if off == len(msg) {
 		return rr, off, nil
 	}
 	rr.Locator32, off, err = unpackDataA(msg, off)
@@ -161,16 +152,13 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(MX)
-	lenmsg := len(msg)
-	_ = lenmsg
-
 	rr.Hdr = h
 
-	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
+	rr.Preference, off, err = unpackUint16(msg, off)
 	if err != nil {
 		return rr, off, err
 	}
-	if off == lenmsg {
+	if off == len(msg) {
 		return rr, off, nil
 	}
 	rr.Mx, off, err = UnpackDomainName(msg, off)
@@ -186,19 +174,16 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	var err error
 	rr := new(NID)
-	lenmsg := len(msg)
-	_ = lenmsg
-
 	rr.Hdr = h
 
-	rr.Preference, off, err = unpackUint16(msg, off, lenmsg)
+	rr.Preference, off, err = unpackUint16(msg, off)
 	if err != nil {
 		return rr, off, err
 	}
-	if off == lenmsg {
+	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.NodeID, off, err = unpackUint64(msg, off, lenmsg, false)
+	rr.NodeID, off, err = unpackUint64(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}

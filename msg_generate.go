@@ -143,11 +143,12 @@ return off, err
 				o("off, err = packDataA(rr.%s, msg, off)\n")
 			case `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
-			case `dns:"uint64"`:
+			case `dns:"uint48"`:
 				o("off, err = packUint64(rr.%s, msg, off, len(msg), true)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
+					o("off, err = packUint8(rr.%s, msg, off, len(msg))\n")
 				case types.Uint16:
 					o("off, err = packUint16(rr.%s, msg, off, len(msg))\n")
 				case types.Uint32:
@@ -183,7 +184,6 @@ return nil, off, nil
 var err error
 `)
 		fmt.Fprintf(b, "rr := new(%s)\n", name)
-		fmt.Fprintln(b, "lenmsg := len(msg); _ = lenmsg\n")
 		fmt.Fprintln(b, "rr.Hdr = h\n")
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
@@ -218,16 +218,17 @@ return rr, off, err
 			case `dns:"aaaa"`:
 				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
 			case `dns:"uint48"`:
-				o("rr.%s, off, err = unpackUint64(msg, off, lenmsg, true)\n")
+				o("rr.%s, off, err = unpackUint64(msg, off, true)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
+					o("rr.%s, off, err = unpackUint8(msg, off)\n")
 				case types.Uint16:
-					o("rr.%s, off, err = unpackUint16(msg, off, lenmsg)\n")
+					o("rr.%s, off, err = unpackUint16(msg, off)\n")
 				case types.Uint32:
-					o("rr.%s, off, err = unpackUint32(msg, off, lenmsg)\n")
+					o("rr.%s, off, err = unpackUint32(msg, off)\n")
 				case types.Uint64:
-					o("rr.%s, off, err = unpackUint64(msg, off, lenmsg, false)\n")
+					o("rr.%s, off, err = unpackUint64(msg, off, false)\n")
 				case types.String:
 
 				default:
@@ -238,7 +239,7 @@ return rr, off, err
 			}
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
-				fmt.Fprintf(b, `if off == lenmsg {
+				fmt.Fprintf(b, `if off == len(msg) {
 return rr, off, nil
 	}
 `)
