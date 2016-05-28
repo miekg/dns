@@ -465,7 +465,7 @@ func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 }
 
 func packOctetString(s string, msg []byte, offset int, tmp []byte) (int, error) {
-	if offset >= len(msg) {
+	if offset >= len(msg) || len(s) > len(tmp) {
 		return offset, ErrBuf
 	}
 	bs := tmp[:len(s)]
