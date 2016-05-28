@@ -209,7 +209,7 @@ func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
 }
 
 func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
-	if off+2 > len(msg) {
+	if off+1 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
 	}
 	msg[off] = byte(i)
