@@ -144,17 +144,17 @@ return off, err
 			case `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
 			case `dns:"uint48"`:
-				o("off, err = packUint64(rr.%s, msg, off, len(msg), true)\n")
+				o("off, err = packUint64(rr.%s, msg, off, true)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
-					o("off, err = packUint8(rr.%s, msg, off, len(msg))\n")
+					o("off, err = packUint8(rr.%s, msg, off)\n")
 				case types.Uint16:
-					o("off, err = packUint16(rr.%s, msg, off, len(msg))\n")
+					o("off, err = packUint16(rr.%s, msg, off)\n")
 				case types.Uint32:
-					o("off, err = packUint32(rr.%s, msg, off, len(msg))\n")
+					o("off, err = packUint32(rr.%s, msg, off\n")
 				case types.Uint64:
-					o("off, err = packUint64(rr.%s, msg, off, len(msg), false)\n")
+					o("off, err = packUint64(rr.%s, msg, off, false)\n")
 				case types.String:
 
 				default:

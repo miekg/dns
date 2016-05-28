@@ -44,7 +44,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 		return off, err
 	}
 	headerEnd := off
-	off, err = packUint16(rr.Preference, msg, off, len(msg))
+	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -62,7 +62,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 		return off, err
 	}
 	headerEnd := off
-	off, err = packUint16(rr.Preference, msg, off, len(msg))
+	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -80,11 +80,11 @@ func (rr *NID) pack(msg []byte, off int, compression map[string]int, compress bo
 		return off, err
 	}
 	headerEnd := off
-	off, err = packUint16(rr.Preference, msg, off, len(msg))
+	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint64(rr.NodeID, msg, off, len(msg), false)
+	off, err = packUint64(rr.NodeID, msg, off, false)
 	if err != nil {
 		return off, err
 	}
