@@ -783,6 +783,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if e != nil {
 					return lenmsg, e
 				}
+				if off+len(b64) > lenmsg {
+					return lenmsg, &Error{err: "overflow packing base64"}
+				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case `dns:"domain-name"`:
