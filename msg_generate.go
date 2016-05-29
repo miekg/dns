@@ -35,7 +35,7 @@ var generate = map[string]bool{
 	"PTR":   true,
 	"RP":    true,
 	"SRV":   true,
-	// "HINFO": true,
+	"HINFO": true,
 }
 
 func shouldGenerate(name string) bool {
@@ -158,6 +158,8 @@ return off, err
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
 			case `dns:"uint48"`:
 				o("off, err = packUint64(rr.%s, msg, off, true)\n")
+			case `dns:"txt"`:
+				o("off, err = packString(rr.%s, msg, off)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -169,7 +171,7 @@ return off, err
 				case types.Uint64:
 					o("off, err = packUint64(rr.%s, msg, off, false)\n")
 				case types.String:
-
+					o("off, err = packString(rr.%s, msg, off)\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
@@ -232,6 +234,8 @@ return rr, off, err
 				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
 			case `dns:"uint48"`:
 				o("rr.%s, off, err = unpackUint64(msg, off, true)\n")
+			case `dns:"txt"`:
+				o("rr.%s, off, err = unpackString(msg, off)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -243,7 +247,7 @@ return rr, off, err
 				case types.Uint64:
 					o("rr.%s, off, err = unpackUint64(msg, off, false)\n")
 				case types.String:
-
+					o("rr.%s, off, err = unpackString(msg, off)\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}

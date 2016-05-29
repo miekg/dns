@@ -423,7 +423,7 @@ func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 
 func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 	lenByteOffset := offset
-	if offset >= len(msg) {
+	if offset >= len(msg) || len(s) > len(tmp) {
 		return offset, ErrBuf
 	}
 	offset++
@@ -1361,6 +1361,8 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 			off1, err = t.pack(msg, off, compression, compress)
 		case *DNAME:
 			off1, err = t.pack(msg, off, compression, compress)
+		case *HINFO:
+			off1, err = t.pack(msg, off, compression, compress)
 		case *L32:
 			off1, err = t.pack(msg, off, compression, compress)
 		case *LOC:
@@ -2006,4 +2008,5 @@ var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
 	TypePTR:   unpackPTR,
 	TypeRP:    unpackRP,
 	TypeSRV:   unpackSRV,
+	TypeHINFO: unpackHINFO,
 }

@@ -66,6 +66,24 @@ func (rr *DNAME) pack(msg []byte, off int, compression map[string]int, compress 
 	return off, nil
 }
 
+func (rr *HINFO) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	headerEnd := off
+	off, err = packString(rr.Cpu, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packString(rr.Os, msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
+	return off, nil
+}
+
 func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
 	if err != nil {
@@ -356,6 +374,28 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rr.Hdr = h
 
 	rr.Target, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, nil
+}
+
+func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
+	if dynamicUpdate(h) {
+		return nil, off, nil
+	}
+	var err error
+	rr := new(HINFO)
+	rr.Hdr = h
+
+	rr.Cpu, off, err = unpackString(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.Os, off, err = unpackString(msg, off)
 	if err != nil {
 		return rr, off, err
 	}

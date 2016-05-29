@@ -4,6 +4,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"net"
+	"strconv"
 )
 
 // helper functions called from the generated zmsg.go
@@ -216,7 +217,6 @@ func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	return off + 1, nil
 }
 
-// unpackUint16 unpacks a uint16, computing the new offset and handling errors.
 func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
 	if off+2 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
@@ -225,7 +225,6 @@ func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
 	return i, off, nil
 }
 
-// packUint16 packs an uint16, computing the new offset and handling errors.
 func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
@@ -234,7 +233,6 @@ func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	return off + 2, nil
 }
 
-// unpackuint32 packs an uint32, computing the new offset and handling errors.
 func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
 	if off+4 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
@@ -243,7 +241,6 @@ func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
 	return i, off, nil
 }
 
-// packUint32 packs an uint32 into a struct, computing the new offset and handling errors.
 func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint32"}
@@ -300,5 +297,53 @@ func packUint64(i uint64, msg []byte, off int, uint48 bool) (off1 int, err error
 	msg[off+6] = byte(i >> 8)
 	msg[off+7] = byte(i)
 	off += 8
+	return off, nil
+}
+
+func unpackString(msg []byte, off int) (string, int, error) {
+	if off+1 > len(msg) {
+		return "", off, &Error{err: "overflow unpacking txt"}
+	}
+	l := int(msg[off])
+	if off+l+1 > len(msg) {
+		return "", off, &Error{err: "overflow unpacking txt"}
+	}
+	s := make([]byte, 0, l)
+	for _, b := range msg[off+1 : off+1+l] {
+		switch b {
+		case '"', '\\':
+			s = append(s, '\\', b)
+		case '\t':
+			s = append(s, `\t`...)
+		case '\r':
+			s = append(s, `\r`...)
+		case '\n':
+			s = append(s, `\n`...)
+		default:
+			if b < 32 || b > 127 { // unprintable
+				var buf [3]byte
+				bufs := strconv.AppendInt(buf[:0], int64(b), 10)
+				s = append(s, '\\')
+				for i := 0; i < 3-len(bufs); i++ {
+					s = append(s, '0')
+				}
+				for _, r := range bufs {
+					s = append(s, r)
+				}
+			} else {
+				s = append(s, b)
+			}
+		}
+	}
+	off += 1 + l
+	return string(s), off, nil
+}
+
+func packString(s string, msg []byte, off int) (int, error) {
+	txtTmp := make([]byte, 256*4+1)
+	off, err := packTxtString(s, msg, off, txtTmp)
+	if err != nil {
+		return len(msg), err
+	}
 	return off, nil
 }
