@@ -18,11 +18,24 @@ import (
 
 // What types are we generating, should be kept in sync with typeToUnpack in msg.go
 var generate = map[string]bool{
-	"AAAA": true,
-	"A":    true,
-	"L32":  true,
-	"MX":   true,
-	"NID":  true,
+	"AAAA":  true,
+	"A":     true,
+	"CNAME": true,
+	"DNAME": true,
+	"L32":   true,
+	"LOC":   true,
+	"MB":    true,
+	"MD":    true,
+	"MF":    true,
+	"MG":    true,
+	"MR":    true,
+	"MX":    true,
+	"NID":   true,
+	"NS":    true,
+	"PTR":   true,
+	"RP":    true,
+	"SRV":   true,
+	// "HINFO": true,
 }
 
 func shouldGenerate(name string) bool {
@@ -152,7 +165,7 @@ return off, err
 				case types.Uint16:
 					o("off, err = packUint16(rr.%s, msg, off)\n")
 				case types.Uint32:
-					o("off, err = packUint32(rr.%s, msg, off\n")
+					o("off, err = packUint32(rr.%s, msg, off)\n")
 				case types.Uint64:
 					o("off, err = packUint64(rr.%s, msg, off, false)\n")
 				case types.String:

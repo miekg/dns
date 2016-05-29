@@ -1357,9 +1357,33 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 			off1, err = t.pack(msg, off, compression, compress)
 		case *AAAA:
 			off1, err = t.pack(msg, off, compression, compress)
-		case *MX:
+		case *CNAME:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *DNAME:
 			off1, err = t.pack(msg, off, compression, compress)
 		case *L32:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *LOC:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MB:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MD:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MF:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MG:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MX:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *NID:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *NS:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *PTR:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *RP:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *SRV:
 			off1, err = t.pack(msg, off, compression, compress)
 		}
 
@@ -1965,9 +1989,21 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 
 // Which types have type specific unpack functions.
 var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
-	TypeA:    unpackA,
-	TypeAAAA: unpackAAAA,
-	TypeMX:   unpackMX,
-	TypeL32:  unpackL32,
-	TypeNID:  unpackNID,
+	TypeAAAA:  unpackAAAA,
+	TypeA:     unpackA,
+	TypeCNAME: unpackCNAME,
+	TypeDNAME: unpackDNAME,
+	TypeL32:   unpackL32,
+	TypeLOC:   unpackLOC,
+	TypeMB:    unpackMB,
+	TypeMD:    unpackMD,
+	TypeMF:    unpackMF,
+	TypeMG:    unpackMG,
+	TypeMR:    unpackMR,
+	TypeMX:    unpackMX,
+	TypeNID:   unpackNID,
+	TypeNS:    unpackNS,
+	TypePTR:   unpackPTR,
+	TypeRP:    unpackRP,
+	TypeSRV:   unpackSRV,
 }
