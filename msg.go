@@ -295,7 +295,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 		off = nameoffset + 1
 		goto End
 	}
-	if msg != nil && len(msg) > 0 {
+	if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
 End:
