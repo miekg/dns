@@ -87,7 +87,6 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 		// Allowed, dynamic updates.
 	default:
 		return len(msg), &Error{err: "overflow packing aaaa"}
-
 	}
 	return off, nil
 }
