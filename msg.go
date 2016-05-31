@@ -1497,8 +1497,11 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small
 // a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
-	var dh Header
-	var compression map[string]int
+	var (
+		dh          Header
+		compression map[string]int
+	)
+
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
 	}
@@ -1602,8 +1605,9 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 func (dns *Msg) Unpack(msg []byte) (err error) {
 	// Header.
 	var dh Header
+
 	off := 0
-	if off, err = UnpackStruct(&dh, msg, off); err != nil {
+	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
 		return err
 	}
 	dns.Id = dh.Id
@@ -1990,10 +1994,38 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 		return q, off, nil
 	}
 	q.Qclass, off, err = unpackUint16(msg, off)
+	// off == len here?
+	return q, off, err
+}
+
+func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
+	// packing of the header happens inline in msg.Pack()
+	var (
+		dh  Header
+		err error
+	)
+	dh.Id, off, err = unpackUint16(msg, off)
 	if err != nil {
-		return q, off, err
+		return dh, off, err
 	}
-	return q, off, nil
+	dh.Bits, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Qdcount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Ancount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Nscount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Arcount, off, err = unpackUint16(msg, off)
+	return dh, off, err
 }
 
 // Which types have type specific unpack functions.
