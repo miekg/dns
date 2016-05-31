@@ -321,7 +321,7 @@ func (rr *SRV) pack(msg []byte, off int, compression map[string]int, compress bo
 // unpack*() functions
 
 func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -336,7 +336,7 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -351,7 +351,7 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -366,7 +366,7 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -381,7 +381,7 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -403,7 +403,7 @@ func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -425,7 +425,7 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -482,7 +482,7 @@ func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -497,7 +497,7 @@ func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -512,7 +512,7 @@ func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -527,7 +527,7 @@ func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -542,7 +542,7 @@ func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -557,7 +557,7 @@ func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -579,7 +579,7 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -601,7 +601,7 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -616,7 +616,7 @@ func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -631,7 +631,7 @@ func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error
@@ -653,7 +653,7 @@ func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
 }
 
 func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if dynamicUpdate(h) {
+	if noRdata(h) {
 		return nil, off, nil
 	}
 	var err error

@@ -193,7 +193,7 @@ return off, err
 		}
 
 		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
-		fmt.Fprint(b, `if dynamicUpdate(h) {
+		fmt.Fprint(b, `if noRdata(h) {
 return nil, off, nil
 	}
 var err error

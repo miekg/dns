@@ -199,7 +199,7 @@ func toBase32(b []byte) string { return base32.HexEncoding.EncodeToString(b) }
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 // dynamicUpdate returns true if the Rdlength is zero.
-func dynamicUpdate(h RR_Header) bool { return h.Rdlength == 0 }
+func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
 
 func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
 	if off+1 > len(msg) {
@@ -210,7 +210,7 @@ func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
 
 func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	if off+1 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint16"}
+		return len(msg), &Error{err: "overflow packing uint8"}
 	}
 	msg[off] = byte(i)
 	return off + 1, nil
