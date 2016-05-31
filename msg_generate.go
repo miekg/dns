@@ -36,6 +36,7 @@ var generate = map[string]bool{
 	"RP":    true,
 	"SRV":   true,
 	"HINFO": true,
+	"ANY":   true,
 }
 
 func shouldGenerate(name string) bool {
@@ -262,7 +263,7 @@ return rr, off, nil
 `)
 			}
 		}
-		fmt.Fprintf(b, "return rr, off, nil }\n\n")
+		fmt.Fprintf(b, "return rr, off, err }\n\n")
 	}
 
 	// gofmt

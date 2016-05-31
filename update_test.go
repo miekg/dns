@@ -40,7 +40,7 @@ func TestDynamicUpdateZeroRdataUnpack(t *testing.T) {
 	rr := &RR_Header{Name: ".", Rrtype: 0, Class: 1, Ttl: ^uint32(0), Rdlength: 0}
 	m.Answer = []RR{rr, rr, rr, rr, rr}
 	m.Ns = m.Answer
-	for n, s := range map[uint16]string{TypeA: "A", TypeMX: "MX"} { //TypeToString {
+	for n, s := range TypeToString {
 		rr.Rrtype = n
 		bytes, err := m.Pack()
 		if err != nil {
@@ -77,7 +77,7 @@ func TestRemoveRRset(t *testing.T) {
 	if !bytes.Equal(actual, expect) {
 		tmp := new(Msg)
 		if err := tmp.Unpack(actual); err != nil {
-			t.Fatalf("error unpacking actual msg: %v", err)
+			t.Fatalf("error unpacking actual msg: %v\nexpected: %v\ngot: %v\n", err, expect, actual)
 		}
 		t.Errorf("expected msg:\n%s", expectstr)
 		t.Errorf("actual msg:\n%v", tmp)

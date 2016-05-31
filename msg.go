@@ -1342,9 +1342,11 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		// off1, err = t.pack(msg, off, compression, compress)
 		switch t := rr.(type) {
 		case *RR_Header:
-			// we can be called with an empty RR, consisting only out of the header, see
-			// update_test.go's TestDynamicUpdateZeroRdataUnpack(t *testing.T) for an example.
-			// This is OK as RR_Header also implements the RR interface.
+			// we can be called with an empty RR, consisting only out of the header, see update_test.go's
+			// TestDynamicUpdateZeroRdataUnpack for an example. This is OK as RR_Header also implements the RR interface.
+			off1, err = t.pack(msg, off, compression, compress)
+		case *ANY:
+			// Also "weird" setup, see (again) update_test.go's TestRemoveRRset, where the Rrtype is 1 but the type is *ANY.
 			off1, err = t.pack(msg, off, compression, compress)
 		case *A:
 			off1, err = t.pack(msg, off, compression, compress)
