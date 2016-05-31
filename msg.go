@@ -1341,6 +1341,9 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	case true:
 		// Shortcut reflection, `pack' needs to be added to the RR interface so we can just do this:
 		// off1, err = t.pack(msg, off, compression, compress)
+		// TODO(miek): revert the logic and make a blacklist for types that still use reflection. Kill
+		// typeToUnpack and just generate all the pack and unpack functions even though we don't use
+		// them for all types (yet).
 		switch t := rr.(type) {
 		case *RR_Header:
 			// we can be called with an empty RR, consisting only out of the header, see update_test.go's
