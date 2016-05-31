@@ -1603,10 +1603,10 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 // Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) (err error) {
-	// Header.
-	var dh Header
-
-	off := 0
+	var (
+		dh  Header
+		off int
+	)
 	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
 		return err
 	}
