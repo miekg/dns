@@ -92,18 +92,6 @@ type Msg struct {
 	Extra    []RR       // Holds the RR(s) of the additional section.
 }
 
-// StringToType is the reverse of TypeToString, needed for string parsing.
-var StringToType = reverseInt16(TypeToString)
-
-// StringToClass is the reverse of ClassToString, needed for string parsing.
-var StringToClass = reverseInt16(ClassToString)
-
-// Map of opcodes strings.
-var StringToOpcode = reverseInt(OpcodeToString)
-
-// Map of rcodes strings.
-var StringToRcode = reverseInt(RcodeToString)
-
 // ClassToString is a maps Classes to strings for each CLASS wire type.
 var ClassToString = map[uint16]string{
 	ClassINET:   "IN",
@@ -1456,31 +1444,6 @@ func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) 
 	return dst, off, err
 }
 
-// Reverse a map
-func reverseInt8(m map[uint8]string) map[string]uint8 {
-	n := make(map[string]uint8)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
-
-func reverseInt16(m map[uint16]string) map[string]uint16 {
-	n := make(map[string]uint16)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
-
-func reverseInt(m map[int]string) map[string]int {
-	n := make(map[string]int)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
-
 // Convert a MsgHdr to a string, with dig-like headers:
 //
 //;; opcode: QUERY, status: NOERROR, id: 48404
@@ -1603,12 +1566,13 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
+	// TODO(miek): header as well
 	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i < len(question); i++ {
-		off, err = packStructCompress(&question[i], msg, off, compression, dns.Compress)
+		off, err = question[i].pack(msg, off, compression, dns.Compress)
 		if err != nil {
 			return nil, err
 		}
@@ -1657,10 +1621,10 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	// Optimistically use the count given to us in the header
 	dns.Question = make([]Question, 0, int(dh.Qdcount))
 
-	var q Question
 	for i := 0; i < int(dh.Qdcount); i++ {
 		off1 := off
-		off, err = UnpackStruct(&q, msg, off)
+		var q Question
+		q, off, err = unpackQuestion(msg, off)
 		if err != nil {
 			// Even if Truncated is set, we only will set ErrTruncated if we
 			// actually got the questions
@@ -1987,6 +1951,49 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	}
 
 	return r1
+}
+
+func (q *Question) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := PackDomainName(q.Name, msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(q.Qtype, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(q.Qclass, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func unpackQuestion(msg []byte, off int) (Question, int, error) {
+	var (
+		q   Question
+		err error
+	)
+	q.Name, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return q, off, err
+	}
+	if off == len(msg) {
+		return q, off, nil
+	}
+	q.Qtype, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return q, off, err
+	}
+	// TODO(miek) not sure if I should keep these off = len(msg) for unpacking the question section.
+	if off == len(msg) {
+		return q, off, nil
+	}
+	q.Qclass, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return q, off, err
+	}
+	return q, off, nil
 }
 
 // Which types have type specific unpack functions.
