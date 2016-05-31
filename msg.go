@@ -821,6 +821,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case `dns:"size"`:
+				// TODO(miek): WTF? size?
 				// the size is already encoded in the RR, we can safely use the
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
@@ -1381,6 +1382,8 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		case *RP:
 			off1, err = t.pack(msg, off, compression, compress)
 		case *SRV:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *DNSKEY:
 			off1, err = t.pack(msg, off, compression, compress)
 		}
 	default:
@@ -2065,22 +2068,23 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 
 // Which types have type specific unpack functions.
 var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
-	TypeAAAA:  unpackAAAA,
-	TypeA:     unpackA,
-	TypeCNAME: unpackCNAME,
-	TypeDNAME: unpackDNAME,
-	TypeL32:   unpackL32,
-	TypeLOC:   unpackLOC,
-	TypeMB:    unpackMB,
-	TypeMD:    unpackMD,
-	TypeMF:    unpackMF,
-	TypeMG:    unpackMG,
-	TypeMR:    unpackMR,
-	TypeMX:    unpackMX,
-	TypeNID:   unpackNID,
-	TypeNS:    unpackNS,
-	TypePTR:   unpackPTR,
-	TypeRP:    unpackRP,
-	TypeSRV:   unpackSRV,
-	TypeHINFO: unpackHINFO,
+	TypeAAAA:   unpackAAAA,
+	TypeA:      unpackA,
+	TypeCNAME:  unpackCNAME,
+	TypeDNAME:  unpackDNAME,
+	TypeL32:    unpackL32,
+	TypeLOC:    unpackLOC,
+	TypeMB:     unpackMB,
+	TypeMD:     unpackMD,
+	TypeMF:     unpackMF,
+	TypeMG:     unpackMG,
+	TypeMR:     unpackMR,
+	TypeMX:     unpackMX,
+	TypeNID:    unpackNID,
+	TypeNS:     unpackNS,
+	TypePTR:    unpackPTR,
+	TypeRP:     unpackRP,
+	TypeSRV:    unpackSRV,
+	TypeHINFO:  unpackHINFO,
+	TypeDNSKEY: unpackDNSKEY,
 }

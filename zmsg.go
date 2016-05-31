@@ -76,6 +76,32 @@ func (rr *DNAME) pack(msg []byte, off int, compression map[string]int, compress 
 	return off, nil
 }
 
+func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	headerEnd := off
+	off, err = packUint16(rr.Flags, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint8(rr.Protocol, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint8(rr.Algorithm, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringBase64(rr.PublicKey, msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
+	return off, nil
+}
+
 func (rr *HINFO) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
@@ -335,6 +361,9 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(A)
 	rr.Hdr = h
 
@@ -350,6 +379,9 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(AAAA)
 	rr.Hdr = h
 
@@ -365,6 +397,9 @@ func unpackANY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(ANY)
 	rr.Hdr = h
 
@@ -376,6 +411,9 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(CNAME)
 	rr.Hdr = h
 
@@ -391,10 +429,52 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(DNAME)
 	rr.Hdr = h
 
 	rr.Target, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, err
+}
+
+func unpackDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
+	if noRdata(h) {
+		return nil, off, nil
+	}
+	var err error
+	rdStart := off
+	_ = rdStart
+
+	rr := new(DNSKEY)
+	rr.Hdr = h
+
+	rr.Flags, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.Protocol, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.Algorithm, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
 	if err != nil {
 		return rr, off, err
 	}
@@ -406,6 +486,9 @@ func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(HINFO)
 	rr.Hdr = h
 
@@ -428,6 +511,9 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(L32)
 	rr.Hdr = h
 
@@ -450,6 +536,9 @@ func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(LOC)
 	rr.Hdr = h
 
@@ -507,6 +596,9 @@ func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MB)
 	rr.Hdr = h
 
@@ -522,6 +614,9 @@ func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MD)
 	rr.Hdr = h
 
@@ -537,6 +632,9 @@ func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MF)
 	rr.Hdr = h
 
@@ -552,6 +650,9 @@ func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MG)
 	rr.Hdr = h
 
@@ -567,6 +668,9 @@ func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MR)
 	rr.Hdr = h
 
@@ -582,6 +686,9 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(MX)
 	rr.Hdr = h
 
@@ -604,6 +711,9 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(NID)
 	rr.Hdr = h
 
@@ -626,6 +736,9 @@ func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(NS)
 	rr.Hdr = h
 
@@ -641,6 +754,9 @@ func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(PTR)
 	rr.Hdr = h
 
@@ -656,6 +772,9 @@ func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(RP)
 	rr.Hdr = h
 
@@ -678,6 +797,9 @@ func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return nil, off, nil
 	}
 	var err error
+	rdStart := off
+	_ = rdStart
+
 	rr := new(SRV)
 	rr.Hdr = h
 

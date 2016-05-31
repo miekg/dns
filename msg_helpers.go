@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/hex"
 	"net"
 	"strconv"
 )
@@ -173,6 +174,8 @@ func fromBase32(s []byte) (buf []byte, err error) {
 	return
 }
 
+func toBase32(b []byte) string { return base32.HexEncoding.EncodeToString(b) }
+
 func fromBase64(s []byte) (buf []byte, err error) {
 	buflen := base64.StdEncoding.DecodedLen(len(s))
 	buf = make([]byte, buflen)
@@ -180,6 +183,8 @@ func fromBase64(s []byte) (buf []byte, err error) {
 	buf = buf[:n]
 	return
 }
+
+func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 func unpackUint16Msg(msg []byte, off int) (uint16, int) {
 	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
@@ -194,9 +199,6 @@ func unpackUint32Msg(msg []byte, off int) (uint32, int) {
 func packUint32Msg(i uint32) (byte, byte, byte, byte) {
 	return byte(i >> 24), byte(i >> 16), byte(i >> 8), byte(i)
 }
-
-func toBase32(b []byte) string { return base32.HexEncoding.EncodeToString(b) }
-func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 // dynamicUpdate returns true if the Rdlength is zero.
 func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
@@ -344,5 +346,54 @@ func packString(s string, msg []byte, off int) (int, error) {
 	if err != nil {
 		return len(msg), err
 	}
+	return off, nil
+}
+
+func unpackStringBase64(msg []byte, off, end int) (string, int, error) {
+	// Rest of the RR is base64 encoded value, so we don't need an explicit length
+	// to be set. Thus far all RR's that have base64 encoded fields have those as their
+	// last one. What we do need is the end of the RR!
+	if end > len(msg) {
+		return "", len(msg), &Error{err: "overflow unpacking base64"}
+	}
+	s := toBase64(msg[off:end])
+	return s, end, nil
+}
+
+func packStringBase64(s string, msg []byte, off int) (int, error) {
+	b64, e := fromBase64([]byte(s))
+	if e != nil {
+		return len(msg), e
+	}
+	if off+len(b64) > len(msg) {
+		return len(msg), &Error{err: "overflow packing base64"}
+	}
+	copy(msg[off:off+len(b64)], b64)
+	off += len(b64)
+	return off, nil
+}
+
+func unpackStringHex(msg []byte, off, end int) (string, int, error) {
+	// Rest of the RR is hex encoded value, so we don't need an explicit length
+	// to be set. NSEC and TSIG have hex fields with a length field.
+	// What we do need is the end of the RR!
+	if end > len(msg) {
+		return "", len(msg), &Error{err: "overflow unpacking hex"}
+	}
+
+	s := hex.EncodeToString(msg[off:end])
+	return s, end, nil
+}
+
+func packStringHex(s string, msg []byte, off int) (int, error) {
+	h, e := hex.DecodeString(s)
+	if e != nil {
+		return len(msg), e
+	}
+	if off+(len(h)) > len(msg) {
+		return len(msg), &Error{err: "overflow packing hex"}
+	}
+	copy(msg[off:off+len(h)], h)
+	off += len(h)
 	return off, nil
 }

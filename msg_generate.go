@@ -16,27 +16,40 @@ import (
 	"os"
 )
 
+// All RR pack and unpack functions should be generated, currently RR that present some
+// problems
+// * NSEC/NSEC3 - type bitmap
+// * TXT/SPF - string slice
+// * URI - weird octet thing there
+// * NSEC3/TSIG - size hex
+// * OPT RR - EDNS0 parsing - needs to some looking at
+// * HIP - uses "hex", but is actually size-hex - might drop size-hex?
+// * Z
+// * WKS - uint16 slice
+// * NINFO
+
 // What types are we generating, should be kept in sync with typeToUnpack in msg.go
 var generate = map[string]bool{
-	"AAAA":  true,
-	"A":     true,
-	"CNAME": true,
-	"DNAME": true,
-	"L32":   true,
-	"LOC":   true,
-	"MB":    true,
-	"MD":    true,
-	"MF":    true,
-	"MG":    true,
-	"MR":    true,
-	"MX":    true,
-	"NID":   true,
-	"NS":    true,
-	"PTR":   true,
-	"RP":    true,
-	"SRV":   true,
-	"HINFO": true,
-	"ANY":   true,
+	"AAAA":   true,
+	"ANY":    true,
+	"A":      true,
+	"CNAME":  true,
+	"DNAME":  true,
+	"DNSKEY": true,
+	"HINFO":  true,
+	"L32":    true,
+	"LOC":    true,
+	"MB":     true,
+	"MD":     true,
+	"MF":     true,
+	"MG":     true,
+	"MR":     true,
+	"MX":     true,
+	"NID":    true,
+	"NS":     true,
+	"PTR":    true,
+	"RP":     true,
+	"SRV":    true,
 }
 
 func shouldGenerate(name string) bool {
@@ -161,6 +174,10 @@ return off, err
 				o("off, err = packUint64(rr.%s, msg, off, true)\n")
 			case `dns:"txt"`:
 				o("off, err = packString(rr.%s, msg, off)\n")
+			case `dns:"base32"`:
+				o("off, err = packStringBase32(rr.%s, msg, off)\n")
+			case `dns:"base64"`:
+				o("off, err = packStringBase64(rr.%s, msg, off)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -198,6 +215,9 @@ return off, err
 return nil, off, nil
 	}
 var err error
+rdStart := off
+_ = rdStart
+
 `)
 		fmt.Fprintf(b, "rr := new(%s)\n", name)
 		fmt.Fprintln(b, "rr.Hdr = h\n")
@@ -237,6 +257,10 @@ return rr, off, err
 				o("rr.%s, off, err = unpackUint64(msg, off, true)\n")
 			case `dns:"txt"`:
 				o("rr.%s, off, err = unpackString(msg, off)\n")
+			case `dns:"base32"`:
+				o("rr.%s, off, err = unpackStringBase32(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+			case `dns:"base64"`:
+				o("rr.%s, off, err = unpackStringBase64(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
