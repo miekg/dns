@@ -123,9 +123,9 @@ func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte,
 	return hdr, off, msg, nil
 }
 
-// packHeader packs an RR header, returning the offset to the end of the header.
+// pack packs an RR header, returning the offset to the end of the header.
 // See PackDomainName for documentation about the compression.
-func packHeader(hdr RR_Header, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
+func (hdr RR_Header) pack(msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
 	if off == len(msg) {
 		return off, nil
 	}

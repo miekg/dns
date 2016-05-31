@@ -11,7 +11,7 @@ package dns
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -25,7 +25,7 @@ func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool
 }
 
 func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -39,7 +39,7 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]int, compress b
 }
 
 func (rr *CNAME) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -53,7 +53,7 @@ func (rr *CNAME) pack(msg []byte, off int, compression map[string]int, compress 
 }
 
 func (rr *DNAME) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -67,7 +67,7 @@ func (rr *DNAME) pack(msg []byte, off int, compression map[string]int, compress 
 }
 
 func (rr *HINFO) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -85,7 +85,7 @@ func (rr *HINFO) pack(msg []byte, off int, compression map[string]int, compress 
 }
 
 func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -103,7 +103,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]int, compress bo
 }
 
 func (rr *LOC) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -141,7 +141,7 @@ func (rr *LOC) pack(msg []byte, off int, compression map[string]int, compress bo
 }
 
 func (rr *MB) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -155,7 +155,7 @@ func (rr *MB) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *MD) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -169,7 +169,7 @@ func (rr *MD) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *MF) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -183,7 +183,7 @@ func (rr *MF) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *MG) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -197,7 +197,7 @@ func (rr *MG) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *MR) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -211,7 +211,7 @@ func (rr *MR) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -229,7 +229,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *NID) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -247,7 +247,7 @@ func (rr *NID) pack(msg []byte, off int, compression map[string]int, compress bo
 }
 
 func (rr *NS) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -261,7 +261,7 @@ func (rr *NS) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *PTR) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -275,7 +275,7 @@ func (rr *PTR) pack(msg []byte, off int, compression map[string]int, compress bo
 }
 
 func (rr *RP) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -293,7 +293,7 @@ func (rr *RP) pack(msg []byte, off int, compression map[string]int, compress boo
 }
 
 func (rr *SRV) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}

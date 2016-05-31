@@ -1345,10 +1345,7 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 			// we can be called with an empty RR, consisting only out of the header, see
 			// update_test.go's TestDynamicUpdateZeroRdataUnpack(t *testing.T) for an example.
 			// This is OK as RR_Header also implements the RR interface.
-			//
-			// TODO(miek): move this to t.pack() syntax as well? If we want to move everything
-			// this .pack, we must.
-			off1, err = packHeader(*rr.Header(), msg, off, compression, compress)
+			off1, err = t.pack(msg, off, compression, compress)
 		case *A:
 			off1, err = t.pack(msg, off, compression, compress)
 		case *AAAA:

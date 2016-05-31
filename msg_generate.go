@@ -118,7 +118,7 @@ func main() {
 		}
 
 		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
-		fmt.Fprint(b, `off, err := packHeader(rr.Hdr, msg, off, compression, compress)
+		fmt.Fprint(b, `off, err := rr.Hdr.pack(msg, off, compression, compress)
 if err != nil {
 	return off, err
 }
