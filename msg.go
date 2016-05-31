@@ -1610,6 +1610,10 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
 		return err
 	}
+	if off == len(msg) {
+		return ErrTruncated
+	}
+
 	dns.Id = dh.Id
 	dns.Response = (dh.Bits & _QR) != 0
 	dns.Opcode = int(dh.Bits>>11) & 0xF
@@ -1989,12 +1993,13 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	if err != nil {
 		return q, off, err
 	}
-	// TODO(miek) not sure if I should keep these off = len(msg) for unpacking the question section.
 	if off == len(msg) {
 		return q, off, nil
 	}
 	q.Qclass, off, err = unpackUint16(msg, off)
-	// off == len here?
+	if off == len(msg) {
+		return q, off, nil
+	}
 	return q, off, err
 }
 
