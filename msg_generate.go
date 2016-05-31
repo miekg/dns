@@ -27,6 +27,7 @@ import (
 // * Z
 // * WKS - uint16 slice
 // * NINFO
+// * PrivateRR
 
 // What types are we generating, should be kept in sync with typeToUnpack in msg.go
 var generate = map[string]bool{
