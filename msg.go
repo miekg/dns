@@ -1341,6 +1341,14 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		// Shortcut reflection, `pack' needs to be added to the RR interface so we can just do this:
 		// off1, err = t.pack(msg, off, compression, compress)
 		switch t := rr.(type) {
+		case *RR_Header:
+			// we can be called with an empty RR, consisting only out of the header, see
+			// update_test.go's TestDynamicUpdateZeroRdataUnpack(t *testing.T) for an example.
+			// This is OK as RR_Header also implements the RR interface.
+			//
+			// TODO(miek): move this to t.pack() syntax as well? If we want to move everything
+			// this .pack, we must.
+			off1, err = packHeader(*rr.Header(), msg, off, compression, compress)
 		case *A:
 			off1, err = t.pack(msg, off, compression, compress)
 		case *AAAA:
@@ -1376,7 +1384,6 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		case *SRV:
 			off1, err = t.pack(msg, off, compression, compress)
 		}
-
 	default:
 		off1, err = packStructCompress(rr, msg, off, compression, compress)
 	}
@@ -1569,8 +1576,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	// TODO(miek): header as well
-	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
+	off, err = dh.pack(msg, off, compression, dns.Compress)
 	if err != nil {
 		return nil, err
 	}
@@ -2004,8 +2010,32 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	return q, off, err
 }
 
+func (dh *Header) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := packUint16(dh.Id, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Bits, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Qdcount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Ancount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Nscount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Arcount, msg, off)
+	return off, err
+}
+
 func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
-	// packing of the header happens inline in msg.Pack()
 	var (
 		dh  Header
 		err error
