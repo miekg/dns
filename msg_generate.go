@@ -66,11 +66,6 @@ var packageHdr = `
 
 package dns
 
-//import (
-	//"encoding/base64"
-	//"net"
-//)
-
 `
 
 // getTypeStruct will take a type and the package scope, and return the
@@ -172,7 +167,7 @@ return off, err
 			case `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
 			case `dns:"uint48"`:
-				o("off, err = packUint64(rr.%s, msg, off, true)\n")
+				o("off, err = packUint48(rr.%s, msg, off)\n")
 			case `dns:"txt"`:
 				o("off, err = packString(rr.%s, msg, off)\n")
 			case `dns:"base32"`:
@@ -188,7 +183,7 @@ return off, err
 				case types.Uint32:
 					o("off, err = packUint32(rr.%s, msg, off)\n")
 				case types.Uint64:
-					o("off, err = packUint64(rr.%s, msg, off, false)\n")
+					o("off, err = packUint64(rr.%s, msg, off)\n")
 				case types.String:
 					o("off, err = packString(rr.%s, msg, off)\n")
 				default:
@@ -255,7 +250,7 @@ return rr, off, err
 			case `dns:"aaaa"`:
 				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
 			case `dns:"uint48"`:
-				o("rr.%s, off, err = unpackUint64(msg, off, true)\n")
+				o("rr.%s, off, err = unpackUint48(msg, off)\n")
 			case `dns:"txt"`:
 				o("rr.%s, off, err = unpackString(msg, off)\n")
 			case `dns:"base32"`:
@@ -271,7 +266,7 @@ return rr, off, err
 				case types.Uint32:
 					o("rr.%s, off, err = unpackUint32(msg, off)\n")
 				case types.Uint64:
-					o("rr.%s, off, err = unpackUint64(msg, off, false)\n")
+					o("rr.%s, off, err = unpackUint64(msg, off)\n")
 				case types.String:
 					o("rr.%s, off, err = unpackString(msg, off)\n")
 				default:

@@ -138,6 +138,30 @@ func BenchmarkUnpackMX(b *testing.B) {
 	}
 }
 
+func BenchmarkPackAAAAA(b *testing.B) {
+	aaaa, _ := NewRR(". IN A ::1")
+
+	buf := make([]byte, aaaa.len())
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = PackRR(aaaa, buf, 0, nil, false)
+	}
+}
+
+func BenchmarkUnpackAAAA(b *testing.B) {
+	aaaa, _ := NewRR(". IN A ::1")
+
+	buf := make([]byte, aaaa.len())
+	PackRR(aaaa, buf, 0, nil, false)
+	aaaa = nil
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = UnpackRR(buf, 0)
+	}
+}
+
 func BenchmarkPackMsg(b *testing.B) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)

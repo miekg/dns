@@ -14,7 +14,7 @@ var StringToRcode = reverseInt(RcodeToString)
 
 // Reverse a map
 func reverseInt8(m map[uint8]string) map[string]uint8 {
-	n := make(map[string]uint8)
+	n := make(map[string]uint8, len(m))
 	for u, s := range m {
 		n[s] = u
 	}
@@ -22,7 +22,7 @@ func reverseInt8(m map[uint8]string) map[string]uint8 {
 }
 
 func reverseInt16(m map[uint16]string) map[string]uint16 {
-	n := make(map[string]uint16)
+	n := make(map[string]uint16, len(m))
 	for u, s := range m {
 		n[s] = u
 	}
@@ -30,7 +30,7 @@ func reverseInt16(m map[uint16]string) map[string]uint16 {
 }
 
 func reverseInt(m map[int]string) map[string]int {
-	n := make(map[string]int)
+	n := make(map[string]int, len(m))
 	for u, s := range m {
 		n[s] = u
 	}

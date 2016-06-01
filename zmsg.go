@@ -3,11 +3,6 @@
 
 package dns
 
-//import (
-//"encoding/base64"
-//"net"
-//)
-
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
@@ -274,7 +269,7 @@ func (rr *NID) pack(msg []byte, off int, compression map[string]int, compress bo
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint64(rr.NodeID, msg, off, false)
+	off, err = packUint64(rr.NodeID, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -724,7 +719,7 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.NodeID, off, err = unpackUint64(msg, off, false)
+	rr.NodeID, off, err = unpackUint64(msg, off)
 	if err != nil {
 		return rr, off, err
 	}

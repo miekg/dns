@@ -250,19 +250,34 @@ func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	return off + 4, nil
 }
 
-func unpackUint64(msg []byte, off int, uint48 bool) (i uint64, off1 int, err error) {
-	if !uint48 && off+8 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
-	}
-	if uint48 && off+6 > len(msg) {
+func unpackUint48(msg []byte, off int) (i uint64, off1 int, err error) {
+	if off+6 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint64 as uint48"}
 	}
-	if uint48 {
-		// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
-		i = (uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-			uint64(msg[off+4])<<8 | uint64(msg[off+5])))
-		off += 6
-		return i, off, nil
+	// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
+	i = (uint64(uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
+		uint64(msg[off+4])<<8 | uint64(msg[off+5])))
+	off += 6
+	return i, off, nil
+}
+
+func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
+	if off+6 > len(msg) {
+		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
+	}
+	msg[off] = byte(i >> 40)
+	msg[off+1] = byte(i >> 32)
+	msg[off+2] = byte(i >> 24)
+	msg[off+3] = byte(i >> 16)
+	msg[off+4] = byte(i >> 8)
+	msg[off+5] = byte(i)
+	off += 6
+	return off, nil
+}
+
+func unpackUint64(msg []byte, off int) (i uint64, off1 int, err error) {
+	if off+8 > len(msg) {
+		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
 	}
 	i = (uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
 		uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
@@ -270,24 +285,9 @@ func unpackUint64(msg []byte, off int, uint48 bool) (i uint64, off1 int, err err
 	return i, off, nil
 }
 
-// packUint64 packs an uint64 into a struct, computing the new offset and handling errors.
-// If uint48 is true only the first 6 bytes are packed
-func packUint64(i uint64, msg []byte, off int, uint48 bool) (off1 int, err error) {
-	if !uint48 && off+8 > len(msg) {
+func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
+	if off+8 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64"}
-	}
-	if uint48 && off+6 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
-	}
-	if uint48 {
-		msg[off] = byte(i >> 40)
-		msg[off+1] = byte(i >> 32)
-		msg[off+2] = byte(i >> 24)
-		msg[off+3] = byte(i >> 16)
-		msg[off+4] = byte(i >> 8)
-		msg[off+5] = byte(i)
-		off += 6
-		return off, nil
 	}
 	msg[off] = byte(i >> 56)
 	msg[off+1] = byte(i >> 48)
@@ -315,11 +315,11 @@ func unpackString(msg []byte, off int) (string, int, error) {
 		case '"', '\\':
 			s = append(s, '\\', b)
 		case '\t':
-			s = append(s, `\t`...)
+			s = append(s, '\t')
 		case '\r':
-			s = append(s, `\r`...)
+			s = append(s, '\r')
 		case '\n':
-			s = append(s, `\n`...)
+			s = append(s, '\n')
 		default:
 			if b < 32 || b > 127 { // unprintable
 				var buf [3]byte
