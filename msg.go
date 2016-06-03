@@ -8,9 +8,9 @@
 
 package dns
 
+//go:generate go run msg_generate.go
+
 import (
-	"encoding/base32"
-	"encoding/base64"
 	"encoding/hex"
 	"math/big"
 	"math/rand"
@@ -91,18 +91,6 @@ type Msg struct {
 	Ns       []RR       // Holds the RR(s) of the authority section.
 	Extra    []RR       // Holds the RR(s) of the additional section.
 }
-
-// StringToType is the reverse of TypeToString, needed for string parsing.
-var StringToType = reverseInt16(TypeToString)
-
-// StringToClass is the reverse of ClassToString, needed for string parsing.
-var StringToClass = reverseInt16(ClassToString)
-
-// Map of opcodes strings.
-var StringToOpcode = reverseInt(OpcodeToString)
-
-// Map of rcodes strings.
-var StringToRcode = reverseInt(RcodeToString)
 
 // ClassToString is a maps Classes to strings for each CLASS wire type.
 var ClassToString = map[uint16]string{
@@ -291,11 +279,11 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		// if msg == nil, we will never do compression
-		msg[nameoffset], msg[nameoffset+1] = packUint16(uint16(pointer ^ 0xC000))
+		msg[nameoffset], msg[nameoffset+1] = packUint16Msg(uint16(pointer ^ 0xC000))
 		off = nameoffset + 1
 		goto End
 	}
-	if msg != nil {
+	if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
 End:
@@ -423,7 +411,7 @@ func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 
 func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 	lenByteOffset := offset
-	if offset >= len(msg) {
+	if offset >= len(msg) || len(s) > len(tmp) {
 		return offset, ErrBuf
 	}
 	offset++
@@ -465,7 +453,7 @@ func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
 }
 
 func packOctetString(s string, msg []byte, offset int, tmp []byte) (int, error) {
-	if offset >= len(msg) {
+	if offset >= len(msg) || len(s) > len(tmp) {
 		return offset, ErrBuf
 	}
 	bs := tmp[:len(s)]
@@ -600,9 +588,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 						return lenmsg, &Error{err: "overflow packing opt"}
 					}
 					// Option code
-					msg[off], msg[off+1] = packUint16(element.(EDNS0).Option())
+					msg[off], msg[off+1] = packUint16Msg(element.(EDNS0).Option())
 					// Length
-					msg[off+2], msg[off+3] = packUint16(uint16(len(b)))
+					msg[off+2], msg[off+3] = packUint16Msg(uint16(len(b)))
 					off += 4
 					if off+len(b) > lenmsg {
 						copy(msg[off:], b)
@@ -783,6 +771,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if e != nil {
 					return lenmsg, e
 				}
+				if off+len(b64) > lenmsg {
+					return lenmsg, &Error{err: "overflow packing base64"}
+				}
 				copy(msg[off:off+len(b64)], b64)
 				off += len(b64)
 			case `dns:"domain-name"`:
@@ -811,6 +802,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				if e != nil {
 					return lenmsg, e
 				}
+				if off+len(b32) > lenmsg {
+					return lenmsg, &Error{err: "overflow packing base32"}
+				}
 				copy(msg[off:off+len(b32)], b32)
 				off += len(b32)
 			case `dns:"size-hex"`:
@@ -827,6 +821,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				copy(msg[off:off+hex.DecodedLen(len(s))], h)
 				off += hex.DecodedLen(len(s))
 			case `dns:"size"`:
+				// TODO(miek): WTF? size?
 				// the size is already encoded in the RR, we can safely use the
 				// length of string. String is RAW (not encoded in hex, nor base64)
 				copy(msg[off:off+len(s)], s)
@@ -930,8 +925,8 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off+4 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
-				code, off = unpackUint16(msg, off)
-				optlen, off1 := unpackUint16(msg, off)
+				code, off = unpackUint16Msg(msg, off)
+				optlen, off1 := unpackUint16Msg(msg, off)
 				if off1+int(optlen) > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking opt"}
 				}
@@ -1174,7 +1169,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			if off+2 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint16"}
 			}
-			i, off = unpackUint16(msg, off)
+			i, off = unpackUint16Msg(msg, off)
 			fv.SetUint(uint64(i))
 		case reflect.Uint32:
 			if off == lenmsg {
@@ -1334,38 +1329,6 @@ func intToBytes(i *big.Int, length int) []byte {
 	return buf
 }
 
-func unpackUint16(msg []byte, off int) (uint16, int) {
-	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
-}
-
-func packUint16(i uint16) (byte, byte) {
-	return byte(i >> 8), byte(i)
-}
-
-func toBase32(b []byte) string {
-	return base32.HexEncoding.EncodeToString(b)
-}
-
-func fromBase32(s []byte) (buf []byte, err error) {
-	buflen := base32.HexEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base32.HexEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
-}
-
-func toBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func fromBase64(s []byte) (buf []byte, err error) {
-	buflen := base64.StdEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base64.StdEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
-}
-
 // PackRR packs a resource record rr into msg[off:].
 // See PackDomainName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
@@ -1373,7 +1336,62 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off1, err = packStructCompress(rr, msg, off, compression, compress)
+	_, ok := typeToUnpack[rr.Header().Rrtype]
+	switch ok {
+	case true:
+		// Shortcut reflection, `pack' needs to be added to the RR interface so we can just do this:
+		// off1, err = t.pack(msg, off, compression, compress)
+		// TODO(miek): revert the logic and make a blacklist for types that still use reflection. Kill
+		// typeToUnpack and just generate all the pack and unpack functions even though we don't use
+		// them for all types (yet).
+		switch t := rr.(type) {
+		case *RR_Header:
+			// we can be called with an empty RR, consisting only out of the header, see update_test.go's
+			// TestDynamicUpdateZeroRdataUnpack for an example. This is OK as RR_Header also implements the RR interface.
+			off1, err = t.pack(msg, off, compression, compress)
+		case *ANY:
+			// Also "weird" setup, see (again) update_test.go's TestRemoveRRset, where the Rrtype is 1 but the type is *ANY.
+			off1, err = t.pack(msg, off, compression, compress)
+		case *A:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *AAAA:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *CNAME:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *DNAME:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *HINFO:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *L32:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *LOC:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MB:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MD:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MF:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MG:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *MX:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *NID:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *NS:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *PTR:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *RP:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *SRV:
+			off1, err = t.pack(msg, off, compression, compress)
+		case *DNSKEY:
+			off1, err = t.pack(msg, off, compression, compress)
+		}
+	default:
+		off1, err = packStructCompress(rr, msg, off, compression, compress)
+	}
 	if err != nil {
 		return len(msg), err
 	}
@@ -1385,21 +1403,27 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	// unpack just the header, to find the rr type and length
-	var h RR_Header
 	off0 := off
-	if off, err = UnpackStruct(&h, msg, off); err != nil {
+	h, off, msg, err := unpackHeader(msg, off)
+	if err != nil {
 		return nil, len(msg), err
 	}
 	end := off + int(h.Rdlength)
-	// make an rr of that type and re-unpack.
-	mk, known := TypeToRR[h.Rrtype]
-	if !known {
-		rr = new(RFC3597)
-	} else {
-		rr = mk()
+
+	fn, ok := typeToUnpack[h.Rrtype]
+	switch ok {
+	case true:
+		// Shortcut reflection.
+		rr, off, err = fn(h, msg, off)
+	default:
+		mk, known := TypeToRR[h.Rrtype]
+		if !known {
+			rr = new(RFC3597)
+		} else {
+			rr = mk()
+		}
+		off, err = UnpackStruct(rr, msg, off0)
 	}
-	off, err = UnpackStruct(rr, msg, off0)
 	if off != end {
 		return &h, end, &Error{err: "bad rdlength"}
 	}
@@ -1430,31 +1454,6 @@ func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) 
 		dst = nil
 	}
 	return dst, off, err
-}
-
-// Reverse a map
-func reverseInt8(m map[uint8]string) map[string]uint8 {
-	n := make(map[string]uint8)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
-
-func reverseInt16(m map[uint16]string) map[string]uint16 {
-	n := make(map[string]uint16)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
-
-func reverseInt(m map[int]string) map[string]int {
-	n := make(map[string]int)
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
 }
 
 // Convert a MsgHdr to a string, with dig-like headers:
@@ -1510,8 +1509,11 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small
 // a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
-	var dh Header
-	var compression map[string]int
+	var (
+		dh          Header
+		compression map[string]int
+	)
+
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
 	}
@@ -1579,12 +1581,12 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, err = packStructCompress(&dh, msg, off, compression, dns.Compress)
+	off, err = dh.pack(msg, off, compression, dns.Compress)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i < len(question); i++ {
-		off, err = packStructCompress(&question[i], msg, off, compression, dns.Compress)
+		off, err = question[i].pack(msg, off, compression, dns.Compress)
 		if err != nil {
 			return nil, err
 		}
@@ -1612,12 +1614,17 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 // Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) (err error) {
-	// Header.
-	var dh Header
-	off := 0
-	if off, err = UnpackStruct(&dh, msg, off); err != nil {
+	var (
+		dh  Header
+		off int
+	)
+	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
 		return err
 	}
+	if off == len(msg) {
+		return ErrTruncated
+	}
+
 	dns.Id = dh.Id
 	dns.Response = (dh.Bits & _QR) != 0
 	dns.Opcode = int(dh.Bits>>11) & 0xF
@@ -1633,10 +1640,10 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	// Optimistically use the count given to us in the header
 	dns.Question = make([]Question, 0, int(dh.Qdcount))
 
-	var q Question
 	for i := 0; i < int(dh.Qdcount); i++ {
 		off1 := off
-		off, err = UnpackStruct(&q, msg, off)
+		var q Question
+		q, off, err = unpackQuestion(msg, off)
 		if err != nil {
 			// Even if Truncated is set, we only will set ErrTruncated if we
 			// actually got the questions
@@ -1662,6 +1669,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 	// The header counts might have been wrong so we need to update it
 	dh.Arcount = uint16(len(dns.Extra))
+
 	if off != len(msg) {
 		// TODO(miek) make this an error?
 		// use PackOpt to let people tell how detailed the error reporting should be?
@@ -1735,6 +1743,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Answer); i++ {
+		if dns.Answer[i] == nil {
+			continue
+		}
 		l += dns.Answer[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
@@ -1750,6 +1761,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Ns); i++ {
+		if dns.Ns[i] == nil {
+			continue
+		}
 		l += dns.Ns[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
@@ -1765,6 +1779,9 @@ func (dns *Msg) Len() int {
 		}
 	}
 	for i := 0; i < len(dns.Extra); i++ {
+		if dns.Extra[i] == nil {
+			continue
+		}
 		l += dns.Extra[i].len()
 		if dns.Compress {
 			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
@@ -1954,4 +1971,123 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	}
 
 	return r1
+}
+
+func (q *Question) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := PackDomainName(q.Name, msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(q.Qtype, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(q.Qclass, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func unpackQuestion(msg []byte, off int) (Question, int, error) {
+	var (
+		q   Question
+		err error
+	)
+	q.Name, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return q, off, err
+	}
+	if off == len(msg) {
+		return q, off, nil
+	}
+	q.Qtype, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return q, off, err
+	}
+	if off == len(msg) {
+		return q, off, nil
+	}
+	q.Qclass, off, err = unpackUint16(msg, off)
+	if off == len(msg) {
+		return q, off, nil
+	}
+	return q, off, err
+}
+
+func (dh *Header) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := packUint16(dh.Id, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Bits, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Qdcount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Ancount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Nscount, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(dh.Arcount, msg, off)
+	return off, err
+}
+
+func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
+	var (
+		dh  Header
+		err error
+	)
+	dh.Id, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Bits, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Qdcount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Ancount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Nscount, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return dh, off, err
+	}
+	dh.Arcount, off, err = unpackUint16(msg, off)
+	return dh, off, err
+}
+
+// Which types have type specific unpack functions.
+var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
+	TypeAAAA:   unpackAAAA,
+	TypeA:      unpackA,
+	TypeCNAME:  unpackCNAME,
+	TypeDNAME:  unpackDNAME,
+	TypeL32:    unpackL32,
+	TypeLOC:    unpackLOC,
+	TypeMB:     unpackMB,
+	TypeMD:     unpackMD,
+	TypeMF:     unpackMF,
+	TypeMG:     unpackMG,
+	TypeMR:     unpackMR,
+	TypeMX:     unpackMX,
+	TypeNID:    unpackNID,
+	TypeNS:     unpackNS,
+	TypePTR:    unpackPTR,
+	TypeRP:     unpackRP,
+	TypeSRV:    unpackSRV,
+	TypeHINFO:  unpackHINFO,
+	TypeDNSKEY: unpackDNSKEY,
 }

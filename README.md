@@ -150,11 +150,3 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * `NSD`
 * `Net::DNS`
 * `GRONG`
-
-## TODO
-
-* privatekey.Precompute() when signing?
-* Last remaining RRs: APL, ATMA, A6, NSAP and NXT.
-* Missing in parsing: ISDN, UNSPEC, NSAP and ATMA.
-* NSEC(3) cover/match/closest enclose.
-* Replies with TC bit are not parsed to the end.
