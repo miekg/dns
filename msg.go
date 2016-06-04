@@ -14,7 +14,6 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
-	"log"
 	"math/big"
 	"math/rand"
 	"net"
@@ -28,9 +27,8 @@ func init() {
 	buf := make([]byte, 8)
 	_, err := crand.Read(buf)
 	if err != nil {
-		// Failed to read from cryptographic source, warn user and
-		// fallback to default initial seed (1) by returning early
-		log.Printf("Failed to seed math/rand with crypto/rand.Read for message ID generation: %s\n", err)
+		// Failed to read from cryptographic source, fallback to default initial
+		// seed (1) by returning early
 		return
 	}
 	seed := binary.BigEndian.Uint64(buf)
