@@ -48,7 +48,7 @@ type RR_Header struct {
 // Header returns itself. This is here to make RR_Header implement the RR interface.
 func (h *RR_Header) Header() *RR_Header { return h }
 
-// Just to imlement the RR interface.
+// Just to implement the RR interface.
 func (h *RR_Header) copy() RR { return nil }
 
 func (h *RR_Header) copyHeader() *RR_Header {
