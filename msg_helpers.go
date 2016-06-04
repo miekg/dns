@@ -397,3 +397,20 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	off += len(h)
 	return off, nil
 }
+
+func unpackStringTxt(msg []byte, off int) ([]string, int, error) {
+	txt, off, err := unpackTxt(msg, off)
+	if err != nil {
+		return nil, len(msg), err
+	}
+	return txt, off, nil
+}
+
+func packStringTxt(s []string, msg []byte, off int) (int, error) {
+	txtTmp := make([]byte, 256*4+1) // If the whole string consists out of \DDD we need this many.
+	off, err := packTxt(s, msg, off, txtTmp)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}

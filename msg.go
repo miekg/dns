@@ -1339,56 +1339,8 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	_, ok := typeToUnpack[rr.Header().Rrtype]
 	switch ok {
 	case true:
-		// Shortcut reflection, `pack' needs to be added to the RR interface so we can just do this:
-		// off1, err = t.pack(msg, off, compression, compress)
-		// TODO(miek): revert the logic and make a blacklist for types that still use reflection. Kill
-		// typeToUnpack and just generate all the pack and unpack functions even though we don't use
-		// them for all types (yet).
-		switch t := rr.(type) {
-		case *RR_Header:
-			// we can be called with an empty RR, consisting only out of the header, see update_test.go's
-			// TestDynamicUpdateZeroRdataUnpack for an example. This is OK as RR_Header also implements the RR interface.
-			off1, err = t.pack(msg, off, compression, compress)
-		case *ANY:
-			// Also "weird" setup, see (again) update_test.go's TestRemoveRRset, where the Rrtype is 1 but the type is *ANY.
-			off1, err = t.pack(msg, off, compression, compress)
-		case *A:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *AAAA:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *CNAME:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *DNAME:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *HINFO:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *L32:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *LOC:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *MB:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *MD:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *MF:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *MG:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *MX:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *NID:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *NS:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *PTR:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *RP:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *SRV:
-			off1, err = t.pack(msg, off, compression, compress)
-		case *DNSKEY:
-			off1, err = t.pack(msg, off, compression, compress)
-		}
+		off1, err = rr.pack(msg, off, compression, compress)
+		// TODO(miek): revert the logic and make a blacklist for types that still use reflection. Kill typeToUnpack.
 	default:
 		off1, err = packStructCompress(rr, msg, off, compression, compress)
 	}
