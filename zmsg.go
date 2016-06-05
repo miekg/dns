@@ -1221,24 +1221,6 @@ func (rr *URI) pack(msg []byte, off int, compression map[string]int, compress bo
 	return off, nil
 }
 
-func (rr *WKS) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return off, err
-	}
-	headerEnd := off
-	off, err = packDataA(rr.Address, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint8(rr.Protocol, msg, off)
-	if err != nil {
-		return off, err
-	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
-	return off, nil
-}
-
 func (rr *X25) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
@@ -3031,34 +3013,6 @@ func unpackURI(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	rr.Weight, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	return rr, off, err
-}
-
-func unpackWKS(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if noRdata(h) {
-		return nil, off, nil
-	}
-	var err error
-	rdStart := off
-	_ = rdStart
-
-	rr := new(WKS)
-	rr.Hdr = h
-
-	rr.Address, off, err = unpackDataA(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.Protocol, off, err = unpackUint8(msg, off)
 	if err != nil {
 		return rr, off, err
 	}

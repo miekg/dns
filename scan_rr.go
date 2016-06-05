@@ -1443,64 +1443,6 @@ func setEUI64(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setWKS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(WKS)
-	rr.Hdr = h
-
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
-	}
-	rr.Address = net.ParseIP(l.token)
-	if rr.Address == nil || l.err {
-		return nil, &ParseError{f, "bad WKS Address", l}, ""
-	}
-
-	<-c // zBlank
-	l = <-c
-	proto := "tcp"
-	i, e := strconv.Atoi(l.token)
-	if e != nil || l.err {
-		return nil, &ParseError{f, "bad WKS Protocol", l}, ""
-	}
-	rr.Protocol = uint8(i)
-	switch rr.Protocol {
-	case 17:
-		proto = "udp"
-	case 6:
-		proto = "tcp"
-	default:
-		return nil, &ParseError{f, "bad WKS Protocol", l}, ""
-	}
-
-	<-c
-	l = <-c
-	rr.BitMap = make([]uint16, 0)
-	var (
-		k   int
-		err error
-	)
-	for l.value != zNewline && l.value != zEOF {
-		switch l.value {
-		case zBlank:
-			// Ok
-		case zString:
-			if k, err = net.LookupPort(proto, l.token); err != nil {
-				i, e := strconv.Atoi(l.token) // If a number use that
-				if e != nil {
-					return nil, &ParseError{f, "bad WKS BitMap", l}, ""
-				}
-				rr.BitMap = append(rr.BitMap, uint16(i))
-			}
-			rr.BitMap = append(rr.BitMap, uint16(k))
-		default:
-			return nil, &ParseError{f, "bad WKS BitMap", l}, ""
-		}
-		l = <-c
-	}
-	return rr, nil, l.comment
-}
-
 func setSSHFP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(SSHFP)
 	rr.Hdr = h
@@ -2265,6 +2207,5 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeUID:        {setUID, false},
 	TypeUINFO:      {setUINFO, true},
 	TypeURI:        {setURI, true},
-	TypeWKS:        {setWKS, true},
 	TypeX25:        {setX25, false},
 }

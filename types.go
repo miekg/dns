@@ -35,7 +35,6 @@ const (
 	TypeMG         uint16 = 8
 	TypeMR         uint16 = 9
 	TypeNULL       uint16 = 10
-	TypeWKS        uint16 = 11
 	TypePTR        uint16 = 12
 	TypeHINFO      uint16 = 13
 	TypeMINFO      uint16 = 14
@@ -1127,31 +1126,6 @@ type NINFO struct {
 }
 
 func (rr *NINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.ZSData) }
-
-type WKS struct {
-	Hdr      RR_Header
-	Address  net.IP `dns:"a"`
-	Protocol uint8
-	BitMap   []uint16 `dns:"wks"`
-}
-
-func (rr *WKS) len() int {
-	// TODO: this is missing something...
-	return rr.Hdr.len() + net.IPv4len + 1
-}
-
-func (rr *WKS) String() (s string) {
-	s = rr.Hdr.String()
-	if rr.Address != nil {
-		s += rr.Address.String()
-	}
-	// TODO(miek): missing protocol here, see /etc/protocols
-	for i := 0; i < len(rr.BitMap); i++ {
-		// should lookup the port
-		s += " " + strconv.Itoa(int(rr.BitMap[i]))
-	}
-	return s
-}
 
 type NID struct {
 	Hdr        RR_Header

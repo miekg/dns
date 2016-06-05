@@ -334,9 +334,8 @@ func TestNoRdataPack(t *testing.T) {
 func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {
-		if typ == TypeSOA || typ == TypeTSIG || typ == TypeWKS {
+		if typ == TypeSOA || typ == TypeTSIG {
 			// SOA, TSIG will not be seen (like this) in dyn. updates?
-			// WKS is an bug, but...deprecated record.
 			continue
 		}
 		r := fn()
