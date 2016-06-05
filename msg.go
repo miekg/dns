@@ -11,14 +11,29 @@ package dns
 //go:generate go run msg_generate.go
 
 import (
+	crand "crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"math/big"
 	"math/rand"
 	"net"
 	"reflect"
 	"strconv"
-	"time"
 )
+
+func init() {
+	// Initialize default math/rand source using crypto/rand to provide better
+	// security without the performance trade-off.
+	buf := make([]byte, 8)
+	_, err := crand.Read(buf)
+	if err != nil {
+		// Failed to read from cryptographic source, fallback to default initial
+		// seed (1) by returning early
+		return
+	}
+	seed := binary.BigEndian.Uint64(buf)
+	rand.Seed(int64(seed))
+}
 
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
@@ -1911,7 +1926,8 @@ func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
 // id returns a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
 func id() uint16 {
-	return uint16(rand.Int()) ^ uint16(time.Now().Nanosecond())
+	id32 := rand.Uint32()
+	return uint16(id32)
 }
 
 // Copy returns a new RR which is a deep-copy of r.
