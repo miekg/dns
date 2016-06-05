@@ -203,3 +203,9 @@ func BenchmarkUnpackMsg(b *testing.B) {
 		_ = msg.Unpack(msgBuf)
 	}
 }
+
+func BenchmarkIdGeneration(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = id()
+	}
+}
