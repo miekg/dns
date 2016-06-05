@@ -34,6 +34,8 @@ type RR interface {
 	copy() RR
 	// len returns the length (in octets) of the uncompressed RR in wire format.
 	len() int
+	// pack packs an RR into wire format.
+	pack([]byte, int, map[string]int, bool) (int, error)
 }
 
 // RR_Header is the header all DNS resource records share.

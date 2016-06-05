@@ -65,6 +65,14 @@ func (r *PrivateRR) copy() RR {
 	}
 	return rr
 }
+func (r *PrivateRR) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	n, err := r.Data.Pack(msg[off:])
+	if err != nil {
+		return len(msg), err
+	}
+	off += n
+	return off, nil
+}
 
 // PrivateHandle registers a private resource record type. It requires
 // string and numeric representation of private RR type and generator function as argument.
