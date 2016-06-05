@@ -76,7 +76,6 @@ var TypeToRR = map[uint16]func() RR{
 	TypeUID:        func() RR { return new(UID) },
 	TypeUINFO:      func() RR { return new(UINFO) },
 	TypeURI:        func() RR { return new(URI) },
-	TypeWKS:        func() RR { return new(WKS) },
 	TypeX25:        func() RR { return new(X25) },
 }
 
@@ -158,7 +157,6 @@ var TypeToString = map[uint16]string{
 	TypeUINFO:      "UINFO",
 	TypeUNSPEC:     "UNSPEC",
 	TypeURI:        "URI",
-	TypeWKS:        "WKS",
 	TypeX25:        "X25",
 	TypeNSAPPTR:    "NSAP-PTR",
 }
@@ -231,7 +229,6 @@ func (rr *TXT) Header() *RR_Header        { return &rr.Hdr }
 func (rr *UID) Header() *RR_Header        { return &rr.Hdr }
 func (rr *UINFO) Header() *RR_Header      { return &rr.Hdr }
 func (rr *URI) Header() *RR_Header        { return &rr.Hdr }
-func (rr *WKS) Header() *RR_Header        { return &rr.Hdr }
 func (rr *X25) Header() *RR_Header        { return &rr.Hdr }
 
 // len() functions
@@ -831,11 +828,6 @@ func (rr *UINFO) copy() RR {
 }
 func (rr *URI) copy() RR {
 	return &URI{*rr.Hdr.copyHeader(), rr.Priority, rr.Weight, rr.Target}
-}
-func (rr *WKS) copy() RR {
-	BitMap := make([]uint16, len(rr.BitMap))
-	copy(BitMap, rr.BitMap)
-	return &WKS{*rr.Hdr.copyHeader(), copyIP(rr.Address), rr.Protocol, BitMap}
 }
 func (rr *X25) copy() RR {
 	return &X25{*rr.Hdr.copyHeader(), rr.PSDNAddress}

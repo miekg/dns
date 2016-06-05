@@ -23,7 +23,6 @@ var skipLen = map[string]struct{}{
 	"NSEC":     {},
 	"NSEC3":    {},
 	"OPT":      {},
-	"WKS":      {},
 	"IPSECKEY": {},
 }
 
@@ -105,7 +104,7 @@ func main() {
 			continue
 		}
 		name := strings.TrimPrefix(o.Name(), "Type")
-		if name == "PrivateRR" {
+		if name == "PrivateRR" || name == "WKS" {
 			continue
 		}
 		numberedTypes = append(numberedTypes, name)
@@ -121,7 +120,7 @@ func main() {
 		if st, _ := getTypeStruct(o.Type(), scope); st == nil {
 			continue
 		}
-		if name == "PrivateRR" {
+		if name == "PrivateRR" || name == "WKS" {
 			continue
 		}
 

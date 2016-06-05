@@ -663,26 +663,6 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					msg[off] = byte(fv.Index(j).Uint())
 					off++
 				}
-			case `dns:"wks"`:
-				// TODO(miek): this is wrong should be lenrd
-				if off == lenmsg {
-					break // dyn. updates
-				}
-				if val.Field(i).Len() == 0 {
-					break
-				}
-				off1 := off
-				for j := 0; j < val.Field(i).Len(); j++ {
-					serv := int(fv.Index(j).Uint())
-					if off+serv/8+1 > len(msg) {
-						return len(msg), &Error{err: "overflow packing wks"}
-					}
-					msg[off+serv/8] |= byte(1 << (7 - uint(serv%8)))
-					if off+serv/8+1 > off1 {
-						off1 = off + serv/8 + 1
-					}
-				}
-				off = off1
 			case `dns:"nsec"`: // NSEC/NSEC3
 				// This is the uint16 type bitmap
 				if val.Field(i).Len() == 0 {
@@ -1050,44 +1030,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
 					msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}))
 				off += net.IPv6len
-			case `dns:"wks"`:
-				// Rest of the record is the bitmap
-				var serv []uint16
-				j := 0
-				for off < lenmsg {
-					if off+1 > lenmsg {
-						return lenmsg, &Error{err: "overflow unpacking wks"}
-					}
-					b := msg[off]
-					// Check the bits one by one, and set the type
-					if b&0x80 == 0x80 {
-						serv = append(serv, uint16(j*8+0))
-					}
-					if b&0x40 == 0x40 {
-						serv = append(serv, uint16(j*8+1))
-					}
-					if b&0x20 == 0x20 {
-						serv = append(serv, uint16(j*8+2))
-					}
-					if b&0x10 == 0x10 {
-						serv = append(serv, uint16(j*8+3))
-					}
-					if b&0x8 == 0x8 {
-						serv = append(serv, uint16(j*8+4))
-					}
-					if b&0x4 == 0x4 {
-						serv = append(serv, uint16(j*8+5))
-					}
-					if b&0x2 == 0x2 {
-						serv = append(serv, uint16(j*8+6))
-					}
-					if b&0x1 == 0x1 {
-						serv = append(serv, uint16(j*8+7))
-					}
-					j++
-					off++
-				}
-				fv.Set(reflect.ValueOf(serv))
 			case `dns:"nsec"`: // NSEC/NSEC3
 				if off == len(msg) {
 					break
