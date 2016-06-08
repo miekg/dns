@@ -167,9 +167,9 @@ func TestClientEDNS0Local(t *testing.T) {
 	m.Extra = append(m.Extra, o)
 
 	c := new(Client)
-	r, _, e := c.Exchange(m, addrstr)
-	if e != nil {
-		t.Logf("failed to exchange: %s", e.Error())
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Logf("failed to exchange: %s", err)
 		t.Fail()
 	}
 
