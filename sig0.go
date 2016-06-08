@@ -152,9 +152,9 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if offset+4+4 >= buflen {
 		return &Error{err: "overflow unpacking signed message"}
 	}
-	expire := uint32(buf[offset])<<24 | uint32(buf[offset+1])<<16 | uint32(buf[offset+2])<<8 | uint32(buf[offset+3])
+	expire := binary.BigEndian.Uint32(buf[offset:])
 	offset += 4
-	incept := uint32(buf[offset])<<24 | uint32(buf[offset+1])<<16 | uint32(buf[offset+2])<<8 | uint32(buf[offset+3])
+	incept := binary.BigEndian.Uint32(buf[offset:])
 	offset += 4
 	now := uint32(time.Now().Unix())
 	if now < incept || now > expire {

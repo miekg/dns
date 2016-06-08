@@ -1138,7 +1138,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 			if off+4 > lenmsg {
 				return lenmsg, &Error{err: "overflow unpacking uint32"}
 			}
-			fv.SetUint(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3])))
+			fv.SetUint(uint64(binary.BigEndian.Uint32(msg[off:])))
 			off += 4
 		case reflect.Uint64:
 			if off == lenmsg {
@@ -1149,8 +1149,7 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 				if off+8 > lenmsg {
 					return lenmsg, &Error{err: "overflow unpacking uint64"}
 				}
-				fv.SetUint(uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
-					uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
+				fv.SetUint(binary.BigEndian.Uint64(msg[off:]))
 				off += 8
 			case `dns:"uint48"`:
 				// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)

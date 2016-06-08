@@ -264,24 +264,14 @@ func unpackUint64(msg []byte, off int) (i uint64, off1 int, err error) {
 	if off+8 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
 	}
-	i = (uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
-		uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
-	off += 8
-	return i, off, nil
+	return binary.BigEndian.Uint64(msg[off:]), off + 8, nil
 }
 
 func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64"}
 	}
-	msg[off] = byte(i >> 56)
-	msg[off+1] = byte(i >> 48)
-	msg[off+2] = byte(i >> 40)
-	msg[off+3] = byte(i >> 32)
-	msg[off+4] = byte(i >> 24)
-	msg[off+5] = byte(i >> 16)
-	msg[off+6] = byte(i >> 8)
-	msg[off+7] = byte(i)
+	binary.BigEndian.PutUint64(msg[off:], i)
 	off += 8
 	return off, nil
 }

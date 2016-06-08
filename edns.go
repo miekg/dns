@@ -340,10 +340,7 @@ func (e *EDNS0_UL) String() string { return strconv.FormatUint(uint64(e.Lease), 
 // Copied: http://golang.org/src/pkg/net/dnsmsg.go
 func (e *EDNS0_UL) pack() ([]byte, error) {
 	b := make([]byte, 4)
-	b[0] = byte(e.Lease >> 24)
-	b[1] = byte(e.Lease >> 16)
-	b[2] = byte(e.Lease >> 8)
-	b[3] = byte(e.Lease)
+	binary.BigEndian.PutUint32(b, e.Lease)
 	return b, nil
 }
 
@@ -351,7 +348,7 @@ func (e *EDNS0_UL) unpack(b []byte) error {
 	if len(b) < 4 {
 		return ErrBuf
 	}
-	e.Lease = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+	e.Lease = binary.BigEndian.Uint32(b)
 	return nil
 }
 
@@ -482,7 +479,7 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	if len(b) < 4 {
 		return ErrBuf
 	}
-	e.Expire = uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+	e.Expire = binary.BigEndian.Uint32(b)
 	return nil
 }
 
