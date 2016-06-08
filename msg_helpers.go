@@ -18,7 +18,7 @@ func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv4len > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking a"}
 	}
-	a := net.IP(msg[off : off+net.IPv4len])
+	a := append(make(net.IP, 0, net.IPv4len), msg[off:off+net.IPv4len]...)
 	off += net.IPv4len
 	return a, off, nil
 }
@@ -44,7 +44,7 @@ func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv6len > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking aaaa"}
 	}
-	aaaa := net.IP(msg[off : off+net.IPv6len])
+	aaaa := append(make(net.IP, 0, net.IPv6len), msg[off:off+net.IPv6len]...)
 	off += net.IPv6len
 	return aaaa, off, nil
 }
