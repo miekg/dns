@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"net"
 	"strconv"
@@ -186,20 +187,6 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
-func unpackUint16Msg(msg []byte, off int) (uint16, int) {
-	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
-}
-
-func packUint16Msg(i uint16) (byte, byte) { return byte(i >> 8), byte(i) }
-
-func unpackUint32Msg(msg []byte, off int) (uint32, int) {
-	return uint32(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]))), off + 4
-}
-
-func packUint32Msg(i uint32) (byte, byte, byte, byte) {
-	return byte(i >> 24), byte(i >> 16), byte(i >> 8), byte(i)
-}
-
 // dynamicUpdate returns true if the Rdlength is zero.
 func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
 
@@ -222,15 +209,14 @@ func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
 	if off+2 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
 	}
-	i, off = unpackUint16Msg(msg, off)
-	return i, off, nil
+	return binary.BigEndian.Uint16(msg[off:]), off + 2, nil
 }
 
 func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
 	}
-	msg[off], msg[off+1] = packUint16Msg(i)
+	binary.BigEndian.PutUint16(msg[off:], i)
 	return off + 2, nil
 }
 
@@ -238,15 +224,14 @@ func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
 	if off+4 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
 	}
-	i, off = unpackUint32Msg(msg, off)
-	return i, off, nil
+	return binary.BigEndian.Uint32(msg[off:]), off + 4, nil
 }
 
 func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint32"}
 	}
-	msg[off], msg[off+1], msg[off+2], msg[off+3] = packUint32Msg(i)
+	binary.BigEndian.PutUint32(msg[off:], i)
 	return off + 4, nil
 }
 
@@ -279,24 +264,14 @@ func unpackUint64(msg []byte, off int) (i uint64, off1 int, err error) {
 	if off+8 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
 	}
-	i = (uint64(uint64(msg[off])<<56 | uint64(msg[off+1])<<48 | uint64(msg[off+2])<<40 |
-		uint64(msg[off+3])<<32 | uint64(msg[off+4])<<24 | uint64(msg[off+5])<<16 | uint64(msg[off+6])<<8 | uint64(msg[off+7])))
-	off += 8
-	return i, off, nil
+	return binary.BigEndian.Uint64(msg[off:]), off + 8, nil
 }
 
 func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64"}
 	}
-	msg[off] = byte(i >> 56)
-	msg[off+1] = byte(i >> 48)
-	msg[off+2] = byte(i >> 40)
-	msg[off+3] = byte(i >> 32)
-	msg[off+4] = byte(i >> 24)
-	msg[off+5] = byte(i >> 16)
-	msg[off+6] = byte(i >> 8)
-	msg[off+7] = byte(i)
+	binary.BigEndian.PutUint64(msg[off:], i)
 	off += 8
 	return off, nil
 }

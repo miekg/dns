@@ -5,6 +5,7 @@ package dns
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/binary"
 	"io"
 	"net"
 	"sync"
@@ -615,7 +616,7 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 		}
 		return nil, ErrShortRead
 	}
-	length, _ := unpackUint16Msg(l, 0)
+	length := binary.BigEndian.Uint16(l)
 	if length == 0 {
 		return nil, ErrShortRead
 	}
@@ -690,7 +691,7 @@ func (w *response) Write(m []byte) (int, error) {
 			return 0, &Error{err: "message too large"}
 		}
 		l := make([]byte, 2, 2+lm)
-		l[0], l[1] = packUint16Msg(uint16(lm))
+		binary.BigEndian.PutUint16(l, uint16(lm))
 		m = append(l, m...)
 
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
