@@ -403,20 +403,17 @@ Loop:
 	return string(s), off1, nil
 }
 
-func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
+func packTxt(txt []string, msg []byte, offset int) (int, error) {
 	var err error
+	if offset >= len(msg) {
+		return offset, ErrBuf
+	}
 	if len(txt) == 0 {
-		if offset >= len(msg) {
-			return offset, ErrBuf
-		}
 		msg[offset] = 0
 		return offset, nil
 	}
 	for i := range txt {
-		if len(txt[i]) > len(tmp) {
-			return offset, ErrBuf
-		}
-		offset, err = packTxtString(txt[i], msg, offset, tmp)
+		offset, err = packTxtString(txt[i], msg, offset)
 		if err != nil {
 			return offset, err
 		}
@@ -424,14 +421,13 @@ func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 	return offset, err
 }
 
-func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
-	lenByteOffset := offset
-	if offset >= len(msg) || len(s) > len(tmp) {
+func packTxtString(s string, msg []byte, offset int) (int, error) {
+	if offset >= len(msg) {
 		return offset, ErrBuf
 	}
+	lenByteOffset := offset
 	offset++
-	bs := tmp[:len(s)]
-	copy(bs, s)
+	bs := []byte(s)
 	for i := 0; i < len(bs); i++ {
 		if len(msg) <= offset {
 			return offset, ErrBuf
@@ -551,7 +547,6 @@ func unpackTxtString(msg []byte, offset int) (string, int, error) {
 // Pack a reflect.StructValue into msg.  Struct members can only be uint8, uint16, uint32, string,
 // slices and other (often anonymous) structs.
 func packStructValue(val reflect.Value, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	var txtTmp []byte
 	lenmsg := len(msg)
 	numfield := val.NumField()
 	for i := 0; i < numfield; i++ {
@@ -588,10 +583,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 					}
 				}
 			case `dns:"txt"`:
-				if txtTmp == nil {
-					txtTmp = make([]byte, 256*4+1)
-				}
-				off, err = packTxt(fv.Interface().([]string), msg, off, txtTmp)
+				off, err = packTxt(fv.Interface().([]string), msg, off)
 				if err != nil {
 					return lenmsg, err
 				}
@@ -830,10 +822,7 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case `dns:"txt"`:
 				fallthrough
 			case "":
-				if txtTmp == nil {
-					txtTmp = make([]byte, 256*4+1)
-				}
-				off, err = packTxtString(fv.String(), msg, off, txtTmp)
+				off, err = packTxtString(fv.String(), msg, off)
 				if err != nil {
 					return lenmsg, err
 				}
