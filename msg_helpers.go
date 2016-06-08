@@ -4,8 +4,8 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"net"
-	"strconv"
 )
 
 // helper functions called from the generated zmsg.go
@@ -18,7 +18,7 @@ func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv4len > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking a"}
 	}
-	a := net.IPv4(msg[off], msg[off+1], msg[off+2], msg[off+3])
+	a := net.IP(msg[off : off+net.IPv4len])
 	off += net.IPv4len
 	return a, off, nil
 }
@@ -29,17 +29,8 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 		return len(msg), &Error{err: "overflow packing a"}
 	}
 	switch len(a) {
-	case net.IPv6len:
-		msg[off] = a[12]
-		msg[off+1] = a[13]
-		msg[off+2] = a[14]
-		msg[off+3] = a[15]
-		off += net.IPv4len
-	case net.IPv4len:
-		msg[off] = a[0]
-		msg[off+1] = a[1]
-		msg[off+2] = a[2]
-		msg[off+3] = a[3]
+	case net.IPv4len, net.IPv6len:
+		copy(msg[off:], a.To4())
 		off += net.IPv4len
 	case 0:
 		// Allowed, for dynamic updates.
@@ -53,9 +44,7 @@ func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv6len > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking aaaa"}
 	}
-	aaaa := net.IP{msg[off], msg[off+1], msg[off+2], msg[off+3], msg[off+4],
-		msg[off+5], msg[off+6], msg[off+7], msg[off+8], msg[off+9], msg[off+10],
-		msg[off+11], msg[off+12], msg[off+13], msg[off+14], msg[off+15]}
+	aaaa := net.IP(msg[off : off+net.IPv6len])
 	off += net.IPv6len
 	return aaaa, off, nil
 }
@@ -67,22 +56,7 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 
 	switch len(aaaa) {
 	case net.IPv6len:
-		msg[off] = aaaa[0]
-		msg[off+1] = aaaa[1]
-		msg[off+2] = aaaa[2]
-		msg[off+3] = aaaa[3]
-		msg[off+4] = aaaa[4]
-		msg[off+5] = aaaa[5]
-		msg[off+6] = aaaa[6]
-		msg[off+7] = aaaa[7]
-		msg[off+8] = aaaa[8]
-		msg[off+9] = aaaa[9]
-		msg[off+10] = aaaa[10]
-		msg[off+11] = aaaa[11]
-		msg[off+12] = aaaa[12]
-		msg[off+13] = aaaa[13]
-		msg[off+14] = aaaa[14]
-		msg[off+15] = aaaa[15]
+		copy(msg[off:], aaaa)
 		off += net.IPv6len
 	case 0:
 		// Allowed, dynamic updates.
@@ -314,23 +288,11 @@ func unpackString(msg []byte, off int) (string, int, error) {
 		switch b {
 		case '"', '\\':
 			s = append(s, '\\', b)
-		case '\t':
-			s = append(s, '\t')
-		case '\r':
-			s = append(s, '\r')
-		case '\n':
-			s = append(s, '\n')
+		case '\t', '\r', '\n':
+			s = append(s, b)
 		default:
 			if b < 32 || b > 127 { // unprintable
-				var buf [3]byte
-				bufs := strconv.AppendInt(buf[:0], int64(b), 10)
-				s = append(s, '\\')
-				for i := 0; i < 3-len(bufs); i++ {
-					s = append(s, '0')
-				}
-				for _, r := range bufs {
-					s = append(s, r)
-				}
+				s = append(s, fmt.Sprintf("\\%03d", b)...)
 			} else {
 				s = append(s, b)
 			}
