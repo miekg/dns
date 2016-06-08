@@ -70,8 +70,7 @@ func TestNormalizedString(t *testing.T) {
 	for tc, expected := range tests {
 		n := normalizedString(tc)
 		if n != expected {
-			t.Logf("expected %s, got %s", expected, n)
-			t.Fail()
+			t.Errorf("expected %s, got %s", expected, n)
 		}
 	}
 }
