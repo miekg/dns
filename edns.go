@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"net"
@@ -213,7 +214,7 @@ func (e *EDNS0_SUBNET) Option() uint16 {
 
 func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	b := make([]byte, 4)
-	b[0], b[1] = packUint16Msg(e.Family)
+	binary.BigEndian.PutUint16(b[0:], e.Family)
 	b[2] = e.SourceNetmask
 	b[3] = e.SourceScope
 	switch e.Family {
@@ -247,7 +248,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	if len(b) < 4 {
 		return ErrBuf
 	}
-	e.Family, _ = unpackUint16Msg(b, 0)
+	e.Family = binary.BigEndian.Uint16(b)
 	e.SourceNetmask = b[2]
 	e.SourceScope = b[3]
 	switch e.Family {
@@ -369,21 +370,11 @@ func (e *EDNS0_LLQ) Option() uint16 { return EDNS0LLQ }
 
 func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	b := make([]byte, 18)
-	b[0], b[1] = packUint16Msg(e.Version)
-	b[2], b[3] = packUint16Msg(e.Opcode)
-	b[4], b[5] = packUint16Msg(e.Error)
-	b[6] = byte(e.Id >> 56)
-	b[7] = byte(e.Id >> 48)
-	b[8] = byte(e.Id >> 40)
-	b[9] = byte(e.Id >> 32)
-	b[10] = byte(e.Id >> 24)
-	b[11] = byte(e.Id >> 16)
-	b[12] = byte(e.Id >> 8)
-	b[13] = byte(e.Id)
-	b[14] = byte(e.LeaseLife >> 24)
-	b[15] = byte(e.LeaseLife >> 16)
-	b[16] = byte(e.LeaseLife >> 8)
-	b[17] = byte(e.LeaseLife)
+	binary.BigEndian.PutUint16(b[0:], e.Version)
+	binary.BigEndian.PutUint16(b[2:], e.Opcode)
+	binary.BigEndian.PutUint16(b[4:], e.Error)
+	binary.BigEndian.PutUint64(b[6:], e.Id)
+	binary.BigEndian.PutUint32(b[14:], e.LeaseLife)
 	return b, nil
 }
 
@@ -391,12 +382,11 @@ func (e *EDNS0_LLQ) unpack(b []byte) error {
 	if len(b) < 18 {
 		return ErrBuf
 	}
-	e.Version, _ = unpackUint16Msg(b, 0)
-	e.Opcode, _ = unpackUint16Msg(b, 2)
-	e.Error, _ = unpackUint16Msg(b, 4)
-	e.Id = uint64(b[6])<<56 | uint64(b[6+1])<<48 | uint64(b[6+2])<<40 |
-		uint64(b[6+3])<<32 | uint64(b[6+4])<<24 | uint64(b[6+5])<<16 | uint64(b[6+6])<<8 | uint64(b[6+7])
-	e.LeaseLife = uint32(b[14])<<24 | uint32(b[14+1])<<16 | uint32(b[14+2])<<8 | uint32(b[14+3])
+	e.Version = binary.BigEndian.Uint16(b[0:])
+	e.Opcode = binary.BigEndian.Uint16(b[2:])
+	e.Error = binary.BigEndian.Uint16(b[4:])
+	e.Id = binary.BigEndian.Uint64(b[6:])
+	e.LeaseLife = binary.BigEndian.Uint32(b[14:])
 	return nil
 }
 

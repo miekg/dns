@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/binary"
 	"encoding/hex"
 	"hash"
 	"io"
@@ -301,8 +302,8 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		if dns.Extra[i].Header().Rrtype == TypeTSIG {
 			rr = dns.Extra[i].(*TSIG)
 			// Adjust Arcount.
-			arcount, _ := unpackUint16Msg(msg, 10)
-			msg[10], msg[11] = packUint16Msg(arcount - 1)
+			arcount := binary.BigEndian.Uint16(msg[10:])
+			binary.BigEndian.PutUint16(msg[10:], arcount-1)
 			break
 		}
 	}

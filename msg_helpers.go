@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"net"
 	"strconv"
@@ -186,20 +187,6 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
-func unpackUint16Msg(msg []byte, off int) (uint16, int) {
-	return uint16(msg[off])<<8 | uint16(msg[off+1]), off + 2
-}
-
-func packUint16Msg(i uint16) (byte, byte) { return byte(i >> 8), byte(i) }
-
-func unpackUint32Msg(msg []byte, off int) (uint32, int) {
-	return uint32(uint64(uint32(msg[off])<<24 | uint32(msg[off+1])<<16 | uint32(msg[off+2])<<8 | uint32(msg[off+3]))), off + 4
-}
-
-func packUint32Msg(i uint32) (byte, byte, byte, byte) {
-	return byte(i >> 24), byte(i >> 16), byte(i >> 8), byte(i)
-}
-
 // dynamicUpdate returns true if the Rdlength is zero.
 func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
 
@@ -222,15 +209,14 @@ func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
 	if off+2 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
 	}
-	i, off = unpackUint16Msg(msg, off)
-	return i, off, nil
+	return binary.BigEndian.Uint16(msg[off:]), off + 2, nil
 }
 
 func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
 	}
-	msg[off], msg[off+1] = packUint16Msg(i)
+	binary.BigEndian.PutUint16(msg[off:], i)
 	return off + 2, nil
 }
 
@@ -238,15 +224,14 @@ func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
 	if off+4 > len(msg) {
 		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
 	}
-	i, off = unpackUint32Msg(msg, off)
-	return i, off, nil
+	return binary.BigEndian.Uint32(msg[off:]), off + 4, nil
 }
 
 func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint32"}
 	}
-	msg[off], msg[off+1], msg[off+2], msg[off+3] = packUint32Msg(i)
+	binary.BigEndian.PutUint32(msg[off:], i)
 	return off + 4, nil
 }
 
