@@ -13,6 +13,7 @@ import (
 	_ "crypto/sha256"
 	_ "crypto/sha512"
 	"encoding/asn1"
+	"encoding/binary"
 	"encoding/hex"
 	"math/big"
 	"sort"
@@ -144,7 +145,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 		// at the base64 values. But I'm lazy.
 		modulus, _ := fromBase64([]byte(k.PublicKey))
 		if len(modulus) > 1 {
-			x, _ := unpackUint16Msg(modulus, len(modulus)-2)
+			x := binary.BigEndian.Uint16(modulus[len(modulus)-2:])
 			keytag = int(x)
 		}
 	default:
