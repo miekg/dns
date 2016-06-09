@@ -1260,9 +1260,9 @@ func TimeToString(t uint32) string {
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
 func StringToTime(s string) (uint32, error) {
-	t, e := time.Parse("20060102150405", s)
-	if e != nil {
-		return 0, e
+	t, err := time.Parse("20060102150405", s)
+	if err != nil {
+		return 0, err
 	}
 	mod := (t.Unix() / year68) - 1
 	if mod < 0 {

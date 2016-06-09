@@ -404,7 +404,6 @@ Loop:
 }
 
 func packTxt(txt []string, msg []byte, offset int) (int, error) {
-	var err error
 	if offset >= len(msg) {
 		return offset, ErrBuf
 	}
@@ -412,13 +411,14 @@ func packTxt(txt []string, msg []byte, offset int) (int, error) {
 		msg[offset] = 0
 		return offset, nil
 	}
+	var err error
 	for i := range txt {
 		offset, err = packTxtString(txt[i], msg, offset)
 		if err != nil {
 			return offset, err
 		}
 	}
-	return offset, err
+	return offset, nil
 }
 
 func packTxtString(s string, msg []byte, offset int) (int, error) {
@@ -590,8 +590,8 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			case `dns:"opt"`: // edns
 				for j := 0; j < val.Field(i).Len(); j++ {
 					element := val.Field(i).Index(j).Interface()
-					b, e := element.(EDNS0).pack()
-					if e != nil || off+3 > lenmsg {
+					b, err := element.(EDNS0).pack()
+					if err != nil || off+3 > lenmsg {
 						return lenmsg, &Error{err: "overflow packing opt"}
 					}
 					// Option code
@@ -754,9 +754,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 			default:
 				return lenmsg, &Error{"bad tag packing string: " + typefield.Tag.Get("dns")}
 			case `dns:"base64"`:
-				b64, e := fromBase64([]byte(s))
-				if e != nil {
-					return lenmsg, e
+				b64, err := fromBase64([]byte(s))
+				if err != nil {
+					return lenmsg, err
 				}
 				if off+len(b64) > lenmsg {
 					return lenmsg, &Error{err: "overflow packing base64"}
@@ -785,9 +785,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				msg[off-1] = 20
 				fallthrough
 			case `dns:"base32"`:
-				b32, e := fromBase32([]byte(s))
-				if e != nil {
-					return lenmsg, e
+				b32, err := fromBase32([]byte(s))
+				if err != nil {
+					return lenmsg, err
 				}
 				if off+len(b32) > lenmsg {
 					return lenmsg, &Error{err: "overflow packing base32"}
@@ -798,9 +798,9 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 				fallthrough
 			case `dns:"hex"`:
 				// There is no length encoded here
-				h, e := hex.DecodeString(s)
-				if e != nil {
-					return lenmsg, e
+				h, err := hex.DecodeString(s)
+				if err != nil {
+					return lenmsg, err
 				}
 				if off+hex.DecodedLen(len(s)) > lenmsg {
 					return lenmsg, &Error{err: "overflow packing hex"}

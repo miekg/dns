@@ -305,9 +305,9 @@ func unpackStringBase64(msg []byte, off, end int) (string, int, error) {
 }
 
 func packStringBase64(s string, msg []byte, off int) (int, error) {
-	b64, e := fromBase64([]byte(s))
-	if e != nil {
-		return len(msg), e
+	b64, err := fromBase64([]byte(s))
+	if err != nil {
+		return len(msg), err
 	}
 	if off+len(b64) > len(msg) {
 		return len(msg), &Error{err: "overflow packing base64"}
@@ -330,9 +330,9 @@ func unpackStringHex(msg []byte, off, end int) (string, int, error) {
 }
 
 func packStringHex(s string, msg []byte, off int) (int, error) {
-	h, e := hex.DecodeString(s)
-	if e != nil {
-		return len(msg), e
+	h, err := hex.DecodeString(s)
+	if err != nil {
+		return len(msg), err
 	}
 	if off+(len(h)) > len(msg) {
 		return len(msg), &Error{err: "overflow packing hex"}
