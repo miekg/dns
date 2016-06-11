@@ -132,8 +132,7 @@ func (rr *OPT) SetDo() {
 	rr.Hdr.Ttl |= _DO
 }
 
-// EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to
-// it.
+// EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to it.
 type EDNS0 interface {
 	// Option returns the option code for the option.
 	Option() uint16
@@ -300,6 +299,14 @@ func (e *EDNS0_SUBNET) String() (s string) {
 //	e.Cookie = "24a5ac.."
 //	o.Option = append(o.Option, e)
 //
+// The Cookie field consists out of a client cookie (RFC 7873 Section 4), that is
+// always 8 bytes. It may then optionally be followed by the server cookie. The server
+// cookie is of variable length, 8 to a maximum of 32 bytes. In other words:
+//
+//	cCookie := o.Cookie[:16]
+//	sCookie := o.Cookie[16:]
+//
+// There is no guarantee that the Cookie string has a specific length.
 type EDNS0_COOKIE struct {
 	Code   uint16 // Always EDNS0COOKIE
 	Cookie string // Hex-encoded cookie data
