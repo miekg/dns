@@ -140,9 +140,9 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7043 - EUI48/EUI64 records
 * 7314 - DNS (EDNS) EXPIRE Option
 * 7553 - URI record
+* 7858 - DNS over TLS: Initiation and Performance Considerations (draft)
+* 7873 - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)
 * xxxx - EDNS0 DNS Update Lease (draft)
-* yyyy - DNS over TLS: Initiation and Performance Considerations (draft)
-* xxxx - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)
 
 ## Loosely based upon
 
