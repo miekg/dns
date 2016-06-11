@@ -403,31 +403,6 @@ func TestMsgCopy(t *testing.T) {
 	}
 }
 
-func TestPackIPSECKEY(t *testing.T) {
-	tests := []string{
-		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
-		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 0 2 .  AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
-		"38.2.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 1 2 192.0.2.3 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
-		"38.1.0.192.in-addr.arpa. 7200 IN     IPSECKEY ( 10 3 2 mygateway.example.com.  AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
-		"0.d.4.0.3.0.e.f.f.f.3.f.0.1.2.0 7200 IN     IPSECKEY ( 10 2 2 2001:0DB8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )",
-	}
-	buf := make([]byte, 1024)
-	for _, t1 := range tests {
-		rr, _ := NewRR(t1)
-		off, err := PackRR(rr, buf, 0, nil, false)
-		if err != nil {
-			t.Errorf("failed to pack IPSECKEY %v: %s", err, t1)
-			continue
-		}
-
-		rr, _, err = UnpackRR(buf[:off], 0)
-		if err != nil {
-			t.Errorf("failed to unpack IPSECKEY %v: %s", err, t1)
-		}
-		t.Log(rr)
-	}
-}
-
 func TestMsgPackBuffer(t *testing.T) {
 	var testMessages = []string{
 		// news.ycombinator.com.in.escapemg.com.	IN	A, response

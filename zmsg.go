@@ -411,44 +411,6 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]int, compress bo
 	return off, nil
 }
 
-func (rr *IPSECKEY) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return off, err
-	}
-	headerEnd := off
-	off, err = packUint8(rr.Precedence, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint8(rr.GatewayType, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint8(rr.Algorithm, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packDataA(rr.GatewayA, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packDataAAAA(rr.GatewayAAAA, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = PackDomainName(rr.GatewayName, msg, off, compression, compress)
-	if err != nil {
-		return off, err
-	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
-	if err != nil {
-		return off, err
-	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
-	return off, nil
-}
-
 func (rr *KEY) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
@@ -839,7 +801,15 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]int, compress 
 	if err != nil {
 		return off, err
 	}
+	off, err = packStringHex(rr.Salt, msg, off)
+	if err != nil {
+		return off, err
+	}
 	off, err = packUint8(rr.HashLength, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringBase32(rr.NextDomain, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1351,6 +1321,10 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
+	off, err = packStringHex(rr.MAC, msg, off)
+	if err != nil {
+		return off, err
+	}
 	off, err = packUint16(rr.OrigId, msg, off)
 	if err != nil {
 		return off, err
@@ -1360,6 +1334,10 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]int, compress b
 		return off, err
 	}
 	off, err = packUint16(rr.OtherLen, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2003,81 +1981,15 @@ func unpackHIP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Hit, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Hit, off, err = unpackStringHex(msg, off, off+int(rr.HitLength))
 	if err != nil {
 		return rr, off, err
 	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, off, err = unpackStringBase64(msg, off, off+int(rr.PublicKeyLength))
 	if err != nil {
 		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
 	}
 	rr.RendezvousServers, off, err = unpackDataDomainNames(msg, off, rdStart+int(rr.Hdr.Rdlength))
-	if err != nil {
-		return rr, off, err
-	}
-	return rr, off, err
-}
-
-func unpackIPSECKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
-	if noRdata(h) {
-		return &h, off, nil
-	}
-	var err error
-	rdStart := off
-	_ = rdStart
-
-	rr := new(IPSECKEY)
-	rr.Hdr = h
-
-	rr.Precedence, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.GatewayType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.GatewayA, off, err = unpackDataA(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.GatewayAAAA, off, err = unpackDataAAAA(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.GatewayName, off, err = UnpackDomainName(msg, off)
-	if err != nil {
-		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
-	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
 	if err != nil {
 		return rr, off, err
 	}
@@ -2637,8 +2549,9 @@ func unpackNSEC3(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	if off == len(msg) {
-		return rr, off, nil
+	rr.Salt, off, err = unpackStringHex(msg, off, off+int(rr.SaltLength))
+	if err != nil {
+		return rr, off, err
 	}
 	rr.HashLength, off, err = unpackUint8(msg, off)
 	if err != nil {
@@ -2647,8 +2560,9 @@ func unpackNSEC3(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	if off == len(msg) {
-		return rr, off, nil
+	rr.NextDomain, off, err = unpackStringBase32(msg, off, off+int(rr.HashLength))
+	if err != nil {
+		return rr, off, err
 	}
 	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
 	if err != nil {
@@ -3409,8 +3323,9 @@ func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	if off == len(msg) {
-		return rr, off, nil
+	rr.MAC, off, err = unpackStringHex(msg, off, off+int(rr.MACSize))
+	if err != nil {
+		return rr, off, err
 	}
 	rr.OrigId, off, err = unpackUint16(msg, off)
 	if err != nil {
@@ -3432,6 +3347,10 @@ func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	}
 	if off == len(msg) {
 		return rr, off, nil
+	}
+	rr.OtherData, off, err = unpackStringHex(msg, off, off+int(rr.OtherLen))
+	if err != nil {
+		return rr, off, err
 	}
 	return rr, off, err
 }
@@ -3562,7 +3481,6 @@ var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
 	TypeGPOS:       unpackGPOS,
 	TypeHINFO:      unpackHINFO,
 	TypeHIP:        unpackHIP,
-	TypeIPSECKEY:   unpackIPSECKEY,
 	TypeKEY:        unpackKEY,
 	TypeKX:         unpackKX,
 	TypeL32:        unpackL32,

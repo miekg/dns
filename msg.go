@@ -1165,13 +1165,7 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	_, ok := blacklist[rr.Header().Rrtype]
-	switch ok {
-	case false:
-		off1, err = rr.pack(msg, off, compression, compress)
-	default:
-		off1, err = packStructCompress(rr, msg, off, compression, compress)
-	}
+	off1, err = rr.pack(msg, off, compression, compress)
 	if err != nil {
 		return len(msg), err
 	}
@@ -1183,29 +1177,16 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	off0 := off
 	h, off, msg, err := unpackHeader(msg, off)
 	if err != nil {
 		return nil, len(msg), err
 	}
 	end := off + int(h.Rdlength)
 
-	_, ok := blacklist[h.Rrtype]
-	switch ok {
-	case false:
-		// Shortcut reflection.
-		if fn, known := typeToUnpack[h.Rrtype]; !known {
-			rr, off, err = unpackRFC3597(h, msg, off)
-		} else {
-			rr, off, err = fn(h, msg, off)
-		}
-	default:
-		if mk, known := TypeToRR[h.Rrtype]; !known {
-			rr = new(RFC3597)
-		} else {
-			rr = mk()
-		}
-		off, err = UnpackStruct(rr, msg, off0)
+	if fn, known := typeToUnpack[h.Rrtype]; !known {
+		rr, off, err = unpackRFC3597(h, msg, off)
+	} else {
+		rr, off, err = fn(h, msg, off)
 	}
 	if off != end {
 		return &h, end, &Error{err: "bad rdlength"}
@@ -1851,12 +1832,4 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 	}
 	dh.Arcount, off, err = unpackUint16(msg, off)
 	return dh, off, err
-}
-
-// Which types do no work reflectionless yet.
-var blacklist = map[uint16]bool{
-	TypeHIP:      true,
-	TypeIPSECKEY: true,
-	TypeNSEC3:    true,
-	TypeTSIG:     true,
 }

@@ -294,6 +294,27 @@ func packString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func unpackStringBase32(msg []byte, off, end int) (string, int, error) {
+	if end > len(msg) {
+		return "", len(msg), &Error{err: "overflow unpacking base32"}
+	}
+	s := toBase32(msg[off:end])
+	return s, end, nil
+}
+
+func packStringBase32(s string, msg []byte, off int) (int, error) {
+	b32, err := fromBase32([]byte(s))
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(b32) > len(msg) {
+		return len(msg), &Error{err: "overflow packing base32"}
+	}
+	copy(msg[off:off+len(b32)], b32)
+	off += len(b32)
+	return off, nil
+}
+
 func unpackStringBase64(msg []byte, off, end int) (string, int, error) {
 	// Rest of the RR is base64 encoded value, so we don't need an explicit length
 	// to be set. Thus far all RR's that have base64 encoded fields have those as their

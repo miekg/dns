@@ -31,11 +31,11 @@ type TSIG struct {
 	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 	MACSize    uint16
-	MAC        string `dns:"size-hex"`
+	MAC        string `dns:"size-hex:MACSize"`
 	OrigId     uint16
 	Error      uint16
 	OtherLen   uint16
-	OtherData  string `dns:"size-hex"`
+	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
 // TSIG has no official presentation format, but this will suffice.
@@ -69,14 +69,14 @@ type tsigWireFmt struct {
 	// MACSize, MAC and OrigId excluded
 	Error     uint16
 	OtherLen  uint16
-	OtherData string `dns:"size-hex"`
+	OtherData string `dns:"size-hex:OtherLen"`
 }
 
 // If we have the MAC use this type to convert it to wiredata.
 // Section 3.4.3. Request MAC
 type macWireFmt struct {
 	MACSize uint16
-	MAC     string `dns:"size-hex"`
+	MAC     string `dns:"size-hex:MACSize"`
 }
 
 // 3.3. Time values used in TSIG calculations
