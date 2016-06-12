@@ -2045,73 +2045,6 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, ""
 }
 
-func setIPSECKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
-	rr := new(IPSECKEY)
-	rr.Hdr = h
-	l := <-c
-	if l.length == 0 {
-		return rr, nil, l.comment
-	}
-	i, err := strconv.Atoi(l.token)
-	if err != nil || l.err {
-		return nil, &ParseError{f, "bad IPSECKEY Precedence", l}, ""
-	}
-	rr.Precedence = uint8(i)
-	<-c // zBlank
-	l = <-c
-	i, err = strconv.Atoi(l.token)
-	if err != nil || l.err {
-		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}, ""
-	}
-	rr.GatewayType = uint8(i)
-	<-c // zBlank
-	l = <-c
-	i, err = strconv.Atoi(l.token)
-	if err != nil || l.err {
-		return nil, &ParseError{f, "bad IPSECKEY Algorithm", l}, ""
-	}
-	rr.Algorithm = uint8(i)
-
-	// Now according to GatewayType we can have different elements here
-	<-c // zBlank
-	l = <-c
-	switch rr.GatewayType {
-	case 0:
-		fallthrough
-	case 3:
-		rr.GatewayName = l.token
-		if l.token == "@" {
-			rr.GatewayName = o
-		}
-		_, ok := IsDomainName(l.token)
-		if !ok || l.length == 0 || l.err {
-			return nil, &ParseError{f, "bad IPSECKEY GatewayName", l}, ""
-		}
-		if rr.GatewayName[l.length-1] != '.' {
-			rr.GatewayName = appendOrigin(rr.GatewayName, o)
-		}
-	case 1:
-		rr.GatewayA = net.ParseIP(l.token)
-		if rr.GatewayA == nil {
-			return nil, &ParseError{f, "bad IPSECKEY GatewayA", l}, ""
-		}
-	case 2:
-		rr.GatewayAAAA = net.ParseIP(l.token)
-		if rr.GatewayAAAA == nil {
-			return nil, &ParseError{f, "bad IPSECKEY GatewayAAAA", l}, ""
-		}
-	default:
-		return nil, &ParseError{f, "bad IPSECKEY GatewayType", l}, ""
-	}
-
-	s, e, c1 := endingToString(c, "bad IPSECKEY PublicKey", f)
-	if e != nil {
-		return nil, e, c1
-	}
-	rr.PublicKey = s
-	return rr, nil, c1
-}
-
 func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr := new(CAA)
 	rr.Hdr = h
@@ -2166,7 +2099,6 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeGPOS:       {setGPOS, false},
 	TypeHINFO:      {setHINFO, true},
 	TypeHIP:        {setHIP, true},
-	TypeIPSECKEY:   {setIPSECKEY, true},
 	TypeKX:         {setKX, false},
 	TypeL32:        {setL32, false},
 	TypeL64:        {setL64, false},
