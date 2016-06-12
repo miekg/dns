@@ -16,17 +16,11 @@ import (
 	"os"
 )
 
-// All RR pack and unpack functions should be generated, currently RR that present some
-// problems
-// * NSEC/NSEC3 - type bitmap
-// * TXT/SPF - string slice
-// * URI - weird octet thing there
-// * NSEC3/TSIG - size hex
-// * OPT RR - EDNS0 parsing - needs to some looking at
+// All RR pack and unpack functions should be generated, currently RR that present some problems
+// * NSEC3 - size hex
+// * TSIG - size hex
 // * HIP - uses "hex", but is actually size-hex - might drop size-hex?
-// * Z
-// * NINFO
-// * PrivateRR
+// * IPSECKEY -
 
 var packageHdr = `
 // *** DO NOT MODIFY ***
@@ -90,10 +84,7 @@ func main() {
 	fmt.Fprint(b, "// pack*() functions\n\n")
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
-		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
+		st, _ := getTypeStruct(o.Type(), scope)
 
 		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
 		fmt.Fprint(b, `off, err := rr.Hdr.pack(msg, off, compression, compress)
@@ -113,19 +104,23 @@ return off, err
 
 			if _, ok := st.Field(i).Type().(*types.Slice); ok {
 				switch st.Tag(i) {
-				case `dns:"-"`:
-				// ignored
+				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
 					o("off, err = packStringTxt(rr.%s, msg, off)\n")
+				case `dns:"opt"`:
+					o("off, err = packDataOpt(rr.%s, msg, off)\n")
+				case `dns:"nsec"`:
+					o("off, err = packDataNsec(rr.%s, msg, off)\n")
+				case `dns:"domain-name"`:
+					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, compress)\n")
 				default:
-					//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
 				continue
 			}
 
 			switch st.Tag(i) {
-			case `dns:"-"`:
-				// ignored
+			case `dns:"-"`: // ignored
 			case `dns:"cdomain-name"`:
 				fallthrough
 			case `dns:"domain-name"`:
@@ -142,6 +137,10 @@ return off, err
 				o("off, err = packStringBase32(rr.%s, msg, off)\n")
 			case `dns:"base64"`:
 				o("off, err = packStringBase64(rr.%s, msg, off)\n")
+			case `dns:"hex"`:
+				o("off, err = packStringHex(rr.%s, msg, off)\n")
+			case `dns:"octet"`:
+				o("off, err = packStringOctet(rr.%s, msg, off)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -169,14 +168,11 @@ return off, err
 	fmt.Fprint(b, "// unpack*() functions\n\n")
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
-		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
+		st, _ := getTypeStruct(o.Type(), scope)
 
 		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
 		fmt.Fprint(b, `if noRdata(h) {
-return nil, off, nil
+return &h, off, nil
 	}
 var err error
 rdStart := off
@@ -196,19 +192,23 @@ return rr, off, err
 
 			if _, ok := st.Field(i).Type().(*types.Slice); ok {
 				switch st.Tag(i) {
-				case `dns:"-"`:
-				// ignored
+				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
 					o("rr.%s, off, err = unpackStringTxt(msg, off)\n")
+				case `dns:"opt"`:
+					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
+				case `dns:"nsec"`:
+					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
+				case `dns:"domain-name"`:
+					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 				default:
-					//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
 				continue
 			}
 
 			switch st.Tag(i) {
-			case `dns:"-"`:
-				// ignored
+			case `dns:"-"`: // ignored
 			case `dns:"cdomain-name"`:
 				fallthrough
 			case `dns:"domain-name"`:
@@ -225,6 +225,10 @@ return rr, off, err
 				o("rr.%s, off, err = unpackStringBase32(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 			case `dns:"base64"`:
 				o("rr.%s, off, err = unpackStringBase64(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+			case `dns:"hex"`:
+				o("rr.%s, off, err = unpackStringHex(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+			case `dns:"octet"`:
+				o("rr.%s, off, err = unpackStringOctet(msg, off)\n")
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -253,6 +257,15 @@ return rr, off, nil
 		}
 		fmt.Fprintf(b, "return rr, off, err }\n\n")
 	}
+	// Generate typeToUnpack map
+	fmt.Fprintln(b, "var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){")
+	for _, name := range namedTypes {
+		if name == "RFC3597" {
+			continue
+		}
+		fmt.Fprintf(b, "Type%s: unpack%s,\n", name, name)
+	}
+	fmt.Fprintln(b, "}\n")
 
 	// gofmt
 	res, err := format.Source(b.Bytes())

@@ -359,3 +359,251 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 	}
 	return off, nil
 }
+
+func unpackDataOpt(msg []byte, off int) ([]EDNS0, int, error) {
+	var edns []EDNS0
+Option:
+	code := uint16(0)
+	if off+4 > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking opt"}
+	}
+	code = binary.BigEndian.Uint16(msg[off:])
+	off += 2
+	optlen := binary.BigEndian.Uint16(msg[off:])
+	off += 2
+	if off+int(optlen) > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking opt"}
+	}
+	switch code {
+	case EDNS0NSID:
+		e := new(EDNS0_NSID)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0SUBNET, EDNS0SUBNETDRAFT:
+		e := new(EDNS0_SUBNET)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+		if code == EDNS0SUBNETDRAFT {
+			e.DraftOption = true
+		}
+	case EDNS0COOKIE:
+		e := new(EDNS0_COOKIE)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0UL:
+		e := new(EDNS0_UL)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0LLQ:
+		e := new(EDNS0_LLQ)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0DAU:
+		e := new(EDNS0_DAU)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0DHU:
+		e := new(EDNS0_DHU)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	case EDNS0N3U:
+		e := new(EDNS0_N3U)
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	default:
+		e := new(EDNS0_LOCAL)
+		e.Code = code
+		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, e)
+		off += int(optlen)
+	}
+
+	if off < len(msg) {
+		goto Option
+	}
+
+	return edns, off, nil
+}
+
+func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
+	for _, el := range options {
+		b, err := el.pack()
+		if err != nil || off+3 > len(msg) {
+			return len(msg), &Error{err: "overflow packing opt"}
+		}
+		binary.BigEndian.PutUint16(msg[off:], el.Option())      // Option code
+		binary.BigEndian.PutUint16(msg[off+2:], uint16(len(b))) // Length
+		off += 4
+		if off+len(b) > len(msg) {
+			copy(msg[off:], b)
+			off = len(msg)
+			continue
+		}
+		// Actual data
+		copy(msg[off:off+len(b)], b)
+		off += len(b)
+	}
+	return off, nil
+}
+
+func unpackStringOctet(msg []byte, off int) (string, int, error) {
+	s := string(msg[off:])
+	return s, len(msg), nil
+}
+
+func packStringOctet(s string, msg []byte, off int) (int, error) {
+	txtTmp := make([]byte, 256*4+1)
+	off, err := packOctetString(s, msg, off, txtTmp)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func unpackDataNsec(msg []byte, off int) ([]uint16, int, error) {
+	var nsec []uint16
+	length, window, lastwindow := 0, 0, -1
+	for off < len(msg) {
+		if off+2 > len(msg) {
+			return nsec, len(msg), &Error{err: "overflow unpacking nsecx"}
+		}
+		window = int(msg[off])
+		length = int(msg[off+1])
+		off += 2
+		if window <= lastwindow {
+			// RFC 4034: Blocks are present in the NSEC RR RDATA in
+			// increasing numerical order.
+			return nsec, len(msg), &Error{err: "out of order NSEC block"}
+		}
+		if length == 0 {
+			// RFC 4034: Blocks with no types present MUST NOT be included.
+			return nsec, len(msg), &Error{err: "empty NSEC block"}
+		}
+		if length > 32 {
+			return nsec, len(msg), &Error{err: "NSEC block too long"}
+		}
+		if off+length > len(msg) {
+			return nsec, len(msg), &Error{err: "overflowing NSEC block"}
+		}
+
+		// Walk the bytes in the window and extract the type bits
+		for j := 0; j < length; j++ {
+			b := msg[off+j]
+			// Check the bits one by one, and set the type
+			if b&0x80 == 0x80 {
+				nsec = append(nsec, uint16(window*256+j*8+0))
+			}
+			if b&0x40 == 0x40 {
+				nsec = append(nsec, uint16(window*256+j*8+1))
+			}
+			if b&0x20 == 0x20 {
+				nsec = append(nsec, uint16(window*256+j*8+2))
+			}
+			if b&0x10 == 0x10 {
+				nsec = append(nsec, uint16(window*256+j*8+3))
+			}
+			if b&0x8 == 0x8 {
+				nsec = append(nsec, uint16(window*256+j*8+4))
+			}
+			if b&0x4 == 0x4 {
+				nsec = append(nsec, uint16(window*256+j*8+5))
+			}
+			if b&0x2 == 0x2 {
+				nsec = append(nsec, uint16(window*256+j*8+6))
+			}
+			if b&0x1 == 0x1 {
+				nsec = append(nsec, uint16(window*256+j*8+7))
+			}
+		}
+		off += length
+		lastwindow = window
+	}
+	return nsec, off, nil
+}
+
+func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
+	if len(bitmap) == 0 {
+		return off, nil
+	}
+	var lastwindow, lastlength uint16
+	for j := 0; j < len(bitmap); j++ {
+		t := bitmap[j]
+		window := t / 256
+		length := (t-window*256)/8 + 1
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
+			off += int(lastlength) + 2
+			lastlength = 0
+		}
+		if window < lastwindow || length < lastlength {
+			return len(msg), &Error{err: "nsec bits out of order"}
+		}
+		if off+2+int(length) > len(msg) {
+			return len(msg), &Error{err: "overflow packing nsec"}
+		}
+		// Setting the window #
+		msg[off] = byte(window)
+		// Setting the octets length
+		msg[off+1] = byte(length)
+		// Setting the bit value for the type in the right octet
+		msg[off+1+int(length)] |= byte(1 << (7 - (t % 8)))
+		lastwindow, lastlength = window, length
+	}
+	off += int(lastlength) + 2
+	return off, nil
+}
+
+func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
+	var (
+		servers []string
+		s       string
+		err     error
+	)
+	if end > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking domain names"}
+	}
+	for off < end {
+		s, off, err = UnpackDomainName(msg, off)
+		if err != nil {
+			return servers, len(msg), err
+		}
+		servers = append(servers, s)
+	}
+	return servers, off, nil
+}
+
+func packDataDomainNames(names []string, msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	var err error
+	for j := 0; j < len(names); j++ {
+		off, err = PackDomainName(names[j], msg, off, compression, false && compress)
+		if err != nil {
+			return len(msg), err
+		}
+	}
+	return off, nil
+}

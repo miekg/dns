@@ -588,35 +588,6 @@ func packStructValue(val reflect.Value, msg []byte, off int, compression map[str
 						return lenmsg, err
 					}
 				}
-			case `dns:"txt"`:
-				if txtTmp == nil {
-					txtTmp = make([]byte, 256*4+1)
-				}
-				off, err = packTxt(fv.Interface().([]string), msg, off, txtTmp)
-				if err != nil {
-					return lenmsg, err
-				}
-			case `dns:"opt"`: // edns
-				for j := 0; j < val.Field(i).Len(); j++ {
-					element := val.Field(i).Index(j).Interface()
-					b, err := element.(EDNS0).pack()
-					if err != nil || off+3 > lenmsg {
-						return lenmsg, &Error{err: "overflow packing opt"}
-					}
-					// Option code
-					binary.BigEndian.PutUint16(msg[off:], element.(EDNS0).Option())
-					// Length
-					binary.BigEndian.PutUint16(msg[off+2:], uint16(len(b)))
-					off += 4
-					if off+len(b) > lenmsg {
-						copy(msg[off:], b)
-						off = lenmsg
-						continue
-					}
-					// Actual data
-					copy(msg[off:off+len(b)], b)
-					off += len(b)
-				}
 			case `dns:"a"`:
 				if val.Type().String() == "dns.IPSECKEY" {
 					// Field(2) is GatewayType, must be 1
@@ -899,108 +870,6 @@ func unpackStructValue(val reflect.Value, msg []byte, off int) (off1 int, err er
 					servers = append(servers, s)
 				}
 				fv.Set(reflect.ValueOf(servers))
-			case `dns:"txt"`:
-				if off == lenmsg {
-					break
-				}
-				var txt []string
-				txt, off, err = unpackTxt(msg, off)
-				if err != nil {
-					return lenmsg, err
-				}
-				fv.Set(reflect.ValueOf(txt))
-			case `dns:"opt"`: // edns0
-				if off == lenmsg {
-					// This is an EDNS0 (OPT Record) with no rdata
-					// We can safely return here.
-					break
-				}
-				var edns []EDNS0
-			Option:
-				code := uint16(0)
-				if off+4 > lenmsg {
-					return lenmsg, &Error{err: "overflow unpacking opt"}
-				}
-				code = binary.BigEndian.Uint16(msg[off:])
-				off += 2
-				optlen := binary.BigEndian.Uint16(msg[off:])
-				off1 := off + 2
-				if off1+int(optlen) > lenmsg {
-					return lenmsg, &Error{err: "overflow unpacking opt"}
-				}
-				switch code {
-				case EDNS0NSID:
-					e := new(EDNS0_NSID)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0SUBNET, EDNS0SUBNETDRAFT:
-					e := new(EDNS0_SUBNET)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-					if code == EDNS0SUBNETDRAFT {
-						e.DraftOption = true
-					}
-				case EDNS0COOKIE:
-					e := new(EDNS0_COOKIE)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0UL:
-					e := new(EDNS0_UL)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0LLQ:
-					e := new(EDNS0_LLQ)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0DAU:
-					e := new(EDNS0_DAU)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0DHU:
-					e := new(EDNS0_DHU)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				case EDNS0N3U:
-					e := new(EDNS0_N3U)
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				default:
-					e := new(EDNS0_LOCAL)
-					e.Code = code
-					if err := e.unpack(msg[off1 : off1+int(optlen)]); err != nil {
-						return lenmsg, err
-					}
-					edns = append(edns, e)
-					off = off1 + int(optlen)
-				}
-				if off < lenmsg {
-					goto Option
-				}
-				fv.Set(reflect.ValueOf(edns))
 			case `dns:"a"`:
 				if val.Type().String() == "dns.IPSECKEY" {
 					// Field(2) is GatewayType, must be 1
@@ -1296,11 +1165,10 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	_, ok := typeToUnpack[rr.Header().Rrtype]
+	_, ok := blacklist[rr.Header().Rrtype]
 	switch ok {
-	case true:
+	case false:
 		off1, err = rr.pack(msg, off, compression, compress)
-		// TODO(miek): revert the logic and make a blacklist for types that still use reflection. Kill typeToUnpack.
 	default:
 		off1, err = packStructCompress(rr, msg, off, compression, compress)
 	}
@@ -1322,14 +1190,17 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	}
 	end := off + int(h.Rdlength)
 
-	fn, ok := typeToUnpack[h.Rrtype]
+	_, ok := blacklist[h.Rrtype]
 	switch ok {
-	case true:
+	case false:
 		// Shortcut reflection.
-		rr, off, err = fn(h, msg, off)
+		if fn, known := typeToUnpack[h.Rrtype]; !known {
+			rr, off, err = unpackRFC3597(h, msg, off)
+		} else {
+			rr, off, err = fn(h, msg, off)
+		}
 	default:
-		mk, known := TypeToRR[h.Rrtype]
-		if !known {
+		if mk, known := TypeToRR[h.Rrtype]; !known {
 			rr = new(RFC3597)
 		} else {
 			rr = mk()
@@ -1982,25 +1853,10 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 	return dh, off, err
 }
 
-// Which types have type specific unpack functions.
-var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
-	TypeAAAA:   unpackAAAA,
-	TypeA:      unpackA,
-	TypeCNAME:  unpackCNAME,
-	TypeDNAME:  unpackDNAME,
-	TypeL32:    unpackL32,
-	TypeLOC:    unpackLOC,
-	TypeMB:     unpackMB,
-	TypeMD:     unpackMD,
-	TypeMF:     unpackMF,
-	TypeMG:     unpackMG,
-	TypeMR:     unpackMR,
-	TypeMX:     unpackMX,
-	TypeNID:    unpackNID,
-	TypeNS:     unpackNS,
-	TypePTR:    unpackPTR,
-	TypeRP:     unpackRP,
-	TypeSRV:    unpackSRV,
-	TypeHINFO:  unpackHINFO,
-	TypeDNSKEY: unpackDNSKEY,
+// Which types do no work reflectionless yet.
+var blacklist = map[uint16]bool{
+	TypeHIP:      true,
+	TypeIPSECKEY: true,
+	TypeNSEC3:    true,
+	TypeTSIG:     true,
 }
