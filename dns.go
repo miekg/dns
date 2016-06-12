@@ -84,19 +84,22 @@ func (h *RR_Header) len() int {
 	return l
 }
 
-// ToRFC3597 converts a known RR to the unknown RR representation
-// from RFC 3597.
+// ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf := make([]byte, r.len()*2)
-	off, err := PackStruct(r, buf, 0)
+	off, err := PackRR(r, buf, 0, nil, false)
 	if err != nil {
 		return err
 	}
 	buf = buf[:off]
-	rawSetRdlength(buf, 0, off)
-	_, err = UnpackStruct(rr, buf, 0)
+	if int(r.Header().Rdlength) > off {
+		return ErrBuf
+	}
+
+	rfc3597, _, err := unpackRFC3597(*r.Header(), buf, off-int(r.Header().Rdlength))
 	if err != nil {
 		return err
 	}
+	*rr = *rfc3597.(*RFC3597)
 	return nil
 }
