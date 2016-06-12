@@ -14,13 +14,8 @@ import (
 	"go/types"
 	"log"
 	"os"
+	"strings"
 )
-
-// All RR pack and unpack functions should be generated, currently RR that present some problems
-// * NSEC3 - size hex
-// * TSIG - size hex
-// * HIP - uses "hex", but is actually size-hex - might drop size-hex?
-// * IPSECKEY -
 
 var packageHdr = `
 // *** DO NOT MODIFY ***
@@ -119,29 +114,39 @@ return off, err
 				continue
 			}
 
-			switch st.Tag(i) {
-			case `dns:"-"`: // ignored
-			case `dns:"cdomain-name"`:
+			switch {
+			case st.Tag(i) == `dns:"-"`: // ignored
+			case st.Tag(i) == `dns:"cdomain-name"`:
 				fallthrough
-			case `dns:"domain-name"`:
+			case st.Tag(i) == `dns:"domain-name"`:
 				o("off, err = PackDomainName(rr.%s, msg, off, compression, compress)\n")
-			case `dns:"a"`:
+			case st.Tag(i) == `dns:"a"`:
 				o("off, err = packDataA(rr.%s, msg, off)\n")
-			case `dns:"aaaa"`:
+			case st.Tag(i) == `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
-			case `dns:"uint48"`:
+			case st.Tag(i) == `dns:"uint48"`:
 				o("off, err = packUint48(rr.%s, msg, off)\n")
-			case `dns:"txt"`:
+			case st.Tag(i) == `dns:"txt"`:
 				o("off, err = packString(rr.%s, msg, off)\n")
-			case `dns:"base32"`:
+
+			case strings.HasPrefix(st.Tag(i), `dns:"size-base32`): // size-base32 can be packed just like base32
+				fallthrough
+			case st.Tag(i) == `dns:"base32"`:
 				o("off, err = packStringBase32(rr.%s, msg, off)\n")
-			case `dns:"base64"`:
+
+			case strings.HasPrefix(st.Tag(i), `dns:"size-base64`): // size-base64 can be packed just like base64
+				fallthrough
+			case st.Tag(i) == `dns:"base64"`:
 				o("off, err = packStringBase64(rr.%s, msg, off)\n")
-			case `dns:"hex"`:
+
+			case strings.HasPrefix(st.Tag(i), `dns:"size-hex`): // size-hex can be packed just like hex
+				fallthrough
+			case st.Tag(i) == `dns:"hex"`:
 				o("off, err = packStringHex(rr.%s, msg, off)\n")
-			case `dns:"octet"`:
+
+			case st.Tag(i) == `dns:"octet"`:
 				o("off, err = packStringOctet(rr.%s, msg, off)\n")
-			case "":
+			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
 					o("off, err = packUint8(rr.%s, msg, off)\n")
@@ -156,8 +161,8 @@ return off, err
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
-				//default:
-				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			default:
+				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
 		// We have packed everything, only now we know the rdlength of this RR
@@ -188,6 +193,27 @@ _ = rdStart
 return rr, off, err
 }
 `)
+			}
+
+			// size-* are special, because they reference a struct member we should use for the length.
+			if strings.HasPrefix(st.Tag(i), `dns:"size-`) {
+				structMember := structMember(st.Tag(i))
+				structTag := structTag(st.Tag(i))
+				switch structTag {
+				case "hex":
+					fmt.Fprintf(b, "rr.%s, off, err = unpackStringHex(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+				case "base32":
+					fmt.Fprintf(b, "rr.%s, off, err = unpackStringBase32(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+				case "base64":
+					fmt.Fprintf(b, "rr.%s, off, err = unpackStringBase64(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+				default:
+					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+				}
+				fmt.Fprint(b, `if err != nil {
+return rr, off, err
+}
+`)
+				continue
 			}
 
 			if _, ok := st.Field(i).Type().(*types.Slice); ok {
@@ -244,8 +270,8 @@ return rr, off, err
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
-				//default:
-				//log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			default:
+				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
@@ -279,6 +305,29 @@ return rr, off, nil
 	fatalIfErr(err)
 	defer f.Close()
 	f.Write(res)
+}
+
+// structMember will take a tag like dns:"size-base32:SaltLength" and return the last part of this string.
+func structMember(s string) string {
+	fields := strings.Split(s, ":")
+	if len(fields) == 0 {
+		return ""
+	}
+	f := fields[len(fields)-1]
+	// f should have a closing "
+	if len(f) > 1 {
+		return f[:len(f)-1]
+	}
+	return f
+}
+
+// structTag will take a tag like dns:"size-base32:SaltLength" and return base32.
+func structTag(s string) string {
+	fields := strings.Split(s, ":")
+	if len(fields) < 2 {
+		return ""
+	}
+	return fields[1][len("\"size-"):]
 }
 
 func fatalIfErr(err error) {

@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net"
 	"strconv"
@@ -64,7 +63,6 @@ const (
 	TypeOPT        uint16 = 41 // EDNS
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
-	TypeIPSECKEY   uint16 = 45
 	TypeRRSIG      uint16 = 46
 	TypeNSEC       uint16 = 47
 	TypeDNSKEY     uint16 = 48
@@ -871,57 +869,6 @@ func (rr *SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
-type IPSECKEY struct {
-	Hdr        RR_Header
-	Precedence uint8
-	// GatewayType: 1: A record, 2: AAAA record, 3: domainname.
-	// 0 is use for no type and GatewayName should be "." then.
-	GatewayType uint8
-	Algorithm   uint8
-	// Gateway can be an A record, AAAA record or a domain name.
-	GatewayA    net.IP `dns:"a"`
-	GatewayAAAA net.IP `dns:"aaaa"`
-	GatewayName string `dns:"domain-name"`
-	PublicKey   string `dns:"base64"`
-}
-
-func (rr *IPSECKEY) String() string {
-	s := rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
-		" " + strconv.Itoa(int(rr.GatewayType)) +
-		" " + strconv.Itoa(int(rr.Algorithm))
-	switch rr.GatewayType {
-	case 0:
-		fallthrough
-	case 3:
-		s += " " + rr.GatewayName
-	case 1:
-		s += " " + rr.GatewayA.String()
-	case 2:
-		s += " " + rr.GatewayAAAA.String()
-	default:
-		s += " ."
-	}
-	s += " " + rr.PublicKey
-	return s
-}
-
-func (rr *IPSECKEY) len() int {
-	l := rr.Hdr.len() + 3 + 1
-	switch rr.GatewayType {
-	default:
-		fallthrough
-	case 0:
-		fallthrough
-	case 3:
-		l += len(rr.GatewayName)
-	case 1:
-		l += 4
-	case 2:
-		l += 16
-	}
-	return l + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-}
-
 type KEY struct {
 	DNSKEY
 }
@@ -973,9 +920,9 @@ type NSEC3 struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string `dns:"size-hex"`
+	Salt       string `dns:"size-hex:SaltLength"`
 	HashLength uint8
-	NextDomain string   `dns:"size-base32"`
+	NextDomain string   `dns:"size-base32:HashLength"`
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
@@ -1105,8 +1052,8 @@ type HIP struct {
 	HitLength          uint8
 	PublicKeyAlgorithm uint8
 	PublicKeyLength    uint16
-	Hit                string   `dns:"hex"`
-	PublicKey          string   `dns:"base64"`
+	Hit                string   `dns:"size-hex:HitLength"`
+	PublicKey          string   `dns:"size-base64:PublicKeyLength"`
 	RendezvousServers  []string `dns:"domain-name"`
 }
 

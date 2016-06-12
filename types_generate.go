@@ -20,10 +20,9 @@ import (
 )
 
 var skipLen = map[string]struct{}{
-	"NSEC":     {},
-	"NSEC3":    {},
-	"OPT":      {},
-	"IPSECKEY": {},
+	"NSEC":  {},
+	"NSEC3": {},
+	"OPT":   {},
 }
 
 var packageHdr = `
@@ -104,7 +103,7 @@ func main() {
 			continue
 		}
 		name := strings.TrimPrefix(o.Name(), "Type")
-		if name == "PrivateRR" || name == "WKS" {
+		if name == "PrivateRR" {
 			continue
 		}
 		numberedTypes = append(numberedTypes, name)
@@ -120,7 +119,7 @@ func main() {
 		if st, _ := getTypeStruct(o.Type(), scope); st == nil {
 			continue
 		}
-		if name == "PrivateRR" || name == "WKS" {
+		if name == "PrivateRR" {
 			continue
 		}
 
@@ -172,26 +171,30 @@ func main() {
 				continue
 			}
 
-			switch st.Tag(i) {
-			case `dns:"-"`:
+			switch {
+			case st.Tag(i) == `dns:"-"`:
 				// ignored
-			case `dns:"cdomain-name"`, `dns:"domain-name"`:
+			case st.Tag(i) == `dns:"cdomain-name"`, st.Tag(i) == `dns:"domain-name"`:
 				o("l += len(rr.%s) + 1\n")
-			case `dns:"octet"`:
+			case st.Tag(i) == `dns:"octet"`:
 				o("l += len(rr.%s)\n")
-			case `dns:"base64"`:
+			case strings.HasPrefix(st.Tag(i), `dns:"size-base64`):
+				fallthrough
+			case st.Tag(i) == `dns:"base64"`:
 				o("l += base64.StdEncoding.DecodedLen(len(rr.%s))\n")
-			case `dns:"size-hex"`, `dns:"hex"`:
+			case strings.HasPrefix(st.Tag(i), `dns:"size-hex`):
+				fallthrough
+			case st.Tag(i) == `dns:"hex"`:
 				o("l += len(rr.%s)/2 + 1\n")
-			case `dns:"a"`:
+			case st.Tag(i) == `dns:"a"`:
 				o("l += net.IPv4len // %s\n")
-			case `dns:"aaaa"`:
+			case st.Tag(i) == `dns:"aaaa"`:
 				o("l += net.IPv6len // %s\n")
-			case `dns:"txt"`:
+			case st.Tag(i) == `dns:"txt"`:
 				o("for _, t := range rr.%s { l += len(t) + 1 }\n")
-			case `dns:"uint48"`:
+			case st.Tag(i) == `dns:"uint48"`:
 				o("l += 6 // %s\n")
-			case "":
+			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
 					o("l += 1 // %s\n")
