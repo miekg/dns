@@ -61,7 +61,7 @@ func main() {
 		if st, _ := getTypeStruct(o.Type(), scope); st == nil {
 			continue
 		}
-		if name == "PrivateRR" || name == "WKS" {
+		if name == "PrivateRR" {
 			continue
 		}
 
