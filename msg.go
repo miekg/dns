@@ -141,12 +141,13 @@ var RcodeToString = map[int]string{
 	RcodeNotZone:        "NOTZONE",
 	RcodeBadSig:         "BADSIG", // Also known as RcodeBadVers, see RFC 6891
 	//	RcodeBadVers:        "BADVERS",
-	RcodeBadKey:   "BADKEY",
-	RcodeBadTime:  "BADTIME",
-	RcodeBadMode:  "BADMODE",
-	RcodeBadName:  "BADNAME",
-	RcodeBadAlg:   "BADALG",
-	RcodeBadTrunc: "BADTRUNC",
+	RcodeBadKey:    "BADKEY",
+	RcodeBadTime:   "BADTIME",
+	RcodeBadMode:   "BADMODE",
+	RcodeBadName:   "BADNAME",
+	RcodeBadAlg:    "BADALG",
+	RcodeBadTrunc:  "BADTRUNC",
+	RcodeBadCookie: "BADCOOKIE",
 }
 
 // Rather than write the usual handful of routines to pack and

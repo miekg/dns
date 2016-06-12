@@ -135,6 +135,7 @@ const (
 	RcodeBadName        = 20
 	RcodeBadAlg         = 21
 	RcodeBadTrunc       = 22 // TSIG
+	RcodeBadCookie      = 23 // DNS Cookies
 
 	// Message Opcodes. There is no 3.
 	OpcodeQuery  = 0
