@@ -2,6 +2,14 @@ package dns
 
 import "encoding/binary"
 
+func rawSetExtraLen(msg []byte, i uint16) bool {
+	if len(msg) < 12 {
+		return false
+	}
+	binary.BigEndian.PutUint16(msg[10:], i)
+	return true
+}
+
 // rawSetRdlength sets the rdlength in the header of
 // the RR. The offset 'off' must be positioned at the
 // start of the header of the RR, 'end' must be the
