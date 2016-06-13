@@ -35,40 +35,27 @@ func init() {
 const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
 
 var (
-	// ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrAlg error = &Error{err: "bad algorithm"}
-	// ErrAuth indicates an error in the TSIG authentication.
-	ErrAuth error = &Error{err: "bad authentication"}
-	// ErrBuf indicates that the buffer used it too small for the message.
-	ErrBuf error = &Error{err: "buffer size too small"}
-	// ErrConnEmpty indicates a connection is being uses before it is initialized.
-	ErrConnEmpty error = &Error{err: "conn has no connection"}
-	// ErrExtendedRcode ...
-	ErrExtendedRcode error = &Error{err: "bad extended rcode"}
-	// ErrFqdn indicates that a domain name does not have a closing dot.
-	ErrFqdn error = &Error{err: "domain must be fully qualified"}
-	// ErrId indicates there is a mismatch with the message's ID.
-	ErrId error = &Error{err: "id mismatch"}
-	// ErrKeyAlg indicates that the algorithm in the key is not valid.
-	ErrKeyAlg    error = &Error{err: "bad key algorithm"}
-	ErrKey       error = &Error{err: "bad key"}
-	ErrKeySize   error = &Error{err: "bad key size"}
-	ErrNoSig     error = &Error{err: "no signature found"}
-	ErrPrivKey   error = &Error{err: "bad private key"}
-	ErrRcode     error = &Error{err: "bad rcode"}
-	ErrRdata     error = &Error{err: "bad rdata"}
-	ErrRRset     error = &Error{err: "bad rrset"}
-	ErrSecret    error = &Error{err: "no secrets defined"}
-	ErrShortRead error = &Error{err: "short read"}
-	// ErrSig indicates that a signature can not be cryptographically validated.
-	ErrSig error = &Error{err: "bad signature"}
-	// ErrSOA indicates that no SOA RR was seen when doing zone transfers.
-	ErrSoa error = &Error{err: "no SOA"}
-	// ErrTime indicates a timing error in TSIG authentication.
-	ErrTime error = &Error{err: "bad time"}
-	// ErrTruncated indicates that we failed to unpack a truncated message.
-	// We unpacked as much as we had so Msg can still be used, if desired.
-	ErrTruncated error = &Error{err: "failed to unpack truncated message"}
+	ErrAlg           error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrAuth          error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
+	ErrBuf           error = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used it too small for the message.
+	ErrConnEmpty     error = &Error{err: "conn has no connection"}         // ErrConnEmpty indicates a connection is being uses before it is initialized.
+	ErrExtendedRcode error = &Error{err: "bad extended rcode"}             // ErrExtendedRcode ...
+	ErrFqdn          error = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
+	ErrId            error = &Error{err: "id mismatch"}                    // ErrId indicates there is a mismatch with the message's ID.
+	ErrKeyAlg        error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
+	ErrKey           error = &Error{err: "bad key"}
+	ErrKeySize       error = &Error{err: "bad key size"}
+	ErrNoSig         error = &Error{err: "no signature found"}
+	ErrPrivKey       error = &Error{err: "bad private key"}
+	ErrRcode         error = &Error{err: "bad rcode"}
+	ErrRdata         error = &Error{err: "bad rdata"}
+	ErrRRset         error = &Error{err: "bad rrset"}
+	ErrSecret        error = &Error{err: "no secrets defined"}
+	ErrShortRead     error = &Error{err: "short read"}
+	ErrSig           error = &Error{err: "bad signature"}                      // ErrSig indicates that a signature can not be cryptographically validated.
+	ErrSoa           error = &Error{err: "no SOA"}                             // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
+	ErrTime          error = &Error{err: "bad time"}                           // ErrTime indicates a timing error in TSIG authentication.
+	ErrTruncated     error = &Error{err: "failed to unpack truncated message"} // ErrTruncated indicates that we failed to unpack a truncated message. We unpacked as much as we had so Msg can still be used, if desired.
 )
 
 // Id, by default, returns a 16 bits random number to be used as a
@@ -78,6 +65,13 @@ var (
 //
 //	dns.Id = func() uint16 { return 3 }
 var Id func() uint16 = id
+
+// id returns a 16 bits random number to be used as a
+// message id. The random provided should be good enough.
+func id() uint16 {
+	id32 := rand.Uint32()
+	return uint16(id32)
+}
 
 // MsgHdr is a a manually-unpacked version of (id, bits).
 type MsgHdr struct {
@@ -97,7 +91,7 @@ type MsgHdr struct {
 // Msg contains the layout of a DNS message.
 type Msg struct {
 	MsgHdr
-	Compress bool       `json:"-"` // If true, the message will be compressed when converted to wire format. This not part of the official DNS packet format.
+	Compress bool       `json:"-"` // If true, the message will be compressed when converted to wire format.
 	Question []Question // Holds the RR(s) of the question section.
 	Answer   []RR       // Holds the RR(s) of the answer section.
 	Ns       []RR       // Holds the RR(s) of the authority section.
@@ -131,7 +125,7 @@ var RcodeToString = map[int]string{
 	RcodeNameError:      "NXDOMAIN",
 	RcodeNotImplemented: "NOTIMPL",
 	RcodeRefused:        "REFUSED",
-	RcodeYXDomain:       "YXDOMAIN", // From RFC 2136
+	RcodeYXDomain:       "YXDOMAIN", // See RFC 2136
 	RcodeYXRrset:        "YXRRSET",
 	RcodeNXRrset:        "NXRRSET",
 	RcodeNotAuth:        "NOTAUTH",
@@ -146,12 +140,6 @@ var RcodeToString = map[int]string{
 	RcodeBadTrunc:  "BADTRUNC",
 	RcodeBadCookie: "BADCOOKIE",
 }
-
-// Rather than write the usual handful of routines to pack and
-// unpack every message that can appear on the wire, we use
-// reflection to write a generic pack/unpack for structs and then
-// use it. Thus, if in the future we need to define new message
-// structs, no new pack/unpack/printing code needs to be written.
 
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
@@ -575,6 +563,7 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return len(msg), err
 	}
+	// TODO(miek): Not sure if this is needed? If removed we can remove rawmsg.go as well.
 	if rawSetRdlength(msg, off, off1) {
 		return off1, nil
 	}
@@ -679,6 +668,7 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small
 // a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
+	// We use a similar function in tsig.go's stripTsig.
 	var (
 		dh          Header
 		compression map[string]int
@@ -1001,7 +991,7 @@ func compressionLenSearch(c map[string]int, s string) (int, bool) {
 	return 0, false
 }
 
-// TODO(miek): should add all types, because the all can be *used* for compression.
+// TODO(miek): should add all types, because the all can be *used* for compression. Autogenerate from msg_generate and put in zmsg.go
 func compressionLenHelperType(c map[string]int, r RR) {
 	switch x := r.(type) {
 	case *NS:
@@ -1027,11 +1017,23 @@ func compressionLenHelperType(c map[string]int, r RR) {
 		compressionLenHelper(c, x.Md)
 	case *RT:
 		compressionLenHelper(c, x.Host)
+	case *RP:
+		compressionLenHelper(c, x.Mbox)
+		compressionLenHelper(c, x.Txt)
 	case *MINFO:
 		compressionLenHelper(c, x.Rmail)
 		compressionLenHelper(c, x.Email)
 	case *AFSDB:
 		compressionLenHelper(c, x.Hostname)
+	case *SRV:
+		compressionLenHelper(c, x.Target)
+	case *NAPTR:
+		compressionLenHelper(c, x.Replacement)
+	case *RRSIG:
+		compressionLenHelper(c, x.SignerName)
+	case *NSEC:
+		compressionLenHelper(c, x.NextDomain)
+		// HIP?
 	}
 }
 
@@ -1043,6 +1045,8 @@ func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
 	case *MX:
 		return compressionLenSearch(c, x.Mx)
 	case *CNAME:
+		return compressionLenSearch(c, x.Target)
+	case *DNAME:
 		return compressionLenSearch(c, x.Target)
 	case *PTR:
 		return compressionLenSearch(c, x.Ptr)
@@ -1078,28 +1082,14 @@ func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
 	return 0, false
 }
 
-// id returns a 16 bits random number to be used as a
-// message id. The random provided should be good enough.
-func id() uint16 {
-	id32 := rand.Uint32()
-	return uint16(id32)
-}
-
 // Copy returns a new RR which is a deep-copy of r.
-func Copy(r RR) RR {
-	r1 := r.copy()
-	return r1
-}
+func Copy(r RR) RR { r1 := r.copy(); return r1 }
 
 // Len returns the length (in octets) of the uncompressed RR in wire format.
-func Len(r RR) int {
-	return r.len()
-}
+func Len(r RR) int { return r.len() }
 
 // Copy returns a new *Msg which is a deep-copy of dns.
-func (dns *Msg) Copy() *Msg {
-	return dns.CopyTo(new(Msg))
-}
+func (dns *Msg) Copy() *Msg { return dns.CopyTo(new(Msg)) }
 
 // CopyTo copies the contents to the provided message using a deep-copy and returns the copy.
 func (dns *Msg) CopyTo(r1 *Msg) *Msg {

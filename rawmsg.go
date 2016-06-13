@@ -2,54 +2,6 @@ package dns
 
 import "encoding/binary"
 
-// These raw* functions do not use reflection, they directly set the values
-// in the buffer. There are faster than their reflection counterparts.
-
-// RawSetId sets the message id in buf.
-func rawSetId(msg []byte, i uint16) bool {
-	if len(msg) < 2 {
-		return false
-	}
-	binary.BigEndian.PutUint16(msg, i)
-	return true
-}
-
-// rawSetQuestionLen sets the length of the question section.
-func rawSetQuestionLen(msg []byte, i uint16) bool {
-	if len(msg) < 6 {
-		return false
-	}
-	binary.BigEndian.PutUint16(msg[4:], i)
-	return true
-}
-
-// rawSetAnswerLen sets the length of the answer section.
-func rawSetAnswerLen(msg []byte, i uint16) bool {
-	if len(msg) < 8 {
-		return false
-	}
-	binary.BigEndian.PutUint16(msg[6:], i)
-	return true
-}
-
-// rawSetsNsLen sets the length of the authority section.
-func rawSetNsLen(msg []byte, i uint16) bool {
-	if len(msg) < 10 {
-		return false
-	}
-	binary.BigEndian.PutUint16(msg[8:], i)
-	return true
-}
-
-// rawSetExtraLen sets the length of the additional section.
-func rawSetExtraLen(msg []byte, i uint16) bool {
-	if len(msg) < 12 {
-		return false
-	}
-	binary.BigEndian.PutUint16(msg[10:], i)
-	return true
-}
-
 // rawSetRdlength sets the rdlength in the header of
 // the RR. The offset 'off' must be positioned at the
 // start of the header of the RR, 'end' must be the
