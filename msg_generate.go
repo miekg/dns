@@ -176,16 +176,16 @@ return off, err
 		st, _ := getTypeStruct(o.Type(), scope)
 
 		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
+		fmt.Fprintf(b, "rr := new(%s)\n", name)
+		fmt.Fprint(b, "rr.Hdr = h\n")
 		fmt.Fprint(b, `if noRdata(h) {
-return &h, off, nil
+return rr, off, nil
 	}
 var err error
 rdStart := off
 _ = rdStart
 
 `)
-		fmt.Fprintf(b, "rr := new(%s)\n", name)
-		fmt.Fprintln(b, "rr.Hdr = h\n")
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
