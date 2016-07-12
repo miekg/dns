@@ -132,10 +132,10 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
-func (mux *ServeMux) match(q string, t uint16) Handler {
+func (mux *ServeMux) match(q string, t uint16) []Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
-	var handler Handler
+	var handler []Handler
 	b := make([]byte, len(q)) // worst case, one label of length q
 	off := 0
 	end := false
@@ -148,11 +148,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			}
 		}
 		if h, ok := mux.z[string(b[:l])]; ok { // 'causes garbage, might want to change the map key
-			if t != TypeDS {
-				return h
-			}
-			// Continue for DS to see if we have a parent too, if so delegeate to the parent
-			handler = h
+			handler = append(handler, h)
 		}
 		off, end = NextLabel(q, off)
 		if end {
@@ -160,8 +156,10 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 	}
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
-	if h, ok := mux.z["."]; ok {
-		return h
+	if len(handler) == 0 {
+		if h, ok := mux.z["."]; ok {
+			handler = append(handler, h)
+		}
 	}
 	return handler
 }
@@ -199,15 +197,45 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // If the request message does not have exactly one question in the
 // question section a SERVFAIL is returned, unlesss Unsafe is true.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
-	var h Handler
+	var h []Handler
 	if len(request.Question) < 1 { // allow more than one question
-		h = failedHandler()
+		h = append(h, failedHandler())
 	} else {
 		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
-			h = failedHandler()
+			h = append(h, failedHandler())
 		}
 	}
-	h.ServeDNS(w, request)
+	buffer := &bufferedResponse{ResponseWriter: w}
+	// iterate over all the handlers. The last handler is responsible
+	// for handling any errors
+	for _, handler := range h[:len(h)-1] {
+		handler.ServeDNS(buffer, request)
+	}
+	mergeReply := &mergeBufferedResponse{bufferedResponse: buffer}
+	h[len(h)-1].ServeDNS(mergeReply, request)
+}
+
+// mergeBufferedResponse embeds a bufferedResponse type which in turn embeds a
+// ResponseWriter type. When WriteMsg is called, it checks to see if
+// the embedded bufferedResponse has any messages. If there are any
+// buffered messages, then they are combined before writing the
+// response onto the wire.
+type mergeBufferedResponse struct {
+	*bufferedResponse
+}
+
+func (mr *mergeBufferedResponse) WriteMsg(message *Msg) (err error) {
+	msg := message
+	for _, m := range mr.bufferedResponse.Msgs {
+		msg.Answer = append(msg.Answer, m.Answer...)
+		// If any of the buffered messages have Rcode success, then
+		// pass it along. Otherwise default to the one from this
+		// function call.
+		if m.MsgHdr.Rcode == RcodeSuccess {
+			msg.MsgHdr.Rcode = RcodeSuccess
+		}
+	}
+	return mr.bufferedResponse.ResponseWriter.WriteMsg(msg)
 }
 
 // Handle registers the handler with the given pattern
@@ -674,6 +702,16 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	}
 	_, err = w.writer.Write(data)
 	return err
+}
+
+type bufferedResponse struct {
+	ResponseWriter
+	Msgs []*Msg
+}
+
+func (b *bufferedResponse) WriteMsg(m *Msg) (err error) {
+	b.Msgs = append(b.Msgs, m)
+	return nil
 }
 
 // Write implements the ResponseWriter.Write method.
