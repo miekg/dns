@@ -801,7 +801,8 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]int, compress 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Salt, msg, off)
+	if rr.Salt == "-" { /* do nothing, empty salt */
+	}
 	if err != nil {
 		return off, err
 	}
@@ -843,7 +844,8 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression map[string]int, comp
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Salt, msg, off)
+	if rr.Salt == "-" { /* do nothing, empty salt */
+	}
 	if err != nil {
 		return off, err
 	}
@@ -2567,7 +2569,7 @@ func unpackNSEC3PARAM(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Salt, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Salt, off, err = unpackStringHex(msg, off, off+int(rr.SaltLength))
 	if err != nil {
 		return rr, off, err
 	}
