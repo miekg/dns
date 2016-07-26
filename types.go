@@ -958,7 +958,7 @@ type NSEC3PARAM struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string `dns:"hex"`
+	Salt       string `dns:"size-hex:SaltLength"`
 }
 
 func (rr *NSEC3PARAM) String() string {
@@ -1219,8 +1219,7 @@ func StringToTime(s string) (uint32, error) {
 	return uint32(t.Unix() - (mod * year68)), nil
 }
 
-// saltToString converts a NSECX salt to uppercase and
-// returns "-" when it is empty
+// saltToString converts a NSECX salt to uppercase and returns "-" when it is empty.
 func saltToString(s string) string {
 	if len(s) == 0 {
 		return "-"

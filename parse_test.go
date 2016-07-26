@@ -360,6 +360,7 @@ func TestNSEC(t *testing.T) {
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC":                                                                                 "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC TYPE65534":                                                                       "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC TYPE65534",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSec Type65534":                                                                       "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC TYPE65534",
+		"44ohaq2njb0idnvolt9ggthvsk1e1uv8.skydns.test. NSEC3 1 0 0 - 44OHAQ2NJB0IDNVOLT9GGTHVSK1E1UVA":                                             "44ohaq2njb0idnvolt9ggthvsk1e1uv8.skydns.test.\t3600\tIN\tNSEC3\t1 0 0 - 44OHAQ2NJB0IDNVOLT9GGTHVSK1E1UVA",
 	}
 	for i, o := range nsectests {
 		rr, err := NewRR(i)
