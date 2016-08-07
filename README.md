@@ -50,6 +50,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://dnslookup.org
 * https://github.com/looterz/grimd
 * https://github.com/phamhongviet/serf-dns
+* https://github.com/zaccone/goPubIP
 
 Send pull request if you want to be listed here.
 
