@@ -677,3 +677,36 @@ zDCJkckCgYEAndqM5KXGk5xYo+MAA1paZcbTUXwaWwjLU+XSRSSoyBEi5xMtfvUb
 kFsxKCqxAnBVGEWAvVZAiiTOxleQFjz5RnL0BQp9Lg2cQe+dvuUmIAA=
 -----END RSA PRIVATE KEY-----`)
 )
+
+func testShutdownBindPort(t *testing.T, protocol string, port string) {
+	handler := NewServeMux()
+	handler.HandleFunc(".", func(w ResponseWriter, r *Msg) {})
+	s := &Server{
+		Addr:    net.JoinHostPort("127.0.0.1", port),
+		Net:     protocol,
+		Handler: handler,
+	}
+	go func() {
+		if err := s.ListenAndServe(); err != nil {
+			t.Log(err)
+		}
+	}()
+	time.Sleep(500 * time.Millisecond)
+	if err := s.Shutdown(); err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		if err := s.ListenAndServe(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	time.Sleep(500 * time.Millisecond)
+}
+
+func TestShutdownBindPortUDP(t *testing.T) {
+	testShutdownBindPort(t, "udp", "1153")
+}
+
+func TestShutdownBindPortTCP(t *testing.T) {
+	testShutdownBindPort(t, "tcp", "1154")
+}
