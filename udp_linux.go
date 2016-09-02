@@ -21,6 +21,7 @@ func setUDPSocketOptions4(conn *net.UDPConn) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1); err != nil {
 		return err
 	}
@@ -39,6 +40,7 @@ func setUDPSocketOptions6(conn *net.UDPConn) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_RECVPKTINFO, 1); err != nil {
 		return err
 	}
@@ -56,6 +58,7 @@ func getUDPSocketOptions6Only(conn *net.UDPConn) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer file.Close()
 	// dual stack. See http://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
 	v6only, err := syscall.GetsockoptInt(int(file.Fd()), syscall.IPPROTO_IPV6, syscall.IPV6_V6ONLY)
 	if err != nil {
@@ -69,5 +72,6 @@ func getUDPSocketName(conn *net.UDPConn) (syscall.Sockaddr, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 	return syscall.Getsockname(int(file.Fd()))
 }
