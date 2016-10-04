@@ -128,13 +128,17 @@ func (rr *OPT) Do() bool {
 }
 
 // SetDo sets the DO (DNSSEC OK) bit.
-func (rr *OPT) SetDo() {
-	rr.Hdr.Ttl |= _DO
-}
-
-// ClearDo clears the DO (DNSSEC OK) bit.
-func (rr *OPT) ClearDo() {
-	rr.Hdr.Ttl &^= _DO
+func (rr *OPT) SetDo(do ...bool) {
+	// if we pass an argument, set the DO bit to that value
+	if len(do) == 1 {
+		if do[0] {
+			rr.Hdr.Ttl |= _DO
+		} else {
+			rr.Hdr.Ttl &^= _DO
+		}
+	} else {
+		rr.Hdr.Ttl |= _DO
+	}
 }
 
 // EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to it.
