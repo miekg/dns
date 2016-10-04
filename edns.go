@@ -132,6 +132,11 @@ func (rr *OPT) SetDo() {
 	rr.Hdr.Ttl |= _DO
 }
 
+// ClearDo clears the DO (DNSSEC OK) bit.
+func (rr *OPT) ClearDo() {
+	rr.Hdr.Ttl &^= _DO
+}
+
 // EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to it.
 type EDNS0 interface {
 	// Option returns the option code for the option.
