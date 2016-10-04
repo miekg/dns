@@ -15,6 +15,18 @@ func TestOPTTtl(t *testing.T) {
 	if !e.Do() {
 		t.Errorf("DO bit should be non-zero")
 	}
+	e.SetDo()
+	if !e.Do() {
+		t.Errorf("DO bit should still be non-zero")
+	}
+	e.ClearDo()
+	if e.Do() {
+		t.Errorf("DO bit should be zero")
+	}
+	e.ClearDo()
+	if e.Do() {
+		t.Errorf("DO bit should still be zero")
+	}
 
 	if e.Version() != 0 {
 		t.Errorf("version should be non-zero")
