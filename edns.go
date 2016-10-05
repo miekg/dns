@@ -128,8 +128,9 @@ func (rr *OPT) Do() bool {
 }
 
 // SetDo sets the DO (DNSSEC OK) bit.
+// If we pass an argument, set the DO bit to that value.
+// It is possible to pass 2 or more arguments. Any arguments after the 1st is silently ignored.
 func (rr *OPT) SetDo(do ...bool) {
-	// if we pass an argument, set the DO bit to that value
 	if len(do) == 1 {
 		if do[0] {
 			rr.Hdr.Ttl |= _DO
