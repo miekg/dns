@@ -7,7 +7,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-const TypeISBN uint16 = 0x0F01
+const TypeISBN uint16 = 0xFF00
 
 // A crazy new RR type :)
 type ISBN struct {
