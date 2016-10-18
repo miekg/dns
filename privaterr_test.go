@@ -101,7 +101,7 @@ func TestPrivateByteSlice(t *testing.T) {
 	}
 }
 
-const TypeVERSION uint16 = 0x0F02
+const TypeVERSION uint16 = 0xFF01
 
 type VERSION struct {
 	x string
