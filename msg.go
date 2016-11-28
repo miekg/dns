@@ -508,12 +508,6 @@ func unpackTxtString(msg []byte, offset int) (string, int, error) {
 		switch b {
 		case '"', '\\':
 			s = append(s, '\\', b)
-		case '\t':
-			s = append(s, `\t`...)
-		case '\r':
-			s = append(s, `\r`...)
-		case '\n':
-			s = append(s, `\n`...)
 		default:
 			if b < 32 || b > 127 { // unprintable
 				var buf [3]byte
