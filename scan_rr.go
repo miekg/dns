@@ -2016,9 +2016,12 @@ func setUINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 	s, e, c1 := endingToTxtSlice(c, "bad UINFO Uinfo", f)
 	if e != nil {
-		return nil, e, ""
+		return nil, e, c1
 	}
-	rr.Uinfo = s[0] // silently discard anything above
+	if ln := len(s); ln == 0 {
+		return rr, nil, c1
+	}
+	rr.Uinfo = s[0] // silently discard anything after the first character-string
 	return rr, nil, c1
 }
 
