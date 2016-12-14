@@ -691,17 +691,17 @@ func testShutdownBindPort(t *testing.T, protocol string, port string) {
 			t.Log(err)
 		}
 	}()
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	if err := s.Shutdown(); err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
 			t.Fatal(err)
 		}
 	}()
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 }
 
 func TestShutdownBindPortUDP(t *testing.T) {
