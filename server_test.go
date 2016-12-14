@@ -695,6 +695,7 @@ func testShutdownBindPort(t *testing.T, protocol string, port string) {
 	if err := s.Shutdown(); err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(500 * time.Millisecond)
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
 			t.Fatal(err)
