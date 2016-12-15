@@ -681,17 +681,22 @@ kFsxKCqxAnBVGEWAvVZAiiTOxleQFjz5RnL0BQp9Lg2cQe+dvuUmIAA=
 func testShutdownBindPort(t *testing.T, protocol string, port string) {
 	handler := NewServeMux()
 	handler.HandleFunc(".", func(w ResponseWriter, r *Msg) {})
+	startedCh := make(chan struct{})
 	s := &Server{
 		Addr:    net.JoinHostPort("127.0.0.1", port),
 		Net:     protocol,
 		Handler: handler,
+		NotifyStartedFunc: func() {
+			startedCh <- struct{}{}
+		},
 	}
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
 			t.Log(err)
 		}
 	}()
-	time.Sleep(100 * time.Millisecond)
+	<-startedCh
+	t.Logf("DNS server is started on: %s", s.Addr)
 	if err := s.Shutdown(); err != nil {
 		t.Fatal(err)
 	}
@@ -701,7 +706,8 @@ func testShutdownBindPort(t *testing.T, protocol string, port string) {
 			t.Fatal(err)
 		}
 	}()
-	time.Sleep(100 * time.Millisecond)
+	<-startedCh
+	t.Logf("DNS server is started on: %s", s.Addr)
 }
 
 func TestShutdownBindPortUDP(t *testing.T) {
