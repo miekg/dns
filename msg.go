@@ -554,8 +554,12 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	if err != nil {
 		return nil, len(msg), err
 	}
-	end := off + int(h.Rdlength)
 
+	return UnpackRdata(h, msg, off)
+}
+
+func UnpackRdata(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
+	end := off + int(h.Rdlength)
 	if fn, known := typeToUnpack[h.Rrtype]; !known {
 		rr, off, err = unpackRFC3597(h, msg, off)
 	} else {
