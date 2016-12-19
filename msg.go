@@ -537,10 +537,17 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off1, err = rr.pack(msg, off, compression, compress)
+	headerEnd, err := rr.Header().pack(msg, off, compression, compress)
+	if err != nil {
+		return off1, err
+	}
+
+	off1, err = rr.pack(msg, headerEnd, compression, compress)
 	if err != nil {
 		return len(msg), err
 	}
+	rr.Header().Rdlength = uint16(off-headerEnd)
+	
 	// TODO(miek): Not sure if this is needed? If removed we can remove rawmsg.go as well.
 	if rawSetRdlength(msg, off, off1) {
 		return off1, nil
@@ -554,8 +561,12 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	if err != nil {
 		return nil, len(msg), err
 	}
-	end := off + int(h.Rdlength)
 
+	return UnpackRdata(h, msg, off)
+}
+
+func UnpackRdata(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
+	end := off + int(h.Rdlength)
 	if fn, known := typeToUnpack[h.Rrtype]; !known {
 		rr, off, err = unpackRFC3597(h, msg, off)
 	} else {
