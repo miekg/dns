@@ -537,10 +537,17 @@ func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress boo
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off1, err = rr.pack(msg, off, compression, compress)
+	headerEnd, err := rr.Header().pack(msg, off, compression, compress)
+	if err != nil {
+		return off1, err
+	}
+
+	off1, err = rr.pack(msg, headerEnd, compression, compress)
 	if err != nil {
 		return len(msg), err
 	}
+	rr.Header().Rdlength = uint16(off-headerEnd)
+	
 	// TODO(miek): Not sure if this is needed? If removed we can remove rawmsg.go as well.
 	if rawSetRdlength(msg, off, off1) {
 		return off1, nil

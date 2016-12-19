@@ -81,13 +81,8 @@ func main() {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
-		fmt.Fprint(b, `off, err := rr.Hdr.pack(msg, off, compression, compress)
-if err != nil {
-	return off, err
-}
-headerEnd := off
-`)
+		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {\n", name)
+
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
@@ -169,7 +164,6 @@ return off, err
 			}
 		}
 		// We have packed everything, only now we know the rdlength of this RR
-		fmt.Fprintln(b, "rr.Header().Rdlength = uint16(off-headerEnd)")
 		fmt.Fprintln(b, "return off, nil }\n")
 	}
 
