@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net"
 	"strconv"
@@ -35,7 +34,6 @@ const (
 	TypeMG         uint16 = 8
 	TypeMR         uint16 = 9
 	TypeNULL       uint16 = 10
-	TypeWKS        uint16 = 11
 	TypePTR        uint16 = 12
 	TypeHINFO      uint16 = 13
 	TypeMINFO      uint16 = 14
@@ -65,7 +63,6 @@ const (
 	TypeOPT        uint16 = 41 // EDNS
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
-	TypeIPSECKEY   uint16 = 45
 	TypeRRSIG      uint16 = 46
 	TypeNSEC       uint16 = 47
 	TypeDNSKEY     uint16 = 48
@@ -73,6 +70,7 @@ const (
 	TypeNSEC3      uint16 = 50
 	TypeNSEC3PARAM uint16 = 51
 	TypeTLSA       uint16 = 52
+	TypeSMIMEA     uint16 = 53
 	TypeHIP        uint16 = 55
 	TypeNINFO      uint16 = 56
 	TypeRKEY       uint16 = 57
@@ -136,6 +134,7 @@ const (
 	RcodeBadName        = 20
 	RcodeBadAlg         = 21
 	RcodeBadTrunc       = 22 // TSIG
+	RcodeBadCookie      = 23 // DNS Cookies
 
 	// Message Opcodes. There is no 3.
 	OpcodeQuery  = 0
@@ -481,12 +480,6 @@ func appendDomainNameByte(s []byte, b byte) []byte {
 
 func appendTXTStringByte(s []byte, b byte) []byte {
 	switch b {
-	case '\t':
-		return append(s, '\\', 't')
-	case '\r':
-		return append(s, '\\', 'r')
-	case '\n':
-		return append(s, '\\', 'n')
 	case '"', '\\':
 		return append(s, '\\', b)
 	}
@@ -526,17 +519,8 @@ func nextByte(b []byte, offset int) (byte, int) {
 			return dddToByte(b[offset+1:]), 4
 		}
 	}
-	// not \ddd, maybe a control char
-	switch b[offset+1] {
-	case 't':
-		return '\t', 2
-	case 'r':
-		return '\r', 2
-	case 'n':
-		return '\n', 2
-	default:
-		return b[offset+1], 2
-	}
+	// not \ddd, just an RFC 1035 "quoted" character
+	return b[offset+1], 2
 }
 
 type SPF struct {
@@ -871,57 +855,6 @@ func (rr *SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
-type IPSECKEY struct {
-	Hdr        RR_Header
-	Precedence uint8
-	// GatewayType: 1: A record, 2: AAAA record, 3: domainname.
-	// 0 is use for no type and GatewayName should be "." then.
-	GatewayType uint8
-	Algorithm   uint8
-	// Gateway can be an A record, AAAA record or a domain name.
-	GatewayA    net.IP `dns:"a"`
-	GatewayAAAA net.IP `dns:"aaaa"`
-	GatewayName string `dns:"domain-name"`
-	PublicKey   string `dns:"base64"`
-}
-
-func (rr *IPSECKEY) String() string {
-	s := rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
-		" " + strconv.Itoa(int(rr.GatewayType)) +
-		" " + strconv.Itoa(int(rr.Algorithm))
-	switch rr.GatewayType {
-	case 0:
-		fallthrough
-	case 3:
-		s += " " + rr.GatewayName
-	case 1:
-		s += " " + rr.GatewayA.String()
-	case 2:
-		s += " " + rr.GatewayAAAA.String()
-	default:
-		s += " ."
-	}
-	s += " " + rr.PublicKey
-	return s
-}
-
-func (rr *IPSECKEY) len() int {
-	l := rr.Hdr.len() + 3 + 1
-	switch rr.GatewayType {
-	default:
-		fallthrough
-	case 0:
-		fallthrough
-	case 3:
-		l += len(rr.GatewayName)
-	case 1:
-		l += 4
-	case 2:
-		l += 16
-	}
-	return l + base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-}
-
 type KEY struct {
 	DNSKEY
 }
@@ -973,9 +906,9 @@ type NSEC3 struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string `dns:"size-hex"`
+	Salt       string `dns:"size-hex:SaltLength"`
 	HashLength uint8
-	NextDomain string   `dns:"size-base32"`
+	NextDomain string   `dns:"size-base32:HashLength"`
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
@@ -1011,7 +944,7 @@ type NSEC3PARAM struct {
 	Flags      uint8
 	Iterations uint16
 	SaltLength uint8
-	Salt       string `dns:"hex"`
+	Salt       string `dns:"size-hex:SaltLength"`
 }
 
 func (rr *NSEC3PARAM) String() string {
@@ -1100,13 +1033,35 @@ func (rr *TLSA) String() string {
 		" " + rr.Certificate
 }
 
+type SMIMEA struct {
+	Hdr          RR_Header
+	Usage        uint8
+	Selector     uint8
+	MatchingType uint8
+	Certificate  string `dns:"hex"`
+}
+
+func (rr *SMIMEA) String() string {
+	s := rr.Hdr.String() +
+		strconv.Itoa(int(rr.Usage)) +
+		" " + strconv.Itoa(int(rr.Selector)) +
+		" " + strconv.Itoa(int(rr.MatchingType))
+
+	// Every Nth char needs a space on this output. If we output
+	// this as one giant line, we can't read it can in because in some cases
+	// the cert length overflows scan.maxTok (2048).
+	sx := splitN(rr.Certificate, 1024) // conservative value here
+	s += " " + strings.Join(sx, " ")
+	return s
+}
+
 type HIP struct {
 	Hdr                RR_Header
 	HitLength          uint8
 	PublicKeyAlgorithm uint8
 	PublicKeyLength    uint16
-	Hit                string   `dns:"hex"`
-	PublicKey          string   `dns:"base64"`
+	Hit                string   `dns:"size-hex:HitLength"`
+	PublicKey          string   `dns:"size-base64:PublicKeyLength"`
 	RendezvousServers  []string `dns:"domain-name"`
 }
 
@@ -1127,31 +1082,6 @@ type NINFO struct {
 }
 
 func (rr *NINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.ZSData) }
-
-type WKS struct {
-	Hdr      RR_Header
-	Address  net.IP `dns:"a"`
-	Protocol uint8
-	BitMap   []uint16 `dns:"wks"`
-}
-
-func (rr *WKS) len() int {
-	// TODO: this is missing something...
-	return rr.Hdr.len() + net.IPv4len + 1
-}
-
-func (rr *WKS) String() (s string) {
-	s = rr.Hdr.String()
-	if rr.Address != nil {
-		s += rr.Address.String()
-	}
-	// TODO(miek): missing protocol here, see /etc/protocols
-	for i := 0; i < len(rr.BitMap); i++ {
-		// should lookup the port
-		s += " " + strconv.Itoa(int(rr.BitMap[i]))
-	}
-	return s
-}
 
 type NID struct {
 	Hdr        RR_Header
@@ -1286,9 +1216,9 @@ func TimeToString(t uint32) string {
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
 func StringToTime(s string) (uint32, error) {
-	t, e := time.Parse("20060102150405", s)
-	if e != nil {
-		return 0, e
+	t, err := time.Parse("20060102150405", s)
+	if err != nil {
+		return 0, err
 	}
 	mod := (t.Unix() / year68) - 1
 	if mod < 0 {
@@ -1297,8 +1227,7 @@ func StringToTime(s string) (uint32, error) {
 	return uint32(t.Unix() - (mod * year68)), nil
 }
 
-// saltToString converts a NSECX salt to uppercase and
-// returns "-" when it is empty
+// saltToString converts a NSECX salt to uppercase and returns "-" when it is empty.
 func saltToString(s string) string {
 	if len(s) == 0 {
 		return "-"
@@ -1325,4 +1254,26 @@ func copyIP(ip net.IP) net.IP {
 	p := make(net.IP, len(ip))
 	copy(p, ip)
 	return p
+}
+
+// SplitN splits a string into N sized string chunks.
+// This might become an exported function once.
+func splitN(s string, n int) []string {
+	if len(s) < n {
+		return []string{s}
+	}
+	sx := []string{}
+	p, i := 0, n
+	for {
+		if i <= len(s) {
+			sx = append(sx, s[p:i])
+		} else {
+			sx = append(sx, s[p:])
+			break
+
+		}
+		p, i = p+n, i+n
+	}
+
+	return sx
 }
