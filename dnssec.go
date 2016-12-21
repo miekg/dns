@@ -516,8 +516,9 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	}
 	// Remainder
 	expo += uint64(keybuf[keyoff])
-	if expo > 2<<31+1 {
-		// Larger expo than supported. > F5
+	if expo > uint64(int(^uint(0)>>1)) || expo > 2<<31+1 {
+		// Larger expo than supported. 
+		// > than int capacity or > F5
 		return nil
 	}
 	pubkey.E = int(expo)
