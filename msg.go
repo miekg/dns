@@ -759,9 +759,6 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
 		return err
 	}
-	if off == len(msg) {
-		return ErrTruncated
-	}
 
 	dns.Id = dh.Id
 	dns.Response = (dh.Bits & _QR) != 0
@@ -774,6 +771,10 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dns.AuthenticatedData = (dh.Bits & _AD) != 0
 	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
+
+	if off == len(msg) {
+		return ErrTruncated
+	}
 
 	// Optimistically use the count given to us in the header
 	dns.Question = make([]Question, 0, int(dh.Qdcount))
