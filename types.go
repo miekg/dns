@@ -535,7 +535,7 @@ type SRV struct {
 	Priority uint16
 	Weight   uint16
 	Port     uint16
-	Target   string `dns:"domain-name"`
+	Target   string `dns:"cdomain-name"`
 }
 
 func (rr *SRV) String() string {
