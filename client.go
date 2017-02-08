@@ -35,6 +35,7 @@ type Client struct {
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
+	Attempts       int               // number of attempts before giving up and returning an error to the caller
 	group          singleflight
 }
 
@@ -107,7 +108,7 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 // of 512 bytes.
 func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	if !c.SingleInflight {
-		return c.exchange(m, a)
+		return c.exchangeAttempt(m, a)
 	}
 	// This adds a bunch of garbage, TODO(miek).
 	t := "nop"
@@ -119,7 +120,7 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 		cl = cl1
 	}
 	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
-		return c.exchange(m, a)
+		return c.exchangeAttempt(m, a)
 	})
 	if err != nil {
 		return r, rtt, err
@@ -152,6 +153,22 @@ func (c *Client) writeTimeout() time.Duration {
 		return c.WriteTimeout
 	}
 	return dnsTimeout
+}
+
+func (c *Client) exchangeAttempt(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	maxAttempts := c.Attempts
+	if maxAttempts <= 0 {
+		maxAttempts = 1
+	}
+
+	for attempts := 0; attempts < maxAttempts; attempts++ {
+		r, rtt, err = c.exchange(m, a)
+		if err == nil {
+			return r, rtt, nil
+		}
+	}
+
+	return nil, 0, err
 }
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
