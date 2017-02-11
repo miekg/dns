@@ -412,7 +412,7 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 		n, err := io.Copy(w, bytes.NewReader(p))
 		return int(n), err
 	}
-	n, err = co.Conn.(*net.UDPConn).Write(p)
+	n, err = co.Conn.Write(p)
 	return n, err
 }
 
