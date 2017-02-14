@@ -9,6 +9,7 @@
 package dns
 
 //go:generate go run msg_generate.go
+//go:generate go run compress_generate.go
 
 import (
 	crand "crypto/rand"
@@ -262,7 +263,9 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 				bsFresh = true
 			}
 			// Don't try to compress '.'
-			if compress && roBs[begin:] != "." {
+			// We should only compress when compress it true, but we should also still pick
+			// up names that can be used for *future* compression(s).
+			if compression != nil && roBs[begin:] != "." {
 				if p, ok := compression[roBs[begin:]]; !ok {
 					// Only offsets smaller than this can be used.
 					if offset < maxCompressionOffset {
@@ -892,10 +895,8 @@ func (dns *Msg) String() string {
 func (dns *Msg) Len() int {
 	// We always return one more than needed.
 	l := 12 // Message header is always 12 bytes
-	var compression map[string]int
-	if dns.Compress {
-		compression = make(map[string]int)
-	}
+	compression := map[string]int{}
+
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].len()
 		if dns.Compress {
@@ -987,97 +988,6 @@ func compressionLenSearch(c map[string]int, s string) (int, bool) {
 			break
 		}
 		off, end = NextLabel(s, off)
-	}
-	return 0, false
-}
-
-// TODO(miek): should add all types, because the all can be *used* for compression. Autogenerate from msg_generate and put in zmsg.go
-func compressionLenHelperType(c map[string]int, r RR) {
-	switch x := r.(type) {
-	case *NS:
-		compressionLenHelper(c, x.Ns)
-	case *MX:
-		compressionLenHelper(c, x.Mx)
-	case *CNAME:
-		compressionLenHelper(c, x.Target)
-	case *PTR:
-		compressionLenHelper(c, x.Ptr)
-	case *SOA:
-		compressionLenHelper(c, x.Ns)
-		compressionLenHelper(c, x.Mbox)
-	case *MB:
-		compressionLenHelper(c, x.Mb)
-	case *MG:
-		compressionLenHelper(c, x.Mg)
-	case *MR:
-		compressionLenHelper(c, x.Mr)
-	case *MF:
-		compressionLenHelper(c, x.Mf)
-	case *MD:
-		compressionLenHelper(c, x.Md)
-	case *RT:
-		compressionLenHelper(c, x.Host)
-	case *RP:
-		compressionLenHelper(c, x.Mbox)
-		compressionLenHelper(c, x.Txt)
-	case *MINFO:
-		compressionLenHelper(c, x.Rmail)
-		compressionLenHelper(c, x.Email)
-	case *AFSDB:
-		compressionLenHelper(c, x.Hostname)
-	case *SRV:
-		compressionLenHelper(c, x.Target)
-	case *NAPTR:
-		compressionLenHelper(c, x.Replacement)
-	case *RRSIG:
-		compressionLenHelper(c, x.SignerName)
-	case *NSEC:
-		compressionLenHelper(c, x.NextDomain)
-		// HIP?
-	}
-}
-
-// Only search on compressing these types.
-func compressionLenSearchType(c map[string]int, r RR) (int, bool) {
-	switch x := r.(type) {
-	case *NS:
-		return compressionLenSearch(c, x.Ns)
-	case *MX:
-		return compressionLenSearch(c, x.Mx)
-	case *CNAME:
-		return compressionLenSearch(c, x.Target)
-	case *DNAME:
-		return compressionLenSearch(c, x.Target)
-	case *PTR:
-		return compressionLenSearch(c, x.Ptr)
-	case *SOA:
-		k, ok := compressionLenSearch(c, x.Ns)
-		k1, ok1 := compressionLenSearch(c, x.Mbox)
-		if !ok && !ok1 {
-			return 0, false
-		}
-		return k + k1, true
-	case *MB:
-		return compressionLenSearch(c, x.Mb)
-	case *MG:
-		return compressionLenSearch(c, x.Mg)
-	case *MR:
-		return compressionLenSearch(c, x.Mr)
-	case *MF:
-		return compressionLenSearch(c, x.Mf)
-	case *MD:
-		return compressionLenSearch(c, x.Md)
-	case *RT:
-		return compressionLenSearch(c, x.Host)
-	case *MINFO:
-		k, ok := compressionLenSearch(c, x.Rmail)
-		k1, ok1 := compressionLenSearch(c, x.Email)
-		if !ok && !ok1 {
-			return 0, false
-		}
-		return k + k1, true
-	case *AFSDB:
-		return compressionLenSearch(c, x.Hostname)
 	}
 	return 0, false
 }
