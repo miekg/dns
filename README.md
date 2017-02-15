@@ -142,6 +142,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 6975 - Algorithm Understanding in DNSSEC
 * 7043 - EUI48/EUI64 records
 * 7314 - DNS (EDNS) EXPIRE Option
+* 7828 - edns-tcp-keepalive EDNS0 Option
 * 7553 - URI record
 * 7858 - DNS over TLS: Initiation and Performance Considerations (draft)
 * 7873 - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)

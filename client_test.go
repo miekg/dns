@@ -77,8 +77,8 @@ func TestClientTLSSync(t *testing.T) {
 	}
 }
 
-func TestClientSyncBadId(t *testing.T) {
-	HandleFunc("miek.nl.", HelloServerBadId)
+func TestClientSyncBadID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
