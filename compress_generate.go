@@ -15,7 +15,6 @@ import (
 	"go/types"
 	"log"
 	"os"
-	"strings"
 )
 
 var packageHdr = `
@@ -176,29 +175,6 @@ func main() {
 	fatalIfErr(err)
 	defer f.Close()
 	f.Write(res)
-}
-
-// structMember will take a tag like dns:"size-base32:SaltLength" and return the last part of this string.
-func structMember(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) == 0 {
-		return ""
-	}
-	f := fields[len(fields)-1]
-	// f should have a closing "
-	if len(f) > 1 {
-		return f[:len(f)-1]
-	}
-	return f
-}
-
-// structTag will take a tag like dns:"size-base32:SaltLength" and return base32.
-func structTag(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) < 2 {
-		return ""
-	}
-	return fields[1][len("\"size-"):]
 }
 
 func fatalIfErr(err error) {
