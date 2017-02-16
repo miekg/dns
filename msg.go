@@ -731,12 +731,9 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
-	compress := dns.Compress
-	dns.Compress = false
-	if packLen := dns.Len() + 1; len(msg) < packLen {
+	if packLen := dns.UncompressedLen() + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
-	dns.Compress = compress
 
 	// Pack it in: header and then the pieces.
 	off := 0
@@ -883,6 +880,36 @@ func (dns *Msg) String() string {
 		}
 	}
 	return s
+}
+
+// UncompressedLen returns the message length when in uncompressed wire format,
+// irregardless of the state of the dns.Compress flag (unlike Len(), which factors
+// in compression settings).
+func (dns *Msg) UncompressedLen() int {
+	// We always return one more than needed.
+	l := 12 // Message header is always 12 bytes
+	for i := 0; i < len(dns.Question); i++ {
+		l += dns.Question[i].len()
+	}
+	for i := 0; i < len(dns.Answer); i++ {
+		if dns.Answer[i] == nil {
+			continue
+		}
+		l += dns.Answer[i].len()
+	}
+	for i := 0; i < len(dns.Ns); i++ {
+		if dns.Ns[i] == nil {
+			continue
+		}
+		l += dns.Ns[i].len()
+	}
+	for i := 0; i < len(dns.Extra); i++ {
+		if dns.Extra[i] == nil {
+			continue
+		}
+		l += dns.Extra[i].len()
+	}
+	return l
 }
 
 // Len returns the message length when in (un)compressed wire format.
