@@ -19,6 +19,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/ed25519"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -38,6 +40,8 @@ const (
 	ECCGOST
 	ECDSAP256SHA256
 	ECDSAP384SHA384
+	ED25519
+	ED448
 	INDIRECT   uint8 = 252
 	PRIVATEDNS uint8 = 253 // Private (experimental keys)
 	PRIVATEOID uint8 = 254
@@ -56,6 +60,8 @@ var AlgorithmToString = map[uint8]string{
 	ECCGOST:          "ECC-GOST",
 	ECDSAP256SHA256:  "ECDSAP256SHA256",
 	ECDSAP384SHA384:  "ECDSAP384SHA384",
+	ED25519:          "ED25519",
+	ED448:            "ED448",
 	INDIRECT:         "INDIRECT",
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
@@ -73,6 +79,7 @@ var AlgorithmToHash = map[uint8]crypto.Hash{
 	ECDSAP256SHA256:  crypto.SHA256,
 	ECDSAP384SHA384:  crypto.SHA384,
 	RSASHA512:        crypto.SHA512,
+	ED25519:          crypto.Hash(0),
 }
 
 // DNSSEC hashing algorithm codes.
@@ -301,16 +308,26 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		return ErrAlg
 	}
 
-	h := hash.New()
-	h.Write(signdata)
-	h.Write(wire)
+	switch rr.Algorithm {
+	case ED25519:
+		signature, err := sign(k, append(signdata, wire...), crypto.Hash(0), rr.Algorithm)
+		if err != nil {
+			return err
+		}
 
-	signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
-	if err != nil {
-		return err
+		rr.Signature = toBase64(signature)
+	default:
+		h := hash.New()
+		h.Write(signdata)
+		h.Write(wire)
+
+		signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
+		if err != nil {
+			return err
+		}
+
+		rr.Signature = toBase64(signature)
 	}
-
-	rr.Signature = toBase64(signature)
 
 	return nil
 }
@@ -352,6 +369,9 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 		// 	signature = append(signature, intToBytes(r1, 20)...)
 		// 	signature = append(signature, intToBytes(s1, 20)...)
 		// 	rr.Signature = signature
+
+	case ED25519:
+		return signature, nil
 	}
 
 	return nil, ErrAlg
@@ -452,6 +472,17 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		h.Write(signeddata)
 		h.Write(wire)
 		if ecdsa.Verify(pubkey, h.Sum(nil), r, s) {
+			return nil
+		}
+		return ErrSig
+
+	case ED25519:
+		pubkey := k.publicKeyED25519()
+		if pubkey == nil {
+			return ErrKey
+		}
+
+		if ed25519.Verify(pubkey, append(signeddata, wire...), sigbuf) {
 			return nil
 		}
 		return ErrSig
@@ -576,6 +607,17 @@ func (k *DNSKEY) publicKeyDSA() *dsa.PublicKey {
 	pubkey.Parameters.G = big.NewInt(0).SetBytes(g)
 	pubkey.Y = big.NewInt(0).SetBytes(y)
 	return pubkey
+}
+
+func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
+	keybuf, err := fromBase64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	if len(keybuf) != ed25519.PublicKeySize {
+		return nil
+	}
+	return keybuf
 }
 
 type wireSlice [][]byte

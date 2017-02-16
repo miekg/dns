@@ -66,7 +66,7 @@ Send pull request if you want to be listed here.
     * Parsing RRs ~ 100K RR/s, that's 5M records in about 50 seconds;
 * Server side programming (mimicking the net/http package);
 * Client side programming;
-* DNSSEC: signing, validating and key generation for DSA, RSA and ECDSA;
+* DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519;
 * EDNS0, NSID, Cookies;
 * AXFR/IXFR;
 * TSIG, SIG(0);
@@ -146,6 +146,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7553 - URI record
 * 7858 - DNS over TLS: Initiation and Performance Considerations (draft)
 * 7873 - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)
+* 8080 - EdDSA for DNSSEC
 * xxxx - EDNS0 DNS Update Lease (draft)
 
 ## Loosely based upon

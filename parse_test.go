@@ -1215,6 +1215,7 @@ func TestNewPrivateKey(t *testing.T) {
 		{RSASHA1, 1024},
 		{RSASHA256, 2048},
 		{DSA, 1024},
+		{ED25519, 256},
 	}
 
 	for _, algo := range algorithms {
