@@ -121,11 +121,11 @@ func (c *Client) Exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
 		return c.exchange(m, a)
 	})
+	if r != nil && shared {
+		r = r.Copy()
+	}
 	if err != nil {
 		return r, rtt, err
-	}
-	if shared {
-		return r.Copy(), rtt, nil
 	}
 	return r, rtt, nil
 }
