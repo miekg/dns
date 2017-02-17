@@ -43,7 +43,7 @@ const (
 	PRIVATEOID uint8 = 254
 )
 
-// ALgorithmToString is a map of algorithm IDs to algorithm names.
+// AlgorithmToString is a map of algorithm IDs to algorithm names.
 var AlgorithmToString = map[uint8]string{
 	RSAMD5:           "RSAMD5",
 	DH:               "DH",
