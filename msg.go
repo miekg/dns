@@ -734,12 +734,10 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
-	compress := dns.Compress
-	dns.Compress = false
-	if packLen := dns.Len() + 1; len(msg) < packLen {
+	uncompressedLen := compressedLen(dns, false)
+	if packLen := uncompressedLen + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
-	dns.Compress = compress
 
 	// Pack it in: header and then the pieces.
 	off := 0
@@ -892,14 +890,18 @@ func (dns *Msg) String() string {
 // If dns.Compress is true compression it is taken into account. Len()
 // is provided to be a faster way to get the size of the resulting packet,
 // than packing it, measuring the size and discarding the buffer.
-func (dns *Msg) Len() int {
+func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
+
+// compressedLen returns the message length when in compressed wire format
+// when compress is true, otherwise the uncompressed length is returned.
+func compressedLen(dns *Msg, compress bool) int {
 	// We always return one more than needed.
 	l := 12 // Message header is always 12 bytes
 	compression := map[string]int{}
 
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].len()
-		if dns.Compress {
+		if compress {
 			compressionLenHelper(compression, dns.Question[i].Name)
 		}
 	}
@@ -908,7 +910,7 @@ func (dns *Msg) Len() int {
 			continue
 		}
 		l += dns.Answer[i].len()
-		if dns.Compress {
+		if compress {
 			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
 			if ok {
 				l += 1 - k
@@ -926,7 +928,7 @@ func (dns *Msg) Len() int {
 			continue
 		}
 		l += dns.Ns[i].len()
-		if dns.Compress {
+		if compress {
 			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
 			if ok {
 				l += 1 - k
@@ -944,7 +946,7 @@ func (dns *Msg) Len() int {
 			continue
 		}
 		l += dns.Extra[i].len()
-		if dns.Compress {
+		if compress {
 			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
 			if ok {
 				l += 1 - k
