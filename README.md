@@ -25,6 +25,7 @@ two versions of Go, currently: 1.6 and 1.7.
 
 A not-so-up-to-date-list-that-may-be-actually-current:
 
+* https://github.com/coredns/coredns
 * https://cloudflare.com
 * https://github.com/abh/geodns
 * http://www.statdns.com/
