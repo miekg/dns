@@ -36,6 +36,10 @@ type Client struct {
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
+	// LocalAddr is the local address to use when dialing an address. The
+	// address must be of a compatible type for the network being dialed.
+	// If nil, a local address is automatically chosen.
+	LocalAddr net.Addr
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -181,9 +185,9 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 
 	if tls {
-		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, c.dialTimeout())
+		co, err = c.DialTimeoutWithTLS(network, a)
 	} else {
-		co, err = DialTimeout(network, a, c.dialTimeout())
+		co, err = c.DialTimeoutEx(network, a)
 	}
 
 	if err != nil {
@@ -446,6 +450,18 @@ func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, er
 	return conn, nil
 }
 
+// Client.DialTimeoutEx acts like DialTimeout, but uses the client's settings.
+func (c *Client) DialTimeoutEx(network, address string) (conn *Conn, err error) {
+	dialer := net.Dialer{Timeout: c.dialTimeout(), LocalAddr: c.LocalAddr}
+
+	conn = new(Conn)
+	conn.Conn, err = dialer.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
 // DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
 func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
 	var dialer net.Dialer
@@ -453,6 +469,20 @@ func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout 
 
 	conn = new(Conn)
 	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// Client.DialTimeoutWithTLS acts like DialTimeoutWithTLS, but uses the client's settings.
+func (c *Client) DialTimeoutWithTLS(network, address string) (conn *Conn, err error) {
+	var dialer net.Dialer
+	dialer.Timeout = c.dialTimeout()
+	dialer.LocalAddr = c.LocalAddr
+
+	conn = new(Conn)
+	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, c.TLSConfig)
 	if err != nil {
 		return nil, err
 	}
