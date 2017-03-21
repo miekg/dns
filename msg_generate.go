@@ -139,8 +139,10 @@ return off, err
 			case st.Tag(i) == `dns:"base64"`:
 				o("off, err = packStringBase64(rr.%s, msg, off)\n")
 
-			case strings.HasPrefix(st.Tag(i), `dns:"size-hex:SaltLength`): // Hack to fix empty salt length for NSEC3
-				o("if rr.%s == \"-\" { /* do nothing, empty salt */ }\n")
+			case strings.HasPrefix(st.Tag(i), `dns:"size-hex:SaltLength`):
+				// directly write instead of using o() so we get the error check in the correct place
+				field := st.Field(i).Name()
+				fmt.Fprintf(b, "// Only pack salt if value is not \"-\", i.e. empty\nif rr.%s != \"-\" {\noff, err = packStringHex(rr.%s, msg, off)\nif err != nil {\nreturn off, err\n}\n}\n", field, field)
 				continue
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
