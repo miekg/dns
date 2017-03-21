@@ -142,7 +142,14 @@ return off, err
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex:SaltLength`):
 				// directly write instead of using o() so we get the error check in the correct place
 				field := st.Field(i).Name()
-				fmt.Fprintf(b, "// Only pack salt if value is not \"-\", i.e. empty\nif rr.%s != \"-\" {\noff, err = packStringHex(rr.%s, msg, off)\nif err != nil {\nreturn off, err\n}\n}\n", field, field)
+				fmt.Fprintf(b, `// Only pack salt if value is not "-", i.e. empty
+if rr.%s != "-" {
+  off, err = packStringHex(rr.%s, msg, off)
+  if err != nil {
+    return off, err
+  }
+}
+`, field, field)
 				continue
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
