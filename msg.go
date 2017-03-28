@@ -330,8 +330,8 @@ func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	labels := 0
 	off1 := 0
 	lenmsg := len(msg)
-	ptr := 0 // number of pointers followed
-	maxLen := 255 // max length of domain name in wire format 
+	ptr := 0      // number of pointers followed
+	maxLen := 255 // max length of domain name in wire format
 Loop:
 	for {
 		if off >= lenmsg {
@@ -355,7 +355,7 @@ Loop:
 					fallthrough
 				case '"', '\\':
 					s = append(s, '\\', b)
-					maxLen += 1  // \ is overhead in presentation format 
+					maxLen += 1 // \ is overhead in presentation format
 				default:
 					if b < 32 || b >= 127 { // unprintable use \DDD
 						var buf [3]byte
@@ -373,12 +373,12 @@ Loop:
 					}
 				}
 			}
-			// never exceed the allowed label count lenght (63) 
-			if labels >= 63 { 
+			// never exceed the allowed label count length (63)
+			if labels >= 63 {
 				return "", lenmsg, &Error{err: "name exceeds 63 labels"}
 			}
 			labels += 1
-			// never exceed the allowed doman name length (255 octets) 
+			// never exceed the allowed doman name length (255 octets)
 			if len(s) >= maxLen {
 				return "", lenmsg, &Error{err: "name exceeded allowed 255 octets"}
 			}
