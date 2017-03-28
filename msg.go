@@ -14,13 +14,17 @@ package dns
 import (
 	crand "crypto/rand"
 	"encoding/binary"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
 	"sync"
 )
 
-const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
+const (
+	maxCompressionOffset    = 2 << 13 // We have 14 bits for the compression pointer
+	maxDomainNameWireOctets = 255     // See RFC 1035 section 2.3.4
+)
 
 var (
 	ErrAlg           error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
@@ -327,11 +331,10 @@ End:
 // UnpackDomainName unpacks a domain name into a string.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	s := make([]byte, 0, 64)
-	labels := 0
 	off1 := 0
 	lenmsg := len(msg)
-	ptr := 0      // number of pointers followed
-	maxLen := 255 // max length of domain name in wire format
+	maxLen := maxDomainNameWireOctets
+	ptr := 0 // number of pointers followed
 Loop:
 	for {
 		if off >= lenmsg {
@@ -355,9 +358,10 @@ Loop:
 					fallthrough
 				case '"', '\\':
 					s = append(s, '\\', b)
-					maxLen += 1 // \ is overhead in presentation format
+					// presentation-format \X escapes add an extra byte
+					maxLen += 1
 				default:
-					if b < 32 || b >= 127 { // unprintable use \DDD
+					if b < 32 || b >= 127 { // unprintable, use \DDD
 						var buf [3]byte
 						bufs := strconv.AppendInt(buf[:0], int64(b), 10)
 						s = append(s, '\\')
@@ -367,20 +371,12 @@ Loop:
 						for _, r := range bufs {
 							s = append(s, r)
 						}
-						maxLen += 3 // unprintable char is 3 extra bytes
+						// presentation-format \DDD escapes add 3 extra bytes
+						maxLen += 3
 					} else {
 						s = append(s, b)
 					}
 				}
-			}
-			// never exceed the allowed label count length (63)
-			if labels >= 63 {
-				return "", lenmsg, &Error{err: "name exceeds 63 labels"}
-			}
-			labels += 1
-			// never exceed the allowed doman name length (255 octets)
-			if len(s) >= maxLen {
-				return "", lenmsg, &Error{err: "name exceeded allowed 255 octets"}
 			}
 			s = append(s, '.')
 			off += c
@@ -415,6 +411,12 @@ Loop:
 	}
 	if len(s) == 0 {
 		s = []byte(".")
+	}
+	// error if the name is too long, but don't throw it away
+	if len(s) >= maxLen {
+		return string(s), lenmsg, &Error{
+			err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets),
+		}
 	}
 	return string(s), off1, nil
 }
