@@ -51,7 +51,7 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 
 // Cover returns true if a name is covered by the NSEC3 record
 func (rr *NSEC3) Cover(name string) bool {
-	hname := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
+	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
 	labels := Split(owner)
 	if len(labels) < 2 {
@@ -63,33 +63,34 @@ func (rr *NSEC3) Cover(name string) bool {
 		return false
 	}
 
-	hash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
-	fmt.Println("hname:", hname, "hash:", hash, "next:", rr.NextDomain)
-	if hash == rr.NextDomain { // empty interval
+	ownerHash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
+	nextHash := rr.NextDomain
+	fmt.Println("nameHash:", nameHash, "ownerHash:", ownerHash, "nextHash:", nextHash)
+	if ownerHash == nextHash { // empty interval
 		fmt.Println("b")
 		return false
 	}
-	if hash > rr.NextDomain { // end of zone
-		if hname > hash { // covered since there is nothing after hash
+	if ownerHash > nextHash { // end of zone
+		if nameHash > ownerHash { // covered since there is nothing after ownerHash
 			fmt.Println("c")
 			return true
 		}
 		fmt.Println("d")
-		return hname < rr.NextDomain // if hname is before beginning of zone it is covered
+		return nameHash < nextHash // if nameHash is before beginning of zone it is covered
 	}
-	if hname < hash { // hname is before hash, not covered
+	if nameHash < ownerHash { // nameHash is before ownerHash, not covered
 		fmt.Println("e")
 		return false
 	}
 	fmt.Println("f")
-	return hname < rr.NextDomain // if hname is before NextDomain is it covered (between hash and NextDomain
+	return nameHash < nextHash // if nameHash is before nextHash is it covered (between ownerHash and nextHash)
 }
 
 // Match returns true if a name matches the NSEC3 record
 func (rr *NSEC3) Match(name string) bool {
-	hname := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
+	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
-	labels := Split(rr.Hdr.Name)
+	labels := Split(owner)
 	if len(labels) < 2 {
 		return false
 	}
@@ -97,8 +98,8 @@ func (rr *NSEC3) Match(name string) bool {
 		// name is outside zone
 		return false
 	}
-	hash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
-	if hash == hname {
+	ownerHash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
+	if ownerHash == nameHash {
 		return true
 	}
 	return false
