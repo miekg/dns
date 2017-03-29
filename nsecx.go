@@ -2,7 +2,6 @@ package dns
 
 import (
 	"crypto/sha1"
-	"fmt"
 	"hash"
 	"strings"
 )
@@ -57,32 +56,24 @@ func (rr *NSEC3) Cover(name string) bool {
 	if len(labels) < 2 {
 		return false
 	}
-	if !strings.HasSuffix(strings.ToUpper(name), owner[labels[1]:]) {
-		// name is outside zone
-		fmt.Println("a")
+	if !strings.HasSuffix(strings.ToUpper(name), owner[labels[1]:]) { // name is outside zone
 		return false
 	}
 
 	ownerHash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
 	nextHash := rr.NextDomain
-	fmt.Println("nameHash:", nameHash, "ownerHash:", ownerHash, "nextHash:", nextHash)
 	if ownerHash == nextHash { // empty interval
-		fmt.Println("b")
 		return false
 	}
 	if ownerHash > nextHash { // end of zone
 		if nameHash > ownerHash { // covered since there is nothing after ownerHash
-			fmt.Println("c")
 			return true
 		}
-		fmt.Println("d")
 		return nameHash < nextHash // if nameHash is before beginning of zone it is covered
 	}
 	if nameHash < ownerHash { // nameHash is before ownerHash, not covered
-		fmt.Println("e")
 		return false
 	}
-	fmt.Println("f")
 	return nameHash < nextHash // if nameHash is before nextHash is it covered (between ownerHash and nextHash)
 }
 
