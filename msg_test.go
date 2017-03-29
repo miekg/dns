@@ -62,7 +62,7 @@ func TestUnpackDomainName(t *testing.T) {
 		{"too long domain",
 			string(54) + "x" + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
 			"x" + longDomain + ".",
-			"dns: domain name exceeded 255 wire-format octets"},
+			ErrLongDomain.Error()},
 		{"too long by pointer",
 			// a matryoshka doll name to get over 255 octets after expansion via internal pointers
 			string([]byte{
@@ -74,7 +74,7 @@ func TestUnpackDomainName(t *testing.T) {
 				192, 10, 192, 9, 192, 8, 192, 7, 192, 6, 192, 5, 192, 4, 192, 3, 192, 2, 192, 1,
 			}),
 			"",
-			"dns: domain name exceeded 255 wire-format octets"},
+			ErrLongDomain.Error()},
 		{"long by pointer",
 			// a matryoshka doll name _not_ exceeding 255 octets after expansion
 			string([]byte{

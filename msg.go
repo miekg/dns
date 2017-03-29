@@ -37,6 +37,7 @@ var (
 	ErrKeyAlg        error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey           error = &Error{err: "bad key"}
 	ErrKeySize       error = &Error{err: "bad key size"}
+	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
 	ErrNoSig         error = &Error{err: "no signature found"}
 	ErrPrivKey       error = &Error{err: "bad private key"}
 	ErrRcode         error = &Error{err: "bad rcode"}
@@ -411,12 +412,9 @@ Loop:
 	}
 	if len(s) == 0 {
 		s = []byte(".")
-	}
-	// error if the name is too long, but don't throw it away
-	if len(s) >= maxLen {
-		return string(s), lenmsg, &Error{
-			err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets),
-		}
+	} else if len(s) >= maxLen {
+		// error if the name is too long, but don't throw it away
+		return string(s), lenmsg, ErrLongDomain
 	}
 	return string(s), off1, nil
 }
