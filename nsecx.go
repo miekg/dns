@@ -52,15 +52,16 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 func (rr *NSEC3) Cover(name string) bool {
 	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
-	labels := Split(owner)
-	if len(labels) < 2 {
+	parts := strings.SplitN(owner, ".", 2)
+	if len(parts) < 2 {
 		return false
 	}
-	if !strings.HasSuffix(strings.ToUpper(name), owner[labels[1]:]) { // name is outside zone
+	ownerHash := parts[0]
+	ownerZone := parts[1]
+	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
 
-	ownerHash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
 	nextHash := rr.NextDomain
 	if ownerHash == nextHash { // empty interval
 		return false
@@ -81,15 +82,15 @@ func (rr *NSEC3) Cover(name string) bool {
 func (rr *NSEC3) Match(name string) bool {
 	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
-	labels := Split(owner)
-	if len(labels) < 2 {
+	parts := strings.SplitN(owner, ".", 2)
+	if len(parts) < 2 {
 		return false
 	}
-	if !strings.HasSuffix(strings.ToUpper(name), owner[labels[1]:]) {
-		// name is outside zone
+	ownerHash := parts[0]
+	ownerZone := parts[1]
+	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
-	ownerHash := strings.TrimRight(owner[labels[0]:labels[1]], ".")
 	if ownerHash == nameHash {
 		return true
 	}
