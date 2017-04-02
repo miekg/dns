@@ -19,6 +19,9 @@ func TestNsec3(t *testing.T) {
 	if !nsec3.(*NSEC3).Match("nl.") { // name hash = sk4e8fj94u78smusb40o1n0oltbblu2r
 		t.Fatal("sk4e8fj94u78smusb40o1n0oltbblu2r.nl. should match sk4e8fj94u78smusb40o1n0oltbblu2r.nl.")
 	}
+	if !nsec3.(*NSEC3).Match("NL.") { // name hash = sk4e8fj94u78smusb40o1n0oltbblu2r
+		t.Fatal("sk4e8fj94u78smusb40o1n0oltbblu2r.NL. should match sk4e8fj94u78smusb40o1n0oltbblu2r.nl.")
+	}
 	if nsec3.(*NSEC3).Match("com.") { //
 		t.Fatal("com. is not in the zone nl.")
 	}
