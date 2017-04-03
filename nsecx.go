@@ -52,12 +52,12 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 func (rr *NSEC3) Cover(name string) bool {
 	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
-	parts := strings.SplitN(owner, ".", 2)
-	if len(parts) < 2 {
+	labelIndices := Split(owner)
+	if len(labelIndices) < 2 {
 		return false
 	}
-	ownerHash := parts[0]
-	ownerZone := parts[1]
+	ownerHash := owner[:labelIndices[1]-1]
+	ownerZone := owner[labelIndices[1]:]
 	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
@@ -82,12 +82,12 @@ func (rr *NSEC3) Cover(name string) bool {
 func (rr *NSEC3) Match(name string) bool {
 	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
-	parts := strings.SplitN(owner, ".", 2)
-	if len(parts) < 2 {
+	labelIndices := Split(owner)
+	if len(labelIndices) < 2 {
 		return false
 	}
-	ownerHash := parts[0]
-	ownerZone := parts[1]
+	ownerHash := owner[:labelIndices[1]-1]
+	ownerZone := owner[labelIndices[1]:]
 	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
