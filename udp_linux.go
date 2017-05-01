@@ -50,10 +50,6 @@ func setUDPSocketOptions4(conn *net.UDPConn) error {
 		return err
 	}
 
-	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, so_REUSEPORT, 1); err != nil {
-		return err
-	}
-
 	if err := syscall.SetsockoptInt(int(file.Fd()), syscall.IPPROTO_IP, syscall.IP_PKTINFO, 1); err != nil {
 		return err
 	}
