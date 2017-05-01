@@ -1527,3 +1527,22 @@ func TestParseAVC(t *testing.T) {
 		}
 	}
 }
+
+func TestParseNoTtl(t *testing.T) {
+	zone := `$ORIGIN example.org.
+@ IN 3700 A 192.0.2.2
+@ IN A 192.0.2.2
+	`
+
+	to := ParseZone(strings.NewReader(zone), "", "test-parse-no-ttl")
+	ttl := uint32(0)
+	for x := range to {
+		if ttl == 0 {
+			ttl = x.RR.Header().Ttl
+			continue
+		}
+		if ttl != x.RR.Header().Ttl {
+			t.Errorf("TTL for %s should be %d, but got %d", x.RR.Header().Name, ttl, x.RR.Header().Ttl)
+		}
+	}
+}
