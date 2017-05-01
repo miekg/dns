@@ -2,4 +2,4 @@
 
 package dns
 
-const so_REUSEPORT = 0x0200
+const so_REUSEPORT = 0xf
