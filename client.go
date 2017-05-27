@@ -199,6 +199,8 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	// Otherwise use the client's configured UDP size.
 	if opt == nil && c.UDPSize >= MinMsgSize {
 		co.UDPSize = c.UDPSize
+		// In this case also set the the EDNS0 bufsize to allow for larger responses.
+		m.SetEdns0(c.UDPSize, false /* dnssec */ )
 	}
 
 	co.TsigSecret = c.TsigSecret
