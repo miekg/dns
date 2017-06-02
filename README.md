@@ -58,6 +58,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * http://quilt.io
 * https://github.com/ipdcode/hades (JD.COM)
 * https://github.com/StackExchange/dnscontrol/
+* https://dnssectest.net/
 
 Send pull request if you want to be listed here.
 
