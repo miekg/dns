@@ -40,6 +40,8 @@ type ResponseWriter interface {
 	// Hijack lets the caller take over the connection.
 	// After a call to Hijack(), the DNS package will not do anything with the connection.
 	Hijack()
+	Tcp() bool
+	Udp() bool
 }
 
 type response struct {
@@ -721,6 +723,16 @@ func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
 
 // Hijack implements the ResponseWriter.Hijack method.
 func (w *response) Hijack() { w.hijacked = true }
+
+// Is the response being sent over TCP?
+func (w *response) Tcp() bool {
+	return w.tcp != nil
+}
+
+// Is the response being sent over UDP?
+func (w *response) Udp() bool {
+	return w.udp != nil
+}
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
