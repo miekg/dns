@@ -543,7 +543,7 @@ type SRV struct {
 	Priority uint16
 	Weight   uint16
 	Port     uint16
-	Target   string `dns:"domain-name"`
+	Target   string `dns:"cdomain-name"`
 }
 
 func (rr *SRV) String() string {
@@ -636,8 +636,8 @@ func (rr *AAAA) String() string {
 type PX struct {
 	Hdr        RR_Header
 	Preference uint16
-	Map822     string `dns:"domain-name"`
-	Mapx400    string `dns:"domain-name"`
+	Map822     string `dns:"cdomain-name"`
+	Mapx400    string `dns:"cdomain-name"`
 }
 
 func (rr *PX) String() string {
