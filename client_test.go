@@ -250,6 +250,9 @@ func TestClientConn(t *testing.T) {
 		t.Errorf("failed to exchange: %v", err)
 	}
 	r, err := cn.ReadMsg()
+	if err != nil {
+		t.Errorf("failed to get a valid answer: %v", err)
+	}
 	if r == nil || r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
@@ -262,6 +265,9 @@ func TestClientConn(t *testing.T) {
 	buf, err := cn.ReadMsgHeader(h)
 	if buf == nil {
 		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+	if err != nil {
+		t.Errorf("failed to get a valid answer: %v", err)
 	}
 	if int(h.Bits&0xF) != RcodeSuccess {
 		t.Errorf("failed to get an valid answer in ReadMsgHeader\n%v", r)
