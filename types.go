@@ -115,7 +115,7 @@ const (
 	ClassNONE   = 254
 	ClassANY    = 255
 
-	// Message Response Codes.
+	// Message Response Codes, see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
 	RcodeSuccess        = 0  // NoError   - No Error                          [DNS]
 	RcodeFormatError    = 1  // FormErr   - Format Error                      [DNS]
 	RcodeServerFailure  = 2  // ServFail  - Server Failure                    [DNS]
