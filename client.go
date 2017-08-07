@@ -37,6 +37,7 @@ type Client struct {
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
+	LocalAddr      net.Addr // local address to use for outgoing connections. If nil, a local address is automatically chosen
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -131,6 +132,69 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 	return r, err
 }
 
+// Dial connects to the address on the named network.
+func Dial(network, address string) (conn *Conn, err error) {
+	conn = new(Conn)
+	conn.Conn, err = net.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialTimeout acts like Dial but takes a timeout.
+func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
+	conn = new(Conn)
+	conn.Conn, err = net.DialTimeout(network, address, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialWithTLS connects to the address on the named network with TLS.
+func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
+	conn = new(Conn)
+	conn.Conn, err = tls.Dial(network, address, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
+func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
+	var dialer net.Dialer
+	dialer.Timeout = timeout
+
+	conn = new(Conn)
+	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// deadlineOrTimeout chooses between the provided deadline and timeout
+// by always preferring the deadline so long as it's non-zero (regardless
+// of which is bigger), and returns the equivalent deadline value.
+func deadlineOrTimeout(deadline time.Time, timeout time.Duration) time.Time {
+	if deadline.IsZero() {
+		return time.Now().Add(timeout)
+	}
+	return deadline
+}
+
+// deadlineOrTimeoutOrCtx returns the earliest of: a context deadline, or the
+// output of deadlineOrtimeout.
+func deadlineOrTimeoutOrCtx(ctx context.Context, deadline time.Time, timeout time.Duration) time.Time {
+	result := deadlineOrTimeout(deadline, timeout)
+	if ctxDeadline, ok := ctx.Deadline(); ok && ctxDeadline.Before(result) {
+		result = ctxDeadline
+	}
+	return result
+}
+
 // Exchange performs a synchronous query. It sends the message m to the address
 // contained in a and waits for a reply. Basic use pattern with a *dns.Client:
 //
@@ -176,6 +240,28 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (
 		return r, rtt, err
 	}
 	return r, rtt, nil
+}
+
+// Client.DialTimeout acts like DialTimeout, but uses the client's configuration
+func (c *Client) DialTimeoutFunc(network, address string) (conn *Conn, err error) {
+	dialer := net.Dialer{Timeout: c.dialTimeout(), LocalAddr: c.LocalAddr}
+
+	conn = new(Conn)
+	if conn.Conn, err = dialer.Dial(network, address); err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// Client.DialTimeoutWithTLS acts like DialTimeoutWithTLS, but uses the client's configuration
+func (c *Client) DialTimeoutWithTLS(network, address string) (conn *Conn, err error) {
+	dialer := net.Dialer{Timeout: c.dialTimeout(), LocalAddr: c.LocalAddr}
+
+	conn = new(Conn)
+	if conn.Conn, err = tls.DialWithDialer(&dialer, network, address, c.TLSConfig); err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 func (c *Client) dialTimeout() time.Duration {
@@ -229,12 +315,12 @@ func (c *Client) exchange(ctx context.Context, m *Msg, a string) (r *Msg, rtt ti
 	}
 
 	dialDeadline := deadlineOrTimeoutOrCtx(ctx, deadline, c.dialTimeout())
-	dialTimeout := dialDeadline.Sub(time.Now())
+	c.DialTimeout = dialDeadline.Sub(time.Now())
 
 	if tls {
-		co, err = DialTimeoutWithTLS(network, a, c.TLSConfig, dialTimeout)
+		co, err = c.DialTimeoutWithTLS(network, a)
 	} else {
-		co, err = DialTimeout(network, a, dialTimeout)
+		co, err = c.DialTimeoutFunc(network, a)
 	}
 
 	if err != nil {
@@ -465,67 +551,4 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 	}
 	n, err = co.Conn.Write(p)
 	return n, err
-}
-
-// Dial connects to the address on the named network.
-func Dial(network, address string) (conn *Conn, err error) {
-	conn = new(Conn)
-	conn.Conn, err = net.Dial(network, address)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// DialTimeout acts like Dial but takes a timeout.
-func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
-	conn = new(Conn)
-	conn.Conn, err = net.DialTimeout(network, address, timeout)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// DialWithTLS connects to the address on the named network with TLS.
-func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
-	conn = new(Conn)
-	conn.Conn, err = tls.Dial(network, address, tlsConfig)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
-func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
-	var dialer net.Dialer
-	dialer.Timeout = timeout
-
-	conn = new(Conn)
-	conn.Conn, err = tls.DialWithDialer(&dialer, network, address, tlsConfig)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// deadlineOrTimeout chooses between the provided deadline and timeout
-// by always preferring the deadline so long as it's non-zero (regardless
-// of which is bigger), and returns the equivalent deadline value.
-func deadlineOrTimeout(deadline time.Time, timeout time.Duration) time.Time {
-	if deadline.IsZero() {
-		return time.Now().Add(timeout)
-	}
-	return deadline
-}
-
-// deadlineOrTimeoutOrCtx returns the earliest of: a context deadline, or the
-// output of deadlineOrtimeout.
-func deadlineOrTimeoutOrCtx(ctx context.Context, deadline time.Time, timeout time.Duration) time.Time {
-	result := deadlineOrTimeout(deadline, timeout)
-	if ctxDeadline, ok := ctx.Deadline(); ok && ctxDeadline.Before(result) {
-		result = ctxDeadline
-	}
-	return result
 }
