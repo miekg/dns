@@ -33,6 +33,9 @@ func TestCompareDomainName(t *testing.T) {
 	if CompareDomainName(".", ".") != 0 {
 		t.Errorf("%s with %s should be %d", ".", ".", 0)
 	}
+	if CompareDomainName("test.com.", "TEST.COM.") != 2 {
+		t.Errorf("test.com. and TEST.COM. should be an exact match")
+	}
 }
 
 func TestSplit(t *testing.T) {
@@ -184,12 +187,14 @@ func BenchmarkLenLabels(b *testing.B) {
 }
 
 func BenchmarkCompareLabels(b *testing.B) {
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		CompareDomainName("www.example.com", "aa.example.com")
 	}
 }
 
 func BenchmarkIsSubDomain(b *testing.B) {
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		IsSubDomain("www.example.com", "aa.example.com")
 		IsSubDomain("example.com", "aa.example.com")

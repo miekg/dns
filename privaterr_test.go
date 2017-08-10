@@ -7,7 +7,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-const TypeISBN uint16 = 0x0F01
+const TypeISBN uint16 = 0xFF00
 
 // A crazy new RR type :)
 type ISBN struct {
@@ -87,6 +87,7 @@ func TestPrivateByteSlice(t *testing.T) {
 	rr1, off1, err := dns.UnpackRR(buf[:off], 0)
 	if err != nil {
 		t.Errorf("got error unpacking ISBN: %v", err)
+		return
 	}
 
 	if off1 != off {
@@ -100,7 +101,7 @@ func TestPrivateByteSlice(t *testing.T) {
 	}
 }
 
-const TypeVERSION uint16 = 0x0F02
+const TypeVERSION uint16 = 0xFF01
 
 type VERSION struct {
 	x string

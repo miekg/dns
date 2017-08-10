@@ -1,5 +1,7 @@
 package dns
 
+import "strings"
+
 // Holds a bunch of helper functions for dealing with labels.
 
 // SplitDomainName splits a name string into it's labels.
@@ -50,6 +52,7 @@ func SplitDomainName(s string) (labels []string) {
 //
 // s1 and s2 must be syntactically valid domain names.
 func CompareDomainName(s1, s2 string) (n int) {
+	s1, s2 = strings.ToLower(s1), strings.ToLower(s2)
 	s1 = Fqdn(s1)
 	s2 = Fqdn(s2)
 	l1 := Split(s1)
@@ -107,7 +110,7 @@ func CountLabel(s string) (labels int) {
 
 // Split splits a name s into its label indexes.
 // www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
-// The root name (.) returns nil. Also see SplitDomainName. 
+// The root name (.) returns nil. Also see SplitDomainName.
 // s must be a syntactically valid domain name.
 func Split(s string) []int {
 	if s == "." {

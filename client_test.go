@@ -1,10 +1,12 @@
 package dns
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -77,8 +79,8 @@ func TestClientTLSSync(t *testing.T) {
 	}
 }
 
-func TestClientSyncBadId(t *testing.T) {
-	HandleFunc("miek.nl.", HelloServerBadId)
+func TestClientSyncBadID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
 	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
@@ -167,36 +169,31 @@ func TestClientEDNS0Local(t *testing.T) {
 	m.Extra = append(m.Extra, o)
 
 	c := new(Client)
-	r, _, e := c.Exchange(m, addrstr)
-	if e != nil {
-		t.Logf("failed to exchange: %s", e.Error())
-		t.Fail()
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %s", err)
 	}
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Log("failed to get a valid answer")
-		t.Fail()
+		t.Error("failed to get a valid answer")
 		t.Logf("%v\n", r)
 	}
 
 	txt := r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello local edns" {
-		t.Log("Unexpected result for miek.nl", txt, "!= Hello local edns")
-		t.Fail()
+		t.Error("Unexpected result for miek.nl", txt, "!= Hello local edns")
 	}
 
 	// Validate the local options in the reply.
 	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_LOCAL).String()
 	if got != optStr1 {
-		t.Logf("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
-		t.Fail()
+		t.Errorf("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
 		t.Logf("%v\n", r)
 	}
 
 	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_LOCAL).String()
 	if got != optStr2 {
-		t.Logf("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
-		t.Fail()
+		t.Errorf("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
 		t.Logf("%v\n", r)
 	}
 }
@@ -253,6 +250,9 @@ func TestClientConn(t *testing.T) {
 		t.Errorf("failed to exchange: %v", err)
 	}
 	r, err := cn.ReadMsg()
+	if err != nil {
+		t.Errorf("failed to get a valid answer: %v", err)
+	}
 	if r == nil || r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
@@ -265,6 +265,9 @@ func TestClientConn(t *testing.T) {
 	buf, err := cn.ReadMsgHeader(h)
 	if buf == nil {
 		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+	if err != nil {
+		t.Errorf("failed to get a valid answer: %v", err)
 	}
 	if int(h.Bits&0xF) != RcodeSuccess {
 		t.Errorf("failed to get an valid answer in ReadMsgHeader\n%v", r)
@@ -305,12 +308,10 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Errorf("unable to unpack message: %v", err)
 	}
 	if len(r.Answer) != cnt {
-		t.Logf("answer count after regular unpack doesn't match: %d", len(r.Answer))
-		t.Fail()
+		t.Errorf("answer count after regular unpack doesn't match: %d", len(r.Answer))
 	}
 	if len(r.Extra) != cnt {
-		t.Logf("extra count after regular unpack doesn't match: %d", len(r.Extra))
-		t.Fail()
+		t.Errorf("extra count after regular unpack doesn't match: %d", len(r.Extra))
 	}
 
 	m.Truncated = true
@@ -324,16 +325,13 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Errorf("unable to unpack truncated message: %v", err)
 	}
 	if !r.Truncated {
-		t.Log("truncated message wasn't unpacked as truncated")
-		t.Fail()
+		t.Errorf("truncated message wasn't unpacked as truncated")
 	}
 	if len(r.Answer) != cnt {
-		t.Logf("answer count after truncated unpack doesn't match: %d", len(r.Answer))
-		t.Fail()
+		t.Errorf("answer count after truncated unpack doesn't match: %d", len(r.Answer))
 	}
 	if len(r.Extra) != cnt {
-		t.Logf("extra count after truncated unpack doesn't match: %d", len(r.Extra))
-		t.Fail()
+		t.Errorf("extra count after truncated unpack doesn't match: %d", len(r.Extra))
 	}
 
 	// Now we want to remove almost all of the extra records
@@ -357,16 +355,13 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Errorf("unable to unpack cutoff message: %v", err)
 	}
 	if !r.Truncated {
-		t.Log("truncated cutoff message wasn't unpacked as truncated")
-		t.Fail()
+		t.Error("truncated cutoff message wasn't unpacked as truncated")
 	}
 	if len(r.Answer) != cnt {
-		t.Logf("answer count after cutoff unpack doesn't match: %d", len(r.Answer))
-		t.Fail()
+		t.Errorf("answer count after cutoff unpack doesn't match: %d", len(r.Answer))
 	}
 	if len(r.Extra) != 0 {
-		t.Logf("extra count after cutoff unpack is not zero: %d", len(r.Extra))
-		t.Fail()
+		t.Errorf("extra count after cutoff unpack is not zero: %d", len(r.Extra))
 	}
 
 	// Now we want to remove almost all of the answer records too
@@ -391,12 +386,10 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Errorf("unable to unpack cutoff message: %v", err)
 	}
 	if !r.Truncated {
-		t.Log("truncated cutoff message wasn't unpacked as truncated")
-		t.Fail()
+		t.Error("truncated cutoff message wasn't unpacked as truncated")
 	}
 	if len(r.Answer) != 0 {
-		t.Logf("answer count after second cutoff unpack is not zero: %d", len(r.Answer))
-		t.Fail()
+		t.Errorf("answer count after second cutoff unpack is not zero: %d", len(r.Answer))
 	}
 
 	// Now leave only 1 byte of the question
@@ -406,8 +399,7 @@ func TestTruncatedMsg(t *testing.T) {
 	r = new(Msg)
 	err = r.Unpack(buf1)
 	if err == nil || err == ErrTruncated {
-		t.Logf("error should not be ErrTruncated from question cutoff unpack: %v", err)
-		t.Fail()
+		t.Errorf("error should not be ErrTruncated from question cutoff unpack: %v", err)
 	}
 
 	// Finally, if we only have the header, we should still return an error
@@ -415,7 +407,126 @@ func TestTruncatedMsg(t *testing.T) {
 
 	r = new(Msg)
 	if err = r.Unpack(buf1); err == nil || err != ErrTruncated {
-		t.Logf("error not ErrTruncated from header-only unpack: %v", err)
-		t.Fail()
+		t.Errorf("error not ErrTruncated from header-only unpack: %v", err)
+	}
+}
+
+func TestTimeout(t *testing.T) {
+	// Set up a dummy UDP server that won't respond
+	addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("unable to resolve local udp address: %v", err)
+	}
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer conn.Close()
+	addrstr := conn.LocalAddr().String()
+
+	// Message to send
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+
+	// Use a channel + timeout to ensure we don't get stuck if the
+	// Client Timeout is not working properly
+	done := make(chan struct{}, 2)
+
+	timeout := time.Millisecond
+	allowable := timeout + (10 * time.Millisecond)
+	abortAfter := timeout + (100 * time.Millisecond)
+
+	start := time.Now()
+
+	go func() {
+		c := &Client{Timeout: timeout}
+		_, _, err := c.Exchange(m, addrstr)
+		if err == nil {
+			t.Error("no timeout using Client.Exchange")
+		}
+		done <- struct{}{}
+	}()
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		c := &Client{}
+		_, _, err := c.ExchangeContext(ctx, m, addrstr)
+		if err == nil {
+			t.Error("no timeout using Client.ExchangeContext")
+		}
+		done <- struct{}{}
+	}()
+
+	// Wait for both the Exchange and ExchangeContext tests to be done.
+	for i := 0; i < 2; i++ {
+		select {
+		case <-done:
+		case <-time.After(abortAfter):
+		}
+	}
+
+	length := time.Since(start)
+
+	if length > allowable {
+		t.Errorf("exchange took longer (%v) than specified Timeout (%v)", length, timeout)
+	}
+}
+
+// Check that responses from deduplicated requests aren't shared between callers
+func TestConcurrentExchanges(t *testing.T) {
+	cases := make([]*Msg, 2)
+	cases[0] = new(Msg)
+	cases[1] = new(Msg)
+	cases[1].Truncated = true
+	for _, m := range cases {
+		block := make(chan struct{})
+		waiting := make(chan struct{})
+
+		handler := func(w ResponseWriter, req *Msg) {
+			r := m.Copy()
+			r.SetReply(req)
+
+			waiting <- struct{}{}
+			<-block
+			w.WriteMsg(r)
+		}
+
+		HandleFunc("miek.nl.", handler)
+		defer HandleRemove("miek.nl.")
+
+		s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+		if err != nil {
+			t.Fatalf("unable to run test server: %s", err)
+		}
+		defer s.Shutdown()
+
+		m := new(Msg)
+		m.SetQuestion("miek.nl.", TypeSRV)
+		c := &Client{
+			SingleInflight: true,
+		}
+		r := make([]*Msg, 2)
+
+		var wg sync.WaitGroup
+		wg.Add(len(r))
+		for i := 0; i < len(r); i++ {
+			go func(i int) {
+				r[i], _, _ = c.Exchange(m.Copy(), addrstr)
+				wg.Done()
+			}(i)
+		}
+		select {
+		case <-waiting:
+		case <-time.After(time.Second):
+			t.FailNow()
+		}
+		close(block)
+		wg.Wait()
+
+		if r[0] == r[1] {
+			t.Log("Got same response object, expected non-shared responses")
+			t.Fail()
+		}
 	}
 }
