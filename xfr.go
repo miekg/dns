@@ -115,8 +115,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	serial := uint32(0) // The first serial seen is the current server serial
 	first := true
 	last := false
-	n := 0
-	rs := q.Ns[0].(*SOA).Serial
+	qser := q.Ns[0].(*SOA).Serial
 	defer t.Close()
 	defer close(c)
 	timeout := dnsTimeout
@@ -134,11 +133,11 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
+		if in.Rcode != RcodeSuccess {
+			c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
+			return
+		}
 		if first {
-			if in.Rcode != RcodeSuccess {
-				c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
-				return
-			}
 			// Check if the returned answer is ok
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}
@@ -146,29 +145,26 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			}
 			// This serial is important
 			serial = in.Answer[0].(*SOA).Serial
-			c <- &Envelope{in.Answer, nil}
 			// requested serial is current serial
-			if rs == serial {
+			if qser == serial {
+				c <- &Envelope{in.Answer, nil}
 				return
 			}
 			first = false
-			n++
-		} else {
-			// Now we need to check each message for SOA records, to see what we need to do
-			t.tsigTimersOnly = true
-			// If the last record in the IXFR contains the servers' SOA,  we should quit
-			if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
-				n++
-				if v.Serial == serial {
-					if last || n == 2 {
-						c <- &Envelope{in.Answer, nil}
-						return
-					}
-					last = true
-				}
-			}
-			c <- &Envelope{in.Answer, nil}
 		}
+		// Now we need to check each message for SOA records, to see what we need to do
+		t.tsigTimersOnly = true
+		// If the last record in the IXFR contains the servers' SOA,  we should quit
+		if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
+			if v.Serial == serial {
+				if last || len(in.Answer) > 1 {
+					c <- &Envelope{in.Answer, nil}
+					return
+				}
+				last = true
+			}
+		}
+		c <- &Envelope{in.Answer, nil}
 	}
 }
 
