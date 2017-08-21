@@ -1,7 +1,7 @@
 package dns
 
 import (
-	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -19,6 +19,16 @@ type Transfer struct {
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
 	tsigTimersOnly bool
+}
+
+// XfrError represents an AXFR or IXFR error.
+type XfrError struct{ Rcode int }
+
+func (e *XfrError) Error() string {
+	if e == nil {
+		return "dns: <nil>"
+	}
+	return "dns: bad xfr rcode: " + strconv.Itoa(e.Rcode)
 }
 
 // Think we need to away to stop the transfer
@@ -83,7 +93,7 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 		}
 		if first {
 			if in.Rcode != RcodeSuccess {
-				c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
+				c <- &Envelope{in.Answer, &XfrError{in.Rcode}}
 				return
 			}
 			if !isSOAFirst(in) {
@@ -134,7 +144,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			return
 		}
 		if in.Rcode != RcodeSuccess {
-			c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
+			c <- &Envelope{in.Answer, &XfrError{in.Rcode}}
 			return
 		}
 		if first {
@@ -253,5 +263,3 @@ func isSOALast(in *Msg) bool {
 	}
 	return false
 }
-
-const errXFR = "bad xfr rcode: %d"
