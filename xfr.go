@@ -65,7 +65,7 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 			return
 		}
 		if q.Question[0].Qtype == TypeIXFR {
-			go t.inIxfr(q, env)
+			go t.inIxfr(q.Id, env)
 			return
 		}
 	}()
@@ -120,12 +120,9 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 	}
 }
 
-func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
-	id := q.Id
+func (t *Transfer) inIxfr(id uint16, c chan *Envelope) {
 	serial := uint32(0) // The first serial seen is the current server serial
 	first := true
-	last := false
-	qser := q.Ns[0].(*SOA).Serial
 	defer t.Close()
 	defer close(c)
 	timeout := dnsTimeout
@@ -143,11 +140,17 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
-		if in.Rcode != RcodeSuccess {
-			c <- &Envelope{in.Answer, &XfrError{in.Rcode}}
-			return
-		}
 		if first {
+			if in.Rcode != RcodeSuccess {
+				c <- &Envelope{in.Answer, &XfrError{in.Rcode}}
+				return
+			}
+			// A single SOA RR signals "no changes"
+			if len(in.Answer) == 1 && isSOAFirst(in) {
+				c <- &Envelope{in.Answer, nil}
+				return
+			}
+
 			// Check if the returned answer is ok
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}
@@ -155,26 +158,21 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			}
 			// This serial is important
 			serial = in.Answer[0].(*SOA).Serial
-			// requested serial is current serial
-			if qser == serial {
-				c <- &Envelope{in.Answer, nil}
-				return
-			}
-			first = false
+			first = !first
 		}
+
 		// Now we need to check each message for SOA records, to see what we need to do
-		t.tsigTimersOnly = true
-		// If the last record in the IXFR contains the servers' SOA,  we should quit
-		if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
-			if v.Serial == serial {
-				if last || len(in.Answer) > 1 {
+		if !first {
+			t.tsigTimersOnly = true
+			// If the last record in the IXFR contains the servers' SOA,  we should quit
+			if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
+				if v.Serial == serial {
 					c <- &Envelope{in.Answer, nil}
 					return
 				}
-				last = true
 			}
+			c <- &Envelope{in.Answer, nil}
 		}
-		c <- &Envelope{in.Answer, nil}
 	}
 }
 
