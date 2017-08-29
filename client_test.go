@@ -11,6 +11,39 @@ import (
 	"time"
 )
 
+func TestMsgHash(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl", TypeAAAA)
+	h := msgHash(m)
+	// the hash is obtained doing the sha256 of the name, hex qtype and hex qclass joined by slashes
+	if h != "3aab51d2977b53d9d62c6f69941089a73f3e313ea50c8939dd9a1256328e15ad" {
+		t.Fatalf("hash is %v", h)
+	}
+}
+
+func TestDialWithDialerUDP(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer("[::1]:0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+	conn, err := c.DialWithDialer(nil, addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	if conn == nil {
+		t.Fatalf("conn is nil")
+	}
+}
+
 func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
@@ -27,9 +60,12 @@ func TestClientSync(t *testing.T) {
 	c := new(Client)
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+		t.Fatalf("failed to exchange: %v", err)
 	}
-	if r != nil && r.Rcode != RcodeSuccess {
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 	// And now with plain Exchange().
@@ -42,7 +78,42 @@ func TestClientSync(t *testing.T) {
 	}
 }
 
-func TestClientTLSSync(t *testing.T) {
+func TestClientLocalAddress(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerEchoAddrPort)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+	laddr := net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345, Zone: ""}
+	d := net.Dialer{LocalAddr: &laddr}
+	r, _, err := c.ExchangeWithDialer(&d, m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r != nil && r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+	if len(r.Extra) != 1 {
+		t.Errorf("failed to get additional answers\n%v", r)
+	}
+	txt := r.Extra[0].(*TXT)
+	if txt == nil {
+		t.Errorf("invalid TXT response\n%v", txt)
+	}
+	if len(txt.Txt) != 1 || txt.Txt[0] != "127.0.0.1:12345" {
+		t.Errorf("invalid TXT response\n%v", txt.Txt)
+	}
+}
+
+func TestClientTLSSyncV4(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
@@ -65,6 +136,8 @@ func TestClientTLSSync(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
+
+	// test tcp-tls
 	c.Net = "tcp-tls"
 	c.TLSConfig = &tls.Config{
 		InsecureSkipVerify: true,
@@ -72,9 +145,88 @@ func TestClientTLSSync(t *testing.T) {
 
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+		t.Fatalf("failed to exchange: %v", err)
 	}
-	if r != nil && r.Rcode != RcodeSuccess {
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+
+	// test tcp4-tls
+	c.Net = "tcp4-tls"
+	c.TLSConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatalf("failed to exchange: %v", err)
+	}
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+}
+
+func TestClientTLSSyncV6(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	config := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	s, addrstr, err := RunLocalTLSServer("[::1]:0", &config)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+
+	// test tcp-tls
+	c.Net = "tcp-tls"
+	c.TLSConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatalf("failed to exchange: %v", err)
+	}
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+
+	// test tcp6-tls
+	c.Net = "tcp6-tls"
+	c.TLSConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatalf("failed to exchange: %v", err)
+	}
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 }
@@ -120,11 +272,11 @@ func TestClientEDNS0(t *testing.T) {
 	c := new(Client)
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+		t.Fatalf("failed to exchange: %v", err)
 	}
 
 	if r != nil && r.Rcode != RcodeSuccess {
-		t.Errorf("failed to get an valid answer\n%v", r)
+		t.Errorf("failed to get a valid answer\n%v", r)
 	}
 }
 
@@ -171,11 +323,14 @@ func TestClientEDNS0Local(t *testing.T) {
 	c := new(Client)
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %s", err)
+		t.Fatalf("failed to exchange: %s", err)
 	}
 
-	if r != nil && r.Rcode != RcodeSuccess {
-		t.Error("failed to get a valid answer")
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Fatal("failed to get a valid answer")
 		t.Logf("%v\n", r)
 	}
 
@@ -513,6 +668,9 @@ func TestConcurrentExchanges(t *testing.T) {
 		for i := 0; i < len(r); i++ {
 			go func(i int) {
 				r[i], _, _ = c.Exchange(m.Copy(), addrstr)
+				if r[i] == nil {
+					t.Fatalf("response %d is nil", i)
+				}
 				wg.Done()
 			}(i)
 		}
