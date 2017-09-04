@@ -313,7 +313,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				t <- &Token{Error: &ParseError{f, "too deeply nested $INCLUDE", l}}
 				return
 			}
-			parseZone(r1, l.token, neworigin, t, include+1)
+			parseZone(r1, neworigin, l.token, t, include+1)
 			st = zExpectOwnerDir
 		case zExpectDirTtlBl:
 			if l.value != zBlank {
