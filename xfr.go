@@ -113,8 +113,8 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	id := q.Id
 	serial := uint32(0) // The first serial seen is the current server serial
-	first := true
-	last := false
+	axfr := true
+	n := 0
 	qser := q.Ns[0].(*SOA).Serial
 	defer t.Close()
 	defer close(c)
@@ -137,7 +137,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
 			return
 		}
-		if first {
+		if n == 0 {
 			// Check if the returned answer is ok
 			if !isSOAFirst(in) {
 				c <- &Envelope{in.Answer, ErrSoa}
@@ -150,18 +150,22 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 				c <- &Envelope{in.Answer, nil}
 				return
 			}
-			first = false
 		}
 		// Now we need to check each message for SOA records, to see what we need to do
 		t.tsigTimersOnly = true
-		// If the last record in the IXFR contains the servers' SOA,  we should quit
-		if v, ok := in.Answer[len(in.Answer)-1].(*SOA); ok {
-			if v.Serial == serial {
-				if last || len(in.Answer) > 1 {
-					c <- &Envelope{in.Answer, nil}
-					return
+		for _, rr := range in.Answer {
+			if v, ok := rr.(*SOA); ok {
+				if v.Serial == serial {
+					n++
+					// quit if it's a full axfr or the the servers' SOA is repeated the third time
+					if axfr && n == 2 || n == 3 {
+						c <- &Envelope{in.Answer, nil}
+						return
+					}
+				} else if axfr {
+					// it's an ixfr
+					axfr = false
 				}
-				last = true
 			}
 		}
 		c <- &Envelope{in.Answer, nil}
