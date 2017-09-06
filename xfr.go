@@ -51,7 +51,7 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	env = make(chan *Envelope)
 	go func() {
 		if q.Question[0].Qtype == TypeAXFR {
-			go t.inAxfr(q.Id, env)
+			go t.inAxfr(q, env)
 			return
 		}
 		if q.Question[0].Qtype == TypeIXFR {
@@ -62,7 +62,7 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	return env, nil
 }
 
-func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
+func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 	first := true
 	defer t.Close()
 	defer close(c)
@@ -77,7 +77,7 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 			c <- &Envelope{nil, err}
 			return
 		}
-		if id != in.Id {
+		if q.Id != in.Id {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
@@ -111,7 +111,6 @@ func (t *Transfer) inAxfr(id uint16, c chan *Envelope) {
 }
 
 func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
-	id := q.Id
 	serial := uint32(0) // The first serial seen is the current server serial
 	axfr := true
 	n := 0
@@ -129,7 +128,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 			c <- &Envelope{nil, err}
 			return
 		}
-		if id != in.Id {
+		if q.Id != in.Id {
 			c <- &Envelope{in.Answer, ErrId}
 			return
 		}
