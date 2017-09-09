@@ -571,83 +571,6 @@ test                          IN CNAME test.a.example.com.
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 
-func ExampleParseZone() {
-	zone := `$ORIGIN .
-$TTL 3600       ; 1 hour
-name                    IN SOA  a6.nstld.com. hostmaster.nic.name. (
-                                203362132  ; serial
-                                300        ; refresh (5 minutes)
-                                300        ; retry (5 minutes)
-                                1209600    ; expire (2 weeks)
-                                300        ; minimum (5 minutes)
-                                )
-$TTL 10800      ; 3 hours
-name.	10800	IN	NS	name.
-               IN       NS      g6.nstld.com.
-               7200     NS      h6.nstld.com.
-             3600 IN    NS      j6.nstld.com.
-             IN 3600    NS      k6.nstld.com.
-                        NS      l6.nstld.com.
-                        NS      a6.nstld.com.
-                        NS      c6.nstld.com.
-                        NS      d6.nstld.com.
-                        NS      f6.nstld.com.
-                        NS      m6.nstld.com.
-(
-			NS	m7.nstld.com.
-)
-$ORIGIN name.
-0-0onlus                NS      ns7.ehiweb.it.
-                        NS      ns8.ehiweb.it.
-0-g                     MX      10 mx01.nic
-                        MX      10 mx02.nic
-                        MX      10 mx03.nic
-                        MX      10 mx04.nic
-$ORIGIN 0-g.name
-moutamassey             NS      ns01.yahoodomains.jp.
-                        NS      ns02.yahoodomains.jp.
-`
-	to := ParseZone(strings.NewReader(zone), "", "testzone")
-	for x := range to {
-		fmt.Println(x.RR)
-	}
-	// Output:
-	// name.	3600	IN	SOA	a6.nstld.com. hostmaster.nic.name. 203362132 300 300 1209600 300
-	// name.	10800	IN	NS	name.
-	// name.	10800	IN	NS	g6.nstld.com.
-	// name.	7200	IN	NS	h6.nstld.com.
-	// name.	3600	IN	NS	j6.nstld.com.
-	// name.	3600	IN	NS	k6.nstld.com.
-	// name.	10800	IN	NS	l6.nstld.com.
-	// name.	10800	IN	NS	a6.nstld.com.
-	// name.	10800	IN	NS	c6.nstld.com.
-	// name.	10800	IN	NS	d6.nstld.com.
-	// name.	10800	IN	NS	f6.nstld.com.
-	// name.	10800	IN	NS	m6.nstld.com.
-	// name.	10800	IN	NS	m7.nstld.com.
-	// 0-0onlus.name.	10800	IN	NS	ns7.ehiweb.it.
-	// 0-0onlus.name.	10800	IN	NS	ns8.ehiweb.it.
-	// 0-g.name.	10800	IN	MX	10 mx01.nic.name.
-	// 0-g.name.	10800	IN	MX	10 mx02.nic.name.
-	// 0-g.name.	10800	IN	MX	10 mx03.nic.name.
-	// 0-g.name.	10800	IN	MX	10 mx04.nic.name.
-	// moutamassey.0-g.name.name.	10800	IN	NS	ns01.yahoodomains.jp.
-	// moutamassey.0-g.name.name.	10800	IN	NS	ns02.yahoodomains.jp.
-}
-
-func ExampleHIP() {
-	h := `www.example.com     IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
-                AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
-9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQ
-b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
-        rvs.example.com. )`
-	if hip, err := NewRR(h); err == nil {
-		fmt.Println(hip.String())
-	}
-	// Output:
-	// www.example.com.	3600	IN	HIP	2 200100107B1A74DF365639CC39F1D578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.example.com.
-}
-
 func TestHIP(t *testing.T) {
 	h := `www.example.com.      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
@@ -682,24 +605,6 @@ b1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
 			if rr.RendezvousServers[j] != s {
 				t.Fatalf("expected server %d of record %d to be %s:\n%v", j, i, s, msg)
 			}
-		}
-	}
-}
-
-func ExampleSOA() {
-	s := "example.com. 1000 SOA master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100"
-	if soa, err := NewRR(s); err == nil {
-		fmt.Println(soa.String())
-	}
-	// Output:
-	// example.com.	1000	IN	SOA	master.example.com. admin.example.com. 1 4294967294 4294967293 4294967295 100
-}
-
-func TestLineNumberError(t *testing.T) {
-	s := "example.com. 1000 SOA master.example.com. admin.example.com. monkey 4294967294 4294967293 4294967295 100"
-	if _, err := NewRR(s); err != nil {
-		if err.Error() != "dns: bad SOA zone parameter: \"monkey\" at line: 1:68" {
-			t.Error("not expecting this error: ", err)
 		}
 	}
 }
@@ -799,28 +704,6 @@ func TestLowercaseTokens(t *testing.T) {
 			t.Errorf("failed to parse %#v, got %v", testrr, err)
 		}
 	}
-}
-
-func ExampleParseZone_generate() {
-	// From the manual: http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#id2566761
-	zone := "$GENERATE 1-2 0 NS SERVER$.EXAMPLE.\n$GENERATE 1-8 $ CNAME $.0"
-	to := ParseZone(strings.NewReader(zone), "0.0.192.IN-ADDR.ARPA.", "")
-	for x := range to {
-		if x.Error == nil {
-			fmt.Println(x.RR.String())
-		}
-	}
-	// Output:
-	// 0.0.0.192.IN-ADDR.ARPA.	3600	IN	NS	SERVER1.EXAMPLE.
-	// 0.0.0.192.IN-ADDR.ARPA.	3600	IN	NS	SERVER2.EXAMPLE.
-	// 1.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	1.0.0.0.192.IN-ADDR.ARPA.
-	// 2.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	2.0.0.0.192.IN-ADDR.ARPA.
-	// 3.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	3.0.0.0.192.IN-ADDR.ARPA.
-	// 4.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	4.0.0.0.192.IN-ADDR.ARPA.
-	// 5.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	5.0.0.0.192.IN-ADDR.ARPA.
-	// 6.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	6.0.0.0.192.IN-ADDR.ARPA.
-	// 7.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	7.0.0.0.192.IN-ADDR.ARPA.
-	// 8.0.0.192.IN-ADDR.ARPA.	3600	IN	CNAME	8.0.0.0.192.IN-ADDR.ARPA.
 }
 
 func TestSRVPacking(t *testing.T) {
