@@ -571,6 +571,34 @@ test                          IN CNAME test.a.example.com.
 	t.Logf("%d RRs parsed in %.2f s (%.2f RR/s)", i, float32(delta)/1e9, float32(i)/(float32(delta)/1e9))
 }
 
+func TestOmittedTTL(t *testing.T) {
+	zone := `
+$ORIGIN example.com.
+example.com. 42 IN SOA ns1.example.com. hostmaster.example.com. 1 86400 60 86400 3600 ; SOA
+example.com.        NS ns1.example.com. ; absolute owner name
+@                   NS ns2.example.com. ; current-origin owner name
+	                NS ns3.example.com. ; leading-space implied owner name
+	NS ns4.example.com ; leading-tab implied owner name
+`
+	var expectedTTL uint32 = 42
+	records := ParseZone(strings.NewReader(zone), "", "")
+	var i int
+	for record := range records {
+		i++
+		if record.Error != nil {
+			t.Error(record.Error)
+			continue
+		}
+		ttl := record.RR.Header().Ttl
+		if ttl != expectedTTL {
+			t.Errorf("%s: expected TTL %d, got %d", record.Comment[2:], expectedTTL, ttl)
+		}
+	}
+	if i != 5 {
+		t.Errorf("expected %d records, got %d", 5, i)
+	}
+}
+
 func TestHIP(t *testing.T) {
 	h := `www.example.com.      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
