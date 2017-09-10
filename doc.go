@@ -22,9 +22,9 @@ Or directly from a string:
 
      mx, err := dns.NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
 
-Or when the default TTL (3600) and class (IN) suit you:
+Or when the default origin (.) and TTL (3600) and class (IN) suit you:
 
-     mx, err := dns.NewRR("miek.nl. MX 10 mx.miek.nl.")
+     mx, err := dns.NewRR("miek.nl MX 10 mx.miek.nl")
 
 Or even:
 

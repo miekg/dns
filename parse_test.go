@@ -617,7 +617,7 @@ func TestRelativeNameErrors(t *testing.T) {
 		{
 			"relative owner name without origin",
 			"example.com 3600 IN SOA ns.example.com. hostmaster.example.com. 1 86400 60 86400 3600",
-			"relative domain name without origin",
+			"bad owner name",
 		},
 		{
 			"relative owner name in RDATA",
@@ -627,17 +627,17 @@ func TestRelativeNameErrors(t *testing.T) {
 		{
 			"origin reference without origin",
 			"@ 3600 IN SOA ns.example.com. hostmaster.example.com. 1 86400 60 86400 3600",
-			"origin reference without origin",
+			"bad owner name",
 		},
 		{
 			"relative owner name in $INCLUDE",
 			"$INCLUDE file.db example.com",
-			"relative domain name without origin",
+			"bad origin name",
 		},
 		{
 			"relative owner name in $ORIGIN",
 			"$ORIGIN example.com",
-			"relative domain name without origin",
+			"bad origin name",
 		},
 	}
 	for _, errorCase := range badZones {

@@ -139,10 +139,10 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 }
 
 // ParseZone reads a RFC 1035 style zonefile from r. It returns *Tokens on the
-// returned channel, which consist out the parsed RR, a potential comment or an error.
-// If there is an error the RR is nil. The string file is only used
+// returned channel, each consisting of either a parsed RR and optional comment
+// or a nil RR and an error. The string file is only used
 // in error reporting. The string origin is used as the initial origin, as
-// if the file would start with: $ORIGIN origin .
+// if the file would start with an $ORIGIN directive.
 // The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are supported.
 // The channel t is closed by ParseZone when the end of r is reached.
 //
@@ -193,13 +193,12 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 	// After detecting these, we know the zRrtype so we can jump to functions
 	// handling the rdata for each of these types.
 
-	if origin == "" {
-		origin = "."
-	}
-	origin = Fqdn(origin)
-	if _, ok := IsDomainName(origin); !ok {
-		t <- &Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
-		return
+	if origin != "" {
+		origin = Fqdn(origin)
+		if _, ok := IsDomainName(origin); !ok {
+			t <- &Token{Error: &ParseError{f, "bad initial origin name", lex{}}}
+			return
+		}
 	}
 
 	st := zExpectOwnerDir // initial state
@@ -224,20 +223,12 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 				st = zExpectOwnerDir
 			case zOwner:
 				h.Name = l.token
-				if l.token[0] == '@' {
-					h.Name = origin
-					prevName = h.Name
-					st = zExpectOwnerBl
-					break
-				}
-				if h.Name[l.length-1] != '.' {
-					h.Name = appendOrigin(h.Name, origin)
-				}
-				_, ok := IsDomainName(l.token)
-				if !ok {
+				name, err := nameToAbsolute(l.token, origin)
+				if err != "" {
 					t <- &Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
+				h.Name = name
 				prevName = h.Name
 				st = zExpectOwnerBl
 			case zDirTtl:
@@ -291,20 +282,12 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 			case zBlank:
 				l := <-c
 				if l.value == zString {
-					if _, ok := IsDomainName(l.token); !ok || l.length == 0 || l.err {
+					name, err := nameToAbsolute(l.token, origin)
+					if err != "" {
 						t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 						return
 					}
-					// a new origin is specified.
-					if l.token[l.length-1] != '.' {
-						if origin != "." { // Prevent .. endings
-							neworigin = l.token + "." + origin
-						} else {
-							neworigin = l.token + origin
-						}
-					} else {
-						neworigin = l.token
-					}
+					neworigin = name
 				}
 			case zNewline, zEOF:
 				// Ok
@@ -360,19 +343,12 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 			if e, _ := slurpRemainder(c, f); e != nil {
 				t <- &Token{Error: e}
 			}
-			if _, ok := IsDomainName(l.token); !ok {
+			name, err := nameToAbsolute(l.token, origin)
+			if err != "" {
 				t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 				return
 			}
-			if l.token[l.length-1] != '.' {
-				if origin != "." { // Prevent .. endings
-					origin = l.token + "." + origin
-				} else {
-					origin = l.token + origin
-				}
-			} else {
-				origin = l.token
-			}
+			origin = name
 			st = zExpectOwnerDir
 		case zExpectDirGenerateBl:
 			if l.value != zBlank {
@@ -933,6 +909,32 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	}
 	m = uint8(val)
 	return
+}
+
+func nameToAbsolute(name, origin string) (absolute string, err string) {
+	// origin reference (requires origin)
+	if name == "@" {
+		if origin == "" {
+			return "", "origin reference without origin"
+		}
+		return origin, ""
+	}
+
+	_, ok := IsDomainName(name)
+	if !ok || name == "" {
+		return "", "not a domain name"
+	}
+
+	// absolute name
+	if name[len(name)-1] == '.' {
+		return name, ""
+	}
+
+	// relative name (requires origin)
+	if origin == "" {
+		return "", "relative domain name without origin"
+	}
+	return appendOrigin(name, origin), ""
 }
 
 func appendOrigin(name, origin string) string {
