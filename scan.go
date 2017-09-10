@@ -120,7 +120,8 @@ func NewRR(s string) (RR, error) {
 // ReadRR reads the RR contained in q.
 // See NewRR for more documentation.
 func ReadRR(q io.Reader, filename string) (RR, error) {
-	r := <-parseZoneHelper(q, ".", filename, 1)
+	var defttl uint32 = defaultTtl
+	r := <-parseZoneHelper(q, ".", &defttl, filename, 1)
 	if r == nil {
 		return nil, nil
 	}
@@ -157,16 +158,16 @@ func ReadRR(q io.Reader, filename string) (RR, error) {
 // The text "; this is comment" is returned in Token.Comment. Comments inside the
 // RR are discarded. Comments on a line by themselves are discarded too.
 func ParseZone(r io.Reader, origin, file string) chan *Token {
-	return parseZoneHelper(r, origin, file, 10000)
+	return parseZoneHelper(r, origin, nil, file, 10000)
 }
 
-func parseZoneHelper(r io.Reader, origin, file string, chansize int) chan *Token {
+func parseZoneHelper(r io.Reader, origin string, defttl *uint32, file string, chansize int) chan *Token {
 	t := make(chan *Token, chansize)
-	go parseZone(r, origin, file, t, 0)
+	go parseZone(r, origin, defttl, file, t, 0)
 	return t
 }
 
-func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
+func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Token, include int) {
 	defer func() {
 		if include == 0 {
 			close(t)
@@ -197,7 +198,6 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 
 	st := zExpectOwnerDir // initial state
 	var h RR_Header
-	var defttl uint32 = defaultTtl
 	var prevName string
 	for l := range c {
 		// Lexer spotted an error already
@@ -209,7 +209,9 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 		switch st {
 		case zExpectOwnerDir:
 			// We can also expect a directive, like $TTL or $ORIGIN
-			h.Ttl = defttl
+			if defttl != nil {
+				h.Ttl = *defttl
+			}
 			h.Class = ClassINET
 			switch l.value {
 			case zNewline:
@@ -258,8 +260,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					return
 				}
 				h.Ttl = ttl
-				// Don't about the defttl, we should take the $TTL value
-				// defttl = ttl
+				defttl = &ttl
 				st = zExpectAnyNoTtlBl
 
 			default:
@@ -313,7 +314,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				t <- &Token{Error: &ParseError{f, "too deeply nested $INCLUDE", l}}
 				return
 			}
-			parseZone(r1, neworigin, l.token, t, include+1)
+			parseZone(r1, neworigin, defttl, l.token, t, include+1)
 			st = zExpectOwnerDir
 		case zExpectDirTtlBl:
 			if l.value != zBlank {
@@ -335,7 +336,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 				t <- &Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			}
-			defttl = ttl
+			defttl = &ttl
 			st = zExpectOwnerDir
 		case zExpectDirOriginBl:
 			if l.value != zBlank {
@@ -390,6 +391,10 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 		case zExpectAny:
 			switch l.value {
 			case zRrtpe:
+				if defttl == nil {
+					t <- &Token{Error: &ParseError{f, "missing TTL with no previous value", l}}
+					return
+				}
 				h.Rrtype = l.torc
 				st = zExpectRdata
 			case zClass:
@@ -402,7 +407,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					return
 				}
 				h.Ttl = ttl
-				// defttl = ttl // don't set the defttl here
+				defttl = &ttl
 				st = zExpectAnyNoTtlBl
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type, TTL or class, not this...", l}}
@@ -441,7 +446,7 @@ func parseZone(r io.Reader, origin, f string, t chan *Token, include int) {
 					return
 				}
 				h.Ttl = ttl
-				// defttl = ttl // don't set the def ttl anymore
+				defttl = &ttl
 				st = zExpectRrtypeBl
 			case zRrtpe:
 				h.Rrtype = l.torc
