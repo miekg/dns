@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -574,13 +575,19 @@ test                          IN CNAME test.a.example.com.
 func TestOmittedTTL(t *testing.T) {
 	zone := `
 $ORIGIN example.com.
-example.com. 42 IN SOA ns1.example.com. hostmaster.example.com. 1 86400 60 86400 3600 ; SOA
-example.com.        NS ns1.example.com. ; absolute owner name
-@                   NS ns2.example.com. ; current-origin owner name
-	                NS ns3.example.com. ; leading-space implied owner name
-	NS ns4.example.com ; leading-tab implied owner name
+example.com. 42 IN SOA ns1.example.com. hostmaster.example.com. 1 86400 60 86400 3600 ; TTL=42 SOA
+example.com.        NS 2 ; TTL=42 absolute owner name
+@                   MD 3 ; TTL=42 current-origin owner name
+	                MF 4 ; TTL=42 leading-space implied owner name
+	MB 5 ; TTL=42 leading-tab implied owner name
+$TTL 1337
+example.com. 88 MG 6 ; TTL=88 explicit TTL
+example.com.    MR 7 ; TTL=1337 after first $TTL
+$TTL 314
+example.com. 0 TXT 8 ; TTL=0 explicit TTL
+example.com.   DNAME 9 ; TTL=314 after second $TTL
 `
-	var expectedTTL uint32 = 42
+	reCaseFromComment := regexp.MustCompile(`TTL=(\d+)\s+(.*)`)
 	records := ParseZone(strings.NewReader(zone), "", "")
 	var i int
 	for record := range records {
@@ -589,12 +596,14 @@ example.com.        NS ns1.example.com. ; absolute owner name
 			t.Error(record.Error)
 			continue
 		}
+		expected := reCaseFromComment.FindStringSubmatch(record.Comment)
+		expectedTTL, _ := strconv.ParseUint(expected[1], 10, 32)
 		ttl := record.RR.Header().Ttl
-		if ttl != expectedTTL {
-			t.Errorf("%s: expected TTL %d, got %d", record.Comment[2:], expectedTTL, ttl)
+		if ttl != uint32(expectedTTL) {
+			t.Errorf("%s: expected TTL %d, got %d", expected[2], expectedTTL, ttl)
 		}
 	}
-	if i != 5 {
+	if i != 9 {
 		t.Errorf("expected %d records, got %d", 5, i)
 	}
 }
