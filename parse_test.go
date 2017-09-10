@@ -608,6 +608,53 @@ example.com.   DNAME 9 ; TTL=314 after second $TTL
 	}
 }
 
+func TestRelativeNameErrors(t *testing.T) {
+	var badZones = []struct {
+		label        string
+		zoneContents string
+		expectedErr  string
+	}{
+		{
+			"relative owner name without origin",
+			"example.com 3600 IN SOA ns.example.com. hostmaster.example.com. 1 86400 60 86400 3600",
+			"relative domain name without origin",
+		},
+		{
+			"relative owner name in RDATA",
+			"example.com. 3600 IN SOA ns hostmaster 1 86400 60 86400 3600",
+			"bad SOA Ns",
+		},
+		{
+			"origin reference without origin",
+			"@ 3600 IN SOA ns.example.com. hostmaster.example.com. 1 86400 60 86400 3600",
+			"origin reference without origin",
+		},
+		{
+			"relative owner name in $INCLUDE",
+			"$INCLUDE file.db example.com",
+			"relative domain name without origin",
+		},
+		{
+			"relative owner name in $ORIGIN",
+			"$ORIGIN example.com",
+			"relative domain name without origin",
+		},
+	}
+	for _, errorCase := range badZones {
+		entries := ParseZone(strings.NewReader(errorCase.zoneContents), "", "")
+		for entry := range entries {
+			if entry.Error == nil {
+				t.Errorf("%s: expected error, got nil", errorCase.label)
+				continue
+			}
+			err := entry.Error.err
+			if err != errorCase.expectedErr {
+				t.Errorf("%s: expected error `%s`, got `%s`", errorCase.label, errorCase.expectedErr, err)
+			}
+		}
+	}
+}
+
 func TestHIP(t *testing.T) {
 	h := `www.example.com.      IN  HIP ( 2 200100107B1A74DF365639CC39F1D578
                                 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p
