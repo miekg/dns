@@ -105,6 +105,12 @@ type Token struct {
 	Comment string
 }
 
+// ttlState describes the state necessary to fill in an omitted RR TTL
+type ttlState struct {
+	ttl           uint32 // ttl is the current default TTL
+	isByDirective bool   // isByDirective indicates whether ttl was set by a $TTL directive
+}
+
 // NewRR reads the RR contained in the string s. Only the first RR is
 // returned. If s contains no RR, return nil with no error. The class
 // defaults to IN and TTL defaults to 3600. The full zone file syntax
@@ -120,8 +126,8 @@ func NewRR(s string) (RR, error) {
 // ReadRR reads the RR contained in q.
 // See NewRR for more documentation.
 func ReadRR(q io.Reader, filename string) (RR, error) {
-	var defttl uint32 = defaultTtl
-	r := <-parseZoneHelper(q, ".", &defttl, filename, 1)
+	defttl := &ttlState{defaultTtl, false}
+	r := <-parseZoneHelper(q, ".", defttl, filename, 1)
 	if r == nil {
 		return nil, nil
 	}
@@ -161,13 +167,13 @@ func ParseZone(r io.Reader, origin, file string) chan *Token {
 	return parseZoneHelper(r, origin, nil, file, 10000)
 }
 
-func parseZoneHelper(r io.Reader, origin string, defttl *uint32, file string, chansize int) chan *Token {
+func parseZoneHelper(r io.Reader, origin string, defttl *ttlState, file string, chansize int) chan *Token {
 	t := make(chan *Token, chansize)
 	go parseZone(r, origin, defttl, file, t, 0)
 	return t
 }
 
-func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Token, include int) {
+func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *Token, include int) {
 	defer func() {
 		if include == 0 {
 			close(t)
@@ -210,7 +216,7 @@ func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Tok
 		case zExpectOwnerDir:
 			// We can also expect a directive, like $TTL or $ORIGIN
 			if defttl != nil {
-				h.Ttl = *defttl
+				h.Ttl = defttl.ttl
 			}
 			h.Class = ClassINET
 			switch l.value {
@@ -260,7 +266,9 @@ func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Tok
 					return
 				}
 				h.Ttl = ttl
-				defttl = &ttl
+				if defttl == nil || !defttl.isByDirective {
+					defttl = &ttlState{ttl, false}
+				}
 				st = zExpectAnyNoTtlBl
 
 			default:
@@ -336,7 +344,7 @@ func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Tok
 				t <- &Token{Error: &ParseError{f, "expecting $TTL value, not this...", l}}
 				return
 			}
-			defttl = &ttl
+			defttl = &ttlState{ttl, true}
 			st = zExpectOwnerDir
 		case zExpectDirOriginBl:
 			if l.value != zBlank {
@@ -407,7 +415,9 @@ func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Tok
 					return
 				}
 				h.Ttl = ttl
-				defttl = &ttl
+				if defttl == nil || !defttl.isByDirective {
+					defttl = &ttlState{ttl, false}
+				}
 				st = zExpectAnyNoTtlBl
 			default:
 				t <- &Token{Error: &ParseError{f, "expecting RR type, TTL or class, not this...", l}}
@@ -446,7 +456,9 @@ func parseZone(r io.Reader, origin string, defttl *uint32, f string, t chan *Tok
 					return
 				}
 				h.Ttl = ttl
-				defttl = &ttl
+				if defttl == nil || !defttl.isByDirective {
+					defttl = &ttlState{ttl, false}
+				}
 				st = zExpectRrtypeBl
 			case zRrtpe:
 				h.Rrtype = l.torc
