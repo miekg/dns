@@ -11,17 +11,7 @@ import (
 	"time"
 )
 
-func TestMsgHash(t *testing.T) {
-	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeAAAA)
-	h := msgHash(m)
-	// the hash is obtained doing the sha256 of the name, hex qtype and hex qclass joined by slashes
-	if h != "3aab51d2977b53d9d62c6f69941089a73f3e313ea50c8939dd9a1256328e15ad" {
-		t.Fatalf("hash is %v", h)
-	}
-}
-
-func TestDialWithDialerUDP(t *testing.T) {
+func TestDialUDP(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
@@ -35,7 +25,7 @@ func TestDialWithDialerUDP(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	conn, err := c.DialWithDialer(nil, addrstr)
+	conn, err := c.Dial(addrstr)
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}
@@ -93,8 +83,8 @@ func TestClientLocalAddress(t *testing.T) {
 
 	c := new(Client)
 	laddr := net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345, Zone: ""}
-	d := net.Dialer{LocalAddr: &laddr}
-	r, _, err := c.ExchangeWithDialer(&d, m, addrstr)
+	c.Dialer = &net.Dialer{LocalAddr: &laddr}
+	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
 		t.Errorf("failed to exchange: %v", err)
 	}

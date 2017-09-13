@@ -11,7 +11,6 @@ import (
 // ExchangeContext performs a synchronous UDP query, like Exchange. It
 // additionally obeys deadlines from the passed Context.
 func ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, err error) {
-	println("dns: ExchangeContext: this function is deprecated")
 	client := Client{Net: "udp"}
 	r, _, err = client.ExchangeContext(ctx, m, a)
 	// ignorint rtt to leave the original ExchangeContext API unchanged, but
@@ -44,10 +43,9 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 
 // DialTimeout acts like Dial but takes a timeout.
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
-	println("dns: DialTimeout: this function is deprecated")
 
-	client := Client{Net: "udp"}
-	conn, err = client.DialWithDialer(&net.Dialer{Timeout: timeout}, address)
+	client := Client{Net: "udp", Dialer: &net.Dialer{Timeout: timeout}}
+	conn, err = client.Dial(address)
 	if err != nil {
 		return nil, err
 	}
@@ -56,12 +54,11 @@ func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, er
 
 // DialWithTLS connects to the address on the named network with TLS.
 func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
-	println("dns: DialWithTLS: this function is deprecated")
 	if !strings.HasSuffix(network, "-tls") {
 		network += "-tls"
 	}
 	client := Client{Net: network, TLSConfig: tlsConfig}
-	conn, err = client.DialWithDialer(nil, address)
+	conn, err = client.Dial(address)
 
 	if err != nil {
 		return nil, err
@@ -71,12 +68,11 @@ func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, er
 
 // DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
 func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
-	println("dns: DialTimeoutWithTLS: this function is deprecated")
 	if !strings.HasSuffix(network, "-tls") {
 		network += "-tls"
 	}
-	client := Client{Net: network, TLSConfig: tlsConfig}
-	conn, err = client.DialWithDialer(&net.Dialer{Timeout: timeout}, address)
+	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}, TLSConfig: tlsConfig}
+	conn, err = client.Dial(address)
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +83,14 @@ func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout 
 // context, if present. If there is both a context deadline and a configured
 // timeout on the client, the earliest of the two takes effect.
 func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	println("dns: Client.ExchangeContext: this function is deprecated")
 	var timeout time.Duration
 	if deadline, ok := ctx.Deadline(); !ok {
 		timeout = 0
 	} else {
 		timeout = deadline.Sub(time.Now())
 	}
-	dialer := net.Dialer{Timeout: timeout}
 	// not passing the context to the underlying calls, as the API does not support
-	// context. For timeouts you should use a net.Dialer and call ExchangeWithDialer.
-	return c.ExchangeWithDialer(&dialer, m, a)
+	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
+	c.Dialer = &net.Dialer{Timeout: timeout}
+	return c.Exchange(m, a)
 }
