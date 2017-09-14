@@ -578,14 +578,15 @@ $ORIGIN example.com.
 example.com. 42 IN SOA ns1.example.com. hostmaster.example.com. 1 86400 60 86400 3600 ; TTL=42 SOA
 example.com.        NS 2 ; TTL=42 absolute owner name
 @                   MD 3 ; TTL=42 current-origin owner name
-	                MF 4 ; TTL=42 leading-space implied owner name
-	MB 5 ; TTL=42 leading-tab implied owner name
+                    MF 4 ; TTL=42 leading-space implied owner name
+	43 TYPE65280 \# 1 05 ; TTL=43 implied owner name explicit TTL
+	          MB 6       ; TTL=43 leading-tab implied owner name
 $TTL 1337
-example.com. 88 MG 6 ; TTL=88 explicit TTL
-example.com.    MR 7 ; TTL=1337 after first $TTL
+example.com. 88 MG 7 ; TTL=88 explicit TTL
+example.com.    MR 8 ; TTL=1337 after first $TTL
 $TTL 314
-example.com. 0 TXT 8 ; TTL=0 explicit TTL
-example.com.   DNAME 9 ; TTL=314 after second $TTL
+             1 TXT 9 ; TTL=1 implied owner name explicit TTL
+example.com.   DNAME 10 ; TTL=314 after second $TTL
 `
 	reCaseFromComment := regexp.MustCompile(`TTL=(\d+)\s+(.*)`)
 	records := ParseZone(strings.NewReader(zone), "", "")
@@ -603,7 +604,7 @@ example.com.   DNAME 9 ; TTL=314 after second $TTL
 			t.Errorf("%s: expected TTL %d, got %d", expected[2], expectedTTL, ttl)
 		}
 	}
-	if i != 9 {
+	if i != 10 {
 		t.Errorf("expected %d records, got %d", 5, i)
 	}
 }

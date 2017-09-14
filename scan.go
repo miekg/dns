@@ -223,8 +223,8 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 				st = zExpectOwnerDir
 			case zOwner:
 				h.Name = l.token
-				name, err := nameToAbsolute(l.token, origin)
-				if err != "" {
+				name, ok := toAbsoluteName(l.token, origin)
+				if !ok {
 					t <- &Token{Error: &ParseError{f, "bad owner name", l}}
 					return
 				}
@@ -282,8 +282,8 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 			case zBlank:
 				l := <-c
 				if l.value == zString {
-					name, err := nameToAbsolute(l.token, origin)
-					if err != "" {
+					name, ok := toAbsoluteName(l.token, origin)
+					if !ok {
 						t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 						return
 					}
@@ -343,8 +343,8 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 			if e, _ := slurpRemainder(c, f); e != nil {
 				t <- &Token{Error: e}
 			}
-			name, err := nameToAbsolute(l.token, origin)
-			if err != "" {
+			name, ok := toAbsoluteName(l.token, origin)
+			if !ok {
 				t <- &Token{Error: &ParseError{f, "bad origin name", l}}
 				return
 			}
@@ -911,30 +911,32 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	return
 }
 
-func nameToAbsolute(name, origin string) (absolute string, err string) {
-	// origin reference (requires origin)
+func toAbsoluteName(name, origin string) (absolute string, ok bool) {
+	// check for an explicit origin reference
 	if name == "@" {
+		// require a nonempty origin
 		if origin == "" {
-			return "", "origin reference without origin"
+			return "", false
 		}
-		return origin, ""
+		return origin, true
 	}
 
-	_, ok := IsDomainName(name)
+	// require a valid domain name
+	_, ok = IsDomainName(name)
 	if !ok || name == "" {
-		return "", "not a domain name"
+		return "", false
 	}
 
-	// absolute name
+	// check if name is already absolute
 	if name[len(name)-1] == '.' {
-		return name, ""
+		return name, true
 	}
 
-	// relative name (requires origin)
+	// require a nonempty origin
 	if origin == "" {
-		return "", "relative domain name without origin"
+		return "", false
 	}
-	return appendOrigin(name, origin), ""
+	return appendOrigin(name, origin), true
 }
 
 func appendOrigin(name, origin string) string {

@@ -167,8 +167,8 @@ func setNS(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad NS Ns", l}, ""
 	}
 	rr.Ns = name
@@ -185,8 +185,8 @@ func setPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad PTR Ptr", l}, ""
 	}
 	rr.Ptr = name
@@ -203,8 +203,8 @@ func setNSAPPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) 
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad NSAP-PTR Ptr", l}, ""
 	}
 	rr.Ptr = name
@@ -221,8 +221,8 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	mbox, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	mbox, mboxOk := toAbsoluteName(l.token, o)
+	if l.err || !mboxOk {
 		return nil, &ParseError{f, "bad RP Mbox", l}, ""
 	}
 	rr.Mbox = mbox
@@ -231,8 +231,8 @@ func setRP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	rr.Txt = l.token
 
-	txt, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	txt, txtOk := toAbsoluteName(l.token, o)
+	if l.err || !txtOk {
 		return nil, &ParseError{f, "bad RP Txt", l}, ""
 	}
 	rr.Txt = txt
@@ -250,8 +250,8 @@ func setMR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MR Mr", l}, ""
 	}
 	rr.Mr = name
@@ -268,8 +268,8 @@ func setMB(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MB Mb", l}, ""
 	}
 	rr.Mb = name
@@ -286,8 +286,8 @@ func setMG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MG Mg", l}, ""
 	}
 	rr.Mg = name
@@ -330,8 +330,8 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	rmail, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	rmail, rmailOk := toAbsoluteName(l.token, o)
+	if l.err || !rmailOk {
 		return nil, &ParseError{f, "bad MINFO Rmail", l}, ""
 	}
 	rr.Rmail = rmail
@@ -340,8 +340,8 @@ func setMINFO(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	rr.Email = l.token
 
-	email, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	email, emailOk := toAbsoluteName(l.token, o)
+	if l.err || !emailOk {
 		return nil, &ParseError{f, "bad MINFO Email", l}, ""
 	}
 	rr.Email = email
@@ -359,8 +359,8 @@ func setMF(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MF Mf", l}, ""
 	}
 	rr.Mf = name
@@ -377,8 +377,8 @@ func setMD(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MD Md", l}, ""
 	}
 	rr.Md = name
@@ -404,8 +404,8 @@ func setMX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Mx = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad MX Mx", l}, ""
 	}
 	rr.Mx = name
@@ -432,8 +432,8 @@ func setRT(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Host = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad RT Host", l}, ""
 	}
 	rr.Host = name
@@ -460,8 +460,8 @@ func setAFSDB(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Hostname = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad AFSDB Hostname", l}, ""
 	}
 	rr.Hostname = name
@@ -503,8 +503,8 @@ func setKX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Exchanger = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad KX Exchanger", l}, ""
 	}
 	rr.Exchanger = name
@@ -521,8 +521,8 @@ func setCNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad CNAME Target", l}, ""
 	}
 	rr.Target = name
@@ -539,8 +539,8 @@ func setDNAME(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad DNAME Target", l}, ""
 	}
 	rr.Target = name
@@ -557,8 +557,8 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	ns, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	ns, nsOk := toAbsoluteName(l.token, o)
+	if l.err || !nsOk {
 		return nil, &ParseError{f, "bad SOA Ns", l}, ""
 	}
 	rr.Ns = ns
@@ -567,8 +567,8 @@ func setSOA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	rr.Mbox = l.token
 
-	mbox, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	mbox, mboxOk := toAbsoluteName(l.token, o)
+	if l.err || !mboxOk {
 		return nil, &ParseError{f, "bad SOA Mbox", l}, ""
 	}
 	rr.Mbox = mbox
@@ -652,8 +652,8 @@ func setSRV(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Target = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad SRV Target", l}, ""
 	}
 	rr.Target = name
@@ -745,8 +745,8 @@ func setNAPTR(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c // zString
 	rr.Replacement = l.token
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad NAPTR Replacement", l}, ""
 	}
 	rr.Replacement = name
@@ -763,8 +763,8 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, ""
 	}
 
-	previousName, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	previousName, previousNameOk := toAbsoluteName(l.token, o)
+	if l.err || !previousNameOk {
 		return nil, &ParseError{f, "bad TALINK PreviousName", l}, ""
 	}
 	rr.PreviousName = previousName
@@ -773,8 +773,8 @@ func setTALINK(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	l = <-c
 	rr.NextName = l.token
 
-	nextName, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	nextName, nextNameOk := toAbsoluteName(l.token, o)
+	if l.err || !nextNameOk {
 		return nil, &ParseError{f, "bad TALINK NextName", l}, ""
 	}
 	rr.NextName = nextName
@@ -956,8 +956,8 @@ func setHIP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
 		case zString:
-			name, err := nameToAbsolute(l.token, o)
-			if l.err || err != "" {
+			name, nameOk := toAbsoluteName(l.token, o)
+			if l.err || !nameOk {
 				return nil, &ParseError{f, "bad HIP RendezvousServers", l}, ""
 			}
 			xs = append(xs, name)
@@ -1116,8 +1116,8 @@ func setRRSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c // zBlank
 	l = <-c
 	rr.SignerName = l.token
-	name, errStr := nameToAbsolute(l.token, o)
-	if l.err || errStr != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad RRSIG SignerName", l}, ""
 	}
 	rr.SignerName = name
@@ -1141,8 +1141,8 @@ func setNSEC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return rr, nil, l.comment
 	}
 
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad NSEC NextDomain", l}, ""
 	}
 	rr.NextDomain = name
@@ -1882,8 +1882,8 @@ func setLP(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c     // zBlank
 	l = <-c // zString
 	rr.Fqdn = l.token
-	name, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
 		return nil, &ParseError{f, "bad LP Fqdn", l}, ""
 	}
 	rr.Fqdn = name
@@ -1982,8 +1982,8 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c     // zBlank
 	l = <-c // zString
 	rr.Map822 = l.token
-	map822, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	map822, map822Ok := toAbsoluteName(l.token, o)
+	if l.err || !map822Ok {
 		return nil, &ParseError{f, "bad PX Map822", l}, ""
 	}
 	rr.Map822 = map822
@@ -1991,8 +1991,8 @@ func setPX(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	<-c     // zBlank
 	l = <-c // zString
 	rr.Mapx400 = l.token
-	mapx400, err := nameToAbsolute(l.token, o)
-	if l.err || err != "" {
+	mapx400, mapx400Ok := toAbsoluteName(l.token, o)
+	if l.err || !mapx400Ok {
 		return nil, &ParseError{f, "bad PX Mapx400", l}, ""
 	}
 	rr.Mapx400 = mapx400
