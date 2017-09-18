@@ -62,7 +62,7 @@ func TestOPTTtl(t *testing.T) {
 	}
 
 	e.SetExtendedRcode(42)
-	if e.ExtendedRcode() != 42 {
-		t.Errorf("set 42, expected %d, got %d", 42-15, e.ExtendedRcode())
+	if e.ExtendedRcode() != (42 & 0xFF0) {
+		t.Errorf("set 42, expected %d, got %d", 42 & 0xFF0, e.ExtendedRcode())
 	}
 }
