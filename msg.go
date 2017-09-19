@@ -915,66 +915,29 @@ func compressedLen(dns *Msg, compress bool) int {
 	l := 12 // Message header is always 12 bytes
 	compression := map[string]int{}
 
+	lenFunc := Len
+	if compress {
+		lenFunc = func(r RR) int {
+			return CompressedLen(compression, r)
+		}
+	}
+
 	for i := 0; i < len(dns.Question); i++ {
 		l += dns.Question[i].len()
 		if compress {
 			compressionLenHelper(compression, dns.Question[i].Name)
 		}
 	}
-	for i := 0; i < len(dns.Answer); i++ {
-		if dns.Answer[i] == nil {
-			continue
-		}
-		l += dns.Answer[i].len()
-		if compress {
-			k, ok := compressionLenSearch(compression, dns.Answer[i].Header().Name)
-			if ok {
-				l += 1 - k
+
+	for _, section := range [][]RR{dns.Answer, dns.Ns, dns.Extra} {
+		for _, r := range section {
+			if r == nil {
+				continue
 			}
-			compressionLenHelper(compression, dns.Answer[i].Header().Name)
-			k, ok = compressionLenSearchType(compression, dns.Answer[i])
-			if ok {
-				l += 1 - k
-			}
-			compressionLenHelperType(compression, dns.Answer[i])
+			l += lenFunc(r)
 		}
 	}
-	for i := 0; i < len(dns.Ns); i++ {
-		if dns.Ns[i] == nil {
-			continue
-		}
-		l += dns.Ns[i].len()
-		if compress {
-			k, ok := compressionLenSearch(compression, dns.Ns[i].Header().Name)
-			if ok {
-				l += 1 - k
-			}
-			compressionLenHelper(compression, dns.Ns[i].Header().Name)
-			k, ok = compressionLenSearchType(compression, dns.Ns[i])
-			if ok {
-				l += 1 - k
-			}
-			compressionLenHelperType(compression, dns.Ns[i])
-		}
-	}
-	for i := 0; i < len(dns.Extra); i++ {
-		if dns.Extra[i] == nil {
-			continue
-		}
-		l += dns.Extra[i].len()
-		if compress {
-			k, ok := compressionLenSearch(compression, dns.Extra[i].Header().Name)
-			if ok {
-				l += 1 - k
-			}
-			compressionLenHelper(compression, dns.Extra[i].Header().Name)
-			k, ok = compressionLenSearchType(compression, dns.Extra[i])
-			if ok {
-				l += 1 - k
-			}
-			compressionLenHelperType(compression, dns.Extra[i])
-		}
-	}
+
 	return l
 }
 
@@ -1015,6 +978,21 @@ func Copy(r RR) RR { r1 := r.copy(); return r1 }
 
 // Len returns the length (in octets) of the uncompressed RR in wire format.
 func Len(r RR) int { return r.len() }
+
+// CompressedLen returns the length (in octets) of the compressed RR in wire format
+// using the provided compression map.
+func CompressedLen(compressionMap map[string]int, r RR) int {
+	l := r.len()
+	if k, ok := compressionLenSearch(compressionMap, r.Header().Name); ok {
+		l += 1 - k
+	}
+	compressionLenHelper(compressionMap, r.Header().Name)
+	if k, ok := compressionLenSearchType(compressionMap, r); ok {
+		l += 1 - k
+	}
+	compressionLenHelperType(compressionMap, r)
+	return l
+}
 
 // Copy returns a new *Msg which is a deep-copy of dns.
 func (dns *Msg) Copy() *Msg { return dns.CopyTo(new(Msg)) }
