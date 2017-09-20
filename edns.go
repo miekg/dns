@@ -609,4 +609,4 @@ type EDNS0_PADDING struct {
 func (e *EDNS0_PADDING) pack() ([]byte, error) { return e.Padding, nil }
 func (e *EDNS0_PADDING) Option() uint16        { return EDNS0PADDING }
 func (e *EDNS0_PADDING) unpack(b []byte) error { e.Padding = b; return nil }
-func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X") }
+func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
