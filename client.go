@@ -4,10 +4,12 @@ package dns
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"io"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -75,13 +77,13 @@ func (c *Client) writeTimeout() time.Duration {
 
 func (c *Client) Dial(address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
-	var realDialer net.Dialer
+	var d net.Dialer
 	if c.Dialer == nil {
-		realDialer = net.Dialer{}
+		d = net.Dialer{}
 	} else {
-		realDialer = net.Dialer(*c.Dialer)
+		d = net.Dialer(*c.Dialer)
 	}
-	realDialer.Timeout = c.getTimeoutForRequest(c.writeTimeout())
+	d.Timeout = c.getTimeoutForRequest(c.writeTimeout())
 
 	network := "udp"
 	useTLS := false
@@ -104,9 +106,9 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	conn = new(Conn)
 	if useTLS {
-		conn.Conn, err = tls.DialWithDialer(&realDialer, network, address, c.TLSConfig)
+		conn.Conn, err = tls.DialWithDialer(&d, network, address, c.TLSConfig)
 	} else {
-		conn.Conn, err = realDialer.Dial(network, address)
+		conn.Conn, err = d.Dial(network, address)
 	}
 	if err != nil {
 		return nil, err
@@ -136,7 +138,7 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 	t := "nop"
 	if t1, ok := TypeToString[m.Question[0].Qtype]; ok {
 		t = t1
-	}		
+	}
 	cl := "nop"
 	if cl1, ok := ClassToString[m.Question[0].Qclass]; ok {
 		cl = cl1
@@ -412,4 +414,91 @@ func Dial(network, address string) (conn *Conn, err error) {
 		return nil, err
 	}
 	return conn, nil
+}
+
+// ExchangeContext performs a synchronous UDP query, like Exchange. It
+// additionally obeys deadlines from the passed Context.
+func ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, err error) {
+	client := Client{Net: "udp"}
+	r, _, err = client.ExchangeContext(ctx, m, a)
+	// ignorint rtt to leave the original ExchangeContext API unchanged, but
+	// this function will go away
+	return r, err
+}
+
+// ExchangeConn performs a synchronous query. It sends the message m via the connection
+// c and waits for a reply. The connection c is not closed by ExchangeConn.
+// This function is going away, but can easily be mimicked:
+//
+//	co := &dns.Conn{Conn: c} // c is your net.Conn
+//	co.WriteMsg(m)
+//	in, _  := co.ReadMsg()
+//	co.Close()
+//
+func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
+	println("dns: ExchangeConn: this function is deprecated")
+	co := new(Conn)
+	co.Conn = c
+	if err = co.WriteMsg(m); err != nil {
+		return nil, err
+	}
+	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
+	return r, err
+}
+
+// DialTimeout acts like Dial but takes a timeout.
+func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
+
+	client := Client{Net: "udp", Dialer: &net.Dialer{Timeout: timeout}}
+	conn, err = client.Dial(address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialWithTLS connects to the address on the named network with TLS.
+func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
+	if !strings.HasSuffix(network, "-tls") {
+		network += "-tls"
+	}
+	client := Client{Net: network, TLSConfig: tlsConfig}
+	conn, err = client.Dial(address)
+
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
+func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
+	if !strings.HasSuffix(network, "-tls") {
+		network += "-tls"
+	}
+	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}, TLSConfig: tlsConfig}
+	conn, err = client.Dial(address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// ExchangeContext acts like Exchange, but honors the deadline on the provided
+// context, if present. If there is both a context deadline and a configured
+// timeout on the client, the earliest of the two takes effect.
+func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	var timeout time.Duration
+	if deadline, ok := ctx.Deadline(); !ok {
+		timeout = 0
+	} else {
+		timeout = deadline.Sub(time.Now())
+	}
+	// not passing the context to the underlying calls, as the API does not support
+	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
+	c.Dialer = &net.Dialer{Timeout: timeout}
+	return c.Exchange(m, a)
 }
