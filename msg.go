@@ -929,13 +929,23 @@ func compressedLen(dns *Msg, compress bool) int {
 		}
 	}
 
-	for _, section := range [][]RR{dns.Answer, dns.Ns, dns.Extra} {
-		for _, r := range section {
-			if r == nil {
-				continue
-			}
-			l += lenFunc(r)
+	for _, r := range dns.Answer {
+		if r == nil {
+			continue
 		}
+		l += lenFunc(r)
+	}
+	for _, r := range dns.Ns {
+		if r == nil {
+			continue
+		}
+		l += lenFunc(r)
+	}
+	for _, r := range dns.Extra {
+		if r == nil {
+			continue
+		}
+		l += lenFunc(r)
 	}
 
 	return l
