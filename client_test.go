@@ -42,6 +42,40 @@ func TestClientSync(t *testing.T) {
 	}
 }
 
+func TestClientLocalAddress(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerEchoAddrPort)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+	c.LocalAddr = &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345, Zone: ""}
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r != nil && r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+	if len(r.Extra) != 1 {
+		t.Errorf("failed to get additional answers\n%v", r)
+	}
+	txt := r.Extra[0].(*TXT)
+	if txt == nil {
+		t.Errorf("invalid TXT response\n%v", txt)
+	}
+	if len(txt.Txt) != 1 || txt.Txt[0] != "127.0.0.1:12345" {
+		t.Errorf("invalid TXT response\n%v", txt.Txt)
+	}
+}
+
 func TestClientTLSSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
