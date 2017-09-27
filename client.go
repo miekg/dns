@@ -28,11 +28,14 @@ type Conn struct {
 
 // A Client defines parameters for a DNS client.
 type Client struct {
-	Net            string            // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	UDPSize        uint16            // minimum receive buffer for UDP messages
-	TLSConfig      *tls.Config       // TLS connection configuration
-	Dialer         *net.Dialer       // a net.Dialer used to set local address, timeouts and more
-	Timeout        time.Duration     // a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout, WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and Client.Dialer) or context.Context.Deadline (see the deprecated ExchangeContext)
+	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	UDPSize   uint16      // minimum receive buffer for UDP messages
+	TLSConfig *tls.Config // TLS connection configuration
+	Dialer    net.Dialer  // a net.Dialer used to set local address, timeouts and more
+	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
+	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
+	// Client.Dialer) or context.Context.Deadline (see the deprecated ExchangeContext)
+	Timeout        time.Duration
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
