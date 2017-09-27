@@ -31,7 +31,7 @@ type Client struct {
 	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	UDPSize   uint16      // minimum receive buffer for UDP messages
 	TLSConfig *tls.Config // TLS connection configuration
-	Dialer    net.Dialer  // a net.Dialer used to set local address, timeouts and more
+	Dialer    *net.Dialer // a net.Dialer used to set local address, timeouts and more
 	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see the deprecated ExchangeContext)
