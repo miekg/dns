@@ -110,9 +110,12 @@ type MsgHdr struct {
 	RecursionDesired   bool
 	RecursionAvailable bool
 	Zero               bool
-	AuthenticatedData  bool
-	CheckingDisabled   bool
-	Rcode              int
+	// Note: The value of AuthenticatedData in a response is only useful if
+	// it was set in the corresponding query. If it was not set in the query
+	// the value should not be used (RFC 6840 Section 5.7.).
+	AuthenticatedData bool
+	CheckingDisabled  bool
+	Rcode             int
 }
 
 // Msg contains the layout of a DNS message.
