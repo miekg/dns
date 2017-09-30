@@ -454,8 +454,7 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 
 // DialTimeout acts like Dial but takes a timeout.
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
-
-	client := Client{Net: "udp", Dialer: &net.Dialer{Timeout: timeout}}
+	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}}
 	conn, err = client.Dial(address)
 	if err != nil {
 		return nil, err
