@@ -102,15 +102,13 @@ func (rr *OPT) SetVersion(v uint8) {
 }
 
 // ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
-// Make sure you "OR" with the 4-bit RCODE field of the header to form the full result.
-func (rr *OPT) ExtendedRcode() uint16 {
-	return uint16((rr.Hdr.Ttl&0xFF000000)>>20)
+func (rr *OPT) ExtendedRcode() int {
+	return int((rr.Hdr.Ttl&0xFF000000)>>24)
 }
 
 // SetExtendedRcode sets the EDNS extended RCODE field.
-// Lower 4 bits are discarded, as they should be set in the 4-bit RCODE field of the header.
-func (rr *OPT) SetExtendedRcode(v uint16) {
-	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | (uint32(v&0xFF0) << 20)
+func (rr *OPT) SetExtendedRcode(v uint8) {
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | (uint32(v) << 24)
 }
 
 // UDPSize returns the UDP buffer size.

@@ -705,7 +705,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 		if opt == nil {
 			return nil, ErrExtendedRcode
 		}
-		opt.SetExtendedRcode(uint16(dns.Rcode))
+		opt.SetExtendedRcode(uint8(dns.Rcode >> 4))
 		dns.Rcode &= 0xF
 	}
 
