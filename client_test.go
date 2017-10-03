@@ -34,6 +34,21 @@ func TestDialUDP(t *testing.T) {
 	}
 }
 
+func TestDialTimeoutTCP(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	// insomniac.slackware.it is configured to drop connections to 5053 for this
+	// test to succeed
+	conn, err := DialTimeout("tcp", "insomniac.slackware.it:5053", time.Millisecond*100)
+	if err == nil {
+		t.Fatalf("expected timeout error, but no error returned")
+	}
+	if conn != nil {
+		t.Fatalf("expected nil value for conn, got %v instead", conn)
+	}
+}
+
 func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
