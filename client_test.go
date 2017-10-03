@@ -1,9 +1,9 @@
 package dns
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
+	"golang.org/x/net/context"
 	"net"
 	"strconv"
 	"sync"

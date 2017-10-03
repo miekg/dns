@@ -4,9 +4,9 @@ package dns
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/binary"
+	"golang.org/x/net/context"
 	"io"
 	"net"
 	"strings"
