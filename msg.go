@@ -919,9 +919,9 @@ func compressedLen(dns *Msg, compress bool) int {
 			l += r.len()
 			compressionLenHelper(compression, r.Name)
 		}
-		l += comperssionLenSlice(compression, dns.Answer)
-		l += comperssionLenSlice(compression, dns.Ns)
-		l += comperssionLenSlice(compression, dns.Extra)
+		l += compressionLenSlice(compression, dns.Answer)
+		l += compressionLenSlice(compression, dns.Ns)
+		l += compressionLenSlice(compression, dns.Extra)
 	} else {
 		for _, r := range dns.Question {
 			l += r.len()
@@ -945,7 +945,7 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func comperssionLenSlice(c map[string]int, rs []RR) int {
+func compressionLenSlice(c map[string]int, rs []RR) int {
 	var l int
 	for _, r := range rs {
 		if r == nil {
