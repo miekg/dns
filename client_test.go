@@ -34,18 +34,23 @@ func TestDialUDP(t *testing.T) {
 	}
 }
 
-func TestDialTimeoutTCP(t *testing.T) {
+func TestDialTimeoutTCPNoTimeout(t *testing.T) {
+	// this tests the non-timeout case of a call to DialTimeout
+	s, addrstr, err := RunLocalTCPServer("[::1]:0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
-	// insomniac.slackware.it is configured to drop connections to 5053 for this
-	// test to succeed
-	conn, err := DialTimeout("tcp", "insomniac.slackware.it:5053", time.Millisecond*100)
-	if err == nil {
-		t.Fatalf("expected timeout error, but no error returned")
+	conn, err := DialTimeout("tcp", addrstr, time.Millisecond*100)
+	if err != nil {
+		t.Fatalf("failed to dial with timeout: %v", err)
 	}
-	if conn != nil {
-		t.Fatalf("expected nil value for conn, got %v instead", conn)
+	if conn == nil {
+		t.Fatalf("conn is nil")
 	}
 }
 
