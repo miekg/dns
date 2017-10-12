@@ -1,10 +1,10 @@
 package dns
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -21,7 +21,7 @@ nameserver 10.28.10.2
 nameserver 11.28.10.1` // <- NOTE: NO newline.
 
 func testConfig(t *testing.T, data string) {
-	cc, err := ClientConfigFromReader(bytes.NewBufferString(data))
+	cc, err := ClientConfigFromReader(strings.NewReader(data))
 	if err != nil {
 		t.Errorf("error parsing resolv.conf: %v", err)
 	}
