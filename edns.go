@@ -229,6 +229,12 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	b[2] = e.SourceNetmask
 	b[3] = e.SourceScope
 	switch e.Family {
+	case 0:
+		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
+		// We might don't need to complain either
+		if e.SourceNetmask != 0 {
+			return nil, errors.New("dns: bad address family")
+		}
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 {
 			return nil, errors.New("dns: bad netmask")
@@ -263,6 +269,13 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	e.SourceNetmask = b[2]
 	e.SourceScope = b[3]
 	switch e.Family {
+	case 0:
+		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
+		// It's okay to accept such a packet
+		if e.SourceNetmask != 0 {
+			return errors.New("dns: bad address family")
+		}
+		e.Address = net.IPv4(0, 0, 0, 0)
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 || e.SourceScope > net.IPv4len*8 {
 			return errors.New("dns: bad netmask")
