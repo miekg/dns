@@ -7,8 +7,8 @@ func TestCompareDomainName(t *testing.T) {
 	s2 := "miek.nl."
 	s3 := "www.bla.nl."
 	s4 := "nl.www.bla."
-	s5 := "nl"
-	s6 := "miek.nl"
+	s5 := "nl."
+	s6 := "miek.nl."
 
 	if CompareDomainName(s1, s2) != 2 {
 		t.Errorf("%s with %s should be %d", s1, s2, 2)
@@ -176,28 +176,28 @@ func TestIsDomainName(t *testing.T) {
 
 func BenchmarkSplitLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Split("www.example.com")
+		Split("www.example.com.")
 	}
 }
 
 func BenchmarkLenLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		CountLabel("www.example.com")
+		CountLabel("www.example.com.")
 	}
 }
 
-func BenchmarkCompareLabels(b *testing.B) {
+func BenchmarkCompareDomainName(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		CompareDomainName("www.example.com", "aa.example.com")
+		CompareDomainName("www.example.com.", "aa.example.com.")
 	}
 }
 
 func BenchmarkIsSubDomain(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		IsSubDomain("www.example.com", "aa.example.com")
-		IsSubDomain("example.com", "aa.example.com")
-		IsSubDomain("miek.nl", "aa.example.com")
+		IsSubDomain("www.example.com.", "aa.example.com.")
+		IsSubDomain("example.com.", "aa.example.com.")
+		IsSubDomain("miek.nl.", "aa.example.com.")
 	}
 }
