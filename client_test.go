@@ -34,6 +34,26 @@ func TestDialUDP(t *testing.T) {
 	}
 }
 
+func TestDialTimeoutTCPNoTimeout(t *testing.T) {
+	// this tests the non-timeout case of a call to DialTimeout
+	s, addrstr, err := RunLocalTCPServer("[::1]:0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	conn, err := DialTimeout("tcp", addrstr, time.Millisecond*100)
+	if err != nil {
+		t.Fatalf("failed to dial with timeout: %v", err)
+	}
+	if conn == nil {
+		t.Fatalf("conn is nil")
+	}
+}
+
 func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
