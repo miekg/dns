@@ -8,10 +8,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -304,8 +301,7 @@ type Server struct {
 
 	inFlight sync.WaitGroup
 
-	shutdownSignal chan os.Signal
-	chanLock       sync.RWMutex
+	shutdownSignal chan bool
 
 	lock    sync.RWMutex
 	started bool
@@ -337,6 +333,8 @@ func (srv *Server) ListenAndServe() error {
 		}
 		srv.Listener = l
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -355,6 +353,8 @@ func (srv *Server) ListenAndServe() error {
 		}
 		srv.Listener = l
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -410,6 +410,8 @@ func (srv *Server) ActivateAndServe() error {
 	}
 	if l != nil {
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		e := srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -431,16 +433,12 @@ func (srv *Server) Shutdown() error {
 	srv.started = false
 	defer srv.lock.Unlock() // to make sure re-serve works do after shutdown
 
-	switch srv.Net {
-	case "tcp", "tcp4", "tcp6":
-		shutdownSignal := srv.getShutdownSignal()
-		shutdownSignal <- syscall.SIGINT
-	}
-
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
 	if srv.Listener != nil {
+		// only TCP listener needs shutdown signal
+		srv.shutdownSignal <- true
 		srv.Listener.Close()
 	}
 
@@ -475,7 +473,6 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
-
 	reader := Reader(&defaultReader{srv})
 	if srv.DecorateReader != nil {
 		reader = srv.DecorateReader(reader)
@@ -489,8 +486,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	// deadline is not used here
 
 	quitting := make(chan struct{})
-	shutdownSignal := srv.getShutdownSignal()
-	go srv.handleCloseSignal(shutdownSignal, quitting, l)
+	go srv.handleCloseSignal(srv.shutdownSignal, quitting, l)
 
 	for {
 		rw, err := l.Accept()
@@ -501,7 +497,6 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			// we chose to ignore this error when graceful shutdown.
 			case <-quitting:
 				err = nil
-				srv.resetShutdownSignal()
 			default:
 				if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 					continue
@@ -519,7 +514,9 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		if err != nil {
 			continue
 		}
+		srv.lock.RLock()
 		srv.inFlight.Add(1)
+		srv.lock.RUnlock()
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
 	}
 }
@@ -555,7 +552,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		if err != nil {
 			continue
 		}
+		srv.lock.RLock()
 		srv.inFlight.Add(1)
+		srv.lock.RUnlock()
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 }
@@ -683,30 +682,11 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	return m, s, nil
 }
 
-// get shutdown signal if is nil, just make it
-func (srv *Server) getShutdownSignal() chan os.Signal {
-	srv.chanLock.Lock()
-	if srv.shutdownSignal == nil {
-		srv.shutdownSignal = make(chan os.Signal)
-	}
-	srv.chanLock.Unlock()
-	return srv.shutdownSignal
-}
-
-func (srv *Server) resetShutdownSignal() {
-	srv.chanLock.Lock()
-	if srv.shutdownSignal != nil {
-		srv.shutdownSignal = make(chan os.Signal)
-	}
-	srv.chanLock.Unlock()
-}
-
 // handleCloseSignal when receive shutdown signal, close quitting
-func (srv *Server) handleCloseSignal(shutdown chan os.Signal, quitting chan struct{}, listener net.Listener) {
+func (srv *Server) handleCloseSignal(shutdown chan bool, quitting chan struct{}, listener net.Listener) {
 	<-shutdown
 	close(quitting)
-	signal.Stop(shutdown)
-	// close(shutdown)
+	close(shutdown)
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
