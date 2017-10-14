@@ -8,7 +8,10 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -301,6 +304,9 @@ type Server struct {
 
 	inFlight sync.WaitGroup
 
+	shutdownSignal chan os.Signal
+	chanLock       sync.RWMutex
+
 	lock    sync.RWMutex
 	started bool
 }
@@ -423,7 +429,13 @@ func (srv *Server) Shutdown() error {
 		return &Error{err: "server not started"}
 	}
 	srv.started = false
-	srv.lock.Unlock()
+	defer srv.lock.Unlock() // to make sure re-serve works do after shutdown
+
+	switch srv.Net {
+	case "tcp", "tcp4", "tcp6":
+		shutdownSignal := srv.getShutdownSignal()
+		shutdownSignal <- syscall.SIGINT
+	}
 
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
@@ -475,11 +487,25 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	}
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
+
+	quitting := make(chan struct{})
+	shutdownSignal := srv.getShutdownSignal()
+	go srv.handleCloseSignal(shutdownSignal, quitting, l)
+
 	for {
 		rw, err := l.Accept()
 		if err != nil {
-			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
-				continue
+			select {
+			// If listening closed, Accept returns a error about use of
+			// closed network connection. It's a excepted error, so
+			// we chose to ignore this error when graceful shutdown.
+			case <-quitting:
+				err = nil
+				srv.resetShutdownSignal()
+			default:
+				if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+					continue
+				}
 			}
 			return err
 		}
@@ -655,6 +681,32 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	}
 	m = m[:n]
 	return m, s, nil
+}
+
+// get shutdown signal if is nil, just make it
+func (srv *Server) getShutdownSignal() chan os.Signal {
+	srv.chanLock.Lock()
+	if srv.shutdownSignal == nil {
+		srv.shutdownSignal = make(chan os.Signal)
+	}
+	srv.chanLock.Unlock()
+	return srv.shutdownSignal
+}
+
+func (srv *Server) resetShutdownSignal() {
+	srv.chanLock.Lock()
+	if srv.shutdownSignal != nil {
+		srv.shutdownSignal = make(chan os.Signal)
+	}
+	srv.chanLock.Unlock()
+}
+
+// handleCloseSignal when receive shutdown signal, close quitting
+func (srv *Server) handleCloseSignal(shutdown chan os.Signal, quitting chan struct{}, listener net.Listener) {
+	<-shutdown
+	close(quitting)
+	signal.Stop(shutdown)
+	// close(shutdown)
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
