@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -299,7 +300,8 @@ type Server struct {
 
 	// Graceful shutdown handling
 
-	inFlight sync.WaitGroup
+	// inFlight sync.WaitGroup
+	inFlight uint32
 
 	shutdownSignal chan bool
 
@@ -444,7 +446,14 @@ func (srv *Server) Shutdown() error {
 
 	fin := make(chan bool)
 	go func() {
-		srv.inFlight.Wait()
+		// srv.inFlight.Wait()
+		var count uint32
+		for {
+			count = atomic.LoadUint32(&srv.inFlight)
+			if count == 0 {
+				break
+			}
+		}
 		fin <- true
 	}()
 
@@ -514,9 +523,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		if err != nil {
 			continue
 		}
-		srv.lock.RLock()
-		srv.inFlight.Add(1)
-		srv.lock.RUnlock()
+		atomic.AddUint32(&srv.inFlight, 1)
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
 	}
 }
@@ -552,16 +559,14 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		if err != nil {
 			continue
 		}
-		srv.lock.RLock()
-		srv.inFlight.Add(1)
-		srv.lock.RUnlock()
+		atomic.AddUint32(&srv.inFlight, 1)
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 }
 
 // Serve a new connection.
 func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t net.Conn) {
-	defer srv.inFlight.Done()
+	defer atomic.AddUint32(&srv.inFlight, ^uint32(0))
 
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
 	if srv.DecorateWriter != nil {
