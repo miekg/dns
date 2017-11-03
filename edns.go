@@ -106,7 +106,7 @@ func (rr *OPT) SetVersion(v uint8) {
 
 // ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
 func (rr *OPT) ExtendedRcode() int {
-	return int((rr.Hdr.Ttl&0xFF000000)>>24)
+	return int((rr.Hdr.Ttl & 0xFF000000) >> 24)
 }
 
 // SetExtendedRcode sets the EDNS extended RCODE field.
@@ -588,7 +588,7 @@ func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
 	}
 	e.Length = binary.BigEndian.Uint16(b[2:4])
 	if e.Length != 0 && e.Length != 2 {
-		return errors.New("dns: length mismatch, want 0/2 but got " + strconv.FormatUint(uint64(e.Length), 10))
+		return fmt.Errorf("dns: length mismatch, want 0/2 but got %d", e.Length)
 	}
 	if e.Length == 2 {
 		if len(b) < 6 {
