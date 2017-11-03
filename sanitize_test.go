@@ -78,7 +78,7 @@ func TestNormalizedString(t *testing.T) {
 func newRR(t *testing.T, s string) RR {
 	r, err := NewRR(s)
 	if err != nil {
-		t.Logf("newRR: %v", err)
+		t.Errorf("newRR: %v", err)
 	}
 	return r
 }

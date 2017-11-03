@@ -15,7 +15,7 @@ func TestDialUDP(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("[::1]:0")
+	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -162,65 +162,6 @@ func TestClientTLSSyncV4(t *testing.T) {
 	}
 }
 
-func TestClientTLSSyncV6(t *testing.T) {
-	HandleFunc("miek.nl.", HelloServer)
-	defer HandleRemove("miek.nl.")
-
-	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
-	if err != nil {
-		t.Fatalf("unable to build certificate: %v", err)
-	}
-
-	config := tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-
-	s, addrstr, err := RunLocalTLSServer("[::1]:0", &config)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-
-	m := new(Msg)
-	m.SetQuestion("miek.nl.", TypeSOA)
-
-	c := new(Client)
-
-	// test tcp-tls
-	c.Net = "tcp-tls"
-	c.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
-	r, _, err := c.Exchange(m, addrstr)
-	if err != nil {
-		t.Fatalf("failed to exchange: %v", err)
-	}
-	if r == nil {
-		t.Fatal("response is nil")
-	}
-	if r.Rcode != RcodeSuccess {
-		t.Errorf("failed to get an valid answer\n%v", r)
-	}
-
-	// test tcp6-tls
-	c.Net = "tcp6-tls"
-	c.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
-	r, _, err = c.Exchange(m, addrstr)
-	if err != nil {
-		t.Fatalf("failed to exchange: %v", err)
-	}
-	if r == nil {
-		t.Fatal("response is nil")
-	}
-	if r.Rcode != RcodeSuccess {
-		t.Errorf("failed to get an valid answer\n%v", r)
-	}
-}
-
 func TestClientSyncBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
@@ -321,7 +262,6 @@ func TestClientEDNS0Local(t *testing.T) {
 	}
 	if r.Rcode != RcodeSuccess {
 		t.Fatal("failed to get a valid answer")
-		t.Logf("%v\n", r)
 	}
 
 	txt := r.Extra[0].(*TXT).Txt[0]
@@ -333,41 +273,11 @@ func TestClientEDNS0Local(t *testing.T) {
 	got := r.Extra[1].(*OPT).Option[0].(*EDNS0_LOCAL).String()
 	if got != optStr1 {
 		t.Errorf("failed to get local edns0 answer; got %s, expected %s", got, optStr1)
-		t.Logf("%v\n", r)
 	}
 
 	got = r.Extra[1].(*OPT).Option[1].(*EDNS0_LOCAL).String()
 	if got != optStr2 {
 		t.Errorf("failed to get local edns0 answer; got %s, expected %s", got, optStr2)
-		t.Logf("%v\n", r)
-	}
-}
-
-// ExampleTsigSecret_updateLeaseTSIG shows how to update a lease signed with TSIG
-func ExampleTsigSecret_updateLeaseTSIG() {
-	m := new(Msg)
-	m.SetUpdate("t.local.ip6.io.")
-	rr, _ := NewRR("t.local.ip6.io. 30 A 127.0.0.1")
-	rrs := make([]RR, 1)
-	rrs[0] = rr
-	m.Insert(rrs)
-
-	leaseRr := new(OPT)
-	leaseRr.Hdr.Name = "."
-	leaseRr.Hdr.Rrtype = TypeOPT
-	e := new(EDNS0_UL)
-	e.Code = EDNS0UL
-	e.Lease = 120
-	leaseRr.Option = append(leaseRr.Option, e)
-	m.Extra = append(m.Extra, leaseRr)
-
-	c := new(Client)
-	m.SetTsig("polvi.", HmacMD5, 300, time.Now().Unix())
-	c.TsigSecret = map[string]string{"polvi.": "pRZgBrBvI4NAHZYhxmhs/Q=="}
-
-	_, _, err := c.Exchange(m, "127.0.0.1:53")
-	if err != nil {
-		panic(err)
 	}
 }
 
@@ -673,8 +583,7 @@ func TestConcurrentExchanges(t *testing.T) {
 		wg.Wait()
 
 		if r[0] == r[1] {
-			t.Log("Got same response object, expected non-shared responses")
-			t.Fail()
+			t.Errorf("Got same response object, expected non-shared responses")
 		}
 	}
 }

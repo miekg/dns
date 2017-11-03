@@ -13,11 +13,8 @@ func TestDynamicUpdateParsing(t *testing.T) {
 			typ == "Reserved" || typ == "None" || typ == "NXT" || typ == "MAILB" || typ == "MAILA" {
 			continue
 		}
-		r, err := NewRR(prefix + typ)
-		if err != nil {
+		if _, err := NewRR(prefix + typ); err != nil {
 			t.Errorf("failure to parse: %s %s: %v", prefix, typ, err)
-		} else {
-			t.Logf("parsed: %s", r.String())
 		}
 	}
 }

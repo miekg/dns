@@ -54,8 +54,6 @@ func TestSplit(t *testing.T) {
 	for s, i := range splitter {
 		if x := len(Split(s)); x != i {
 			t.Errorf("labels should be %d, got %d: %s %v", i, x, s, Split(s))
-		} else {
-			t.Logf("%s %v", s, Split(s))
 		}
 	}
 }
