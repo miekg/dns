@@ -26,6 +26,7 @@ const (
 	maxDomainNameWireOctets = 255     // See RFC 1035 section 2.3.4
 )
 
+// Errors defined in this package.
 var (
 	ErrAlg           error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
 	ErrAuth          error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
@@ -57,7 +58,7 @@ var (
 // For instance, to make it return a static value:
 //
 //	dns.Id = func() uint16 { return 3 }
-var Id func() uint16 = id
+var Id = id
 
 var (
 	idLock sync.Mutex
@@ -360,7 +361,7 @@ Loop:
 				case '"', '\\':
 					s = append(s, '\\', b)
 					// presentation-format \X escapes add an extra byte
-					maxLen += 1
+					maxLen++
 				default:
 					if b < 32 || b >= 127 { // unprintable, use \DDD
 						var buf [3]byte
