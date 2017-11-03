@@ -178,8 +178,6 @@ func TestPackNAPTR(t *testing.T) {
 		if off, err := PackRR(rr, msg, 0, nil, false); err != nil {
 			t.Errorf("packing failed: %v", err)
 			t.Errorf("length %d, need more than %d", rr.len(), off)
-		} else {
-			t.Logf("buf size needed: %d", off)
 		}
 	}
 }
@@ -372,11 +370,9 @@ func TestNoRdataUnpack(t *testing.T) {
 			t.Errorf("failed to pack RR: %v", err)
 			continue
 		}
-		rr, _, err := UnpackRR(data[:off], 0)
-		if err != nil {
+		if _, _, err := UnpackRR(data[:off], 0); err != nil {
 			t.Errorf("failed to unpack RR with zero rdata: %s: %v", TypeToString[typ], err)
 		}
-		t.Log(rr)
 	}
 }
 
@@ -448,6 +444,5 @@ func TestMsgPackBuffer(t *testing.T) {
 			t.Errorf("packet %d failed to unpack", i)
 			continue
 		}
-		t.Logf("packet %d %s", i, m.String())
 	}
 }
