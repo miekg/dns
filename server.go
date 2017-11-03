@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -299,7 +300,10 @@ type Server struct {
 
 	// Graceful shutdown handling
 
-	inFlight sync.WaitGroup
+	// inFlight sync.WaitGroup
+	inFlight uint32
+
+	shutdownSignal chan bool
 
 	lock    sync.RWMutex
 	started bool
@@ -331,6 +335,8 @@ func (srv *Server) ListenAndServe() error {
 		}
 		srv.Listener = l
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -349,6 +355,8 @@ func (srv *Server) ListenAndServe() error {
 		}
 		srv.Listener = l
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		err = srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -404,6 +412,8 @@ func (srv *Server) ActivateAndServe() error {
 	}
 	if l != nil {
 		srv.started = true
+		srv.shutdownSignal = make(chan bool)
+
 		srv.lock.Unlock()
 		e := srv.serveTCP(l)
 		srv.lock.Lock() // to satisfy the defer at the top
@@ -423,18 +433,27 @@ func (srv *Server) Shutdown() error {
 		return &Error{err: "server not started"}
 	}
 	srv.started = false
-	srv.lock.Unlock()
+	defer srv.lock.Unlock() // to make sure re-serve works do after shutdown
 
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
 	if srv.Listener != nil {
+		// only TCP listener needs shutdown signal
+		srv.shutdownSignal <- true
 		srv.Listener.Close()
 	}
 
 	fin := make(chan bool)
 	go func() {
-		srv.inFlight.Wait()
+		// srv.inFlight.Wait()
+		var count uint32
+		for {
+			count = atomic.LoadUint32(&srv.inFlight)
+			if count == 0 {
+				break
+			}
+		}
 		fin <- true
 	}()
 
@@ -463,7 +482,6 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
-
 	reader := Reader(&defaultReader{srv})
 	if srv.DecorateReader != nil {
 		reader = srv.DecorateReader(reader)
@@ -475,11 +493,23 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	}
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
+
+	quitting := make(chan struct{})
+	go srv.handleCloseSignal(srv.shutdownSignal, quitting, l)
+
 	for {
 		rw, err := l.Accept()
 		if err != nil {
-			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
-				continue
+			select {
+			// If listening closed, Accept returns a error about use of
+			// closed network connection. It's a excepted error, so
+			// we chose to ignore this error when graceful shutdown.
+			case <-quitting:
+				err = nil
+			default:
+				if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+					continue
+				}
 			}
 			return err
 		}
@@ -493,7 +523,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		if err != nil {
 			continue
 		}
-		srv.inFlight.Add(1)
+		atomic.AddUint32(&srv.inFlight, 1)
 		go srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
 	}
 }
@@ -529,14 +559,14 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		if err != nil {
 			continue
 		}
-		srv.inFlight.Add(1)
+		atomic.AddUint32(&srv.inFlight, 1)
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 }
 
 // Serve a new connection.
 func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t net.Conn) {
-	defer srv.inFlight.Done()
+	defer atomic.AddUint32(&srv.inFlight, ^uint32(0))
 
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
 	if srv.DecorateWriter != nil {
@@ -655,6 +685,13 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	}
 	m = m[:n]
 	return m, s, nil
+}
+
+// handleCloseSignal when receive shutdown signal, close quitting
+func (srv *Server) handleCloseSignal(shutdown chan bool, quitting chan struct{}, listener net.Listener) {
+	<-shutdown
+	close(quitting)
+	close(shutdown)
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
