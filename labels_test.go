@@ -87,19 +87,19 @@ func TestPrevLabel(t *testing.T) {
 		int
 	}
 	prever := map[prev]int{
-		prev{"www.miek.nl.", 0}: 12,
-		prev{"www.miek.nl.", 1}: 9,
-		prev{"www.miek.nl.", 2}: 4,
+		{"www.miek.nl.", 0}: 12,
+		{"www.miek.nl.", 1}: 9,
+		{"www.miek.nl.", 2}: 4,
 
-		prev{"www.miek.nl", 0}: 11,
-		prev{"www.miek.nl", 1}: 9,
-		prev{"www.miek.nl", 2}: 4,
+		{"www.miek.nl", 0}: 11,
+		{"www.miek.nl", 1}: 9,
+		{"www.miek.nl", 2}: 4,
 
-		prev{"www.miek.nl.", 5}: 0,
-		prev{"www.miek.nl", 5}:  0,
+		{"www.miek.nl.", 5}: 0,
+		{"www.miek.nl", 5}:  0,
 
-		prev{"www.miek.nl.", 3}: 0,
-		prev{"www.miek.nl", 3}:  0,
+		{"www.miek.nl.", 3}: 0,
+		{"www.miek.nl", 3}:  0,
 	}
 	for s, i := range prever {
 		x, ok := PrevLabel(s.string, s.int)

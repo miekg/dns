@@ -99,7 +99,7 @@ func main() {
 
 	fmt.Fprint(b, "func compressionLenHelperType(c map[string]int, r RR) {\n")
 	fmt.Fprint(b, "switch x := r.(type) {\n")
-	for name, _ := range domainTypes {
+	for name := range domainTypes {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
@@ -135,7 +135,7 @@ func main() {
 
 	fmt.Fprint(b, "func compressionLenSearchType(c map[string]int, r RR) (int, bool) {\n")
 	fmt.Fprint(b, "switch x := r.(type) {\n")
-	for name, _ := range cdomainTypes {
+	for name := range cdomainTypes {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
