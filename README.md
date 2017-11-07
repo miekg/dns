@@ -7,15 +7,13 @@
 
 > Less is more.
 
-Complete and usable DNS library. All widely used Resource Records are
-supported, including the DNSSEC types. It follows a lean and mean philosophy.
-If there is stuff you should know as a DNS programmer there isn't a convenience
-function for it. Server side and client side programming is supported, i.e. you
-can build servers and resolvers with it.
+Complete and usable DNS library. All widely used Resource Records are supported, including the
+DNSSEC types. It follows a lean and mean philosophy. If there is stuff you should know as a DNS
+programmer there isn't a convenience function for it. Server side and client side programming is
+supported, i.e. you can build servers and resolvers with it.
 
-We try to keep the "master" branch as sane as possible and at the bleeding edge
-of standards, avoiding breaking changes wherever reasonable. We support the last
-two versions of Go, currently: 1.7 and 1.8.
+We try to keep the "master" branch as sane as possible and at the bleeding edge of standards,
+avoiding breaking changes wherever reasonable. We support the last two versions of Go.
 
 # Goals
 
@@ -90,8 +88,8 @@ Miek Gieben  -  2010-2012  -  <miek@miek.nl>
 
 # Building
 
-Building is done with the `go` tool. If you have setup your GOPATH
-correctly, the following should work:
+Building is done with the `go` tool. If you have setup your GOPATH correctly, the following should
+work:
 
     go get github.com/miekg/dns
     go build github.com/miekg/dns
@@ -154,9 +152,8 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7314 - DNS (EDNS) EXPIRE Option
 * 7828 - edns-tcp-keepalive EDNS0 Option
 * 7553 - URI record
-* 7858 - DNS over TLS: Initiation and Performance Considerations (draft)
+* 7858 - DNS over TLS: Initiation and Performance Considerations
 * 7873 - Domain Name System (DNS) Cookies (draft-ietf-dnsop-cookies)
-* xxxx - EDNS0 DNS Update Lease (draft)
 
 ## Loosely based upon
 
