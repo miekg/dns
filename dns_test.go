@@ -153,8 +153,7 @@ func TestPack(t *testing.T) {
 		t.Error("packing should fail")
 	}
 	x.Answer = make([]RR, 1)
-	x.Answer[0], err = NewRR(rr[0])
-	if err != nil {
+	if x.Answer[0], err = NewRR(rr[0]); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := x.Pack(); err == nil {

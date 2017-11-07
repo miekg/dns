@@ -114,13 +114,13 @@ func TestTrimDomainName(t *testing.T) {
 	// These test cases provide both origin, s, and the expected result.
 	// If you find a bug in the while, this is probably the easiest place
 	// to add it as a test case.
-	var tests_wild = []struct{ e1, e2, expected string }{
+	var testsWild = []struct{ e1, e2, expected string }{
 		{"mathoverflow.net.", ".", "mathoverflow.net"},
 		{"mathoverflow.net", ".", "mathoverflow.net"},
 		{"", ".", "@"},
 		{"@", ".", "@"},
 	}
-	for i, test := range tests_wild {
+	for i, test := range testsWild {
 		actual := TrimDomainName(test.e1, test.e2)
 		if test.expected != actual {
 			t.Errorf("%d TrimDomainName(%#v, %#v): expected (%v) got (%v)\n", i, test.e1, test.e2, test.expected, actual)
