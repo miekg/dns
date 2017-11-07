@@ -11,4 +11,7 @@ before_install:
   - ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/miekg/ || true
 
 script:
-  - go test -race -v -bench=.
+  - go test -race -v -bench=. -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
