@@ -21,8 +21,8 @@ func AddOrigin(s, origin string) string {
 	// ("foo.", "origin.") -> "foo." (already a FQDN)
 	// ("foo", "origin.") -> "foo.origin."
 	// ("foo", "origin") -> "foo.origin"
-	// ("foo", ".") -> "foo."
-	// ("foo.", ".") -> "foo."
+	// ("foo", ".") -> "foo." (Same as dns.Fqdn())
+	// ("foo.", ".") -> "foo." (Same as dns.Fqdn())
 	// ("@", "origin.") -> "origin." (@ represents the apex (bare) domain)
 	// ("", "origin.") -> "origin." (not obvious)
 	// ("foo", "") -> "foo" (not obvious)
@@ -36,9 +36,8 @@ func AddOrigin(s, origin string) string {
 	if s == "@" || len(s) == 0 {
 		return origin // Expand apex.
 	}
-
 	if origin == "." {
-		return s + origin // AddOrigin(s, ".") is an easy way to add a "." without creating "..".
+		return dns.Fqdn(s)
 	}
 
 	return s + "." + origin // The simple case.
@@ -59,12 +58,12 @@ func TrimDomainName(s, origin string) string {
 		return strings.TrimSuffix(s, origin)
 	}
 
-	original_s := s
-	s = AddOrigin(s, ".")
-	origin = AddOrigin(origin, ".")
+	original := s
+	s = dns.Fqdn(s)
+	origin = dns.Fqdn(origin)
 
 	if !dns.IsSubDomain(origin, s) {
-		return original_s
+		return original
 	}
 
 	slabels := dns.Split(s)

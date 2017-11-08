@@ -28,7 +28,7 @@ func TestAddOrigin(t *testing.T) {
 	for _, test := range tests {
 		actual := AddOrigin(test.e1, test.e2)
 		if test.expected != actual {
-			t.Errorf("AddOrigin(%#v, %#v) expected %#v, go %#v\n", test.e1, test.e2, test.expected, actual)
+			t.Errorf("AddOrigin(%#v, %#v) expected %#v, got %#v\n", test.e1, test.e2, test.expected, actual)
 		}
 	}
 }
