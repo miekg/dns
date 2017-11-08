@@ -10,6 +10,8 @@ func TestAddOrigin(t *testing.T) {
 		{"@", "example.com.", "example.com."},
 		{"foo", "example.com.", "foo.example.com."},
 		{"foo.", "example.com.", "foo."},
+		{"example.com", ".", "example.com."},
+		{"example.com.", ".", "example.com."},
 		// Oddball tests:
 		// In general origin should not be "" or "." but at least
 		// these tests verify we don't crash and will keep results
@@ -26,7 +28,7 @@ func TestAddOrigin(t *testing.T) {
 	for _, test := range tests {
 		actual := AddOrigin(test.e1, test.e2)
 		if test.expected != actual {
-			t.Errorf("AddOrigin(%#v, %#v) expected %#v, go %#v\n", test.e1, test.e2, test.expected, actual)
+			t.Errorf("AddOrigin(%#v, %#v) expected %#v, got %#v\n", test.e1, test.e2, test.expected, actual)
 		}
 	}
 }
