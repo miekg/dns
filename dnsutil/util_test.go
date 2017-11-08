@@ -10,6 +10,8 @@ func TestAddOrigin(t *testing.T) {
 		{"@", "example.com.", "example.com."},
 		{"foo", "example.com.", "foo.example.com."},
 		{"foo.", "example.com.", "foo."},
+		{"example.com", ".", "example.com."},
+		{"example.com.", ".", "example.com."},
 		// Oddball tests:
 		// In general origin should not be "" or "." but at least
 		// these tests verify we don't crash and will keep results
