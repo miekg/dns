@@ -57,7 +57,6 @@ func TrimDomainName(s, origin string) string {
 		return strings.TrimSuffix(s, origin)
 	}
 
-	//original_origin := origin
 	if !strings.HasSuffix(origin, ".") {
 		origin = origin + "."
 	}
