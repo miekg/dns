@@ -147,7 +147,7 @@ func TestServing(t *testing.T) {
 	defer HandleRemove("miek.nl.")
 	defer HandleRemove("example.com.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestServingTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer("127.0.0.1:0", &config)
+	s, addrstr, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -253,7 +253,7 @@ func BenchmarkServe(b *testing.B) {
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		b.Fatalf("unable to run test server: %v", err)
 	}
@@ -306,7 +306,7 @@ func BenchmarkServeCompress(b *testing.B) {
 	HandleFunc("miek.nl.", HelloServerCompress)
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		b.Fatalf("unable to run test server: %v", err)
 	}
@@ -407,7 +407,7 @@ func TestServingLargeResponses(t *testing.T) {
 	HandleFunc("example.", HelloServerLargeResponse)
 	defer HandleRemove("example.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -447,7 +447,7 @@ func TestServingResponse(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 	HandleFunc("miek.nl.", HelloServer)
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -467,7 +467,7 @@ func TestServingResponse(t *testing.T) {
 	}
 
 	s.Shutdown()
-	s, addrstr, err = RunLocalUDPServerUnsafe("127.0.0.1:0")
+	s, addrstr, err = RunLocalUDPServerUnsafe(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -481,7 +481,7 @@ func TestServingResponse(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	s, _, err := RunLocalTCPServer("127.0.0.1:0")
+	s, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -501,7 +501,7 @@ func TestShutdownTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, _, err := RunLocalTLSServer("127.0.0.1:0", &config)
+	s, _, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -529,7 +529,7 @@ func (t *trigger) Get() bool {
 
 func TestHandlerCloseTCP(t *testing.T) {
 
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	ln, err := net.Listen("tcp", ":0")
 	if err != nil {
 		panic(err)
 	}
@@ -569,7 +569,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 }
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, fin, err := RunLocalUDPServerWithFinChan("127.0.0.1:0")
+	s, _, fin, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -600,7 +600,7 @@ func ExampleDecorateWriter() {
 	})
 
 	// simple UDP server
-	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
+	pc, err := net.ListenPacket("udp", ":0")
 	if err != nil {
 		fmt.Println(err.Error())
 		return

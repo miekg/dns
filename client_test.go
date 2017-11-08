@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ func TestDialUDP(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -38,7 +39,7 @@ func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -72,7 +73,7 @@ func TestClientLocalAddress(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerEchoAddrPort)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -82,11 +83,11 @@ func TestClientLocalAddress(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	laddr := net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345, Zone: ""}
+	laddr := net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 12345, Zone: ""}
 	c.Dialer = &net.Dialer{LocalAddr: &laddr}
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+		t.Fatalf("failed to exchange: %v", err)
 	}
 	if r != nil && r.Rcode != RcodeSuccess {
 		t.Errorf("failed to get an valid answer\n%v", r)
@@ -98,7 +99,7 @@ func TestClientLocalAddress(t *testing.T) {
 	if txt == nil {
 		t.Errorf("invalid TXT response\n%v", txt)
 	}
-	if len(txt.Txt) != 1 || txt.Txt[0] != "127.0.0.1:12345" {
+	if len(txt.Txt) != 1 || !strings.Contains(txt.Txt[0], ":12345") {
 		t.Errorf("invalid TXT response\n%v", txt.Txt)
 	}
 }
@@ -116,7 +117,7 @@ func TestClientTLSSyncV4(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer("127.0.0.1:0", &config)
+	s, addrstr, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -166,7 +167,7 @@ func TestClientSyncBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -189,7 +190,7 @@ func TestClientEDNS0(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -236,7 +237,7 @@ func TestClientEDNS0Local(t *testing.T) {
 	HandleFunc("miek.nl.", handler)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -286,7 +287,7 @@ func TestClientConn(t *testing.T) {
 	defer HandleRemove("miek.nl.")
 
 	// This uses TCP just to make it slightly different than TestClientSync
-	s, addrstr, err := RunLocalTCPServer("127.0.0.1:0")
+	s, addrstr, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -468,7 +469,7 @@ func TestTruncatedMsg(t *testing.T) {
 
 func TestTimeout(t *testing.T) {
 	// Set up a dummy UDP server that won't respond
-	addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
+	addr, err := net.ResolveUDPAddr("udp", ":0")
 	if err != nil {
 		t.Fatalf("unable to resolve local udp address: %v", err)
 	}
@@ -550,7 +551,7 @@ func TestConcurrentExchanges(t *testing.T) {
 		HandleFunc("miek.nl.", handler)
 		defer HandleRemove("miek.nl.")
 
-		s, addrstr, err := RunLocalUDPServer("127.0.0.1:0")
+		s, addrstr, err := RunLocalUDPServer(":0")
 		if err != nil {
 			t.Fatalf("unable to run test server: %s", err)
 		}
