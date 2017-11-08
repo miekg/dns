@@ -57,8 +57,16 @@ func TrimDomainName(s, origin string) string {
 		return strings.TrimSuffix(s, origin)
 	}
 
+	//original_origin := origin
+	if !strings.HasSuffix(origin, ".") {
+		origin = origin + "."
+	}
+	original_s := s
+	if !strings.HasSuffix(s, ".") {
+		s = s + "."
+	}
 	if !dns.IsSubDomain(origin, s) {
-		return s
+		return original_s
 	}
 
 	slabels := dns.Split(s)
