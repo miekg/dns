@@ -43,21 +43,20 @@ func AddOrigin(s, origin string) string {
 }
 
 // TrimDomainName trims origin from s if s is a subdomain.
-// This function will never return "", but returns "@" instead (@ represents the apex (bare) domain).
+// This function will never return "", but returns "@" instead (@ represents the apex domain).
 func TrimDomainName(s, origin string) string {
 	// An apex (bare) domain is always returned as "@".
 	// If the return value ends in a ".", the domain was not the suffix.
 	// origin can end in "." or not. Either way the results should be the same.
 
 	if len(s) == 0 {
-		return "@" // Return the apex (@) rather than "".
+		return "@"
 	}
 	// Someone is using TrimDomainName(s, ".") to remove a dot if it exists.
 	if origin == "." {
 		return strings.TrimSuffix(s, origin)
 	}
 
-	// Dude, you aren't even if the right subdomain!
 	if !dns.IsSubDomain(origin, s) {
 		return s
 	}

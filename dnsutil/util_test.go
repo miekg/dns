@@ -32,10 +32,9 @@ func TestAddOrigin(t *testing.T) {
 }
 
 func TestTrimDomainName(t *testing.T) {
-
 	// Basic tests.
 	// Try trimming "example.com" and "example.com." from typical use cases.
-	var tests_examplecom = []struct{ experiment, expected string }{
+	testsEx := []struct{ experiment, expected string }{
 		{"foo.example.com", "foo"},
 		{"foo.example.com.", "foo"},
 		{".foo.example.com", ".foo"},
@@ -51,10 +50,10 @@ func TestTrimDomainName(t *testing.T) {
 		{".foo.ronco.com.", ".foo.ronco.com."},
 	}
 	for _, dom := range []string{"example.com", "example.com."} {
-		for i, test := range tests_examplecom {
+		for i, test := range testsEx {
 			actual := TrimDomainName(test.experiment, dom)
 			if test.expected != actual {
-				t.Errorf("%d TrimDomainName(%#v, %#v): expected (%v) got (%v)\n", i, test.experiment, dom, test.expected, actual)
+				t.Errorf("%d TrimDomainName(%#v, %#v): expected %v, got %v\n", i, test.experiment, dom, test.expected, actual)
 			}
 		}
 	}
@@ -63,7 +62,7 @@ func TestTrimDomainName(t *testing.T) {
 	// These test shouldn't be needed but I was weary of off-by-one errors.
 	// In theory, these can't happen because there are no single-letter TLDs,
 	// but it is good to exercize the code this way.
-	var tests = []struct{ experiment, expected string }{
+	tests := []struct{ experiment, expected string }{
 		{"", "@"},
 		{".", "."},
 		{"a.b.c.d.e.f.", "a.b.c.d.e"},
@@ -105,7 +104,7 @@ func TestTrimDomainName(t *testing.T) {
 		for i, test := range tests {
 			actual := TrimDomainName(test.experiment, dom)
 			if test.expected != actual {
-				t.Errorf("%d TrimDomainName(%#v, %#v): expected (%v) got (%v)\n", i, test.experiment, dom, test.expected, actual)
+				t.Errorf("%d TrimDomainName(%#v, %#v): expected %v, got %v\n", i, test.experiment, dom, test.expected, actual)
 			}
 		}
 	}
@@ -123,8 +122,7 @@ func TestTrimDomainName(t *testing.T) {
 	for i, test := range testsWild {
 		actual := TrimDomainName(test.e1, test.e2)
 		if test.expected != actual {
-			t.Errorf("%d TrimDomainName(%#v, %#v): expected (%v) got (%v)\n", i, test.e1, test.e2, test.expected, actual)
+			t.Errorf("%d TrimDomainName(%#v, %#v): expected %v, got %v\n", i, test.e1, test.e2, test.expected, actual)
 		}
 	}
-
 }
