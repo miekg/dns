@@ -426,6 +426,7 @@ func (srv *Server) Shutdown() error {
 	if srv.Listener != nil {
 		srv.Listener.Close()
 	}
+	return nil
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
