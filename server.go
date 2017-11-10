@@ -410,8 +410,7 @@ func (srv *Server) ActivateAndServe() error {
 }
 
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return. If the Shutdown is taking longer than the
-// reading timeout an error is returned.
+// ActivateAndServe will return.
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()
 	if !srv.started {
@@ -426,18 +425,6 @@ func (srv *Server) Shutdown() error {
 	}
 	if srv.Listener != nil {
 		srv.Listener.Close()
-	}
-
-	fin := make(chan bool)
-	go func() {
-		fin <- true
-	}()
-
-	select {
-	case <-time.After(srv.getReadTimeout()):
-		return &Error{err: "server shutdown is pending"}
-	case <-fin:
-		return nil
 	}
 }
 
