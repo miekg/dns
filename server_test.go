@@ -648,6 +648,22 @@ func TestShutdownUDP(t *testing.T) {
 	}
 }
 
+func TestServerStartStopRace(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		var err error
+		s := &Server{}
+		s, _, _, err = RunLocalUDPServerWithFinChan(":0")
+		if err != nil {
+			t.Fatalf("Could not start server: %s", err)
+		}
+		go func() {
+			if err := s.Shutdown(); err != nil {
+				t.Fatalf("Could not stop server: %s", err)
+			}
+		}()
+	}
+}
+
 type ExampleFrameLengthWriter struct {
 	Writer
 }
