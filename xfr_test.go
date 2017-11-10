@@ -38,9 +38,6 @@ func TestAXFR_Miek(t *testing.T) {
 				t.Errorf("error %v", ex.Error)
 				break
 			}
-			for _, rr := range ex.RR {
-				// Nothing
-			}
 		}
 	}
 }
@@ -88,9 +85,6 @@ func TestAXFR_Miek_Tsig(t *testing.T) {
 			if ex.Error != nil {
 				t.Errorf("error %v", ex.Error)
 				break
-			}
-			for _, rr := range ex.RR {
-				// Nothing
 			}
 		}
 	}
