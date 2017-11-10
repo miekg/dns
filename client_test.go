@@ -584,7 +584,7 @@ func TestConcurrentExchanges(t *testing.T) {
 		wg.Wait()
 
 		if r[0] == r[1] {
-			t.Errorf("Got same response object, expected non-shared responses")
+			t.Errorf("got same response, expected non-shared responses")
 		}
 	}
 }
