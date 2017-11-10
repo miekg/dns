@@ -525,7 +525,7 @@ func TestTimeout(t *testing.T) {
 	length := time.Since(start)
 
 	if length > allowable {
-		t.Errorf("exchange took longer (%v) than specified Timeout (%v)", length, timeout)
+		t.Errorf("exchange took longer %v than specified Timeout %v", length, allowable)
 	}
 }
 
