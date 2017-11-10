@@ -127,7 +127,7 @@ func TestNsec3(t *testing.T) {
 	} {
 		covers := tc.rr.Cover(tc.name)
 		if tc.covers != covers {
-			t.Fatalf("Cover failed for %s: expected %t, got %t [record: %s]", tc.name, tc.covers, covers, tc.rr)
+			t.Fatalf("cover failed for %s: expected %t, got %t [record: %s]", tc.name, tc.covers, covers, tc.rr)
 		}
 	}
 }

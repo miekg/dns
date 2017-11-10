@@ -98,23 +98,14 @@ func TestDomainNameAndTXTEscapes(t *testing.T) {
 		s := rr1.String()
 		rr2, err := NewRR(s)
 		if err != nil {
-			t.Errorf("Error parsing unpacked RR's string: %v", err)
-			t.Errorf(" Bytes: %v", rrbytes)
-			t.Errorf("String: %v", s)
+			t.Errorf("error parsing unpacked RR's string: %v", err)
 		}
 		repacked := make([]byte, len(rrbytes))
 		if _, err := PackRR(rr2, repacked, 0, nil, false); err != nil {
 			t.Errorf("error packing parsed RR: %v", err)
-			t.Errorf(" original Bytes: %v", rrbytes)
-			t.Errorf("unpacked Struct: %v", rr1)
-			t.Errorf("  parsed Struct: %v", rr2)
 		}
 		if !bytes.Equal(repacked, rrbytes) {
 			t.Error("packed bytes don't match original bytes")
-			t.Errorf(" original bytes: %v", rrbytes)
-			t.Errorf("   packed bytes: %v", repacked)
-			t.Errorf("unpacked struct: %v", rr1)
-			t.Errorf("  parsed struct: %v", rr2)
 		}
 	}
 }

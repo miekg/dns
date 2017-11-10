@@ -247,6 +247,70 @@ func TestServingTLS(t *testing.T) {
 	}
 }
 
+func TestServingListenAndServe(t *testing.T) {
+	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("example.com.")
+
+	waitLock := sync.Mutex{}
+	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	waitLock.Lock()
+
+	go func() {
+		server.ListenAndServe()
+	}()
+	waitLock.Lock()
+
+	c, m := new(Client), new(Msg)
+	m.SetQuestion("example.com.", TypeTXT)
+	addr := server.PacketConn.LocalAddr().String() // Get address via the PacketConn that gets set.
+	r, _, err := c.Exchange(m, addr)
+	if err != nil {
+		t.Fatal("failed to exchange example.com", err)
+	}
+	txt := r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello example" {
+		t.Error("unexpected result for example.com", txt, "!= Hello example")
+	}
+	server.Shutdown()
+}
+
+func TestServingListenAndServeTLS(t *testing.T) {
+	HandleFunc("example.com.", AnotherHelloServer)
+	defer HandleRemove("example.com.")
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	waitLock := sync.Mutex{}
+	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	waitLock.Lock()
+
+	go func() {
+		server.ListenAndServe()
+	}()
+	waitLock.Lock()
+
+	c, m := new(Client), new(Msg)
+	c.Net = "tcp"
+	m.SetQuestion("example.com.", TypeTXT)
+	addr := server.Listener.Addr().String() // Get address via the Listener that gets set.
+	r, _, err := c.Exchange(m, addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello example" {
+		t.Error("unexpected result for example.com", txt, "!= Hello example")
+	}
+	server.Shutdown()
+}
+
 func BenchmarkServe(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
@@ -580,7 +644,7 @@ func TestShutdownUDP(t *testing.T) {
 	select {
 	case <-fin:
 	case <-time.After(2 * time.Second):
-		t.Error("Could not shutdown test UDP server. Gave up waiting")
+		t.Error("could not shutdown test UDP server. Gave up waiting")
 	}
 }
 
