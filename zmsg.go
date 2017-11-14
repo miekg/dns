@@ -1303,7 +1303,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Key, msg, off)
+	off, err = packStringHex(rr.Key, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1311,7 +1311,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]int, compress b
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.OtherData, msg, off)
+	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -3265,12 +3265,9 @@ func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Key, off, err = unpackString(msg, off)
+	rr.Key, off, err = unpackStringHex(msg, off, off+int(rr.KeySize))
 	if err != nil {
 		return rr, off, err
-	}
-	if off == len(msg) {
-		return rr, off, nil
 	}
 	rr.OtherLen, off, err = unpackUint16(msg, off)
 	if err != nil {
@@ -3279,7 +3276,7 @@ func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.OtherData, off, err = unpackString(msg, off)
+	rr.OtherData, off, err = unpackStringHex(msg, off, off+int(rr.OtherLen))
 	if err != nil {
 		return rr, off, err
 	}
