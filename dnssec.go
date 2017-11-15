@@ -310,6 +310,12 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 
 	switch rr.Algorithm {
 	case ED25519:
+		// ed25519 signs the raw message and performs hashing internally.
+		// All other supported signature schemes operate over the pre-hashed
+		// message, and thus ed25519 must be handled separately here.
+		//
+		// The raw message is passed directly into sign and crypto.Hash(0) is
+		// used to signal to the crypto.Signer that the data has not been hashed.
 		signature, err := sign(k, append(signdata, wire...), crypto.Hash(0), rr.Algorithm)
 		if err != nil {
 			return err
