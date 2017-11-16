@@ -4,14 +4,18 @@ package dns
 
 import (
 	"bufio"
+	"errors"
 	"io"
+	"sync"
 	"text/scanner"
 )
 
 type scan struct {
-	src      *bufio.Reader
-	position scanner.Position
-	eof      bool // Have we just seen a eof
+	src          *bufio.Reader
+	position     scanner.Position
+	eof          bool
+	e            bool // upstream scan_rr code has triggered error
+	sync.RWMutex      // protect e
 }
 
 func scanInit(r io.Reader) *scan {
@@ -21,11 +25,27 @@ func scanInit(r io.Reader) *scan {
 	return s
 }
 
+func (s *scan) err() bool {
+	s.RLock()
+	b := s.e
+	s.RUnlock()
+	return b
+}
+
+func (s *scan) setErr(b bool) {
+	s.Lock()
+	s.e = b
+	s.Unlock()
+}
+
 // tokenText returns the next byte from the input
 func (s *scan) tokenText() (byte, error) {
 	c, err := s.src.ReadByte()
 	if err != nil {
 		return c, err
+	}
+	if s.err() {
+		return c, errors.New("parser triggered error")
 	}
 	// delay the newline handling until the next token is delivered,
 	// fixes off-by-one errors when reporting a parse error.
