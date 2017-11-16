@@ -174,15 +174,19 @@ func parseZoneHelper(r io.Reader, origin string, defttl *ttlState, file string, 
 }
 
 func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *Token, include int) {
+	s := scanInit(r)
+	c := make(chan lex)
+
 	defer func() {
 		if include == 0 {
 			close(t)
 		}
+		s.setErr(true)
 	}()
-	s := scanInit(r)
-	c := make(chan lex)
+
 	// Start the lexer
 	go zlexer(s, c)
+
 	// 6 possible beginnings of a line, _ is a space
 	// 0. zRRTYPE                              -> all omitted until the rrtype
 	// 1. zOwner _ zRrtype                     -> class/ttl omitted
