@@ -169,10 +169,20 @@ func readPrivateKeyECDSA(m map[string]string) (*ecdsa.PrivateKey, error) {
 // parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
-	s := scanInit(r)
+	s, cancel := scanInit(r)
 	m := make(map[string]string)
 	c := make(chan lex)
 	k := ""
+	defer func() {
+		cancel()
+		// zlexer can send up to two tokens, the next one and possibly 1 remainders.
+		// Do a non-blocking read.
+		_, ok := <-c
+		_, ok = <-c
+		if !ok {
+			// too bad
+		}
+	}()
 	// Start the lexer
 	go klexer(s, c)
 	for l := range c {

@@ -1406,6 +1406,18 @@ func TestParseAVC(t *testing.T) {
 	}
 }
 
+func TestParseBadNAPTR(t *testing.T) {
+	// Should look like: mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 "S" "SIP+D2U" "" _sip._udp.mplus.ims.vodafone.com.
+	naptr := `mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 S SIP+D2U  _sip._udp.mplus.ims.vodafone.com.`
+	_, err := NewRR(naptr) // parse fails, we should not have leaked a goroutine.
+	if err == nil {
+		t.Fatalf("parsing NAPTR should have failed: %s", naptr)
+	}
+	if err := goroutineLeaked(); err != nil {
+		t.Errorf("leaked goroutines: %s", err)
+	}
+}
+
 func TestUnbalancedParens(t *testing.T) {
 	sig := `example.com. 3600 IN RRSIG MX 15 2 3600 (
               1440021600 1438207200 3613 example.com. (
