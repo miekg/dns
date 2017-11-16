@@ -85,9 +85,9 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 }
 
 type CallbackContext struct {
-	w ResponseWriter
-	r *Msg
-	pattern string
+	Writer  ResponseWriter
+	Req     *Msg
+	Pattern string
 }
 
 type HandlerContext func(*CallbackContext)
@@ -183,7 +183,12 @@ func (mux *ServeMux) Handle(pattern string, handler interface{}) {
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler interface{}) {
+func (mux *ServeMux) HandleFunc(pattern string, handler HandlerFunc) {
+	mux.Handle(pattern, handler)
+}
+
+// HandleFuncContext adds a handler function to the ServeMux for pattern and will callback with a context struct
+func (mux *ServeMux) HandleFuncContext(pattern string, handler HandlerContext) {
 	mux.Handle(pattern, handler)
 }
 
@@ -213,7 +218,7 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
 	if handler, ok := h.(HandlerFunc); ok {
 		handler.ServeDNS(w, request)
 	} else if handler, ok := h.(HandlerContext); ok {
-		handler(&CallbackContext{w: w, r: request, pattern: matched})
+		handler(&CallbackContext{Writer: w, Req: request, Pattern: matched})
 	} else {
 		HandleFailed(w, request)
 	}
@@ -232,6 +237,12 @@ func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 // in the DefaultServeMux.
 func HandleFunc(pattern string, handler HandlerFunc) {
 	DefaultServeMux.HandleFunc(pattern, handler)
+}
+
+// HandleFunc registers the handler function with the given pattern
+// in the DefaultServeMux.  This will callback with a context struct
+func HandleContext(pattern string, handler HandlerContext) {
+	DefaultServeMux.HandleFuncContext(pattern, handler)
 }
 
 // Writer writes raw DNS messages; each call to Write should send an entire message.
