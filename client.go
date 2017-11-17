@@ -20,7 +20,7 @@ const tcpIdleTimeout time.Duration = 8 * time.Second
 type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
 	UDPSize        uint16            // minimum receive buffer for UDP messages
-	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	rtt            time.Duration
 	t              time.Time
 	tsigRequestMAC string
@@ -39,7 +39,7 @@ type Client struct {
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
-	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be fully qualified
+	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
 }

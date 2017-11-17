@@ -285,7 +285,7 @@ type Server struct {
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// Secret(s) for Tsig map[<zonename>]<base64 secret>.
+	// Secret(s) for Tsig map[<zonename>]<base64 secret>. The zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2).
 	TsigSecret map[string]string
 	// Unsafe instructs the server to disregard any sanity checks and directly hand the message to
 	// the handler. It will specifically not check if the query has the QR bit not set.
