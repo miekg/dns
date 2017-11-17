@@ -1425,6 +1425,6 @@ func TestUnbalancedParens(t *testing.T) {
               x8A4M3e23mRZ9VrbpMngwcrqNAg== )`
 	_, err := NewRR(sig)
 	if err == nil {
-		t.Fatalf("Failed to detect extra opening brace")
+		t.Fatalf("failed to detect extra opening brace")
 	}
 }
