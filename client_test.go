@@ -568,11 +568,11 @@ func TestConcurrentExchanges(t *testing.T) {
 		wg.Add(len(r))
 		for i := 0; i < len(r); i++ {
 			go func(i int) {
+				defer wg.Done()
 				r[i], _, _ = c.Exchange(m.Copy(), addrstr)
 				if r[i] == nil {
-					t.Fatalf("response %d is nil", i)
+					t.Errorf("response %d is nil", i)
 				}
-				wg.Done()
 			}(i)
 		}
 		select {
