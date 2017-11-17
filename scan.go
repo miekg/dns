@@ -179,10 +179,22 @@ func parseZone(r io.Reader, origin string, defttl *ttlState, f string, t chan *T
 			close(t)
 		}
 	}()
-	s := scanInit(r)
+	s, cancel := scanInit(r)
 	c := make(chan lex)
 	// Start the lexer
 	go zlexer(s, c)
+
+	defer func() {
+		cancel()
+		// zlexer can send up to three tokens, the next one and possibly 2 remainders.
+		// Do a non-blocking read.
+		_, ok := <-c
+		_, ok = <-c
+		_, ok = <-c
+		if !ok {
+			// too bad
+		}
+	}()
 	// 6 possible beginnings of a line, _ is a space
 	// 0. zRRTYPE                              -> all omitted until the rrtype
 	// 1. zOwner _ zRrtype                     -> class/ttl omitted
