@@ -13,7 +13,6 @@ type scan struct {
 	src      *bufio.Reader
 	position scanner.Position
 	eof      bool // Have we just seen a eof
-	sem      bool // higher level has seen semantic error
 	ctx      context.Context
 }
 
