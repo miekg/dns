@@ -1,10 +1,10 @@
 package dns
 
 import (
+	"bytes"
 	"encoding/hex"
 	"net"
 	"testing"
-	"bytes"
 )
 
 func TestPackUnpack(t *testing.T) {
@@ -409,7 +409,7 @@ func TestMsgPackBuffer(t *testing.T) {
 }
 
 // Make sure we can decode a TKEY packet from the string, modify the RR, and then pack it again.
-func TestTKEY (t *testing.T) {
+func TestTKEY(t *testing.T) {
 	// An example tkey RR captured
 	tkeyStr := "0737362d6d732d370932322d3332633233332463303439663961662d633065612d313165372d363839362d6463333937396666656666640000f900ff0000000000d2086773732d747369670059fd01f359fe53730003000000b8a181b53081b2a0030a0100a10b06092a864882f712010202a2819d04819a60819706092a864886f71201020202006f8187308184a003020105a10302010fa2783076a003020112a26f046db29b1b1d2625da3b20b49dafef930dd1e9aad335e1c5f45dcd95e0005d67a1100f3e573d70506659dbed064553f1ab890f68f65ae10def0dad5b423b39f240ebe666f2886c5fe03819692d29182bbed87b83e1f9d16b7334ec16a3c4fc5ad4a990088e0be43f0c6957916f5fe60000"
 	tkeyBytes, err := hex.DecodeString(tkeyStr)
@@ -418,11 +418,11 @@ func TestTKEY (t *testing.T) {
 	}
 	// Decode the RR
 	rr, tkeyLen, unPackErr := UnpackRR(tkeyBytes, 0)
-	if unPackErr != nil{
+	if unPackErr != nil {
 		t.Fatal("Unable to decode TKEY RR", unPackErr)
 	}
 	// make space for it with some fudge room
-	msg := make([]byte, tkeyLen + 1000)
+	msg := make([]byte, tkeyLen+1000)
 	offset, packErr := PackRR(rr, msg, 0, nil, false)
 	if packErr != nil {
 		t.Fatal("Unable to pack TKEY RR", packErr)
@@ -442,6 +442,6 @@ func TestTKEY (t *testing.T) {
 		t.Fatal("Unable to pack TKEY RR after modification", packErr)
 	}
 	if offset != (len(tkeyBytes) + 2) {
-		t.Fatalf("Mismatched TKEY RR size %d != %d", offset, len(tkeyBytes) + 2)
+		t.Fatalf("Mismatched TKEY RR size %d != %d", offset, len(tkeyBytes)+2)
 	}
 }
