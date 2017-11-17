@@ -410,28 +410,29 @@ func TestMsgPackBuffer(t *testing.T) {
 
 // Make sure we can decode a TKEY packet from the string, modify the RR, and then pack it again.
 func TestTKEY(t *testing.T) {
-	// An example tkey RR captured
+	// An example TKEY RR captured.  There is no known accepted standard text format for a TKEY
+	// record so we do this from a hex string instead of from a text readable string.
 	tkeyStr := "0737362d6d732d370932322d3332633233332463303439663961662d633065612d313165372d363839362d6463333937396666656666640000f900ff0000000000d2086773732d747369670059fd01f359fe53730003000000b8a181b53081b2a0030a0100a10b06092a864882f712010202a2819d04819a60819706092a864886f71201020202006f8187308184a003020105a10302010fa2783076a003020112a26f046db29b1b1d2625da3b20b49dafef930dd1e9aad335e1c5f45dcd95e0005d67a1100f3e573d70506659dbed064553f1ab890f68f65ae10def0dad5b423b39f240ebe666f2886c5fe03819692d29182bbed87b83e1f9d16b7334ec16a3c4fc5ad4a990088e0be43f0c6957916f5fe60000"
 	tkeyBytes, err := hex.DecodeString(tkeyStr)
 	if err != nil {
-		t.Fatal("Unable to decode TKEY string ", err)
+		t.Fatal("unable to decode TKEY string ", err)
 	}
 	// Decode the RR
 	rr, tkeyLen, unPackErr := UnpackRR(tkeyBytes, 0)
 	if unPackErr != nil {
-		t.Fatal("Unable to decode TKEY RR", unPackErr)
+		t.Fatal("unable to decode TKEY RR", unPackErr)
 	}
 	// make space for it with some fudge room
 	msg := make([]byte, tkeyLen+1000)
 	offset, packErr := PackRR(rr, msg, 0, nil, false)
 	if packErr != nil {
-		t.Fatal("Unable to pack TKEY RR", packErr)
+		t.Fatal("unable to pack TKEY RR", packErr)
 	}
 	if offset != len(tkeyBytes) {
-		t.Fatalf("Mismatched TKEY RR size %d != %d", len(tkeyBytes), offset)
+		t.Fatalf("mismatched TKEY RR size %d != %d", len(tkeyBytes), offset)
 	}
 	if bytes.Compare(tkeyBytes, msg[0:offset]) != 0 {
-		t.Fatal("Mismatched TKEY data after rewriting bytes")
+		t.Fatal("mismatched TKEY data after rewriting bytes")
 	}
 	// Now add some bytes to this and make sure we can encode OtherData properly
 	tkey := rr.(*TKEY)
@@ -439,9 +440,9 @@ func TestTKEY(t *testing.T) {
 	tkey.OtherLen = 2
 	offset, packErr = PackRR(tkey, msg, 0, nil, false)
 	if packErr != nil {
-		t.Fatal("Unable to pack TKEY RR after modification", packErr)
+		t.Fatal("unable to pack TKEY RR after modification", packErr)
 	}
 	if offset != (len(tkeyBytes) + 2) {
-		t.Fatalf("Mismatched TKEY RR size %d != %d", offset, len(tkeyBytes)+2)
+		t.Fatalf("mismatched TKEY RR size %d != %d", offset, len(tkeyBytes)+2)
 	}
 }
