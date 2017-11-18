@@ -1019,7 +1019,10 @@ type TKEY struct {
 
 func (rr *TKEY) String() string {
 	// It has no presentation format
-	return fmt.Sprintf("%s Algo: %s KeyLen: %d OtherLen: %d", rr.Hdr.String(), rr.Algorithm, rr.KeySize, rr.OtherLen)
+	return rr.Hdr.String() +
+		rr.Algorithm + " " +
+		strconv.Itoa(int(rr.KeySize)) + " " + rr.Key + " " +
+		strconv.Itoa(int(rr.OtherLen)) + " " + rr.OtherData
 }
 
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
