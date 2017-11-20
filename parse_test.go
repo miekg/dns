@@ -1428,3 +1428,20 @@ func TestUnbalancedParens(t *testing.T) {
 		t.Fatalf("failed to detect extra opening brace")
 	}
 }
+
+func TestBad(t *testing.T) {
+	tests := []string{
+		`" TYPE257 9 1E12\x00\x105"`,
+		`" TYPE256  9 5"`,
+		`" TYPE257 0\"00000000000000400000000000000000000\x00\x10000000000000000000000000000000000 9 l\x16\x01\x005266"`,
+	}
+	for i := range tests {
+		s, err := strconv.Unquote(tests[i])
+		if err != nil {
+			t.Fatalf("failed to unquote: %q: %s", tests[i], err)
+		}
+		if _, err = NewRR(s); err == nil {
+			t.Errorf("correctly parsed %q", s)
+		}
+	}
+}
