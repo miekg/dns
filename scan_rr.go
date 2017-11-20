@@ -1797,7 +1797,7 @@ func setURI(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if err != nil {
 		return nil, err, ""
 	}
-	if len(s) > 1 {
+	if len(s) != 1 {
 		return nil, &ParseError{f, "bad URI Target", l}, ""
 	}
 	rr.Target = s[0]
@@ -2027,7 +2027,7 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	if e != nil {
 		return nil, e, ""
 	}
-	if len(s) > 1 {
+	if len(s) != 1 {
 		return nil, &ParseError{f, "bad CAA Value", l}, ""
 	}
 	rr.Value = s[0]
