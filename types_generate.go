@@ -23,6 +23,7 @@ var skipLen = map[string]struct{}{
 	"NSEC":  {},
 	"NSEC3": {},
 	"OPT":   {},
+	"CSYNC": {},
 }
 
 var packageHdr = `

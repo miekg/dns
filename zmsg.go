@@ -189,6 +189,28 @@ func (rr *CNAME) pack(msg []byte, off int, compression map[string]int, compress 
 	return off, nil
 }
 
+func (rr *CSYNC) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+	off, err := rr.Hdr.pack(msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	headerEnd := off
+	off, err = packUint32(rr.Serial, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.Flags, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDataNsec(rr.TypeBitMap, msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.Header().Rdlength = uint16(off - headerEnd)
+	return off, nil
+}
+
 func (rr *DHCID) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := rr.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
@@ -1715,6 +1737,37 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	_ = rdStart
 
 	rr.Target, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	return rr, off, err
+}
+
+func unpackCSYNC(h RR_Header, msg []byte, off int) (RR, int, error) {
+	rr := new(CSYNC)
+	rr.Hdr = h
+	if noRdata(h) {
+		return rr, off, nil
+	}
+	var err error
+	rdStart := off
+	_ = rdStart
+
+	rr.Serial, off, err = unpackUint32(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.Flags, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return rr, off, err
+	}
+	if off == len(msg) {
+		return rr, off, nil
+	}
+	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3504,6 +3557,7 @@ var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
 	TypeCDS:        unpackCDS,
 	TypeCERT:       unpackCERT,
 	TypeCNAME:      unpackCNAME,
+	TypeCSYNC:      unpackCSYNC,
 	TypeDHCID:      unpackDHCID,
 	TypeDLV:        unpackDLV,
 	TypeDNAME:      unpackDNAME,
