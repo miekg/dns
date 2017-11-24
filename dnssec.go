@@ -615,6 +615,10 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 		switch x := r1.(type) {
 		case *NS:
 			x.Ns = strings.ToLower(x.Ns)
+		case *MD:
+			x.Md = strings.ToLower(x.Md)
+		case *MF:
+			x.Mf = strings.ToLower(x.Mf)
 		case *CNAME:
 			x.Target = strings.ToLower(x.Target)
 		case *SOA:
@@ -633,6 +637,18 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 			x.Email = strings.ToLower(x.Email)
 		case *MX:
 			x.Mx = strings.ToLower(x.Mx)
+		case *RP:
+			x.Mbox = strings.ToLower(x.Mbox)
+			x.Txt = strings.ToLower(x.Txt)
+		case *AFSDB:
+			x.Hostname = strings.ToLower(x.Hostname)
+		case *RT:
+			x.Host = strings.ToLower(x.Host)
+		case *SIG:
+			x.SignerName = strings.ToLower(x.SignerName)
+		case *PX:
+			x.Map822 = strings.ToLower(x.Map822)
+			x.Mapx400 = strings.ToLower(x.Mapx400)
 		case *NAPTR:
 			x.Replacement = strings.ToLower(x.Replacement)
 		case *KX:
