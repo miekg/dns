@@ -145,7 +145,7 @@ func TestTXTEscapeParsing(t *testing.T) {
 }
 
 func GenerateDomain(r *rand.Rand, size int) []byte {
-	dnLen := size % 70 // artificially limit size so there's less to intrepret if a failure occurs
+	dnLen := size % 70 // artificially limit size so there's less to interpret if a failure occurs
 	var dn []byte
 	done := false
 	for i := 0; i < dnLen && !done; {
@@ -203,7 +203,7 @@ func TestDomainQuick(t *testing.T) {
 }
 
 func GenerateTXT(r *rand.Rand, size int) []byte {
-	rdLen := size % 300 // artificially limit size so there's less to intrepret if a failure occurs
+	rdLen := size % 300 // artificially limit size so there's less to interpret if a failure occurs
 	var rd []byte
 	for i := 0; i < rdLen; {
 		max := rdLen - 1
