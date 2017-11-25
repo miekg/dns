@@ -1024,6 +1024,56 @@ func setOPENPGPKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, strin
 	return rr, nil, c1
 }
 
+func setCSYNC(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	rr := new(CSYNC)
+	rr.Hdr = h
+
+	l := <-c
+	if l.length == 0 { // dynamic update rr.
+		return rr, nil, l.comment
+	}
+	j, e := strconv.ParseUint(l.token, 10, 32)
+	if e != nil {
+		// Serial must be a number
+		return nil, &ParseError{f, "bad CSYNC serial", l}, ""
+	}
+	rr.Serial = uint32(j)
+
+	<-c // zBlank
+
+	l = <-c
+	j, e = strconv.ParseUint(l.token, 10, 16)
+	if e != nil {
+		// Serial must be a number
+		return nil, &ParseError{f, "bad CSYNC flags", l}, ""
+	}
+	rr.Flags = uint16(j)
+
+	rr.TypeBitMap = make([]uint16, 0)
+	var (
+		k  uint16
+		ok bool
+	)
+	l = <-c
+	for l.value != zNewline && l.value != zEOF {
+		switch l.value {
+		case zBlank:
+			// Ok
+		case zString:
+			if k, ok = StringToType[l.tokenUpper]; !ok {
+				if k, ok = typeToInt(l.tokenUpper); !ok {
+					return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}, ""
+				}
+			}
+			rr.TypeBitMap = append(rr.TypeBitMap, k)
+		default:
+			return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}, ""
+		}
+		l = <-c
+	}
+	return rr, nil, l.comment
+}
+
 func setSIG(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	r, e, s := setRRSIG(h, c, o, f)
 	if r != nil {
@@ -2043,6 +2093,7 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeCDNSKEY:    {setCDNSKEY, true},
 	TypeCERT:       {setCERT, true},
 	TypeCNAME:      {setCNAME, false},
+	TypeCSYNC:      {setCSYNC, true},
 	TypeDHCID:      {setDHCID, true},
 	TypeDLV:        {setDLV, true},
 	TypeDNAME:      {setDNAME, false},
