@@ -67,7 +67,7 @@ func TestReadFromFile(t *testing.T) {
 	}
 }
 
-func TestNameList(t *testing.T) {
+func TestNameList_Ndots1(t *testing.T) {
 	cfg := ClientConfig{
 		Ndots: 1,
 	}
@@ -91,15 +91,41 @@ func TestNameList(t *testing.T) {
 	} else if names[1] != "miek.nl.test." {
 		t.Errorf("NameList didn't return search last: %v", names[1])
 	}
+}
+func TestNameList_Ndots2(t *testing.T) {
+	cfg := ClientConfig{
+		Ndots: 2,
+	}
 
-	cfg.Ndots = 2
 	// Sent domain has less than NDots and search
-	names = cfg.NameList("miek.nl")
+	cfg.Search = []string{
+		"test",
+	}
+	names := cfg.NameList("miek.nl")
+
 	if len(names) != 2 {
 		t.Errorf("NameList returned != 2 names: %v", names)
 	} else if names[0] != "miek.nl.test." {
 		t.Errorf("NameList didn't return search first: %v", names[0])
 	} else if names[1] != "miek.nl." {
+		t.Errorf("NameList didn't return sent domain last: %v", names[1])
+	}
+}
+
+func TestNameList_Ndots0(t *testing.T) {
+	cfg := ClientConfig{
+		Ndots: 0,
+	}
+	cfg.Search = []string{
+		"test",
+	}
+	// Sent domain has less than NDots and search
+	names := cfg.NameList("miek")
+	if len(names) != 2 {
+		t.Errorf("NameList returned != 2 names: %v", names)
+	} else if names[0] != "miek." {
+		t.Errorf("NameList didn't return search first: %v", names[0])
+	} else if names[1] != "miek.test." {
 		t.Errorf("NameList didn't return sent domain last: %v", names[1])
 	}
 }
