@@ -1017,12 +1017,13 @@ type TKEY struct {
 	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
+// TKEY has no official presentation format, but this will suffice.
 func (rr *TKEY) String() string {
-	// It has no presentation format
-	return rr.Hdr.String() +
-		rr.Algorithm + " " +
+	s := "\n;; TKEY PSEUDOSECTION:\n"
+	s += rr.Hdr.String() + " " + rr.Algorithm + " " +
 		strconv.Itoa(int(rr.KeySize)) + " " + rr.Key + " " +
 		strconv.Itoa(int(rr.OtherLen)) + " " + rr.OtherData
+	return s
 }
 
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
