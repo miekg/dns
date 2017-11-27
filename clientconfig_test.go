@@ -48,6 +48,14 @@ nameserver 11.28.10.1
 options ndots:16
 `
 
+const normalWithNdotsBelow0 string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+options ndots:-1
+`
+
 func testConfig(t *testing.T, data string, expectedNdots int) {
 	cc, err := ClientConfigFromReader(strings.NewReader(data))
 	if err != nil {
@@ -74,6 +82,7 @@ func TestWithOutNdots(t *testing.T)        { testConfig(t, normalWithOutNdots, 1
 func TestNdots0(t *testing.T)              { testConfig(t, normalWithNdots0, 0) }
 func TestNdots15(t *testing.T)             { testConfig(t, normalWithNdots15, 15) }
 func TestNdots16(t *testing.T)             { testConfig(t, normalWithNdots16, 15) }
+func TestNdotsBelow0(t *testing.T)         { testConfig(t, normalWithNdotsBelow0, 0) }
 
 func TestReadFromFile(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "")
