@@ -413,6 +413,8 @@ Option:
 			if code == EDNS0SUBNETDRAFT {
 				e.DraftOption = true
 			}
+		} else if err == ErrBuf {
+			return nil, len(msg), err
 		}
 		off += int(optlen)
 	case EDNS0COOKIE:
