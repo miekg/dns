@@ -15,6 +15,14 @@ nameserver 10.28.10.2
 nameserver 11.28.10.1
 `
 
+const normalWNdots string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+options ndots0
+`
+
 const missingNewline string = `
 domain somedomain.com
 nameserver 10.28.10.2
@@ -39,6 +47,59 @@ func testConfig(t *testing.T, data string) {
 
 func TestNameserver(t *testing.T)          { testConfig(t, normal) }
 func TestMissingFinalNewLine(t *testing.T) { testConfig(t, missingNewline) }
+
+const normalWithOutNdots string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+`
+const normalWithNdots0 string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+options ndots:0
+`
+const normalWithNdots15 string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+options ndots:15
+`
+const normalWithNdots16 string = `
+# Comment
+domain somedomain.com
+nameserver 10.28.10.2
+nameserver 11.28.10.1
+options ndots:16
+`
+
+func testConfigWithNdots(t *testing.T, data string, expectedNdots int) {
+	cc, err := ClientConfigFromReader(strings.NewReader(data))
+	if err != nil {
+		t.Errorf("error parsing resolv.conf: %v", err)
+	}
+	if l := len(cc.Servers); l != 2 {
+		t.Errorf("incorrect number of nameservers detected: %d", l)
+	}
+	if l := len(cc.Search); l != 1 {
+		t.Errorf("domain directive not parsed correctly: %v", cc.Search)
+	} else {
+		if cc.Search[0] != "somedomain.com" {
+			t.Errorf("domain is unexpected: %v", cc.Search[0])
+		}
+	}
+	if cc.Ndots != expectedNdots {
+		t.Errorf("Ndots not properly parsed: (Expected: %d / Was: %d)", expectedNdots, cc.Ndots)
+	}
+}
+
+func TestWithOutNdots(t *testing.T) { testConfigWithNdots(t, normalWithOutNdots, 1) }
+func TestNdots0(t *testing.T)       { testConfigWithNdots(t, normalWithNdots0, 0) }
+func TestNdots15(t *testing.T)      { testConfigWithNdots(t, normalWithNdots15, 15) }
+func TestNdots16(t *testing.T)      { testConfigWithNdots(t, normalWithNdots16, 15) }
 
 func TestReadFromFile(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "")
