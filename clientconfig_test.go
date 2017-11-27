@@ -40,27 +40,24 @@ func testConfig(t *testing.T, data string) {
 func TestNameserver(t *testing.T)          { testConfig(t, normal) }
 func TestMissingFinalNewLine(t *testing.T) { testConfig(t, missingNewline) }
 
-func testNdotsConfig(t *testing.T, data string, expectedNdots int) {
-	cc, err := ClientConfigFromReader(strings.NewReader(data))
-	if err != nil {
-		t.Errorf("error parsing resolv.conf: %v", err)
-	}
-	if cc.Ndots != expectedNdots {
-		t.Errorf("Ndots not properly parsed: (Expected: %d / Was: %d)", expectedNdots, cc.Ndots)
-	}
-}
-
 func TestNdots(t *testing.T) {
-	var ndotsVariants map[string]int = make(map[string]int)
-	ndotsVariants["options ndots:0"] = 0
-	ndotsVariants["options ndots:1"] = 1
-	ndotsVariants["options ndots:15"] = 15
-	ndotsVariants["options ndots:16"] = 15
-	ndotsVariants["options ndots:-1"] = 0
-	ndotsVariants[""] = 1
+	ndotsVariants := map[string]int{
+		"options ndots:0":  0,
+		"options ndots:1":  1,
+		"options ndots:15": 15,
+		"options ndots:16": 15,
+		"options ndots:-1": 0,
+		"":                 1,
+	}
 
-	for key := range ndotsVariants {
-		testNdotsConfig(t, key, ndotsVariants[key])
+	for data := range ndotsVariants {
+		cc, err := ClientConfigFromReader(strings.NewReader(data))
+		if err != nil {
+			t.Errorf("error parsing resolv.conf: %v", err)
+		}
+		if cc.Ndots != ndotsVariants[data] {
+			t.Errorf("Ndots not properly parsed: (Expected: %d / Was: %d)", ndotsVariants[data], cc.Ndots)
+		}
 	}
 
 }
@@ -92,7 +89,7 @@ func TestReadFromFile(t *testing.T) {
 	}
 }
 
-func TestNameList_Ndots1(t *testing.T) {
+func TestNameListNdots1(t *testing.T) {
 	cfg := ClientConfig{
 		Ndots: 1,
 	}
@@ -117,7 +114,7 @@ func TestNameList_Ndots1(t *testing.T) {
 		t.Errorf("NameList didn't return search last: %v", names[1])
 	}
 }
-func TestNameList_Ndots2(t *testing.T) {
+func TestNameListNdots2(t *testing.T) {
 	cfg := ClientConfig{
 		Ndots: 2,
 	}
@@ -137,7 +134,7 @@ func TestNameList_Ndots2(t *testing.T) {
 	}
 }
 
-func TestNameList_Ndots0(t *testing.T) {
+func TestNameListNdots0(t *testing.T) {
 	cfg := ClientConfig{
 		Ndots: 0,
 	}
