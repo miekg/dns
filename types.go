@@ -1013,14 +1013,18 @@ type TKEY struct {
 	Mode       uint16
 	Error      uint16
 	KeySize    uint16
-	Key        string
+	Key        string `dns:"size-hex:KeySize"`
 	OtherLen   uint16
-	OtherData  string
+	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
+// TKEY has no official presentation format, but this will suffice.
 func (rr *TKEY) String() string {
-	// It has no presentation format
-	return ""
+	s := "\n;; TKEY PSEUDOSECTION:\n"
+	s += rr.Hdr.String() + " " + rr.Algorithm + " " +
+		strconv.Itoa(int(rr.KeySize)) + " " + rr.Key + " " +
+		strconv.Itoa(int(rr.OtherLen)) + " " + rr.OtherData
+	return s
 }
 
 // RFC3597 represents an unknown/generic RR. See RFC 3597.

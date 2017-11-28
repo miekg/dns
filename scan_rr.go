@@ -2084,6 +2084,51 @@ func setCAA(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 	return rr, nil, c1
 }
 
+func setTKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
+	rr := new(TKEY)
+	rr.Hdr = h
+
+	l := <-c
+
+	// Algorithm
+	if l.value != zString {
+		return nil, &ParseError{f, "bad TKEY algorithm", l}, ""
+	}
+	rr.Algorithm = l.token
+	<-c     // zBlank
+
+	// Get the key length and key values
+	l = <-c
+	i, err := strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return nil, &ParseError{f, "bad TKEY key length", l}, ""
+	}
+	rr.KeySize = uint16(i)
+	<-c     // zBlank
+	l = <-c
+	if l.value != zString {
+		return nil, &ParseError{f, "bad TKEY key", l}, ""
+	}
+	rr.Key = l.token
+	<-c     // zBlank
+
+	// Get the otherdata length and string data
+	l = <-c
+	i, err = strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return nil, &ParseError{f, "bad TKEY otherdata length", l}, ""
+	}
+	rr.OtherLen = uint16(i)
+	<-c     // zBlank
+	l = <-c
+	if l.value != zString {
+		return nil, &ParseError{f, "bad TKEY otherday", l}, ""
+	}
+	rr.OtherData = l.token
+
+	return rr, nil, ""
+}
+
 var typeToparserFunc = map[uint16]parserFunc{
 	TypeAAAA:       {setAAAA, false},
 	TypeAFSDB:      {setAFSDB, false},
@@ -2150,4 +2195,5 @@ var typeToparserFunc = map[uint16]parserFunc{
 	TypeUINFO:      {setUINFO, true},
 	TypeURI:        {setURI, true},
 	TypeX25:        {setX25, false},
+	TypeTKEY:       {setTKEY, true},
 }
