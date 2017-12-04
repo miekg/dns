@@ -592,9 +592,9 @@ func (rr *TKEY) len() int {
 	l += 2 // Mode
 	l += 2 // Error
 	l += 2 // KeySize
-	l += len(rr.Key) + 1
+	l += len(rr.Key)/2 + 1
 	l += 2 // OtherLen
-	l += len(rr.OtherData) + 1
+	l += len(rr.OtherData)/2 + 1
 	return l
 }
 func (rr *TLSA) len() int {
