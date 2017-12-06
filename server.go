@@ -63,12 +63,12 @@ type response struct {
 // is also registered), otherwise the child gets the query.
 // ServeMux is also safe for concurrent access from multiple goroutines.
 type ServeMux struct {
-	z map[string]Handler
+	z map[string]interface{}
 	m *sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux { return &ServeMux{z: make(map[string]Handler), m: new(sync.RWMutex)} }
+func NewServeMux() *ServeMux { return &ServeMux{z: make(map[string]interface{}), m: new(sync.RWMutex)} }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
@@ -84,6 +84,14 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
+type CallbackContext struct {
+	Writer  ResponseWriter
+	Req     *Msg
+	Pattern string
+}
+
+type HandlerContext func(*CallbackContext)
+
 // HandleFailed returns a HandlerFunc that returns SERVFAIL for every request it gets.
 func HandleFailed(w ResponseWriter, r *Msg) {
 	m := new(Msg)
@@ -91,8 +99,6 @@ func HandleFailed(w ResponseWriter, r *Msg) {
 	// does not matter if this write fails
 	w.WriteMsg(m)
 }
-
-func failedHandler() Handler { return HandlerFunc(HandleFailed) }
 
 // ListenAndServe Starts a server on address and network specified Invoke handler
 // for incoming queries.
@@ -132,10 +138,10 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
-func (mux *ServeMux) match(q string, t uint16) Handler {
+func (mux *ServeMux) match(q string, t uint16) (interface{}, string) {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
-	var handler Handler
+	var handler interface{}
 	b := make([]byte, len(q)) // worst case, one label of length q
 	off := 0
 	end := false
@@ -149,7 +155,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		}
 		if h, ok := mux.z[string(b[:l])]; ok { // causes garbage, might want to change the map key
 			if t != TypeDS {
-				return h
+				return h, string(b[:l])
 			}
 			// Continue for DS to see if we have a parent too, if so delegeate to the parent
 			handler = h
@@ -161,13 +167,13 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	}
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
-		return h
+		return h, "."
 	}
-	return handler
+	return handler, ""
 }
 
 // Handle adds a handler to the ServeMux for pattern.
-func (mux *ServeMux) Handle(pattern string, handler Handler) {
+func (mux *ServeMux) Handle(pattern string, handler interface{}) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
@@ -177,8 +183,13 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
-	mux.Handle(pattern, HandlerFunc(handler))
+func (mux *ServeMux) HandleFunc(pattern string, handler HandlerFunc) {
+	mux.Handle(pattern, handler)
+}
+
+// HandleFuncContext adds a handler function to the ServeMux for pattern and will callback with a context struct
+func (mux *ServeMux) HandleFuncContext(pattern string, handler HandlerContext) {
+	mux.Handle(pattern, handler)
 }
 
 // HandleRemove deregistrars the handler specific for pattern from the ServeMux.
@@ -199,15 +210,18 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // If the request message does not have exactly one question in the
 // question section a SERVFAIL is returned, unlesss Unsafe is true.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
-	var h Handler
-	if len(request.Question) < 1 { // allow more than one question
-		h = failedHandler()
-	} else {
-		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
-			h = failedHandler()
-		}
+	var h interface{}
+	var matched string
+	if len(request.Question) >= 1 { // make sure there is more than one question
+		h, matched = mux.match(request.Question[0].Name, request.Question[0].Qtype)
 	}
-	h.ServeDNS(w, request)
+	if handler, ok := h.(HandlerFunc); ok {
+		handler.ServeDNS(w, request)
+	} else if handler, ok := h.(HandlerContext); ok {
+		handler(&CallbackContext{Writer: w, Req: request, Pattern: matched})
+	} else {
+		HandleFailed(w, request)
+	}
 }
 
 // Handle registers the handler with the given pattern
@@ -221,8 +235,14 @@ func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
 // HandleFunc registers the handler function with the given pattern
 // in the DefaultServeMux.
-func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func HandleFunc(pattern string, handler HandlerFunc) {
 	DefaultServeMux.HandleFunc(pattern, handler)
+}
+
+// HandleFunc registers the handler function with the given pattern
+// in the DefaultServeMux.  This will callback with a context struct
+func HandleContext(pattern string, handler HandlerContext) {
+	DefaultServeMux.HandleFuncContext(pattern, handler)
 }
 
 // Writer writes raw DNS messages; each call to Write should send an entire message.
