@@ -347,7 +347,7 @@ func (rr *HIP) len() int {
 	l++    // HitLength
 	l++    // PublicKeyAlgorithm
 	l += 2 // PublicKeyLength
-	l += len(rr.Hit)/2 + 1
+	l += len(rr.Hit) / 2
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	for _, x := range rr.RendezvousServers {
 		l += len(x) + 1
@@ -470,7 +470,7 @@ func (rr *NSEC3PARAM) len() int {
 	l++    // Flags
 	l += 2 // Iterations
 	l++    // SaltLength
-	l += len(rr.Salt)/2 + 1
+	l += len(rr.Salt) / 2
 	return l
 }
 func (rr *OPENPGPKEY) len() int {
@@ -591,9 +591,9 @@ func (rr *TKEY) len() int {
 	l += 2 // Mode
 	l += 2 // Error
 	l += 2 // KeySize
-	l += len(rr.Key)/2 + 1
+	l += len(rr.Key) / 2
 	l += 2 // OtherLen
-	l += len(rr.OtherData)/2 + 1
+	l += len(rr.OtherData) / 2
 	return l
 }
 func (rr *TLSA) len() int {
@@ -610,11 +610,11 @@ func (rr *TSIG) len() int {
 	l += 6 // TimeSigned
 	l += 2 // Fudge
 	l += 2 // MACSize
-	l += len(rr.MAC)/2 + 1
+	l += len(rr.MAC) / 2
 	l += 2 // OrigId
 	l += 2 // Error
 	l += 2 // OtherLen
-	l += len(rr.OtherData)/2 + 1
+	l += len(rr.OtherData) / 2
 	return l
 }
 func (rr *TXT) len() int {
