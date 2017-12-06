@@ -2095,7 +2095,7 @@ func setTKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, &ParseError{f, "bad TKEY algorithm", l}, ""
 	}
 	rr.Algorithm = l.token
-	<-c     // zBlank
+	<-c // zBlank
 
 	// Get the key length and key values
 	l = <-c
@@ -2104,13 +2104,13 @@ func setTKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, &ParseError{f, "bad TKEY key length", l}, ""
 	}
 	rr.KeySize = uint16(i)
-	<-c     // zBlank
+	<-c // zBlank
 	l = <-c
 	if l.value != zString {
 		return nil, &ParseError{f, "bad TKEY key", l}, ""
 	}
 	rr.Key = l.token
-	<-c     // zBlank
+	<-c // zBlank
 
 	// Get the otherdata length and string data
 	l = <-c
@@ -2119,7 +2119,7 @@ func setTKEY(h RR_Header, c chan lex, o, f string) (RR, *ParseError, string) {
 		return nil, &ParseError{f, "bad TKEY otherdata length", l}, ""
 	}
 	rr.OtherLen = uint16(i)
-	<-c     // zBlank
+	<-c // zBlank
 	l = <-c
 	if l.value != zString {
 		return nil, &ParseError{f, "bad TKEY otherday", l}, ""
