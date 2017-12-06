@@ -422,6 +422,14 @@ func TestTKEY(t *testing.T) {
 	if unPackErr != nil {
 		t.Fatal("unable to decode TKEY RR", unPackErr)
 	}
+	// Make sure it's a TKEY record
+	if rr.Header().Rrtype != TypeTKEY {
+		t.Fatal("Unable to decode TKEY")
+	}
+	// Make sure we get back the same length
+	if rr.len() != len(tkeyBytes) {
+		t.Fatalf("Lengths don't match %d != %d", rr.len(), len(tkeyBytes))
+	}
 	// make space for it with some fudge room
 	msg := make([]byte, tkeyLen+1000)
 	offset, packErr := PackRR(rr, msg, 0, nil, false)
