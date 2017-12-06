@@ -420,6 +420,7 @@ func (e *EDNS0_LLQ) String() string {
 	return s
 }
 
+// EDNS0_DUA implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
 type EDNS0_DAU struct {
 	Code    uint16 // Always EDNS0DAU
 	AlgCode []uint8
@@ -442,6 +443,7 @@ func (e *EDNS0_DAU) String() string {
 	return s
 }
 
+// EDNS0_DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
 type EDNS0_DHU struct {
 	Code    uint16 // Always EDNS0DHU
 	AlgCode []uint8
@@ -464,6 +466,7 @@ func (e *EDNS0_DHU) String() string {
 	return s
 }
 
+// EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
 type EDNS0_N3U struct {
 	Code    uint16 // Always EDNS0N3U
 	AlgCode []uint8
@@ -487,6 +490,7 @@ func (e *EDNS0_N3U) String() string {
 	return s
 }
 
+// EDNS0_EXPIRE implementes the EDNS0 option as described in RFC 7314.
 type EDNS0_EXPIRE struct {
 	Code   uint16 // Always EDNS0EXPIRE
 	Expire uint32
