@@ -303,7 +303,7 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 			if !filepath.IsAbs(includePath) {
 				includePath = filepath.Join(filepath.Dir(f), includePath)
 			}
-			r1, e1 := os.Open(l.token)
+			r1, e1 := os.Open(includePath)
 			if e1 != nil {
 				msg := fmt.Sprintf("failed to open `%s'", l.token)
 				if !filepath.IsAbs(l.token) {
