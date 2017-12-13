@@ -21,7 +21,6 @@ type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	TsigVerifySkip bool              // Skip verifying a TSIG RR immediately at read time
 	rtt            time.Duration
 	t              time.Time
 	tsigRequestMAC string
@@ -41,7 +40,6 @@ type Client struct {
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	TsigVerifySkip bool              // Skip verifying a TSIG RR immediately at read time
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
 }
@@ -179,7 +177,6 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 
 	co.TsigSecret = c.TsigSecret
-	co.TsigVerifySkip = c.TsigVerifySkip
 	// write with the appropriate write timeout
 	co.SetWriteDeadline(time.Now().Add(c.getTimeoutForRequest(c.writeTimeout())))
 	if err = co.WriteMsg(m); err != nil {
@@ -213,7 +210,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		}
 		return nil, err
 	}
-	if t := m.IsTsig(); t != nil && !co.TsigVerifySkip {
+	if t := m.IsTsig(); t != nil {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return m, ErrSecret
 		}
