@@ -210,7 +210,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		}
 		return nil, err
 	}
-	if t := m.IsTsig(); t != nil {
+	if t := m.IsTsig(); t != nil && co.TsigSecret != nil {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return m, ErrSecret
 		}
