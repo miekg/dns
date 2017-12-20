@@ -458,12 +458,12 @@ func TestTruncatedMsg(t *testing.T) {
 		t.Errorf("error should not be ErrTruncated from question cutoff unpack: %v", err)
 	}
 
-	// Finally, if we only have the header, we should still return an error
+	// Finally, if we only have the header, we don't return an error.
 	buf1 = buf[:12]
 
 	r = new(Msg)
-	if err = r.Unpack(buf1); err == nil || err != ErrTruncated {
-		t.Errorf("error not ErrTruncated from header-only unpack: %v", err)
+	if err = r.Unpack(buf1); err != nil {
+		t.Errorf("from header-only unpack should not return an error: %v", err)
 	}
 }
 
