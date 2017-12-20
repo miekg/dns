@@ -811,8 +811,13 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
 
+	// If we are at the end of the message we should return *just* the
+	// header. This can still be useful to the caller. 9.9.9.9 sends these
+	// when responding with REFUSED for instance.
 	if off == len(msg) {
-		return ErrTruncated
+		// reset sections before returning
+		dns.Question, dns.Answer, dns.Ns, dns.Extra = nil, nil, nil, nil
+		return nil
 	}
 
 	// Optimistically use the count given to us in the header
