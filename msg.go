@@ -124,7 +124,6 @@ type Msg struct {
 	Answer   []RR       // Holds the RR(s) of the answer section.
 	Ns       []RR       // Holds the RR(s) of the authority section.
 	Extra    []RR       // Holds the RR(s) of the additional section.
-	RawMsg   []byte     // The original byte stream if this message was decoded from wire format
 }
 
 // ClassToString is a maps Classes to strings for each CLASS wire type.
@@ -811,7 +810,6 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dns.AuthenticatedData = (dh.Bits & _AD) != 0
 	dns.CheckingDisabled = (dh.Bits & _CD) != 0
 	dns.Rcode = int(dh.Bits & 0xF)
-	dns.RawMsg = msg
 
 	if off == len(msg) {
 		return ErrTruncated
