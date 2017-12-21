@@ -612,8 +612,8 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 // If we cannot unpack the whole array, then it will return nil
 func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) {
 	var r RR
-	// Optimistically make dst be the length that was sent
-	dst := make([]RR, 0, l)
+	// Don't pre-allocate, l may be under attacker control
+	var dst []RR
 	for i := 0; i < l; i++ {
 		off1 := off
 		r, off, err = UnpackRR(msg, off)
@@ -820,9 +820,10 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		return nil
 	}
 
-	// Optimistically use the count given to us in the header
-	dns.Question = make([]Question, 0, int(dh.Qdcount))
-
+	// Qdcount, Ancount, Nscount, Arcount can't be trusted, as they are
+	// attacker controlled. This means we can't use them to pre-allocate
+	// slices.
+	dns.Question = nil
 	for i := 0; i < int(dh.Qdcount); i++ {
 		off1 := off
 		var q Question
