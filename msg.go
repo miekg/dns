@@ -50,6 +50,7 @@ var (
 	ErrSoa           error = &Error{err: "no SOA"}                             // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
 	ErrTime          error = &Error{err: "bad time"}                           // ErrTime indicates a timing error in TSIG authentication.
 	ErrTruncated     error = &Error{err: "failed to unpack truncated message"} // ErrTruncated indicates that we failed to unpack a truncated message. We unpacked as much as we had so Msg can still be used, if desired.
+	ErrTrailingData  error = &Error{err: "trailing data after message"}
 )
 
 // Id by default, returns a 16 bits random number to be used as a
@@ -789,8 +790,10 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	return msg[:off], nil
 }
 
-// Unpack unpacks a binary message to a Msg structure.
-func (dns *Msg) Unpack(msg []byte) (err error) {
+// UnpackStrict unpacks a binary message to a Msg structure.
+//
+// Returns an error if msg contains data after the message.
+func (dns *Msg) UnpackStrict(msg []byte) (err error) {
 	var (
 		dh  Header
 		off int
@@ -855,13 +858,20 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	dh.Arcount = uint16(len(dns.Extra))
 
 	if off != len(msg) {
-		// TODO(miek) make this an error?
-		// use PackOpt to let people tell how detailed the error reporting should be?
-		// println("dns: extra bytes in dns packet", off, "<", len(msg))
+		return ErrTrailingData
 	} else if dns.Truncated {
 		// Whether we ran into a an error or not, we want to return that it
 		// was truncated
 		err = ErrTruncated
+	}
+	return err
+}
+
+// Unpack unpacks a binary message to a Msg structure.
+func (dns *Msg) Unpack(msg []byte) error {
+	err := dns.UnpackStrict(msg)
+	if err == ErrTrailingData {
+		return nil
 	}
 	return err
 }
