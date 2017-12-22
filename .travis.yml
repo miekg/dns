@@ -7,6 +7,7 @@ go:
 env:
   - TESTS="-race -v -bench=. -coverprofile=coverage.txt -covermode=atomic"
   - TESTS="-race -v ./..."
+  - TESTS="-race tags net -v ./..."
 
 before_install:
   # don't use the miekg/dns when testing forks
