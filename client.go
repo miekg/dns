@@ -348,7 +348,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 // signature is calculated.
 func (co *Conn) WriteMsg(m *Msg) (err error) {
 	var out []byte
-	if t := m.IsTsig(); t != nil {
+	if t := m.IsTsig(); t != nil && co.TsigSecret != nil {
 		mac := ""
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return ErrSecret
