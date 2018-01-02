@@ -1,8 +1,10 @@
 package dns
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -297,16 +299,24 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 				return
 			}
 			// Start with the new file
-			r1, e1 := os.Open(l.token)
+			includePath := l.token
+			if !filepath.IsAbs(includePath) {
+				includePath = filepath.Join(filepath.Dir(f), includePath)
+			}
+			r1, e1 := os.Open(includePath)
 			if e1 != nil {
-				t <- &Token{Error: &ParseError{f, "failed to open `" + l.token + "'", l}}
+				msg := fmt.Sprintf("failed to open `%s'", l.token)
+				if !filepath.IsAbs(l.token) {
+					msg += fmt.Sprintf(" as `%s'", includePath)
+				}
+				t <- &Token{Error: &ParseError{f, msg, l}}
 				return
 			}
 			if include+1 > 7 {
 				t <- &Token{Error: &ParseError{f, "too deeply nested $INCLUDE", l}}
 				return
 			}
-			parseZone(r1, neworigin, l.token, defttl, t, include+1)
+			parseZone(r1, neworigin, includePath, defttl, t, include+1)
 			st = zExpectOwnerDir
 		case zExpectDirTTLBl:
 			if l.value != zBlank {

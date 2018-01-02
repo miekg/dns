@@ -192,8 +192,10 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 }
 
 // ReadMsg reads a message from the connection co.
-// If the received message contains a TSIG record the transaction
-// signature is verified.
+// If the received message contains a TSIG record the transaction signature
+// is verified. This method always tries to return the message, however if an
+// error is returned there are no guarantees that the returned message is a
+// valid representation of the packet read.
 func (co *Conn) ReadMsg() (*Msg, error) {
 	p, err := co.ReadMsgHeader(nil)
 	if err != nil {
@@ -202,13 +204,10 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 
 	m := new(Msg)
 	if err := m.Unpack(p); err != nil {
-		// If ErrTruncated was returned, we still want to allow the user to use
+		// If an error was returned, we still want to allow the user to use
 		// the message, but naively they can just check err if they don't want
-		// to use a truncated message
-		if err == ErrTruncated {
-			return m, err
-		}
-		return nil, err
+		// to use an erroneous message
+		return m, err
 	}
 	if t := m.IsTsig(); t != nil {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {

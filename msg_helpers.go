@@ -406,7 +406,7 @@ Option:
 		}
 		edns = append(edns, e)
 		off += int(optlen)
-	case EDNS0SUBNET, EDNS0SUBNETDRAFT:
+	case EDNS0SUBNET:
 		e := new(EDNS0_SUBNET)
 		if err := e.unpack(msg[off : off+int(optlen)]); err == nil {
 			edns = append(edns, e)
