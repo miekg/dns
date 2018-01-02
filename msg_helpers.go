@@ -408,10 +408,14 @@ Option:
 		off += int(optlen)
 	case EDNS0SUBNET:
 		e := new(EDNS0_SUBNET)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+		if err := e.unpack(msg[off : off+int(optlen)]); err == nil {
+			edns = append(edns, e)
+			if code == EDNS0SUBNETDRAFT {
+				e.DraftOption = true
+			}
+		} else if err == ErrBuf {
 			return nil, len(msg), err
 		}
-		edns = append(edns, e)
 		off += int(optlen)
 	case EDNS0COOKIE:
 		e := new(EDNS0_COOKIE)
