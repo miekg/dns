@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -42,6 +43,15 @@ type Client struct {
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
+
+	ReuseTCPConn        bool          // if true reuses "tcp" or "tcp-tls" client TCP connection
+	ReuseTCPIdleTimeout time.Duration // TCP reuse idle timeout, automatically close connection if the connection is not used after specified timeout, defaults to 5 seconds
+
+	cmu  sync.Mutex // reusable connection mutex
+	conn *Conn      // reusable connection
+
+	cimu     sync.RWMutex // reusable connection idle mutex
+	connIdle time.Time    // reusable connection idle timeout
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -135,7 +145,11 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 // To specify a local address or a timeout, the caller has to set the `Client.Dialer`
 // attribute appropriately
 func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, err error) {
+	reuse := c.ReuseTCPConn && strings.HasPrefix(c.Net, "tcp")
 	if !c.SingleInflight {
+		if reuse {
+			return c.exchangeWithTCPReuse(m, address)
+		}
 		return c.exchange(m, address)
 	}
 
@@ -148,6 +162,9 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 		cl = cl1
 	}
 	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
+		if reuse {
+			return c.exchangeWithTCPReuse(m, address)
+		}
 		return c.exchange(m, address)
 	})
 	if r != nil && shared {
@@ -188,6 +205,32 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	if err == nil && r.Id != m.Id {
 		err = ErrId
 	}
+	return r, co.rtt, err
+}
+
+func (c *Client) exchangeWithTCPReuse(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	defer func() {
+		if err != nil && isTCPReuseHandleableError(err) {
+			if _, err2 := c.getReusableConnection(a, true); err2 != nil {
+				r, rtt, err = nil, 0, err2
+				return
+			}
+			r, rtt, err = c.exchangeWithTCPReuse(m, a)
+		}
+	}()
+
+	co, err := c.getReusableConnection(a, false)
+	if err != nil {
+		return nil, 0, err
+	}
+	if err = co.WriteMsg(m); err != nil {
+		return nil, 0, err
+	}
+	r, err = co.ReadMsg()
+	if err == nil && r.Id != m.Id {
+		err = ErrId
+	}
+
 	return r, co.rtt, err
 }
 
@@ -503,4 +546,81 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
 	c.Dialer = &net.Dialer{Timeout: timeout}
 	return c.Exchange(m, a)
+}
+
+// getReusableConnection gets the reusable TCP connection to the DNS Server.
+func (c *Client) getReusableConnection(a string, f bool) (conn *Conn, err error) {
+	c.cmu.Lock()
+	defer c.cmu.Unlock()
+
+	dial := false
+	if c.conn == nil {
+		dial = true
+	} else if f {
+		// force
+		dial = true
+	} else {
+		// this one detects a TCP (non-tls) closed connection
+		if _, err := c.conn.Conn.Read(nil); err != nil {
+			if !isTCPReuseHandleableError(err) {
+				return nil, err
+			}
+			dial = true
+		}
+	}
+
+	if dial {
+		if c.conn != nil {
+			// just in case it was a Deadline timeout and the underlying connection is not closed
+			c.conn.Close()
+		}
+		conn, err = c.Dial(a)
+		if err != nil {
+			return nil, err
+		}
+		c.conn = conn
+		c.conn.TsigSecret = c.TsigSecret
+
+		// TODO: implement Close interface on Conn and a cancel context to finish goroutine without waiting delay
+		go func(cl *Client) {
+			delay := cl.ReuseTCPIdleTimeout
+			if delay <= 0 {
+				delay = 5 * time.Second
+			}
+
+			for {
+				time.Sleep(delay)
+				cl.cimu.RLock()
+				last := cl.connIdle
+				cl.cimu.RUnlock()
+				if time.Now().Sub(last) >= delay {
+					cl.cmu.Lock()
+					cl.conn.Close()
+					cl.cmu.Unlock()
+					return
+				}
+			}
+		}(c)
+	}
+
+	// extends idle timeout
+	now := time.Now()
+	c.cimu.Lock()
+	c.connIdle = now
+	c.cimu.Unlock()
+	c.conn.SetReadDeadline(now.Add(c.getTimeoutForRequest(c.dialTimeout())))
+	return c.conn, nil
+}
+
+// isTCPReuseHandleableError tests if an error is handleable for a TCP connection reuse.
+func isTCPReuseHandleableError(err error) bool {
+	if err == nil {
+		return true
+	}
+	op, ok := err.(*net.OpError)
+	return err == io.EOF ||
+		(ok && op.Timeout()) ||
+		strings.HasSuffix(err.Error(), "EOF") ||
+		strings.HasSuffix(err.Error(), "use of closed network connection") ||
+		strings.HasSuffix(err.Error(), "tls: use of closed connection")
 }
