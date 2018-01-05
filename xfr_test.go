@@ -3,6 +3,7 @@
 package dns
 
 import (
+	"fmt"
 	"net"
 	"strings"
 	"testing"
@@ -86,6 +87,58 @@ func TestAXFR_Miek_Tsig(t *testing.T) {
 				t.Errorf("error %v", ex.Error)
 				break
 			}
+		}
+	}
+}
+
+func TestAxfrBindNone(t *testing.T) {
+	if bindHarness == nil {
+		t.Skip("bind not available")
+	}
+	testAxfrBind(t, "", "")
+}
+
+func TestAxfrBindSha1(t *testing.T) {
+	if bindHarness == nil {
+		t.Skip("bind not available")
+	}
+	testAxfrBind(t, "hmac-sha1", HmacSHA1)
+}
+
+func TestAxfrBindSha256(t *testing.T) {
+	if bindHarness == nil {
+		t.Skip("bind not available")
+	}
+	testAxfrBind(t, "hmac-sha256", HmacSHA256)
+}
+
+func TestAxfrBindSha512(t *testing.T) {
+	if bindHarness == nil {
+		t.Skip("bind not available")
+	}
+	testAxfrBind(t, "hmac-sha512", HmacSHA512)
+}
+
+func testAxfrBind(t *testing.T, key, alg string) {
+	keyfull := key + ".example."
+
+	x := new(Transfer)
+	x.TsigSecret = map[string]string{
+		keyfull: bindHarness.hmacKeys[key],
+	}
+
+	m := new(Msg)
+	m.SetAxfr("example.")
+	if key != "" {
+		m.SetTsig(keyfull, alg, 300, time.Now().Unix())
+	}
+	c, err := x.In(m, fmt.Sprintf("127.0.0.1:%d", bindHarness.port))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for e := range c {
+		if e.Error != nil {
+			t.Fatal(e.Error)
 		}
 	}
 }
