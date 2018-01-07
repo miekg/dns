@@ -433,6 +433,7 @@ func TestParseClass(t *testing.T) {
 		// ClassANY can not occur in zone files
 		// "t.example.com. ANY A 127.0.0.1": "t.example.com.	3600	ANY	A	127.0.0.1",
 		"t.example.com. NONE A 127.0.0.1": "t.example.com.	3600	NONE	A	127.0.0.1",
+		"t.example.com. CLASS255 A 127.0.0.1": "t.example.com.	3600	CLASS255	A	127.0.0.1",
 	}
 	for i, o := range tests {
 		rr, err := NewRR(i)
