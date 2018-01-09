@@ -509,7 +509,10 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		}
 		srv.lock.RUnlock()
 		if err != nil {
-			continue
+			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				continue
+			}
+			return err
 		}
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
@@ -626,11 +629,8 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	m := make([]byte, srv.UDPSize)
 	n, s, err := ReadFromSessionUDP(conn, m)
-	if err != nil || n == 0 {
-		if err != nil {
-			return nil, nil, err
-		}
-		return nil, nil, ErrShortRead
+	if err != nil {
+		return nil, nil, err
 	}
 	m = m[:n]
 	return m, s, nil
