@@ -509,10 +509,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		}
 		srv.lock.RUnlock()
 		if err != nil {
-			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
-				continue
-			}
-			return err
+			continue
 		}
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
