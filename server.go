@@ -514,6 +514,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			}
 			return err
 		}
+		if len(m) < headerSize {
+			continue
+		}
 		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
 	}
 }
