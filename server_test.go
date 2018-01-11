@@ -66,6 +66,9 @@ func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
+	// fin must be buffered so the goroutine below won't block
+	// forever if fin is never read from. This always happens
+	// in RunLocalUDPServer and can happen in TestShutdownUDP.
 	fin := make(chan error, 1)
 
 	go func() {
@@ -116,6 +119,8 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
+	// See the comment in RunLocalUDPServerWithFinChan as to
+	// why fin must be buffered.
 	fin := make(chan error, 1)
 
 	go func() {
