@@ -22,8 +22,13 @@ const (
 	HmacSHA512 = "hmac-sha512."
 )
 
-type tsigAlgorithmGenerate func([]byte, string, interface{}) ([]byte, error)
-type tsigAlgorithmVerify func([]byte, *TSIG, interface{}) error
+type TsigAlgorithm struct {
+	Generate tsigAlgorithmGenerate
+	Verify   tsigAlgorithmVerify
+}
+
+type tsigAlgorithmGenerate func(msg []byte, algorithm, name, secret string) ([]byte, error)
+type tsigAlgorithmVerify func(msg []byte, tsig *TSIG, name, secret string) error
 
 // TSIG is the RR the holds the transaction signature of a message.
 // See RFC 2845 and RFC 4635.
@@ -86,9 +91,7 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-func tsigGenerateHmac(msg []byte, algorithm string, meta interface{}) ([]byte, error) {
-	secret := meta.(string)
-
+func tsigGenerateHmac(msg []byte, algorithm string, name, secret string) ([]byte, error) {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return nil, err
@@ -121,7 +124,7 @@ func tsigGenerateHmac(msg []byte, algorithm string, meta interface{}) ([]byte, e
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return TsigGenerateByAlgorithm(m, tsigGenerateHmac, secret, requestMAC, timersOnly)
+	return TsigGenerateByAlgorithm(m, tsigGenerateHmac, "", secret, requestMAC, timersOnly)
 }
 
 // TsigGenerateByAlgorithm fills out the TSIG record attached to the message
@@ -133,7 +136,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 // When TsigGenerate is called for the first time requestMAC is set to the empty string and
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
-func TsigGenerateByAlgorithm(m *Msg, cb tsigAlgorithmGenerate, meta interface{}, requestMAC string, timersOnly bool) ([]byte, string, error) {
+func TsigGenerateByAlgorithm(m *Msg, cb tsigAlgorithmGenerate, name, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -148,7 +151,7 @@ func TsigGenerateByAlgorithm(m *Msg, cb tsigAlgorithmGenerate, meta interface{},
 
 	t := new(TSIG)
 
-	h, err := cb(buf, rr.Algorithm, meta)
+	h, err := cb(buf, rr.Algorithm, name, secret)
 	if err != nil {
 		return nil, "", err
 	}
@@ -175,9 +178,7 @@ func TsigGenerateByAlgorithm(m *Msg, cb tsigAlgorithmGenerate, meta interface{},
 	return mbuf, t.MAC, nil
 }
 
-func tsigVerifyHmac(msg []byte, tsig *TSIG, meta interface{}) error {
-	secret := meta.(string)
-
+func tsigVerifyHmac(msg []byte, tsig *TSIG, name, secret string) error {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err
@@ -212,14 +213,14 @@ func tsigVerifyHmac(msg []byte, tsig *TSIG, meta interface{}) error {
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
-	return TsigVerifyByAlgorithm(msg, tsigVerifyHmac, secret, requestMAC, timersOnly)
+	return TsigVerifyByAlgorithm(msg, tsigVerifyHmac, "", secret, requestMAC, timersOnly)
 }
 
 // TsigVerifyByAlgorithm verifies the TSIG on a message using a callback to
 // implement the algorithm-specific verification.
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
-func TsigVerifyByAlgorithm(msg []byte, cb tsigAlgorithmVerify, meta interface{}, requestMAC string, timersOnly bool) error {
+func TsigVerifyByAlgorithm(msg []byte, cb tsigAlgorithmVerify, name, secret, requestMAC string, timersOnly bool) error {
 	// Strip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
 	if err != nil {
@@ -239,7 +240,7 @@ func TsigVerifyByAlgorithm(msg []byte, cb tsigAlgorithmVerify, meta interface{},
 		return ErrTime
 	}
 
-	return cb(buf, tsig, meta)
+	return cb(buf, tsig, name, secret)
 }
 
 // Create a wiredata buffer for the MAC calculation.
