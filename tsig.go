@@ -91,7 +91,7 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-func tsigGenerateHmac(msg []byte, algorithm string, name, secret string) ([]byte, error) {
+func tsigGenerateHmac(msg []byte, algorithm, name, secret string) ([]byte, error) {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return nil, err
