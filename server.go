@@ -566,9 +566,9 @@ Redo:
 		}
 	}
 
-	// If EDNS0 is used use that for size, otherwise we hard cap at go'old 512 bytes.
-	// This value is used when we write the UDP response back to the client.
-	// ignored when we're doing TCP, to signal this to WriteMsg we leave this value at 0.
+	// If EDNS0 is used, use that for size, otherwise we hard cap at go'old 512 bytes.
+	// This value is used when we write the UDP response back to the client in WriteMsg.
+	// It is ignored when we're doing TCP. To signal this to WriteMsg we leave this value at 0.
 	if w.udp != nil {
 		w.udpSize = MinMsgSize
 		opt := req.IsEdns0()
