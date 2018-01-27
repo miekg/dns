@@ -51,6 +51,7 @@ type response struct {
 	udp            *net.UDPConn      // i/o connection if UDP was used
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
+	udpSize        int               // client advertised buf size
 	remoteAddr     net.Addr          // address of the client
 	writer         Writer            // writer to output the raw DNS bits
 }
@@ -564,6 +565,18 @@ Redo:
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
+
+	// If EDNS0 is used use that for size, otherwise we hard cap at go'old 512 bytes.
+	// This value is used when we write the UDP response back to the client.
+	// ignored when we're doing TCP, to signal this to WriteMsg we leave this value at 0.
+	if w.udp != nil {
+		w.udpSize = MinMsgSize
+		opt := req.IsEdns0()
+		if opt != nil && opt.UDPSize() >= MinMsgSize {
+			w.udpSize = int(opt.UDPSize())
+		}
+	}
+
 	h.ServeDNS(w, req) // Writes back to the client
 
 Exit:
@@ -651,6 +664,12 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 			if err != nil {
 				return err
 			}
+
+			// If the client's udp advertised buffer is too small, it makes no sense sending everything we've got
+			if w.udpSize != 0 && len(data) > w.udpSize {
+				data = data[:w.udpSize]
+			}
+
 			_, err = w.writer.Write(data)
 			return err
 		}
@@ -659,6 +678,12 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// If the client's udp advertised buffer is too small, it makes no sense sending everything we've got
+	if w.udpSize != 0 && len(data) > w.udpSize {
+		data = data[:w.udpSize]
+	}
+
 	_, err = w.writer.Write(data)
 	return err
 }
