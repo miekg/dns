@@ -10,6 +10,7 @@ import (
 	"math/big"
 
 	"golang.org/x/crypto/ed25519"
+	"io"
 )
 
 // Generate generates a DNSKEY of the given bit size.
@@ -19,6 +20,10 @@ import (
 // The ECDSA algorithms imply a fixed keysize, in that case
 // bits should be set to the size of the algorithm.
 func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
+	return k.GenerateCustom(bits, rand.Reader)
+}
+
+func (k *DNSKEY) GenerateCustom(bits int, reader io.Reader) (crypto.PrivateKey, error) {
 	switch k.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		if bits != 1024 {
@@ -49,19 +54,19 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 	switch k.Algorithm {
 	case DSA, DSANSEC3SHA1:
 		params := new(dsa.Parameters)
-		if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
+		if err := dsa.GenerateParameters(params, reader, dsa.L1024N160); err != nil {
 			return nil, err
 		}
 		priv := new(dsa.PrivateKey)
 		priv.PublicKey.Parameters = *params
-		err := dsa.GenerateKey(priv, rand.Reader)
+		err := dsa.GenerateKey(priv, reader)
 		if err != nil {
 			return nil, err
 		}
 		k.setPublicKeyDSA(params.Q, params.P, params.G, priv.PublicKey.Y)
 		return priv, nil
 	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
-		priv, err := rsa.GenerateKey(rand.Reader, bits)
+		priv, err := rsa.GenerateKey(reader, bits)
 		if err != nil {
 			return nil, err
 		}
@@ -75,14 +80,14 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 		case ECDSAP384SHA384:
 			c = elliptic.P384()
 		}
-		priv, err := ecdsa.GenerateKey(c, rand.Reader)
+		priv, err := ecdsa.GenerateKey(c, reader)
 		if err != nil {
 			return nil, err
 		}
 		k.setPublicKeyECDSA(priv.PublicKey.X, priv.PublicKey.Y)
 		return priv, nil
 	case ED25519:
-		pub, priv, err := ed25519.GenerateKey(rand.Reader)
+		pub, priv, err := ed25519.GenerateKey(reader)
 		if err != nil {
 			return nil, err
 		}
@@ -91,6 +96,7 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 	default:
 		return nil, ErrAlg
 	}
+
 }
 
 // Set the public key (the value E and N)
