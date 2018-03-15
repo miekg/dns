@@ -595,6 +595,13 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	if err != nil {
 		return nil, len(msg), err
 	}
+
+	return UnpackRRWithHeader(h, msg, off)
+}
+
+// UnpackRRWithHeader unpacks the record type specific payload given an existing
+// RR_Header.
+func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
 	end := off + int(h.Rdlength)
 
 	if fn, known := typeToUnpack[h.Rrtype]; !known {
