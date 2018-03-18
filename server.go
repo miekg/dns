@@ -564,7 +564,7 @@ Redo:
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
-	h.ServeDNS(w, req) // Writes back to the client
+	go h.ServeDNS(w, req) // Writes back to the client
 
 Exit:
 	if w.tcp == nil {
@@ -712,7 +712,6 @@ func (w *response) Close() error {
 	// Can't close the udp conn, as that is actually the listener.
 	if w.tcp != nil {
 		e := w.tcp.Close()
-		w.tcp = nil
 		return e
 	}
 	return nil
