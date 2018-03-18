@@ -16,8 +16,8 @@ func MsgToRequest(m *Msg, url string) (*http.Request, error) {
 		return nil, err
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewReader(out))
-	req.Header.Set("content-type", mime)
-	req.Header.Set("accept", mime)
+	req.Header.Set("Content-Type", mime)
+	req.Header.Set("Accept", mime)
 
 	return req, nil
 }
