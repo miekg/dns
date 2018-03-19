@@ -19,6 +19,7 @@ const tcpIdleTimeout time.Duration = 8 * time.Second
 // A Conn represents a connection to a DNS server.
 type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
+	doh            *dohConn          // This is a stub for DNS-over-HTTP support
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	rtt            time.Duration
@@ -102,6 +103,8 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	case "tcp6-tls":
 		network = "tcp6"
 		useTLS = true
+	case "https", "https-tls":
+		return c.dohDial(address)
 	default:
 		if c.Net != "" {
 			network = c.Net
@@ -223,6 +226,12 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 // Returns message as a byte slice to be parsed with Msg.Unpack later on.
 // Note that error handling on the message body is not possible as only the header is parsed.
 func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
+	if co.doh != nil {
+		p, err := co.doh.ReadMsgHeader(hdr)
+		co.rtt = time.Since(co.t)
+		return p, err
+	}
+
 	var (
 		p   []byte
 		n   int
@@ -315,6 +324,10 @@ func tcpRead(t io.Reader, p []byte) (int, error) {
 
 // Read implements the net.Conn read method.
 func (co *Conn) Read(p []byte) (n int, err error) {
+	if co.doh != nil {
+		panic("dns: Read not supported for DNS-over-HTTP connections")
+	}
+
 	if co.Conn == nil {
 		return 0, ErrConnEmpty
 	}
@@ -362,6 +375,9 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 		return err
 	}
 	co.t = time.Now()
+	if co.doh != nil {
+		return co.doh.Write(out)
+	}
 	if _, err = co.Write(out); err != nil {
 		return err
 	}
@@ -370,6 +386,10 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 
 // Write implements the net.Conn Write method.
 func (co *Conn) Write(p []byte) (n int, err error) {
+	if co.doh != nil {
+		panic("dns: Write not supported for DNS-over-HTTP connections")
+	}
+
 	switch t := co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
 		w := t.(io.Writer)
