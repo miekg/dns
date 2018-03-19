@@ -590,7 +590,7 @@ func TestConcurrentExchanges(t *testing.T) {
 }
 
 func TestHTTPSConn(t *testing.T) {
-	const addrstr = "https://dns.cloudflare.com"
+	const addrstr = "dns.cloudflare.com"
 
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
@@ -601,10 +601,11 @@ func TestHTTPSConn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to dial %s: %v", addrstr, err)
 	}
+	defer cn.Close()
 
 	err = cn.WriteMsg(m)
 	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+		t.Fatalf("failed to exchange: %v", err)
 	}
 	r, err := cn.ReadMsg()
 	if err != nil {

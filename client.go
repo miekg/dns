@@ -14,6 +14,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/net/http2"
 )
 
 const dnsTimeout time.Duration = 2 * time.Second
@@ -23,12 +25,6 @@ const dohMimeType = "application/dns-udpwireformat"
 
 var errReadBeforeWrite = errors.New("dns: invalid read before write")
 
-type dohConn struct {
-	client  *Client
-	address string
-	resp    chan *http.Response
-}
-
 // A Conn represents a connection to a DNS server.
 type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
@@ -37,6 +33,10 @@ type Conn struct {
 	rtt            time.Duration
 	t              time.Time
 	tsigRequestMAC string
+	// DNS-over-HTTPS
+	address string
+	cc      *http2.ClientConn
+	resp    chan *http.Response
 }
 
 // A Client defines parameters for a DNS client.
@@ -104,6 +104,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	network := "udp"
 	useTLS := false
+	tlsConfig := c.TLSConfig
 
 	switch c.Net {
 	case "tcp-tls":
@@ -116,13 +117,21 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 		network = "tcp6"
 		useTLS = true
 	case "https", "https-tls":
-		return &Conn{
-			Conn: &dohConn{
-				client:  c,
-				address: address,
-				resp:    make(chan *http.Response, 1),
-			},
-		}, nil
+		network = "tcp"
+		useTLS = true
+
+		if c.TLSConfig != nil {
+			tlsConfig = c.TLSConfig.Clone()
+		} else {
+			tlsConfig = new(tls.Config)
+		}
+		if !strSliceContains(tlsConfig.NextProtos, http2.NextProtoTLS) {
+			tlsConfig.NextProtos = append([]string{http2.NextProtoTLS}, tlsConfig.NextProtos...)
+		}
+
+		if _, _, err := net.SplitHostPort(address); err != nil {
+			address = net.JoinHostPort(address, "443")
+		}
 	default:
 		if c.Net != "" {
 			network = c.Net
@@ -131,13 +140,27 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	conn = new(Conn)
 	if useTLS {
-		conn.Conn, err = tls.DialWithDialer(&d, network, address, c.TLSConfig)
+		conn.Conn, err = tls.DialWithDialer(&d, network, address, tlsConfig)
 	} else {
 		conn.Conn, err = d.Dial(network, address)
 	}
 	if err != nil {
 		return nil, err
 	}
+
+	switch c.Net {
+	case "https", "https-tls":
+		conn.address = "https://" + address
+		conn.resp = make(chan *http.Response, 1)
+
+		conn.cc, err = (&http2.Transport{
+			TLSClientConfig: tlsConfig,
+		}).NewClientConn(conn.Conn)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return conn, nil
 }
 
@@ -250,10 +273,9 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		err error
 	)
 
-	switch t := co.Conn.(type) {
-	case *dohConn:
+	if co.cc != nil {
 		select {
-		case resp := <-t.resp:
+		case resp := <-co.resp:
 			defer resp.Body.Close()
 
 			p, err = ioutil.ReadAll(resp.Body)
@@ -265,25 +287,28 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		default:
 			return nil, errReadBeforeWrite
 		}
-	case *net.TCPConn, *tls.Conn:
-		r := t.(io.Reader)
+	} else {
+		switch t := co.Conn.(type) {
+		case *net.TCPConn, *tls.Conn:
+			r := t.(io.Reader)
 
-		// First two bytes specify the length of the entire message.
-		l, err := tcpMsgLen(r)
-		if err != nil {
-			return nil, err
+			// First two bytes specify the length of the entire message.
+			l, err := tcpMsgLen(r)
+			if err != nil {
+				return nil, err
+			}
+			p = make([]byte, l)
+			n, err = tcpRead(r, p)
+			co.rtt = time.Since(co.t)
+		default:
+			if co.UDPSize > MinMsgSize {
+				p = make([]byte, co.UDPSize)
+			} else {
+				p = make([]byte, MinMsgSize)
+			}
+			n, err = co.Read(p)
+			co.rtt = time.Since(co.t)
 		}
-		p = make([]byte, l)
-		n, err = tcpRead(r, p)
-		co.rtt = time.Since(co.t)
-	default:
-		if co.UDPSize > MinMsgSize {
-			p = make([]byte, co.UDPSize)
-		} else {
-			p = make([]byte, MinMsgSize)
-		}
-		n, err = co.Read(p)
-		co.rtt = time.Since(co.t)
 	}
 
 	if err != nil {
@@ -356,10 +381,10 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
-	switch t := co.Conn.(type) {
-	case *dohConn:
+
+	if co.cc != nil {
 		select {
-		case resp := <-t.resp:
+		case resp := <-co.resp:
 			defer resp.Body.Close()
 
 			// ContentLength may not be set.
@@ -371,6 +396,9 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		default:
 			return 0, errReadBeforeWrite
 		}
+	}
+
+	switch t := co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
 		r := t.(io.Reader)
 
@@ -419,9 +447,8 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 
 // Write implements the net.Conn Write method.
 func (co *Conn) Write(p []byte) (n int, err error) {
-	switch t := co.Conn.(type) {
-	case *dohConn:
-		req, err := http.NewRequest(http.MethodPost, t.address, bytes.NewReader(p))
+	if co.cc != nil {
+		req, err := http.NewRequest(http.MethodPost, co.address, bytes.NewReader(p))
 		if err != nil {
 			return 0, err
 		}
@@ -429,20 +456,16 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 		req.Header.Set("Content-Type", dohMimeType)
 		req.Header.Set("Accept", dohMimeType)
 
-		d := t.client.dialTimeout() + t.client.writeTimeout() + t.client.readTimeout()
-
-		ctx, cancel := context.WithTimeout(context.Background(), d)
-		defer cancel()
-
-		req = req.WithContext(ctx)
-
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := co.cc.RoundTrip(req)
 		if err != nil {
 			return 0, err
 		}
 
-		t.resp <- resp
+		co.resp <- resp
 		return len(p), nil
+	}
+
+	switch t := co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
 		w := t.(io.Writer)
 
@@ -577,26 +600,11 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	return c.Exchange(m, a)
 }
 
-func (*dohConn) Read([]byte) (n int, err error) {
-	panic("dns: Read not supported for DNS-over-HTTP connections")
+func strSliceContains(ss []string, s string) bool {
+	for _, v := range ss {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
-
-func (*dohConn) Write([]byte) (n int, err error) {
-	panic("dns: Write not supported for DNS-over-HTTP connections")
-}
-
-func (*dohConn) Close() error { return nil }
-
-const dohLocalAddr = dohStubAddr("dns-over-http")
-
-func (*dohConn) LocalAddr() net.Addr    { return dohLocalAddr }
-func (c *dohConn) RemoteAddr() net.Addr { return dohStubAddr(c.address) }
-
-func (*dohConn) SetDeadline(time.Time) error      { return nil }
-func (*dohConn) SetReadDeadline(time.Time) error  { return nil }
-func (*dohConn) SetWriteDeadline(time.Time) error { return nil }
-
-type dohStubAddr string
-
-func (dohStubAddr) Network() string  { return "https" }
-func (a dohStubAddr) String() string { return string(a) }
