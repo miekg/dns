@@ -7,14 +7,25 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/http2"
 )
 
 const dnsTimeout time.Duration = 2 * time.Second
 const tcpIdleTimeout time.Duration = 8 * time.Second
+
+const dohMimeType = "application/dns-udpwireformat"
+
+var errReadBeforeWrite = errors.New("dns: invalid read before write")
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {
@@ -24,6 +35,10 @@ type Conn struct {
 	rtt            time.Duration
 	t              time.Time
 	tsigRequestMAC string
+	// DNS-over-HTTPS
+	address string
+	cc      *http2.ClientConn
+	resp    chan *http.Response
 }
 
 // A Client defines parameters for a DNS client.
@@ -91,6 +106,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	network := "udp"
 	useTLS := false
+	tlsConfig := c.TLSConfig
 
 	switch c.Net {
 	case "tcp-tls":
@@ -102,6 +118,26 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	case "tcp6-tls":
 		network = "tcp6"
 		useTLS = true
+	case "https", "https-tls":
+		network = "tcp"
+		useTLS = true
+
+		host, _, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.TLSConfig != nil {
+			tlsConfig = c.TLSConfig.Clone()
+		} else {
+			tlsConfig = new(tls.Config)
+		}
+		if !strSliceContains(tlsConfig.NextProtos, http2.NextProtoTLS) {
+			tlsConfig.NextProtos = append([]string{http2.NextProtoTLS}, tlsConfig.NextProtos...)
+		}
+		if tlsConfig.ServerName == "" {
+			tlsConfig.ServerName = host
+		}
 	default:
 		if c.Net != "" {
 			network = c.Net
@@ -110,13 +146,51 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	conn = new(Conn)
 	if useTLS {
-		conn.Conn, err = tls.DialWithDialer(&d, network, address, c.TLSConfig)
+		conn.Conn, err = tls.DialWithDialer(&d, network, address, tlsConfig)
 	} else {
 		conn.Conn, err = d.Dial(network, address)
 	}
 	if err != nil {
 		return nil, err
 	}
+
+	switch c.Net {
+	case "https", "https-tls":
+		// TODO(tmthrgd): Allow the path to be customised?
+		u := &url.URL{
+			Scheme: "https",
+			Host:   address,
+			Path:   "/.well-known/dns-query",
+		}
+		if u.Port() == "443" {
+			u.Host = u.Hostname()
+		}
+		conn.address = u.String()
+		conn.resp = make(chan *http.Response, 1)
+
+		cn := conn.Conn.(*tls.Conn)
+		if err := cn.Handshake(); err != nil {
+			return nil, err
+		}
+		if !tlsConfig.InsecureSkipVerify {
+			if err := cn.VerifyHostname(tlsConfig.ServerName); err != nil {
+				return nil, err
+			}
+		}
+		state := cn.ConnectionState()
+		if p := state.NegotiatedProtocol; p != http2.NextProtoTLS {
+			return nil, fmt.Errorf("dns: unexpected ALPN protocol %q; want %q", p, http2.NextProtoTLS)
+		}
+		if !state.NegotiatedProtocolIsMutual {
+			return nil, errors.New("dns: could not negotiate protocol mutually")
+		}
+
+		conn.cc, err = new(http2.Transport).NewClientConn(cn)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return conn, nil
 }
 
@@ -229,26 +303,52 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		err error
 	)
 
-	switch t := co.Conn.(type) {
-	case *net.TCPConn, *tls.Conn:
-		r := t.(io.Reader)
+	if co.cc != nil {
+		select {
+		case resp := <-co.resp:
+			defer resp.Body.Close()
 
-		// First two bytes specify the length of the entire message.
-		l, err := tcpMsgLen(r)
-		if err != nil {
-			return nil, err
+			// TODO(tmthrgd): Are there valid status codes other than 200?
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+			}
+
+			if ct := resp.Header.Get("Content-Type"); ct != dohMimeType {
+				return nil, fmt.Errorf("dns: unexpected Content-Type %q; expected %q", ct, dohMimeType)
+			}
+
+			p, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			n = len(p)
+			co.rtt = time.Since(co.t)
+		default:
+			return nil, errReadBeforeWrite
 		}
-		p = make([]byte, l)
-		n, err = tcpRead(r, p)
-		co.rtt = time.Since(co.t)
-	default:
-		if co.UDPSize > MinMsgSize {
-			p = make([]byte, co.UDPSize)
-		} else {
-			p = make([]byte, MinMsgSize)
+	} else {
+		switch t := co.Conn.(type) {
+		case *net.TCPConn, *tls.Conn:
+			r := t.(io.Reader)
+
+			// First two bytes specify the length of the entire message.
+			l, err := tcpMsgLen(r)
+			if err != nil {
+				return nil, err
+			}
+			p = make([]byte, l)
+			n, err = tcpRead(r, p)
+			co.rtt = time.Since(co.t)
+		default:
+			if co.UDPSize > MinMsgSize {
+				p = make([]byte, co.UDPSize)
+			} else {
+				p = make([]byte, MinMsgSize)
+			}
+			n, err = co.Read(p)
+			co.rtt = time.Since(co.t)
 		}
-		n, err = co.Read(p)
-		co.rtt = time.Since(co.t)
 	}
 
 	if err != nil {
@@ -321,6 +421,32 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 	if len(p) < 2 {
 		return 0, io.ErrShortBuffer
 	}
+
+	if co.cc != nil {
+		select {
+		case resp := <-co.resp:
+			defer resp.Body.Close()
+
+			// TODO(tmthrgd): Are there valid status codes other than 200?
+			if resp.StatusCode != http.StatusOK {
+				return 0, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+			}
+
+			if ct := resp.Header.Get("Content-Type"); ct != dohMimeType {
+				return 0, fmt.Errorf("dns: unexpected Content-Type %q; expected %q", ct, dohMimeType)
+			}
+
+			// ContentLength may not be set.
+			if int64(len(p)) < resp.ContentLength {
+				return 0, io.ErrShortBuffer
+			}
+
+			return io.ReadFull(resp.Body, p)
+		default:
+			return 0, errReadBeforeWrite
+		}
+	}
+
 	switch t := co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
 		r := t.(io.Reader)
@@ -370,6 +496,29 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 
 // Write implements the net.Conn Write method.
 func (co *Conn) Write(p []byte) (n int, err error) {
+	if co.cc != nil {
+		req, err := http.NewRequest(http.MethodPost, co.address, bytes.NewReader(p))
+		if err != nil {
+			return 0, err
+		}
+
+		req.Header.Set("Content-Type", dohMimeType)
+		req.Header.Set("Accept", dohMimeType)
+
+		resp, err := co.cc.RoundTrip(req)
+		if err != nil {
+			return 0, err
+		}
+
+		select {
+		case co.resp <- resp:
+			return len(p), nil
+		default:
+			resp.Body.Close()
+			return 0, errors.New("dns: invalid write with in-flight response")
+		}
+	}
+
 	switch t := co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
 		w := t.(io.Writer)
@@ -503,4 +652,13 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
 	c.Dialer = &net.Dialer{Timeout: timeout}
 	return c.Exchange(m, a)
+}
+
+func strSliceContains(ss []string, s string) bool {
+	for _, v := range ss {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
