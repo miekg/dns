@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -120,6 +121,13 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 		network = "tcp"
 		useTLS = true
 
+		host, _, err := net.SplitHostPort(address)
+		if err != nil {
+			// TODO(tmthrgd): require that address always include a port?
+			host = address
+			address = net.JoinHostPort(host, "443")
+		}
+
 		if c.TLSConfig != nil {
 			tlsConfig = c.TLSConfig.Clone()
 		} else {
@@ -128,9 +136,8 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 		if !strSliceContains(tlsConfig.NextProtos, http2.NextProtoTLS) {
 			tlsConfig.NextProtos = append([]string{http2.NextProtoTLS}, tlsConfig.NextProtos...)
 		}
-
-		if _, _, err := net.SplitHostPort(address); err != nil {
-			address = net.JoinHostPort(address, "443")
+		if tlsConfig.ServerName == "" {
+			tlsConfig.ServerName = host
 		}
 	default:
 		if c.Net != "" {
@@ -150,12 +157,29 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	switch c.Net {
 	case "https", "https-tls":
+		// TODO(tmthrgd): allow a path to be provided? Perhaps address
+		// should be a fully formed URL?
 		conn.address = "https://" + address
 		conn.resp = make(chan *http.Response, 1)
 
-		conn.cc, err = (&http2.Transport{
-			TLSClientConfig: tlsConfig,
-		}).NewClientConn(conn.Conn)
+		cn := conn.Conn.(*tls.Conn)
+		if err := cn.Handshake(); err != nil {
+			return nil, err
+		}
+		if !tlsConfig.InsecureSkipVerify {
+			if err := cn.VerifyHostname(tlsConfig.ServerName); err != nil {
+				return nil, err
+			}
+		}
+		state := cn.ConnectionState()
+		if p := state.NegotiatedProtocol; p != http2.NextProtoTLS {
+			return nil, fmt.Errorf("dns: unexpected ALPN protocol %q; want %q", p, http2.NextProtoTLS)
+		}
+		if !state.NegotiatedProtocolIsMutual {
+			return nil, errors.New("dns: could not negotiate protocol mutually")
+		}
+
+		conn.cc, err = new(http2.Transport).NewClientConn(cn)
 		if err != nil {
 			return nil, err
 		}
