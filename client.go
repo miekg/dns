@@ -313,6 +313,10 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 				return nil, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
 			}
 
+			if ct := resp.Header.Get("Content-Type"); ct != dohMimeType {
+				return nil, fmt.Errorf("dns: unexpected Content-Type %q; expected %q", ct, dohMimeType)
+			}
+
 			p, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return nil, err
@@ -425,6 +429,10 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 			// TODO(tmthrgd): Are there valid status codes other than 200?
 			if resp.StatusCode != http.StatusOK {
 				return 0, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+			}
+
+			if ct := resp.Header.Get("Content-Type"); ct != dohMimeType {
+				return 0, fmt.Errorf("dns: unexpected Content-Type %q; expected %q", ct, dohMimeType)
 			}
 
 			// ContentLength may not be set.
