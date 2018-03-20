@@ -323,6 +323,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 			}
 
 			n = len(p)
+			co.rtt = time.Since(co.t)
 		default:
 			return nil, errReadBeforeWrite
 		}
