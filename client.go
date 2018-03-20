@@ -300,6 +300,11 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		case resp := <-co.resp:
 			defer resp.Body.Close()
 
+			// TODO(tmthrgd): Are there valid status codes other than 200?
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+			}
+
 			p, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return nil, err
@@ -408,6 +413,11 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		select {
 		case resp := <-co.resp:
 			defer resp.Body.Close()
+
+			// TODO(tmthrgd): Are there valid status codes other than 200?
+			if resp.StatusCode != http.StatusOK {
+				return 0, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+			}
 
 			// ContentLength may not be set.
 			if int64(len(p)) < resp.ContentLength {
