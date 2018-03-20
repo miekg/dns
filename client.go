@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -155,9 +156,16 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 	switch c.Net {
 	case "https", "https-tls":
-		// TODO(tmthrgd): allow a path to be provided? Perhaps address
-		// should be a fully formed URL?
-		conn.address = "https://" + address
+		// TODO(tmthrgd): Allow the path to be customised?
+		u := &url.URL{
+			Scheme: "https",
+			Host:   address,
+			Path:   "/.well-known/dns-query",
+		}
+		if u.Port() == "443" {
+			u.Host = u.Hostname()
+		}
+		conn.address = u.String()
 		conn.resp = make(chan *http.Response, 1)
 
 		cn := conn.Conn.(*tls.Conn)
