@@ -509,8 +509,13 @@ func (co *Conn) Write(p []byte) (n int, err error) {
 			return 0, err
 		}
 
-		co.resp <- resp
-		return len(p), nil
+		select {
+		case co.resp <- resp:
+			return len(p), nil
+		default:
+			resp.Body.Close()
+			return 0, errors.New("dns: invalid write with in-flight response")
+		}
 	}
 
 	switch t := co.Conn.(type) {
