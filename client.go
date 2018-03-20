@@ -123,9 +123,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 
 		host, _, err := net.SplitHostPort(address)
 		if err != nil {
-			// TODO(tmthrgd): require that address always include a port?
-			host = address
-			address = net.JoinHostPort(host, "443")
+			return nil, err
 		}
 
 		if c.TLSConfig != nil {
