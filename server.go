@@ -544,7 +544,7 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(m, w, h)
+		srv.serveDNS(h, m, w)
 		if w.tcp == nil {
 			break // Close() was called
 		}
@@ -565,10 +565,10 @@ func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *Sessio
 	} else {
 		w.writer = w
 	}
-	srv.serveDNS(m, w, h)
+	srv.serveDNS(h, m, w)
 }
 
-func (srv *Server) serveDNS(m []byte, w *response, h Handler) {
+func (srv *Server) serveDNS(h Handler, m []byte, w *response) {
 	req := new(Msg)
 	err := req.Unpack(m)
 	if err != nil { // Send a FormatError back
