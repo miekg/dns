@@ -447,16 +447,10 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.NotifyStartedFunc()
 	}
 
-	reader := Reader(&defaultReader{srv})
-	if srv.DecorateReader != nil {
-		reader = srv.DecorateReader(reader)
-	}
-
 	handler := srv.Handler
 	if handler == nil {
 		handler = DefaultServeMux
 	}
-	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
 		rw, err := l.Accept()
@@ -472,14 +466,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			}
 			return err
 		}
-		go func() {
-			m, err := reader.ReadTCP(rw, rtimeout)
-			if err != nil {
-				rw.Close()
-				return
-			}
-			srv.serve(rw.RemoteAddr(), handler, m, nil, nil, rw)
-		}()
+		go srv.serveTCPConn(handler, rw)
 	}
 }
 
@@ -520,8 +507,29 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		if len(m) < headerSize {
 			continue
 		}
-		go srv.serve(s.RemoteAddr(), handler, m, l, s, nil)
+		go srv.serveUDPPacket(handler, m, l, s)
 	}
+}
+
+// Serve a new TCP connection.
+func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
+	reader := Reader(&defaultReader{srv})
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
+	}
+
+	m, err := reader.ReadTCP(t, srv.getReadTimeout())
+	if err != nil {
+		t.Close()
+		return
+	}
+
+	srv.serve(t.RemoteAddr(), h, m, nil, nil, t)
+}
+
+// Serve a new UDP request.
+func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *SessionUDP) {
+	srv.serve(s.RemoteAddr(), h, m, u, s, nil)
 }
 
 // Serve a new connection.
