@@ -525,6 +525,12 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 		w.writer = w
 	}
 
+	defer func() {
+		if !w.hijacked {
+			w.Close()
+		}
+	}()
+
 	idleTimeout := tcpIdleTimeout
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
@@ -544,14 +550,12 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 			break // Close() was called
 		}
 		if w.hijacked {
-			return // client will call Close() themselves
+			break // client will call Close() themselves
 		}
 		// The first read uses the read timeout, the rest use the
 		// idle timeout.
 		timeout = idleTimeout
 	}
-
-	w.Close()
 }
 
 // Serve a new UDP request.
