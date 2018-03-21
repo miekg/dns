@@ -524,23 +524,7 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 		return
 	}
 
-	srv.serve(t.RemoteAddr(), h, m, nil, nil, t)
-}
-
-// Serve a new UDP request.
-func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *SessionUDP) {
-	w := &response{tsigSecret: srv.TsigSecret, udp: u, remoteAddr: s.RemoteAddr(), udpSession: s}
-	if srv.DecorateWriter != nil {
-		w.writer = srv.DecorateWriter(w)
-	} else {
-		w.writer = w
-	}
-	srv.serveDNS(m, w, h)
-}
-
-// Serve a new connection.
-func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *SessionUDP, t net.Conn) {
-	w := &response{tsigSecret: srv.TsigSecret, udp: u, tcp: t, remoteAddr: a, udpSession: s}
+	w := &response{tsigSecret: srv.TsigSecret, tcp: t, remoteAddr: t.RemoteAddr()}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -549,10 +533,6 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *Ses
 
 	q := 0 // counter for the amount of TCP queries we get
 
-	reader := Reader(&defaultReader{srv})
-	if srv.DecorateReader != nil {
-		reader = srv.DecorateReader(reader)
-	}
 Redo:
 	srv.serveDNS(m, w, h)
 	if w.tcp == nil {
@@ -567,21 +547,28 @@ Redo:
 	if w.hijacked {
 		return // client calls Close()
 	}
-	if u != nil { // UDP, "close" and return
-		w.Close()
-		return
-	}
 	idleTimeout := tcpIdleTimeout
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
 	}
-	m, err := reader.ReadTCP(w.tcp, idleTimeout)
+	m, err = reader.ReadTCP(w.tcp, idleTimeout)
 	if err == nil {
 		q++
 		goto Redo
 	}
 	w.Close()
 	return
+}
+
+// Serve a new UDP request.
+func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *SessionUDP) {
+	w := &response{tsigSecret: srv.TsigSecret, udp: u, remoteAddr: s.RemoteAddr(), udpSession: s}
+	if srv.DecorateWriter != nil {
+		w.writer = srv.DecorateWriter(w)
+	} else {
+		w.writer = w
+	}
+	srv.serveDNS(m, w, h)
 }
 
 func (srv *Server) serveDNS(m []byte, w *response, h Handler) {
