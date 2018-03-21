@@ -51,7 +51,6 @@ type response struct {
 	udp            *net.UDPConn      // i/o connection if UDP was used
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
-	remoteAddr     net.Addr          // address of the client
 	writer         Writer            // writer to output the raw DNS bits
 }
 
@@ -518,7 +517,7 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 		reader = srv.DecorateReader(reader)
 	}
 
-	w := &response{tsigSecret: srv.TsigSecret, tcp: t, remoteAddr: t.RemoteAddr()}
+	w := &response{tsigSecret: srv.TsigSecret, tcp: t}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -560,7 +559,7 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *SessionUDP) {
-	w := &response{tsigSecret: srv.TsigSecret, udp: u, remoteAddr: s.RemoteAddr(), udpSession: s}
+	w := &response{tsigSecret: srv.TsigSecret, udp: u, udpSession: s}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -697,7 +696,12 @@ func (w *response) LocalAddr() net.Addr {
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
-func (w *response) RemoteAddr() net.Addr { return w.remoteAddr }
+func (w *response) RemoteAddr() net.Addr {
+	if w.tcp != nil {
+		return w.tcp.RemoteAddr()
+	}
+	return w.udpSession.RemoteAddr()
+}
 
 // TsigStatus implements the ResponseWriter.TsigStatus method.
 func (w *response) TsigStatus() error { return w.tsigStatus }
