@@ -584,11 +584,11 @@ func (srv *Server) serveDNS(m []byte, w *response, h Handler) {
 	w.tsigStatus = nil
 	if w.tsigSecret != nil {
 		if t := req.IsTsig(); t != nil {
-			secret := t.Hdr.Name
-			if _, ok := w.tsigSecret[secret]; !ok {
-				w.tsigStatus = ErrKeyAlg
+			if secret, ok := w.tsigSecret[t.Hdr.Name]; ok {
+				w.tsigStatus = TsigVerify(m, secret, "", false)
+			} else {
+				w.tsigStatus = ErrSecret
 			}
-			w.tsigStatus = TsigVerify(m, w.tsigSecret[secret], "", false)
 			w.tsigTimersOnly = false
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
