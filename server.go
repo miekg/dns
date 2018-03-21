@@ -518,12 +518,6 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 		reader = srv.DecorateReader(reader)
 	}
 
-	m, err := reader.ReadTCP(t, srv.getReadTimeout())
-	if err != nil {
-		t.Close()
-		return
-	}
-
 	w := &response{tsigSecret: srv.TsigSecret, tcp: t, remoteAddr: t.RemoteAddr()}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -531,33 +525,33 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 		w.writer = w
 	}
 
-	q := 0 // counter for the amount of TCP queries we get
-
-Redo:
-	srv.serveDNS(m, w, h)
-	if w.tcp == nil {
-		return
-	}
-	// TODO(miek): make this number configurable?
-	if q > maxTCPQueries { // close socket after this many queries
-		w.Close()
-		return
-	}
-
-	if w.hijacked {
-		return // client calls Close()
-	}
 	idleTimeout := tcpIdleTimeout
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
 	}
-	m, err = reader.ReadTCP(w.tcp, idleTimeout)
-	if err == nil {
-		q++
-		goto Redo
+
+	timeout := srv.getReadTimeout()
+
+	// TODO(miek): make maxTCPQueries configurable?
+	for q := 0; q < maxTCPQueries; q++ {
+		m, err := reader.ReadTCP(t, timeout)
+		if err != nil {
+			// TODO(tmthrgd): handle error
+			break
+		}
+		srv.serveDNS(m, w, h)
+		if w.tcp == nil {
+			break // Close() was called
+		}
+		if w.hijacked {
+			return // client will call Close() themselves
+		}
+		// The first read uses the read timeout, the rest use the
+		// idle timeout.
+		timeout = idleTimeout
 	}
+
 	w.Close()
-	return
 }
 
 // Serve a new UDP request.
