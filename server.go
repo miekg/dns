@@ -529,7 +529,13 @@ func (srv *Server) serveTCPConn(h Handler, t net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(h Handler, m []byte, u *net.UDPConn, s *SessionUDP) {
-	srv.serve(s.RemoteAddr(), h, m, u, s, nil)
+	w := &response{tsigSecret: srv.TsigSecret, udp: u, remoteAddr: s.RemoteAddr(), udpSession: s}
+	if srv.DecorateWriter != nil {
+		w.writer = srv.DecorateWriter(w)
+	} else {
+		w.writer = w
+	}
+	srv.serveDNS(m, w, h)
 }
 
 // Serve a new connection.
