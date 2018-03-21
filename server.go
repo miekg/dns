@@ -540,33 +540,7 @@ func (srv *Server) serve(a net.Addr, h Handler, m []byte, u *net.UDPConn, s *Ses
 		reader = srv.DecorateReader(reader)
 	}
 Redo:
-	req := new(Msg)
-	err := req.Unpack(m)
-	if err != nil { // Send a FormatError back
-		x := new(Msg)
-		x.SetRcodeFormatError(req)
-		w.WriteMsg(x)
-		goto Exit
-	}
-	if !srv.Unsafe && req.Response {
-		goto Exit
-	}
-
-	w.tsigStatus = nil
-	if w.tsigSecret != nil {
-		if t := req.IsTsig(); t != nil {
-			secret := t.Hdr.Name
-			if _, ok := w.tsigSecret[secret]; !ok {
-				w.tsigStatus = ErrKeyAlg
-			}
-			w.tsigStatus = TsigVerify(m, w.tsigSecret[secret], "", false)
-			w.tsigTimersOnly = false
-			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
-		}
-	}
-	h.ServeDNS(w, req) // Writes back to the client
-
-Exit:
+	srv.serveDNS(m, w, h)
 	if w.tcp == nil {
 		return
 	}
@@ -587,13 +561,41 @@ Exit:
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
 	}
-	m, err = reader.ReadTCP(w.tcp, idleTimeout)
+	m, err := reader.ReadTCP(w.tcp, idleTimeout)
 	if err == nil {
 		q++
 		goto Redo
 	}
 	w.Close()
 	return
+}
+
+func (srv *Server) serveDNS(m []byte, w *response, h Handler) {
+	req := new(Msg)
+	err := req.Unpack(m)
+	if err != nil { // Send a FormatError back
+		x := new(Msg)
+		x.SetRcodeFormatError(req)
+		w.WriteMsg(x)
+		return
+	}
+	if !srv.Unsafe && req.Response {
+		return
+	}
+
+	w.tsigStatus = nil
+	if w.tsigSecret != nil {
+		if t := req.IsTsig(); t != nil {
+			secret := t.Hdr.Name
+			if _, ok := w.tsigSecret[secret]; !ok {
+				w.tsigStatus = ErrKeyAlg
+			}
+			w.tsigStatus = TsigVerify(m, w.tsigSecret[secret], "", false)
+			w.tsigTimersOnly = false
+			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
+		}
+	}
+	h.ServeDNS(w, req) // Writes back to the client
 }
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
