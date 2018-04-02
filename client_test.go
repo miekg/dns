@@ -588,3 +588,311 @@ func TestConcurrentExchanges(t *testing.T) {
 		}
 	}
 }
+
+func TestClientTCP(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := &Client{Net: "tcp"}
+
+	tt := []struct {
+		Question      string
+		Type          uint16
+		ExpectedRcode int
+		ExpectedTxt   string
+	}{
+		{Question: "miek.nl.", Type: TypeSOA, ExpectedRcode: RcodeSuccess},
+		{Question: "miek.nl.", Type: TypeTXT, ExpectedRcode: RcodeSuccess, ExpectedTxt: "Hello world"},
+	}
+
+	for i, test := range tt {
+		t.Run(fmt.Sprintf("TCP client test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+		})
+	}
+}
+
+func TestClientReuseTCP(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := &Client{Net: "tcp", ReuseTCPConn: true}
+	// To avoid conflicts with other tests; without this, tests fails because of leaked goroutines
+	c.ReuseTCPIdleTimeout = 80 * time.Millisecond
+
+	tt := []struct {
+		Question      string
+		Type          uint16
+		ExpectedRcode int
+		ExpectedTxt   string
+	}{
+		{Question: "miek.nl.", Type: TypeSOA, ExpectedRcode: RcodeSuccess},
+		{Question: "miek.nl.", Type: TypeTXT, ExpectedRcode: RcodeSuccess, ExpectedTxt: "Hello world"},
+	}
+
+	if c.conn != nil {
+		t.Fatal("initial reusable connection was expected to be nil\n")
+	}
+
+	var connp *Conn
+	for i, test := range tt {
+		t.Run(fmt.Sprintf("normal test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+			}
+
+			if i > 0 && connp != c.conn {
+				st.Error("TCP connection not reused")
+			}
+		})
+	}
+	c.conn.Close()
+
+	// Simulate closed connection
+	connp = nil
+	for i, test := range tt {
+		t.Run(fmt.Sprintf("closed connection test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+				c.conn.Close()
+			}
+
+			if i > 0 && connp == c.conn {
+				st.Error("TCP connection not redialed")
+			}
+		})
+	}
+	c.conn.Close()
+
+	// Simulate TCP Idle timeout
+	connp = nil
+	for i, test := range tt {
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		t.Run(fmt.Sprintf("Idle timeout test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %+v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+			}
+			if i > 0 && connp == c.conn {
+				st.Error("TCP connection not redialed")
+			}
+		})
+	}
+	c.conn.Close()
+}
+
+func TestClientReuseTLSTCP(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	config := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	s, addrstr, err := RunLocalTLSServer(":0", &config)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := &Client{Net: "tcp4-tls", ReuseTCPConn: true, TLSConfig: &tls.Config{InsecureSkipVerify: true}}
+	// To avoid conflicts with other tests; without this, tests fails because of leaked goroutines
+	c.ReuseTCPIdleTimeout = 80 * time.Millisecond
+
+	tt := []struct {
+		Question      string
+		Type          uint16
+		ExpectedRcode int
+		ExpectedTxt   string
+	}{
+		{Question: "miek.nl.", Type: TypeSOA, ExpectedRcode: RcodeSuccess},
+		{Question: "miek.nl.", Type: TypeTXT, ExpectedRcode: RcodeSuccess, ExpectedTxt: "Hello world"},
+	}
+
+	if c.conn != nil {
+		t.Fatal("initial reusable connection was expected to be nil\n")
+	}
+
+	var connp *Conn
+	for i, test := range tt {
+		t.Run(fmt.Sprintf("normal test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+			}
+
+			if i > 0 && connp != c.conn {
+				st.Error("TCP connection not reused")
+			}
+		})
+	}
+	c.conn.Close()
+
+	// Simulate closed connection
+	connp = nil
+	for i, test := range tt {
+		t.Run(fmt.Sprintf("closed connection test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+				c.conn.Close()
+			}
+
+			if i > 0 && connp == c.conn {
+				st.Error("TCP connection not redialed")
+			}
+		})
+	}
+	c.conn.Close()
+
+	// Simulate TCP Idle timeout
+	connp = nil
+	for i, test := range tt {
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		t.Run(fmt.Sprintf("Idle timeout test (%d)", i), func(st *testing.T) {
+			m := &Msg{}
+			m.SetQuestion(test.Question, test.Type)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				st.Fatalf("failed to exchange: %+v", err)
+			}
+			if r == nil {
+				st.Fatal("response is nil")
+			}
+			if r.Rcode != test.ExpectedRcode {
+				st.Errorf("failed to get an valid answer\n%v", r)
+			}
+			if test.ExpectedTxt != "" {
+				if got := r.Extra[0].(*TXT).Txt[0]; got != test.ExpectedTxt {
+					st.Error(fmt.Sprintf("Unexpected result for %s", test.Question), got, test.ExpectedTxt)
+				}
+			}
+			if i == 0 {
+				connp = c.conn
+			}
+			if i > 0 && connp == c.conn {
+				st.Error("TCP connection not redialed")
+			}
+		})
+	}
+	c.conn.Close()
+}
