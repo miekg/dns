@@ -71,18 +71,15 @@ func parseDstFromOOB(oob []byte) net.IP {
 	// Start with IPv6 and then fallback to IPv4
 	// TODO(fastest963): Figure out a way to prefer one or the other. Looking at
 	// the lvl of the header for a 0 or 41 isn't cross-platform.
-	var dst net.IP
 	cm6 := new(ipv6.ControlMessage)
-	if cm6.Parse(oob) == nil {
-		dst = cm6.Dst
+	if cm6.Parse(oob) == nil && cm6.Dst != nil {
+		return cm6.Dst
 	}
-	if dst == nil {
-		cm4 := new(ipv4.ControlMessage)
-		if cm4.Parse(oob) == nil {
-			dst = cm4.Dst
-		}
+	cm4 := new(ipv4.ControlMessage)
+	if cm4.Parse(oob) == nil && cm4.Dst != nil {
+		return cm4.Dst
 	}
-	return dst
+	return nil
 }
 
 // correctSource takes oob data and returns new oob data with the Src equal to the Dst
