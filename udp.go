@@ -9,6 +9,24 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
+// This is the required size of the OOB buffer to pass to ReadMsgUDP.
+var udpOOBSize int
+
+func init() {
+	// We can't know whether we'll get an IPv4 control message or an
+	// IPv6 control message ahead of time. To get around this, we size
+	// the buffer equal to the largest of the two.
+
+	oob4 := ipv4.NewControlMessage(ipv4.FlagDst | ipv4.FlagInterface)
+	oob6 := ipv6.NewControlMessage(ipv6.FlagDst | ipv6.FlagInterface)
+
+	if len(oob4) > len(oob6) {
+		udpOOBSize = len(oob4)
+	} else {
+		udpOOBSize = len(oob6)
+	}
+}
+
 // SessionUDP holds the remote address and the associated
 // out-of-band data.
 type SessionUDP struct {
@@ -22,7 +40,7 @@ func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
 func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
-	oob := make([]byte, 40)
+	oob := make([]byte, udpOOBSize)
 	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
 	if err != nil {
 		return n, nil, err
