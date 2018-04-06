@@ -10,9 +10,7 @@ import (
 )
 
 // This is the required size of the OOB buffer to pass to ReadMsgUDP.
-var udpOOBSize int
-
-func init() {
+var udpOOBSize = func() int {
 	// We can't know whether we'll get an IPv4 control message or an
 	// IPv6 control message ahead of time. To get around this, we size
 	// the buffer equal to the largest of the two.
@@ -21,11 +19,11 @@ func init() {
 	oob6 := ipv6.NewControlMessage(ipv6.FlagDst | ipv6.FlagInterface)
 
 	if len(oob4) > len(oob6) {
-		udpOOBSize = len(oob4)
-	} else {
-		udpOOBSize = len(oob6)
+		return len(oob4)
 	}
-}
+
+	return len(oob6)
+}()
 
 // SessionUDP holds the remote address and the associated
 // out-of-band data.
