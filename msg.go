@@ -971,7 +971,6 @@ func compressionLenSlice(len int, c map[string]int, rs []RR) int {
 		// track this length, and the global length in len, while taking compression into account for both.
 		x := r.len()
 		l += x
-		len += x
 
 		k, ok := compressionLenSearch(c, r.Header().Name)
 		if ok {
@@ -992,6 +991,7 @@ func compressionLenSlice(len int, c map[string]int, rs []RR) int {
 		if len < maxCompressionOffset {
 			compressionLenHelperType(c, r)
 		}
+		len += x
 	}
 	return l
 }

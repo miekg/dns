@@ -172,3 +172,22 @@ func TestMsgCompressLengthLargeRecords(t *testing.T) {
 		t.Fatalf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d", msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
 	}
 }
+
+func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("redis.service.consul.", TypeSRV)
+	for i := 0; i < 900; i++ {
+		target := fmt.Sprintf("host-redis-%d-%d.test.acme.com.node.dc1.consul.", i/256, i%256)
+		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
+		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: 1, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", i/256, i%256)})
+		predicted := msg.Len()
+		buf, err := msg.Pack()
+		if err != nil {
+			t.Error(err)
+		}
+		if predicted != len(buf) {
+			t.Fatalf("predicted compressed length is wrong for %d records: predicted %s (len=%d) %d, actual %d", i, msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
+		}
+	}
+}
