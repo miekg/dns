@@ -931,7 +931,7 @@ func compressedLen(dns *Msg, compress bool) int {
 		compression := map[string]int{}
 		for _, r := range dns.Question {
 			l += r.len()
-			compressionLenHelper(compression, r.Name)
+			compressionLenHelper(compression, r.Name, l)
 		}
 		l += compressionLenSlice(l, compression, dns.Answer)
 		l += compressionLenSlice(l, compression, dns.Ns)
@@ -962,7 +962,7 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func compressionLenSlice(len int, c map[string]int, rs []RR) int {
+func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 	var l int
 	for _, r := range rs {
 		if r == nil {
@@ -970,40 +970,48 @@ func compressionLenSlice(len int, c map[string]int, rs []RR) int {
 		}
 		// track this length, and the global length in len, while taking compression into account for both.
 		x := r.len()
+		initLen := lenp
 		l += x
+		compressedSize := 0
 
 		k, ok := compressionLenSearch(c, r.Header().Name)
 		if ok {
 			l += 1 - k
-			len += 1 - k
+			lenp += 1 - k
+			compressedSize = len(r.Header().Name) - k + 1
 		}
 
-		if len < maxCompressionOffset {
-			compressionLenHelper(c, r.Header().Name)
+		if initLen+compressedSize < maxCompressionOffset {
+			compressionLenHelper(c, r.Header().Name, initLen+compressedSize)
 		}
 
 		k, ok = compressionLenSearchType(c, r)
 		if ok {
 			l += 1 - k
-			len += 1 - k
+			lenp += 1 - k
+			compressedSize += len(r.Header().Name) - k + 1
 		}
 
-		if len < maxCompressionOffset {
-			compressionLenHelperType(c, r)
+		if initLen+compressedSize < maxCompressionOffset {
+			compressionLenHelperType(c, r, initLen+compressedSize)
 		}
-		len += x
+		lenp += x
 	}
 	return l
 }
 
 // Put the parts of the name in the compression map.
-func compressionLenHelper(c map[string]int, s string) {
+func compressionLenHelper(c map[string]int, s string, currentLen int) {
 	pref := ""
 	lbs := Split(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
 		pref = s[lbs[j]:]
 		if _, ok := c[pref]; !ok {
-			c[pref] = len(pref)
+			lenAdded := len(pref)
+			offsetOfLabel := currentLen + len(s) - len(pref) + 6
+			if offsetOfLabel < maxCompressionOffset {
+				c[pref] = lenAdded
+			}
 		}
 	}
 }

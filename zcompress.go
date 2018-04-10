@@ -2,71 +2,71 @@
 
 package dns
 
-func compressionLenHelperType(c map[string]int, r RR) {
+func compressionLenHelperType(c map[string]int, r RR, currentLen int) {
 	switch x := r.(type) {
 	case *AFSDB:
-		compressionLenHelper(c, x.Hostname)
+		compressionLenHelper(c, x.Hostname, currentLen)
 	case *CNAME:
-		compressionLenHelper(c, x.Target)
+		compressionLenHelper(c, x.Target, currentLen)
 	case *DNAME:
-		compressionLenHelper(c, x.Target)
+		compressionLenHelper(c, x.Target, currentLen)
 	case *HIP:
 		for i := range x.RendezvousServers {
-			compressionLenHelper(c, x.RendezvousServers[i])
+			compressionLenHelper(c, x.RendezvousServers[i], currentLen)
 		}
 	case *KX:
-		compressionLenHelper(c, x.Exchanger)
+		compressionLenHelper(c, x.Exchanger, currentLen)
 	case *LP:
-		compressionLenHelper(c, x.Fqdn)
+		compressionLenHelper(c, x.Fqdn, currentLen)
 	case *MB:
-		compressionLenHelper(c, x.Mb)
+		compressionLenHelper(c, x.Mb, currentLen)
 	case *MD:
-		compressionLenHelper(c, x.Md)
+		compressionLenHelper(c, x.Md, currentLen)
 	case *MF:
-		compressionLenHelper(c, x.Mf)
+		compressionLenHelper(c, x.Mf, currentLen)
 	case *MG:
-		compressionLenHelper(c, x.Mg)
+		compressionLenHelper(c, x.Mg, currentLen)
 	case *MINFO:
-		compressionLenHelper(c, x.Rmail)
-		compressionLenHelper(c, x.Email)
+		compressionLenHelper(c, x.Rmail, currentLen)
+		compressionLenHelper(c, x.Email, currentLen)
 	case *MR:
-		compressionLenHelper(c, x.Mr)
+		compressionLenHelper(c, x.Mr, currentLen)
 	case *MX:
-		compressionLenHelper(c, x.Mx)
+		compressionLenHelper(c, x.Mx, currentLen)
 	case *NAPTR:
-		compressionLenHelper(c, x.Replacement)
+		compressionLenHelper(c, x.Replacement, currentLen)
 	case *NS:
-		compressionLenHelper(c, x.Ns)
+		compressionLenHelper(c, x.Ns, currentLen)
 	case *NSAPPTR:
-		compressionLenHelper(c, x.Ptr)
+		compressionLenHelper(c, x.Ptr, currentLen)
 	case *NSEC:
-		compressionLenHelper(c, x.NextDomain)
+		compressionLenHelper(c, x.NextDomain, currentLen)
 	case *PTR:
-		compressionLenHelper(c, x.Ptr)
+		compressionLenHelper(c, x.Ptr, currentLen)
 	case *PX:
-		compressionLenHelper(c, x.Map822)
-		compressionLenHelper(c, x.Mapx400)
+		compressionLenHelper(c, x.Map822, currentLen)
+		compressionLenHelper(c, x.Mapx400, currentLen)
 	case *RP:
-		compressionLenHelper(c, x.Mbox)
-		compressionLenHelper(c, x.Txt)
+		compressionLenHelper(c, x.Mbox, currentLen)
+		compressionLenHelper(c, x.Txt, currentLen)
 	case *RRSIG:
-		compressionLenHelper(c, x.SignerName)
+		compressionLenHelper(c, x.SignerName, currentLen)
 	case *RT:
-		compressionLenHelper(c, x.Host)
+		compressionLenHelper(c, x.Host, currentLen)
 	case *SIG:
-		compressionLenHelper(c, x.SignerName)
+		compressionLenHelper(c, x.SignerName, currentLen)
 	case *SOA:
-		compressionLenHelper(c, x.Ns)
-		compressionLenHelper(c, x.Mbox)
+		compressionLenHelper(c, x.Ns, currentLen)
+		compressionLenHelper(c, x.Mbox, currentLen)
 	case *SRV:
-		compressionLenHelper(c, x.Target)
+		compressionLenHelper(c, x.Target, currentLen)
 	case *TALINK:
-		compressionLenHelper(c, x.PreviousName)
-		compressionLenHelper(c, x.NextName)
+		compressionLenHelper(c, x.PreviousName, currentLen)
+		compressionLenHelper(c, x.NextName, currentLen)
 	case *TKEY:
-		compressionLenHelper(c, x.Algorithm)
+		compressionLenHelper(c, x.Algorithm, currentLen)
 	case *TSIG:
-		compressionLenHelper(c, x.Algorithm)
+		compressionLenHelper(c, x.Algorithm, currentLen)
 	}
 }
 

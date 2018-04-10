@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -170,6 +171,29 @@ func TestMsgCompressLengthLargeRecords(t *testing.T) {
 	}
 	if predicted != len(buf) {
 		t.Fatalf("predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d", msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
+	}
+}
+
+func TestMsgCompressLengthLargeRecordsWithPaddingPermutation(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("my.service.acme.", TypeSRV)
+
+	for i := 0; i < 250; i++ {
+		target := fmt.Sprintf("host-redis-x-%d.test.acme.com.node.dc1.consul.", i)
+		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
+		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: 1, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.x.%d.", i)})
+	}
+	for labelSize := 1; labelSize < 63; labelSize++ {
+		msg.SetQuestion(fmt.Sprintf("my.%s.service.acme.", strings.Repeat("x", labelSize)), TypeSRV)
+		predicted := msg.Len()
+		buf, err := msg.Pack()
+		if err != nil {
+			t.Error(err)
+		}
+		if predicted != len(buf) {
+			t.Fatalf("padding= %d ; predicted compressed length is wrong: predicted %s (len=%d) %d, actual %d", labelSize, msg.Question[0].Name, len(msg.Answer), predicted, len(buf))
+		}
 	}
 }
 
