@@ -992,7 +992,7 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 
 // Put the parts of the name in the compression map, return the size in bytes added in payload
 func compressionLenHelper(c map[string]int, s string, currentLen int) int {
-	if currentLen >= maxCompressionOffset {
+	if currentLen+3 >= maxCompressionOffset {
 		return 0
 	}
 	if _, ok := c[s]; ok {
