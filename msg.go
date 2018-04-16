@@ -990,9 +990,15 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 	return lenp - initLen
 }
 
-// Put the parts of the name in the compression map, return the size added in payload
+// Put the parts of the name in the compression map, return the size in bytes added in payload
 func compressionLenHelper(c map[string]int, s string, currentLen int) int {
-	addedSize := 0
+	if currentLen >= maxCompressionOffset {
+		return 0
+	}
+	if _, ok := c[s]; ok {
+		return 0
+	}
+	addedSizeBytes := 0
 	pref := ""
 	lbs := Split(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
@@ -1000,14 +1006,14 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 		if _, ok := c[pref]; !ok {
 			lenAdded := len(pref)
 			numLabelsBefore := len(lbs) - j - 1
-			offsetOfLabel := currentLen + len(s) - len(pref) + numLabelsBefore*2
+			offsetOfLabel := currentLen + len(s) - lenAdded + numLabelsBefore*2
 			if offsetOfLabel < maxCompressionOffset {
 				c[pref] = lenAdded
-				addedSize += 2 + lenAdded
+				addedSizeBytes += 2 + lenAdded
 			}
 		}
 	}
-	return addedSize
+	return addedSizeBytes
 }
 
 // Look for each part in the compression map and returns its length,
