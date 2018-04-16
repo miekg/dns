@@ -963,77 +963,75 @@ func compressedLen(dns *Msg, compress bool) int {
 }
 
 func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
-	var l int
+	initLen := lenp
 	for _, r := range rs {
 		if r == nil {
 			continue
 		}
-		// track this length, and the global length in len, while taking compression into account for both.
+		// TmpLen is to track len of record at 14bits boudaries, 6 bytes is the raw overhead
+		tmpLen := lenp + 6
 		x := r.len()
-		initLen := lenp
-		l += x
-		compressedSize := 0
-
-		k, ok := compressionLenSearch(c, r.Header().Name)
+		// track this length, and the global length in len, while taking compression into account for both.
+		k, ok, sz := compressionLenSearch(c, r.Header().Name)
 		if ok {
-			l += 1 - k
-			lenp += 1 - k
-			compressedSize = len(r.Header().Name) - k + 1
+			x += 1 - k
 		}
+		tmpLen += sz
 
-		if initLen+compressedSize < maxCompressionOffset {
-			compressionLenHelper(c, r.Header().Name, initLen+compressedSize)
-		}
-
-		k, ok = compressionLenSearchType(c, r)
+		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
+		k, ok, added := compressionLenSearchType(c, r)
 		if ok {
-			l += 1 - k
-			lenp += 1 - k
-			compressedSize += len(r.Header().Name) - k + 1
+			x += 1 - k
 		}
-
-		if initLen+compressedSize < maxCompressionOffset {
-			compressionLenHelperType(c, r, initLen+compressedSize)
-		}
+		tmpLen += added
+		tmpLen += compressionLenHelperType(c, r, tmpLen)
 		lenp += x
 	}
-	return l
+	return lenp - initLen
 }
 
-// Put the parts of the name in the compression map.
-func compressionLenHelper(c map[string]int, s string, currentLen int) {
+// Put the parts of the name in the compression map, return the size added in payload
+func compressionLenHelper(c map[string]int, s string, currentLen int) int {
+	addedSize := 0
 	pref := ""
 	lbs := Split(s)
 	for j := len(lbs) - 1; j >= 0; j-- {
 		pref = s[lbs[j]:]
 		if _, ok := c[pref]; !ok {
 			lenAdded := len(pref)
-			offsetOfLabel := currentLen + len(s) - len(pref) + 6
+			numLabelsBefore := len(lbs) - j - 1
+			offsetOfLabel := currentLen + len(s) - len(pref) + numLabelsBefore*2
 			if offsetOfLabel < maxCompressionOffset {
 				c[pref] = lenAdded
+				addedSize += 2 + lenAdded
 			}
 		}
 	}
+	return addedSize
 }
 
 // Look for each part in the compression map and returns its length,
 // keep on searching so we get the longest match.
-func compressionLenSearch(c map[string]int, s string) (int, bool) {
+// Will return the size of compression found, whether a match has been
+// found and the size of record if added in payload
+func compressionLenSearch(c map[string]int, s string) (int, bool, int) {
 	off := 0
 	end := false
 	if s == "" { // don't bork on bogus data
-		return 0, false
+		return 0, false, 0
 	}
+	fullSize := 0
 	for {
 		if _, ok := c[s[off:]]; ok {
-			return len(s[off:]), true
+			return len(s[off:]), true, fullSize + off
 		}
 		if end {
 			break
 		}
+		fullSize += 2
 		off, end = NextLabel(s, off)
 	}
-	return 0, false
+	return 0, false, fullSize + len(s)
 }
 
 // Copy returns a new RR which is a deep-copy of r.

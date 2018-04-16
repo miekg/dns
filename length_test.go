@@ -80,6 +80,70 @@ func TestMsgLength(t *testing.T) {
 	}
 }
 
+func TestCompressionLenHelper(t *testing.T) {
+	c := make(map[string]int)
+	compressionLenHelper(c, "example.com", 12)
+	if c["example.com"] != 11 {
+		t.Errorf("bad %d", c["example.com"])
+	}
+	if c["com"] != 3 {
+		t.Errorf("bad %d", c["com"])
+	}
+
+	// Test boundaries
+	c = make(map[string]int)
+	// foo label starts at 16379
+	// com label starts at 16384
+	compressionLenHelper(c, "foo.com", 16379)
+	if c["foo.com"] != 7 {
+		t.Errorf("bad %d", c["foo.com"])
+	}
+	// com label is accessible
+	if c["com"] != 3 {
+		t.Errorf("bad %d", c["com"])
+	}
+
+	c = make(map[string]int)
+	// foo label starts at 16379
+	// com label starts at 16385 => outside range
+	compressionLenHelper(c, "foo.com", 16380)
+	if c["foo.com"] != 7 {
+		t.Errorf("bad %d", c["foo.com"])
+	}
+	// com label is NOT accessible
+	if c["com"] != 0 {
+		t.Errorf("bad %d", c["com"])
+	}
+
+	c = make(map[string]int)
+	compressionLenHelper(c, "example.com", 16375)
+	if c["example.com"] != 11 {
+		t.Errorf("bad %d", c["example.com"])
+	}
+	// com starts AFTER 16384
+	if c["com"] != 3 {
+		t.Errorf("bad %d", c["com"])
+	}
+
+	c = make(map[string]int)
+	compressionLenHelper(c, "example.com", 16376)
+	if c["example.com"] != 11 {
+		t.Errorf("bad %d", c["example.com"])
+	}
+	// com starts AFTER 16384
+	if c["com"] != 0 {
+		t.Errorf("bad %d", c["com"])
+	}
+}
+
+func TestCompressionLenSearch(t *testing.T) {
+	c := make(map[string]int)
+	compressed, ok, fullSize := compressionLenSearch(c, "a.b.org.")
+	if compressed != 0 || ok || fullSize != 14 {
+		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+	}
+}
+
 func TestMsgLength2(t *testing.T) {
 	// Serialized replies
 	var testMessages = []string{
