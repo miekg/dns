@@ -974,6 +974,8 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 		// track this length, and the global length in len, while taking compression into account for both.
 		k, ok, sz := compressionLenSearch(c, r.Header().Name)
 		if ok {
+			// Size of x is reduced by k, but we add 1 since k includes the '.' and label descriptor take 2 bytes
+			// so, basically x:= x - k - 1 + 2
 			x += 1 - k
 		}
 		tmpLen += sz
@@ -992,7 +994,8 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 
 // Put the parts of the name in the compression map, return the size in bytes added in payload
 func compressionLenHelper(c map[string]int, s string, currentLen int) int {
-	if currentLen+3 >= maxCompressionOffset {
+	if currentLen > maxCompressionOffset {
+		// We won't be able to add any label that could be re-used later anyway
 		return 0
 	}
 	if _, ok := c[s]; ok {
@@ -1006,7 +1009,9 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 		if _, ok := c[pref]; !ok {
 			lenAdded := len(pref)
 			numLabelsBefore := len(lbs) - j - 1
+			// 2 bytes per label before this label to take into account
 			offsetOfLabel := currentLen + len(s) - lenAdded + numLabelsBefore*2
+			// If first byte label is within the first 14bits, it might be re-used later
 			if offsetOfLabel < maxCompressionOffset {
 				c[pref] = lenAdded
 				addedSizeBytes += 2 + lenAdded
@@ -1034,6 +1039,7 @@ func compressionLenSearch(c map[string]int, s string) (int, bool, int) {
 		if end {
 			break
 		}
+		// Each label descriptor takes 2 bytes, add it
 		fullSize += 2
 		off, end = NextLabel(s, off)
 	}
