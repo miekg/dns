@@ -931,9 +931,9 @@ func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
 		compressionLenHelper(compression, r.Name, l)
 		l += r.len()
 	}
-	l += compressionLenSlice(l, compression, dns.Answer, 0)
-	l += compressionLenSlice(l, compression, dns.Ns, 0)
-	l += compressionLenSlice(l, compression, dns.Extra, 0)
+	l += compressionLenSlice(l, compression, dns.Answer)
+	l += compressionLenSlice(l, compression, dns.Ns)
+	l += compressionLenSlice(l, compression, dns.Extra)
 	return l
 }
 
@@ -969,15 +969,14 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]int, rs []RR, padding int) int {
+func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 	initLen := lenp
 	for _, r := range rs {
 		if r == nil {
 			continue
 		}
-		// TmpLen is to track len of record at 14bits boudaries, 6 bytes is the raw overhead
-		// 10 bytes for Signalization + 2 bytes for pointer
-		tmpLen := lenp + padding
+		// TmpLen is to track len of record at 14bits boudaries
+		tmpLen := lenp
 
 		x := r.len()
 		// track this length, and the global length in len, while taking compression into account for both.
