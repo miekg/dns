@@ -6,67 +6,102 @@ func compressionLenHelperType(c map[string]int, r RR, initLen int) int {
 	currentLen := initLen
 	switch x := r.(type) {
 	case *AFSDB:
+		currentLen -= len(x.Hostname) + 1
 		currentLen += compressionLenHelper(c, x.Hostname, currentLen)
 	case *CNAME:
+		currentLen -= len(x.Target) + 1
 		currentLen += compressionLenHelper(c, x.Target, currentLen)
 	case *DNAME:
+		currentLen -= len(x.Target) + 1
 		currentLen += compressionLenHelper(c, x.Target, currentLen)
 	case *HIP:
+		for i := range x.RendezvousServers {
+			currentLen -= len(x.RendezvousServers[i]) + 1
+		}
 		for i := range x.RendezvousServers {
 			currentLen += compressionLenHelper(c, x.RendezvousServers[i], currentLen)
 		}
 	case *KX:
+		currentLen -= len(x.Exchanger) + 1
 		currentLen += compressionLenHelper(c, x.Exchanger, currentLen)
 	case *LP:
+		currentLen -= len(x.Fqdn) + 1
 		currentLen += compressionLenHelper(c, x.Fqdn, currentLen)
 	case *MB:
+		currentLen -= len(x.Mb) + 1
 		currentLen += compressionLenHelper(c, x.Mb, currentLen)
 	case *MD:
+		currentLen -= len(x.Md) + 1
 		currentLen += compressionLenHelper(c, x.Md, currentLen)
 	case *MF:
+		currentLen -= len(x.Mf) + 1
 		currentLen += compressionLenHelper(c, x.Mf, currentLen)
 	case *MG:
+		currentLen -= len(x.Mg) + 1
 		currentLen += compressionLenHelper(c, x.Mg, currentLen)
 	case *MINFO:
+		currentLen -= len(x.Rmail) + 1
 		currentLen += compressionLenHelper(c, x.Rmail, currentLen)
+		currentLen -= len(x.Email) + 1
 		currentLen += compressionLenHelper(c, x.Email, currentLen)
 	case *MR:
+		currentLen -= len(x.Mr) + 1
 		currentLen += compressionLenHelper(c, x.Mr, currentLen)
 	case *MX:
+		currentLen -= len(x.Mx) + 1
 		currentLen += compressionLenHelper(c, x.Mx, currentLen)
 	case *NAPTR:
+		currentLen -= len(x.Replacement) + 1
 		currentLen += compressionLenHelper(c, x.Replacement, currentLen)
 	case *NS:
+		currentLen -= len(x.Ns) + 1
 		currentLen += compressionLenHelper(c, x.Ns, currentLen)
 	case *NSAPPTR:
+		currentLen -= len(x.Ptr) + 1
 		currentLen += compressionLenHelper(c, x.Ptr, currentLen)
 	case *NSEC:
+		currentLen -= len(x.NextDomain) + 1
 		currentLen += compressionLenHelper(c, x.NextDomain, currentLen)
 	case *PTR:
+		currentLen -= len(x.Ptr) + 1
 		currentLen += compressionLenHelper(c, x.Ptr, currentLen)
 	case *PX:
+		currentLen -= len(x.Map822) + 1
 		currentLen += compressionLenHelper(c, x.Map822, currentLen)
+		currentLen -= len(x.Mapx400) + 1
 		currentLen += compressionLenHelper(c, x.Mapx400, currentLen)
 	case *RP:
+		currentLen -= len(x.Mbox) + 1
 		currentLen += compressionLenHelper(c, x.Mbox, currentLen)
+		currentLen -= len(x.Txt) + 1
 		currentLen += compressionLenHelper(c, x.Txt, currentLen)
 	case *RRSIG:
+		currentLen -= len(x.SignerName) + 1
 		currentLen += compressionLenHelper(c, x.SignerName, currentLen)
 	case *RT:
+		currentLen -= len(x.Host) + 1
 		currentLen += compressionLenHelper(c, x.Host, currentLen)
 	case *SIG:
+		currentLen -= len(x.SignerName) + 1
 		currentLen += compressionLenHelper(c, x.SignerName, currentLen)
 	case *SOA:
+		currentLen -= len(x.Ns) + 1
 		currentLen += compressionLenHelper(c, x.Ns, currentLen)
+		currentLen -= len(x.Mbox) + 1
 		currentLen += compressionLenHelper(c, x.Mbox, currentLen)
 	case *SRV:
+		currentLen -= len(x.Target) + 1
 		currentLen += compressionLenHelper(c, x.Target, currentLen)
 	case *TALINK:
+		currentLen -= len(x.PreviousName) + 1
 		currentLen += compressionLenHelper(c, x.PreviousName, currentLen)
+		currentLen -= len(x.NextName) + 1
 		currentLen += compressionLenHelper(c, x.NextName, currentLen)
 	case *TKEY:
+		currentLen -= len(x.Algorithm) + 1
 		currentLen += compressionLenHelper(c, x.Algorithm, currentLen)
 	case *TSIG:
+		currentLen -= len(x.Algorithm) + 1
 		currentLen += compressionLenHelper(c, x.Algorithm, currentLen)
 	}
 	return currentLen - initLen

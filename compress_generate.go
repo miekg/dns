@@ -111,6 +111,7 @@ Names:
 		fmt.Fprintf(b, "case *%s:\n", name)
 		for i := 1; i < st.NumFields(); i++ {
 			out := func(s string) {
+				fmt.Fprintf(b, "currentLen -= len(x.%s) + 1\n", st.Field(i).Name())
 				fmt.Fprintf(b, "currentLen += compressionLenHelper(c, x.%s, currentLen)\n", st.Field(i).Name())
 			}
 
@@ -120,6 +121,10 @@ Names:
 					fallthrough
 				case `dns:"cdomain-name"`:
 					// For HIP we need to slice over the elements in this slice.
+					fmt.Fprintf(b, `for i := range x.%s {
+	currentLen -= len(x.%s[i]) + 1
+}
+`, st.Field(i).Name(), st.Field(i).Name())
 					fmt.Fprintf(b, `for i := range x.%s {
 	currentLen += compressionLenHelper(c, x.%s[i], currentLen)
 }

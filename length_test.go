@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -53,6 +54,7 @@ func TestMsgCompressLength(t *testing.T) {
 func TestMsgLength(t *testing.T) {
 	makeMsg := func(question string, ans, ns, e []RR) *Msg {
 		msg := new(Msg)
+		msg.Compress = true
 		msg.SetQuestion(Fqdn(question), TypeANY)
 		msg.Answer = append(msg.Answer, ans...)
 		msg.Ns = append(msg.Ns, ns...)
@@ -83,10 +85,10 @@ func TestMsgLength(t *testing.T) {
 func TestCompressionLenHelper(t *testing.T) {
 	c := make(map[string]int)
 	compressionLenHelper(c, "example.com", 12)
-	if c["example.com"] != 11 {
+	if c["example.com"] != 12 {
 		t.Errorf("bad %d", c["example.com"])
 	}
-	if c["com"] != 3 {
+	if c["com"] != 20 {
 		t.Errorf("bad %d", c["com"])
 	}
 
@@ -95,11 +97,11 @@ func TestCompressionLenHelper(t *testing.T) {
 	// foo label starts at 16379
 	// com label starts at 16384
 	compressionLenHelper(c, "foo.com", 16379)
-	if c["foo.com"] != 7 {
+	if c["foo.com"] != 16379 {
 		t.Errorf("bad %d", c["foo.com"])
 	}
 	// com label is accessible
-	if c["com"] != 3 {
+	if c["com"] != 16383 {
 		t.Errorf("bad %d", c["com"])
 	}
 
@@ -107,7 +109,7 @@ func TestCompressionLenHelper(t *testing.T) {
 	// foo label starts at 16379
 	// com label starts at 16385 => outside range
 	compressionLenHelper(c, "foo.com", 16380)
-	if c["foo.com"] != 7 {
+	if c["foo.com"] != 16380 {
 		t.Errorf("bad %d", c["foo.com"])
 	}
 	// com label is NOT accessible
@@ -117,17 +119,17 @@ func TestCompressionLenHelper(t *testing.T) {
 
 	c = make(map[string]int)
 	compressionLenHelper(c, "example.com", 16375)
-	if c["example.com"] != 11 {
+	if c["example.com"] != 16375 {
 		t.Errorf("bad %d", c["example.com"])
 	}
 	// com starts AFTER 16384
-	if c["com"] != 3 {
+	if c["com"] != 16383 {
 		t.Errorf("bad %d", c["com"])
 	}
 
 	c = make(map[string]int)
 	compressionLenHelper(c, "example.com", 16376)
-	if c["example.com"] != 11 {
+	if c["example.com"] != 16376 {
 		t.Errorf("bad %d", c["example.com"])
 	}
 	// com starts AFTER 16384
@@ -246,7 +248,7 @@ func TestMsgCompressLengthLargeRecords(t *testing.T) {
 	msg.SetQuestion("my.service.acme.", TypeSRV)
 	j := 1
 	for i := 0; i < 250; i++ {
-		target := fmt.Sprintf("host-redis-%d-%d.test.acme.com.node.dc1.consul.", j, i)
+		target := fmt.Sprintf("host-redis-1-%d.test.acme.com.node.dc1.consul.", i)
 		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
 		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: 1, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", j, i)})
 	}
@@ -260,6 +262,72 @@ func TestMsgCompressLengthLargeRecords(t *testing.T) {
 	}
 }
 
+func TestCompareCompressionMapsForANY(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("a.service.acme.", TypeANY)
+	// Be sure to have more than 14bits
+	for i := 0; i < 2000; i++ {
+		target := fmt.Sprintf("host.app-%d.x%d.test.acme.", i%250, i)
+		msg.Answer = append(msg.Answer, &AAAA{Hdr: RR_Header{Name: target, Rrtype: TypeAAAA, Class: ClassINET, Ttl: 0x3c}, AAAA: net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte(i / 255), byte(i % 255)}})
+		msg.Answer = append(msg.Answer, &A{Hdr: RR_Header{Name: target, Rrtype: TypeA, Class: ClassINET, Ttl: 0x3c}, A: net.IP{127, 0, byte(i / 255), byte(i % 255)}})
+		if msg.Len() > 16384 {
+			break
+		}
+	}
+	for labelSize := 0; labelSize < 63; labelSize++ {
+		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeANY)
+
+		compressionFake := make(map[string]int)
+		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
+
+		compressionReal := make(map[string]int)
+		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if lenFake != len(buf) {
+			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
+		}
+		if !reflect.DeepEqual(compressionFake, compressionReal) {
+			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+		}
+	}
+}
+
+func TestCompareCompressionMapsForSRV(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("a.service.acme.", TypeSRV)
+	// Be sure to have more than 14bits
+	for i := 0; i < 2000; i++ {
+		target := fmt.Sprintf("host.app-%d.x%d.test.acme.", i%250, i)
+		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: ClassINET, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
+		msg.Extra = append(msg.Extra, &A{Hdr: RR_Header{Name: target, Rrtype: TypeA, Class: ClassINET, Ttl: 0x3c}, A: net.IP{127, 0, byte(i / 255), byte(i % 255)}})
+		if msg.Len() > 16384 {
+			break
+		}
+	}
+	for labelSize := 0; labelSize < 63; labelSize++ {
+		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeAAAA)
+
+		compressionFake := make(map[string]int)
+		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
+
+		compressionReal := make(map[string]int)
+		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if lenFake != len(buf) {
+			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
+		}
+		if !reflect.DeepEqual(compressionFake, compressionReal) {
+			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+		}
+	}
+}
+
 func TestMsgCompressLengthLargeRecordsWithPaddingPermutation(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
@@ -268,7 +336,7 @@ func TestMsgCompressLengthLargeRecordsWithPaddingPermutation(t *testing.T) {
 	for i := 0; i < 250; i++ {
 		target := fmt.Sprintf("host-redis-x-%d.test.acme.com.node.dc1.consul.", i)
 		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
-		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: 1, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.x.%d.", i)})
+		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: ClassINET, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.x.%d.", i)})
 	}
 	for labelSize := 1; labelSize < 63; labelSize++ {
 		msg.SetQuestion(fmt.Sprintf("my.%s.service.acme.", strings.Repeat("x", labelSize)), TypeSRV)
@@ -290,7 +358,7 @@ func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
 	for i := 0; i < 900; i++ {
 		target := fmt.Sprintf("host-redis-%d-%d.test.acme.com.node.dc1.consul.", i/256, i%256)
 		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
-		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: 1, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", i/256, i%256)})
+		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: ClassINET, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", i/256, i%256)})
 		predicted := msg.Len()
 		buf, err := msg.Pack()
 		if err != nil {

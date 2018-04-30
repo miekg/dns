@@ -694,15 +694,18 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small
 // a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
-	// We use a similar function in tsig.go's stripTsig.
-	var (
-		dh          Header
-		compression map[string]int
-	)
-
+	var compression map[string]int
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
 	}
+	return dns.packBufferWithCompressionMap(msg, compression)
+}
+
+func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
+	// We use a similar function in tsig.go's stripTsig.
+	var (
+		dh Header
+	)
 
 	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
 		return nil, ErrRcode
@@ -922,23 +925,27 @@ func (dns *Msg) String() string {
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
 
+func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
+	l := 12 // Message header is always 12 bytes
+	for _, r := range dns.Question {
+		compressionLenHelper(compression, r.Name, l)
+		l += r.len()
+	}
+	l += compressionLenSlice(l, compression, dns.Answer, 0)
+	l += compressionLenSlice(l, compression, dns.Ns, 0)
+	l += compressionLenSlice(l, compression, dns.Extra, 0)
+	return l
+}
+
 // compressedLen returns the message length when in compressed wire format
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
 	// We always return one more than needed.
-	l := 12 // Message header is always 12 bytes
 	if compress {
 		compression := map[string]int{}
-		for _, r := range dns.Question {
-			l += r.len()
-			compressionLenHelper(compression, r.Name, l)
-		}
-		l += compressionLenSlice(l, compression, dns.Answer)
-		l += compressionLenSlice(l, compression, dns.Ns)
-		l += compressionLenSlice(l, compression, dns.Extra)
-
-		return l
+		return compressedLenWithCompressionMap(dns, compression)
 	}
+	l := 12 // Message header is always 12 bytes
 
 	for _, r := range dns.Question {
 		l += r.len()
@@ -962,32 +969,34 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
+func compressionLenSlice(lenp int, c map[string]int, rs []RR, padding int) int {
 	initLen := lenp
 	for _, r := range rs {
 		if r == nil {
 			continue
 		}
 		// TmpLen is to track len of record at 14bits boudaries, 6 bytes is the raw overhead
-		tmpLen := lenp + 6
+		// 10 bytes for Signalization + 2 bytes for pointer
+		tmpLen := lenp + padding
+
 		x := r.len()
 		// track this length, and the global length in len, while taking compression into account for both.
-		k, ok, sz := compressionLenSearch(c, r.Header().Name)
+		k, ok, _ := compressionLenSearch(c, r.Header().Name)
 		if ok {
 			// Size of x is reduced by k, but we add 1 since k includes the '.' and label descriptor take 2 bytes
 			// so, basically x:= x - k - 1 + 2
 			x += 1 - k
 		}
-		tmpLen += sz
 
 		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
-		k, ok, added := compressionLenSearchType(c, r)
+		k, ok, _ = compressionLenSearchType(c, r)
 		if ok {
 			x += 1 - k
 		}
-		tmpLen += added
-		tmpLen += compressionLenHelperType(c, r, tmpLen)
 		lenp += x
+		tmpLen = lenp
+		tmpLen += compressionLenHelperType(c, r, tmpLen)
+
 	}
 	return lenp - initLen
 }
@@ -1001,24 +1010,29 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 	if _, ok := c[s]; ok {
 		return 0
 	}
-	addedSizeBytes := 0
+	initLen := currentLen
 	pref := ""
+	prev := s
 	lbs := Split(s)
-	for j := len(lbs) - 1; j >= 0; j-- {
+	for j := 0; j < len(lbs); j++ {
 		pref = s[lbs[j]:]
+		currentLen += len(prev) - len(pref)
+		prev = pref
 		if _, ok := c[pref]; !ok {
-			lenAdded := len(pref)
-			numLabelsBefore := len(lbs) - j - 1
-			// 2 bytes per label before this label to take into account
-			offsetOfLabel := currentLen + len(s) - lenAdded + numLabelsBefore*2
 			// If first byte label is within the first 14bits, it might be re-used later
-			if offsetOfLabel < maxCompressionOffset {
-				c[pref] = lenAdded
-				addedSizeBytes += 2 + lenAdded
+			if currentLen < maxCompressionOffset {
+				c[pref] = currentLen
 			}
+		} else {
+			added := currentLen - initLen
+			if j > 0 {
+				// We added a new PTR
+				added += 2
+			}
+			return added
 		}
 	}
-	return addedSizeBytes
+	return currentLen - initLen
 }
 
 // Look for each part in the compression map and returns its length,
