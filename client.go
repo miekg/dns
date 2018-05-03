@@ -201,6 +201,8 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	return r, rtt, err
 }
 
+var defaultDOHDial = http.DefaultTransport.(*http.Transport).DialContext
+
 func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	// TODO(tmthrgd): pipe context into here
 
@@ -229,8 +231,27 @@ func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 
 	t := time.Now()
 
+	dial := defaultDOHDial
+	if c.Dialer != nil {
+		dial = c.Dialer.DialContext
+	}
+
 	// TODO(tmthrgd): make the http.Client configurable
-	resp, err := http.DefaultClient.Do(req)
+	hc := &http.Client{
+		Transport: &http.Transport{
+			DialContext:     dial,
+			TLSClientConfig: c.TLSConfig,
+
+			// These are the values from http.DefaultTransport
+			Proxy:                 http.ProxyFromEnvironment,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+
+	resp, err := hc.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
