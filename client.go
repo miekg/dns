@@ -43,6 +43,7 @@ type Client struct {
 	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
+	HTTPClient     *http.Client      // The http.Client to use for DNS-over-HTTPS
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
@@ -201,8 +202,6 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	return r, rtt, err
 }
 
-var defaultDOHDial = http.DefaultTransport.(*http.Transport).DialContext
-
 func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	// TODO(tmthrgd): pipe context into here
 
@@ -231,24 +230,9 @@ func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 
 	t := time.Now()
 
-	dial := defaultDOHDial
-	if c.Dialer != nil {
-		dial = c.Dialer.DialContext
-	}
-
-	// TODO(tmthrgd): make the http.Client configurable
-	hc := &http.Client{
-		Transport: &http.Transport{
-			DialContext:     dial,
-			TLSClientConfig: c.TLSConfig,
-
-			// These are the values from http.DefaultTransport
-			Proxy:                 http.ProxyFromEnvironment,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
+	hc := http.DefaultClient
+	if c.HTTPClient != nil {
+		hc = c.HTTPClient
 	}
 
 	resp, err := hc.Do(req)
