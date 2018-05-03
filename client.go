@@ -141,6 +141,11 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 // attribute appropriately
 func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, err error) {
 	if !c.SingleInflight {
+		if c.Net == "https" {
+			// TODO(tmthrgd): pipe timeouts into exchangeDOH
+			return c.exchangeDOH(context.TODO(), m, address)
+		}
+
 		return c.exchange(m, address)
 	}
 
@@ -153,6 +158,11 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 		cl = cl1
 	}
 	r, rtt, err, shared := c.group.Do(m.Question[0].Name+t+cl, func() (*Msg, time.Duration, error) {
+		if c.Net == "https" {
+			// TODO(tmthrgd): pipe timeouts into exchangeDOH
+			return c.exchangeDOH(context.TODO(), m, address)
+		}
+
 		return c.exchange(m, address)
 	})
 	if r != nil && shared {
@@ -162,10 +172,6 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 }
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	if c.Net == "https" {
-		return c.exchangeDOH(m, a)
-	}
-
 	var co *Conn
 
 	co, err = c.Dial(a)
@@ -202,9 +208,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	return r, rtt, err
 }
 
-func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
-	// TODO(tmthrgd): pipe context into here
-
+func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
 	p, err := m.Pack()
 	if err != nil {
 		return nil, 0, err
@@ -233,6 +237,10 @@ func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err e
 	hc := http.DefaultClient
 	if c.HTTPClient != nil {
 		hc = c.HTTPClient
+	}
+
+	if ctx != context.Background() && ctx != context.TODO() {
+		req = req.WithContext(ctx)
 	}
 
 	resp, err := hc.Do(req)
@@ -570,6 +578,10 @@ func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout 
 // context, if present. If there is both a context deadline and a configured
 // timeout on the client, the earliest of the two takes effect.
 func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	if !c.SingleInflight && c.Net == "https" {
+		return c.exchangeDOH(ctx, m, a)
+	}
+
 	var timeout time.Duration
 	if deadline, ok := ctx.Deadline(); !ok {
 		timeout = 0
@@ -578,6 +590,7 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	}
 	// not passing the context to the underlying calls, as the API does not support
 	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
+	// TODO(tmthrgd): this is a race condition
 	c.Dialer = &net.Dialer{Timeout: timeout}
 	return c.Exchange(m, a)
 }
