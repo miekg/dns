@@ -7,14 +7,20 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/binary"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
 
 const dnsTimeout time.Duration = 2 * time.Second
 const tcpIdleTimeout time.Duration = 8 * time.Second
+
+const dohMimeType = "application/dns-udpwireformat"
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {
@@ -155,6 +161,10 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 }
 
 func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	if c.Net == "https" {
+		return c.exchangeDOH(m, a)
+	}
+
 	var co *Conn
 
 	co, err = c.Dial(a)
@@ -189,6 +199,71 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 	rtt = time.Since(t)
 	return r, rtt, err
+}
+
+func (c *Client) exchangeDOH(m *Msg, a string) (r *Msg, rtt time.Duration, err error) {
+	// TODO(tmthrgd): pipe context into here
+
+	p, err := m.Pack()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// TODO(tmthrgd): Allow the path to be customised?
+	u := &url.URL{
+		Scheme: "https",
+		Host:   a,
+		Path:   "/.well-known/dns-query",
+	}
+	if u.Port() == "443" {
+		u.Host = u.Hostname()
+	}
+
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(p))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	req.Header.Set("Content-Type", dohMimeType)
+	req.Header.Set("Accept", dohMimeType)
+
+	t := time.Now()
+
+	// TODO(tmthrgd): make the http.Client configurable
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer closeHTTPBody(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, 0, fmt.Errorf("dns: server returned HTTP %d error: %q", resp.StatusCode, resp.Status)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != dohMimeType {
+		return nil, 0, fmt.Errorf("dns: unexpected Content-Type %q; expected %q", ct, dohMimeType)
+	}
+
+	p, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rtt = time.Since(t)
+
+	r = new(Msg)
+	if err := r.Unpack(p); err != nil {
+		return r, 0, err
+	}
+
+	// TODO: TSIG? Is it even supported over DoH?
+
+	return r, rtt, nil
+}
+
+func closeHTTPBody(r io.ReadCloser) error {
+	io.Copy(ioutil.Discard, io.LimitReader(r, 8<<20))
+	return r.Close()
 }
 
 // ReadMsg reads a message from the connection co.
