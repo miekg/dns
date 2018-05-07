@@ -328,7 +328,7 @@ func (srv *Server) worker(w *response) {
 
 	defer atomic.AddInt32(&srv.workersCount, -1)
 
-	count := 0
+	inUse := false
 	timeout := time.NewTimer(idleWorkerTimeout)
 	defer timeout.Stop()
 LOOP:
@@ -338,13 +338,13 @@ LOOP:
 			if !ok {
 				break LOOP
 			}
-			count += 1
+			inUse = true
 			srv.serve(w)
 		case <-timeout.C:
-			if count == 0 {
+			if !inUse {
 				break LOOP
 			}
-			count = 0
+			inUse = false
 			timeout.Reset(idleWorkerTimeout)
 		}
 	}
