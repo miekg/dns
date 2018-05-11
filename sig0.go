@@ -30,7 +30,7 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 	rr.Labels = 0
 
 	buf := make([]byte, m.Len()+rr.len())
-	mbuf, err := m.packBufferWithCompressionMap(buf, nil)
+	mbuf, err := m.PackBuffer(buf)
 	if err != nil {
 		return nil, err
 	}

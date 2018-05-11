@@ -698,7 +698,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings
 	}
-	return dns.packBufferWithCompressionMap(msg, compression)
+	return dns.packBufferWithCompressionMap(buf, compression)
 }
 
 func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
