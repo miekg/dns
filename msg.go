@@ -701,6 +701,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	return dns.packBufferWithCompressionMap(buf, compression)
 }
 
+// packBufferWithCompressionMap is ONLY for testing purposes
 func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
 	// We use a similar function in tsig.go's stripTsig.
 	var (
