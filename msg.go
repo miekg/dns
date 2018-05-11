@@ -698,6 +698,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	var (
 		dh          Header
 		compression map[string]int
+		rcode       int
 	)
 
 	if dns.Compress {
@@ -707,6 +708,7 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
 		return nil, ErrRcode
 	}
+	rcode = dns.Rcode & 0xF
 	if dns.Rcode > 0xF {
 		// Regular RCODE field is 4 bits
 		opt := dns.IsEdns0()
@@ -714,12 +716,11 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 			return nil, ErrExtendedRcode
 		}
 		opt.SetExtendedRcode(uint8(dns.Rcode >> 4))
-		dns.Rcode &= 0xF
 	}
 
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
-	dh.Bits = uint16(dns.Opcode)<<11 | uint16(dns.Rcode)
+	dh.Bits = uint16(dns.Opcode)<<11 | uint16(rcode)
 	if dns.Response {
 		dh.Bits |= _QR
 	}
