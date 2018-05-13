@@ -714,12 +714,11 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 			return nil, ErrExtendedRcode
 		}
 		opt.SetExtendedRcode(uint8(dns.Rcode >> 4))
-		dns.Rcode &= 0xF
 	}
 
 	// Convert convenient Msg into wire-like Header.
 	dh.Id = dns.Id
-	dh.Bits = uint16(dns.Opcode)<<11 | uint16(dns.Rcode)
+	dh.Bits = uint16(dns.Opcode)<<11 | uint16(dns.Rcode&0xF)
 	if dns.Response {
 		dh.Bits |= _QR
 	}
