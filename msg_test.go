@@ -42,9 +42,6 @@ func TestPackNoSideEffect(t *testing.T) {
 	a.Extra = append(a.Extra, o)
 	a.SetRcode(m, RcodeBadVers)
 
-	if a.Rcode != RcodeBadVers {
-		t.Errorf("before pack: Rcode is expected to be BADVERS")
-	}
 	a.Pack()
 	if a.Rcode != RcodeBadVers {
 		t.Errorf("after pack: Rcode is expected to be BADVERS")
