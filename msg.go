@@ -691,22 +691,20 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 	return dns.PackBuffer(nil)
 }
 
-// PackBuffer packs a Msg, using the given buffer buf. If buf is too small
-// a new buffer is allocated.
+// PackBuffer packs a Msg, using the given buffer buf. If buf is too small a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	var compression map[string]int
 	if dns.Compress {
-		compression = make(map[string]int) // Compression pointer mappings
+		compression = make(map[string]int) // Compression pointer mappings.
 	}
 	return dns.packBufferWithCompressionMap(buf, compression)
 }
 
-// packBufferWithCompressionMap is ONLY for testing purposes
+// packBufferWithCompressionMap packs a Msg, using the given buffer buf.
 func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
 	// We use a similar function in tsig.go's stripTsig.
-	var (
-		dh Header
-	)
+
+	var dh Header
 
 	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
 		return nil, ErrRcode
