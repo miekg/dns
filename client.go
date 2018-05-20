@@ -17,10 +17,12 @@ import (
 	"time"
 )
 
-const dnsTimeout time.Duration = 2 * time.Second
-const tcpIdleTimeout time.Duration = 8 * time.Second
+const (
+	dnsTimeout     time.Duration = 2 * time.Second
+	tcpIdleTimeout time.Duration = 8 * time.Second
 
-const dohMimeType = "application/dns-udpwireformat"
+	dohMimeType = "application/dns-message"
+)
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {
