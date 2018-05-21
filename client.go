@@ -231,8 +231,6 @@ func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt
 	req.Header.Set("Content-Type", dohMimeType)
 	req.Header.Set("Accept", dohMimeType)
 
-	t := time.Now()
-
 	hc := http.DefaultClient
 	if c.HTTPClient != nil {
 		hc = c.HTTPClient
@@ -241,6 +239,8 @@ func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt
 	if ctx != context.Background() && ctx != context.TODO() {
 		req = req.WithContext(ctx)
 	}
+
+	t := time.Now()
 
 	resp, err := hc.Do(req)
 	if err != nil {
