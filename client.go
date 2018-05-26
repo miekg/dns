@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -216,14 +215,7 @@ func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt
 		return nil, 0, err
 	}
 
-	u, err := url.Parse(a)
-	if err != nil {
-		return nil, 0, err
-	} else if u.Scheme != "https" {
-		return nil, 0, fmt.Errorf(`dns: unexpected url scheme %q; expected "https"`, u.Scheme)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(p))
+	req, err := http.NewRequest(http.MethodPost, a, bytes.NewReader(p))
 	if err != nil {
 		return nil, 0, err
 	}
