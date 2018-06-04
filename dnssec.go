@@ -542,6 +542,10 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 		explen = uint16(keybuf[1])<<8 | uint16(keybuf[2])
 		keyoff = 3
 	}
+	if explen > 4 {
+		// Larger exponent than supported by the crypto package.
+		return nil
+	}
 	pubkey := new(rsa.PublicKey)
 
 	pubkey.N = big.NewInt(0)
@@ -550,9 +554,8 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 		expo <<= 8
 		expo |= uint64(keybuf[keyoff+i])
 	}
-	if expo > (2<<31)+1 {
-		// Larger expo than supported.
-		// println("dns: F5 primes (or larger) are not supported")
+	if expo > 1<<31-1 {
+		// Larger exponent than supported by the crypto package.
 		return nil
 	}
 	pubkey.E = int(expo)
