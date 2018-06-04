@@ -89,11 +89,10 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
 	var d net.Dialer
 	if c.Dialer == nil {
-		d = net.Dialer{}
+		d = net.Dialer{Timeout:c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
 		d = net.Dialer(*c.Dialer)
 	}
-	d.Timeout = c.getTimeoutForRequest(c.dialTimeout())
 
 	network := "udp"
 	useTLS := false
@@ -530,7 +529,7 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 
 // DialTimeout acts like Dial but takes a timeout.
 func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
-	client := Client{Net: network, DialTimeout: timeout, Dialer: &net.Dialer{Timeout: timeout}}
+	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}}
 	conn, err = client.Dial(address)
 	if err != nil {
 		return nil, err
@@ -557,7 +556,7 @@ func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout 
 	if !strings.HasSuffix(network, "-tls") {
 		network += "-tls"
 	}
-	client := Client{Net: network, DialTimeout: timeout, Dialer: &net.Dialer{Timeout: timeout}, TLSConfig: tlsConfig}
+	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}, TLSConfig: tlsConfig}
 	conn, err = client.Dial(address)
 	if err != nil {
 		return nil, err
