@@ -851,12 +851,10 @@ func TestRsaExponentUnpack(t *testing.T) {
 	zskSig, kskSig := zskRrRrsig.(*RRSIG), kskRrRrsig.(*RRSIG)
 
 	if e := zskSig.Verify(zsk, []RR{zsk, ksk}); e != nil {
-		t.Logf("cannot verify RRSIG with keytag [%d]. Cause [%s]", zsk.KeyTag(), e.Error())
-		t.Fail()
+		t.Fatalf("cannot verify RRSIG with keytag [%d]. Cause [%s]", zsk.KeyTag(), e.Error())
 	}
 
 	if e := kskSig.Verify(ksk, []RR{zsk, ksk}); e != nil {
-		t.Logf("cannot verify RRSIG with keytag [%d]. Cause [%s]", ksk.KeyTag(), e.Error())
-		t.Fail()
+		t.Fatalf("cannot verify RRSIG with keytag [%d]. Cause [%s]", ksk.KeyTag(), e.Error())
 	}
 }
