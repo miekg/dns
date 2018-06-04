@@ -545,14 +545,11 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	pubkey := new(rsa.PublicKey)
 
 	pubkey.N = big.NewInt(0)
-	shift := uint64((explen - 1) * 8)
 	expo := uint64(0)
-	for i := int(explen - 1); i > 0; i-- {
-		expo += uint64(keybuf[keyoff+i]) << shift
-		shift -= 8
+	for i := 0; i < int(explen); i++ {
+		expo <<= 8
+		expo |= uint64(keybuf[keyoff+i])
 	}
-	// Remainder
-	expo += uint64(keybuf[keyoff])
 	if expo > (2<<31)+1 {
 		// Larger expo than supported.
 		// println("dns: F5 primes (or larger) are not supported")
