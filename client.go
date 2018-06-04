@@ -89,11 +89,10 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
 	var d net.Dialer
 	if c.Dialer == nil {
-		d = net.Dialer{}
+		d = net.Dialer{Timeout:c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
 		d = net.Dialer(*c.Dialer)
 	}
-	d.Timeout = c.getTimeoutForRequest(c.writeTimeout())
 
 	network := "udp"
 	useTLS := false
