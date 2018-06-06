@@ -162,7 +162,7 @@ const msgChannelOpen = 90
 
 type channelOpenMsg struct {
 	ChanType         string `sshtype:"90"`
-	PeersID          uint32
+	PeersId          uint32
 	PeersWindow      uint32
 	MaxPacketSize    uint32
 	TypeSpecificData []byte `ssh:"rest"`
@@ -173,7 +173,7 @@ const msgChannelData = 94
 
 // Used for debug print outs of packets.
 type channelDataMsg struct {
-	PeersID uint32 `sshtype:"94"`
+	PeersId uint32 `sshtype:"94"`
 	Length  uint32
 	Rest    []byte `ssh:"rest"`
 }
@@ -182,8 +182,8 @@ type channelDataMsg struct {
 const msgChannelOpenConfirm = 91
 
 type channelOpenConfirmMsg struct {
-	PeersID          uint32 `sshtype:"91"`
-	MyID             uint32
+	PeersId          uint32 `sshtype:"91"`
+	MyId             uint32
 	MyWindow         uint32
 	MaxPacketSize    uint32
 	TypeSpecificData []byte `ssh:"rest"`
@@ -193,7 +193,7 @@ type channelOpenConfirmMsg struct {
 const msgChannelOpenFailure = 92
 
 type channelOpenFailureMsg struct {
-	PeersID  uint32 `sshtype:"92"`
+	PeersId  uint32 `sshtype:"92"`
 	Reason   RejectionReason
 	Message  string
 	Language string
@@ -202,7 +202,7 @@ type channelOpenFailureMsg struct {
 const msgChannelRequest = 98
 
 type channelRequestMsg struct {
-	PeersID             uint32 `sshtype:"98"`
+	PeersId             uint32 `sshtype:"98"`
 	Request             string
 	WantReply           bool
 	RequestSpecificData []byte `ssh:"rest"`
@@ -212,28 +212,28 @@ type channelRequestMsg struct {
 const msgChannelSuccess = 99
 
 type channelRequestSuccessMsg struct {
-	PeersID uint32 `sshtype:"99"`
+	PeersId uint32 `sshtype:"99"`
 }
 
 // See RFC 4254, section 5.4.
 const msgChannelFailure = 100
 
 type channelRequestFailureMsg struct {
-	PeersID uint32 `sshtype:"100"`
+	PeersId uint32 `sshtype:"100"`
 }
 
 // See RFC 4254, section 5.3
 const msgChannelClose = 97
 
 type channelCloseMsg struct {
-	PeersID uint32 `sshtype:"97"`
+	PeersId uint32 `sshtype:"97"`
 }
 
 // See RFC 4254, section 5.3
 const msgChannelEOF = 96
 
 type channelEOFMsg struct {
-	PeersID uint32 `sshtype:"96"`
+	PeersId uint32 `sshtype:"96"`
 }
 
 // See RFC 4254, section 4
@@ -263,7 +263,7 @@ type globalRequestFailureMsg struct {
 const msgChannelWindowAdjust = 93
 
 type windowAdjustMsg struct {
-	PeersID         uint32 `sshtype:"93"`
+	PeersId         uint32 `sshtype:"93"`
 	AdditionalBytes uint32
 }
 

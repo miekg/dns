@@ -50,23 +50,15 @@ func TestVectors(t *testing.T) {
 	}
 }
 
-func millionA() string {
+func TestMillionA(t *testing.T) {
 	md := New()
 	for i := 0; i < 100000; i++ {
 		io.WriteString(md, "aaaaaaaaaa")
 	}
-	return fmt.Sprintf("%x", md.Sum(nil))
-}
-
-func TestMillionA(t *testing.T) {
-	const out = "52783243c1697bdbe16d37f97f68f08325dc1528"
-	if s := millionA(); s != out {
+	out := "52783243c1697bdbe16d37f97f68f08325dc1528"
+	s := fmt.Sprintf("%x", md.Sum(nil))
+	if s != out {
 		t.Fatalf("RIPEMD-160 (1 million 'a') = %s, expected %s", s, out)
 	}
-}
-
-func BenchmarkMillionA(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		millionA()
-	}
+	md.Reset()
 }

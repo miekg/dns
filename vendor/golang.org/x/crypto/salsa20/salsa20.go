@@ -32,7 +32,7 @@ import (
 // be either 8 or 24 bytes long.
 func XORKeyStream(out, in []byte, nonce []byte, key *[32]byte) {
 	if len(out) < len(in) {
-		panic("salsa20: output smaller than input")
+		in = in[:len(out)]
 	}
 
 	var subNonce [16]byte

@@ -89,15 +89,9 @@ func ReadPassword(fd int) ([]byte, error) {
 		return nil, err
 	}
 
-	defer windows.SetConsoleMode(windows.Handle(fd), old)
+	defer func() {
+		windows.SetConsoleMode(windows.Handle(fd), old)
+	}()
 
-	var h windows.Handle
-	p, _ := windows.GetCurrentProcess()
-	if err := windows.DuplicateHandle(p, windows.Handle(fd), p, &h, 0, false, windows.DUPLICATE_SAME_ACCESS); err != nil {
-		return nil, err
-	}
-
-	f := os.NewFile(uintptr(h), "stdin")
-	defer f.Close()
-	return readPasswordLine(f)
+	return readPasswordLine(os.NewFile(uintptr(fd), "stdin"))
 }

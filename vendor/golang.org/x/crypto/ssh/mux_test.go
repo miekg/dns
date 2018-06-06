@@ -108,6 +108,10 @@ func TestMuxReadWrite(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Write: %v", err)
 		}
+		err = s.Close()
+		if err != nil {
+			t.Fatalf("Close: %v", err)
+		}
 	}()
 
 	var buf [1024]byte
