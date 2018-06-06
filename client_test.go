@@ -606,7 +606,5 @@ func TestDoHExchange(t *testing.T) {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 
-	t.Log(r)
-
 	// TODO: proper tests for this
 }
