@@ -311,7 +311,7 @@ func TestTKEY(t *testing.T) {
 
 	// Make sure we can parse our string output
 	tkey.Hdr.Class = ClassINET // https://github.com/miekg/dns/issues/577
-	newRR, newError := NewRR(tkey.String())
+	_, newError := NewRR(tkey.String())
 	if newError != nil {
 		t.Fatalf("unable to parse TKEY string: %s", newError)
 	}
