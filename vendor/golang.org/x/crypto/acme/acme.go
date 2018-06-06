@@ -14,7 +14,6 @@
 package acme
 
 import (
-	"bytes"
 	"context"
 	"crypto"
 	"crypto/ecdsa"
@@ -33,7 +32,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -76,6 +74,22 @@ type Client struct {
 	// will have no effect.
 	DirectoryURL string
 
+	// RetryBackoff computes the duration after which the nth retry of a failed request
+	// should occur. The value of n for the first call on failure is 1.
+	// The values of r and resp are the request and response of the last failed attempt.
+	// If the returned value is negative or zero, no more retries are done and an error
+	// is returned to the caller of the original method.
+	//
+	// Requests which result in a 4xx client error are not retried,
+	// except for 400 Bad Request due to "bad nonce" errors and 429 Too Many Requests.
+	//
+	// If RetryBackoff is nil, a truncated exponential backoff algorithm
+	// with the ceiling of 10 seconds is used, where each subsequent retry n
+	// is done after either ("Retry-After" + jitter) or (2^n seconds + jitter),
+	// preferring the former if "Retry-After" header is found in the resp.
+	// The jitter is a random value up to 1 second.
+	RetryBackoff func(n int, r *http.Request, resp *http.Response) time.Duration
+
 	dirMu sync.Mutex // guards writes to dir
 	dir   *Directory // cached result of Client's Discover method
 
@@ -99,15 +113,12 @@ func (c *Client) Discover(ctx context.Context) (Directory, error) {
 	if dirURL == "" {
 		dirURL = LetsEncryptURL
 	}
-	res, err := c.get(ctx, dirURL)
+	res, err := c.get(ctx, dirURL, wantStatus(http.StatusOK))
 	if err != nil {
 		return Directory{}, err
 	}
 	defer res.Body.Close()
 	c.addNonce(res.Header)
-	if res.StatusCode != http.StatusOK {
-		return Directory{}, responseError(res)
-	}
 
 	var v struct {
 		Reg    string `json:"new-reg"`
@@ -166,14 +177,11 @@ func (c *Client) CreateCert(ctx context.Context, csr []byte, exp time.Duration, 
 		req.NotAfter = now.Add(exp).Format(time.RFC3339)
 	}
 
-	res, err := c.retryPostJWS(ctx, c.Key, c.dir.CertURL, req)
+	res, err := c.post(ctx, c.Key, c.dir.CertURL, req, wantStatus(http.StatusCreated))
 	if err != nil {
 		return nil, "", err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusCreated {
-		return nil, "", responseError(res)
-	}
 
 	curl := res.Header.Get("Location") // cert permanent URL
 	if res.ContentLength == 0 {
@@ -196,26 +204,11 @@ func (c *Client) CreateCert(ctx context.Context, csr []byte, exp time.Duration, 
 // Callers are encouraged to parse the returned value to ensure the certificate is valid
 // and has expected features.
 func (c *Client) FetchCert(ctx context.Context, url string, bundle bool) ([][]byte, error) {
-	for {
-		res, err := c.get(ctx, url)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-		if res.StatusCode == http.StatusOK {
-			return c.responseCert(ctx, res, bundle)
-		}
-		if res.StatusCode > 299 {
-			return nil, responseError(res)
-		}
-		d := retryAfter(res.Header.Get("Retry-After"), 3*time.Second)
-		select {
-		case <-time.After(d):
-			// retry
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		}
+	res, err := c.get(ctx, url, wantStatus(http.StatusOK))
+	if err != nil {
+		return nil, err
 	}
+	return c.responseCert(ctx, res, bundle)
 }
 
 // RevokeCert revokes a previously issued certificate cert, provided in DER format.
@@ -241,14 +234,11 @@ func (c *Client) RevokeCert(ctx context.Context, key crypto.Signer, cert []byte,
 	if key == nil {
 		key = c.Key
 	}
-	res, err := c.retryPostJWS(ctx, key, c.dir.RevokeURL, body)
+	res, err := c.post(ctx, key, c.dir.RevokeURL, body, wantStatus(http.StatusOK))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return responseError(res)
-	}
 	return nil
 }
 
@@ -329,14 +319,11 @@ func (c *Client) Authorize(ctx context.Context, domain string) (*Authorization, 
 		Resource:   "new-authz",
 		Identifier: authzID{Type: "dns", Value: domain},
 	}
-	res, err := c.retryPostJWS(ctx, c.Key, c.dir.AuthzURL, req)
+	res, err := c.post(ctx, c.Key, c.dir.AuthzURL, req, wantStatus(http.StatusCreated))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusCreated {
-		return nil, responseError(res)
-	}
 
 	var v wireAuthz
 	if err := json.NewDecoder(res.Body).Decode(&v); err != nil {
@@ -353,14 +340,11 @@ func (c *Client) Authorize(ctx context.Context, domain string) (*Authorization, 
 // If a caller needs to poll an authorization until its status is final,
 // see the WaitAuthorization method.
 func (c *Client) GetAuthorization(ctx context.Context, url string) (*Authorization, error) {
-	res, err := c.get(ctx, url)
+	res, err := c.get(ctx, url, wantStatus(http.StatusOK, http.StatusAccepted))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
-		return nil, responseError(res)
-	}
 	var v wireAuthz
 	if err := json.NewDecoder(res.Body).Decode(&v); err != nil {
 		return nil, fmt.Errorf("acme: invalid response: %v", err)
@@ -387,56 +371,58 @@ func (c *Client) RevokeAuthorization(ctx context.Context, url string) error {
 		Status:   "deactivated",
 		Delete:   true,
 	}
-	res, err := c.retryPostJWS(ctx, c.Key, url, req)
+	res, err := c.post(ctx, c.Key, url, req, wantStatus(http.StatusOK))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return responseError(res)
-	}
 	return nil
 }
 
 // WaitAuthorization polls an authorization at the given URL
 // until it is in one of the final states, StatusValid or StatusInvalid,
-// or the context is done.
+// the ACME CA responded with a 4xx error code, or the context is done.
 //
 // It returns a non-nil Authorization only if its Status is StatusValid.
 // In all other cases WaitAuthorization returns an error.
 // If the Status is StatusInvalid, the returned error is of type *AuthorizationError.
 func (c *Client) WaitAuthorization(ctx context.Context, url string) (*Authorization, error) {
-	sleep := sleeper(ctx)
 	for {
-		res, err := c.get(ctx, url)
+		res, err := c.get(ctx, url, wantStatus(http.StatusOK, http.StatusAccepted))
 		if err != nil {
 			return nil, err
 		}
-		retry := res.Header.Get("Retry-After")
-		if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
-			res.Body.Close()
-			if err := sleep(retry, 1); err != nil {
-				return nil, err
-			}
-			continue
-		}
+
 		var raw wireAuthz
 		err = json.NewDecoder(res.Body).Decode(&raw)
 		res.Body.Close()
-		if err != nil {
-			if err := sleep(retry, 0); err != nil {
-				return nil, err
-			}
-			continue
-		}
-		if raw.Status == StatusValid {
+		switch {
+		case err != nil:
+			// Skip and retry.
+		case raw.Status == StatusValid:
 			return raw.authorization(url), nil
-		}
-		if raw.Status == StatusInvalid {
+		case raw.Status == StatusInvalid:
 			return nil, raw.error(url)
 		}
-		if err := sleep(retry, 0); err != nil {
-			return nil, err
+
+		// Exponential backoff is implemented in c.get above.
+		// This is just to prevent continuously hitting the CA
+		// while waiting for a final authorization status.
+		d := retryAfter(res.Header.Get("Retry-After"))
+		if d == 0 {
+			// Given that the fastest challenges TLS-SNI and HTTP-01
+			// require a CA to make at least 1 network round trip
+			// and most likely persist a challenge state,
+			// this default delay seems reasonable.
+			d = time.Second
+		}
+		t := time.NewTimer(d)
+		select {
+		case <-ctx.Done():
+			t.Stop()
+			return nil, ctx.Err()
+		case <-t.C:
+			// Retry.
 		}
 	}
 }
@@ -445,14 +431,11 @@ func (c *Client) WaitAuthorization(ctx context.Context, url string) (*Authorizat
 //
 // A client typically polls a challenge status using this method.
 func (c *Client) GetChallenge(ctx context.Context, url string) (*Challenge, error) {
-	res, err := c.get(ctx, url)
+	res, err := c.get(ctx, url, wantStatus(http.StatusOK, http.StatusAccepted))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
-		return nil, responseError(res)
-	}
 	v := wireChallenge{URI: url}
 	if err := json.NewDecoder(res.Body).Decode(&v); err != nil {
 		return nil, fmt.Errorf("acme: invalid response: %v", err)
@@ -479,16 +462,14 @@ func (c *Client) Accept(ctx context.Context, chal *Challenge) (*Challenge, error
 		Type:     chal.Type,
 		Auth:     auth,
 	}
-	res, err := c.retryPostJWS(ctx, c.Key, chal.URI, req)
+	res, err := c.post(ctx, c.Key, chal.URI, req, wantStatus(
+		http.StatusOK,       // according to the spec
+		http.StatusAccepted, // Let's Encrypt: see https://goo.gl/WsJ7VT (acme-divergences.md)
+	))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	// Note: the protocol specifies 200 as the expected response code, but
-	// letsencrypt seems to be returning 202.
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
-		return nil, responseError(res)
-	}
 
 	var v wireChallenge
 	if err := json.NewDecoder(res.Body).Decode(&v); err != nil {
@@ -612,14 +593,14 @@ func (c *Client) doReg(ctx context.Context, url string, typ string, acct *Accoun
 		req.Contact = acct.Contact
 		req.Agreement = acct.AgreedTerms
 	}
-	res, err := c.retryPostJWS(ctx, c.Key, url, req)
+	res, err := c.post(ctx, c.Key, url, req, wantStatus(
+		http.StatusOK,      // updates and deletes
+		http.StatusCreated, // new account creation
+	))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, responseError(res)
-	}
 
 	var v struct {
 		Contact        []string
@@ -647,59 +628,6 @@ func (c *Client) doReg(ctx context.Context, url string, typ string, acct *Accoun
 		Authorizations: v.Authorizations,
 		Certificates:   v.Certificates,
 	}, nil
-}
-
-// retryPostJWS will retry calls to postJWS if there is a badNonce error,
-// clearing the stored nonces after each error.
-// If the response was 4XX-5XX, then responseError is called on the body,
-// the body is closed, and the error returned.
-func (c *Client) retryPostJWS(ctx context.Context, key crypto.Signer, url string, body interface{}) (*http.Response, error) {
-	sleep := sleeper(ctx)
-	for {
-		res, err := c.postJWS(ctx, key, url, body)
-		if err != nil {
-			return nil, err
-		}
-		// handle errors 4XX-5XX with responseError
-		if res.StatusCode >= 400 && res.StatusCode <= 599 {
-			err := responseError(res)
-			res.Body.Close()
-			// according to spec badNonce is urn:ietf:params:acme:error:badNonce
-			// however, acme servers in the wild return their version of the error
-			// https://tools.ietf.org/html/draft-ietf-acme-acme-02#section-5.4
-			if ae, ok := err.(*Error); ok && strings.HasSuffix(strings.ToLower(ae.ProblemType), ":badnonce") {
-				// clear any nonces that we might've stored that might now be
-				// considered bad
-				c.clearNonces()
-				retry := res.Header.Get("Retry-After")
-				if err := sleep(retry, 1); err != nil {
-					return nil, err
-				}
-				continue
-			}
-			return nil, err
-		}
-		return res, nil
-	}
-}
-
-// postJWS signs the body with the given key and POSTs it to the provided url.
-// The body argument must be JSON-serializable.
-func (c *Client) postJWS(ctx context.Context, key crypto.Signer, url string, body interface{}) (*http.Response, error) {
-	nonce, err := c.popNonce(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	b, err := jwsEncodeJSON(body, key, nonce)
-	if err != nil {
-		return nil, err
-	}
-	res, err := c.post(ctx, url, "application/jose+json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	c.addNonce(res.Header)
-	return res, nil
 }
 
 // popNonce returns a nonce value previously stored with c.addNonce
@@ -742,58 +670,12 @@ func (c *Client) addNonce(h http.Header) {
 	c.nonces[v] = struct{}{}
 }
 
-func (c *Client) httpClient() *http.Client {
-	if c.HTTPClient != nil {
-		return c.HTTPClient
-	}
-	return http.DefaultClient
-}
-
-func (c *Client) get(ctx context.Context, urlStr string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", urlStr, nil)
-	if err != nil {
-		return nil, err
-	}
-	return c.do(ctx, req)
-}
-
-func (c *Client) head(ctx context.Context, urlStr string) (*http.Response, error) {
-	req, err := http.NewRequest("HEAD", urlStr, nil)
-	if err != nil {
-		return nil, err
-	}
-	return c.do(ctx, req)
-}
-
-func (c *Client) post(ctx context.Context, urlStr, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest("POST", urlStr, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", contentType)
-	return c.do(ctx, req)
-}
-
-func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, error) {
-	res, err := c.httpClient().Do(req.WithContext(ctx))
-	if err != nil {
-		select {
-		case <-ctx.Done():
-			// Prefer the unadorned context error.
-			// (The acme package had tests assuming this, previously from ctxhttp's
-			// behavior, predating net/http supporting contexts natively)
-			// TODO(bradfitz): reconsider this in the future. But for now this
-			// requires no test updates.
-			return nil, ctx.Err()
-		default:
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
 func (c *Client) fetchNonce(ctx context.Context, url string) (string, error) {
-	resp, err := c.head(ctx, url)
+	r, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.doNoRetry(ctx, r)
 	if err != nil {
 		return "", err
 	}
@@ -845,24 +727,6 @@ func (c *Client) responseCert(ctx context.Context, res *http.Response, bundle bo
 	return cert, nil
 }
 
-// responseError creates an error of Error type from resp.
-func responseError(resp *http.Response) error {
-	// don't care if ReadAll returns an error:
-	// json.Unmarshal will fail in that case anyway
-	b, _ := ioutil.ReadAll(resp.Body)
-	e := &wireError{Status: resp.StatusCode}
-	if err := json.Unmarshal(b, e); err != nil {
-		// this is not a regular error response:
-		// populate detail with anything we received,
-		// e.Status will already contain HTTP response code value
-		e.Detail = string(b)
-		if e.Detail == "" {
-			e.Detail = resp.Status
-		}
-	}
-	return e.error(resp.Header)
-}
-
 // chainCert fetches CA certificate chain recursively by following "up" links.
 // Each recursive call increments the depth by 1, resulting in an error
 // if the recursion level reaches maxChainLen.
@@ -873,14 +737,11 @@ func (c *Client) chainCert(ctx context.Context, url string, depth int) ([][]byte
 		return nil, errors.New("acme: certificate chain is too deep")
 	}
 
-	res, err := c.get(ctx, url)
+	res, err := c.get(ctx, url, wantStatus(http.StatusOK))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return nil, responseError(res)
-	}
 	b, err := ioutil.ReadAll(io.LimitReader(res.Body, maxCertSize+1))
 	if err != nil {
 		return nil, err
@@ -923,65 +784,6 @@ func linkHeader(h http.Header, rel string) []string {
 		}
 	}
 	return links
-}
-
-// sleeper returns a function that accepts the Retry-After HTTP header value
-// and an increment that's used with backoff to increasingly sleep on
-// consecutive calls until the context is done. If the Retry-After header
-// cannot be parsed, then backoff is used with a maximum sleep time of 10
-// seconds.
-func sleeper(ctx context.Context) func(ra string, inc int) error {
-	var count int
-	return func(ra string, inc int) error {
-		count += inc
-		d := backoff(count, 10*time.Second)
-		d = retryAfter(ra, d)
-		wakeup := time.NewTimer(d)
-		defer wakeup.Stop()
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-wakeup.C:
-			return nil
-		}
-	}
-}
-
-// retryAfter parses a Retry-After HTTP header value,
-// trying to convert v into an int (seconds) or use http.ParseTime otherwise.
-// It returns d if v cannot be parsed.
-func retryAfter(v string, d time.Duration) time.Duration {
-	if i, err := strconv.Atoi(v); err == nil {
-		return time.Duration(i) * time.Second
-	}
-	t, err := http.ParseTime(v)
-	if err != nil {
-		return d
-	}
-	return t.Sub(timeNow())
-}
-
-// backoff computes a duration after which an n+1 retry iteration should occur
-// using truncated exponential backoff algorithm.
-//
-// The n argument is always bounded between 0 and 30.
-// The max argument defines upper bound for the returned value.
-func backoff(n int, max time.Duration) time.Duration {
-	if n < 0 {
-		n = 0
-	}
-	if n > 30 {
-		n = 30
-	}
-	var d time.Duration
-	if x, err := rand.Int(rand.Reader, big.NewInt(1000)); err == nil {
-		d = time.Duration(x.Int64()) * time.Millisecond
-	}
-	d += time.Duration(1<<uint(n)) * time.Second
-	if d > max {
-		return max
-	}
-	return d
 }
 
 // keyAuth generates a key authorization string for a given token.
