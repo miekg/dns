@@ -104,7 +104,7 @@ func RateLimit(err error) (time.Duration, bool) {
 	if e.Header == nil {
 		return 0, true
 	}
-	return retryAfter(e.Header.Get("Retry-After"), 0), true
+	return retryAfter(e.Header.Get("Retry-After")), true
 }
 
 // Account is a user account. It is associated with a private key.
