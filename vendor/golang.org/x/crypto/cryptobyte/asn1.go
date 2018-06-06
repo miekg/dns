@@ -23,12 +23,6 @@ func (b *Builder) AddASN1Int64(v int64) {
 	b.addASN1Signed(asn1.INTEGER, v)
 }
 
-// AddASN1Int64WithTag appends a DER-encoded ASN.1 INTEGER with the
-// given tag.
-func (b *Builder) AddASN1Int64WithTag(v int64, tag asn1.Tag) {
-	b.addASN1Signed(tag, v)
-}
-
 // AddASN1Enum appends a DER-encoded ASN.1 ENUMERATION.
 func (b *Builder) AddASN1Enum(v int64) {
 	b.addASN1Signed(asn1.ENUM, v)
@@ -230,9 +224,6 @@ func (b *Builder) AddASN1(tag asn1.Tag, f BuilderContinuation) {
 
 // String
 
-// ReadASN1Boolean decodes an ASN.1 INTEGER and converts it to a boolean
-// representation into out and advances. It reports whether the read
-// was successful.
 func (s *String) ReadASN1Boolean(out *bool) bool {
 	var bytes String
 	if !s.ReadASN1(&bytes, asn1.INTEGER) || len(bytes) != 1 {
@@ -254,8 +245,8 @@ func (s *String) ReadASN1Boolean(out *bool) bool {
 var bigIntType = reflect.TypeOf((*big.Int)(nil)).Elem()
 
 // ReadASN1Integer decodes an ASN.1 INTEGER into out and advances. If out does
-// not point to an integer or to a big.Int, it panics. It reports whether the
-// read was successful.
+// not point to an integer or to a big.Int, it panics. It returns true on
+// success and false on error.
 func (s *String) ReadASN1Integer(out interface{}) bool {
 	if reflect.TypeOf(out).Kind() != reflect.Ptr {
 		panic("out is not a pointer")
@@ -368,16 +359,8 @@ func asn1Unsigned(out *uint64, n []byte) bool {
 	return true
 }
 
-// ReadASN1Int64WithTag decodes an ASN.1 INTEGER with the given tag into out
-// and advances. It reports whether the read was successful and resulted in a
-// value that can be represented in an int64.
-func (s *String) ReadASN1Int64WithTag(out *int64, tag asn1.Tag) bool {
-	var bytes String
-	return s.ReadASN1(&bytes, tag) && checkASN1Integer(bytes) && asn1Signed(out, bytes)
-}
-
-// ReadASN1Enum decodes an ASN.1 ENUMERATION into out and advances. It reports
-// whether the read was successful.
+// ReadASN1Enum decodes an ASN.1 ENUMERATION into out and advances. It returns
+// true on success and false on error.
 func (s *String) ReadASN1Enum(out *int) bool {
 	var bytes String
 	var i int64
@@ -409,7 +392,7 @@ func (s *String) readBase128Int(out *int) bool {
 }
 
 // ReadASN1ObjectIdentifier decodes an ASN.1 OBJECT IDENTIFIER into out and
-// advances. It reports whether the read was successful.
+// advances. It returns true on success and false on error.
 func (s *String) ReadASN1ObjectIdentifier(out *encoding_asn1.ObjectIdentifier) bool {
 	var bytes String
 	if !s.ReadASN1(&bytes, asn1.OBJECT_IDENTIFIER) || len(bytes) == 0 {
@@ -448,7 +431,7 @@ func (s *String) ReadASN1ObjectIdentifier(out *encoding_asn1.ObjectIdentifier) b
 }
 
 // ReadASN1GeneralizedTime decodes an ASN.1 GENERALIZEDTIME into out and
-// advances. It reports whether the read was successful.
+// advances. It returns true on success and false on error.
 func (s *String) ReadASN1GeneralizedTime(out *time.Time) bool {
 	var bytes String
 	if !s.ReadASN1(&bytes, asn1.GeneralizedTime) {
@@ -466,8 +449,8 @@ func (s *String) ReadASN1GeneralizedTime(out *time.Time) bool {
 	return true
 }
 
-// ReadASN1BitString decodes an ASN.1 BIT STRING into out and advances.
-// It reports whether the read was successful.
+// ReadASN1BitString decodes an ASN.1 BIT STRING into out and advances. It
+// returns true on success and false on error.
 func (s *String) ReadASN1BitString(out *encoding_asn1.BitString) bool {
 	var bytes String
 	if !s.ReadASN1(&bytes, asn1.BIT_STRING) || len(bytes) == 0 {
@@ -488,8 +471,8 @@ func (s *String) ReadASN1BitString(out *encoding_asn1.BitString) bool {
 }
 
 // ReadASN1BitString decodes an ASN.1 BIT STRING into out and advances. It is
-// an error if the BIT STRING is not a whole number of bytes. It reports
-// whether the read was successful.
+// an error if the BIT STRING is not a whole number of bytes. This function
+// returns true on success and false on error.
 func (s *String) ReadASN1BitStringAsBytes(out *[]byte) bool {
 	var bytes String
 	if !s.ReadASN1(&bytes, asn1.BIT_STRING) || len(bytes) == 0 {
@@ -506,14 +489,14 @@ func (s *String) ReadASN1BitStringAsBytes(out *[]byte) bool {
 
 // ReadASN1Bytes reads the contents of a DER-encoded ASN.1 element (not including
 // tag and length bytes) into out, and advances. The element must match the
-// given tag. It reports whether the read was successful.
+// given tag. It returns true on success and false on error.
 func (s *String) ReadASN1Bytes(out *[]byte, tag asn1.Tag) bool {
 	return s.ReadASN1((*String)(out), tag)
 }
 
 // ReadASN1 reads the contents of a DER-encoded ASN.1 element (not including
 // tag and length bytes) into out, and advances. The element must match the
-// given tag. It reports whether the read was successful.
+// given tag. It returns true on success and false on error.
 //
 // Tags greater than 30 are not supported (i.e. low-tag-number format only).
 func (s *String) ReadASN1(out *String, tag asn1.Tag) bool {
@@ -526,7 +509,7 @@ func (s *String) ReadASN1(out *String, tag asn1.Tag) bool {
 
 // ReadASN1Element reads the contents of a DER-encoded ASN.1 element (including
 // tag and length bytes) into out, and advances. The element must match the
-// given tag. It reports whether the read was successful.
+// given tag. It returns true on success and false on error.
 //
 // Tags greater than 30 are not supported (i.e. low-tag-number format only).
 func (s *String) ReadASN1Element(out *String, tag asn1.Tag) bool {
@@ -538,8 +521,8 @@ func (s *String) ReadASN1Element(out *String, tag asn1.Tag) bool {
 }
 
 // ReadAnyASN1 reads the contents of a DER-encoded ASN.1 element (not including
-// tag and length bytes) into out, sets outTag to its tag, and advances.
-// It reports whether the read was successful.
+// tag and length bytes) into out, sets outTag to its tag, and advances. It
+// returns true on success and false on error.
 //
 // Tags greater than 30 are not supported (i.e. low-tag-number format only).
 func (s *String) ReadAnyASN1(out *String, outTag *asn1.Tag) bool {
@@ -548,14 +531,14 @@ func (s *String) ReadAnyASN1(out *String, outTag *asn1.Tag) bool {
 
 // ReadAnyASN1Element reads the contents of a DER-encoded ASN.1 element
 // (including tag and length bytes) into out, sets outTag to is tag, and
-// advances. It reports whether the read was successful.
+// advances. It returns true on success and false on error.
 //
 // Tags greater than 30 are not supported (i.e. low-tag-number format only).
 func (s *String) ReadAnyASN1Element(out *String, outTag *asn1.Tag) bool {
 	return s.readASN1(out, outTag, false /* include header */)
 }
 
-// PeekASN1Tag reports whether the next ASN.1 value on the string starts with
+// PeekASN1Tag returns true if the next ASN.1 value on the string starts with
 // the given tag.
 func (s String) PeekASN1Tag(tag asn1.Tag) bool {
 	if len(s) == 0 {
@@ -564,8 +547,7 @@ func (s String) PeekASN1Tag(tag asn1.Tag) bool {
 	return asn1.Tag(s[0]) == tag
 }
 
-// SkipASN1 reads and discards an ASN.1 element with the given tag. It
-// reports whether the operation was successful.
+// SkipASN1 reads and discards an ASN.1 element with the given tag.
 func (s *String) SkipASN1(tag asn1.Tag) bool {
 	var unused String
 	return s.ReadASN1(&unused, tag)
@@ -574,7 +556,7 @@ func (s *String) SkipASN1(tag asn1.Tag) bool {
 // ReadOptionalASN1 attempts to read the contents of a DER-encoded ASN.1
 // element (not including tag and length bytes) tagged with the given tag into
 // out. It stores whether an element with the tag was found in outPresent,
-// unless outPresent is nil. It reports whether the read was successful.
+// unless outPresent is nil. It returns true on success and false on error.
 func (s *String) ReadOptionalASN1(out *String, outPresent *bool, tag asn1.Tag) bool {
 	present := s.PeekASN1Tag(tag)
 	if outPresent != nil {
@@ -587,7 +569,7 @@ func (s *String) ReadOptionalASN1(out *String, outPresent *bool, tag asn1.Tag) b
 }
 
 // SkipOptionalASN1 advances s over an ASN.1 element with the given tag, or
-// else leaves s unchanged. It reports whether the operation was successful.
+// else leaves s unchanged.
 func (s *String) SkipOptionalASN1(tag asn1.Tag) bool {
 	if !s.PeekASN1Tag(tag) {
 		return true
@@ -599,8 +581,8 @@ func (s *String) SkipOptionalASN1(tag asn1.Tag) bool {
 // ReadOptionalASN1Integer attempts to read an optional ASN.1 INTEGER
 // explicitly tagged with tag into out and advances. If no element with a
 // matching tag is present, it writes defaultValue into out instead. If out
-// does not point to an integer or to a big.Int, it panics. It reports
-// whether the read was successful.
+// does not point to an integer or to a big.Int, it panics. It returns true on
+// success and false on error.
 func (s *String) ReadOptionalASN1Integer(out interface{}, tag asn1.Tag, defaultValue interface{}) bool {
 	if reflect.TypeOf(out).Kind() != reflect.Ptr {
 		panic("out is not a pointer")
@@ -637,8 +619,8 @@ func (s *String) ReadOptionalASN1Integer(out interface{}, tag asn1.Tag, defaultV
 
 // ReadOptionalASN1OctetString attempts to read an optional ASN.1 OCTET STRING
 // explicitly tagged with tag into out and advances. If no element with a
-// matching tag is present, it sets "out" to nil instead. It reports
-// whether the read was successful.
+// matching tag is present, it writes defaultValue into out instead. It returns
+// true on success and false on error.
 func (s *String) ReadOptionalASN1OctetString(out *[]byte, outPresent *bool, tag asn1.Tag) bool {
 	var present bool
 	var child String
@@ -662,7 +644,6 @@ func (s *String) ReadOptionalASN1OctetString(out *[]byte, outPresent *bool, tag 
 
 // ReadOptionalASN1Boolean sets *out to the value of the next ASN.1 BOOLEAN or,
 // if the next bytes are not an ASN.1 BOOLEAN, to the value of defaultValue.
-// It reports whether the operation was successful.
 func (s *String) ReadOptionalASN1Boolean(out *bool, defaultValue bool) bool {
 	var present bool
 	var child String

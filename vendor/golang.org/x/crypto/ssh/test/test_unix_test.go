@@ -10,8 +10,6 @@ package test
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -27,8 +25,7 @@ import (
 	"golang.org/x/crypto/ssh/testdata"
 )
 
-const (
-	defaultSshdConfig = `
+const sshd_config = `
 Protocol 2
 Banner {{.Dir}}/banner
 HostKey {{.Dir}}/id_rsa
@@ -53,17 +50,8 @@ RhostsRSAAuthentication no
 HostbasedAuthentication no
 PubkeyAcceptedKeyTypes=*
 `
-	multiAuthSshdConfigTail = `
-UsePAM yes
-PasswordAuthentication yes
-ChallengeResponseAuthentication yes
-AuthenticationMethods {{.AuthMethods}}
-`
-)
 
-var configTmpl = map[string]*template.Template{
-	"default":   template.Must(template.New("").Parse(defaultSshdConfig)),
-	"MultiAuth": template.Must(template.New("").Parse(defaultSshdConfig + multiAuthSshdConfigTail))}
+var configTmpl = template.Must(template.New("").Parse(sshd_config))
 
 type server struct {
 	t          *testing.T
@@ -71,10 +59,6 @@ type server struct {
 	configfile string
 	cmd        *exec.Cmd
 	output     bytes.Buffer // holds stderr from sshd process
-
-	testUser     string // test username for sshd
-	testPasswd   string // test password for sshd
-	sshdTestPwSo string // dynamic library to inject a custom password into sshd
 
 	// Client half of the network connection.
 	clientConn net.Conn
@@ -202,20 +186,6 @@ func (s *server) TryDialWithAddr(config *ssh.ClientConfig, addr string) (*ssh.Cl
 	s.cmd.Stdin = f
 	s.cmd.Stdout = f
 	s.cmd.Stderr = &s.output
-
-	if s.sshdTestPwSo != "" {
-		if s.testUser == "" {
-			s.t.Fatal("user missing from sshd_test_pw.so config")
-		}
-		if s.testPasswd == "" {
-			s.t.Fatal("password missing from sshd_test_pw.so config")
-		}
-		s.cmd.Env = append(os.Environ(),
-			fmt.Sprintf("LD_PRELOAD=%s", s.sshdTestPwSo),
-			fmt.Sprintf("TEST_USER=%s", s.testUser),
-			fmt.Sprintf("TEST_PASSWD=%s", s.testPasswd))
-	}
-
 	if err := s.cmd.Start(); err != nil {
 		s.t.Fail()
 		s.Shutdown()
@@ -266,48 +236,10 @@ func writeFile(path string, contents []byte) {
 	}
 }
 
-// generate random password
-func randomPassword() (string, error) {
-	b := make([]byte, 12)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
-}
-
-// setTestPassword is used for setting user and password data for sshd_test_pw.so
-// This function also checks that ./sshd_test_pw.so exists and if not calls s.t.Skip()
-func (s *server) setTestPassword(user, passwd string) error {
-	wd, _ := os.Getwd()
-	wrapper := filepath.Join(wd, "sshd_test_pw.so")
-	if _, err := os.Stat(wrapper); err != nil {
-		s.t.Skip(fmt.Errorf("sshd_test_pw.so is not available"))
-		return err
-	}
-
-	s.sshdTestPwSo = wrapper
-	s.testUser = user
-	s.testPasswd = passwd
-	return nil
-}
-
 // newServer returns a new mock ssh server.
 func newServer(t *testing.T) *server {
-	return newServerForConfig(t, "default", map[string]string{})
-}
-
-// newServerForConfig returns a new mock ssh server.
-func newServerForConfig(t *testing.T, config string, configVars map[string]string) *server {
 	if testing.Short() {
 		t.Skip("skipping test due to -short")
-	}
-	u, err := user.Current()
-	if err != nil {
-		t.Fatalf("user.Current: %v", err)
-	}
-	if u.Name == "root" {
-		t.Skip("skipping test because current user is root")
 	}
 	dir, err := ioutil.TempDir("", "sshtest")
 	if err != nil {
@@ -317,11 +249,9 @@ func newServerForConfig(t *testing.T, config string, configVars map[string]strin
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := configTmpl[config]; ok == false {
-		t.Fatal(fmt.Errorf("Invalid server config '%s'", config))
-	}
-	configVars["Dir"] = dir
-	err = configTmpl[config].Execute(f, configVars)
+	err = configTmpl.Execute(f, map[string]string{
+		"Dir": dir,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -341,7 +271,7 @@ func newServerForConfig(t *testing.T, config string, configVars map[string]strin
 	}
 
 	var authkeys bytes.Buffer
-	for k := range testdata.PEMBytes {
+	for k, _ := range testdata.PEMBytes {
 		authkeys.Write(ssh.MarshalAuthorizedKey(testPublicKeys[k]))
 	}
 	writeFile(filepath.Join(dir, "authorized_keys"), authkeys.Bytes())

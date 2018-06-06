@@ -13,13 +13,11 @@ import (
 )
 
 func TestReadVersion(t *testing.T) {
-	longVersion := strings.Repeat("SSH-2.0-bla", 50)[:253]
-	multiLineVersion := strings.Repeat("ignored\r\n", 20) + "SSH-2.0-bla\r\n"
+	longversion := strings.Repeat("SSH-2.0-bla", 50)[:253]
 	cases := map[string]string{
 		"SSH-2.0-bla\r\n":    "SSH-2.0-bla",
 		"SSH-2.0-bla\n":      "SSH-2.0-bla",
-		multiLineVersion:     "SSH-2.0-bla",
-		longVersion + "\r\n": longVersion,
+		longversion + "\r\n": longversion,
 	}
 
 	for in, want := range cases {
@@ -35,11 +33,9 @@ func TestReadVersion(t *testing.T) {
 }
 
 func TestReadVersionError(t *testing.T) {
-	longVersion := strings.Repeat("SSH-2.0-bla", 50)[:253]
-	multiLineVersion := strings.Repeat("ignored\r\n", 50) + "SSH-2.0-bla\r\n"
+	longversion := strings.Repeat("SSH-2.0-bla", 50)[:253]
 	cases := []string{
-		longVersion + "too-long\r\n",
-		multiLineVersion,
+		longversion + "too-long\r\n",
 	}
 	for _, in := range cases {
 		if _, err := readVersion(bytes.NewBufferString(in)); err == nil {
@@ -64,7 +60,7 @@ func TestExchangeVersionsBasic(t *testing.T) {
 func TestExchangeVersions(t *testing.T) {
 	cases := []string{
 		"not\x000allowed",
-		"not allowed\x01\r\n",
+		"not allowed\n",
 	}
 	for _, c := range cases {
 		buf := bytes.NewBufferString("SSH-2.0-bla\r\n")

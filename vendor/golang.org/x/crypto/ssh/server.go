@@ -166,9 +166,6 @@ type ServerConn struct {
 // unsuccessful, it closes the connection and returns an error.  The
 // Request and NewChannel channels must be serviced, or the connection
 // will hang.
-//
-// The returned error may be of type *ServerAuthError for
-// authentication errors.
 func NewServerConn(c net.Conn, config *ServerConfig) (*ServerConn, <-chan NewChannel, <-chan *Request, error) {
 	fullConf := *config
 	fullConf.SetDefaults()
@@ -259,7 +256,7 @@ func (s *connection) serverHandshake(config *ServerConfig) (*Permissions, error)
 func isAcceptableAlgo(algo string) bool {
 	switch algo {
 	case KeyAlgoRSA, KeyAlgoDSA, KeyAlgoECDSA256, KeyAlgoECDSA384, KeyAlgoECDSA521, KeyAlgoED25519,
-		CertAlgoRSAv01, CertAlgoDSAv01, CertAlgoECDSA256v01, CertAlgoECDSA384v01, CertAlgoECDSA521v01, CertAlgoED25519v01:
+		CertAlgoRSAv01, CertAlgoDSAv01, CertAlgoECDSA256v01, CertAlgoECDSA384v01, CertAlgoECDSA521v01:
 		return true
 	}
 	return false
@@ -295,13 +292,12 @@ func checkSourceAddress(addr net.Addr, sourceAddrs string) error {
 	return fmt.Errorf("ssh: remote address %v is not allowed because of source-address restriction", addr)
 }
 
-// ServerAuthError represents server authentication errors and is
-// sometimes returned by NewServerConn. It appends any authentication
-// errors that may occur, and is returned if all of the authentication
-// methods provided by the user failed to authenticate.
+// ServerAuthError implements the error interface. It appends any authentication
+// errors that may occur, and is returned if all of the authentication methods
+// provided by the user failed to authenticate.
 type ServerAuthError struct {
 	// Errors contains authentication errors returned by the authentication
-	// callback methods. The first entry is typically ErrNoAuth.
+	// callback methods.
 	Errors []error
 }
 
@@ -313,13 +309,6 @@ func (l ServerAuthError) Error() string {
 	return "[" + strings.Join(errs, ", ") + "]"
 }
 
-// ErrNoAuth is the error value returned if no
-// authentication method has been passed yet. This happens as a normal
-// part of the authentication loop, since the client first tries
-// 'none' authentication to discover available methods.
-// It is returned in ServerAuthError.Errors from NewServerConn.
-var ErrNoAuth = errors.New("ssh: no auth passed yet")
-
 func (s *connection) serverAuthenticate(config *ServerConfig) (*Permissions, error) {
 	sessionID := s.transport.getSessionID()
 	var cache pubKeyCache
@@ -327,7 +316,6 @@ func (s *connection) serverAuthenticate(config *ServerConfig) (*Permissions, err
 
 	authFailures := 0
 	var authErrs []error
-	var displayedBanner bool
 
 userAuthLoop:
 	for {
@@ -360,8 +348,7 @@ userAuthLoop:
 
 		s.user = userAuthReq.User
 
-		if !displayedBanner && config.BannerCallback != nil {
-			displayedBanner = true
+		if authFailures == 0 && config.BannerCallback != nil {
 			msg := config.BannerCallback(s)
 			if msg != "" {
 				bannerMsg := &userAuthBannerMsg{
@@ -374,7 +361,7 @@ userAuthLoop:
 		}
 
 		perms = nil
-		authErr := ErrNoAuth
+		authErr := errors.New("no auth passed yet")
 
 		switch userAuthReq.Method {
 		case "none":
