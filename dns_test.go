@@ -296,7 +296,7 @@ func TestTKEY(t *testing.T) {
 	if bytes.Compare(tkeyBytes, msg[0:offset]) != 0 {
 		t.Fatal("mismatched TKEY data after rewriting bytes")
 	}
-	t.Logf("got TKEY of: " + rr.String())
+
 	// Now add some bytes to this and make sure we can encode OtherData properly
 	tkey := rr.(*TKEY)
 	tkey.OtherData = "abcd"
@@ -308,13 +308,11 @@ func TestTKEY(t *testing.T) {
 	if offset != (len(tkeyBytes) + 2) {
 		t.Fatalf("mismatched TKEY RR size %d != %d", offset, len(tkeyBytes)+2)
 	}
-	t.Logf("modified to TKEY of: " + rr.String())
 
 	// Make sure we can parse our string output
 	tkey.Hdr.Class = ClassINET // https://github.com/miekg/dns/issues/577
-	newRR, newError := NewRR(tkey.String())
+	_, newError := NewRR(tkey.String())
 	if newError != nil {
 		t.Fatalf("unable to parse TKEY string: %s", newError)
 	}
-	t.Log("got reparsed TKEY of newRR: " + newRR.String())
 }
