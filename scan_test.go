@@ -2,10 +2,43 @@ package dns
 
 import (
 	"io/ioutil"
+	"net"
 	"os"
 	"strings"
 	"testing"
 )
+
+func TestParseZoneGenerate(t *testing.T) {
+	zone := "$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$"
+
+	wantRRs := []RR{
+		&A{Hdr: RR_Header{Name: "foo012.example.org."}, A: net.ParseIP("127.0.0.10")},
+		&A{Hdr: RR_Header{Name: "foo013.example.org."}, A: net.ParseIP("127.0.0.11")},
+		&A{Hdr: RR_Header{Name: "foo014.example.org."}, A: net.ParseIP("127.0.0.12")},
+	}
+	wantIdx := 0
+
+	tok := ParseZone(strings.NewReader(zone), "", "")
+	for x := range tok {
+		if wantIdx >= len(wantRRs) {
+			t.Fatalf("expected %d RRs, but got more", len(wantRRs))
+		}
+		if x.Error != nil {
+			t.Fatalf("expected no error, but got %s", x.Error)
+		}
+		if got, want := x.RR.Header().Name, wantRRs[wantIdx].Header().Name; got != want {
+			t.Fatalf("expected name %s, but got %s", want, got)
+		}
+		a, ok := x.RR.(*A)
+		if !ok {
+			t.Fatalf("expected *A RR, but got %T", x.RR)
+		}
+		if got, want := a.A, wantRRs[wantIdx].(*A).A; !got.Equal(want) {
+			t.Fatalf("expected A with IP %v, but got %v", got, want)
+		}
+		wantIdx++
+	}
+}
 
 func TestParseZoneInclude(t *testing.T) {
 
