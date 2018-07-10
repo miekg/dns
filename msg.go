@@ -923,58 +923,55 @@ func (dns *Msg) String() string {
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
 
-func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
-	l := 12 // Message header is always 12 bytes
-	for _, r := range dns.Question {
-		compressionLenHelper(compression, r.Name, l)
-		l += r.len()
-	}
-	l += compressionLenSlice(l, compression, dns.Answer)
-	l += compressionLenSlice(l, compression, dns.Ns)
-	l += compressionLenSlice(l, compression, dns.Extra)
-	return l
-}
-
 // compressedLen returns the message length when in compressed wire format
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
-	// We always return one more than needed.
+	lenFn := Len
 	if compress {
-		compression := map[string]int{}
-		return compressedLenWithCompressionMap(dns, compression)
+		lenFn = newCompressionLenFn(dns.Question)
 	}
-	l := 12 // Message header is always 12 bytes
 
-	for _, r := range dns.Question {
-		l += r.len()
+	l := 12 // Message header is always 12 bytes
+	for _, q := range dns.Question {
+		l += q.len()
 	}
 	for _, r := range dns.Answer {
 		if r != nil {
-			l += r.len()
+			l += lenFn(r)
 		}
 	}
 	for _, r := range dns.Ns {
 		if r != nil {
-			l += r.len()
+			l += lenFn(r)
 		}
 	}
 	for _, r := range dns.Extra {
 		if r != nil {
-			l += r.len()
+			l += lenFn(r)
 		}
 	}
 
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
-	initLen := lenp
-	for _, r := range rs {
+// newCompressionLenFn returns a function which returns the compressed length of
+// a given resource record.
+//
+// Calling the returned length function is not side-effect free, as the name of
+// the record might be added to the compression dictionary, and should only be
+// used for records of the same message.
+func newCompressionLenFn(qs []Question) func(RR) int {
+	c := map[string]int{}
+	l := 12
+	for _, q := range qs {
+		compressionLenHelper(c, q.Name, l)
+		l += q.len()
+	}
+
+	return func(r RR) int {
 		if r == nil {
-			continue
+			return 0
 		}
-		// TmpLen is to track len of record at 14bits boudaries
-		tmpLen := lenp
 
 		x := r.len()
 		// track this length, and the global length in len, while taking compression into account for both.
@@ -985,17 +982,16 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 			x += 1 - k
 		}
 
-		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
+		compressionLenHelper(c, r.Header().Name, l)
 		k, ok, _ = compressionLenSearchType(c, r)
 		if ok {
 			x += 1 - k
 		}
-		lenp += x
-		tmpLen = lenp
-		tmpLen += compressionLenHelperType(c, r, tmpLen)
+		l += x
+		compressionLenHelperType(c, r, l)
 
+		return x
 	}
-	return lenp - initLen
 }
 
 // Put the parts of the name in the compression map, return the size in bytes added in payload

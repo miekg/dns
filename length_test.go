@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -278,19 +277,12 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 	for labelSize := 0; labelSize < 63; labelSize++ {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeANY)
 
-		compressionFake := make(map[string]int)
-		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
-
-		compressionReal := make(map[string]int)
-		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		buf, err := msg.packBufferWithCompressionMap(nil, make(map[string]int))
 		if err != nil {
 			t.Fatal(err)
 		}
-		if lenFake != len(buf) {
-			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
-		}
-		if !reflect.DeepEqual(compressionFake, compressionReal) {
-			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+		if want, got := len(buf), msg.Len(); want != got {
+			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, got, want)
 		}
 	}
 }
@@ -311,19 +303,12 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 	for labelSize := 0; labelSize < 63; labelSize++ {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeAAAA)
 
-		compressionFake := make(map[string]int)
-		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
-
-		compressionReal := make(map[string]int)
-		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		buf, err := msg.packBufferWithCompressionMap(nil, make(map[string]int))
 		if err != nil {
 			t.Fatal(err)
 		}
-		if lenFake != len(buf) {
-			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
-		}
-		if !reflect.DeepEqual(compressionFake, compressionReal) {
-			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+		if want, got := len(buf), msg.Len(); want != got {
+			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, got, want)
 		}
 	}
 }
