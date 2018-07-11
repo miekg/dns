@@ -1053,6 +1053,86 @@ func compressionLenSearch(c map[string]int, s string) (int, bool, int) {
 	return 0, false, fullSize + len(s)
 }
 
+// Truncate removes resource records from Additional, Ns, and Answer sections to
+// ensure the message doesn't exceed the given response buffer size. It doesn't
+// alter the message if it already fits. If resource records have to be removed
+// from the Answer section, the TC header bit will be set.
+//
+// Compression, EDNS0 and TSIG requirements are taken into account.
+func (dns *Msg) Truncate(size int) {
+	var lenFn = Len
+	if dns.Compress {
+		lenFn = newCompressionLenFn(dns.Question)
+	}
+
+	l := 12 // Message header size in bytes.
+	for _, q := range dns.Question {
+		l += q.len()
+	}
+
+	// OPT and TSIG records must be kept in the response.
+	for _, r := range dns.Extra {
+		switch r.Header().Rrtype {
+		case TypeOPT, TypeSIG:
+			l += lenFn(r)
+		}
+	}
+
+	var n int
+	n, l = maxRRs(dns.Answer, lenFn, l, size)
+	if n < len(dns.Answer) {
+		dns.Answer = dns.Answer[:n]
+		dns.Ns = nil
+		dns.Extra = filterExtra(dns.Extra, 0)
+		dns.Truncated = true
+		return
+	}
+
+	n, l = maxRRs(dns.Ns, lenFn, l, size)
+	if n < len(dns.Ns) {
+		dns.Ns = nil
+		dns.Extra = filterExtra(dns.Extra, 0)
+		return
+	}
+
+	n, l = maxRRs(dns.Extra, lenFn, l, size)
+	if n < len(dns.Extra) {
+		dns.Extra = filterExtra(dns.Extra, n)
+		return
+	}
+}
+
+// maxRRs returns the number of records fitting into the given message size
+// as well as the length of the resulting message including the given initial
+// size.
+func maxRRs(rs []RR, lenFn func(RR) int, initial, size int) (number, length int) {
+	i, l := 0, initial
+	for ; i < len(rs); i++ {
+		if rs[i] == nil {
+			continue
+		}
+		t := lenFn(rs[i])
+		if l+t > size {
+			break
+		}
+		l += t
+	}
+	return i, l
+}
+
+// filterExtra removes all records from the given Additional section above the
+// given n index. It ensures to keep mandatory OPT and SIG records.
+func filterExtra(rs []RR, n int) []RR {
+	for i := 0; i < len(rs); i++ {
+		if i < n || rs[i].Header().Rrtype == TypeOPT || rs[i].Header().Rrtype == TypeSIG {
+			continue
+		}
+		rs = append(rs[:i], rs[i+1:]...)
+		i--
+	}
+	return rs
+}
+
 // Copy returns a new RR which is a deep-copy of r.
 func Copy(r RR) RR { r1 := r.copy(); return r1 }
 
