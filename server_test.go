@@ -66,7 +66,7 @@ func RunLocalUDPServerWithFinChan(laddr string, rdtimeout time.Duration) (*Serve
 	// tune the timeouts. If shutdown is lower than rdtimeout and there is no queries,
 	// then ActivateAndServe will end on an error because connection will be close before timeout of ReadUDP.
 
-	shtimeout := rdtimeout
+	shtimeout := rdtimeout + 1 * time.Second  // to avoid error return by Server, we need that ShutdownTimeout is > ReadTimeout
 	if rdtimeout == 0 {
 		rdtimeout = 1 * time.Hour
 		shtimeout = 1 * time.Second
