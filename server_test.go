@@ -52,26 +52,18 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 }
 
 func RunLocalUDPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalUDPServerWithFinChan(laddr, 0)
+	server, l, _, err := RunLocalUDPServerWithFinChan(laddr)
 
 	return server, l, err
 }
 
-func RunLocalUDPServerWithFinChan(laddr string, rdtimeout time.Duration) (*Server, string, chan error, error) {
+func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	// tune the timeouts. If shutdown is lower than rdtimeout and there is no queries,
-	// then ActivateAndServe will end on an error because connection will be close before timeout of ReadUDP.
-
-	shtimeout := rdtimeout + (1 * time.Second)  // to avoid error return by Server, we need that ShutdownTimeout is > ReadTimeout
-	if rdtimeout == 0 {
-		rdtimeout = 1 * time.Hour
-	}
-
-	server := &Server{PacketConn: pc, ReadTimeout: rdtimeout, WriteTimeout: time.Hour, ShutdownTimeout:shtimeout}
+	server := &Server{PacketConn: pc}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -586,7 +578,7 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
-func testLostQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fin chan error, client *Client) {
+func checkLostQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fin chan error, client *Client) {
 
 	var h = func(w ResponseWriter, req *Msg) {
 		// simulate small delay between 0 to 0.5 sec.
@@ -674,7 +666,7 @@ func TestLostQueriesAtShutdownTCP(t *testing.T) {
 
 	client := &Client{Net: "tcp"}
 
-	testLostQueriesAtShutdownServer(t, s, addr, fin, client)
+	checkLostQueriesAtShutdownServer(t, s, addr, fin, client)
 
 }
 
@@ -718,7 +710,7 @@ func TestLostQueriesAtShutdownTLS(t *testing.T) {
 		InsecureSkipVerify: true,
 	}}
 
-	testLostQueriesAtShutdownServer(t, s, addr, nil, client)
+	checkLostQueriesAtShutdownServer(t, s, addr, nil, client)
 
 }
 
@@ -784,7 +776,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, fin, err := RunLocalUDPServerWithFinChan(":0", time.Second)
+	s, _, fin, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -804,14 +796,14 @@ func TestShutdownUDP(t *testing.T) {
 
 func TestLostQueriesAtShutdownUDP(t *testing.T) {
 
-	s, addr, fin, err := RunLocalUDPServerWithFinChan(":0", time.Second)
+	s, addr, fin, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 
 	client := &Client{Net: "udp"}
 
-	testLostQueriesAtShutdownServer(t, s, addr, fin, client)
+	checkLostQueriesAtShutdownServer(t, s, addr, fin, client)
 
 }
 
@@ -819,7 +811,7 @@ func TestServerStartStopRace(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		var err error
 		s := &Server{}
-		s, _, _, err = RunLocalUDPServerWithFinChan(":0", 0 )
+		s, _, _, err = RunLocalUDPServerWithFinChan(":0")
 		if err != nil {
 			t.Fatalf("could not start server: %s", err)
 		}

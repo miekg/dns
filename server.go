@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -486,6 +485,33 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
+func (srv *Server) getShutdownTimeout() time.Duration {
+	if srv.ShutdownTimeout != time.Duration(0) {
+		return  srv.ShutdownTimeout
+	}
+
+	// if not defined, the shutdownTimeout should be > to the readTimeout where the thread are blocked waiting for msg
+	// UDP is using only readTimeout
+	timeout := srv.getReadTimeout()
+
+	if srv.Listener != nil {
+		// if TCP listener is in use, the read timeout may be extended with the idleTimeout
+		idleTimeout := tcpIdleTimeout
+		if srv.IdleTimeout != nil {
+			idleTimeout = srv.IdleTimeout()
+		}
+		if idleTimeout > timeout {
+			timeout = idleTimeout
+		}
+	}
+
+	// add a little time to ensure we have time to wait the thread are released
+	timeout = timeout + time.Second
+	return timeout
+
+}
+
+
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
 func (srv *Server) Shutdown() error {
@@ -503,46 +529,29 @@ func (srv *Server) Shutdown() error {
 
 	// and then stop the service : it will wait all queries are served
 
-	timeout := srv.getReadTimeout()
-	idleTimeout := time.Duration(0)
-
 	// we can close the TCP listener (the accept() part)
 	if srv.Listener != nil {
 		srv.Listener.Close()
 
-		// if TCP listener is in use, the read timeout may be extended with the idleTimeout
-		idleTimeout = tcpIdleTimeout
-		if srv.IdleTimeout != nil {
-			idleTimeout = srv.IdleTimeout()
-		}
 	}
 
-	if idleTimeout > timeout {
-		timeout = idleTimeout
-	}
-	timeout = timeout + time.Second
-	if srv.ShutdownTimeout != time.Duration(0) {
-		timeout  = srv.ShutdownTimeout
-	}
 
 	// and then wait all TCPConn and PacketConn finish the on-going work
-	if runtime.GOOS != "windows" {
-		// force connections to close after timeout
-		done := make(chan struct{})
-		go func() {
-			// wait all packet started to be processed are now processed
-			srv.dnsWg.Wait()
-			close(done)
-		}()
+	// force connections to close after timeout
+	done := make(chan struct{})
+	go func() {
+		// wait all packet started to be processed are now processed
+		srv.dnsWg.Wait()
+		close(done)
+	}()
 
-		// Wait for remaining connections to finish or
-		// force them all to close after timeout
-		// use the max of all timeout for UDP, TCP and TCP wait
+	// Wait for remaining connections to finish or
+	// force them all to close after timeout
+	// use the max of all timeout for UDP, TCP and TCP wait
 
-		select {
-		case <-time.After(timeout):
-		case <-done:
-		}
+	select {
+	case <-time.After(srv.getShutdownTimeout()):
+	case <-done:
 	}
 
 	// at this point all Msg received should have been processed
@@ -580,14 +589,6 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 				continue
 			}
-			// if listener is closed while Accept, we'll get an error
-			// we just not want to notify this error if it is related to shutdown
-			srv.lock.RLock()
-			if !srv.started {
-				srv.lock.RUnlock()
-				return nil
-			}
-			srv.lock.RUnlock()
 			return err
 		}
 		srv.spawnWorker(&response{tsigSecret: srv.TsigSecret, tcp: rw})
