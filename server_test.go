@@ -582,7 +582,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	var h = func(w ResponseWriter, req *Msg) {
 		// simulate small delay between 0 to 0.5 sec.
-		time.Sleep(time.Duration((rand.Intn(500))+ 100)*time.Millisecond)
+		time.Sleep(time.Duration((rand.Intn(900))+ 100)*time.Millisecond)
 		HelloServer(w, req)
 	}
 	HandleFunc("example.com", h)
@@ -626,11 +626,10 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	// then stop everything .. and let see
 	close(stop)
-	time.Sleep(time.Millisecond*50)	// expected time to at least do the write part of the msg
-	// but less than time needed to handle the msg (min is 100 ms)
+	time.Sleep(time.Millisecond*200)	// expected time to at least do the write part of the msg (TLS would need about 100ms)
 
 	// let enough time to shutdown to happen - but do not wait the whole hours defined for readTimeout
-	srv.ShutdownTimeout = time.Second*2
+	srv.ShutdownTimeout = time.Second*5
 	err := srv.Shutdown()
 	if err != nil {
 		t.Errorf("could not shutdown test server, %v", err)
