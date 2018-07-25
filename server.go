@@ -313,10 +313,10 @@ type Server struct {
 	// Shutdown handling
 	lock    sync.RWMutex
 	started bool
-	dnsWg       sync.WaitGroup
 	// track packet processing and allow to wait all are processed before closing
+	dnsWg       sync.WaitGroup
+	// Shutdown timeout. If not indicated, the timeout will be max(readTimeout, idleTimeout) + 1 sec
 	ShutdownTimeout time.Duration
-	// Shutdown timeout. If not indicated, the timeout will be max(readTimeout, idleTimeout)
 
 }
 
@@ -512,8 +512,9 @@ func (srv *Server) getShutdownTimeout() time.Duration {
 }
 
 
-// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return.
+// Shutdown shuts down gracefully a server. All in progress queries will be dealt with
+// After a call to Shutdown, ListenAndServe and ActivateAndServe will return when all accepted queries are handled
+// or shutdown timeout occurs
 func (srv *Server) Shutdown() error {
 	srv.lock.Lock()
 	if !srv.started {
@@ -522,44 +523,37 @@ func (srv *Server) Shutdown() error {
 	}
 	// inform the server is no more alive
 	// it will prevent to start read new packet
-	// however the already started READ session will continue.
+	// however the already started READ session will continue until timeout or receiving one msg
 	// it can take to MAX(readTimeout, TCPIdleTimeout) to have all READ session processed
 	srv.started = false
 	srv.lock.Unlock()
 
-	// and then stop the service : it will wait all queries are served
-
-	// we can close the TCP listener (the accept() part)
+	// we can safely close the TCP listener : no more incoming queries will be accepted
 	if srv.Listener != nil {
 		srv.Listener.Close()
-
 	}
+	// for UDP side the Listener is also the Connection so we cannot cloe it here
+	// however, the reading loop will exit as soon as it see the flag srv.started == false
 
 
-	// and then wait all TCPConn and PacketConn finish the on-going work
-	// force connections to close after timeout
+	// wait all queries in progress are processed
 	done := make(chan struct{})
 	go func() {
-		// wait all packet started to be processed are now processed
 		srv.dnsWg.Wait()
 		close(done)
 	}()
-
-	// Wait for remaining connections to finish or
-	// force them all to close after timeout
-	// use the max of all timeout for UDP, TCP and TCP wait
 
 	select {
 	case <-time.After(srv.getShutdownTimeout()):
 	case <-done:
 	}
 
-	// at this point all Msg received should have been processed
-	// or timed out
-
+	// no more msg to send. We can safely cloe the UDP connection
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
+	// on TCP side, the TCP connections are automatically closed at end of function serve(..)
+	// or are handled by the client side (see Hijack())
 	return nil
 }
 

@@ -578,7 +578,7 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
-func checkLostQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fin chan error, client *Client) {
+func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fin chan error, client *Client) {
 
 	var h = func(w ResponseWriter, req *Msg) {
 		// simulate small delay between 0 to 0.5 sec.
@@ -657,7 +657,7 @@ func checkLostQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fi
 
 }
 
-func TestLostQueriesAtShutdownTCP(t *testing.T) {
+func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
 
 	s, addr, fin, err := RunLocalTCPServerWithFinChan(":0")
 	if err != nil {
@@ -666,7 +666,7 @@ func TestLostQueriesAtShutdownTCP(t *testing.T) {
 
 	client := &Client{Net: "tcp"}
 
-	checkLostQueriesAtShutdownServer(t, s, addr, fin, client)
+	checkInProgressQueriesAtShutdownServer(t, s, addr, fin, client)
 
 }
 
@@ -690,7 +690,7 @@ func TestShutdownTLS(t *testing.T) {
 	}
 }
 
-func TestLostQueriesAtShutdownTLS(t *testing.T) {
+func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 
 	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
 	if err != nil {
@@ -710,7 +710,7 @@ func TestLostQueriesAtShutdownTLS(t *testing.T) {
 		InsecureSkipVerify: true,
 	}}
 
-	checkLostQueriesAtShutdownServer(t, s, addr, nil, client)
+	checkInProgressQueriesAtShutdownServer(t, s, addr, nil, client)
 
 }
 
@@ -794,7 +794,7 @@ func TestShutdownUDP(t *testing.T) {
 	}
 }
 
-func TestLostQueriesAtShutdownUDP(t *testing.T) {
+func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
 
 	s, addr, fin, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
@@ -803,7 +803,7 @@ func TestLostQueriesAtShutdownUDP(t *testing.T) {
 
 	client := &Client{Net: "udp"}
 
-	checkLostQueriesAtShutdownServer(t, s, addr, fin, client)
+	checkInProgressQueriesAtShutdownServer(t, s, addr, fin, client)
 
 }
 
