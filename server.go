@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"io"
@@ -314,10 +315,7 @@ type Server struct {
 	lock    sync.RWMutex
 	started bool
 	// track packet processing and allow to wait all are processed before closing
-	dnsWg       sync.WaitGroup
-	// Shutdown timeout. If not indicated, the timeout will be max(readTimeout, idleTimeout) + 1 sec
-	ShutdownTimeout time.Duration
-
+	dnsWg sync.WaitGroup
 }
 
 func (srv *Server) isStarted() bool {
@@ -486,10 +484,6 @@ func (srv *Server) ActivateAndServe() error {
 }
 
 func (srv *Server) getShutdownTimeout() time.Duration {
-	if srv.ShutdownTimeout != time.Duration(0) {
-		return  srv.ShutdownTimeout
-	}
-
 	// if not defined, the shutdownTimeout should be > to the readTimeout where the thread are blocked waiting for msg
 	// UDP is using only readTimeout
 	timeout := srv.getReadTimeout()
@@ -511,11 +505,19 @@ func (srv *Server) getShutdownTimeout() time.Duration {
 
 }
 
-
 // Shutdown shuts down gracefully a server. All in progress queries will be dealt with
 // After a call to Shutdown, ListenAndServe and ActivateAndServe will return when all accepted queries are handled
 // or shutdown timeout occurs
 func (srv *Server) Shutdown() error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(srv.getShutdownTimeout()))
+	srv.ShutdownContext(ctx)
+	cancel()
+	return nil
+}
+
+// ShutdownContext shuts down gracefully a server.
+// the context allows caller to set a deadline for shutdown
+func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Lock()
 	if !srv.started {
 		srv.lock.Unlock()
@@ -532,9 +534,8 @@ func (srv *Server) Shutdown() error {
 	if srv.Listener != nil {
 		srv.Listener.Close()
 	}
-	// for UDP side the Listener is also the Connection so we cannot cloe it here
+	// for UDP side the Listener is also the Connection so we cannot close it here
 	// however, the reading loop will exit as soon as it see the flag srv.started == false
-
 
 	// wait all queries in progress are processed
 	done := make(chan struct{})
@@ -543,9 +544,11 @@ func (srv *Server) Shutdown() error {
 		close(done)
 	}()
 
+	var err error
 	select {
-	case <-time.After(srv.getShutdownTimeout()):
 	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
 
 	// no more msg to send. We can safely cloe the UDP connection
@@ -554,7 +557,7 @@ func (srv *Server) Shutdown() error {
 	}
 	// on TCP side, the TCP connections are automatically closed at end of function serve(..)
 	// or are handled by the client side (see Hijack())
-	return nil
+	return err
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
@@ -641,7 +644,7 @@ func (srv *Server) serve(w *response) {
 	if w.udp != nil {
 		// serve UDP
 		srv.serveDNS(w)
-		srv.dnsWg.Done()		// ack processing the UDP packet
+		srv.dnsWg.Done() // ack processing the UDP packet
 		return
 	}
 
@@ -686,7 +689,7 @@ func (srv *Server) serve(w *response) {
 			break
 		}
 		srv.serveDNS(w)
-		srv.dnsWg.Done()	// ack processing the TCP packet
+		srv.dnsWg.Done() // ack processing the TCP packet
 		if w.tcp == nil {
 			break // Close() was called
 		}
