@@ -588,6 +588,9 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		HelloServer(w, req)
 	})
 
+	// tune the timeout of the client, based on expecting delay to reply - from 1 to 2 sec.
+	client.Timeout = time.Duration(4 * time.Second)
+
 	var sendMsg int64
 	var recvMsg int64
 	var wg sync.WaitGroup
@@ -810,19 +813,6 @@ func TestShutdownUDPWithContext(t *testing.T) {
 	err = s.ShutdownContext(ctx)
 	if err != nil {
 		t.Errorf("could not shutdown test UDP server, %v", err)
-	}
-	cancel()
-}
-
-func TestShutdownUDPWithContextError(t *testing.T) {
-	s, _, _, err := RunLocalUDPServerWithFinChan(":0", time.Hour, time.Hour)
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
-	err = s.ShutdownContext(ctx)
-	if err == nil {
-		t.Errorf("shutdown context triggered by deadline did not occur")
 	}
 	cancel()
 }
