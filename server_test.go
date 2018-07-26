@@ -611,7 +611,8 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 					m.SetQuestion("example.com.", TypeTXT)
 					atomic.AddInt64(&sendMsg, 1)
 					_, _, err := client.Exchange(m, addr)
-					// ignore errors that are not "read" errors - if we have a read error, it means the shutdown did not act properly
+					// ignore errors that are not "read" errors
+					// if we have a read error, it means the shutdown did not act properly
 					if err != nil {
 						if operr, ok := err.(*net.OpError); ok {
 							if operr.Op != "read" {
