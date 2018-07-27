@@ -600,7 +600,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	// run a series of queries until we shutdown, for each thread, most likely the last query send will not
 	// be processed before we call the shutdown
 	// but as we force the server to wait all incoming query are processed we expect ALL queries to be replied.
-	for i := 1; i < 50; i++ {
+	for i := 1; i < 10; i++ {
 		wg.Add(1)
 		go func() {
 			for {
@@ -640,7 +640,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	// then stop sending msgs ..
 	close(stop)
-	//time.Sleep(time.Millisecond * 200) // expected time to at least do the write part of the msg (TLS would need about 100ms)
+	time.Sleep(time.Millisecond * 200) // expected time to at least do the write part of the msg (TLS would need about 100ms)
 
 	// And now shutdown the server : we expect that all msg sent will be served
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
