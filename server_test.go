@@ -584,7 +584,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	HandleFunc("example.com", func(w ResponseWriter, req *Msg) {
 		// simulate small delay between 0 to 0.5 sec.
-		time.Sleep(time.Duration((rand.Intn(500))+100) * time.Millisecond)
+		time.Sleep(time.Duration((rand.Intn(500))+500) * time.Millisecond)
 		HelloServer(w, req)
 	})
 
@@ -636,11 +636,11 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	}
 
 	// wait at least 1 sec the mechanism start to send msgs
-	time.Sleep(time.Millisecond * 1000)
+	time.Sleep(time.Millisecond * 100)
 
 	// then stop sending msgs ..
 	close(stop)
-	time.Sleep(time.Millisecond * 200) // expected time to at least do the write part of the msg (TLS would need about 100ms)
+	time.Sleep(time.Millisecond * 500) // expected time to at least do the write part of the msg (TLS would need about 100ms)
 
 	// And now shutdown the server : we expect that all msg sent will be served
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
