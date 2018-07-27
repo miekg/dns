@@ -583,7 +583,7 @@ func TestShutdownTCP(t *testing.T) {
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, fin chan error, client *Client) {
 
 	HandleFunc("example.com", func(w ResponseWriter, req *Msg) {
-		// simulate small delay between 0 to 0.5 sec.
+		// simulate small delay between 0.5 and 1 sec.
 		time.Sleep(time.Duration((rand.Intn(500))+500) * time.Millisecond)
 		HelloServer(w, req)
 	})
@@ -619,7 +619,6 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 					if err != nil {
 						if operr, ok := err.(*net.OpError); ok {
 							if operr.Op != "read" {
-								// just cancel the error
 								err = nil
 							}
 						}
@@ -638,11 +637,11 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	// wait at least 1 sec the mechanism start to send msgs
 	time.Sleep(time.Millisecond * 100)
 
-	// then stop sending msgs ..
+	// ask to stop sending msgs ..
 	close(stop)
-	time.Sleep(time.Millisecond * 500) // expected time to at least do the write part of the msg (TLS would need about 100ms)
+	time.Sleep(time.Millisecond * 500) // expected time to at least do the write part of the msg
 
-	// And now shutdown the server : we expect that all msg sent will be served
+	// And now shutdown the server : we expect that all msg already read by the server will be served
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
 	err := srv.ShutdownContext(ctx)
 	cancel()
@@ -663,11 +662,10 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	// wait that all go routines are stopped
 	wg.Wait()
 
-	// now check we receive ALL the msg sent
+	// now check we received ALL the msg sent
 	if sendMsg != recvMsg {
 		t.Errorf("sent %v msgs to the server, but only %v msgs were returned", sendMsg, recvMsg)
 	}
-	// t.Logf("total of %v msgs processed", sendMsg)
 
 }
 
