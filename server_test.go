@@ -715,7 +715,7 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addr, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
+	s, addr, err := RunLocalTLSServer(":0", &config, 3*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
