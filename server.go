@@ -483,7 +483,7 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-func (srv *Server) getShutdownTimeout() time.Duration {
+func (srv *Server) shutdownTimeout() time.Duration {
 	// if not defined, the shutdownTimeout should be > to the readTimeout where the thread are blocked waiting for msg
 	// UDP is using only readTimeout
 	timeout := srv.getReadTimeout()
@@ -507,16 +507,19 @@ func (srv *Server) getShutdownTimeout() time.Duration {
 
 // Shutdown shuts down gracefully a server. All in progress queries will be dealt with
 // After a call to Shutdown, ListenAndServe and ActivateAndServe will return when all accepted queries are handled
-// or shutdown timeout occurs
+// or shutdown timeout occurs.
+// error is returned if the server is not started, or if graceful shutdown interrupted by timeout
 func (srv *Server) Shutdown() error {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(srv.getShutdownTimeout()))
-	srv.ShutdownContext(ctx)
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(srv.shutdownTimeout()))
+	err := srv.ShutdownContext(ctx)
 	cancel()
-	return nil
+
+	return err
 }
 
 // ShutdownContext shuts down gracefully a server.
 // the context allows caller to set a deadline for shutdown
+// error is returned if the server is not started, or if graceful shutdown interrupted by timeout
 func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Lock()
 	if !srv.started {
@@ -551,7 +554,7 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 		err = ctx.Err()
 	}
 
-	// no more msg to send. We can safely cloe the UDP connection
+	// no more messages to send. We can safely close the UDP connection
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
@@ -620,14 +623,14 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		m, s, err := reader.ReadUDP(l, rtimeout)
 		if err != nil {
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
-				srv.dnsWg.Done() // ack processing the UDP packet
+				srv.dnsWg.Done()
 				continue
 			}
-			srv.dnsWg.Done() // ack processing the UDP packet
+			srv.dnsWg.Done()
 			return err
 		}
 		if len(m) < headerSize {
-			srv.dnsWg.Done() // ack processing the UDP packet
+			srv.dnsWg.Done()
 			continue
 		}
 		srv.spawnWorker(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s})
@@ -644,7 +647,7 @@ func (srv *Server) serve(w *response) {
 	if w.udp != nil {
 		// serve UDP
 		srv.serveDNS(w)
-		srv.dnsWg.Done() // ack processing the UDP packet
+		srv.dnsWg.Done()
 		return
 	}
 
@@ -685,11 +688,11 @@ func (srv *Server) serve(w *response) {
 		w.msg, err = reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
-			srv.dnsWg.Done() // ack processing the TCP packet
+			srv.dnsWg.Done()
 			break
 		}
 		srv.serveDNS(w)
-		srv.dnsWg.Done() // ack processing the TCP packet
+		srv.dnsWg.Done()
 		if w.tcp == nil {
 			break // Close() was called
 		}
