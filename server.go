@@ -315,6 +315,13 @@ type Server struct {
 	started bool
 }
 
+func (srv *Server) isStarted() bool {
+	srv.lock.RLock()
+	started := srv.started
+	srv.lock.RUnlock()
+	return started
+}
+
 func (srv *Server) worker(w *response) {
 	srv.serve(w)
 
@@ -512,12 +519,9 @@ func (srv *Server) serveTCP(l net.Listener) error {
 
 	for {
 		rw, err := l.Accept()
-		srv.lock.RLock()
-		if !srv.started {
-			srv.lock.RUnlock()
+		if !srv.isStarted() {
 			return nil
 		}
-		srv.lock.RUnlock()
 		if err != nil {
 			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 				continue
@@ -545,12 +549,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	// deadline is not used here
 	for {
 		m, s, err := reader.ReadUDP(l, rtimeout)
-		srv.lock.RLock()
-		if !srv.started {
-			srv.lock.RUnlock()
+		if !srv.isStarted() {
 			return nil
 		}
-		srv.lock.RUnlock()
 		if err != nil {
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
 				continue
