@@ -316,6 +316,8 @@ type Server struct {
 	started bool
 	// track packet processing and allow to wait all are processed before closing
 	dnsWg sync.WaitGroup
+	// a chan to wait shutdown is done
+	shut chan struct{}
 }
 
 func (srv *Server) isStarted(incWg bool) bool {
@@ -389,7 +391,6 @@ func (srv *Server) ListenAndServe() error {
 		srv.UDPSize = MinMsgSize
 	}
 	srv.queue = make(chan *response)
-	defer close(srv.queue)
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
 		a, err := net.ResolveTCPAddr(srv.Net, addr)
@@ -458,7 +459,6 @@ func (srv *Server) ActivateAndServe() error {
 	pConn := srv.PacketConn
 	l := srv.Listener
 	srv.queue = make(chan *response)
-	defer close(srv.queue)
 	if pConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
@@ -534,11 +534,13 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	// however the already started READ session will continue until timeout or receiving one msg
 	// it can take to MAX(readTimeout, TCPIdleTimeout) to have all READ session processed
 	srv.started = false
+	srv.shut = make(chan struct{})
 	srv.lock.Unlock()
 
 	// we can safely close the TCP listener : no more incoming queries will be accepted
 	if srv.Listener != nil {
 		srv.Listener.Close()
+		srv.Listener = nil
 	}
 	// for UDP side the Listener is also the Connection so we cannot close it here
 	// however, the reading loop will exit as soon as it see the flag srv.started == false
@@ -557,13 +559,36 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 		err = ctx.Err()
 	}
 
-	// no more messages to send. We can safely close the UDP connection
+	srv.closeResources()
+	return err
+}
+
+func (srv *Server) waitShutdownCompletes() {
+	srv.lock.RLock()
+	defer srv.lock.RUnlock()
+	if srv.shut != nil {
+		select {
+		case <-srv.shut:
+		}
+	}
+
+}
+
+func (srv *Server) closeResources() {
+	srv.lock.Lock()
+	defer srv.lock.Unlock()
+	if srv.Listener != nil {
+		srv.Listener.Close()
+		srv.Listener = nil
+	}
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
+		srv.PacketConn = nil
 	}
-	// on TCP side, the TCP connections are automatically closed at end of function serve(..)
-	// or are handled by the client side (see Hijack())
-	return err
+	if srv.queue != nil {
+		close(srv.queue)
+		srv.queue = nil
+	}
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
@@ -577,8 +602,7 @@ func (srv *Server) getReadTimeout() time.Duration {
 
 // serveTCP starts a TCP listener for the server.
 func (srv *Server) serveTCP(l net.Listener) error {
-	defer l.Close()
-
+	var reterr error
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -592,16 +616,20 @@ func (srv *Server) serveTCP(l net.Listener) error {
 			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 				continue
 			}
-			return err
+			reterr = err
+			break
 		}
 		srv.spawnWorker(&response{tsigSecret: srv.TsigSecret, tcp: rw})
 	}
+	// service is ended - ensure closing the resources
+	srv.waitShutdownCompletes()
+	srv.closeResources()
+	return reterr
 }
 
 // serveUDP starts a UDP listener for the server.
 func (srv *Server) serveUDP(l *net.UDPConn) error {
-	defer l.Close()
-
+	var reterr error
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -624,7 +652,8 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 				continue
 			}
 			srv.dnsWg.Done()
-			return err
+			reterr = err
+			break
 		}
 		if len(m) < headerSize {
 			srv.dnsWg.Done()
@@ -632,6 +661,11 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		}
 		srv.spawnWorker(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s})
 	}
+
+	// service is ended - ensure closing the resources
+	srv.waitShutdownCompletes()
+	srv.closeResources()
+	return reterr
 }
 
 func (srv *Server) serve(w *response) {
