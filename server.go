@@ -318,9 +318,12 @@ type Server struct {
 	dnsWg sync.WaitGroup
 }
 
-func (srv *Server) isStarted() bool {
+func (srv *Server) isStarted(incWg bool) bool {
 	srv.lock.RLock()
 	started := srv.started
+	if started && incWg {
+		srv.dnsWg.Add(1)
+	}
 	srv.lock.RUnlock()
 	return started
 }
@@ -582,7 +585,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 
 	for {
 		rw, err := l.Accept()
-		if !srv.isStarted() {
+		if !srv.isStarted(false) {
 			return nil
 		}
 		if err != nil {
@@ -611,15 +614,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
-		srv.lock.RLock()
-		// check server is still alive
-		if !srv.started {
-			srv.lock.RUnlock()
+		if !srv.isStarted(true) {
 			return nil
 		}
-		// and flag that we are processing another packet
-		srv.dnsWg.Add(1)
-		srv.lock.RUnlock()
 		m, s, err := reader.ReadUDP(l, rtimeout)
 		if err != nil {
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
@@ -676,15 +673,10 @@ func (srv *Server) serve(w *response) {
 
 	for q := 0; q < limit || limit == -1; q++ {
 		var err error
-		srv.lock.RLock()
 		// check the server is still alive before block on Read
-		if !srv.started {
-			srv.lock.RUnlock()
+		if !srv.isStarted(true) {
 			break
 		}
-		// notify a new packet in process ...
-		srv.dnsWg.Add(1)
-		srv.lock.RUnlock()
 		w.msg, err = reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
