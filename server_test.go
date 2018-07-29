@@ -64,7 +64,7 @@ func RunLocalUDPServerWithFinChan(laddr string, readTimeout time.Duration, write
 	}
 
 	server := &Server{PacketConn: pc,
-		ReadTimeout: time.Second, WriteTimeout: time.Hour}
+		ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -591,7 +591,15 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		// wait the signal to reply
 		select {
 		case <-doReply:
-			HelloServer(w, req)
+			time.Sleep(100 * time.Millisecond)
+			m := new(Msg)
+			m.SetReply(req)
+			m.Extra = make([]RR, 1)
+			m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
+			err := w.WriteMsg(m)
+			if err != nil {
+				t.Logf("Error while replying hello msg : %s", err)
+			}
 		}
 	})
 
@@ -610,16 +618,6 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 			m.SetQuestion("example.com.", TypeTXT)
 			atomic.AddInt64(&sendMsg, 1)
 			_, _, err := client.Exchange(m, addr)
-			// ignore errors that are not "read" errors
-			// if we have a read error, it means the shutdown did not act properly
-			if err != nil {
-				if operr, ok := err.(*net.OpError); ok {
-					if operr.Op != "read" {
-						err = nil
-					}
-				}
-			}
-
 			if err == nil {
 				atomic.AddInt64(&recvMsg, 1)
 			} else {
@@ -635,7 +633,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(shutdownTimeout))
 
-	// we ask HandleFunc to stop hold the reply. Tere is 100ms to ensure that the replies
+	// we ask HandleFunc to stop hold the reply. There is 100ms to ensure that the replies
 	// will start AFTER the shutdown is kickedoff.
 	// here we cannot control the time sync.
 	close(doReply)
@@ -658,7 +656,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
 
-	s, addr, _, err := RunLocalTCPServerWithFinChan(":0", time.Second, time.Hour)
+	s, addr, _, err := RunLocalTCPServerWithFinChan(":0", 3*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -790,11 +788,11 @@ func TestShutdownUDP(t *testing.T) {
 }
 
 func TestShutdownUDPWithContext(t *testing.T) {
-	s, _, _, err := RunLocalUDPServerWithFinChan(":0", time.Second, time.Hour)
+	s, _, _, err := RunLocalUDPServerWithFinChan(":0", 2*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 	err = s.ShutdownContext(ctx)
 	if err != nil {
 		t.Errorf("could not shutdown test UDP server, %v", err)
@@ -804,7 +802,7 @@ func TestShutdownUDPWithContext(t *testing.T) {
 
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
 
-	s, addr, _, err := RunLocalUDPServerWithFinChan(":0", 5*time.Second, time.Hour)
+	s, addr, _, err := RunLocalUDPServerWithFinChan(":0", 3*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
