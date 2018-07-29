@@ -391,6 +391,7 @@ func (srv *Server) ListenAndServe() error {
 		srv.UDPSize = MinMsgSize
 	}
 	srv.queue = make(chan *response)
+	defer close(srv.queue)
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
 		a, err := net.ResolveTCPAddr(srv.Net, addr)
@@ -459,6 +460,7 @@ func (srv *Server) ActivateAndServe() error {
 	pConn := srv.PacketConn
 	l := srv.Listener
 	srv.queue = make(chan *response)
+	defer close(srv.queue)
 	if pConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
@@ -559,7 +561,7 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 		err = ctx.Err()
 	}
 
-	srv.closeResources()
+	srv.closeResources(true)
 	return err
 }
 
@@ -574,7 +576,7 @@ func (srv *Server) waitShutdownCompletes() {
 
 }
 
-func (srv *Server) closeResources() {
+func (srv *Server) closeResources(closeShut bool) {
 	srv.lock.Lock()
 	defer srv.lock.Unlock()
 	if srv.Listener != nil {
@@ -585,9 +587,9 @@ func (srv *Server) closeResources() {
 		srv.PacketConn.Close()
 		srv.PacketConn = nil
 	}
-	if srv.queue != nil {
-		close(srv.queue)
-		srv.queue = nil
+	if closeShut {
+		close(srv.shut)
+		srv.shut = nil
 	}
 }
 
@@ -623,7 +625,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 	}
 	// service is ended - ensure closing the resources
 	srv.waitShutdownCompletes()
-	srv.closeResources()
+	srv.closeResources(false)
 	return reterr
 }
 
@@ -664,7 +666,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 
 	// service is ended - ensure closing the resources
 	srv.waitShutdownCompletes()
-	srv.closeResources()
+	srv.closeResources(false)
 	return reterr
 }
 
