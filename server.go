@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"io"
@@ -21,6 +22,10 @@ const idleWorkerTimeout = 10 * time.Second
 
 // Maximum number of workers
 const maxWorkersCount = 10000
+
+// aLongTimeAgo is a non-zero time, far in the past, used for
+// immediate cancelation of network operations.
+var aLongTimeAgo = time.Unix(1, 0)
 
 // Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
@@ -60,6 +65,7 @@ type response struct {
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
 	writer         Writer            // writer to output the raw DNS bits
+	wg             *sync.WaitGroup   // for gracefull shutdown
 }
 
 // ServeMux is an DNS request multiplexer. It matches the
@@ -311,8 +317,10 @@ type Server struct {
 	// Workers count
 	workersCount int32
 	// Shutdown handling
-	lock    sync.RWMutex
-	started bool
+	lock     sync.RWMutex
+	started  bool
+	shutdown chan struct{}
+	conns    map[net.Conn]struct{}
 }
 
 func (srv *Server) isStarted() bool {
@@ -384,6 +392,8 @@ func (srv *Server) ListenAndServe() error {
 	}
 	srv.queue = make(chan *response)
 	defer close(srv.queue)
+	srv.shutdown = make(chan struct{})
+	srv.conns = make(map[net.Conn]struct{})
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
 		a, err := net.ResolveTCPAddr(srv.Net, addr)
@@ -453,6 +463,8 @@ func (srv *Server) ActivateAndServe() error {
 	l := srv.Listener
 	srv.queue = make(chan *response)
 	defer close(srv.queue)
+	srv.shutdown = make(chan struct{})
+	srv.conns = make(map[net.Conn]struct{})
 	if pConn != nil {
 		if srv.UDPSize == 0 {
 			srv.UDPSize = MinMsgSize
@@ -483,21 +495,48 @@ func (srv *Server) ActivateAndServe() error {
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
 func (srv *Server) Shutdown() error {
+	return srv.ShutdownContext(context.Background())
+}
+
+// ShutdownContext shuts down a server. After a call to ShutdownContext,
+// ListenAndServe and ActivateAndServe will return.
+//
+// A context.Context may be passed to limit how long to wait for connections
+// to terminate.
+func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Lock()
-	if !srv.started {
-		srv.lock.Unlock()
-		return &Error{err: "server not started"}
-	}
+	started := srv.started
 	srv.started = false
 	srv.lock.Unlock()
 
+	if !started {
+		return &Error{err: "server not started"}
+	}
+
 	if srv.PacketConn != nil {
-		srv.PacketConn.Close()
+		srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
 	}
 	if srv.Listener != nil {
 		srv.Listener.Close()
 	}
-	return nil
+	srv.lock.Lock()
+	for rw := range srv.conns {
+		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+	}
+	srv.lock.Unlock()
+
+	var err error
+	select {
+	case <-srv.shutdown:
+	case <-ctx.Done():
+		err = ctx.Err()
+	}
+
+	if srv.PacketConn != nil {
+		srv.PacketConn.Close()
+	}
+
+	return err
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
@@ -517,19 +556,36 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.NotifyStartedFunc()
 	}
 
-	for {
+	var wg sync.WaitGroup
+	defer func() {
+		wg.Wait()
+		close(srv.shutdown)
+	}()
+
+	for srv.isStarted() {
 		rw, err := l.Accept()
-		if !srv.isStarted() {
-			return nil
-		}
 		if err != nil {
+			if !srv.isStarted() {
+				return nil
+			}
 			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 				continue
 			}
 			return err
 		}
-		srv.spawnWorker(&response{tsigSecret: srv.TsigSecret, tcp: rw})
+		srv.lock.Lock()
+		// Track the connection to allow unblocking reads on shutdown.
+		srv.conns[rw] = struct{}{}
+		srv.lock.Unlock()
+		wg.Add(1)
+		srv.spawnWorker(&response{
+			tsigSecret: srv.TsigSecret,
+			tcp:        rw,
+			wg:         &wg,
+		})
 	}
+
+	return nil
 }
 
 // serveUDP starts a UDP listener for the server.
@@ -545,14 +601,20 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		reader = srv.DecorateReader(reader)
 	}
 
+	var wg sync.WaitGroup
+	defer func() {
+		wg.Wait()
+		close(srv.shutdown)
+	}()
+
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
-	for {
+	for srv.isStarted() {
 		m, s, err := reader.ReadUDP(l, rtimeout)
-		if !srv.isStarted() {
-			return nil
-		}
 		if err != nil {
+			if !srv.isStarted() {
+				return nil
+			}
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
 				continue
 			}
@@ -561,11 +623,30 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		if len(m) < headerSize {
 			continue
 		}
-		srv.spawnWorker(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s})
+		wg.Add(1)
+		srv.spawnWorker(&response{
+			msg:        m,
+			tsigSecret: srv.TsigSecret,
+			udp:        l,
+			udpSession: s,
+			wg:         &wg,
+		})
 	}
+
+	return nil
 }
 
 func (srv *Server) serve(w *response) {
+	defer func() {
+		if w.tcp != nil {
+			srv.lock.Lock()
+			delete(srv.conns, w.tcp)
+			srv.lock.Unlock()
+		}
+
+		w.wg.Done()
+	}()
+
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -601,7 +682,7 @@ func (srv *Server) serve(w *response) {
 		limit = maxTCPQueries
 	}
 
-	for q := 0; q < limit || limit == -1; q++ {
+	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
 		var err error
 		w.msg, err = reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
