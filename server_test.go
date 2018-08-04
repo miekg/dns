@@ -580,91 +580,99 @@ func TestShutdownTCP(t *testing.T) {
 }
 
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
-
 	// send a series of DNS queries : sending happen before the shutdown, and reply happen AFTER the shutdown is triggered
 	// we expect to have all DNS messages replied.
 
-	// timeout is set very large to ensure we have time to get all replies.
-	shutdownTimeout := 10 * time.Second
+	const requests = 100
+
+	errors := make(chan error, requests*2)
+
 	doReply := make(chan struct{})
-	HandleFunc("example.com", func(w ResponseWriter, req *Msg) {
+	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		// wait the signal to reply
-		select {
-		case <-doReply:
-			time.Sleep(100 * time.Millisecond)
-			m := new(Msg)
-			m.SetReply(req)
-			m.Extra = make([]RR, 1)
-			m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
-			err := w.WriteMsg(m)
-			if err != nil {
-				t.Logf("Error while replying hello msg : %s", err)
-			}
+		<-doReply
+
+		time.Sleep(100 * time.Millisecond)
+
+		m := new(Msg)
+		m.SetReply(req)
+		m.Extra = make([]RR, 1)
+		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
+
+		if err := w.WriteMsg(m); err != nil {
+			errors <- fmt.Errorf("Error while replying hello msg: %s", err)
 		}
 	})
+	defer HandleRemove("example.com.")
 
+	// timeout is set very large to ensure we have time to get all replies.
 	// tune the timeout of the client, based on expecting delay to reply - from 1 to 2 sec.
-	client.Timeout = time.Duration(shutdownTimeout)
+	client.Timeout = 10 * time.Second
 
-	var sendMsg int64
-	var recvMsg int64
-	var wg sync.WaitGroup
+	var (
+		sendMsg int64
+		recvMsg int64
+		wg      sync.WaitGroup
+	)
+	wg.Add(requests)
 
 	// run a series of workers that just send ONE message and count if reply is correct (no timeout)
-	for i := 0; i < 100; i++ {
-		wg.Add(1)
+	for i := 0; i < requests; i++ {
 		go func() {
+			defer wg.Done()
+
 			m := new(Msg)
 			m.SetQuestion("example.com.", TypeTXT)
 			atomic.AddInt64(&sendMsg, 1)
-			_, _, err := client.Exchange(m, addr)
-			if err == nil {
+			if _, _, err := client.Exchange(m, addr); err == nil {
 				atomic.AddInt64(&recvMsg, 1)
 			} else {
-				t.Logf("error return by msg : %s", err)
+				errors <- fmt.Errorf("error return by msg: %s", err)
 			}
-			wg.Done()
 		}()
 	}
 
 	// wait at least 1 sec the mechanism start to send msgs
-	time.Sleep(time.Millisecond * 1000)
+	time.Sleep(time.Second)
+
 	// all senders are now waiting the DNS response. stop will take effect after receiving the response
 
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(shutdownTimeout))
+	ctx, cancel := context.WithTimeout(context.Background(), client.Timeout)
+	defer cancel()
 
 	// we ask HandleFunc to stop hold the reply. There is 100ms to ensure that the replies
 	// will start AFTER the shutdown is kickedoff.
 	// here we cannot control the time sync.
 	close(doReply)
+
 	// And now shutdown the server : we expect that all msg already read by the server will be served
-	err := srv.ShutdownContext(ctx)
-	cancel()
-	if err != nil {
+	if err := srv.ShutdownContext(ctx); err != nil {
 		t.Errorf("could not shutdown test server, %v", err)
 	}
 
 	// wait that all go routines are stopped and report their numbers
 	wg.Wait()
 
+	close(errors)
+
 	// now check we received ALL the msg sent
 	if sendMsg != recvMsg {
 		t.Errorf("sent %v msgs to the server, but only %v msgs were returned", sendMsg, recvMsg)
 	}
 
+	for err := range errors {
+		t.Error(err)
+	}
 }
 
 func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
-
 	s, addr, _, err := RunLocalTCPServerWithFinChan(":0", 3*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 
-	client := &Client{Net: "tcp"}
-
-	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
-
+	c := &Client{Net: "tcp"}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
 func TestShutdownTLS(t *testing.T) {
@@ -688,7 +696,6 @@ func TestShutdownTLS(t *testing.T) {
 }
 
 func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
-
 	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
 	if err != nil {
 		t.Fatalf("unable to build certificate: %v", err)
@@ -703,12 +710,13 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 
-	client := &Client{Net: "tcp-tls", TLSConfig: &tls.Config{
-		InsecureSkipVerify: true,
-	}}
-
-	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
-
+	c := &Client{
+		Net: "tcp-tls",
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
 type trigger struct {
@@ -801,16 +809,13 @@ func TestShutdownUDPWithContext(t *testing.T) {
 }
 
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
-
 	s, addr, _, err := RunLocalUDPServerWithFinChan(":0", 3*time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 
-	client := &Client{Net: "udp"}
-
-	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
-
+	c := &Client{Net: "udp"}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
 func TestServerStartStopRace(t *testing.T) {
