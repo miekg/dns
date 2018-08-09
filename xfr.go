@@ -204,8 +204,9 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 		if err := w.WriteMsg(r); err != nil {
 			return err
 		}
+		w.TsigTimersOnly(true)
 	}
-	w.TsigTimersOnly(true)
+
 	return nil
 }
 
