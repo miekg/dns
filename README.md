@@ -65,6 +65,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/jedisct1/dnscrypt-proxy
 * https://github.com/jedisct1/rpdns
 * https://github.com/xor-gate/sshfp
+* https://github.com/rs/dnstrace
 
 Send pull request if you want to be listed here.
 
