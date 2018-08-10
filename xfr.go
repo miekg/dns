@@ -185,18 +185,28 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 // The server is responsible for sending the correct sequence of RRs through the
 // channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
+	tsig := q.IsTsig()
+	if w.TsigStatus() != nil {
+		tsig = nil
+	}
 	for x := range ch {
 		r := new(Msg)
 		// Compress?
 		r.SetReply(q)
 		r.Authoritative = true
+
+		// If there is a TSIG RR in question, then set it into answers
+		if tsig != nil {
+			r.SetTsig(tsig.Hdr.Name, tsig.Algorithm, tsig.Fudge, time.Now().Unix())
+		}
 		// assume it fits TODO(miek): fix
 		r.Answer = append(r.Answer, x.RR...)
 		if err := w.WriteMsg(r); err != nil {
 			return err
 		}
+		w.TsigTimersOnly(true)
 	}
-	w.TsigTimersOnly(true)
+
 	return nil
 }
 
