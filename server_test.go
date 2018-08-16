@@ -585,8 +585,6 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 	const requests = 100
 
-	errors := make(chan error, requests*2)
-
 	doReply := make(chan struct{})
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		// wait the signal to reply
@@ -600,7 +598,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 
 		if err := w.WriteMsg(m); err != nil {
-			errors <- fmt.Errorf("Error while replying hello msg: %s", err)
+			t.Errorf("ResponseWriter.WriteMsg error: %s", err)
 		}
 	})
 	defer HandleRemove("example.com.")
@@ -623,11 +621,13 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 
 			m := new(Msg)
 			m.SetQuestion("example.com.", TypeTXT)
+
 			atomic.AddInt64(&sendMsg, 1)
-			if _, _, err := client.Exchange(m, addr); err == nil {
-				atomic.AddInt64(&recvMsg, 1)
+
+			if _, _, err := client.Exchange(m, addr); err != nil {
+				t.Errorf("client.Exchange error: %s", err)
 			} else {
-				errors <- fmt.Errorf("error return by msg: %s", err)
+				atomic.AddInt64(&recvMsg, 1)
 			}
 		}()
 	}
@@ -653,15 +653,9 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	// wait that all go routines are stopped and report their numbers
 	wg.Wait()
 
-	close(errors)
-
 	// now check we received ALL the msg sent
 	if sendMsg != recvMsg {
 		t.Errorf("sent %v msgs to the server, but only %v msgs were returned", sendMsg, recvMsg)
-	}
-
-	for err := range errors {
-		t.Error(err)
 	}
 }
 
