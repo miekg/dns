@@ -893,19 +893,19 @@ Altitude:
 				if !ok {
 					return nil, &ParseError{f, "bad LOC Size", l}, ""
 				}
-				rr.Size = (e & 0x0f) | (m << 4 & 0xf0)
+				rr.Size = e&0x0f | m<<4&0xf0
 			case 1: // HorizPre
 				e, m, ok := stringToCm(l.token)
 				if !ok {
 					return nil, &ParseError{f, "bad LOC HorizPre", l}, ""
 				}
-				rr.HorizPre = (e & 0x0f) | (m << 4 & 0xf0)
+				rr.HorizPre = e&0x0f | m<<4&0xf0
 			case 2: // VertPre
 				e, m, ok := stringToCm(l.token)
 				if !ok {
 					return nil, &ParseError{f, "bad LOC VertPre", l}, ""
 				}
-				rr.VertPre = (e & 0x0f) | (m << 4 & 0xf0)
+				rr.VertPre = e&0x0f | m<<4&0xf0
 			}
 			count++
 		case zBlank:
