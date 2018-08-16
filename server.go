@@ -16,11 +16,18 @@ import (
 // Default maximum number of TCP queries before we close the socket.
 const maxTCPQueries = 128
 
-// Interval for stop worker if no load
-const idleWorkerTimeout = 10 * time.Second
+// The maximum number of idle workers.
+//
+// This controls the maximum number of workers that are allowed to stay
+// idle waiting for incoming requests before being torn down.
+//
+// If this limit is reached, the server will just keep spawning new
+// workers (goroutines) for each incoming request. In this case, each
+// worker will only be used for a single request.
+const maxIdleWorkersCount = 10000
 
-// Maximum number of workers
-const maxWorkersCount = 10000
+// The maximum length of time a worker may idle for before being destroyed.
+const idleWorkerTimeout = 10 * time.Second
 
 // Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
@@ -327,7 +334,7 @@ func (srv *Server) worker(w *response) {
 
 	for {
 		count := atomic.LoadInt32(&srv.workersCount)
-		if count > maxWorkersCount {
+		if count > maxIdleWorkersCount {
 			return
 		}
 		if atomic.CompareAndSwapInt32(&srv.workersCount, count, count+1) {
