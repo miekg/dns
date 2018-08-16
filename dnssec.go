@@ -173,7 +173,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 				keytag += int(v) << 8
 			}
 		}
-		keytag += (keytag >> 16) & 0xFFFF
+		keytag += keytag >> 16 & 0xFFFF
 		keytag &= 0xFFFF
 	}
 	return uint16(keytag)

@@ -752,9 +752,9 @@ func (rr *LOC) String() string {
 		s += fmt.Sprintf("%.0fm ", alt)
 	}
 
-	s += cmToM((rr.Size&0xf0)>>4, rr.Size&0x0f) + "m "
-	s += cmToM((rr.HorizPre&0xf0)>>4, rr.HorizPre&0x0f) + "m "
-	s += cmToM((rr.VertPre&0xf0)>>4, rr.VertPre&0x0f) + "m"
+	s += cmToM(rr.Size&0xf0>>4, rr.Size&0x0f) + "m "
+	s += cmToM(rr.HorizPre&0xf0>>4, rr.HorizPre&0x0f) + "m "
+	s += cmToM(rr.VertPre&0xf0>>4, rr.VertPre&0x0f) + "m"
 
 	return s
 }

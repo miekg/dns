@@ -92,7 +92,7 @@ func (rr *OPT) len() int {
 
 // Version returns the EDNS version used. Only zero is defined.
 func (rr *OPT) Version() uint8 {
-	return uint8((rr.Hdr.Ttl & 0x00FF0000) >> 16)
+	return uint8(rr.Hdr.Ttl & 0x00FF0000 >> 16)
 }
 
 // SetVersion sets the version of EDNS. This is usually zero.
@@ -102,7 +102,7 @@ func (rr *OPT) SetVersion(v uint8) {
 
 // ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
 func (rr *OPT) ExtendedRcode() int {
-	return int((rr.Hdr.Ttl&0xFF000000)>>24) + 15
+	return int(rr.Hdr.Ttl&0xFF000000>>24) + 15
 }
 
 // SetExtendedRcode sets the EDNS extended RCODE field.
