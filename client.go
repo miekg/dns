@@ -89,7 +89,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
 	var d net.Dialer
 	if c.Dialer == nil {
-		d = net.Dialer{Timeout:c.getTimeoutForRequest(c.dialTimeout())}
+		d = net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
 		d = net.Dialer(*c.Dialer)
 	}
