@@ -56,6 +56,12 @@ type ResponseWriter interface {
 	Hijack()
 }
 
+// A TLSResponse interface is used by a DNS Handler to access TLS connection state
+// when available.
+type TLSResponse interface {
+	TLS() *tls.ConnectionState
+}
+
 type response struct {
 	msg            []byte
 	hijacked       bool // connection has been hijacked by handler
@@ -784,6 +790,18 @@ func (w *response) Close() error {
 		e := w.tcp.Close()
 		w.tcp = nil
 		return e
+	}
+	return nil
+}
+
+// TLS implements the TLSResponse.TLS method.
+func (w *response) TLS() *tls.ConnectionState {
+	if w.tcp == nil {
+		return nil
+	}
+	if v, ok := w.tcp.(*tls.Conn); ok {
+		t := v.ConnectionState()
+		return &t
 	}
 	return nil
 }

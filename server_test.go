@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+const (
+	TLSOffMsg = "TLS: off"
+	TLSOnMsg  = "TLS: on"
+)
+
 func HelloServer(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
@@ -46,6 +51,18 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 
 	m.Extra = make([]RR, 1)
 	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello example"}}
+	w.WriteMsg(m)
+}
+
+func TLSStateServer(w ResponseWriter, req *Msg) {
+	m := new(Msg)
+	m.SetReply(req)
+	txt := TLSOffMsg
+	m.Extra = make([]RR, 1)
+	if tlsState := w.(TLSResponse).TLS(); tlsState != nil {
+		txt = TLSOnMsg
+	}
+	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{txt}}
 	w.WriteMsg(m)
 }
 
@@ -156,8 +173,10 @@ func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, error
 func TestServing(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
+	HandleFunc("tlsstate.example.net.", TLSStateServer)
 	defer HandleRemove("miek.nl.")
 	defer HandleRemove("example.com.")
+	defer HandleRemove("tlsstate.example.net.")
 
 	s, addrstr, err := RunLocalUDPServer(":0")
 	if err != nil {
@@ -197,13 +216,26 @@ func TestServing(t *testing.T) {
 	if txt != "Hello example" {
 		t.Error("unexpected result for example.com", txt, "!= Hello example")
 	}
+
+	// Test TLS State. With UDP, it should be OFF.
+	m.SetQuestion("tlsstate.example.net.", TypeTXT)
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Error("failed to exchange eXaMplE.cOm", err)
+	}
+	txt = r.Extra[0].(*TXT).Txt[0]
+	if txt != TLSOffMsg {
+		t.Error("unexpected result for tlsstate.examepl.net.", txt, "!= "+TLSOffMsg)
+	}
 }
 
 func TestServingTLS(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
+	HandleFunc("tlsstate.example.net.", TLSStateServer)
 	defer HandleRemove("miek.nl.")
 	defer HandleRemove("example.com.")
+	defer HandleRemove("tlsstate.example.net.")
 
 	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
 	if err != nil {
@@ -256,6 +288,78 @@ func TestServingTLS(t *testing.T) {
 	txt = r.Extra[0].(*TXT).Txt[0]
 	if txt != "Hello example" {
 		t.Error("unexpected result for example.com", txt, "!= Hello example")
+	}
+
+	// Test TLS State. With TLS, it should be OFF.
+	m.SetQuestion("tlsstate.example.net.", TypeTXT)
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Error("failed to exchange eXaMplE.cOm", err)
+	}
+	txt = r.Extra[0].(*TXT).Txt[0]
+	if txt != TLSOnMsg {
+		t.Error("unexpected result for tlsstate.examepl.net.", txt, "!= "+TLSOnMsg)
+	}
+}
+
+func TestServingTCP(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	HandleFunc("example.com.", AnotherHelloServer)
+	HandleFunc("tlsstate.example.net.", TLSStateServer)
+	defer HandleRemove("miek.nl.")
+	defer HandleRemove("example.com.")
+	defer HandleRemove("tlsstate.example.net.")
+
+	s, addrstr, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := new(Client)
+	c.Net = "tcp"
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil || len(r.Extra) == 0 {
+		t.Fatal("failed to exchange miek.nl", err)
+	}
+	txt := r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello world" {
+		t.Error("unexpected result for miek.nl", txt, "!= Hello world")
+	}
+
+	m.SetQuestion("example.com.", TypeTXT)
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange example.com", err)
+	}
+	txt = r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello example" {
+		t.Error("unexpected result for example.com", txt, "!= Hello example")
+	}
+
+	// Test Mixes cased as noticed by Ask.
+	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Error("failed to exchange eXaMplE.cOm", err)
+	}
+	txt = r.Extra[0].(*TXT).Txt[0]
+	if txt != "Hello example" {
+		t.Error("unexpected result for example.com", txt, "!= Hello example")
+	}
+
+	// Test TLS State. With TLS, it should be OFF.
+	m.SetQuestion("tlsstate.example.net.", TypeTXT)
+	r, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Error("failed to exchange eXaMplE.cOm", err)
+	}
+	txt = r.Extra[0].(*TXT).Txt[0]
+	if txt != TLSOffMsg {
+		t.Error("unexpected result for tlsstate.examepl.net.", txt, "!= "+TLSOffMsg)
 	}
 }
 
