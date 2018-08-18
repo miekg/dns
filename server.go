@@ -796,9 +796,6 @@ func (w *response) Close() error {
 
 // TLS implements the TLSResponse.TLS method.
 func (w *response) TLS() *tls.ConnectionState {
-	if w.tcp == nil {
-		return nil
-	}
 	if v, ok := w.tcp.(*tls.Conn); ok {
 		t := v.ConnectionState()
 		return &t

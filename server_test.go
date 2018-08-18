@@ -58,10 +58,10 @@ func TLSStateServer(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	txt := TLSOffMsg
-	m.Extra = make([]RR, 1)
 	if tlsState := w.(TLSResponse).TLS(); tlsState != nil {
 		txt = TLSOnMsg
 	}
+	m.Extra = make([]RR, 1)
 	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{txt}}
 	w.WriteMsg(m)
 }
