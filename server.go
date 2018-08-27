@@ -56,10 +56,10 @@ type ResponseWriter interface {
 	Hijack()
 }
 
-// A TLSResponse interface is used by a DNS Handler to access TLS connection state
+// A ConnectionState interface is used by a DNS Handler to access TLS connection state
 // when available.
-type TLSResponse interface {
-	TLS() *tls.ConnectionState
+type ConnectionState interface {
+	ConnectionState() *tls.ConnectionState
 }
 
 type response struct {
@@ -794,8 +794,8 @@ func (w *response) Close() error {
 	return nil
 }
 
-// TLS implements the TLSResponse.TLS method.
-func (w *response) TLS() *tls.ConnectionState {
+// ConnectionState() implements the ConnectionState.ConnectionState() interface.
+func (w *response) ConnectionState() *tls.ConnectionState {
 	if v, ok := w.tcp.(*tls.Conn); ok {
 		t := v.ConnectionState()
 		return &t
