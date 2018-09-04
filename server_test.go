@@ -1,12 +1,14 @@
 package dns
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -50,17 +52,19 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 }
 
 func RunLocalUDPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalUDPServerWithFinChan(laddr)
+	server, l, _, err := RunLocalUDPServerWithFinChan(laddr, time.Second, time.Hour)
 
 	return server, l, err
 }
 
-func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
+func RunLocalUDPServerWithFinChan(laddr string, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
-	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+
+	server := &Server{PacketConn: pc,
+		ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -86,7 +90,7 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 		return nil, "", err
 	}
 	server := &Server{PacketConn: pc, Unsafe: true,
-		ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+		ReadTimeout: time.Second, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -102,18 +106,18 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 }
 
 func RunLocalTCPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalTCPServerWithFinChan(laddr)
+	server, l, _, err := RunLocalTCPServerWithFinChan(laddr, time.Hour, time.Hour)
 
 	return server, l, err
 }
 
-func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
+func RunLocalTCPServerWithFinChan(laddr string, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+	server := &Server{Listener: l, ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -132,13 +136,13 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	return server, l.Addr().String(), fin, nil
 }
 
-func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, error) {
+func RunLocalTLSServer(laddr string, config *tls.Config, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, error) {
 	l, err := tls.Listen("tcp", laddr, config)
 	if err != nil {
 		return nil, "", err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+	server := &Server{Listener: l, ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -214,7 +218,7 @@ func TestServingTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer(":0", &config)
+	s, addrstr, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -264,7 +268,7 @@ func TestServingListenAndServe(t *testing.T) {
 	defer HandleRemove("example.com.")
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Second, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -300,7 +304,7 @@ func TestServingListenAndServeTLS(t *testing.T) {
 	}
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Second, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -557,7 +561,7 @@ func TestServingResponse(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	s, _, fin, err := RunLocalTCPServerWithFinChan(":0")
+	s, _, fin, err := RunLocalTCPServerWithFinChan(":0", time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -575,6 +579,94 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
+func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
+
+	// send a series of DNS queries : sending happen before the shutdown, and reply happen AFTER the shutdown is triggered
+	// we expect to have all DNS messages replied.
+
+	// timeout is set very large to ensure we have time to get all replies.
+	shutdownTimeout := 10 * time.Second
+	doReply := make(chan struct{})
+	HandleFunc("example.com", func(w ResponseWriter, req *Msg) {
+		// wait the signal to reply
+		select {
+		case <-doReply:
+			time.Sleep(100 * time.Millisecond)
+			m := new(Msg)
+			m.SetReply(req)
+			m.Extra = make([]RR, 1)
+			m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
+			err := w.WriteMsg(m)
+			if err != nil {
+				t.Logf("Error while replying hello msg : %s", err)
+			}
+		}
+	})
+
+	// tune the timeout of the client, based on expecting delay to reply - from 1 to 2 sec.
+	client.Timeout = time.Duration(shutdownTimeout)
+
+	var sendMsg int64
+	var recvMsg int64
+	var wg sync.WaitGroup
+
+	// run a series of workers that just send ONE message and count if reply is correct (no timeout)
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			m := new(Msg)
+			m.SetQuestion("example.com.", TypeTXT)
+			atomic.AddInt64(&sendMsg, 1)
+			_, _, err := client.Exchange(m, addr)
+			if err == nil {
+				atomic.AddInt64(&recvMsg, 1)
+			} else {
+				t.Logf("error return by msg : %s", err)
+			}
+			wg.Done()
+		}()
+	}
+
+	// wait at least 1 sec the mechanism start to send msgs
+	time.Sleep(time.Millisecond * 1000)
+	// all senders are now waiting the DNS response. stop will take effect after receiving the response
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(shutdownTimeout))
+
+	// we ask HandleFunc to stop hold the reply. There is 100ms to ensure that the replies
+	// will start AFTER the shutdown is kickedoff.
+	// here we cannot control the time sync.
+	close(doReply)
+	// And now shutdown the server : we expect that all msg already read by the server will be served
+	err := srv.ShutdownContext(ctx)
+	cancel()
+	if err != nil {
+		t.Errorf("could not shutdown test server, %v", err)
+	}
+
+	// wait that all go routines are stopped and report their numbers
+	wg.Wait()
+
+	// now check we received ALL the msg sent
+	if sendMsg != recvMsg {
+		t.Errorf("sent %v msgs to the server, but only %v msgs were returned", sendMsg, recvMsg)
+	}
+
+}
+
+func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
+
+	s, addr, _, err := RunLocalTCPServerWithFinChan(":0", 3*time.Second, time.Hour)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	client := &Client{Net: "tcp"}
+
+	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
+
+}
+
 func TestShutdownTLS(t *testing.T) {
 	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
 	if err != nil {
@@ -585,7 +677,7 @@ func TestShutdownTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, _, err := RunLocalTLSServer(":0", &config)
+	s, _, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -593,6 +685,30 @@ func TestShutdownTLS(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not shutdown test TLS server, %v", err)
 	}
+}
+
+func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	config := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	s, addr, err := RunLocalTLSServer(":0", &config, 3*time.Second, time.Hour)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	client := &Client{Net: "tcp-tls", TLSConfig: &tls.Config{
+		InsecureSkipVerify: true,
+	}}
+
+	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
+
 }
 
 type trigger struct {
@@ -653,7 +769,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 }
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, fin, err := RunLocalUDPServerWithFinChan(":0")
+	s, _, fin, err := RunLocalUDPServerWithFinChan(":0", time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -671,11 +787,37 @@ func TestShutdownUDP(t *testing.T) {
 	}
 }
 
+func TestShutdownUDPWithContext(t *testing.T) {
+	s, _, _, err := RunLocalUDPServerWithFinChan(":0", 2*time.Second, time.Hour)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
+	err = s.ShutdownContext(ctx)
+	if err != nil {
+		t.Errorf("could not shutdown test UDP server, %v", err)
+	}
+	cancel()
+}
+
+func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
+
+	s, addr, _, err := RunLocalUDPServerWithFinChan(":0", 3*time.Second, time.Hour)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	client := &Client{Net: "udp"}
+
+	checkInProgressQueriesAtShutdownServer(t, s, addr, client)
+
+}
+
 func TestServerStartStopRace(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		var err error
 		s := &Server{}
-		s, _, _, err = RunLocalUDPServerWithFinChan(":0")
+		s, _, _, err = RunLocalUDPServerWithFinChan(":0", time.Second, time.Hour)
 		if err != nil {
 			t.Fatalf("could not start server: %s", err)
 		}
@@ -711,7 +853,8 @@ func ExampleDecorateWriter() {
 	server := &Server{
 		PacketConn:     pc,
 		DecorateWriter: wf,
-		ReadTimeout:    time.Hour, WriteTimeout: time.Hour,
+		ReadTimeout:    time.Second,
+		WriteTimeout:   time.Hour,
 	}
 
 	waitLock := sync.Mutex{}

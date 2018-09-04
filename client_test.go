@@ -117,7 +117,7 @@ func TestClientTLSSyncV4(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer(":0", &config)
+	s, addrstr, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}

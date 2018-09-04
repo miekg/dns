@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"io"
@@ -320,11 +321,18 @@ type Server struct {
 	// Shutdown handling
 	lock    sync.RWMutex
 	started bool
+	// track packet processing and allow to wait all are processed before closing
+	dnsWg sync.WaitGroup
+	// a chan to wait shutdown is done
+	shut chan struct{}
 }
 
-func (srv *Server) isStarted() bool {
+func (srv *Server) isStarted(incWg bool) bool {
 	srv.lock.RLock()
 	started := srv.started
+	if started && incWg {
+		srv.dnsWg.Add(1)
+	}
 	srv.lock.RUnlock()
 	return started
 }
@@ -486,24 +494,109 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return.
+func (srv *Server) shutdownTimeout() time.Duration {
+	// if not defined, the shutdownTimeout should be > to the readTimeout where the thread are blocked waiting for msg
+	// UDP is using only readTimeout
+	timeout := srv.getReadTimeout()
+
+	if srv.Listener != nil {
+		// if TCP listener is in use, the read timeout may be extended with the idleTimeout
+		idleTimeout := tcpIdleTimeout
+		if srv.IdleTimeout != nil {
+			idleTimeout = srv.IdleTimeout()
+		}
+		if idleTimeout > timeout {
+			timeout = idleTimeout
+		}
+	}
+
+	// add a little time to ensure we have time to wait the thread are released
+	timeout = timeout + time.Second
+	return timeout
+
+}
+
+// Shutdown shuts down gracefully a server. All in progress queries will be dealt with
+// After a call to Shutdown, ListenAndServe and ActivateAndServe will return when all accepted queries are handled
+// or shutdown timeout occurs.
+// error is returned if the server is not started, or if graceful shutdown interrupted by timeout
 func (srv *Server) Shutdown() error {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(srv.shutdownTimeout()))
+	err := srv.ShutdownContext(ctx)
+	cancel()
+
+	return err
+}
+
+// ShutdownContext shuts down gracefully a server.
+// the context allows caller to set a deadline for shutdown
+// error is returned if the server is not started, or if graceful shutdown interrupted by timeout
+func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Lock()
 	if !srv.started {
 		srv.lock.Unlock()
 		return &Error{err: "server not started"}
 	}
+	// inform the server is no more alive
+	// it will prevent to start read new packet
+	// however the already started READ session will continue until timeout or receiving one msg
+	// it can take to MAX(readTimeout, TCPIdleTimeout) to have all READ session processed
 	srv.started = false
+	srv.shut = make(chan struct{})
 	srv.lock.Unlock()
 
-	if srv.PacketConn != nil {
-		srv.PacketConn.Close()
-	}
+	// we can safely close the TCP listener : no more incoming queries will be accepted
 	if srv.Listener != nil {
 		srv.Listener.Close()
+		srv.Listener = nil
 	}
-	return nil
+	// for UDP side the Listener is also the Connection so we cannot close it here
+	// however, the reading loop will exit as soon as it see the flag srv.started == false
+
+	// wait all queries in progress are processed
+	done := make(chan struct{})
+	go func() {
+		srv.dnsWg.Wait()
+		close(done)
+	}()
+
+	var err error
+	select {
+	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
+	}
+
+	srv.closeResources(true)
+	return err
+}
+
+func (srv *Server) waitShutdownCompletes() {
+	srv.lock.RLock()
+	defer srv.lock.RUnlock()
+	if srv.shut != nil {
+		select {
+		case <-srv.shut:
+		}
+	}
+
+}
+
+func (srv *Server) closeResources(closeShut bool) {
+	srv.lock.Lock()
+	defer srv.lock.Unlock()
+	if srv.Listener != nil {
+		srv.Listener.Close()
+		srv.Listener = nil
+	}
+	if srv.PacketConn != nil {
+		srv.PacketConn.Close()
+		srv.PacketConn = nil
+	}
+	if closeShut {
+		close(srv.shut)
+		srv.shut = nil
+	}
 }
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
@@ -517,31 +610,34 @@ func (srv *Server) getReadTimeout() time.Duration {
 
 // serveTCP starts a TCP listener for the server.
 func (srv *Server) serveTCP(l net.Listener) error {
-	defer l.Close()
-
+	var reterr error
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
 
 	for {
 		rw, err := l.Accept()
-		if !srv.isStarted() {
+		if !srv.isStarted(false) {
 			return nil
 		}
 		if err != nil {
 			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
 				continue
 			}
-			return err
+			reterr = err
+			break
 		}
 		srv.spawnWorker(&response{tsigSecret: srv.TsigSecret, tcp: rw})
 	}
+	// service is ended - ensure closing the resources
+	srv.waitShutdownCompletes()
+	srv.closeResources(false)
+	return reterr
 }
 
 // serveUDP starts a UDP listener for the server.
 func (srv *Server) serveUDP(l *net.UDPConn) error {
-	defer l.Close()
-
+	var reterr error
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -554,21 +650,30 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
 	for {
-		m, s, err := reader.ReadUDP(l, rtimeout)
-		if !srv.isStarted() {
+		if !srv.isStarted(true) {
 			return nil
 		}
+		m, s, err := reader.ReadUDP(l, rtimeout)
 		if err != nil {
 			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+				srv.dnsWg.Done()
 				continue
 			}
-			return err
+			srv.dnsWg.Done()
+			reterr = err
+			break
 		}
 		if len(m) < headerSize {
+			srv.dnsWg.Done()
 			continue
 		}
 		srv.spawnWorker(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s})
 	}
+
+	// service is ended - ensure closing the resources
+	srv.waitShutdownCompletes()
+	srv.closeResources(false)
+	return reterr
 }
 
 func (srv *Server) serve(w *response) {
@@ -581,6 +686,7 @@ func (srv *Server) serve(w *response) {
 	if w.udp != nil {
 		// serve UDP
 		srv.serveDNS(w)
+		srv.dnsWg.Done()
 		return
 	}
 
@@ -609,12 +715,18 @@ func (srv *Server) serve(w *response) {
 
 	for q := 0; q < limit || limit == -1; q++ {
 		var err error
+		// check the server is still alive before block on Read
+		if !srv.isStarted(true) {
+			break
+		}
 		w.msg, err = reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
+			srv.dnsWg.Done()
 			break
 		}
 		srv.serveDNS(w)
+		srv.dnsWg.Done()
 		if w.tcp == nil {
 			break // Close() was called
 		}
