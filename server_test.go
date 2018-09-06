@@ -274,7 +274,7 @@ func TestServingTLSConnectionState(t *testing.T) {
 			m := new(Msg)
 			m.SetReply(req)
 			tlsFound := true
-			if connState := w.(ConnectionState).ConnectionState(); connState == nil {
+			if connState := w.(ConnectionState).ConnectionState(); connState.Version == 0 {
 				tlsFound = false
 			}
 			if tlsFound != tlsExpected {

@@ -59,7 +59,7 @@ type ResponseWriter interface {
 // A ConnectionState interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionState interface {
-	ConnectionState() *tls.ConnectionState
+	ConnectionState() tls.ConnectionState
 }
 
 type response struct {
@@ -795,10 +795,9 @@ func (w *response) Close() error {
 }
 
 // ConnectionState() implements the ConnectionState.ConnectionState() interface.
-func (w *response) ConnectionState() *tls.ConnectionState {
+func (w *response) ConnectionState() (t tls.ConnectionState) {
 	if v, ok := w.tcp.(*tls.Conn); ok {
-		t := v.ConnectionState()
-		return &t
+		return v.ConnectionState()
 	}
-	return nil
+	return
 }
