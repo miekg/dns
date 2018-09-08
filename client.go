@@ -91,7 +91,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	if c.Dialer == nil {
 		d = net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
-		d = net.Dialer(*c.Dialer)
+		d = *c.Dialer
 	}
 
 	network := c.Net
