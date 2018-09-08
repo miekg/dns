@@ -337,11 +337,14 @@ func BenchmarkServe(b *testing.B) {
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -359,11 +362,14 @@ func benchmarkServe6(b *testing.B) {
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -390,10 +396,13 @@ func BenchmarkServeCompress(b *testing.B) {
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
