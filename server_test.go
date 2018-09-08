@@ -636,6 +636,12 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		t.Fatalf("conn.WriteMsg error: %v", eg.Wait())
 	}
 
+	// This sleep is needed to allow time for the requests to
+	// pass from the client through the kernel and back into
+	// the server. Without it, some requests may still be in
+	// the kernel's buffer when ShutdownContext is called.
+	time.Sleep(100 * time.Millisecond)
+
 	eg = new(errgroup.Group)
 
 	for _, conn := range conns {
