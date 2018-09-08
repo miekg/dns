@@ -637,16 +637,6 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 }
 
 func (srv *Server) serve(w *response) {
-	defer func() {
-		if w.tcp != nil {
-			srv.lock.Lock()
-			delete(srv.conns, w.tcp)
-			srv.lock.Unlock()
-		}
-
-		w.wg.Done()
-	}()
-
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -656,19 +646,27 @@ func (srv *Server) serve(w *response) {
 	if w.udp != nil {
 		// serve UDP
 		srv.serveDNS(w)
-		return
-	}
 
-	reader := Reader(&defaultReader{srv})
-	if srv.DecorateReader != nil {
-		reader = srv.DecorateReader(reader)
+		w.wg.Done()
+		return
 	}
 
 	defer func() {
 		if !w.hijacked {
 			w.Close()
 		}
+
+		srv.lock.Lock()
+		delete(srv.conns, w.tcp)
+		srv.lock.Unlock()
+
+		w.wg.Done()
 	}()
+
+	reader := Reader(&defaultReader{srv})
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
+	}
 
 	idleTimeout := tcpIdleTimeout
 	if srv.IdleTimeout != nil {
