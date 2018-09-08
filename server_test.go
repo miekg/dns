@@ -601,7 +601,6 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	}()
 
 	client.Timeout = 10 * time.Second
-	srv.ReadTimeout, srv.WriteTimeout = client.Timeout, client.Timeout
 
 	conns := make([]*Conn, requests)
 	eg := new(errgroup.Group)
