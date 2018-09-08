@@ -52,19 +52,17 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 }
 
 func RunLocalUDPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalUDPServerWithFinChan(laddr, time.Second, time.Hour)
+	server, l, _, err := RunLocalUDPServerWithFinChan(laddr)
 
 	return server, l, err
 }
 
-func RunLocalUDPServerWithFinChan(laddr string, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, chan error, error) {
+func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
-
-	server := &Server{PacketConn: pc,
-		ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
+	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -90,7 +88,7 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 		return nil, "", err
 	}
 	server := &Server{PacketConn: pc, Unsafe: true,
-		ReadTimeout: time.Second, WriteTimeout: time.Hour}
+		ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -106,18 +104,18 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 }
 
 func RunLocalTCPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalTCPServerWithFinChan(laddr, time.Hour, time.Hour)
+	server, l, _, err := RunLocalTCPServerWithFinChan(laddr)
 
 	return server, l, err
 }
 
-func RunLocalTCPServerWithFinChan(laddr string, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, chan error, error) {
+func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
+	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -136,13 +134,13 @@ func RunLocalTCPServerWithFinChan(laddr string, readTimeout time.Duration, write
 	return server, l.Addr().String(), fin, nil
 }
 
-func RunLocalTLSServer(laddr string, config *tls.Config, readTimeout time.Duration, writeTimeout time.Duration) (*Server, string, error) {
+func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, error) {
 	l, err := tls.Listen("tcp", laddr, config)
 	if err != nil {
 		return nil, "", err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: readTimeout, WriteTimeout: writeTimeout}
+	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -218,7 +216,7 @@ func TestServingTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
+	s, addrstr, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -268,7 +266,7 @@ func TestServingListenAndServe(t *testing.T) {
 	defer HandleRemove("example.com.")
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Second, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -304,7 +302,7 @@ func TestServingListenAndServeTLS(t *testing.T) {
 	}
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Second, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -561,7 +559,7 @@ func TestServingResponse(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	s, _, fin, err := RunLocalTCPServerWithFinChan(":0", time.Second, time.Hour)
+	s, _, fin, err := RunLocalTCPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -660,7 +658,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 }
 
 func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
-	s, addr, _, err := RunLocalTCPServerWithFinChan(":0", 3*time.Second, time.Hour)
+	s, addr, _, err := RunLocalTCPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -679,7 +677,7 @@ func TestShutdownTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, _, err := RunLocalTLSServer(":0", &config, time.Second, time.Hour)
+	s, _, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -699,7 +697,7 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addr, err := RunLocalTLSServer(":0", &config, 3*time.Second, time.Hour)
+	s, addr, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -771,7 +769,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 }
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, fin, err := RunLocalUDPServerWithFinChan(":0", time.Second, time.Hour)
+	s, _, fin, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -790,7 +788,7 @@ func TestShutdownUDP(t *testing.T) {
 }
 
 func TestShutdownUDPWithContext(t *testing.T) {
-	s, _, _, err := RunLocalUDPServerWithFinChan(":0", 2*time.Second, time.Hour)
+	s, _, _, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -803,7 +801,7 @@ func TestShutdownUDPWithContext(t *testing.T) {
 }
 
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
-	s, addr, _, err := RunLocalUDPServerWithFinChan(":0", 3*time.Second, time.Hour)
+	s, addr, _, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -816,7 +814,7 @@ func TestServerStartStopRace(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		var err error
 		s := &Server{}
-		s, _, _, err = RunLocalUDPServerWithFinChan(":0", time.Second, time.Hour)
+		s, _, _, err = RunLocalUDPServerWithFinChan(":0")
 		if err != nil {
 			t.Fatalf("could not start server: %s", err)
 		}
@@ -852,8 +850,7 @@ func ExampleDecorateWriter() {
 	server := &Server{
 		PacketConn:     pc,
 		DecorateWriter: wf,
-		ReadTimeout:    time.Second,
-		WriteTimeout:   time.Hour,
+		ReadTimeout:    time.Hour, WriteTimeout: time.Hour,
 	}
 
 	waitLock := sync.Mutex{}
