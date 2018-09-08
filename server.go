@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -413,13 +414,7 @@ func (srv *Server) ListenAndServe() error {
 		unlock()
 		return srv.serveTCP(l)
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
-		network := "tcp"
-		if srv.Net == "tcp4-tls" {
-			network = "tcp4"
-		} else if srv.Net == "tcp6-tls" {
-			network = "tcp6"
-		}
-
+		network := strings.TrimSuffix(srv.Net, "-tls")
 		l, err := tls.Listen(network, addr, srv.TLSConfig)
 		if err != nil {
 			return err
