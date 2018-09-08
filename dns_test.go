@@ -305,7 +305,7 @@ func TestTKEY(t *testing.T) {
 	if packErr != nil {
 		t.Fatal("unable to pack TKEY RR after modification", packErr)
 	}
-	if offset != (len(tkeyBytes) + 2) {
+	if offset != len(tkeyBytes)+2 {
 		t.Fatalf("mismatched TKEY RR size %d != %d", offset, len(tkeyBytes)+2)
 	}
 

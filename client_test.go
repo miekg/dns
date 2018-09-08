@@ -489,8 +489,8 @@ func TestTimeout(t *testing.T) {
 	done := make(chan struct{}, 2)
 
 	timeout := time.Millisecond
-	allowable := timeout + (10 * time.Millisecond)
-	abortAfter := timeout + (100 * time.Millisecond)
+	allowable := timeout + 10*time.Millisecond
+	abortAfter := timeout + 100*time.Millisecond
 
 	start := time.Now()
 
