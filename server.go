@@ -630,6 +630,7 @@ func (srv *Server) serve(w *response) {
 func (srv *Server) serveDNS(w *response) {
 	req := new(Msg)
 	err := req.Unpack(w.msg)
+	w.msg = nil
 	if err != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
