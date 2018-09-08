@@ -532,7 +532,7 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Unlock()
 
 	if testShutdownNotify != nil {
-		close(testShutdownNotify)
+		testShutdownNotify.Broadcast()
 	}
 
 	var err error
@@ -549,7 +549,7 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	return err
 }
 
-var testShutdownNotify chan struct{}
+var testShutdownNotify *sync.Cond
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
 func (srv *Server) getReadTimeout() time.Duration {

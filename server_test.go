@@ -578,13 +578,20 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
+func init() {
+	testShutdownNotify = &sync.Cond{
+		L: new(sync.Mutex),
+	}
+}
+
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
 	const requests = 100
 
-	testShutdownNotify = make(chan struct{})
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		// wait the signal to reply
-		<-testShutdownNotify
+		testShutdownNotify.L.Lock()
+		testShutdownNotify.Wait()
+		testShutdownNotify.L.Unlock()
 
 		m := new(Msg)
 		m.SetReply(req)
@@ -595,10 +602,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 			t.Errorf("ResponseWriter.WriteMsg error: %s", err)
 		}
 	})
-	defer func() {
-		testShutdownNotify = nil
-		HandleRemove("example.com.")
-	}()
+	defer HandleRemove("example.com.")
 
 	client.Timeout = 10 * time.Second
 
