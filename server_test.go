@@ -8,9 +8,10 @@ import (
 	"net"
 	"runtime"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func HelloServer(w ResponseWriter, req *Msg) {
@@ -578,17 +579,12 @@ func TestShutdownTCP(t *testing.T) {
 }
 
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
-	// send a series of DNS queries : sending happen before the shutdown, and reply happen AFTER the shutdown is triggered
-	// we expect to have all DNS messages replied.
-
 	const requests = 100
 
-	doReply := make(chan struct{})
+	testShutdownNotify = make(chan struct{})
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		// wait the signal to reply
-		<-doReply
-
-		time.Sleep(100 * time.Millisecond)
+		<-testShutdownNotify
 
 		m := new(Msg)
 		m.SetReply(req)
@@ -599,61 +595,68 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 			t.Errorf("ResponseWriter.WriteMsg error: %s", err)
 		}
 	})
-	defer HandleRemove("example.com.")
+	defer func() {
+		testShutdownNotify = nil
+		HandleRemove("example.com.")
+	}()
 
-	// timeout is set very large to ensure we have time to get all replies.
-	// tune the timeout of the client, based on expecting delay to reply - from 1 to 2 sec.
 	client.Timeout = 10 * time.Second
+	srv.ReadTimeout, srv.WriteTimeout = client.Timeout, client.Timeout
 
-	var (
-		sendMsg int64
-		recvMsg int64
-		wg      sync.WaitGroup
-	)
-	wg.Add(requests)
+	conns := make([]*Conn, requests)
+	eg := new(errgroup.Group)
 
-	// run a series of workers that just send ONE message and count if reply is correct (no timeout)
-	for i := 0; i < requests; i++ {
-		go func() {
-			defer wg.Done()
-
-			m := new(Msg)
-			m.SetQuestion("example.com.", TypeTXT)
-
-			atomic.AddInt64(&sendMsg, 1)
-
-			if _, _, err := client.Exchange(m, addr); err != nil {
-				t.Errorf("client.Exchange error: %s", err)
-			} else {
-				atomic.AddInt64(&recvMsg, 1)
-			}
-		}()
+	for i := range conns {
+		conn := &conns[i]
+		eg.Go(func() error {
+			var err error
+			*conn, err = client.Dial(addr)
+			return err
+		})
 	}
 
-	// wait at least 1 sec the mechanism start to send msgs
-	time.Sleep(time.Second)
+	if eg.Wait() != nil {
+		t.Fatalf("client.Dial error: %v", eg.Wait())
+	}
 
-	// all senders are now waiting the DNS response. stop will take effect after receiving the response
+	m := new(Msg)
+	m.SetQuestion("example.com.", TypeTXT)
+	eg = new(errgroup.Group)
+
+	for _, conn := range conns {
+		conn := conn
+		eg.Go(func() error {
+			conn.SetWriteDeadline(time.Now().Add(client.Timeout))
+
+			return conn.WriteMsg(m)
+		})
+	}
+
+	if eg.Wait() != nil {
+		t.Fatalf("conn.WriteMsg error: %v", eg.Wait())
+	}
+
+	eg = new(errgroup.Group)
+
+	for _, conn := range conns {
+		conn := conn
+		eg.Go(func() error {
+			conn.SetReadDeadline(time.Now().Add(client.Timeout))
+
+			_, err := conn.ReadMsg()
+			return err
+		})
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), client.Timeout)
 	defer cancel()
 
-	// we ask HandleFunc to stop hold the reply. There is 100ms to ensure that the replies
-	// will start AFTER the shutdown is kickedoff.
-	// here we cannot control the time sync.
-	close(doReply)
-
-	// And now shutdown the server : we expect that all msg already read by the server will be served
 	if err := srv.ShutdownContext(ctx); err != nil {
 		t.Errorf("could not shutdown test server, %v", err)
 	}
 
-	// wait that all go routines are stopped and report their numbers
-	wg.Wait()
-
-	// now check we received ALL the msg sent
-	if sendMsg != recvMsg {
-		t.Errorf("sent %v msgs to the server, but only %v msgs were returned", sendMsg, recvMsg)
+	if eg.Wait() != nil {
+		t.Fatalf("conn.ReadMsg error: %v", eg.Wait())
 	}
 }
 
