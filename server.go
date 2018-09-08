@@ -577,6 +577,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			return err
 		}
 		if len(m) < headerSize {
+			if cap(m) == srv.UDPSize {
+				srv.udpPool.Put(m[:srv.UDPSize])
+			}
 			continue
 		}
 		srv.spawnWorker(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s})
@@ -717,6 +720,7 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
 	if err != nil {
+		srv.udpPool.Put(m)
 		return nil, nil, err
 	}
 	m = m[:n]
