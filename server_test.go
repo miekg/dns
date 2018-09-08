@@ -687,6 +687,52 @@ func TestServerStartStopRace(t *testing.T) {
 	}
 }
 
+func TestServerReuseport(t *testing.T) {
+	if !supportsReuseport {
+		t.Skip("reuseport is not supported")
+	}
+
+	startServer := func(addr string) (*Server, chan error) {
+		wait := make(chan struct{})
+		srv := &Server{
+			Net:               "udp",
+			Addr:              addr,
+			NotifyStartedFunc: func() { close(wait) },
+			Reuseport:         true,
+		}
+
+		fin := make(chan error, 1)
+		go func() {
+			fin <- srv.ListenAndServe()
+		}()
+
+		select {
+		case <-wait:
+		case err := <-fin:
+			t.Fatalf("failed to start server: %v", err)
+		}
+
+		return srv, fin
+	}
+
+	srv1, fin1 := startServer(":0") // :0 is resolved to a random free port by the kernel
+	srv2, fin2 := startServer(srv1.PacketConn.LocalAddr().String())
+
+	if err := srv1.Shutdown(); err != nil {
+		t.Fatalf("failed to shutdown first server: %v", err)
+	}
+	if err := srv2.Shutdown(); err != nil {
+		t.Fatalf("failed to shutdown second server: %v", err)
+	}
+
+	if err := <-fin1; err != nil {
+		t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
+	}
+	if err := <-fin2; err != nil {
+		t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
+	}
+}
+
 type ExampleFrameLengthWriter struct {
 	Writer
 }
