@@ -799,19 +799,6 @@ func TestShutdownUDP(t *testing.T) {
 	}
 }
 
-func TestShutdownUDPWithContext(t *testing.T) {
-	s, _, _, err := RunLocalUDPServerWithFinChan(":0")
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
-	err = s.ShutdownContext(ctx)
-	if err != nil {
-		t.Errorf("could not shutdown test UDP server, %v", err)
-	}
-	cancel()
-}
-
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
 	s, addr, _, err := RunLocalUDPServerWithFinChan(":0")
 	if err != nil {
