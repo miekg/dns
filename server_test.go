@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -356,6 +357,9 @@ func BenchmarkServe6(b *testing.B) {
 	a := runtime.GOMAXPROCS(4)
 	s, addrstr, err := RunLocalUDPServer("[::1]:0")
 	if err != nil {
+		if strings.Contains(err.Error(), "bind: cannot assign requested address") {
+			b.Skip("missing IPv6 support")
+		}
 		b.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
