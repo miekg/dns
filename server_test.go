@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -337,33 +338,42 @@ func BenchmarkServe(b *testing.B) {
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
 
-func benchmarkServe6(b *testing.B) {
+func BenchmarkServe6(b *testing.B) {
 	b.StopTimer()
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 	s, addrstr, err := RunLocalUDPServer("[::1]:0")
 	if err != nil {
+		if strings.Contains(err.Error(), "bind: cannot assign requested address") {
+			b.Skip("missing IPv6 support")
+		}
 		b.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
@@ -390,10 +400,13 @@ func BenchmarkServeCompress(b *testing.B) {
 
 	c := new(Client)
 	m := new(Msg)
-	m.SetQuestion("miek.nl", TypeSOA)
+	m.SetQuestion("miek.nl.", TypeSOA)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, addrstr)
+		_, _, err := c.Exchange(m, addrstr)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
 	}
 	runtime.GOMAXPROCS(a)
 }
