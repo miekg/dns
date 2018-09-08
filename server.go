@@ -377,6 +377,12 @@ func (srv *Server) spawnWorker(w *response) {
 	}
 }
 
+func makeUDPBuffer(size int) func() interface{} {
+	return func() interface{} {
+		return make([]byte, size)
+	}
+}
+
 func (srv *Server) init() {
 	srv.queue = make(chan *response)
 
@@ -384,9 +390,7 @@ func (srv *Server) init() {
 		srv.UDPSize = MinMsgSize
 	}
 
-	srv.udpPool.New = func() interface{} {
-		return make([]byte, srv.UDPSize)
-	}
+	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
 }
 
 func unlockOnce(l sync.Locker) func() {
