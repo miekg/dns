@@ -494,7 +494,6 @@ func (srv *Server) ActivateAndServe() error {
 
 	pConn := srv.PacketConn
 	l := srv.Listener
-
 	if pConn != nil {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
