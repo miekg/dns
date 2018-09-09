@@ -538,9 +538,11 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	if srv.PacketConn != nil {
 		srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
 	}
+
 	if srv.Listener != nil {
 		srv.Listener.Close()
 	}
+
 	srv.lock.Lock()
 	for rw := range srv.conns {
 		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
@@ -551,18 +553,18 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 		testShutdownNotify.Broadcast()
 	}
 
-	var err error
+	var ctxErr error
 	select {
 	case <-srv.shutdown:
 	case <-ctx.Done():
-		err = ctx.Err()
+		ctxErr = ctx.Err()
 	}
 
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
 
-	return err
+	return ctxErr
 }
 
 var testShutdownNotify *sync.Cond
