@@ -600,9 +600,14 @@ func init() {
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
 	const requests = 100
 
+	var wg sync.WaitGroup
+	wg.Add(requests)
+
 	var errOnce sync.Once
 
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
+		defer wg.Done()
+
 		// wait the signal to reply
 		testShutdownNotify.L.Lock()
 		testShutdownNotify.Wait()
@@ -674,11 +679,23 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		})
 	}
 
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
 	ctx, cancel := context.WithTimeout(context.Background(), client.Timeout)
 	defer cancel()
 
 	if err := srv.ShutdownContext(ctx); err != nil {
 		t.Errorf("could not shutdown test server, %v", err)
+	}
+
+	select {
+	case <-done:
+	default:
+		t.Error("ShutdownContext returned before replies")
 	}
 
 	if eg.Wait() != nil {
