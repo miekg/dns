@@ -600,6 +600,8 @@ func init() {
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
 	const requests = 100
 
+	var errOnce sync.Once
+
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		// wait the signal to reply
 		testShutdownNotify.L.Lock()
@@ -612,7 +614,9 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 
 		if err := w.WriteMsg(m); err != nil {
-			t.Errorf("ResponseWriter.WriteMsg error: %s", err)
+			errOnce.Do(func() {
+				t.Errorf("ResponseWriter.WriteMsg error: %s", err)
+			})
 		}
 	})
 	defer HandleRemove("example.com.")
