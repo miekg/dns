@@ -685,19 +685,21 @@ func TestShutdownUDP(t *testing.T) {
 }
 
 func TestServerStartStopRace(t *testing.T) {
+	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
-		var err error
-		s := &Server{}
-		s, _, _, err = RunLocalUDPServerWithFinChan(":0")
+		wg.Add(1)
+		s, _, _, err := RunLocalUDPServerWithFinChan(":0")
 		if err != nil {
 			t.Fatalf("could not start server: %s", err)
 		}
 		go func() {
+			defer wg.Done()
 			if err := s.Shutdown(); err != nil {
-				t.Fatalf("could not stop server: %s", err)
+				t.Errorf("could not stop server: %s", err)
 			}
 		}()
 	}
+	wg.Wait()
 }
 
 type ExampleFrameLengthWriter struct {
