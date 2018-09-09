@@ -323,8 +323,8 @@ type Server struct {
 	queue chan *response
 	// Workers count
 	workersCount int32
-	// Shutdown handling
 
+	// Shutdown handling
 	lock     sync.RWMutex
 	started  bool
 	shutdown chan struct{}
@@ -395,6 +395,9 @@ func makeUDPBuffer(size int) func() interface{} {
 func (srv *Server) init() {
 	srv.queue = make(chan *response)
 
+	srv.shutdown = make(chan struct{})
+	srv.conns = make(map[net.Conn]struct{})
+
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
@@ -425,10 +428,7 @@ func (srv *Server) ListenAndServe() error {
 	srv.init()
 	defer close(srv.queue)
 
-	srv.shutdown = make(chan struct{})
-	srv.conns = make(map[net.Conn]struct{})
-
-  switch srv.Net {
+	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
 		a, err := net.ResolveTCPAddr(srv.Net, addr)
 		if err != nil {
@@ -495,10 +495,7 @@ func (srv *Server) ActivateAndServe() error {
 	pConn := srv.PacketConn
 	l := srv.Listener
 
-	srv.shutdown = make(chan struct{})
-	srv.conns = make(map[net.Conn]struct{})
-
-  if pConn != nil {
+	if pConn != nil {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
 		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
