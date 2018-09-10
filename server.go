@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/binary"
+	"errors"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -312,6 +314,9 @@ type Server struct {
 	DecorateWriter DecorateWriter
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (unlimited if -1).
 	MaxTCPQueries int
+	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
+	// It is only supported on go1.11+ and when using ListenAndServe.
+	ReusePort bool
 
 	// UDP packet or TCP connection queue
 	queue chan *response
@@ -418,11 +423,7 @@ func (srv *Server) ListenAndServe() error {
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		a, err := net.ResolveTCPAddr(srv.Net, addr)
-		if err != nil {
-			return err
-		}
-		l, err := net.ListenTCP(srv.Net, a)
+		l, err := listenTCP(srv.Net, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}
@@ -431,37 +432,32 @@ func (srv *Server) ListenAndServe() error {
 		unlock()
 		return srv.serveTCP(l)
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
-		network := "tcp"
-		if srv.Net == "tcp4-tls" {
-			network = "tcp4"
-		} else if srv.Net == "tcp6-tls" {
-			network = "tcp6"
+		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
+			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
 		}
-
-		l, err := tls.Listen(network, addr, srv.TLSConfig)
+		network := strings.TrimSuffix(srv.Net, "-tls")
+		l, err := listenTCP(network, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}
+		l = tls.NewListener(l, srv.TLSConfig)
 		srv.Listener = l
 		srv.started = true
 		unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
-		a, err := net.ResolveUDPAddr(srv.Net, addr)
+		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}
-		l, err := net.ListenUDP(srv.Net, a)
-		if err != nil {
-			return err
-		}
-		if e := setUDPSocketOptions(l); e != nil {
+		u := l.(*net.UDPConn)
+		if e := setUDPSocketOptions(u); e != nil {
 			return e
 		}
 		srv.PacketConn = l
 		srv.started = true
 		unlock()
-		return srv.serveUDP(l)
+		return srv.serveUDP(u)
 	}
 	return &Error{err: "bad network"}
 }
