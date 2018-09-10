@@ -316,7 +316,7 @@ type Server struct {
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on go1.11+ and when using ListenAndServe.
-	Reuseport bool
+	ReusePort bool
 
 	// UDP packet or TCP connection queue
 	queue chan *response
@@ -405,7 +405,7 @@ func (srv *Server) ListenAndServe() error {
 	defer close(srv.queue)
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		l, err := listenTCP(srv.Net, addr, srv.Reuseport)
+		l, err := listenTCP(srv.Net, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}
@@ -418,7 +418,7 @@ func (srv *Server) ListenAndServe() error {
 			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
 		}
 		network := strings.TrimSuffix(srv.Net, "-tls")
-		l, err := listenTCP(network, addr, srv.Reuseport)
+		l, err := listenTCP(network, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}
@@ -428,7 +428,7 @@ func (srv *Server) ListenAndServe() error {
 		unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
-		l, err := listenUDP(srv.Net, addr, srv.Reuseport)
+		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
 		if err != nil {
 			return err
 		}

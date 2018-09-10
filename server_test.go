@@ -698,7 +698,7 @@ func TestServerReuseport(t *testing.T) {
 			Net:               "udp",
 			Addr:              addr,
 			NotifyStartedFunc: func() { close(wait) },
-			Reuseport:         true,
+			ReusePort:         true,
 		}
 
 		fin := make(chan error, 1)
