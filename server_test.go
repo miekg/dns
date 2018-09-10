@@ -608,7 +608,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		defer wg.Done()
 
-		// wait the signal to reply
+		// Wait until ShutdownContext is called before replying.
 		testShutdownNotify.L.Lock()
 		testShutdownNotify.Wait()
 		testShutdownNotify.L.Unlock()
