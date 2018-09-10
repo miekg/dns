@@ -265,7 +265,6 @@ func TestServingTLS(t *testing.T) {
 // handler which will set a testing error if tls.ConnectionState is available
 // when it is not expected, or the other way around.
 func TestServingTLSConnectionState(t *testing.T) {
-
 	handlerResponse := "Hello example"
 	// tlsHandlerTLS is a HandlerFunc that can be set to expect or not TLS
 	// connection state.
@@ -274,7 +273,7 @@ func TestServingTLSConnectionState(t *testing.T) {
 			m := new(Msg)
 			m.SetReply(req)
 			tlsFound := true
-			if connState := w.(ConnectionState).ConnectionState(); connState.Version == 0 {
+			if connState := w.(ConnectionStater).ConnectionState(); connState == nil {
 				tlsFound = false
 			}
 			if tlsFound != tlsExpected {
@@ -308,10 +307,11 @@ func TestServingTLSConnectionState(t *testing.T) {
 	defer s.Shutdown()
 
 	// TLS DNS query
-	c := new(Client)
-	c.Net = "tcp-tls"
-	c.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
+	c := &Client{
+		Net: "tcp-tls",
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 
 	_, _, err = c.Exchange(m, addrstr)
@@ -344,8 +344,7 @@ func TestServingTLSConnectionState(t *testing.T) {
 	defer s.Shutdown()
 
 	// TCP DNS query
-	c = new(Client)
-	c.Net = "tcp"
+	c = &Client{Net: "tcp"}
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Error("failed to exchange tlsstate.example.net", err)
