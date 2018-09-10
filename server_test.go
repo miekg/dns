@@ -688,7 +688,7 @@ func TestServerStartStopRace(t *testing.T) {
 }
 
 func TestServerReuseport(t *testing.T) {
-	if !supportsReuseport {
+	if !supportsReusePort {
 		t.Skip("reuseport is not supported")
 	}
 

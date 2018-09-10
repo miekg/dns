@@ -4,7 +4,7 @@ package dns
 
 import "net"
 
-const supportsReuseport = false
+const supportsReusePort = false
 
 func listenTCP(network, addr string, reuseport bool) (net.Listener, error) {
 	if reuseport {

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const supportsReuseport = true
+const supportsReusePort = true
 
 func reuseportControl(network, address string, c syscall.RawConn) error {
 	var opErr error
