@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -10,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func HelloServer(w ResponseWriter, req *Msg) {
@@ -588,6 +591,128 @@ func TestShutdownTCP(t *testing.T) {
 	}
 }
 
+func init() {
+	testShutdownNotify = &sync.Cond{
+		L: new(sync.Mutex),
+	}
+}
+
+func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
+	const requests = 100
+
+	var wg sync.WaitGroup
+	wg.Add(requests)
+
+	var errOnce sync.Once
+
+	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
+		defer wg.Done()
+
+		// Wait until ShutdownContext is called before replying.
+		testShutdownNotify.L.Lock()
+		testShutdownNotify.Wait()
+		testShutdownNotify.L.Unlock()
+
+		m := new(Msg)
+		m.SetReply(req)
+		m.Extra = make([]RR, 1)
+		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
+
+		if err := w.WriteMsg(m); err != nil {
+			errOnce.Do(func() {
+				t.Errorf("ResponseWriter.WriteMsg error: %s", err)
+			})
+		}
+	})
+	defer HandleRemove("example.com.")
+
+	client.Timeout = 10 * time.Second
+
+	conns := make([]*Conn, requests)
+	eg := new(errgroup.Group)
+
+	for i := range conns {
+		conn := &conns[i]
+		eg.Go(func() error {
+			var err error
+			*conn, err = client.Dial(addr)
+			return err
+		})
+	}
+
+	if eg.Wait() != nil {
+		t.Fatalf("client.Dial error: %v", eg.Wait())
+	}
+
+	m := new(Msg)
+	m.SetQuestion("example.com.", TypeTXT)
+	eg = new(errgroup.Group)
+
+	for _, conn := range conns {
+		conn := conn
+		eg.Go(func() error {
+			conn.SetWriteDeadline(time.Now().Add(client.Timeout))
+
+			return conn.WriteMsg(m)
+		})
+	}
+
+	if eg.Wait() != nil {
+		t.Fatalf("conn.WriteMsg error: %v", eg.Wait())
+	}
+
+	// This sleep is needed to allow time for the requests to
+	// pass from the client through the kernel and back into
+	// the server. Without it, some requests may still be in
+	// the kernel's buffer when ShutdownContext is called.
+	time.Sleep(100 * time.Millisecond)
+
+	eg = new(errgroup.Group)
+
+	for _, conn := range conns {
+		conn := conn
+		eg.Go(func() error {
+			conn.SetReadDeadline(time.Now().Add(client.Timeout))
+
+			_, err := conn.ReadMsg()
+			return err
+		})
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), client.Timeout)
+	defer cancel()
+
+	if err := srv.ShutdownContext(ctx); err != nil {
+		t.Errorf("could not shutdown test server, %v", err)
+	}
+
+	select {
+	case <-done:
+	default:
+		t.Error("ShutdownContext returned before replies")
+	}
+
+	if eg.Wait() != nil {
+		t.Fatalf("conn.ReadMsg error: %v", eg.Wait())
+	}
+}
+
+func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
+	s, addr, _, err := RunLocalTCPServerWithFinChan(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	c := &Client{Net: "tcp"}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
+}
+
 func TestShutdownTLS(t *testing.T) {
 	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
 	if err != nil {
@@ -606,6 +731,30 @@ func TestShutdownTLS(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not shutdown test TLS server, %v", err)
 	}
+}
+
+func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	config := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	s, addr, err := RunLocalTLSServer(":0", &config)
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	c := &Client{
+		Net: "tcp-tls",
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
 type trigger struct {
@@ -682,6 +831,16 @@ func TestShutdownUDP(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Error("could not shutdown test UDP server. Gave up waiting")
 	}
+}
+
+func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
+	s, addr, _, err := RunLocalUDPServerWithFinChan(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	c := &Client{Net: "udp"}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
 func TestServerStartStopRace(t *testing.T) {
