@@ -796,7 +796,10 @@ func (w *response) Close() error {
 
 // ConnectionState() implements the ConnectionStater.ConnectionState() interface.
 func (w *response) ConnectionState() *tls.ConnectionState {
-	if v, ok := w.tcp.(*tls.Conn); ok {
+	type tlsConnectionStater interface {
+		ConnectionState() tls.ConnectionState
+	}
+	if v, ok := w.tcp.(tlsConnectionStater); ok {
 		t := v.ConnectionState()
 		return &t
 	}
