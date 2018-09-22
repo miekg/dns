@@ -79,3 +79,13 @@ func TestParseZoneInclude(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTA(t *testing.T) {
+	rr, err := NewRR(` Ta 0 0 0`)
+	if err != nil {
+		t.Fatalf("expected no error, but got %s", err)
+	}
+	if rr == nil {
+		t.Fatal(`expected a normal RR, but got nil`)
+	}
+}
