@@ -106,3 +106,33 @@ func TestPackDataNsec(t *testing.T) {
 		})
 	}
 }
+
+func TestUnpackString(t *testing.T) {
+	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm")
+	msg[0] = byte(len(msg) - 1)
+
+	got, _, err := unpackString(msg, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want := `abcdef\015\\\"ghi\004mmm`; want != got {
+		t.Errorf("expected %q, got %q", want, got)
+	}
+}
+
+func BenchmarkUnpackString(b *testing.B) {
+	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm")
+	msg[0] = byte(len(msg) - 1)
+
+	for n := 0; n < b.N; n++ {
+		got, _, err := unpackString(msg, 0)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		if want := `abcdef\015\\\"ghi\004mmm`; want != got {
+			b.Errorf("expected %q, got %q", want, got)
+		}
+	}
+}
