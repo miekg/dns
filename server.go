@@ -741,6 +741,7 @@ func (srv *Server) serveDNS(w *response) {
 	if w.udp != nil && cap(w.msg) == srv.UDPSize {
 		srv.udpPool.Put(w.msg[:srv.UDPSize])
 	}
+	tmpMsg := w.msg
 	w.msg = nil
 	if err != nil { // Send a FormatError back
 		x := new(Msg)
@@ -756,7 +757,7 @@ func (srv *Server) serveDNS(w *response) {
 	if w.tsigSecret != nil {
 		if t := req.IsTsig(); t != nil {
 			if secret, ok := w.tsigSecret[t.Hdr.Name]; ok {
-				w.tsigStatus = TsigVerify(w.msg, secret, "", false)
+				w.tsigStatus = TsigVerify(tmpMsg, secret, "", false)
 			} else {
 				w.tsigStatus = ErrSecret
 			}
@@ -764,6 +765,7 @@ func (srv *Server) serveDNS(w *response) {
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
+	tmpMsg = nil
 
 	handler := srv.Handler
 	if handler == nil {
