@@ -828,7 +828,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 	exchange:
 		_, _, err := c.Exchange(m, addr)
 		if err != nil && err != io.EOF {
-			t.Errorf("exchange failed: %s\n", err)
+			t.Errorf("exchange failed: %v", err)
 			if tries == 3 {
 				return
 			}
@@ -837,7 +837,9 @@ func TestHandlerCloseTCP(t *testing.T) {
 			goto exchange
 		}
 	}()
-	server.ActivateAndServe()
+	if err := server.ActivateAndServe(); err != nil {
+		t.Fatalf("ActivateAndServe failed: %v", err)
+	}
 	select {
 	case <-triggered:
 	default:
