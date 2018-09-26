@@ -33,7 +33,8 @@ func TestSetUDPSocketOptions(t *testing.T) {
 			b := make([]byte, 1)
 			_, sess, err := ReadFromSessionUDP(c, b)
 			if err != nil {
-				t.Fatalf("failed to read from conn: %v", err)
+				t.Errorf("failed to read from conn: %v", err)
+				// fallthrough to chan send below
 			}
 			ch <- sess
 		}()
@@ -46,6 +47,10 @@ func TestSetUDPSocketOptions(t *testing.T) {
 			t.Fatalf("failed to write to conn: %v", err)
 		}
 		sess := <-ch
+		if sess == nil {
+			// t.Error was already called in the goroutine above.
+			t.FailNow()
+		}
 		if len(sess.context) == 0 {
 			t.Fatalf("empty session context: %v", sess)
 		}

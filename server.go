@@ -83,8 +83,8 @@ type ConnectionStater interface {
 type response struct {
 	msg            []byte
 	hijacked       bool // connection has been hijacked by handler
-	tsigStatus     error
 	tsigTimersOnly bool
+	tsigStatus     error
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
 	udp            *net.UDPConn      // i/o connection if UDP was used
