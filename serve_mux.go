@@ -76,13 +76,15 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	mux.m.Unlock()
 }
 
-// ServeDNS dispatches the request to the handler whose
-// pattern most closely matches the request message. If DefaultServeMux
-// is used the correct thing for DS queries is done: a possible parent
-// is sought.
-// If no handler is found a standard SERVFAIL message is returned
-// If the request message does not have exactly one question in the
-// question section a SERVFAIL is returned, unlesss Unsafe is true.
+// ServeDNS dispatches the request to the handler whose pattern most
+// closely matches the request message.
+//
+// ServeDNS is DNSSEC aware, meaning that queries for the DS record
+// are redirected to the parent zone (if that is also registered),
+// otherwise the child gets the query.
+//
+// If no handler is found, or there is no question, a standard SERVFAIL
+// message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 	if len(req.Question) < 1 { // allow more than one question
 		HandleFailed(w, req)
