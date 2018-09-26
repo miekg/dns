@@ -81,11 +81,29 @@ func TestSprintName(t *testing.T) {
 	}
 }
 
+func TestSprintTxtOctet(t *testing.T) {
+	got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
+
+	if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
+		t.Errorf("expected %q, got %q", got, want)
+	}
+}
+
 func BenchmarkSprintName(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		got := sprintName("abc\\.def\007\"\127@\255\x05\xef\\")
 
 		if want := "abc\\.def\\007\\\"W\\@\\173\\005\\239"; got != want {
+			b.Fatalf("expected %q, got %q", got, want)
+		}
+	}
+}
+
+func BenchmarkSprintTxtOctet(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
+
+		if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
 			b.Fatalf("expected %q, got %q", got, want)
 		}
 	}
