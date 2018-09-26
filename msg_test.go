@@ -8,10 +8,7 @@ import (
 	"testing"
 )
 
-const (
-	maxPrintableLabel = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789x"
-	tooLongLabel      = maxPrintableLabel + "x"
-)
+const maxPrintableLabel = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789x"
 
 var (
 	longDomain = maxPrintableLabel[:53] + strings.TrimSuffix(

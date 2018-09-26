@@ -10,7 +10,6 @@ import (
 )
 
 const maxTok = 2048 // Largest token we can return.
-const maxUint16 = 1<<16 - 1
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
