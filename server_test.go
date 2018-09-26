@@ -987,10 +987,10 @@ func TestServerRoundtripTsig(t *testing.T) {
 	m.SetQuestion("example.com.", TypeSOA)
 	m.Ns = []RR{&CNAME{
 		Hdr: RR_Header{
-			Name: "foo.example.com.",
+			Name:   "foo.example.com.",
 			Rrtype: TypeCNAME,
-			Class: ClassINET,
-			Ttl: 300,
+			Class:  ClassINET,
+			Ttl:    300,
 		},
 		Target: "bar.example.com.",
 	}}
