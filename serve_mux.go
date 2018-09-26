@@ -76,8 +76,6 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	mux.m.Unlock()
 }
 
-func failedHandler() Handler { return HandlerFunc(HandleFailed) }
-
 // ServeDNS dispatches the request to the handler whose
 // pattern most closely matches the request message. If DefaultServeMux
 // is used the correct thing for DS queries is done: a possible parent
@@ -85,16 +83,18 @@ func failedHandler() Handler { return HandlerFunc(HandleFailed) }
 // If no handler is found a standard SERVFAIL message is returned
 // If the request message does not have exactly one question in the
 // question section a SERVFAIL is returned, unlesss Unsafe is true.
-func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
-	var h Handler
-	if len(request.Question) < 1 { // allow more than one question
-		h = failedHandler()
-	} else {
-		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
-			h = failedHandler()
-		}
+func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
+	if len(req.Question) < 1 { // allow more than one question
+		HandleFailed(w, req)
+		return
 	}
-	h.ServeDNS(w, request)
+
+	h := mux.match(req.Question[0].Name, req.Question[0].Qtype)
+	if h == nil {
+		h = HandlerFunc(HandleFailed)
+	}
+
+	h.ServeDNS(w, req)
 }
 
 // Handle registers the handler with the given pattern
