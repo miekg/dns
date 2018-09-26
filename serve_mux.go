@@ -30,8 +30,13 @@ var DefaultServeMux = NewServeMux()
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
+	if mux.z == nil {
+		return nil
+	}
+
 	var handler Handler
 	q = strings.ToLower(q)
+
 	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
@@ -41,10 +46,12 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			handler = h
 		}
 	}
+
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		return h
 	}
+
 	return handler
 }
 
