@@ -52,3 +52,21 @@ func TestRootServer(t *testing.T) {
 		t.Error("root match failed")
 	}
 }
+
+func BenchmarkMuxMatch(b *testing.B) {
+	mux := NewServeMux()
+	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
+
+	bench := func(q string) func(*testing.B) {
+		return func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				handler := mux.match(q, TypeSRV)
+				if handler == nil {
+					b.Fatal("couldn't find match")
+				}
+			}
+		}
+	}
+	b.Run("lowercase", bench("_dns._udp.example.com."))
+	b.Run("uppercase", bench("_DNS._UDP.EXAMPLE.COM."))
+}
