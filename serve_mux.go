@@ -32,19 +32,13 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	defer mux.m.RUnlock()
 	var handler Handler
 	q = strings.ToLower(q)
-	off := 0
-	end := false
-	for {
+	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				return h
 			}
 			// Continue for DS to see if we have a parent too, if so delegeate to the parent
 			handler = h
-		}
-		off, end = NextLabel(q, off)
-		if end {
-			break
 		}
 	}
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
