@@ -567,7 +567,7 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	if deadline, ok := ctx.Deadline(); !ok {
 		timeout = 0
 	} else {
-		timeout = deadline.Sub(time.Now())
+		timeout = time.Until(deadline)
 	}
 	// not passing the context to the underlying calls, as the API does not support
 	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.

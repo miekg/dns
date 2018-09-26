@@ -293,7 +293,7 @@ func TestTKEY(t *testing.T) {
 	if offset != len(tkeyBytes) {
 		t.Fatalf("mismatched TKEY RR size %d != %d", len(tkeyBytes), offset)
 	}
-	if bytes.Compare(tkeyBytes, msg[0:offset]) != 0 {
+	if !bytes.Equal(tkeyBytes, msg[0:offset]) {
 		t.Fatal("mismatched TKEY data after rewriting bytes")
 	}
 

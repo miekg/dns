@@ -208,10 +208,9 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 	var prevName string
 	for l := range c {
 		// Lexer spotted an error already
-		if l.err == true {
+		if l.err {
 			t <- &Token{Error: &ParseError{f, l.token, l}}
 			return
-
 		}
 		switch st {
 		case zExpectOwnerDir:

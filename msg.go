@@ -367,12 +367,10 @@ Loop:
 						var buf [3]byte
 						bufs := strconv.AppendInt(buf[:0], int64(b), 10)
 						s = append(s, '\\')
-						for i := 0; i < 3-len(bufs); i++ {
+						for i := len(bufs); i < 3; i++ {
 							s = append(s, '0')
 						}
-						for _, r := range bufs {
-							s = append(s, r)
-						}
+						s = append(s, bufs...)
 						// presentation-format \DDD escapes add 3 extra bytes
 						maxLen += 3
 					} else {
