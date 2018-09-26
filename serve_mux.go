@@ -75,7 +75,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Ms
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
-// HandleRemove deregistrars the handler specific for pattern from the ServeMux.
+// HandleRemove deregisters the handler specific for pattern from the ServeMux.
 func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
