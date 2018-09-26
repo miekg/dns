@@ -59,7 +59,7 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 	return server, l, err
 }
 
-func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
+func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -74,6 +74,10 @@ func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	// forever if fin is never read from. This always happens
 	// in RunLocalUDPServer and can happen in TestShutdownUDP.
 	fin := make(chan error, 1)
+
+	for _, opt := range opts {
+		opt(server)
+	}
 
 	go func() {
 		fin <- server.ActivateAndServe()
@@ -996,6 +1000,56 @@ func TestServerReuseport(t *testing.T) {
 	}
 	if err := <-fin2; err != nil {
 		t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
+	}
+}
+
+func TestServerRoundtripTsig(t *testing.T) {
+	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
+
+	s, addrstr, _, err := RunLocalUDPServerWithFinChan(":0", func(srv *Server) {
+		srv.TsigSecret = secret
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
+		m := new(Msg)
+		m.SetReply(r)
+		if r.IsTsig() != nil {
+			status := w.TsigStatus()
+			if status == nil {
+				// *Msg r has an TSIG record and it was validated
+				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+			} else {
+				// *Msg r has an TSIG records and it was not valided
+				t.Errorf("invalid TSIG: %v", status)
+			}
+		} else {
+			t.Error("missing TSIG")
+		}
+		w.WriteMsg(m)
+	})
+
+	c := new(Client)
+	m := new(Msg)
+	m.Opcode = OpcodeUpdate
+	m.SetQuestion("example.com.", TypeSOA)
+	m.Ns = []RR{&CNAME{
+		Hdr: RR_Header{
+			Name: "foo.example.com.",
+			Rrtype: TypeCNAME,
+			Class: ClassINET,
+			Ttl: 300,
+		},
+		Target: "bar.example.com.",
+	}}
+	c.TsigSecret = secret
+	m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange", err)
 	}
 }
 

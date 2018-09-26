@@ -735,20 +735,23 @@ func (srv *Server) serve(w *response) {
 	}
 }
 
-func (srv *Server) serveDNS(w *response) {
-	req := new(Msg)
-	err := req.Unpack(w.msg)
+func (srv *Server) disposeBuffer(w *response) {
 	if w.udp != nil && cap(w.msg) == srv.UDPSize {
 		srv.udpPool.Put(w.msg[:srv.UDPSize])
 	}
 	w.msg = nil
+}
+
+func (srv *Server) serveDNS(w *response) {
+	req := new(Msg)
+	err := req.Unpack(w.msg)
 	if err != nil { // Send a FormatError back
 		x := new(Msg)
 		x.SetRcodeFormatError(req)
 		w.WriteMsg(x)
-		return
 	}
-	if !srv.Unsafe && req.Response {
+	if err != nil || !srv.Unsafe && req.Response {
+		srv.disposeBuffer(w)
 		return
 	}
 
@@ -764,6 +767,8 @@ func (srv *Server) serveDNS(w *response) {
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
 	}
+
+	srv.disposeBuffer(w)
 
 	handler := srv.Handler
 	if handler == nil {
