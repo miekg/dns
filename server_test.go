@@ -802,22 +802,6 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
-type trigger struct {
-	done bool
-	sync.RWMutex
-}
-
-func (t *trigger) Set() {
-	t.Lock()
-	defer t.Unlock()
-	t.done = true
-}
-func (t *trigger) Get() bool {
-	t.RLock()
-	defer t.RUnlock()
-	return t.done
-}
-
 func TestHandlerCloseTCP(t *testing.T) {
 
 	ln, err := net.Listen("tcp", ":0")
@@ -829,9 +813,9 @@ func TestHandlerCloseTCP(t *testing.T) {
 	server := &Server{Addr: addr, Net: "tcp", Listener: ln}
 
 	hname := "testhandlerclosetcp."
-	triggered := &trigger{}
+	triggered := make(chan struct{})
 	HandleFunc(hname, func(w ResponseWriter, r *Msg) {
-		triggered.Set()
+		close(triggered)
 		w.Close()
 	})
 	defer HandleRemove(hname)
@@ -844,7 +828,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 	exchange:
 		_, _, err := c.Exchange(m, addr)
 		if err != nil && err != io.EOF {
-			t.Errorf("exchange failed: %s\n", err)
+			t.Errorf("exchange failed: %v", err)
 			if tries == 3 {
 				return
 			}
@@ -853,8 +837,12 @@ func TestHandlerCloseTCP(t *testing.T) {
 			goto exchange
 		}
 	}()
-	server.ActivateAndServe()
-	if !triggered.Get() {
+	if err := server.ActivateAndServe(); err != nil {
+		t.Fatalf("ActivateAndServe failed: %v", err)
+	}
+	select {
+	case <-triggered:
+	default:
 		t.Fatalf("handler never called")
 	}
 }
