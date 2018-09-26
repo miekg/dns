@@ -59,27 +59,7 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 	return server, l, err
 }
 
-func RunLocalUDPServerWithSecrets(laddr string, secrets map[string]string) (*Server, string, error) {
-	pc, err := net.ListenPacket("udp", laddr)
-	if err != nil {
-		return nil, "", err
-	}
-	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour, TsigSecret: secrets}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	go func() {
-		server.ActivateAndServe()
-		pc.Close()
-	}()
-
-	waitLock.Lock()
-	return server, pc.LocalAddr().String(), nil
-}
-
-func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
+func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -94,6 +74,10 @@ func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	// forever if fin is never read from. This always happens
 	// in RunLocalUDPServer and can happen in TestShutdownUDP.
 	fin := make(chan error, 1)
+
+	for _, opt := range opts {
+		opt(server)
+	}
 
 	go func() {
 		fin <- server.ActivateAndServe()
@@ -1022,7 +1006,9 @@ func TestServerReuseport(t *testing.T) {
 func TestServerRoundtripTsig(t *testing.T) {
 	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
 
-	s, addrstr, err := RunLocalUDPServerWithSecrets(":0", secret)
+	s, addrstr, _, err := RunLocalUDPServerWithFinChan(":0", func(srv *Server) {
+		srv.TsigSecret = secret
+	})
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
