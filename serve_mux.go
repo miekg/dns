@@ -9,6 +9,8 @@ import "sync"
 // that queries for the DS record are redirected to the parent zone (if that
 // is also registered), otherwise the child gets the query.
 // ServeMux is also safe for concurrent access from multiple goroutines.
+//
+// The zero ServeMux is empty and ready for use.
 type ServeMux struct {
 	z map[string]Handler
 	m sync.RWMutex
@@ -16,7 +18,7 @@ type ServeMux struct {
 
 // NewServeMux allocates and returns a new ServeMux.
 func NewServeMux() *ServeMux {
-	return &ServeMux{z: make(map[string]Handler)}
+	return new(ServeMux)
 }
 
 // DefaultServeMux is the default ServeMux used by Serve.
@@ -62,6 +64,9 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
+	if mux.z == nil {
+		mux.z = make(map[string]Handler)
+	}
 	mux.z[Fqdn(pattern)] = handler
 	mux.m.Unlock()
 }
