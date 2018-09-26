@@ -999,6 +999,60 @@ func TestServerReuseport(t *testing.T) {
 	}
 }
 
+func TestServerRoundtripTsig(t *testing.T) {
+	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	s.TsigSecret = secret
+	var handlerError error
+	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
+		m := new(Msg)
+		m.SetReply(r)
+		if r.IsTsig() != nil {
+			status := w.TsigStatus()
+			if status == nil {
+				// *Msg r has an TSIG record and it was validated
+				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+				handlerError = nil
+			} else {
+				// *Msg r has an TSIG records and it was not valided
+				handlerError = fmt.Errorf("invalid TSIG: %v", status)
+			}
+		} else {
+			handlerError = fmt.Errorf("missing TSIG")
+		}
+		w.WriteMsg(m)
+	})
+
+	c := new(Client)
+	m := new(Msg)
+	m.Opcode = OpcodeUpdate
+	m.SetQuestion("example.com.", TypeSOA)
+	m.Ns = []RR{&CNAME{
+		Hdr: RR_Header{
+			Name: "foo.example.com.",
+			Rrtype: TypeCNAME,
+			Class: ClassINET,
+			Ttl: 300,
+		},
+		Target: "bar.example.com.",
+	}}
+	c.TsigSecret = secret
+	m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange", err)
+	}
+
+	if handlerError != nil {
+		t.Fatal("handler status error", handlerError)
+	}
+}
+
 type ExampleFrameLengthWriter struct {
 	Writer
 }
