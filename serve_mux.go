@@ -5,12 +5,14 @@ import (
 	"sync"
 )
 
-// ServeMux is an DNS request multiplexer. It matches the
-// zone name of each incoming request against a list of
-// registered patterns add calls the handler for the pattern
-// that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
-// that queries for the DS record are redirected to the parent zone (if that
-// is also registered), otherwise the child gets the query.
+// ServeMux is an DNS request multiplexer. It matches the zone name of
+// each incoming request against a list of registered patterns add calls
+// the handler for the pattern that most closely matches the zone name.
+//
+// ServeMux is DNSSEC aware, meaning that queries for the DS record are
+// redirected to the parent zone (if that is also registered), otherwise
+// the child gets the query.
+//
 // ServeMux is also safe for concurrent access from multiple goroutines.
 //
 // The zero ServeMux is empty and ready for use.
