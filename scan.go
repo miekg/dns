@@ -637,7 +637,6 @@ func zlexer(s *scan, c chan lex) {
 			if quote {
 				str[stri] = x
 				stri++
-				break
 			}
 			// discard if outside of quotes
 		case '\n':
