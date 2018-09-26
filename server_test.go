@@ -1028,7 +1028,6 @@ func TestServerRoundtripTsig(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	handlerError := make(chan error, 1)
 	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
 		m := new(Msg)
 		m.SetReply(r)
@@ -1037,13 +1036,12 @@ func TestServerRoundtripTsig(t *testing.T) {
 			if status == nil {
 				// *Msg r has an TSIG record and it was validated
 				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
-				close(handlerError)
 			} else {
 				// *Msg r has an TSIG records and it was not valided
-				handlerError <- fmt.Errorf("invalid TSIG: %v", status)
+				t.Errorf("invalid TSIG: %v", status)
 			}
 		} else {
-			handlerError <- fmt.Errorf("missing TSIG")
+			t.Error("missing TSIG")
 		}
 		w.WriteMsg(m)
 	})
@@ -1066,11 +1064,6 @@ func TestServerRoundtripTsig(t *testing.T) {
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange", err)
-	}
-
-	hErr := <-handlerError
-	if hErr != nil {
-		t.Fatal("handler status error", hErr)
 	}
 }
 
