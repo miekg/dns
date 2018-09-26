@@ -108,7 +108,7 @@ func TestPackDataNsec(t *testing.T) {
 }
 
 func TestUnpackString(t *testing.T) {
-	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm")
+	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm\x7f")
 	msg[0] = byte(len(msg) - 1)
 
 	got, _, err := unpackString(msg, 0)
@@ -116,7 +116,7 @@ func TestUnpackString(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if want := `abcdef\015\\\"ghi\004mmm`; want != got {
+	if want := `abcdef\015\\\"ghi\004mmm\127`; want != got {
 		t.Errorf("expected %q, got %q", want, got)
 	}
 }
