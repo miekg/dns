@@ -460,7 +460,7 @@ func sprintTxtOctet(s string) string {
 		case b == '.':
 			dst.WriteByte('.')
 		case b < ' ' || b > '~':
-			writeByte(&dst, b)
+			writeEscapedByte(&dst, b)
 		default:
 			dst.WriteByte(b)
 		}
@@ -508,13 +508,13 @@ func writeTXTStringByte(s *strings.Builder, b byte) {
 		s.WriteByte('\\')
 		s.WriteByte(b)
 	case b < ' ' || b > '~':
-		writeByte(s, b)
+		writeEscapedByte(s, b)
 	default:
 		s.WriteByte(b)
 	}
 }
 
-func writeByte(s *strings.Builder, b byte) {
+func writeEscapedByte(s *strings.Builder, b byte) {
 	var buf [3]byte
 	bufs := strconv.AppendInt(buf[:0], int64(b), 10)
 	s.WriteByte('\\')
