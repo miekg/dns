@@ -86,17 +86,16 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // If no handler is found, or there is no question, a standard SERVFAIL
 // message is returned
 func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
-	if len(req.Question) < 1 { // allow more than one question
+	var h Handler
+	if len(req.Question) >= 1 { // allow more than one question
+		h = mux.match(req.Question[0].Name, req.Question[0].Qtype)
+	}
+
+	if h != nil {
+		h.ServeDNS(w, req)
+	} else {
 		HandleFailed(w, req)
-		return
 	}
-
-	h := mux.match(req.Question[0].Name, req.Question[0].Qtype)
-	if h == nil {
-		h = HandlerFunc(HandleFailed)
-	}
-
-	h.ServeDNS(w, req)
 }
 
 // Handle registers the handler with the given pattern
