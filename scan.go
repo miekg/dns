@@ -79,9 +79,9 @@ type lex struct {
 	length     int    // length of the token
 	err        bool   // when true, token text has lexer error
 	value      uint8  // value: zString, _BLANK, etc.
+	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
 	line       int    // line in the file
 	column     int    // column in the file
-	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
 	comment    string // any comment text seen
 }
 
