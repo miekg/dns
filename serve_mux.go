@@ -1,6 +1,9 @@
 package dns
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 // ServeMux is an DNS request multiplexer. It matches the
 // zone name of each incoming request against a list of
@@ -28,18 +31,11 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
 	var handler Handler
-	b := make([]byte, len(q)) // worst case, one label of length q
+	q = strings.ToLower(q)
 	off := 0
 	end := false
 	for {
-		l := len(q[off:])
-		for i := 0; i < l; i++ {
-			b[i] = q[off+i]
-			if b[i] >= 'A' && b[i] <= 'Z' {
-				b[i] |= 'a' - 'A'
-			}
-		}
-		if h, ok := mux.z[string(b[:l])]; ok { // causes garbage, might want to change the map key
+		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				return h
 			}
