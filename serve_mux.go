@@ -42,7 +42,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 			if t != TypeDS {
 				return h
 			}
-			// Continue for DS to see if we have a parent too, if so delegeate to the parent
+			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
 		}
 	}
