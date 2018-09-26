@@ -11,12 +11,12 @@ import "sync"
 // ServeMux is also safe for concurrent access from multiple goroutines.
 type ServeMux struct {
 	z map[string]Handler
-	m *sync.RWMutex
+	m sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
 func NewServeMux() *ServeMux {
-	return &ServeMux{z: make(map[string]Handler), m: new(sync.RWMutex)}
+	return &ServeMux{z: make(map[string]Handler)}
 }
 
 // DefaultServeMux is the default ServeMux used by Serve.
