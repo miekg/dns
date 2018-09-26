@@ -59,6 +59,26 @@ func RunLocalUDPServer(laddr string) (*Server, string, error) {
 	return server, l, err
 }
 
+func RunLocalUDPServerWithSecrets(laddr string, secrets map[string]string) (*Server, string, error) {
+	pc, err := net.ListenPacket("udp", laddr)
+	if err != nil {
+		return nil, "", err
+	}
+	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour, TsigSecret: secrets}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
+	go func() {
+		server.ActivateAndServe()
+		pc.Close()
+	}()
+
+	waitLock.Lock()
+	return server, pc.LocalAddr().String(), nil
+}
+
 func RunLocalUDPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
@@ -1002,13 +1022,13 @@ func TestServerReuseport(t *testing.T) {
 func TestServerRoundtripTsig(t *testing.T) {
 	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, err := RunLocalUDPServerWithSecrets(":0", secret)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
+	defer s.Shutdown()
 
-	s.TsigSecret = secret
-	var handlerError error
+	handlerError := make(chan error, 1)
 	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
 		m := new(Msg)
 		m.SetReply(r)
@@ -1017,13 +1037,13 @@ func TestServerRoundtripTsig(t *testing.T) {
 			if status == nil {
 				// *Msg r has an TSIG record and it was validated
 				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
-				handlerError = nil
+				close(handlerError)
 			} else {
 				// *Msg r has an TSIG records and it was not valided
-				handlerError = fmt.Errorf("invalid TSIG: %v", status)
+				handlerError <- fmt.Errorf("invalid TSIG: %v", status)
 			}
 		} else {
-			handlerError = fmt.Errorf("missing TSIG")
+			handlerError <- fmt.Errorf("missing TSIG")
 		}
 		w.WriteMsg(m)
 	})
@@ -1048,8 +1068,9 @@ func TestServerRoundtripTsig(t *testing.T) {
 		t.Fatal("failed to exchange", err)
 	}
 
-	if handlerError != nil {
-		t.Fatal("handler status error", handlerError)
+	hErr := <-handlerError
+	if hErr != nil {
+		t.Fatal("handler status error", hErr)
 	}
 }
 
