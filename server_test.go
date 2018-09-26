@@ -802,22 +802,6 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
 }
 
-type trigger struct {
-	done bool
-	sync.RWMutex
-}
-
-func (t *trigger) Set() {
-	t.Lock()
-	defer t.Unlock()
-	t.done = true
-}
-func (t *trigger) Get() bool {
-	t.RLock()
-	defer t.RUnlock()
-	return t.done
-}
-
 func TestHandlerCloseTCP(t *testing.T) {
 
 	ln, err := net.Listen("tcp", ":0")
@@ -829,9 +813,9 @@ func TestHandlerCloseTCP(t *testing.T) {
 	server := &Server{Addr: addr, Net: "tcp", Listener: ln}
 
 	hname := "testhandlerclosetcp."
-	triggered := &trigger{}
+	triggered := make(chan struct{})
 	HandleFunc(hname, func(w ResponseWriter, r *Msg) {
-		triggered.Set()
+		close(triggered)
 		w.Close()
 	})
 	defer HandleRemove(hname)
@@ -854,7 +838,9 @@ func TestHandlerCloseTCP(t *testing.T) {
 		}
 	}()
 	server.ActivateAndServe()
-	if !triggered.Get() {
+	select {
+	case <-triggered:
+	default:
 		t.Fatalf("handler never called")
 	}
 }
