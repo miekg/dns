@@ -275,7 +275,7 @@ func unpackString(msg []byte, off int) (string, int, error) {
 		case b == '"' || b == '\\':
 			s.WriteByte('\\')
 			s.WriteByte(b)
-		case b < 32 || b > 127: // unprintable
+		case b < ' ' || b > '~': // unprintable
 			var buf [3]byte
 			bufs := strconv.AppendInt(buf[:0], int64(b), 10)
 			s.WriteByte('\\')
