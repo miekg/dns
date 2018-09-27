@@ -203,34 +203,36 @@ func dump(n *Node) (string, error) {
 	return b.String(), nil
 }
 
-const testDataDir = "testdata/webkit/"
+var testDataDirs = []string{"testdata/webkit/", "testdata/go/"}
 
 func TestParser(t *testing.T) {
-	testFiles, err := filepath.Glob(testDataDir + "*.dat")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, tf := range testFiles {
-		f, err := os.Open(tf)
+	for _, testDataDir := range testDataDirs {
+		testFiles, err := filepath.Glob(testDataDir + "*.dat")
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer f.Close()
-		r := bufio.NewReader(f)
-
-		for i := 0; ; i++ {
-			text, want, context, err := readParseTest(r)
-			if err == io.EOF {
-				break
-			}
+		for _, tf := range testFiles {
+			f, err := os.Open(tf)
 			if err != nil {
 				t.Fatal(err)
 			}
+			defer f.Close()
+			r := bufio.NewReader(f)
 
-			err = testParseCase(text, want, context)
+			for i := 0; ; i++ {
+				text, want, context, err := readParseTest(r)
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
 
-			if err != nil {
-				t.Errorf("%s test #%d %q, %s", tf, i, text, err)
+				err = testParseCase(text, want, context)
+
+				if err != nil {
+					t.Errorf("%s test #%d %q, %s", tf, i, text, err)
+				}
 			}
 		}
 	}
@@ -327,6 +329,7 @@ var renderTestBlacklist = map[string]bool{
 	`<a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe`: true,
 	`<a><table><a></table><p><a><div><a>`:                                     true,
 	`<a><table><td><a><table></table><a></tr><a></table><a>`:                  true,
+	`<template><a><table><a>`:                                                 true,
 	// A similar reparenting situation involving <nobr>:
 	`<!DOCTYPE html><body><b><nobr>1<table><nobr></b><i><nobr>2<nobr></i>3`: true,
 	// A <plaintext> element is reparented, putting it before a table.
