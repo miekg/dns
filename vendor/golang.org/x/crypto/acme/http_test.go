@@ -88,12 +88,14 @@ func TestPostWithRetries(t *testing.T) {
 		}
 
 		head, err := decodeJWSHead(r)
-		if err != nil {
+		switch {
+		case err != nil:
 			t.Errorf("decodeJWSHead: %v", err)
-		} else if head.Nonce == "" {
+		case head.Nonce == "":
 			t.Error("head.Nonce is empty")
-		} else if head.Nonce == "nonce1" {
-			// return a badNonce error to force the call to retry
+		case head.Nonce == "nonce1":
+			// Return a badNonce error to force the call to retry.
+			w.Header().Set("Retry-After", "0")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"type":"urn:ietf:params:acme:error:badNonce"}`))
 			return
@@ -111,6 +113,55 @@ func TestPostWithRetries(t *testing.T) {
 	}
 	if count != 4 {
 		t.Errorf("total requests count: %d; want 4", count)
+	}
+}
+
+func TestRetryErrorType(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Replay-Nonce", "nonce")
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte(`{"type":"rateLimited"}`))
+	}))
+	defer ts.Close()
+
+	client := &Client{
+		Key: testKey,
+		RetryBackoff: func(n int, r *http.Request, res *http.Response) time.Duration {
+			// Do no retries.
+			return 0
+		},
+		dir: &Directory{AuthzURL: ts.URL},
+	}
+
+	t.Run("post", func(t *testing.T) {
+		testRetryErrorType(t, func() error {
+			_, err := client.Authorize(context.Background(), "example.com")
+			return err
+		})
+	})
+	t.Run("get", func(t *testing.T) {
+		testRetryErrorType(t, func() error {
+			_, err := client.GetAuthorization(context.Background(), ts.URL)
+			return err
+		})
+	})
+}
+
+func testRetryErrorType(t *testing.T, callClient func() error) {
+	t.Helper()
+	err := callClient()
+	if err == nil {
+		t.Fatal("client.Authorize returned nil error")
+	}
+	acmeErr, ok := err.(*Error)
+	if !ok {
+		t.Fatalf("err is %v (%T); want *Error", err, err)
+	}
+	if acmeErr.StatusCode != http.StatusTooManyRequests {
+		t.Errorf("acmeErr.StatusCode = %d; want %d", acmeErr.StatusCode, http.StatusTooManyRequests)
+	}
+	if acmeErr.ProblemType != "rateLimited" {
+		t.Errorf("acmeErr.ProblemType = %q; want 'rateLimited'", acmeErr.ProblemType)
 	}
 }
 

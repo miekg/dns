@@ -13,6 +13,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -1158,6 +1159,58 @@ func TestTLSSNI02ChallengeCert(t *testing.T) {
 	if cn := cert.Subject.CommonName; cn != sanA {
 		t.Errorf("CommonName = %q; want %q", cn, sanA)
 	}
+}
+
+func TestTLSALPN01ChallengeCert(t *testing.T) {
+	const (
+		token   = "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA"
+		keyAuth = "evaGxfADs6pSRb2LAv9IZf17Dt3juxGJ-PCt92wr-oA." + testKeyECThumbprint
+		// echo -n <token.testKeyECThumbprint> | shasum -a 256
+		h      = "0420dbbd5eefe7b4d06eb9d1d9f5acb4c7cda27d320e4b30332f0b6cb441734ad7b0"
+		domain = "example.com"
+	)
+
+	extValue, err := hex.DecodeString(h)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := &Client{Key: testKeyEC}
+	tlscert, err := client.TLSALPN01ChallengeCert(token, domain)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n := len(tlscert.Certificate); n != 1 {
+		t.Fatalf("len(tlscert.Certificate) = %d; want 1", n)
+	}
+	cert, err := x509.ParseCertificate(tlscert.Certificate[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := []string{domain}
+	if !reflect.DeepEqual(cert.DNSNames, names) {
+		t.Fatalf("cert.DNSNames = %v;\nwant %v", cert.DNSNames, names)
+	}
+	if cn := cert.Subject.CommonName; cn != domain {
+		t.Errorf("CommonName = %q; want %q", cn, domain)
+	}
+	acmeExts := []pkix.Extension{}
+	for _, ext := range cert.Extensions {
+		if idPeACMEIdentifierV1.Equal(ext.Id) {
+			acmeExts = append(acmeExts, ext)
+		}
+	}
+	if len(acmeExts) != 1 {
+		t.Errorf("acmeExts = %v; want exactly one", acmeExts)
+	}
+	if !acmeExts[0].Critical {
+		t.Errorf("acmeExt.Critical = %v; want true", acmeExts[0].Critical)
+	}
+	if bytes.Compare(acmeExts[0].Value, extValue) != 0 {
+		t.Errorf("acmeExt.Value = %v; want %v", acmeExts[0].Value, extValue)
+	}
+
 }
 
 func TestTLSChallengeCertOpt(t *testing.T) {
