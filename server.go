@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -425,16 +426,25 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	}
 
 	if srv.PacketConn != nil {
-		srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		err := srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		if err != nil {
+			log.Printf("srv.PacketConn.SetReadDeadline failed: %v", err)
+		}
 	}
 
 	if srv.Listener != nil {
-		srv.Listener.Close()
+		err := srv.Listener.Close()
+		if err != nil {
+			log.Printf("srv.Listener.Close failed: %v", err)
+		}
 	}
 
 	srv.lock.Lock()
 	for rw := range srv.conns {
-		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		err := rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		if err != nil {
+			log.Printf("rw.SetReadDeadline failed: %v", err)
+		}
 	}
 	srv.lock.Unlock()
 
@@ -450,7 +460,10 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	}
 
 	if srv.PacketConn != nil {
-		srv.PacketConn.Close()
+		err := srv.PacketConn.Close()
+		if err != nil {
+			log.Printf("srv.PacketConn.Close failed: %v", err)
+		}
 	}
 
 	return ctxErr
