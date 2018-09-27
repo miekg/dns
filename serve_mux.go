@@ -1,22 +1,29 @@
 package dns
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
-// ServeMux is an DNS request multiplexer. It matches the
-// zone name of each incoming request against a list of
-// registered patterns add calls the handler for the pattern
-// that most closely matches the zone name. ServeMux is DNSSEC aware, meaning
-// that queries for the DS record are redirected to the parent zone (if that
-// is also registered), otherwise the child gets the query.
+// ServeMux is an DNS request multiplexer. It matches the zone name of
+// each incoming request against a list of registered patterns add calls
+// the handler for the pattern that most closely matches the zone name.
+//
+// ServeMux is DNSSEC aware, meaning that queries for the DS record are
+// redirected to the parent zone (if that is also registered), otherwise
+// the child gets the query.
+//
 // ServeMux is also safe for concurrent access from multiple goroutines.
+//
+// The zero ServeMux is empty and ready for use.
 type ServeMux struct {
 	z map[string]Handler
-	m *sync.RWMutex
+	m sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
 func NewServeMux() *ServeMux {
-	return &ServeMux{z: make(map[string]Handler), m: new(sync.RWMutex)}
+	return new(ServeMux)
 }
 
 // DefaultServeMux is the default ServeMux used by Serve.
@@ -25,34 +32,52 @@ var DefaultServeMux = NewServeMux()
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
 	defer mux.m.RUnlock()
+	if mux.z == nil {
+		return nil
+	}
+
 	var handler Handler
-	b := make([]byte, len(q)) // worst case, one label of length q
-	off := 0
-	end := false
-	for {
-		l := len(q[off:])
-		for i := 0; i < l; i++ {
-			b[i] = q[off+i]
-			if b[i] >= 'A' && b[i] <= 'Z' {
-				b[i] |= 'a' - 'A'
-			}
+
+	// TODO(tmthrgd): Once https://go-review.googlesource.com/c/go/+/137575
+	// lands in a go release, replace the following with strings.ToLower.
+	var sb strings.Builder
+	for i := 0; i < len(q); i++ {
+		c := q[i]
+		if !(c >= 'A' && c <= 'Z') {
+			continue
 		}
-		if h, ok := mux.z[string(b[:l])]; ok { // causes garbage, might want to change the map key
+
+		sb.Grow(len(q))
+		sb.WriteString(q[:i])
+
+		for ; i < len(q); i++ {
+			c := q[i]
+			if c >= 'A' && c <= 'Z' {
+				c += 'a' - 'A'
+			}
+
+			sb.WriteByte(c)
+		}
+
+		q = sb.String()
+		break
+	}
+
+	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
+		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				return h
 			}
-			// Continue for DS to see if we have a parent too, if so delegeate to the parent
+			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
 		}
-		off, end = NextLabel(q, off)
-		if end {
-			break
-		}
 	}
+
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		return h
 	}
+
 	return handler
 }
 
@@ -62,6 +87,9 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
+	if mux.z == nil {
+		mux.z = make(map[string]Handler)
+	}
 	mux.z[Fqdn(pattern)] = handler
 	mux.m.Unlock()
 }
@@ -71,7 +99,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Ms
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
-// HandleRemove deregistrars the handler specific for pattern from the ServeMux.
+// HandleRemove deregisters the handler specific for pattern from the ServeMux.
 func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
@@ -81,25 +109,26 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	mux.m.Unlock()
 }
 
-func failedHandler() Handler { return HandlerFunc(HandleFailed) }
-
-// ServeDNS dispatches the request to the handler whose
-// pattern most closely matches the request message. If DefaultServeMux
-// is used the correct thing for DS queries is done: a possible parent
-// is sought.
-// If no handler is found a standard SERVFAIL message is returned
-// If the request message does not have exactly one question in the
-// question section a SERVFAIL is returned, unlesss Unsafe is true.
-func (mux *ServeMux) ServeDNS(w ResponseWriter, request *Msg) {
+// ServeDNS dispatches the request to the handler whose pattern most
+// closely matches the request message.
+//
+// ServeDNS is DNSSEC aware, meaning that queries for the DS record
+// are redirected to the parent zone (if that is also registered),
+// otherwise the child gets the query.
+//
+// If no handler is found, or there is no question, a standard SERVFAIL
+// message is returned
+func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 	var h Handler
-	if len(request.Question) < 1 { // allow more than one question
-		h = failedHandler()
-	} else {
-		if h = mux.match(request.Question[0].Name, request.Question[0].Qtype); h == nil {
-			h = failedHandler()
-		}
+	if len(req.Question) >= 1 { // allow more than one question
+		h = mux.match(req.Question[0].Name, req.Question[0].Qtype)
 	}
-	h.ServeDNS(w, request)
+
+	if h != nil {
+		h.ServeDNS(w, req)
+	} else {
+		HandleFailed(w, req)
+	}
 }
 
 // Handle registers the handler with the given pattern
