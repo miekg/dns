@@ -14,8 +14,18 @@ before_install:
   - mkdir -p $GOPATH/src/github.com/miekg
   - ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/miekg/ || true
 
+install:
+  - sudo apt-get install -y gdb  # install gdb
+
+before_script:
+  - ulimit -c unlimited -S       # enable core dumps
+
 script:
   - go test $TESTS
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+after_failure:
+  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1) # find core file
+  - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
