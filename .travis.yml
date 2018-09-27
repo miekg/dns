@@ -19,7 +19,7 @@ before_script:
   - ulimit -c unlimited -S       # enable core dumps
 
 script:
-  - go test $TESTS
+  - go test -timeout 5m $TESTS
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
