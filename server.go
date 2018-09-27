@@ -403,14 +403,29 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
+var cancelledCtx = func() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return ctx
+}()
+
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
+//
+// Unlike ShutdownContext, Shutdown will not wait for connections to
+// gracefully terminate.
 func (srv *Server) Shutdown() error {
-	return srv.ShutdownContext(context.Background())
+	err := srv.ShutdownContext(cancelledCtx)
+	if err == context.Canceled {
+		err = nil
+	}
+	return err
 }
 
 // ShutdownContext shuts down a server. After a call to ShutdownContext,
 // ListenAndServe and ActivateAndServe will return.
+//
+// ShutdownContext will wait for connections to gracefully terminate.
 //
 // A context.Context may be passed to limit how long to wait for connections
 // to terminate.
