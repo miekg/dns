@@ -753,24 +753,33 @@ func (w *response) Write(m []byte) (int, error) {
 
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
 		return int(n), err
+	default:
+		panic("Write called after Close")
 	}
-	panic("not reached")
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
 func (w *response) LocalAddr() net.Addr {
-	if w.tcp != nil {
+	switch {
+	case w.udp != nil:
+		return w.udp.LocalAddr()
+	case w.tcp != nil:
 		return w.tcp.LocalAddr()
+	default:
+		panic("LocalAddr called after Close")
 	}
-	return w.udp.LocalAddr()
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *response) RemoteAddr() net.Addr {
-	if w.tcp != nil {
+	switch {
+	case w.udpSession != nil:
+		return w.udpSession.RemoteAddr()
+	case w.tcp != nil:
 		return w.tcp.RemoteAddr()
+	default:
+		panic("RemoteAddr called after Close")
 	}
-	return w.udpSession.RemoteAddr()
 }
 
 // TsigStatus implements the ResponseWriter.TsigStatus method.
