@@ -10,6 +10,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -438,8 +439,15 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	}
 	srv.lock.Unlock()
 
+	// TODO(tmthrgd): remove this once issue #756 has been solved.
+	var testCh <-chan time.Time
+
 	if testShutdownNotify != nil {
 		testShutdownNotify.Broadcast()
+
+		if _, ok := ctx.Deadline(); !ok {
+			testCh = time.After(time.Minute)
+		}
 	}
 
 	var ctxErr error
@@ -447,6 +455,8 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	case <-srv.shutdown:
 	case <-ctx.Done():
 		ctxErr = ctx.Err()
+	case <-testCh:
+		os.Stderr.WriteString("ShutdownContext took too long during testing (see issue #756)\n")
 	}
 
 	if srv.PacketConn != nil {
