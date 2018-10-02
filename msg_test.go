@@ -141,3 +141,48 @@ func TestUnpackDomainName(t *testing.T) {
 		}
 	}
 }
+
+func TestPackDomainNameNSECTypeBitmap(t *testing.T) {
+	ownername := "some-very-long-ownername.com."
+	msg := &Msg{
+		Compress: true,
+		Answer: []RR{
+			&NS{
+				Hdr: RR_Header{
+					Name:   ownername,
+					Rrtype: TypeNS,
+					Class:  ClassINET,
+				},
+				Ns: "ns1.server.com.",
+			},
+			&NSEC{
+				Hdr: RR_Header{
+					Name:   ownername,
+					Rrtype: TypeNSEC,
+					Class:  ClassINET,
+				},
+				NextDomain: "a.com.",
+				TypeBitMap: []uint16{TypeNS, TypeNSEC},
+			},
+		},
+	}
+
+	// Pack msg and then unpack into msg2
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Fatalf("msg.Pack failed: %v", err)
+	}
+
+	var msg2 Msg
+	if err := msg2.Unpack(buf); err != nil {
+		t.Fatalf("msg2.Unpack failed: %v", err)
+	}
+
+	if !IsDuplicate(msg.Answer[1], msg2.Answer[1]) {
+		t.Error("message differs after packing and unpacking")
+
+		// Print NSEC RR for both cases
+		t.Logf("expected: %v", msg.Answer[1])
+		t.Logf("got:      %v", msg2.Answer[1])
+	}
+}
