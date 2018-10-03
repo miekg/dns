@@ -754,7 +754,7 @@ func (w *response) Write(m []byte) (int, error) {
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
 		return int(n), err
 	default:
-		panic("Write called after Close")
+		panic("dns: Write called after Close")
 	}
 }
 
@@ -766,7 +766,7 @@ func (w *response) LocalAddr() net.Addr {
 	case w.tcp != nil:
 		return w.tcp.LocalAddr()
 	default:
-		panic("LocalAddr called after Close")
+		panic("dns: LocalAddr called after Close")
 	}
 }
 
@@ -778,7 +778,7 @@ func (w *response) RemoteAddr() net.Addr {
 	case w.tcp != nil:
 		return w.tcp.RemoteAddr()
 	default:
-		panic("RemoteAddr called after Close")
+		panic("dns: RemoteAddr called after Close")
 	}
 }
 
