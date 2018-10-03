@@ -993,8 +993,11 @@ func TestServerRoundtripTsig(t *testing.T) {
 func TestResponseAfterClose(t *testing.T) {
 	testPanic := func(name string, fn func()) {
 		defer func() {
-			if recover() == nil {
+			expect := fmt.Sprintf("dns: %s called after Close", name)
+			if err := recover(); err == nil {
 				t.Errorf("expected panic from %s after Close", name)
+			} else if err != expect {
+				t.Errorf("expected explicit panic from %s after Close, expected %q, got %q", name, expect, err)
 			}
 		}()
 		fn()
