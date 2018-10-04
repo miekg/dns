@@ -1,13 +1,16 @@
 language: go
 sudo: false
+
 go:
   - 1.10.x
   - 1.11.x
   - tip
 
-env:
-  - TESTS="-race -v -bench=. -coverprofile=coverage.txt -covermode=atomic"
-  - TESTS="-race -v ./..."
+matrix:
+  include:
+  - name: test coverage profile
+    go: 1.11.x
+    env: COVER="-bench=. -coverprofile=coverage.txt -covermode=atomic"
 
 before_install:
   # don't use the miekg/dns when testing forks
@@ -15,7 +18,7 @@ before_install:
   - ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/miekg/ || true
 
 script:
-  - go test $TESTS
+  - go test -race -v "$COVER" ./...
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - if [[ -n "${COVER}" ]]; then bash <(curl -s https://codecov.io/bash); fi
