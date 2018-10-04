@@ -539,8 +539,9 @@ func TestConcurrentExchanges(t *testing.T) {
 		block := make(chan struct{})
 		waiting := make(chan struct{})
 
+		mm := m // redeclare m so as not to trip the race detector
 		handler := func(w ResponseWriter, req *Msg) {
-			r := m.Copy()
+			r := mm.Copy()
 			r.SetReply(req)
 
 			waiting <- struct{}{}
