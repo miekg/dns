@@ -1,13 +1,18 @@
 language: go
 sudo: false
+
 go:
   - 1.10.x
   - 1.11.x
   - tip
 
-env:
-  - TESTS="-race -v -bench=. -coverprofile=coverage.txt -covermode=atomic"
-  - TESTS="-race -v ./..."
+env: TESTS="-race -v ./..."
+
+matrix:
+  include:
+  - name: test coverage profile (go 1.11.x)
+    go: 1.11.x
+    env: TESTS="-race -v -bench=. -coverprofile=coverage.txt -covermode=atomic"
 
 before_install:
   # don't use the miekg/dns when testing forks
@@ -18,4 +23,4 @@ script:
   - go test $TESTS
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - if [[ -e coverage.txt ]]; then bash <(curl -s https://codecov.io/bash); fi
