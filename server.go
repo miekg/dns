@@ -435,17 +435,15 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	if srv.Listener != nil {
 		err := srv.Listener.Close()
 		if err != nil {
-			//log.Printf("srv.Listener.Close failed: %v", err)
+			log.Printf("srv.Listener.Close failed: %v", err)
 		}
 	}
-
-	// end=$((SECONDS+600)); while [ $SECONDS -lt $end ]; do go test -timeout 1m || break; done
 
 	srv.lock.Lock()
 	for rw := range srv.conns {
 		err := rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
 		if err != nil {
-			//log.Printf("rw.SetReadDeadline failed: %v", err)
+			log.Printf("rw.SetReadDeadline failed: %v", err)
 		}
 	}
 	srv.lock.Unlock()
@@ -464,7 +462,7 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	if srv.PacketConn != nil {
 		err := srv.PacketConn.Close()
 		if err != nil {
-			//log.Printf("srv.PacketConn.Close failed: %v", err)
+			log.Printf("srv.PacketConn.Close failed: %v", err)
 		}
 	}
 
