@@ -990,6 +990,35 @@ func TestServerRoundtripTsig(t *testing.T) {
 	}
 }
 
+func TestResponseAfterClose(t *testing.T) {
+	testPanic := func(name string, fn func()) {
+		defer func() {
+			expect := fmt.Sprintf("dns: %s called after Close", name)
+			if err := recover(); err == nil {
+				t.Errorf("expected panic from %s after Close", name)
+			} else if err != expect {
+				t.Errorf("expected explicit panic from %s after Close, expected %q, got %q", name, expect, err)
+			}
+		}()
+		fn()
+	}
+
+	rw := &response{
+		tcp:        nil, // Close sets tcp to nil
+		udp:        nil,
+		udpSession: nil,
+	}
+	testPanic("Write", func() {
+		rw.Write(make([]byte, 2))
+	})
+	testPanic("LocalAddr", func() {
+		rw.LocalAddr()
+	})
+	testPanic("RemoteAddr", func() {
+		rw.RemoteAddr()
+	})
+}
+
 type ExampleFrameLengthWriter struct {
 	Writer
 }
