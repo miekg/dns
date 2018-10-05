@@ -531,6 +531,10 @@ func dddToByte(s []byte) byte {
 	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
 }
 
+func dddStringToByte(s string) byte {
+	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
+}
+
 // Helper function for packing and unpacking
 func intToBytes(i *big.Int, length int) []byte {
 	buf := i.Bytes()
