@@ -33,7 +33,7 @@ func TestSetUDPSocketOptions(t *testing.T) {
 			// Set some deadline so this goroutine doesn't hang forever
 			c.SetReadDeadline(time.Now().Add(time.Minute))
 			b := make([]byte, 1)
-			_, sess, err := ReadFromSessionUDP(c, b)
+			_, sess, err := ReadFromSessionUDP(&loggingUDPConn{c}, b)
 			if err != nil {
 				t.Errorf("failed to read from conn: %v", err)
 				// fallthrough to chan send below

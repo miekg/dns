@@ -88,7 +88,7 @@ type response struct {
 	tsigStatus     error
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
-	udp            *net.UDPConn      // i/o connection if UDP was used
+	udp            *loggingUDPConn   // i/o connection if UDP was used
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
 	writer         Writer            // writer to output the raw DNS bits
@@ -153,7 +153,7 @@ type Reader interface {
 	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
-	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
+	ReadUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
 }
 
 // defaultReader is an adapter for the Server struct that implements the Reader interface
@@ -166,7 +166,7 @@ func (dr *defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, 
 	return dr.readTCP(conn, timeout)
 }
 
-func (dr *defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (dr *defaultReader) ReadUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	return dr.readUDP(conn, timeout)
 }
 
@@ -309,6 +309,31 @@ func unlockOnce(l sync.Locker) func() {
 	return func() { once.Do(l.Unlock) }
 }
 
+type loggingUDPConn struct {
+	*net.UDPConn
+}
+
+func (conn *loggingUDPConn) ReadMsgUDP(b, oob []byte) (n, oobn, flags int, addr *net.UDPAddr, err error) {
+	log.Println("ReadMsgUDP")
+	defer log.Println("ReadMsgUDP done")
+	return conn.UDPConn.ReadMsgUDP(b, oob)
+}
+
+func (conn *loggingUDPConn) Close() error {
+	log.Println("Close")
+	return conn.UDPConn.Close()
+}
+
+func (conn *loggingUDPConn) SetDeadline(t time.Time) error {
+	log.Printf("SetDeadline: %s", t)
+	return conn.UDPConn.SetDeadline(t)
+}
+
+func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
+	log.Printf("SetReadDeadline: %s", t)
+	return conn.UDPConn.SetReadDeadline(t)
+}
+
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
 	unlock := unlockOnce(&srv.lock)
@@ -360,10 +385,11 @@ func (srv *Server) ListenAndServe() error {
 		if e := setUDPSocketOptions(u); e != nil {
 			return e
 		}
-		srv.PacketConn = l
+		lc := &loggingUDPConn{u}
+		srv.PacketConn = lc
 		srv.started = true
 		unlock()
-		return srv.serveUDP(u)
+		return srv.serveUDP(lc)
 	}
 	return &Error{err: "bad network"}
 }
@@ -388,12 +414,14 @@ func (srv *Server) ActivateAndServe() error {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
 		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
+			lc := &loggingUDPConn{t}
+			srv.PacketConn = lc
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
 			srv.started = true
 			unlock()
-			return srv.serveUDP(t)
+			return srv.serveUDP(lc)
 		}
 	}
 	if l != nil {
@@ -521,7 +549,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 }
 
 // serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(l *net.UDPConn) error {
+func (srv *Server) serveUDP(l *loggingUDPConn) error {
 	defer l.Close()
 
 	if srv.NotifyStartedFunc != nil {
@@ -720,7 +748,7 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	return m, nil
 }
 
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (srv *Server) readUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	if srv.isStarted() {
 		// See the comment in readTCP above.
 		conn.SetReadDeadline(time.Now().Add(timeout))
