@@ -343,6 +343,10 @@ func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
 	return conn.UDPConn.SetReadDeadline(t)
 }
 
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+}
+
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
 	unlock := unlockOnce(&srv.lock)
