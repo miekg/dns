@@ -64,7 +64,7 @@ func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server,
 	if err != nil {
 		return nil, "", nil, err
 	}
-	server := &Server{PacketConn: pc, ReadTimeout: time.Minute, WriteTimeout: time.Minute}
+	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -94,7 +94,7 @@ func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
 		return nil, "", err
 	}
 	server := &Server{PacketConn: pc, Unsafe: true,
-		ReadTimeout: time.Minute, WriteTimeout: time.Minute}
+		ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -121,7 +121,7 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 		return nil, "", nil, err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Minute, WriteTimeout: time.Minute}
+	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -146,7 +146,7 @@ func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, error
 		return nil, "", err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Minute, WriteTimeout: time.Minute}
+	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -364,7 +364,7 @@ func TestServingListenAndServe(t *testing.T) {
 	defer HandleRemove("example.com.")
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Minute, WriteTimeout: time.Minute, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "udp", ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -400,7 +400,7 @@ func TestServingListenAndServeTLS(t *testing.T) {
 	}
 
 	waitLock := sync.Mutex{}
-	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Minute, WriteTimeout: time.Minute, NotifyStartedFunc: waitLock.Unlock}
+	server := &Server{Addr: ":0", Net: "tcp", TLSConfig: config, ReadTimeout: time.Hour, WriteTimeout: time.Hour, NotifyStartedFunc: waitLock.Unlock}
 	waitLock.Lock()
 
 	go func() {
@@ -1043,7 +1043,7 @@ func ExampleDecorateWriter() {
 	server := &Server{
 		PacketConn:     pc,
 		DecorateWriter: wf,
-		ReadTimeout:    time.Minute, WriteTimeout: time.Minute,
+		ReadTimeout:    time.Hour, WriteTimeout: time.Hour,
 	}
 
 	waitLock := sync.Mutex{}
