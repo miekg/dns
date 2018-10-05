@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -311,6 +312,7 @@ func unlockOnce(l sync.Locker) func() {
 
 type loggingUDPConn struct {
 	*net.UDPConn
+	noMoreReadDeadlines int32
 }
 
 func (conn *loggingUDPConn) ReadMsgUDP(b, oob []byte) (n, oobn, flags int, addr *net.UDPAddr, err error) {
@@ -331,6 +333,13 @@ func (conn *loggingUDPConn) SetDeadline(t time.Time) error {
 
 func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
 	log.Printf("%p SetReadDeadline: %s", conn, t)
+
+	if t.Equal(aLongTimeAgo) {
+		atomic.StoreInt32(&conn.noMoreReadDeadlines, 1)
+	} else if atomic.LoadInt32(&conn.noMoreReadDeadlines) != 0 {
+		panic(fmt.Sprintf("%p SetReadDeadline should not have been called !!!", conn))
+	}
+
 	return conn.UDPConn.SetReadDeadline(t)
 }
 
@@ -385,7 +394,7 @@ func (srv *Server) ListenAndServe() error {
 		if e := setUDPSocketOptions(u); e != nil {
 			return e
 		}
-		lc := &loggingUDPConn{u}
+		lc := &loggingUDPConn{UDPConn: u}
 		srv.PacketConn = lc
 		srv.started = true
 		unlock()
@@ -414,7 +423,7 @@ func (srv *Server) ActivateAndServe() error {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
 		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
-			lc := &loggingUDPConn{t}
+			lc := &loggingUDPConn{UDPConn: t}
 			srv.PacketConn = lc
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
