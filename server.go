@@ -667,10 +667,10 @@ func (srv *Server) serveDNS(w *response) {
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
 	if srv.isStarted() {
-		// If we race with ShutdownContext, a distant read
-		// deadline will be set to unblock the read below.
-		// We must not override it, otherwise ShutdownContext
-		// might hang.
+		// If we race with ShutdownContext, the read deadline may
+		// have been set in the distant past to unblock the read
+		// below. We must not override it, otherwise we may block
+		// ShutdownContext.
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}
 
