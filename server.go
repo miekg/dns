@@ -314,23 +314,23 @@ type loggingUDPConn struct {
 }
 
 func (conn *loggingUDPConn) ReadMsgUDP(b, oob []byte) (n, oobn, flags int, addr *net.UDPAddr, err error) {
-	log.Println("ReadMsgUDP")
-	defer log.Println("ReadMsgUDP done")
+	log.Printf("%p ReadMsgUDP", conn)
+	defer log.Printf("%p ReadMsgUDP done", conn)
 	return conn.UDPConn.ReadMsgUDP(b, oob)
 }
 
 func (conn *loggingUDPConn) Close() error {
-	log.Println("Close")
+	log.Printf("%p Close", conn)
 	return conn.UDPConn.Close()
 }
 
 func (conn *loggingUDPConn) SetDeadline(t time.Time) error {
-	log.Printf("SetDeadline: %s", t)
+	log.Printf("%p SetDeadline: %s", conn, t)
 	return conn.UDPConn.SetDeadline(t)
 }
 
 func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
-	log.Printf("SetReadDeadline: %s", t)
+	log.Printf("%p SetReadDeadline: %s", conn, t)
 	return conn.UDPConn.SetReadDeadline(t)
 }
 
@@ -454,6 +454,8 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	}
 
 	if srv.PacketConn != nil {
+		log.Printf("%p in ShutdownContext", srv.PacketConn)
+
 		err := srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
 		if err != nil {
 			log.Printf("srv.PacketConn.SetReadDeadline failed: %v", err)
