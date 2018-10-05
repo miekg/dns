@@ -666,7 +666,14 @@ func (srv *Server) serveDNS(w *response) {
 }
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
+	if srv.isStarted() {
+		// If we race with ShutdownContext, the read deadline may
+		// have been set in the distant past to unblock the read
+		// below. We must not override it, otherwise we may block
+		// ShutdownContext.
+		conn.SetReadDeadline(time.Now().Add(timeout))
+	}
+
 	l := make([]byte, 2)
 	n, err := conn.Read(l)
 	if err != nil || n != 2 {
@@ -701,7 +708,11 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 }
 
 func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
+	if srv.isStarted() {
+		// See the comment in readTCP above.
+		conn.SetReadDeadline(time.Now().Add(timeout))
+	}
+
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
 	if err != nil {
