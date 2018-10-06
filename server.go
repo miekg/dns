@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -312,9 +311,6 @@ func unlockOnce(l sync.Locker) func() {
 
 type loggingUDPConn struct {
 	*net.UDPConn
-
-	mu                  sync.Mutex
-	noMoreReadDeadlines bool
 }
 
 func (conn *loggingUDPConn) ReadMsgUDP(b, oob []byte) (n, oobn, flags int, addr *net.UDPAddr, err error) {
@@ -334,19 +330,7 @@ func (conn *loggingUDPConn) SetDeadline(t time.Time) error {
 }
 
 func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
-	unlock := unlockOnce(&conn.mu)
-	conn.mu.Lock()
-	defer unlock()
-
 	log.Printf("%p SetReadDeadline: %s", conn, t)
-
-	if t.Equal(aLongTimeAgo) {
-		conn.noMoreReadDeadlines = true
-	} else if conn.noMoreReadDeadlines {
-		panic(fmt.Sprintf("%p SetReadDeadline should not have been called !!!", conn))
-	}
-
-	unlock()
 	return conn.UDPConn.SetReadDeadline(t)
 }
 
