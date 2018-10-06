@@ -716,11 +716,11 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	// have been set in the distant past to unblock the read
 	// below. We must not override it, otherwise we may block
 	// ShutdownContext.
-	srv.lock.Lock()
+	srv.lock.RLock()
 	if srv.started {
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}
-	srv.lock.Unlock()
+	srv.lock.RUnlock()
 
 	l := make([]byte, 2)
 	n, err := conn.Read(l)
@@ -756,12 +756,12 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 }
 
 func (srv *Server) readUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	srv.lock.Lock()
+	srv.lock.RLock()
 	if srv.started {
 		// See the comment in readTCP above.
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}
-	srv.lock.Unlock()
+	srv.lock.RUnlock()
 
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
