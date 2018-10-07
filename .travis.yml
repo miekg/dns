@@ -15,7 +15,7 @@ before_install:
   - ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/miekg/ || true
 
 script:
-  - go test $TESTS
+  - go test -timeout 5m $TESTS
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

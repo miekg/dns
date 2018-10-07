@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -87,7 +88,7 @@ type response struct {
 	tsigStatus     error
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
-	udp            *net.UDPConn      // i/o connection if UDP was used
+	udp            *loggingUDPConn   // i/o connection if UDP was used
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
 	writer         Writer            // writer to output the raw DNS bits
@@ -152,7 +153,7 @@ type Reader interface {
 	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
-	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
+	ReadUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
 }
 
 // defaultReader is an adapter for the Server struct that implements the Reader interface
@@ -165,7 +166,7 @@ func (dr *defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, 
 	return dr.readTCP(conn, timeout)
 }
 
-func (dr *defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (dr *defaultReader) ReadUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	return dr.readUDP(conn, timeout)
 }
 
@@ -308,6 +309,35 @@ func unlockOnce(l sync.Locker) func() {
 	return func() { once.Do(l.Unlock) }
 }
 
+type loggingUDPConn struct {
+	*net.UDPConn
+}
+
+func (conn *loggingUDPConn) ReadMsgUDP(b, oob []byte) (n, oobn, flags int, addr *net.UDPAddr, err error) {
+	log.Printf("%p ReadMsgUDP", conn)
+	defer log.Printf("%p ReadMsgUDP done", conn)
+	return conn.UDPConn.ReadMsgUDP(b, oob)
+}
+
+func (conn *loggingUDPConn) Close() error {
+	log.Printf("%p Close", conn)
+	return conn.UDPConn.Close()
+}
+
+func (conn *loggingUDPConn) SetDeadline(t time.Time) error {
+	log.Printf("%p SetDeadline: %s", conn, t)
+	return conn.UDPConn.SetDeadline(t)
+}
+
+func (conn *loggingUDPConn) SetReadDeadline(t time.Time) error {
+	log.Printf("%p SetReadDeadline: %s", conn, t)
+	return conn.UDPConn.SetReadDeadline(t)
+}
+
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+}
+
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
 	unlock := unlockOnce(&srv.lock)
@@ -359,10 +389,11 @@ func (srv *Server) ListenAndServe() error {
 		if e := setUDPSocketOptions(u); e != nil {
 			return e
 		}
-		srv.PacketConn = l
+		lc := &loggingUDPConn{UDPConn: u}
+		srv.PacketConn = lc
 		srv.started = true
 		unlock()
-		return srv.serveUDP(u)
+		return srv.serveUDP(lc)
 	}
 	return &Error{err: "bad network"}
 }
@@ -387,12 +418,14 @@ func (srv *Server) ActivateAndServe() error {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
 		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
+			lc := &loggingUDPConn{UDPConn: t}
+			srv.PacketConn = lc
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
 			srv.started = true
 			unlock()
-			return srv.serveUDP(t)
+			return srv.serveUDP(lc)
 		}
 	}
 	if l != nil {
@@ -416,26 +449,36 @@ func (srv *Server) Shutdown() error {
 // to terminate.
 func (srv *Server) ShutdownContext(ctx context.Context) error {
 	srv.lock.Lock()
-	started := srv.started
-	srv.started = false
-	srv.lock.Unlock()
-
-	if !started {
+	if !srv.started {
+		srv.lock.Unlock()
 		return &Error{err: "server not started"}
 	}
 
+	srv.started = false
+
 	if srv.PacketConn != nil {
-		srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		log.Printf("%p in ShutdownContext", srv.PacketConn)
+
+		err := srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		if err != nil {
+			log.Printf("srv.PacketConn.SetReadDeadline failed: %v", err)
+		}
 	}
 
 	if srv.Listener != nil {
-		srv.Listener.Close()
+		err := srv.Listener.Close()
+		if err != nil {
+			log.Printf("srv.Listener.Close failed: %v", err)
+		}
 	}
 
-	srv.lock.Lock()
 	for rw := range srv.conns {
-		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		err := rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		if err != nil {
+			log.Printf("rw.SetReadDeadline failed: %v", err)
+		}
 	}
+
 	srv.lock.Unlock()
 
 	if testShutdownNotify != nil {
@@ -450,7 +493,10 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	}
 
 	if srv.PacketConn != nil {
-		srv.PacketConn.Close()
+		err := srv.PacketConn.Close()
+		if err != nil {
+			log.Printf("srv.PacketConn.Close failed: %v", err)
+		}
 	}
 
 	return ctxErr
@@ -508,7 +554,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 }
 
 // serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(l *net.UDPConn) error {
+func (srv *Server) serveUDP(l *loggingUDPConn) error {
 	defer l.Close()
 
 	if srv.NotifyStartedFunc != nil {
@@ -666,13 +712,15 @@ func (srv *Server) serveDNS(w *response) {
 }
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
-	if srv.isStarted() {
-		// If we race with ShutdownContext, the read deadline may
-		// have been set in the distant past to unblock the read
-		// below. We must not override it, otherwise we may block
-		// ShutdownContext.
+	// If we race with ShutdownContext, the read deadline may
+	// have been set in the distant past to unblock the read
+	// below. We must not override it, otherwise we may block
+	// ShutdownContext.
+	srv.lock.RLock()
+	if srv.started {
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}
+	srv.lock.RUnlock()
 
 	l := make([]byte, 2)
 	n, err := conn.Read(l)
@@ -707,11 +755,13 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	return m, nil
 }
 
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	if srv.isStarted() {
+func (srv *Server) readUDP(conn *loggingUDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+	srv.lock.RLock()
+	if srv.started {
 		// See the comment in readTCP above.
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}
+	srv.lock.RUnlock()
 
 	m := srv.udpPool.Get().([]byte)
 	n, s, err := ReadFromSessionUDP(conn, m)
