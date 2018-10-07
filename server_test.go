@@ -709,7 +709,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	// pass from the client through the kernel and back into
 	// the server. Without it, some requests may still be in
 	// the kernel's buffer when ShutdownContext is called.
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	eg = new(errgroup.Group)
 
