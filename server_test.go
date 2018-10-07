@@ -649,6 +649,10 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	wg.Add(requests)
 
 	var errOnce sync.Once
+	// t.Fail will panic if it's called after the test has finished
+	// function, burning the sync.Once with a defer will prevent the
+	// handler from calling t.Errorf after we've returned.
+	defer errOnce.Do(func() {})
 
 	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
 		defer wg.Done()
