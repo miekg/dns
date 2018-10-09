@@ -88,27 +88,6 @@ func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server,
 	return server, pc.LocalAddr().String(), fin, nil
 }
 
-func RunLocalUDPServerUnsafe(laddr string) (*Server, string, error) {
-	pc, err := net.ListenPacket("udp", laddr)
-	if err != nil {
-		return nil, "", err
-	}
-	server := &Server{PacketConn: pc, Unsafe: true,
-		ReadTimeout: time.Hour, WriteTimeout: time.Hour}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	go func() {
-		server.ActivateAndServe()
-		pc.Close()
-	}()
-
-	waitLock.Lock()
-	return server, pc.LocalAddr().String(), nil
-}
-
 func RunLocalTCPServer(laddr string) (*Server, string, error) {
 	server, l, _, err := RunLocalTCPServerWithFinChan(laddr)
 
@@ -604,7 +583,8 @@ func TestServingResponse(t *testing.T) {
 	}
 
 	s.Shutdown()
-	s, addrstr, err = RunLocalUDPServerUnsafe(":0")
+	s, addrstr, _, err = RunLocalUDPServerWithFinChan(":0",
+		func(srv *Server) { srv.Unsafe = true })
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
