@@ -690,7 +690,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		if opt == nil {
 			return nil, ErrExtendedRcode
 		}
-		opt.SetExtendedRcode(uint8(dns.Rcode >> 4))
+		opt.SetExtendedRcode(uint8(dns.Rcode))
 	}
 
 	// Convert convenient Msg into wire-like Header.

@@ -45,6 +45,44 @@ func TestPackNoSideEffect(t *testing.T) {
 	}
 }
 
+func TestPackExtendedBadvers(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion(Fqdn("example.com."), TypeNS)
+
+	a := new(Msg)
+	a.SetReply(m)
+	o := &OPT{
+		Hdr: RR_Header{
+			Name:   ".",
+			Rrtype: TypeOPT,
+		},
+	}
+	o.SetUDPSize(DefaultMsgSize)
+	a.Extra = append(a.Extra, o)
+
+	a.SetRcode(m, RcodeBadVers)
+
+	edns0 := a.IsEdns0()
+	if edns0 == nil {
+		t.Fatal("")
+	}
+
+	if edns0.ExtendedRcode() == RcodeBadVers {
+		t.Errorf("ExtendedRcode is expected to not be BADVERS before Pack")
+	}
+
+	a.Pack()
+
+	edns0 = a.IsEdns0()
+	if edns0 == nil {
+		t.Fatal("")
+	}
+
+	if edns0.ExtendedRcode() != RcodeBadVers {
+		t.Errorf("ExtendedRcode is expected to be BADVERS after Pack")
+	}
+}
+
 func TestUnpackDomainName(t *testing.T) {
 	var cases = []struct {
 		label          string
