@@ -196,7 +196,7 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
 	m := make(map[string]string)
-	k := ""
+	var k string
 
 	c := newKLexer(r)
 
@@ -209,7 +209,7 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 			if k == "" {
 				return nil, &ParseError{file, "no private key seen", l}
 			}
-			//println("Setting", strings.ToLower(k), "to", l.token, "b")
+
 			m[strings.ToLower(k)] = l.token
 			k = ""
 		}
