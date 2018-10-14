@@ -284,23 +284,18 @@ func (kl *klexer) Next() (lex, bool) {
 
 		switch x {
 		case ':':
-			if commt {
+			if commt || !kl.key {
 				break
 			}
 
+			kl.key = false
+
+			// Next token is a space, eat it
+			kl.tokenText()
+
+			l.value = zKey
 			l.token = str.String()
-
-			if kl.key {
-				l.value = zKey
-				kl.key = false
-
-				// Next token is a space, eat it
-				kl.tokenText()
-
-				return l, true
-			}
-
-			l.value = zValue
+			return l, true
 		case ';':
 			commt = true
 		case '\n':
@@ -329,8 +324,8 @@ func (kl *klexer) Next() (lex, bool) {
 
 	if str.Len() > 0 {
 		// Send remainder
-		l.token = str.String()
 		l.value = zValue
+		l.token = str.String()
 		return l, true
 	}
 
