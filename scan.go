@@ -646,12 +646,11 @@ func (zl *zlexer) Next() (lex, bool) {
 				retL = *l
 			}
 			zl.stri = 0
-
-			wasSpace := zl.space
 			zl.owner = false
-			zl.space = true
 
-			if !wasSpace && !zl.commt {
+			if !zl.space {
+				zl.space = true
+
 				l.value = zBlank
 				l.token = " "
 				l.length = 1
