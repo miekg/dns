@@ -580,17 +580,20 @@ func (zl *zlexer) Next() (lex, bool) {
 				stri++
 				break
 			}
+
 			if zl.quote {
 				// Inside quotes this is legal
 				zl.tok[stri] = x
 				stri++
 				break
 			}
+
 			if zl.commt {
 				zl.tok[comi] = x
 				comi++
 				break
 			}
+
 			var retL lex
 			if stri == 0 {
 				// Space directly in the beginning, handled in the grammar
@@ -599,6 +602,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zOwner
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
+
 				// escape $... start with a \ not a $, so this will work
 				switch l.tokenUpper {
 				case "$TTL":
@@ -610,45 +614,47 @@ func (zl *zlexer) Next() (lex, bool) {
 				case "$GENERATE":
 					l.value = zDirGenerate
 				}
+
 				retL = *l
 			} else {
 				l.value = zString
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
+
 				if !zl.rrtype {
 					if t, ok := StringToType[l.tokenUpper]; ok {
 						l.value = zRrtpe
 						l.torc = t
 						zl.rrtype = true
-					} else {
-						if strings.HasPrefix(l.tokenUpper, "TYPE") {
-							t, ok := typeToInt(l.token)
-							if !ok {
-								l.token = "unknown RR type"
-								l.err = true
-								return *l, true
-							}
-							l.value = zRrtpe
-							zl.rrtype = true
-							l.torc = t
+					} else if strings.HasPrefix(l.tokenUpper, "TYPE") {
+						t, ok := typeToInt(l.token)
+						if !ok {
+							l.token = "unknown RR type"
+							l.err = true
+							return *l, true
 						}
+
+						l.value = zRrtpe
+						zl.rrtype = true
+						l.torc = t
 					}
+
 					if t, ok := StringToClass[l.tokenUpper]; ok {
 						l.value = zClass
 						l.torc = t
-					} else {
-						if strings.HasPrefix(l.tokenUpper, "CLASS") {
-							t, ok := classToInt(l.token)
-							if !ok {
-								l.token = "unknown class"
-								l.err = true
-								return *l, true
-							}
-							l.value = zClass
-							l.torc = t
+					} else if strings.HasPrefix(l.tokenUpper, "CLASS") {
+						t, ok := classToInt(l.token)
+						if !ok {
+							l.token = "unknown class"
+							l.err = true
+							return *l, true
 						}
+
+						l.value = zClass
+						l.torc = t
 					}
 				}
+
 				retL = *l
 			}
 
@@ -677,6 +683,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				stri++
 				break
 			}
+
 			if zl.quote {
 				// Inside quotes this is legal
 				zl.tok[stri] = x
@@ -699,24 +706,29 @@ func (zl *zlexer) Next() (lex, bool) {
 			comi++
 		case '\r':
 			escape = false
+
 			if zl.quote {
 				zl.tok[stri] = x
 				stri++
 			}
+
 			// discard if outside of quotes
 		case '\n':
 			escape = false
+
 			// Escaped newline
 			if zl.quote {
 				zl.tok[stri] = x
 				stri++
 				break
 			}
+
 			// inside quotes this is legal
 			if zl.commt {
 				// Reset a comment
 				zl.commt = false
 				zl.rrtype = false
+
 				// If not in a brace this ends the comment AND the RR
 				if zl.brace == 0 {
 					zl.owner = true
@@ -728,6 +740,7 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.comment = ""
 					return ll, true
 				}
+
 				zl.tok[comi] = ' ' // convert newline to space
 				comi++
 				break
@@ -774,6 +787,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				comi++
 				break
 			}
+
 			// something already escaped must be in string
 			if escape {
 				zl.tok[stri] = x
@@ -781,9 +795,11 @@ func (zl *zlexer) Next() (lex, bool) {
 				escape = false
 				break
 			}
+
 			// something escaped outside of string gets added to string
 			zl.tok[stri] = x
 			stri++
+
 			escape = true
 		case '"':
 			if zl.commt {
@@ -791,13 +807,16 @@ func (zl *zlexer) Next() (lex, bool) {
 				comi++
 				break
 			}
+
 			if escape {
 				zl.tok[stri] = x
 				stri++
 				escape = false
 				break
 			}
+
 			zl.space = false
+
 			// send previous gathered text and the quote
 			var retL lex
 			if stri != 0 {
@@ -826,20 +845,24 @@ func (zl *zlexer) Next() (lex, bool) {
 				comi++
 				break
 			}
+
 			if escape {
 				zl.tok[stri] = x
 				stri++
 				escape = false
 				break
 			}
+
 			if zl.quote {
 				zl.tok[stri] = x
 				stri++
 				break
 			}
+
 			switch x {
 			case ')':
 				zl.brace--
+
 				if zl.brace < 0 {
 					l.token = "extra closing brace"
 					l.tokenUpper = l.token
@@ -851,15 +874,19 @@ func (zl *zlexer) Next() (lex, bool) {
 			}
 		default:
 			escape = false
+
 			if zl.commt {
 				zl.tok[comi] = x
 				comi++
 				break
 			}
+
 			zl.tok[stri] = x
 			stri++
+
 			zl.space = false
 		}
+
 		x, err = zl.tokenText()
 	}
 
@@ -872,6 +899,7 @@ func (zl *zlexer) Next() (lex, bool) {
 		l.value = zString
 		return *l, true
 	}
+
 	if zl.brace != 0 {
 		l.token = "unbalanced brace"
 		l.tokenUpper = l.token
