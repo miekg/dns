@@ -562,12 +562,12 @@ func (zl *zlexer) Next() (lex, bool) {
 	for err == nil {
 		l.line, l.column = zl.line, zl.column
 
-		if stri >= maxTok {
+		if stri >= len(zl.tok) {
 			l.token = "token length insufficient for parsing"
 			l.err = true
 			return *l, true
 		}
-		if comi >= maxTok {
+		if comi >= len(zl.tok) {
 			l.token = "comment length insufficient for parsing"
 			l.err = true
 			return *l, true
