@@ -273,7 +273,8 @@ func (kl *klexer) Next() (lex, bool) {
 	var (
 		l lex
 
-		str   string
+		str strings.Builder
+
 		commt bool
 	)
 
@@ -287,7 +288,7 @@ func (kl *klexer) Next() (lex, bool) {
 				break
 			}
 
-			l.token = str
+			l.token = str.String()
 
 			if kl.key {
 				l.value = zKey
@@ -311,14 +312,14 @@ func (kl *klexer) Next() (lex, bool) {
 			kl.key = true
 
 			l.value = zValue
-			l.token = str
+			l.token = str.String()
 			return l, true
 		default:
 			if commt {
 				break
 			}
 
-			str += string(x)
+			str.WriteByte(x)
 		}
 
 		x, err = kl.tokenText()
@@ -326,9 +327,9 @@ func (kl *klexer) Next() (lex, bool) {
 
 	kl.eof = true
 
-	if len(str) > 0 {
+	if str.Len() > 0 {
 		// Send remainder
-		l.token = str
+		l.token = str.String()
 		l.value = zValue
 		return l, true
 	}
