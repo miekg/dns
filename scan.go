@@ -594,9 +594,10 @@ func (zl *zlexer) Next() (lex, bool) {
 		switch x {
 		case ' ', '\t':
 			if escape {
-				escape = false
 				zl.tok[stri] = x
 				stri++
+
+				escape = false
 				break
 			}
 
@@ -644,6 +645,7 @@ func (zl *zlexer) Next() (lex, bool) {
 					if t, ok := StringToType[l.tokenUpper]; ok {
 						l.value = zRrtpe
 						l.torc = t
+
 						zl.rrtype = true
 					} else if strings.HasPrefix(l.tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.token)
@@ -654,8 +656,9 @@ func (zl *zlexer) Next() (lex, bool) {
 						}
 
 						l.value = zRrtpe
-						zl.rrtype = true
 						l.torc = t
+
+						zl.rrtype = true
 					}
 
 					if t, ok := StringToClass[l.tokenUpper]; ok {
@@ -698,6 +701,7 @@ func (zl *zlexer) Next() (lex, bool) {
 		case ';':
 			if escape {
 				escape = false
+
 				zl.tok[stri] = x
 				stri++
 				break
@@ -751,10 +755,12 @@ func (zl *zlexer) Next() (lex, bool) {
 				// If not in a brace this ends the comment AND the RR
 				if zl.brace == 0 {
 					zl.owner = true
+
 					l.value = zNewline
 					l.token = "\n"
 					l.tokenUpper = l.token
 					l.comment = string(zl.tok[:comi])
+
 					ll := *l
 					l.comment = ""
 					return ll, true
@@ -775,9 +781,10 @@ func (zl *zlexer) Next() (lex, bool) {
 
 					if !zl.rrtype {
 						if t, ok := StringToType[l.tokenUpper]; ok {
+							zl.rrtype = true
+
 							l.value = zRrtpe
 							l.torc = t
-							zl.rrtype = true
 						}
 					}
 
@@ -811,6 +818,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			if escape {
 				zl.tok[stri] = x
 				stri++
+
 				escape = false
 				break
 			}
@@ -830,6 +838,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			if escape {
 				zl.tok[stri] = x
 				stri++
+
 				escape = false
 				break
 			}
@@ -842,6 +851,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zString
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
+
 				retL = *l
 			}
 
@@ -868,6 +878,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			if escape {
 				zl.tok[stri] = x
 				stri++
+
 				escape = false
 				break
 			}
@@ -911,9 +922,9 @@ func (zl *zlexer) Next() (lex, bool) {
 
 	if stri > 0 {
 		// Send remainder
+		l.value = zString
 		l.token = string(zl.tok[:stri])
 		l.tokenUpper = strings.ToUpper(l.token)
-		l.value = zString
 		return *l, true
 	}
 
