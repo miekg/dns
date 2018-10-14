@@ -45,7 +45,7 @@ func TestPackNoSideEffect(t *testing.T) {
 	}
 }
 
-func TestPackExtendedBadvers(t *testing.T) {
+func TestPackExtendedBadCookie(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion(Fqdn("example.com."), TypeNS)
 
@@ -60,15 +60,16 @@ func TestPackExtendedBadvers(t *testing.T) {
 	o.SetUDPSize(DefaultMsgSize)
 	a.Extra = append(a.Extra, o)
 
-	a.SetRcode(m, RcodeBadVers)
+	a.SetRcode(m, RcodeBadCookie)
 
 	edns0 := a.IsEdns0()
 	if edns0 == nil {
 		t.Fatal("")
 	}
-
-	if edns0.ExtendedRcode() == RcodeBadVers {
-		t.Errorf("ExtendedRcode is expected to not be BADVERS before Pack")
+	// SetExtendedRcode is only called as part of `Pack()`, hence at this stage,
+	// the OPT RR is not set yet.
+	if edns0.ExtendedRcode() == RcodeBadCookie & 0xFFFFFFF0 {
+		t.Errorf("ExtendedRcode is expected to not be BADCOOKIE before Pack")
 	}
 
 	a.Pack()
@@ -78,8 +79,8 @@ func TestPackExtendedBadvers(t *testing.T) {
 		t.Fatal("")
 	}
 
-	if edns0.ExtendedRcode() != RcodeBadVers {
-		t.Errorf("ExtendedRcode is expected to be BADVERS after Pack")
+	if edns0.ExtendedRcode() != RcodeBadCookie & 0xFFFFFFF0 {
+		t.Errorf("ExtendedRcode is expected to be BADCOOKIE after Pack")
 	}
 }
 
