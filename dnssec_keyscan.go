@@ -215,11 +215,18 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 		}
 	}
 
+	// Surface any read errors from r.
+	if err := c.Err(); err != nil {
+		return nil, &ParseError{file: file, err: err.Error()}
+	}
+
 	return m, nil
 }
 
 type klexer struct {
 	src *bufio.Reader
+
+	readErr error
 
 	line   int
 	column int
@@ -240,10 +247,19 @@ func newKLexer(r io.Reader) *klexer {
 	}
 }
 
+func (kl *klexer) Err() error {
+	if kl.readErr == io.EOF {
+		return nil
+	}
+
+	return kl.readErr
+}
+
 // tokenText returns the next byte from the input
 func (kl *klexer) tokenText() (byte, error) {
 	c, err := kl.src.ReadByte()
 	if err != nil {
+		kl.readErr = err
 		return 0, err
 	}
 

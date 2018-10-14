@@ -846,3 +846,13 @@ func TestRsaExponentUnpack(t *testing.T) {
 		t.Fatalf("cannot verify RRSIG with keytag [%d]. Cause [%s]", ksk.KeyTag(), e.Error())
 	}
 }
+
+func TestParseKeyReadError(t *testing.T) {
+	m, err := parseKey(errReader{}, "")
+	if err == nil || !strings.Contains(err.Error(), errTestReadError.Error()) {
+		t.Errorf("expected error to contain %q, but got %v", errTestReadError, err)
+	}
+	if m != nil {
+		t.Errorf("expected a nil map, but got %v", m)
+	}
+}
