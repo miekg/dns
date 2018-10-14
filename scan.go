@@ -469,10 +469,17 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 	}
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
 	// is not an error, because an empty zone file is still a zone file.
+
+	// Surface any read errors from r.
+	if err := c.Err(); err != nil {
+		t <- &Token{Error: &ParseError{file: f, err: err.Error()}}
+	}
 }
 
 type zlexer struct {
 	src *bufio.Reader
+
+	readErr error
 
 	line   int
 	column int
@@ -508,10 +515,19 @@ func newZLexer(r io.Reader) *zlexer {
 	}
 }
 
+func (zl *zlexer) Err() error {
+	if zl.readErr == io.EOF {
+		return nil
+	}
+
+	return zl.readErr
+}
+
 // tokenText returns the next byte from the input
 func (zl *zlexer) tokenText() (byte, error) {
 	c, err := zl.src.ReadByte()
 	if err != nil {
+		zl.readErr = err
 		return 0, err
 	}
 

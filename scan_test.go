@@ -89,3 +89,19 @@ func TestParseTA(t *testing.T) {
 		t.Fatal(`expected a normal RR, but got nil`)
 	}
 }
+
+var errTestReadError = &Error{"test error"}
+
+type errReader struct{}
+
+func (errReader) Read(p []byte) (int, error) { return 0, errTestReadError }
+
+func TestParseZoneReadError(t *testing.T) {
+	rr, err := ReadRR(errReader{}, "")
+	if err == nil || !strings.Contains(err.Error(), errTestReadError.Error()) {
+		t.Errorf("expected error to contain %q, but got %v", errTestReadError, err)
+	}
+	if rr != nil {
+		t.Errorf("expected a nil RR, but got %v", rr)
+	}
+}
