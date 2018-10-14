@@ -488,7 +488,6 @@ type zlexer struct {
 
 	brace  int
 	quote  bool
-	escape bool
 	space  bool
 	commt  bool
 	rrtype bool
@@ -548,6 +547,8 @@ func (zl *zlexer) Next() (lex, bool) {
 		return lex{value: zEOF}, false
 	}
 
+	var escape bool
+
 	x, err := zl.tokenText()
 	for err == nil {
 		l.line, l.column = zl.line, zl.column
@@ -565,8 +566,8 @@ func (zl *zlexer) Next() (lex, bool) {
 
 		switch x {
 		case ' ', '\t':
-			if zl.escape {
-				zl.escape = false
+			if escape {
+				escape = false
 				zl.str[zl.stri] = x
 				zl.stri++
 				break
@@ -666,8 +667,8 @@ func (zl *zlexer) Next() (lex, bool) {
 				return retL, true
 			}
 		case ';':
-			if zl.escape {
-				zl.escape = false
+			if escape {
+				escape = false
 				zl.str[zl.stri] = x
 				zl.stri++
 				break
@@ -692,14 +693,14 @@ func (zl *zlexer) Next() (lex, bool) {
 				return *l, true
 			}
 		case '\r':
-			zl.escape = false
+			escape = false
 			if zl.quote {
 				zl.str[zl.stri] = x
 				zl.stri++
 			}
 			// discard if outside of quotes
 		case '\n':
-			zl.escape = false
+			escape = false
 			// Escaped newline
 			if zl.quote {
 				zl.str[zl.stri] = x
@@ -773,26 +774,26 @@ func (zl *zlexer) Next() (lex, bool) {
 				break
 			}
 			// something already escaped must be in string
-			if zl.escape {
+			if escape {
 				zl.str[zl.stri] = x
 				zl.stri++
-				zl.escape = false
+				escape = false
 				break
 			}
 			// something escaped outside of string gets added to string
 			zl.str[zl.stri] = x
 			zl.stri++
-			zl.escape = true
+			escape = true
 		case '"':
 			if zl.commt {
 				zl.com[zl.comi] = x
 				zl.comi++
 				break
 			}
-			if zl.escape {
+			if escape {
 				zl.str[zl.stri] = x
 				zl.stri++
-				zl.escape = false
+				escape = false
 				break
 			}
 			zl.space = false
@@ -827,10 +828,10 @@ func (zl *zlexer) Next() (lex, bool) {
 				zl.comi++
 				break
 			}
-			if zl.escape {
+			if escape {
 				zl.str[zl.stri] = x
 				zl.stri++
-				zl.escape = false
+				escape = false
 				break
 			}
 			if zl.quote {
@@ -851,7 +852,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				zl.brace++
 			}
 		default:
-			zl.escape = false
+			escape = false
 			if zl.commt {
 				zl.com[zl.comi] = x
 				zl.comi++
