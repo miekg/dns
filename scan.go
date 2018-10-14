@@ -905,15 +905,36 @@ func (zl *zlexer) Next() (lex, bool) {
 		}
 	}
 
+	var retL lex
 	if stri > 0 {
-		// Send remainder
+		// Send remainder of str
 		l.value = zString
 		l.token = string(str[:stri])
 		l.tokenUpper = strings.ToUpper(l.token)
+		retL = *l
+
+		if comi <= 0 {
+			return retL, true
+		}
+	}
+
+	if comi > 0 {
+		// Send remainder of com
+		l.value = zNewline
+		l.token = "\n"
+		l.tokenUpper = l.token
+		l.comment = string(com[:comi])
+
+		if retL != (lex{}) {
+			zl.nextL = true
+			return retL, true
+		}
+
 		return *l, true
 	}
 
 	if zl.brace != 0 {
+		l.comment = "" // in case there was left over string and comment
 		l.token = "unbalanced brace"
 		l.tokenUpper = l.token
 		l.err = true
