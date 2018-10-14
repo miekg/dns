@@ -483,14 +483,14 @@ type zlexer struct {
 	str []byte
 	com []byte // Hold comment text
 
-	comi int
-
 	brace  int
 	quote  bool
 	space  bool
 	commt  bool
 	rrtype bool
 	owner  bool
+
+	startCommt bool
 
 	nextL bool
 
@@ -548,9 +548,17 @@ func (zl *zlexer) Next() (lex, bool) {
 
 	var (
 		stri int // Offset in zl.str (0 means empty)
+		comi int // Offset in zl.com (0 means empty)
 
 		escape bool
 	)
+
+	if zl.startCommt {
+		zl.com[comi] = ';'
+		comi++
+
+		zl.startCommt = false
+	}
 
 	x, err := zl.tokenText()
 	for err == nil {
@@ -561,7 +569,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			l.err = true
 			return *l, true
 		}
-		if zl.comi >= maxTok {
+		if comi >= maxTok {
 			l.token = "comment length insufficient for parsing"
 			l.err = true
 			return *l, true
@@ -582,8 +590,8 @@ func (zl *zlexer) Next() (lex, bool) {
 				break
 			}
 			if zl.commt {
-				zl.com[zl.comi] = x
-				zl.comi++
+				zl.com[comi] = x
+				comi++
 				break
 			}
 			var retL lex
@@ -683,16 +691,19 @@ func (zl *zlexer) Next() (lex, bool) {
 			}
 
 			zl.commt = true
-			zl.com[zl.comi] = ';'
-			zl.comi++
 
 			if stri > 0 {
+				zl.startCommt = true
+
 				l.value = zString
 				l.token = string(zl.str[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				return *l, true
 			}
+
+			zl.com[comi] = ';'
+			comi++
 		case '\r':
 			escape = false
 			if zl.quote {
@@ -720,14 +731,13 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.token = "\n"
 					l.tokenUpper = l.token
 					l.length = 1
-					l.comment = string(zl.com[:zl.comi])
+					l.comment = string(zl.com[:comi])
 					ll := *l
 					l.comment = ""
-					zl.comi = 0
 					return ll, true
 				}
-				zl.com[zl.comi] = ' ' // convert newline to space
-				zl.comi++
+				zl.com[comi] = ' ' // convert newline to space
+				comi++
 				break
 			}
 
@@ -758,7 +768,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				zl.commt = false
 				zl.rrtype = false
 				zl.owner = true
-				zl.comi = 0
 
 				if retL != (lex{}) {
 					zl.nextL = true
@@ -770,8 +779,8 @@ func (zl *zlexer) Next() (lex, bool) {
 		case '\\':
 			// comments do not get escaped chars, everything is copied
 			if zl.commt {
-				zl.com[zl.comi] = x
-				zl.comi++
+				zl.com[comi] = x
+				comi++
 				break
 			}
 			// something already escaped must be in string
@@ -787,8 +796,8 @@ func (zl *zlexer) Next() (lex, bool) {
 			escape = true
 		case '"':
 			if zl.commt {
-				zl.com[zl.comi] = x
-				zl.comi++
+				zl.com[comi] = x
+				comi++
 				break
 			}
 			if escape {
@@ -824,8 +833,8 @@ func (zl *zlexer) Next() (lex, bool) {
 			return *l, true
 		case '(', ')':
 			if zl.commt {
-				zl.com[zl.comi] = x
-				zl.comi++
+				zl.com[comi] = x
+				comi++
 				break
 			}
 			if escape {
@@ -854,8 +863,8 @@ func (zl *zlexer) Next() (lex, bool) {
 		default:
 			escape = false
 			if zl.commt {
-				zl.com[zl.comi] = x
-				zl.comi++
+				zl.com[comi] = x
+				comi++
 				break
 			}
 			zl.str[stri] = x
