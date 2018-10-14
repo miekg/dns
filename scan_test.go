@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -112,6 +113,20 @@ func BenchmarkNewRR(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		_, err := NewRR(s)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkReadRR(b *testing.B) {
+	const name1 = "12345678901234567890123456789012345.12345678.123."
+	const s = name1 + " 3600 IN MX 10 " + name1 + "\n"
+
+	for n := 0; n < b.N; n++ {
+		r := struct{ io.Reader }{strings.NewReader(s)}
+
+		_, err := ReadRR(r, "")
 		if err != nil {
 			b.Fatal(err)
 		}
