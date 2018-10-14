@@ -480,8 +480,7 @@ type zlexer struct {
 
 	l lex
 
-	str []byte
-	com []byte // Hold comment text
+	tok []byte // Hold string or comment text
 
 	brace  int
 	quote  bool
@@ -504,8 +503,7 @@ func newZLexer(r io.Reader) *zlexer {
 
 		line: 1,
 
-		str: make([]byte, maxTok), // Should be enough for any token
-		com: make([]byte, maxTok),
+		tok: make([]byte, maxTok), // Should be enough for any token
 
 		owner: true,
 	}
@@ -547,14 +545,14 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 
 	var (
-		stri int // Offset in zl.str (0 means empty)
-		comi int // Offset in zl.com (0 means empty)
+		stri int // Offset in zl.tok (0 means empty)
+		comi int // Offset in zl.tok (0 means empty)
 
 		escape bool
 	)
 
 	if zl.startCommt {
-		zl.com[comi] = ';'
+		zl.tok[comi] = ';'
 		comi++
 
 		zl.startCommt = false
@@ -579,18 +577,18 @@ func (zl *zlexer) Next() (lex, bool) {
 		case ' ', '\t':
 			if escape {
 				escape = false
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
 			if zl.quote {
 				// Inside quotes this is legal
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
 			if zl.commt {
-				zl.com[comi] = x
+				zl.tok[comi] = x
 				comi++
 				break
 			}
@@ -600,7 +598,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			} else if zl.owner {
 				// If we have a string and its the first, make it an owner
 				l.value = zOwner
-				l.token = string(zl.str[:stri])
+				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				// escape $... start with a \ not a $, so this will work
@@ -617,7 +615,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				retL = *l
 			} else {
 				l.value = zString
-				l.token = string(zl.str[:stri])
+				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				if !zl.rrtype {
@@ -679,13 +677,13 @@ func (zl *zlexer) Next() (lex, bool) {
 		case ';':
 			if escape {
 				escape = false
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
 			if zl.quote {
 				// Inside quotes this is legal
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
@@ -696,18 +694,18 @@ func (zl *zlexer) Next() (lex, bool) {
 				zl.startCommt = true
 
 				l.value = zString
-				l.token = string(zl.str[:stri])
+				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				return *l, true
 			}
 
-			zl.com[comi] = ';'
+			zl.tok[comi] = ';'
 			comi++
 		case '\r':
 			escape = false
 			if zl.quote {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 			}
 			// discard if outside of quotes
@@ -715,7 +713,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			escape = false
 			// Escaped newline
 			if zl.quote {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
@@ -731,12 +729,12 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.token = "\n"
 					l.tokenUpper = l.token
 					l.length = 1
-					l.comment = string(zl.com[:comi])
+					l.comment = string(zl.tok[:comi])
 					ll := *l
 					l.comment = ""
 					return ll, true
 				}
-				zl.com[comi] = ' ' // convert newline to space
+				zl.tok[comi] = ' ' // convert newline to space
 				comi++
 				break
 			}
@@ -746,7 +744,7 @@ func (zl *zlexer) Next() (lex, bool) {
 				var retL lex
 				if stri != 0 {
 					l.value = zString
-					l.token = string(zl.str[:stri])
+					l.token = string(zl.tok[:stri])
 					l.tokenUpper = strings.ToUpper(l.token)
 					l.length = stri
 
@@ -760,6 +758,7 @@ func (zl *zlexer) Next() (lex, bool) {
 
 					retL = *l
 				}
+
 				l.value = zNewline
 				l.token = "\n"
 				l.tokenUpper = l.token
@@ -779,29 +778,29 @@ func (zl *zlexer) Next() (lex, bool) {
 		case '\\':
 			// comments do not get escaped chars, everything is copied
 			if zl.commt {
-				zl.com[comi] = x
+				zl.tok[comi] = x
 				comi++
 				break
 			}
 			// something already escaped must be in string
 			if escape {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				escape = false
 				break
 			}
 			// something escaped outside of string gets added to string
-			zl.str[stri] = x
+			zl.tok[stri] = x
 			stri++
 			escape = true
 		case '"':
 			if zl.commt {
-				zl.com[comi] = x
+				zl.tok[comi] = x
 				comi++
 				break
 			}
 			if escape {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				escape = false
 				break
@@ -811,7 +810,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			var retL lex
 			if stri != 0 {
 				l.value = zString
-				l.token = string(zl.str[:stri])
+				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				l.length = stri
 				retL = *l
@@ -833,18 +832,18 @@ func (zl *zlexer) Next() (lex, bool) {
 			return *l, true
 		case '(', ')':
 			if zl.commt {
-				zl.com[comi] = x
+				zl.tok[comi] = x
 				comi++
 				break
 			}
 			if escape {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				escape = false
 				break
 			}
 			if zl.quote {
-				zl.str[stri] = x
+				zl.tok[stri] = x
 				stri++
 				break
 			}
@@ -863,11 +862,11 @@ func (zl *zlexer) Next() (lex, bool) {
 		default:
 			escape = false
 			if zl.commt {
-				zl.com[comi] = x
+				zl.tok[comi] = x
 				comi++
 				break
 			}
-			zl.str[stri] = x
+			zl.tok[stri] = x
 			stri++
 			zl.space = false
 		}
@@ -878,7 +877,7 @@ func (zl *zlexer) Next() (lex, bool) {
 
 	if stri > 0 {
 		// Send remainder
-		l.token = string(zl.str[:stri])
+		l.token = string(zl.tok[:stri])
 		l.tokenUpper = strings.ToUpper(l.token)
 		l.length = stri
 		l.value = zString
