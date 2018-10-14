@@ -486,8 +486,8 @@ type zlexer struct {
 
 	l lex
 
-	str []byte // Hold string text
-	com []byte // Hold comment text
+	str *[maxTok]byte // Hold string text
+	com *[maxTok]byte // Hold comment text
 
 	brace  int
 	quote  bool
@@ -509,8 +509,8 @@ func newZLexer(r io.Reader) *zlexer {
 
 		line: 1,
 
-		str: make([]byte, maxTok), // Should be enough for any token
-		com: make([]byte, maxTok), // Should be enough for any token
+		str: new([maxTok]byte), // Should be enough for any token
+		com: new([maxTok]byte), // Should be enough for any token
 
 		owner: true,
 	}
