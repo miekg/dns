@@ -77,7 +77,6 @@ func (e *ParseError) Error() (s string) {
 type lex struct {
 	token      string // text of the token
 	tokenUpper string // uppercase text of the token
-	length     int    // length of the token
 	err        bool   // when true, token text has lexer error
 	value      uint8  // value: zString, _BLANK, etc.
 	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
@@ -600,7 +599,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zOwner
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
-				l.length = stri
 				// escape $... start with a \ not a $, so this will work
 				switch l.tokenUpper {
 				case "$TTL":
@@ -617,7 +615,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zString
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
-				l.length = stri
 				if !zl.rrtype {
 					if t, ok := StringToType[l.tokenUpper]; ok {
 						l.value = zRrtpe
@@ -662,7 +659,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				l.value = zBlank
 				l.token = " "
-				l.length = 1
 
 				if retL == (lex{}) {
 					return *l, true
@@ -696,7 +692,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zString
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
-				l.length = stri
 				return *l, true
 			}
 
@@ -728,7 +723,6 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.value = zNewline
 					l.token = "\n"
 					l.tokenUpper = l.token
-					l.length = 1
 					l.comment = string(zl.tok[:comi])
 					ll := *l
 					l.comment = ""
@@ -746,7 +740,6 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.value = zString
 					l.token = string(zl.tok[:stri])
 					l.tokenUpper = strings.ToUpper(l.token)
-					l.length = stri
 
 					if !zl.rrtype {
 						if t, ok := StringToType[l.tokenUpper]; ok {
@@ -762,7 +755,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zNewline
 				l.token = "\n"
 				l.tokenUpper = l.token
-				l.length = 1
 
 				zl.commt = false
 				zl.rrtype = false
@@ -812,7 +804,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zString
 				l.token = string(zl.tok[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
-				l.length = stri
 				retL = *l
 			}
 
@@ -820,7 +811,6 @@ func (zl *zlexer) Next() (lex, bool) {
 			l.value = zQuote
 			l.token = "\""
 			l.tokenUpper = l.token
-			l.length = 1
 
 			zl.quote = !zl.quote
 
@@ -879,7 +869,6 @@ func (zl *zlexer) Next() (lex, bool) {
 		// Send remainder
 		l.token = string(zl.tok[:stri])
 		l.tokenUpper = strings.ToUpper(l.token)
-		l.length = stri
 		l.value = zString
 		return *l, true
 	}

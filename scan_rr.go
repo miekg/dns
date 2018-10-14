@@ -130,7 +130,7 @@ func setA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -146,7 +146,7 @@ func setAAAA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -163,7 +163,7 @@ func setNS(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Ns = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -181,7 +181,7 @@ func setPTR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Ptr = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -199,7 +199,7 @@ func setNSAPPTR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Ptr = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -217,7 +217,7 @@ func setRP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Mbox = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -246,7 +246,7 @@ func setMR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Mr = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -264,7 +264,7 @@ func setMB(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Mb = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -282,7 +282,7 @@ func setMG(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Mg = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -326,7 +326,7 @@ func setMINFO(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Rmail = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -355,7 +355,7 @@ func setMF(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Mf = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -373,7 +373,7 @@ func setMD(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Md = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -390,7 +390,7 @@ func setMX(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -418,7 +418,7 @@ func setRT(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -446,7 +446,7 @@ func setAFSDB(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -473,7 +473,7 @@ func setX25(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -489,7 +489,7 @@ func setKX(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -517,7 +517,7 @@ func setCNAME(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Target = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -535,7 +535,7 @@ func setDNAME(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Target = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -553,7 +553,7 @@ func setSOA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.Ns = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -622,7 +622,7 @@ func setSRV(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -665,7 +665,7 @@ func setNAPTR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -759,7 +759,7 @@ func setTALINK(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.PreviousName = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -793,7 +793,7 @@ func setLOC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	// North
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 	i, e := strconv.ParseUint(l.token, 10, 32)
@@ -869,7 +869,7 @@ East:
 Altitude:
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if l.length == 0 || l.err {
+	if len(l.token) == 0 || l.err {
 		return nil, &ParseError{f, "bad LOC Altitude", l}, ""
 	}
 	if l.token[len(l.token)-1] == 'M' || l.token[len(l.token)-1] == 'm' {
@@ -924,7 +924,7 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	// HitLength is not represented
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -936,7 +936,7 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
-	if l.length == 0 || l.err {
+	if len(l.token) == 0 || l.err {
 		return nil, &ParseError{f, "bad HIP Hit", l}, ""
 	}
 	rr.Hit = l.token // This can not contain spaces, see RFC 5205 Section 6.
@@ -944,7 +944,7 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
-	if l.length == 0 || l.err {
+	if len(l.token) == 0 || l.err {
 		return nil, &ParseError{f, "bad HIP PublicKey", l}, ""
 	}
 	rr.PublicKey = l.token // This cannot contain spaces
@@ -977,7 +977,7 @@ func setCERT(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1029,7 +1029,7 @@ func setCSYNC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 	j, e := strconv.ParseUint(l.token, 10, 32)
@@ -1087,7 +1087,7 @@ func setRRSIG(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1187,7 +1187,7 @@ func setNSEC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	rr.NextDomain = l.token
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1227,7 +1227,7 @@ func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1298,7 +1298,7 @@ func setNSEC3PARAM(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1335,11 +1335,11 @@ func setEUI48(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
-	if l.length != 17 || l.err {
+	if len(l.token) != 17 || l.err {
 		return nil, &ParseError{f, "bad EUI48 Address", l}, ""
 	}
 	addr := make([]byte, 12)
@@ -1368,11 +1368,11 @@ func setEUI64(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
-	if l.length != 23 || l.err {
+	if len(l.token) != 23 || l.err {
 		return nil, &ParseError{f, "bad EUI64 Address", l}, ""
 	}
 	addr := make([]byte, 16)
@@ -1401,7 +1401,7 @@ func setSSHFP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1431,7 +1431,7 @@ func setDNSKEYs(h RR_Header, c *zlexer, o, f, typ string) (RR, *ParseError, stri
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1488,7 +1488,7 @@ func setRKEY(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1546,7 +1546,7 @@ func setGPOS(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1577,7 +1577,7 @@ func setDSs(h RR_Header, c *zlexer, o, f, typ string) (RR, *ParseError, string) 
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1638,7 +1638,7 @@ func setTA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1678,7 +1678,7 @@ func setTLSA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1715,7 +1715,7 @@ func setSMIMEA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
@@ -1829,7 +1829,7 @@ func setURI(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1876,7 +1876,7 @@ func setNID(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1900,7 +1900,7 @@ func setL32(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1923,7 +1923,7 @@ func setLP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1950,7 +1950,7 @@ func setL64(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1974,7 +1974,7 @@ func setUID(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -1991,7 +1991,7 @@ func setGID(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -2023,7 +2023,7 @@ func setPX(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, ""
 	}
 
@@ -2059,7 +2059,7 @@ func setCAA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	rr.Hdr = h
 
 	l, _ := c.Next()
-	if l.length == 0 { // dynamic update rr.
+	if len(l.token) == 0 { // dynamic update rr.
 		return rr, nil, l.comment
 	}
 
