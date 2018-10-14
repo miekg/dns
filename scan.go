@@ -524,11 +524,11 @@ func (zl *zlexer) Err() error {
 }
 
 // readByte returns the next byte from the input
-func (zl *zlexer) readByte() (byte, error) {
+func (zl *zlexer) readByte() (byte, bool) {
 	c, err := zl.src.ReadByte()
 	if err != nil {
 		zl.readErr = err
-		return 0, err
+		return 0, false
 	}
 
 	// delay the newline handling until the next token is delivered,
@@ -545,7 +545,7 @@ func (zl *zlexer) readByte() (byte, error) {
 		zl.column++
 	}
 
-	return c, nil
+	return c, true
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
@@ -573,12 +573,7 @@ func (zl *zlexer) Next() (lex, bool) {
 		zl.startCommt = false
 	}
 
-	for {
-		x, err := zl.readByte()
-		if err != nil {
-			break
-		}
-
+	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.line, l.column = zl.line, zl.column
 
 		if stri >= len(zl.tok) {

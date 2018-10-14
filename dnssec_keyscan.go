@@ -256,11 +256,11 @@ func (kl *klexer) Err() error {
 }
 
 // readByte returns the next byte from the input
-func (kl *klexer) readByte() (byte, error) {
+func (kl *klexer) readByte() (byte, bool) {
 	c, err := kl.src.ReadByte()
 	if err != nil {
 		kl.readErr = err
-		return 0, err
+		return 0, false
 	}
 
 	// delay the newline handling until the next token is delivered,
@@ -277,7 +277,7 @@ func (kl *klexer) readByte() (byte, error) {
 		kl.column++
 	}
 
-	return c, nil
+	return c, true
 }
 
 // klexer scans the sourcefile and returns tokens on the channel c.
@@ -294,12 +294,7 @@ func (kl *klexer) Next() (lex, bool) {
 		commt bool
 	)
 
-	for {
-		x, err := kl.readByte()
-		if err != nil {
-			break
-		}
-
+	for x, ok := kl.readByte(); ok; x, ok = kl.readByte() {
 		l.line, l.column = kl.line, kl.column
 
 		switch x {
