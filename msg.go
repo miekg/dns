@@ -837,6 +837,11 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	// The header counts might have been wrong so we need to update it
 	dh.Arcount = uint16(len(dns.Extra))
 
+	// Set extended Rcode
+	if opt := dns.IsEdns0(); opt != nil {
+		dns.Rcode = dns.Rcode | opt.ExtendedRcode()
+	}
+
 	if off != len(msg) {
 		// TODO(miek) make this an error?
 		// use PackOpt to let people tell how detailed the error reporting should be?
