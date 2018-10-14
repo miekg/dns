@@ -593,18 +593,12 @@ func (zl *zlexer) Next() (lex, bool) {
 
 		switch x {
 		case ' ', '\t':
-			if escape {
+			if escape || zl.quote {
+				// Inside quotes or escaped this is legal.
 				zl.tok[stri] = x
 				stri++
 
 				escape = false
-				break
-			}
-
-			if zl.quote {
-				// Inside quotes this is legal
-				zl.tok[stri] = x
-				stri++
 				break
 			}
 
@@ -699,18 +693,12 @@ func (zl *zlexer) Next() (lex, bool) {
 				return retL, true
 			}
 		case ';':
-			if escape {
+			if escape || zl.quote {
+				// Inside quotes or escaped this is legal.
+				zl.tok[stri] = x
+				stri++
+
 				escape = false
-
-				zl.tok[stri] = x
-				stri++
-				break
-			}
-
-			if zl.quote {
-				// Inside quotes this is legal
-				zl.tok[stri] = x
-				stri++
 				break
 			}
 
@@ -875,17 +863,12 @@ func (zl *zlexer) Next() (lex, bool) {
 				break
 			}
 
-			if escape {
+			if escape || zl.quote {
+				// Inside quotes or escaped this is legal.
 				zl.tok[stri] = x
 				stri++
 
 				escape = false
-				break
-			}
-
-			if zl.quote {
-				zl.tok[stri] = x
-				stri++
 				break
 			}
 
