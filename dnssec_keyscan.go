@@ -255,8 +255,8 @@ func (kl *klexer) Err() error {
 	return kl.readErr
 }
 
-// tokenText returns the next byte from the input
-func (kl *klexer) tokenText() (byte, error) {
+// readByte returns the next byte from the input
+func (kl *klexer) readByte() (byte, error) {
 	c, err := kl.src.ReadByte()
 	if err != nil {
 		kl.readErr = err
@@ -295,7 +295,7 @@ func (kl *klexer) Next() (lex, bool) {
 	)
 
 	for {
-		x, err := kl.tokenText()
+		x, err := kl.readByte()
 		if err != nil {
 			break
 		}
@@ -311,7 +311,7 @@ func (kl *klexer) Next() (lex, bool) {
 			kl.key = false
 
 			// Next token is a space, eat it
-			kl.tokenText()
+			kl.readByte()
 
 			l.value = zKey
 			l.token = str.String()

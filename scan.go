@@ -523,8 +523,8 @@ func (zl *zlexer) Err() error {
 	return zl.readErr
 }
 
-// tokenText returns the next byte from the input
-func (zl *zlexer) tokenText() (byte, error) {
+// readByte returns the next byte from the input
+func (zl *zlexer) readByte() (byte, error) {
 	c, err := zl.src.ReadByte()
 	if err != nil {
 		zl.readErr = err
@@ -574,7 +574,7 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 
 	for {
-		x, err := zl.tokenText()
+		x, err := zl.readByte()
 		if err != nil {
 			break
 		}
