@@ -1,12 +1,14 @@
 package dns
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/scanner"
 )
 
 const maxTok = 2048 // Largest token we can return.
@@ -170,10 +172,7 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 		}
 	}()
 
-	s, cancel := scanInit(r)
-	defer cancel()
-
-	c := newZLexer(s)
+	c := newZLexer(r)
 
 	// 6 possible beginnings of a line, _ is a space
 	// 0. zRRTYPE                              -> all omitted until the rrtype
@@ -475,7 +474,8 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 }
 
 type zlexer struct {
-	s *scan
+	src      *bufio.Reader
+	position scanner.Position
 
 	l lex
 
@@ -495,17 +495,45 @@ type zlexer struct {
 
 	nextL bool
 
-	eof bool
+	eol bool // end-of-line
+	eof bool // end-of-file
 }
 
-func newZLexer(s *scan) *zlexer {
+func newZLexer(r io.Reader) *zlexer {
 	return &zlexer{
-		s: s,
+		src: bufio.NewReader(r),
+		position: scanner.Position{
+			Line: 1,
+		},
 
 		str:   make([]byte, maxTok), // Should be enough for any token
 		com:   make([]byte, maxTok),
 		owner: true,
 	}
+}
+
+// tokenText returns the next byte from the input
+func (zl *zlexer) tokenText() (byte, error) {
+	c, err := zl.src.ReadByte()
+	if err != nil {
+		return 0, err
+	}
+
+	// delay the newline handling until the next token is delivered,
+	// fixes off-by-one errors when reporting a parse error.
+	if zl.eol {
+		zl.position.Line++
+		zl.position.Column = 0
+		zl.eol = false
+	}
+
+	if c == '\n' {
+		zl.eol = true
+	} else {
+		zl.position.Column++
+	}
+
+	return c, nil
 }
 
 // zlexer scans the sourcefile and returns tokens on the channel c.
@@ -519,10 +547,10 @@ func (zl *zlexer) Next() (lex, bool) {
 		return lex{value: zEOF}, false
 	}
 
-	x, err := zl.s.tokenText()
+	x, err := zl.tokenText()
 	for err == nil {
-		l.column = zl.s.position.Column
-		l.line = zl.s.position.Line
+		l.column = zl.position.Column
+		l.line = zl.position.Line
 		if zl.stri >= maxTok {
 			l.token = "token length insufficient for parsing"
 			l.err = true
@@ -832,7 +860,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			zl.stri++
 			zl.space = false
 		}
-		x, err = zl.s.tokenText()
+		x, err = zl.tokenText()
 	}
 
 	zl.eof = true

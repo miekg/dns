@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bufio"
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
@@ -9,6 +10,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"text/scanner"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -194,13 +196,10 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 // parseKey reads a private key from r. It returns a map[string]string,
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
-	s, cancel := scanInit(r)
-	defer cancel()
-
 	m := make(map[string]string)
 	k := ""
 
-	c := newKLexer(s)
+	c := newKLexer(r)
 
 	for l, ok := c.Next(); ok; l, ok = c.Next() {
 		// It should alternate
@@ -221,21 +220,50 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 }
 
 type klexer struct {
-	s *scan
+	src      *bufio.Reader
+	position scanner.Position
 
 	l lex
 
 	key bool
 
-	eof bool
+	eol bool // end-of-line
+	eof bool // end-of-file
 }
 
-func newKLexer(s *scan) *klexer {
+func newKLexer(r io.Reader) *klexer {
 	return &klexer{
-		s: s,
+		src: bufio.NewReader(r),
+		position: scanner.Position{
+			Line: 1,
+		},
 
 		key: true,
 	}
+}
+
+// tokenText returns the next byte from the input
+func (kl *klexer) tokenText() (byte, error) {
+	c, err := kl.src.ReadByte()
+	if err != nil {
+		return 0, err
+	}
+
+	// delay the newline handling until the next token is delivered,
+	// fixes off-by-one errors when reporting a parse error.
+	if kl.eol {
+		kl.position.Line++
+		kl.position.Column = 0
+		kl.eol = false
+	}
+
+	if c == '\n' {
+		kl.eol = true
+	} else {
+		kl.position.Column++
+	}
+
+	return c, nil
 }
 
 // klexer scans the sourcefile and returns tokens on the channel c.
@@ -250,10 +278,10 @@ func (kl *klexer) Next() (lex, bool) {
 		commt bool
 	)
 
-	x, err := kl.s.tokenText()
+	x, err := kl.tokenText()
 	for err == nil {
-		l.column = kl.s.position.Column
-		l.line = kl.s.position.Line
+		l.column = kl.position.Column
+		l.line = kl.position.Line
 		switch x {
 		case ':':
 			if commt {
@@ -263,7 +291,7 @@ func (kl *klexer) Next() (lex, bool) {
 			if kl.key {
 				l.value = zKey
 				// Next token is a space, eat it
-				kl.s.tokenText()
+				kl.tokenText()
 				kl.key = false
 				return *l, true
 			}
@@ -286,7 +314,7 @@ func (kl *klexer) Next() (lex, bool) {
 			}
 			str += string(x)
 		}
-		x, err = kl.s.tokenText()
+		x, err = kl.tokenText()
 	}
 
 	kl.eof = true
