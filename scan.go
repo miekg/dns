@@ -500,7 +500,6 @@ type zlexer struct {
 	nextL bool
 
 	eol bool // end-of-line
-	eof bool // end-of-file
 }
 
 func newZLexer(r io.Reader) *zlexer {
@@ -559,7 +558,8 @@ func (zl *zlexer) Next() (lex, bool) {
 		zl.nextL = false
 		return *l, true
 	}
-	if zl.eof || l.err {
+	if l.err {
+		// Parsing errors should be sticky.
 		return lex{value: zEOF}, false
 	}
 
@@ -917,8 +917,6 @@ func (zl *zlexer) Next() (lex, bool) {
 			zl.space = false
 		}
 	}
-
-	zl.eof = true
 
 	if stri > 0 {
 		// Send remainder

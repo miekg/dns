@@ -234,7 +234,6 @@ type klexer struct {
 	key bool
 
 	eol bool // end-of-line
-	eof bool // end-of-file
 }
 
 func newKLexer(r io.Reader) *klexer {
@@ -286,10 +285,6 @@ func (kl *klexer) readByte() (byte, bool) {
 
 // klexer scans the sourcefile and returns tokens on the channel c.
 func (kl *klexer) Next() (lex, bool) {
-	if kl.eof {
-		return lex{value: zEOF}, false
-	}
-
 	var (
 		l lex
 
@@ -336,8 +331,6 @@ func (kl *klexer) Next() (lex, bool) {
 			str.WriteByte(x)
 		}
 	}
-
-	kl.eof = true
 
 	if str.Len() > 0 {
 		// Send remainder
