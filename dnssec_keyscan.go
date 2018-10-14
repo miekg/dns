@@ -10,7 +10,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"text/scanner"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -220,8 +219,10 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 }
 
 type klexer struct {
-	src      *bufio.Reader
-	position scanner.Position
+	src *bufio.Reader
+
+	line   int
+	column int
 
 	l lex
 
@@ -234,9 +235,8 @@ type klexer struct {
 func newKLexer(r io.Reader) *klexer {
 	return &klexer{
 		src: bufio.NewReader(r),
-		position: scanner.Position{
-			Line: 1,
-		},
+
+		line: 1,
 
 		key: true,
 	}
@@ -252,15 +252,15 @@ func (kl *klexer) tokenText() (byte, error) {
 	// delay the newline handling until the next token is delivered,
 	// fixes off-by-one errors when reporting a parse error.
 	if kl.eol {
-		kl.position.Line++
-		kl.position.Column = 0
+		kl.line++
+		kl.column = 0
 		kl.eol = false
 	}
 
 	if c == '\n' {
 		kl.eol = true
 	} else {
-		kl.position.Column++
+		kl.column++
 	}
 
 	return c, nil
@@ -280,8 +280,8 @@ func (kl *klexer) Next() (lex, bool) {
 
 	x, err := kl.tokenText()
 	for err == nil {
-		l.column = kl.position.Column
-		l.line = kl.position.Line
+		l.line, l.column = kl.line, kl.column
+
 		switch x {
 		case ':':
 			if commt {

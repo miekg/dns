@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"text/scanner"
 )
 
 const maxTok = 2048 // Largest token we can return.
@@ -474,8 +473,10 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 }
 
 type zlexer struct {
-	src      *bufio.Reader
-	position scanner.Position
+	src *bufio.Reader
+
+	line   int
+	column int
 
 	l lex
 
@@ -502,12 +503,12 @@ type zlexer struct {
 func newZLexer(r io.Reader) *zlexer {
 	return &zlexer{
 		src: bufio.NewReader(r),
-		position: scanner.Position{
-			Line: 1,
-		},
 
-		str:   make([]byte, maxTok), // Should be enough for any token
-		com:   make([]byte, maxTok),
+		line: 1,
+
+		str: make([]byte, maxTok), // Should be enough for any token
+		com: make([]byte, maxTok),
+
 		owner: true,
 	}
 }
@@ -522,15 +523,15 @@ func (zl *zlexer) tokenText() (byte, error) {
 	// delay the newline handling until the next token is delivered,
 	// fixes off-by-one errors when reporting a parse error.
 	if zl.eol {
-		zl.position.Line++
-		zl.position.Column = 0
+		zl.line++
+		zl.column = 0
 		zl.eol = false
 	}
 
 	if c == '\n' {
 		zl.eol = true
 	} else {
-		zl.position.Column++
+		zl.column++
 	}
 
 	return c, nil
@@ -549,8 +550,8 @@ func (zl *zlexer) Next() (lex, bool) {
 
 	x, err := zl.tokenText()
 	for err == nil {
-		l.column = zl.position.Column
-		l.line = zl.position.Line
+		l.line, l.column = zl.line, zl.column
+
 		if zl.stri >= maxTok {
 			l.token = "token length insufficient for parsing"
 			l.err = true
