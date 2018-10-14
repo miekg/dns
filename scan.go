@@ -525,6 +525,10 @@ func (zl *zlexer) Err() error {
 
 // readByte returns the next byte from the input
 func (zl *zlexer) readByte() (byte, bool) {
+	if zl.readErr != nil {
+		return 0, false
+	}
+
 	c, err := zl.src.ReadByte()
 	if err != nil {
 		zl.readErr = err

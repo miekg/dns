@@ -257,6 +257,10 @@ func (kl *klexer) Err() error {
 
 // readByte returns the next byte from the input
 func (kl *klexer) readByte() (byte, bool) {
+	if kl.readErr != nil {
+		return 0, false
+	}
+
 	c, err := kl.src.ReadByte()
 	if err != nil {
 		kl.readErr = err
