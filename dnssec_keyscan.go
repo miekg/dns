@@ -278,8 +278,12 @@ func (kl *klexer) Next() (lex, bool) {
 		commt bool
 	)
 
-	x, err := kl.tokenText()
-	for err == nil {
+	for {
+		x, err := kl.tokenText()
+		if err != nil {
+			break
+		}
+
 		l.line, l.column = kl.line, kl.column
 
 		switch x {
@@ -316,8 +320,6 @@ func (kl *klexer) Next() (lex, bool) {
 
 			str.WriteByte(x)
 		}
-
-		x, err = kl.tokenText()
 	}
 
 	kl.eof = true

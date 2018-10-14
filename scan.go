@@ -557,8 +557,12 @@ func (zl *zlexer) Next() (lex, bool) {
 		zl.startCommt = false
 	}
 
-	x, err := zl.tokenText()
-	for err == nil {
+	for {
+		x, err := zl.tokenText()
+		if err != nil {
+			break
+		}
+
 		l.line, l.column = zl.line, zl.column
 
 		if stri >= len(zl.tok) {
@@ -886,8 +890,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 			zl.space = false
 		}
-
-		x, err = zl.tokenText()
 	}
 
 	zl.eof = true
