@@ -105,3 +105,15 @@ func TestParseZoneReadError(t *testing.T) {
 		t.Errorf("expected a nil RR, but got %v", rr)
 	}
 }
+
+func BenchmarkNewRR(b *testing.B) {
+	const name1 = "12345678901234567890123456789012345.12345678.123."
+	const s = name1 + " 3600 IN MX 10 " + name1
+
+	for n := 0; n < b.N; n++ {
+		_, err := NewRR(s)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
