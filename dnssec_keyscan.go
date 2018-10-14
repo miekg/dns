@@ -195,22 +195,14 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 // with the key-value pairs, or an error when the file is not correct.
 func parseKey(r io.Reader, file string) (map[string]string, error) {
 	s, cancel := scanInit(r)
+	defer cancel()
+
 	m := make(map[string]string)
-	c := make(chan lex)
 	k := ""
-	defer func() {
-		cancel()
-		// zlexer can send up to two tokens, the next one and possibly 1 remainders.
-		// Do a non-blocking read.
-		_, ok := <-c
-		_, ok = <-c
-		if !ok {
-			// too bad
-		}
-	}()
-	// Start the lexer
-	go klexer(s, c)
-	for l := range c {
+
+	c := newKLexer(s)
+
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
 		// It should alternate
 		switch l.value {
 		case zKey:
@@ -224,36 +216,59 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 			k = ""
 		}
 	}
+
 	return m, nil
 }
 
+type klexer struct {
+	s *scan
+
+	l lex
+
+	key bool
+
+	eof bool
+}
+
+func newKLexer(s *scan) *klexer {
+	return &klexer{
+		s: s,
+
+		key: true,
+	}
+}
+
 // klexer scans the sourcefile and returns tokens on the channel c.
-func klexer(s *scan, c chan lex) {
-	var l lex
-	str := "" // Hold the current read text
-	commt := false
-	key := true
-	x, err := s.tokenText()
-	defer close(c)
+func (kl *klexer) Next() (lex, bool) {
+	l := &kl.l
+	if kl.eof || l.err {
+		return lex{value: zEOF}, false
+	}
+
+	var (
+		str   string
+		commt bool
+	)
+
+	x, err := kl.s.tokenText()
 	for err == nil {
-		l.column = s.position.Column
-		l.line = s.position.Line
+		l.column = kl.s.position.Column
+		l.line = kl.s.position.Line
 		switch x {
 		case ':':
 			if commt {
 				break
 			}
 			l.token = str
-			if key {
+			if kl.key {
 				l.value = zKey
-				c <- l
 				// Next token is a space, eat it
-				s.tokenText()
-				key = false
-				str = ""
-			} else {
-				l.value = zValue
+				kl.s.tokenText()
+				kl.key = false
+				return *l, true
 			}
+
+			l.value = zValue
 		case ';':
 			commt = true
 		case '\n':
@@ -263,22 +278,25 @@ func klexer(s *scan, c chan lex) {
 			}
 			l.value = zValue
 			l.token = str
-			c <- l
-			str = ""
-			commt = false
-			key = true
+			kl.key = true
+			return *l, true
 		default:
 			if commt {
 				break
 			}
 			str += string(x)
 		}
-		x, err = s.tokenText()
+		x, err = kl.s.tokenText()
 	}
+
+	kl.eof = true
+
 	if len(str) > 0 {
 		// Send remainder
 		l.token = str
 		l.value = zValue
-		c <- l
+		return *l, true
 	}
+
+	return lex{value: zEOF}, false
 }
