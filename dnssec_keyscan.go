@@ -224,8 +224,6 @@ type klexer struct {
 	line   int
 	column int
 
-	l lex
-
 	key bool
 
 	eol bool // end-of-line
@@ -268,12 +266,13 @@ func (kl *klexer) tokenText() (byte, error) {
 
 // klexer scans the sourcefile and returns tokens on the channel c.
 func (kl *klexer) Next() (lex, bool) {
-	l := &kl.l
-	if kl.eof || l.err {
+	if kl.eof {
 		return lex{value: zEOF}, false
 	}
 
 	var (
+		l lex
+
 		str   string
 		commt bool
 	)
@@ -297,7 +296,7 @@ func (kl *klexer) Next() (lex, bool) {
 				// Next token is a space, eat it
 				kl.tokenText()
 
-				return *l, true
+				return l, true
 			}
 
 			l.value = zValue
@@ -313,7 +312,7 @@ func (kl *klexer) Next() (lex, bool) {
 
 			l.value = zValue
 			l.token = str
-			return *l, true
+			return l, true
 		default:
 			if commt {
 				break
@@ -331,7 +330,7 @@ func (kl *klexer) Next() (lex, bool) {
 		// Send remainder
 		l.token = str
 		l.value = zValue
-		return *l, true
+		return l, true
 	}
 
 	return lex{value: zEOF}, false
