@@ -477,7 +477,7 @@ func parseZone(r io.Reader, origin, f string, defttl *ttlState, t chan *Token, i
 }
 
 type zlexer struct {
-	src *bufio.Reader
+	br io.ByteReader
 
 	readErr error
 
@@ -501,8 +501,13 @@ type zlexer struct {
 }
 
 func newZLexer(r io.Reader) *zlexer {
+	br, ok := r.(io.ByteReader)
+	if !ok {
+		br = bufio.NewReaderSize(r, 1024)
+	}
+
 	return &zlexer{
-		src: bufio.NewReader(r),
+		br: br,
 
 		line: 1,
 
@@ -524,7 +529,7 @@ func (zl *zlexer) readByte() (byte, bool) {
 		return 0, false
 	}
 
-	c, err := zl.src.ReadByte()
+	c, err := zl.br.ReadByte()
 	if err != nil {
 		zl.readErr = err
 		return 0, false

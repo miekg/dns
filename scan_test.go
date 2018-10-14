@@ -125,6 +125,8 @@ func BenchmarkReadRR(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		r := struct{ io.Reader }{strings.NewReader(s)}
+		// r is now only an io.Reader and won't benefit from the
+		// io.ByteReader special-case in zlexer.Next.
 
 		_, err := ReadRR(r, "")
 		if err != nil {

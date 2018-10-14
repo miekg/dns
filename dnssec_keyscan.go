@@ -224,7 +224,7 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 }
 
 type klexer struct {
-	src *bufio.Reader
+	br io.ByteReader
 
 	readErr error
 
@@ -237,8 +237,13 @@ type klexer struct {
 }
 
 func newKLexer(r io.Reader) *klexer {
+	br, ok := r.(io.ByteReader)
+	if !ok {
+		br = bufio.NewReaderSize(r, 1024)
+	}
+
 	return &klexer{
-		src: bufio.NewReader(r),
+		br: br,
 
 		line: 1,
 
@@ -260,7 +265,7 @@ func (kl *klexer) readByte() (byte, bool) {
 		return 0, false
 	}
 
-	c, err := kl.src.ReadByte()
+	c, err := kl.br.ReadByte()
 	if err != nil {
 		kl.readErr = err
 		return 0, false
