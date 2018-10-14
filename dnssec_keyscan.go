@@ -287,12 +287,16 @@ func (kl *klexer) Next() (lex, bool) {
 			if commt {
 				break
 			}
+
 			l.token = str
+
 			if kl.key {
 				l.value = zKey
+				kl.key = false
+
 				// Next token is a space, eat it
 				kl.tokenText()
-				kl.key = false
+
 				return *l, true
 			}
 
@@ -304,16 +308,20 @@ func (kl *klexer) Next() (lex, bool) {
 				// Reset a comment
 				commt = false
 			}
+
+			kl.key = true
+
 			l.value = zValue
 			l.token = str
-			kl.key = true
 			return *l, true
 		default:
 			if commt {
 				break
 			}
+
 			str += string(x)
 		}
+
 		x, err = kl.tokenText()
 	}
 
