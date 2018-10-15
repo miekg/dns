@@ -960,8 +960,12 @@ func TestParseZoneComments(t *testing.T) {
 
 		var j int
 		for r := range ParseZone(r, "", "") {
-			if j > len(test.comments) {
-				t.Fatalf("too many records for zone %d:%d", i, j)
+			if r.Error != nil {
+				t.Fatal(r.Error)
+			}
+
+			if j >= len(test.comments) {
+				t.Fatalf("too many records for zone %d at %d record, expected %d", i, j+1, len(test.comments))
 			}
 
 			if r.Comment != test.comments[j] {
@@ -974,7 +978,7 @@ func TestParseZoneComments(t *testing.T) {
 		}
 
 		if j != len(test.comments) {
-			t.Errorf("too few records for zone %d", i)
+			t.Errorf("too few records for zone %d, got %d, expected %d", i, j, len(test.comments))
 		}
 	}
 }
