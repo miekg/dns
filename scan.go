@@ -164,6 +164,8 @@ func ReadRR(r io.Reader, file string) (RR, error) {
 // To prevent memory leaks it is important to always fully drain the
 // returned channel. If an error occurs, it will always be the last
 // Token sent on the channel.
+//
+// Deprecated: New users should prefer the ZoneParser API.
 func ParseZone(r io.Reader, origin, file string) chan *Token {
 	t := make(chan *Token, 10000)
 	go parseZone(r, origin, file, t)
