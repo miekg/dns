@@ -22,6 +22,7 @@ import (
 // Any error are returned as a string value, the empty string signals
 // "no error".
 func (zp *ZoneParser) generate(l lex) string {
+	origL := l
 	step := 1
 	if i := strings.IndexAny(l.token, "/"); i != -1 {
 		if i+1 == len(l.token) {
@@ -64,6 +65,9 @@ BuildRR:
 	}
 
 	r := &generateReader{
+		file: zp.file,
+		lex:  &origL,
+
 		s: s,
 
 		cur:   start,
@@ -78,6 +82,9 @@ BuildRR:
 }
 
 type generateReader struct {
+	file string
+	lex  *lex
+
 	s  string
 	si int
 
@@ -91,6 +98,10 @@ type generateReader struct {
 	escape bool
 
 	eof bool
+}
+
+func (r *generateReader) parseError(msg string) *ParseError {
+	return &ParseError{r.file, msg, *r.lex}
 }
 
 func (r *generateReader) Read(p []byte) (int, error) {
@@ -154,16 +165,16 @@ func (r *generateReader) ReadByte() (byte, error) {
 			// Modifier block
 			sep := strings.Index(r.s[si+2:], "}")
 			if sep < 0 {
-				return 0, errors.New("bad modifier in $GENERATE")
+				return 0, r.parseError("bad modifier in $GENERATE")
 			}
 
 			var err error
 			mod, offset, err = modToPrintf(r.s[si+2 : si+2+sep])
 			if err != nil {
-				return 0, err
+				return 0, r.parseError(err.Error())
 			}
 			if r.start+offset < 0 || r.end+offset > 1<<31-1 {
-				return 0, errors.New("bad offset in $GENERATE")
+				return 0, r.parseError("bad offset in $GENERATE")
 			}
 
 			r.si += 2 + sep // Jump to it
