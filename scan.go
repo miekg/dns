@@ -231,8 +231,7 @@ type ZoneParser struct {
 
 	defttl *ttlState
 
-	h        RR_Header
-	prevName string
+	h RR_Header
 
 	include int
 
@@ -385,7 +384,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				}
 
 				h.Name = name
-				zp.prevName = h.Name
 
 				st = zExpectOwnerBl
 			case zDirTTL:
@@ -397,12 +395,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zDirGenerate:
 				st = zExpectDirGenerateBl
 			case zRrtpe:
-				h.Name = zp.prevName
 				h.Rrtype = l.torc
 
 				st = zExpectRdata
 			case zClass:
-				h.Name = zp.prevName
 				h.Class = l.torc
 
 				st = zExpectAnyNoClassBl
