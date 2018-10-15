@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -168,10 +167,10 @@ func (r *generateReader) ReadByte() (byte, error) {
 				return 0, r.parseError("bad modifier in $GENERATE")
 			}
 
-			var err error
-			mod, offset, err = modToPrintf(r.s[si+2 : si+2+sep])
-			if err != nil {
-				return 0, r.parseError(err.Error())
+			var errMsg string
+			mod, offset, errMsg = modToPrintf(r.s[si+2 : si+2+sep])
+			if errMsg != "" {
+				return 0, r.parseError(errMsg)
 			}
 			if r.start+offset < 0 || r.end+offset > 1<<31-1 {
 				return 0, r.parseError("bad offset in $GENERATE")
@@ -193,7 +192,7 @@ func (r *generateReader) ReadByte() (byte, error) {
 }
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.
-func modToPrintf(s string) (string, int, error) {
+func modToPrintf(s string) (string, int, string) {
 	xs := strings.Split(s, ",")
 
 	// Modifier is { offset [ ,width [ ,base ] ] } - provide default
@@ -205,26 +204,26 @@ func modToPrintf(s string) (string, int, error) {
 		xs = append(xs, "d")
 	case 3:
 	default:
-		return "", 0, errors.New("bad modifier in $GENERATE")
+		return "", 0, "bad modifier in $GENERATE"
 	}
 
 	// xs[0] is offset, xs[1] is width, xs[2] is base
 	if xs[2] != "o" && xs[2] != "d" && xs[2] != "x" && xs[2] != "X" {
-		return "", 0, errors.New("bad base in $GENERATE")
+		return "", 0, "bad base in $GENERATE"
 	}
 	offset, err := strconv.Atoi(xs[0])
 	if err != nil {
-		return "", 0, errors.New("bad offset in $GENERATE")
+		return "", 0, "bad offset in $GENERATE"
 	}
 	width, err := strconv.Atoi(xs[1])
 	if err != nil || width > 255 {
-		return "", offset, errors.New("bad width in $GENERATE")
+		return "", offset, "bad width in $GENERATE"
 	}
 	switch {
 	case width < 0:
-		return "", offset, errors.New("bad width in $GENERATE")
+		return "", offset, "bad width in $GENERATE"
 	case width == 0:
-		return "%" + xs[1] + xs[2], offset, nil
+		return "%" + xs[1] + xs[2], offset, ""
 	}
-	return "%0" + xs[1] + xs[2], offset, nil
+	return "%0" + xs[1] + xs[2], offset, ""
 }

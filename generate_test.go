@@ -63,12 +63,12 @@ func TestGenerateModToPrintf(t *testing.T) {
 		{"-100,0,d", "%0d", -100, false},
 	}
 	for _, test := range tests {
-		gotFmt, gotOffset, err := modToPrintf(test.mod)
+		gotFmt, gotOffset, errMsg := modToPrintf(test.mod)
 		switch {
-		case err != nil && !test.wantErr:
-			t.Errorf("modToPrintf(%q) - expected nil-error, but got %v", test.mod, err)
-		case err == nil && test.wantErr:
-			t.Errorf("modToPrintf(%q) - expected error, but got nil-error", test.mod)
+		case errMsg != "" && !test.wantErr:
+			t.Errorf("modToPrintf(%q) - expected empty-error, but got %v", test.mod, errMsg)
+		case errMsg == "" && test.wantErr:
+			t.Errorf("modToPrintf(%q) - expected error, but got empty-error", test.mod)
 		case gotFmt != test.wantFmt:
 			t.Errorf("modToPrintf(%q) - expected format %q, but got %q", test.mod, test.wantFmt, gotFmt)
 		case gotOffset != test.wantOffset:
