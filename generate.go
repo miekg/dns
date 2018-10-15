@@ -20,7 +20,7 @@ import (
 // of $ after that are interpreted.
 // Any error are returned as a string value, the empty string signals
 // "no error".
-func generate(l lex, c *zlexer, t chan *Token, o string) string {
+func (zp *ZoneParser) generate(l lex) string {
 	step := 1
 	if i := strings.IndexAny(l.token, "/"); i != -1 {
 		if i+1 == len(l.token) {
@@ -52,15 +52,16 @@ func generate(l lex, c *zlexer, t chan *Token, o string) string {
 		return "bad range in $GENERATE range"
 	}
 
-	c.Next() // _BLANK
+	zp.c.Next() // _BLANK
 	// Create a complete new string, which we then parse again.
 	s := ""
 BuildRR:
-	l, _ = c.Next()
+	l, _ = zp.c.Next()
 	if l.value != zNewline && l.value != zEOF {
 		s += l.token
 		goto BuildRR
 	}
+	zp.gen = make([]RR, 0, (end-start+step-1)/step)
 	for i := start; i <= end; i += step {
 		var (
 			escape bool
@@ -122,15 +123,26 @@ BuildRR:
 			}
 		}
 		// Re-parse the RR and send it on the current channel t
-		rx, err := NewRR("$ORIGIN " + o + "\n" + dom.String())
+		rx, err := NewRR("$ORIGIN " + zp.origin + "\n" + dom.String())
 		if err != nil {
 			return err.Error()
 		}
-		t <- &Token{RR: rx}
+		zp.gen = append(zp.gen, rx)
 		// Its more efficient to first built the rrlist and then parse it in
 		// one go! But is this a problem?
 	}
 	return ""
+}
+
+func (zp *ZoneParser) generateNext() (RR, bool) {
+	rr := zp.gen[0]
+	zp.gen, zp.gen[0] = zp.gen[1:], nil
+
+	if len(zp.gen) == 0 {
+		zp.gen = nil
+	}
+
+	return rr, true
 }
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.
