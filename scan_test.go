@@ -173,3 +173,45 @@ func BenchmarkReadRR(b *testing.B) {
 		}
 	}
 }
+
+const benchZone = `
+foo. IN A 10.0.0.1 ; this is comment 1
+foo. IN A (
+	10.0.0.2 ; this is comment 2
+)
+; this is comment 3
+foo. IN A 10.0.0.3
+foo. IN A ( 10.0.0.4 ); this is comment 4
+
+foo. IN A 10.0.0.5
+; this is comment 5
+
+foo. IN A 10.0.0.6
+
+foo. IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
+foo. IN NSEC miek.nl. TXT RRSIG NSEC; this is comment 7
+foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
+`
+
+func BenchmarkParseZone(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for tok := range ParseZone(strings.NewReader(benchZone), "example.org.", "") {
+			if tok.Error != nil {
+				b.Fatal(tok.Error)
+			}
+		}
+	}
+}
+
+func BenchmarkZoneParser(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		zp := NewZoneParser(strings.NewReader(benchZone), "example.org.", "")
+
+		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+		}
+
+		if err := zp.Err(); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
