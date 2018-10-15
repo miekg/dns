@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -62,74 +63,122 @@ BuildRR:
 		goto BuildRR
 	}
 
-	var dom bytes.Buffer
-	for i := start; i <= end; i += step {
-		var (
-			escape bool
-			mod    string
-			err    error
-			offset int
-		)
+	r := &generateReader{
+		s: s,
 
-		for j := 0; j < len(s); j++ { // No 'range' because we need to jump around
-			switch s[j] {
-			case '\\':
-				if escape {
-					dom.WriteByte('\\')
-					escape = false
-					continue
-				}
-				escape = true
-			case '$':
-				mod = "%d"
-				offset = 0
-				if escape {
-					dom.WriteByte('$')
-					escape = false
-					continue
-				}
-				escape = false
-				if j+1 >= len(s) { // End of the string
-					fmt.Fprintf(&dom, mod, i+offset)
-					continue
-				} else {
-					if s[j+1] == '$' {
-						dom.WriteByte('$')
-						j++
-						continue
-					}
-				}
-				// Search for { and }
-				if s[j+1] == '{' { // Modifier block
-					sep := strings.Index(s[j+2:], "}")
-					if sep == -1 {
-						return "bad modifier in $GENERATE"
-					}
-					mod, offset, err = modToPrintf(s[j+2 : j+2+sep])
-					if err != nil {
-						return err.Error()
-					} else if start+offset < 0 || end+offset > 1<<31-1 {
-						return "bad offset in $GENERATE"
-					}
-					j += 2 + sep // Jump to it
-				}
-				fmt.Fprintf(&dom, mod, i+offset)
-			default:
-				if escape { // Pretty useless here
-					escape = false
-					continue
-				}
-				dom.WriteByte(s[j])
-			}
-		}
-
-		dom.WriteByte('\n')
+		cur:   start,
+		start: start,
+		end:   end,
+		step:  step,
 	}
-
-	zp.sub = NewZoneParser(&dom, zp.origin, zp.file)
+	zp.sub = NewZoneParser(r, zp.origin, zp.file)
 	zp.sub.includeDepth = zp.includeDepth
 	zp.sub.SetDefaultTTL(defaultTtl)
 	return ""
+}
+
+type generateReader struct {
+	s  string
+	si int
+
+	cur   int
+	start int
+	end   int
+	step  int
+
+	mod bytes.Buffer
+
+	escape bool
+
+	eof bool
+}
+
+func (r *generateReader) Read(p []byte) (int, error) {
+	// NewZLexer, through NewZoneParser, should use ReadByte and
+	// not end up here.
+
+	panic("not implemented")
+}
+
+func (r *generateReader) ReadByte() (byte, error) {
+	if r.eof {
+		return 0, io.EOF
+	}
+	if r.mod.Len() > 0 {
+		return r.mod.ReadByte()
+	}
+
+	if r.si >= len(r.s) {
+		r.si = 0
+		r.cur += r.step
+
+		r.eof = r.cur > r.end || r.cur < 0
+		return '\n', nil
+	}
+
+	si := r.si
+	r.si++
+
+	switch r.s[si] {
+	case '\\':
+		if r.escape {
+			r.escape = false
+			return '\\', nil
+		}
+
+		r.escape = true
+		return r.ReadByte()
+	case '$':
+		if r.escape {
+			r.escape = false
+			return '$', nil
+		}
+
+		mod := "%d"
+
+		if si >= len(r.s)-1 {
+			// End of the string
+			fmt.Fprintf(&r.mod, mod, r.cur)
+			return r.mod.ReadByte()
+		}
+
+		if r.s[si+1] == '$' {
+			r.si++
+			return '$', nil
+		}
+
+		var offset int
+
+		// Search for { and }
+		if r.s[si+1] == '{' {
+			// Modifier block
+			sep := strings.Index(r.s[si+2:], "}")
+			if sep < 0 {
+				return 0, errors.New("bad modifier in $GENERATE")
+			}
+
+			var err error
+			mod, offset, err = modToPrintf(r.s[si+2 : si+2+sep])
+			if err != nil {
+				return 0, err
+			}
+			if r.start+offset < 0 || r.end+offset > 1<<31-1 {
+				return 0, errors.New("bad offset in $GENERATE")
+			}
+
+			r.si += 2 + sep // Jump to it
+		}
+
+		fmt.Fprintf(&r.mod, mod, r.cur+offset)
+		return r.mod.ReadByte()
+	default:
+		if r.escape { // Pretty useless here
+			r.escape = false
+			return r.ReadByte()
+		}
+
+		return r.s[si], nil
+	}
 }
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.
