@@ -60,11 +60,12 @@ func (zp *ZoneParser) generate(l lex) string {
 
 	// Create a complete new string, which we then parse again.
 	var s string
-BuildRR:
-	l, _ = zp.c.Next()
-	if l.value != zNewline && l.value != zEOF {
+	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
+		if l.value == zNewline {
+			break
+		}
+
 		s += l.token
-		goto BuildRR
 	}
 
 	r := &generateReader{
