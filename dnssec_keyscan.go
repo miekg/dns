@@ -288,7 +288,6 @@ func (kl *klexer) readByte() (byte, bool) {
 	return c, true
 }
 
-// klexer scans the sourcefile and returns tokens on the channel c.
 func (kl *klexer) Next() (lex, bool) {
 	var (
 		l lex

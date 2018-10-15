@@ -552,7 +552,6 @@ func (zl *zlexer) readByte() (byte, bool) {
 	return c, true
 }
 
-// zlexer scans the sourcefile and returns tokens on the channel c.
 func (zl *zlexer) Next() (lex, bool) {
 	l := &zl.l
 	if zl.nextL {
