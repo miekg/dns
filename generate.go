@@ -64,15 +64,15 @@ BuildRR:
 	}
 
 	r := &generateReader{
-		file: zp.file,
-		lex:  &origL,
-
 		s: s,
 
 		cur:   start,
 		start: start,
 		end:   end,
 		step:  step,
+
+		file: zp.file,
+		lex:  &origL,
 	}
 	zp.sub = NewZoneParser(r, zp.origin, zp.file)
 	zp.sub.SetDefaultTTL(defaultTtl)
@@ -80,9 +80,6 @@ BuildRR:
 }
 
 type generateReader struct {
-	file string
-	lex  *lex
-
 	s  string
 	si int
 
@@ -96,6 +93,9 @@ type generateReader struct {
 	escape bool
 
 	eof bool
+
+	file string
+	lex  *lex
 }
 
 func (r *generateReader) parseError(msg string) *ParseError {
