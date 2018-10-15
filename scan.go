@@ -240,7 +240,7 @@ type ZoneParser struct {
 
 	com string
 
-	include uint8
+	includeDepth uint8
 
 	includeAllowed bool
 }
@@ -457,7 +457,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("$INCLUDE directive not allowed", l)
 			}
 
-			if zp.include >= 7 {
+			if zp.includeDepth >= 7 {
 				return zp.setParseError("too deeply nested $INCLUDE", l)
 			}
 
@@ -479,7 +479,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
-			zp.sub.defttl, zp.sub.include, zp.sub.osFile = zp.defttl, zp.include+1, r1
+			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
 			zp.sub.SetIncludeAllowed(true)
 			return zp.subNext()
 		case zExpectDirTTLBl:
