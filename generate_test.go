@@ -1,28 +1,28 @@
 package dns
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestGenerateRangeGuard(t *testing.T) {
 	var tests = [...]struct {
 		zone string
 		fail bool
-	}{{
-		`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+	}{
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 dhcp-${0,4,d} A 10.0.0.$
-`, false},{
-		`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+`, false},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 128-129 dhcp-${-128,4,d} A 10.0.0.$
-`, false},{
-		`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+`, false},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 128-129 dhcp-${-129,4,d} A 10.0.0.$
-`, true},{
-		`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+`, true},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-2 dhcp-${2147483647,4,d} A 10.0.0.$
-`, true},{
-		`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+`, true},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 dhcp-${2147483646,4,d} A 10.0.0.$
 `, false},
 	}
