@@ -148,20 +148,15 @@ func ReadRR(r io.Reader, filename string) (RR, error) {
 // RR are returned concatenated along with the RR. Comments on a line by themselves
 // are discarded.
 func ParseZone(r io.Reader, origin, file string) chan *Token {
-	return parseZoneHelper(r, origin, file, nil, 10000)
-}
-
-func parseZoneHelper(r io.Reader, origin, file string, defttl *ttlState, chansize int) chan *Token {
-	t := make(chan *Token, chansize)
-	go parseZone(r, origin, file, defttl, t)
+	t := make(chan *Token, 10000)
+	go parseZone(r, origin, file, t)
 	return t
 }
 
-func parseZone(r io.Reader, origin, file string, defttl *ttlState, t chan *Token) {
+func parseZone(r io.Reader, origin, file string, t chan *Token) {
 	defer close(t)
 
 	zp := NewZoneParser(r, origin, file)
-	zp.defttl = defttl
 
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		t <- &Token{RR: rr, Comment: zp.Comment()}
