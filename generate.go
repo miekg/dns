@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -60,19 +61,15 @@ BuildRR:
 		s += l.token
 		goto BuildRR
 	}
-	zp.gen = make([]RR, 0, (end-start+step-1)/step)
+
+	var dom bytes.Buffer
 	for i := start; i <= end; i += step {
 		var (
 			escape bool
-			dom    strings.Builder
 			mod    string
 			err    error
 			offset int
 		)
-		dom.Grow(len("$ORIGIN ") + len(zp.origin) + 1)
-		dom.WriteString("$ORIGIN ")
-		dom.WriteString(zp.origin)
-		dom.WriteByte('\n')
 
 		for j := 0; j < len(s); j++ { // No 'range' because we need to jump around
 			switch s[j] {
@@ -125,27 +122,14 @@ BuildRR:
 				dom.WriteByte(s[j])
 			}
 		}
-		// Re-parse the RR and send it on the current channel t
-		rx, err := NewRR(dom.String())
-		if err != nil {
-			return err.Error()
-		}
-		zp.gen = append(zp.gen, rx)
-		// Its more efficient to first built the rrlist and then parse it in
-		// one go! But is this a problem?
+
+		dom.WriteByte('\n')
 	}
+
+	zp.sub = NewZoneParser(&dom, zp.origin, zp.file)
+	zp.sub.includeDepth = zp.includeDepth
+	zp.sub.SetDefaultTTL(defaultTtl)
 	return ""
-}
-
-func (zp *ZoneParser) generateNext() (RR, bool) {
-	rr := zp.gen[0]
-	zp.gen, zp.gen[0] = zp.gen[1:], nil
-
-	if len(zp.gen) == 0 {
-		zp.gen = nil
-	}
-
-	return rr, true
 }
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.

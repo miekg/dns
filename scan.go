@@ -237,9 +237,7 @@ type ZoneParser struct {
 
 	h RR_Header
 
-	sub *ZoneParser
-	gen []RR
-
+	sub    *ZoneParser
 	osFile *os.File
 
 	com string
@@ -325,7 +323,10 @@ func (zp *ZoneParser) subNext() (RR, bool) {
 
 	if !ok && zp.sub.Err() == nil {
 		// zp.sub has ended
-		zp.sub.osFile.Close()
+		if zp.sub.osFile != nil {
+			zp.sub.osFile.Close()
+		}
+
 		zp.sub = nil
 		return zp.Next()
 	}
@@ -346,9 +347,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	}
 	if zp.sub != nil {
 		return zp.subNext()
-	}
-	if len(zp.gen) > 0 {
-		return zp.generateNext()
 	}
 
 	// 6 possible beginnings of a line (_ is a space):
@@ -548,11 +546,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError(errMsg, l)
 			}
 
-			if len(zp.gen) > 0 {
-				return zp.generateNext()
-			}
-
-			st = zExpectOwnerDir
+			return zp.subNext()
 		case zExpectOwnerBl:
 			if l.value != zBlank {
 				return zp.setParseError("no blank after owner", l)
