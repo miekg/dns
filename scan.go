@@ -117,6 +117,7 @@ func NewRR(s string) (RR, error) {
 func ReadRR(r io.Reader, filename string) (RR, error) {
 	zp := NewZoneParser(r, ".", filename)
 	zp.SetDefaultTTL(defaultTtl)
+	zp.SetIncludeAllowed(true)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
@@ -157,6 +158,7 @@ func parseZone(r io.Reader, origin, file string, t chan *Token) {
 	defer close(t)
 
 	zp := NewZoneParser(r, origin, file)
+	zp.SetIncludeAllowed(true)
 
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		t <- &Token{RR: rr, Comment: zp.Comment()}
@@ -193,6 +195,8 @@ type ZoneParser struct {
 	osFile *os.File
 
 	com string
+
+	includeAllowed bool
 }
 
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
@@ -234,6 +238,10 @@ func (zp *ZoneParser) Comment() string {
 
 func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
 	zp.defttl = &ttlState{ttl, false}
+}
+
+func (zp *ZoneParser) SetIncludeAllowed(v bool) {
+	zp.includeAllowed = v
 }
 
 func (zp *ZoneParser) subNext() (RR, bool) {
@@ -365,6 +373,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				zp.parseErr = &ParseError{zp.file, "garbage after $INCLUDE", l}
 				return nil, false
 			}
+			if !zp.includeAllowed {
+				zp.parseErr = &ParseError{zp.file, "$INCLUDE directive not allowed", l}
+				return nil, false
+			}
 			if zp.include >= 7 {
 				zp.parseErr = &ParseError{zp.file, "too deeply nested $INCLUDE", l}
 				return nil, false
@@ -386,6 +398,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
 			zp.sub.defttl, zp.sub.include, zp.sub.osFile = zp.defttl, zp.include+1, r1
+			zp.sub.SetIncludeAllowed(true)
 			return zp.subNext()
 		case zExpectDirTTLBl:
 			if l.value != zBlank {
