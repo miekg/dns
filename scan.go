@@ -233,14 +233,14 @@ type ZoneParser struct {
 
 	h RR_Header
 
-	include int
-
 	sub *ZoneParser
 	gen []RR
 
 	osFile *os.File
 
 	com string
+
+	include uint8
 
 	includeAllowed bool
 }
