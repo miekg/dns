@@ -286,6 +286,11 @@ func (zp *ZoneParser) Err() error {
 	return zp.c.Err()
 }
 
+func (zp *ZoneParser) setParseError(err string, l lex) (RR, bool) {
+	zp.parseErr = &ParseError{zp.file, err, l}
+	return nil, false
+}
+
 // Comment returns an optional text comment that occurred alongside
 // the RR.
 func (zp *ZoneParser) Comment() string {
@@ -360,8 +365,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
 		if l.err {
-			zp.parseErr = &ParseError{zp.file, l.token, l}
-			return nil, false
+			return zp.setParseError(l.token, l)
 		}
 
 		switch st {
@@ -379,8 +383,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zOwner:
 				name, ok := toAbsoluteName(l.token, zp.origin)
 				if !ok {
-					zp.parseErr = &ParseError{zp.file, "bad owner name", l}
-					return nil, false
+					return zp.setParseError("bad owner name", l)
 				}
 
 				h.Name = name
@@ -408,8 +411,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zString:
 				ttl, ok := stringToTTL(l.token)
 				if !ok {
-					zp.parseErr = &ParseError{zp.file, "not a TTL", l}
-					return nil, false
+					return zp.setParseError("not a TTL", l)
 				}
 
 				h.Ttl = ttl
@@ -419,22 +421,18 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				}
 
 				st = zExpectAnyNoTTLBl
-
 			default:
-				zp.parseErr = &ParseError{zp.file, "syntax error at beginning", l}
-				return nil, false
+				return zp.setParseError("syntax error at beginning", l)
 			}
 		case zExpectDirIncludeBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank after $INCLUDE-directive", l}
-				return nil, false
+				return zp.setParseError("no blank after $INCLUDE-directive", l)
 			}
 
 			st = zExpectDirInclude
 		case zExpectDirInclude:
 			if l.value != zString {
-				zp.parseErr = &ParseError{zp.file, "expecting $INCLUDE value, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting $INCLUDE value, not this...", l)
 			}
 
 			neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
@@ -444,8 +442,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				if l.value == zString {
 					name, ok := toAbsoluteName(l.token, zp.origin)
 					if !ok {
-						zp.parseErr = &ParseError{zp.file, "bad origin name", l}
-						return nil, false
+						return zp.setParseError("bad origin name", l)
 					}
 
 					neworigin = name
@@ -453,18 +450,15 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zNewline, zEOF:
 				// Ok
 			default:
-				zp.parseErr = &ParseError{zp.file, "garbage after $INCLUDE", l}
-				return nil, false
+				return zp.setParseError("garbage after $INCLUDE", l)
 			}
 
 			if !zp.includeAllowed {
-				zp.parseErr = &ParseError{zp.file, "$INCLUDE directive not allowed", l}
-				return nil, false
+				return zp.setParseError("$INCLUDE directive not allowed", l)
 			}
 
 			if zp.include >= 7 {
-				zp.parseErr = &ParseError{zp.file, "too deeply nested $INCLUDE", l}
-				return nil, false
+				return zp.setParseError("too deeply nested $INCLUDE", l)
 			}
 
 			// Start with the new file
@@ -480,8 +474,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					msg += fmt.Sprintf(" as `%s'", includePath)
 				}
 
-				zp.parseErr = &ParseError{zp.file, msg, l}
-				return nil, false
+				return zp.setParseError(msg, l)
 			}
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
@@ -490,15 +483,13 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			return zp.subNext()
 		case zExpectDirTTLBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank after $TTL-directive", l}
-				return nil, false
+				return zp.setParseError("no blank after $TTL-directive", l)
 			}
 
 			st = zExpectDirTTL
 		case zExpectDirTTL:
 			if l.value != zString {
-				zp.parseErr = &ParseError{zp.file, "expecting $TTL value, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting $TTL value, not this...", l)
 			}
 
 			if e, _ := slurpRemainder(zp.c, zp.file); e != nil {
@@ -508,8 +499,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			ttl, ok := stringToTTL(l.token)
 			if !ok {
-				zp.parseErr = &ParseError{zp.file, "expecting $TTL value, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting $TTL value, not this...", l)
 			}
 
 			zp.defttl = &ttlState{ttl, true}
@@ -517,15 +507,13 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			st = zExpectOwnerDir
 		case zExpectDirOriginBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank after $ORIGIN-directive", l}
-				return nil, false
+				return zp.setParseError("no blank after $ORIGIN-directive", l)
 			}
 
 			st = zExpectDirOrigin
 		case zExpectDirOrigin:
 			if l.value != zString {
-				zp.parseErr = &ParseError{zp.file, "expecting $ORIGIN value, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting $ORIGIN value, not this...", l)
 			}
 
 			if e, _ := slurpRemainder(zp.c, zp.file); e != nil {
@@ -535,8 +523,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			name, ok := toAbsoluteName(l.token, zp.origin)
 			if !ok {
-				zp.parseErr = &ParseError{zp.file, "bad origin name", l}
-				return nil, false
+				return zp.setParseError("bad origin name", l)
 			}
 
 			zp.origin = name
@@ -544,20 +531,17 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			st = zExpectOwnerDir
 		case zExpectDirGenerateBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank after $GENERATE-directive", l}
-				return nil, false
+				return zp.setParseError("no blank after $GENERATE-directive", l)
 			}
 
 			st = zExpectDirGenerate
 		case zExpectDirGenerate:
 			if l.value != zString {
-				zp.parseErr = &ParseError{zp.file, "expecting $GENERATE value, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting $GENERATE value, not this...", l)
 			}
 
 			if errMsg := zp.generate(l); errMsg != "" {
-				zp.parseErr = &ParseError{zp.file, errMsg, l}
-				return nil, false
+				return zp.setParseError(errMsg, l)
 			}
 
 			if len(zp.gen) > 0 {
@@ -567,8 +551,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			st = zExpectOwnerDir
 		case zExpectOwnerBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank after owner", l}
-				return nil, false
+				return zp.setParseError("no blank after owner", l)
 			}
 
 			st = zExpectAny
@@ -576,8 +559,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			switch l.value {
 			case zRrtpe:
 				if zp.defttl == nil {
-					zp.parseErr = &ParseError{zp.file, "missing TTL with no previous value", l}
-					return nil, false
+					return zp.setParseError("missing TTL with no previous value", l)
 				}
 
 				h.Rrtype = l.torc
@@ -590,8 +572,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zString:
 				ttl, ok := stringToTTL(l.token)
 				if !ok {
-					zp.parseErr = &ParseError{zp.file, "not a TTL", l}
-					return nil, false
+					return zp.setParseError("not a TTL", l)
 				}
 
 				h.Ttl = ttl
@@ -602,20 +583,17 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectAnyNoTTLBl
 			default:
-				zp.parseErr = &ParseError{zp.file, "expecting RR type, TTL or class, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
 			}
 		case zExpectAnyNoClassBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank before class", l}
-				return nil, false
+				return zp.setParseError("no blank before class", l)
 			}
 
 			st = zExpectAnyNoClass
 		case zExpectAnyNoTTLBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank before TTL", l}
-				return nil, false
+				return zp.setParseError("no blank before TTL", l)
 			}
 
 			st = zExpectAnyNoTTL
@@ -630,16 +608,14 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectRdata
 			default:
-				zp.parseErr = &ParseError{zp.file, "expecting RR type or class, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting RR type or class, not this...", l)
 			}
 		case zExpectAnyNoClass:
 			switch l.value {
 			case zString:
 				ttl, ok := stringToTTL(l.token)
 				if !ok {
-					zp.parseErr = &ParseError{zp.file, "not a TTL", l}
-					return nil, false
+					return zp.setParseError("not a TTL", l)
 				}
 
 				h.Ttl = ttl
@@ -654,20 +630,17 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectRdata
 			default:
-				zp.parseErr = &ParseError{zp.file, "expecting RR type or TTL, not this...", l}
-				return nil, false
+				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			}
 		case zExpectRrtypeBl:
 			if l.value != zBlank {
-				zp.parseErr = &ParseError{zp.file, "no blank before RR type", l}
-				return nil, false
+				return zp.setParseError("no blank before RR type", l)
 			}
 
 			st = zExpectRrtype
 		case zExpectRrtype:
 			if l.value != zRrtpe {
-				zp.parseErr = &ParseError{zp.file, "unknown RR type", l}
-				return nil, false
+				return zp.setParseError("unknown RR type", l)
 			}
 
 			h.Rrtype = l.torc
