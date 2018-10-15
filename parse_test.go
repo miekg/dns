@@ -847,20 +847,25 @@ func TestPX(t *testing.T) {
 
 func TestComment(t *testing.T) {
 	// Comments we must see
-	comments := map[string]bool{"; this is comment 1": true,
-		"; this is comment 4": true, "; this is comment 6": true,
-		"; this is comment 7": true, "; this is comment 8": true}
+	comments := map[string]bool{
+		"; this is comment 1": true,
+		"; this is comment 2": true,
+		"; this is comment 4": true,
+		"; this is comment 6": true,
+		"; this is comment 7": true,
+		"; this is comment 8": true,
+	}
 	zone := `
 foo. IN A 10.0.0.1 ; this is comment 1
 foo. IN A (
-	10.0.0.2 ; this is comment2
+	10.0.0.2 ; this is comment 2
 )
-; this is comment3
+; this is comment 3
 foo. IN A 10.0.0.3
 foo. IN A ( 10.0.0.4 ); this is comment 4
 
 foo. IN A 10.0.0.5
-; this is comment5
+; this is comment 5
 
 foo. IN A 10.0.0.6
 
@@ -872,9 +877,108 @@ foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
 		if x.Error == nil {
 			if x.Comment != "" {
 				if _, ok := comments[x.Comment]; !ok {
-					t.Errorf("wrong comment %s", x.Comment)
+					t.Errorf("wrong comment %q", x.Comment)
 				}
 			}
+		}
+	}
+}
+
+func TestParseZoneComments(t *testing.T) {
+	for i, test := range []struct {
+		zone     string
+		comments []string
+	}{
+		{
+			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+			203362132 ; serial
+			5m        ; refresh (5 minutes)
+			5m        ; retry (5 minutes)
+			2w        ; expire (2 weeks)
+			300       ; minimum (5 minutes)
+		) ; y
+. 3600000  IN  NS ONE.MY-ROOTS.NET. ; x`,
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes) ; y", "; x"},
+		},
+		{
+			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+			203362132 ; serial
+			5m        ; refresh (5 minutes)
+			5m        ; retry (5 minutes)
+			2w        ; expire (2 weeks)
+			300       ; minimum (5 minutes)
+		) ; y
+. 3600000  IN  NS ONE.MY-ROOTS.NET.`,
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes) ; y", ""},
+		},
+		{
+			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+			203362132 ; serial
+			5m        ; refresh (5 minutes)
+			5m        ; retry (5 minutes)
+			2w        ; expire (2 weeks)
+			300       ; minimum (5 minutes)
+		)
+. 3600000  IN  NS ONE.MY-ROOTS.NET.`,
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)", ""},
+		},
+		{
+			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+			203362132 ; serial
+			5m        ; refresh (5 minutes)
+			5m        ; retry (5 minutes)
+			2w        ; expire (2 weeks)
+			300       ; minimum (5 minutes)
+		)
+. 3600000  IN  NS ONE.MY-ROOTS.NET. ; x`,
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)", "; x"},
+		},
+		{
+			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
+			203362132 ; serial
+			5m        ; refresh (5 minutes)
+			5m        ; retry (5 minutes)
+			2w        ; expire (2 weeks)
+			300       ; minimum (5 minutes)
+		)`,
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)"},
+		},
+		{
+			`. 3600000  IN  NS ONE.MY-ROOTS.NET. ; x`,
+			[]string{"; x"},
+		},
+		{
+			`. 3600000  IN  NS ONE.MY-ROOTS.NET.`,
+			[]string{""},
+		},
+		{
+			`. 3600000  IN  NS ONE.MY-ROOTS.NET. ;;x`,
+			[]string{";;x"},
+		},
+	} {
+		r := strings.NewReader(test.zone)
+
+		var j int
+		for r := range ParseZone(r, "", "") {
+			if r.Error != nil {
+				t.Fatal(r.Error)
+			}
+
+			if j >= len(test.comments) {
+				t.Fatalf("too many records for zone %d at %d record, expected %d", i, j+1, len(test.comments))
+			}
+
+			if r.Comment != test.comments[j] {
+				t.Errorf("invalid comment for record %d:%d %v / %v", i, j, r.RR, r.Error)
+				t.Logf("expected %q", test.comments[j])
+				t.Logf("got      %q", r.Comment)
+			}
+
+			j++
+		}
+
+		if j != len(test.comments) {
+			t.Errorf("too few records for zone %d, got %d, expected %d", i, j, len(test.comments))
 		}
 	}
 }

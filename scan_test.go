@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -87,5 +88,49 @@ func TestParseTA(t *testing.T) {
 	}
 	if rr == nil {
 		t.Fatal(`expected a normal RR, but got nil`)
+	}
+}
+
+var errTestReadError = &Error{"test error"}
+
+type errReader struct{}
+
+func (errReader) Read(p []byte) (int, error) { return 0, errTestReadError }
+
+func TestParseZoneReadError(t *testing.T) {
+	rr, err := ReadRR(errReader{}, "")
+	if err == nil || !strings.Contains(err.Error(), errTestReadError.Error()) {
+		t.Errorf("expected error to contain %q, but got %v", errTestReadError, err)
+	}
+	if rr != nil {
+		t.Errorf("expected a nil RR, but got %v", rr)
+	}
+}
+
+func BenchmarkNewRR(b *testing.B) {
+	const name1 = "12345678901234567890123456789012345.12345678.123."
+	const s = name1 + " 3600 IN MX 10 " + name1
+
+	for n := 0; n < b.N; n++ {
+		_, err := NewRR(s)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkReadRR(b *testing.B) {
+	const name1 = "12345678901234567890123456789012345.12345678.123."
+	const s = name1 + " 3600 IN MX 10 " + name1 + "\n"
+
+	for n := 0; n < b.N; n++ {
+		r := struct{ io.Reader }{strings.NewReader(s)}
+		// r is now only an io.Reader and won't benefit from the
+		// io.ByteReader special-case in zlexer.Next.
+
+		_, err := ReadRR(r, "")
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
