@@ -75,7 +75,6 @@ BuildRR:
 		step:  step,
 	}
 	zp.sub = NewZoneParser(r, zp.origin, zp.file)
-	zp.sub.includeDepth = zp.includeDepth
 	zp.sub.SetDefaultTTL(defaultTtl)
 	return ""
 }
