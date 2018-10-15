@@ -148,6 +148,10 @@ func ReadRR(r io.Reader, filename string) (RR, error) {
 // The text "; this is comment" is returned in Token.Comment. Comments inside the
 // RR are returned concatenated along with the RR. Comments on a line by themselves
 // are discarded.
+//
+// To prevent memory leaks it is important to always fully drain the returned
+// channel. If an error occurs, it will always be the last Token sent on the
+// channel.
 func ParseZone(r io.Reader, origin, file string) chan *Token {
 	t := make(chan *Token, 10000)
 	go parseZone(r, origin, file, t)
