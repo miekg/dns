@@ -12,6 +12,10 @@ import (
 
 const maxTok = 2048 // Largest token we can return.
 
+// The maximum depth of $INCLUDE directives supported by the
+// ZoneParser API.
+const maxIncludeDepth = 7
+
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
@@ -456,8 +460,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			if !zp.includeAllowed {
 				return zp.setParseError("$INCLUDE directive not allowed", l)
 			}
-
-			if zp.includeDepth >= 7 {
+			if zp.includeDepth >= maxIncludeDepth {
 				return zp.setParseError("too deeply nested $INCLUDE", l)
 			}
 
