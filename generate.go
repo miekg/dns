@@ -99,6 +99,7 @@ type generateReader struct {
 }
 
 func (r *generateReader) parseError(msg string) *ParseError {
+	r.eof = true // Make errors sticky.
 	return &ParseError{r.file, msg, *r.lex}
 }
 
