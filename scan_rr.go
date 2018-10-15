@@ -1060,8 +1060,9 @@ func setCSYNC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		case zBlank:
 			// Ok
 		case zString:
-			if k, ok = StringToType[l.tokenUpper]; !ok {
-				if k, ok = typeToInt(l.tokenUpper); !ok {
+			tokenUpper := strings.ToUpper(l.token)
+			if k, ok = StringToType[tokenUpper]; !ok {
+				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}, ""
 				}
 			}
@@ -1091,9 +1092,10 @@ func setRRSIG(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		return rr, nil, l.comment
 	}
 
-	if t, ok := StringToType[l.tokenUpper]; !ok {
-		if strings.HasPrefix(l.tokenUpper, "TYPE") {
-			t, ok = typeToInt(l.tokenUpper)
+	tokenUpper := strings.ToUpper(l.token)
+	if t, ok := StringToType[tokenUpper]; !ok {
+		if strings.HasPrefix(tokenUpper, "TYPE") {
+			t, ok = typeToInt(l.token)
 			if !ok {
 				return nil, &ParseError{f, "bad RRSIG Typecovered", l}, ""
 			}
@@ -1208,8 +1210,9 @@ func setNSEC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		case zBlank:
 			// Ok
 		case zString:
-			if k, ok = StringToType[l.tokenUpper]; !ok {
-				if k, ok = typeToInt(l.tokenUpper); !ok {
+			tokenUpper := strings.ToUpper(l.token)
+			if k, ok = StringToType[tokenUpper]; !ok {
+				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}, ""
 				}
 			}
@@ -1279,8 +1282,9 @@ func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		case zBlank:
 			// Ok
 		case zString:
-			if k, ok = StringToType[l.tokenUpper]; !ok {
-				if k, ok = typeToInt(l.tokenUpper); !ok {
+			tokenUpper := strings.ToUpper(l.token)
+			if k, ok = StringToType[tokenUpper]; !ok {
+				if k, ok = typeToInt(l.token); !ok {
 					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}, ""
 				}
 			}
@@ -1589,7 +1593,8 @@ func setDSs(h RR_Header, c *zlexer, o, f, typ string) (RR, *ParseError, string) 
 	c.Next() // zBlank
 	l, _ = c.Next()
 	if i, e = strconv.ParseUint(l.token, 10, 8); e != nil {
-		i, ok := StringToAlgorithm[l.tokenUpper]
+		tokenUpper := strings.ToUpper(l.token)
+		i, ok := StringToAlgorithm[tokenUpper]
 		if !ok || l.err {
 			return nil, &ParseError{f, "bad " + typ + " Algorithm", l}, ""
 		}
@@ -1650,7 +1655,8 @@ func setTA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	c.Next() // zBlank
 	l, _ = c.Next()
 	if i, e := strconv.ParseUint(l.token, 10, 8); e != nil {
-		i, ok := StringToAlgorithm[l.tokenUpper]
+		tokenUpper := strings.ToUpper(l.token)
+		i, ok := StringToAlgorithm[tokenUpper]
 		if !ok || l.err {
 			return nil, &ParseError{f, "bad TA Algorithm", l}, ""
 		}

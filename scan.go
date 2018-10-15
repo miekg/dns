@@ -75,14 +75,13 @@ func (e *ParseError) Error() (s string) {
 }
 
 type lex struct {
-	token      string // text of the token
-	tokenUpper string // uppercase text of the token
-	err        bool   // when true, token text has lexer error
-	value      uint8  // value: zString, _BLANK, etc.
-	torc       uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	line       int    // line in the file
-	column     int    // column in the file
-	comment    string // any comment text seen
+	token   string // text of the token
+	err     bool   // when true, token text has lexer error
+	value   uint8  // value: zString, _BLANK, etc.
+	torc    uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
+	line    int    // line in the file
+	column  int    // column in the file
+	comment string // any comment text seen
 }
 
 // Token holds the token that are returned when a zone file is parsed.
@@ -617,10 +616,9 @@ func (zl *zlexer) Next() (lex, bool) {
 				// If we have a string and its the first, make it an owner
 				l.value = zOwner
 				l.token = string(str[:stri])
-				l.tokenUpper = strings.ToUpper(l.token)
 
 				// escape $... start with a \ not a $, so this will work
-				switch l.tokenUpper {
+				switch strings.ToUpper(l.token) {
 				case "$TTL":
 					l.value = zDirTTL
 				case "$ORIGIN":
@@ -635,15 +633,15 @@ func (zl *zlexer) Next() (lex, bool) {
 			} else {
 				l.value = zString
 				l.token = string(str[:stri])
-				l.tokenUpper = strings.ToUpper(l.token)
 
 				if !zl.rrtype {
-					if t, ok := StringToType[l.tokenUpper]; ok {
+					tokenUpper := strings.ToUpper(l.token)
+					if t, ok := StringToType[tokenUpper]; ok {
 						l.value = zRrtpe
 						l.torc = t
 
 						zl.rrtype = true
-					} else if strings.HasPrefix(l.tokenUpper, "TYPE") {
+					} else if strings.HasPrefix(tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.token)
 						if !ok {
 							l.token = "unknown RR type"
@@ -657,10 +655,10 @@ func (zl *zlexer) Next() (lex, bool) {
 						zl.rrtype = true
 					}
 
-					if t, ok := StringToClass[l.tokenUpper]; ok {
+					if t, ok := StringToClass[tokenUpper]; ok {
 						l.value = zClass
 						l.torc = t
-					} else if strings.HasPrefix(l.tokenUpper, "CLASS") {
+					} else if strings.HasPrefix(tokenUpper, "CLASS") {
 						t, ok := classToInt(l.token)
 						if !ok {
 							l.token = "unknown class"
@@ -722,7 +720,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				l.value = zString
 				l.token = string(str[:stri])
-				l.tokenUpper = strings.ToUpper(l.token)
 				return *l, true
 			}
 		case '\r':
@@ -755,7 +752,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 					l.value = zNewline
 					l.token = "\n"
-					l.tokenUpper = l.token
 					l.comment = string(com[:comi])
 					return *l, true
 				}
@@ -770,10 +766,10 @@ func (zl *zlexer) Next() (lex, bool) {
 				if stri != 0 {
 					l.value = zString
 					l.token = string(str[:stri])
-					l.tokenUpper = strings.ToUpper(l.token)
 
 					if !zl.rrtype {
-						if t, ok := StringToType[l.tokenUpper]; ok {
+						tokenUpper := strings.ToUpper(l.token)
+						if t, ok := StringToType[tokenUpper]; ok {
 							zl.rrtype = true
 
 							l.value = zRrtpe
@@ -786,7 +782,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				l.value = zNewline
 				l.token = "\n"
-				l.tokenUpper = l.token
 				l.comment = zl.com
 
 				zl.com = ""
@@ -844,7 +839,6 @@ func (zl *zlexer) Next() (lex, bool) {
 			if stri != 0 {
 				l.value = zString
 				l.token = string(str[:stri])
-				l.tokenUpper = strings.ToUpper(l.token)
 
 				retL = *l
 			}
@@ -852,7 +846,6 @@ func (zl *zlexer) Next() (lex, bool) {
 			// send quote itself as separate token
 			l.value = zQuote
 			l.token = "\""
-			l.tokenUpper = l.token
 
 			zl.quote = !zl.quote
 
@@ -884,7 +877,6 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				if zl.brace < 0 {
 					l.token = "extra closing brace"
-					l.tokenUpper = l.token
 					l.err = true
 					return *l, true
 				}
@@ -912,7 +904,6 @@ func (zl *zlexer) Next() (lex, bool) {
 		// Send remainder of str
 		l.value = zString
 		l.token = string(str[:stri])
-		l.tokenUpper = strings.ToUpper(l.token)
 		retL = *l
 
 		if comi <= 0 {
@@ -924,7 +915,6 @@ func (zl *zlexer) Next() (lex, bool) {
 		// Send remainder of com
 		l.value = zNewline
 		l.token = "\n"
-		l.tokenUpper = l.token
 		l.comment = string(com[:comi])
 
 		if retL != (lex{}) {
@@ -938,7 +928,6 @@ func (zl *zlexer) Next() (lex, bool) {
 	if zl.brace != 0 {
 		l.comment = "" // in case there was left over string and comment
 		l.token = "unbalanced brace"
-		l.tokenUpper = l.token
 		l.err = true
 		return *l, true
 	}
