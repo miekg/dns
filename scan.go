@@ -707,6 +707,13 @@ func (zl *zlexer) Next() (lex, bool) {
 			zl.commt = true
 			zl.com = ""
 
+			if comi > 1 {
+				// A newline was previously seen inside a comment that
+				// was inside braces and we delayed adding it until now.
+				com[comi] = ' ' // convert newline to space
+				comi++
+			}
+
 			com[comi] = ';'
 			comi++
 
@@ -737,7 +744,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				break
 			}
 
-			// inside quotes this is legal
 			if zl.commt {
 				// Reset a comment
 				zl.commt = false
@@ -753,9 +759,6 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.comment = string(com[:comi])
 					return *l, true
 				}
-
-				com[comi] = ' ' // convert newline to space
-				comi++
 
 				zl.com = string(com[:comi])
 				break

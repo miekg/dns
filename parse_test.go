@@ -848,12 +848,12 @@ func TestPX(t *testing.T) {
 func TestComment(t *testing.T) {
 	// Comments we must see
 	comments := map[string]bool{
-		"; this is comment 1":  true,
-		"; this is comment 2 ": true,
-		"; this is comment 4":  true,
-		"; this is comment 6":  true,
-		"; this is comment 7":  true,
-		"; this is comment 8":  true,
+		"; this is comment 1": true,
+		"; this is comment 2": true,
+		"; this is comment 4": true,
+		"; this is comment 6": true,
+		"; this is comment 7": true,
+		"; this is comment 8": true,
 	}
 	zone := `
 foo. IN A 10.0.0.1 ; this is comment 1
@@ -920,7 +920,7 @@ func TestParseZoneComments(t *testing.T) {
 			300       ; minimum (5 minutes)
 		)
 . 3600000  IN  NS ONE.MY-ROOTS.NET.`,
-			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes) ", ""},
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)", ""},
 		},
 		{
 			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
@@ -931,7 +931,7 @@ func TestParseZoneComments(t *testing.T) {
 			300       ; minimum (5 minutes)
 		)
 . 3600000  IN  NS ONE.MY-ROOTS.NET. ; x`,
-			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes) ", "; x"},
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)", "; x"},
 		},
 		{
 			`name. IN SOA  a6.nstld.com. hostmaster.nic.name. (
@@ -941,7 +941,7 @@ func TestParseZoneComments(t *testing.T) {
 			2w        ; expire (2 weeks)
 			300       ; minimum (5 minutes)
 		)`,
-			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes) "},
+			[]string{"; serial ; refresh (5 minutes) ; retry (5 minutes) ; expire (2 weeks) ; minimum (5 minutes)"},
 		},
 		{
 			`. 3600000  IN  NS ONE.MY-ROOTS.NET. ; x`,
@@ -950,6 +950,10 @@ func TestParseZoneComments(t *testing.T) {
 		{
 			`. 3600000  IN  NS ONE.MY-ROOTS.NET.`,
 			[]string{""},
+		},
+		{
+			`. 3600000  IN  NS ONE.MY-ROOTS.NET. ;;x`,
+			[]string{";;x"},
 		},
 	} {
 		r := strings.NewReader(test.zone)
