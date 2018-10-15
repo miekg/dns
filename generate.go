@@ -211,19 +211,23 @@ func modToPrintf(s string) (string, int, string) {
 	if xs[2] != "o" && xs[2] != "d" && xs[2] != "x" && xs[2] != "X" {
 		return "", 0, "bad base in $GENERATE"
 	}
+
 	offset, err := strconv.Atoi(xs[0])
 	if err != nil {
 		return "", 0, "bad offset in $GENERATE"
 	}
+
 	width, err := strconv.Atoi(xs[1])
 	if err != nil || width > 255 {
-		return "", offset, "bad width in $GENERATE"
+		return "", 0, "bad width in $GENERATE"
 	}
+
 	switch {
 	case width < 0:
-		return "", offset, "bad width in $GENERATE"
+		return "", 0, "bad width in $GENERATE"
 	case width == 0:
 		return "%" + xs[1] + xs[2], offset, ""
+	default:
+		return "%0" + xs[1] + xs[2], offset, ""
 	}
-	return "%0" + xs[1] + xs[2], offset, ""
 }
