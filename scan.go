@@ -112,19 +112,13 @@ func NewRR(s string) (RR, error) {
 	return ReadRR(strings.NewReader(s), "")
 }
 
-// ReadRR reads the RR contained in q.
+// ReadRR reads the RR contained in r.
 // See NewRR for more documentation.
-func ReadRR(q io.Reader, filename string) (RR, error) {
-	defttl := &ttlState{defaultTtl, false}
-	r := <-parseZoneHelper(q, ".", filename, defttl, 1)
-	if r == nil {
-		return nil, nil
-	}
-
-	if r.Error != nil {
-		return nil, r.Error
-	}
-	return r.RR, nil
+func ReadRR(r io.Reader, filename string) (RR, error) {
+	zp := NewZoneParser(r, ".", filename)
+	zp.defttl = &ttlState{defaultTtl, false}
+	rr, _ := zp.Next()
+	return rr, zp.Err()
 }
 
 // ParseZone reads a RFC 1035 style zonefile from r. It returns *Tokens on the
