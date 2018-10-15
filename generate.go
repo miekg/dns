@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -65,11 +64,15 @@ BuildRR:
 	for i := start; i <= end; i += step {
 		var (
 			escape bool
-			dom    bytes.Buffer
+			dom    strings.Builder
 			mod    string
 			err    error
 			offset int
 		)
+		dom.Grow(len("$ORIGIN ") + len(zp.origin) + 1)
+		dom.WriteString("$ORIGIN ")
+		dom.WriteString(zp.origin)
+		dom.WriteByte('\n')
 
 		for j := 0; j < len(s); j++ { // No 'range' because we need to jump around
 			switch s[j] {
@@ -90,7 +93,7 @@ BuildRR:
 				}
 				escape = false
 				if j+1 >= len(s) { // End of the string
-					dom.WriteString(fmt.Sprintf(mod, i+offset))
+					fmt.Fprintf(&dom, mod, i+offset)
 					continue
 				} else {
 					if s[j+1] == '$' {
@@ -113,7 +116,7 @@ BuildRR:
 					}
 					j += 2 + sep // Jump to it
 				}
-				dom.WriteString(fmt.Sprintf(mod, i+offset))
+				fmt.Fprintf(&dom, mod, i+offset)
 			default:
 				if escape { // Pretty useless here
 					escape = false
@@ -123,7 +126,7 @@ BuildRR:
 			}
 		}
 		// Re-parse the RR and send it on the current channel t
-		rx, err := NewRR("$ORIGIN " + zp.origin + "\n" + dom.String())
+		rx, err := NewRR(dom.String())
 		if err != nil {
 			return err.Error()
 		}
