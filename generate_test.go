@@ -76,3 +76,20 @@ func TestGenerateModToPrintf(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkGenerate(b *testing.B) {
+	const zone = `@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 32-158 dhcp-${-32,4,d} A 10.0.0.$
+`
+
+	for n := 0; n < b.N; n++ {
+		zp := NewZoneParser(strings.NewReader(zone), ".", "")
+
+		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+		}
+
+		if err := zp.Err(); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
