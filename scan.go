@@ -484,6 +484,8 @@ type zlexer struct {
 	line   int
 	column int
 
+	com string
+
 	l lex
 
 	brace  int
@@ -492,8 +494,6 @@ type zlexer struct {
 	commt  bool
 	rrtype bool
 	owner  bool
-
-	startCommt bool
 
 	nextL bool
 
@@ -574,15 +574,14 @@ func (zl *zlexer) Next() (lex, bool) {
 		escape bool
 	)
 
-	if zl.startCommt {
-		com[comi] = ';'
-		comi++
-
-		zl.startCommt = false
+	if zl.com != "" {
+		comi = copy(com[:], zl.com)
+		zl.com = ""
 	}
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.line, l.column = zl.line, zl.column
+		l.comment = ""
 
 		if stri >= len(str) {
 			l.token = "token length insufficient for parsing"
@@ -707,18 +706,19 @@ func (zl *zlexer) Next() (lex, bool) {
 			}
 
 			zl.commt = true
+			zl.com = ""
+
+			com[comi] = ';'
+			comi++
 
 			if stri > 0 {
-				zl.startCommt = true
+				zl.com = string(com[:comi])
 
 				l.value = zString
 				l.token = string(str[:stri])
 				l.tokenUpper = strings.ToUpper(l.token)
 				return *l, true
 			}
-
-			com[comi] = ';'
-			comi++
 		case '\r':
 			escape = false
 
@@ -752,14 +752,13 @@ func (zl *zlexer) Next() (lex, bool) {
 					l.token = "\n"
 					l.tokenUpper = l.token
 					l.comment = string(com[:comi])
-
-					ll := *l
-					l.comment = ""
-					return ll, true
+					return *l, true
 				}
 
 				com[comi] = ' ' // convert newline to space
 				comi++
+
+				zl.com = string(com[:comi])
 				break
 			}
 
@@ -786,8 +785,9 @@ func (zl *zlexer) Next() (lex, bool) {
 				l.value = zNewline
 				l.token = "\n"
 				l.tokenUpper = l.token
+				l.comment = zl.com
 
-				zl.commt = false
+				zl.com = ""
 				zl.rrtype = false
 				zl.owner = true
 
