@@ -190,6 +190,35 @@ func parseZone(r io.Reader, origin, file string, t chan *Token) {
 	}
 }
 
+// ZoneParser is a parser for an RFC 1035 style zonefile.
+//
+// Each parsed RR in the zone is returned sequentially from Next. An
+// optional comment can be retrieved with Comment.
+//
+// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are all
+// supported. Although $INCLUDE is disabled by default.
+//
+// Basic usage pattern when reading from a string (z) containing the
+// zone data:
+//
+//	zp := NewZoneParser(strings.NewReader(z), "", "")
+//
+//	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+//		// Do something with rr
+//	}
+//
+//	if err := zp.Err(); err != nil {
+//		// log.Println(err)
+//	}
+//
+// Comments specified after an RR (and on the same line!) are
+// returned too:
+//
+//	foo. IN A 10.0.0.1 ; this is a comment
+//
+// The text "; this is comment" is returned from Comment. Comments inside
+// the RR are returned concatenated along with the RR. Comments on a line
+// by themselves are discarded.
 type ZoneParser struct {
 	c *zlexer
 
@@ -215,6 +244,12 @@ type ZoneParser struct {
 	includeAllowed bool
 }
 
+// NewZoneParser returns an RFC 1035 style zonefile parser that reads
+// from r.
+//
+// The string file is used in error reporting and to resolve relative
+// $INCLUDE directives. The string origin is used as the initial
+// origin, as if the file would start with an $ORIGIN directive.
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
@@ -234,6 +269,8 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	}
 }
 
+// Err returns the first non-EOF error that was encountered by the
+// ZoneParser.
 func (zp *ZoneParser) Err() error {
 	if zp.parseErr != nil {
 		return zp.parseErr
@@ -248,14 +285,26 @@ func (zp *ZoneParser) Err() error {
 	return zp.c.Err()
 }
 
+// Comment returns an optional text comment that occurred alongside
+// the RR.
 func (zp *ZoneParser) Comment() string {
 	return zp.com
 }
 
+// SetDefaultTTL sets the parsers default TTL to ttl.
 func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
 	zp.defttl = &ttlState{ttl, false}
 }
 
+// SetIncludeAllowed controls whether $INCLUDE directives are
+// allowed. $INCLUDE directives are not supported by default.
+//
+// The $INCLUDE directive will open and read from a user controlled
+// file on the system. Even if the file is not a valid zonefile, the
+// contents of the file may be revealed in error messages, such as:
+//
+//	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
+//	/etc/shadow: dns: not a TTL: "root:$6$<redacted>::0:99999:7:::" at line: 1:125
 func (zp *ZoneParser) SetIncludeAllowed(v bool) {
 	zp.includeAllowed = v
 }
@@ -274,6 +323,11 @@ func (zp *ZoneParser) subNext() (RR, bool) {
 	return rr, ok
 }
 
+// Next advances the parser to the next RR in the zonefile and
+// returns the (RR, true). It will return (nil, false) when the
+// parsing stops, either by reaching the end of the input or an
+// error. After Next returns (nil, false), the Err method will return
+// any error that occurred during parsing.
 func (zp *ZoneParser) Next() (RR, bool) {
 	zp.com = ""
 
