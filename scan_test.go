@@ -39,6 +39,10 @@ func TestParseZoneGenerate(t *testing.T) {
 		}
 		wantIdx++
 	}
+
+	if wantIdx != len(wantRRs) {
+		t.Errorf("too few records, expected %d, got %d", len(wantRRs), wantIdx)
+	}
 }
 
 func TestParseZoneInclude(t *testing.T) {
@@ -47,6 +51,7 @@ func TestParseZoneInclude(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
 	}
+	defer os.Remove(tmpfile.Name())
 
 	if _, err := tmpfile.WriteString("foo\tIN\tA\t127.0.0.1"); err != nil {
 		t.Fatalf("unable to write content to tmpfile %q: %s", tmpfile.Name(), err)
@@ -55,16 +60,24 @@ func TestParseZoneInclude(t *testing.T) {
 		t.Fatalf("could not close tmpfile %q: %s", tmpfile.Name(), err)
 	}
 
-	zone := "$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name()
+	zone := "$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name() + "\nbar\tIN\tA\t127.0.0.2"
 
+	var got int
 	tok := ParseZone(strings.NewReader(zone), "", "")
 	for x := range tok {
 		if x.Error != nil {
 			t.Fatalf("expected no error, but got %s", x.Error)
 		}
-		if x.RR.Header().Name != "foo.example.org." {
-			t.Fatalf("expected %s, but got %s", "foo.example.org.", x.RR.Header().Name)
+		switch x.RR.Header().Name {
+		case "foo.example.org.", "bar.example.org.":
+		default:
+			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", x.RR.Header().Name)
 		}
+		got++
+	}
+
+	if expected := 2; got != expected {
+		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
 	}
 
 	os.Remove(tmpfile.Name())
