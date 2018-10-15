@@ -469,11 +469,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			r1, e1 := os.Open(includePath)
 			if e1 != nil {
-				msg := fmt.Sprintf("failed to open `%s'", l.token)
+				var as string
 				if !filepath.IsAbs(l.token) {
-					msg += fmt.Sprintf(" as `%s'", includePath)
+					as = fmt.Sprintf(" as `%s'", includePath)
 				}
 
+				msg := fmt.Sprintf("failed to open `%s'%s: %v", l.token, as, e1)
 				return zp.setParseError(msg, l)
 			}
 

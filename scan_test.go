@@ -88,8 +88,10 @@ func TestParseZoneInclude(t *testing.T) {
 			t.Fatalf("expected first token to contain an error but it didn't")
 		}
 		if !strings.Contains(x.Error.Error(), "failed to open") ||
-			!strings.Contains(x.Error.Error(), tmpfile.Name()) {
-			t.Fatalf(`expected error to contain: "failed to open" and %q but got: %s`, tmpfile.Name(), x.Error)
+			!strings.Contains(x.Error.Error(), tmpfile.Name()) ||
+			!strings.Contains(x.Error.Error(), "no such file or directory") {
+			t.Fatalf(`expected error to contain: "failed to open", %q and "no such file or directory" but got: %s`,
+				tmpfile.Name(), x.Error)
 		}
 	}
 }
