@@ -116,7 +116,7 @@ func NewRR(s string) (RR, error) {
 // See NewRR for more documentation.
 func ReadRR(r io.Reader, filename string) (RR, error) {
 	zp := NewZoneParser(r, ".", filename)
-	zp.defttl = &ttlState{defaultTtl, false}
+	zp.SetDefaultTTL(defaultTtl)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
@@ -230,6 +230,10 @@ func (zp *ZoneParser) Err() error {
 
 func (zp *ZoneParser) Comment() string {
 	return zp.com
+}
+
+func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
+	zp.defttl = &ttlState{ttl, false}
 }
 
 func (zp *ZoneParser) subNext() (RR, bool) {
