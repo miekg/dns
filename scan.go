@@ -101,11 +101,15 @@ type ttlState struct {
 }
 
 // NewRR reads the RR contained in the string s. Only the first RR is
-// returned. If s contains no RR, return nil with no error. The class
-// defaults to IN and TTL defaults to 3600. The full zone file syntax
-// like $TTL, $ORIGIN, etc. is supported, except for $INCLUDE. All
-// fields of the returned RR are set, except RR.Header().Rdlength which
-// is set to 0.
+// returned. If s contains no records, NewRR will return nil with no
+// error.
+//
+// The class defaults to IN and TTL defaults to 3600. The full zone
+// file syntax like $TTL, $ORIGIN, etc. is supported, except for
+// $INCLUDE.
+//
+// All fields of the returned RR are set, except RR.Header().Rdlength
+// which is set to 0.
 func NewRR(s string) (RR, error) {
 	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
 		return ReadRR(strings.NewReader(s+"\n"), "")
@@ -114,21 +118,28 @@ func NewRR(s string) (RR, error) {
 }
 
 // ReadRR reads the RR contained in r.
+//
+// The string file is only used in error reporting.
+//
 // See NewRR for more documentation.
-func ReadRR(r io.Reader, filename string) (RR, error) {
-	zp := NewZoneParser(r, ".", filename)
+func ReadRR(r io.Reader, file string) (RR, error) {
+	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTtl)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
 
-// ParseZone reads a RFC 1035 style zonefile from r. It returns *Tokens on the
-// returned channel, each consisting of either a parsed RR and optional comment
-// or a nil RR and an error. The string file is only used
-// in error reporting. The string origin is used as the initial origin, as
-// if the file would start with an $ORIGIN directive.
-// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are supported.
-// The channel t is closed by ParseZone when the end of r is reached.
+// ParseZone reads a RFC 1035 style zonefile from r. It returns
+// *Tokens on the returned channel, each consisting of either a
+// parsed RR and optional comment or a nil RR and an error. The
+// channel is closed by ParseZone when the end of r is reached.
+//
+// The string file is used in error reporting and to resolve relative
+// $INCLUDE directives. The string origin is used as the initial
+// origin, as if the file would start with an $ORIGIN directive.
+//
+// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are all
+// supported.
 //
 // Basic usage pattern when reading from a string (z) containing the
 // zone data:
@@ -141,17 +152,18 @@ func ReadRR(r io.Reader, filename string) (RR, error) {
 //              }
 //	}
 //
-// Comments specified after an RR (and on the same line!) are returned too:
+// Comments specified after an RR (and on the same line!) are
+// returned too:
 //
 //	foo. IN A 10.0.0.1 ; this is a comment
 //
-// The text "; this is comment" is returned in Token.Comment. Comments inside the
-// RR are returned concatenated along with the RR. Comments on a line by themselves
-// are discarded.
+// The text "; this is comment" is returned in Token.Comment.
+// Comments inside the RR are returned concatenated along with the
+// RR. Comments on a line by themselves are discarded.
 //
-// To prevent memory leaks it is important to always fully drain the returned
-// channel. If an error occurs, it will always be the last Token sent on the
-// channel.
+// To prevent memory leaks it is important to always fully drain the
+// returned channel. If an error occurs, it will always be the last
+// Token sent on the channel.
 func ParseZone(r io.Reader, origin, file string) chan *Token {
 	t := make(chan *Token, 10000)
 	go parseZone(r, origin, file, t)
