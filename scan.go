@@ -103,8 +103,9 @@ type ttlState struct {
 // NewRR reads the RR contained in the string s. Only the first RR is
 // returned. If s contains no RR, return nil with no error. The class
 // defaults to IN and TTL defaults to 3600. The full zone file syntax
-// like $TTL, $ORIGIN, etc. is supported. All fields of the returned
-// RR are set, except RR.Header().Rdlength which is set to 0.
+// like $TTL, $ORIGIN, etc. is supported, except for $INCLUDE. All
+// fields of the returned RR are set, except RR.Header().Rdlength which
+// is set to 0.
 func NewRR(s string) (RR, error) {
 	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
 		return ReadRR(strings.NewReader(s+"\n"), "")
@@ -117,7 +118,6 @@ func NewRR(s string) (RR, error) {
 func ReadRR(r io.Reader, filename string) (RR, error) {
 	zp := NewZoneParser(r, ".", filename)
 	zp.SetDefaultTTL(defaultTtl)
-	zp.SetIncludeAllowed(true)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }

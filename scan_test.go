@@ -94,6 +94,30 @@ func TestParseZoneInclude(t *testing.T) {
 	}
 }
 
+func TestNewRRNoInclude(t *testing.T) {
+	tmpfile, err := ioutil.TempFile("", "dns")
+	if err != nil {
+		t.Fatalf("could not create tmpfile for test: %s", err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.WriteString("foo\tIN\tA\t127.0.0.1"); err != nil {
+		t.Fatalf("unable to write content to tmpfile %q: %s", tmpfile.Name(), err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatalf("could not close tmpfile %q: %s", tmpfile.Name(), err)
+	}
+
+	rr, err := NewRR("$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name())
+	if expect := "$INCLUDE directive not allowed"; err == nil ||
+		!strings.Contains(err.Error(), expect) {
+		t.Errorf("expected error to contain %q, got %v", expect, err)
+	}
+	if rr != nil {
+		t.Errorf("expected nil RR, got %v", rr)
+	}
+}
+
 func TestParseTA(t *testing.T) {
 	rr, err := NewRR(` Ta 0 0 0`)
 	if err != nil {
