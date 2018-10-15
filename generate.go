@@ -22,29 +22,32 @@ import (
 // "no error".
 func (zp *ZoneParser) generate(l lex) string {
 	origL := l
+
 	step := 1
-	if i := strings.IndexAny(l.token, "/"); i != -1 {
+	if i := strings.IndexByte(l.token, '/'); i >= 0 {
 		if i+1 == len(l.token) {
 			return "bad step in $GENERATE range"
 		}
-		if s, err := strconv.Atoi(l.token[i+1:]); err == nil {
-			if s < 0 {
-				return "bad step in $GENERATE range"
-			}
-			step = s
-		} else {
+
+		s, err := strconv.Atoi(l.token[i+1:])
+		if err != nil || s < 0 {
 			return "bad step in $GENERATE range"
 		}
+
+		step = s
 		l.token = l.token[:i]
 	}
+
 	sx := strings.SplitN(l.token, "-", 2)
 	if len(sx) != 2 {
 		return "bad start-stop in $GENERATE range"
 	}
+
 	start, err := strconv.Atoi(sx[0])
 	if err != nil {
 		return "bad start in $GENERATE range"
 	}
+
 	end, err := strconv.Atoi(sx[1])
 	if err != nil {
 		return "bad stop in $GENERATE range"
@@ -54,8 +57,9 @@ func (zp *ZoneParser) generate(l lex) string {
 	}
 
 	zp.c.Next() // _BLANK
+
 	// Create a complete new string, which we then parse again.
-	s := ""
+	var s string
 BuildRR:
 	l, _ = zp.c.Next()
 	if l.value != zNewline && l.value != zEOF {
