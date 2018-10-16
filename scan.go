@@ -122,7 +122,8 @@ func NewRR(s string) (RR, error) {
 
 // ReadRR reads the RR contained in r.
 //
-// The string file is only used in error reporting.
+// The string file is used in error reporting and to resolve relative
+// $INCLUDE directives.
 //
 // See NewRR for more documentation.
 func ReadRR(r io.Reader, file string) (RR, error) {
