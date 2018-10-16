@@ -109,8 +109,7 @@ type ttlState struct {
 // error.
 //
 // The class defaults to IN and TTL defaults to 3600. The full zone
-// file syntax like $TTL, $ORIGIN, etc. is supported, except for
-// $INCLUDE.
+// file syntax like $TTL, $ORIGIN, etc. is supported.
 //
 // All fields of the returned RR are set, except RR.Header().Rdlength
 // which is set to 0.
@@ -129,6 +128,7 @@ func NewRR(s string) (RR, error) {
 func ReadRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTtl)
+	zp.SetIncludeAllowed(true)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }

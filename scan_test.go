@@ -96,7 +96,7 @@ func TestParseZoneInclude(t *testing.T) {
 	}
 }
 
-func TestNewRRNoInclude(t *testing.T) {
+func TestZoneParserIncludeDisallowed(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
@@ -110,13 +110,16 @@ func TestNewRRNoInclude(t *testing.T) {
 		t.Fatalf("could not close tmpfile %q: %s", tmpfile.Name(), err)
 	}
 
-	rr, err := NewRR("$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name())
-	if expect := "$INCLUDE directive not allowed"; err == nil ||
-		!strings.Contains(err.Error(), expect) {
-		t.Errorf("expected error to contain %q, got %v", expect, err)
-	}
-	if rr != nil {
+	zp := NewZoneParser(strings.NewReader("$INCLUDE "+tmpfile.Name()), "example.org.", "")
+
+	rr, ok := zp.Next()
+	if rr != nil || ok {
 		t.Errorf("expected nil RR, got %v", rr)
+	}
+
+	const expect = "$INCLUDE directive not allowed"
+	if err := zp.Err(); err == nil || !strings.Contains(err.Error(), expect) {
+		t.Errorf("expected error to contain %q, got %v", expect, err)
 	}
 }
 
