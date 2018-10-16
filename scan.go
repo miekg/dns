@@ -1091,6 +1091,11 @@ func (zl *zlexer) Next() (lex, bool) {
 		}
 	}
 
+	if zl.readErr != nil && zl.readErr != io.EOF {
+		// Don't return any tokens after a read error occurs.
+		return lex{value: zEOF}, false
+	}
+
 	var retL lex
 	if stri > 0 {
 		// Send remainder of str

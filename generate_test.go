@@ -93,6 +93,22 @@ $GENERATE 0-1 $$INCLUDE ` + tmpfile.Name() + `
 	}
 }
 
+func TestGenerateSurfacesErrors(t *testing.T) {
+	const zone = `@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1 dhcp-${0,4,dd} A 10.0.0.$
+`
+
+	zp := NewZoneParser(strings.NewReader(zone), ".", "test")
+
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+	}
+
+	const expected = `test: dns: bad base in $GENERATE: "0-1" at line: 2:14`
+	if err := zp.Err(); err == nil || err.Error() != expected {
+		t.Errorf("expected specific error, wanted %q, got %v", expected, err)
+	}
+}
+
 func TestGenerateModToPrintf(t *testing.T) {
 	tests := []struct {
 		mod        string
