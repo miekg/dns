@@ -101,7 +101,7 @@ $GENERATE 0-1 $$INCLUDE ` + tmpfile.Name() + `
 
 	const expected = "too deeply nested $INCLUDE"
 	if err := zp.Err(); err == nil || !strings.Contains(err.Error(), expected) {
-		t.Errorf("expected error to include %q, got %q", expected, err.Error())
+		t.Errorf("expected error to include %q, got %v", expected, err)
 	}
 }
 
@@ -116,7 +116,7 @@ $GENERATE 0-1 $$INCLUDE test.conf
 
 	const expected = "$INCLUDE directive not allowed"
 	if err := zp.Err(); err == nil || !strings.Contains(err.Error(), expected) {
-		t.Errorf("expected error to include %q, got %q", expected, err.Error())
+		t.Errorf("expected error to include %q, got %v", expected, err)
 	}
 }
 
