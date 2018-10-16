@@ -20,40 +20,39 @@ import (
 // of $ after that are interpreted.
 // Any error are returned as a string value, the empty string signals
 // "no error".
-func (zp *ZoneParser) generate(l lex) string {
-	origL := l
-
+func (zp *ZoneParser) generate(l lex) (RR, bool) {
+	token := l.token
 	step := 1
-	if i := strings.IndexByte(l.token, '/'); i >= 0 {
-		if i+1 == len(l.token) {
-			return "bad step in $GENERATE range"
+	if i := strings.IndexByte(token, '/'); i >= 0 {
+		if i+1 == len(token) {
+			return zp.setParseError("bad step in $GENERATE range", l)
 		}
 
-		s, err := strconv.Atoi(l.token[i+1:])
+		s, err := strconv.Atoi(token[i+1:])
 		if err != nil || s <= 0 {
-			return "bad step in $GENERATE range"
+			return zp.setParseError("bad step in $GENERATE range", l)
 		}
 
 		step = s
-		l.token = l.token[:i]
+		token = token[:i]
 	}
 
-	sx := strings.SplitN(l.token, "-", 2)
+	sx := strings.SplitN(token, "-", 2)
 	if len(sx) != 2 {
-		return "bad start-stop in $GENERATE range"
+		return zp.setParseError("bad start-stop in $GENERATE range", l)
 	}
 
 	start, err := strconv.Atoi(sx[0])
 	if err != nil {
-		return "bad start in $GENERATE range"
+		return zp.setParseError("bad start in $GENERATE range", l)
 	}
 
 	end, err := strconv.Atoi(sx[1])
 	if err != nil {
-		return "bad stop in $GENERATE range"
+		return zp.setParseError("bad stop in $GENERATE range", l)
 	}
 	if end < 0 || start < 0 || end < start {
-		return "bad range in $GENERATE range"
+		return zp.setParseError("bad range in $GENERATE range", l)
 	}
 
 	zp.c.Next() // _BLANK
@@ -77,12 +76,12 @@ func (zp *ZoneParser) generate(l lex) string {
 		step:  step,
 
 		file: zp.file,
-		lex:  &origL,
+		lex:  &l,
 	}
 	zp.sub = NewZoneParser(r, zp.origin, zp.file)
 	zp.sub.includeDepth, zp.sub.includeAllowed = zp.includeDepth, zp.includeAllowed
 	zp.sub.SetDefaultTTL(defaultTtl)
-	return ""
+	return zp.subNext()
 }
 
 type generateReader struct {

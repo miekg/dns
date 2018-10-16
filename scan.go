@@ -546,11 +546,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("expecting $GENERATE value, not this...", l)
 			}
 
-			if errMsg := zp.generate(l); errMsg != "" {
-				return zp.setParseError(errMsg, l)
-			}
-
-			return zp.subNext()
+			return zp.generate(l)
 		case zExpectOwnerBl:
 			if l.value != zBlank {
 				return zp.setParseError("no blank after owner", l)
