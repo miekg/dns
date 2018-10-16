@@ -106,9 +106,14 @@ type generateReader struct {
 	lex  *lex
 }
 
-func (r *generateReader) parseError(msg string) *ParseError {
+func (r *generateReader) parseError(msg string, end int) *ParseError {
 	r.eof = true // Make errors sticky.
-	return &ParseError{r.file, msg, *r.lex}
+
+	l := *r.lex
+	l.token = r.s[r.si-1 : end]
+	l.column += r.si // l.column starts one zBLANK before r.s
+
+	return &ParseError{r.file, msg, l}
 }
 
 func (r *generateReader) Read(p []byte) (int, error) {
@@ -172,16 +177,16 @@ func (r *generateReader) ReadByte() (byte, error) {
 			// Modifier block
 			sep := strings.Index(r.s[si+2:], "}")
 			if sep < 0 {
-				return 0, r.parseError("bad modifier in $GENERATE")
+				return 0, r.parseError("bad modifier in $GENERATE", len(r.s))
 			}
 
 			var errMsg string
 			mod, offset, errMsg = modToPrintf(r.s[si+2 : si+2+sep])
 			if errMsg != "" {
-				return 0, r.parseError(errMsg)
+				return 0, r.parseError(errMsg, si+3+sep)
 			}
 			if r.start+offset < 0 || r.end+offset > 1<<31-1 {
-				return 0, r.parseError("bad offset in $GENERATE")
+				return 0, r.parseError("bad offset in $GENERATE", si+3+sep)
 			}
 
 			r.si += 2 + sep // Jump to it

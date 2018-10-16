@@ -129,7 +129,7 @@ $GENERATE 0-1 dhcp-${0,4,dd} A 10.0.0.$
 	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 	}
 
-	const expected = `test: dns: bad base in $GENERATE: "0-1" at line: 2:14`
+	const expected = `test: dns: bad base in $GENERATE: "${0,4,dd}" at line: 2:20`
 	if err := zp.Err(); err == nil || err.Error() != expected {
 		t.Errorf("expected specific error, wanted %q, got %v", expected, err)
 	}
