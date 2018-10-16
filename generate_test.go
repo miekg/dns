@@ -112,7 +112,6 @@ func TestGenerateSurfacesErrors(t *testing.T) {
 	const zone = `@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 dhcp-${0,4,dd} A 10.0.0.$
 `
-
 	zp := NewZoneParser(strings.NewReader(zone), ".", "test")
 
 	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
