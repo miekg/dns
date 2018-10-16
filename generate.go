@@ -206,41 +206,39 @@ func (r *generateReader) ReadByte() (byte, error) {
 
 // Convert a $GENERATE modifier 0,0,d to something Printf can deal with.
 func modToPrintf(s string) (string, int, string) {
-	xs := strings.Split(s, ",")
-
 	// Modifier is { offset [ ,width [ ,base ] ] } - provide default
 	// values for optional width and type, if necessary.
-	switch len(xs) {
+	var offStr, widthStr, base string
+	switch xs := strings.Split(s, ","); len(xs) {
 	case 1:
-		xs = append(xs, "0", "d")
+		offStr, widthStr, base = xs[0], "0", "d"
 	case 2:
-		xs = append(xs, "d")
+		offStr, widthStr, base = xs[0], xs[1], "d"
 	case 3:
+		offStr, widthStr, base = xs[0], xs[1], xs[2]
 	default:
 		return "", 0, "bad modifier in $GENERATE"
 	}
 
-	// xs[0] is offset, xs[1] is width, xs[2] is base
-	if xs[2] != "o" && xs[2] != "d" && xs[2] != "x" && xs[2] != "X" {
+	switch base {
+	case "o", "d", "x", "X":
+	default:
 		return "", 0, "bad base in $GENERATE"
 	}
 
-	offset, err := strconv.Atoi(xs[0])
+	offset, err := strconv.Atoi(offStr)
 	if err != nil {
 		return "", 0, "bad offset in $GENERATE"
 	}
 
-	width, err := strconv.Atoi(xs[1])
-	if err != nil || width > 255 {
+	width, err := strconv.Atoi(widthStr)
+	if err != nil || width < 0 || width > 255 {
 		return "", 0, "bad width in $GENERATE"
 	}
 
-	switch {
-	case width < 0:
-		return "", 0, "bad width in $GENERATE"
-	case width == 0:
-		return "%" + xs[1] + xs[2], offset, ""
-	default:
-		return "%0" + xs[1] + xs[2], offset, ""
+	if width == 0 {
+		return "%" + base, offset, ""
 	}
+
+	return "%0" + widthStr + base, offset, ""
 }
