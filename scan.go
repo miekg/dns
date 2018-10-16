@@ -272,6 +272,24 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	}
 }
 
+// SetDefaultTTL sets the parsers default TTL to ttl.
+func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
+	zp.defttl = &ttlState{ttl, false}
+}
+
+// SetIncludeAllowed controls whether $INCLUDE directives are
+// allowed. $INCLUDE directives are not supported by default.
+//
+// The $INCLUDE directive will open and read from a user controlled
+// file on the system. Even if the file is not a valid zonefile, the
+// contents of the file may be revealed in error messages, such as:
+//
+//	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
+//	/etc/shadow: dns: not a TTL: "root:$6$<redacted>::0:99999:7:::" at line: 1:125
+func (zp *ZoneParser) SetIncludeAllowed(v bool) {
+	zp.includeAllowed = v
+}
+
 // Err returns the first non-EOF error that was encountered by the
 // ZoneParser.
 func (zp *ZoneParser) Err() error {
@@ -297,24 +315,6 @@ func (zp *ZoneParser) setParseError(err string, l lex) (RR, bool) {
 // the RR.
 func (zp *ZoneParser) Comment() string {
 	return zp.com
-}
-
-// SetDefaultTTL sets the parsers default TTL to ttl.
-func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
-	zp.defttl = &ttlState{ttl, false}
-}
-
-// SetIncludeAllowed controls whether $INCLUDE directives are
-// allowed. $INCLUDE directives are not supported by default.
-//
-// The $INCLUDE directive will open and read from a user controlled
-// file on the system. Even if the file is not a valid zonefile, the
-// contents of the file may be revealed in error messages, such as:
-//
-//	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
-//	/etc/shadow: dns: not a TTL: "root:$6$<redacted>::0:99999:7:::" at line: 1:125
-func (zp *ZoneParser) SetIncludeAllowed(v bool) {
-	zp.includeAllowed = v
 }
 
 func (zp *ZoneParser) subNext() (RR, bool) {
