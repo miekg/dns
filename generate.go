@@ -60,6 +60,9 @@ func (zp *ZoneParser) generate(l lex) (RR, bool) {
 	// Create a complete new string, which we then parse again.
 	var s string
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
+		if l.err {
+			return zp.setParseError("bad data in $GENERATE directive", l)
+		}
 		if l.value == zNewline {
 			break
 		}
