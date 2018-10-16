@@ -112,9 +112,7 @@ func TestZoneParserIncludeDisallowed(t *testing.T) {
 
 	zp := NewZoneParser(strings.NewReader("$INCLUDE "+tmpfile.Name()), "example.org.", "")
 
-	rr, ok := zp.Next()
-	if rr != nil || ok {
-		t.Errorf("expected nil RR, got %v", rr)
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 	}
 
 	const expect = "$INCLUDE directive not allowed"
