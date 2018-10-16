@@ -80,6 +80,7 @@ func (zp *ZoneParser) generate(l lex) string {
 		lex:  &origL,
 	}
 	zp.sub = NewZoneParser(r, zp.origin, zp.file)
+	zp.sub.includeDepth, zp.sub.includeAllowed = zp.includeDepth, zp.includeAllowed
 	zp.sub.SetDefaultTTL(defaultTtl)
 	return ""
 }

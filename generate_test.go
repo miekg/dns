@@ -1,11 +1,30 @@
 package dns
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 func TestGenerateRangeGuard(t *testing.T) {
+	tmpdir, err := ioutil.TempDir("", "dns")
+	if err != nil {
+		t.Fatalf("could not create tmpdir for test: %v", err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	for i := 0; i <= 1; i++ {
+		path := filepath.Join(tmpdir, fmt.Sprintf("%04d.conf", i))
+		data := []byte(fmt.Sprintf("dhcp-%04d A 10.0.0.%d", i, i))
+
+		if err := ioutil.WriteFile(path, data, 0644); err != nil {
+			t.Fatalf("could not create tmpfile for test: %v", err)
+		}
+	}
+
 	var tests = [...]struct {
 		zone string
 		fail bool
@@ -25,6 +44,9 @@ $GENERATE 0-2 dhcp-${2147483647,4,d} A 10.0.0.$
 		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 dhcp-${2147483646,4,d} A 10.0.0.$
 `, false},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1 $$INCLUDE ` + tmpdir + string(filepath.Separator) + `${0,4,d}.conf
+`, false},
 	}
 Outer:
 	for i := range tests {
@@ -39,6 +61,35 @@ Outer:
 		if tests[i].fail {
 			t.Errorf("expected \n\n%s\nto fail, but got no error", tests[i].zone)
 		}
+	}
+}
+
+func TestGenerateIncludeDepth(t *testing.T) {
+	tmpfile, err := ioutil.TempFile("", "dns")
+	if err != nil {
+		t.Fatalf("could not create tmpfile for test: %v", err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	zone := `@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1 $$INCLUDE ` + tmpfile.Name() + `
+`
+	if _, err := tmpfile.WriteString(zone); err != nil {
+		t.Fatalf("could not write to tmpfile for test: %v", err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatalf("could not close tmpfile for test: %v", err)
+	}
+
+	zp := NewZoneParser(strings.NewReader(zone), ".", tmpfile.Name())
+	zp.SetIncludeAllowed(true)
+
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+	}
+
+	const expected = "too deeply nested $INCLUDE"
+	if err := zp.Err(); err == nil || !strings.Contains(err.Error(), expected) {
+		t.Errorf("expected error to include %q, got %q", expected, err.Error())
 	}
 }
 
