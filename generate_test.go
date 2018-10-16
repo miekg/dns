@@ -45,6 +45,18 @@ $GENERATE 0-2 dhcp-${2147483647,4,d} A 10.0.0.$
 $GENERATE 0-1 dhcp-${2147483646,4,d} A 10.0.0.$
 `, false},
 		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1/step dhcp-${0,4,d} A 10.0.0.$
+`, true},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1/ dhcp-${0,4,d} A 10.0.0.$
+`, true},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-10/2 dhcp-${0,4,d} A 10.0.0.$
+`, false},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1/0 dhcp-${0,4,d} A 10.0.0.$
+`, true},
+		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 $$INCLUDE ` + tmpdir + string(filepath.Separator) + `${0,4,d}.conf
 `, false},
 	}

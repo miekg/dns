@@ -30,7 +30,7 @@ func (zp *ZoneParser) generate(l lex) string {
 		}
 
 		s, err := strconv.Atoi(l.token[i+1:])
-		if err != nil || s < 0 {
+		if err != nil || s <= 0 {
 			return "bad step in $GENERATE range"
 		}
 
