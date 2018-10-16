@@ -319,20 +319,23 @@ func (zp *ZoneParser) Comment() string {
 }
 
 func (zp *ZoneParser) subNext() (RR, bool) {
-	rr, ok := zp.sub.Next()
-	zp.com = zp.sub.com
-
-	if !ok && zp.sub.Err() == nil {
-		// zp.sub has ended
-		if zp.sub.osFile != nil {
-			zp.sub.osFile.Close()
-		}
-
-		zp.sub = nil
-		return zp.Next()
+	if rr, ok := zp.sub.Next(); ok {
+		zp.com = zp.sub.com
+		return rr, true
 	}
 
-	return rr, ok
+	if zp.sub.osFile != nil {
+		zp.sub.osFile.Close()
+		zp.sub.osFile = nil
+	}
+
+	if zp.sub.Err() != nil {
+		// We have errors to surface.
+		return nil, false
+	}
+
+	zp.sub = nil
+	return zp.Next()
 }
 
 // Next advances the parser to the next RR in the zonefile and
