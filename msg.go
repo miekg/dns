@@ -839,7 +839,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 
 	// Set extended Rcode
 	if opt := dns.IsEdns0(); opt != nil {
-		dns.Rcode = dns.Rcode | opt.ExtendedRcode()
+		dns.Rcode |= opt.ExtendedRcode()
 	}
 
 	if off != len(msg) {
