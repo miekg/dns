@@ -238,6 +238,9 @@ type ZoneParser struct {
 
 	h RR_Header
 
+	// sub is used to parse $INCLUDE files and $GENERATE directives.
+	// Next, by calling subNext, forwards the resulting RRs from this
+	// sub parser to the calling code.
 	sub    *ZoneParser
 	osFile *os.File
 
