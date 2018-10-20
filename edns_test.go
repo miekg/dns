@@ -66,4 +66,10 @@ func TestOPTTtl(t *testing.T) {
 	if e.ExtendedRcode() != 42 & 0xFFFFFFF0 {
 		t.Errorf("set 42, expected %d, got %d", 42 & 0xFFFFFFF0, e.ExtendedRcode())
 	}
+
+	// This will reset the 8 upper bits of the extended rcode
+	e.SetExtendedRcode(RcodeNotAuth)
+	if e.ExtendedRcode() != 0 {
+		t.Errorf("Setting a non-extended rcode is expected to set extended rcode to 0, got: %d", e.ExtendedRcode())
+	}
 }

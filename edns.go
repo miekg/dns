@@ -106,10 +106,8 @@ func (rr *OPT) ExtendedRcode() int {
 }
 
 // SetExtendedRcode sets the EDNS extended RCODE field.
+// If the RCODE is not an extended RCODE, will reset the extended RCODE field to 0.
 func (rr *OPT) SetExtendedRcode(v uint16) {
-	if v < RcodeBadVers { // Smaller than 16.. Use the 4 bits you have!
-		return
-	}
 	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | uint32(v >> 4)<<24
 }
 
