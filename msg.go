@@ -685,15 +685,14 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		return nil, ErrRcode
 	}
 
-	// Regular RCODE field is 4 bits
 	opt := dns.IsEdns0()
-	// If Rcode is an extended one and opt is nil, error out.
-	if opt == nil && dns.Rcode > 0xF {
-		return nil, ErrExtendedRcode
-	// Else set extended rcode unconditionally if we have an opt, this will allow
+	// Set extended rcode unconditionally if we have an opt, this will allow
 	// reseting the extended rcode bits if they need to.
-	} else if opt != nil {
+	if opt != nil {
 		opt.SetExtendedRcode(uint16(dns.Rcode))
+		// If Rcode is an extended one and opt is nil, error out.
+	} else if dns.Rcode > 0xF {
+		return nil, ErrExtendedRcode
 	}
 
 	// Convert convenient Msg into wire-like Header.

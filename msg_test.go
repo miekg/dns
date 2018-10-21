@@ -68,7 +68,7 @@ func TestPackExtendedBadCookie(t *testing.T) {
 	}
 	// SetExtendedRcode is only called as part of `Pack()`, hence at this stage,
 	// the OPT RR is not set yet.
-	if edns0.ExtendedRcode() == RcodeBadCookie & 0xFFFFFFF0 {
+	if edns0.ExtendedRcode() == RcodeBadCookie&0xFFFFFFF0 {
 		t.Errorf("ExtendedRcode is expected to not be BADCOOKIE before Pack")
 	}
 
@@ -79,7 +79,7 @@ func TestPackExtendedBadCookie(t *testing.T) {
 		t.Fatal("Expected OPT RR")
 	}
 
-	if edns0.ExtendedRcode() != RcodeBadCookie & 0xFFFFFFF0 {
+	if edns0.ExtendedRcode() != RcodeBadCookie&0xFFFFFFF0 {
 		t.Errorf("ExtendedRcode is expected to be BADCOOKIE after Pack")
 	}
 }
@@ -100,7 +100,6 @@ func TestUnPackExtendedRcode(t *testing.T) {
 	a.Extra = append(a.Extra, o)
 
 	a.SetRcode(m, RcodeBadCookie)
-
 
 	packed, err := a.Pack()
 	if err != nil {
