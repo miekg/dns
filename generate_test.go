@@ -97,7 +97,6 @@ $GENERATE 0-1 $$INCLUDE ` + tmpfile.Name() + `
 	}
 
 	zp := NewZoneParser(strings.NewReader(zone), ".", tmpfile.Name())
-	zp.AllowInclude = true
 
 	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 	}
@@ -113,6 +112,7 @@ func TestGenerateIncludeDisallowed(t *testing.T) {
 $GENERATE 0-1 $$INCLUDE test.conf
 `
 	zp := NewZoneParser(strings.NewReader(zone), ".", "")
+	zp.AllowInclude = false
 
 	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 	}

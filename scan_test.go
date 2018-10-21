@@ -111,6 +111,7 @@ func TestZoneParserIncludeDisallowed(t *testing.T) {
 	}
 
 	zp := NewZoneParser(strings.NewReader("$INCLUDE "+tmpfile.Name()), "example.org.", "")
+	zp.AllowInclude = false
 
 	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 	}

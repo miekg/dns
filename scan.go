@@ -129,7 +129,6 @@ func NewRR(s string) (RR, error) {
 func ReadRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTtl)
-	zp.AllowInclude = true
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
@@ -181,7 +180,6 @@ func parseZone(r io.Reader, origin, file string, t chan *Token) {
 	defer close(t)
 
 	zp := NewZoneParser(r, origin, file)
-	zp.AllowInclude = true
 
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		t <- &Token{RR: rr, Comment: zp.Comment()}
@@ -266,6 +264,9 @@ type ZoneParser struct {
 // The string file is used in error reporting and to resolve relative
 // $INCLUDE directives. The string origin is used as the initial
 // origin, as if the file would start with an $ORIGIN directive.
+//
+// $INCLUDE directives are enabled by default (which may pose a security risk),
+// See AllowInclude to disable this.
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
@@ -282,6 +283,8 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 
 		origin: origin,
 		file:   file,
+
+		AllowInclude: true,
 	}
 }
 
@@ -482,7 +485,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.AllowInclude = true
 			return zp.subNext()
 		case zExpectDirTTLBl:
 			if l.value != zBlank {
