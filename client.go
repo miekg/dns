@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -205,13 +206,25 @@ func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt
 		return nil, 0, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, a, bytes.NewReader(p))
+	// TODO(tmthrgd): Allow the path to be customised?
+	u := &url.URL{
+		Scheme: "https",
+		Host:   a,
+		Path:   "/.well-known/dns-query",
+	}
+	if u.Port() == "443" {
+		u.Host = u.Hostname()
+	}
+
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(p))
 	if err != nil {
 		return nil, 0, err
 	}
 
 	req.Header.Set("Content-Type", dohMimeType)
 	req.Header.Set("Accept", dohMimeType)
+
+	t := time.Now()
 
 	hc := http.DefaultClient
 	if c.HTTPClient != nil {
@@ -221,8 +234,6 @@ func (c *Client) exchangeDOH(ctx context.Context, m *Msg, a string) (r *Msg, rtt
 	if ctx != context.Background() && ctx != context.TODO() {
 		req = req.WithContext(ctx)
 	}
-
-	t := time.Now()
 
 	resp, err := hc.Do(req)
 	if err != nil {
