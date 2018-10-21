@@ -129,7 +129,7 @@ func NewRR(s string) (RR, error) {
 func ReadRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTtl)
-	zp.SetIncludeAllowed(true)
+	zp.AllowInclude = true
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
@@ -181,7 +181,7 @@ func parseZone(r io.Reader, origin, file string, t chan *Token) {
 	defer close(t)
 
 	zp := NewZoneParser(r, origin, file)
-	zp.SetIncludeAllowed(true)
+	zp.AllowInclude = true
 
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		t <- &Token{RR: rr, Comment: zp.Comment()}
@@ -257,7 +257,7 @@ type ZoneParser struct {
 	//
 	//	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
 	//	/etc/shadow: dns: not a TTL: "root:$6$<redacted>::0:99999:7:::" at line: 1:125
-	AllowIncludes bool
+	AllowInclude bool
 }
 
 // NewZoneParser returns an RFC 1035 style zonefile parser that reads
@@ -456,7 +456,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("garbage after $INCLUDE", l)
 			}
 
-			if !zp.includeAllowed {
+			if !zp.AllowInclude {
 				return zp.setParseError("$INCLUDE directive not allowed", l)
 			}
 			if zp.includeDepth >= maxIncludeDepth {
@@ -482,7 +482,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.SetIncludeAllowed(true)
+			zp.sub.AllowInclude = true
 			return zp.subNext()
 		case zExpectDirTTLBl:
 			if l.value != zBlank {
