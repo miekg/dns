@@ -685,13 +685,12 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		return nil, ErrRcode
 	}
 
-	opt := dns.IsEdns0()
 	// Set extended rcode unconditionally if we have an opt, this will allow
 	// reseting the extended rcode bits if they need to.
-	if opt != nil {
+	if opt := dns.IsEdns0(); opt != nil {
 		opt.SetExtendedRcode(uint16(dns.Rcode))
-		// If Rcode is an extended one and opt is nil, error out.
 	} else if dns.Rcode > 0xF {
+		// If Rcode is an extended one and opt is nil, error out.
 		return nil, ErrExtendedRcode
 	}
 

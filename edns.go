@@ -108,7 +108,7 @@ func (rr *OPT) ExtendedRcode() int {
 // SetExtendedRcode sets the EDNS extended RCODE field.
 // If the RCODE is not an extended RCODE, will reset the extended RCODE field to 0.
 func (rr *OPT) SetExtendedRcode(v uint16) {
-	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | uint32(v >> 4)<<24
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0x00FFFFFF | uint32(v>>4)<<24
 }
 
 // UDPSize returns the UDP buffer size.
