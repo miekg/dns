@@ -5,6 +5,7 @@ package dns
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"syscall"
 
@@ -16,6 +17,11 @@ const supportsReusePort = true
 func reuseportControl(network, address string, c syscall.RawConn) error {
 	var opErr error
 	err := c.Control(func(fd uintptr) {
+		_, err := unix.GetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT)
+		if err != nil {
+			opErr = fmt.Errorf("could not get SO_REUSEPORT: %s", err.Error())
+			return
+		}
 		opErr = unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
 	})
 	if err != nil {
