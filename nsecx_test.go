@@ -112,6 +112,18 @@ func TestNsec3(t *testing.T) {
 			name:   "asd.com.",
 			covers: false,
 		},
+		{ // empty interval close to next
+			rr: &NSEC3{
+				Hdr:        RR_Header{Name: "2n1tb3vairuobl6rkdvii42n9tfmialp.com."},
+				Hash:       1,
+				Flags:      1,
+				Iterations: 5,
+				Salt:       "F10E9F7EA83FC8F3",
+				NextDomain: "2N1TB3VAIRUOBL6RKDVII42N9TFMIALP",
+			},
+			name:   "asdc.com.",
+			covers: true,
+		},
 		{ // name hash is before owner hash, not covered
 			rr: &NSEC3{
 				Hdr:        RR_Header{Name: "3V62ULR0NRE83V0RJA2VJGTLIF9V6RAB.com."},
