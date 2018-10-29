@@ -64,10 +64,7 @@ func (rr *NSEC3) Cover(name string) bool {
 
 	nextHash := rr.NextDomain
 	if ownerHash == nextHash { // empty interval
-		if nameHash < nextHash {
-			return true
-		}
-		return false
+		return true
 	}
 	if ownerHash > nextHash { // end of zone
 		if nameHash > ownerHash { // covered since there is nothing after ownerHash
