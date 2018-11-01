@@ -490,6 +490,7 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	}
 	// not passing the context to the underlying calls, as the API does not support
 	// context. For timeouts you should set up Client.Dialer and call Client.Exchange.
+	// TODO(tmthrgd,miekg): this is a race condition.
 	c.Dialer = &net.Dialer{Timeout: timeout}
 	return c.Exchange(m, a)
 }
