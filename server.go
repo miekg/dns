@@ -779,10 +779,6 @@ func (w *response) Write(m []byte) (int, error) {
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
 func (w *response) LocalAddr() net.Addr {
-	if w.closed {
-		panic("dns: LocalAddr called after Close")
-	}
-
 	switch {
 	case w.udp != nil:
 		return w.udp.LocalAddr()
@@ -795,10 +791,6 @@ func (w *response) LocalAddr() net.Addr {
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *response) RemoteAddr() net.Addr {
-	if w.closed {
-		panic("dns: RemoteAddr called after Close")
-	}
-
 	switch {
 	case w.udpSession != nil:
 		return w.udpSession.RemoteAddr()

@@ -988,12 +988,6 @@ func TestResponseAfterClose(t *testing.T) {
 	testPanic("Write", func() {
 		rw.Write(make([]byte, 2))
 	})
-	testPanic("LocalAddr", func() {
-		rw.LocalAddr()
-	})
-	testPanic("RemoteAddr", func() {
-		rw.RemoteAddr()
-	})
 }
 
 type ExampleFrameLengthWriter struct {
