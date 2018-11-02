@@ -823,7 +823,7 @@ func (w *response) Hijack() {
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
 	if w.closed {
-		return nil
+		return &Error{err: "connection already closed"}
 	}
 	w.closed = true
 
