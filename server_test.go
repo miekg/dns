@@ -719,7 +719,11 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	}
 
 	if eg.Wait() != nil {
-		t.Fatalf("conn.ReadMsg error: %v", eg.Wait())
+		t.Errorf("conn.ReadMsg error: %v", eg.Wait())
+	}
+
+	if len(srv.conns) != 0 {
+		t.Errorf("TCP connection tracking map not empty after Shutdown; map still contains %d connections", len(srv.conns))
 	}
 }
 
