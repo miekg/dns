@@ -812,7 +812,13 @@ func (w *response) TsigStatus() error { return w.tsigStatus }
 func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
 
 // Hijack implements the ResponseWriter.Hijack method.
-func (w *response) Hijack() { w.hijacked = true }
+func (w *response) Hijack() {
+	if w.closed {
+		panic("dns: Hijack called after Close")
+	}
+
+	w.hijacked = true
+}
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
