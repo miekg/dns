@@ -988,6 +988,9 @@ func TestResponseAfterClose(t *testing.T) {
 	testPanic("Write", func() {
 		rw.Write(make([]byte, 2))
 	})
+	testPanic("WriteMsg", func() {
+		rw.WriteMsg(new(Msg))
+	})
 }
 
 type ExampleFrameLengthWriter struct {

@@ -729,6 +729,10 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
 func (w *response) WriteMsg(m *Msg) (err error) {
+	if w.closed {
+		panic("dns: WriteMsg called after Close")
+	}
+
 	var data []byte
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
