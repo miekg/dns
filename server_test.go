@@ -983,9 +983,7 @@ func TestResponseAfterClose(t *testing.T) {
 	}
 
 	rw := &response{
-		tcp:        nil, // Close sets tcp to nil
-		udp:        nil,
-		udpSession: nil,
+		closed: true,
 	}
 	testPanic("Write", func() {
 		rw.Write(make([]byte, 2))

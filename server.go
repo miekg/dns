@@ -82,6 +82,7 @@ type ConnectionStater interface {
 
 type response struct {
 	msg            []byte
+	closed         bool // connection has been closed
 	hijacked       bool // connection has been hijacked by handler
 	tsigTimersOnly bool
 	tsigStatus     error
@@ -749,6 +750,10 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m []byte) (int, error) {
+	if w.closed {
+		panic("dns: Write called after Close")
+	}
+
 	switch {
 	case w.udp != nil:
 		n, err := WriteToSessionUDP(w.udp, m, w.udpSession)
@@ -768,31 +773,39 @@ func (w *response) Write(m []byte) (int, error) {
 		n, err := io.Copy(w.tcp, bytes.NewReader(m))
 		return int(n), err
 	default:
-		panic("dns: Write called after Close")
+		panic("dns: internal error: udp and tcp both nil")
 	}
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
 func (w *response) LocalAddr() net.Addr {
+	if w.closed {
+		panic("dns: LocalAddr called after Close")
+	}
+
 	switch {
 	case w.udp != nil:
 		return w.udp.LocalAddr()
 	case w.tcp != nil:
 		return w.tcp.LocalAddr()
 	default:
-		panic("dns: LocalAddr called after Close")
+		panic("dns: internal error: udp and tcp both nil")
 	}
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *response) RemoteAddr() net.Addr {
+	if w.closed {
+		panic("dns: RemoteAddr called after Close")
+	}
+
 	switch {
 	case w.udpSession != nil:
 		return w.udpSession.RemoteAddr()
 	case w.tcp != nil:
 		return w.tcp.RemoteAddr()
 	default:
-		panic("dns: RemoteAddr called after Close")
+		panic("dns: internal error: udpSession and tcp both nil")
 	}
 }
 
@@ -807,13 +820,20 @@ func (w *response) Hijack() { w.hijacked = true }
 
 // Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	// Can't close the udp conn, as that is actually the listener.
-	if w.tcp != nil {
-		e := w.tcp.Close()
-		w.tcp = nil
-		return e
+	if w.closed {
+		return nil
 	}
-	return nil
+	w.closed = true
+
+	switch {
+	case w.udp != nil:
+		// Can't close the udp conn, as that is actually the listener.
+		return nil
+	case w.tcp != nil:
+		return w.tcp.Close()
+	default:
+		panic("dns: internal error: udp and tcp both nil")
+	}
 }
 
 // ConnectionState() implements the ConnectionStater.ConnectionState() interface.
