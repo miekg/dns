@@ -722,6 +722,8 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		t.Errorf("conn.ReadMsg error: %v", eg.Wait())
 	}
 
+	srv.lock.RLock()
+	defer srv.lock.RUnlock()
 	if len(srv.conns) != 0 {
 		t.Errorf("TCP connection tracking map not empty after Shutdown; map still contains %d connections", len(srv.conns))
 	}
