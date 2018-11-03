@@ -993,9 +993,6 @@ func TestResponseAfterClose(t *testing.T) {
 	testPanic("WriteMsg", func() {
 		rw.WriteMsg(new(Msg))
 	})
-	testPanic("Hijack", func() {
-		rw.Hijack()
-	})
 }
 
 func TestResponseDoubleClose(t *testing.T) {
