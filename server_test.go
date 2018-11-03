@@ -972,27 +972,25 @@ func TestServerRoundtripTsig(t *testing.T) {
 }
 
 func TestResponseAfterClose(t *testing.T) {
-	testPanic := func(name string, fn func()) {
-		defer func() {
-			expect := fmt.Sprintf("dns: %s called after Close", name)
-			if err := recover(); err == nil {
-				t.Errorf("expected panic from %s after Close", name)
-			} else if err != expect {
-				t.Errorf("expected explicit panic from %s after Close, expected %q, got %q", name, expect, err)
-			}
-		}()
-		fn()
+	testError := func(name string, err error) {
+		t.Helper()
+
+		expect := fmt.Sprintf("dns: %s called after Close", name)
+		if err == nil {
+			t.Errorf("expected error from %s after Close", name)
+		} else if err.Error() != expect {
+			t.Errorf("expected explicit error from %s after Close, expected %q, got %q", name, expect, err)
+		}
 	}
 
 	rw := &response{
 		closed: true,
 	}
-	testPanic("Write", func() {
-		rw.Write(make([]byte, 2))
-	})
-	testPanic("WriteMsg", func() {
-		rw.WriteMsg(new(Msg))
-	})
+
+	_, err := rw.Write(make([]byte, 2))
+	testError("Write", err)
+
+	testError("WriteMsg", rw.WriteMsg(new(Msg)))
 }
 
 func TestResponseDoubleClose(t *testing.T) {

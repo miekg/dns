@@ -730,7 +730,7 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 // WriteMsg implements the ResponseWriter.WriteMsg method.
 func (w *response) WriteMsg(m *Msg) (err error) {
 	if w.closed {
-		panic("dns: WriteMsg called after Close")
+		return &Error{err: "WriteMsg called after Close"}
 	}
 
 	var data []byte
@@ -755,7 +755,7 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 // Write implements the ResponseWriter.Write method.
 func (w *response) Write(m []byte) (int, error) {
 	if w.closed {
-		panic("dns: Write called after Close")
+		return 0, &Error{err: "Write called after Close"}
 	}
 
 	switch {
