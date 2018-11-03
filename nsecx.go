@@ -63,6 +63,8 @@ func (rr *NSEC3) Cover(name string) bool {
 	}
 
 	nextHash := rr.NextDomain
+
+	// if empty interval found, try cover wildcard hashes so nameHash shouldn't match with ownerHash
 	if ownerHash == nextHash && nameHash != ownerHash { // empty interval
 		return true
 	}
