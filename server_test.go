@@ -719,7 +719,13 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	}
 
 	if eg.Wait() != nil {
-		t.Fatalf("conn.ReadMsg error: %v", eg.Wait())
+		t.Errorf("conn.ReadMsg error: %v", eg.Wait())
+	}
+
+	srv.lock.RLock()
+	defer srv.lock.RUnlock()
+	if len(srv.conns) != 0 {
+		t.Errorf("TCP connection tracking map not empty after ShutdownContext; map still contains %d connections", len(srv.conns))
 	}
 }
 
@@ -966,32 +972,34 @@ func TestServerRoundtripTsig(t *testing.T) {
 }
 
 func TestResponseAfterClose(t *testing.T) {
-	testPanic := func(name string, fn func()) {
-		defer func() {
-			expect := fmt.Sprintf("dns: %s called after Close", name)
-			if err := recover(); err == nil {
-				t.Errorf("expected panic from %s after Close", name)
-			} else if err != expect {
-				t.Errorf("expected explicit panic from %s after Close, expected %q, got %q", name, expect, err)
-			}
-		}()
-		fn()
+	testError := func(name string, err error) {
+		t.Helper()
+
+		expect := fmt.Sprintf("dns: %s called after Close", name)
+		if err == nil {
+			t.Errorf("expected error from %s after Close", name)
+		} else if err.Error() != expect {
+			t.Errorf("expected explicit error from %s after Close, expected %q, got %q", name, expect, err)
+		}
 	}
 
 	rw := &response{
-		tcp:        nil, // Close sets tcp to nil
-		udp:        nil,
-		udpSession: nil,
+		closed: true,
 	}
-	testPanic("Write", func() {
-		rw.Write(make([]byte, 2))
-	})
-	testPanic("LocalAddr", func() {
-		rw.LocalAddr()
-	})
-	testPanic("RemoteAddr", func() {
-		rw.RemoteAddr()
-	})
+
+	_, err := rw.Write(make([]byte, 2))
+	testError("Write", err)
+
+	testError("WriteMsg", rw.WriteMsg(new(Msg)))
+}
+
+func TestResponseDoubleClose(t *testing.T) {
+	rw := &response{
+		closed: true,
+	}
+	if err, expect := rw.Close(), "dns: connection already closed"; err == nil || err.Error() != expect {
+		t.Errorf("Close did not return expected: error %q, got: %v", expect, err)
+	}
 }
 
 type ExampleFrameLengthWriter struct {
