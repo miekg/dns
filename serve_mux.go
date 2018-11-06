@@ -17,8 +17,7 @@ import (
 //
 // The zero ServeMux is empty and ready for use.
 type ServeMux struct {
-	z map[string]Handler
-	m sync.RWMutex
+	z sync.Map
 }
 
 // NewServeMux allocates and returns a new ServeMux.
@@ -30,12 +29,6 @@ func NewServeMux() *ServeMux {
 var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) Handler {
-	mux.m.RLock()
-	defer mux.m.RUnlock()
-	if mux.z == nil {
-		return nil
-	}
-
 	var handler Handler
 
 	// TODO(tmthrgd): Once https://go-review.googlesource.com/c/go/+/137575
@@ -64,18 +57,18 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	}
 
 	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
-		if h, ok := mux.z[q[off:]]; ok {
+		if h, ok := mux.z.Load(q[off:]); ok {
 			if t != TypeDS {
-				return h
+				return h.(Handler)
 			}
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
-			handler = h
+			handler = h.(Handler)
 		}
 	}
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
-	if h, ok := mux.z["."]; ok {
-		return h
+	if h, ok := mux.z.Load("."); ok {
+		return h.(Handler)
 	}
 
 	return handler
@@ -86,12 +79,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m.Lock()
-	if mux.z == nil {
-		mux.z = make(map[string]Handler)
-	}
-	mux.z[Fqdn(pattern)] = handler
-	mux.m.Unlock()
+	mux.z.Store(Fqdn(pattern), handler)
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
@@ -104,9 +92,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
-	mux.m.Lock()
-	delete(mux.z, Fqdn(pattern))
-	mux.m.Unlock()
+	mux.z.Delete(Fqdn(pattern))
 }
 
 // ServeDNS dispatches the request to the handler whose pattern most
