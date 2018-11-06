@@ -1,6 +1,9 @@
 package dns
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestDotAsCatchAllWildcard(t *testing.T) {
 	mux := NewServeMux()
@@ -69,4 +72,25 @@ func BenchmarkMuxMatch(b *testing.B) {
 	}
 	b.Run("lowercase", bench("_dns._udp.example.com."))
 	b.Run("uppercase", bench("_DNS._UDP.EXAMPLE.COM."))
+}
+
+func BenchmarkMuxMatchConcurrent(b *testing.B) {
+	queries := []string{}
+	mux := NewServeMux()
+
+	for i := 0; i < 10; i++ {
+		mux.Handle(fmt.Sprintf("_udp.example%d.com.", i), HandlerFunc(HelloServer))
+		queries = append(queries, fmt.Sprintf("_dns._udp.example%d.com.", i))
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for i := 0; pb.Next(); i++ {
+			handler := mux.match(queries[i%len(queries)], TypeSRV)
+			if handler == nil {
+				b.Error("couldn't find match")
+			}
+		}
+	})
 }
