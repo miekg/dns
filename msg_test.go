@@ -45,6 +45,77 @@ func TestPackNoSideEffect(t *testing.T) {
 	}
 }
 
+func TestPackExtendedBadCookie(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion(Fqdn("example.com."), TypeNS)
+
+	a := new(Msg)
+	a.SetReply(m)
+	o := &OPT{
+		Hdr: RR_Header{
+			Name:   ".",
+			Rrtype: TypeOPT,
+		},
+	}
+	o.SetUDPSize(DefaultMsgSize)
+	a.Extra = append(a.Extra, o)
+
+	a.SetRcode(m, RcodeBadCookie)
+
+	edns0 := a.IsEdns0()
+	if edns0 == nil {
+		t.Fatal("Expected OPT RR")
+	}
+	// SetExtendedRcode is only called as part of `Pack()`, hence at this stage,
+	// the OPT RR is not set yet.
+	if edns0.ExtendedRcode() == RcodeBadCookie&0xFFFFFFF0 {
+		t.Errorf("ExtendedRcode is expected to not be BADCOOKIE before Pack")
+	}
+
+	a.Pack()
+
+	edns0 = a.IsEdns0()
+	if edns0 == nil {
+		t.Fatal("Expected OPT RR")
+	}
+
+	if edns0.ExtendedRcode() != RcodeBadCookie&0xFFFFFFF0 {
+		t.Errorf("ExtendedRcode is expected to be BADCOOKIE after Pack")
+	}
+}
+
+func TestUnPackExtendedRcode(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion(Fqdn("example.com."), TypeNS)
+
+	a := new(Msg)
+	a.SetReply(m)
+	o := &OPT{
+		Hdr: RR_Header{
+			Name:   ".",
+			Rrtype: TypeOPT,
+		},
+	}
+	o.SetUDPSize(DefaultMsgSize)
+	a.Extra = append(a.Extra, o)
+
+	a.SetRcode(m, RcodeBadCookie)
+
+	packed, err := a.Pack()
+	if err != nil {
+		t.Fatalf("Could not unpack %v", a)
+	}
+
+	unpacked := new(Msg)
+	if err := unpacked.Unpack(packed); err != nil {
+		t.Fatalf("Failed to unpack message")
+	}
+
+	if unpacked.Rcode != RcodeBadCookie {
+		t.Fatalf("Rcode should be matching RcodeBadCookie (%d), got (%d)", RcodeBadCookie, unpacked.Rcode)
+	}
+}
+
 func TestUnpackDomainName(t *testing.T) {
 	var cases = []struct {
 		label          string
