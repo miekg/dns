@@ -377,9 +377,7 @@ func TestTruncatedMsg(t *testing.T) {
 	}
 
 	r = new(Msg)
-	if err = r.Unpack(buf); err != nil && err != ErrTruncated {
-		t.Errorf("unable to unpack truncated message: %v", err)
-	}
+	err = r.Unpack(buf)
 	if !r.Truncated {
 		t.Errorf("truncated message wasn't unpacked as truncated")
 	}
@@ -402,68 +400,14 @@ func TestTruncatedMsg(t *testing.T) {
 		}
 	}
 
-	// Remove all of the extra bytes but 10 bytes from the end of buf
+	// Remove all of the extra bytes but 10 bytes from the end of buf. This unpack should fail
+	// because we expect a full message.
 	off -= 10
 	buf1 = buf[:len(buf)-off]
 
 	r = new(Msg)
-	if err = r.Unpack(buf1); err != nil && err != ErrTruncated {
-		t.Errorf("unable to unpack cutoff message: %v", err)
-	}
-	if !r.Truncated {
-		t.Error("truncated cutoff message wasn't unpacked as truncated")
-	}
-	if len(r.Answer) != cnt {
-		t.Errorf("answer count after cutoff unpack doesn't match: %d", len(r.Answer))
-	}
-	if len(r.Extra) != 0 {
-		t.Errorf("extra count after cutoff unpack is not zero: %d", len(r.Extra))
-	}
-
-	// Now we want to remove almost all of the answer records too
-	buf1 = make([]byte, m.Len())
-	as := 0
-	for i := 0; i < len(m.Extra); i++ {
-		off1 := off
-		off, err = PackRR(m.Extra[i], buf1, off, nil, m.Compress)
-		as = off - off1
-		if err != nil {
-			t.Errorf("failed to pack extra: %v", err)
-		}
-	}
-
-	// Keep exactly one answer left
-	// This should still cause Answer to be nil
-	off -= as
-	buf1 = buf[:len(buf)-off]
-
-	r = new(Msg)
-	if err = r.Unpack(buf1); err != nil && err != ErrTruncated {
-		t.Errorf("unable to unpack cutoff message: %v", err)
-	}
-	if !r.Truncated {
-		t.Error("truncated cutoff message wasn't unpacked as truncated")
-	}
-	if len(r.Answer) != 0 {
-		t.Errorf("answer count after second cutoff unpack is not zero: %d", len(r.Answer))
-	}
-
-	// Now leave only 1 byte of the question
-	// Since the header is always 12 bytes, we just need to keep 13
-	buf1 = buf[:13]
-
-	r = new(Msg)
-	err = r.Unpack(buf1)
-	if err == nil || err == ErrTruncated {
-		t.Errorf("error should not be ErrTruncated from question cutoff unpack: %v", err)
-	}
-
-	// Finally, if we only have the header, we don't return an error.
-	buf1 = buf[:12]
-
-	r = new(Msg)
-	if err = r.Unpack(buf1); err != nil {
-		t.Errorf("from header-only unpack should not return an error: %v", err)
+	if err = r.Unpack(buf1); err == nil {
+		t.Fatalf("able to unpack cutoff message: %v", err)
 	}
 }
 
