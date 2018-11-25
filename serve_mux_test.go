@@ -70,3 +70,81 @@ func BenchmarkMuxMatch(b *testing.B) {
 	b.Run("lowercase", bench("_dns._udp.example.com."))
 	b.Run("uppercase", bench("_DNS._UDP.EXAMPLE.COM."))
 }
+
+func BenchmarkMuxMatchConcurrent(b *testing.B) {
+	var mux ServeMux
+	mux.HandleFunc("_udp.example.com.", HelloServer)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for i := 0; pb.Next(); i++ {
+			if mux.match("_dns._udp.example.com.", TypeSRV) == nil {
+				b.Error("couldn't find match")
+			}
+		}
+	})
+}
+
+func runMuxBenchmarks(b *testing.B, fn func(*testing.B, *ServeMux), pfn func(*testing.PB, *ServeMux)) {
+	b.Run("fresh", func(b *testing.B) {
+		fn(b, NewServeMux())
+	})
+	b.Run("claimed", func(b *testing.B) {
+		var mux ServeMux
+		mux.match("example.com.", TypeSRV)
+
+		fn(b, &mux)
+	})
+	b.Run("concurrent+fresh", func(b *testing.B) {
+		var mux ServeMux
+
+		b.RunParallel(func(pb *testing.PB) {
+			pfn(pb, &mux)
+		})
+	})
+	b.Run("concurrent+claimed", func(b *testing.B) {
+		var mux ServeMux
+		mux.match("example.com.", TypeSRV)
+
+		b.RunParallel(func(pb *testing.PB) {
+			pfn(pb, &mux)
+		})
+	})
+}
+
+func BenchmarkMuxHandleFunc(b *testing.B) {
+	runMuxBenchmarks(b, func(b *testing.B, mux *ServeMux) {
+		for n := 0; n < b.N; n++ {
+			mux.HandleFunc("_dns._udp.example.com.", HelloServer)
+		}
+	}, func(pb *testing.PB, mux *ServeMux) {
+		for pb.Next() {
+			mux.HandleFunc("_dns._udp.example.com.", HelloServer)
+		}
+	})
+}
+
+func BenchmarkMuxHandleRemove(b *testing.B) {
+	runMuxBenchmarks(b, func(b *testing.B, mux *ServeMux) {
+		for n := 0; n < b.N; n++ {
+			mux.HandleRemove("_dns._udp.example.com.")
+		}
+	}, func(pb *testing.PB, mux *ServeMux) {
+		for pb.Next() {
+			mux.HandleRemove("_dns._udp.example.com.")
+		}
+	})
+}
+
+func BenchmarkMuxHandleAddRemove(b *testing.B) {
+	runMuxBenchmarks(b, func(b *testing.B, mux *ServeMux) {
+		for n := 0; n < b.N; n++ {
+			mux.HandleFunc("_dns._udp.example.com.", HelloServer)
+			mux.HandleRemove("_dns._udp.example.com.")
+		}
+	}, func(pb *testing.PB, mux *ServeMux) {
+		for pb.Next() {
+			mux.HandleFunc("_dns._udp.example.com.", HelloServer)
+			mux.HandleRemove("_dns._udp.example.com.")
+		}
+	})
+}

@@ -457,6 +457,37 @@ func BenchmarkServe6(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
+func BenchmarkServeConcurrent(b *testing.B) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		b.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	var errOnce sync.Once
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		c := new(Client)
+
+		for i := 0; pb.Next(); i++ {
+			_, _, err := c.Exchange(m, addrstr)
+			if err != nil {
+				errOnce.Do(func() {
+					b.Errorf("Exchange %d failed: %v", i, err)
+				})
+			}
+		}
+	})
+}
+
 func HelloServerCompress(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
