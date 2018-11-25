@@ -115,7 +115,7 @@ func (mux *ServeMux) modifyLocked(pattern string, handler Handler) {
 			newz = make(map[string]Handler)
 		}
 	} else {
-		newz = make(map[string]Handler, len(oldz))
+		newz = make(map[string]Handler, len(oldz)+1)
 		for k, v := range oldz {
 			newz[k] = v
 		}
