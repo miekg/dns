@@ -92,13 +92,10 @@ func (mux *ServeMux) claim() {
 	mux.mu.Unlock()
 }
 
-func (mux *ServeMux) modify(pattern string, handler Handler) {
-	deleteEntry := handler == nil
-
-	mux.mu.Lock()
-	defer mux.mu.Unlock()
-
+func (mux *ServeMux) modifyLocked(pattern string, handler Handler) {
 	oldz, _ := mux.z.Load().(map[string]Handler)
+
+	deleteEntry := handler == nil
 	if deleteEntry {
 		// If the entry isn't in the map, then we have
 		// nothing to do.
@@ -142,7 +139,9 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 		panic("dns: nil Handler for pattern " + pattern)
 	}
 
-	mux.modify(Fqdn(pattern), handler)
+	mux.mu.Lock()
+	mux.modifyLocked(Fqdn(pattern), handler)
+	mux.mu.Unlock()
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
@@ -156,7 +155,9 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 
-	mux.modify(Fqdn(pattern), nil)
+	mux.mu.Lock()
+	mux.modifyLocked(Fqdn(pattern), nil)
+	mux.mu.Unlock()
 }
 
 // ServeDNS dispatches the request to the handler whose pattern most
