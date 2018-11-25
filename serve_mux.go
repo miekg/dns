@@ -86,6 +86,10 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if pattern == "" {
 		panic("dns: invalid pattern " + pattern)
 	}
+	if handler == nil {
+		panic("dns: nil Handler for pattern " + pattern)
+	}
+
 	mux.m.Lock()
 	if mux.z == nil {
 		mux.z = make(map[string]Handler)
