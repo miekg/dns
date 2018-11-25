@@ -20,6 +20,8 @@ import (
 type ServeMux struct {
 	mu sync.Mutex   // protects z during modifications
 	z  atomic.Value // map[string]Handler
+
+	claimed int32 // atomic
 }
 
 // NewServeMux allocates and returns a new ServeMux.
@@ -31,6 +33,10 @@ func NewServeMux() *ServeMux {
 var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) Handler {
+	if atomic.LoadInt32(&mux.claimed) == 0 {
+		mux.claim()
+	}
+
 	z, _ := mux.z.Load().(map[string]Handler)
 	if len(z) == 0 {
 		return nil
@@ -80,6 +86,12 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	return handler
 }
 
+func (mux *ServeMux) claim() {
+	mux.mu.Lock()
+	atomic.StoreInt32(&mux.claimed, 1)
+	mux.mu.Unlock()
+}
+
 func (mux *ServeMux) modify(pattern string, handler Handler) {
 	deleteEntry := handler == nil
 
@@ -88,9 +100,9 @@ func (mux *ServeMux) modify(pattern string, handler Handler) {
 
 	oldz, _ := mux.z.Load().(map[string]Handler)
 	if deleteEntry {
-		_, ok := oldz[pattern]
-		if !ok {
-			// Entry is already not in the map.
+		// If the entry isn't in the map, then we have
+		// nothing to do.
+		if _, ok := oldz[pattern]; !ok {
 			return
 		}
 	} else {
@@ -99,9 +111,17 @@ func (mux *ServeMux) modify(pattern string, handler Handler) {
 		// a runtime panic.
 	}
 
-	newz := make(map[string]Handler, len(oldz))
-	for k, v := range oldz {
-		newz[k] = v
+	var newz map[string]Handler
+	if mux.claimed == 0 {
+		newz = oldz
+		if oldz == nil {
+			newz = make(map[string]Handler)
+		}
+	} else {
+		newz = make(map[string]Handler, len(oldz))
+		for k, v := range oldz {
+			newz[k] = v
+		}
 	}
 
 	if deleteEntry {
