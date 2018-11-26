@@ -229,12 +229,12 @@ loop:
 
 		switch c {
 		case '\\':
-			if bs == nil {
-				bs = []byte(s)
-			}
-
 			if off+1 > lenmsg {
 				return lenmsg, labels, ErrBuf
+			}
+
+			if bs == nil {
+				bs = []byte(s)
 			}
 
 			// check for \DDD
