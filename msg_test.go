@@ -213,6 +213,28 @@ func TestUnpackDomainName(t *testing.T) {
 	}
 }
 
+func TestPackDomainNameCompressionMap(t *testing.T) {
+	msg := make([]byte, 256)
+	compression := make(map[string]int)
+
+	_, err := PackDomainName(`www\.this.is.\131an.example.org.`, msg, 0, compression, true)
+	if err != nil {
+		t.Fatalf("PackDomainName failed: %v", err)
+	}
+
+	for _, dname := range []string{
+		`www.this.is.\131an.example.org.`,
+		`is.\131an.example.org.`,
+		"\x83an.example.org.",
+		`example.org.`,
+		`org.`,
+	} {
+		if _, ok := compression[dname]; !ok {
+			t.Errorf("expected to find %q in compression map", dname)
+		}
+	}
+}
+
 func TestPackDomainNameNSECTypeBitmap(t *testing.T) {
 	ownername := "some-very-long-ownername.com."
 	msg := &Msg{

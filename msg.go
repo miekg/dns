@@ -265,7 +265,7 @@ loop:
 			}
 
 			if compress && !bsFresh {
-				roBs = string(bs)
+				roBs = string(bs[:ls])
 				bsFresh = true
 			}
 
