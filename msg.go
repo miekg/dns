@@ -321,13 +321,14 @@ loop:
 		// We have two bytes (14 bits) to put the pointer in
 		// if msg == nil, we will never do compression
 		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
-		off++
-	} else if msg != nil && off < len(msg) {
+		return off + 2, labels, nil
+	}
+
+	if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
 
-	off++
-	return off, labels, nil
+	return off + 1, labels, nil
 }
 
 // Unpack a domain name.
