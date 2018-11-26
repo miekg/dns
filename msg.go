@@ -324,7 +324,7 @@ loop:
 		return off + 2, labels, nil
 	}
 
-	if msg != nil && off < len(msg) {
+	if msg != nil && off < lenmsg {
 		msg[off] = 0
 	}
 
