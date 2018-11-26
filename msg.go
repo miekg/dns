@@ -311,12 +311,9 @@ loop:
 		// if msg == nil, we will never do compression
 		binary.BigEndian.PutUint16(msg[nameoffset:], uint16(pointer^0xC000))
 		off = nameoffset + 1
-		goto End
-	}
-	if msg != nil && off < len(msg) {
+	} else if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
-End:
 	off++
 	return off, labels, nil
 }
