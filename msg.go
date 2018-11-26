@@ -989,11 +989,9 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 		return 0
 	}
 	initLen := currentLen
-	pref := ""
 	prev := s
-	lbs := Split(s)
-	for j := 0; j < len(lbs); j++ {
-		pref = s[lbs[j]:]
+	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
+		pref := s[off:]
 		currentLen += len(prev) - len(pref)
 		prev = pref
 		if _, ok := c[pref]; !ok {
@@ -1003,7 +1001,7 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 			}
 		} else {
 			added := currentLen - initLen
-			if j > 0 {
+			if off > 0 {
 				// We added a new PTR
 				added += 2
 			}
