@@ -212,11 +212,9 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 
 	// Emit sequence of counted strings, chopping at dots.
 	var (
-		begin   int
-		bs      []byte
-		roBs    = s
-		bsDirty bool
-		wasDot  bool
+		begin  int
+		bs     []byte
+		wasDot bool
 	)
 loop:
 	for i := 0; i < ls; i++ {
@@ -247,7 +245,6 @@ loop:
 				ls--
 			}
 
-			bsDirty = true
 			wasDot = false
 		case '.':
 			if wasDot {
@@ -267,16 +264,21 @@ loop:
 				return lenmsg, labels, ErrBuf
 			}
 
-			if compression != nil && bsDirty {
-				roBs = string(bs[:ls])
-				bsDirty = false
-			}
-
 			// Don't try to compress '.'
 			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
 			if compression != nil && !isRootLabel(s, bs, begin, ls) {
-				if p, ok := compression[roBs[begin:]]; ok {
+				var (
+					p  int
+					ok bool
+				)
+				if bs == nil {
+					p, ok = compression[s[begin:]]
+				} else {
+					p, ok = compression[string(bs[begin:ls])]
+				}
+
+				if ok {
 					// The first hit is the longest matching dname
 					// keep the pointer offset we get back and store
 					// the offset of the current name, because that's
@@ -289,7 +291,11 @@ loop:
 					}
 				} else if off < maxCompressionOffset {
 					// Only offsets smaller than maxCompressionOffset can be used.
-					compression[roBs[begin:]] = off
+					if bs == nil {
+						compression[s[begin:]] = off
+					} else {
+						compression[string(bs[begin:ls])] = off
+					}
 				}
 			}
 
