@@ -254,19 +254,6 @@ loop:
 			if off+1+(i-begin) > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
-			if msg != nil {
-				msg[off] = byte(i - begin)
-			}
-			offset := off
-			off++
-			if msg != nil {
-				if bs == nil {
-					copy(msg[off:], s[begin:i])
-				} else {
-					copy(msg[off:], bs[begin:i])
-				}
-			}
-			off += i - begin
 			if compress && !bsFresh {
 				roBs = string(bs)
 				bsFresh = true
@@ -283,15 +270,28 @@ loop:
 
 					// If compress is true, we're allowed to compress this dname
 					if compress {
-						pointer = p         // Where to point to
-						nameoffset = offset // Where to point from
+						pointer = p      // Where to point to
+						nameoffset = off // Where to point from
 						break loop
 					}
-				} else if offset < maxCompressionOffset {
+				} else if off < maxCompressionOffset {
 					// Only offsets smaller than maxCompressionOffset can be used.
-					compression[roBs[begin:]] = offset
+					compression[roBs[begin:]] = off
 				}
 			}
+
+			// The following is covered by the length check above.
+			if msg != nil {
+				msg[off] = byte(i - begin)
+
+				if bs == nil {
+					copy(msg[off+1:], s[begin:i])
+				} else {
+					copy(msg[off+1:], bs[begin:i])
+				}
+			}
+			off += 1 + i - begin
+
 			labels++
 			begin = i + 1
 		default:
