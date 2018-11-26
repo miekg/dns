@@ -215,8 +215,10 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	begin := 0
 	bs := []byte(s)
 	roBs, bsFresh, escapedDot := s, true, false
+loop:
 	for i := 0; i < ls; i++ {
-		if bs[i] == '\\' {
+		switch bs[i] {
+		case '\\':
 			copy(bs[i:ls-1], bs[i+1:])
 			ls--
 			if off+1 > lenmsg {
@@ -231,9 +233,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 			escapedDot = bs[i] == '.'
 			bsFresh = false
 			continue
-		}
-
-		if bs[i] == '.' {
+		case '.':
 			if i > 0 && bs[i-1] == '.' && !escapedDot {
 				// two dots back to back is not legal
 				return lenmsg, labels, ErrRdata
@@ -281,7 +281,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 					if pointer == -1 && compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
-						break
+						break loop
 					}
 				}
 			}
