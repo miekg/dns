@@ -211,10 +211,13 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	pointer := -1
 
 	// Emit sequence of counted strings, chopping at dots.
-	begin := 0
-	var bs []byte
-	roBs, bsFresh, wasDot := s, true, false
-
+	var (
+		begin   int
+		bs      []byte
+		roBs    = s
+		bsDirty bool
+		wasDot  bool
+	)
 loop:
 	for i := 0; i < ls; i++ {
 		var c byte
@@ -244,7 +247,7 @@ loop:
 				ls -= 2
 			}
 
-			bsFresh = false
+			bsDirty = true
 			wasDot = false
 		case '.':
 			if wasDot {
@@ -264,9 +267,9 @@ loop:
 				return lenmsg, labels, ErrBuf
 			}
 
-			if compress && !bsFresh {
+			if compress && bsDirty {
 				roBs = string(bs[:ls])
-				bsFresh = true
+				bsDirty = false
 			}
 
 			// Don't try to compress '.'
