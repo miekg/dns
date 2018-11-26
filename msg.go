@@ -210,10 +210,12 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Compression
 	nameoffset := -1
 	pointer := -1
+
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	var bs []byte
 	roBs, bsFresh, wasDot := s, true, false
+
 loop:
 	for i := 0; i < ls; i++ {
 		var c byte
@@ -222,22 +224,27 @@ loop:
 		} else {
 			c = bs[i]
 		}
+
 		switch c {
 		case '\\':
 			if bs == nil {
 				bs = []byte(s)
 			}
+
 			copy(bs[i:ls-1], bs[i+1:])
 			ls--
+
 			if off+1 > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
+
 			// check for \DDD
 			if i+2 < ls && isDigit(bs[i]) && isDigit(bs[i+1]) && isDigit(bs[i+2]) {
 				bs[i] = dddToByte(bs[i:])
 				copy(bs[i+1:ls-2], bs[i+3:])
 				ls -= 2
 			}
+
 			bsFresh = false
 			wasDot = false
 		case '.':
@@ -246,18 +253,22 @@ loop:
 				return lenmsg, labels, ErrRdata
 			}
 			wasDot = true
+
 			if i-begin >= 1<<6 { // top two bits of length must be clear
 				return lenmsg, labels, ErrRdata
 			}
+
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1+(i-begin) > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
+
 			if compress && !bsFresh {
 				roBs = string(bs)
 				bsFresh = true
 			}
+
 			// Don't try to compress '.'
 			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
@@ -298,6 +309,7 @@ loop:
 			wasDot = false
 		}
 	}
+
 	// Root label is special
 	if bs == nil && len(s) == 1 && s[0] == '.' {
 		return off, labels, nil
@@ -305,6 +317,7 @@ loop:
 	if bs != nil && len(bs) == 1 && bs[0] == '.' {
 		return off, labels, nil
 	}
+
 	// If we did compression and we find something add the pointer here
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
@@ -314,6 +327,7 @@ loop:
 	} else if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
+
 	off++
 	return off, labels, nil
 }
