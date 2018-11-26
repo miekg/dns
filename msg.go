@@ -208,7 +208,6 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// There is also a trailing zero.
 
 	// Compression
-	nameoffset := -1
 	pointer := -1
 
 	// Emit sequence of counted strings, chopping at dots.
@@ -281,8 +280,7 @@ loop:
 
 					// If compress is true, we're allowed to compress this dname
 					if compress {
-						pointer = p      // Where to point to
-						nameoffset = off // Where to point from
+						pointer = p // Where to point to
 						break loop
 					}
 				} else if off < maxCompressionOffset {
@@ -322,8 +320,8 @@ loop:
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		// if msg == nil, we will never do compression
-		binary.BigEndian.PutUint16(msg[nameoffset:], uint16(pointer^0xC000))
-		off = nameoffset + 1
+		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
+		off++
 	} else if msg != nil && off < len(msg) {
 		msg[off] = 0
 	}
