@@ -213,7 +213,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
 	var bs []byte
-	roBs, bsFresh, escapedDot := s, true, false
+	roBs, bsFresh, wasDot := s, true, false
 loop:
 	for i := 0; i < ls; i++ {
 		var c byte
@@ -238,21 +238,14 @@ loop:
 				copy(bs[i+1:ls-2], bs[i+3:])
 				ls -= 2
 			}
-			escapedDot = bs[i] == '.'
 			bsFresh = false
+			wasDot = false
 		case '.':
-			if i > 0 {
-				var wasDot bool
-				if bs == nil {
-					wasDot = s[i-1] == '.'
-				} else {
-					wasDot = bs[i-1] == '.'
-				}
-				if wasDot && !escapedDot {
-					// two dots back to back is not legal
-					return lenmsg, labels, ErrRdata
-				}
+			if wasDot {
+				// two dots back to back is not legal
+				return lenmsg, labels, ErrRdata
 			}
+			wasDot = true
 			if i-begin >= 1<<6 { // top two bits of length must be clear
 				return lenmsg, labels, ErrRdata
 			}
@@ -306,8 +299,9 @@ loop:
 			}
 			labels++
 			begin = i + 1
+		default:
+			wasDot = false
 		}
-		escapedDot = false
 	}
 	// Root label is special
 	if bs == nil && len(s) == 1 && s[0] == '.' {
