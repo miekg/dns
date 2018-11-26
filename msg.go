@@ -187,22 +187,21 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	if msg != nil {
 		lenmsg = len(msg)
 	}
+
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return off, 0, nil
 	}
-	// If not fully qualified, error out, but only if msg == nil #ugly
-	switch {
-	case msg == nil:
-		if s[ls-1] != '.' {
-			s += "."
-			ls++
-		}
-	case msg != nil:
-		if s[ls-1] != '.' {
+
+	// If not fully qualified, error out, but only if msg != nil #ugly
+	if s[ls-1] != '.' {
+		if msg != nil {
 			return lenmsg, 0, ErrFqdn
 		}
+		s += "."
+		ls++
 	}
+
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots.
