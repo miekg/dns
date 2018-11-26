@@ -267,7 +267,7 @@ loop:
 				return lenmsg, labels, ErrBuf
 			}
 
-			if compress && bsDirty {
+			if compression != nil && bsDirty {
 				roBs = string(bs[:ls])
 				bsDirty = false
 			}
