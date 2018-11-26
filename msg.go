@@ -217,9 +217,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	roBs, bsFresh, escapedDot := s, true, false
 	for i := 0; i < ls; i++ {
 		if bs[i] == '\\' {
-			for j := i; j < ls-1; j++ {
-				bs[j] = bs[j+1]
-			}
+			copy(bs[i:ls-1], bs[i+1:])
 			ls--
 			if off+1 > lenmsg {
 				return lenmsg, labels, ErrBuf
@@ -227,9 +225,7 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 			// check for \DDD
 			if i+2 < ls && isDigit(bs[i]) && isDigit(bs[i+1]) && isDigit(bs[i+2]) {
 				bs[i] = dddToByte(bs[i:])
-				for j := i + 1; j < ls-2; j++ {
-					bs[j] = bs[j+2]
-				}
+				copy(bs[i+1:ls-2], bs[i+3:])
 				ls -= 2
 			}
 			escapedDot = bs[i] == '.'
