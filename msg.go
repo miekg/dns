@@ -275,26 +275,24 @@ loop:
 				bsFresh = true
 			}
 			// Don't try to compress '.'
-			// We should only compress when compress it true, but we should also still pick
+			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
 			if compression != nil && roBs[begin:] != "." {
-				if p, ok := compression[roBs[begin:]]; !ok {
-					// Only offsets smaller than this can be used.
-					if offset < maxCompressionOffset {
-						compression[roBs[begin:]] = offset
-					}
-				} else {
+				if p, ok := compression[roBs[begin:]]; ok {
 					// The first hit is the longest matching dname
 					// keep the pointer offset we get back and store
 					// the offset of the current name, because that's
 					// where we need to insert the pointer later
 
 					// If compress is true, we're allowed to compress this dname
-					if pointer == -1 && compress {
+					if compress {
 						pointer = p         // Where to point to
 						nameoffset = offset // Where to point from
 						break loop
 					}
+				} else if offset < maxCompressionOffset {
+					// Only offsets smaller than maxCompressionOffset can be used.
+					compression[roBs[begin:]] = offset
 				}
 			}
 			labels++
