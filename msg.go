@@ -251,15 +251,13 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 			}
 			offset := off
 			off++
-			for j := begin; j < i; j++ {
-				if off+1 > lenmsg {
-					return lenmsg, labels, ErrBuf
-				}
-				if msg != nil {
-					msg[off] = bs[j]
-				}
-				off++
+			if off+(i-begin) > lenmsg {
+				return lenmsg, labels, ErrBuf
 			}
+			if msg != nil {
+				copy(msg[off:], bs[begin:i])
+			}
+			off += i - begin
 			if compress && !bsFresh {
 				roBs = string(bs)
 				bsFresh = true
