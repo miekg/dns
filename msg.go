@@ -213,12 +213,21 @@ func packDomainName(s string, msg []byte, off int, compression map[string]int, c
 	pointer := -1
 	// Emit sequence of counted strings, chopping at dots.
 	begin := 0
-	bs := []byte(s)
+	var bs []byte
 	roBs, bsFresh, escapedDot := s, true, false
 loop:
 	for i := 0; i < ls; i++ {
-		switch bs[i] {
+		var c byte
+		if bs == nil {
+			c = s[i]
+		} else {
+			c = bs[i]
+		}
+		switch c {
 		case '\\':
+			if bs == nil {
+				bs = []byte(s)
+			}
 			copy(bs[i:ls-1], bs[i+1:])
 			ls--
 			if off+1 > lenmsg {
@@ -232,11 +241,18 @@ loop:
 			}
 			escapedDot = bs[i] == '.'
 			bsFresh = false
-			continue
 		case '.':
-			if i > 0 && bs[i-1] == '.' && !escapedDot {
-				// two dots back to back is not legal
-				return lenmsg, labels, ErrRdata
+			if i > 0 {
+				var wasDot bool
+				if bs == nil {
+					wasDot = s[i-1] == '.'
+				} else {
+					wasDot = bs[i-1] == '.'
+				}
+				if wasDot && !escapedDot {
+					// two dots back to back is not legal
+					return lenmsg, labels, ErrRdata
+				}
 			}
 			if i-begin >= 1<<6 { // top two bits of length must be clear
 				return lenmsg, labels, ErrRdata
@@ -255,7 +271,11 @@ loop:
 				return lenmsg, labels, ErrBuf
 			}
 			if msg != nil {
-				copy(msg[off:], bs[begin:i])
+				if bs == nil {
+					copy(msg[off:], s[begin:i])
+				} else {
+					copy(msg[off:], bs[begin:i])
+				}
 			}
 			off += i - begin
 			if compress && !bsFresh {
@@ -291,7 +311,10 @@ loop:
 		escapedDot = false
 	}
 	// Root label is special
-	if len(bs) == 1 && bs[0] == '.' {
+	if bs == nil && len(s) == 1 && s[0] == '.' {
+		return off, labels, nil
+	}
+	if bs != nil && len(bs) == 1 && bs[0] == '.' {
 		return off, labels, nil
 	}
 	// If we did compression and we find something add the pointer here
