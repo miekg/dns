@@ -251,7 +251,7 @@ loop:
 			}
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1 > lenmsg {
+			if off+1+(i-begin) > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
 			if msg != nil {
@@ -259,9 +259,6 @@ loop:
 			}
 			offset := off
 			off++
-			if off+(i-begin) > lenmsg {
-				return lenmsg, labels, ErrBuf
-			}
 			if msg != nil {
 				if bs == nil {
 					copy(msg[off:], s[begin:i])
