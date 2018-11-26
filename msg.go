@@ -253,13 +253,14 @@ loop:
 			}
 			wasDot = true
 
-			if i-begin >= 1<<6 { // top two bits of length must be clear
+			labelLen := i - begin
+			if labelLen >= 1<<6 { // top two bits of length must be clear
 				return lenmsg, labels, ErrRdata
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1+(i-begin) > lenmsg {
+			if off+1+labelLen > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
 
@@ -291,7 +292,7 @@ loop:
 
 			// The following is covered by the length check above.
 			if msg != nil {
-				msg[off] = byte(i - begin)
+				msg[off] = byte(labelLen)
 
 				if bs == nil {
 					copy(msg[off+1:], s[begin:i])
@@ -299,7 +300,7 @@ loop:
 					copy(msg[off+1:], bs[begin:i])
 				}
 			}
-			off += 1 + i - begin
+			off += 1 + labelLen
 
 			labels++
 			begin = i + 1
