@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -83,85 +82,85 @@ func TestMsgLength(t *testing.T) {
 }
 
 func TestCompressionLenHelper(t *testing.T) {
-	c := make(map[string]int)
+	c := make(map[string]struct{})
 	compressionLenHelper(c, "example.com", 12)
-	if c["example.com"] != 12 {
-		t.Errorf("bad %d", c["example.com"])
+	if _, ok := c["example.com"]; !ok {
+		t.Errorf("bad example.com")
 	}
-	if c["com"] != 20 {
-		t.Errorf("bad %d", c["com"])
+	if _, ok := c["com"]; !ok {
+		t.Errorf("bad com")
 	}
 
 	// Test boundaries
-	c = make(map[string]int)
+	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16384
 	compressionLenHelper(c, "foo.com", 16379)
-	if c["foo.com"] != 16379 {
-		t.Errorf("bad %d", c["foo.com"])
+	if _, ok := c["foo.com"]; !ok {
+		t.Errorf("bad foo.com")
 	}
 	// com label is accessible
-	if c["com"] != 16383 {
-		t.Errorf("bad %d", c["com"])
+	if _, ok := c["com"]; !ok {
+		t.Errorf("bad com")
 	}
 
-	c = make(map[string]int)
+	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16385 => outside range
 	compressionLenHelper(c, "foo.com", 16380)
-	if c["foo.com"] != 16380 {
-		t.Errorf("bad %d", c["foo.com"])
+	if _, ok := c["foo.com"]; !ok {
+		t.Errorf("bad foo.com")
 	}
 	// com label is NOT accessible
-	if c["com"] != 0 {
-		t.Errorf("bad %d", c["com"])
+	if _, ok := c["com"]; ok {
+		t.Errorf("bad com")
 	}
 
-	c = make(map[string]int)
+	c = make(map[string]struct{})
 	compressionLenHelper(c, "example.com", 16375)
-	if c["example.com"] != 16375 {
-		t.Errorf("bad %d", c["example.com"])
+	if _, ok := c["example.com"]; !ok {
+		t.Errorf("bad example.com")
 	}
 	// com starts AFTER 16384
-	if c["com"] != 16383 {
-		t.Errorf("bad %d", c["com"])
+	if _, ok := c["com"]; !ok {
+		t.Errorf("bad com")
 	}
 
-	c = make(map[string]int)
+	c = make(map[string]struct{})
 	compressionLenHelper(c, "example.com", 16376)
-	if c["example.com"] != 16376 {
-		t.Errorf("bad %d", c["example.com"])
+	if _, ok := c["example.com"]; !ok {
+		t.Errorf("bad example.com")
 	}
 	// com starts AFTER 16384
-	if c["com"] != 0 {
-		t.Errorf("bad %d", c["com"])
+	if _, ok := c["com"]; ok {
+		t.Errorf("bad com")
 	}
 }
 
 func TestCompressionLenSearch(t *testing.T) {
-	c := make(map[string]int)
+	c := make(map[string]struct{})
 	compressed, ok, fullSize := compressionLenSearch(c, "a.b.org.")
 	if compressed != 0 || ok || fullSize != 14 {
 		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
-	c["org."] = 3
+	c["org."] = struct{}{}
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 4 || !ok || fullSize != 8 {
 		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
-	c["b.org."] = 5
+	c["b.org."] = struct{}{}
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 6 || !ok || fullSize != 4 {
 		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	// Not found long compression
-	c["x.b.org."] = 5
+	c["x.b.org."] = struct{}{}
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 6 || !ok || fullSize != 4 {
 		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	// Found long compression
-	c["a.b.org."] = 5
+	c["a.b.org."] = struct{}{}
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 8 || !ok || fullSize != 0 {
 		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
@@ -262,6 +261,20 @@ func TestMsgCompressLengthLargeRecords(t *testing.T) {
 	}
 }
 
+func compressionMapsEqual(a map[string]struct{}, b map[string]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
 func TestCompareCompressionMapsForANY(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
@@ -278,7 +291,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 	for labelSize := 0; labelSize < 63; labelSize++ {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeANY)
 
-		compressionFake := make(map[string]int)
+		compressionFake := make(map[string]struct{})
 		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
@@ -289,7 +302,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 		if lenFake != len(buf) {
 			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
 		}
-		if !reflect.DeepEqual(compressionFake, compressionReal) {
+		if !compressionMapsEqual(compressionFake, compressionReal) {
 			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
 		}
 	}
@@ -311,7 +324,7 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 	for labelSize := 0; labelSize < 63; labelSize++ {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeAAAA)
 
-		compressionFake := make(map[string]int)
+		compressionFake := make(map[string]struct{})
 		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
@@ -322,7 +335,7 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 		if lenFake != len(buf) {
 			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
 		}
-		if !reflect.DeepEqual(compressionFake, compressionReal) {
+		if !compressionMapsEqual(compressionFake, compressionReal) {
 			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
 		}
 	}
