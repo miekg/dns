@@ -275,7 +275,7 @@ loop:
 			// Don't try to compress '.'
 			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
-			if compression != nil && roBs[begin:] != "." {
+			if compression != nil && !isRootLabel(s, bs, begin, ls) {
 				if p, ok := compression[roBs[begin:]]; ok {
 					// The first hit is the longest matching dname
 					// keep the pointer offset we get back and store
@@ -313,10 +313,7 @@ loop:
 	}
 
 	// Root label is special
-	if bs == nil && len(s) == 1 && s[0] == '.' {
-		return off, labels, nil
-	}
-	if bs != nil && len(bs) == 1 && bs[0] == '.' {
+	if isRootLabel(s, bs, 0, ls) {
 		return off, labels, nil
 	}
 
@@ -333,6 +330,18 @@ loop:
 	}
 
 	return off + 1, labels, nil
+}
+
+// isRootLabel returns whether s or bs, from off to end, is the root
+// label ".".
+//
+// If bs is nil, s will be checked, otherwise bs will be checked.
+func isRootLabel(s string, bs []byte, off, end int) bool {
+	if bs == nil {
+		return s[off:end] == "."
+	}
+
+	return end-off == 1 && bs[off] == '.'
 }
 
 // Unpack a domain name.
