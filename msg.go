@@ -233,18 +233,18 @@ loop:
 				bs = []byte(s)
 			}
 
-			copy(bs[i:ls-1], bs[i+1:])
-			ls--
-
 			if off+1 > lenmsg {
 				return lenmsg, labels, ErrBuf
 			}
 
 			// check for \DDD
-			if i+2 < ls && isDigit(bs[i]) && isDigit(bs[i+1]) && isDigit(bs[i+2]) {
-				bs[i] = dddToByte(bs[i:])
-				copy(bs[i+1:ls-2], bs[i+3:])
-				ls -= 2
+			if i+3 < ls && isDigit(bs[i+1]) && isDigit(bs[i+2]) && isDigit(bs[i+3]) {
+				bs[i] = dddToByte(bs[i+1:])
+				copy(bs[i+1:ls-3], bs[i+4:])
+				ls -= 3
+			} else {
+				copy(bs[i:ls-1], bs[i+1:])
+				ls--
 			}
 
 			bsDirty = true
