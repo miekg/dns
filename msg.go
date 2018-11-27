@@ -668,12 +668,14 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
-	var compression map[string]int
-	if dns.Compress {
-		compression = make(map[string]int) // Compression pointer mappings.
+	// If this message can't be compressed, avoid filling the
+	// compression map and creating garbage.
+	if dns.Compress && dns.isCompressible() {
+		compression := make(map[string]int) // Compression pointer mappings.
+		return dns.packBufferWithCompressionMap(buf, compression, true)
 	}
 
-	return dns.packBufferWithCompressionMap(buf, compression, dns.Compress)
+	return dns.packBufferWithCompressionMap(buf, nil, false)
 }
 
 // packBufferWithCompressionMap packs a Msg, using the given buffer buf.
@@ -905,6 +907,12 @@ func (dns *Msg) String() string {
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
 
+// isCompressible returns whether the msg may be compressible.
+func (dns *Msg) isCompressible() bool {
+	// If we only have questions, there is nothing we can ever compress.
+	return len(dns.Answer) > 0 || len(dns.Ns) > 0 || len(dns.Extra) > 0
+}
+
 func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
 	l := 12 // Message header is always 12 bytes
 	for _, r := range dns.Question {
@@ -921,12 +929,15 @@ func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
 	// We always return one more than needed.
-	if compress {
+
+	// If this message can't be compressed, avoid filling the
+	// compression map and creating garbage.
+	if compress && dns.isCompressible() {
 		compression := map[string]int{}
 		return compressedLenWithCompressionMap(dns, compression)
 	}
-	l := 12 // Message header is always 12 bytes
 
+	l := 12 // Message header is always 12 bytes
 	for _, r := range dns.Question {
 		l += r.len()
 	}
