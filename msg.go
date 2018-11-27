@@ -46,10 +46,9 @@ var (
 	ErrRRset         error = &Error{err: "bad rrset"}
 	ErrSecret        error = &Error{err: "no secrets defined"}
 	ErrShortRead     error = &Error{err: "short read"}
-	ErrSig           error = &Error{err: "bad signature"}                      // ErrSig indicates that a signature can not be cryptographically validated.
-	ErrSoa           error = &Error{err: "no SOA"}                             // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
-	ErrTime          error = &Error{err: "bad time"}                           // ErrTime indicates a timing error in TSIG authentication.
-	ErrTruncated     error = &Error{err: "failed to unpack truncated message"} // ErrTruncated indicates that we failed to unpack a truncated message. We unpacked as much as we had so Msg can still be used, if desired.
+	ErrSig           error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
+	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
+	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
 
 // Id by default, returns a 16 bits random number to be used as a
@@ -813,8 +812,6 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		var q Question
 		q, off, err = unpackQuestion(msg, off)
 		if err != nil {
-			// Even if Truncated is set, we only will set ErrTruncated if we
-			// actually got the questions
 			return err
 		}
 		if off1 == off { // Offset does not increase anymore, dh.Qdcount is a lie!
@@ -847,10 +844,6 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		// TODO(miek) make this an error?
 		// use PackOpt to let people tell how detailed the error reporting should be?
 		// println("dns: extra bytes in dns packet", off, "<", len(msg))
-	} else if dns.Truncated {
-		// Whether we ran into a an error or not, we want to return that it
-		// was truncated
-		err = ErrTruncated
 	}
 	return err
 }
