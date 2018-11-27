@@ -964,10 +964,10 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 func compressionLenSearch(c map[string]struct{}, s string, msgOff int) (int, bool) {
 	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
 		if _, ok := c[s[off:]]; ok {
-			return len(s[:off]), true
+			return off, true
 		}
 
-		if msgOff+len(s[:off]) < maxCompressionOffset {
+		if msgOff+off < maxCompressionOffset {
 			c[s[off:]] = struct{}{}
 		}
 	}
@@ -985,7 +985,7 @@ func compressionLenMapInsert(c map[string]struct{}, s string, msgOff int) {
 			break
 		}
 
-		if msgOff+len(s[:off]) >= maxCompressionOffset {
+		if msgOff+off >= maxCompressionOffset {
 			break
 		}
 
