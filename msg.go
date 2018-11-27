@@ -556,12 +556,12 @@ func unpackTxt(msg []byte, off0 int) (ss []string, off int, err error) {
 func isDigit(b byte) bool { return b >= '0' && b <= '9' }
 
 func dddToByte(s []byte) byte {
-	_ = s[2]
+	_ = s[2] // bounds check hint to compiler; see golang.org/issue/14808
 	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
 }
 
 func dddStringToByte(s string) byte {
-	_ = s[2]
+	_ = s[2] // bounds check hint to compiler; see golang.org/issue/14808
 	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
 }
 
