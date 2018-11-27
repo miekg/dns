@@ -150,7 +150,7 @@ var RcodeToString = map[int]string{
 	RcodeFormatError:    "FORMERR",
 	RcodeServerFailure:  "SERVFAIL",
 	RcodeNameError:      "NXDOMAIN",
-	RcodeNotImplemented: "NOTIMPL",
+	RcodeNotImplemented: "NOTIMP",
 	RcodeRefused:        "REFUSED",
 	RcodeYXDomain:       "YXDOMAIN", // See RFC 2136
 	RcodeYXRrset:        "YXRRSET",
