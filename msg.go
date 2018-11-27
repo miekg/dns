@@ -736,7 +736,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
-	uncompressedLen := compressedLenWithCompressionMap(dns, nil, false)
+	uncompressedLen := compressedLenWithCompressionMap(dns, nil)
 	if packLen := uncompressedLen + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
@@ -909,13 +909,15 @@ func (dns *Msg) Len() int {
 	// compression map and creating garbage.
 	if dns.Compress && dns.isCompressible() {
 		compression := make(map[string]struct{})
-		return compressedLenWithCompressionMap(dns, compression, true)
+		return compressedLenWithCompressionMap(dns, compression)
 	}
 
-	return compressedLenWithCompressionMap(dns, nil, false)
+	return compressedLenWithCompressionMap(dns, nil)
 }
 
-func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}, compress bool) int {
+func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
+	compress := compression != nil
+
 	l := 12 // Message header is always 12 bytes
 
 	for _, r := range dns.Question {
