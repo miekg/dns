@@ -410,3 +410,43 @@ func TestMsgCompressionMultipleQuestions(t *testing.T) {
 		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
 	}
 }
+
+func TestMsgCompressMINFO(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("www.example.com.", TypeSRV)
+	msg.Answer = append(msg.Answer, &MINFO{
+		Hdr:   RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c},
+		Rmail: "mail.example.org.",
+		Email: "mail.example.org.",
+	})
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+	if predicted != len(buf) {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
+
+func TestMsgCompressSOA(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("www.example.com.", TypeSRV)
+	msg.Answer = append(msg.Answer, &SOA{
+		Hdr:  RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c},
+		Ns:   "ns.example.org.",
+		Mbox: "mail.example.org.",
+	})
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+	if predicted != len(buf) {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
