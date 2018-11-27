@@ -736,7 +736,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
-	uncompressedLen := compressedLen(dns, false)
+	uncompressedLen := compressedLenWithCompressionMap(dns, nil, false)
 	if packLen := uncompressedLen + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
@@ -893,12 +893,6 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Len returns the message length when in (un)compressed wire format.
-// If dns.Compress is true compression it is taken into account. Len()
-// is provided to be a faster way to get the size of the resulting packet,
-// than packing it, measuring the size and discarding the buffer.
-func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
-
 // isCompressible returns whether the msg may be compressible.
 func (dns *Msg) isCompressible() bool {
 	// If we only have one question, there is nothing we can ever compress.
@@ -906,12 +900,14 @@ func (dns *Msg) isCompressible() bool {
 		len(dns.Ns) > 0 || len(dns.Extra) > 0
 }
 
-// compressedLen returns the message length when in compressed wire format
-// when compress is true, otherwise the uncompressed length is returned.
-func compressedLen(dns *Msg, compress bool) int {
+// Len returns the message length when in (un)compressed wire format.
+// If dns.Compress is true compression it is taken into account. Len()
+// is provided to be a faster way to get the size of the resulting packet,
+// than packing it, measuring the size and discarding the buffer.
+func (dns *Msg) Len() int {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
-	if compress && dns.isCompressible() {
+	if dns.Compress && dns.isCompressible() {
 		compression := make(map[string]struct{})
 		return compressedLenWithCompressionMap(dns, compression, true)
 	}
