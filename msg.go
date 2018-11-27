@@ -916,26 +916,24 @@ func (dns *Msg) Len() int {
 }
 
 func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
-	compress := compression != nil
-
 	l := 12 // Message header is always 12 bytes
 
 	for _, r := range dns.Question {
-		l += r.len(l, compression, compress)
+		l += r.len(l, compression)
 	}
 	for _, r := range dns.Answer {
 		if r != nil {
-			l += r.len(l, compression, compress)
+			l += r.len(l, compression)
 		}
 	}
 	for _, r := range dns.Ns {
 		if r != nil {
-			l += r.len(l, compression, compress)
+			l += r.len(l, compression)
 		}
 	}
 	for _, r := range dns.Extra {
 		if r != nil {
-			l += r.len(l, compression, compress)
+			l += r.len(l, compression)
 		}
 	}
 
@@ -999,7 +997,7 @@ func compressionLenMapInsert(c map[string]struct{}, s string, msgOff int) {
 func Copy(r RR) RR { r1 := r.copy(); return r1 }
 
 // Len returns the length (in octets) of the uncompressed RR in wire format.
-func Len(r RR) int { return r.len(0, nil, false) }
+func Len(r RR) int { return r.len(0, nil) }
 
 // Copy returns a new *Msg which is a deep-copy of dns.
 func (dns *Msg) Copy() *Msg { return dns.CopyTo(new(Msg)) }

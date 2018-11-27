@@ -37,10 +37,9 @@ type RR interface {
 
 	// len returns the length (in octets) of the compressed or uncompressed RR in wire format.
 	//
-	// If compress is true, the uncompressed size will be returned, otherwise the compressed
-	// size will be returned. If compression is non-nil, domain names will be added to the map
-	// for future compression.
-	len(off int, compression map[string]struct{}, compress bool) int
+	// If compression is nil, the uncompressed size will be returned, otherwise the compressed
+	// size will be returned and domain names will be added to the map for future compression.
+	len(off int, compression map[string]struct{}) int
 
 	// pack packs an RR into wire format.
 	pack([]byte, int, map[string]int, bool) (int, error)
@@ -76,8 +75,8 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-func (h *RR_Header) len(off int, compression map[string]struct{}, compress bool) int {
-	l := compressedNameLen(h.Name, off, compression, compress)
+func (h *RR_Header) len(off int, compression map[string]struct{}) int {
+	l := compressedNameLen(h.Name, off, compression, true)
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
 }

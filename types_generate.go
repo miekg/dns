@@ -153,8 +153,8 @@ func main() {
 		if isEmbedded {
 			continue
 		}
-		fmt.Fprintf(b, "func (rr *%s) len(off int, compression map[string]struct{}, compress bool) int {\n", name)
-		fmt.Fprintf(b, "l := rr.Hdr.len(off, compression, compress)\n")
+		fmt.Fprintf(b, "func (rr *%s) len(off int, compression map[string]struct{}) int {\n", name)
+		fmt.Fprintf(b, "l := rr.Hdr.len(off, compression)\n")
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) { fmt.Fprintf(b, s, st.Field(i).Name()) }
 
@@ -163,7 +163,7 @@ func main() {
 				case `dns:"-"`:
 					// ignored
 				case `dns:"cdomain-name"`:
-					o("for _, x := range rr.%s { l += compressedNameLen(x, off+l, compression, compress) }\n")
+					o("for _, x := range rr.%s { l += compressedNameLen(x, off+l, compression, true) }\n")
 				case `dns:"domain-name"`:
 					o("for _, x := range rr.%s { l += compressedNameLen(x, off+l, compression, false) }\n")
 				case `dns:"txt"`:
@@ -178,7 +178,7 @@ func main() {
 			case st.Tag(i) == `dns:"-"`:
 				// ignored
 			case st.Tag(i) == `dns:"cdomain-name"`:
-				o("l += compressedNameLen(rr.%s, off+l, compression, compress)\n")
+				o("l += compressedNameLen(rr.%s, off+l, compression, true)\n")
 			case st.Tag(i) == `dns:"domain-name"`:
 				o("l += compressedNameLen(rr.%s, off+l, compression, false)\n")
 			case st.Tag(i) == `dns:"octet"`:
