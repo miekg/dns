@@ -303,7 +303,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeANY)
 
 		compressionFake := make(map[string]struct{})
-		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
+		lenFake := msgLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
 		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal, true)
@@ -336,7 +336,7 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 		msg.SetQuestion(fmt.Sprintf("a%s.service.acme.", strings.Repeat("x", labelSize)), TypeAAAA)
 
 		compressionFake := make(map[string]struct{})
-		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
+		lenFake := msgLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
 		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal, true)
