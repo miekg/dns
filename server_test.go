@@ -102,6 +102,7 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	}
 
 	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
+	server.init()
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -568,6 +569,7 @@ func TestServingResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
+	defer s.Shutdown()
 
 	c := new(Client)
 	m := new(Msg)
@@ -581,20 +583,6 @@ func TestServingResponse(t *testing.T) {
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
 		t.Fatal("exchanged response message")
-	}
-
-	s.Shutdown()
-	s, addrstr, _, err = RunLocalUDPServerWithFinChan(":0",
-		func(srv *Server) { srv.Unsafe = true })
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-
-	m.Response = true
-	_, _, err = c.Exchange(m, addrstr)
-	if err != nil {
-		t.Fatal("could exchanged response message in Unsafe mode")
 	}
 }
 
