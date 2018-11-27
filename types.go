@@ -813,7 +813,7 @@ func (rr *NSEC) String() string {
 
 func (rr *NSEC) len(off int, compression map[string]struct{}, compress bool) int {
 	l := rr.Hdr.len(off, compression, compress)
-	l += len(rr.NextDomain) + 1
+	l += compressedNameLen(rr.NextDomain, off+l, compression, false)
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
