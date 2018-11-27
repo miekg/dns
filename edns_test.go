@@ -1,9 +1,6 @@
 package dns
 
-import (
-	"net"
-	"testing"
-)
+import "testing"
 
 func TestOPTTtl(t *testing.T) {
 	e := &OPT{}
@@ -66,46 +63,13 @@ func TestOPTTtl(t *testing.T) {
 
 	e.SetExtendedRcode(42)
 	// ExtendedRcode has the last 4 bits set to 0.
-	if e.ExtendedRcode() != 42&0xFFFFFFF0 {
-		t.Errorf("set 42, expected %d, got %d", 42&0xFFFFFFF0, e.ExtendedRcode())
+	if e.ExtendedRcode() != 42 & 0xFFFFFFF0 {
+		t.Errorf("set 42, expected %d, got %d", 42 & 0xFFFFFFF0, e.ExtendedRcode())
 	}
 
 	// This will reset the 8 upper bits of the extended rcode
 	e.SetExtendedRcode(RcodeNotAuth)
 	if e.ExtendedRcode() != 0 {
 		t.Errorf("Setting a non-extended rcode is expected to set extended rcode to 0, got: %d", e.ExtendedRcode())
-	}
-}
-
-func TestEDNS0_SUBNETUnpack(t *testing.T) {
-	for _, ip := range []net.IP{
-		net.IPv4(0xde, 0xad, 0xbe, 0xef),
-		net.ParseIP("192.0.2.1"),
-		net.ParseIP("2001:db8::68"),
-	} {
-		var s1 EDNS0_SUBNET
-		s1.Address = ip
-
-		if ip.To4() == nil {
-			s1.Family = 2
-			s1.SourceNetmask = net.IPv6len * 8
-		} else {
-			s1.Family = 1
-			s1.SourceNetmask = net.IPv4len * 8
-		}
-
-		b, err := s1.pack()
-		if err != nil {
-			t.Fatalf("failed to pack: %v", err)
-		}
-
-		var s2 EDNS0_SUBNET
-		if err := s2.unpack(b); err != nil {
-			t.Fatalf("failed to unpack: %v", err)
-		}
-
-		if !ip.Equal(s2.Address) {
-			t.Errorf("address different after unpacking; expected %s, got %s", ip, s2.Address)
-		}
 	}
 }
