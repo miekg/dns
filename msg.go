@@ -747,7 +747,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		return nil, err
 	}
 	for i := 0; i < len(question); i++ {
-		off, err = question[i].pack(msg, off, compression)
+		off, err = question[i].pack(msg, off, compression, dns.Compress)
 		if err != nil {
 			return nil, err
 		}
@@ -1090,7 +1090,7 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	return r1
 }
 
-func (q *Question) pack(msg []byte, off int, compression map[string]int) (int, error) {
+func (q *Question) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	off, err := PackDomainName(q.Name, msg, off, compression, false)
 	if err != nil {
 		return off, err
