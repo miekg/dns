@@ -163,9 +163,9 @@ func main() {
 				case `dns:"-"`:
 					// ignored
 				case `dns:"cdomain-name"`:
-					o("for _, x := range rr.%s { l += compressedNameLen(x, off+l, compression, true) }\n")
+					o("for _, x := range rr.%s { l += domainNameLen(x, off+l, compression, true) }\n")
 				case `dns:"domain-name"`:
-					o("for _, x := range rr.%s { l += compressedNameLen(x, off+l, compression, false) }\n")
+					o("for _, x := range rr.%s { l += domainNameLen(x, off+l, compression, false) }\n")
 				case `dns:"txt"`:
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
 				default:
@@ -178,9 +178,9 @@ func main() {
 			case st.Tag(i) == `dns:"-"`:
 				// ignored
 			case st.Tag(i) == `dns:"cdomain-name"`:
-				o("l += compressedNameLen(rr.%s, off+l, compression, true)\n")
+				o("l += domainNameLen(rr.%s, off+l, compression, true)\n")
 			case st.Tag(i) == `dns:"domain-name"`:
-				o("l += compressedNameLen(rr.%s, off+l, compression, false)\n")
+				o("l += domainNameLen(rr.%s, off+l, compression, false)\n")
 			case st.Tag(i) == `dns:"octet"`:
 				o("l += len(rr.%s)\n")
 			case strings.HasPrefix(st.Tag(i), `dns:"size-base64`):

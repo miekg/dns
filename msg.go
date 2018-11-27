@@ -940,7 +940,7 @@ func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) 
 	return l
 }
 
-func compressedNameLen(s string, off int, compression map[string]struct{}, compress bool) int {
+func domainNameLen(s string, off int, compression map[string]struct{}, compress bool) int {
 	if s == "" || s == "." {
 		return 1
 	}

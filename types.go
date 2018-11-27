@@ -219,7 +219,7 @@ type Question struct {
 }
 
 func (q *Question) len(off int, compression map[string]struct{}) int {
-	l := compressedNameLen(q.Name, off, compression, true)
+	l := domainNameLen(q.Name, off, compression, true)
 	l += 2 + 2
 	return l
 }
@@ -813,7 +813,7 @@ func (rr *NSEC) String() string {
 
 func (rr *NSEC) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
-	l += compressedNameLen(rr.NextDomain, off+l, compression, false)
+	l += domainNameLen(rr.NextDomain, off+l, compression, false)
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256

@@ -76,7 +76,7 @@ func (h *RR_Header) String() string {
 }
 
 func (h *RR_Header) len(off int, compression map[string]struct{}) int {
-	l := compressedNameLen(h.Name, off, compression, true)
+	l := domainNameLen(h.Name, off, compression, true)
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
 }
