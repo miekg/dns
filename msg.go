@@ -909,8 +909,6 @@ func (dns *Msg) isCompressible() bool {
 // compressedLen returns the message length when in compressed wire format
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
-	// We always return one more than needed.
-
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
 	if compress && dns.isCompressible() {
@@ -918,27 +916,7 @@ func compressedLen(dns *Msg, compress bool) int {
 		return compressedLenWithCompressionMap(dns, compression, true)
 	}
 
-	l := 12 // Message header is always 12 bytes
-	for _, r := range dns.Question {
-		l += r.len()
-	}
-	for _, r := range dns.Answer {
-		if r != nil {
-			l += r.len()
-		}
-	}
-	for _, r := range dns.Ns {
-		if r != nil {
-			l += r.len()
-		}
-	}
-	for _, r := range dns.Extra {
-		if r != nil {
-			l += r.len()
-		}
-	}
-
-	return l
+	return compressedLenWithCompressionMap(dns, nil, false)
 }
 
 func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}, compress bool) int {
@@ -969,6 +947,10 @@ func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}, 
 func compressedNameLen(s string, off int, compression map[string]struct{}, compress bool) int {
 	if s == "" || s == "." {
 		return 1
+	}
+
+	if compression == nil {
+		return len(s) + 1
 	}
 
 	nameLen := len(s) + 1
