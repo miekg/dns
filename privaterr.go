@@ -53,6 +53,13 @@ func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
 
 // Private len and copy parts to satisfy RR interface.
 func (r *PrivateRR) len() int { return r.Hdr.len() + r.Data.Len() }
+
+func (r *PrivateRR) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := r.Hdr.compressedLen(off, compression, compress)
+	l += r.Data.Len()
+	return l
+}
+
 func (r *PrivateRR) copy() RR {
 	// make new RR like this:
 	rr := mkPrivateRR(r.Hdr.Rrtype)

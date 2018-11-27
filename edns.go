@@ -88,6 +88,16 @@ func (rr *OPT) len() int {
 	return l
 }
 
+func (rr *OPT) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	for i := 0; i < len(rr.Option); i++ {
+		l += 4 // Account for 2-byte option code and 2-byte option length.
+		lo, _ := rr.Option[i].pack()
+		l += len(lo)
+	}
+	return l
+}
+
 // return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.

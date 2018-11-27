@@ -647,6 +647,418 @@ func (rr *X25) len() int {
 	return l
 }
 
+// compressedLen() functions
+func (rr *A) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += net.IPv4len // A
+	return l
+}
+func (rr *AAAA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += net.IPv6len // AAAA
+	return l
+}
+func (rr *AFSDB) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Subtype
+	l += compressedNameLen(rr.Hostname, off+l, compression, false)
+	return l
+}
+func (rr *ANY) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	return l
+}
+func (rr *AVC) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	for _, x := range rr.Txt {
+		l += len(x) + 1
+	}
+	return l
+}
+func (rr *CAA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++ // Flag
+	l += len(rr.Tag) + 1
+	l += len(rr.Value)
+	return l
+}
+func (rr *CERT) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Type
+	l += 2 // KeyTag
+	l++    // Algorithm
+	l += base64.StdEncoding.DecodedLen(len(rr.Certificate))
+	return l
+}
+func (rr *CNAME) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Target, off+l, compression, compress)
+	return l
+}
+func (rr *DHCID) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
+	return l
+}
+func (rr *DNAME) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Target, off+l, compression, false)
+	return l
+}
+func (rr *DNSKEY) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Flags
+	l++    // Protocol
+	l++    // Algorithm
+	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	return l
+}
+func (rr *DS) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // KeyTag
+	l++    // Algorithm
+	l++    // DigestType
+	l += len(rr.Digest)/2 + 1
+	return l
+}
+func (rr *EID) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Endpoint)/2 + 1
+	return l
+}
+func (rr *EUI48) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 6 // Address
+	return l
+}
+func (rr *EUI64) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 8 // Address
+	return l
+}
+func (rr *GID) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 4 // Gid
+	return l
+}
+func (rr *GPOS) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Longitude) + 1
+	l += len(rr.Latitude) + 1
+	l += len(rr.Altitude) + 1
+	return l
+}
+func (rr *HINFO) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Cpu) + 1
+	l += len(rr.Os) + 1
+	return l
+}
+func (rr *HIP) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++    // HitLength
+	l++    // PublicKeyAlgorithm
+	l += 2 // PublicKeyLength
+	l += len(rr.Hit) / 2
+	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	for _, x := range rr.RendezvousServers {
+		l += compressedNameLen(x, off+l, compression, false)
+	}
+	return l
+}
+func (rr *KX) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += compressedNameLen(rr.Exchanger, off+l, compression, false)
+	return l
+}
+func (rr *L32) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2           // Preference
+	l += net.IPv4len // Locator32
+	return l
+}
+func (rr *L64) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += 8 // Locator64
+	return l
+}
+func (rr *LOC) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++    // Version
+	l++    // Size
+	l++    // HorizPre
+	l++    // VertPre
+	l += 4 // Latitude
+	l += 4 // Longitude
+	l += 4 // Altitude
+	return l
+}
+func (rr *LP) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += compressedNameLen(rr.Fqdn, off+l, compression, false)
+	return l
+}
+func (rr *MB) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Mb, off+l, compression, compress)
+	return l
+}
+func (rr *MD) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Md, off+l, compression, compress)
+	return l
+}
+func (rr *MF) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Mf, off+l, compression, compress)
+	return l
+}
+func (rr *MG) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Mg, off+l, compression, compress)
+	return l
+}
+func (rr *MINFO) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Rmail, off+l, compression, compress)
+	l += compressedNameLen(rr.Email, off+l, compression, compress)
+	return l
+}
+func (rr *MR) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Mr, off+l, compression, compress)
+	return l
+}
+func (rr *MX) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += compressedNameLen(rr.Mx, off+l, compression, compress)
+	return l
+}
+func (rr *NAPTR) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Order
+	l += 2 // Preference
+	l += len(rr.Flags) + 1
+	l += len(rr.Service) + 1
+	l += len(rr.Regexp) + 1
+	l += compressedNameLen(rr.Replacement, off+l, compression, false)
+	return l
+}
+func (rr *NID) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += 8 // NodeID
+	return l
+}
+func (rr *NIMLOC) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Locator)/2 + 1
+	return l
+}
+func (rr *NINFO) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	for _, x := range rr.ZSData {
+		l += len(x) + 1
+	}
+	return l
+}
+func (rr *NS) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Ns, off+l, compression, compress)
+	return l
+}
+func (rr *NSAPPTR) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Ptr, off+l, compression, false)
+	return l
+}
+func (rr *NSEC3PARAM) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++    // Hash
+	l++    // Flags
+	l += 2 // Iterations
+	l++    // SaltLength
+	l += len(rr.Salt) / 2
+	return l
+}
+func (rr *OPENPGPKEY) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	return l
+}
+func (rr *PTR) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Ptr, off+l, compression, compress)
+	return l
+}
+func (rr *PX) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += compressedNameLen(rr.Map822, off+l, compression, false)
+	l += compressedNameLen(rr.Mapx400, off+l, compression, false)
+	return l
+}
+func (rr *RFC3597) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Rdata)/2 + 1
+	return l
+}
+func (rr *RKEY) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Flags
+	l++    // Protocol
+	l++    // Algorithm
+	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	return l
+}
+func (rr *RP) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Mbox, off+l, compression, false)
+	l += compressedNameLen(rr.Txt, off+l, compression, false)
+	return l
+}
+func (rr *RRSIG) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // TypeCovered
+	l++    // Algorithm
+	l++    // Labels
+	l += 4 // OrigTtl
+	l += 4 // Expiration
+	l += 4 // Inception
+	l += 2 // KeyTag
+	l += compressedNameLen(rr.SignerName, off+l, compression, false)
+	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
+	return l
+}
+func (rr *RT) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Preference
+	l += compressedNameLen(rr.Host, off+l, compression, compress)
+	return l
+}
+func (rr *SMIMEA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++ // Usage
+	l++ // Selector
+	l++ // MatchingType
+	l += len(rr.Certificate)/2 + 1
+	return l
+}
+func (rr *SOA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Ns, off+l, compression, compress)
+	l += compressedNameLen(rr.Mbox, off+l, compression, compress)
+	l += 4 // Serial
+	l += 4 // Refresh
+	l += 4 // Retry
+	l += 4 // Expire
+	l += 4 // Minttl
+	return l
+}
+func (rr *SPF) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	for _, x := range rr.Txt {
+		l += len(x) + 1
+	}
+	return l
+}
+func (rr *SRV) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Priority
+	l += 2 // Weight
+	l += 2 // Port
+	l += compressedNameLen(rr.Target, off+l, compression, false)
+	return l
+}
+func (rr *SSHFP) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++ // Algorithm
+	l++ // Type
+	l += len(rr.FingerPrint)/2 + 1
+	return l
+}
+func (rr *TA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // KeyTag
+	l++    // Algorithm
+	l++    // DigestType
+	l += len(rr.Digest)/2 + 1
+	return l
+}
+func (rr *TALINK) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.PreviousName, off+l, compression, false)
+	l += compressedNameLen(rr.NextName, off+l, compression, false)
+	return l
+}
+func (rr *TKEY) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Algorithm, off+l, compression, false)
+	l += 4 // Inception
+	l += 4 // Expiration
+	l += 2 // Mode
+	l += 2 // Error
+	l += 2 // KeySize
+	l += len(rr.Key) / 2
+	l += 2 // OtherLen
+	l += len(rr.OtherData) / 2
+	return l
+}
+func (rr *TLSA) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l++ // Usage
+	l++ // Selector
+	l++ // MatchingType
+	l += len(rr.Certificate)/2 + 1
+	return l
+}
+func (rr *TSIG) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += compressedNameLen(rr.Algorithm, off+l, compression, false)
+	l += 6 // TimeSigned
+	l += 2 // Fudge
+	l += 2 // MACSize
+	l += len(rr.MAC) / 2
+	l += 2 // OrigId
+	l += 2 // Error
+	l += 2 // OtherLen
+	l += len(rr.OtherData) / 2
+	return l
+}
+func (rr *TXT) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	for _, x := range rr.Txt {
+		l += len(x) + 1
+	}
+	return l
+}
+func (rr *UID) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 4 // Uid
+	return l
+}
+func (rr *UINFO) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.Uinfo) + 1
+	return l
+}
+func (rr *URI) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += 2 // Priority
+	l += 2 // Weight
+	l += len(rr.Target)
+	return l
+}
+func (rr *X25) compressedLen(off int, compression map[string]struct{}, compress bool) int {
+	l := rr.Hdr.compressedLen(off, compression, compress)
+	l += len(rr.PSDNAddress) + 1
+	return l
+}
+
 // copy() functions
 func (rr *A) copy() RR {
 	return &A{rr.Hdr, copyIP(rr.A)}

@@ -9,7 +9,6 @@
 package dns
 
 //go:generate go run msg_generate.go
-//go:generate go run compress_generate.go
 
 import (
 	crand "crypto/rand"
@@ -907,18 +906,6 @@ func (dns *Msg) isCompressible() bool {
 		len(dns.Ns) > 0 || len(dns.Extra) > 0
 }
 
-func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
-	l := 12 // Message header is always 12 bytes
-	for _, r := range dns.Question {
-		compressionLenHelper(compression, r.Name, l)
-		l += r.len()
-	}
-	l += compressionLenSlice(l, compression, dns.Answer)
-	l += compressionLenSlice(l, compression, dns.Ns)
-	l += compressionLenSlice(l, compression, dns.Extra)
-	return l
-}
-
 // compressedLen returns the message length when in compressed wire format
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
@@ -928,7 +915,7 @@ func compressedLen(dns *Msg, compress bool) int {
 	// compression map and creating garbage.
 	if compress && dns.isCompressible() {
 		compression := make(map[string]struct{})
-		return compressedLenWithCompressionMap(dns, compression)
+		return compressedLenWithCompressionMap(dns, compression, true)
 	}
 
 	l := 12 // Message header is always 12 bytes
@@ -954,91 +941,73 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]struct{}, rs []RR) int {
-	initLen := lenp
-	for _, r := range rs {
-		if r == nil {
-			continue
-		}
-		// TmpLen is to track len of record at 14bits boudaries
-		tmpLen := lenp
+func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}, compress bool) int {
+	l := 12 // Message header is always 12 bytes
 
-		x := r.len()
-		// track this length, and the global length in len, while taking compression into account for both.
-		k, ok := compressionLenSearch(c, r.Header().Name)
-		if ok {
-			// Size of x is reduced by k, but we add 1 since k includes the '.' and label descriptor take 2 bytes
-			// so, basically x:= x - k - 1 + 2
-			x += 1 - k
-		}
-
-		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
-		k, ok = compressionLenSearchType(c, r)
-		if ok {
-			x += 1 - k
-		}
-		lenp += x
-		tmpLen = lenp
-		tmpLen += compressionLenHelperType(c, r, tmpLen)
-
+	for _, r := range dns.Question {
+		l += r.compressedLen(l, compression, compress)
 	}
-	return lenp - initLen
+	for _, r := range dns.Answer {
+		if r != nil {
+			l += r.compressedLen(l, compression, compress)
+		}
+	}
+	for _, r := range dns.Ns {
+		if r != nil {
+			l += r.compressedLen(l, compression, compress)
+		}
+	}
+	for _, r := range dns.Extra {
+		if r != nil {
+			l += r.compressedLen(l, compression, compress)
+		}
+	}
+
+	return l
 }
 
-// Put the parts of the name in the compression map, return the size in bytes added in payload
-func compressionLenHelper(c map[string]struct{}, s string, currentLen int) int {
-	if currentLen > maxCompressionOffset {
-		// We won't be able to add any label that could be re-used later anyway
-		return 0
+func compressedNameLen(s string, off int, compression map[string]struct{}, compress bool) int {
+	if s == "" || s == "." {
+		return 1
 	}
-	if _, ok := c[s]; ok {
-		return 0
-	}
-	initLen := currentLen
-	pref := ""
-	prev := s
-	lbs := Split(s)
-	for j := 0; j < len(lbs); j++ {
-		pref = s[lbs[j]:]
-		currentLen += len(prev) - len(pref)
-		prev = pref
-		if _, ok := c[pref]; !ok {
-			// If first byte label is within the first 14bits, it might be re-used later
-			if currentLen < maxCompressionOffset {
-				c[pref] = struct{}{}
-			}
-		} else {
-			added := currentLen - initLen
-			if j > 0 {
-				// We added a new PTR
-				added += 2
-			}
-			return added
+
+	nameLen := len(s) + 1
+	if compress {
+		if l, ok := compressionLenSearch(compression, s); ok {
+			nameLen = l + 2
 		}
 	}
-	return currentLen - initLen
+
+	compressionLenMapInsert(compression, s, off)
+	return nameLen
 }
 
-// Look for each part in the compression map and returns its length,
-// keep on searching so we get the longest match.
-// Will return the size of compression found and whether a match has been found.
 func compressionLenSearch(c map[string]struct{}, s string) (int, bool) {
-	off := 0
-	end := false
-	if s == "" { // don't bork on bogus data
-		return 0, false
-	}
-	for {
+	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
 		if _, ok := c[s[off:]]; ok {
-			return len(s[off:]), true
+			return len(s[:off]), true
 		}
-		if end {
+	}
+
+	return 0, false
+}
+
+func compressionLenMapInsert(c map[string]struct{}, s string, msgOff int) {
+	if msgOff >= maxCompressionOffset {
+		return
+	}
+
+	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
+		if _, ok := c[s[off:]]; ok {
 			break
 		}
-		// Each label descriptor takes 2 bytes, add it
-		off, end = NextLabel(s, off)
+
+		if msgOff+len(s[:off]) >= maxCompressionOffset {
+			break
+		}
+
+		c[s[off:]] = struct{}{}
 	}
-	return 0, false
 }
 
 // Copy returns a new RR which is a deep-copy of r.
