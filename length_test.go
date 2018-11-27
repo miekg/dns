@@ -142,29 +142,29 @@ func TestCompressionLenSearch(t *testing.T) {
 	c := make(map[string]int)
 	compressed, ok, fullSize := compressionLenSearch(c, "a.b.org.")
 	if compressed != 0 || ok || fullSize != 14 {
-		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	c["org."] = 3
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 4 || !ok || fullSize != 8 {
-		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	c["b.org."] = 5
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 6 || !ok || fullSize != 4 {
-		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	// Not found long compression
 	c["x.b.org."] = 5
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 6 || !ok || fullSize != 4 {
-		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 	// Found long compression
 	c["a.b.org."] = 5
 	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
 	if compressed != 8 || !ok || fullSize != 0 {
-		panic(fmt.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize))
+		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
 	}
 }
 
