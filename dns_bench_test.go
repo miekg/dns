@@ -63,6 +63,16 @@ func BenchmarkMsgLengthPack(b *testing.B) {
 	}
 }
 
+func BenchmarkMsgLengthOnlyQuestion(b *testing.B) {
+	msg := new(Msg)
+	msg.SetQuestion(Fqdn("12345678901234567890123456789012345.12345678.123."), TypeANY)
+	msg.Compress = true
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		msg.Len()
+	}
+}
+
 func BenchmarkPackDomainName(b *testing.B) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	buf := make([]byte, len(name1)+1)
@@ -194,6 +204,18 @@ func BenchmarkPackMsg(b *testing.B) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	rrMx := testRR(name1 + " 3600 IN MX 10 " + name1)
 	msg := makeMsg(name1, []RR{rrMx, rrMx}, nil, nil)
+	buf := make([]byte, 512)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = msg.PackBuffer(buf)
+	}
+}
+
+func BenchmarkPackMsgOnlyQuestion(b *testing.B) {
+	msg := new(Msg)
+	msg.SetQuestion(Fqdn("12345678901234567890123456789012345.12345678.123."), TypeANY)
+	msg.Compress = true
 	buf := make([]byte, 512)
 	b.ReportAllocs()
 	b.ResetTimer()

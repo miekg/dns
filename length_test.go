@@ -282,7 +282,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
-		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -315,7 +315,7 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 		lenFake := compressedLenWithCompressionMap(msg, compressionFake)
 
 		compressionReal := make(map[string]int)
-		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal)
+		buf, err := msg.packBufferWithCompressionMap(nil, compressionReal, true)
 		if err != nil {
 			t.Fatal(err)
 		}

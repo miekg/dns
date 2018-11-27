@@ -667,15 +667,18 @@ func (dns *Msg) Pack() (msg []byte, err error) {
 
 // PackBuffer packs a Msg, using the given buffer buf. If buf is too small a new buffer is allocated.
 func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
-	var compression map[string]int
-	if dns.Compress {
-		compression = make(map[string]int) // Compression pointer mappings.
+	// If this message can't be compressed, avoid filling the
+	// compression map and creating garbage.
+	if dns.Compress && dns.isCompressible() {
+		compression := make(map[string]int) // Compression pointer mappings.
+		return dns.packBufferWithCompressionMap(buf, compression, true)
 	}
-	return dns.packBufferWithCompressionMap(buf, compression)
+
+	return dns.packBufferWithCompressionMap(buf, nil, false)
 }
 
 // packBufferWithCompressionMap packs a Msg, using the given buffer buf.
-func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
+func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int, compress bool) (msg []byte, err error) {
 	// We use a similar function in tsig.go's stripTsig.
 
 	var dh Header
@@ -741,30 +744,30 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, err = dh.pack(msg, off, compression, dns.Compress)
+	off, err = dh.pack(msg, off, compression, compress)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i < len(question); i++ {
-		off, err = question[i].pack(msg, off, compression, dns.Compress)
+		off, err = question[i].pack(msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(answer); i++ {
-		off, err = PackRR(answer[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(answer[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(ns); i++ {
-		off, err = PackRR(ns[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(ns[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(extra); i++ {
-		off, err = PackRR(extra[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(extra[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
@@ -897,6 +900,13 @@ func (dns *Msg) String() string {
 // than packing it, measuring the size and discarding the buffer.
 func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
 
+// isCompressible returns whether the msg may be compressible.
+func (dns *Msg) isCompressible() bool {
+	// If we only have one question, there is nothing we can ever compress.
+	return len(dns.Question) > 1 || len(dns.Answer) > 0 ||
+		len(dns.Ns) > 0 || len(dns.Extra) > 0
+}
+
 func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
 	l := 12 // Message header is always 12 bytes
 	for _, r := range dns.Question {
@@ -913,12 +923,15 @@ func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
 // when compress is true, otherwise the uncompressed length is returned.
 func compressedLen(dns *Msg, compress bool) int {
 	// We always return one more than needed.
-	if compress {
+
+	// If this message can't be compressed, avoid filling the
+	// compression map and creating garbage.
+	if compress && dns.isCompressible() {
 		compression := map[string]int{}
 		return compressedLenWithCompressionMap(dns, compression)
 	}
-	l := 12 // Message header is always 12 bytes
 
+	l := 12 // Message header is always 12 bytes
 	for _, r := range dns.Question {
 		l += r.len()
 	}
