@@ -369,3 +369,20 @@ func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgCompressionMultipleQuestions(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("www.example.org.", TypeA)
+	msg.Question = append(msg.Question, Question{"other.example.org.", TypeA, ClassINET})
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if predicted != len(buf) {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
