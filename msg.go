@@ -909,8 +909,9 @@ func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
 
 // isCompressible returns whether the msg may be compressible.
 func (dns *Msg) isCompressible() bool {
-	// If we only have questions, there is nothing we can ever compress.
-	return len(dns.Answer) > 0 || len(dns.Ns) > 0 || len(dns.Extra) > 0
+	// If we only have one question, there is nothing we can ever compress.
+	return len(dns.Question) > 1 || len(dns.Answer) > 0 ||
+		len(dns.Ns) > 0 || len(dns.Extra) > 0
 }
 
 func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
