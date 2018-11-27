@@ -953,19 +953,24 @@ func compressedNameLen(s string, off int, compression map[string]struct{}, compr
 
 	nameLen := len(s) + 1
 	if compress {
-		if l, ok := compressionLenSearch(compression, s); ok {
+		if l, ok := compressionLenSearch(compression, s, off); ok {
 			nameLen = l + 2
 		}
+	} else {
+		compressionLenMapInsert(compression, s, off)
 	}
 
-	compressionLenMapInsert(compression, s, off)
 	return nameLen
 }
 
-func compressionLenSearch(c map[string]struct{}, s string) (int, bool) {
+func compressionLenSearch(c map[string]struct{}, s string, msgOff int) (int, bool) {
 	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
 		if _, ok := c[s[off:]]; ok {
 			return len(s[:off]), true
+		}
+
+		if msgOff+len(s[:off]) < maxCompressionOffset {
+			c[s[off:]] = struct{}{}
 		}
 	}
 

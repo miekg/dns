@@ -81,9 +81,11 @@ func TestMsgLength(t *testing.T) {
 	}
 }
 
-func TestCompressionLenMapInsert(t *testing.T) {
+func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s string, off int)) {
+	t.Helper()
+
 	c := make(map[string]struct{})
-	compressionLenMapInsert(c, "example.com", 12)
+	insert(c, "example.com", 12)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -95,7 +97,7 @@ func TestCompressionLenMapInsert(t *testing.T) {
 	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16384
-	compressionLenMapInsert(c, "foo.com", 16379)
+	insert(c, "foo.com", 16379)
 	if _, ok := c["foo.com"]; !ok {
 		t.Errorf("bad foo.com")
 	}
@@ -107,7 +109,7 @@ func TestCompressionLenMapInsert(t *testing.T) {
 	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16385 => outside range
-	compressionLenMapInsert(c, "foo.com", 16380)
+	insert(c, "foo.com", 16380)
 	if _, ok := c["foo.com"]; !ok {
 		t.Errorf("bad foo.com")
 	}
@@ -117,7 +119,7 @@ func TestCompressionLenMapInsert(t *testing.T) {
 	}
 
 	c = make(map[string]struct{})
-	compressionLenMapInsert(c, "example.com", 16375)
+	insert(c, "example.com", 16375)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -127,7 +129,7 @@ func TestCompressionLenMapInsert(t *testing.T) {
 	}
 
 	c = make(map[string]struct{})
-	compressionLenMapInsert(c, "example.com", 16376)
+	insert(c, "example.com", 16376)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -137,31 +139,41 @@ func TestCompressionLenMapInsert(t *testing.T) {
 	}
 }
 
+func TestCompressionLenMapInsert(t *testing.T) {
+	testCompressionLenInsert(t, compressionLenMapInsert)
+}
+
+func TestCompressionLenSearchInsert(t *testing.T) {
+	testCompressionLenInsert(t, func(c map[string]struct{}, s string, off int) {
+		compressionLenSearch(c, s, off)
+	})
+}
+
 func TestCompressionLenSearch(t *testing.T) {
 	c := make(map[string]struct{})
-	compressed, ok := compressionLenSearch(c, "a.b.org.")
+	compressed, ok := compressionLenSearch(c, "a.b.org.", maxCompressionOffset)
 	if compressed != 0 || ok {
 		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	c["org."] = struct{}{}
-	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	compressed, ok = compressionLenSearch(c, "a.b.org.", maxCompressionOffset)
 	if compressed != 4 || !ok {
 		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	c["b.org."] = struct{}{}
-	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	compressed, ok = compressionLenSearch(c, "a.b.org.", maxCompressionOffset)
 	if compressed != 2 || !ok {
 		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	// Not found long compression
 	c["x.b.org."] = struct{}{}
-	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	compressed, ok = compressionLenSearch(c, "a.b.org.", maxCompressionOffset)
 	if compressed != 2 || !ok {
 		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	// Found long compression
 	c["a.b.org."] = struct{}{}
-	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	compressed, ok = compressionLenSearch(c, "a.b.org.", maxCompressionOffset)
 	if compressed != 0 || !ok {
 		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
