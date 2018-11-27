@@ -672,11 +672,12 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	if dns.Compress {
 		compression = make(map[string]int) // Compression pointer mappings.
 	}
-	return dns.packBufferWithCompressionMap(buf, compression)
+
+	return dns.packBufferWithCompressionMap(buf, compression, dns.Compress)
 }
 
 // packBufferWithCompressionMap packs a Msg, using the given buffer buf.
-func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int) (msg []byte, err error) {
+func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int, compress bool) (msg []byte, err error) {
 	// We use a similar function in tsig.go's stripTsig.
 
 	var dh Header
@@ -742,30 +743,30 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, err = dh.pack(msg, off, compression, dns.Compress)
+	off, err = dh.pack(msg, off, compression, compress)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i < len(question); i++ {
-		off, err = question[i].pack(msg, off, compression, dns.Compress)
+		off, err = question[i].pack(msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(answer); i++ {
-		off, err = PackRR(answer[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(answer[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(ns); i++ {
-		off, err = PackRR(ns[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(ns[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < len(extra); i++ {
-		off, err = PackRR(extra[i], msg, off, compression, dns.Compress)
+		off, err = PackRR(extra[i], msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
