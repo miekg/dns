@@ -907,7 +907,7 @@ func (dns *Msg) isCompressible() bool {
 		len(dns.Ns) > 0 || len(dns.Extra) > 0
 }
 
-func compressedLenWithCompressionMap(dns *Msg, compression map[string]int) int {
+func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
 	l := 12 // Message header is always 12 bytes
 	for _, r := range dns.Question {
 		compressionLenHelper(compression, r.Name, l)
@@ -927,7 +927,7 @@ func compressedLen(dns *Msg, compress bool) int {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
 	if compress && dns.isCompressible() {
-		compression := map[string]int{}
+		compression := make(map[string]struct{})
 		return compressedLenWithCompressionMap(dns, compression)
 	}
 
@@ -954,7 +954,7 @@ func compressedLen(dns *Msg, compress bool) int {
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
+func compressionLenSlice(lenp int, c map[string]struct{}, rs []RR) int {
 	initLen := lenp
 	for _, r := range rs {
 		if r == nil {
@@ -986,7 +986,7 @@ func compressionLenSlice(lenp int, c map[string]int, rs []RR) int {
 }
 
 // Put the parts of the name in the compression map, return the size in bytes added in payload
-func compressionLenHelper(c map[string]int, s string, currentLen int) int {
+func compressionLenHelper(c map[string]struct{}, s string, currentLen int) int {
 	if currentLen > maxCompressionOffset {
 		// We won't be able to add any label that could be re-used later anyway
 		return 0
@@ -1005,7 +1005,7 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 		if _, ok := c[pref]; !ok {
 			// If first byte label is within the first 14bits, it might be re-used later
 			if currentLen < maxCompressionOffset {
-				c[pref] = currentLen
+				c[pref] = struct{}{}
 			}
 		} else {
 			added := currentLen - initLen
@@ -1023,7 +1023,7 @@ func compressionLenHelper(c map[string]int, s string, currentLen int) int {
 // keep on searching so we get the longest match.
 // Will return the size of compression found, whether a match has been
 // found and the size of record if added in payload
-func compressionLenSearch(c map[string]int, s string) (int, bool, int) {
+func compressionLenSearch(c map[string]struct{}, s string) (int, bool, int) {
 	off := 0
 	end := false
 	if s == "" { // don't bork on bogus data
