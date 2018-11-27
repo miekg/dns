@@ -965,7 +965,7 @@ func compressionLenSlice(lenp int, c map[string]struct{}, rs []RR) int {
 
 		x := r.len()
 		// track this length, and the global length in len, while taking compression into account for both.
-		k, ok, _ := compressionLenSearch(c, r.Header().Name)
+		k, ok := compressionLenSearch(c, r.Header().Name)
 		if ok {
 			// Size of x is reduced by k, but we add 1 since k includes the '.' and label descriptor take 2 bytes
 			// so, basically x:= x - k - 1 + 2
@@ -973,7 +973,7 @@ func compressionLenSlice(lenp int, c map[string]struct{}, rs []RR) int {
 		}
 
 		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
-		k, ok, _ = compressionLenSearchType(c, r)
+		k, ok = compressionLenSearchType(c, r)
 		if ok {
 			x += 1 - k
 		}
@@ -1021,27 +1021,24 @@ func compressionLenHelper(c map[string]struct{}, s string, currentLen int) int {
 
 // Look for each part in the compression map and returns its length,
 // keep on searching so we get the longest match.
-// Will return the size of compression found, whether a match has been
-// found and the size of record if added in payload
-func compressionLenSearch(c map[string]struct{}, s string) (int, bool, int) {
+// Will return the size of compression found and whether a match has been found.
+func compressionLenSearch(c map[string]struct{}, s string) (int, bool) {
 	off := 0
 	end := false
 	if s == "" { // don't bork on bogus data
-		return 0, false, 0
+		return 0, false
 	}
-	fullSize := 0
 	for {
 		if _, ok := c[s[off:]]; ok {
-			return len(s[off:]), true, fullSize + off
+			return len(s[off:]), true
 		}
 		if end {
 			break
 		}
 		// Each label descriptor takes 2 bytes, add it
-		fullSize += 2
 		off, end = NextLabel(s, off)
 	}
-	return 0, false, fullSize + len(s)
+	return 0, false
 }
 
 // Copy returns a new RR which is a deep-copy of r.

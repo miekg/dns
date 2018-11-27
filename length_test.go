@@ -139,31 +139,31 @@ func TestCompressionLenHelper(t *testing.T) {
 
 func TestCompressionLenSearch(t *testing.T) {
 	c := make(map[string]struct{})
-	compressed, ok, fullSize := compressionLenSearch(c, "a.b.org.")
-	if compressed != 0 || ok || fullSize != 14 {
-		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
+	compressed, ok := compressionLenSearch(c, "a.b.org.")
+	if compressed != 0 || ok {
+		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	c["org."] = struct{}{}
-	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
-	if compressed != 4 || !ok || fullSize != 8 {
-		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
+	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	if compressed != 4 || !ok {
+		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	c["b.org."] = struct{}{}
-	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
-	if compressed != 6 || !ok || fullSize != 4 {
-		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
+	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	if compressed != 6 || !ok {
+		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	// Not found long compression
 	c["x.b.org."] = struct{}{}
-	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
-	if compressed != 6 || !ok || fullSize != 4 {
-		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
+	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	if compressed != 6 || !ok {
+		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 	// Found long compression
 	c["a.b.org."] = struct{}{}
-	compressed, ok, fullSize = compressionLenSearch(c, "a.b.org.")
-	if compressed != 8 || !ok || fullSize != 0 {
-		t.Errorf("Failed: compressed:=%d, ok:=%v, fullSize:=%d", compressed, ok, fullSize)
+	compressed, ok = compressionLenSearch(c, "a.b.org.")
+	if compressed != 8 || !ok {
+		t.Errorf("Failed: compressed:=%d, ok:=%v", compressed, ok)
 	}
 }
 

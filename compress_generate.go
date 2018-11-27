@@ -145,7 +145,7 @@ Names:
 
 	// compressionLenSearchType - search cdomain-tags types for compressible names.
 
-	fmt.Fprint(b, "func compressionLenSearchType(c map[string]struct{}, r RR) (int, bool, int) {\n")
+	fmt.Fprint(b, "func compressionLenSearchType(c map[string]struct{}, r RR) (int, bool) {\n")
 	fmt.Fprint(b, "switch x := r.(type) {\n")
 	for _, name := range cdomainTypes {
 		o := scope.Lookup(name)
@@ -155,7 +155,7 @@ Names:
 		j := 1
 		for i := 1; i < st.NumFields(); i++ {
 			out := func(s string, j int) {
-				fmt.Fprintf(b, "k%d, ok%d, sz%d := compressionLenSearch(c, x.%s)\n", j, j, j, st.Field(i).Name())
+				fmt.Fprintf(b, "k%d, ok%d := compressionLenSearch(c, x.%s)\n", j, j, st.Field(i).Name())
 			}
 
 			// There are no slice types with names that can be compressed.
@@ -168,15 +168,13 @@ Names:
 		}
 		k := "k1"
 		ok := "ok1"
-		sz := "sz1"
 		for i := 2; i < j; i++ {
 			k += fmt.Sprintf(" + k%d", i)
 			ok += fmt.Sprintf(" && ok%d", i)
-			sz += fmt.Sprintf(" + sz%d", i)
 		}
-		fmt.Fprintf(b, "return %s, %s, %s\n", k, ok, sz)
+		fmt.Fprintf(b, "return %s, %s\n", k, ok)
 	}
-	fmt.Fprintln(b, "}\nreturn 0, false, 0\n}\n\n")
+	fmt.Fprintln(b, "}\nreturn 0, false\n}\n\n")
 
 	// gofmt
 	res, err := format.Source(b.Bytes())
