@@ -426,9 +426,6 @@ Loop:
 	if ptr == 0 {
 		off1 = off
 	}
-	if budget <= 0 {
-		return "", lenmsg, ErrLongDomain
-	}
 	if len(s) == 0 {
 		return ".", off1, nil
 	}
