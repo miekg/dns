@@ -371,7 +371,7 @@ Loop:
 			if off+c > lenmsg {
 				return "", lenmsg, ErrBuf
 			}
-			budget -= c + 1 // +1 for the trailing period
+			budget -= c + 1 // +1 for the label separator
 			if budget <= 0 {
 				return "", lenmsg, ErrLongDomain
 			}
