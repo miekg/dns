@@ -151,7 +151,7 @@ func TestUnpackDomainName(t *testing.T) {
 
 		{"too long domain",
 			string(54) + "x" + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
-			"x" + longDomain + ".",
+			"",
 			ErrLongDomain.Error()},
 		{"too long by pointer",
 			// a matryoshka doll name to get over 255 octets after expansion via internal pointers

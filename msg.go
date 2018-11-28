@@ -427,8 +427,7 @@ Loop:
 		s = []byte(".")
 	}
 	if budget <= 0 || budget > maxDomainNameWireOctets { // handle overflow
-		// error if the name is too long, but don't throw it away
-		return string(s), lenmsg, ErrLongDomain
+		return "", lenmsg, ErrLongDomain
 	}
 	return string(s), off1, nil
 }
