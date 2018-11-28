@@ -215,11 +215,11 @@ func TestUnpackDomainName(t *testing.T) {
 
 func TestPackDomainNameCompressionMap(t *testing.T) {
 	expected := map[string]struct{}{
-		`www.this.is.\131an.example.org.`: struct{}{},
-		`is.\131an.example.org.`:          struct{}{},
-		"\x83an.example.org.":             struct{}{},
-		`example.org.`:                    struct{}{},
-		`org.`:                            struct{}{},
+		`www\.this.is.\131an.example.org.`: struct{}{},
+		`is.\131an.example.org.`:           struct{}{},
+		`\131an.example.org.`:              struct{}{},
+		`example.org.`:                     struct{}{},
+		`org.`:                             struct{}{},
 	}
 
 	msg := make([]byte, 256)
