@@ -33,8 +33,8 @@ const (
 	//
 	// It is possible to construct a valid message that has more compression pointers
 	// than this, and still doesn't loop, by pointing to a previous pointer. This is
-	// not something a well written implementation should ever do, so we ignore that
-	// possibility.
+	// not something a well written implementation should ever do, so we leave them
+	// to trip the maximum compression pointer check.
 	maxCompressionPointers = (maxDomainNameWireOctets+1)/2 - 2
 )
 
