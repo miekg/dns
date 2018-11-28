@@ -779,7 +779,6 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 }
 
 func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
-	dns.setHdr(dh)
 	// If we are at the end of the message we should return *just* the
 	// header. This can still be useful to the caller. 9.9.9.9 sends these
 	// when responding with REFUSED for instance.
@@ -842,6 +841,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 		return err
 	}
 
+	dns.setHdr(dh)
 	return dns.unpack(dh, msg, off)
 }
 
