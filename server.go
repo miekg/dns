@@ -642,11 +642,13 @@ func (srv *Server) serveDNS(w *response) {
 	req := new(Msg)
 	req.setHdr(dh)
 
-	if action := srv.MsgAcceptFunc(dh); action != MsgAccept {
-		if action == MsgIgnore {
-			return
-		}
+	switch srv.MsgAcceptFunc(dh) {
+	case MsgAccept:
 
+	case MsgIgnore:
+		return
+
+	case MsgReject:
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
 		req.Ns, req.Answer, req.Extra = nil, nil, nil

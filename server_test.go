@@ -102,7 +102,6 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	}
 
 	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
-	server.init()
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
