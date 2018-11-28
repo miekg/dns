@@ -393,7 +393,6 @@ func TestMsgCompressionMultipleQuestions(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
 	if predicted != len(buf) {
 		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
 	}
