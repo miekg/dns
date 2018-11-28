@@ -214,8 +214,8 @@ type Server struct {
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on go1.11+ and when using ListenAndServe.
 	ReusePort bool
-	// AcceptMsgFunc will check the incoming message and will reject it early in the process. This function must be
-	// defined. By default DefaultMsgAcceptFunc will be used.
+	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
+	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
 
 	// UDP packet or TCP connection queue
@@ -642,10 +642,11 @@ func (srv *Server) serveDNS(w *response) {
 	req := new(Msg)
 	req.setHdr(dh)
 
-	if accept, respond := srv.MsgAcceptFunc(dh); !accept {
-		if !respond {
+	if action := srv.MsgAcceptFunc(dh); action != MsgAccept {
+		if action == MsgIgnore {
 			return
 		}
+
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
