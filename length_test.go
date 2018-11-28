@@ -387,7 +387,7 @@ func TestMsgCompressLengthEscapingMatch(t *testing.T) {
 	// Although slightly non-optimal, "example.org." and "ex\\097mple.org."
 	// are not considered equal in the compression map, even though \097 is
 	// a valid escaping of a. This test ensures that the Len code and the
-	// Pack don't disagree on this.
+	// Pack code don't disagree on this.
 
 	msg := new(Msg)
 	msg.Compress = true
