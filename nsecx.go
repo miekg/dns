@@ -8,12 +8,12 @@ import (
 
 // HashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
 func HashName(label string, ha uint8, iter uint16, salt string) string {
-	wire := make([]byte, DefaultMsgSize)
-	n, err := packStringHex(salt, wire, 0)
+	wireSalt := make([]byte, DefaultMsgSize)
+	n, err := packStringHex(salt, wireSalt, 0)
 	if err != nil {
 		return ""
 	}
-	wire = wire[:n]
+	wireSalt = wireSalt[:n]
 	name := make([]byte, 255)
 	off, err := PackDomainName(strings.ToLower(label), name, 0, nil, false)
 	if err != nil {
@@ -30,13 +30,13 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 
 	// k = 0
 	s.Write(name)
-	s.Write(wire)
+	s.Write(wireSalt)
 	nsec3 := s.Sum(nil)
 	// k > 0
 	for k := uint16(0); k < iter; k++ {
 		s.Reset()
 		s.Write(nsec3)
-		s.Write(wire)
+		s.Write(wireSalt)
 		nsec3 = s.Sum(nsec3[:0])
 	}
 	return toBase32(nsec3)
