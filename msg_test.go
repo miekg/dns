@@ -148,7 +148,6 @@ func TestUnpackDomainName(t *testing.T) {
 			"\x03foo" + "\x05\x03com\x00" + "\x07example" + "\xC0\x05",
 			"foo.\\003com\\000.example.com.",
 			""},
-
 		{"too long domain",
 			string(54) + "x" + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
 			"",
@@ -193,10 +192,11 @@ func TestUnpackDomainName(t *testing.T) {
 			""},
 		{"truncated name", "\x07example\x03", "", "dns: buffer size too small"},
 		{"non-absolute name", "\x07example\x03com", "", "dns: buffer size too small"},
-		{"compression pointer cycle",
+		{"compression pointer cycle (too many)", "\xC0\x00", "", "dns: too many compression pointers"},
+		{"compression pointer cycle (too long)",
 			"\x03foo" + "\x03bar" + "\x07example" + "\xC0\x04",
 			"",
-			"dns: too many compression pointers"},
+			ErrLongDomain.Error()},
 		{"reserved compression pointer 0b10", "\x07example\x80", "", "dns: bad rdata"},
 		{"reserved compression pointer 0b01", "\x07example\x40", "", "dns: bad rdata"},
 	}

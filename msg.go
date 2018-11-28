@@ -372,6 +372,9 @@ Loop:
 				return "", lenmsg, ErrBuf
 			}
 			budget -= c + 1 // +1 for the trailing period
+			if budget <= 0 {
+				return "", lenmsg, ErrLongDomain
+			}
 			for j := off; j < off+c; j++ {
 				switch b := msg[j]; b {
 				case '.', '(', ')', ';', ' ', '@':
@@ -423,7 +426,7 @@ Loop:
 	if ptr == 0 {
 		off1 = off
 	}
-	if budget <= 0 || budget > maxDomainNameWireOctets { // handle overflow
+	if budget <= 0 {
 		return "", lenmsg, ErrLongDomain
 	}
 	if len(s) == 0 {
