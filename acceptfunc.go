@@ -1,8 +1,7 @@
 package dns
 
 // MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError.
-// There are to booleans to be returned, once signaling the rejection and another to signal if
-// a reply is to be send back (you want to prevent DNS ping-pong and not reply to a response for instance).
+// It returns a MsgAcceptAction to indicate what should happen with the message.
 type MsgAcceptFunc func(dh Header) MsgAcceptAction
 
 // DefaultMsgAcceptFunc checks the request and will reject if:
@@ -20,9 +19,9 @@ var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
 type MsgAcceptAction int
 
 const (
-	MsgAccept MsgAcceptAction = iota
-	MsgReject
-	MsgIgnore
+	MsgAccept MsgAcceptAction = iota // Accept the message
+	MsgReject                        // Reject the message with a RcodeFormatError
+	MsgIgnore                        // Ignore the error and send nothing back.
 )
 
 var defaultMsgAcceptFunc = func(dh Header) MsgAcceptAction {
