@@ -257,3 +257,23 @@ func TestPackDomainNameNSECTypeBitmap(t *testing.T) {
 		t.Logf("got:      %v", msg2.Answer[1])
 	}
 }
+
+func TestPackUnpackManyCompressionPointers(t *testing.T) {
+	m := new(Msg)
+	m.Compress = true
+	m.SetQuestion("example.org.", TypeNS)
+
+	for domain := "a."; len(domain) < maxDomainNameWireOctets; domain += "a." {
+		m.Answer = append(m.Answer, &NS{Hdr: RR_Header{Name: domain, Rrtype: TypeNS, Class: ClassINET}, Ns: "example.org."})
+
+		b, err := m.Pack()
+		if err != nil {
+			t.Fatalf("Pack failed for %q and %d records with: %v", domain, len(m.Answer), err)
+		}
+
+		var m2 Msg
+		if err := m2.Unpack(b); err != nil {
+			t.Fatalf("Unpack failed for %q and %d records with: %v", domain, len(m.Answer), err)
+		}
+	}
+}
