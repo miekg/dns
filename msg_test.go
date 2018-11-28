@@ -214,8 +214,15 @@ func TestUnpackDomainName(t *testing.T) {
 }
 
 func TestPackDomainNameCompressionMap(t *testing.T) {
-	msg := make([]byte, 256)
+	expected := map[string]struct{}{
+		`www.this.is.\131an.example.org.`: struct{}{},
+		`is.\131an.example.org.`:          struct{}{},
+		"\x83an.example.org.":             struct{}{},
+		`example.org.`:                    struct{}{},
+		`org.`:                            struct{}{},
+	}
 
+	msg := make([]byte, 256)
 	for _, compress := range []bool{true, false} {
 		compression := make(map[string]int)
 
@@ -224,16 +231,8 @@ func TestPackDomainNameCompressionMap(t *testing.T) {
 			t.Fatalf("PackDomainName failed: %v", err)
 		}
 
-		for _, dname := range []string{
-			`www.this.is.\131an.example.org.`,
-			`is.\131an.example.org.`,
-			"\x83an.example.org.",
-			`example.org.`,
-			`org.`,
-		} {
-			if _, ok := compression[dname]; !ok {
-				t.Errorf("expected to find %q in compression map", dname)
-			}
+		if !compressionMapsEqual(expected, compression) {
+			t.Errorf("expected compression maps to be equal; expected %v, got %v", expected, compression)
 		}
 	}
 }
