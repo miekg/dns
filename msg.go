@@ -946,14 +946,16 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 	}
 
 	nameLen := len(s) + 1
-	if compression == nil || !compress && off >= maxCompressionOffset {
+	if compression == nil {
 		return nameLen
 	}
 
-	// compressionLenSearch will insert the entry into the compression
-	// map if it doesn't contain it.
-	if l, ok := compressionLenSearch(compression, s, off); ok && compress {
-		nameLen = l + 2
+	if compress || off < maxCompressionOffset {
+		// compressionLenSearch will insert the entry into the compression
+		// map if it doesn't contain it.
+		if l, ok := compressionLenSearch(compression, s, off); ok && compress {
+			nameLen = l + 2
+		}
 	}
 
 	return nameLen
