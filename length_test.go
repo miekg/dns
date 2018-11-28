@@ -382,3 +382,26 @@ func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgCompressLengthEscapingMatch(t *testing.T) {
+	// Although slightly non-optimal, "example.org." and "ex\\097mple.org."
+	// are not considered equal in the compression map, even though \097 is
+	// a valid escaping of a. This test ensures that the Len code and the
+	// Pack code don't disagree on this.
+
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion("www.example.org.", TypeA)
+	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: "ex\\097mple.org.", Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+	// Len doesn't account for escaping when calculating the length *yet* so
+	// we're off by three here. This will be fixed in a follow up change.
+	if predicted != len(buf)+3 {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
