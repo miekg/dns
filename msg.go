@@ -724,16 +724,10 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		dh.Bits |= _CD
 	}
 
-	// Prepare variable sized arrays.
-	question := dns.Question
-	answer := dns.Answer
-	ns := dns.Ns
-	extra := dns.Extra
-
-	dh.Qdcount = uint16(len(question))
-	dh.Ancount = uint16(len(answer))
-	dh.Nscount = uint16(len(ns))
-	dh.Arcount = uint16(len(extra))
+	dh.Qdcount = uint16(len(dns.Question))
+	dh.Ancount = uint16(len(dns.Answer))
+	dh.Nscount = uint16(len(dns.Ns))
+	dh.Arcount = uint16(len(dns.Extra))
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
@@ -748,25 +742,25 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 	if err != nil {
 		return nil, err
 	}
-	for _, r := range question {
+	for _, r := range dns.Question {
 		off, err = r.pack(msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for _, r := range answer {
+	for _, r := range dns.Answer {
 		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for _, r := range ns {
+	for _, r := range dns.Ns {
 		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for _, r := range extra {
+	for _, r := range dns.Extra {
 		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
