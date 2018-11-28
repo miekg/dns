@@ -748,26 +748,26 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < len(question); i++ {
-		off, err = question[i].pack(msg, off, compression, compress)
+	for _, r := range question {
+		off, err = r.pack(msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for i := 0; i < len(answer); i++ {
-		off, err = PackRR(answer[i], msg, off, compression, compress)
+	for _, r := range answer {
+		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for i := 0; i < len(ns); i++ {
-		off, err = PackRR(ns[i], msg, off, compression, compress)
+	for _, r := range ns {
+		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	for i := 0; i < len(extra); i++ {
-		off, err = PackRR(extra[i], msg, off, compression, compress)
+	for _, r := range extra {
+		off, err = PackRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
