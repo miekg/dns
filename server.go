@@ -644,10 +644,8 @@ func (srv *Server) serveDNS(w *response) {
 
 	switch srv.MsgAcceptFunc(dh) {
 	case MsgAccept:
-
 	case MsgIgnore:
 		return
-
 	case MsgReject:
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
