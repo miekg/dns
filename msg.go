@@ -347,7 +347,11 @@ End:
 // In theory, the pointers are only allowed to jump backward.
 // We let them jump anywhere and stop jumping after a while.
 
-// UnpackDomainName unpacks a domain name into a string.
+// UnpackDomainName unpacks a domain name into a string. It returns
+// the name, the new offset into msg and any error that occurred.
+//
+// When an error is encountered, the unpacked name will be discarded
+// and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	s := make([]byte, 0, 64)
 	off1 := 0
