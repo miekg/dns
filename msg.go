@@ -24,6 +24,18 @@ import (
 const (
 	maxCompressionOffset    = 2 << 13 // We have 14 bits for the compression pointer
 	maxDomainNameWireOctets = 255     // See RFC 1035 section 2.3.4
+
+	// This is the maximum number of compression pointers that should occur in a
+	// semantically valid message. Each label in a domain name must be at least one
+	// octet and is separated by a period. The root label won't be represented by a
+	// compression pointer to a compression pointer, hence the -2 to exclude the
+	// smallest valid root label.
+	//
+	// It is possible to construct a valid message that has more compression pointers
+	// than this, and still doesn't loop, by pointing to a previous pointer. This is
+	// not something a well written implementation should ever do, so we ignore that
+	// possibility.
+	maxCompressionPointers = (maxDomainNameWireOctets+1)/2 - 2
 )
 
 // Errors defined in this package.
@@ -399,7 +411,7 @@ Loop:
 			if ptr == 0 {
 				off1 = off
 			}
-			if ptr++; ptr > 10 {
+			if ptr++; ptr > maxCompressionPointers {
 				return "", lenmsg, &Error{err: "too many compression pointers"}
 			}
 			// pointer should guarantee that it advances and points forwards at least
