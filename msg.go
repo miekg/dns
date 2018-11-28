@@ -679,8 +679,6 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 
 // packBufferWithCompressionMap packs a Msg, using the given buffer buf.
 func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int, compress bool) (msg []byte, err error) {
-	// We use a similar function in tsig.go's stripTsig.
-
 	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
 		return nil, ErrRcode
 	}
@@ -770,6 +768,8 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 // Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) (err error) {
+	// We use a similar function in tsig.go's stripTsig.
+
 	var (
 		dh  Header
 		off int
