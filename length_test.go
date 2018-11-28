@@ -81,11 +81,9 @@ func TestMsgLength(t *testing.T) {
 	}
 }
 
-func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s string, off int)) {
-	t.Helper()
-
+func TestCompressionLenSearchInsert(t *testing.T) {
 	c := make(map[string]struct{})
-	insert(c, "example.com", 12)
+	compressionLenSearch(c, "example.com", 12)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -97,7 +95,7 @@ func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s
 	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16384
-	insert(c, "foo.com", 16379)
+	compressionLenSearch(c, "foo.com", 16379)
 	if _, ok := c["foo.com"]; !ok {
 		t.Errorf("bad foo.com")
 	}
@@ -109,7 +107,7 @@ func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s
 	c = make(map[string]struct{})
 	// foo label starts at 16379
 	// com label starts at 16385 => outside range
-	insert(c, "foo.com", 16380)
+	compressionLenSearch(c, "foo.com", 16380)
 	if _, ok := c["foo.com"]; !ok {
 		t.Errorf("bad foo.com")
 	}
@@ -119,7 +117,7 @@ func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s
 	}
 
 	c = make(map[string]struct{})
-	insert(c, "example.com", 16375)
+	compressionLenSearch(c, "example.com", 16375)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -129,7 +127,7 @@ func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s
 	}
 
 	c = make(map[string]struct{})
-	insert(c, "example.com", 16376)
+	compressionLenSearch(c, "example.com", 16376)
 	if _, ok := c["example.com"]; !ok {
 		t.Errorf("bad example.com")
 	}
@@ -137,16 +135,6 @@ func testCompressionLenInsert(t *testing.T, insert func(c map[string]struct{}, s
 	if _, ok := c["com"]; ok {
 		t.Errorf("bad com")
 	}
-}
-
-func TestCompressionLenMapInsert(t *testing.T) {
-	testCompressionLenInsert(t, compressionLenMapInsert)
-}
-
-func TestCompressionLenSearchInsert(t *testing.T) {
-	testCompressionLenInsert(t, func(c map[string]struct{}, s string, off int) {
-		compressionLenSearch(c, s, off)
-	})
 }
 
 func TestCompressionLenSearch(t *testing.T) {

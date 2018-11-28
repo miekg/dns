@@ -955,7 +955,9 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 			nameLen = l + 2
 		}
 	} else if off < maxCompressionOffset {
-		compressionLenMapInsert(compression, s, off)
+		// compressionLenSearch will insert the entry into the compression
+		// map if it doesn't contain it.
+		compressionLenSearch(compression, s, off)
 	}
 
 	return nameLen
@@ -973,20 +975,6 @@ func compressionLenSearch(c map[string]struct{}, s string, msgOff int) (int, boo
 	}
 
 	return 0, false
-}
-
-func compressionLenMapInsert(c map[string]struct{}, s string, msgOff int) {
-	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
-		if _, ok := c[s[off:]]; ok {
-			break
-		}
-
-		if msgOff+off >= maxCompressionOffset {
-			break
-		}
-
-		c[s[off:]] = struct{}{}
-	}
 }
 
 // Copy returns a new RR which is a deep-copy of r.
