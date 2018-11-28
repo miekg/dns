@@ -423,11 +423,11 @@ Loop:
 	if ptr == 0 {
 		off1 = off
 	}
-	if len(s) == 0 {
-		s = []byte(".")
-	}
 	if budget <= 0 || budget > maxDomainNameWireOctets { // handle overflow
 		return "", lenmsg, ErrLongDomain
+	}
+	if len(s) == 0 {
+		return ".", off1, nil
 	}
 	return string(s), off1, nil
 }
