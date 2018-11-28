@@ -352,7 +352,7 @@ func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	s := make([]byte, 0, 64)
 	off1 := 0
 	lenmsg := len(msg)
-	maxLen := maxDomainNameWireOctets
+	budget := maxDomainNameWireOctets
 	ptr := 0 // number of pointers followed
 Loop:
 	for {
@@ -371,14 +371,13 @@ Loop:
 			if off+c > lenmsg {
 				return "", lenmsg, ErrBuf
 			}
+			budget -= c + 1 // +1 for the trailing period
 			for j := off; j < off+c; j++ {
 				switch b := msg[j]; b {
 				case '.', '(', ')', ';', ' ', '@':
 					fallthrough
 				case '"', '\\':
 					s = append(s, '\\', b)
-					// presentation-format \X escapes add an extra byte
-					maxLen++
 				default:
 					if b < 32 || b >= 127 { // unprintable, use \DDD
 						var buf [3]byte
@@ -388,8 +387,6 @@ Loop:
 							s = append(s, '0')
 						}
 						s = append(s, bufs...)
-						// presentation-format \DDD escapes add 3 extra bytes
-						maxLen += 3
 					} else {
 						s = append(s, b)
 					}
@@ -428,7 +425,8 @@ Loop:
 	}
 	if len(s) == 0 {
 		s = []byte(".")
-	} else if len(s) >= maxLen {
+	}
+	if budget <= 0 || budget > maxDomainNameWireOctets { // handle overflow
 		// error if the name is too long, but don't throw it away
 		return string(s), lenmsg, ErrLongDomain
 	}
