@@ -36,6 +36,9 @@ const (
 	// not something a well written implementation should ever do, so we leave them
 	// to trip the maximum compression pointer check.
 	maxCompressionPointers = (maxDomainNameWireOctets+1)/2 - 2
+
+	// This is the maximum length of a domain name in presentation format.
+	maxDomainNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
 // Errors defined in this package.
@@ -372,7 +375,7 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
-	s := make([]byte, 0, 64)
+	s := make([]byte, 0, maxDomainNamePresentationLength)
 	off1 := 0
 	lenmsg := len(msg)
 	budget := maxDomainNameWireOctets
