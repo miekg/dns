@@ -275,7 +275,7 @@ func unpackString(msg []byte, off int) (string, int, error) {
 			s.WriteByte('\\')
 			s.WriteByte(b)
 		case b < ' ' || b > '~': // unprintable
-			writeEscapedByte(&s, b)
+			s.WriteString(escapeByte(b))
 		default:
 			s.WriteByte(b)
 		}
