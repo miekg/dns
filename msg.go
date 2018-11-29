@@ -416,10 +416,7 @@ Loop:
 					s = append(s, '\\', b)
 				default:
 					if b < ' ' || b > '~' { // unprintable, use \DDD
-						var buf [3]byte
-						bufs := strconv.AppendInt(buf[:0], int64(b), 10)
-						s = append(s, '\\', '0', '0', '0')
-						copy(s[len(s)-len(bufs):], bufs)
+						s = append(s, escapeByte(b)...)
 					} else {
 						s = append(s, b)
 					}
