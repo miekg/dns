@@ -143,7 +143,7 @@ func BenchmarkUnpackDomainNameLongest(b *testing.B) {
 	}
 }
 
-func BenchmarkUnpackDomainNameLongestEscaped(b *testing.B) {
+func BenchmarkUnpackDomainNameLongestUnprintable(b *testing.B) {
 	buf := make([]byte, len(longestUnprintableDomain)+1)
 	n, err := PackDomainName(longestUnprintableDomain, buf, 0, nil, false)
 	if err != nil {
