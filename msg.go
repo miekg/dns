@@ -36,6 +36,16 @@ const (
 	// not something a well written implementation should ever do, so we leave them
 	// to trip the maximum compression pointer check.
 	maxCompressionPointers = (maxDomainNameWireOctets+1)/2 - 2
+
+	// This is the maximum length of a domain name in presentation format. The
+	// maximum wire length of a domain name is 255 octets (see above), with the
+	// maximum label length being 63. The wire format requires one extra byte over
+	// the presentation format, reducing the number of octets by 1. Each label in
+	// the name will be separated by a single period, with each octet in the label
+	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
+	// length, then the final label can only be 61 octets long to not exceed the
+	// maximum allowed wire length.
+	maxDomainNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
 // Errors defined in this package.
@@ -372,7 +382,7 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
-	s := make([]byte, 0, 64)
+	s := make([]byte, 0, maxDomainNamePresentationLength)
 	off1 := 0
 	lenmsg := len(msg)
 	budget := maxDomainNameWireOctets

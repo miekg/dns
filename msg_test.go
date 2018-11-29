@@ -13,6 +13,7 @@ const maxPrintableLabel = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0
 var (
 	longDomain = maxPrintableLabel[:53] + strings.TrimSuffix(
 		strings.Join([]string{".", ".", ".", ".", "."}, maxPrintableLabel[:49]), ".")
+
 	reChar              = regexp.MustCompile(`.`)
 	i                   = -1
 	maxUnprintableLabel = reChar.ReplaceAllStringFunc(maxPrintableLabel, func(ch string) string {
@@ -21,6 +22,10 @@ var (
 		}
 		return fmt.Sprintf("\\%03d", i)
 	})
+
+	// These are the longest possible domain names in presentation format.
+	longestDomain            = maxPrintableLabel[:61] + strings.Join([]string{".", ".", ".", "."}, maxPrintableLabel)
+	longestUnprintableDomain = maxUnprintableLabel[:61*4] + strings.Join([]string{".", ".", ".", "."}, maxUnprintableLabel)
 )
 
 func TestPackNoSideEffect(t *testing.T) {
