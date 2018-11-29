@@ -525,7 +525,7 @@ func (rr *RRSIG) len(off int, compression map[string]struct{}) int {
 func (rr *RT) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
 	l += 2 // Preference
-	l += domainNameLen(rr.Host, off+l, compression, true)
+	l += domainNameLen(rr.Host, off+l, compression, false)
 	return l
 }
 func (rr *SMIMEA) len(off int, compression map[string]struct{}) int {
