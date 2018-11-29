@@ -382,7 +382,6 @@ func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
 	}
 }
 
-
 func TestMsgCompressionMultipleQuestions(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
