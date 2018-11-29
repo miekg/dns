@@ -13,6 +13,7 @@ const maxPrintableLabel = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0
 var (
 	longDomain = maxPrintableLabel[:53] + strings.TrimSuffix(
 		strings.Join([]string{".", ".", ".", ".", "."}, maxPrintableLabel[:49]), ".")
+
 	reChar              = regexp.MustCompile(`.`)
 	i                   = -1
 	maxUnprintableLabel = reChar.ReplaceAllStringFunc(maxPrintableLabel, func(ch string) string {
@@ -21,6 +22,10 @@ var (
 		}
 		return fmt.Sprintf("\\%03d", i)
 	})
+
+	// These are the longest possible domain names in presentation format.
+	longestDomain            = maxPrintableLabel[:61] + strings.Join([]string{".", ".", ".", "."}, maxPrintableLabel)
+	longestUnprintableDomain = maxUnprintableLabel[:61*4] + strings.Join([]string{".", ".", ".", "."}, maxUnprintableLabel)
 )
 
 func TestPackNoSideEffect(t *testing.T) {
@@ -148,10 +153,9 @@ func TestUnpackDomainName(t *testing.T) {
 			"\x03foo" + "\x05\x03com\x00" + "\x07example" + "\xC0\x05",
 			"foo.\\003com\\000.example.com.",
 			""},
-
 		{"too long domain",
 			string(54) + "x" + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
-			"x" + longDomain + ".",
+			"",
 			ErrLongDomain.Error()},
 		{"too long by pointer",
 			// a matryoshka doll name to get over 255 octets after expansion via internal pointers
@@ -193,10 +197,11 @@ func TestUnpackDomainName(t *testing.T) {
 			""},
 		{"truncated name", "\x07example\x03", "", "dns: buffer size too small"},
 		{"non-absolute name", "\x07example\x03com", "", "dns: buffer size too small"},
-		{"compression pointer cycle",
+		{"compression pointer cycle (too many)", "\xC0\x00", "", "dns: too many compression pointers"},
+		{"compression pointer cycle (too long)",
 			"\x03foo" + "\x03bar" + "\x07example" + "\xC0\x04",
 			"",
-			"dns: too many compression pointers"},
+			ErrLongDomain.Error()},
 		{"reserved compression pointer 0b10", "\x07example\x80", "", "dns: bad rdata"},
 		{"reserved compression pointer 0b01", "\x07example\x40", "", "dns: bad rdata"},
 	}
@@ -209,6 +214,30 @@ func TestUnpackDomainName(t *testing.T) {
 			t.Errorf("%s: expected no error, got %d %v", test.label, idx, err)
 		} else if test.expectedError != "" && (err == nil || err.Error() != test.expectedError) {
 			t.Errorf("%s: expected error %s, got %d %v", test.label, test.expectedError, idx, err)
+		}
+	}
+}
+
+func TestPackDomainNameCompressionMap(t *testing.T) {
+	expected := map[string]struct{}{
+		`www\.this.is.\131an.example.org.`: struct{}{},
+		`is.\131an.example.org.`:           struct{}{},
+		`\131an.example.org.`:              struct{}{},
+		`example.org.`:                     struct{}{},
+		`org.`:                             struct{}{},
+	}
+
+	msg := make([]byte, 256)
+	for _, compress := range []bool{true, false} {
+		compression := make(map[string]int)
+
+		_, err := PackDomainName(`www\.this.is.\131an.example.org.`, msg, 0, compression, compress)
+		if err != nil {
+			t.Fatalf("PackDomainName failed: %v", err)
+		}
+
+		if !compressionMapsEqual(expected, compression) {
+			t.Errorf("expected compression maps to be equal; expected %v, got %v", expected, compression)
 		}
 	}
 }
@@ -255,5 +284,25 @@ func TestPackDomainNameNSECTypeBitmap(t *testing.T) {
 		// Print NSEC RR for both cases
 		t.Logf("expected: %v", msg.Answer[1])
 		t.Logf("got:      %v", msg2.Answer[1])
+	}
+}
+
+func TestPackUnpackManyCompressionPointers(t *testing.T) {
+	m := new(Msg)
+	m.Compress = true
+	m.SetQuestion("example.org.", TypeNS)
+
+	for domain := "a."; len(domain) < maxDomainNameWireOctets; domain += "a." {
+		m.Answer = append(m.Answer, &NS{Hdr: RR_Header{Name: domain, Rrtype: TypeNS, Class: ClassINET}, Ns: "example.org."})
+
+		b, err := m.Pack()
+		if err != nil {
+			t.Fatalf("Pack failed for %q and %d records with: %v", domain, len(m.Answer), err)
+		}
+
+		var m2 Msg
+		if err := m2.Unpack(b); err != nil {
+			t.Fatalf("Unpack failed for %q and %d records with: %v", domain, len(m.Answer), err)
+		}
 	}
 }
