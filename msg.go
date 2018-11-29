@@ -408,11 +408,8 @@ Loop:
 					if b < 32 || b >= 127 { // unprintable, use \DDD
 						var buf [3]byte
 						bufs := strconv.AppendInt(buf[:0], int64(b), 10)
-						s = append(s, '\\')
-						for i := len(bufs); i < 3; i++ {
-							s = append(s, '0')
-						}
-						s = append(s, bufs...)
+						s = append(s, '\\', '0', '0', '0')
+						copy(s[len(s)-len(bufs):], bufs)
 					} else {
 						s = append(s, b)
 					}
