@@ -2,13 +2,14 @@ package dns
 
 import (
 	"crypto/sha1"
+	"encoding/hex"
 	"hash"
 	"strings"
 )
 
 // HashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
 func HashName(label string, ha uint8, iter uint16, salt string) string {
-	wireSalt := make([]byte, DefaultMsgSize)
+	wireSalt := make([]byte, hex.DecodedLen(len(salt)))
 	n, err := packStringHex(salt, wireSalt, 0)
 	if err != nil {
 		return ""
