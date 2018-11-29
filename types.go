@@ -218,8 +218,10 @@ type Question struct {
 	Qclass uint16
 }
 
-func (q *Question) len() int {
-	return len(q.Name) + 1 + 2 + 2
+func (q *Question) len(off int, compression map[string]struct{}) int {
+	l := domainNameLen(q.Name, off, compression, true)
+	l += 2 + 2
+	return l
 }
 
 func (q *Question) String() (s string) {
@@ -833,8 +835,9 @@ func (rr *NSEC) String() string {
 	return s
 }
 
-func (rr *NSEC) len() int {
-	l := rr.Hdr.len() + len(rr.NextDomain) + 1
+func (rr *NSEC) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += domainNameLen(rr.NextDomain, off+l, compression, false)
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
@@ -998,8 +1001,9 @@ func (rr *NSEC3) String() string {
 	return s
 }
 
-func (rr *NSEC3) len() int {
-	l := rr.Hdr.len() + 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
+func (rr *NSEC3) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256
@@ -1315,8 +1319,9 @@ func (rr *CSYNC) String() string {
 	return s
 }
 
-func (rr *CSYNC) len() int {
-	l := rr.Hdr.len() + 4 + 2
+func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 4 + 2
 	lastwindow := uint32(2 ^ 32 + 1)
 	for _, t := range rr.TypeBitMap {
 		window := t / 256

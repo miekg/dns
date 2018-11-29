@@ -178,7 +178,7 @@ func BenchmarkCopy(b *testing.B) {
 func BenchmarkPackA(b *testing.B) {
 	a := &A{Hdr: RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY}, A: net.IPv4(127, 0, 0, 1)}
 
-	buf := make([]byte, a.len())
+	buf := make([]byte, Len(a))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -189,7 +189,7 @@ func BenchmarkPackA(b *testing.B) {
 func BenchmarkUnpackA(b *testing.B) {
 	a := &A{Hdr: RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY}, A: net.IPv4(127, 0, 0, 1)}
 
-	buf := make([]byte, a.len())
+	buf := make([]byte, Len(a))
 	PackRR(a, buf, 0, nil, false)
 	a = nil
 	b.ReportAllocs()
@@ -202,7 +202,7 @@ func BenchmarkUnpackA(b *testing.B) {
 func BenchmarkPackMX(b *testing.B) {
 	m := &MX{Hdr: RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY}, Mx: "mx.miek.nl."}
 
-	buf := make([]byte, m.len())
+	buf := make([]byte, Len(m))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -213,7 +213,7 @@ func BenchmarkPackMX(b *testing.B) {
 func BenchmarkUnpackMX(b *testing.B) {
 	m := &MX{Hdr: RR_Header{Name: ".", Rrtype: TypeA, Class: ClassANY}, Mx: "mx.miek.nl."}
 
-	buf := make([]byte, m.len())
+	buf := make([]byte, Len(m))
 	PackRR(m, buf, 0, nil, false)
 	m = nil
 	b.ReportAllocs()
@@ -226,7 +226,7 @@ func BenchmarkUnpackMX(b *testing.B) {
 func BenchmarkPackAAAAA(b *testing.B) {
 	aaaa := testRR(". IN A ::1")
 
-	buf := make([]byte, aaaa.len())
+	buf := make([]byte, Len(aaaa))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -237,7 +237,7 @@ func BenchmarkPackAAAAA(b *testing.B) {
 func BenchmarkUnpackAAAA(b *testing.B) {
 	aaaa := testRR(". IN A ::1")
 
-	buf := make([]byte, aaaa.len())
+	buf := make([]byte, Len(aaaa))
 	PackRR(aaaa, buf, 0, nil, false)
 	aaaa = nil
 	b.ReportAllocs()

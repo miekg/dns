@@ -9,7 +9,6 @@
 package dns
 
 //go:generate go run msg_generate.go
-//go:generate go run compress_generate.go
 
 import (
 	crand "crypto/rand"
@@ -766,7 +765,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	msg = buf
-	uncompressedLen := compressedLen(dns, false)
+	uncompressedLen := msgLenWithCompressionMap(dns, nil)
 	if packLen := uncompressedLen + 1; len(msg) < packLen {
 		msg = make([]byte, packLen)
 	}
@@ -914,12 +913,6 @@ func (dns *Msg) String() string {
 	return s
 }
 
-// Len returns the message length when in (un)compressed wire format.
-// If dns.Compress is true compression it is taken into account. Len()
-// is provided to be a faster way to get the size of the resulting packet,
-// than packing it, measuring the size and discarding the buffer.
-func (dns *Msg) Len() int { return compressedLen(dns, dns.Compress) }
-
 // isCompressible returns whether the msg may be compressible.
 func (dns *Msg) isCompressible() bool {
 	// If we only have one question, there is nothing we can ever compress.
@@ -927,148 +920,86 @@ func (dns *Msg) isCompressible() bool {
 		len(dns.Ns) > 0 || len(dns.Extra) > 0
 }
 
-func compressedLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
-	l := 12 // Message header is always 12 bytes
-	for _, r := range dns.Question {
-		compressionLenHelper(compression, r.Name, l)
-		l += r.len()
-	}
-	l += compressionLenSlice(l, compression, dns.Answer)
-	l += compressionLenSlice(l, compression, dns.Ns)
-	l += compressionLenSlice(l, compression, dns.Extra)
-	return l
-}
-
-// compressedLen returns the message length when in compressed wire format
-// when compress is true, otherwise the uncompressed length is returned.
-func compressedLen(dns *Msg, compress bool) int {
-	// We always return one more than needed.
-
+// Len returns the message length when in (un)compressed wire format.
+// If dns.Compress is true compression it is taken into account. Len()
+// is provided to be a faster way to get the size of the resulting packet,
+// than packing it, measuring the size and discarding the buffer.
+func (dns *Msg) Len() int {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
-	if compress && dns.isCompressible() {
+	if dns.Compress && dns.isCompressible() {
 		compression := make(map[string]struct{})
-		return compressedLenWithCompressionMap(dns, compression)
+		return msgLenWithCompressionMap(dns, compression)
 	}
 
+	return msgLenWithCompressionMap(dns, nil)
+}
+
+func msgLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
 	l := 12 // Message header is always 12 bytes
+
 	for _, r := range dns.Question {
-		l += r.len()
+		l += r.len(l, compression)
 	}
 	for _, r := range dns.Answer {
 		if r != nil {
-			l += r.len()
+			l += r.len(l, compression)
 		}
 	}
 	for _, r := range dns.Ns {
 		if r != nil {
-			l += r.len()
+			l += r.len(l, compression)
 		}
 	}
 	for _, r := range dns.Extra {
 		if r != nil {
-			l += r.len()
+			l += r.len(l, compression)
 		}
 	}
 
 	return l
 }
 
-func compressionLenSlice(lenp int, c map[string]struct{}, rs []RR) int {
-	initLen := lenp
-	for _, r := range rs {
-		if r == nil {
-			continue
-		}
-		// TmpLen is to track len of record at 14bits boudaries
-		tmpLen := lenp
-
-		x := r.len()
-		// track this length, and the global length in len, while taking compression into account for both.
-		k, ok, _ := compressionLenSearch(c, r.Header().Name)
-		if ok {
-			// Size of x is reduced by k, but we add 1 since k includes the '.' and label descriptor take 2 bytes
-			// so, basically x:= x - k - 1 + 2
-			x += 1 - k
-		}
-
-		tmpLen += compressionLenHelper(c, r.Header().Name, tmpLen)
-		k, ok, _ = compressionLenSearchType(c, r)
-		if ok {
-			x += 1 - k
-		}
-		lenp += x
-		tmpLen = lenp
-		tmpLen += compressionLenHelperType(c, r, tmpLen)
-
+func domainNameLen(s string, off int, compression map[string]struct{}, compress bool) int {
+	if s == "" || s == "." {
+		return 1
 	}
-	return lenp - initLen
+
+	nameLen := len(s) + 1
+	if compression == nil {
+		return nameLen
+	}
+
+	if compress || off < maxCompressionOffset {
+		// compressionLenSearch will insert the entry into the compression
+		// map if it doesn't contain it.
+		if l, ok := compressionLenSearch(compression, s, off); ok && compress {
+			nameLen = l + 2
+		}
+	}
+
+	return nameLen
 }
 
-// Put the parts of the name in the compression map, return the size in bytes added in payload
-func compressionLenHelper(c map[string]struct{}, s string, currentLen int) int {
-	if currentLen > maxCompressionOffset {
-		// We won't be able to add any label that could be re-used later anyway
-		return 0
-	}
-	if _, ok := c[s]; ok {
-		return 0
-	}
-	initLen := currentLen
-	pref := ""
-	prev := s
-	lbs := Split(s)
-	for j := 0; j < len(lbs); j++ {
-		pref = s[lbs[j]:]
-		currentLen += len(prev) - len(pref)
-		prev = pref
-		if _, ok := c[pref]; !ok {
-			// If first byte label is within the first 14bits, it might be re-used later
-			if currentLen < maxCompressionOffset {
-				c[pref] = struct{}{}
-			}
-		} else {
-			added := currentLen - initLen
-			if j > 0 {
-				// We added a new PTR
-				added += 2
-			}
-			return added
-		}
-	}
-	return currentLen - initLen
-}
-
-// Look for each part in the compression map and returns its length,
-// keep on searching so we get the longest match.
-// Will return the size of compression found, whether a match has been
-// found and the size of record if added in payload
-func compressionLenSearch(c map[string]struct{}, s string) (int, bool, int) {
-	off := 0
-	end := false
-	if s == "" { // don't bork on bogus data
-		return 0, false, 0
-	}
-	fullSize := 0
-	for {
+func compressionLenSearch(c map[string]struct{}, s string, msgOff int) (int, bool) {
+	for off, end := 0, false; !end; off, end = NextLabel(s, off) {
 		if _, ok := c[s[off:]]; ok {
-			return len(s[off:]), true, fullSize + off
+			return off, true
 		}
-		if end {
-			break
+
+		if msgOff+off < maxCompressionOffset {
+			c[s[off:]] = struct{}{}
 		}
-		// Each label descriptor takes 2 bytes, add it
-		fullSize += 2
-		off, end = NextLabel(s, off)
 	}
-	return 0, false, fullSize + len(s)
+
+	return 0, false
 }
 
 // Copy returns a new RR which is a deep-copy of r.
 func Copy(r RR) RR { r1 := r.copy(); return r1 }
 
 // Len returns the length (in octets) of the uncompressed RR in wire format.
-func Len(r RR) int { return r.len() }
+func Len(r RR) int { return r.len(0, nil) }
 
 // Copy returns a new *Msg which is a deep-copy of dns.
 func (dns *Msg) Copy() *Msg { return dns.CopyTo(new(Msg)) }

@@ -132,10 +132,10 @@ func TestPackNAPTR(t *testing.T) {
 		`apple.com. IN NAPTR   50 50 "se" "SIPS+D2T" "" _sips._tcp.apple.com.`,
 	} {
 		rr := testRR(n)
-		msg := make([]byte, rr.len())
+		msg := make([]byte, Len(rr))
 		if off, err := PackRR(rr, msg, 0, nil, false); err != nil {
 			t.Errorf("packing failed: %v", err)
-			t.Errorf("length %d, need more than %d", rr.len(), off)
+			t.Errorf("length %d, need more than %d", Len(rr), off)
 		}
 	}
 }
@@ -279,8 +279,8 @@ func TestTKEY(t *testing.T) {
 		t.Fatal("Unable to decode TKEY")
 	}
 	// Make sure we get back the same length
-	if rr.len() != len(tkeyBytes) {
-		t.Fatalf("Lengths don't match %d != %d", rr.len(), len(tkeyBytes))
+	if Len(rr) != len(tkeyBytes) {
+		t.Fatalf("Lengths don't match %d != %d", Len(rr), len(tkeyBytes))
 	}
 	// make space for it with some fudge room
 	msg := make([]byte, tkeyLen+1000)

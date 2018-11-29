@@ -78,8 +78,8 @@ func (rr *OPT) String() string {
 	return s
 }
 
-func (rr *OPT) len() int {
-	l := rr.Hdr.len()
+func (rr *OPT) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
 	for i := 0; i < len(rr.Option); i++ {
 		l += 4 // Account for 2-byte option code and 2-byte option length.
 		lo, _ := rr.Option[i].pack()

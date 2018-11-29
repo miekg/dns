@@ -34,8 +34,13 @@ type RR interface {
 
 	// copy returns a copy of the RR
 	copy() RR
-	// len returns the length (in octets) of the uncompressed RR in wire format.
-	len() int
+
+	// len returns the length (in octets) of the compressed or uncompressed RR in wire format.
+	//
+	// If compression is nil, the uncompressed size will be returned, otherwise the compressed
+	// size will be returned and domain names will be added to the map for future compression.
+	len(off int, compression map[string]struct{}) int
+
 	// pack packs an RR into wire format.
 	pack([]byte, int, map[string]int, bool) (int, error)
 }
@@ -70,15 +75,15 @@ func (h *RR_Header) String() string {
 	return s
 }
 
-func (h *RR_Header) len() int {
-	l := len(h.Name) + 1
+func (h *RR_Header) len(off int, compression map[string]struct{}) int {
+	l := domainNameLen(h.Name, off, compression, true)
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
 }
 
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
-	buf := make([]byte, r.len()*2)
+	buf := make([]byte, Len(r)*2)
 	off, err := PackRR(r, buf, 0, nil, false)
 	if err != nil {
 		return err
