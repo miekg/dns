@@ -37,7 +37,12 @@ const (
 	// to trip the maximum compression pointer check.
 	maxCompressionPointers = (maxDomainNameWireOctets+1)/2 - 2
 
-	// This is the maximum length of a domain name in presentation format.
+	// This is the maximum length of a domain name in presentation format. The
+	// maximum wire length of a domain name is 255 octets (see above), with the
+	// maximum label length being 63. The wire format requires one extra byte over
+	// the presentation format, reducing the number of octets by 1. Each label in
+	// the name will be separated by a single period, with each octet in the label
+	// expanding to at most 4 bytes (\DDD).
 	maxDomainNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
