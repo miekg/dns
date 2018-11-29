@@ -3,36 +3,35 @@ package dns
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"hash"
 	"strings"
 )
 
 // HashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
 func HashName(label string, ha uint8, iter uint16, salt string) string {
+	if ha != SHA1 {
+		return ""
+	}
+
 	wireSalt := make([]byte, hex.DecodedLen(len(salt)))
 	n, err := packStringHex(salt, wireSalt, 0)
 	if err != nil {
 		return ""
 	}
 	wireSalt = wireSalt[:n]
+
 	name := make([]byte, 255)
 	off, err := PackDomainName(strings.ToLower(label), name, 0, nil, false)
 	if err != nil {
 		return ""
 	}
 	name = name[:off]
-	var s hash.Hash
-	switch ha {
-	case SHA1:
-		s = sha1.New()
-	default:
-		return ""
-	}
 
+	s := sha1.New()
 	// k = 0
 	s.Write(name)
 	s.Write(wireSalt)
 	nsec3 := s.Sum(nil)
+
 	// k > 0
 	for k := uint16(0); k < iter; k++ {
 		s.Reset()
@@ -40,6 +39,7 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 		s.Write(wireSalt)
 		nsec3 = s.Sum(nsec3[:0])
 	}
+
 	return toBase32(nsec3)
 }
 
