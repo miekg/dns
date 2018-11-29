@@ -128,6 +128,36 @@ func BenchmarkUnpackDomainNameUnprintable(b *testing.B) {
 	}
 }
 
+func BenchmarkUnpackDomainNameLongest(b *testing.B) {
+	buf := make([]byte, len(longestDomain)+1)
+	n, err := PackDomainName(longestDomain, buf, 0, nil, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+	if n != maxDomainNameWireOctets {
+		b.Fatalf("name wrong size in wire format, expected %d, got %d", maxDomainNameWireOctets, n)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = UnpackDomainName(buf, 0)
+	}
+}
+
+func BenchmarkUnpackDomainNameLongestEscaped(b *testing.B) {
+	buf := make([]byte, len(longestUnprintableDomain)+1)
+	n, err := PackDomainName(longestUnprintableDomain, buf, 0, nil, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+	if n != maxDomainNameWireOctets {
+		b.Fatalf("name wrong size in wire format, expected %d, got %d", maxDomainNameWireOctets, n)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = UnpackDomainName(buf, 0)
+	}
+}
+
 func BenchmarkCopy(b *testing.B) {
 	b.ReportAllocs()
 	m := new(Msg)
