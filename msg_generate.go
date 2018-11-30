@@ -145,6 +145,10 @@ return off, err
 			switch {
 			case st.Tag(i) == `dns:"-"`: // ignored
 			case st.Tag(i) == `dns:"cdomain-name"`:
+				if !compressionAllowed[name] {
+					panic("prohibited name compression for type " + name)
+				}
+
 				o("off, err = PackDomainName(rr.%s, msg, off, compression, compress)\n")
 			case st.Tag(i) == `dns:"domain-name"`:
 				o("off, err = PackDomainName(rr.%s, msg, off, compression, false)\n")
