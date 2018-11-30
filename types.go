@@ -353,7 +353,7 @@ func (rr *X25) String() string {
 type RT struct {
 	Hdr        RR_Header
 	Preference uint16
-	Host       string `dns:"cdomain-name"`
+	Host       string `dns:"domain-name"` // RFC 3597 prohibits compressing records not defined in RFC 1035.
 }
 
 func (rr *RT) String() string {

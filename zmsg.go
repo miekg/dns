@@ -1070,7 +1070,7 @@ func (rr *RT) pack(msg []byte, off int, compression map[string]int, compress boo
 	if err != nil {
 		return off, err
 	}
-	off, err = PackDomainName(rr.Host, msg, off, compression, compress)
+	off, err = PackDomainName(rr.Host, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
