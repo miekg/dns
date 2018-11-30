@@ -624,7 +624,7 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 func packDataDomainNames(names []string, msg []byte, off int, compression map[string]int, compress bool) (int, error) {
 	var err error
 	for j := 0; j < len(names); j++ {
-		off, err = PackDomainName(names[j], msg, off, compression, false && compress)
+		off, err = PackDomainName(names[j], msg, off, compression, compress)
 		if err != nil {
 			return len(msg), err
 		}

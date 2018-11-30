@@ -106,7 +106,7 @@ return off, err
 				case `dns:"nsec"`:
 					o("off, err = packDataNsec(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
-					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, compress)\n")
+					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, false)\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}

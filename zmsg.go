@@ -438,7 +438,7 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]int, compress bo
 	if err != nil {
 		return off, err
 	}
-	off, err = packDataDomainNames(rr.RendezvousServers, msg, off, compression, compress)
+	off, err = packDataDomainNames(rr.RendezvousServers, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
