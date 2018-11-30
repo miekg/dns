@@ -190,6 +190,12 @@ var RcodeToString = map[int]string{
 	RcodeBadCookie: "BADCOOKIE",
 }
 
+// compressionMap is used to allow a more efficient compression map
+// to be used for internal packDomainName calls without changing the
+// signature or functionality of public API.
+//
+// In particular, map[string]uint16 uses 25% less per-entry memory
+// than does map[string]int.
 type compressionMap struct {
 	ext map[string]int    // external callers
 	int map[string]uint16 // internal callers
