@@ -968,32 +968,27 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 
 	escaped := strings.Contains(s, "\\")
 
-	nameLen := len(s) + 1
-	if escaped {
-		nameLen = escapedNameLen(s)
-	}
-
-	if compression == nil {
-		return nameLen
-	}
-
-	if compress || off < maxCompressionOffset {
+	if compression != nil && (compress || off < maxCompressionOffset) {
 		// compressionLenSearch will insert the entry into the compression
 		// map if it doesn't contain it.
 		if l, ok := compressionLenSearch(compression, s, off); ok && compress {
 			if escaped {
-				nameLen = escapedNameLen(s[:l]) - 1 + 2
-			} else {
-				nameLen = l + 2
+				return escapedNameLen(s[:l]) + 2
 			}
+
+			return l + 2
 		}
 	}
 
-	return nameLen
+	if escaped {
+		return escapedNameLen(s) + 1
+	}
+
+	return len(s) + 1
 }
 
 func escapedNameLen(s string) int {
-	nameLen := len(s) + 1
+	nameLen := len(s)
 	for i := 0; i < len(s); i++ {
 		if s[i] != '\\' {
 			continue
