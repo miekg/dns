@@ -17,6 +17,7 @@ import (
 	"math/big"
 	"math/rand"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -965,16 +966,40 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 		return 1
 	}
 
-	nameLen := len(s) + 1
-	if compression == nil {
-		return nameLen
-	}
+	escaped := strings.Contains(s, "\\")
 
-	if compress || off < maxCompressionOffset {
+	if compression != nil && (compress || off < maxCompressionOffset) {
 		// compressionLenSearch will insert the entry into the compression
 		// map if it doesn't contain it.
 		if l, ok := compressionLenSearch(compression, s, off); ok && compress {
-			nameLen = l + 2
+			if escaped {
+				return escapedNameLen(s[:l]) + 2
+			}
+
+			return l + 2
+		}
+	}
+
+	if escaped {
+		return escapedNameLen(s) + 1
+	}
+
+	return len(s) + 1
+}
+
+func escapedNameLen(s string) int {
+	nameLen := len(s)
+	for i := 0; i < len(s); i++ {
+		if s[i] != '\\' {
+			continue
+		}
+
+		if i+3 < len(s) && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
+			nameLen -= 3
+			i += 3
+		} else {
+			nameLen--
+			i++
 		}
 	}
 
