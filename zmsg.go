@@ -2083,7 +2083,7 @@ func unpackHIP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	rr.RendezvousServers, off, err = unpackDataDomainNames(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.RendezvousServers, off, err = unpackDataDomainNames(msg, off, rdStart+int(rr.Hdr.Rdlength), false)
 	if err != nil {
 		return rr, off, err
 	}

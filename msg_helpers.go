@@ -602,7 +602,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
+func unpackDataDomainNames(msg []byte, off, end int, allowCompression bool) ([]string, int, error) {
 	var (
 		servers []string
 		s       string
@@ -612,7 +612,7 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 		return nil, len(msg), &Error{err: "overflow unpacking domain names"}
 	}
 	for off < end {
-		s, off, err = UnpackDomainName(msg, off)
+		s, off, err = unpackDomainName(msg, off, allowCompression)
 		if err != nil {
 			return servers, len(msg), err
 		}

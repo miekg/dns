@@ -270,7 +270,8 @@ return rr, off, err
 				case `dns:"nsec"`:
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
 				case `dns:"domain-name"`:
-					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+					o(fmt.Sprintf("rr.%%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength), %t)\n",
+						compressionAllowed[name]))
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
