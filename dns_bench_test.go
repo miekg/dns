@@ -99,6 +99,15 @@ func BenchmarkMsgLengthOnlyQuestion(b *testing.B) {
 	}
 }
 
+func BenchmarkMsgLengthEscapedName(b *testing.B) {
+	msg := new(Msg)
+	msg.SetQuestion(`\1\2\3\4\5\6\7\8\9\0\1\2\3\4\5\6\7\8\9\0\1\2\3\4\5\6\7\8\9\0\1\2\3\4\5.\1\2\3\4\5\6\7\8.\1\2\3.`, TypeANY)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		msg.Len()
+	}
+}
+
 func BenchmarkPackDomainName(b *testing.B) {
 	name1 := "12345678901234567890123456789012345.12345678.123."
 	buf := make([]byte, len(name1)+1)
