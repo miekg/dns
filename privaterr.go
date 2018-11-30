@@ -69,7 +69,7 @@ func (r *PrivateRR) copy() RR {
 	}
 	return rr
 }
-func (r *PrivateRR) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	off, err := r.Hdr.pack(msg, off, compression, compress)
 	if err != nil {
 		return off, err

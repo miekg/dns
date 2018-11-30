@@ -42,7 +42,7 @@ type RR interface {
 	len(off int, compression map[string]struct{}) int
 
 	// pack packs an RR into wire format.
-	pack([]byte, int, map[string]int, bool) (int, error)
+	pack([]byte, int, compressionMap, bool) (int, error)
 }
 
 // RR_Header is the header all DNS resource records share.

@@ -190,6 +190,33 @@ var RcodeToString = map[int]string{
 	RcodeBadCookie: "BADCOOKIE",
 }
 
+type compressionMap struct {
+	ext map[string]int    // external callers
+	int map[string]uint16 // internal callers
+}
+
+func (m compressionMap) valid() bool {
+	return m.int != nil || m.ext != nil
+}
+
+func (m compressionMap) insert(s string, pos int) {
+	if m.ext != nil {
+		m.ext[s] = pos
+	} else {
+		m.int[s] = uint16(pos)
+	}
+}
+
+func (m compressionMap) find(s string) (int, bool) {
+	if m.ext != nil {
+		pos, ok := m.ext[s]
+		return pos, ok
+	}
+
+	pos, ok := m.int[s]
+	return int(pos), ok
+}
+
 // Domain names are a sequence of counted strings
 // split at the dots. They end with a zero-length string.
 
@@ -198,11 +225,11 @@ var RcodeToString = map[int]string{
 // map needs to hold a mapping between domain names and offsets
 // pointing into msg.
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	off1, _, err = packDomainName(s, msg, off, compression, compress)
+	off1, _, err = packDomainName(s, msg, off, compressionMap{ext: compression}, compress)
 	return
 }
 
-func packDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, labels int, err error) {
+func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
 	// special case if msg == nil
 	lenmsg := 256
 	if msg != nil {
@@ -292,8 +319,8 @@ loop:
 			// Don't try to compress '.'
 			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
-			if compression != nil && !isRootLabel(s, bs, begin, ls) {
-				if p, ok := compression[s[compBegin:]]; ok {
+			if compression.valid() && !isRootLabel(s, bs, begin, ls) {
+				if p, ok := compression.find(s[compBegin:]); ok {
 					// The first hit is the longest matching dname
 					// keep the pointer offset we get back and store
 					// the offset of the current name, because that's
@@ -306,7 +333,7 @@ loop:
 					}
 				} else if off < maxCompressionOffset {
 					// Only offsets smaller than maxCompressionOffset can be used.
-					compression[s[compBegin:]] = off
+					compression.insert(s[compBegin:], off)
 				}
 			}
 
@@ -586,6 +613,10 @@ func intToBytes(i *big.Int, length int) []byte {
 // PackRR packs a resource record rr into msg[off:].
 // See PackDomainName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
+	return packRR(rr, msg, off, compressionMap{ext: compression}, compress)
+}
+
+func packRR(rr RR, msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	if rr == nil {
 		return len(msg), &Error{err: "nil rr"}
 	}
@@ -708,15 +739,15 @@ func (dns *Msg) PackBuffer(buf []byte) (msg []byte, err error) {
 	// If this message can't be compressed, avoid filling the
 	// compression map and creating garbage.
 	if dns.Compress && dns.isCompressible() {
-		compression := make(map[string]int) // Compression pointer mappings.
-		return dns.packBufferWithCompressionMap(buf, compression, true)
+		compression := make(map[string]uint16) // Compression pointer mappings.
+		return dns.packBufferWithCompressionMap(buf, compressionMap{int: compression}, true)
 	}
 
-	return dns.packBufferWithCompressionMap(buf, nil, false)
+	return dns.packBufferWithCompressionMap(buf, compressionMap{}, false)
 }
 
 // packBufferWithCompressionMap packs a Msg, using the given buffer buf.
-func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]int, compress bool) (msg []byte, err error) {
+func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compressionMap, compress bool) (msg []byte, err error) {
 	if dns.Rcode < 0 || dns.Rcode > 0xFFF {
 		return nil, ErrRcode
 	}
@@ -784,19 +815,19 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression map[string]
 		}
 	}
 	for _, r := range dns.Answer {
-		off, err = PackRR(r, msg, off, compression, compress)
+		off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for _, r := range dns.Ns {
-		off, err = PackRR(r, msg, off, compression, compress)
+		off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for _, r := range dns.Extra {
-		off, err = PackRR(r, msg, off, compression, compress)
+		off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
@@ -1072,8 +1103,8 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	return r1
 }
 
-func (q *Question) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
-	off, err := PackDomainName(q.Name, msg, off, compression, compress)
+func (q *Question) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
+	off, _, err := packDomainName(q.Name, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
@@ -1114,7 +1145,7 @@ func unpackQuestion(msg []byte, off int) (Question, int, error) {
 	return q, off, err
 }
 
-func (dh *Header) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	off, err := packUint16(dh.Id, msg, off)
 	if err != nil {
 		return off, err
