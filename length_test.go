@@ -439,9 +439,37 @@ func TestMsgCompressLengthEscapingMatch(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	// Len doesn't account for escaping when calculating the length *yet* so
-	// we're off by three here. This will be fixed in a follow up change.
-	if predicted != len(buf)+3 {
+	if predicted != len(buf) {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
+
+func TestMsgLengthEscaped(t *testing.T) {
+	msg := new(Msg)
+	msg.SetQuestion(`\000\001\002.\003\004\005\006\007\008\009.\a\b\c.`, TypeA)
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+	if predicted != len(buf) {
+		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
+	}
+}
+
+func TestMsgCompressLengthEscaped(t *testing.T) {
+	msg := new(Msg)
+	msg.Compress = true
+	msg.SetQuestion(`www.example.org.`, TypeA)
+	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `\000\001\002.example.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
+
+	predicted := msg.Len()
+	buf, err := msg.Pack()
+	if err != nil {
+		t.Error(err)
+	}
+	if predicted != len(buf) {
 		t.Fatalf("predicted compressed length is wrong: predicted %d, actual %d", predicted, len(buf))
 	}
 }
