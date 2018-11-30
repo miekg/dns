@@ -966,8 +966,10 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 		return 1
 	}
 
+	escaped := strings.Contains(s, "\\")
+
 	nameLen := len(s) + 1
-	if strings.Contains(s, "\\") {
+	if escaped {
 		nameLen = escapedNameLen(s)
 	}
 
@@ -979,9 +981,11 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 		// compressionLenSearch will insert the entry into the compression
 		// map if it doesn't contain it.
 		if l, ok := compressionLenSearch(compression, s, off); ok && compress {
-			// nameLen = l + 2, but this doesn't mess up escapedNameLen
-			// above.
-			nameLen += l - len(s) + 1
+			if escaped {
+				nameLen = escapedNameLen(s[:l]) - 1 + 2
+			} else {
+				nameLen = l + 2
+			}
 		}
 	}
 

@@ -462,7 +462,8 @@ func TestMsgCompressLengthEscaped(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
 	msg.SetQuestion(`www.example.org.`, TypeA)
-	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `\000\001\002.example.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
+	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `\000\001\002.example.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: `ns.\e\x\a\m\p\l\e.org.`})
+	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `www.\e\x\a\m\p\l\e.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
 
 	predicted := msg.Len()
 	buf, err := msg.Pack()
