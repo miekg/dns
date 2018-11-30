@@ -381,6 +381,10 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
+	return unpackDomainName(msg, off, true)
+}
+
+func unpackDomainName(msg []byte, off int, allowCompression bool) (string, int, error) {
 	s := make([]byte, 0, maxDomainNamePresentationLength)
 	off1 := 0
 	lenmsg := len(msg)
@@ -424,6 +428,9 @@ Loop:
 			s = append(s, '.')
 			off += c
 		case 0xC0:
+			if !allowCompression {
+				return "", lenmsg, &Error{err: "prohibited compression pointer found in name"}
+			}
 			// pointer to somewhere else in msg.
 			// remember location after first ptr,
 			// since that's how many bytes we consumed.

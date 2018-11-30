@@ -1543,7 +1543,7 @@ func unpackAFSDB(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Hostname, off, err = UnpackDomainName(msg, off)
+	rr.Hostname, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -1735,7 +1735,7 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -1838,7 +1838,7 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2145,7 +2145,7 @@ func unpackKX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Exchanger, off, err = UnpackDomainName(msg, off)
+	rr.Exchanger, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2276,7 +2276,7 @@ func unpackLP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Fqdn, off, err = UnpackDomainName(msg, off)
+	rr.Fqdn, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2293,7 +2293,7 @@ func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Mb, off, err = UnpackDomainName(msg, off)
+	rr.Mb, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2310,7 +2310,7 @@ func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Md, off, err = UnpackDomainName(msg, off)
+	rr.Md, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2327,7 +2327,7 @@ func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Mf, off, err = UnpackDomainName(msg, off)
+	rr.Mf, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2344,7 +2344,7 @@ func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Mg, off, err = UnpackDomainName(msg, off)
+	rr.Mg, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2361,14 +2361,14 @@ func unpackMINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Rmail, off, err = UnpackDomainName(msg, off)
+	rr.Rmail, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Email, off, err = UnpackDomainName(msg, off)
+	rr.Email, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2385,7 +2385,7 @@ func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Mr, off, err = UnpackDomainName(msg, off)
+	rr.Mr, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2409,7 +2409,7 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Mx, off, err = UnpackDomainName(msg, off)
+	rr.Mx, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2461,7 +2461,7 @@ func unpackNAPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Replacement, off, err = UnpackDomainName(msg, off)
+	rr.Replacement, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2536,7 +2536,7 @@ func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Ns, off, err = UnpackDomainName(msg, off)
+	rr.Ns, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2553,7 +2553,7 @@ func unpackNSAPPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Ptr, off, err = UnpackDomainName(msg, off)
+	rr.Ptr, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2570,7 +2570,7 @@ func unpackNSEC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.NextDomain, off, err = UnpackDomainName(msg, off)
+	rr.NextDomain, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2733,7 +2733,7 @@ func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Ptr, off, err = UnpackDomainName(msg, off)
+	rr.Ptr, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2757,14 +2757,14 @@ func unpackPX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Map822, off, err = UnpackDomainName(msg, off)
+	rr.Map822, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Mapx400, off, err = UnpackDomainName(msg, off)
+	rr.Mapx400, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2836,14 +2836,14 @@ func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Mbox, off, err = UnpackDomainName(msg, off)
+	rr.Mbox, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Txt, off, err = UnpackDomainName(msg, off)
+	rr.Txt, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2909,7 +2909,7 @@ func unpackRRSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.SignerName, off, err = UnpackDomainName(msg, off)
+	rr.SignerName, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -2940,7 +2940,7 @@ func unpackRT(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Host, off, err = UnpackDomainName(msg, off)
+	rr.Host, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3006,7 +3006,7 @@ func unpackSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.SignerName, off, err = UnpackDomainName(msg, off)
+	rr.SignerName, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3068,14 +3068,14 @@ func unpackSOA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Ns, off, err = UnpackDomainName(msg, off)
+	rr.Ns, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Mbox, off, err = UnpackDomainName(msg, off)
+	rr.Mbox, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3165,7 +3165,7 @@ func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, off, err = unpackDomainName(msg, off, true)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3251,14 +3251,14 @@ func unpackTALINK(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.PreviousName, off, err = UnpackDomainName(msg, off)
+	rr.PreviousName, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
 	if off == len(msg) {
 		return rr, off, nil
 	}
-	rr.NextName, off, err = UnpackDomainName(msg, off)
+	rr.NextName, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3275,7 +3275,7 @@ func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Algorithm, off, err = UnpackDomainName(msg, off)
+	rr.Algorithm, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
@@ -3383,7 +3383,7 @@ func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Algorithm, off, err = UnpackDomainName(msg, off)
+	rr.Algorithm, off, err = unpackDomainName(msg, off, false)
 	if err != nil {
 		return rr, off, err
 	}
