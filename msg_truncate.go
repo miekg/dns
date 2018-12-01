@@ -39,7 +39,7 @@ func (dns *Msg) Truncate(size int) {
 
 	dns.Compress = true
 
-	edns0 := dns.IsEdns0()
+	edns0 := dns.popEdns0()
 	if edns0 != nil {
 		// Account for the OPT record that gets added at the end,
 		// by subtracting that length from our budget.
@@ -47,12 +47,6 @@ func (dns *Msg) Truncate(size int) {
 		// The EDNS(0) OPT record must have the root domain and
 		// it's length is thus unaffected by compression.
 		size -= Len(edns0)
-
-		// Remove the OPT record and handle it separately.
-		//
-		// TODO(tmthrgd): IsEdns0 checks more than just the
-		// last record. This could remove the wrong record.
-		dns.Extra = dns.Extra[:len(dns.Extra)-1]
 	}
 
 	compression := make(map[string]struct{})
@@ -86,6 +80,7 @@ func (dns *Msg) Truncate(size int) {
 	dns.Extra = dns.Extra[:numExtra]
 
 	if edns0 != nil {
+		// Add the OPT record back onto the additional section.
 		dns.Extra = append(dns.Extra, edns0)
 	}
 }
