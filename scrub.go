@@ -22,6 +22,14 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 		return
 	}
 
+	// RFC 6891 mandates that the payload size in an OPT record
+	// less than 512 bytes must be treated as equal to 512 bytes.
+	//
+	// For ease of use, we impose that restriction here.
+	if size < 512 {
+		size = 512
+	}
+
 	l := msgLenWithCompressionMap(dns, nil) // uncompressed length
 	if l <= size {
 		// Don't waste effort compressing this message.
