@@ -43,7 +43,10 @@ func (dns *Msg) Truncate(size int) {
 	if edns0 != nil {
 		// Account for the OPT record that gets added at the end,
 		// by subtracting that length from our budget.
-		size -= 12 // OPT record length.
+		//
+		// The EDNS(0) OPT record must have the root domain and
+		// it's length is thus unaffected by compression.
+		size -= Len(edns0)
 
 		// Remove the OPT record and handle it separately.
 		//
