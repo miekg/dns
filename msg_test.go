@@ -237,7 +237,7 @@ func TestPackDomainNameCompressionMap(t *testing.T) {
 		}
 
 		if !compressionMapsEqual(expected, compression) {
-			t.Errorf("expected compression maps to be equal; expected %v, got %v", expected, compression)
+			t.Errorf("expected compression maps to be equal\n%s", compressionMapsDifference(expected, compression))
 		}
 	}
 }
