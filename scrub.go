@@ -77,24 +77,25 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 	dns.Ns = dns.Ns[:numNS]
 	dns.Extra = dns.Extra[:numExtra]
 
-	if reqEDNS0 != nil {
-		// Add OPT record to message. This may be the same OPT
-		// record that was already part of the message.
-
-		o := dnsEDNS0
-		if o == nil {
-			o = new(OPT)
-		}
-
-		o.Hdr.Name = "."
-		o.Hdr.Rrtype = TypeOPT
-		o.SetVersion(0)
-		o.Hdr.Ttl &^= 0xffff // clear flags
-		o.SetDo(reqEDNS0.Do())
-		o.SetUDPSize(reqEDNS0.UDPSize())
-
-		dns.Extra = append(dns.Extra, o)
+	if reqEDNS0 == nil {
+		return
 	}
+
+	// Add OPT record to message. This may be the same OPT
+	// record that was already part of the message.
+	o := dnsEDNS0
+	if o == nil {
+		o = new(OPT)
+	}
+
+	o.Hdr.Name = "."
+	o.Hdr.Rrtype = TypeOPT
+	o.SetVersion(0)
+	o.Hdr.Ttl &^= 0xffff // clear flags
+	o.SetDo(reqEDNS0.Do())
+	o.SetUDPSize(reqEDNS0.UDPSize())
+
+	dns.Extra = append(dns.Extra, o)
 }
 
 func (dns *Msg) truncateLoop(rrs []RR, size, l int, compression map[string]struct{}) (int, int) {
