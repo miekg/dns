@@ -16,7 +16,7 @@ func TestRequestScrubAnswer(t *testing.T) {
 			fmt.Sprintf("large.example.com. 10 IN SRV 0 0 80 10-0-0-%d.default.pod.k8s.example.com.", i)))
 	}
 
-	reply.Scrub(MinMsgSize, m)
+	reply.Scrub(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
@@ -36,7 +36,7 @@ func TestRequestScrubExtra(t *testing.T) {
 			fmt.Sprintf("large.example.com. 10 IN SRV 0 0 80 10-0-0-%d.default.pod.k8s.example.com.", i)))
 	}
 
-	reply.Scrub(MinMsgSize, m)
+	reply.Scrub(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
@@ -46,9 +46,11 @@ func TestRequestScrubExtra(t *testing.T) {
 }
 
 func TestRequestScrubExtraEdns0(t *testing.T) {
+	const size = 4096
+
 	m := new(Msg)
 	m.SetQuestion("large.example.com.", TypeSRV)
-	m.SetEdns0(4096, true)
+	m.SetEdns0(size, true)
 
 	reply := new(Msg)
 	reply.SetReply(m)
@@ -56,9 +58,10 @@ func TestRequestScrubExtraEdns0(t *testing.T) {
 		reply.Extra = append(reply.Extra, testRR(
 			fmt.Sprintf("large.example.com. 10 IN SRV 0 0 80 10-0-0-%d.default.pod.k8s.example.com.", i)))
 	}
+	reply.SetEdns0(size, true)
 
-	reply.Scrub(MinMsgSize, m)
-	if want, got := MinMsgSize, reply.Len(); want < got {
+	reply.Scrub(size)
+	if want, got := size, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
 	if reply.Truncated {
@@ -87,8 +90,9 @@ func TestRequestScrubExtraRegression(t *testing.T) {
 		reply.Extra = append(reply.Extra, testRR(
 			fmt.Sprintf("10-0-0-%d.default.pod.k8s.example.com. 10 IN A 10.0.0.%d", i, i)))
 	}
+	reply.SetEdns0(size, true)
 
-	reply.Scrub(size, m)
+	reply.Scrub(size)
 	if want, got := size, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
@@ -124,7 +128,7 @@ func TestTruncation(t *testing.T) {
 		copy := reply.Copy()
 		copy.SetReply(m)
 
-		copy.Scrub(bufsize, m)
+		copy.Scrub(bufsize)
 		if want, got := bufsize, copy.Len(); want < got {
 			t.Fatalf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 		}
@@ -144,7 +148,7 @@ func TestRequestScrubAnswerExact(t *testing.T) {
 		reply.Answer = append(reply.Answer, testRR(fmt.Sprintf("large.example.com. 10 IN A 127.0.0.%d", i)))
 	}
 
-	reply.Scrub(size, m)
+	reply.Scrub(size)
 	if want, got := size, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
@@ -175,6 +179,6 @@ func BenchmarkMsgScrub(b *testing.B) {
 		copy := reply.Copy()
 		b.StartTimer()
 
-		copy.Scrub(size, m)
+		copy.Scrub(size)
 	}
 }

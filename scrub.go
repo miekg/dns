@@ -15,7 +15,7 @@ package dns
 // record, if present, and is transport specific otherwise. dns.MinMsgSize
 // should be used for UDP requests without an OPT record, and
 // dns.MaxMsgSize for TCP requests without an OPT record.
-func (dns *Msg) Scrub(size int, req *Msg) {
+func (dns *Msg) Scrub(size int) {
 	if dns.IsTsig() != nil {
 		// To simplify this implementation, we don't perform
 		// scrubbing on responses with a TSIG record.
@@ -39,20 +39,17 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 
 	dns.Compress = true
 
-	reqEDNS0 := req.IsEdns0()
-	dnsEDNS0 := dns.IsEdns0()
-	if reqEDNS0 != nil {
+	edns0 := dns.IsEdns0()
+	if edns0 != nil {
 		// Account for the OPT record that gets added at the end,
 		// by subtracting that length from our budget.
 		size -= 12 // OPT record length.
 
-		if dnsEDNS0 != nil {
-			// Remove the OPT record and handle it separately.
-			//
-			// TODO(tmthrgd): IsEdns0 checks more than just the
-			// last record. This could remove the wrong record.
-			dns.Extra = dns.Extra[:len(dns.Extra)-1]
-		}
+		// Remove the OPT record and handle it separately.
+		//
+		// TODO(tmthrgd): IsEdns0 checks more than just the
+		// last record. This could remove the wrong record.
+		dns.Extra = dns.Extra[:len(dns.Extra)-1]
 	}
 
 	compression := make(map[string]struct{})
@@ -85,25 +82,9 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 	dns.Ns = dns.Ns[:numNS]
 	dns.Extra = dns.Extra[:numExtra]
 
-	if reqEDNS0 == nil {
-		return
+	if edns0 != nil {
+		dns.Extra = append(dns.Extra, edns0)
 	}
-
-	// Add OPT record to message. This may be the same OPT
-	// record that was already part of the message.
-	o := dnsEDNS0
-	if o == nil {
-		o = new(OPT)
-	}
-
-	o.Hdr.Name = "."
-	o.Hdr.Rrtype = TypeOPT
-	o.SetVersion(0)
-	o.Hdr.Ttl &^= 0xffff // clear flags
-	o.SetDo(reqEDNS0.Do())
-	o.SetUDPSize(reqEDNS0.UDPSize())
-
-	dns.Extra = append(dns.Extra, o)
 }
 
 func truncateLoop(rrs []RR, size, l int, compression map[string]struct{}) (int, int) {
