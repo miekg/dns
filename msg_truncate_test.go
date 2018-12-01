@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRequestScrubAnswer(t *testing.T) {
+func TestRequestTruncateAnswer(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("large.example.com.", TypeSRV)
 
@@ -16,16 +16,16 @@ func TestRequestScrubAnswer(t *testing.T) {
 			fmt.Sprintf("large.example.com. 10 IN SRV 0 0 80 10-0-0-%d.default.pod.k8s.example.com.", i)))
 	}
 
-	reply.Scrub(MinMsgSize)
+	reply.Truncate(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
-		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
 	if !reply.Truncated {
-		t.Errorf("Want scrub to set truncated bit")
+		t.Errorf("truncated bit should be set")
 	}
 }
 
-func TestRequestScrubExtra(t *testing.T) {
+func TestRequestTruncateExtra(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("large.example.com.", TypeSRV)
 
@@ -36,16 +36,16 @@ func TestRequestScrubExtra(t *testing.T) {
 			fmt.Sprintf("large.example.com. 10 IN SRV 0 0 80 10-0-0-%d.default.pod.k8s.example.com.", i)))
 	}
 
-	reply.Scrub(MinMsgSize)
+	reply.Truncate(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
-		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
 	if reply.Truncated {
-		t.Errorf("Want scrub to not set truncated bit")
+		t.Errorf("truncated bit should not be set")
 	}
 }
 
-func TestRequestScrubExtraEdns0(t *testing.T) {
+func TestRequestTruncateExtraEdns0(t *testing.T) {
 	const size = 4096
 
 	m := new(Msg)
@@ -60,20 +60,20 @@ func TestRequestScrubExtraEdns0(t *testing.T) {
 	}
 	reply.SetEdns0(size, true)
 
-	reply.Scrub(size)
+	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
 	if reply.Truncated {
-		t.Errorf("Want scrub to not set truncated bit")
+		t.Errorf("truncated bit should not be set")
 	}
 	opt := reply.Extra[len(reply.Extra)-1]
 	if opt.Header().Rrtype != TypeOPT {
-		t.Errorf("Last RR must be OPT record")
+		t.Errorf("expected last RR to be OPT")
 	}
 }
 
-func TestRequestScrubExtraRegression(t *testing.T) {
+func TestRequestTruncateExtraRegression(t *testing.T) {
 	const size = 2048
 
 	m := new(Msg)
@@ -92,16 +92,16 @@ func TestRequestScrubExtraRegression(t *testing.T) {
 	}
 	reply.SetEdns0(size, true)
 
-	reply.Scrub(size)
+	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
 	if reply.Truncated {
-		t.Errorf("Want scrub to not set truncated bit")
+		t.Errorf("truncated bit should not be set")
 	}
 	opt := reply.Extra[len(reply.Extra)-1]
 	if opt.Header().Rrtype != TypeOPT {
-		t.Errorf("Last RR must be OPT record")
+		t.Errorf("expected last RR to be OPT")
 	}
 }
 
@@ -122,21 +122,21 @@ func TestTruncation(t *testing.T) {
 
 	for bufsize := 1024; bufsize <= 4096; bufsize += 12 {
 		m := new(Msg)
-		m.SetQuestion("http.service.tcp.srv.k8s.example.org", TypeSRV)
+		m.SetQuestion("http.service.tcp.srv.k8s.example.org.", TypeSRV)
 		m.SetEdns0(uint16(bufsize), true)
 
 		copy := reply.Copy()
 		copy.SetReply(m)
 
-		copy.Scrub(bufsize)
+		copy.Truncate(bufsize)
 		if want, got := bufsize, copy.Len(); want < got {
-			t.Fatalf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+			t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 		}
 	}
 }
 
-func TestRequestScrubAnswerExact(t *testing.T) {
-	const size = 867 // Bit fiddly, but this hits the rl == size break clause in Scrub, 52 RRs should remain.
+func TestRequestTruncateAnswerExact(t *testing.T) {
+	const size = 867 // Bit fiddly, but this hits the rl == size break clause in Truncate, 52 RRs should remain.
 
 	m := new(Msg)
 	m.SetQuestion("large.example.com.", TypeSRV)
@@ -148,16 +148,16 @@ func TestRequestScrubAnswerExact(t *testing.T) {
 		reply.Answer = append(reply.Answer, testRR(fmt.Sprintf("large.example.com. 10 IN A 127.0.0.%d", i)))
 	}
 
-	reply.Scrub(size)
+	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
 	if expected := 52; len(reply.Answer) != expected {
 		t.Errorf("wrong number of answers; expected %d, got %d", expected, len(reply.Answer))
 	}
 }
 
-func BenchmarkMsgScrub(b *testing.B) {
+func BenchmarkMsgTruncate(b *testing.B) {
 	const size = 2048
 
 	m := new(Msg)
@@ -182,6 +182,6 @@ func BenchmarkMsgScrub(b *testing.B) {
 		copy := reply.Copy()
 		b.StartTimer()
 
-		copy.Scrub(size)
+		copy.Truncate(size)
 	}
 }

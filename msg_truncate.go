@@ -1,7 +1,7 @@
 package dns
 
-// Scrub truncates the reply message so that it will fit the requested
-// buffer size.
+// Truncate ensures the reply message will fit into the requested buffer
+// size by removing records that exceed the requested size.
 //
 // It will first check if the reply fits without compression and then with
 // compression. If it won't fit with compression, Scrub then walks the
@@ -15,7 +15,7 @@ package dns
 // record, if present, and is transport specific otherwise. dns.MinMsgSize
 // should be used for UDP requests without an OPT record, and
 // dns.MaxMsgSize for TCP requests without an OPT record.
-func (dns *Msg) Scrub(size int) {
+func (dns *Msg) Truncate(size int) {
 	if dns.IsTsig() != nil {
 		// To simplify this implementation, we don't perform
 		// scrubbing on responses with a TSIG record.
