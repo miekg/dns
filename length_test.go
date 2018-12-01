@@ -274,6 +274,38 @@ func compressionMapsEqual(a map[string]struct{}, b map[string]int) bool {
 	return true
 }
 
+func compressionMapsDifference(a map[string]struct{}, b map[string]int) string {
+	var s strings.Builder
+
+	var c int
+	fmt.Fprintf(&s, "length compression map (%d):", len(a))
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			if c > 0 {
+				s.WriteString(",")
+			}
+
+			fmt.Fprintf(&s, " missing %q", k)
+			c++
+		}
+	}
+
+	c = 0
+	fmt.Fprintf(&s, "\npack compression map (%d):", len(b))
+	for k := range b {
+		if _, ok := a[k]; !ok {
+			if c > 0 {
+				s.WriteString(",")
+			}
+
+			fmt.Fprintf(&s, " missing %q", k)
+			c++
+		}
+	}
+
+	return s.String()
+}
+
 func TestCompareCompressionMapsForANY(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
@@ -302,7 +334,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
 		}
 		if !compressionMapsEqual(compressionFake, compressionReal) {
-			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n%s", labelSize, compressionMapsDifference(compressionFake, compressionReal))
 		}
 	}
 }
@@ -335,7 +367,7 @@ func TestCompareCompressionMapsForSRV(t *testing.T) {
 			t.Fatalf("padding= %d ; Predicted len := %d != real:= %d", labelSize, lenFake, len(buf))
 		}
 		if !compressionMapsEqual(compressionFake, compressionReal) {
-			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n*** Real:= %v\n\n***Fake:= %v", labelSize, compressionReal, compressionFake)
+			t.Fatalf("padding= %d ; Fake Compression Map != Real Compression Map\n%s", labelSize, compressionMapsDifference(compressionFake, compressionReal))
 		}
 	}
 }
