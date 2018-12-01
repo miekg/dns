@@ -1050,8 +1050,7 @@ type TKEY struct {
 
 // TKEY has no official presentation format, but this will suffice.
 func (rr *TKEY) String() string {
-	s := "\n;; TKEY PSEUDOSECTION:\n"
-	s += rr.Hdr.String() + " " + rr.Algorithm + " " +
+	s := ";" + rr.Hdr.String() + " " + rr.Algorithm + " " +
 		strconv.Itoa(int(rr.KeySize)) + " " + rr.Key + " " +
 		strconv.Itoa(int(rr.OtherLen)) + " " + rr.OtherData
 	return s
