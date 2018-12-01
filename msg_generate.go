@@ -85,7 +85,6 @@ func main() {
 if err != nil {
 	return off, err
 }
-headerEnd := off
 `)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
@@ -176,8 +175,6 @@ if rr.%s != "-" {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		// We have packed everything, only now we know the rdlength of this RR
-		fmt.Fprintln(b, "rr.Header().Rdlength = uint16(off-headerEnd)")
 		fmt.Fprintln(b, "return off, nil }\n")
 	}
 

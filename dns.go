@@ -82,6 +82,7 @@ func (h *RR_Header) len(off int, compression map[string]struct{}) int {
 }
 
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
+// This function modifies r.Rdlength.
 func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf := make([]byte, Len(r)*2)
 	off, err := PackRR(r, buf, 0, nil, false)
@@ -89,11 +90,12 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 		return err
 	}
 	buf = buf[:off]
-	if int(r.Header().Rdlength) > off {
-		return ErrBuf
-	}
 
-	rfc3597, _, err := unpackRFC3597(*r.Header(), buf, off-int(r.Header().Rdlength))
+	// unpack expects the rdlength to be set in the header.
+	hLen := r.Header().len(0, nil)
+	r.Header().Rdlength = uint16(off - hLen)
+
+	rfc3597, _, err := unpackRFC3597(*r.Header(), buf, hLen)
 	if err != nil {
 		return err
 	}

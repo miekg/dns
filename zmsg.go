@@ -9,12 +9,10 @@ func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packDataA(rr.A, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -23,12 +21,10 @@ func (rr *AAAA) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packDataAAAA(rr.AAAA, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -37,7 +33,6 @@ func (rr *AFSDB) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Subtype, msg, off)
 	if err != nil {
 		return off, err
@@ -46,7 +41,6 @@ func (rr *AFSDB) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -55,8 +49,6 @@ func (rr *ANY) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -65,12 +57,10 @@ func (rr *AVC) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -79,7 +69,6 @@ func (rr *CAA) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Flag, msg, off)
 	if err != nil {
 		return off, err
@@ -92,7 +81,6 @@ func (rr *CAA) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -101,7 +89,6 @@ func (rr *CDNSKEY) pack(msg []byte, off int, compression compressionMap, compres
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
@@ -118,7 +105,6 @@ func (rr *CDNSKEY) pack(msg []byte, off int, compression compressionMap, compres
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -127,7 +113,6 @@ func (rr *CDS) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
@@ -144,7 +129,6 @@ func (rr *CDS) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -153,7 +137,6 @@ func (rr *CERT) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Type, msg, off)
 	if err != nil {
 		return off, err
@@ -170,7 +153,6 @@ func (rr *CERT) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -179,12 +161,10 @@ func (rr *CNAME) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Target, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -193,7 +173,6 @@ func (rr *CSYNC) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint32(rr.Serial, msg, off)
 	if err != nil {
 		return off, err
@@ -206,7 +185,6 @@ func (rr *CSYNC) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -215,12 +193,10 @@ func (rr *DHCID) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringBase64(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -229,7 +205,6 @@ func (rr *DLV) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
@@ -246,7 +221,6 @@ func (rr *DLV) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -255,12 +229,10 @@ func (rr *DNAME) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Target, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -269,7 +241,6 @@ func (rr *DNSKEY) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
@@ -286,7 +257,6 @@ func (rr *DNSKEY) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -295,7 +265,6 @@ func (rr *DS) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
@@ -312,7 +281,6 @@ func (rr *DS) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -321,12 +289,10 @@ func (rr *EID) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringHex(rr.Endpoint, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -335,12 +301,10 @@ func (rr *EUI48) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint48(rr.Address, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -349,12 +313,10 @@ func (rr *EUI64) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint64(rr.Address, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -363,12 +325,10 @@ func (rr *GID) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint32(rr.Gid, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -377,7 +337,6 @@ func (rr *GPOS) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packString(rr.Longitude, msg, off)
 	if err != nil {
 		return off, err
@@ -390,7 +349,6 @@ func (rr *GPOS) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -399,7 +357,6 @@ func (rr *HINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packString(rr.Cpu, msg, off)
 	if err != nil {
 		return off, err
@@ -408,7 +365,6 @@ func (rr *HINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -417,7 +373,6 @@ func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.HitLength, msg, off)
 	if err != nil {
 		return off, err
@@ -442,7 +397,6 @@ func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -451,7 +405,6 @@ func (rr *KEY) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
@@ -468,7 +421,6 @@ func (rr *KEY) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -477,7 +429,6 @@ func (rr *KX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -486,7 +437,6 @@ func (rr *KX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -495,7 +445,6 @@ func (rr *L32) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -504,7 +453,6 @@ func (rr *L32) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -513,7 +461,6 @@ func (rr *L64) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -522,7 +469,6 @@ func (rr *L64) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -531,7 +477,6 @@ func (rr *LOC) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Version, msg, off)
 	if err != nil {
 		return off, err
@@ -560,7 +505,6 @@ func (rr *LOC) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -569,7 +513,6 @@ func (rr *LP) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -578,7 +521,6 @@ func (rr *LP) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -587,12 +529,10 @@ func (rr *MB) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Mb, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -601,12 +541,10 @@ func (rr *MD) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Md, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -615,12 +553,10 @@ func (rr *MF) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Mf, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -629,12 +565,10 @@ func (rr *MG) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Mg, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -643,7 +577,6 @@ func (rr *MINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Rmail, msg, off, compression, compress)
 	if err != nil {
 		return off, err
@@ -652,7 +585,6 @@ func (rr *MINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -661,12 +593,10 @@ func (rr *MR) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Mr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -675,7 +605,6 @@ func (rr *MX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -684,7 +613,6 @@ func (rr *MX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -693,7 +621,6 @@ func (rr *NAPTR) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Order, msg, off)
 	if err != nil {
 		return off, err
@@ -718,7 +645,6 @@ func (rr *NAPTR) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -727,7 +653,6 @@ func (rr *NID) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -736,7 +661,6 @@ func (rr *NID) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -745,12 +669,10 @@ func (rr *NIMLOC) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringHex(rr.Locator, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -759,12 +681,10 @@ func (rr *NINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringTxt(rr.ZSData, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -773,12 +693,10 @@ func (rr *NS) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Ns, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -787,12 +705,10 @@ func (rr *NSAPPTR) pack(msg []byte, off int, compression compressionMap, compres
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Ptr, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -801,7 +717,6 @@ func (rr *NSEC) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.NextDomain, msg, off, compression, false)
 	if err != nil {
 		return off, err
@@ -810,7 +725,6 @@ func (rr *NSEC) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -819,7 +733,6 @@ func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Hash, msg, off)
 	if err != nil {
 		return off, err
@@ -855,7 +768,6 @@ func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -864,7 +776,6 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression compressionMap, comp
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Hash, msg, off)
 	if err != nil {
 		return off, err
@@ -888,7 +799,6 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression compressionMap, comp
 			return off, err
 		}
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -897,12 +807,10 @@ func (rr *OPENPGPKEY) pack(msg []byte, off int, compression compressionMap, comp
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -911,12 +819,10 @@ func (rr *OPT) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packDataOpt(rr.Option, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -925,12 +831,10 @@ func (rr *PTR) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Ptr, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -939,7 +843,6 @@ func (rr *PX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
@@ -952,7 +855,6 @@ func (rr *PX) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -961,12 +863,10 @@ func (rr *RFC3597) pack(msg []byte, off int, compression compressionMap, compres
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringHex(rr.Rdata, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -975,7 +875,6 @@ func (rr *RKEY) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
@@ -992,7 +891,6 @@ func (rr *RKEY) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1001,7 +899,6 @@ func (rr *RP) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Mbox, msg, off, compression, false)
 	if err != nil {
 		return off, err
@@ -1010,7 +907,6 @@ func (rr *RP) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1019,7 +915,6 @@ func (rr *RRSIG) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.TypeCovered, msg, off)
 	if err != nil {
 		return off, err
@@ -1056,7 +951,6 @@ func (rr *RRSIG) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1065,16 +959,14 @@ func (rr *RT) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, _, err = packDomainName(rr.Host, msg, off, compression, false)
+	off, _, err = packDomainName(rr.Host, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1083,7 +975,6 @@ func (rr *SIG) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.TypeCovered, msg, off)
 	if err != nil {
 		return off, err
@@ -1120,7 +1011,6 @@ func (rr *SIG) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1129,7 +1019,6 @@ func (rr *SMIMEA) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Usage, msg, off)
 	if err != nil {
 		return off, err
@@ -1146,7 +1035,6 @@ func (rr *SMIMEA) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1155,7 +1043,6 @@ func (rr *SOA) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Ns, msg, off, compression, compress)
 	if err != nil {
 		return off, err
@@ -1184,7 +1071,6 @@ func (rr *SOA) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1193,12 +1079,10 @@ func (rr *SPF) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1207,7 +1091,6 @@ func (rr *SRV) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
@@ -1224,7 +1107,6 @@ func (rr *SRV) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1233,7 +1115,6 @@ func (rr *SSHFP) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
@@ -1246,7 +1127,6 @@ func (rr *SSHFP) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1255,7 +1135,6 @@ func (rr *TA) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
@@ -1272,7 +1151,6 @@ func (rr *TA) pack(msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1281,7 +1159,6 @@ func (rr *TALINK) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.PreviousName, msg, off, compression, false)
 	if err != nil {
 		return off, err
@@ -1290,7 +1167,6 @@ func (rr *TALINK) pack(msg []byte, off int, compression compressionMap, compress
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1299,7 +1175,6 @@ func (rr *TKEY) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Algorithm, msg, off, compression, false)
 	if err != nil {
 		return off, err
@@ -1336,7 +1211,6 @@ func (rr *TKEY) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1345,7 +1219,6 @@ func (rr *TLSA) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint8(rr.Usage, msg, off)
 	if err != nil {
 		return off, err
@@ -1362,7 +1235,6 @@ func (rr *TLSA) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1371,7 +1243,6 @@ func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, _, err = packDomainName(rr.Algorithm, msg, off, compression, false)
 	if err != nil {
 		return off, err
@@ -1408,7 +1279,6 @@ func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1417,12 +1287,10 @@ func (rr *TXT) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1431,12 +1299,10 @@ func (rr *UID) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint32(rr.Uid, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1445,12 +1311,10 @@ func (rr *UINFO) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packString(rr.Uinfo, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1459,7 +1323,6 @@ func (rr *URI) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packUint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
@@ -1472,7 +1335,6 @@ func (rr *URI) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
@@ -1481,12 +1343,10 @@ func (rr *X25) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
-	headerEnd := off
 	off, err = packString(rr.PSDNAddress, msg, off)
 	if err != nil {
 		return off, err
 	}
-	rr.Header().Rdlength = uint16(off - headerEnd)
 	return off, nil
 }
 
