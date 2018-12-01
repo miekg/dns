@@ -64,17 +64,17 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 
 	var numAnswer int
 	if l < size {
-		l, numAnswer = dns.truncateLoop(dns.Answer, size, l, compression)
+		l, numAnswer = truncateLoop(dns.Answer, size, l, compression)
 	}
 
 	var numNS int
 	if l < size {
-		l, numNS = dns.truncateLoop(dns.Ns, size, l, compression)
+		l, numNS = truncateLoop(dns.Ns, size, l, compression)
 	}
 
 	var numExtra int
 	if l < size {
-		l, numExtra = dns.truncateLoop(dns.Extra, size, l, compression)
+		l, numExtra = truncateLoop(dns.Extra, size, l, compression)
 	}
 
 	// According to RFC 2181, the TC bit should only be set if not all
@@ -106,7 +106,7 @@ func (dns *Msg) Scrub(size int, req *Msg) {
 	dns.Extra = append(dns.Extra, o)
 }
 
-func (dns *Msg) truncateLoop(rrs []RR, size, l int, compression map[string]struct{}) (int, int) {
+func truncateLoop(rrs []RR, size, l int, compression map[string]struct{}) (int, int) {
 	for i, r := range rrs {
 		if r == nil {
 			continue
