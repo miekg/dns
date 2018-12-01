@@ -152,6 +152,9 @@ func TestRequestScrubAnswerExact(t *testing.T) {
 	if want, got := size, reply.Len(); want < got {
 		t.Errorf("Want scrub to reduce message length below %d bytes, got %d bytes", want, got)
 	}
+	if expected := 52; len(reply.Answer) != expected {
+		t.Errorf("wrong number of answers; expected %d, got %d", expected, len(reply.Answer))
+	}
 }
 
 func BenchmarkMsgScrub(b *testing.B) {
