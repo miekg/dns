@@ -18,7 +18,7 @@ package dns
 func (dns *Msg) Truncate(size int) {
 	if dns.IsTsig() != nil {
 		// To simplify this implementation, we don't perform
-		// scrubbing on responses with a TSIG record.
+		// truncation on responses with a TSIG record.
 		return
 	}
 
