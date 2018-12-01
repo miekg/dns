@@ -80,7 +80,7 @@ func main() {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]int, compress bool) (int, error) {\n", name)
+		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {\n", name)
 		fmt.Fprint(b, `off, err := rr.Hdr.pack(msg, off, compression, compress)
 if err != nil {
 	return off, err
@@ -116,9 +116,9 @@ return off, err
 			switch {
 			case st.Tag(i) == `dns:"-"`: // ignored
 			case st.Tag(i) == `dns:"cdomain-name"`:
-				o("off, err = PackDomainName(rr.%s, msg, off, compression, compress)\n")
+				o("off, _, err = packDomainName(rr.%s, msg, off, compression, compress)\n")
 			case st.Tag(i) == `dns:"domain-name"`:
-				o("off, err = PackDomainName(rr.%s, msg, off, compression, false)\n")
+				o("off, _, err = packDomainName(rr.%s, msg, off, compression, false)\n")
 			case st.Tag(i) == `dns:"a"`:
 				o("off, err = packDataA(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"aaaa"`:

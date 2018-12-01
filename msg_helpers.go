@@ -101,12 +101,12 @@ func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte,
 
 // pack packs an RR header, returning the offset to the end of the header.
 // See PackDomainName for documentation about the compression.
-func (hdr RR_Header) pack(msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
+func (hdr RR_Header) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	if off == len(msg) {
 		return off, nil
 	}
 
-	off, err = PackDomainName(hdr.Name, msg, off, compression, compress)
+	off, _, err = packDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
 		return len(msg), err
 	}
@@ -621,10 +621,10 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 	return servers, off, nil
 }
 
-func packDataDomainNames(names []string, msg []byte, off int, compression map[string]int, compress bool) (int, error) {
+func packDataDomainNames(names []string, msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	var err error
 	for j := 0; j < len(names); j++ {
-		off, err = PackDomainName(names[j], msg, off, compression, compress)
+		off, _, err = packDomainName(names[j], msg, off, compression, compress)
 		if err != nil {
 			return len(msg), err
 		}
