@@ -279,8 +279,8 @@ func compressionMapsDifference(a map[string]struct{}, b map[string]int) string {
 
 	var c int
 	fmt.Fprintf(&s, "length compression map (%d):", len(a))
-	for k := range a {
-		if _, ok := b[k]; !ok {
+	for k := range b {
+		if _, ok := a[k]; !ok {
 			if c > 0 {
 				s.WriteString(",")
 			}
@@ -292,8 +292,8 @@ func compressionMapsDifference(a map[string]struct{}, b map[string]int) string {
 
 	c = 0
 	fmt.Fprintf(&s, "\npack compression map (%d):", len(b))
-	for k := range b {
-		if _, ok := a[k]; !ok {
+	for k := range a {
+		if _, ok := b[k]; !ok {
 			if c > 0 {
 				s.WriteString(",")
 			}
