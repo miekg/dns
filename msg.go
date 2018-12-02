@@ -637,12 +637,14 @@ func packRR(rr RR, msg []byte, off int, compression compressionMap, compress boo
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-	if off1-headerEnd > 0xFFFF {
+
+	rdlength := off1 - headerEnd
+	if int(uint16(rdlength)) != rdlength { // overflow
 		return headerEnd, len(msg), ErrRdata
 	}
 
 	// The RDLENGTH field is the last field in the header and we set it here.
-	binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(off1-headerEnd))
+	binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(rdlength))
 	return headerEnd, off1, nil
 }
 
