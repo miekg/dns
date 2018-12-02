@@ -93,7 +93,7 @@ func TestClientLocalAddress(t *testing.T) {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 	if len(r.Extra) != 1 {
-		t.Errorf("failed to get additional answers\n%v", r)
+		t.Fatalf("failed to get additional answers\n%v", r)
 	}
 	txt := r.Extra[0].(*TXT)
 	if txt == nil {
