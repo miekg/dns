@@ -42,7 +42,7 @@ type RR interface {
 	len(off int, compression map[string]struct{}) int
 
 	// pack packs an RR into wire format.
-	pack([]byte, int, compressionMap, bool) (int, error)
+	pack(msg []byte, off int, compression compressionMap, compress bool) (headerEnd int, off1 int, err error)
 }
 
 // RR_Header is the header all DNS resource records share.
@@ -84,19 +84,20 @@ func (h *RR_Header) len(off int, compression map[string]struct{}) int {
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf := make([]byte, Len(r)*2)
-	off, err := PackRR(r, buf, 0, nil, false)
+	headerEnd, off, err := packRR(r, buf, 0, compressionMap{}, false)
 	if err != nil {
 		return err
 	}
 	buf = buf[:off]
-	if int(r.Header().Rdlength) > off {
-		return ErrBuf
-	}
 
-	rfc3597, _, err := unpackRFC3597(*r.Header(), buf, off-int(r.Header().Rdlength))
+	hdr := *r.Header()
+	hdr.Rdlength = uint16(off - headerEnd)
+
+	rfc3597, _, err := unpackRFC3597(hdr, buf, headerEnd)
 	if err != nil {
 		return err
 	}
+
 	*rr = *rfc3597.(*RFC3597)
 	return nil
 }

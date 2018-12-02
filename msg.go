@@ -619,23 +619,31 @@ func intToBytes(i *big.Int, length int) []byte {
 // PackRR packs a resource record rr into msg[off:].
 // See PackDomainName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	return packRR(rr, msg, off, compressionMap{ext: compression}, compress)
+	headerEnd, off1, err := packRR(rr, msg, off, compressionMap{ext: compression}, compress)
+	if err == nil {
+		// packRR no longer sets the Rdlength field on the rr, but
+		// callers might be expecting it so we set it here.
+		rr.Header().Rdlength = uint16(off1 - headerEnd)
+	}
+	return off1, err
 }
 
-func packRR(rr RR, msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+func packRR(rr RR, msg []byte, off int, compression compressionMap, compress bool) (headerEnd int, off1 int, err error) {
 	if rr == nil {
-		return len(msg), &Error{err: "nil rr"}
+		return len(msg), len(msg), &Error{err: "nil rr"}
 	}
 
-	off1, err = rr.pack(msg, off, compression, compress)
+	headerEnd, off1, err = rr.pack(msg, off, compression, compress)
 	if err != nil {
-		return len(msg), err
+		return headerEnd, len(msg), err
 	}
-	// TODO(miek): Not sure if this is needed? If removed we can remove rawmsg.go as well.
-	if rawSetRdlength(msg, off, off1) {
-		return off1, nil
+	if off1-headerEnd > 0xFFFF {
+		return headerEnd, len(msg), ErrRdata
 	}
-	return off, ErrRdata
+
+	// The RDLENGTH field is the last field in the header and we set it here.
+	binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(off1-headerEnd))
+	return headerEnd, off1, nil
 }
 
 // UnpackRR unpacks msg[off:] into an RR.
@@ -821,19 +829,19 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 		}
 	}
 	for _, r := range dns.Answer {
-		off, err = packRR(r, msg, off, compression, compress)
+		_, off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for _, r := range dns.Ns {
-		off, err = packRR(r, msg, off, compression, compress)
+		_, off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for _, r := range dns.Extra {
-		off, err = packRR(r, msg, off, compression, compress)
+		_, off, err = packRR(r, msg, off, compression, compress)
 		if err != nil {
 			return nil, err
 		}
