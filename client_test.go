@@ -485,49 +485,34 @@ func TestTimeout(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
 
-	// Use a channel + timeout to ensure we don't get stuck if the
-	// Client Timeout is not working properly
-	done := make(chan struct{}, 2)
+	runTest := func(name string, exchange func(m *Msg, addr string, timeout time.Duration) (*Msg, time.Duration, error)) {
+		t.Run(name, func(t *testing.T) {
+			start := time.Now()
 
-	timeout := time.Millisecond
-	allowable := timeout + 10*time.Millisecond
-	abortAfter := timeout + 100*time.Millisecond
+			timeout := time.Millisecond
+			allowable := timeout + 10*time.Millisecond
 
-	start := time.Now()
+			_, _, err := exchange(m, addrstr, timeout)
+			if err == nil {
+				t.Errorf("no timeout using Client.%s", name)
+			}
 
-	go func() {
+			length := time.Since(start)
+			if length > allowable {
+				t.Errorf("exchange took longer %v than specified Timeout %v", length, allowable)
+			}
+		})
+	}
+	runTest("Exchange", func(m *Msg, addr string, timeout time.Duration) (*Msg, time.Duration, error) {
 		c := &Client{Timeout: timeout}
-		_, _, err := c.Exchange(m, addrstr)
-		if err == nil {
-			t.Error("no timeout using Client.Exchange")
-		}
-		done <- struct{}{}
-	}()
-
-	go func() {
+		return c.Exchange(m, addr)
+	})
+	runTest("ExchangeContext", func(m *Msg, addr string, timeout time.Duration) (*Msg, time.Duration, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		c := &Client{}
-		_, _, err := c.ExchangeContext(ctx, m, addrstr)
-		if err == nil {
-			t.Error("no timeout using Client.ExchangeContext")
-		}
-		done <- struct{}{}
-	}()
 
-	// Wait for both the Exchange and ExchangeContext tests to be done.
-	for i := 0; i < 2; i++ {
-		select {
-		case <-done:
-		case <-time.After(abortAfter):
-		}
-	}
-
-	length := time.Since(start)
-
-	if length > allowable {
-		t.Errorf("exchange took longer %v than specified Timeout %v", length, allowable)
-	}
+		return new(Client).ExchangeContext(ctx, m, addrstr)
+	})
 }
 
 // Check that responses from deduplicated requests aren't shared between callers
