@@ -7,7 +7,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -521,17 +520,13 @@ func TestConcurrentExchanges(t *testing.T) {
 	cases[0] = new(Msg)
 	cases[1] = new(Msg)
 	cases[1].Truncated = true
-	for _, m := range cases {
-		block := make(chan struct{})
-		waiting := make(chan struct{})
 
+	for _, m := range cases {
 		mm := m // redeclare m so as not to trip the race detector
 		handler := func(w ResponseWriter, req *Msg) {
 			r := mm.Copy()
 			r.SetReply(req)
 
-			waiting <- struct{}{}
-			<-block
 			w.WriteMsg(r)
 		}
 
@@ -546,29 +541,24 @@ func TestConcurrentExchanges(t *testing.T) {
 
 		m := new(Msg)
 		m.SetQuestion("miek.nl.", TypeSRV)
+
 		c := &Client{
 			SingleInflight: true,
 		}
-		r := make([]*Msg, 2)
+		// Force this client to always return the same request,
+		// even though we're querying sequentially. Running the
+		// Exchange calls below concurrently can fail due to
+		// goroutine scheduling, but this simulates the same
+		// outcome.
+		c.group.dontDeleteForTesting = true
 
-		var wg sync.WaitGroup
-		wg.Add(len(r))
-		for i := 0; i < len(r); i++ {
-			go func(i int) {
-				defer wg.Done()
-				r[i], _, _ = c.Exchange(m.Copy(), addrstr)
-				if r[i] == nil {
-					t.Errorf("response %d is nil", i)
-				}
-			}(i)
+		r := make([]*Msg, 2)
+		for i := range r {
+			r[i], _, _ = c.Exchange(m.Copy(), addrstr)
+			if r[i] == nil {
+				t.Errorf("response %d is nil", i)
+			}
 		}
-		select {
-		case <-waiting:
-		case <-time.After(time.Second):
-			t.FailNow()
-		}
-		close(block)
-		wg.Wait()
 
 		if r[0] == r[1] {
 			t.Errorf("got same response, expected non-shared responses")
