@@ -633,7 +633,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		m.Extra = make([]RR, 1)
 		m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{"Hello world"}}
 
-		if err := w.WriteMsg(m); err != nil {
+		if _, err := w.WriteMsg(m); err != nil {
 			errOnce.Do(func() {
 				t.Errorf("ResponseWriter.WriteMsg error: %s", err)
 			})
@@ -668,7 +668,8 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 		eg.Go(func() error {
 			conn.SetWriteDeadline(time.Now().Add(client.Timeout))
 
-			return conn.WriteMsg(m)
+			_, err := conn.WriteMsg(m)
+			return err
 		})
 	}
 
@@ -977,7 +978,8 @@ func TestResponseAfterClose(t *testing.T) {
 	_, err := rw.Write(make([]byte, 2))
 	testError("Write", err)
 
-	testError("WriteMsg", rw.WriteMsg(new(Msg)))
+	_, err = rw.WriteMsg(new(Msg))
+	testError("WriteMsg", err)
 }
 
 func TestResponseDoubleClose(t *testing.T) {

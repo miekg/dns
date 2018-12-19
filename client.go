@@ -170,7 +170,7 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	t := time.Now()
 	// write with the appropriate write timeout
 	co.SetWriteDeadline(t.Add(c.getTimeoutForRequest(c.writeTimeout())))
-	if err = co.WriteMsg(m); err != nil {
+	if _, err = co.WriteMsg(m); err != nil {
 		return nil, 0, err
 	}
 
@@ -335,12 +335,13 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 // WriteMsg sends a message through the connection co.
 // If the message m contains a TSIG record the transaction
 // signature is calculated.
-func (co *Conn) WriteMsg(m *Msg) (err error) {
+func (co *Conn) WriteMsg(m *Msg) (int, error) {
 	var out []byte
+	var err error
 	if t := m.IsTsig(); t != nil {
 		mac := ""
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
-			return ErrSecret
+			return 0, ErrSecret
 		}
 		out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 		// Set for the next read, although only used in zone transfers
@@ -349,12 +350,9 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 		out, err = m.Pack()
 	}
 	if err != nil {
-		return err
+		return 0, err
 	}
-	if _, err = co.Write(out); err != nil {
-		return err
-	}
-	return nil
+	return co.Write(out)
 }
 
 // Write implements the net.Conn Write method.
@@ -431,7 +429,7 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 	println("dns: ExchangeConn: this function is deprecated")
 	co := new(Conn)
 	co.Conn = c
-	if err = co.WriteMsg(m); err != nil {
+	if _, err = co.WriteMsg(m); err != nil {
 		return nil, err
 	}
 	r, err = co.ReadMsg()

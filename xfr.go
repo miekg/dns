@@ -45,7 +45,7 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 			return nil, err
 		}
 	}
-	if err := t.WriteMsg(q); err != nil {
+	if _, err := t.WriteMsg(q); err != nil {
 		return nil, err
 	}
 	env = make(chan *Envelope)
@@ -192,7 +192,7 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 		r.Authoritative = true
 		// assume it fits TODO(miek): fix
 		r.Answer = append(r.Answer, x.RR...)
-		if err := w.WriteMsg(r); err != nil {
+		if _, err := w.WriteMsg(r); err != nil {
 			return err
 		}
 	}
@@ -224,23 +224,21 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 }
 
 // WriteMsg writes a message through the transfer connection t.
-func (t *Transfer) WriteMsg(m *Msg) (err error) {
+func (t *Transfer) WriteMsg(m *Msg) (int, error) {
 	var out []byte
+	var err error
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
 		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
-			return ErrSecret
+			return 0, ErrSecret
 		}
 		out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
 	} else {
 		out, err = m.Pack()
 	}
 	if err != nil {
-		return err
+		return 0, err
 	}
-	if _, err = t.Write(out); err != nil {
-		return err
-	}
-	return nil
+	return t.Write(out)
 }
 
 func isSOAFirst(in *Msg) bool {

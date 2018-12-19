@@ -59,8 +59,9 @@ type ResponseWriter interface {
 	LocalAddr() net.Addr
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// WriteMsg writes a reply back to the client.
-	WriteMsg(*Msg) error
+	// WriteMsg writes a reply back to the client. It returns the number of
+	// bytes written to the client and the error, if any.
+	WriteMsg(*Msg) (int, error)
 	// Write writes a raw buffer back to the client.
 	Write([]byte) (int, error)
 	// Close closes the connection.
@@ -751,28 +752,27 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.
-func (w *response) WriteMsg(m *Msg) (err error) {
+func (w *response) WriteMsg(m *Msg) (int, error) {
 	if w.closed {
-		return &Error{err: "WriteMsg called after Close"}
+		return 0, &Error{err: "WriteMsg called after Close"}
 	}
 
 	var data []byte
+	var err error
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
 			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
 			if err != nil {
-				return err
+				return 0, err
 			}
-			_, err = w.writer.Write(data)
-			return err
+			return w.writer.Write(data)
 		}
 	}
 	data, err = m.Pack()
 	if err != nil {
-		return err
+		return 0, err
 	}
-	_, err = w.writer.Write(data)
-	return err
+	return w.writer.Write(data)
 }
 
 // Write implements the ResponseWriter.Write method.

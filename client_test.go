@@ -300,7 +300,7 @@ func TestClientConn(t *testing.T) {
 		t.Errorf("failed to dial %s: %v", addrstr, err)
 	}
 
-	err = cn.WriteMsg(m)
+	_, err = cn.WriteMsg(m)
 	if err != nil {
 		t.Errorf("failed to exchange: %v", err)
 	}
@@ -312,7 +312,7 @@ func TestClientConn(t *testing.T) {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 
-	err = cn.WriteMsg(m)
+	_, err = cn.WriteMsg(m)
 	if err != nil {
 		t.Errorf("failed to exchange: %v", err)
 	}
