@@ -45,7 +45,7 @@ var defaultMsgAcceptFunc = func(dh Header) MsgAcceptAction {
 		return MsgReject
 	}
 	// IXFR request could have one SOA RR in the NS section
-	// RFC 1995, section 3: https://tools.ietf.org/html/rfc1995
+	// RFC 1995, section 3
 	if dh.Nscount > 1 {
 		return MsgReject
 	}
