@@ -85,6 +85,8 @@ func isDuplicateRdata(r1, r2 RR) bool {
 		return isDuplicateNSEC3(r1.(*NSEC3), r2.(*NSEC3))
 	case TypeNSEC3PARAM:
 		return isDuplicateNSEC3PARAM(r1.(*NSEC3PARAM), r2.(*NSEC3PARAM))
+	case TypeNULL:
+		return isDuplicateNULL(r1.(*NULL), r2.(*NULL))
 	case TypeOPENPGPKEY:
 		return isDuplicateOPENPGPKEY(r1.(*OPENPGPKEY), r2.(*OPENPGPKEY))
 	case TypePTR:
@@ -611,6 +613,13 @@ func isDuplicateNSEC3PARAM(r1, r2 *NSEC3PARAM) bool {
 		return false
 	}
 	if r1.Salt != r2.Salt {
+		return false
+	}
+	return true
+}
+
+func isDuplicateNULL(r1, r2 *NULL) bool {
+	if r1.Anything != r2.Anything {
 		return false
 	}
 	return true

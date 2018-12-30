@@ -363,6 +363,22 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func unpackStringAny(msg []byte, off, end int) (string, int, error) {
+	if end > len(msg) {
+		return "", len(msg), &Error{err: "overflow unpacking anything"}
+	}
+	return string(msg[off:end]), end, nil
+}
+
+func packStringAny(s string, msg []byte, off int) (int, error) {
+	if off+len(s) > len(msg) {
+		return len(msg), &Error{err: "overflow packing anything"}
+	}
+	copy(msg[off:off+len(s)], s)
+	off += len(s)
+	return off, nil
+}
+
 func unpackStringTxt(msg []byte, off int) ([]string, int, error) {
 	txt, off, err := unpackTxt(msg, off)
 	if err != nil {
