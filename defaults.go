@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/binary"
 	"errors"
 	"net"
 	"strconv"
@@ -166,8 +167,156 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	_, labels, err := packDomainName(s, nil, 0, compressionMap{}, false)
+	_, labels, err := packDomainName2(s, nil, 0, compressionMap{}, false)
 	return labels, err == nil
+}
+
+func packDomainName2(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
+	// special case if msg == nil
+	lenmsg := 256
+	if msg != nil {
+		lenmsg = len(msg)
+	}
+
+	ls := len(s)
+	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
+		return off, 0, nil
+	}
+
+	// If not fully qualified, error out, but only if msg != nil #ugly
+	if s[ls-1] != '.' {
+		if msg != nil {
+			return lenmsg, 0, ErrFqdn
+		}
+		s += "."
+		ls++
+	}
+
+	// Each dot ends a segment of the name.
+	// We trade each dot byte for a length byte.
+	// Except for escaped dots (\.), which are normal dots.
+	// There is also a trailing zero.
+
+	// Compression
+	pointer := -1
+
+	// Emit sequence of counted strings, chopping at dots.
+	var (
+		begin     int
+		compBegin int
+		compOff   int
+		bs        []byte
+		wasDot    bool
+	)
+loop:
+	for i := 0; i < ls; i++ {
+		var c byte
+		if bs == nil {
+			c = s[i]
+		} else {
+			c = bs[i]
+		}
+
+		switch c {
+		case '\\':
+			if off+1 > lenmsg {
+				return lenmsg, labels, ErrBuf
+			}
+
+			if bs == nil {
+				bs = []byte(s)
+			}
+
+			// check for \DDD
+			if i+3 < ls && isDigit(bs[i+1]) && isDigit(bs[i+2]) && isDigit(bs[i+3]) {
+				bs[i] = dddToByte(bs[i+1:])
+				copy(bs[i+1:ls-3], bs[i+4:])
+				ls -= 3
+				compOff += 3
+			} else {
+				copy(bs[i:ls-1], bs[i+1:])
+				ls--
+				compOff++
+			}
+
+			wasDot = false
+		case '.':
+			if wasDot {
+				// two dots back to back is not legal
+				return lenmsg, labels, ErrRdata
+			}
+			wasDot = true
+
+			labelLen := i - begin
+			if labelLen >= 1<<6 { // top two bits of length must be clear
+				return lenmsg, labels, ErrRdata
+			}
+
+			// off can already (we're in a loop) be bigger than len(msg)
+			// this happens when a name isn't fully qualified
+			if off+1+labelLen > lenmsg {
+				return lenmsg, labels, ErrBuf
+			}
+
+			// Don't try to compress '.'
+			// We should only compress when compress is true, but we should also still pick
+			// up names that can be used for *future* compression(s).
+			if compression.valid() && !isRootLabel(s, bs, begin, ls) {
+				if p, ok := compression.find(s[compBegin:]); ok {
+					// The first hit is the longest matching dname
+					// keep the pointer offset we get back and store
+					// the offset of the current name, because that's
+					// where we need to insert the pointer later
+
+					// If compress is true, we're allowed to compress this dname
+					if compress {
+						pointer = p // Where to point to
+						break loop
+					}
+				} else if off < maxCompressionOffset {
+					// Only offsets smaller than maxCompressionOffset can be used.
+					compression.insert(s[compBegin:], off)
+				}
+			}
+
+			// The following is covered by the length check above.
+			if msg != nil {
+				msg[off] = byte(labelLen)
+
+				if bs == nil {
+					copy(msg[off+1:], s[begin:i])
+				} else {
+					copy(msg[off+1:], bs[begin:i])
+				}
+			}
+			off += 1 + labelLen
+
+			labels++
+			begin = i + 1
+			compBegin = begin + compOff
+		default:
+			wasDot = false
+		}
+	}
+
+	// Root label is special
+	if isRootLabel(s, bs, 0, ls) {
+		return off, labels, nil
+	}
+
+	// If we did compression and we find something add the pointer here
+	if pointer != -1 {
+		// We have two bytes (14 bits) to put the pointer in
+		// if msg == nil, we will never do compression
+		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
+		return off + 2, labels, nil
+	}
+
+	if msg != nil && off < lenmsg {
+		msg[off] = 0
+	}
+
+	return off + 1, labels, nil
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. If child and parent
