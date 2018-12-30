@@ -236,24 +236,16 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 }
 
 func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
-	// special case if msg == nil
-	lenmsg := 256
-	if msg != nil {
-		lenmsg = len(msg)
-	}
+	lenmsg := len(msg)
 
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return off, 0, nil
 	}
 
-	// If not fully qualified, error out, but only if msg != nil #ugly
+	// If not fully qualified, error out.
 	if s[ls-1] != '.' {
-		if msg != nil {
-			return lenmsg, 0, ErrFqdn
-		}
-		s += "."
-		ls++
+		return lenmsg, 0, ErrFqdn
 	}
 
 	// Each dot ends a segment of the name.
@@ -344,14 +336,12 @@ loop:
 			}
 
 			// The following is covered by the length check above.
-			if msg != nil {
-				msg[off] = byte(labelLen)
+			msg[off] = byte(labelLen)
 
-				if bs == nil {
-					copy(msg[off+1:], s[begin:i])
-				} else {
-					copy(msg[off+1:], bs[begin:i])
-				}
+			if bs == nil {
+				copy(msg[off+1:], s[begin:i])
+			} else {
+				copy(msg[off+1:], bs[begin:i])
 			}
 			off += 1 + labelLen
 
@@ -371,12 +361,11 @@ loop:
 	// If we did compression and we find something add the pointer here
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
-		// if msg == nil, we will never do compression
 		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
 		return off + 2, labels, nil
 	}
 
-	if msg != nil && off < lenmsg {
+	if off < lenmsg {
 		msg[off] = 0
 	}
 
