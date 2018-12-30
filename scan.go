@@ -756,7 +756,8 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 	if l.err {
 		// Parsing errors should be sticky.
-		return lex{value: zEOF}, false
+		l.value = zEOF
+		return *l, false
 	}
 
 	var (
