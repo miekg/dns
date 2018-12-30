@@ -79,13 +79,12 @@ func (e *ParseError) Error() (s string) {
 }
 
 type lex struct {
-	token   string // text of the token
-	err     bool   // when true, token text has lexer error
-	value   uint8  // value: zString, _BLANK, etc.
-	torc    uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	line    int    // line in the file
-	column  int    // column in the file
-	comment string // any comment text seen
+	token  string // text of the token
+	err    bool   // when true, token text has lexer error
+	value  uint8  // value: zString, _BLANK, etc.
+	torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
+	line   int    // line in the file
+	column int    // column in the file
 }
 
 // Token holds the token that are returned when a zone file is parsed.
@@ -678,7 +677,9 @@ type zlexer struct {
 	line   int
 	column int
 
-	com string
+	// TODO(tmthrgd): merge
+	comBuf  string
+	comment string
 
 	l lex
 
@@ -767,14 +768,14 @@ func (zl *zlexer) Next() (lex, bool) {
 		escape bool
 	)
 
-	if zl.com != "" {
-		comi = copy(com[:], zl.com)
-		zl.com = ""
+	if zl.comBuf != "" {
+		comi = copy(com[:], zl.comBuf)
+		zl.comBuf = ""
 	}
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.line, l.column = zl.line, zl.column
-		l.comment = ""
+		zl.comment = ""
 
 		if stri >= len(str) {
 			l.token = "token length insufficient for parsing"
@@ -898,7 +899,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			}
 
 			zl.commt = true
-			zl.com = ""
+			zl.comBuf = ""
 
 			if comi > 1 {
 				// A newline was previously seen inside a comment that
@@ -911,7 +912,7 @@ func (zl *zlexer) Next() (lex, bool) {
 			comi++
 
 			if stri > 0 {
-				zl.com = string(com[:comi])
+				zl.comBuf = string(com[:comi])
 
 				l.value = zString
 				l.token = string(str[:stri])
@@ -947,11 +948,11 @@ func (zl *zlexer) Next() (lex, bool) {
 
 					l.value = zNewline
 					l.token = "\n"
-					l.comment = string(com[:comi])
+					zl.comment = string(com[:comi])
 					return *l, true
 				}
 
-				zl.com = string(com[:comi])
+				zl.comBuf = string(com[:comi])
 				break
 			}
 
@@ -977,9 +978,9 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				l.value = zNewline
 				l.token = "\n"
-				l.comment = zl.com
+				zl.comment = zl.comBuf
 
-				zl.com = ""
+				zl.comBuf = ""
 				zl.rrtype = false
 				zl.owner = true
 
@@ -1115,7 +1116,7 @@ func (zl *zlexer) Next() (lex, bool) {
 		// Send remainder of com
 		l.value = zNewline
 		l.token = "\n"
-		l.comment = string(com[:comi])
+		zl.comment = string(com[:comi])
 
 		if retL != (lex{}) {
 			zl.nextL = true
@@ -1126,7 +1127,7 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 
 	if zl.brace != 0 {
-		l.comment = "" // in case there was left over string and comment
+		zl.comment = "" // in case there was left over string and comment
 		l.token = "unbalanced brace"
 		l.err = true
 		return *l, true
@@ -1136,7 +1137,7 @@ func (zl *zlexer) Next() (lex, bool) {
 }
 
 func (zl *zlexer) Comment() string {
-	return zl.l.comment
+	return zl.comment
 }
 
 // Extract the class number from CLASSxx
