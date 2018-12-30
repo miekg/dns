@@ -342,3 +342,23 @@ func BenchmarkIdGeneration(b *testing.B) {
 		_ = id()
 	}
 }
+
+func BenchmarkReverseAddr(b *testing.B) {
+	b.Run("IP4", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, err := ReverseAddr("192.0.2.1")
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+
+	b.Run("IP6", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_, err := ReverseAddr("2001:db8::68")
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
