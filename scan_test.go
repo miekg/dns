@@ -131,6 +131,15 @@ func TestParseTA(t *testing.T) {
 	}
 }
 
+func TestZLexerExpect(t *testing.T) {
+	rr, err := NewRR("example.com. 42 IN SOA ns1.example.com.\"hostmaster.example.com.\"1 86400 60 86400 3600")
+	if err == nil {
+		t.Errorf("expected error, got record: %v", rr)
+	} else if expect := `dns: bad SOA Mbox: "unexpected type 3 lexer token, wanted type 2" at line: 1:40`; err.Error() != expect {
+		t.Errorf("expected error %q, got %q", expect, err.Error())
+	}
+}
+
 var errTestReadError = &Error{"test error"}
 
 type errReader struct{}
