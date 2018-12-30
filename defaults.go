@@ -193,35 +193,20 @@ func packDomainName2(s string) (labels int, err error) {
 	var (
 		off    int
 		begin  int
-		bs     []byte
 		wasDot bool
 	)
 	for i := 0; i < ls; i++ {
-		var c byte
-		if bs == nil {
-			c = s[i]
-		} else {
-			c = bs[i]
-		}
-
-		switch c {
+		switch s[i] {
 		case '\\':
 			if off+1 > lenmsg {
 				return labels, ErrBuf
 			}
 
-			if bs == nil {
-				bs = []byte(s)
-			}
-
 			// check for \DDD
-			if i+3 < ls && isDigit(bs[i+1]) && isDigit(bs[i+2]) && isDigit(bs[i+3]) {
-				bs[i] = dddToByte(bs[i+1:])
-				copy(bs[i+1:ls-3], bs[i+4:])
-				ls -= 3
+			if i+3 < ls && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
+				i += 3
 			} else {
-				copy(bs[i:ls-1], bs[i+1:])
-				ls--
+				i++
 			}
 
 			wasDot = false
@@ -254,7 +239,7 @@ func packDomainName2(s string) (labels int, err error) {
 	}
 
 	// Root label is special
-	if isRootLabel(s, bs, 0, ls) {
+	if isRootLabel(s, nil, 0, ls) {
 		return labels, nil
 	}
 
