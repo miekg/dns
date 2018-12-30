@@ -231,19 +231,18 @@ func (m compressionMap) find(s string) (int, bool) {
 // map needs to hold a mapping between domain names and offsets
 // pointing into msg.
 func PackDomainName(s string, msg []byte, off int, compression map[string]int, compress bool) (off1 int, err error) {
-	off1, _, err = packDomainName(s, msg, off, compressionMap{ext: compression}, compress)
-	return
+	return packDomainName(s, msg, off, compressionMap{ext: compression}, compress)
 }
 
-func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
+func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
-		return off, 0, nil
+		return off, nil
 	}
 
 	// If not fully qualified, error out.
 	if s[ls-1] != '.' {
-		return len(msg), 0, ErrFqdn
+		return len(msg), ErrFqdn
 	}
 
 	// Each dot ends a segment of the name.
@@ -274,7 +273,7 @@ loop:
 		switch c {
 		case '\\':
 			if off+1 > len(msg) {
-				return len(msg), labels, ErrBuf
+				return len(msg), ErrBuf
 			}
 
 			if bs == nil {
@@ -297,19 +296,19 @@ loop:
 		case '.':
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), labels, ErrRdata
+				return len(msg), ErrRdata
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return len(msg), labels, ErrRdata
+				return len(msg), ErrRdata
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1+labelLen > len(msg) {
-				return len(msg), labels, ErrBuf
+				return len(msg), ErrBuf
 			}
 
 			// Don't try to compress '.'
@@ -343,7 +342,6 @@ loop:
 			}
 			off += 1 + labelLen
 
-			labels++
 			begin = i + 1
 			compBegin = begin + compOff
 		default:
@@ -353,21 +351,21 @@ loop:
 
 	// Root label is special
 	if isRootLabel(s, bs, 0, ls) {
-		return off, labels, nil
+		return off, nil
 	}
 
 	// If we did compression and we find something add the pointer here
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
-		return off + 2, labels, nil
+		return off + 2, nil
 	}
 
 	if off < len(msg) {
 		msg[off] = 0
 	}
 
-	return off + 1, labels, nil
+	return off + 1, nil
 }
 
 // isRootLabel returns whether s or bs, from off to end, is the root
@@ -1107,7 +1105,7 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 }
 
 func (q *Question) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
-	off, _, err := packDomainName(q.Name, msg, off, compression, compress)
+	off, err := packDomainName(q.Name, msg, off, compression, compress)
 	if err != nil {
 		return off, err
 	}
