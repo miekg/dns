@@ -46,7 +46,7 @@ func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func endingToString(c *zlexer, errstr, f string) (string, *ParseError, string) {
-	s := ""
+	var s string
 	l, _ := c.Next() // zString
 	for l.value != zNewline && l.value != zEOF {
 		if l.err {
@@ -61,7 +61,8 @@ func endingToString(c *zlexer, errstr, f string) (string, *ParseError, string) {
 		}
 		l, _ = c.Next()
 	}
-	return s, nil, l.comment
+
+	return s, nil, c.Comment()
 }
 
 // A remainder of the rdata with embedded spaces, split on unquoted whitespace
@@ -119,10 +120,12 @@ func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError, strin
 		}
 		l, _ = c.Next()
 	}
+
 	if quote {
 		return nil, &ParseError{f, errstr, l}, ""
 	}
-	return s, nil, l.comment
+
+	return s, nil, c.Comment()
 }
 
 func setA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
@@ -925,7 +928,7 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	// HitLength is not represented
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 8)
@@ -968,8 +971,9 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		}
 		l, _ = c.Next()
 	}
+
 	rr.RendezvousServers = xs
-	return rr, nil, l.comment
+	return rr, nil, c.Comment()
 }
 
 func setCERT(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
@@ -978,7 +982,7 @@ func setCERT(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	if v, ok := StringToCertType[l.token]; ok {
@@ -1030,7 +1034,7 @@ func setCSYNC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 	j, e := strconv.ParseUint(l.token, 10, 32)
 	if e != nil {
@@ -1072,7 +1076,7 @@ func setCSYNC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		}
 		l, _ = c.Next()
 	}
-	return rr, nil, l.comment
+	return rr, nil, c.Comment()
 }
 
 func setSIG(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
@@ -1089,7 +1093,7 @@ func setRRSIG(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	tokenUpper := strings.ToUpper(l.token)
@@ -1190,7 +1194,7 @@ func setNSEC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 	l, _ := c.Next()
 	rr.NextDomain = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -1222,7 +1226,7 @@ func setNSEC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		}
 		l, _ = c.Next()
 	}
-	return rr, nil, l.comment
+	return rr, nil, c.Comment()
 }
 
 func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
@@ -1231,7 +1235,7 @@ func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 8)
@@ -1294,7 +1298,7 @@ func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 		}
 		l, _ = c.Next()
 	}
-	return rr, nil, l.comment
+	return rr, nil, c.Comment()
 }
 
 func setNSEC3PARAM(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
@@ -1436,7 +1440,7 @@ func setDNSKEYs(h RR_Header, c *zlexer, o, f, typ string) (RR, *ParseError, stri
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1493,7 +1497,7 @@ func setRKEY(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1582,7 +1586,7 @@ func setDSs(h RR_Header, c *zlexer, o, f, typ string) (RR, *ParseError, string) 
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1644,7 +1648,7 @@ func setTA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1685,7 +1689,7 @@ func setTLSA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 8)
@@ -1722,7 +1726,7 @@ func setSMIMEA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 8)
@@ -2066,7 +2070,7 @@ func setCAA(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
 
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return rr, nil, l.comment
+		return rr, nil, c.Comment()
 	}
 
 	i, err := strconv.ParseUint(l.token, 10, 8)

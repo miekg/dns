@@ -1299,16 +1299,16 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 // "Eat" the rest of the "line". Return potential comments
 func slurpRemainder(c *zlexer, f string) (*ParseError, string) {
 	l, _ := c.Next()
-	com := ""
+	var com string
 	switch l.value {
 	case zBlank:
 		l, _ = c.Next()
-		com = l.comment
+		com = c.Comment()
 		if l.value != zNewline && l.value != zEOF {
 			return &ParseError{f, "garbage after rdata", l}, ""
 		}
 	case zNewline:
-		com = l.comment
+		com = c.Comment()
 	case zEOF:
 	default:
 		return &ParseError{f, "garbage after rdata", l}, ""
