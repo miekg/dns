@@ -166,16 +166,11 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	labels, err := packDomainName2(s)
-	return labels, err == nil
-}
-
-func packDomainName2(s string) (labels int, err error) {
 	lenmsg := 256
 
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
-		return 0, nil
+		return 0, false
 	}
 
 	// If not fully qualified, error out, but only if msg != nil #ugly
@@ -199,7 +194,7 @@ func packDomainName2(s string) (labels int, err error) {
 		switch s[i] {
 		case '\\':
 			if off+1 > lenmsg {
-				return labels, ErrBuf
+				return labels, false
 			}
 
 			// check for \DDD
@@ -213,19 +208,19 @@ func packDomainName2(s string) (labels int, err error) {
 		case '.':
 			if wasDot {
 				// two dots back to back is not legal
-				return labels, ErrRdata
+				return labels, false
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return labels, ErrRdata
+				return labels, false
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1+labelLen > lenmsg {
-				return labels, ErrBuf
+				return labels, false
 			}
 
 			// The following is covered by the length check above.
@@ -240,10 +235,10 @@ func packDomainName2(s string) (labels int, err error) {
 
 	// Root label is special
 	if isRootLabel(s, nil, 0, ls) {
-		return labels, nil
+		return labels, true
 	}
 
-	return labels, nil
+	return labels, true
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. If child and parent
