@@ -46,11 +46,14 @@ func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 // or an error
 func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
 	var s string
-	l, _ := c.Next()
-	for l.value != zNewline && l.value != zEOF {
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
 		if l.err {
 			return s, &ParseError{f, errstr, l}
 		}
+		if l.value == zNewline || l.value == zEOF {
+			break
+		}
+
 		switch l.value {
 		case zString:
 			s += l.token
@@ -58,7 +61,6 @@ func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
 		default:
 			return "", &ParseError{f, errstr, l}
 		}
-		l, _ = c.Next()
 	}
 
 	return s, nil
