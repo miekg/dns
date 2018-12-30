@@ -167,23 +167,19 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	lenmsg := 256
+	const lenmsg = 256
 
 	if len(s) == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return 0, false
 	}
 
-	// If not fully qualified, error out, but only if msg != nil #ugly
 	if !strings.HasSuffix(s, ".") {
 		s += "."
 	}
 
-	// Each dot ends a segment of the name.
-	// We trade each dot byte for a length byte.
-	// Except for escaped dots (\.), which are normal dots.
-	// There is also a trailing zero.
+	// Each dot ends a segment of the name. Except for escaped dots (\.), which
+	// are normal dots.
 
-	// Emit sequence of counted strings, chopping at dots.
 	var (
 		off    int
 		begin  int
@@ -216,7 +212,7 @@ func IsDomainName(s string) (labels int, ok bool) {
 				return labels, false
 			}
 
-			// off can already (we're in a loop) be bigger than len(msg)
+			// off can already (we're in a loop) be bigger than lenmsg
 			// this happens when a name isn't fully qualified
 			if off+1+labelLen > lenmsg {
 				return labels, false
