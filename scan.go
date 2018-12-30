@@ -501,7 +501,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("expecting $TTL value, not this...", l)
 			}
 
-			if e, _ := slurpRemainder(zp.c, zp.file); e != nil {
+			if e := slurpRemainder(zp.c, zp.file); e != nil {
 				zp.parseErr = e
 				return nil, false
 			}
@@ -525,7 +525,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
 			}
 
-			if e, _ := slurpRemainder(zp.c, zp.file); e != nil {
+			if e := slurpRemainder(zp.c, zp.file); e != nil {
 				zp.parseErr = e
 				return nil, false
 			}
@@ -648,7 +648,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			st = zExpectRdata
 		case zExpectRdata:
-			r, e, c1 := setRR(*h, zp.c, zp.origin, zp.file)
+			r, e := setRR(*h, zp.c, zp.origin, zp.file)
 			if e != nil {
 				// If e.lex is nil than we have encounter a unknown RR type
 				// in that case we substitute our current lex token
@@ -660,7 +660,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return nil, false
 			}
 
-			zp.com = c1
+			zp.com = zp.c.Comment()
 			return r, true
 		}
 	}
@@ -1296,24 +1296,21 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 	return longitude, false
 }
 
-// "Eat" the rest of the "line". Return potential comments
-func slurpRemainder(c *zlexer, f string) (*ParseError, string) {
+// "Eat" the rest of the "line"
+func slurpRemainder(c *zlexer, f string) *ParseError {
 	l, _ := c.Next()
-	var com string
 	switch l.value {
 	case zBlank:
 		l, _ = c.Next()
-		com = c.Comment()
 		if l.value != zNewline && l.value != zEOF {
-			return &ParseError{f, "garbage after rdata", l}, ""
+			return &ParseError{f, "garbage after rdata", l}
 		}
 	case zNewline:
-		com = c.Comment()
 	case zEOF:
 	default:
-		return &ParseError{f, "garbage after rdata", l}, ""
+		return &ParseError{f, "garbage after rdata", l}
 	}
-	return nil, com
+	return nil
 }
 
 // Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64"

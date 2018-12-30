@@ -109,7 +109,7 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 		return rr, off, err
 	}
 
-	setPrivateRR := func(h RR_Header, c *zlexer, o, f string) (RR, *ParseError, string) {
+	setPrivateRR := func(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 		rr := mkPrivateRR(h.Rrtype)
 		rr.Hdr = h
 
@@ -129,10 +129,10 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 
 		err := rr.Data.Parse(text)
 		if err != nil {
-			return nil, &ParseError{f, err.Error(), l}, ""
+			return nil, &ParseError{f, err.Error(), l}
 		}
 
-		return rr, nil, ""
+		return rr, nil
 	}
 
 	typeToparserFunc[rtype] = parserFunc{setPrivateRR, true}
