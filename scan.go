@@ -1137,6 +1137,20 @@ func (zl *zlexer) Next() (lex, bool) {
 	return lex{value: zEOF}, false
 }
 
+func (zl *zlexer) Expect(typ uint8) (lex, bool) {
+	l, ok := zl.Next()
+	if ok && !l.err && l.value != typ {
+		zl.nextL = false
+
+		l := &zl.l
+		l.token = fmt.Sprintf("unexpected type %d lexer token, wanted type %d", l.value, typ)
+		l.err = true
+		return *l, true
+	}
+
+	return l, ok
+}
+
 func (zl *zlexer) Comment() string {
 	if zl.l.err {
 		return ""
