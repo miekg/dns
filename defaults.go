@@ -214,12 +214,10 @@ func IsDomainName(s string) (labels int, ok bool) {
 
 			// off can already (we're in a loop) be bigger than lenmsg
 			// this happens when a name isn't fully qualified
-			if off+1+labelLen > lenmsg {
+			off += 1 + labelLen
+			if off > lenmsg {
 				return labels, false
 			}
-
-			// The following is covered by the length check above.
-			off += 1 + labelLen
 
 			labels++
 			begin = i + 1
