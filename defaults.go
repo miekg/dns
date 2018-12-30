@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"encoding/binary"
 	"errors"
 	"net"
 	"strconv"
@@ -167,16 +166,12 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	_, labels, err := packDomainName2(s, nil, 0, compressionMap{}, false)
+	_, labels, err := packDomainName2(s, 0, compressionMap{}, false)
 	return labels, err == nil
 }
 
-func packDomainName2(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
-	// special case if msg == nil
+func packDomainName2(s string, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
 	lenmsg := 256
-	if msg != nil {
-		lenmsg = len(msg)
-	}
 
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
@@ -185,9 +180,6 @@ func packDomainName2(s string, msg []byte, off int, compression compressionMap, 
 
 	// If not fully qualified, error out, but only if msg != nil #ugly
 	if s[ls-1] != '.' {
-		if msg != nil {
-			return lenmsg, 0, ErrFqdn
-		}
 		s += "."
 		ls++
 	}
@@ -280,15 +272,6 @@ loop:
 			}
 
 			// The following is covered by the length check above.
-			if msg != nil {
-				msg[off] = byte(labelLen)
-
-				if bs == nil {
-					copy(msg[off+1:], s[begin:i])
-				} else {
-					copy(msg[off+1:], bs[begin:i])
-				}
-			}
 			off += 1 + labelLen
 
 			labels++
@@ -308,12 +291,7 @@ loop:
 	if pointer != -1 {
 		// We have two bytes (14 bits) to put the pointer in
 		// if msg == nil, we will never do compression
-		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
 		return off + 2, labels, nil
-	}
-
-	if msg != nil && off < lenmsg {
-		msg[off] = 0
 	}
 
 	return off + 1, labels, nil
