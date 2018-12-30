@@ -233,11 +233,6 @@ func IsDomainName(s string) (labels int, ok bool) {
 		}
 	}
 
-	// Root label is special
-	if isRootLabel(s, nil, 0, ls) {
-		return labels, true
-	}
-
 	return labels, true
 }
 
