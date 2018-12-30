@@ -243,8 +243,6 @@ type ZoneParser struct {
 	sub    *ZoneParser
 	osFile *os.File
 
-	com string
-
 	includeDepth uint8
 
 	includeAllowed bool
@@ -317,12 +315,19 @@ func (zp *ZoneParser) setParseError(err string, l lex) (RR, bool) {
 // Comment returns an optional text comment that occurred alongside
 // the RR.
 func (zp *ZoneParser) Comment() string {
-	return zp.com
+	if zp.parseErr != nil {
+		return ""
+	}
+
+	if zp.sub != nil {
+		return zp.sub.Comment()
+	}
+
+	return zp.c.Comment()
 }
 
 func (zp *ZoneParser) subNext() (RR, bool) {
 	if rr, ok := zp.sub.Next(); ok {
-		zp.com = zp.sub.com
 		return rr, true
 	}
 
@@ -346,8 +351,6 @@ func (zp *ZoneParser) subNext() (RR, bool) {
 // error. After Next returns (nil, false), the Err method will return
 // any error that occurred during parsing.
 func (zp *ZoneParser) Next() (RR, bool) {
-	zp.com = ""
-
 	if zp.parseErr != nil {
 		return nil, false
 	}
@@ -659,7 +662,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return nil, false
 			}
 
-			zp.com = zp.c.Comment()
 			return r, true
 		}
 	}
