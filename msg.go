@@ -236,8 +236,6 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 }
 
 func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
-	lenmsg := len(msg)
-
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return off, 0, nil
@@ -245,7 +243,7 @@ func packDomainName(s string, msg []byte, off int, compression compressionMap, c
 
 	// If not fully qualified, error out.
 	if s[ls-1] != '.' {
-		return lenmsg, 0, ErrFqdn
+		return len(msg), 0, ErrFqdn
 	}
 
 	// Each dot ends a segment of the name.
@@ -275,8 +273,8 @@ loop:
 
 		switch c {
 		case '\\':
-			if off+1 > lenmsg {
-				return lenmsg, labels, ErrBuf
+			if off+1 > len(msg) {
+				return len(msg), labels, ErrBuf
 			}
 
 			if bs == nil {
@@ -299,19 +297,19 @@ loop:
 		case '.':
 			if wasDot {
 				// two dots back to back is not legal
-				return lenmsg, labels, ErrRdata
+				return len(msg), labels, ErrRdata
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return lenmsg, labels, ErrRdata
+				return len(msg), labels, ErrRdata
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1+labelLen > lenmsg {
-				return lenmsg, labels, ErrBuf
+			if off+1+labelLen > len(msg) {
+				return len(msg), labels, ErrBuf
 			}
 
 			// Don't try to compress '.'
@@ -365,7 +363,7 @@ loop:
 		return off + 2, labels, nil
 	}
 
-	if off < lenmsg {
+	if off < len(msg) {
 		msg[off] = 0
 	}
 
