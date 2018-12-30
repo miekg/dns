@@ -775,9 +775,10 @@ func (zl *zlexer) Next() (lex, bool) {
 		zl.comBuf = ""
 	}
 
+	zl.comment = ""
+
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.line, l.column = zl.line, zl.column
-		zl.comment = ""
 
 		if stri >= len(str) {
 			l.token = "token length insufficient for parsing"
@@ -980,8 +981,8 @@ func (zl *zlexer) Next() (lex, bool) {
 
 				l.value = zNewline
 				l.token = "\n"
-				zl.comment = zl.comBuf
 
+				zl.comment = zl.comBuf
 				zl.comBuf = ""
 				zl.rrtype = false
 				zl.owner = true
