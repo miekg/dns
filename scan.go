@@ -1135,6 +1135,10 @@ func (zl *zlexer) Next() (lex, bool) {
 	return lex{value: zEOF}, false
 }
 
+func (zl *zlexer) Comment() string {
+	return zl.l.comment
+}
+
 // Extract the class number from CLASSxx
 func classToInt(token string) (uint16, bool) {
 	offset := 5
