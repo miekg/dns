@@ -1129,7 +1129,6 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 
 	if zl.brace != 0 {
-		zl.comment = "" // in case there was left over string and comment
 		l.token = "unbalanced brace"
 		l.err = true
 		return *l, true
@@ -1139,6 +1138,10 @@ func (zl *zlexer) Next() (lex, bool) {
 }
 
 func (zl *zlexer) Comment() string {
+	if zl.l.err {
+		return ""
+	}
+
 	return zl.comment
 }
 
