@@ -166,11 +166,11 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	_, labels, err := packDomainName2(s, 0, compressionMap{}, false)
+	_, labels, err := packDomainName2(s, 0)
 	return labels, err == nil
 }
 
-func packDomainName2(s string, off int, compression compressionMap, compress bool) (off1 int, labels int, err error) {
+func packDomainName2(s string, off int) (off1 int, labels int, err error) {
 	lenmsg := 256
 
 	ls := len(s)
@@ -189,18 +189,12 @@ func packDomainName2(s string, off int, compression compressionMap, compress boo
 	// Except for escaped dots (\.), which are normal dots.
 	// There is also a trailing zero.
 
-	// Compression
-	pointer := -1
-
 	// Emit sequence of counted strings, chopping at dots.
 	var (
-		begin     int
-		compBegin int
-		compOff   int
-		bs        []byte
-		wasDot    bool
+		begin  int
+		bs     []byte
+		wasDot bool
 	)
-loop:
 	for i := 0; i < ls; i++ {
 		var c byte
 		if bs == nil {
@@ -224,11 +218,9 @@ loop:
 				bs[i] = dddToByte(bs[i+1:])
 				copy(bs[i+1:ls-3], bs[i+4:])
 				ls -= 3
-				compOff += 3
 			} else {
 				copy(bs[i:ls-1], bs[i+1:])
 				ls--
-				compOff++
 			}
 
 			wasDot = false
@@ -250,33 +242,11 @@ loop:
 				return lenmsg, labels, ErrBuf
 			}
 
-			// Don't try to compress '.'
-			// We should only compress when compress is true, but we should also still pick
-			// up names that can be used for *future* compression(s).
-			if compression.valid() && !isRootLabel(s, bs, begin, ls) {
-				if p, ok := compression.find(s[compBegin:]); ok {
-					// The first hit is the longest matching dname
-					// keep the pointer offset we get back and store
-					// the offset of the current name, because that's
-					// where we need to insert the pointer later
-
-					// If compress is true, we're allowed to compress this dname
-					if compress {
-						pointer = p // Where to point to
-						break loop
-					}
-				} else if off < maxCompressionOffset {
-					// Only offsets smaller than maxCompressionOffset can be used.
-					compression.insert(s[compBegin:], off)
-				}
-			}
-
 			// The following is covered by the length check above.
 			off += 1 + labelLen
 
 			labels++
 			begin = i + 1
-			compBegin = begin + compOff
 		default:
 			wasDot = false
 		}
@@ -285,13 +255,6 @@ loop:
 	// Root label is special
 	if isRootLabel(s, bs, 0, ls) {
 		return off, labels, nil
-	}
-
-	// If we did compression and we find something add the pointer here
-	if pointer != -1 {
-		// We have two bytes (14 bits) to put the pointer in
-		// if msg == nil, we will never do compression
-		return off + 2, labels, nil
 	}
 
 	return off + 1, labels, nil
