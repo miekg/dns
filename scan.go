@@ -679,7 +679,6 @@ type zlexer struct {
 	line   int
 	column int
 
-	// TODO(tmthrgd): merge
 	comBuf  string
 	comment string
 
