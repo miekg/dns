@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 	"strconv"
+	"strings"
 )
 
 const hexDigit = "0123456789abcdef"
@@ -168,15 +169,13 @@ func (dns *Msg) IsEdns0() *OPT {
 func IsDomainName(s string) (labels int, ok bool) {
 	lenmsg := 256
 
-	ls := len(s)
-	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
+	if len(s) == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return 0, false
 	}
 
 	// If not fully qualified, error out, but only if msg != nil #ugly
-	if s[ls-1] != '.' {
+	if !strings.HasSuffix(s, ".") {
 		s += "."
-		ls++
 	}
 
 	// Each dot ends a segment of the name.
@@ -190,7 +189,7 @@ func IsDomainName(s string) (labels int, ok bool) {
 		begin  int
 		wasDot bool
 	)
-	for i := 0; i < ls; i++ {
+	for i := 0; i < len(s); i++ {
 		switch s[i] {
 		case '\\':
 			if off+1 > lenmsg {
@@ -198,7 +197,7 @@ func IsDomainName(s string) (labels int, ok bool) {
 			}
 
 			// check for \DDD
-			if i+3 < ls && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
+			if i+3 < len(s) && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
 				i += 3
 			} else {
 				i++
