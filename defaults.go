@@ -166,16 +166,16 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
-	_, labels, err := packDomainName2(s, 0)
+	labels, err := packDomainName2(s)
 	return labels, err == nil
 }
 
-func packDomainName2(s string, off int) (off1 int, labels int, err error) {
+func packDomainName2(s string) (labels int, err error) {
 	lenmsg := 256
 
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
-		return off, 0, nil
+		return 0, nil
 	}
 
 	// If not fully qualified, error out, but only if msg != nil #ugly
@@ -191,6 +191,7 @@ func packDomainName2(s string, off int) (off1 int, labels int, err error) {
 
 	// Emit sequence of counted strings, chopping at dots.
 	var (
+		off    int
 		begin  int
 		bs     []byte
 		wasDot bool
@@ -206,7 +207,7 @@ func packDomainName2(s string, off int) (off1 int, labels int, err error) {
 		switch c {
 		case '\\':
 			if off+1 > lenmsg {
-				return lenmsg, labels, ErrBuf
+				return labels, ErrBuf
 			}
 
 			if bs == nil {
@@ -227,19 +228,19 @@ func packDomainName2(s string, off int) (off1 int, labels int, err error) {
 		case '.':
 			if wasDot {
 				// two dots back to back is not legal
-				return lenmsg, labels, ErrRdata
+				return labels, ErrRdata
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return lenmsg, labels, ErrRdata
+				return labels, ErrRdata
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1+labelLen > lenmsg {
-				return lenmsg, labels, ErrBuf
+				return labels, ErrBuf
 			}
 
 			// The following is covered by the length check above.
@@ -254,10 +255,10 @@ func packDomainName2(s string, off int) (off1 int, labels int, err error) {
 
 	// Root label is special
 	if isRootLabel(s, bs, 0, ls) {
-		return off, labels, nil
+		return labels, nil
 	}
 
-	return off + 1, labels, nil
+	return labels, nil
 }
 
 // IsSubDomain checks if child is indeed a child of the parent. If child and parent
