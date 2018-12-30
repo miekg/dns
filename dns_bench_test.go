@@ -342,3 +342,29 @@ func BenchmarkIdGeneration(b *testing.B) {
 		_ = id()
 	}
 }
+
+func BenchmarkReverseAddr(b *testing.B) {
+	b.Run("IP4", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			addr, err := ReverseAddr("192.0.2.1")
+			if err != nil {
+				b.Fatal(err)
+			}
+			if expect := "1.2.0.192.in-addr.arpa."; addr != expect {
+				b.Fatalf("invalid reverse address, expected %q, got %q", expect, addr)
+			}
+		}
+	})
+
+	b.Run("IP6", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			addr, err := ReverseAddr("2001:db8::68")
+			if err != nil {
+				b.Fatal(err)
+			}
+			if expect := "8.6.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa."; addr != expect {
+				b.Fatalf("invalid reverse address, expected %q, got %q", expect, addr)
+			}
+		}
+	})
+}
