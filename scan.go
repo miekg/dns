@@ -41,24 +41,24 @@ const (
 	zValue
 	zKey
 
-	zExpectOwnerDir      // Ownername
-	zExpectOwnerBl       // Whitespace after the ownername
-	zExpectAny           // Expect rrtype, ttl or class
-	zExpectAnyNoClass    // Expect rrtype or ttl
-	zExpectAnyNoClassBl  // The whitespace after _EXPECT_ANY_NOCLASS
-	zExpectAnyNoTTL      // Expect rrtype or class
-	zExpectAnyNoTTLBl    // Whitespace after _EXPECT_ANY_NOTTL
-	zExpectRrtype        // Expect rrtype
-	zExpectRrtypeBl      // Whitespace BEFORE rrtype
-	zExpectRdata         // The first element of the rdata
-	zExpectDirTTLBl      // Space after directive $TTL
-	zExpectDirTTL        // Directive $TTL
-	zExpectDirOriginBl   // Space after directive $ORIGIN
-	zExpectDirOrigin     // Directive $ORIGIN
-	zExpectDirIncludeBl  // Space after directive $INCLUDE
-	zExpectDirInclude    // Directive $INCLUDE
-	zExpectDirGenerate   // Directive $GENERATE
-	zExpectDirGenerateBl // Space after directive $GENERATE
+	zExpectOwnerDir      = iota // Ownername
+	zExpectOwnerBl              // Whitespace after the ownername
+	zExpectAny                  // Expect rrtype, ttl or class
+	zExpectAnyNoClass           // Expect rrtype or ttl
+	zExpectAnyNoClassBl         // The whitespace after _EXPECT_ANY_NOCLASS
+	zExpectAnyNoTTL             // Expect rrtype or class
+	zExpectAnyNoTTLBl           // Whitespace after _EXPECT_ANY_NOTTL
+	zExpectRrtype               // Expect rrtype
+	zExpectRrtypeBl             // Whitespace BEFORE rrtype
+	zExpectRdata                // The first element of the rdata
+	zExpectDirTTLBl             // Space after directive $TTL
+	zExpectDirTTL               // Directive $TTL
+	zExpectDirOriginBl          // Space after directive $ORIGIN
+	zExpectDirOrigin            // Directive $ORIGIN
+	zExpectDirIncludeBl         // Space after directive $INCLUDE
+	zExpectDirInclude           // Directive $INCLUDE
+	zExpectDirGenerate          // Directive $GENERATE
+	zExpectDirGenerateBl        // Space after directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
