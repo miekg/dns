@@ -195,8 +195,10 @@ func IsDomainName(s string) (labels int, ok bool) {
 			// check for \DDD
 			if i+3 < len(s) && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
 				i += 3
+				begin += 3
 			} else {
 				i++
+				begin++
 			}
 
 			wasDot = false
