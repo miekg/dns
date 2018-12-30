@@ -249,7 +249,7 @@ func ReverseAddr(addr string) (arpa string, err error) {
 			strconv.Itoa(int(ip[12])) + ".in-addr.arpa.", nil
 	}
 	// Must be IPv6
-	buf := make([]byte, 0, len(ip)*4+len("ip6.arpa."))
+	buf := make([]byte, 0, net.IPv6len*4+len("ip6.arpa."))
 	// Add it, in reverse, to the buffer
 	for i := len(ip) - 1; i >= 0; i-- {
 		v := ip[i]
