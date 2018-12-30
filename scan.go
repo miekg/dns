@@ -16,6 +16,11 @@ const maxTok = 2048 // Largest token we can return.
 // ZoneParser API.
 const maxIncludeDepth = 7
 
+type (
+	lexerValue      uint8
+	zoneParserState uint8
+)
+
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
@@ -24,7 +29,7 @@ const maxIncludeDepth = 7
 // * Handle braces - anywhere.
 const (
 	// Zonefile
-	zEOF = iota
+	zEOF lexerValue = iota
 	zString
 	zBlank
 	zQuote
@@ -41,24 +46,24 @@ const (
 	zValue
 	zKey
 
-	zExpectOwnerDir      = iota // Ownername
-	zExpectOwnerBl              // Whitespace after the ownername
-	zExpectAny                  // Expect rrtype, ttl or class
-	zExpectAnyNoClass           // Expect rrtype or ttl
-	zExpectAnyNoClassBl         // The whitespace after _EXPECT_ANY_NOCLASS
-	zExpectAnyNoTTL             // Expect rrtype or class
-	zExpectAnyNoTTLBl           // Whitespace after _EXPECT_ANY_NOTTL
-	zExpectRrtype               // Expect rrtype
-	zExpectRrtypeBl             // Whitespace BEFORE rrtype
-	zExpectRdata                // The first element of the rdata
-	zExpectDirTTLBl             // Space after directive $TTL
-	zExpectDirTTL               // Directive $TTL
-	zExpectDirOriginBl          // Space after directive $ORIGIN
-	zExpectDirOrigin            // Directive $ORIGIN
-	zExpectDirIncludeBl         // Space after directive $INCLUDE
-	zExpectDirInclude           // Directive $INCLUDE
-	zExpectDirGenerate          // Directive $GENERATE
-	zExpectDirGenerateBl        // Space after directive $GENERATE
+	zExpectOwnerDir      zoneParserState = iota // Ownername
+	zExpectOwnerBl                              // Whitespace after the ownername
+	zExpectAny                                  // Expect rrtype, ttl or class
+	zExpectAnyNoClass                           // Expect rrtype or ttl
+	zExpectAnyNoClassBl                         // The whitespace after _EXPECT_ANY_NOCLASS
+	zExpectAnyNoTTL                             // Expect rrtype or class
+	zExpectAnyNoTTLBl                           // Whitespace after _EXPECT_ANY_NOTTL
+	zExpectRrtype                               // Expect rrtype
+	zExpectRrtypeBl                             // Whitespace BEFORE rrtype
+	zExpectRdata                                // The first element of the rdata
+	zExpectDirTTLBl                             // Space after directive $TTL
+	zExpectDirTTL                               // Directive $TTL
+	zExpectDirOriginBl                          // Space after directive $ORIGIN
+	zExpectDirOrigin                            // Directive $ORIGIN
+	zExpectDirIncludeBl                         // Space after directive $INCLUDE
+	zExpectDirInclude                           // Directive $INCLUDE
+	zExpectDirGenerate                          // Directive $GENERATE
+	zExpectDirGenerateBl                        // Space after directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -79,12 +84,12 @@ func (e *ParseError) Error() (s string) {
 }
 
 type lex struct {
-	token  string // text of the token
-	err    bool   // when true, token text has lexer error
-	value  uint8  // value: zString, _BLANK, etc.
-	torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	line   int    // line in the file
-	column int    // column in the file
+	token  string     // text of the token
+	err    bool       // when true, token text has lexer error
+	value  lexerValue // value: zString, _BLANK, etc.
+	torc   uint16     // type or class as parsed in the lexer, we only need to look this up in the grammar
+	line   int        // line in the file
+	column int        // column in the file
 }
 
 // Token holds the token that are returned when a zone file is parsed.
@@ -1138,7 +1143,7 @@ func (zl *zlexer) Next() (lex, bool) {
 	return lex{value: zEOF}, false
 }
 
-func (zl *zlexer) Expect(typ uint8) (lex, bool) {
+func (zl *zlexer) Expect(typ lexerValue) (lex, bool) {
 	l, ok := zl.Next()
 	if ok && !l.err && l.value != typ {
 		zl.nextL = false
