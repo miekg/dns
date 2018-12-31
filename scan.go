@@ -43,24 +43,16 @@ const (
 	zValue
 	zKey
 
-	zExpectOwnerDir      zoneParserState = iota // Ownername
-	zExpectOwnerBl                              // Whitespace after the ownername
-	zExpectAny                                  // Expect rrtype, ttl or class
-	zExpectAnyNoClass                           // Expect rrtype or ttl
-	zExpectAnyNoClassBl                         // The whitespace after _EXPECT_ANY_NOCLASS
-	zExpectAnyNoTTL                             // Expect rrtype or class
-	zExpectAnyNoTTLBl                           // Whitespace after _EXPECT_ANY_NOTTL
-	zExpectRrtype                               // Expect rrtype
-	zExpectRrtypeBl                             // Whitespace BEFORE rrtype
-	zExpectRdata                                // The first element of the rdata
-	zExpectDirTTLBl                             // Space after directive $TTL
-	zExpectDirTTL                               // Directive $TTL
-	zExpectDirOriginBl                          // Space after directive $ORIGIN
-	zExpectDirOrigin                            // Directive $ORIGIN
-	zExpectDirIncludeBl                         // Space after directive $INCLUDE
-	zExpectDirInclude                           // Directive $INCLUDE
-	zExpectDirGenerate                          // Directive $GENERATE
-	zExpectDirGenerateBl                        // Space after directive $GENERATE
+	zExpectOwnerDir    zoneParserState = iota // Ownername
+	zExpectAny                                // Expect rrtype, ttl or class
+	zExpectAnyNoClass                         // Expect rrtype or ttl
+	zExpectAnyNoTTL                           // Expect rrtype or class
+	zExpectRrtype                             // Expect rrtype
+	zExpectRdata                              // The first element of the rdata
+	zExpectDirTTL                             // Directive $TTL
+	zExpectDirOrigin                          // Directive $ORIGIN
+	zExpectDirInclude                         // Directive $INCLUDE
+	zExpectDirGenerate                        // Directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -401,19 +393,29 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				h.Name = name
 
-				st = zExpectOwnerBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after owner", l)
+				}
+
+				st = zExpectAny
 			case zDirective:
 				switch strings.ToUpper(l.token) {
 				case "$TTL":
-					st = zExpectDirTTLBl
+					st = zExpectDirTTL
 				case "$ORIGIN":
-					st = zExpectDirOriginBl
+					st = zExpectDirOrigin
 				case "$INCLUDE":
-					st = zExpectDirIncludeBl
+					st = zExpectDirInclude
 				case "$GENERATE":
-					st = zExpectDirGenerateBl
+					st = zExpectDirGenerate
 				default:
 					return zp.setParseError("bad owner name", l)
+				}
+
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after directive", l)
 				}
 			case zRrtpe:
 				h.Rrtype = l.torc
@@ -422,7 +424,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zClass:
 				h.Class = l.torc
 
-				st = zExpectAnyNoClassBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after class", l)
+				}
+
+				st = zExpectAnyNoClass
 			case zBlank:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
@@ -438,16 +445,15 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					zp.defttl = &ttlState{ttl, false}
 				}
 
-				st = zExpectAnyNoTTLBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after TTL", l)
+				}
+
+				st = zExpectAnyNoTTL
 			default:
 				return zp.setParseError("syntax error at beginning", l)
 			}
-		case zExpectDirIncludeBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank after $INCLUDE-directive", l)
-			}
-
-			st = zExpectDirInclude
 		case zExpectDirInclude:
 			if l.value != zString {
 				return zp.setParseError("expecting $INCLUDE value, not this...", l)
@@ -499,12 +505,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
 			zp.sub.SetIncludeAllowed(true)
 			return zp.subNext()
-		case zExpectDirTTLBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank after $TTL-directive", l)
-			}
-
-			st = zExpectDirTTL
 		case zExpectDirTTL:
 			if l.value != zString {
 				return zp.setParseError("expecting $TTL value, not this...", l)
@@ -523,12 +523,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.defttl = &ttlState{ttl, true}
 
 			st = zExpectOwnerDir
-		case zExpectDirOriginBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank after $ORIGIN-directive", l)
-			}
-
-			st = zExpectDirOrigin
 		case zExpectDirOrigin:
 			if l.value != zString {
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
@@ -547,24 +541,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.origin = name
 
 			st = zExpectOwnerDir
-		case zExpectDirGenerateBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank after $GENERATE-directive", l)
-			}
-
-			st = zExpectDirGenerate
 		case zExpectDirGenerate:
 			if l.value != zString {
 				return zp.setParseError("expecting $GENERATE value, not this...", l)
 			}
 
 			return zp.generate(l)
-		case zExpectOwnerBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank after owner", l)
-			}
-
-			st = zExpectAny
 		case zExpectAny:
 			switch l.value {
 			case zRrtpe:
@@ -578,7 +560,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zClass:
 				h.Class = l.torc
 
-				st = zExpectAnyNoClassBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after class", l)
+				}
+
+				st = zExpectAnyNoClass
 			case zString:
 				ttl, ok := stringToTTL(l.token)
 				if !ok {
@@ -591,28 +578,26 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					zp.defttl = &ttlState{ttl, false}
 				}
 
-				st = zExpectAnyNoTTLBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after TTl", l)
+				}
+
+				st = zExpectAnyNoTTL
 			default:
 				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
 			}
-		case zExpectAnyNoClassBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank before class", l)
-			}
-
-			st = zExpectAnyNoClass
-		case zExpectAnyNoTTLBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank before TTL", l)
-			}
-
-			st = zExpectAnyNoTTL
 		case zExpectAnyNoTTL:
 			switch l.value {
 			case zClass:
 				h.Class = l.torc
 
-				st = zExpectRrtypeBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after class", l)
+				}
+
+				st = zExpectRrtype
 			case zRrtpe:
 				h.Rrtype = l.torc
 
@@ -634,7 +619,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					zp.defttl = &ttlState{ttl, false}
 				}
 
-				st = zExpectRrtypeBl
+				l, _ = zp.c.Expect(zBlank)
+				if l.err {
+					return zp.setParseError("no blank after TTL", l)
+				}
+
+				st = zExpectRrtype
 			case zRrtpe:
 				h.Rrtype = l.torc
 
@@ -642,12 +632,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			default:
 				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			}
-		case zExpectRrtypeBl:
-			if l.value != zBlank {
-				return zp.setParseError("no blank before RR type", l)
-			}
-
-			st = zExpectRrtype
 		case zExpectRrtype:
 			if l.value != zRrtpe {
 				return zp.setParseError("unknown RR type", l)
