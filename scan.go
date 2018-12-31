@@ -47,7 +47,6 @@ const (
 	zExpectAny                                // Expect rrtype, ttl or class
 	zExpectAnyNoClass                         // Expect rrtype or ttl
 	zExpectAnyNoTTL                           // Expect rrtype or class
-	zExpectRrtype                             // Expect rrtype
 	zExpectRdata                              // The first element of the rdata
 	zExpectDirTTL                             // Directive $TTL
 	zExpectDirOrigin                          // Directive $ORIGIN
@@ -548,6 +547,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			return zp.generate(l)
 		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
+			var expectRRType bool
 			switch l.value {
 			case zRrtpe:
 				if st == zExpectAny && zp.defttl == nil {
@@ -569,11 +569,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("no blank after class", l)
 				}
 
-				if st == zExpectAnyNoTTL {
-					st = zExpectRrtype
-				} else {
-					st = zExpectAnyNoClass
-				}
+				expectRRType = st == zExpectAnyNoTTL
+				st = zExpectAnyNoClass
 			case zString:
 				if st == zExpectAnyNoTTL {
 					return zp.setParseError("expecting RR type or class, not this...", l)
@@ -595,11 +592,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("no blank after TTl", l)
 				}
 
-				if st == zExpectAnyNoClass {
-					st = zExpectRrtype
-				} else {
-					st = zExpectAnyNoTTL
-				}
+				expectRRType = st == zExpectAnyNoClass
+				st = zExpectAnyNoTTL
 			default:
 				switch st {
 				case zExpectAnyNoTTL:
@@ -610,14 +604,17 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("expecting RR type, TTL or class, not this...", l)
 				}
 			}
-		case zExpectRrtype:
-			if l.value != zRrtpe {
-				return zp.setParseError("unknown RR type", l)
+
+			if expectRRType {
+				l, _ = zp.c.Expect(zRrtpe)
+				if l.err {
+					return zp.setParseError("unknown RR type", l)
+				}
+
+				h.Rrtype = l.torc
+
+				st = zExpectRdata
 			}
-
-			h.Rrtype = l.torc
-
-			st = zExpectRdata
 		case zExpectRdata:
 			r, e := setRR(*h, zp.c, zp.origin, zp.file)
 			if e != nil {
