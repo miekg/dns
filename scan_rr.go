@@ -70,22 +70,27 @@ func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
 // and return the parsed string slice or an error
 func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError) {
 	// Get the remaining data until we see a zNewline
-	l, _ := c.Next()
-	if l.err {
-		return nil, &ParseError{f, errstr, l}
-	}
+	var (
+		s []string
 
-	// Build the slice
-	s := make([]string, 0)
-	quote := false
-	empty := false
-	for l.value != zNewline && l.value != zEOF {
+		quote bool
+		empty bool
+
+		l  lex
+		ok bool
+	)
+	for l, ok = c.Next(); ok; l, ok = c.Next() {
 		if l.err {
 			return nil, &ParseError{f, errstr, l}
 		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zString:
 			empty = false
+
 			if len(l.token) > 255 {
 				// split up tokens that are larger than 255 into 255-chunks
 				sx := []string{}
@@ -96,10 +101,11 @@ func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError) {
 					} else {
 						sx = append(sx, l.token[p:])
 						break
-
 					}
+
 					p, i = p+255, i+255
 				}
+
 				s = append(s, sx...)
 				break
 			}
@@ -114,12 +120,12 @@ func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError) {
 			if empty && quote {
 				s = append(s, "")
 			}
+
 			quote = !quote
 			empty = true
 		default:
 			return nil, &ParseError{f, errstr, l}
 		}
-		l, _ = c.Next()
 	}
 
 	if quote {
@@ -886,9 +892,15 @@ Altitude:
 	}
 
 	// And now optionally the other values
-	l, _ = c.Next()
-	count := 0
-	for l.value != zNewline && l.value != zEOF {
+	var count int
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
+		if l.err {
+			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}
+		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zString:
 			switch count {
@@ -911,14 +923,15 @@ Altitude:
 				}
 				rr.VertPre = e&0x0f | m<<4&0xf0
 			}
+
 			count++
 		case zBlank:
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}
 		}
-		l, _ = c.Next()
 	}
+
 	return rr, nil
 }
 
@@ -955,22 +968,28 @@ func setHIP(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	rr.PublicKeyLength = uint16(base64.StdEncoding.DecodedLen(len(rr.PublicKey)))
 
 	// RendezvousServers (if any)
-	l, _ = c.Next()
 	var xs []string
-	for l.value != zNewline && l.value != zEOF {
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
+		if l.err {
+			return nil, &ParseError{f, "bad HIP RendezvousServers", l}
+		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zString:
 			name, nameOk := toAbsoluteName(l.token, o)
-			if l.err || !nameOk {
+			if !nameOk {
 				return nil, &ParseError{f, "bad HIP RendezvousServers", l}
 			}
+
 			xs = append(xs, name)
 		case zBlank:
 			// Ok
 		default:
 			return nil, &ParseError{f, "bad HIP RendezvousServers", l}
 		}
-		l, _ = c.Next()
 	}
 
 	rr.RendezvousServers = xs
@@ -1055,28 +1074,32 @@ func setCSYNC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	rr.Flags = uint16(j)
 
 	rr.TypeBitMap = make([]uint16, 0)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.value != zNewline && l.value != zEOF {
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
+		if l.err {
+			return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}
+		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zBlank:
 			// Ok
 		case zString:
-			tokenUpper := strings.ToUpper(l.token)
-			if k, ok = StringToType[tokenUpper]; !ok {
-				if k, ok = typeToInt(l.token); !ok {
-					return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}
-				}
+			k, ok := StringToType[strings.ToUpper(l.token)]
+			if !ok {
+				k, ok = typeToInt(l.token)
 			}
+			if !ok {
+				return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}
+			}
+
 			rr.TypeBitMap = append(rr.TypeBitMap, k)
 		default:
 			return nil, &ParseError{f, "bad CSYNC TypeBitMap", l}
 		}
-		l, _ = c.Next()
 	}
+
 	return rr, nil
 }
 
@@ -1205,28 +1228,32 @@ func setNSEC(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	rr.NextDomain = name
 
 	rr.TypeBitMap = make([]uint16, 0)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.value != zNewline && l.value != zEOF {
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
+		if l.err {
+			return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
+		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zBlank:
 			// Ok
 		case zString:
-			tokenUpper := strings.ToUpper(l.token)
-			if k, ok = StringToType[tokenUpper]; !ok {
-				if k, ok = typeToInt(l.token); !ok {
-					return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
-				}
+			k, ok := StringToType[strings.ToUpper(l.token)]
+			if !ok {
+				k, ok = typeToInt(l.token)
 			}
+			if !ok {
+				return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
+			}
+
 			rr.TypeBitMap = append(rr.TypeBitMap, k)
 		default:
 			return nil, &ParseError{f, "bad NSEC TypeBitMap", l}
 		}
-		l, _ = c.Next()
 	}
+
 	return rr, nil
 }
 
@@ -1277,28 +1304,32 @@ func setNSEC3(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	rr.NextDomain = l.token
 
 	rr.TypeBitMap = make([]uint16, 0)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.value != zNewline && l.value != zEOF {
+	for l, ok := c.Next(); ok; l, ok = c.Next() {
+		if l.err {
+			return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
+		}
+		if l.value == zNewline {
+			break
+		}
+
 		switch l.value {
 		case zBlank:
 			// Ok
 		case zString:
-			tokenUpper := strings.ToUpper(l.token)
-			if k, ok = StringToType[tokenUpper]; !ok {
-				if k, ok = typeToInt(l.token); !ok {
-					return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
-				}
+			k, ok := StringToType[strings.ToUpper(l.token)]
+			if !ok {
+				k, ok = typeToInt(l.token)
 			}
+			if !ok {
+				return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
+			}
+
 			rr.TypeBitMap = append(rr.TypeBitMap, k)
 		default:
 			return nil, &ParseError{f, "bad NSEC3 TypeBitMap", l}
 		}
-		l, _ = c.Next()
 	}
+
 	return rr, nil
 }
 
