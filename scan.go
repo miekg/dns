@@ -48,7 +48,6 @@ const (
 	zExpectAnyNoClass                        // Expect rrtype or ttl
 	zExpectAnyNoTTL                          // Expect rrtype or class
 	zExpectRdata                             // The first element of the rdata
-	zExpectDirOrigin                         // Directive $ORIGIN
 	zExpectDirInclude                        // Directive $INCLUDE
 )
 
@@ -422,7 +421,24 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 					st = zExpectOwnerDir
 				case "$ORIGIN":
-					st = zExpectDirOrigin
+					l, _ = zp.c.Expect(zString)
+					if l.err {
+						return zp.setParseError("expecting $ORIGIN value, not this...", l)
+					}
+
+					if e := slurpRemainder(zp.c, zp.file); e != nil {
+						zp.parseErr = e
+						return nil, false
+					}
+
+					name, ok := toAbsoluteName(l.token, zp.origin)
+					if !ok {
+						return zp.setParseError("bad origin name", l)
+					}
+
+					zp.origin = name
+
+					st = zExpectOwnerDir
 				case "$INCLUDE":
 					st = zExpectDirInclude
 				case "$GENERATE":
@@ -523,24 +539,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
 			zp.sub.SetIncludeAllowed(true)
 			return zp.subNext()
-		case zExpectDirOrigin:
-			if l.value != zString {
-				return zp.setParseError("expecting $ORIGIN value, not this...", l)
-			}
-
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
-			}
-
-			name, ok := toAbsoluteName(l.token, zp.origin)
-			if !ok {
-				return zp.setParseError("bad origin name", l)
-			}
-
-			zp.origin = name
-
-			st = zExpectOwnerDir
 		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
 			var expectRRType bool
 			switch l.value {
