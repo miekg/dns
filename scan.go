@@ -48,7 +48,6 @@ const (
 	zExpectAnyNoClass                        // Expect rrtype or ttl
 	zExpectAnyNoTTL                          // Expect rrtype or class
 	zExpectRdata                             // The first element of the rdata
-	zExpectDirInclude                        // Directive $INCLUDE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -440,7 +439,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 					st = zExpectOwnerDir
 				case "$INCLUDE":
-					st = zExpectDirInclude
+					l, _ = zp.c.Expect(zString)
+					if l.err {
+						return zp.setParseError("expecting $INCLUDE value, not this...", l)
+					}
+
+					return zp.include(l)
 				case "$GENERATE":
 					l, _ = zp.c.Expect(zString)
 					if l.err {
@@ -488,57 +492,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			default:
 				return zp.setParseError("syntax error at beginning", l)
 			}
-		case zExpectDirInclude:
-			if l.value != zString {
-				return zp.setParseError("expecting $INCLUDE value, not this...", l)
-			}
-
-			neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
-			switch l, _ := zp.c.Next(); l.value {
-			case zBlank:
-				l, _ := zp.c.Next()
-				if l.value == zString {
-					name, ok := toAbsoluteName(l.token, zp.origin)
-					if !ok {
-						return zp.setParseError("bad origin name", l)
-					}
-
-					neworigin = name
-				}
-			case zNewline, zEOF:
-				// Ok
-			default:
-				return zp.setParseError("garbage after $INCLUDE", l)
-			}
-
-			if !zp.includeAllowed {
-				return zp.setParseError("$INCLUDE directive not allowed", l)
-			}
-			if zp.includeDepth >= maxIncludeDepth {
-				return zp.setParseError("too deeply nested $INCLUDE", l)
-			}
-
-			// Start with the new file
-			includePath := l.token
-			if !filepath.IsAbs(includePath) {
-				includePath = filepath.Join(filepath.Dir(zp.file), includePath)
-			}
-
-			r1, e1 := os.Open(includePath)
-			if e1 != nil {
-				var as string
-				if !filepath.IsAbs(l.token) {
-					as = fmt.Sprintf(" as `%s'", includePath)
-				}
-
-				msg := fmt.Sprintf("failed to open `%s'%s: %v", l.token, as, e1)
-				return zp.setParseError(msg, l)
-			}
-
-			zp.sub = NewZoneParser(r1, neworigin, includePath)
-			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.SetIncludeAllowed(true)
-			return zp.subNext()
 		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
 			var expectRRType bool
 			switch l.value {
@@ -634,6 +587,55 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
 	// is not an error, because an empty zone file is still a zone file.
 	return nil, false
+}
+
+func (zp *ZoneParser) include(l lex) (RR, bool) {
+	neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
+	switch l, _ := zp.c.Next(); l.value {
+	case zBlank:
+		l, _ := zp.c.Next()
+		if l.value == zString {
+			name, ok := toAbsoluteName(l.token, zp.origin)
+			if !ok {
+				return zp.setParseError("bad origin name", l)
+			}
+
+			neworigin = name
+		}
+	case zNewline, zEOF:
+		// Ok
+	default:
+		return zp.setParseError("garbage after $INCLUDE", l)
+	}
+
+	if !zp.includeAllowed {
+		return zp.setParseError("$INCLUDE directive not allowed", l)
+	}
+	if zp.includeDepth >= maxIncludeDepth {
+		return zp.setParseError("too deeply nested $INCLUDE", l)
+	}
+
+	// Start with the new file
+	includePath := l.token
+	if !filepath.IsAbs(includePath) {
+		includePath = filepath.Join(filepath.Dir(zp.file), includePath)
+	}
+
+	r1, e1 := os.Open(includePath)
+	if e1 != nil {
+		var as string
+		if !filepath.IsAbs(l.token) {
+			as = fmt.Sprintf(" as `%s'", includePath)
+		}
+
+		msg := fmt.Sprintf("failed to open `%s'%s: %v", l.token, as, e1)
+		return zp.setParseError(msg, l)
+	}
+
+	zp.sub = NewZoneParser(r1, neworigin, includePath)
+	zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
+	zp.sub.SetIncludeAllowed(true)
+	return zp.subNext()
 }
 
 type zlexer struct {
