@@ -667,6 +667,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return nil, false
 			}
 
+			// The setRR code may not have checked for error in all paths, we
+			// check here to be sure we surface the error and not a broken RR.
+			if l := zp.c.LastToken(); l.err {
+				return zp.setParseError("error parsing RR", l)
+			}
+
 			return r, true
 		}
 	}
@@ -1163,6 +1169,10 @@ func (zl *zlexer) Comment() string {
 	}
 
 	return zl.comment
+}
+
+func (zl *zlexer) LastToken() lex {
+	return zl.l
 }
 
 // Extract the class number from CLASSxx

@@ -140,6 +140,15 @@ func TestZLexerExpect(t *testing.T) {
 	}
 }
 
+func TestZLexerUncheckedError(t *testing.T) {
+	rr, err := NewRR("nl. IN NSEC3PARAM 1 0 5\"\"")
+	if err == nil {
+		t.Errorf("expected error, got record: %v", rr)
+	} else if expect := `dns: error parsing RR: "unexpected type 3 lexer token, wanted type 2" at line: 1:24`; err.Error() != expect {
+		t.Errorf("expected error %q, got %q", expect, err.Error())
+	}
+}
+
 var errTestReadError = &Error{"test error"}
 
 type errReader struct{}
