@@ -381,12 +381,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zNewline:
 				st = zExpectOwnerDir
 			case zOwner:
-				name, ok := toAbsoluteName(l.token, zp.origin)
+				h.Name, ok = toAbsoluteName(l.token, zp.origin)
 				if !ok {
 					return zp.setParseError("bad owner name", l)
 				}
-
-				h.Name = name
 
 				l, _ = zp.c.Expect(zBlank)
 				if l.err {
@@ -430,12 +428,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 						return nil, false
 					}
 
-					name, ok := toAbsoluteName(l.token, zp.origin)
+					zp.origin, ok = toAbsoluteName(l.token, zp.origin)
 					if !ok {
 						return zp.setParseError("bad origin name", l)
 					}
-
-					zp.origin = name
 
 					st = zExpectOwnerDir
 				case "$INCLUDE":
