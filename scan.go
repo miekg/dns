@@ -17,7 +17,7 @@ const maxTok = 2048 // Largest token we can return.
 const maxIncludeDepth = 7
 
 type (
-	lexerValue      uint8
+	lexerValue      uint16
 	zoneParserState uint8
 )
 
@@ -29,8 +29,8 @@ type (
 // * Handle braces - anywhere.
 const (
 	// Zonefile
-	zEOF lexerValue = iota
-	zString
+	zEOF    lexerValue = 0
+	zString lexerValue = 1 << iota
 	zBlank
 	zQuote
 	zNewline
@@ -1151,14 +1151,14 @@ func (zl *zlexer) Next() (lex, bool) {
 
 func (zl *zlexer) Expect(typ lexerValue) (lex, bool) {
 	l, ok := zl.Next()
-	if ok && !l.err && l.value != typ {
+	if ok && !l.err && l.value&typ == 0 {
 		// This will never be hit for zEOF, as ok will always
 		// be false whenever l.value == zEOF.
 
 		zl.nextL = false
 
 		l := &zl.l
-		l.token = fmt.Sprintf("unexpected type %d lexer token, wanted type %d", l.value, typ)
+		l.token = fmt.Sprintf("unexpected type %#x lexer token, wanted bitmask %#x", l.value, typ)
 		l.err = true
 		return *l, true
 	}
