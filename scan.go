@@ -43,15 +43,14 @@ const (
 	zValue
 	zKey
 
-	zExpectOwnerDir    zoneParserState = iota // Ownername
-	zExpectAny                                // Expect rrtype, ttl or class
-	zExpectAnyNoClass                         // Expect rrtype or ttl
-	zExpectAnyNoTTL                           // Expect rrtype or class
-	zExpectRdata                              // The first element of the rdata
-	zExpectDirTTL                             // Directive $TTL
-	zExpectDirOrigin                          // Directive $ORIGIN
-	zExpectDirInclude                         // Directive $INCLUDE
-	zExpectDirGenerate                        // Directive $GENERATE
+	zExpectOwnerDir   zoneParserState = iota // Ownername
+	zExpectAny                               // Expect rrtype, ttl or class
+	zExpectAnyNoClass                        // Expect rrtype or ttl
+	zExpectAnyNoTTL                          // Expect rrtype or class
+	zExpectRdata                             // The first element of the rdata
+	zExpectDirTTL                            // Directive $TTL
+	zExpectDirOrigin                         // Directive $ORIGIN
+	zExpectDirInclude                        // Directive $INCLUDE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -399,6 +398,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectAny
 			case zDirective:
+				if l, _ := zp.c.Expect(zBlank); l.err {
+					return zp.setParseError("no blank after directive", l)
+				}
+
 				switch strings.ToUpper(l.token) {
 				case "$TTL":
 					st = zExpectDirTTL
@@ -407,14 +410,14 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				case "$INCLUDE":
 					st = zExpectDirInclude
 				case "$GENERATE":
-					st = zExpectDirGenerate
+					l, _ = zp.c.Expect(zString)
+					if l.err {
+						return zp.setParseError("expecting $GENERATE value, not this...", l)
+					}
+
+					return zp.generate(l)
 				default:
 					return zp.setParseError("bad owner name", l)
-				}
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after directive", l)
 				}
 			case zRrtpe:
 				h.Rrtype = l.torc
@@ -540,12 +543,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.origin = name
 
 			st = zExpectOwnerDir
-		case zExpectDirGenerate:
-			if l.value != zString {
-				return zp.setParseError("expecting $GENERATE value, not this...", l)
-			}
-
-			return zp.generate(l)
 		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
 			var expectRRType bool
 			switch l.value {
