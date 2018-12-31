@@ -547,10 +547,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			return zp.generate(l)
-		case zExpectAny:
+		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
 			switch l.value {
 			case zRrtpe:
-				if zp.defttl == nil {
+				if st == zExpectAny && zp.defttl == nil {
 					return zp.setParseError("missing TTL with no previous value", l)
 				}
 
@@ -558,6 +558,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectRdata
 			case zClass:
+				if st == zExpectAnyNoClass {
+					return zp.setParseError("expecting RR type or TTL, not this...", l)
+				}
+
 				h.Class = l.torc
 
 				l, _ = zp.c.Expect(zBlank)
@@ -565,8 +569,16 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("no blank after class", l)
 				}
 
-				st = zExpectAnyNoClass
+				if st == zExpectAnyNoTTL {
+					st = zExpectRrtype
+				} else {
+					st = zExpectAnyNoClass
+				}
 			case zString:
+				if st == zExpectAnyNoTTL {
+					return zp.setParseError("expecting RR type or class, not this...", l)
+				}
+
 				ttl, ok := stringToTTL(l.token)
 				if !ok {
 					return zp.setParseError("not a TTL", l)
@@ -583,54 +595,20 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("no blank after TTl", l)
 				}
 
-				st = zExpectAnyNoTTL
+				if st == zExpectAnyNoClass {
+					st = zExpectRrtype
+				} else {
+					st = zExpectAnyNoTTL
+				}
 			default:
-				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
-			}
-		case zExpectAnyNoTTL:
-			switch l.value {
-			case zClass:
-				h.Class = l.torc
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after class", l)
+				switch st {
+				case zExpectAnyNoTTL:
+					return zp.setParseError("expecting RR type or class, not this...", l)
+				case zExpectAnyNoClass:
+					return zp.setParseError("expecting RR type or TTL, not this...", l)
+				default:
+					return zp.setParseError("expecting RR type, TTL or class, not this...", l)
 				}
-
-				st = zExpectRrtype
-			case zRrtpe:
-				h.Rrtype = l.torc
-
-				st = zExpectRdata
-			default:
-				return zp.setParseError("expecting RR type or class, not this...", l)
-			}
-		case zExpectAnyNoClass:
-			switch l.value {
-			case zString:
-				ttl, ok := stringToTTL(l.token)
-				if !ok {
-					return zp.setParseError("not a TTL", l)
-				}
-
-				h.Ttl = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
-				}
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after TTL", l)
-				}
-
-				st = zExpectRrtype
-			case zRrtpe:
-				h.Rrtype = l.torc
-
-				st = zExpectRdata
-			default:
-				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			}
 		case zExpectRrtype:
 			if l.value != zRrtpe {
