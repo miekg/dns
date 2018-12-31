@@ -37,10 +37,7 @@ const (
 	zRrtpe
 	zOwner
 	zClass
-	zDirOrigin   // $ORIGIN
-	zDirTTL      // $TTL
-	zDirInclude  // $INCLUDE
-	zDirGenerate // $GENERATE
+	zDirective // $ORIGIN, $TTL, $INCLUDE or $GENERATE
 
 	// Privatekey file
 	zValue
@@ -405,14 +402,19 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				h.Name = name
 
 				st = zExpectOwnerBl
-			case zDirTTL:
-				st = zExpectDirTTLBl
-			case zDirOrigin:
-				st = zExpectDirOriginBl
-			case zDirInclude:
-				st = zExpectDirIncludeBl
-			case zDirGenerate:
-				st = zExpectDirGenerateBl
+			case zDirective:
+				switch strings.ToUpper(l.token) {
+				case "$TTL":
+					st = zExpectDirTTLBl
+				case "$ORIGIN":
+					st = zExpectDirOriginBl
+				case "$INCLUDE":
+					st = zExpectDirIncludeBl
+				case "$GENERATE":
+					st = zExpectDirGenerateBl
+				default:
+					return zp.setParseError("bad owner name", l)
+				}
 			case zRrtpe:
 				h.Rrtype = l.torc
 
@@ -824,19 +826,13 @@ func (zl *zlexer) Next() (lex, bool) {
 				// Space directly in the beginning, handled in the grammar
 			} else if zl.owner {
 				// If we have a string and its the first, make it an owner
-				l.value = zOwner
 				l.token = string(str[:stri])
 
 				// escape $... start with a \ not a $, so this will work
-				switch strings.ToUpper(l.token) {
-				case "$TTL":
-					l.value = zDirTTL
-				case "$ORIGIN":
-					l.value = zDirOrigin
-				case "$INCLUDE":
-					l.value = zDirInclude
-				case "$GENERATE":
-					l.value = zDirGenerate
+				if strings.HasPrefix(l.token, "$") {
+					l.value = zDirective
+				} else {
+					l.value = zOwner
 				}
 
 				retL = *l
