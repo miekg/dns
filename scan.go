@@ -1337,18 +1337,17 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 
 // "Eat" the rest of the "line"
 func slurpRemainder(c *zlexer, f string) *ParseError {
-	l, _ := c.Next()
-	switch l.value {
-	case zBlank:
-		l, _ = c.Next()
-		if l.value != zNewline && l.value != zEOF {
-			return &ParseError{f, "garbage after rdata", l}
-		}
-	case zNewline:
-	case zEOF:
-	default:
+	l, ok := c.Expect(zBlank | zNewline)
+	if l.value == zBlank {
+		l, ok = c.Expect(zNewline)
+	}
+	if ok && l.value != zNewline {
+		// We could use l.err here, but it would cause a less
+		// obvious error message for sticky errors. Instead we
+		// defer the error checking until ZoneParser.Next.
 		return &ParseError{f, "garbage after rdata", l}
 	}
+
 	return nil
 }
 
