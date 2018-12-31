@@ -50,7 +50,7 @@ func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
 		if l.err {
 			return s, &ParseError{f, errstr, l}
 		}
-		if l.value == zNewline || l.value == zEOF {
+		if l.value == zNewline {
 			break
 		}
 

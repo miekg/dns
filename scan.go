@@ -1152,6 +1152,9 @@ func (zl *zlexer) Next() (lex, bool) {
 func (zl *zlexer) Expect(typ lexerValue) (lex, bool) {
 	l, ok := zl.Next()
 	if ok && !l.err && l.value != typ {
+		// This will never be hit for zEOF, as ok will always
+		// be false whenever l.value == zEOF.
+
 		zl.nextL = false
 
 		l := &zl.l

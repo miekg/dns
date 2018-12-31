@@ -117,7 +117,7 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 			if l.err {
 				return nil, &ParseError{f, l.token, l}
 			}
-			if l.value == zNewline || l.value == zEOF {
+			if l.value == zNewline {
 				break
 			}
 
