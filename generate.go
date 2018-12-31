@@ -53,7 +53,9 @@ func (zp *ZoneParser) generate(l lex) (RR, bool) {
 		return zp.setParseError("bad range in $GENERATE range", l)
 	}
 
-	zp.c.Expect(zBlank)
+	if l, _ := zp.c.Expect(zBlank); l.err {
+		return zp.setParseError("bad data in $GENERATE directive", l)
+	}
 
 	// Create a complete new string, which we then parse again.
 	var s string
