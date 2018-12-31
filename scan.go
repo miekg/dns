@@ -48,7 +48,6 @@ const (
 	zExpectAnyNoClass                        // Expect rrtype or ttl
 	zExpectAnyNoTTL                          // Expect rrtype or class
 	zExpectRdata                             // The first element of the rdata
-	zExpectDirTTL                            // Directive $TTL
 	zExpectDirOrigin                         // Directive $ORIGIN
 	zExpectDirInclude                        // Directive $INCLUDE
 )
@@ -404,7 +403,24 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				switch strings.ToUpper(l.token) {
 				case "$TTL":
-					st = zExpectDirTTL
+					l, _ = zp.c.Expect(zString)
+					if l.err {
+						return zp.setParseError("expecting $TTL value, not this...", l)
+					}
+
+					if e := slurpRemainder(zp.c, zp.file); e != nil {
+						zp.parseErr = e
+						return nil, false
+					}
+
+					ttl, ok := stringToTTL(l.token)
+					if !ok {
+						return zp.setParseError("expecting $TTL value, not this...", l)
+					}
+
+					zp.defttl = &ttlState{ttl, true}
+
+					st = zExpectOwnerDir
 				case "$ORIGIN":
 					st = zExpectDirOrigin
 				case "$INCLUDE":
@@ -507,24 +523,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
 			zp.sub.SetIncludeAllowed(true)
 			return zp.subNext()
-		case zExpectDirTTL:
-			if l.value != zString {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
-			}
-
-			ttl, ok := stringToTTL(l.token)
-			if !ok {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			zp.defttl = &ttlState{ttl, true}
-
-			st = zExpectOwnerDir
 		case zExpectDirOrigin:
 			if l.value != zString {
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
