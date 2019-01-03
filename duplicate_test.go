@@ -75,4 +75,10 @@ func TestDuplicateWrongRrtype(t *testing.T) {
 	if IsDuplicate(r3, r4) {
 		t.Errorf("expected %s/%s not to be duplicates, but got true", r3.String(), r4.String())
 	}
+
+	r5 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	r6 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	if !IsDuplicate(r5, r6) {
+		t.Errorf("expected %s/%s to be duplicates, but got false", r5.String(), r6.String())
+	}
 }
