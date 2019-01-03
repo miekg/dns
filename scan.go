@@ -383,14 +383,14 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			return zp.setParseError("bad owner name", l)
 		}
 
-		l, _ = zp.c.Expect(zBlank)
-		if l.err {
+		l, ok = zp.c.Expect(zBlank)
+		if !ok || l.err {
 			return zp.setParseError("no blank after owner", l)
 		}
 
 		st = zExpectAny
 	case zDirective:
-		if l, _ := zp.c.Expect(zBlank); l.err {
+		if l, ok := zp.c.Expect(zBlank); !ok || l.err {
 			return zp.setParseError("no blank after directive", l)
 		}
 
@@ -402,8 +402,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	case zClass:
 		h.Class = l.torc
 
-		l, _ = zp.c.Expect(zBlank)
-		if l.err {
+		l, ok = zp.c.Expect(zBlank)
+		if !ok || l.err {
 			return zp.setParseError("no blank after class", l)
 		}
 
@@ -420,8 +420,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			zp.defttl = &ttlState{ttl, false}
 		}
 
-		l, _ = zp.c.Expect(zBlank)
-		if l.err {
+		l, ok = zp.c.Expect(zBlank)
+		if !ok || l.err {
 			return zp.setParseError("no blank after TTL", l)
 		}
 
@@ -455,8 +455,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				h.Class = l.torc
 
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
+				l, ok = zp.c.Expect(zBlank)
+				if !ok || l.err {
 					return zp.setParseError("no blank after class", l)
 				}
 
@@ -478,8 +478,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					zp.defttl = &ttlState{ttl, false}
 				}
 
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
+				l, ok = zp.c.Expect(zBlank)
+				if !ok || l.err {
 					return zp.setParseError("no blank after TTl", l)
 				}
 
@@ -497,8 +497,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			if expectRRType {
-				l, _ = zp.c.Expect(zRrtpe)
-				if l.err {
+				l, ok = zp.c.Expect(zRrtpe)
+				if !ok || l.err {
 					return zp.setParseError("unknown RR type", l)
 				}
 
@@ -539,8 +539,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 func (zp *ZoneParser) directive(l lex) (RR, bool) {
 	switch strings.ToUpper(l.token) {
 	case "$TTL":
-		l, _ = zp.c.Expect(zString)
-		if l.err {
+		l, ok := zp.c.Expect(zString)
+		if !ok || l.err {
 			return zp.setParseError("expecting $TTL value, not this...", l)
 		}
 
@@ -557,8 +557,8 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 
 		return zp.Next()
 	case "$ORIGIN":
-		l, _ = zp.c.Expect(zString)
-		if l.err {
+		l, ok := zp.c.Expect(zString)
+		if !ok || l.err {
 			return zp.setParseError("expecting $ORIGIN value, not this...", l)
 		}
 
@@ -575,15 +575,15 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 
 		return zp.Next()
 	case "$INCLUDE":
-		l, _ = zp.c.Expect(zString)
-		if l.err {
+		l, ok := zp.c.Expect(zString)
+		if !ok || l.err {
 			return zp.setParseError("expecting $INCLUDE value, not this...", l)
 		}
 
 		return zp.include(l)
 	case "$GENERATE":
-		l, _ = zp.c.Expect(zString)
-		if l.err {
+		l, ok := zp.c.Expect(zString)
+		if !ok || l.err {
 			return zp.setParseError("expecting $GENERATE value, not this...", l)
 		}
 
@@ -598,13 +598,13 @@ func (zp *ZoneParser) include(l lex) (RR, bool) {
 	// if not use current one.
 	neworigin := zp.origin
 
-	l2, _ := zp.c.Expect(zBlank | zNewline)
-	if l2.err {
+	l2, ok := zp.c.Expect(zBlank | zNewline)
+	if !ok || l2.err {
 		return zp.setParseError("garbage after $INCLUDE", l2)
 	}
 	if l2.value == zBlank {
-		l, _ := zp.c.Expect(zString | zNewline)
-		if l.err {
+		l, ok := zp.c.Expect(zString | zNewline)
+		if !ok || l.err {
 			return zp.setParseError("garbage after $INCLUDE", l)
 		}
 		if l.value == zString {
