@@ -106,7 +106,7 @@ func (hdr RR_Header) pack(msg []byte, off int, compression compressionMap, compr
 		return off, off, nil
 	}
 
-	off, _, err := packDomainName(hdr.Name, msg, off, compression, compress)
+	off, err := packDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
 		return off, len(msg), err
 	}
@@ -640,7 +640,7 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 func packDataDomainNames(names []string, msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	var err error
 	for j := 0; j < len(names); j++ {
-		off, _, err = packDomainName(names[j], msg, off, compression, compress)
+		off, err = packDomainName(names[j], msg, off, compression, compress)
 		if err != nil {
 			return len(msg), err
 		}
