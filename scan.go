@@ -599,16 +599,17 @@ func (zp *ZoneParser) include(l lex) (RR, bool) {
 	// if not use current one.
 	neworigin := zp.origin
 
-	l2, ok := zp.c.Expect(zBlank | zNewline)
-	if !ok || l2.err {
+	l2, _ := zp.c.Expect(zBlank | zNewline)
+	if l2.err {
 		return zp.setParseError("garbage after $INCLUDE", l2)
 	}
 	if l2.value == zBlank {
-		l, ok := zp.c.Expect(zString | zNewline)
-		if !ok || l.err {
+		l, _ := zp.c.Expect(zString | zNewline)
+		if l.err {
 			return zp.setParseError("garbage after $INCLUDE", l)
 		}
 		if l.value == zString {
+			var ok bool
 			neworigin, ok = toAbsoluteName(l.token, zp.origin)
 			if !ok {
 				return zp.setParseError("bad origin name", l)
