@@ -477,7 +477,7 @@ func (rr *NSEC3PARAM) len(off int, compression map[string]struct{}) int {
 }
 func (rr *NULL) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
-	l += len(rr.Anything)
+	l += len(rr.Data)
 	return l
 }
 func (rr *OPENPGPKEY) len(off int, compression map[string]struct{}) int {
@@ -791,7 +791,7 @@ func (rr *NSEC3PARAM) copy() RR {
 	return &NSEC3PARAM{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
 func (rr *NULL) copy() RR {
-	return &NULL{rr.Hdr, rr.Anything}
+	return &NULL{rr.Hdr, rr.Data}
 }
 func (rr *OPENPGPKEY) copy() RR {
 	return &OPENPGPKEY{rr.Hdr, rr.PublicKey}

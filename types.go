@@ -243,13 +243,13 @@ func (rr *ANY) String() string { return rr.Hdr.String() }
 
 // NULL RR. See RFC 1035.
 type NULL struct {
-	Hdr      RR_Header
-	Anything string `dns:"any"`
+	Hdr  RR_Header
+	Data string `dns:"any"`
 }
 
 func (rr *NULL) String() string {
 	// There is no presentation format; prefix string with a comment.
-	return ";" + rr.Hdr.String() + rr.Anything
+	return ";" + rr.Hdr.String() + rr.Data
 }
 
 // CNAME RR. See RFC 1034.
