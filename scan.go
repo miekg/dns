@@ -531,9 +531,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		}
 	}
 
-	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
-	// is not an error, because an empty zone file is still a zone file.
-	return nil, false
+	return zp.setParseError("unexpected end of file", zp.c.LastToken())
 }
 
 func (zp *ZoneParser) directive(l lex) (RR, bool) {
