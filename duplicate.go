@@ -1,7 +1,5 @@
 package dns
 
-import "reflect"
-
 //go:generate go run duplicate_generate.go
 
 // IsDuplicate checks of r1 and r2 are duplicates of each other, excluding the TTL.
@@ -9,25 +7,31 @@ import "reflect"
 // is so, otherwise false.
 // It's is a protocol violation to have identical RRs in a message.
 func IsDuplicate(r1, r2 RR) bool {
-	if r1.Header().Class != r2.Header().Class {
+	// Check whether the record header is identical.
+	if !r1.Header().isDuplicate(r2.Header()) {
 		return false
 	}
-	if r1.Header().Rrtype != r2.Header().Rrtype {
+
+	// Check whether the RDATA is identical.
+	return r1.isDuplicate(r2)
+}
+
+func (r1 *RR_Header) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*RR_Header)
+	if !ok {
 		return false
 	}
-	if !isDulicateName(r1.Header().Name, r2.Header().Name) {
+	if r1.Class != r2.Class {
+		return false
+	}
+	if r1.Rrtype != r2.Rrtype {
+		return false
+	}
+	if !isDulicateName(r1.Name, r2.Name) {
 		return false
 	}
 	// ignore TTL
-
-	// If either RR is lying about it's Rrtype, isDuplicateRdata will panic.
-	// To prevent this, we check that they have the correct type here.
-	expectedType := reflect.TypeOf(TypeToRR[r1.Header().Rrtype]())
-	if reflect.TypeOf(r1) != expectedType || reflect.TypeOf(r2) != expectedType {
-		return false
-	}
-
-	return isDuplicateRdata(r1, r2)
+	return true
 }
 
 // isDulicateName checks if the domain names s1 and s2 are equal.

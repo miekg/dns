@@ -83,6 +83,8 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 	return headerEnd, off, nil
 }
 
+func (r1 *PrivateRR) isDuplicate(r2 RR) bool { return false }
+
 // PrivateHandle registers a private resource record type. It requires
 // string and numeric representation of private RR type and generator function as argument.
 func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata) {

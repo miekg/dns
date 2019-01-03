@@ -43,6 +43,9 @@ type RR interface {
 
 	// pack packs an RR into wire format.
 	pack(msg []byte, off int, compression compressionMap, compress bool) (headerEnd int, off1 int, err error)
+
+	// isDuplicate returns whether the two RRs are duplicates.
+	isDuplicate(r2 RR) bool
 }
 
 // RR_Header is the header all DNS resource records share.

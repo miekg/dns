@@ -88,6 +88,8 @@ func (rr *OPT) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
+func (r1 *OPT) isDuplicate(r2 RR) bool { return false }
+
 // return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.

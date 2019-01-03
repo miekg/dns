@@ -57,10 +57,7 @@ func main() {
 			continue
 		}
 
-		if name == "PrivateRR" || name == "RFC3597" {
-			continue
-		}
-		if name == "OPT" || name == "ANY" || name == "IXFR" || name == "AXFR" {
+		if name == "PrivateRR" || name == "OPT" {
 			continue
 		}
 
@@ -69,22 +66,6 @@ func main() {
 
 	b := &bytes.Buffer{}
 	b.WriteString(packageHdr)
-
-	// Generate the giant switch that calls the correct function for each type.
-	fmt.Fprint(b, "// isDuplicateRdata calls the rdata specific functions\n")
-	fmt.Fprint(b, "func isDuplicateRdata(r1, r2 RR) bool {\n")
-	fmt.Fprint(b, "switch r1.Header().Rrtype {\n")
-
-	for _, name := range namedTypes {
-
-		o := scope.Lookup(name)
-		_, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
-		fmt.Fprintf(b, "case Type%s:\nreturn isDuplicate%s(r1.(*%s), r2.(*%s))\n", name, name, name, name)
-	}
-	fmt.Fprintf(b, "}\nreturn false\n}\n")
 
 	// Generate the duplicate check for each type.
 	fmt.Fprint(b, "// isDuplicate() functions\n\n")
@@ -95,7 +76,10 @@ func main() {
 		if isEmbedded {
 			continue
 		}
-		fmt.Fprintf(b, "func isDuplicate%s(r1, r2 *%s) bool {\n", name, name)
+		fmt.Fprintf(b, "func (r1 *%s) isDuplicate(_r2 RR) bool {\n", name)
+		fmt.Fprintf(b, "r2, ok := _r2.(*%s)\n", name)
+		fmt.Fprint(b, "if !ok { return false }\n")
+		fmt.Fprint(b, "_ = r2\n")
 		for i := 1; i < st.NumFields(); i++ {
 			field := st.Field(i).Name()
 			o2 := func(s string) { fmt.Fprintf(b, s+"\n", field, field) }
