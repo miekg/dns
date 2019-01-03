@@ -167,6 +167,9 @@ func (dns *Msg) IsEdns0() *OPT {
 // label fits in 63 characters, but there is no length check for the entire
 // string s. I.e.  a domain name longer than 255 characters is considered valid.
 func IsDomainName(s string) (labels int, ok bool) {
+	// XXX: The logic in this function was copied from packDomainName and
+	// should be kept in sync with that function.
+
 	const lenmsg = 256
 
 	if len(s) == 0 { // Ok, for instance when dealing with update RR without any rdata.

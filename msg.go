@@ -235,6 +235,9 @@ func PackDomainName(s string, msg []byte, off int, compression map[string]int, c
 }
 
 func packDomainName(s string, msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	// XXX: A logical copy of this function exists in IsDomainName and
+	// should be kept in sync with this function.
+
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
 		return off, nil
