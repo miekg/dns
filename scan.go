@@ -47,7 +47,6 @@ const (
 	zExpectAny                        // Expect rrtype, ttl or class
 	zExpectAnyNoClass                 // Expect rrtype or ttl
 	zExpectAnyNoTTL                   // Expect rrtype or class
-	zExpectRdata                      // The first element of the rdata
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -375,7 +374,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		h.Ttl = zp.defttl.ttl
 	}
 
-	var st zoneParserState
+	var (
+		st          zoneParserState
+		expectRdata bool
+	)
 	switch l.value {
 	case zOwner:
 		h.Name, ok = toAbsoluteName(l.token, zp.origin)
@@ -398,7 +400,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	case zRrtpe:
 		h.Rrtype = l.torc
 
-		st = zExpectRdata
+		expectRdata = true
 	case zClass:
 		h.Class = l.torc
 
@@ -430,108 +432,112 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		panic("dns: internal error: lexer type mismatch")
 	}
 
-	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
-		// zlexer spotted an error already
+	for !expectRdata {
+		l, ok = zp.c.Next()
+		if !ok {
+			return zp.setParseError("unexpected end of file", l)
+		}
 		if l.err {
 			return zp.setParseError(l.token, l)
 		}
 
-		switch st {
-		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
-			var expectRRType bool
-			switch l.value {
-			case zRrtpe:
-				if st == zExpectAny && zp.defttl == nil {
-					return zp.setParseError("missing TTL with no previous value", l)
-				}
-
-				h.Rrtype = l.torc
-
-				st = zExpectRdata
-			case zClass:
-				if st == zExpectAnyNoClass {
-					return zp.setParseError("expecting RR type or TTL, not this...", l)
-				}
-
-				h.Class = l.torc
-
-				l, ok = zp.c.Expect(zBlank)
-				if !ok || l.err {
-					return zp.setParseError("no blank after class", l)
-				}
-
-				expectRRType = st == zExpectAnyNoTTL
-				st = zExpectAnyNoClass
-			case zString:
-				if st == zExpectAnyNoTTL {
-					return zp.setParseError("expecting RR type or class, not this...", l)
-				}
-
-				ttl, ok := stringToTTL(l.token)
-				if !ok {
-					return zp.setParseError("not a TTL", l)
-				}
-
-				h.Ttl = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
-				}
-
-				l, ok = zp.c.Expect(zBlank)
-				if !ok || l.err {
-					return zp.setParseError("no blank after TTl", l)
-				}
-
-				expectRRType = st == zExpectAnyNoClass
-				st = zExpectAnyNoTTL
-			default:
-				switch st {
-				case zExpectAnyNoTTL:
-					return zp.setParseError("expecting RR type or class, not this...", l)
-				case zExpectAnyNoClass:
-					return zp.setParseError("expecting RR type or TTL, not this...", l)
-				default:
-					return zp.setParseError("expecting RR type, TTL or class, not this...", l)
-				}
+		var expectRRType bool
+		switch l.value {
+		case zRrtpe:
+			if st == zExpectAny && zp.defttl == nil {
+				return zp.setParseError("missing TTL with no previous value", l)
 			}
 
-			if expectRRType {
-				l, ok = zp.c.Expect(zRrtpe)
-				if !ok || l.err {
-					return zp.setParseError("unknown RR type", l)
-				}
+			h.Rrtype = l.torc
 
-				h.Rrtype = l.torc
-
-				st = zExpectRdata
-			}
-		case zExpectRdata:
-			r, e := setRR(*h, zp.c, zp.origin, zp.file)
-			if e != nil {
-				// If e.lex is nil than we have encounter a unknown RR type
-				// in that case we substitute our current lex token
-				if e.lex.token == "" && e.lex.value == 0 {
-					e.lex = l // Uh, dirty
-				}
-
-				zp.parseErr = e
-				return nil, false
+			expectRdata = true
+		case zClass:
+			if st == zExpectAnyNoClass {
+				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			}
 
-			// The setRR code may not have checked for error in all paths, we
-			// check here to be sure we surface the error and not a broken RR.
-			if l := zp.c.LastToken(); l.err {
-				return zp.setParseError("error parsing RR", l)
+			h.Class = l.torc
+
+			l, ok = zp.c.Expect(zBlank)
+			if !ok || l.err {
+				return zp.setParseError("no blank after class", l)
 			}
 
-			return r, true
+			expectRRType = st == zExpectAnyNoTTL
+			st = zExpectAnyNoClass
+		case zString:
+			if st == zExpectAnyNoTTL {
+				return zp.setParseError("expecting RR type or class, not this...", l)
+			}
+
+			ttl, ok := stringToTTL(l.token)
+			if !ok {
+				return zp.setParseError("not a TTL", l)
+			}
+
+			h.Ttl = ttl
+
+			if zp.defttl == nil || !zp.defttl.isByDirective {
+				zp.defttl = &ttlState{ttl, false}
+			}
+
+			l, ok = zp.c.Expect(zBlank)
+			if !ok || l.err {
+				return zp.setParseError("no blank after TTl", l)
+			}
+
+			expectRRType = st == zExpectAnyNoClass
+			st = zExpectAnyNoTTL
 		default:
-			panic("dns: internal error: invalid zone parser state")
+			switch st {
+			case zExpectAnyNoTTL:
+				return zp.setParseError("expecting RR type or class, not this...", l)
+			case zExpectAnyNoClass:
+				return zp.setParseError("expecting RR type or TTL, not this...", l)
+			default:
+				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
+			}
+		}
+
+		if expectRRType {
+			l, ok = zp.c.Expect(zRrtpe)
+			if !ok || l.err {
+				return zp.setParseError("unknown RR type", l)
+			}
+
+			h.Rrtype = l.torc
+
+			expectRdata = true
 		}
 	}
 
-	return zp.setParseError("unexpected end of file", zp.c.LastToken())
+	l, ok = zp.c.Expect(zBlank | zNewline)
+	if !ok {
+		return zp.setParseError("unexpected end of file", l)
+	}
+	if l.err {
+		return zp.setParseError("no blank before rdata", l)
+	}
+
+	r, err := setRR(*h, zp.c, zp.origin, zp.file)
+	if err != nil {
+		// If e.lex is nil than we have encounter a unknown RR type
+		// in that case we substitute our current lex token
+		if err.lex.token == "" && err.lex.value == 0 {
+			err.lex = l // Uh, dirty
+		}
+
+		zp.parseErr = err
+		return nil, false
+	}
+
+	// The setRR code may not have checked for error in all paths, we
+	// check here to be sure we surface the error and not a broken RR.
+	if l := zp.c.LastToken(); l.err {
+		return zp.setParseError("error parsing RR", l)
+	}
+
+	return r, true
 }
 
 func (zp *ZoneParser) directive(l lex) (RR, bool) {
