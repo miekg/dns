@@ -184,10 +184,8 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(msg []byte, off int) (int, error) {\n", name)
-		fmt.Fprint(b, `var err error
-_ = err
-rdStart := off
+		fmt.Fprintf(b, "func (rr *%s) unpack(msg []byte, off int) (off1 int, err error) {\n", name)
+		fmt.Fprint(b, `rdStart := off
 _ = rdStart
 
 `)
