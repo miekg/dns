@@ -621,7 +621,12 @@ func packRR(rr RR, msg []byte, off int, compression compressionMap, compress boo
 		return len(msg), len(msg), &Error{err: "nil rr"}
 	}
 
-	headerEnd, off1, err = rr.pack(msg, off, compression, compress)
+	headerEnd, err = rr.Header().packHeader(msg, off, compression, compress)
+	if err != nil {
+		return headerEnd, len(msg), err
+	}
+
+	off1, err = rr.pack(msg, headerEnd, compression, compress)
 	if err != nil {
 		return headerEnd, len(msg), err
 	}

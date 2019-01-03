@@ -4,1362 +4,1078 @@ package dns
 
 // pack*() functions
 
-func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDataA(rr.A, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *AAAA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *AAAA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDataAAAA(rr.AAAA, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *AFSDB) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *AFSDB) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Subtype, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Hostname, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *ANY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
-	return headerEnd, off, nil
+func (rr *ANY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	return off, nil
 }
 
-func (rr *AVC) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *AVC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CAA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CAA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Flag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Tag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringOctet(rr.Value, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CDNSKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CDNSKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Protocol, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CDS) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CDS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.DigestType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Digest, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CERT) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CERT) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Type, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.Certificate, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CNAME) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CNAME) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Target, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *CSYNC) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *CSYNC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint32(rr.Serial, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDataNsec(rr.TypeBitMap, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *DHCID) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *DHCID) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringBase64(rr.Digest, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *DLV) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *DLV) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.DigestType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Digest, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *DNAME) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *DNAME) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Target, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *DNSKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *DNSKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Protocol, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *DS) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *DS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.DigestType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Digest, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *EID) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *EID) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringHex(rr.Endpoint, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *EUI48) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *EUI48) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint48(rr.Address, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *EUI64) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *EUI64) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint64(rr.Address, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *GID) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *GID) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint32(rr.Gid, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *GPOS) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *GPOS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packString(rr.Longitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Latitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Altitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *HINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *HINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packString(rr.Cpu, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Os, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.HitLength, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.PublicKeyAlgorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.PublicKeyLength, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Hit, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDataDomainNames(rr.RendezvousServers, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *KEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *KEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Protocol, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *KX) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *KX) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Exchanger, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *L32) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *L32) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDataA(rr.Locator32, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *L64) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *L64) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint64(rr.Locator64, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *LOC) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *LOC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Version, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Size, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.HorizPre, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.VertPre, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Latitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Longitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Altitude, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *LP) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *LP) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Fqdn, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MB) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MB) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Mb, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MD) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MD) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Md, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MF) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MF) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Mf, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MG) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MG) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Mg, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Rmail, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Email, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MR) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Mr, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *MX) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *MX) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Mx, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NAPTR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NAPTR) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Order, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Service, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packString(rr.Regexp, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Replacement, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NID) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NID) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint64(rr.NodeID, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NIMLOC) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NIMLOC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringHex(rr.Locator, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringTxt(rr.ZSData, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NS) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Ns, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NSAPPTR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NSAPPTR) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Ptr, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NSEC) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NSEC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.NextDomain, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDataNsec(rr.TypeBitMap, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Hash, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Iterations, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.SaltLength, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
 		off, err = packStringHex(rr.Salt, msg, off)
 		if err != nil {
-			return headerEnd, off, err
+			return off, err
 		}
 	}
 	off, err = packUint8(rr.HashLength, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase32(rr.NextDomain, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDataNsec(rr.TypeBitMap, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NSEC3PARAM) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NSEC3PARAM) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Hash, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Iterations, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.SaltLength, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
 		off, err = packStringHex(rr.Salt, msg, off)
 		if err != nil {
-			return headerEnd, off, err
+			return off, err
 		}
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *NULL) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *NULL) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringAny(rr.Data, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *OPENPGPKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *OPENPGPKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *OPT) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *OPT) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDataOpt(rr.Option, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *PTR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *PTR) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Ptr, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *PX) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *PX) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Map822, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Mapx400, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *RFC3597) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *RFC3597) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringHex(rr.Rdata, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *RKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *RKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Protocol, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *RP) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *RP) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Mbox, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Txt, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *RRSIG) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *RRSIG) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.TypeCovered, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Labels, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.OrigTtl, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Expiration, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Inception, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.SignerName, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.Signature, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *RT) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *RT) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Host, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SIG) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SIG) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.TypeCovered, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Labels, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.OrigTtl, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Expiration, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Inception, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.SignerName, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringBase64(rr.Signature, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SMIMEA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SMIMEA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Usage, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Selector, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.MatchingType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Certificate, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SOA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SOA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Ns, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Mbox, msg, off, compression, compress)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Serial, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Refresh, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Retry, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Expire, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Minttl, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SPF) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SPF) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SRV) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SRV) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Priority, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Weight, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Port, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.Target, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *SSHFP) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *SSHFP) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Type, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.FingerPrint, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Algorithm, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.DigestType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Digest, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TALINK) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TALINK) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.PreviousName, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packDomainName(rr.NextName, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Algorithm, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Inception, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint32(rr.Expiration, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Mode, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Error, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.KeySize, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Key, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.OtherLen, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TLSA) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TLSA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint8(rr.Usage, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.Selector, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint8(rr.MatchingType, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.Certificate, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packDomainName(rr.Algorithm, msg, off, compression, false)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint48(rr.TimeSigned, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Fudge, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.MACSize, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.MAC, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.OrigId, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Error, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.OtherLen, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *TXT) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *TXT) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringTxt(rr.Txt, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *UID) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *UID) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint32(rr.Uid, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *UINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *UINFO) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packString(rr.Uinfo, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *URI) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *URI) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Priority, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packUint16(rr.Weight, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
 	off, err = packStringOctet(rr.Target, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
-func (rr *X25) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return headerEnd, off, err
-	}
+func (rr *X25) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packString(rr.PSDNAddress, msg, off)
 	if err != nil {
-		return headerEnd, off, err
+		return off, err
 	}
-	return headerEnd, off, nil
+	return off, nil
 }
 
 // unpack*() functions

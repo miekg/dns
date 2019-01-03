@@ -70,17 +70,13 @@ func (r *PrivateRR) copy() RR {
 	return rr
 }
 
-func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
-	headerEnd, off, err := r.Hdr.pack(msg, off, compression, compress)
-	if err != nil {
-		return off, off, err
-	}
+func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	n, err := r.Data.Pack(msg[off:])
 	if err != nil {
-		return headerEnd, len(msg), err
+		return len(msg), err
 	}
 	off += n
-	return headerEnd, off, nil
+	return off, nil
 }
 
 func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
