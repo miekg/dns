@@ -1586,7 +1586,7 @@ func TestBadDirective(t *testing.T) {
 	rr, err := NewRR("$INVALID directive\nfoo IN A 127.0.0.1")
 	if err == nil {
 		t.Errorf("expected error, got record: %v", rr)
-	} else if expect := `dns: bad owner name: "$INVALID" at line: 1:9`; err.Error() != expect {
+	} else if expect := `dns: unknown directive: "$INVALID" at line: 1:9`; err.Error() != expect {
 		t.Errorf("expected error %q, got %q", expect, err.Error())
 	}
 }

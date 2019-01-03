@@ -394,60 +394,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			return zp.setParseError("no blank after directive", l)
 		}
 
-		switch strings.ToUpper(l.token) {
-		case "$TTL":
-			l, _ = zp.c.Expect(zString)
-			if l.err {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
-			}
-
-			ttl, ok := stringToTTL(l.token)
-			if !ok {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			zp.defttl = &ttlState{ttl, true}
-
-			return zp.Next()
-		case "$ORIGIN":
-			l, _ = zp.c.Expect(zString)
-			if l.err {
-				return zp.setParseError("expecting $ORIGIN value, not this...", l)
-			}
-
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
-			}
-
-			zp.origin, ok = toAbsoluteName(l.token, zp.origin)
-			if !ok {
-				return zp.setParseError("bad origin name", l)
-			}
-
-			return zp.Next()
-		case "$INCLUDE":
-			l, _ = zp.c.Expect(zString)
-			if l.err {
-				return zp.setParseError("expecting $INCLUDE value, not this...", l)
-			}
-
-			return zp.include(l)
-		case "$GENERATE":
-			l, _ = zp.c.Expect(zString)
-			if l.err {
-				return zp.setParseError("expecting $GENERATE value, not this...", l)
-			}
-
-			return zp.generate(l)
-		default:
-			return zp.setParseError("bad owner name", l)
-		}
+		return zp.directive(l)
 	case zRrtpe:
 		h.Rrtype = l.torc
 
@@ -587,6 +534,63 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
 	// is not an error, because an empty zone file is still a zone file.
 	return nil, false
+}
+
+func (zp *ZoneParser) directive(l lex) (RR, bool) {
+	switch strings.ToUpper(l.token) {
+	case "$TTL":
+		l, _ = zp.c.Expect(zString)
+		if l.err {
+			return zp.setParseError("expecting $TTL value, not this...", l)
+		}
+
+		if e := slurpRemainder(zp.c, zp.file); e != nil {
+			zp.parseErr = e
+			return nil, false
+		}
+
+		ttl, ok := stringToTTL(l.token)
+		if !ok {
+			return zp.setParseError("expecting $TTL value, not this...", l)
+		}
+		zp.defttl = &ttlState{ttl, true}
+
+		return zp.Next()
+	case "$ORIGIN":
+		l, _ = zp.c.Expect(zString)
+		if l.err {
+			return zp.setParseError("expecting $ORIGIN value, not this...", l)
+		}
+
+		if e := slurpRemainder(zp.c, zp.file); e != nil {
+			zp.parseErr = e
+			return nil, false
+		}
+
+		origin, ok := toAbsoluteName(l.token, zp.origin)
+		if !ok {
+			return zp.setParseError("bad origin name", l)
+		}
+		zp.origin = origin
+
+		return zp.Next()
+	case "$INCLUDE":
+		l, _ = zp.c.Expect(zString)
+		if l.err {
+			return zp.setParseError("expecting $INCLUDE value, not this...", l)
+		}
+
+		return zp.include(l)
+	case "$GENERATE":
+		l, _ = zp.c.Expect(zString)
+		if l.err {
+			return zp.setParseError("expecting $GENERATE value, not this...", l)
+		}
+
+		return zp.generate(l)
+	default:
+		return zp.setParseError("unknown directive", l)
+	}
 }
 
 func (zp *ZoneParser) include(l lex) (RR, bool) {
