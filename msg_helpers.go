@@ -99,34 +99,34 @@ func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte,
 	return hdr, off, msg, err
 }
 
-// pack packs an RR header, returning the offset to the end of the header.
+// packHeader packs an RR header, returning the offset to the end of the header.
 // See PackDomainName for documentation about the compression.
-func (hdr RR_Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {
+func (hdr RR_Header) packHeader(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	if off == len(msg) {
-		return off, off, nil
+		return off, nil
 	}
 
 	off, _, err := packDomainName(hdr.Name, msg, off, compression, compress)
 	if err != nil {
-		return off, len(msg), err
+		return len(msg), err
 	}
 	off, err = packUint16(hdr.Rrtype, msg, off)
 	if err != nil {
-		return off, len(msg), err
+		return len(msg), err
 	}
 	off, err = packUint16(hdr.Class, msg, off)
 	if err != nil {
-		return off, len(msg), err
+		return len(msg), err
 	}
 	off, err = packUint32(hdr.Ttl, msg, off)
 	if err != nil {
-		return off, len(msg), err
+		return len(msg), err
 	}
 	off, err = packUint16(0, msg, off) // The RDLENGTH field will be set later in packRR.
 	if err != nil {
-		return off, len(msg), err
+		return len(msg), err
 	}
-	return off, off, nil
+	return off, nil
 }
 
 // helper helper functions.

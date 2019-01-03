@@ -80,17 +80,12 @@ func main() {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {\n", name)
-		fmt.Fprint(b, `headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-if err != nil {
-	return headerEnd, off, err
-}
-`)
+		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {\n", name)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
 				fmt.Fprint(b, `if err != nil {
-return headerEnd, off, err
+return off, err
 }
 `)
 			}
@@ -144,7 +139,7 @@ return headerEnd, off, err
 if rr.%s != "-" {
   off, err = packStringHex(rr.%s, msg, off)
   if err != nil {
-    return headerEnd, off, err
+    return off, err
   }
 }
 `, field, field)
@@ -176,7 +171,7 @@ if rr.%s != "-" {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintln(b, "return headerEnd, off, nil }\n")
+		fmt.Fprintln(b, "return off, nil }\n")
 	}
 
 	fmt.Fprint(b, "// unpack*() functions\n\n")

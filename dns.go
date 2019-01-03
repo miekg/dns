@@ -41,8 +41,9 @@ type RR interface {
 	// size will be returned and domain names will be added to the map for future compression.
 	len(off int, compression map[string]struct{}) int
 
-	// pack packs an RR into wire format.
-	pack(msg []byte, off int, compression compressionMap, compress bool) (headerEnd int, off1 int, err error)
+	// pack packs the records RDATA into wire format. The header will
+	// already have been packed into msg.
+	pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error)
 }
 
 // RR_Header is the header all DNS resource records share.
@@ -79,6 +80,11 @@ func (h *RR_Header) len(off int, compression map[string]struct{}) int {
 	l := domainNameLen(h.Name, off, compression, true)
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
+}
+
+func (h *RR_Header) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	// RR_Header has no RDATA to pack.
+	return off, nil
 }
 
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
