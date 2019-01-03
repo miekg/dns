@@ -388,11 +388,11 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 		l, ok = zp.c.Expect(zBlank)
 		if !ok || l.err {
-			return zp.setParseError("no blank after owner", l)
+			return zp.setParseError(lexErrMsg("no blank after owner", ok), l)
 		}
 	case zDirective:
 		if l, ok := zp.c.Expect(zBlank); !ok || l.err {
-			return zp.setParseError("no blank after directive", l)
+			return zp.setParseError(lexErrMsg("no blank after directive", ok), l)
 		}
 
 		return zp.directive(l)
@@ -405,7 +405,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 		l, ok = zp.c.Expect(zBlank)
 		if !ok || l.err {
-			return zp.setParseError("no blank after class", l)
+			return zp.setParseError(lexErrMsg("no blank after class", ok), l)
 		}
 
 		noClass = true
@@ -423,7 +423,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 		l, ok = zp.c.Expect(zBlank)
 		if !ok || l.err {
-			return zp.setParseError("no blank after TTL", l)
+			return zp.setParseError(lexErrMsg("no blank after TTL", ok), l)
 		}
 
 		noTTL = true
@@ -433,11 +433,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	for !expectRdata {
 		l, ok = zp.c.Next()
-		if !ok {
-			return zp.setParseError("unexpected end of file", l)
-		}
-		if l.err {
-			return zp.setParseError(l.token, l)
+		if !ok || l.err {
+			return zp.setParseError(lexErrMsg(l.token, ok), l)
 		}
 
 		var expectRRType bool
@@ -459,7 +456,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			l, ok = zp.c.Expect(zBlank)
 			if !ok || l.err {
-				return zp.setParseError("no blank after class", l)
+				return zp.setParseError(lexErrMsg("no blank after class", ok), l)
 			}
 
 			expectRRType = noTTL
@@ -482,7 +479,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			l, ok = zp.c.Expect(zBlank)
 			if !ok || l.err {
-				return zp.setParseError("no blank after TTl", l)
+				return zp.setParseError(lexErrMsg("no blank after TTl", ok), l)
 			}
 
 			expectRRType = noClass
@@ -501,7 +498,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		if expectRRType {
 			l, ok = zp.c.Expect(zRrtpe)
 			if !ok || l.err {
-				return zp.setParseError("unknown RR type", l)
+				return zp.setParseError(lexErrMsg("unknown RR type", ok), l)
 			}
 
 			h.Rrtype = l.torc
@@ -511,11 +508,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	}
 
 	l, ok = zp.c.Expect(zBlank | zNewline)
-	if !ok {
-		return zp.setParseError("unexpected end of file", l)
-	}
-	if l.err {
-		return zp.setParseError("no blank before rdata", l)
+	if !ok || l.err {
+		return zp.setParseError(lexErrMsg("no blank before rdata", ok), l)
 	}
 
 	r, err := setRR(*h, zp.c, zp.origin, zp.file)
@@ -544,7 +538,7 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 	case "$TTL":
 		l, ok := zp.c.Expect(zString)
 		if !ok || l.err {
-			return zp.setParseError("expecting $TTL value, not this...", l)
+			return zp.setParseError(lexErrMsg("expecting $TTL value, not this...", ok), l)
 		}
 
 		if e := slurpRemainder(zp.c, zp.file); e != nil {
@@ -562,7 +556,7 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 	case "$ORIGIN":
 		l, ok := zp.c.Expect(zString)
 		if !ok || l.err {
-			return zp.setParseError("expecting $ORIGIN value, not this...", l)
+			return zp.setParseError(lexErrMsg("expecting $ORIGIN value, not this...", ok), l)
 		}
 
 		if e := slurpRemainder(zp.c, zp.file); e != nil {
@@ -580,14 +574,14 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 	case "$INCLUDE":
 		l, ok := zp.c.Expect(zString)
 		if !ok || l.err {
-			return zp.setParseError("expecting $INCLUDE value, not this...", l)
+			return zp.setParseError(lexErrMsg("expecting $INCLUDE value, not this...", ok), l)
 		}
 
 		return zp.include(l)
 	case "$GENERATE":
 		l, ok := zp.c.Expect(zString)
 		if !ok || l.err {
-			return zp.setParseError("expecting $GENERATE value, not this...", l)
+			return zp.setParseError(lexErrMsg("expecting $GENERATE value, not this...", ok), l)
 		}
 
 		return zp.generate(l)
@@ -647,6 +641,14 @@ func (zp *ZoneParser) include(l lex) (RR, bool) {
 	zp.sub.defttl, zp.sub.includeDepth, zp.sub.osFile = zp.defttl, zp.includeDepth+1, r1
 	zp.sub.SetIncludeAllowed(true)
 	return zp.subNext()
+}
+
+func lexErrMsg(err string, ok bool) string {
+	if ok {
+		return err
+	}
+
+	return "unexpected end of file"
 }
 
 type zlexer struct {
