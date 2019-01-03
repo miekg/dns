@@ -892,45 +892,47 @@ Altitude:
 	}
 
 	// And now optionally the other values
-	var count int
-	for l, ok := c.Next(); ok; l, ok = c.Next() {
-		if l.err {
-			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}
-		}
-		if l.value == zNewline {
-			break
-		}
-
-		switch l.value {
-		case zString:
-			switch count {
-			case 0: // Size
-				e, m, ok := stringToCm(l.token)
-				if !ok {
-					return nil, &ParseError{f, "bad LOC Size", l}
-				}
-				rr.Size = e&0x0f | m<<4&0xf0
-			case 1: // HorizPre
-				e, m, ok := stringToCm(l.token)
-				if !ok {
-					return nil, &ParseError{f, "bad LOC HorizPre", l}
-				}
-				rr.HorizPre = e&0x0f | m<<4&0xf0
-			case 2: // VertPre
-				e, m, ok := stringToCm(l.token)
-				if !ok {
-					return nil, &ParseError{f, "bad LOC VertPre", l}
-				}
-				rr.VertPre = e&0x0f | m<<4&0xf0
-			}
-
-			count++
-		case zBlank:
-			// Ok
-		default:
-			return nil, &ParseError{f, "bad LOC Size, HorizPre or VertPre", l}
-		}
+	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
+	if !ok || l.err {
+		return nil, &ParseError{f, "bad LOC Size", l}
 	}
+	if l.value == zNewline {
+		return rr, nil
+	}
+
+	s, m, ok := stringToCm(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad LOC Size", l}
+	}
+	rr.Size = s&0x0f | m<<4&0xf0
+
+	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
+	if !ok || l.err {
+		return nil, &ParseError{f, "bad LOC HorizPre", l}
+	}
+	if l.value == zNewline {
+		return rr, nil
+	}
+
+	hp, m, ok := stringToCm(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad LOC HorizPre", l}
+	}
+	rr.HorizPre = hp&0x0f | m<<4&0xf0
+
+	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
+	if !ok || l.err {
+		return nil, &ParseError{f, "bad LOC VertPre", l}
+	}
+	if l.value == zNewline {
+		return rr, nil
+	}
+
+	vp, m, ok := stringToCm(l.token)
+	if !ok {
+		return nil, &ParseError{f, "bad LOC VertPre", l}
+	}
+	rr.VertPre = vp&0x0f | m<<4&0xf0
 
 	return rr, nil
 }
