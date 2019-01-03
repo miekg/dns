@@ -16,10 +16,7 @@ const maxTok = 2048 // Largest token we can return.
 // ZoneParser API.
 const maxIncludeDepth = 7
 
-type (
-	lexerValue      uint16
-	zoneParserState uint8
-)
+type lexerValue uint16
 
 // Tokinize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -42,11 +39,6 @@ const (
 	// Privatekey file
 	zValue
 	zKey
-
-	_                 zoneParserState = iota
-	zExpectAny                        // Expect rrtype, ttl or class
-	zExpectAnyNoClass                 // Expect rrtype or ttl
-	zExpectAnyNoTTL                   // Expect rrtype or class
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -375,8 +367,9 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	}
 
 	var (
-		st          zoneParserState
 		expectRdata bool
+		noClass     bool
+		noTTL       bool
 	)
 	switch l.value {
 	case zOwner:
@@ -389,8 +382,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		if !ok || l.err {
 			return zp.setParseError("no blank after owner", l)
 		}
-
-		st = zExpectAny
 	case zDirective:
 		if l, ok := zp.c.Expect(zBlank); !ok || l.err {
 			return zp.setParseError("no blank after directive", l)
@@ -409,7 +400,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			return zp.setParseError("no blank after class", l)
 		}
 
-		st = zExpectAnyNoClass
+		noClass = true
 	case zString:
 		ttl, ok := stringToTTL(l.token)
 		if !ok {
@@ -427,7 +418,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			return zp.setParseError("no blank after TTL", l)
 		}
 
-		st = zExpectAnyNoTTL
+		noTTL = true
 	default:
 		panic("dns: internal error: lexer type mismatch")
 	}
@@ -444,7 +435,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		var expectRRType bool
 		switch l.value {
 		case zRrtpe:
-			if st == zExpectAny && zp.defttl == nil {
+			if !noClass && !noTTL && zp.defttl == nil {
 				return zp.setParseError("missing TTL with no previous value", l)
 			}
 
@@ -452,7 +443,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			expectRdata = true
 		case zClass:
-			if st == zExpectAnyNoClass {
+			if noClass {
 				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			}
 
@@ -463,10 +454,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("no blank after class", l)
 			}
 
-			expectRRType = st == zExpectAnyNoTTL
-			st = zExpectAnyNoClass
+			expectRRType = noTTL
+			noClass = true
 		case zString:
-			if st == zExpectAnyNoTTL {
+			if noTTL {
 				return zp.setParseError("expecting RR type or class, not this...", l)
 			}
 
@@ -486,13 +477,13 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("no blank after TTl", l)
 			}
 
-			expectRRType = st == zExpectAnyNoClass
-			st = zExpectAnyNoTTL
+			expectRRType = noClass
+			noTTL = true
 		default:
-			switch st {
-			case zExpectAnyNoTTL:
+			switch {
+			case noTTL:
 				return zp.setParseError("expecting RR type or class, not this...", l)
-			case zExpectAnyNoClass:
+			case noClass:
 				return zp.setParseError("expecting RR type or TTL, not this...", l)
 			default:
 				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
