@@ -807,7 +807,7 @@ func (rr *NULL) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return headerEnd, off, err
 	}
-	off, err = packStringAny(rr.Anything, msg, off)
+	off, err = packStringAny(rr.Data, msg, off)
 	if err != nil {
 		return headerEnd, off, err
 	}
@@ -2571,7 +2571,7 @@ func unpackNULL(h RR_Header, msg []byte, off int) (RR, int, error) {
 	rdStart := off
 	_ = rdStart
 
-	rr.Anything, off, err = unpackStringAny(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Data, off, err = unpackStringAny(msg, off, rdStart+int(rr.Hdr.Rdlength))
 	if err != nil {
 		return rr, off, err
 	}

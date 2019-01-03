@@ -619,7 +619,7 @@ func isDuplicateNSEC3PARAM(r1, r2 *NSEC3PARAM) bool {
 }
 
 func isDuplicateNULL(r1, r2 *NULL) bool {
-	if r1.Anything != r2.Anything {
+	if r1.Data != r2.Data {
 		return false
 	}
 	return true
