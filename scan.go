@@ -594,10 +594,19 @@ func (zp *ZoneParser) directive(l lex) (RR, bool) {
 }
 
 func (zp *ZoneParser) include(l lex) (RR, bool) {
-	neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
-	switch l, _ := zp.c.Next(); l.value {
-	case zBlank:
-		l, _ := zp.c.Next()
+	// There may be optionally a new origin set after the filename,
+	// if not use current one.
+	neworigin := zp.origin
+
+	l2, _ := zp.c.Expect(zBlank | zNewline)
+	if l2.err {
+		return zp.setParseError("garbage after $INCLUDE", l2)
+	}
+	if l2.value == zBlank {
+		l, _ := zp.c.Expect(zString | zNewline)
+		if l.err {
+			return zp.setParseError("garbage after $INCLUDE", l)
+		}
 		if l.value == zString {
 			name, ok := toAbsoluteName(l.token, zp.origin)
 			if !ok {
@@ -606,10 +615,6 @@ func (zp *ZoneParser) include(l lex) (RR, bool) {
 
 			neworigin = name
 		}
-	case zNewline, zEOF:
-		// Ok
-	default:
-		return zp.setParseError("garbage after $INCLUDE", l)
 	}
 
 	if !zp.includeAllowed {
