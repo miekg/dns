@@ -1,5 +1,7 @@
 package dns
 
+import "reflect"
+
 //go:generate go run duplicate_generate.go
 
 // IsDuplicate checks of r1 and r2 are duplicates of each other, excluding the TTL.
@@ -17,6 +19,13 @@ func IsDuplicate(r1, r2 RR) bool {
 		return false
 	}
 	// ignore TTL
+
+	// If either RR is lying about it's Rrtype, isDuplicateRdata will panic.
+	// To prevent this, we check that they have the correct type here.
+	expectedType := reflect.TypeOf(TypeToRR[r1.Header().Rrtype]())
+	if reflect.TypeOf(r1) != expectedType || reflect.TypeOf(r2) != expectedType {
+		return false
+	}
 
 	return isDuplicateRdata(r1, r2)
 }
