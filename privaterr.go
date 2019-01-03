@@ -84,8 +84,6 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 }
 
 func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
-	r.Data = mkPrivateRR(r.Hdr.Rrtype).Data
-
 	off1, err := r.Data.Unpack(msg[off:])
 	off += off1
 	if err != nil {
