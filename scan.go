@@ -43,11 +43,11 @@ const (
 	zValue
 	zKey
 
-	zExpectOwnerDir   zoneParserState = iota // Ownername
-	zExpectAny                               // Expect rrtype, ttl or class
-	zExpectAnyNoClass                        // Expect rrtype or ttl
-	zExpectAnyNoTTL                          // Expect rrtype or class
-	zExpectRdata                             // The first element of the rdata
+	_                 zoneParserState = iota
+	zExpectAny                        // Expect rrtype, ttl or class
+	zExpectAnyNoClass                 // Expect rrtype or ttl
+	zExpectAnyNoTTL                   // Expect rrtype or class
+	zExpectRdata                      // The first element of the rdata
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -359,8 +359,129 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	// After detecting these, we know the zRrtype so we can jump to functions
 	// handling the rdata for each of these types.
 
-	st := zExpectOwnerDir // initial state
+	l, ok := zp.c.ExpectUntil(zOwner|zDirective|zRrtpe|zClass|zString, zBlank|zNewline)
+	if !ok {
+		return nil, false
+	}
+	if l.err {
+		return zp.setParseError("syntax error at beginning of line", l)
+	}
+
 	h := &zp.h
+	h.Class = ClassINET
+
+	// We can also expect a directive, like $TTL or $ORIGIN
+	if zp.defttl != nil {
+		h.Ttl = zp.defttl.ttl
+	}
+
+	var st zoneParserState
+	switch l.value {
+	case zOwner:
+		h.Name, ok = toAbsoluteName(l.token, zp.origin)
+		if !ok {
+			return zp.setParseError("bad owner name", l)
+		}
+
+		l, _ = zp.c.Expect(zBlank)
+		if l.err {
+			return zp.setParseError("no blank after owner", l)
+		}
+
+		st = zExpectAny
+	case zDirective:
+		if l, _ := zp.c.Expect(zBlank); l.err {
+			return zp.setParseError("no blank after directive", l)
+		}
+
+		switch strings.ToUpper(l.token) {
+		case "$TTL":
+			l, _ = zp.c.Expect(zString)
+			if l.err {
+				return zp.setParseError("expecting $TTL value, not this...", l)
+			}
+
+			if e := slurpRemainder(zp.c, zp.file); e != nil {
+				zp.parseErr = e
+				return nil, false
+			}
+
+			ttl, ok := stringToTTL(l.token)
+			if !ok {
+				return zp.setParseError("expecting $TTL value, not this...", l)
+			}
+
+			zp.defttl = &ttlState{ttl, true}
+
+			return zp.Next()
+		case "$ORIGIN":
+			l, _ = zp.c.Expect(zString)
+			if l.err {
+				return zp.setParseError("expecting $ORIGIN value, not this...", l)
+			}
+
+			if e := slurpRemainder(zp.c, zp.file); e != nil {
+				zp.parseErr = e
+				return nil, false
+			}
+
+			zp.origin, ok = toAbsoluteName(l.token, zp.origin)
+			if !ok {
+				return zp.setParseError("bad origin name", l)
+			}
+
+			return zp.Next()
+		case "$INCLUDE":
+			l, _ = zp.c.Expect(zString)
+			if l.err {
+				return zp.setParseError("expecting $INCLUDE value, not this...", l)
+			}
+
+			return zp.include(l)
+		case "$GENERATE":
+			l, _ = zp.c.Expect(zString)
+			if l.err {
+				return zp.setParseError("expecting $GENERATE value, not this...", l)
+			}
+
+			return zp.generate(l)
+		default:
+			return zp.setParseError("bad owner name", l)
+		}
+	case zRrtpe:
+		h.Rrtype = l.torc
+
+		st = zExpectRdata
+	case zClass:
+		h.Class = l.torc
+
+		l, _ = zp.c.Expect(zBlank)
+		if l.err {
+			return zp.setParseError("no blank after class", l)
+		}
+
+		st = zExpectAnyNoClass
+	case zString:
+		ttl, ok := stringToTTL(l.token)
+		if !ok {
+			return zp.setParseError("not a TTL", l)
+		}
+
+		h.Ttl = ttl
+
+		if zp.defttl == nil || !zp.defttl.isByDirective {
+			zp.defttl = &ttlState{ttl, false}
+		}
+
+		l, _ = zp.c.Expect(zBlank)
+		if l.err {
+			return zp.setParseError("no blank after TTL", l)
+		}
+
+		st = zExpectAnyNoTTL
+	default:
+		panic("dns: internal error: lexer type mismatch")
+	}
 
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
@@ -369,125 +490,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		}
 
 		switch st {
-		case zExpectOwnerDir:
-			// We can also expect a directive, like $TTL or $ORIGIN
-			if zp.defttl != nil {
-				h.Ttl = zp.defttl.ttl
-			}
-
-			h.Class = ClassINET
-
-			switch l.value {
-			case zNewline:
-				st = zExpectOwnerDir
-			case zOwner:
-				h.Name, ok = toAbsoluteName(l.token, zp.origin)
-				if !ok {
-					return zp.setParseError("bad owner name", l)
-				}
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after owner", l)
-				}
-
-				st = zExpectAny
-			case zDirective:
-				if l, _ := zp.c.Expect(zBlank); l.err {
-					return zp.setParseError("no blank after directive", l)
-				}
-
-				switch strings.ToUpper(l.token) {
-				case "$TTL":
-					l, _ = zp.c.Expect(zString)
-					if l.err {
-						return zp.setParseError("expecting $TTL value, not this...", l)
-					}
-
-					if e := slurpRemainder(zp.c, zp.file); e != nil {
-						zp.parseErr = e
-						return nil, false
-					}
-
-					ttl, ok := stringToTTL(l.token)
-					if !ok {
-						return zp.setParseError("expecting $TTL value, not this...", l)
-					}
-
-					zp.defttl = &ttlState{ttl, true}
-
-					st = zExpectOwnerDir
-				case "$ORIGIN":
-					l, _ = zp.c.Expect(zString)
-					if l.err {
-						return zp.setParseError("expecting $ORIGIN value, not this...", l)
-					}
-
-					if e := slurpRemainder(zp.c, zp.file); e != nil {
-						zp.parseErr = e
-						return nil, false
-					}
-
-					zp.origin, ok = toAbsoluteName(l.token, zp.origin)
-					if !ok {
-						return zp.setParseError("bad origin name", l)
-					}
-
-					st = zExpectOwnerDir
-				case "$INCLUDE":
-					l, _ = zp.c.Expect(zString)
-					if l.err {
-						return zp.setParseError("expecting $INCLUDE value, not this...", l)
-					}
-
-					return zp.include(l)
-				case "$GENERATE":
-					l, _ = zp.c.Expect(zString)
-					if l.err {
-						return zp.setParseError("expecting $GENERATE value, not this...", l)
-					}
-
-					return zp.generate(l)
-				default:
-					return zp.setParseError("bad owner name", l)
-				}
-			case zRrtpe:
-				h.Rrtype = l.torc
-
-				st = zExpectRdata
-			case zClass:
-				h.Class = l.torc
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after class", l)
-				}
-
-				st = zExpectAnyNoClass
-			case zBlank:
-				// Discard, can happen when there is nothing on the
-				// line except the RR type
-			case zString:
-				ttl, ok := stringToTTL(l.token)
-				if !ok {
-					return zp.setParseError("not a TTL", l)
-				}
-
-				h.Ttl = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
-				}
-
-				l, _ = zp.c.Expect(zBlank)
-				if l.err {
-					return zp.setParseError("no blank after TTL", l)
-				}
-
-				st = zExpectAnyNoTTL
-			default:
-				return zp.setParseError("syntax error at beginning", l)
-			}
 		case zExpectAny, zExpectAnyNoTTL, zExpectAnyNoClass:
 			var expectRRType bool
 			switch l.value {
@@ -577,6 +579,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			return r, true
+		default:
+			panic("dns: internal error: invalid zone parser state")
 		}
 	}
 
