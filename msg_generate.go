@@ -191,6 +191,7 @@ if rr.%s != "-" {
 return rr, off, nil
 	}
 var err error
+_ = err
 rdStart := off
 _ = rdStart
 
@@ -292,7 +293,7 @@ return rr, off, nil
 `)
 			}
 		}
-		fmt.Fprintf(b, "return rr, off, err }\n\n")
+		fmt.Fprintf(b, "return rr, off, nil }\n\n")
 	}
 	// Generate typeToUnpack map
 	fmt.Fprintln(b, "var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){")
