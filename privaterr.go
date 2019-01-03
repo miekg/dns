@@ -79,6 +79,16 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
+func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
+	off1, err := r.Data.Unpack(msg[off:])
+	off += off1
+	if err != nil {
+		return off, err
+	}
+
+	return off, nil
+}
+
 // PrivateHandle registers a private resource record type. It requires
 // string and numeric representation of private RR type and generator function as argument.
 func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata) {
@@ -87,23 +97,6 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 	TypeToRR[rtype] = func() RR { return &PrivateRR{RR_Header{}, generator()} }
 	TypeToString[rtype] = rtypestr
 	StringToType[rtypestr] = rtype
-
-	typeToUnpack[rtype] = func(h RR_Header, msg []byte, off int) (RR, int, error) {
-		if noRdata(h) {
-			return &h, off, nil
-		}
-		var err error
-
-		rr := mkPrivateRR(h.Rrtype)
-		rr.Hdr = h
-
-		off1, err := rr.Data.Unpack(msg[off:])
-		off += off1
-		if err != nil {
-			return rr, off, err
-		}
-		return rr, off, err
-	}
 
 	setPrivateRR := func(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 		rr := mkPrivateRR(h.Rrtype)
@@ -142,6 +135,5 @@ func PrivateHandleRemove(rtype uint16) {
 		delete(TypeToString, rtype)
 		delete(typeToparserFunc, rtype)
 		delete(StringToType, rtypestr)
-		delete(typeToUnpack, rtype)
 	}
 }

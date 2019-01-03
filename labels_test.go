@@ -155,13 +155,15 @@ func TestIsDomainName(t *testing.T) {
 		lab int
 	}
 	names := map[string]*ret{
-		"..":               {false, 1},
-		"@.":               {true, 1},
-		"www.example.com":  {true, 3},
-		"www.e%ample.com":  {true, 3},
-		"www.example.com.": {true, 3},
-		"mi\\k.nl.":        {true, 2},
-		"mi\\k.nl":         {true, 2},
+		"..":                     {false, 1},
+		"@.":                     {true, 1},
+		"www.example.com":        {true, 3},
+		"www.e%ample.com":        {true, 3},
+		"www.example.com.":       {true, 3},
+		"mi\\k.nl.":              {true, 2},
+		"mi\\k.nl":               {true, 2},
+		longestDomain:            {true, 4},
+		longestUnprintableDomain: {true, 4},
 	}
 	for d, ok := range names {
 		l, k := IsDomainName(d)

@@ -44,6 +44,12 @@ type RR interface {
 	// pack packs the records RDATA into wire format. The header will
 	// already have been packed into msg.
 	pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error)
+
+	// unpack unpacks an RR from wire format.
+	//
+	// This will only be called on a new and empty RR type with only the header populated. It
+	// will only be called if the record's RDATA is non-empty.
+	unpack(msg []byte, off int) (off1 int, err error)
 }
 
 // RR_Header is the header all DNS resource records share.
@@ -87,6 +93,10 @@ func (h *RR_Header) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
+func (h *RR_Header) unpack(msg []byte, off int) (int, error) {
+	panic("dns: internal error: unpack should never be called on RR_Header")
+}
+
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf := make([]byte, Len(r)*2)
@@ -96,14 +106,17 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 	}
 	buf = buf[:off]
 
-	hdr := *r.Header()
-	hdr.Rdlength = uint16(off - headerEnd)
+	*rr = RFC3597{Hdr: *r.Header()}
+	rr.Hdr.Rdlength = uint16(off - headerEnd)
 
-	rfc3597, _, err := unpackRFC3597(hdr, buf, headerEnd)
+	if noRdata(rr.Hdr) {
+		return nil
+	}
+
+	_, err = rr.unpack(buf, headerEnd)
 	if err != nil {
 		return err
 	}
 
-	*rr = *rfc3597.(*RFC3597)
 	return nil
 }
