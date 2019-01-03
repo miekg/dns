@@ -514,9 +514,9 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	r, err := setRR(*h, zp.c, zp.origin, zp.file)
 	if err != nil {
-		// If e.lex is nil than we have encounter a unknown RR type
-		// in that case we substitute our current lex token
-		if err.lex.token == "" && err.lex.value == 0 {
+		// If err.lex is nil than we have encounter a unknown RR
+		// type in that case we substitute our current lex token.
+		if err.lex == (lex{}) {
 			err.lex = l // Uh, dirty
 		}
 
