@@ -526,7 +526,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	// The setRR code may not have checked for error in all paths, we
 	// check here to be sure we surface the error and not a broken RR.
-	if l := zp.c.LastToken(); l.err {
+	if l := zp.c.LastToken(); l.err || zp.c.Err() != nil {
 		return zp.setParseError("error parsing RR", l)
 	}
 
