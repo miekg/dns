@@ -280,17 +280,19 @@ func (zp *ZoneParser) SetIncludeAllowed(v bool) {
 // Err returns the first non-EOF error that was encountered by the
 // ZoneParser.
 func (zp *ZoneParser) Err() error {
+	if err := zp.c.Err(); err != nil {
+		return err
+	}
+
 	if zp.parseErr != nil {
 		return zp.parseErr
 	}
 
 	if zp.sub != nil {
-		if err := zp.sub.Err(); err != nil {
-			return err
-		}
+		return zp.sub.Err()
 	}
 
-	return zp.c.Err()
+	return nil
 }
 
 func (zp *ZoneParser) setParseError(err string, l lex) (RR, bool) {
