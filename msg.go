@@ -661,17 +661,28 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
 // RR_Header.
 func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
+	if newFn, ok := TypeToRR[h.Rrtype]; ok {
+		rr = newFn()
+		*rr.Header() = h
+	} else {
+		rr = &RFC3597{Hdr: h}
+	}
+
+	if noRdata(h) {
+		return rr, off, nil
+	}
+
 	end := off + int(h.Rdlength)
 
-	if fn, known := typeToUnpack[h.Rrtype]; !known {
-		rr, off, err = unpackRFC3597(h, msg, off)
-	} else {
-		rr, off, err = fn(h, msg, off)
+	off, err = rr.unpack(msg, off)
+	if err != nil {
+		return nil, end, err
 	}
 	if off != end {
 		return &h, end, &Error{err: "bad rdlength"}
 	}
-	return rr, off, err
+
+	return rr, off, nil
 }
 
 // unpackRRslice unpacks msg[off:] into an []RR.

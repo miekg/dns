@@ -184,13 +184,8 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
-		fmt.Fprintf(b, "rr := new(%s)\n", name)
-		fmt.Fprint(b, "rr.Hdr = h\n")
-		fmt.Fprint(b, `if noRdata(h) {
-return rr, off, nil
-	}
-var err error
+		fmt.Fprintf(b, "func (rr *%s) unpack(msg []byte, off int) (int, error) {\n", name)
+		fmt.Fprint(b, `var err error
 _ = err
 rdStart := off
 _ = rdStart
@@ -200,7 +195,7 @@ _ = rdStart
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
 				fmt.Fprint(b, `if err != nil {
-return rr, off, err
+return off, err
 }
 `)
 			}
@@ -220,7 +215,7 @@ return rr, off, err
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
 				fmt.Fprint(b, `if err != nil {
-return rr, off, err
+return off, err
 }
 `)
 				continue
@@ -288,22 +283,13 @@ return rr, off, err
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
 				fmt.Fprintf(b, `if off == len(msg) {
-return rr, off, nil
+return off, nil
 	}
 `)
 			}
 		}
-		fmt.Fprintf(b, "return rr, off, nil }\n\n")
+		fmt.Fprintf(b, "return off, nil }\n\n")
 	}
-	// Generate typeToUnpack map
-	fmt.Fprintln(b, "var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){")
-	for _, name := range namedTypes {
-		if name == "RFC3597" {
-			continue
-		}
-		fmt.Fprintf(b, "Type%s: unpack%s,\n", name, name)
-	}
-	fmt.Fprintln(b, "}\n")
 
 	// gofmt
 	res, err := format.Source(b.Bytes())
