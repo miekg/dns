@@ -893,11 +893,11 @@ Altitude:
 
 	// And now optionally the other values
 	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
-	if !ok || l.err {
-		return nil, &ParseError{f, "bad LOC Size", l}
-	}
-	if l.value == zNewline {
+	if !ok || l.value == zNewline {
 		return rr, nil
+	}
+	if l.err {
+		return nil, &ParseError{f, "bad LOC Size", l}
 	}
 
 	s, m, ok := stringToCm(l.token)
@@ -907,11 +907,11 @@ Altitude:
 	rr.Size = s&0x0f | m<<4&0xf0
 
 	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
-	if !ok || l.err {
-		return nil, &ParseError{f, "bad LOC HorizPre", l}
-	}
-	if l.value == zNewline {
+	if !ok || l.value == zNewline {
 		return rr, nil
+	}
+	if l.err {
+		return nil, &ParseError{f, "bad LOC HorizPre", l}
 	}
 
 	hp, m, ok := stringToCm(l.token)
@@ -921,11 +921,11 @@ Altitude:
 	rr.HorizPre = hp&0x0f | m<<4&0xf0
 
 	l, ok = c.ExpectUntil(zString|zNewline, zBlank)
-	if !ok || l.err {
-		return nil, &ParseError{f, "bad LOC VertPre", l}
-	}
-	if l.value == zNewline {
+	if !ok || l.value == zNewline {
 		return rr, nil
+	}
+	if l.err {
+		return nil, &ParseError{f, "bad LOC VertPre", l}
 	}
 
 	vp, m, ok := stringToCm(l.token)
