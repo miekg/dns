@@ -608,12 +608,10 @@ func (zp *ZoneParser) include(l lex) (RR, bool) {
 			return zp.setParseError("garbage after $INCLUDE", l)
 		}
 		if l.value == zString {
-			name, ok := toAbsoluteName(l.token, zp.origin)
+			neworigin, ok = toAbsoluteName(l.token, zp.origin)
 			if !ok {
 				return zp.setParseError("bad origin name", l)
 			}
-
-			neworigin = name
 		}
 	}
 
