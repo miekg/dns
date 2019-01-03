@@ -164,8 +164,8 @@ func (dns *Msg) IsEdns0() *OPT {
 // the number of labels.  When false is returned the number of labels is not
 // defined.  Also note that this function is extremely liberal; almost any
 // string is a valid domain name as the DNS is 8 bit protocol. It checks if each
-// label fits in 63 characters, but there is no length check for the entire
-// string s. I.e.  a domain name longer than 255 characters is considered valid.
+// label fits in 63 characters and that the entire name will fit into the 255
+// octet wire format limit.
 func IsDomainName(s string) (labels int, ok bool) {
 	// XXX: The logic in this function was copied from packDomainName and
 	// should be kept in sync with that function.
