@@ -1112,6 +1112,20 @@ func (zl *zlexer) Expect(typ lexerValue) (lex, bool) {
 	return l, ok
 }
 
+func (zl *zlexer) ExpectUntil(want, valid lexerValue) (lex, bool) {
+	if valid&^want == 0 {
+		panic("dns: internal error: caller should have used Expect")
+	}
+
+	valid |= want // This makes call sites shorter and easier to read.
+
+	for l, ok := zl.Expect(valid); ; l, ok = zl.Expect(valid) {
+		if !ok || l.err || l.value&want != 0 {
+			return l, ok
+		}
+	}
+}
+
 func (zl *zlexer) Comment() string {
 	if zl.l.err {
 		return ""
