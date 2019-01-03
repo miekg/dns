@@ -1371,6 +1371,7 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1378,7 +1379,7 @@ func unpackA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1388,6 +1389,7 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1395,7 +1397,7 @@ func unpackAAAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackAFSDB(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1405,6 +1407,7 @@ func unpackAFSDB(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1419,7 +1422,7 @@ func unpackAFSDB(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackANY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1429,10 +1432,11 @@ func unpackANY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackAVC(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1442,6 +1446,7 @@ func unpackAVC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1449,7 +1454,7 @@ func unpackAVC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCAA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1459,6 +1464,7 @@ func unpackCAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1480,7 +1486,7 @@ func unpackCAA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1490,6 +1496,7 @@ func unpackCDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1518,7 +1525,7 @@ func unpackCDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCDS(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1528,6 +1535,7 @@ func unpackCDS(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1556,7 +1564,7 @@ func unpackCDS(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCERT(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1566,6 +1574,7 @@ func unpackCERT(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1594,7 +1603,7 @@ func unpackCERT(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1604,6 +1613,7 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1611,7 +1621,7 @@ func unpackCNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackCSYNC(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1621,6 +1631,7 @@ func unpackCSYNC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1642,7 +1653,7 @@ func unpackCSYNC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackDHCID(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1652,6 +1663,7 @@ func unpackDHCID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1659,7 +1671,7 @@ func unpackDHCID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackDLV(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1669,6 +1681,7 @@ func unpackDLV(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1697,7 +1710,7 @@ func unpackDLV(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1707,6 +1720,7 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1714,7 +1728,7 @@ func unpackDNAME(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1724,6 +1738,7 @@ func unpackDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1752,7 +1767,7 @@ func unpackDNSKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackDS(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1762,6 +1777,7 @@ func unpackDS(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1790,7 +1806,7 @@ func unpackDS(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackEID(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1800,6 +1816,7 @@ func unpackEID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1807,7 +1824,7 @@ func unpackEID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackEUI48(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1817,6 +1834,7 @@ func unpackEUI48(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1824,7 +1842,7 @@ func unpackEUI48(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackEUI64(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1834,6 +1852,7 @@ func unpackEUI64(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1841,7 +1860,7 @@ func unpackEUI64(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackGID(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1851,6 +1870,7 @@ func unpackGID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1858,7 +1878,7 @@ func unpackGID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackGPOS(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1868,6 +1888,7 @@ func unpackGPOS(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1889,7 +1910,7 @@ func unpackGPOS(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1899,6 +1920,7 @@ func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1913,7 +1935,7 @@ func unpackHINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackHIP(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1923,6 +1945,7 @@ func unpackHIP(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1959,7 +1982,7 @@ func unpackHIP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -1969,6 +1992,7 @@ func unpackKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -1997,7 +2021,7 @@ func unpackKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackKX(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2007,6 +2031,7 @@ func unpackKX(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2021,7 +2046,7 @@ func unpackKX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2031,6 +2056,7 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2045,7 +2071,7 @@ func unpackL32(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackL64(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2055,6 +2081,7 @@ func unpackL64(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2069,7 +2096,7 @@ func unpackL64(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2079,6 +2106,7 @@ func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2128,7 +2156,7 @@ func unpackLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackLP(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2138,6 +2166,7 @@ func unpackLP(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2152,7 +2181,7 @@ func unpackLP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2162,6 +2191,7 @@ func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2169,7 +2199,7 @@ func unpackMB(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2179,6 +2209,7 @@ func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2186,7 +2217,7 @@ func unpackMD(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2196,6 +2227,7 @@ func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2203,7 +2235,7 @@ func unpackMF(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2213,6 +2245,7 @@ func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2220,7 +2253,7 @@ func unpackMG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2230,6 +2263,7 @@ func unpackMINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2244,7 +2278,7 @@ func unpackMINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2254,6 +2288,7 @@ func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2261,7 +2296,7 @@ func unpackMR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2271,6 +2306,7 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2285,7 +2321,7 @@ func unpackMX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNAPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2295,6 +2331,7 @@ func unpackNAPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2337,7 +2374,7 @@ func unpackNAPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2347,6 +2384,7 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2361,7 +2399,7 @@ func unpackNID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNIMLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2371,6 +2409,7 @@ func unpackNIMLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2378,7 +2417,7 @@ func unpackNIMLOC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2388,6 +2427,7 @@ func unpackNINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2395,7 +2435,7 @@ func unpackNINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2405,6 +2445,7 @@ func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2412,7 +2453,7 @@ func unpackNS(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNSAPPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2422,6 +2463,7 @@ func unpackNSAPPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2429,7 +2471,7 @@ func unpackNSAPPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNSEC(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2439,6 +2481,7 @@ func unpackNSEC(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2453,7 +2496,7 @@ func unpackNSEC(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNSEC3(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2463,6 +2506,7 @@ func unpackNSEC3(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2513,7 +2557,7 @@ func unpackNSEC3(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNSEC3PARAM(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2523,6 +2567,7 @@ func unpackNSEC3PARAM(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2558,7 +2603,7 @@ func unpackNSEC3PARAM(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackNULL(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2568,6 +2613,7 @@ func unpackNULL(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2575,7 +2621,7 @@ func unpackNULL(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackOPENPGPKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2585,6 +2631,7 @@ func unpackOPENPGPKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2592,7 +2639,7 @@ func unpackOPENPGPKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackOPT(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2602,6 +2649,7 @@ func unpackOPT(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2609,7 +2657,7 @@ func unpackOPT(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2619,6 +2667,7 @@ func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2626,7 +2675,7 @@ func unpackPTR(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackPX(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2636,6 +2685,7 @@ func unpackPX(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2657,7 +2707,7 @@ func unpackPX(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackRFC3597(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2667,6 +2717,7 @@ func unpackRFC3597(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2674,7 +2725,7 @@ func unpackRFC3597(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackRKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2684,6 +2735,7 @@ func unpackRKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2712,7 +2764,7 @@ func unpackRKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2722,6 +2774,7 @@ func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2736,7 +2789,7 @@ func unpackRP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackRRSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2746,6 +2799,7 @@ func unpackRRSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2809,7 +2863,7 @@ func unpackRRSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackRT(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2819,6 +2873,7 @@ func unpackRT(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2833,7 +2888,7 @@ func unpackRT(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2843,6 +2898,7 @@ func unpackSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2906,7 +2962,7 @@ func unpackSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSMIMEA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2916,6 +2972,7 @@ func unpackSMIMEA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -2944,7 +3001,7 @@ func unpackSMIMEA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSOA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -2954,6 +3011,7 @@ func unpackSOA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3003,7 +3061,7 @@ func unpackSOA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSPF(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3013,6 +3071,7 @@ func unpackSPF(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3020,7 +3079,7 @@ func unpackSPF(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3030,6 +3089,7 @@ func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3058,7 +3118,7 @@ func unpackSRV(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackSSHFP(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3068,6 +3128,7 @@ func unpackSSHFP(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3089,7 +3150,7 @@ func unpackSSHFP(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3099,6 +3160,7 @@ func unpackTA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3127,7 +3189,7 @@ func unpackTA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTALINK(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3137,6 +3199,7 @@ func unpackTALINK(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3151,7 +3214,7 @@ func unpackTALINK(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3161,6 +3224,7 @@ func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3221,7 +3285,7 @@ func unpackTKEY(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTLSA(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3231,6 +3295,7 @@ func unpackTLSA(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3259,7 +3324,7 @@ func unpackTLSA(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3269,6 +3334,7 @@ func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3329,7 +3395,7 @@ func unpackTSIG(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackTXT(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3339,6 +3405,7 @@ func unpackTXT(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3346,7 +3413,7 @@ func unpackTXT(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackUID(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3356,6 +3423,7 @@ func unpackUID(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3363,7 +3431,7 @@ func unpackUID(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackUINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3373,6 +3441,7 @@ func unpackUINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3380,7 +3449,7 @@ func unpackUINFO(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackURI(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3390,6 +3459,7 @@ func unpackURI(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3411,7 +3481,7 @@ func unpackURI(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 func unpackX25(h RR_Header, msg []byte, off int) (RR, int, error) {
@@ -3421,6 +3491,7 @@ func unpackX25(h RR_Header, msg []byte, off int) (RR, int, error) {
 		return rr, off, nil
 	}
 	var err error
+	_ = err
 	rdStart := off
 	_ = rdStart
 
@@ -3428,7 +3499,7 @@ func unpackX25(h RR_Header, msg []byte, off int) (RR, int, error) {
 	if err != nil {
 		return rr, off, err
 	}
-	return rr, off, err
+	return rr, off, nil
 }
 
 var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){
