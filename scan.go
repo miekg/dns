@@ -49,13 +49,19 @@ type ParseError struct {
 	lex  lex
 }
 
-func (e *ParseError) Error() (s string) {
+func (e *ParseError) Error() string {
+	var s string
 	if e.file != "" {
 		s = e.file + ": "
 	}
-	s += "dns: " + e.err + ": " + strconv.QuoteToASCII(e.lex.token) + " at line: " +
+
+	token := e.lex.token
+	if token == "" && e.lex.value == zEOF && e.lex != (lex{}) {
+		token = "unexpected end of file"
+	}
+
+	return s + "dns: " + e.err + ": " + strconv.QuoteToASCII(token) + " at line: " +
 		strconv.Itoa(e.lex.line) + ":" + strconv.Itoa(e.lex.column)
-	return
 }
 
 type lex struct {
