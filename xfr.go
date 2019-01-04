@@ -35,6 +35,12 @@ type Transfer struct {
 //	channel, err := transfer.In(message, master)
 //
 func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
+	switch q.Question[0].Qtype {
+	case TypeAXFR, TypeIXFR:
+	default:
+		return nil, &Error{"unsupported question type"}
+	}
+
 	timeout := dnsTimeout
 	if t.DialTimeout != 0 {
 		timeout = t.DialTimeout
