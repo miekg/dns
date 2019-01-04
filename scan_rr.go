@@ -11,10 +11,8 @@ type parserFunc struct {
 	// Func defines the function that parses the tokens and returns the RR
 	// or an error.
 	Func func(h RR_Header, c *zlexer, origin string, file string) (RR, *ParseError)
-	// Signals if the RR ending is of variable length, like TXT or records
-	// that have Hexadecimal or Base64 as their last element in the Rdata. Records
-	// that have a fixed ending or for instance A, AAAA, SOA and etc.
-	Variable bool
+
+	Variable bool // Unused
 }
 
 // Parse the rdata of each rrtype.
@@ -26,11 +24,11 @@ func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	parserfunc, ok := typeToparserFunc[h.Rrtype]
 	if ok {
 		r, e := parserfunc.Func(h, c, o, f)
-		if parserfunc.Variable {
-			return r, e
-		}
 		if e != nil {
 			return nil, e
+		}
+		if l := c.LastToken(); l.value == zNewline || l.value == zEOF {
+			return r, nil
 		}
 		e = slurpRemainder(c, f)
 		if e != nil {
