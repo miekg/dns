@@ -243,7 +243,7 @@ func IsSubDomain(parent, child string) bool {
 // The checking is performed on the binary payload.
 func IsMsg(buf []byte) error {
 	// Header
-	if len(buf) < 12 {
+	if len(buf) < headerSize {
 		return errors.New("dns: bad message header")
 	}
 	// Header: Opcode

@@ -103,7 +103,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	anc := binary.BigEndian.Uint16(buf[6:])
 	auc := binary.BigEndian.Uint16(buf[8:])
 	adc := binary.BigEndian.Uint16(buf[10:])
-	offset := 12
+	offset := headerSize
 	var err error
 	for i := uint16(0); i < qdc && offset < buflen; i++ {
 		_, offset, err = UnpackDomainName(buf, offset)
