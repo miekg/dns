@@ -988,7 +988,7 @@ func (dns *Msg) Len() int {
 }
 
 func msgLenWithCompressionMap(dns *Msg, compression map[string]struct{}) int {
-	l := 12 // Message header is always 12 bytes
+	l := headerSize
 
 	for _, r := range dns.Question {
 		l += r.len(l, compression)
