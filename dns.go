@@ -44,7 +44,7 @@ type RR interface {
 	// pack packs an RR into wire format.
 	pack(msg []byte, off int, compression compressionMap, compress bool) (headerEnd int, off1 int, err error)
 
-	// isDuplicate returns whether two RRs have duplicate RDATA.
+	// isDuplicate returns whether the two RRs are duplicates.
 	isDuplicate(r2 RR) bool
 }
 
@@ -83,8 +83,6 @@ func (h *RR_Header) len(off int, compression map[string]struct{}) int {
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)
 	return l
 }
-
-func (r1 *RR_Header) isDuplicate(r2 RR) bool { return false }
 
 // ToRFC3597 converts a known RR to the unknown RR representation from RFC 3597.
 func (rr *RFC3597) ToRFC3597(r RR) error {

@@ -8,20 +8,30 @@ package dns
 // It's is a protocol violation to have identical RRs in a message.
 func IsDuplicate(r1, r2 RR) bool {
 	// Check whether the record header is identical.
-	h1, h2 := r1.Header(), r2.Header()
-	if h1.Class != h2.Class {
+	if !r1.Header().isDuplicate(r2.Header()) {
 		return false
 	}
-	if h1.Rrtype != h2.Rrtype {
-		return false
-	}
-	if !isDulicateName(h1.Name, h2.Name) {
-		return false
-	}
-	// ignore TTL
 
 	// Check whether the RDATA is identical.
 	return r1.isDuplicate(r2)
+}
+
+func (r1 *RR_Header) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*RR_Header)
+	if !ok {
+		return false
+	}
+	if r1.Class != r2.Class {
+		return false
+	}
+	if r1.Rrtype != r2.Rrtype {
+		return false
+	}
+	if !isDulicateName(r1.Name, r2.Name) {
+		return false
+	}
+	// ignore TTL
+	return true
 }
 
 // isDulicateName checks if the domain names s1 and s2 are equal.
