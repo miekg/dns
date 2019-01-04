@@ -320,7 +320,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 			return 0, err
 		}
 		if l > len(p) {
-			return int(l), io.ErrShortBuffer
+			return l, io.ErrShortBuffer
 		}
 		return tcpRead(r, p[:l])
 	}
