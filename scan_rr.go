@@ -26,15 +26,6 @@ func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 		return nil, err
 	}
 
-	if l := c.LastToken(); l.value == zNewline || l.value == zEOF {
-		return rr, nil
-	}
-
-	err = slurpRemainder(c, f)
-	if err != nil {
-		return nil, err
-	}
-
 	return rr, nil
 }
 
@@ -126,34 +117,34 @@ func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError) {
 func (rr *A) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	rr.A = net.ParseIP(l.token)
 	if rr.A == nil || l.err {
 		return &ParseError{f, "bad A A", l}
 	}
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *AAAA) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	rr.AAAA = net.ParseIP(l.token)
 	if rr.AAAA == nil || l.err {
 		return &ParseError{f, "bad AAAA AAAA", l}
 	}
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *NS) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Ns = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -161,14 +152,14 @@ func (rr *NS) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad NS Ns", l}
 	}
 	rr.Ns = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *PTR) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Ptr = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -176,14 +167,14 @@ func (rr *PTR) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad PTR Ptr", l}
 	}
 	rr.Ptr = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *NSAPPTR) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Ptr = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -191,14 +182,14 @@ func (rr *NSAPPTR) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad NSAP-PTR Ptr", l}
 	}
 	rr.Ptr = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *RP) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Mbox = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	mbox, mboxOk := toAbsoluteName(l.token, o)
@@ -217,14 +208,14 @@ func (rr *RP) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Txt = txt
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MR) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Mr = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -232,14 +223,14 @@ func (rr *MR) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad MR Mr", l}
 	}
 	rr.Mr = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MB) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Mb = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -247,14 +238,14 @@ func (rr *MB) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad MB Mb", l}
 	}
 	rr.Mb = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MG) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Mg = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -262,7 +253,7 @@ func (rr *MG) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad MG Mg", l}
 	}
 	rr.Mg = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *HINFO) parse(c *zlexer, o, f string) *ParseError {
@@ -292,7 +283,7 @@ func (rr *MINFO) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Rmail = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	rmail, rmailOk := toAbsoluteName(l.token, o)
@@ -311,14 +302,14 @@ func (rr *MINFO) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Email = email
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MF) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Mf = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -326,14 +317,14 @@ func (rr *MF) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad MF Mf", l}
 	}
 	rr.Mf = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MD) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Md = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -341,13 +332,13 @@ func (rr *MD) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad MD Md", l}
 	}
 	rr.Md = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *MX) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -366,13 +357,13 @@ func (rr *MX) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Mx = name
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *RT) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -391,13 +382,13 @@ func (rr *RT) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Host = name
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *AFSDB) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -415,26 +406,26 @@ func (rr *AFSDB) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad AFSDB Hostname", l}
 	}
 	rr.Hostname = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *X25) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	if l.err {
 		return &ParseError{f, "bad X25 PSDNAddress", l}
 	}
 	rr.PSDNAddress = l.token
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *KX) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -452,14 +443,14 @@ func (rr *KX) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad KX Exchanger", l}
 	}
 	rr.Exchanger = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *CNAME) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Target = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -467,14 +458,14 @@ func (rr *CNAME) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad CNAME Target", l}
 	}
 	rr.Target = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *DNAME) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Target = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	name, nameOk := toAbsoluteName(l.token, o)
@@ -482,14 +473,14 @@ func (rr *DNAME) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad DNAME Target", l}
 	}
 	rr.Target = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *SOA) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.Ns = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	ns, nsOk := toAbsoluteName(l.token, o)
@@ -549,13 +540,13 @@ func (rr *SOA) parse(c *zlexer, o, f string) *ParseError {
 			rr.Minttl = v
 		}
 	}
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *SRV) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -589,13 +580,13 @@ func (rr *SRV) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad SRV Target", l}
 	}
 	rr.Target = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *NAPTR) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -679,14 +670,14 @@ func (rr *NAPTR) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad NAPTR Replacement", l}
 	}
 	rr.Replacement = name
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *TALINK) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	rr.PreviousName = l.token
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	previousName, previousNameOk := toAbsoluteName(l.token, o)
@@ -705,7 +696,7 @@ func (rr *TALINK) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.NextName = nextName
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *LOC) parse(c *zlexer, o, f string) *ParseError {
@@ -1200,7 +1191,7 @@ func (rr *NSEC3) parse(c *zlexer, o, f string) *ParseError {
 func (rr *NSEC3PARAM) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 8)
@@ -1228,13 +1219,13 @@ func (rr *NSEC3PARAM) parse(c *zlexer, o, f string) *ParseError {
 		rr.SaltLength = uint8(len(l.token))
 		rr.Salt = l.token
 	}
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *EUI48) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	if len(l.token) != 17 || l.err {
@@ -1258,13 +1249,13 @@ func (rr *EUI48) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad EUI48 Address", l}
 	}
 	rr.Address = i
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *EUI64) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	if len(l.token) != 23 || l.err {
@@ -1288,7 +1279,7 @@ func (rr *EUI64) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad EUI68 Address", l}
 	}
 	rr.Address = uint64(i)
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *SSHFP) parse(c *zlexer, o, f string) *ParseError {
@@ -1417,7 +1408,7 @@ func (rr *NIMLOC) parse(c *zlexer, o, f string) *ParseError {
 func (rr *GPOS) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	_, e := strconv.ParseFloat(l.token, 64)
@@ -1439,7 +1430,7 @@ func (rr *GPOS) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad GPOS Altitude", l}
 	}
 	rr.Altitude = l.token
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *DS) parseDS(c *zlexer, o, f, typ string) *ParseError {
@@ -1704,7 +1695,7 @@ func (rr *DHCID) parse(c *zlexer, o, f string) *ParseError {
 func (rr *NID) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1719,13 +1710,13 @@ func (rr *NID) parse(c *zlexer, o, f string) *ParseError {
 		return err
 	}
 	rr.NodeID = u
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *L32) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1739,13 +1730,13 @@ func (rr *L32) parse(c *zlexer, o, f string) *ParseError {
 	if rr.Locator32 == nil || l.err {
 		return &ParseError{f, "bad L32 Locator", l}
 	}
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *LP) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1763,13 +1754,13 @@ func (rr *LP) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Fqdn = name
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *L64) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1784,13 +1775,13 @@ func (rr *L64) parse(c *zlexer, o, f string) *ParseError {
 		return err
 	}
 	rr.Locator64 = u
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *UID) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 32)
@@ -1798,13 +1789,13 @@ func (rr *UID) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad UID Uid", l}
 	}
 	rr.Uid = uint32(i)
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *GID) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 32)
@@ -1812,7 +1803,7 @@ func (rr *GID) parse(c *zlexer, o, f string) *ParseError {
 		return &ParseError{f, "bad GID Gid", l}
 	}
 	rr.Gid = uint32(i)
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *UINFO) parse(c *zlexer, o, f string) *ParseError {
@@ -1830,7 +1821,7 @@ func (rr *UINFO) parse(c *zlexer, o, f string) *ParseError {
 func (rr *PX) parse(c *zlexer, o, f string) *ParseError {
 	l, _ := c.Next()
 	if len(l.token) == 0 { // dynamic update rr.
-		return nil
+		return slurpRemainder(c, f)
 	}
 
 	i, e := strconv.ParseUint(l.token, 10, 16)
@@ -1857,7 +1848,7 @@ func (rr *PX) parse(c *zlexer, o, f string) *ParseError {
 	}
 	rr.Mapx400 = mapx400
 
-	return nil
+	return slurpRemainder(c, f)
 }
 
 func (rr *CAA) parse(c *zlexer, o, f string) *ParseError {
