@@ -1173,8 +1173,7 @@ func typeToInt(token string) (uint16, bool) {
 
 // stringToTTL parses things like 2w, 2m, etc, and returns the time in seconds.
 func stringToTTL(token string) (uint32, bool) {
-	s := uint32(0)
-	i := uint32(0)
+	var s, i uint32
 	for _, c := range token {
 		switch c {
 		case 's', 'S':

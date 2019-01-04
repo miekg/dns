@@ -555,7 +555,7 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 
 	pubkey := new(rsa.PublicKey)
 
-	expo := uint64(0)
+	var expo uint64
 	for i := 0; i < int(explen); i++ {
 		expo <<= 8
 		expo |= uint64(keybuf[keyoff+i])

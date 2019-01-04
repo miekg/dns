@@ -1399,7 +1399,7 @@ func setEUI64(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 	if e != nil {
 		return nil, &ParseError{f, "bad EUI68 Address", l}
 	}
-	rr.Address = uint64(i)
+	rr.Address = i
 	return rr, nil
 }
 

@@ -183,7 +183,7 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 // Option implements the EDNS0 interface.
 func (e *EDNS0_NSID) Option() uint16        { return EDNS0NSID } // Option returns the option code.
 func (e *EDNS0_NSID) unpack(b []byte) error { e.Nsid = hex.EncodeToString(b); return nil }
-func (e *EDNS0_NSID) String() string        { return string(e.Nsid) }
+func (e *EDNS0_NSID) String() string        { return e.Nsid }
 
 // EDNS0_SUBNET is the subnet option that is used to give the remote nameserver
 // an idea of where the client lives. See RFC 7871. It can then give back a different
@@ -411,7 +411,7 @@ func (e *EDNS0_LLQ) unpack(b []byte) error {
 
 func (e *EDNS0_LLQ) String() string {
 	s := strconv.FormatUint(uint64(e.Version), 10) + " " + strconv.FormatUint(uint64(e.Opcode), 10) +
-		" " + strconv.FormatUint(uint64(e.Error), 10) + " " + strconv.FormatUint(uint64(e.Id), 10) +
+		" " + strconv.FormatUint(uint64(e.Error), 10) + " " + strconv.FormatUint(e.Id, 10) +
 		" " + strconv.FormatUint(uint64(e.LeaseLife), 10)
 	return s
 }
