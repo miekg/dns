@@ -88,6 +88,10 @@ func (rr *OPT) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
+func (rr *OPT) parse(c *zlexer, origin, file string) *ParseError {
+	return &ParseError{file, "OPT record cannot be represented in a zone file", c.LastToken()}
+}
+
 // return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.

@@ -241,6 +241,10 @@ type ANY struct {
 
 func (rr *ANY) String() string { return rr.Hdr.String() }
 
+func (rr *ANY) parse(c *zlexer, origin, file string) *ParseError {
+	return &ParseError{file, "ANY record cannot be represented in a zone file", c.LastToken()}
+}
+
 // NULL RR. See RFC 1035.
 type NULL struct {
 	Hdr  RR_Header
@@ -250,6 +254,10 @@ type NULL struct {
 func (rr *NULL) String() string {
 	// There is no presentation format; prefix string with a comment.
 	return ";" + rr.Hdr.String() + rr.Data
+}
+
+func (rr *NULL) parse(c *zlexer, origin, file string) *ParseError {
+	return &ParseError{file, "NULL record cannot be represented in a zone file", c.LastToken()}
 }
 
 // CNAME RR. See RFC 1034.

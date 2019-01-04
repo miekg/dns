@@ -89,6 +89,29 @@ func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func (r *PrivateRR) parse(c *zlexer, origin, file string) *ParseError {
+	var l lex
+	text := make([]string, 0, 2) // could be 0..N elements, median is probably 1
+Fetch:
+	for {
+		// TODO(miek): we could also be returning _QUOTE, this might or might not
+		// be an issue (basically parsing TXT becomes hard)
+		switch l, _ = c.Next(); l.value {
+		case zNewline, zEOF:
+			break Fetch
+		case zString:
+			text = append(text, l.token)
+		}
+	}
+
+	err := r.Data.Parse(text)
+	if err != nil {
+		return &ParseError{file, err.Error(), l}
+	}
+
+	return nil
+}
+
 // PrivateHandle registers a private resource record type. It requires
 // string and numeric representation of private RR type and generator function as argument.
 func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata) {
@@ -97,34 +120,6 @@ func PrivateHandle(rtypestr string, rtype uint16, generator func() PrivateRdata)
 	TypeToRR[rtype] = func() RR { return &PrivateRR{RR_Header{}, generator()} }
 	TypeToString[rtype] = rtypestr
 	StringToType[rtypestr] = rtype
-
-	setPrivateRR := func(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
-		rr := mkPrivateRR(h.Rrtype)
-		rr.Hdr = h
-
-		var l lex
-		text := make([]string, 0, 2) // could be 0..N elements, median is probably 1
-	Fetch:
-		for {
-			// TODO(miek): we could also be returning _QUOTE, this might or might not
-			// be an issue (basically parsing TXT becomes hard)
-			switch l, _ = c.Next(); l.value {
-			case zNewline, zEOF:
-				break Fetch
-			case zString:
-				text = append(text, l.token)
-			}
-		}
-
-		err := rr.Data.Parse(text)
-		if err != nil {
-			return nil, &ParseError{f, err.Error(), l}
-		}
-
-		return rr, nil
-	}
-
-	typeToparserFunc[rtype] = parserFunc{setPrivateRR, true}
 }
 
 // PrivateHandleRemove removes definitions required to support private RR type.
@@ -133,7 +128,6 @@ func PrivateHandleRemove(rtype uint16) {
 	if ok {
 		delete(TypeToRR, rtype)
 		delete(TypeToString, rtype)
-		delete(typeToparserFunc, rtype)
 		delete(StringToType, rtypestr)
 	}
 }
