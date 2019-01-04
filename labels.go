@@ -36,8 +36,7 @@ func SplitDomainName(s string) (labels []string) {
 		}
 	}
 
-	labels = append(labels, s[begin:fqdnEnd])
-	return labels
+	return append(labels, s[begin:fqdnEnd])
 }
 
 // CompareDomainName compares the names s1 and s2 and
