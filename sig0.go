@@ -21,13 +21,9 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return nil, ErrKey
 	}
-	rr.Header().Rrtype = TypeSIG
-	rr.Header().Class = ClassANY
-	rr.Header().Ttl = 0
-	rr.Header().Name = "."
-	rr.OrigTtl = 0
-	rr.TypeCovered = 0
-	rr.Labels = 0
+
+	rr.Hdr = RR_Header{Name: ".", Rrtype: TypeSIG, Class: ClassANY, Ttl: 0}
+	rr.OrigTtl, rr.TypeCovered, rr.Labels = 0, 0, 0
 
 	buf := make([]byte, m.Len()+Len(rr))
 	mbuf, err := m.PackBuffer(buf)
