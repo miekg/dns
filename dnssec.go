@@ -67,9 +67,6 @@ var AlgorithmToString = map[uint8]string{
 	PRIVATEOID:       "PRIVATEOID",
 }
 
-// StringToAlgorithm is the reverse of AlgorithmToString.
-var StringToAlgorithm = reverseInt8(AlgorithmToString)
-
 // AlgorithmToHash is a map of algorithm crypto hash IDs to crypto.Hash's.
 var AlgorithmToHash = map[uint8]crypto.Hash{
 	RSAMD5:           crypto.MD5, // Deprecated in RFC 6725
@@ -101,9 +98,6 @@ var HashToString = map[uint8]string{
 	SHA384: "SHA384",
 	SHA512: "SHA512",
 }
-
-// StringToHash is a map of names to hash IDs.
-var StringToHash = reverseInt8(HashToString)
 
 // DNSKEY flag values.
 const (
