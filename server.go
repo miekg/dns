@@ -463,11 +463,10 @@ var testShutdownNotify *sync.Cond
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
 func (srv *Server) getReadTimeout() time.Duration {
-	rtimeout := dnsTimeout
 	if srv.ReadTimeout != 0 {
-		rtimeout = srv.ReadTimeout
+		return srv.ReadTimeout
 	}
-	return rtimeout
+	return dnsTimeout
 }
 
 // serveTCP starts a TCP listener for the server.
@@ -783,8 +782,7 @@ func (w *response) Write(m []byte) (int, error) {
 
 	switch {
 	case w.udp != nil:
-		n, err := WriteToSessionUDP(w.udp, m, w.udpSession)
-		return n, err
+		return WriteToSessionUDP(w.udp, m, w.udpSession)
 	case w.tcp != nil:
 		lm := len(m)
 		if lm < 2 {

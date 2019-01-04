@@ -243,24 +243,18 @@ func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	if err != nil {
 		return err
 	}
-	if _, err = t.Write(out); err != nil {
-		return err
-	}
-	return nil
+	_, err = t.Write(out)
+	return err
 }
 
 func isSOAFirst(in *Msg) bool {
-	if len(in.Answer) > 0 {
-		return in.Answer[0].Header().Rrtype == TypeSOA
-	}
-	return false
+	return len(in.Answer) > 0 &&
+		in.Answer[0].Header().Rrtype == TypeSOA
 }
 
 func isSOALast(in *Msg) bool {
-	if len(in.Answer) > 0 {
-		return in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA
-	}
-	return false
+	return len(in.Answer) > 0 &&
+		in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA
 }
 
 const errXFR = "bad xfr rcode: %d"

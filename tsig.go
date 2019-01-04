@@ -134,12 +134,11 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	t.OrigId = m.Id
 
 	tbuf := make([]byte, Len(t))
-	if off, err := PackRR(t, tbuf, 0, nil, false); err == nil {
-		tbuf = tbuf[:off] // reset to actual size used
-	} else {
+	off, err := PackRR(t, tbuf, 0, nil, false)
+	if err != nil {
 		return nil, "", err
 	}
-	mbuf = append(mbuf, tbuf...)
+	mbuf = append(mbuf, tbuf[:off]...)
 	// Update the ArCount directly in the buffer.
 	binary.BigEndian.PutUint16(mbuf[10:], uint16(len(m.Extra)+1))
 

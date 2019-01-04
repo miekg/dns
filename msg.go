@@ -1072,7 +1072,7 @@ func compressionLenSearch(c map[string]struct{}, s string, msgOff int) (int, boo
 }
 
 // Copy returns a new RR which is a deep-copy of r.
-func Copy(r RR) RR { r1 := r.copy(); return r1 }
+func Copy(r RR) RR { return r.copy() }
 
 // Len returns the length (in octets) of the uncompressed RR in wire format.
 func Len(r RR) int { return r.len(0, nil) }
@@ -1187,7 +1187,10 @@ func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress
 		return off, err
 	}
 	off, err = packUint16(dh.Arcount, msg, off)
-	return off, err
+	if err != nil {
+		return off, err
+	}
+	return off, nil
 }
 
 func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
@@ -1216,7 +1219,10 @@ func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
 		return dh, off, err
 	}
 	dh.Arcount, off, err = unpackUint16(msg, off)
-	return dh, off, err
+	if err != nil {
+		return dh, off, err
+	}
+	return dh, off, nil
 }
 
 // setHdr set the header in the dns using the binary data in dh.
