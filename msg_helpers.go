@@ -399,7 +399,7 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 func unpackDataOpt(msg []byte, off int) ([]EDNS0, int, error) {
 	var edns []EDNS0
 Option:
-	code := uint16(0)
+	var code uint16
 	if off+4 > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking opt"}
 	}

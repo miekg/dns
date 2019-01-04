@@ -117,7 +117,7 @@ func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 }
 
 func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
-	serial := uint32(0) // The first serial seen is the current server serial
+	var serial uint32 // The first serial seen is the current server serial
 	axfr := true
 	n := 0
 	qser := q.Ns[0].(*SOA).Serial
