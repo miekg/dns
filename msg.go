@@ -244,7 +244,7 @@ func packDomainName(s string, msg []byte, off int, compression compressionMap, c
 	}
 
 	// If not fully qualified, error out.
-	if s[ls-1] != '.' {
+	if !IsFqdn(s) {
 		return len(msg), ErrFqdn
 	}
 
