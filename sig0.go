@@ -21,10 +21,11 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return nil, ErrKey
 	}
-	rr.Header().Rrtype = TypeSIG
-	rr.Header().Class = ClassANY
-	rr.Header().Ttl = 0
-	rr.Header().Name = "."
+	h := rr.Header()
+	h.Rrtype = TypeSIG
+	h.Class = ClassANY
+	h.Ttl = 0
+	h.Name = "."
 	rr.OrigTtl = 0
 	rr.TypeCovered = 0
 	rr.Labels = 0

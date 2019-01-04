@@ -268,16 +268,17 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		return ErrKey
 	}
 
+	h0 := rrset[0].Header()
 	rr.Hdr.Rrtype = TypeRRSIG
-	rr.Hdr.Name = rrset[0].Header().Name
-	rr.Hdr.Class = rrset[0].Header().Class
+	rr.Hdr.Name = h0.Name
+	rr.Hdr.Class = h0.Class
 	if rr.OrigTtl == 0 { // If set don't override
-		rr.OrigTtl = rrset[0].Header().Ttl
+		rr.OrigTtl = h0.Ttl
 	}
-	rr.TypeCovered = rrset[0].Header().Rrtype
-	rr.Labels = uint8(CountLabel(rrset[0].Header().Name))
+	rr.TypeCovered = h0.Rrtype
+	rr.Labels = uint8(CountLabel(h0.Name))
 
-	if strings.HasPrefix(rrset[0].Header().Name, "*") {
+	if strings.HasPrefix(h0.Name, "*") {
 		rr.Labels-- // wildcard, remove from label count
 	}
 
@@ -411,10 +412,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// IsRRset checked that we have at least one RR and that the RRs in
 	// the set have consistent type, class, and name. Also check that type and
 	// class matches the RRSIG record.
-	if rrset[0].Header().Class != rr.Hdr.Class {
-		return ErrRRset
-	}
-	if rrset[0].Header().Rrtype != rr.TypeCovered {
+	if h0 := rrset[0].Header(); h0.Class != rr.Hdr.Class || h0.Rrtype != rr.TypeCovered {
 		return ErrRRset
 	}
 
@@ -658,15 +656,16 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 	wires := make(wireSlice, len(rrset))
 	for i, r := range rrset {
 		r1 := r.copy()
-		r1.Header().Ttl = s.OrigTtl
-		labels := SplitDomainName(r1.Header().Name)
+		h := r1.Header()
+		h.Ttl = s.OrigTtl
+		labels := SplitDomainName(h.Name)
 		// 6.2. Canonical RR Form. (4) - wildcards
 		if len(labels) > int(s.Labels) {
 			// Wildcard
-			r1.Header().Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		r1.Header().Name = strings.ToLower(r1.Header().Name)
+		h.Name = strings.ToLower(h.Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
