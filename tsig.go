@@ -55,7 +55,7 @@ func (rr *TSIG) String() string {
 }
 
 func (rr *TSIG) parse(c *zlexer, origin, file string) *ParseError {
-	return &ParseError{file, "TSIG record cannot be represented in a zone file", c.LastToken()}
+	panic("dns: internal error: parse should never be called on TSIG")
 }
 
 // The following values must be put in wireformat, so that the MAC can be calculated.

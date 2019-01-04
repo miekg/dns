@@ -242,7 +242,7 @@ type ANY struct {
 func (rr *ANY) String() string { return rr.Hdr.String() }
 
 func (rr *ANY) parse(c *zlexer, origin, file string) *ParseError {
-	return &ParseError{file, "ANY record cannot be represented in a zone file", c.LastToken()}
+	panic("dns: internal error: parse should never be called on ANY")
 }
 
 // NULL RR. See RFC 1035.
@@ -257,7 +257,7 @@ func (rr *NULL) String() string {
 }
 
 func (rr *NULL) parse(c *zlexer, origin, file string) *ParseError {
-	return &ParseError{file, "NULL record cannot be represented in a zone file", c.LastToken()}
+	panic("dns: internal error: parse should never be called on NULL")
 }
 
 // CNAME RR. See RFC 1034.

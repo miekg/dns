@@ -89,7 +89,7 @@ func (rr *OPT) len(off int, compression map[string]struct{}) int {
 }
 
 func (rr *OPT) parse(c *zlexer, origin, file string) *ParseError {
-	return &ParseError{file, "OPT record cannot be represented in a zone file", c.LastToken()}
+	panic("dns: internal error: parse should never be called on OPT")
 }
 
 // return the old value -> delete SetVersion?
