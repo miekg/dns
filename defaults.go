@@ -253,7 +253,18 @@ func IsMsg(buf []byte) error {
 
 // IsFqdn checks if a domain name is fully qualified.
 func IsFqdn(s string) bool {
-	return strings.HasSuffix(s, ".")
+	s2 := strings.TrimSuffix(s, ".")
+	if s == s2 {
+		return false
+	}
+
+	i := strings.LastIndexFunc(s2, func(r rune) bool {
+		return r != '\\'
+	})
+
+	// Test whether we have an even number of escape sequences before
+	// the dot or none.
+	return (len(s2)-i)%2 != 0
 }
 
 // IsRRset checks if a set of RRs is a valid RRset as defined by RFC 2181.
