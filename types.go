@@ -205,9 +205,6 @@ var CertTypeToString = map[uint16]string{
 	CertOID:     "OID",
 }
 
-// StringToCertType is the reverseof CertTypeToString.
-var StringToCertType = reverseInt16(CertTypeToString)
-
 //go:generate go run types_generate.go
 
 // Question holds a DNS question. There can be multiple questions in the
