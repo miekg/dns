@@ -1262,7 +1262,7 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 	}
 
 	// check if name is already absolute
-	if name[len(name)-1] == '.' {
+	if IsFqdn(name) {
 		return name, true
 	}
 
