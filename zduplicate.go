@@ -10,13 +10,8 @@ func (r1 *A) isDuplicate(_r2 RR) bool {
 		return false
 	}
 	_ = r2
-	if len(r1.A) != len(r2.A) {
+	if !r1.A.Equal(r2.A) {
 		return false
-	}
-	for i := 0; i < len(r1.A); i++ {
-		if r1.A[i] != r2.A[i] {
-			return false
-		}
 	}
 	return true
 }
@@ -27,13 +22,8 @@ func (r1 *AAAA) isDuplicate(_r2 RR) bool {
 		return false
 	}
 	_ = r2
-	if len(r1.AAAA) != len(r2.AAAA) {
+	if !r1.AAAA.Equal(r2.AAAA) {
 		return false
-	}
-	for i := 0; i < len(r1.AAAA); i++ {
-		if r1.AAAA[i] != r2.AAAA[i] {
-			return false
-		}
 	}
 	return true
 }
@@ -356,13 +346,8 @@ func (r1 *L32) isDuplicate(_r2 RR) bool {
 	if r1.Preference != r2.Preference {
 		return false
 	}
-	if len(r1.Locator32) != len(r2.Locator32) {
+	if !r1.Locator32.Equal(r2.Locator32) {
 		return false
-	}
-	for i := 0; i < len(r1.Locator32); i++ {
-		if r1.Locator32[i] != r2.Locator32[i] {
-			return false
-		}
 	}
 	return true
 }

@@ -80,17 +80,12 @@ func main() {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (int, int, error) {\n", name)
-		fmt.Fprint(b, `headerEnd, off, err := rr.Hdr.pack(msg, off, compression, compress)
-if err != nil {
-	return headerEnd, off, err
-}
-`)
+		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {\n", name)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
 				fmt.Fprint(b, `if err != nil {
-return headerEnd, off, err
+return off, err
 }
 `)
 			}
@@ -115,9 +110,9 @@ return headerEnd, off, err
 			switch {
 			case st.Tag(i) == `dns:"-"`: // ignored
 			case st.Tag(i) == `dns:"cdomain-name"`:
-				o("off, _, err = packDomainName(rr.%s, msg, off, compression, compress)\n")
+				o("off, err = packDomainName(rr.%s, msg, off, compression, compress)\n")
 			case st.Tag(i) == `dns:"domain-name"`:
-				o("off, _, err = packDomainName(rr.%s, msg, off, compression, false)\n")
+				o("off, err = packDomainName(rr.%s, msg, off, compression, false)\n")
 			case st.Tag(i) == `dns:"a"`:
 				o("off, err = packDataA(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"aaaa"`:
@@ -144,7 +139,7 @@ return headerEnd, off, err
 if rr.%s != "-" {
   off, err = packStringHex(rr.%s, msg, off)
   if err != nil {
-    return headerEnd, off, err
+    return off, err
   }
 }
 `, field, field)
@@ -176,7 +171,7 @@ if rr.%s != "-" {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintln(b, "return headerEnd, off, nil }\n")
+		fmt.Fprintln(b, "return off, nil }\n")
 	}
 
 	fmt.Fprint(b, "// unpack*() functions\n\n")
@@ -184,15 +179,8 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func unpack%s(h RR_Header, msg []byte, off int) (RR, int, error) {\n", name)
-		fmt.Fprintf(b, "rr := new(%s)\n", name)
-		fmt.Fprint(b, "rr.Hdr = h\n")
-		fmt.Fprint(b, `if noRdata(h) {
-return rr, off, nil
-	}
-var err error
-_ = err
-rdStart := off
+		fmt.Fprintf(b, "func (rr *%s) unpack(msg []byte, off int) (off1 int, err error) {\n", name)
+		fmt.Fprint(b, `rdStart := off
 _ = rdStart
 
 `)
@@ -200,7 +188,7 @@ _ = rdStart
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
 				fmt.Fprint(b, `if err != nil {
-return rr, off, err
+return off, err
 }
 `)
 			}
@@ -220,7 +208,7 @@ return rr, off, err
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
 				fmt.Fprint(b, `if err != nil {
-return rr, off, err
+return off, err
 }
 `)
 				continue
@@ -288,22 +276,13 @@ return rr, off, err
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
 				fmt.Fprintf(b, `if off == len(msg) {
-return rr, off, nil
+return off, nil
 	}
 `)
 			}
 		}
-		fmt.Fprintf(b, "return rr, off, nil }\n\n")
+		fmt.Fprintf(b, "return off, nil }\n\n")
 	}
-	// Generate typeToUnpack map
-	fmt.Fprintln(b, "var typeToUnpack = map[uint16]func(RR_Header, []byte, int) (RR, int, error){")
-	for _, name := range namedTypes {
-		if name == "RFC3597" {
-			continue
-		}
-		fmt.Fprintf(b, "Type%s: unpack%s,\n", name, name)
-	}
-	fmt.Fprintln(b, "}\n")
 
 	// gofmt
 	res, err := format.Source(b.Bytes())

@@ -87,7 +87,7 @@ func main() {
 
 			// For some reason, a and aaaa don't pop up as *types.Slice here (mostly like because the are
 			// *indirectly* defined as a slice in the net package).
-			if _, ok := st.Field(i).Type().(*types.Slice); ok || st.Tag(i) == `dns:"a"` || st.Tag(i) == `dns:"aaaa"` {
+			if _, ok := st.Field(i).Type().(*types.Slice); ok {
 				o2("if len(r1.%s) != len(r2.%s) {\nreturn false\n}")
 
 				if st.Tag(i) == `dns:"cdomain-name"` || st.Tag(i) == `dns:"domain-name"` {
@@ -112,6 +112,8 @@ func main() {
 			switch st.Tag(i) {
 			case `dns:"-"`:
 				// ignored
+			case `dns:"a"`, `dns:"aaaa"`:
+				o2("if !r1.%s.Equal(r2.%s) {\nreturn false\n}")
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
 				o2("if !isDulicateName(r1.%s, r2.%s) {\nreturn false\n}")
 			default:
