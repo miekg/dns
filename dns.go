@@ -51,13 +51,13 @@ type RR interface {
 	// will only be called if the record's RDATA is non-empty.
 	unpack(msg []byte, off int) (off1 int, err error)
 
-	// isDuplicate returns whether the two RRs are duplicates.
-	isDuplicate(r2 RR) bool
-
 	// parse parses an RR from zone file format.
 	//
 	// This will only be called on a new and empty RR type with only the header populated.
 	parse(c *zlexer, origin, file string) *ParseError
+
+	// isDuplicate returns whether the two RRs are duplicates.
+	isDuplicate(r2 RR) bool
 }
 
 // RR_Header is the header all DNS resource records share.
