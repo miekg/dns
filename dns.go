@@ -51,7 +51,7 @@ type RR interface {
 	// will only be called if the record's RDATA is non-empty.
 	unpack(msg []byte, off int) (off1 int, err error)
 
-  // isDuplicate returns whether the two RRs are duplicates.
+	// isDuplicate returns whether the two RRs are duplicates.
 	isDuplicate(r2 RR) bool
 
 	// parse parses an RR from zone file format.
