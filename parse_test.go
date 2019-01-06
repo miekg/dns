@@ -341,7 +341,7 @@ func TestParseDirectiveMisc(t *testing.T) {
 
 func TestNSEC(t *testing.T) {
 	nsectests := map[string]string{
-		"nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F":                                                                                                 "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
+		"nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F": "nl.\t3600\tIN\tNSEC3PARAM\t1 0 5 30923C44C6CBBB8F",
 		"p2209hipbpnm681knjnu0m1febshlv4e.nl. IN NSEC3 1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM": "p2209hipbpnm681knjnu0m1febshlv4e.nl.\t3600\tIN\tNSEC3\t1 1 5 30923C44C6CBBB8F P90DG1KE8QEAN0B01613LHQDG0SOJ0TA NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC":                                                                                 "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC",
 		"localhost.dnssex.nl. IN NSEC www.dnssex.nl. A RRSIG NSEC TYPE65534":                                                                       "localhost.dnssex.nl.\t3600\tIN\tNSEC\twww.dnssex.nl. A RRSIG NSEC TYPE65534",
@@ -398,16 +398,16 @@ func TestQuotes(t *testing.T) {
 		`t.example.com. IN TXT "a bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a bc\"",
 		`t.example.com. IN TXT "a
  bc"`: "t.example.com.\t3600\tIN\tTXT\t\"a\\010 bc\"",
-		`t.example.com. IN TXT ""`:                                                           "t.example.com.\t3600\tIN\tTXT\t\"\"",
-		`t.example.com. IN TXT "a"`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"a\"",
-		`t.example.com. IN TXT "aa"`:                                                         "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
-		`t.example.com. IN TXT "aaa" ;`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
-		`t.example.com. IN TXT "abc" "DEF"`:                                                  "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
-		`t.example.com. IN TXT "abc" ( "DEF" )`:                                              "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
-		`t.example.com. IN TXT aaa ;`:                                                        "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
-		`t.example.com. IN TXT aaa aaa;`:                                                     "t.example.com.\t3600\tIN\tTXT\t\"aaa\" \"aaa\"",
-		`t.example.com. IN TXT aaa aaa`:                                                      "t.example.com.\t3600\tIN\tTXT\t\"aaa\" \"aaa\"",
-		`t.example.com. IN TXT aaa`:                                                          "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
+		`t.example.com. IN TXT ""`:              "t.example.com.\t3600\tIN\tTXT\t\"\"",
+		`t.example.com. IN TXT "a"`:             "t.example.com.\t3600\tIN\tTXT\t\"a\"",
+		`t.example.com. IN TXT "aa"`:            "t.example.com.\t3600\tIN\tTXT\t\"aa\"",
+		`t.example.com. IN TXT "aaa" ;`:         "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
+		`t.example.com. IN TXT "abc" "DEF"`:     "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
+		`t.example.com. IN TXT "abc" ( "DEF" )`: "t.example.com.\t3600\tIN\tTXT\t\"abc\" \"DEF\"",
+		`t.example.com. IN TXT aaa ;`:           "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
+		`t.example.com. IN TXT aaa aaa;`:        "t.example.com.\t3600\tIN\tTXT\t\"aaa\" \"aaa\"",
+		`t.example.com. IN TXT aaa aaa`:         "t.example.com.\t3600\tIN\tTXT\t\"aaa\" \"aaa\"",
+		`t.example.com. IN TXT aaa`:             "t.example.com.\t3600\tIN\tTXT\t\"aaa\"",
 		"cid.urn.arpa. NAPTR 100 50 \"s\" \"z3950+I2L+I2C\"    \"\" _z3950._tcp.gatech.edu.": "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"z3950+I2L+I2C\" \"\" _z3950._tcp.gatech.edu.",
 		"cid.urn.arpa. NAPTR 100 50 \"s\" \"rcds+I2C\"         \"\" _rcds._udp.gatech.edu.":  "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"rcds+I2C\" \"\" _rcds._udp.gatech.edu.",
 		"cid.urn.arpa. NAPTR 100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.":  "cid.urn.arpa.\t3600\tIN\tNAPTR\t100 50 \"s\" \"http+I2L+I2C+I2R\" \"\" _http._tcp.gatech.edu.",
@@ -543,6 +543,10 @@ example.com.   DNAME 10 ; TTL=314 after second $TTL
 			continue
 		}
 		expected := reCaseFromComment.FindStringSubmatch(record.Comment)
+		if len(expected) != 3 {
+			t.Errorf("regexp didn't match for record %d", i)
+			continue
+		}
 		expectedTTL, _ := strconv.ParseUint(expected[1], 10, 32)
 		ttl := record.RR.Header().Ttl
 		if ttl != uint32(expectedTTL) {

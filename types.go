@@ -238,6 +238,10 @@ type ANY struct {
 
 func (rr *ANY) String() string { return rr.Hdr.String() }
 
+func (rr *ANY) parse(c *zlexer, origin, file string) *ParseError {
+	panic("dns: internal error: parse should never be called on ANY")
+}
+
 // NULL RR. See RFC 1035.
 type NULL struct {
 	Hdr  RR_Header
@@ -247,6 +251,10 @@ type NULL struct {
 func (rr *NULL) String() string {
 	// There is no presentation format; prefix string with a comment.
 	return ";" + rr.Hdr.String() + rr.Data
+}
+
+func (rr *NULL) parse(c *zlexer, origin, file string) *ParseError {
+	panic("dns: internal error: parse should never be called on NULL")
 }
 
 // CNAME RR. See RFC 1034.
