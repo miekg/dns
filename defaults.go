@@ -176,9 +176,7 @@ func IsDomainName(s string) (labels int, ok bool) {
 		return 0, false
 	}
 
-	if !strings.HasSuffix(s, ".") {
-		s += "."
-	}
+	s = Fqdn(s)
 
 	// Each dot ends a segment of the name. Except for escaped dots (\.), which
 	// are normal dots.
@@ -245,7 +243,7 @@ func IsSubDomain(parent, child string) bool {
 // The checking is performed on the binary payload.
 func IsMsg(buf []byte) error {
 	// Header
-	if len(buf) < 12 {
+	if len(buf) < headerSize {
 		return errors.New("dns: bad message header")
 	}
 	// Header: Opcode

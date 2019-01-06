@@ -24,7 +24,7 @@ const (
 	MsgIgnore                        // Ignore the error and send nothing back.
 )
 
-var defaultMsgAcceptFunc = func(dh Header) MsgAcceptAction {
+func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
 	if isResponse := dh.Bits&_QR != 0; isResponse {
 		return MsgIgnore
 	}

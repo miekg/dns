@@ -1173,8 +1173,7 @@ func typeToInt(token string) (uint16, bool) {
 
 // stringToTTL parses things like 2w, 2m, etc, and returns the time in seconds.
 func stringToTTL(token string) (uint32, bool) {
-	s := uint32(0)
-	i := uint32(0)
+	var s, i uint32
 	for _, c := range token {
 		switch c {
 		case 's', 'S':
@@ -1262,7 +1261,7 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 	}
 
 	// check if name is already absolute
-	if name[len(name)-1] == '.' {
+	if IsFqdn(name) {
 		return name, true
 	}
 

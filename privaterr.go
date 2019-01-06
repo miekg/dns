@@ -39,11 +39,12 @@ func mkPrivateRR(rrtype uint16) *PrivateRR {
 	}
 
 	anyrr := rrfunc()
-	switch rr := anyrr.(type) {
-	case *PrivateRR:
-		return rr
+	rr, ok := anyrr.(*PrivateRR)
+	if !ok {
+		panic(fmt.Sprintf("dns: RR is not a PrivateRR, TypeToRR[%d] generator returned %T", rrtype, anyrr))
 	}
-	panic(fmt.Sprintf("dns: RR is not a PrivateRR, TypeToRR[%d] generator returned %T", rrtype, anyrr))
+
+	return rr
 }
 
 // Header return the RR header of r.
@@ -82,11 +83,7 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
 	off1, err := r.Data.Unpack(msg[off:])
 	off += off1
-	if err != nil {
-		return off, err
-	}
-
-	return off, nil
+	return off, err
 }
 
 func (r *PrivateRR) parse(c *zlexer, origin, file string) *ParseError {

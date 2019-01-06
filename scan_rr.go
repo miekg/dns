@@ -1290,7 +1290,7 @@ func (rr *EUI64) parse(c *zlexer, o, f string) *ParseError {
 	if e != nil {
 		return &ParseError{f, "bad EUI68 Address", l}
 	}
-	rr.Address = uint64(i)
+	rr.Address = i
 	return slurpRemainder(c, f)
 }
 

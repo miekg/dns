@@ -32,7 +32,7 @@ func TestTsig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	binary.BigEndian.PutUint16(buf[0:2], uint16(42))
+	binary.BigEndian.PutUint16(buf[0:2], 42)
 	err = TsigVerify(buf, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
 	if err != nil {
 		t.Fatal(err)
