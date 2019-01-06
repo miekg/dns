@@ -1335,3 +1335,122 @@ func stringToNodeID(l lex) (uint64, *ParseError) {
 	}
 	return u, nil
 }
+
+// Parse the rdata of each rrtype.
+// All data from the channel c is either zString or zBlank.
+// After the rdata there may come a zBlank and then a zNewline
+// or immediately a zNewline. If this is not the case we flag
+// an *ParseError: garbage after rdata.
+func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
+	var rr RR
+	if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype) {
+		rr = newFn()
+		*rr.Header() = h
+	} else {
+		rr = &RFC3597{Hdr: h}
+	}
+
+	err := rr.parse(c, o, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return rr, nil
+}
+
+// canParseAsRR returns true if the record type can be parsed as a
+// concrete RR. It blacklists certain record types that must be parsed
+// according to RFC 3597 because they lack a presentation format.
+func canParseAsRR(rrtype uint16) bool {
+	switch rrtype {
+	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
+		return false
+	default:
+		return true
+	}
+}
+
+// A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
+// or an error
+func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
+	var s string
+	l, _ := c.Next() // zString
+	for l.value != zNewline && l.value != zEOF {
+		if l.err {
+			return s, &ParseError{f, errstr, l}
+		}
+		switch l.value {
+		case zString:
+			s += l.token
+		case zBlank: // Ok
+		default:
+			return "", &ParseError{f, errstr, l}
+		}
+		l, _ = c.Next()
+	}
+
+	return s, nil
+}
+
+// A remainder of the rdata with embedded spaces, split on unquoted whitespace
+// and return the parsed string slice or an error
+func endingToTxtSlice(c *zlexer, errstr, f string) ([]string, *ParseError) {
+	// Get the remaining data until we see a zNewline
+	l, _ := c.Next()
+	if l.err {
+		return nil, &ParseError{f, errstr, l}
+	}
+
+	// Build the slice
+	s := make([]string, 0)
+	quote := false
+	empty := false
+	for l.value != zNewline && l.value != zEOF {
+		if l.err {
+			return nil, &ParseError{f, errstr, l}
+		}
+		switch l.value {
+		case zString:
+			empty = false
+			if len(l.token) > 255 {
+				// split up tokens that are larger than 255 into 255-chunks
+				sx := []string{}
+				p, i := 0, 255
+				for {
+					if i <= len(l.token) {
+						sx = append(sx, l.token[p:i])
+					} else {
+						sx = append(sx, l.token[p:])
+						break
+
+					}
+					p, i = p+255, i+255
+				}
+				s = append(s, sx...)
+				break
+			}
+
+			s = append(s, l.token)
+		case zBlank:
+			if quote {
+				// zBlank can only be seen in between txt parts.
+				return nil, &ParseError{f, errstr, l}
+			}
+		case zQuote:
+			if empty && quote {
+				s = append(s, "")
+			}
+			quote = !quote
+			empty = true
+		default:
+			return nil, &ParseError{f, errstr, l}
+		}
+		l, _ = c.Next()
+	}
+
+	if quote {
+		return nil, &ParseError{f, errstr, l}
+	}
+
+	return s, nil
+}
