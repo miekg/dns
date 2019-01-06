@@ -174,6 +174,42 @@ func TestIsDomainName(t *testing.T) {
 	}
 }
 
+func TestIsFqdnEscaped(t *testing.T) {
+	for s, expect := range map[string]bool{
+		".":                  true,
+		"\\.":                false,
+		"\\\\.":              true,
+		"\\\\\\.":            false,
+		"\\\\\\\\.":          true,
+		"a.":                 true,
+		"a\\.":               false,
+		"a\\\\.":             true,
+		"a\\\\\\.":           false,
+		"ab.":                true,
+		"ab\\.":              false,
+		"ab\\\\.":            true,
+		"ab\\\\\\.":          false,
+		"..":                 true,
+		".\\.":               false,
+		".\\\\.":             true,
+		".\\\\\\.":           false,
+		"example.org.":       true,
+		"example.org\\.":     false,
+		"example.org\\\\.":   true,
+		"example.org\\\\\\.": false,
+		"example\\.org.":     true,
+		"example\\\\.org.":   true,
+		"example\\\\\\.org.": true,
+		"\\example.org.":     true,
+		"\\\\example.org.":   true,
+		"\\\\\\example.org.": true,
+	} {
+		if got := IsFqdn(s); got != expect {
+			t.Errorf("IsFqdn(%q) = %t, expected %t", s, got, expect)
+		}
+	}
+}
+
 func BenchmarkSplitLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Split("www.example.com.")
