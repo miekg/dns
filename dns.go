@@ -55,6 +55,9 @@ type RR interface {
 	//
 	// This will only be called on a new and empty RR type with only the header populated.
 	parse(c *zlexer, origin, file string) *ParseError
+
+	// isDuplicate returns whether the two RRs are duplicates.
+	isDuplicate(r2 RR) bool
 }
 
 // RR_Header is the header all DNS resource records share.

@@ -59,3 +59,26 @@ func TestDuplicateDomain(t *testing.T) {
 		t.Errorf("expected %s/%s to be duplicates, but got false", a1.String(), a2.String())
 	}
 }
+
+func TestDuplicateWrongRrtype(t *testing.T) {
+	// Test that IsDuplicate won't panic for a record that's lying about
+	// it's Rrtype.
+
+	r1 := &A{Hdr: RR_Header{Rrtype: TypeA}}
+	r2 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	if IsDuplicate(r1, r2) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", r1.String(), r2.String())
+	}
+
+	r3 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	r4 := &A{Hdr: RR_Header{Rrtype: TypeA}}
+	if IsDuplicate(r3, r4) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", r3.String(), r4.String())
+	}
+
+	r5 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	r6 := &AAAA{Hdr: RR_Header{Rrtype: TypeA}}
+	if !IsDuplicate(r5, r6) {
+		t.Errorf("expected %s/%s to be duplicates, but got false", r5.String(), r6.String())
+	}
+}

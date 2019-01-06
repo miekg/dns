@@ -92,6 +92,8 @@ func (rr *OPT) parse(c *zlexer, origin, file string) *ParseError {
 	panic("dns: internal error: parse should never be called on OPT")
 }
 
+func (r1 *OPT) isDuplicate(r2 RR) bool { return false }
+
 // return the old value -> delete SetVersion?
 
 // Version returns the EDNS version used. Only zero is defined.
