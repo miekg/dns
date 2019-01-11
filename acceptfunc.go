@@ -41,7 +41,7 @@ func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
 	if dh.Qdcount != 1 {
 		return MsgReject
 	}
-	if dh.Ancount != 0 {
+	if dh.Ancount > 1 {
 		return MsgReject
 	}
 	// IXFR request could have one SOA RR in the NS section
