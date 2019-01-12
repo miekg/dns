@@ -10,7 +10,7 @@ type MsgAcceptFunc func(dh Header) MsgAcceptAction
 // * opcode isn't OpcodeQuery or OpcodeNotify
 // * Zero bit isn't zero
 // * has more than 1 question in the question section
-// * has more than 0 RRs in the Answer section
+// * has more than 1 RR in the Answer section
 // * has more than 0 RRs in the Authority section
 // * has more than 2 RRs in the Additional section
 var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
@@ -41,11 +41,11 @@ func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
 	if dh.Qdcount != 1 {
 		return MsgReject
 	}
-	if dh.Ancount != 0 {
+	// NOTIFY requests can have a SOA in the ANSWER section. See RFC 1996 Section 3.7 and 3.11.
+	if dh.Ancount > 1 {
 		return MsgReject
 	}
-	// IXFR request could have one SOA RR in the NS section
-	// RFC 1995, section 3
+	// IXFR request could have one SOA RR in the NS section. See RFC 1995, section 3.
 	if dh.Nscount > 1 {
 		return MsgReject
 	}
