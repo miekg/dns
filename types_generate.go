@@ -244,6 +244,14 @@ func main() {
 					splits := strings.Split(t, ".")
 					t = splits[len(splits)-1]
 				}
+				if t == "EDNS0" {
+					// need to use a Copy for each element
+
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.Copy()\n}\n",
+						f, t, f, f, f)
+					fields = append(fields, f)
+					continue
+				}
 				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
 					f, t, f, f, f)
 				fields = append(fields, f)

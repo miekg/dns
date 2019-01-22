@@ -238,6 +238,23 @@ func TestMsgCopy(t *testing.T) {
 	}
 }
 
+func TestOptCopy(t *testing.T) {
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeA)
+	m.SetEdns0(4096, true)
+	o := m.IsEdns0()
+	o.Option = append(o.Option, &EDNS0_LOCAL{Code: 0xffee, Data: []byte("initial-data")})
+
+	mcp := m.Copy()
+	cpo := mcp.IsEdns0()
+	// modify in purpose the same EDNS0 LOCAL
+	cpo.Option[0].(*EDNS0_LOCAL).Data = []byte("another-value")
+
+	if string(o.Option[0].(*EDNS0_LOCAL).Data) == string(cpo.Option[0].(*EDNS0_LOCAL).Data) {
+		t.Fatalf("TestOptCopy failed; re-set the Data of EDNS0 changed the initial EDNS0")
+	}
+}
+
 func TestMsgPackBuffer(t *testing.T) {
 	var testMessages = []string{
 		// news.ycombinator.com.in.escapemg.com.	IN	A, response
