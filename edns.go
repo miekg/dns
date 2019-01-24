@@ -160,7 +160,7 @@ type EDNS0 interface {
 	// String returns the string representation of the option.
 	String() string
 	// Copy return deep copy of this EDNS0 information
-	Copy() EDNS0
+	copy() EDNS0
 }
 
 // EDNS0_NSID option is used to retrieve a nameserver
@@ -192,7 +192,7 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 func (e *EDNS0_NSID) Option() uint16        { return EDNS0NSID } // Option returns the option code.
 func (e *EDNS0_NSID) unpack(b []byte) error { e.Nsid = hex.EncodeToString(b); return nil }
 func (e *EDNS0_NSID) String() string        { return e.Nsid }
-func (e *EDNS0_NSID) Copy() EDNS0           { return &EDNS0_NSID{e.Code, e.Nsid} }
+func (e *EDNS0_NSID) copy() EDNS0           { return &EDNS0_NSID{e.Code, e.Nsid} }
 
 // EDNS0_SUBNET is the subnet option that is used to give the remote nameserver
 // an idea of where the client lives. See RFC 7871. It can then give back a different
@@ -310,7 +310,7 @@ func (e *EDNS0_SUBNET) String() (s string) {
 	return
 }
 
-func (e *EDNS0_SUBNET) Copy() EDNS0 {
+func (e *EDNS0_SUBNET) copy() EDNS0 {
 	return &EDNS0_SUBNET{
 		e.Code,
 		e.Family,
@@ -355,7 +355,7 @@ func (e *EDNS0_COOKIE) pack() ([]byte, error) {
 func (e *EDNS0_COOKIE) Option() uint16        { return EDNS0COOKIE }
 func (e *EDNS0_COOKIE) unpack(b []byte) error { e.Cookie = hex.EncodeToString(b); return nil }
 func (e *EDNS0_COOKIE) String() string        { return e.Cookie }
-func (e *EDNS0_COOKIE) Copy() EDNS0           { return &EDNS0_COOKIE{e.Code, e.Cookie} }
+func (e *EDNS0_COOKIE) copy() EDNS0           { return &EDNS0_COOKIE{e.Code, e.Cookie} }
 
 // The EDNS0_UL (Update Lease) (draft RFC) option is used to tell the server to set
 // an expiration on an update RR. This is helpful for clients that cannot clean
@@ -377,7 +377,7 @@ type EDNS0_UL struct {
 // Option implements the EDNS0 interface.
 func (e *EDNS0_UL) Option() uint16 { return EDNS0UL }
 func (e *EDNS0_UL) String() string { return strconv.FormatUint(uint64(e.Lease), 10) }
-func (e *EDNS0_UL) Copy() EDNS0    { return &EDNS0_UL{e.Code, e.Lease} }
+func (e *EDNS0_UL) copy() EDNS0    { return &EDNS0_UL{e.Code, e.Lease} }
 
 // Copied: http://golang.org/src/pkg/net/dnsmsg.go
 func (e *EDNS0_UL) pack() ([]byte, error) {
@@ -436,7 +436,7 @@ func (e *EDNS0_LLQ) String() string {
 		" " + strconv.FormatUint(uint64(e.LeaseLife), 10)
 	return s
 }
-func (e *EDNS0_LLQ) Copy() EDNS0 {
+func (e *EDNS0_LLQ) copy() EDNS0 {
 	return &EDNS0_LLQ{e.Code, e.Version, e.Opcode, e.Error, e.Id, e.LeaseLife}
 }
 
@@ -462,7 +462,7 @@ func (e *EDNS0_DAU) String() string {
 	}
 	return s
 }
-func (e *EDNS0_DAU) Copy() EDNS0 { return &EDNS0_DAU{e.Code, e.AlgCode} }
+func (e *EDNS0_DAU) copy() EDNS0 { return &EDNS0_DAU{e.Code, e.AlgCode} }
 
 // EDNS0_DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
 type EDNS0_DHU struct {
@@ -486,7 +486,7 @@ func (e *EDNS0_DHU) String() string {
 	}
 	return s
 }
-func (e *EDNS0_DHU) Copy() EDNS0 { return &EDNS0_DHU{e.Code, e.AlgCode} }
+func (e *EDNS0_DHU) copy() EDNS0 { return &EDNS0_DHU{e.Code, e.AlgCode} }
 
 // EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
 type EDNS0_N3U struct {
@@ -511,7 +511,7 @@ func (e *EDNS0_N3U) String() string {
 	}
 	return s
 }
-func (e *EDNS0_N3U) Copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
+func (e *EDNS0_N3U) copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
 
 // EDNS0_EXPIRE implementes the EDNS0 option as described in RFC 7314.
 type EDNS0_EXPIRE struct {
@@ -522,7 +522,7 @@ type EDNS0_EXPIRE struct {
 // Option implements the EDNS0 interface.
 func (e *EDNS0_EXPIRE) Option() uint16 { return EDNS0EXPIRE }
 func (e *EDNS0_EXPIRE) String() string { return strconv.FormatUint(uint64(e.Expire), 10) }
-func (e *EDNS0_EXPIRE) Copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire} }
+func (e *EDNS0_EXPIRE) copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire} }
 
 func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	b := make([]byte, 4)
@@ -561,7 +561,7 @@ func (e *EDNS0_LOCAL) Option() uint16 { return e.Code }
 func (e *EDNS0_LOCAL) String() string {
 	return strconv.FormatInt(int64(e.Code), 10) + ":0x" + hex.EncodeToString(e.Data)
 }
-func (e *EDNS0_LOCAL) Copy() EDNS0 {
+func (e *EDNS0_LOCAL) copy() EDNS0 {
 	b := make([]byte, len(e.Data))
 	copy(b, e.Data)
 	return &EDNS0_LOCAL{e.Code, b}
@@ -638,7 +638,7 @@ func (e *EDNS0_TCP_KEEPALIVE) String() (s string) {
 	}
 	return
 }
-func (e *EDNS0_TCP_KEEPALIVE) Copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Length, e.Timeout} }
+func (e *EDNS0_TCP_KEEPALIVE) copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Length, e.Timeout} }
 
 // EDNS0_PADDING option is used to add padding to a request/response. The default
 // value of padding SHOULD be 0x0 but other values MAY be used, for instance if
@@ -652,7 +652,7 @@ func (e *EDNS0_PADDING) Option() uint16        { return EDNS0PADDING }
 func (e *EDNS0_PADDING) pack() ([]byte, error) { return e.Padding, nil }
 func (e *EDNS0_PADDING) unpack(b []byte) error { e.Padding = b; return nil }
 func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
-func (e *EDNS0_PADDING) Copy() EDNS0 {
+func (e *EDNS0_PADDING) copy() EDNS0 {
 	b := make([]byte, len(e.Padding))
 	copy(b, e.Padding)
 	return &EDNS0_PADDING{b}

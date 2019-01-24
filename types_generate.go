@@ -246,7 +246,7 @@ func main() {
 				}
 				// For the EDNS0 interface (used in the OPT RR), we need to call the copy method on each element.
 				if t == "EDNS0" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.Copy()\n}\n",
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
 						f, t, f, f, f)
 					fields = append(fields, f)
 					continue
