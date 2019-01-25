@@ -159,7 +159,7 @@ type EDNS0 interface {
 	unpack([]byte) error
 	// String returns the string representation of the option.
 	String() string
-	// Copy return deep copy of this EDNS0 information
+	// copy returns a deep-copy of the option.
 	copy() EDNS0
 }
 
