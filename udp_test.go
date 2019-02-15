@@ -25,15 +25,16 @@ func TestSetUDPSocketOptions(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		if err := setUDPSocketOptions(c); err != nil {
+		sf := defaultSessionUDPFactory
+		if err := sf.InitConn(c); err != nil {
 			t.Fatalf("failed to set socket options: %v", err)
 		}
-		ch := make(chan *SessionUDP)
+		ch := make(chan SessionUDP)
 		go func() {
 			// Set some deadline so this goroutine doesn't hang forever
 			c.SetReadDeadline(time.Now().Add(time.Minute))
-			b := make([]byte, 1)
-			_, sess, err := ReadFromSessionUDP(c, b)
+			sess := sf.CreateSessionUDP(1)
+			_, err := sess.ReadRequest(c)
 			if err != nil {
 				t.Errorf("failed to read from conn: %v", err)
 				// fallthrough to chan send below
@@ -48,15 +49,15 @@ func TestSetUDPSocketOptions(t *testing.T) {
 		if _, err := c2.Write([]byte{1}); err != nil {
 			t.Fatalf("failed to write to conn: %v", err)
 		}
-		sess := <-ch
+		sess := (<-ch).(*sessionUDP)
 		if sess == nil {
 			// t.Error was already called in the goroutine above.
 			t.FailNow()
 		}
-		if len(sess.context) == 0 {
+		if len(sess.oob) == 0 {
 			t.Fatalf("empty session context: %v", sess)
 		}
-		ip := parseDstFromOOB(sess.context)
+		ip := parseDstFromOOB(sess.oob)
 		if ip == nil {
 			t.Fatalf("failed to parse dst: %v", sess)
 		}
