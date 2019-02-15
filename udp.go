@@ -30,6 +30,8 @@ type SessionUDP interface {
 	ReadRequest(conn *net.UDPConn) ([]byte, error)
 	// RemoteAddr returns the remote address of the last read UDP request
 	RemoteAddr() net.Addr
+	// LocalAddr returns the local address of the last read UDP request
+	LocalAddr() net.Addr
 	// WriteResponse writes a response to the last read UDP request.
 	// The response is sent to the UDP address the request came from.
 	WriteResponse(b []byte) (int, error)
@@ -92,8 +94,11 @@ func (s *sessionUDP) Clear() SessionUDP {
 	return s
 }
 
-// RemoteAddr returns the remote network address.
+// RemoteAddr returns the remote network address for the current request.
 func (s *sessionUDP) RemoteAddr() net.Addr { return s.raddr }
+
+// LocalAddr returns the local network address for the current request.
+func (s *sessionUDP) LocalAddr() net.Addr { return s.conn.LocalAddr() }
 
 // ReadRequest reads a single request from the session and keeps the request context
 func (s *sessionUDP) ReadRequest(conn *net.UDPConn) ([]byte, error) {
