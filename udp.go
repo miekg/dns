@@ -28,7 +28,7 @@ var udpOOBSize = func() int {
 // SessionUDP holds the remote address and the associated
 // out-of-band data.
 type SessionUDP struct {
-	raddr   *net.UDPAddr
+	raddr   net.Addr
 	context []byte
 }
 
@@ -37,23 +37,36 @@ func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
 
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
-func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
-	oob := make([]byte, udpOOBSize)
-	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
+func ReadFromSessionUDP(conn net.PacketConn, b []byte) (int, *SessionUDP, error) {
+	if netUDPConn, ok := conn.(*net.UDPConn); ok {
+		oob := make([]byte, udpOOBSize)
+		n, oobn, _, raddr, err := netUDPConn.ReadMsgUDP(b, oob)
+		if err != nil {
+			return n, nil, err
+		}
+		return n, &SessionUDP{raddr, oob[:oobn]}, err
+	}
+
+	n, raddr, err := conn.ReadFrom(b)
 	if err != nil {
 		return n, nil, err
 	}
-	return n, &SessionUDP{raddr, oob[:oobn]}, err
+	return n, &SessionUDP{raddr, []byte{}}, err
 }
 
 // WriteToSessionUDP acts just like net.UDPConn.WriteTo(), but uses a *SessionUDP instead of a net.Addr.
-func WriteToSessionUDP(conn *net.UDPConn, b []byte, session *SessionUDP) (int, error) {
-	oob := correctSource(session.context)
-	n, _, err := conn.WriteMsgUDP(b, oob, session.raddr)
+func WriteToSessionUDP(conn net.PacketConn, b []byte, session *SessionUDP) (int, error) {
+	if netUDPConn, ok := conn.(*net.UDPConn); ok {
+		oob := correctSource(session.context)
+		n, _, err := netUDPConn.WriteMsgUDP(b, oob, session.raddr.(*net.UDPAddr))
+		return n, err
+	}
+
+	n, err := conn.WriteTo(b, session.raddr)
 	return n, err
 }
 
-func setUDPSocketOptions(conn *net.UDPConn) error {
+func setUDPSocketOptions(conn net.PacketConn) error {
 	// Try setting the flags for both families and ignore the errors unless they
 	// both error.
 	err6 := ipv6.NewPacketConn(conn).SetControlMessage(ipv6.FlagDst|ipv6.FlagInterface, true)

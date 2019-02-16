@@ -72,7 +72,7 @@ type response struct {
 	tsigStatus     error
 	tsigRequestMAC string
 	tsigSecret     map[string]string // the tsig secrets
-	udp            *net.UDPConn      // i/o connection if UDP was used
+	udp            net.PacketConn    // i/o connection if UDP was used
 	tcp            net.Conn          // i/o connection if TCP was used
 	udpSession     *SessionUDP       // oob data to get egress interface right
 	writer         Writer            // writer to output the raw DNS bits
@@ -144,7 +144,7 @@ type Reader interface {
 	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
-	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
+	ReadUDP(conn net.PacketConn, timeout time.Duration) ([]byte, *SessionUDP, error)
 }
 
 // defaultReader is an adapter for the Server struct that implements the Reader interface
@@ -157,7 +157,7 @@ func (dr defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, e
 	return dr.readTCP(conn, timeout)
 }
 
-func (dr defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (dr defaultReader) ReadUDP(conn net.PacketConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	return dr.readUDP(conn, timeout)
 }
 
@@ -334,10 +334,10 @@ func (srv *Server) ActivateAndServe() error {
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
-			srv.started = true
-			unlock()
-			return srv.serveUDP(t)
 		}
+		srv.started = true
+		unlock()
+		return srv.serveUDP(pConn)
 	}
 	if l != nil {
 		srv.started = true
@@ -446,7 +446,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 }
 
 // serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(l *net.UDPConn) error {
+func (srv *Server) serveUDP(l net.PacketConn) error {
 	defer l.Close()
 
 	if srv.NotifyStartedFunc != nil {
@@ -546,7 +546,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 }
 
 // Serve a new UDP request.
-func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u *net.UDPConn, s *SessionUDP) {
+func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, s *SessionUDP) {
 	w := &response{tsigSecret: srv.TsigSecret, udp: u, udpSession: s}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -641,7 +641,7 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 	return m, nil
 }
 
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (srv *Server) readUDP(conn net.PacketConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
 	srv.lock.RLock()
 	if srv.started {
 		// See the comment in readTCP above.
