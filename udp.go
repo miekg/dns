@@ -65,38 +65,38 @@ func setUDPSocketOptions(conn *net.UDPConn) error {
 }
 
 // parseDstFromOOB takes oob data and returns the destination IP.
-func parseDstFromOOB(oob []byte) net.IP {
+func parseDstFromOOB(oob []byte) (net.IP, *ipv6.ControlMessage, *ipv4.ControlMessage) {
 	// Start with IPv6 and then fallback to IPv4
 	// TODO(fastest963): Figure out a way to prefer one or the other. Looking at
 	// the lvl of the header for a 0 or 41 isn't cross-platform.
 	cm6 := new(ipv6.ControlMessage)
 	if cm6.Parse(oob) == nil && cm6.Dst != nil {
-		return cm6.Dst
+		return cm6.Dst, cm6, nil
 	}
 	cm4 := new(ipv4.ControlMessage)
 	if cm4.Parse(oob) == nil && cm4.Dst != nil {
-		return cm4.Dst
+		return cm4.Dst, nil, cm4
 	}
-	return nil
+	return nil, nil, nil
 }
 
 // correctSource takes oob data and returns new oob data with the Src equal to the Dst
 func correctSource(oob []byte) []byte {
-	dst := parseDstFromOOB(oob)
+	dst, cm6, cm4 := parseDstFromOOB(oob)
 	if dst == nil {
 		return nil
 	}
 	// If the dst is definitely an IPv6, then use ipv6's ControlMessage to
 	// respond otherwise use ipv4's because ipv6's marshal ignores ipv4
 	// addresses.
-	if dst.To4() == nil {
-		cm := new(ipv6.ControlMessage)
-		cm.Src = dst
-		oob = cm.Marshal()
-	} else {
-		cm := new(ipv4.ControlMessage)
-		cm.Src = dst
-		oob = cm.Marshal()
+	if dst.To4() == nil && cm6 != nil {
+		cm6.Src = dst
+		return cm6.Marshal()
 	}
-	return oob
+	if cm4 != nil {
+		cm4.Src = dst
+		return cm4.Marshal()
+
+	}
+	return nil
 }

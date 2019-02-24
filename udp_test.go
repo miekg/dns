@@ -56,7 +56,7 @@ func TestSetUDPSocketOptions(t *testing.T) {
 		if len(sess.context) == 0 {
 			t.Fatalf("empty session context: %v", sess)
 		}
-		ip := parseDstFromOOB(sess.context)
+		ip, _, _ := parseDstFromOOB(sess.context)
 		if ip == nil {
 			t.Fatalf("failed to parse dst: %v", sess)
 		}
@@ -90,7 +90,7 @@ func TestParseDstFromOOB(t *testing.T) {
 
 	// dst is :ffff:100.100.100.100
 	oob := []byte{36, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 100, 100, 100, 100, 2, 0, 0, 0}
-	dst := parseDstFromOOB(oob)
+	dst, _, _ := parseDstFromOOB(oob)
 	dst4 := dst.To4()
 	if dst4 == nil {
 		t.Errorf("failed to parse IPv4 in IPv6: %v", dst)
@@ -100,7 +100,7 @@ func TestParseDstFromOOB(t *testing.T) {
 
 	// dst is 2001:db8::1
 	oob = []byte{36, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 50, 0, 0, 0, 32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0}
-	dst = parseDstFromOOB(oob)
+	dst, _, _ = parseDstFromOOB(oob)
 	dst6 := dst.To16()
 	if dst6 == nil {
 		t.Errorf("failed to parse IPv6: %v", dst)
@@ -110,7 +110,7 @@ func TestParseDstFromOOB(t *testing.T) {
 
 	// dst is 100.100.100.100 but was received on 10.10.10.10
 	oob = []byte{28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 2, 0, 0, 0, 10, 10, 10, 10, 100, 100, 100, 100, 0, 0, 0, 0}
-	dst = parseDstFromOOB(oob)
+	dst, _, _ = parseDstFromOOB(oob)
 	dst4 = dst.To4()
 	if dst4 == nil {
 		t.Errorf("failed to parse IPv4: %v", dst)
@@ -130,8 +130,8 @@ func TestCorrectSource(t *testing.T) {
 	soob := correctSource(oob)
 	cm4 := new(ipv4.ControlMessage)
 	cm4.Src = net.ParseIP("100.100.100.100")
-	if !bytes.Equal(soob, cm4.Marshal()) {
-		t.Errorf("unexpected oob for ipv4 address: %v", soob)
+	if x := cm4.Marshal(); !bytes.Equal(soob, x) {
+		t.Errorf("unexpected oob for IPv4 address: got\n%v, expected\n%v", soob, x)
 	}
 
 	// dst is 2001:db8::1
@@ -139,7 +139,7 @@ func TestCorrectSource(t *testing.T) {
 	soob = correctSource(oob)
 	cm6 := new(ipv6.ControlMessage)
 	cm6.Src = net.ParseIP("2001:db8::1")
-	if !bytes.Equal(soob, cm6.Marshal()) {
-		t.Errorf("unexpected oob for IPv6 address: %v", soob)
+	if x := cm6.Marshal(); !bytes.Equal(soob, x) {
+		t.Errorf("unexpected oob for IPv6 address: got\n%v, expected\n%v", soob, x)
 	}
 }
