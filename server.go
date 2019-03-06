@@ -289,10 +289,6 @@ func (srv *Server) spawnWorker(w *response) {
 	}
 }
 
-func (srv *Server) makeSessionUDP() interface{} {
-	return srv.SessionUDPFactory.CreateSessionUDP(srv.UDPSize)
-}
-
 func (srv *Server) init() {
 	srv.queue = make(chan *response)
 
@@ -309,7 +305,11 @@ func (srv *Server) init() {
 		srv.SessionUDPFactory = defaultSessionUDPFactory
 	}
 
-	srv.udpPool.New = srv.makeSessionUDP
+	udpFactory := srv.SessionUDPFactory
+	udpSize := srv.UDPSize
+	srv.udpPool.New = func () interface{} {
+		return udpFactory.CreateSessionUDP(udpSize)
+	}
 }
 
 func unlockOnce(l sync.Locker) func() {
