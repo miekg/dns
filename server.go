@@ -301,7 +301,7 @@ func (srv *Server) init() {
 		srv.UDPSize = MinMsgSize
 	}
 	if srv.MsgAcceptFunc == nil {
-		srv.MsgAcceptFunc = defaultMsgAcceptFunc
+		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
 
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
