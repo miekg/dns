@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math/rand"
 	"net"
 	"strings"
 	"sync"
@@ -27,7 +28,10 @@ const maxTCPQueries = 128
 // If this limit is reached, the server will just keep spawning new
 // workers (goroutines) for each incoming request. In this case, each
 // worker will only be used for a single request.
-const maxIdleWorkersCount = 10000
+const maxIdleWorkersCount = 500
+const maxConcurrentWorkersCount = 1000
+const maxServePerWorker = 10000
+const durationSleepOnBurst = time.Millisecond * 10
 
 // The maximum length of time a worker may idle for before being destroyed.
 const idleWorkerTimeout = 10 * time.Second
@@ -218,9 +222,18 @@ type Server struct {
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
 
+	// MaxConcurrentWorkers is the max of simultaneus go routines to process incoming msg
+	MaxConcurrentWorkers uint32
+	// MaxReusableWorkers is the max size of pool of workers waiting incoming msg
+	MaxReusableWorkers uint32
+	// MaxMsgPerWorker is the max msg processed by one worker before being recycled
+	MaxMsgPerWorker uint32
+	// DurationSleepOnBurst allow to volunteerely ignore incoming msgs when system is overwhelmed
+	DurationSleepOnBurst time.Duration
+
 	// UDP packet or TCP connection queue
 	queue chan *response
-	// Workers count
+	// current active workers count
 	workersCount int32
 
 	// Shutdown handling
@@ -241,23 +254,41 @@ func (srv *Server) isStarted() bool {
 }
 
 func (srv *Server) worker(w *response) {
-	srv.serve(w)
-
-	for {
-		count := atomic.LoadInt32(&srv.workersCount)
-		if count > maxIdleWorkersCount {
-			return
+	var served uint32
+	count := atomic.AddInt32(&srv.workersCount, 1)
+	defer atomic.AddInt32(&srv.workersCount, -1)
+	if uint32(count) > srv.MaxConcurrentWorkers {
+		w.Close()
+		if srv.DurationSleepOnBurst > 1 {
+			time.Sleep(srv.DurationSleepOnBurst)
 		}
-		if atomic.CompareAndSwapInt32(&srv.workersCount, count, count+1) {
-			break
-		}
+		return
 	}
 
-	defer atomic.AddInt32(&srv.workersCount, -1)
+	srv.serve(w)
+	w = nil
+	served++
+
+	// keep idle workers if the pool is not full yet
+	if uint32(count) > srv.MaxReusableWorkers {
+		return
+	}
+
+	// jitter on the timeout
+	delay := idleWorkerTimeout - time.Duration(rand.Int63n(int64(idleWorkerTimeout)/4))
 
 	inUse := false
-	timeout := time.NewTimer(idleWorkerTimeout)
-	defer timeout.Stop()
+	timeout := time.NewTimer(delay)
+
+	defer func() {
+		// ensure to drain the chanel when stopping the timer (avoid mem leak on the channel)
+		if !timeout.Stop() {
+			select {
+			case <-timeout.C:
+			default:
+			}
+		}
+	}()
 LOOP:
 	for {
 		select {
@@ -267,12 +298,17 @@ LOOP:
 			}
 			inUse = true
 			srv.serve(w)
+			w = nil
+			served++
+			if served >= srv.MaxMsgPerWorker {
+				break LOOP
+			}
 		case <-timeout.C:
 			if !inUse {
 				break LOOP
 			}
 			inUse = false
-			timeout.Reset(idleWorkerTimeout)
+			timeout.Reset(delay)
 		}
 	}
 }
@@ -302,6 +338,19 @@ func (srv *Server) init() {
 	}
 	if srv.MsgAcceptFunc == nil {
 		srv.MsgAcceptFunc = defaultMsgAcceptFunc
+	}
+
+	if srv.MaxConcurrentWorkers == 0 {
+		srv.MaxConcurrentWorkers = maxConcurrentWorkersCount
+	}
+	if srv.MaxReusableWorkers == 0 {
+		srv.MaxReusableWorkers = maxIdleWorkersCount
+	}
+	if srv.MaxMsgPerWorker == 0 {
+		srv.MaxMsgPerWorker = maxServePerWorker
+	}
+	if srv.DurationSleepOnBurst == 0 {
+		srv.DurationSleepOnBurst = durationSleepOnBurst
 	}
 
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
