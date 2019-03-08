@@ -233,7 +233,7 @@ func BenchmarkUnpackMX(b *testing.B) {
 }
 
 func BenchmarkPackAAAAA(b *testing.B) {
-	aaaa := testRR(". IN A ::1")
+	aaaa := testRR(". IN AAAA ::1")
 
 	buf := make([]byte, Len(aaaa))
 	b.ReportAllocs()
@@ -244,7 +244,7 @@ func BenchmarkPackAAAAA(b *testing.B) {
 }
 
 func BenchmarkUnpackAAAA(b *testing.B) {
-	aaaa := testRR(". IN A ::1")
+	aaaa := testRR(". IN AAAA ::1")
 
 	buf := make([]byte, Len(aaaa))
 	PackRR(aaaa, buf, 0, nil, false)
