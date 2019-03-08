@@ -121,6 +121,59 @@ func TestZoneParserIncludeDisallowed(t *testing.T) {
 	}
 }
 
+func TestZoneParserAddressAAAA(t *testing.T) {
+	zone := `
+1.example.org. 600 IN AAAA ::1
+2.example.org. 600 IN AAAA ::FFFF:127.0.0.1`
+
+	wantRRs := []*AAAA{
+		&AAAA{Hdr: RR_Header{Name: "1.example.org."}, AAAA: net.IPv6loopback},
+		&AAAA{Hdr: RR_Header{Name: "2.example.org."}, AAAA: net.ParseIP("::FFFF:127.0.0.1")},
+	}
+
+	wantIdx := 0
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		if wantIdx >= len(wantRRs) {
+			t.Fatalf("expected %d RRs, but got more", len(wantRRs))
+		}
+		if got, want := rr.Header().Name, wantRRs[wantIdx].Header().Name; got != want {
+			t.Fatalf("expected name %s, but got %s", want, got)
+		}
+		aaaa, ok := rr.(*AAAA)
+		if !ok {
+			t.Fatalf("expected *AAAA RR, but got %T", aaaa)
+		}
+		if got, want := aaaa.AAAA, wantRRs[wantIdx].AAAA; !got.Equal(want) {
+			t.Fatalf("expected AAAA with IP %v, but got %v", got, want)
+		}
+		wantIdx++
+	}
+
+	if wantIdx != len(wantRRs) {
+		t.Errorf("too few records, expected %d, got %d", len(wantRRs), wantIdx)
+	}
+}
+
+func TestZoneParserAddressBad(t *testing.T) {
+	zones := []string{
+		"1.bad.example.org. 600 IN A ::1",
+		"2.bad.example.org. 600 IN A ::FFFF:127.0.0.1",
+		"3.bad.example.org. 600 IN AAAA 127.0.0.1",
+	}
+
+	for _, zone := range zones {
+		zp := NewZoneParser(strings.NewReader(zone), "", "")
+		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+		}
+
+		const expect = "bad A"
+		if err := zp.Err(); err == nil || !strings.Contains(err.Error(), expect) {
+			t.Errorf("expected error to contain %q, got %v", expect, err)
+		}
+	}
+}
+
 func TestParseTA(t *testing.T) {
 	rr, err := NewRR(` Ta 0 0 0`)
 	if err != nil {

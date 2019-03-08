@@ -133,7 +133,8 @@ func (rr *A) parse(c *zlexer, o, f string) *ParseError {
 	}
 
 	rr.A = net.ParseIP(l.token)
-	if rr.A == nil || l.err {
+	isIPv6 := strings.Contains(l.token, ":")
+	if rr.A == nil || isIPv6 || l.err {
 		return &ParseError{f, "bad A A", l}
 	}
 	return slurpRemainder(c, f)
@@ -146,7 +147,8 @@ func (rr *AAAA) parse(c *zlexer, o, f string) *ParseError {
 	}
 
 	rr.AAAA = net.ParseIP(l.token)
-	if rr.AAAA == nil || l.err {
+	isIPv6 := strings.Contains(l.token, ":")
+	if rr.AAAA == nil || !isIPv6 || l.err {
 		return &ParseError{f, "bad AAAA AAAA", l}
 	}
 	return slurpRemainder(c, f)
