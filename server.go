@@ -408,7 +408,9 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.NotifyStartedFunc()
 	}
 
+	var wg sync.WaitGroup
 	defer func() {
+		wg.Wait()
 		close(srv.shutdown)
 	}()
 
@@ -427,7 +429,8 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		// Track the connection to allow unblocking reads on shutdown.
 		srv.conns[rw] = struct{}{}
 		srv.lock.Unlock()
-		go srv.serve(&response{tsigSecret: srv.TsigSecret, tcp: rw})
+		wg.Add(1)
+		go srv.serve(&response{tsigSecret: srv.TsigSecret, tcp: rw}, &wg)
 	}
 
 	return nil
@@ -446,7 +449,9 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		reader = srv.DecorateReader(reader)
 	}
 
+	var wg sync.WaitGroup
 	defer func() {
+		wg.Wait()
 		close(srv.shutdown)
 	}()
 
@@ -469,17 +474,14 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			}
 			continue
 		}
-		go srv.serve(&response{
-			msg:        m,
-			tsigSecret: srv.TsigSecret,
-			udp:        l,
-			udpSession: s})
+		wg.Add(1)
+		go srv.serve(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s}, &wg)
 	}
 
 	return nil
 }
 
-func (srv *Server) serve(w *response) {
+func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -489,18 +491,9 @@ func (srv *Server) serve(w *response) {
 	if w.udp != nil {
 		// serve UDP
 		srv.serveDNS(w)
+		wg.Done()
 		return
 	}
-
-	defer func() {
-		if !w.hijacked {
-			w.Close()
-		}
-
-		srv.lock.Lock()
-		delete(srv.conns, w.tcp)
-		srv.lock.Unlock()
-	}()
 
 	reader := Reader(defaultReader{srv})
 	if srv.DecorateReader != nil {
@@ -537,6 +530,16 @@ func (srv *Server) serve(w *response) {
 		// idle timeout.
 		timeout = idleTimeout
 	}
+
+	if !w.hijacked {
+		w.Close()
+	}
+
+	srv.lock.Lock()
+	delete(srv.conns, w.tcp)
+	srv.lock.Unlock()
+
+	wg.Done()
 }
 
 func (srv *Server) disposeBuffer(w *response) {
