@@ -66,8 +66,8 @@ type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
 }
 
+// response contains the client's connection details.
 type response struct {
-	msg            []byte
 	closed         bool // connection has been closed
 	hijacked       bool // connection has been hijacked by handler
 	tsigTimersOnly bool
@@ -433,7 +433,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.conns[rw] = struct{}{}
 		srv.lock.Unlock()
 		wg.Add(1)
-		go srv.serve(&response{tsigSecret: srv.TsigSecret, tcp: rw}, &wg)
+		go srv.serve(nil, &response{tsigSecret: srv.TsigSecret, tcp: rw}, &wg)
 	}
 
 	return nil
@@ -478,13 +478,13 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			continue
 		}
 		wg.Add(1)
-		go srv.serve(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s}, &wg)
+		go srv.serve(m, &response{tsigSecret: srv.TsigSecret, udp: l, udpSession: s}, &wg)
 	}
 
 	return nil
 }
 
-func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
+func (srv *Server) serve(m []byte, w *response, wg *sync.WaitGroup) {
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -493,7 +493,7 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 
 	if w.udp != nil {
 		// serve UDP
-		srv.serveDNS(w)
+		srv.serveDNS(m, w)
 		wg.Done()
 		return
 	}
@@ -517,7 +517,7 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 
 	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
 		var err error
-		w.msg, err = reader.ReadTCP(w.tcp, timeout)
+		m, err = reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
@@ -545,15 +545,18 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func (srv *Server) disposeBuffer(w *response) {
-	if w.udp != nil && cap(w.msg) == srv.UDPSize {
-		srv.udpPool.Put(w.msg[:srv.UDPSize])
+func (srv *Server) disposeBuffer(udp bool, m []byte) {
+	if !udp {
+		return
 	}
-	w.msg = nil
+
+	if cap(m) == srv.UDPSize {
+		srv.udpPool.Put(m[:srv.UDPSize])
+	}
 }
 
-func (srv *Server) serveDNS(w *response) {
-	dh, off, err := unpackMsgHdr(w.msg, 0)
+func (srv *Server) serveDNS(m []byte, w *response) {
+	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
@@ -572,16 +575,16 @@ func (srv *Server) serveDNS(w *response) {
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
 
 		w.WriteMsg(req)
-		srv.disposeBuffer(w)
+		srv.disposeBuffer(w.udp != nil, m)
 		return
 	}
 
-	if err := req.unpack(dh, w.msg, off); err != nil {
+	if err := req.unpack(dh, m, off); err != nil {
 		req.SetRcodeFormatError(req)
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
 
 		w.WriteMsg(req)
-		srv.disposeBuffer(w)
+		srv.disposeBuffer(w.udp != nil, m)
 		return
 	}
 
@@ -589,7 +592,7 @@ func (srv *Server) serveDNS(w *response) {
 	if w.tsigSecret != nil {
 		if t := req.IsTsig(); t != nil {
 			if secret, ok := w.tsigSecret[t.Hdr.Name]; ok {
-				w.tsigStatus = TsigVerify(w.msg, secret, "", false)
+				w.tsigStatus = TsigVerify(m, secret, "", false)
 			} else {
 				w.tsigStatus = ErrSecret
 			}
