@@ -121,6 +121,51 @@ func TestZoneParserIncludeDisallowed(t *testing.T) {
 	}
 }
 
+func TestZoneParserAddressAAAA(t *testing.T) {
+	tests := []struct {
+		record string
+		want   *AAAA
+	}{
+		{
+			record: "1.example.org. 600 IN AAAA ::1",
+			want:   &AAAA{Hdr: RR_Header{Name: "1.example.org."}, AAAA: net.IPv6loopback},
+		},
+		{
+			record: "2.example.org. 600 IN AAAA ::FFFF:127.0.0.1",
+			want:   &AAAA{Hdr: RR_Header{Name: "2.example.org."}, AAAA: net.ParseIP("::FFFF:127.0.0.1")},
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := NewRR(tc.record)
+		if err != nil {
+			t.Fatalf("expected no error, but got %s", err)
+		}
+		aaaa, ok := got.(*AAAA)
+		if !ok {
+			t.Fatalf("expected *AAAA RR, but got %T", aaaa)
+		}
+		if g, w := aaaa.AAAA, tc.want.AAAA; !g.Equal(w) {
+			t.Fatalf("expected AAAA with IP %v, but got %v", g, w)
+		}
+	}
+}
+
+func TestZoneParserAddressBad(t *testing.T) {
+	records := []string{
+		"1.bad.example.org. 600 IN A ::1",
+		"2.bad.example.org. 600 IN A ::FFFF:127.0.0.1",
+		"3.bad.example.org. 600 IN AAAA 127.0.0.1",
+	}
+
+	for _, record := range records {
+		const expect = "bad A"
+		if got, err := NewRR(record); err == nil || !strings.Contains(err.Error(), expect) {
+			t.Errorf("NewRR(%v) = %v, want err to contain %q", record, got, expect)
+		}
+	}
+}
+
 func TestParseTA(t *testing.T) {
 	rr, err := NewRR(` Ta 0 0 0`)
 	if err != nil {
