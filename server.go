@@ -569,24 +569,21 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 	switch srv.MsgAcceptFunc(dh) {
 	case MsgAccept:
-	case MsgIgnore:
-		return
+		if req.unpack(dh, m, off) == nil {
+			break
+		}
+
+		fallthrough
 	case MsgReject:
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
 
 		w.WriteMsg(req)
+
 		srv.disposeBuffer(m, w)
 		return
-	}
-
-	if err := req.unpack(dh, m, off); err != nil {
-		req.SetRcodeFormatError(req)
-		req.Ns, req.Answer, req.Extra = nil, nil, nil
-
-		w.WriteMsg(req)
-		srv.disposeBuffer(m, w)
+	case MsgIgnore:
 		return
 	}
 
@@ -604,6 +601,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 	}
 
 	srv.disposeBuffer(m, w)
+
 	srv.Handler.ServeDNS(w, req) // Writes back to the client
 }
 
