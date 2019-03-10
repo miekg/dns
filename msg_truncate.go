@@ -51,7 +51,7 @@ func (dns *Msg) Truncate(size int) {
 
 	compression := make(map[string]struct{})
 
-	l = 12 // Message header is always 12 bytes
+	l = headerSize
 	for _, r := range dns.Question {
 		l += r.len(l, compression)
 	}
@@ -72,7 +72,7 @@ func (dns *Msg) Truncate(size int) {
 	}
 
 	// According to RFC 2181, the TC bit should only be set if not all
-	// of the answer RRs cannot be included.
+	// of the answer RRs can be included in the response.
 	dns.Truncated = len(dns.Answer) > numAnswer
 
 	dns.Answer = dns.Answer[:numAnswer]
