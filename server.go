@@ -551,12 +551,6 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u *net.UDPConn, 
 	wg.Done()
 }
 
-func (srv *Server) disposeBuffer(m []byte, w *response) {
-	if w.udp != nil && cap(m) == srv.UDPSize {
-		srv.udpPool.Put(m[:srv.UDPSize])
-	}
-}
-
 func (srv *Server) serveDNS(m []byte, w *response) {
 	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
@@ -581,7 +575,10 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 		w.WriteMsg(req)
 
-		srv.disposeBuffer(m, w)
+		if w.udp != nil && cap(m) == srv.UDPSize {
+			srv.udpPool.Put(m[:srv.UDPSize])
+		}
+
 		return
 	case MsgIgnore:
 		return
@@ -600,7 +597,9 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		}
 	}
 
-	srv.disposeBuffer(m, w)
+	if w.udp != nil && cap(m) == srv.UDPSize {
+		srv.udpPool.Put(m[:srv.UDPSize])
+	}
 
 	srv.Handler.ServeDNS(w, req) // Writes back to the client
 }
