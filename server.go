@@ -523,7 +523,7 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 			break
 		}
 		srv.serveDNS(w)
-		if w.tcp == nil {
+		if w.closed {
 			break // Close() was called
 		}
 		if w.hijacked {
