@@ -3,7 +3,6 @@ package dns
 // A client implementation.
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/binary"
@@ -353,23 +352,19 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 
 // Write implements the net.Conn Write method.
 func (co *Conn) Write(p []byte) (n int, err error) {
-	switch t := co.Conn.(type) {
+	switch co.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
-		w := t.(io.Writer)
-
-		lp := len(p)
-		if lp < 2 {
-			return 0, io.ErrShortBuffer
-		}
-		if lp > MaxMsgSize {
+		if len(p) > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
 		}
-		l := make([]byte, 2, lp+2)
-		binary.BigEndian.PutUint16(l, uint16(lp))
-		p = append(l, p...)
-		n, err := io.Copy(w, bytes.NewReader(p))
+
+		l := make([]byte, 2)
+		binary.BigEndian.PutUint16(l, uint16(len(p)))
+
+		n, err := (&net.Buffers{l, p}).WriteTo(co.Conn)
 		return int(n), err
 	}
+
 	return co.Conn.Write(p)
 }
 

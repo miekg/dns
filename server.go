@@ -3,7 +3,6 @@
 package dns
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/binary"
@@ -701,18 +700,14 @@ func (w *response) Write(m []byte) (int, error) {
 	case w.udp != nil:
 		return WriteToSessionUDP(w.udp, m, w.udpSession)
 	case w.tcp != nil:
-		lm := len(m)
-		if lm < 2 {
-			return 0, io.ErrShortBuffer
-		}
-		if lm > MaxMsgSize {
+		if len(m) > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
 		}
-		l := make([]byte, 2, 2+lm)
-		binary.BigEndian.PutUint16(l, uint16(lm))
-		m = append(l, m...)
 
-		n, err := io.Copy(w.tcp, bytes.NewReader(m))
+		l := make([]byte, 2)
+		binary.BigEndian.PutUint16(l, uint16(len(m)))
+
+		n, err := (&net.Buffers{l, m}).WriteTo(w.tcp)
 		return int(n), err
 	default:
 		panic("dns: internal error: udp and tcp both nil")
