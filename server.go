@@ -67,7 +67,6 @@ type ConnectionStater interface {
 }
 
 type response struct {
-	msg            []byte
 	closed         bool // connection has been closed
 	hijacked       bool // connection has been hijacked by handler
 	tsigTimersOnly bool
@@ -433,7 +432,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.conns[rw] = struct{}{}
 		srv.lock.Unlock()
 		wg.Add(1)
-		go srv.serve(&response{tsigSecret: srv.TsigSecret, tcp: rw}, &wg)
+		go srv.serveTCPConn(&wg, rw)
 	}
 
 	return nil
@@ -478,24 +477,19 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			continue
 		}
 		wg.Add(1)
-		go srv.serve(&response{msg: m, tsigSecret: srv.TsigSecret, udp: l, udpSession: s}, &wg)
+		go srv.serveUDPPacket(&wg, m, l, s)
 	}
 
 	return nil
 }
 
-func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
+// Serve a new TCP connection.
+func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
+	w := &response{tsigSecret: srv.TsigSecret, tcp: rw}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
 		w.writer = w
-	}
-
-	if w.udp != nil {
-		// serve UDP
-		srv.serveDNS(w)
-		wg.Done()
-		return
 	}
 
 	reader := Reader(defaultReader{srv})
@@ -516,13 +510,12 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 	}
 
 	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
-		var err error
-		w.msg, err = reader.ReadTCP(w.tcp, timeout)
+		m, err := reader.ReadTCP(w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(w)
+		srv.serveDNS(m, w)
 		if w.closed {
 			break // Close() was called
 		}
@@ -545,15 +538,21 @@ func (srv *Server) serve(w *response, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func (srv *Server) disposeBuffer(w *response) {
-	if w.udp != nil && cap(w.msg) == srv.UDPSize {
-		srv.udpPool.Put(w.msg[:srv.UDPSize])
+// Serve a new UDP request.
+func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u *net.UDPConn, s *SessionUDP) {
+	w := &response{tsigSecret: srv.TsigSecret, udp: u, udpSession: s}
+	if srv.DecorateWriter != nil {
+		w.writer = srv.DecorateWriter(w)
+	} else {
+		w.writer = w
 	}
-	w.msg = nil
+
+	srv.serveDNS(m, w)
+	wg.Done()
 }
 
-func (srv *Server) serveDNS(w *response) {
-	dh, off, err := unpackMsgHdr(w.msg, 0)
+func (srv *Server) serveDNS(m []byte, w *response) {
+	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
@@ -564,24 +563,24 @@ func (srv *Server) serveDNS(w *response) {
 
 	switch srv.MsgAcceptFunc(dh) {
 	case MsgAccept:
-	case MsgIgnore:
-		return
+		if req.unpack(dh, m, off) == nil {
+			break
+		}
+
+		fallthrough
 	case MsgReject:
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
 
 		w.WriteMsg(req)
-		srv.disposeBuffer(w)
+
+		if w.udp != nil && cap(m) == srv.UDPSize {
+			srv.udpPool.Put(m[:srv.UDPSize])
+		}
+
 		return
-	}
-
-	if err := req.unpack(dh, w.msg, off); err != nil {
-		req.SetRcodeFormatError(req)
-		req.Ns, req.Answer, req.Extra = nil, nil, nil
-
-		w.WriteMsg(req)
-		srv.disposeBuffer(w)
+	case MsgIgnore:
 		return
 	}
 
@@ -589,7 +588,7 @@ func (srv *Server) serveDNS(w *response) {
 	if w.tsigSecret != nil {
 		if t := req.IsTsig(); t != nil {
 			if secret, ok := w.tsigSecret[t.Hdr.Name]; ok {
-				w.tsigStatus = TsigVerify(w.msg, secret, "", false)
+				w.tsigStatus = TsigVerify(m, secret, "", false)
 			} else {
 				w.tsigStatus = ErrSecret
 			}
@@ -598,7 +597,10 @@ func (srv *Server) serveDNS(w *response) {
 		}
 	}
 
-	srv.disposeBuffer(w)
+	if w.udp != nil && cap(m) == srv.UDPSize {
+		srv.udpPool.Put(m[:srv.UDPSize])
+	}
+
 	srv.Handler.ServeDNS(w, req) // Writes back to the client
 }
 
