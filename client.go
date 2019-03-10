@@ -227,9 +227,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		}
 
 		p = make([]byte, length)
-		if n, err = io.ReadFull(co.Conn, p); err != nil {
-			return nil, err
-		}
+		n, err = io.ReadFull(co.Conn, p)
 	default:
 		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
