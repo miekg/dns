@@ -236,6 +236,9 @@ func (srv *Server) init() {
 	if srv.MsgAcceptFunc == nil {
 		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
+	if srv.Handler == nil {
+		srv.Handler = DefaultServeMux
+	}
 
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
 }
@@ -596,13 +599,7 @@ func (srv *Server) serveDNS(w *response) {
 	}
 
 	srv.disposeBuffer(w)
-
-	handler := srv.Handler
-	if handler == nil {
-		handler = DefaultServeMux
-	}
-
-	handler.ServeDNS(w, req) // Writes back to the client
+	srv.Handler.ServeDNS(w, req) // Writes back to the client
 }
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
