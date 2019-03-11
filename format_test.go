@@ -4,26 +4,7 @@ import (
 	"testing"
 )
 
-func TestFieldEmptyAData(t *testing.T) {
-	rr := &A{
-		Hdr:  RR_Header{},
-		A: nil,
-	}
-
-	res := Field(rr, 1)
-	if res != "" {
-		t.Errorf("expected empty string but got %v", res)
-	}
-}
-
-func TestFieldEmptyAAAAData(t *testing.T) {
-	rr := &AAAA{
-		Hdr:  RR_Header{},
-		AAAA: nil,
-	}
-
-	res := Field(rr, 1)
-	if res != "" {
-		t.Errorf("expected empty string but got %v", res)
-	}
+func TestFieldEmptyAOrAAAAData(t *testing.T) {
+	Field(new(A), 1)
+	Field(new(AAAA), 1)
 }
