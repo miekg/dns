@@ -1091,33 +1091,20 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	}
 
 	rrArr := make([]RR, len(dns.Answer)+len(dns.Ns)+len(dns.Extra))
-	var rri int
+	r1.Answer, rrArr = rrArr[:0:len(dns.Answer)], rrArr[len(dns.Answer):]
+	r1.Ns, rrArr = rrArr[:0:len(dns.Ns)], rrArr[len(dns.Ns):]
+	r1.Extra = rrArr[:0:len(dns.Extra)]
 
-	if len(dns.Answer) > 0 {
-		rrbegin := rri
-		for i := 0; i < len(dns.Answer); i++ {
-			rrArr[rri] = dns.Answer[i].copy()
-			rri++
-		}
-		r1.Answer = rrArr[rrbegin:rri:rri]
+	for _, r := range dns.Answer {
+		r1.Answer = append(r1.Answer, r.copy())
 	}
 
-	if len(dns.Ns) > 0 {
-		rrbegin := rri
-		for i := 0; i < len(dns.Ns); i++ {
-			rrArr[rri] = dns.Ns[i].copy()
-			rri++
-		}
-		r1.Ns = rrArr[rrbegin:rri:rri]
+	for _, r := range dns.Ns {
+		r1.Ns = append(r1.Ns, r.copy())
 	}
 
-	if len(dns.Extra) > 0 {
-		rrbegin := rri
-		for i := 0; i < len(dns.Extra); i++ {
-			rrArr[rri] = dns.Extra[i].copy()
-			rri++
-		}
-		r1.Extra = rrArr[rrbegin:rri:rri]
+	for _, r := range dns.Extra {
+		r1.Extra = append(r1.Extra, r.copy())
 	}
 
 	return r1
