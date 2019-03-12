@@ -5,6 +5,12 @@ import (
 )
 
 func TestFieldEmptyAOrAAAAData(t *testing.T) {
-	Field(new(A), 1)
-	Field(new(AAAA), 1)
+	res := Field(new(A), 1)
+	if res != "" {
+		t.Errorf("expected empty string but got %v", res)
+	}
+	res = Field(new(AAAA), 1)
+	if res != "" {
+		t.Errorf("expected empty string but got %v", res)
+	}
 }
