@@ -32,11 +32,11 @@ func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 		// Calculate Exponent1/2 and Coefficient as per: http://en.wikipedia.org/wiki/RSA#Using_the_Chinese_remainder_algorithm
 		// and from: http://code.google.com/p/go/issues/detail?id=987
 		one := big.NewInt(1)
-		p1 := big.NewInt(0).Sub(p.Primes[0], one)
-		q1 := big.NewInt(0).Sub(p.Primes[1], one)
-		exp1 := big.NewInt(0).Mod(p.D, p1)
-		exp2 := big.NewInt(0).Mod(p.D, q1)
-		coeff := big.NewInt(0).ModInverse(p.Primes[1], p.Primes[0])
+		p1 := new(big.Int).Sub(p.Primes[0], one)
+		q1 := new(big.Int).Sub(p.Primes[1], one)
+		exp1 := new(big.Int).Mod(p.D, p1)
+		exp2 := new(big.Int).Mod(p.D, q1)
+		coeff := new(big.Int).ModInverse(p.Primes[1], p.Primes[0])
 
 		exponent1 := toBase64(exp1.Bytes())
 		exponent2 := toBase64(exp2.Bytes())
