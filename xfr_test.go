@@ -2,7 +2,10 @@ package dns
 
 import (
 	"fmt"
+	"net"
+	"sync"
 	"testing"
+	"time"
 )
 
 var (
@@ -85,11 +88,10 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
-	s.TsigSecret = tsigSecret
 	defer s.Shutdown()
 
 	testCases := []struct {
@@ -109,7 +111,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -126,6 +128,37 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("Testing %v TSIG", tc.name), axfrTestingSuite(addrstr))
 	}
+}
+
+func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
+	server, l, _, err := RunLocalTCPServerWithFinChanWithTsig(laddr, tsig)
+
+	return server, l, err
+}
+
+func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) (*Server, string, chan error, error) {
+	l, err := net.Listen("tcp", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour, TsigSecret: tsig}
+
+	waitLock := sync.Mutex{}
+	waitLock.Lock()
+	server.NotifyStartedFunc = waitLock.Unlock
+
+	// See the comment in RunLocalUDPServerWithFinChan as to
+	// why fin must be buffered.
+	fin := make(chan error, 1)
+
+	go func() {
+		fin <- server.ActivateAndServe()
+		l.Close()
+	}()
+
+	waitLock.Lock()
+	return server, l.Addr().String(), fin, nil
 }
 
 func axfrTestingSuite(addrstr string) func(*testing.T) {
