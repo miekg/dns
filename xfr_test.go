@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"testing"
@@ -9,20 +8,12 @@ import (
 )
 
 var (
-	tsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	xfrSoa     = `miek.nl.	0	IN	SOA	linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600`
-	xfrA       = `x.miek.nl.	1792	IN	A	10.0.0.1`
-	xfrMX      = `miek.nl.	1800	IN	MX	1	x.miek.nl.`
-	testData   = axfrZoneData()
+	tsigSecret  = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+	xfrSoa      = testRR(`miek.nl.	0	IN	SOA	linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600`)
+	xfrA        = testRR(`x.miek.nl.	1792	IN	A	10.0.0.1`)
+	xfrMX       = testRR(`miek.nl.	1800	IN	MX	1	x.miek.nl.`)
+	xfrTestData = []RR{xfrSoa, xfrA, xfrMX, xfrSoa}
 )
-
-func axfrZoneData() []RR {
-	soa, _ := NewRR(xfrSoa)
-	a, _ := NewRR(xfrA)
-	mx, _ := NewRR(xfrMX)
-
-	return []RR{soa, a, mx, soa}
-}
 
 func InvalidXfrServer(w ResponseWriter, req *Msg) {
 	ch := make(chan *Envelope)
@@ -39,7 +30,7 @@ func SingleEnvelopeXfrServer(w ResponseWriter, req *Msg) {
 	tr := new(Transfer)
 
 	go tr.Out(w, req, ch)
-	ch <- &Envelope{RR: axfrZoneData()}
+	ch <- &Envelope{RR: xfrTestData}
 	close(ch)
 	w.Hijack()
 }
@@ -49,9 +40,8 @@ func MultipleEnvelopeXfrServer(w ResponseWriter, req *Msg) {
 	tr := new(Transfer)
 
 	go tr.Out(w, req, ch)
-	records := axfrZoneData()
 
-	for _, rr := range records {
+	for _, rr := range xfrTestData {
 		ch <- &Envelope{RR: []RR{rr}}
 	}
 	close(ch)
@@ -94,17 +84,7 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	testCases := []struct {
-		name string
-		tsig map[string]string
-	}{
-		{"empty", nil},
-		{"valid", tsigSecret},
-	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Testing %v TSIG", tc.name), axfrTestingSuite(addrstr))
-	}
+	axfrTestingSuite(addrstr)
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
@@ -117,17 +97,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	testCases := []struct {
-		name string
-		tsig map[string]string
-	}{
-		{"empty", nil},
-		{"valid", tsigSecret},
-	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Testing %v TSIG", tc.name), axfrTestingSuite(addrstr))
-	}
+	axfrTestingSuite(addrstr)
 }
 
 func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
@@ -182,13 +152,13 @@ func axfrTestingSuite(addrstr string) func(*testing.T) {
 			}
 		}
 
-		if len(records) != len(testData) {
-			t.Fatalf("bad axfr: expected %v, got %v", records, testData)
+		if len(records) != 4 {
+			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
 		}
 
 		for i := range records {
-			if records[i].String() != testData[i].String() {
-				t.Fatalf("bad axfr: expected %v, got %v", records, testData)
+			if !records[i].isDuplicate(xfrTestData[i]) {
+				t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
 			}
 		}
 	}
