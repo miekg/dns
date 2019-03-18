@@ -556,6 +556,7 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	pubkey := new(rsa.PublicKey)
 
 	var expo uint64
+	// The exponent of length explen is between keyoff and modoff.
 	for _, v := range keybuf[keyoff:modoff] {
 		expo <<= 8
 		expo |= uint64(v)
