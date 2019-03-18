@@ -556,9 +556,10 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 	pubkey := new(rsa.PublicKey)
 
 	var expo uint64
-	for i := 0; i < int(explen); i++ {
+	// The exponent of length explen is between keyoff and modoff.
+	for _, v := range keybuf[keyoff:modoff] {
 		expo <<= 8
-		expo |= uint64(keybuf[keyoff+i])
+		expo |= uint64(v)
 	}
 	if expo > 1<<31-1 {
 		// Larger exponent than supported by the crypto package.

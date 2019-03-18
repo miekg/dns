@@ -553,8 +553,7 @@ func unpackDataNsec(msg []byte, off int) ([]uint16, int, error) {
 		}
 
 		// Walk the bytes in the window and extract the type bits
-		for j := 0; j < length; j++ {
-			b := msg[off+j]
+		for j, b := range msg[off : off+length] {
 			// Check the bits one by one, and set the type
 			if b&0x80 == 0x80 {
 				nsec = append(nsec, uint16(window*256+j*8+0))
@@ -592,8 +591,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 		return off, nil
 	}
 	var lastwindow, lastlength uint16
-	for j := 0; j < len(bitmap); j++ {
-		t := bitmap[j]
+	for _, t := range bitmap {
 		window := t / 256
 		length := (t-window*256)/8 + 1
 		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
@@ -639,8 +637,8 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 
 func packDataDomainNames(names []string, msg []byte, off int, compression compressionMap, compress bool) (int, error) {
 	var err error
-	for j := 0; j < len(names); j++ {
-		off, err = packDomainName(names[j], msg, off, compression, compress)
+	for _, name := range names {
+		off, err = packDomainName(name, msg, off, compression, compress)
 		if err != nil {
 			return len(msg), err
 		}
