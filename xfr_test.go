@@ -152,12 +152,12 @@ func axfrTestingSuite(addrstr string) func(*testing.T) {
 			}
 		}
 
-		if len(records) != 4 {
+		if len(records) != len(xfrTestData) {
 			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
 		}
 
 		for i := range records {
-			if !records[i].isDuplicate(xfrTestData[i]) {
+			if !IsDuplicate(records[i], xfrTestData[i]) {
 				t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
 			}
 		}
