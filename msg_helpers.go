@@ -474,6 +474,8 @@ Option:
 		}
 		edns = append(edns, e)
 		off += int(optlen)
+
+	// Process any unrecognized option code as a local/experimental option.
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
