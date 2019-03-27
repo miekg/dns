@@ -205,6 +205,8 @@ type Server struct {
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on go1.11+ and when using ListenAndServe.
 	ReusePort bool
+	// Whether to disable setting socket options in ActivateAndServer.
+	DisableSocketOptions bool
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
@@ -331,8 +333,10 @@ func (srv *Server) ActivateAndServe() error {
 		// Check PacketConn interface's type is valid and value
 		// is not nil
 		if t, ok := pConn.(*net.UDPConn); ok && t != nil {
-			if e := setUDPSocketOptions(t); e != nil {
-				return e
+			if !srv.DisableSocketOptions {
+				if e := setUDPSocketOptions(t); e != nil {
+					return e
+				}
 			}
 			srv.started = true
 			unlock()
