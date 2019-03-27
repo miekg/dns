@@ -53,10 +53,10 @@ func TestSetUDPSocketOptions(t *testing.T) {
 			// t.Error was already called in the goroutine above.
 			t.FailNow()
 		}
-		if len(sess.context) == 0 {
+		if len(sess.Context) == 0 {
 			t.Fatalf("empty session context: %v", sess)
 		}
-		ip := parseDstFromOOB(sess.context)
+		ip := parseDstFromOOB(sess.Context)
 		if ip == nil {
 			t.Fatalf("failed to parse dst: %v", sess)
 		}

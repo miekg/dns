@@ -6,11 +6,12 @@ import "net"
 
 // SessionUDP holds the remote address
 type SessionUDP struct {
-	raddr *net.UDPAddr
+	Addr    *net.UDPAddr
+	Context []byte
 }
 
 // RemoteAddr returns the remote network address.
-func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
+func (s *SessionUDP) RemoteAddr() net.Addr { return s.Addr }
 
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
@@ -20,13 +21,13 @@ func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
 	if err != nil {
 		return n, nil, err
 	}
-	return n, &SessionUDP{raddr.(*net.UDPAddr)}, err
+	return n, &SessionUDP{raddr.(*net.UDPAddr), nil}, err
 }
 
 // WriteToSessionUDP acts just like net.UDPConn.WriteTo(), but uses a *SessionUDP instead of a net.Addr.
 // TODO(fastest963): Once go1.10 is released, use WriteMsgUDP.
 func WriteToSessionUDP(conn *net.UDPConn, b []byte, session *SessionUDP) (int, error) {
-	return conn.WriteTo(b, session.raddr)
+	return conn.WriteTo(b, session.Addr)
 }
 
 // TODO(fastest963): Once go1.10 is released and we can use *MsgUDP methods
