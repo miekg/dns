@@ -129,6 +129,14 @@ type Writer interface {
 	io.Writer
 }
 
+// ConnWriter contains optional methods that a Writer may implement. These methods will be called instead of Write if available.
+type ConnWriter interface {
+	// WriteTCP write a raw message to a TCP connection.
+	WriteTCP(conn net.Conn, p []byte) (int, error)
+	// WriteUDP writes a raw message to a UDP connection.
+	WriteUDP(conn *net.UDPConn, p []byte, addr *SessionUDP) (int, error)
+}
+
 // Reader reads raw DNS messages; each call to ReadTCP or ReadUDP should return an entire message.
 type Reader interface {
 	// ReadTCP reads a raw message from a TCP connection. Implementations may alter
@@ -655,19 +663,31 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
 			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
-			if err != nil {
-				return err
-			}
-			_, err = w.writer.Write(data)
-			return err
 		}
 	}
-	data, err = m.Pack()
+	if data == nil {
+		data, err = m.Pack()
+	}
 	if err != nil {
 		return err
 	}
-	_, err = w.writer.Write(data)
-	return err
+
+	cw, ok := w.writer.(ConnWriter)
+	if !ok {
+		_, err := w.writer.Write(data)
+		return err
+	}
+
+	switch {
+	case w.udp != nil:
+		_, err := cw.WriteUDP(w.udp, data, w.udpSession)
+		return err
+	case w.tcp != nil:
+		_, err := cw.WriteTCP(w.tcp, data)
+		return err
+	default:
+		panic("dns: internal error: udp and tcp both nil")
+	}
 }
 
 // Write implements the ResponseWriter.Write method.
