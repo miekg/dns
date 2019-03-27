@@ -7,6 +7,11 @@ go:
   - 1.12.x
   - tip
 
+matrix:
+  include:
+    - os: windows
+      go: 1.12.x
+
 before_install:
   # don't use the miekg/dns when testing forks
   - mkdir -p $GOPATH/src/github.com/miekg
