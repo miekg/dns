@@ -306,3 +306,20 @@ func TestPackUnpackManyCompressionPointers(t *testing.T) {
 		}
 	}
 }
+
+func TestLenDynamicA(t *testing.T) {
+	for _, rr := range []RR{
+		testRR("example.org. A"),
+		testRR("example.org. AAAA"),
+		testRR("example.org. L32"),
+	} {
+		msg := make([]byte, Len(rr))
+		off, err := PackRR(rr, msg, 0, nil, false)
+		if err != nil {
+			t.Fatalf("PackRR failed for %T: %v", rr, err)
+		}
+		if off != len(msg) {
+			t.Errorf("Len(rr) wrong for %T: Len(rr) = %d, PackRR(rr) = %d", rr, len(msg), off)
+		}
+	}
+}
