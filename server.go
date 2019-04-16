@@ -476,7 +476,12 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 			continue
 		}
 		wg.Add(1)
-		go srv.serveUDPPacket(&wg, m, l, s)
+		go func() {
+			srv.serveUDPPacket(&wg, m, l, s)
+			if cap(m) == srv.UDPSize {
+				srv.udpPool.Put(m[:srv.UDPSize])
+			}
+		}()
 	}
 
 	return nil
@@ -573,11 +578,6 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
 
 		w.WriteMsg(req)
-
-		if w.udp != nil && cap(m) == srv.UDPSize {
-			srv.udpPool.Put(m[:srv.UDPSize])
-		}
-
 		return
 	case MsgIgnore:
 		return
@@ -594,10 +594,6 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 			w.tsigTimersOnly = false
 			w.tsigRequestMAC = req.Extra[len(req.Extra)-1].(*TSIG).MAC
 		}
-	}
-
-	if w.udp != nil && cap(m) == srv.UDPSize {
-		srv.udpPool.Put(m[:srv.UDPSize])
 	}
 
 	srv.Handler.ServeDNS(w, req) // Writes back to the client
