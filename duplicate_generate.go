@@ -57,7 +57,7 @@ func main() {
 			continue
 		}
 
-		if name == "PrivateRR" || name == "OPT" {
+		if name == "PrivateRR" || name == "OPT" || name == "XPF" {
 			continue
 		}
 

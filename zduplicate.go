@@ -1138,30 +1138,3 @@ func (r1 *X25) isDuplicate(_r2 RR) bool {
 	}
 	return true
 }
-
-func (r1 *XPF) isDuplicate(_r2 RR) bool {
-	r2, ok := _r2.(*XPF)
-	if !ok {
-		return false
-	}
-	_ = r2
-	if r1.IpVersion != r2.IpVersion {
-		return false
-	}
-	if r1.Protocol != r2.Protocol {
-		return false
-	}
-	if !r1.SrcAddress.Equal(r2.SrcAddress) {
-		return false
-	}
-	if !r1.DestAddress.Equal(r2.DestAddress) {
-		return false
-	}
-	if r1.SrcPort != r2.SrcPort {
-		return false
-	}
-	if r1.DestPort != r2.DestPort {
-		return false
-	}
-	return true
-}

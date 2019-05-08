@@ -230,44 +230,6 @@ func (q *Question) String() (s string) {
 	return s
 }
 
-// XPF RR. See https://tools.ietf.org/html/draft-bellis-dnsop-xpf-04
-type XPF struct {
-	Hdr         RR_Header
-	IpVersion   uint8
-	Protocol    uint8
-	SrcAddress  net.IP `dns:"a"`
-	DestAddress net.IP `dns:"a"`
-	SrcPort     uint16
-	DestPort    uint16
-}
-
-func (rr *XPF) String() string {
-	return fmt.Sprintf("%v Source=%v:%v Destination=%v:%v", rr.Hdr.String(), rr.SrcAddress, rr.SrcPort, rr.DestAddress, rr.DestPort)
-}
-
-func (rr *XPF) parse(c *zlexer, origin, file string) *ParseError {
-	panic("dns: internal error: parse should never be called on XPF")
-}
-
-func (rr *XPF) len(off int, compression map[string]struct{}) int {
-	l := rr.Hdr.len(off, compression)
-	l += 1 // IpVersion
-	l += 1 // Protocol
-	switch rr.IpVersion {
-	case 4:
-		l += 4 // SrcAddr
-		l += 4 // DestAddr
-
-	case 6:
-		l += 8 // SrcAddr
-		l += 8 // DestAddr
-	}
-	l += 2 // SrcPort
-	l += 2 // DestPort
-	//
-	return l
-}
-
 // ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY
 // is named "*" there.
 type ANY struct {

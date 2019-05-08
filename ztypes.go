@@ -883,5 +883,5 @@ func (rr *X25) copy() RR {
 	return &X25{rr.Hdr, rr.PSDNAddress}
 }
 func (rr *XPF) copy() RR {
-	return &XPF{rr.Hdr, rr.IpVersion, rr.Protocol, copyIP(rr.SrcAddress), copyIP(rr.DestAddress), rr.SrcPort, rr.DestPort}
+	return &XPF{rr.Hdr, rr.Data}
 }

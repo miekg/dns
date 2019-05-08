@@ -68,6 +68,98 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func unpackDataXpf(msg []byte, off int) (XPF_Data, int, error) {
+	xpf := XPF_Data{}
+	var err error
+
+	if off >= len(msg) {
+		return xpf, len(msg), err
+	}
+
+	xpf.IpVersion, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return xpf, off, err
+	}
+
+	xpf.Protocol, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return xpf, off, err
+	}
+
+	switch xpf.IpVersion {
+	case 4:
+		xpf.DestAddress, off, err = unpackDataA(msg, off)
+		xpf.SrcAddress, off, err = unpackDataA(msg, off)
+	case 6:
+		xpf.DestAddress, off, err = unpackDataAAAA(msg, off)
+		xpf.SrcAddress, off, err = unpackDataAAAA(msg, off)
+	default:
+		return xpf, off, &Error{err: "invalid IP Version"}
+	}
+
+	xpf.SrcPort, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return xpf, off, err
+	}
+
+	xpf.DestPort, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return xpf, off, err
+	}
+
+	return xpf, off, nil
+}
+
+func packDataXpf(xpf XPF_Data, msg []byte, off int) (int, error) {
+	if xpf.Equals(XPF_Data{}) {
+		return off, nil
+	}
+
+	off, err := packUint8(xpf.IpVersion, msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	off, err = packUint8(xpf.Protocol, msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	switch xpf.IpVersion {
+	case 4:
+		off, err = packDataA(xpf.SrcAddress, msg, off)
+		if err != nil {
+			return off, err
+		}
+		off, err = packDataA(xpf.DestAddress, msg, off)
+		if err != nil {
+			return off, err
+		}
+	case 6:
+		off, err = packDataAAAA(xpf.SrcAddress, msg, off)
+		if err != nil {
+			return off, err
+		}
+		off, err = packDataAAAA(xpf.DestAddress, msg, off)
+		if err != nil {
+			return off, err
+		}
+	default:
+		return off, &Error{err: "invalid IP Version"}
+	}
+
+	off, err = packUint16(xpf.SrcPort, msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	off, err = packUint16(xpf.DestPort, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 // unpackHeader unpacks an RR header, returning the offset to the end of the header and a
 // re-sliced msg according to the expected length of the RR.
 func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte, err error) {

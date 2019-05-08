@@ -117,6 +117,8 @@ return off, err
 				o("off, err = packDataA(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"aaaa"`:
 				o("off, err = packDataAAAA(rr.%s, msg, off)\n")
+			case st.Tag(i) == `dns:"xpf"`:
+				o("off, err = packDataXpf(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"uint48"`:
 				o("off, err = packUint48(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"txt"`:
@@ -241,6 +243,8 @@ return off, err
 				o("rr.%s, off, err = unpackDataA(msg, off)\n")
 			case `dns:"aaaa"`:
 				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
+			case `dns:"xpf"`:
+				o("rr.%s, off, err = unpackDataXpf(msg, off)\n")
 			case `dns:"uint48"`:
 				o("rr.%s, off, err = unpackUint48(msg, off)\n")
 			case `dns:"txt"`:
