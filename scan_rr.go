@@ -34,7 +34,7 @@ func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
 // according to RFC 3597 because they lack a presentation format.
 func canParseAsRR(rrtype uint16) bool {
 	switch rrtype {
-	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
+	case TypeANY, TypeNULL, TypeOPT, TypeTSIG, TypeXPF:
 		return false
 	default:
 		return true

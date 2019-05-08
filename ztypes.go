@@ -79,6 +79,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeUINFO:      func() RR { return new(UINFO) },
 	TypeURI:        func() RR { return new(URI) },
 	TypeX25:        func() RR { return new(X25) },
+	TypeXPF:        func() RR { return new(XPF) },
 }
 
 // TypeToString is a map of strings for each RR type.
@@ -163,6 +164,7 @@ var TypeToString = map[uint16]string{
 	TypeURI:        "URI",
 	TypeX25:        "X25",
 	TypeNSAPPTR:    "NSAP-PTR",
+	TypeXPF:        "XPF",
 }
 
 func (rr *A) Header() *RR_Header          { return &rr.Hdr }
@@ -236,6 +238,7 @@ func (rr *UID) Header() *RR_Header        { return &rr.Hdr }
 func (rr *UINFO) Header() *RR_Header      { return &rr.Hdr }
 func (rr *URI) Header() *RR_Header        { return &rr.Hdr }
 func (rr *X25) Header() *RR_Header        { return &rr.Hdr }
+func (rr *XPF) Header() *RR_Header        { return &rr.Hdr }
 
 // len() functions
 func (rr *A) len(off int, compression map[string]struct{}) int {
@@ -659,6 +662,16 @@ func (rr *X25) len(off int, compression map[string]struct{}) int {
 	l += len(rr.PSDNAddress) + 1
 	return l
 }
+func (rr *XPF) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 1 // IpAddress
+	l += 1 // Protocol
+	l += len(rr.DestAddress)
+	l += len(rr.SrcAddress)
+	l += 2 // DestPort
+	l += 2 // SrcPort
+	return l
+}
 
 // copy() functions
 func (rr *A) copy() RR {
@@ -878,4 +891,7 @@ func (rr *URI) copy() RR {
 }
 func (rr *X25) copy() RR {
 	return &X25{rr.Hdr, rr.PSDNAddress}
+}
+func (rr *XPF) copy() RR {
+	return &XPF{rr.Hdr, rr.IpVersion, rr.Protocol, rr.DestAddress, rr.SrcAddress, rr.DestPort, rr.SrcPort}
 }

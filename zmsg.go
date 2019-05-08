@@ -1078,6 +1078,34 @@ func (rr *X25) pack(msg []byte, off int, compression compressionMap, compress bo
 	return off, nil
 }
 
+func (rr *XPF) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packUint8(rr.IpVersion, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint8(rr.Protocol, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDataA(rr.SrcAddress, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDataA(rr.DestAddress, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.SrcPort, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.DestPort, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 // unpack*() functions
 
 func (rr *A) unpack(msg []byte, off int) (off1 int, err error) {
@@ -2715,6 +2743,37 @@ func (rr *X25) unpack(msg []byte, off int) (off1 int, err error) {
 	_ = rdStart
 
 	rr.PSDNAddress, off, err = unpackString(msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *XPF) unpack(msg []byte, off int) (off1 int, err error) {
+	rdStart := off
+	_ = rdStart
+
+	rr.IpVersion, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.Protocol, off, err = unpackUint8(msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.SrcAddress, off, err = unpackDataA(msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.DestAddress, off, err = unpackDataA(msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.SrcPort, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return off, err
+	}
+	rr.DestPort, off, err = unpackUint16(msg, off)
 	if err != nil {
 		return off, err
 	}
