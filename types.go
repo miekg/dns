@@ -249,6 +249,25 @@ func (rr *XPF) parse(c *zlexer, origin, file string) *ParseError {
 	panic("dns: internal error: parse should never be called on XPF")
 }
 
+func (rr *XPF) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 1 // IpVersion
+	l += 1 // Protocol
+	switch rr.IpVersion {
+	case 4:
+		l += 4 // SrcAddr
+		l += 4 // DestAddr
+
+	case 6:
+		l += 8 // SrcAddr
+		l += 8 // DestAddr
+	}
+	l += 2 // SrcPort
+	l += 2 // DestPort
+	//
+	return l
+}
+
 // ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY
 // is named "*" there.
 type ANY struct {

@@ -10,7 +10,8 @@ func TestDynamicUpdateParsing(t *testing.T) {
 	for _, typ := range TypeToString {
 		if typ == "OPT" || typ == "AXFR" || typ == "IXFR" || typ == "ANY" || typ == "TKEY" ||
 			typ == "TSIG" || typ == "ISDN" || typ == "UNSPEC" || typ == "NULL" || typ == "ATMA" ||
-			typ == "Reserved" || typ == "None" || typ == "NXT" || typ == "MAILB" || typ == "MAILA" {
+			typ == "Reserved" || typ == "None" || typ == "NXT" || typ == "MAILB" || typ == "MAILA" ||
+			typ == "XPF" {
 			continue
 		}
 		if _, err := NewRR(prefix + typ); err != nil {

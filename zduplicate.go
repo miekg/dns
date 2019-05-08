@@ -1151,10 +1151,10 @@ func (r1 *XPF) isDuplicate(_r2 RR) bool {
 	if r1.Protocol != r2.Protocol {
 		return false
 	}
-	if r1.SrcAddress.String() != r2.SrcAddress.String() {
+	if !r1.SrcAddress.Equal(r2.SrcAddress) {
 		return false
 	}
-	if r1.DestAddress.String() != r2.DestAddress.String() {
+	if !r1.DestAddress.Equal(r2.DestAddress) {
 		return false
 	}
 	if r1.SrcPort != r2.SrcPort {

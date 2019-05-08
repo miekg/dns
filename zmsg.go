@@ -2757,21 +2757,36 @@ func (rr *XPF) unpack(msg []byte, off int) (off1 int, err error) {
 	if err != nil {
 		return off, err
 	}
+	if off == len(msg) {
+		return off, nil
+	}
 	rr.Protocol, off, err = unpackUint8(msg, off)
 	if err != nil {
 		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
 	}
 	rr.SrcAddress, off, err = unpackDataA(msg, off)
 	if err != nil {
 		return off, err
 	}
+	if off == len(msg) {
+		return off, nil
+	}
 	rr.DestAddress, off, err = unpackDataA(msg, off)
 	if err != nil {
 		return off, err
 	}
+	if off == len(msg) {
+		return off, nil
+	}
 	rr.SrcPort, off, err = unpackUint16(msg, off)
 	if err != nil {
 		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
 	}
 	rr.DestPort, off, err = unpackUint16(msg, off)
 	if err != nil {
