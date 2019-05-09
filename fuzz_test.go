@@ -71,3 +71,37 @@ func TestPackDataOpt(t *testing.T) {
 		})
 	}
 }
+
+// TestCrashNSEC tests generated using fuzz.go and with a message pack
+// containing the following bytes:
+// "0000\x00\x00000000\x00\x00/00000" +
+// "0\x00\v\x00#\b00000\x00\x00\x00\x00\x00\x1a000" +
+// "000\x00\x00\x00\x00\x1a000000\x00\x00\x00\x00\x1a0" +
+// "00000\x00\v00\a0000000\x00"
+// That byte sequence, when Unpack() and subsequential Pack() created a
+// panic: runtime error: slice bounds out of range
+// which was attributed to the fact that NSEC RR length computation was different (and smaller)
+// then when within packDataNsec.
+func TestCrashNSEC(t *testing.T) {
+	compression := make(map[string]struct{})
+	nsec := &NSEC{
+			Hdr: RR_Header{
+					Name:".",
+					Rrtype:0x2f,
+					Class:0x3030,
+					Ttl:0x30303030,
+					Rdlength:0xb,
+			},
+			NextDomain:".",
+			TypeBitMap:[]uint16{
+					0x2302, 0x2303, 0x230a, 0x230b,
+					0x2312, 0x2313, 0x231a, 0x231b,
+					0x2322, 0x2323,
+			},
+		}
+		expectedLength := 19
+		l := nsec.len(0, compression)
+		if l != expectedLength {
+			t.Fatalf("expected length of %d, got %d", expectedLength, l)
+		}
+}
