@@ -41,7 +41,6 @@ func (xpf_data *XPF_Data) Equals(xpf_data2 XPF_Data) bool {
 	if xpf_data.DestPort != xpf_data2.DestPort {
 		return false
 	}
-	fmt.Println("meow")
 	return true
 }
 
