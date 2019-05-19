@@ -20,11 +20,13 @@ import (
 // bits should be set to the size of the algorithm.
 func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 	switch k.Algorithm {
+	case RSAMD5:
+		return nil, ErrAlg
 	case DSA, DSANSEC3SHA1:
 		if bits != 1024 {
 			return nil, ErrKeySize
 		}
-	case RSAMD5, RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
+	case RSASHA1, RSASHA256, RSASHA1NSEC3SHA1:
 		if bits < 512 || bits > 4096 {
 			return nil, ErrKeySize
 		}
@@ -60,7 +62,7 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 		}
 		k.setPublicKeyDSA(params.Q, params.P, params.G, priv.PublicKey.Y)
 		return priv, nil
-	case RSAMD5, RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
+	case RSASHA1, RSASHA256, RSASHA512, RSASHA1NSEC3SHA1:
 		priv, err := rsa.GenerateKey(rand.Reader, bits)
 		if err != nil {
 			return nil, err

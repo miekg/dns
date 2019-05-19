@@ -318,6 +318,9 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		}
 
 		rr.Signature = toBase64(signature)
+	case RSAMD5:
+		// See RFC 6944.
+		return ErrAlg
 	default:
 		h := hash.New()
 		h.Write(signdata)
