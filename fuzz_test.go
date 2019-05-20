@@ -85,23 +85,23 @@ func TestPackDataOpt(t *testing.T) {
 func TestCrashNSEC(t *testing.T) {
 	compression := make(map[string]struct{})
 	nsec := &NSEC{
-			Hdr: RR_Header{
-					Name:".",
-					Rrtype:0x2f,
-					Class:0x3030,
-					Ttl:0x30303030,
-					Rdlength:0xb,
-			},
-			NextDomain:".",
-			TypeBitMap:[]uint16{
-					0x2302, 0x2303, 0x230a, 0x230b,
-					0x2312, 0x2313, 0x231a, 0x231b,
-					0x2322, 0x2323,
-			},
-		}
-		expectedLength := 19
-		l := nsec.len(0, compression)
-		if l != expectedLength {
-			t.Fatalf("expected length of %d, got %d", expectedLength, l)
-		}
+		Hdr: RR_Header{
+			Name:     ".",
+			Rrtype:   0x2f,
+			Class:    0x3030,
+			Ttl:      0x30303030,
+			Rdlength: 0xb,
+		},
+		NextDomain: ".",
+		TypeBitMap: []uint16{
+			0x2302, 0x2303, 0x230a, 0x230b,
+			0x2312, 0x2313, 0x231a, 0x231b,
+			0x2322, 0x2323,
+		},
+	}
+	expectedLength := 19
+	l := nsec.len(0, compression)
+	if l != expectedLength {
+		t.Fatalf("expected length of %d, got %d", expectedLength, l)
+	}
 }
