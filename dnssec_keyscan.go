@@ -44,6 +44,8 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, er
 		return nil, ErrPrivKey
 	}
 	switch uint8(algo) {
+	case RSAMD5:
+		return nil, ErrAlg
 	case DSA:
 		priv, err := readPrivateKeyDSA(m)
 		if err != nil {
@@ -55,8 +57,6 @@ func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, er
 		}
 		priv.PublicKey = *pub
 		return priv, nil
-	case RSAMD5:
-		fallthrough
 	case RSASHA1:
 		fallthrough
 	case RSASHA1NSEC3SHA1:
