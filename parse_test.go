@@ -1212,7 +1212,6 @@ func TestNewPrivateKey(t *testing.T) {
 		{ECDSAP384SHA384, 384},
 		{RSASHA1, 1024},
 		{RSASHA256, 2048},
-		{DSA, 1024},
 		{ED25519, 256},
 	}
 
