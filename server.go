@@ -571,6 +571,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		req.SetRcodeFormatError(req)
 		// Are we allowed to delete any OPT records here?
 		req.Ns, req.Answer, req.Extra = nil, nil, nil
+		req.Zero = false
 
 		w.WriteMsg(req)
 		fallthrough
