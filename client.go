@@ -256,21 +256,20 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		return 0, ErrConnEmpty
 	}
 
-	switch co.Conn.(type) {
-	case *net.TCPConn, *tls.Conn:
-		var length uint16
-		if err := binary.Read(co.Conn, binary.BigEndian, &length); err != nil {
-			return 0, err
-		}
-		if int(length) > len(p) {
-			return 0, io.ErrShortBuffer
-		}
-
-		return io.ReadFull(co.Conn, p[:length])
+	if _, ok := co.Conn.(net.PacketConn); ok {
+		// UDP connection
+		return co.Conn.Read(p)
 	}
 
-	// UDP connection
-	return co.Conn.Read(p)
+	var length uint16
+	if err := binary.Read(co.Conn, binary.BigEndian, &length); err != nil {
+		return 0, err
+	}
+	if int(length) > len(p) {
+		return 0, io.ErrShortBuffer
+	}
+
+	return io.ReadFull(co.Conn, p[:length])
 }
 
 // WriteMsg sends a message through the connection co.
