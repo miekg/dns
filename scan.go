@@ -503,9 +503,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("expecting $TTL value, not this...", l)
 			}
 
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
+			if err := slurpRemainder(zp.c); err != nil {
+				return zp.setParseError(err.err, err.lex)
 			}
 
 			ttl, ok := stringToTTL(l.token)
@@ -527,9 +526,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
 			}
 
-			if e := slurpRemainder(zp.c, zp.file); e != nil {
-				zp.parseErr = e
-				return nil, false
+			if err := slurpRemainder(zp.c); err != nil {
+				return zp.setParseError(err.err, err.lex)
 			}
 
 			name, ok := toAbsoluteName(l.token, zp.origin)
@@ -658,16 +656,15 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr = &RFC3597{Hdr: *h}
 			}
 
-			err := rr.parse(zp.c, zp.origin, zp.file)
+			err := rr.parse(zp.c, zp.origin)
 			if err != nil {
 				// If err.lex is nil than we have encounter an unknown RR type
 				// in that case we substitute our current lex token.
 				if err.lex == (lex{}) {
-					err.lex = l // Uh, dirty
+					return zp.setParseError(err.err, l)
 				}
 
-				zp.parseErr = err
-				return nil, false
+				return zp.setParseError(err.err, err.lex)
 			}
 
 			return rr, true
@@ -1322,18 +1319,18 @@ func locCheckEast(token string, longitude uint32) (uint32, bool) {
 }
 
 // "Eat" the rest of the "line"
-func slurpRemainder(c *zlexer, f string) *ParseError {
+func slurpRemainder(c *zlexer) *ParseError {
 	l, _ := c.Next()
 	switch l.value {
 	case zBlank:
 		l, _ = c.Next()
 		if l.value != zNewline && l.value != zEOF {
-			return &ParseError{f, "garbage after rdata", l}
+			return &ParseError{"", "garbage after rdata", l}
 		}
 	case zNewline:
 	case zEOF:
 	default:
-		return &ParseError{f, "garbage after rdata", l}
+		return &ParseError{"", "garbage after rdata", l}
 	}
 	return nil
 }
