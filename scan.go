@@ -670,8 +670,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("unexpected newline", l)
 			}
 
-			err := rr.parse(zp.c, zp.origin)
-			if err != nil {
+			if err := rr.parse(zp.c, zp.origin); err != nil {
 				// If err.lex is nil than we have encounter an unknown RR type
 				// in that case we substitute our current lex token.
 				if err.lex == (lex{}) {
