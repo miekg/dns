@@ -650,25 +650,45 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			st = zExpectRdata
 		case zExpectRdata:
-			r, e := setRR(*h, zp.c, zp.origin, zp.file)
-			if e != nil {
-				// If e.lex is nil than we have encounter a unknown RR type
-				// in that case we substitute our current lex token
-				if e.lex.token == "" && e.lex.value == 0 {
-					e.lex = l // Uh, dirty
+			var rr RR
+			if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype) {
+				rr = newFn()
+				*rr.Header() = *h
+			} else {
+				rr = &RFC3597{Hdr: *h}
+			}
+
+			err := rr.parse(zp.c, zp.origin, zp.file)
+			if err != nil {
+				// If err.lex is nil than we have encounter an unknown RR type
+				// in that case we substitute our current lex token.
+				if err.lex == (lex{}) {
+					err.lex = l // Uh, dirty
 				}
 
-				zp.parseErr = e
+				zp.parseErr = err
 				return nil, false
 			}
 
-			return r, true
+			return rr, true
 		}
 	}
 
 	// If we get here, we and the h.Rrtype is still zero, we haven't parsed anything, this
 	// is not an error, because an empty zone file is still a zone file.
 	return nil, false
+}
+
+// canParseAsRR returns true if the record type can be parsed as a
+// concrete RR. It blacklists certain record types that must be parsed
+// according to RFC 3597 because they lack a presentation format.
+func canParseAsRR(rrtype uint16) bool {
+	switch rrtype {
+	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
+		return false
+	default:
+		return true
+	}
 }
 
 type zlexer struct {

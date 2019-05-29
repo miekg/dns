@@ -7,40 +7,6 @@ import (
 	"strings"
 )
 
-// Parse the rdata of each rrtype.
-// All data from the channel c is either zString or zBlank.
-// After the rdata there may come a zBlank and then a zNewline
-// or immediately a zNewline. If this is not the case we flag
-// an *ParseError: garbage after rdata.
-func setRR(h RR_Header, c *zlexer, o, f string) (RR, *ParseError) {
-	var rr RR
-	if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype) {
-		rr = newFn()
-		*rr.Header() = h
-	} else {
-		rr = &RFC3597{Hdr: h}
-	}
-
-	err := rr.parse(c, o, f)
-	if err != nil {
-		return nil, err
-	}
-
-	return rr, nil
-}
-
-// canParseAsRR returns true if the record type can be parsed as a
-// concrete RR. It blacklists certain record types that must be parsed
-// according to RFC 3597 because they lack a presentation format.
-func canParseAsRR(rrtype uint16) bool {
-	switch rrtype {
-	case TypeANY, TypeNULL, TypeOPT, TypeTSIG:
-		return false
-	default:
-		return true
-	}
-}
-
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func endingToString(c *zlexer, errstr, f string) (string, *ParseError) {
