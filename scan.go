@@ -656,6 +656,18 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr = &RFC3597{Hdr: *h}
 			}
 
+			if allowDynamicUpdate(rr) && zp.c.Peek().token == "" {
+				// This is a dynamic update rr.
+
+				// TODO(tmthrgd): Previously slurpRemainder was only called
+				// for certain RR types, which may have been important.
+				if err := slurpRemainder(zp.c); err != nil {
+					return zp.setParseError(err.err, err.lex)
+				}
+
+				return rr, true
+			}
+
 			err := rr.parse(zp.c, zp.origin)
 			if err != nil {
 				// If err.lex is nil than we have encounter an unknown RR type
@@ -688,6 +700,15 @@ func canParseAsRR(rrtype uint16) bool {
 	}
 }
 
+func allowDynamicUpdate(rr RR) bool {
+	switch rr.(type) {
+	case *TKEY, *RFC3597, *PrivateRR:
+		return false
+	default:
+		return true
+	}
+}
+
 type zlexer struct {
 	br io.ByteReader
 
@@ -699,7 +720,8 @@ type zlexer struct {
 	comBuf  string
 	comment string
 
-	l lex
+	l       lex
+	cachedL *lex
 
 	brace  int
 	quote  bool
@@ -765,13 +787,37 @@ func (zl *zlexer) readByte() (byte, bool) {
 	return c, true
 }
 
+func (zl *zlexer) Peek() lex {
+	if zl.nextL {
+		return zl.l
+	}
+
+	l, ok := zl.Next()
+	if !ok {
+		return l
+	}
+
+	if zl.nextL {
+		// Cache l. Next returns zl.cachedL then zl.l.
+		zl.cachedL = &l
+	} else {
+		// In this case l == zl.l, so we just tell Next to return zl.l.
+		zl.nextL = true
+	}
+
+	return l
+}
+
 func (zl *zlexer) Next() (lex, bool) {
 	l := &zl.l
-	if zl.nextL {
+	switch {
+	case zl.cachedL != nil:
+		l, zl.cachedL = zl.cachedL, nil
+		return *l, true
+	case zl.nextL:
 		zl.nextL = false
 		return *l, true
-	}
-	if l.err {
+	case l.err:
 		// Parsing errors should be sticky.
 		return lex{value: zEOF}, false
 	}
