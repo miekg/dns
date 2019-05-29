@@ -666,6 +666,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				}
 
 				return rr, true
+			} else if l.value == zNewline {
+				return zp.setParseError("unexpected newline", l)
 			}
 
 			err := rr.parse(zp.c, zp.origin)

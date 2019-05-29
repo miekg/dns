@@ -192,6 +192,26 @@ func TestParseZoneReadError(t *testing.T) {
 	}
 }
 
+func TestUnexpectedNewline(t *testing.T) {
+	const zone = `
+$ORIGIN example.com.
+example.com. 3600 IN SOA ns.example.net. hostmaster.example.com. 1 86400 60 86400 3600
+example.com. 3600 NS ns.example.net.
+
+example.com. 60 PX
+1000 TXT 1K
+`
+
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+	}
+
+	const expect = `dns: unexpected newline: "\n" at line: 6:18`
+	if err := zp.Err(); err == nil || err.Error() != expect {
+		t.Errorf("expected error to contain %q, got %v", expect, err)
+	}
+}
+
 func BenchmarkNewRR(b *testing.B) {
 	const name1 = "12345678901234567890123456789012345.12345678.123."
 	const s = name1 + " 3600 IN MX 10 " + name1
