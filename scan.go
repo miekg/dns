@@ -701,13 +701,11 @@ func canParseAsRR(rrtype uint16) bool {
 	}
 }
 
+// allowDynamicUpdate returns true if the record allows for dynamic updates
+// when parsing zone files.
 func allowDynamicUpdate(rr RR) bool {
-	switch rr.(type) {
-	case *TKEY, *RFC3597, *PrivateRR:
-		return false
-	default:
-		return true
-	}
+	_, isPrivate := rr.(*PrivateRR)
+	return !isPrivate
 }
 
 type zlexer struct {
