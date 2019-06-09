@@ -656,7 +656,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr = &RFC3597{Hdr: *h}
 			}
 
-			if allowDynamicUpdate(rr) && zp.c.Peek().token == "" {
+			_, isPrivate := rr.(*PrivateRR)
+			if !isPrivate && zp.c.Peek().token == "" {
 				// This is a dynamic update rr.
 
 				// TODO(tmthrgd): Previously slurpRemainder was only called
@@ -703,13 +704,6 @@ func canParseAsRR(rrtype uint16) bool {
 	default:
 		return true
 	}
-}
-
-// allowDynamicUpdate returns true if the record allows for dynamic updates
-// when parsing zone files.
-func allowDynamicUpdate(rr RR) bool {
-	_, isPrivate := rr.(*PrivateRR)
-	return !isPrivate
 }
 
 type zlexer struct {
