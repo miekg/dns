@@ -192,6 +192,41 @@ func TestParseZoneReadError(t *testing.T) {
 	}
 }
 
+func TestUnexpectedNewline(t *testing.T) {
+	zone := `
+example.com. 60 PX
+1000 TXT 1K
+`
+	zp := NewZoneParser(strings.NewReader(zone), "example.com.", "")
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+	}
+
+	const expect = `dns: unexpected newline: "\n" at line: 2:18`
+	if err := zp.Err(); err == nil || err.Error() != expect {
+		t.Errorf("expected error to contain %q, got %v", expect, err)
+	}
+
+	// Test that newlines inside braces still work.
+	zone = `
+example.com. 60 PX (
+1000 TXT 1K )
+`
+	zp = NewZoneParser(strings.NewReader(zone), "example.com.", "")
+
+	var count int
+	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+		count++
+	}
+
+	if count != 1 {
+		t.Errorf("expected 1 record, got %d", count)
+	}
+
+	if err := zp.Err(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
 func BenchmarkNewRR(b *testing.B) {
 	const name1 = "12345678901234567890123456789012345.12345678.123."
 	const s = name1 + " 3600 IN MX 10 " + name1
