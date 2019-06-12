@@ -187,7 +187,7 @@ func TestServing(t *testing.T) {
 	}
 }
 
-// Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back 
+// Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back
 func TestServeIgnoresZFlag(t *testing.T) {
 	HandleFunc("example.com.", AnotherHelloServer)
 
@@ -199,7 +199,7 @@ func TestServeIgnoresZFlag(t *testing.T) {
 
 	c := new(Client)
 	m := new(Msg)
-	
+
 	// Test the Z flag is not echoed
 	m.SetQuestion("example.com.", TypeTXT)
 	m.Zero = true
