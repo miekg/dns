@@ -215,6 +215,35 @@ func TestServeIgnoresZFlag(t *testing.T) {
 	}
 }
 
+// Verify that the server responds to a query with unsupported Opcode with a NotImplemented error and that Opcode is unchanged.
+func TestServeNotImplemented(t *testing.T) {
+	HandleFunc("example.com.", AnotherHelloServer)
+	opcode := 15
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := new(Client)
+	m := new(Msg)
+
+	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemnented
+	m.SetQuestion("example.com.", TypeTXT)
+	m.Opcode = opcode
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange example.com with +zflag", err)
+	}
+	if r.Opcode != opcode {
+		t.Errorf("expected opcode %v, got %v", opcode, r.Opcode)
+	}
+	if r.Rcode != RcodeNotImplemented {
+		t.Errorf("expected rcode %v, got %v", RcodeNotImplemented, r.Rcode)
+	}
+}
+
 func TestServingTLS(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	HandleFunc("example.com.", AnotherHelloServer)
