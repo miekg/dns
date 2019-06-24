@@ -40,8 +40,8 @@ func TestRequestTruncateExtra(t *testing.T) {
 	if want, got := MinMsgSize, reply.Len(); want < got {
 		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
-	if reply.Truncated {
-		t.Errorf("truncated bit should not be set")
+	if !reply.Truncated {
+		t.Errorf("truncated bit should be set")
 	}
 }
 
@@ -64,8 +64,8 @@ func TestRequestTruncateExtraEdns0(t *testing.T) {
 	if want, got := size, reply.Len(); want < got {
 		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
-	if reply.Truncated {
-		t.Errorf("truncated bit should not be set")
+	if !reply.Truncated {
+		t.Errorf("truncated bit should be set")
 	}
 	opt := reply.Extra[len(reply.Extra)-1]
 	if opt.Header().Rrtype != TypeOPT {
@@ -96,8 +96,8 @@ func TestRequestTruncateExtraRegression(t *testing.T) {
 	if want, got := size, reply.Len(); want < got {
 		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
 	}
-	if reply.Truncated {
-		t.Errorf("truncated bit should not be set")
+	if !reply.Truncated {
+		t.Errorf("truncated bit should be set")
 	}
 	opt := reply.Extra[len(reply.Extra)-1]
 	if opt.Header().Rrtype != TypeOPT {

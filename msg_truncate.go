@@ -71,9 +71,12 @@ func (dns *Msg) Truncate(size int) {
 		l, numExtra = truncateLoop(dns.Extra, size, l, compression)
 	}
 
-	// According to RFC 2181, the TC bit should only be set if not all
-	// of the answer RRs can be included in the response.
-	dns.Truncated = len(dns.Answer) > numAnswer
+	// According to RFC 2181, the TC bit should only be set if not all of
+	// the "required" RRs can be included in the response. Unfortunately,
+	// we have no way of knowing which RRs are required so we set the TC
+	// bit if any RR had to be omitted from the response.
+	dns.Truncated = len(dns.Answer) > numAnswer ||
+		len(dns.Ns) > numNS || len(dns.Extra) > numExtra
 
 	dns.Answer = dns.Answer[:numAnswer]
 	dns.Ns = dns.Ns[:numNS]
