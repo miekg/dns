@@ -90,6 +90,19 @@ func (h *RR_Header) String() string {
 	return s
 }
 
+func (h RR_Header) RelativeString(origin string) string {
+	s := trim(sprintName(h.Name), origin)
+
+	if h.Rrtype == TypeOPT {
+		s = ";" + s
+		// and maybe other things
+	}
+	s += "\t" + strconv.FormatInt(int64(h.Ttl), 10) + "\t" +
+		Class(h.Class).String() + "\t" + Type(h.Rrtype).String() + "\t"
+
+	return s
+}
+
 func (h *RR_Header) len(off int, compression map[string]struct{}) int {
 	l := domainNameLen(h.Name, off, compression, true)
 	l += 10 // rrtype(2) + class(2) + ttl(4) + rdlength(2)

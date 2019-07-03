@@ -436,6 +436,10 @@ type TXT struct {
 
 func (rr *TXT) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
 
+func (rr *TXT) RelativeString(origin string) string {
+	return rr.Hdr.RelativeString(origin) + sprintTxt(rr.Txt)
+}
+
 func sprintName(s string) string {
 	var dst strings.Builder
 	dst.Grow(len(s))
