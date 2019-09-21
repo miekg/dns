@@ -54,18 +54,18 @@ func CompareDomainName(s1, s2 string) (n int) {
 		return 0
 	}
 
-	j1 := len(s1) - 1
-	if s1[j1] == '.' {
+	j1 := len(s1)
+	if s1[j1-1] == '.' {
 		j1--
 	}
-	j2 := len(s2) - 1
-	if s2[j2] == '.' {
+	j2 := len(s2)
+	if s2[j2-1] == '.' {
 		j2--
 	}
 	var i1, i2 int
 	for {
-		i1 = prevLabel(s1, j1)
-		i2 = prevLabel(s2, j2)
+		i1 = prevLabel(s1, j1-1)
+		i2 = prevLabel(s2, j2-1)
 		if equal(s1[i1:j1], s2[i2:j2]) {
 			n++
 		} else {
