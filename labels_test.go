@@ -1,6 +1,9 @@
 package dns
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCompareDomainName(t *testing.T) {
 	s1 := "www.miek.nl."
@@ -40,16 +43,21 @@ func TestCompareDomainName(t *testing.T) {
 
 func TestSplit(t *testing.T) {
 	splitter := map[string]int{
-		"www.miek.nl.":   3,
-		"www.miek.nl":    3,
-		"www..miek.nl":   4,
-		`www\.miek.nl.`:  2,
-		`www\\.miek.nl.`: 3,
-		".":              0,
-		"nl.":            1,
-		"nl":             1,
-		"com.":           1,
-		".com.":          2,
+		"www.miek.nl.":     3,
+		"www.miek.nl":      3,
+		"www..miek.nl":     4,
+		`www\.miek.nl.`:    2,
+		`www\\.miek.nl.`:   3,
+		`\\.miek.nl.`:      3,
+		`\\\.miek.nl.`:     2,
+		`\\\\.miek.nl.`:    3,
+		`www.miek\\\\.nl.`: 3,
+		`www.miek\\\.nl.`:  2,
+		".":                0,
+		"nl.":              1,
+		"nl":               1,
+		"com.":             1,
+		".com.":            2,
 	}
 	for s, i := range splitter {
 		if x := len(Split(s)); x != i {
@@ -99,6 +107,13 @@ func TestPrevLabel(t *testing.T) {
 		{"www.miek.nl.", 3}: 0,
 		{"www.miek.nl", 3}:  0,
 	}
+
+	// make sure we are safe when the label  begins with a possibly escaped '.'
+	for i := 1; i < 8; i++ {
+		s := strings.Repeat(`\`, i) + "."
+		prever[prev{s, 0}] = i + 1
+	}
+
 	for s, i := range prever {
 		x, ok := PrevLabel(s.string, s.int)
 		if i != x {
@@ -206,6 +221,27 @@ func TestIsFqdnEscaped(t *testing.T) {
 	} {
 		if got := IsFqdn(s); got != expect {
 			t.Errorf("IsFqdn(%q) = %t, expected %t", s, got, expect)
+		}
+	}
+}
+
+func TestEqual(t *testing.T) {
+	type testcase struct {
+		a, b  string
+		match bool
+	}
+	tests := []testcase{
+		{"a", "a", true},
+		{"a", "A", true},
+		{"A", "a", true},
+		{"A", "b", false},
+		{"www.example.com.", "www.exAmpLe.com.", true},
+		{"www.example.com.", "www.exAmpLe.org.", false},
+	}
+	for _, x := range tests {
+		eq := equal(x.a, x.b)
+		if eq != x.match {
+			t.Errorf("%+v: want: %t got: %t", x, x.match, eq)
 		}
 	}
 }
