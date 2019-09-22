@@ -122,17 +122,34 @@ func TestUnpackString(t *testing.T) {
 }
 
 func BenchmarkUnpackString(b *testing.B) {
-	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm")
-	msg[0] = byte(len(msg) - 1)
+	b.Run("Escaped", func(b *testing.B) {
+		msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm")
+		msg[0] = byte(len(msg) - 1)
 
-	for n := 0; n < b.N; n++ {
-		got, _, err := unpackString(msg, 0)
-		if err != nil {
-			b.Fatal(err)
-		}
+		for n := 0; n < b.N; n++ {
+			got, _, err := unpackString(msg, 0)
+			if err != nil {
+				b.Fatal(err)
+			}
 
-		if want := `abcdef\015\\\"ghi\004mmm`; want != got {
-			b.Errorf("expected %q, got %q", want, got)
+			if want := `abcdef\015\\\"ghi\004mmm`; want != got {
+				b.Errorf("expected %q, got %q", want, got)
+			}
 		}
-	}
+	})
+	b.Run("Unescaped", func(b *testing.B) {
+		msg := []byte("\x00large.example.com")
+		msg[0] = byte(len(msg) - 1)
+
+		for n := 0; n < b.N; n++ {
+			got, _, err := unpackString(msg, 0)
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			if want := "large.example.com"; want != got {
+				b.Errorf("expected %q, got %q", want, got)
+			}
+		}
+	})
 }
