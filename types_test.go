@@ -133,6 +133,16 @@ func BenchmarkSprintName(b *testing.B) {
 	}
 }
 
+func BenchmarkSprintName_NoEscape(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		got := sprintName("large.example.com")
+
+		if want := "large.example.com"; got != want {
+			b.Fatalf("expected %q, got %q", got, want)
+		}
+	}
+}
+
 func BenchmarkSprintTxtOctet(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
@@ -149,6 +159,7 @@ func BenchmarkSprintTxt(b *testing.B) {
 		"example.com",
 	}
 
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		got := sprintTxt(txt)
 
