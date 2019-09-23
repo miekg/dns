@@ -269,33 +269,32 @@ func unpackString(msg []byte, off int) (string, int, error) {
 	if off+l > len(msg) {
 		return "", off, &Error{err: "overflow unpacking txt"}
 	}
-	escapedLen := l
-	for _, b := range msg[off : off+l] {
-		switch {
-		case b == '"' || b == '\\':
-			escapedLen++
-		case b < ' ' || b > '~': // unprintable
-			escapedLen += 3 // escapeByte always returns four characters
-		}
-	}
-	if escapedLen == l { // no escaping needed
-		return string(msg[off : off+l]), off + l, nil
-	}
 	var s strings.Builder
-	s.Grow(escapedLen)
-	for _, b := range msg[off : off+l] {
+	consumed := 0
+	for i, b := range msg[off : off+l] {
 		switch {
 		case b == '"' || b == '\\':
+			if consumed == 0 {
+				s.Grow(l * 2)
+			}
+			s.Write(msg[off+consumed : off+i])
 			s.WriteByte('\\')
 			s.WriteByte(b)
+			consumed = i + 1
 		case b < ' ' || b > '~': // unprintable
+			if consumed == 0 {
+				s.Grow(l * 2)
+			}
+			s.Write(msg[off+consumed : off+i])
 			s.WriteString(escapeByte(b))
-		default:
-			s.WriteByte(b)
+			consumed = i + 1
 		}
 	}
-	off += l
-	return s.String(), off, nil
+	if consumed == 0 { // no escaping needed
+		return string(msg[off : off+l]), off + l, nil
+	}
+	s.Write(msg[off+consumed : off+l])
+	return s.String(), off + l, nil
 }
 
 func packString(s string, msg []byte, off int) (int, error) {
