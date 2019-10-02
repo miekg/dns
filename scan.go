@@ -968,6 +968,11 @@ func (zl *zlexer) Next() (lex, bool) {
 				// was inside braces and we delayed adding it until now.
 				com[comi] = ' ' // convert newline to space
 				comi++
+				if comi >= len(com) {
+					l.token = "comment length insufficient for parsing"
+					l.err = true
+					return *l, true
+				}
 			}
 
 			com[comi] = ';'
