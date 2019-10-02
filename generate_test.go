@@ -212,10 +212,10 @@ func TestCrasherString(t *testing.T) {
 	in  string
 	err string
 }{
-		{"$GENERATE 0-300103\"$$GENERATE 2-2", "dns: Expect blank after $GENERATE range: \"\\\"\" at line: 1:19"},
-		{"$GENERATE 0-5414137360", "dns: Expect blank after $GENERATE range: \"\\n\" at line: 1:22"},
-		{"$GENERATE       11522-3668518066406258", "dns: Expect blank after $GENERATE range: \"\\n\" at line: 1:38"},
-		{"$GENERATE 0-200\"(;00000000000000\n$$GENERATE 0-0", "dns: Expect blank after $GENERATE range: \"\\\"\" at line: 1:16"},
+		{"$GENERATE 0-300103\"$$GENERATE 2-2", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:19"},
+		{"$GENERATE 0-5414137360", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:22"},
+		{"$GENERATE       11522-3668518066406258", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:38"},
+		{"$GENERATE 0-200\"(;00000000000000\n$$GENERATE 0-0", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:16"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.in, func(t *testing.T) {
