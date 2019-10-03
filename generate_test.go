@@ -205,31 +205,27 @@ $GENERATE 32-158 dhcp-${-32,4,d} A 10.0.0.$
 	}
 }
 
-func TestOutofRangeRange(t *testing.T) {
-	// outside limit
-	data := `$GENERATE 0-65536 dhcp A 10.0.0.1`
-	zp := NewZoneParser(strings.NewReader(data), ".", "test")
-	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
-	}
-	if zp.Err() == nil || !strings.Contains(zp.Err().Error(), "dns: bad range in $GENERATE") {
-		t.Errorf("Expected %q error, got %s", "bad range", zp.Err())
-	}
 
-	// within limit
-	data = `$GENERATE 0-65535 dhcp A 10.0.0.1`
-	zp = NewZoneParser(strings.NewReader(data), ".", "test")
-	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
-	}
-	if zp.Err() != nil {
-		t.Errorf("Expected nil error, got %s", zp.Err())
-	}
 
-	// within limit, due to /2
-	data = `$GENERATE 0-65536/2 dhcp A 10.0.0.1`
-	zp = NewZoneParser(strings.NewReader(data), ".", "test")
-	for _, ok := zp.Next(); ok; _, ok = zp.Next() {
+func TestCrasherString(t *testing.T) {
+	tests := []struct{
+	in  string
+	err string
+}{
+		{"$GENERATE 0-300103\"$$GENERATE 2-2", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:19"},
+		{"$GENERATE 0-5414137360", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:22"},
+		{"$GENERATE       11522-3668518066406258", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:38"},
+		{"$GENERATE 0-200\"(;00000000000000\n$$GENERATE 0-0", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:16"},
 	}
-	if zp.Err() != nil {
-		t.Errorf("Expected nil error, got %s", zp.Err())
+	for _, tc := range tests {
+		t.Run(tc.in, func(t *testing.T) {
+			_, err := NewRR(tc.in)
+			if err == nil {
+				t.Errorf("Expecting error for crasher line %s", tc.in)
+			}
+			if tc.err != err.Error() {
+				t.Errorf("Expecting error %s, got %s", tc.err, err.Error())
+			}
+		})
 	}
 }
