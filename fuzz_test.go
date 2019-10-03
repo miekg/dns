@@ -143,3 +143,127 @@ func TestCrashNSEC3(t *testing.T) {
 		t.Fatalf("expected length of %d, got %d", expectedLength, l)
 	}
 }
+
+
+// TestNewRRCommentLengthCrasherString test inputs to NewRR that generated crashes.
+func TestNewRRCommentLengthCrasherString(t *testing.T) {
+	tests := []struct {
+		in  string
+		err string
+	}{
+
+		{
+			" HINFO ;;;;;;;;;;;;;" +
+				";;;;;;;;\x00\x19;;;;;;;;;;" +
+				";\u007f;;;;;;;;;;;;;;;;;;" +
+				";;}mP_Qq_3sJ_1_84X_5" +
+				"45iW_3K4p8J8_v9_LT3_" +
+				"6_0l_3D4VT3xq6N_3K__" +
+				"_U_xX2m;;;;;;(;;;;;;" +
+				";;;;;;;;;;;;;;;\x1d;;;;" +
+				";;;;;;-0x804dBDe8ba " +
+				"\t \t\tr  HINFO \" \t\t\tve" +
+				"k1xH11e__P6_dk1_51bo" +
+				"g8gJK1V_O_v84_Bw4_1_" +
+				"72jQ3_0J3V_S5iYn4h5X" +
+				"R_2n___51J nN_  \t\tm " +
+				"aa_XO4_5\t   \t\t \t\tg6b" +
+				"p_KI_1_YWc_K8c2b___A" +
+				"e_Y1m__4Y_R_avy6t08x" +
+				"b5Cp9_7uS_yLa\t\t\t  d " +
+				"EKe1Q83vS___ a  \t\t  " +
+				"\tmP_Qq_3sJ_1_84X_545" +
+				"iW_3K4p8J8_v9_LT3_6_" +
+				"0l_3D4VT3xq6N_3K___U" +
+				"_xX2\"\"   \t \t_fL Ogl5" +
+				"_09i_9__3O7C__QMAG2U" +
+				"35IO8RRU6aJ9_6_57_6_" +
+				"b05BMoX5I__4833_____" +
+				"yfD_2_OPs__sqzM_pqQi" +
+				"_\t\t \tN__GuY4_Trath_0" +
+				"yy___cAK_a__0J0q5 L_" +
+				"p63Fzdva_Lb_29V7_R__" +
+				"Go_H2_8m_4__FJM5B_Y5" +
+				"Slw_ghp_55l_X2_Pnt6Y" +
+				"_Wd_hM7jRZ_\t\t   \tm \t" +
+				"  \t\ta md rK \x00 7_\"sr " +
+				"- sg o  -0x804dBDe8b" +
+				"a \t \t\tN_W6J3PBS_W__C" +
+				"yJu__k6F_jY0INI_LC27" +
+				"7x14b_1b___Y8f_K_3y_" +
+				"0055yaP_LKu_72g_T_32" +
+				"iBk1Zm_o  9i1P44_S0_" +
+				"_4AXUpo2__H55tL_g78_" +
+				"8V_8l0yg6bp_KI_1_YWc" +
+				"_K8c2b  \t \tmaa_XO4_5" +
+				"rg6bp_KI_1_YWc_K8c2b" +
+				" _C20w i_4 \t\t  u_k d" +
+				" rKsg09099 \"\"2335779" +
+				"05047986112651e025 \t" +
+				" \t\tN_W6J3PBS_W__CyJu" +
+				"__k6F_jY0INI_LC277x1" +
+				"4b_1b___Y8f_K_3y_005" +
+				"5yaP_LKu_72g_T_32iBk" +
+				"1Zm_o  9i1P44_S0__4A" +
+				"XUpo2__H55tL_g78_8V_" +
+				"8l0y_9K9_C__6af__wj_" +
+				"UbSYy_ge29S_s_Qe259q" +
+				"_kGod \t\t\t\t :0xb1AF1F" +
+				"b71D2ACeaB3FEce2ssg " +
+				"o dr-0x804dBDe8ba \t " +
+				"\t\t$  Y5 _BzOc6S_Lk0K" +
+				"y43j1TzV__9367tbX56_" +
+				"6B3__q6_v8_4_0_t_2q_" +
+				"nJ2gV3j9_tkOrx_H__a}" +
+				"mT 0g6bp_KI_1_YWc_K8" +
+				"c2b\t_ a\t \t54KM8f9_63" +
+				"zJ2Q_c1_C_Zf4ICF4m0q" +
+				"_RVm_3Zh4vr7yI_H2  a" +
+				" m 0yq__TiqA_FQBv_SS" +
+				"_Hm_8T8__M8F2_53TTo_" +
+				"k_o2__u_W6Vr__524q9l" +
+				"9CQsC_kOU___g_94   \"" +
+				" ~a_j_16_6iUSu_96V1W" +
+				"5r01j____gn157__8_LO" +
+				"0y_08Jr6OR__WF8__JK_" +
+				"N_wx_k_CGB_SjJ9R74i_" +
+				"7_1t_6 m NULLNULLNUL" +
+				"L \t \t\t\t drK\t\x00 7_\"\" 5" +
+				"_5_y732S43__D_8U9FX2" +
+				"27_k\t\tg6bp_KI_1_YWc_" +
+				"K8c2b_J_wx8yw1CMw27j" +
+				"___f_a8uw_ Er9gB_L2 " +
+				"\t\t  \t\t\tm aa_XO4_5 Y_" +
+				" I_T7762_zlMi_n8_FjH" +
+				"vy62p__M4S_8__r092af" +
+				"P_T_vhp6__SA_jVF13c5" +
+				"2__8J48K__S4YcjoY91X" +
+				"_iNf06  am aa_XO4_5\t" +
+				" d _ am_SYY4G__2h4QL" +
+				"iUIDd \t\t  \tXXp__KFjR" +
+				"V__JU3o\"\" d  \t_Iks_ " +
+				"aa_XO4_5<g6bp_KI_1_Y" +
+				"Wc_K8c2b _BzOc6S_Lk0" +
+				"Ky43j1TzV__9367tbX56" +
+				"_6B3__q6_v8_4_0_t_2q" +
+				"_nJ2gV3j9_tkOrx_H__ " +
+				"a\t_Iks_ \\ ma 0_58_r1" +
+				"y8jib_FaV_C_e \t \td\"\"" +
+				" ^Dy_0  \t\t \t ;;;;;;;" +
+				";;;;;;;;;;;",
+			`dns: bad HINFO Fields: "comment length insufficient for parsing" at line: 1:1951`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.in, func(t *testing.T) {
+			_, err := NewRR(tc.in)
+			if err == nil {
+				t.Errorf("Expecting error for crasher line %s", tc.in)
+			}
+			if tc.err != err.Error() {
+				t.Errorf("Expecting error %s, got %s", tc.err, err.Error())
+			}
+		})
+	}
+}
