@@ -205,16 +205,14 @@ $GENERATE 32-158 dhcp-${-32,4,d} A 10.0.0.$
 	}
 }
 
-
-
 func TestCrasherString(t *testing.T) {
-	tests := []struct{
-	in  string
-	err string
-}{
-		{"$GENERATE 0-300103\"$$GENERATE 2-2", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:19"},
-		{"$GENERATE 0-5414137360", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:22"},
-		{"$GENERATE       11522-3668518066406258", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:38"},
+	tests := []struct {
+		in  string
+		err string
+	}{
+		{"$GENERATE 0-300103\"$$GENERATE 2-2", "bad range in $GENERATE"},
+		{"$GENERATE 0-5414137360", "bad range in $GENERATE"},
+		{"$GENERATE       11522-3668518066406258", "bad range in $GENERATE"},
 		{"$GENERATE 0-200\"(;00000000000000\n$$GENERATE 0-0", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:16"},
 	}
 	for _, tc := range tests {
@@ -223,7 +221,7 @@ func TestCrasherString(t *testing.T) {
 			if err == nil {
 				t.Errorf("Expecting error for crasher line %s", tc.in)
 			}
-			if tc.err != err.Error() {
+			if !strings.Contains(err.Error(), tc.err) {
 				t.Errorf("Expecting error %s, got %s", tc.err, err.Error())
 			}
 		})
