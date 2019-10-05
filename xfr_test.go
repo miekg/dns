@@ -147,9 +147,7 @@ func axfrTestingSuite(addrstr string) func(*testing.T) {
 			if msg.Error != nil {
 				t.Fatal(msg.Error)
 			}
-			for _, rr := range msg.RR {
-				records = append(records, rr)
-			}
+			records = append(records, msg.RR...)
 		}
 
 		if len(records) != len(xfrTestData) {
