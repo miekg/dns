@@ -144,7 +144,6 @@ func TestCrashNSEC3(t *testing.T) {
 	}
 }
 
-
 // TestNewRRCommentLengthCrasherString test inputs to NewRR that generated crashes.
 func TestNewRRCommentLengthCrasherString(t *testing.T) {
 	tests := []struct {
