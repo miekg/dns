@@ -109,3 +109,27 @@ func TestEDNS0_SUBNETUnpack(t *testing.T) {
 		}
 	}
 }
+
+func TestEDNS0_UL(t *testing.T) {
+	cases := []struct {
+		l  uint32
+		kl uint32
+	}{
+		{0x01234567, 0},
+		{0x76543210, 0xFEDCBA98},
+	}
+	for _, c := range cases {
+		expect := EDNS0_UL{EDNS0UL, c.l, c.kl}
+		b, err := expect.pack()
+		if err != nil {
+			t.Fatalf("failed to pack: %v", err)
+		}
+		actual := EDNS0_UL{EDNS0UL, ^uint32(0), ^uint32(0)}
+		if err := actual.unpack(b); err != nil {
+			t.Fatalf("failed to unpack: %v", err)
+		}
+		if expect != actual {
+			t.Errorf("unpacked option is different; expected %v, got %v", expect, actual)
+		}
+	}
+}
