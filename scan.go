@@ -275,6 +275,14 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	}
 }
 
+// ClearError resets the error state of the parser. This is useful to forcibly
+// parse widely distributed but malformed zones such as .us, which include TSIG
+// pseudo-RRs. By clearing the error state from the parsing loop, the user is
+// able to skip the errors.
+func (zp *ZoneParser) ClearError() {
+	zp.parseErr = nil
+}
+
 // SetDefaultTTL sets the parsers default TTL to ttl.
 func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
 	zp.defttl = &ttlState{ttl, false}

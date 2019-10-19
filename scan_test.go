@@ -45,6 +45,36 @@ func TestParseZoneGenerate(t *testing.T) {
 	}
 }
 
+func TestClearError(t *testing.T) {
+	zone := "monitor.reg.neustar.com. 0\tANY\tTSIG\thmac-md5.sig-alg.reg.int. 1571283626 300 16 tCSU0OXlP3q2R9OAUe1lHQ== 32393 NOERROR 0\nfoo\tIN\tA\t127.0.0.1"
+	zp := NewZoneParser(strings.NewReader(zone), "", "")
+	i := 0
+	pass := false
+	cleared := false
+
+Again:
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		i++
+		if rr != nil {
+			pass = rr.Header().Class == ClassINET && rr.Header().Rrtype == TypeA
+		}
+
+		if err := zp.Err(); err != nil {
+			zp.ClearError()
+			cleared = true
+			goto Again
+		}
+	}
+
+	if !pass {
+		t.Error("Unable to jump over TSIG pseudo-record")
+	}
+
+	if !cleared {
+		t.Error("Parse errors should have been detected")
+	}
+}
+
 func TestParseZoneInclude(t *testing.T) {
 
 	tmpfile, err := ioutil.TempFile("", "dns")
