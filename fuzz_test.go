@@ -147,12 +147,13 @@ func TestCrashNSEC3(t *testing.T) {
 // TestNewRRCommentLengthCrasherString test inputs to NewRR that generated crashes.
 func TestNewRRCommentLengthCrasherString(t *testing.T) {
 	tests := []struct {
-		in  string
-		err string
+		name string
+		in   string
+		err  string
 	}{
 
 		{
-			" HINFO ;;;;;;;;;;;;;" +
+			"HINFO1", " HINFO ;;;;;;;;;;;;;" +
 				";;;;;;;;\x00\x19;;;;;;;;;;" +
 				";\u007f;;;;;;;;;;;;;;;;;;" +
 				";;}mP_Qq_3sJ_1_84X_5" +
@@ -255,7 +256,7 @@ func TestNewRRCommentLengthCrasherString(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.in, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			_, err := NewRR(tc.in)
 			if err == nil {
 				t.Errorf("Expecting error for crasher line %s", tc.in)
