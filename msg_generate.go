@@ -45,6 +45,32 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	return nil, false
 }
 
+func getSizeFieldInfo(st *types.Struct) (map[string]string, map[string]types.BasicKind) {
+	nameToSizeFieldName := make(map[string]string)
+	sizeNameToKind := make(map[string]types.BasicKind)
+	sizePrefix := `dns:"size-`
+	for i := 1; i < st.NumFields(); i++ {
+		tag := st.Tag(i)
+		if !strings.HasPrefix(st.Tag(i), sizePrefix) {
+			continue
+		}
+		tag = tag[len(sizePrefix) : len(tag)-1]
+		fmt_name := strings.Split(tag, ":")
+		if len(fmt_name) != 2 {
+			log.Fatalf("unexpected size tag: %s", st.Tag(i))
+		}
+		sizeNameToKind[fmt_name[1]] = types.Invalid
+		nameToSizeFieldName[st.Field(i).Name()] = fmt_name[1]
+	}
+	for i := 1; i < st.NumFields(); i++ {
+		fieldName := st.Field(i).Name()
+		if _, ok := sizeNameToKind[fieldName]; ok {
+			sizeNameToKind[st.Field(i).Name()] = st.Field(i).Type().(*types.Basic).Kind()
+		}
+	}
+	return nameToSizeFieldName, sizeNameToKind
+}
+
 // loadModule retrieves package description for a given module.
 func loadModule(name string) (*types.Package, error) {
 	conf := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo}
@@ -92,6 +118,7 @@ func main() {
 		st, _ := getTypeStruct(o.Type(), scope)
 
 		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {\n", name)
+		nameToSizeFieldName, sizeNameToKind := getSizeFieldInfo(st)
 		for i := 1; i < st.NumFields(); i++ {
 			o := func(s string) {
 				fmt.Fprintf(b, s, st.Field(i).Name())
@@ -99,6 +126,9 @@ func main() {
 return off, err
 }
 `)
+			}
+			if _, ok := sizeNameToKind[st.Field(i).Name()]; ok {
+				fmt.Fprintf(b, "off%s := off\n", st.Field(i).Name())
 			}
 
 			if _, ok := st.Field(i).Type().(*types.Slice); ok {
@@ -136,16 +166,19 @@ return off, err
 				o("off, err = packString(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(st.Tag(i), `dns:"size-base32`): // size-base32 can be packed just like base32
+				fmt.Fprintf(b, "off%s := off\n", st.Field(i).Name())
 				fallthrough
 			case st.Tag(i) == `dns:"base32"`:
 				o("off, err = packStringBase32(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(st.Tag(i), `dns:"size-base64`): // size-base64 can be packed just like base64
+				fmt.Fprintf(b, "off%s := off\n", st.Field(i).Name())
 				fallthrough
 			case st.Tag(i) == `dns:"base64"`:
 				o("off, err = packStringBase64(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex:SaltLength`):
+				fmt.Fprintf(b, "off%s := off\n", st.Field(i).Name())
 				// directly write instead of using o() so we get the error check in the correct place
 				field := st.Field(i).Name()
 				fmt.Fprintf(b, `// Only pack salt if value is not "-", i.e. empty
@@ -156,8 +189,8 @@ if rr.%s != "-" {
   }
 }
 `, field, field)
-				continue
 			case strings.HasPrefix(st.Tag(i), `dns:"size-hex`): // size-hex can be packed just like hex
+				fmt.Fprintf(b, "off%s := off\n", st.Field(i).Name())
 				fallthrough
 			case st.Tag(i) == `dns:"hex"`:
 				o("off, err = packStringHex(rr.%s, msg, off)\n")
@@ -182,6 +215,22 @@ if rr.%s != "-" {
 				}
 			default:
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
+			}
+
+			if sizeFieldName, ok := nameToSizeFieldName[st.Field(i).Name()]; ok {
+				max, packName, ty := 0, "", ""
+				switch kind := sizeNameToKind[sizeFieldName]; kind {
+				case types.Uint8:
+					max, packName, ty = 0xFF, "packUint8", "uint8"
+				case types.Uint16:
+					max, packName, ty = 0xFFFF, "packUint16", "uint16"
+				default:
+					log.Fatalf("unexpected size kind: %s", kind)
+				}
+				fieldName := st.Field(i).Name()
+				fmt.Fprintf(b, "len%s := off - off%s\n", fieldName, fieldName)
+				fmt.Fprintf(b, "if len%s > %d { return off, &Error{err: \"overflowed length prefix\"} }\n", fieldName, max)
+				fmt.Fprintf(b, "if _, err := %s(%s(len%s), msg, off%s); err != nil { return off, err }\n", packName, ty, fieldName, sizeFieldName)
 			}
 		}
 		fmt.Fprintln(b, "return off, nil }\n")

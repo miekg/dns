@@ -289,6 +289,7 @@ func (rr *HINFO) pack(msg []byte, off int, compression compressionMap, compress 
 }
 
 func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	offHitLength := off
 	off, err = packUint8(rr.HitLength, msg, off)
 	if err != nil {
 		return off, err
@@ -297,16 +298,33 @@ func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bo
 	if err != nil {
 		return off, err
 	}
+	offPublicKeyLength := off
 	off, err = packUint16(rr.PublicKeyLength, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offHit := off
 	off, err = packStringHex(rr.Hit, msg, off)
 	if err != nil {
 		return off, err
 	}
+	lenHit := off - offHit
+	if lenHit > 255 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint8(uint8(lenHit), msg, offHitLength); err != nil {
+		return off, err
+	}
+	offPublicKey := off
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
+		return off, err
+	}
+	lenPublicKey := off - offPublicKey
+	if lenPublicKey > 65535 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint16(uint16(lenPublicKey), msg, offPublicKeyLength); err != nil {
 		return off, err
 	}
 	off, err = packDataDomainNames(rr.RendezvousServers, msg, off, compression, false)
@@ -577,10 +595,12 @@ func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress 
 	if err != nil {
 		return off, err
 	}
+	offSaltLength := off
 	off, err = packUint8(rr.SaltLength, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offSalt := off
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
 		off, err = packStringHex(rr.Salt, msg, off)
@@ -588,12 +608,28 @@ func (rr *NSEC3) pack(msg []byte, off int, compression compressionMap, compress 
 			return off, err
 		}
 	}
+	lenSalt := off - offSalt
+	if lenSalt > 255 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint8(uint8(lenSalt), msg, offSaltLength); err != nil {
+		return off, err
+	}
+	offHashLength := off
 	off, err = packUint8(rr.HashLength, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offNextDomain := off
 	off, err = packStringBase32(rr.NextDomain, msg, off)
 	if err != nil {
+		return off, err
+	}
+	lenNextDomain := off - offNextDomain
+	if lenNextDomain > 255 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint8(uint8(lenNextDomain), msg, offHashLength); err != nil {
 		return off, err
 	}
 	off, err = packDataNsec(rr.TypeBitMap, msg, off)
@@ -616,16 +652,25 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression compressionMap, comp
 	if err != nil {
 		return off, err
 	}
+	offSaltLength := off
 	off, err = packUint8(rr.SaltLength, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offSalt := off
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
 		off, err = packStringHex(rr.Salt, msg, off)
 		if err != nil {
 			return off, err
 		}
+	}
+	lenSalt := off - offSalt
+	if lenSalt > 255 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint8(uint8(lenSalt), msg, offSaltLength); err != nil {
+		return off, err
 	}
 	return off, nil
 }
@@ -959,20 +1004,38 @@ func (rr *TKEY) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
+	offKeySize := off
 	off, err = packUint16(rr.KeySize, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offKey := off
 	off, err = packStringHex(rr.Key, msg, off)
 	if err != nil {
 		return off, err
 	}
+	lenKey := off - offKey
+	if lenKey > 65535 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint16(uint16(lenKey), msg, offKeySize); err != nil {
+		return off, err
+	}
+	offOtherLen := off
 	off, err = packUint16(rr.OtherLen, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offOtherData := off
 	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
+		return off, err
+	}
+	lenOtherData := off - offOtherData
+	if lenOtherData > 65535 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint16(uint16(lenOtherData), msg, offOtherLen); err != nil {
 		return off, err
 	}
 	return off, nil
@@ -1011,12 +1074,21 @@ func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
+	offMACSize := off
 	off, err = packUint16(rr.MACSize, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offMAC := off
 	off, err = packStringHex(rr.MAC, msg, off)
 	if err != nil {
+		return off, err
+	}
+	lenMAC := off - offMAC
+	if lenMAC > 65535 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint16(uint16(lenMAC), msg, offMACSize); err != nil {
 		return off, err
 	}
 	off, err = packUint16(rr.OrigId, msg, off)
@@ -1027,12 +1099,21 @@ func (rr *TSIG) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
+	offOtherLen := off
 	off, err = packUint16(rr.OtherLen, msg, off)
 	if err != nil {
 		return off, err
 	}
+	offOtherData := off
 	off, err = packStringHex(rr.OtherData, msg, off)
 	if err != nil {
+		return off, err
+	}
+	lenOtherData := off - offOtherData
+	if lenOtherData > 65535 {
+		return off, &Error{err: "overflowed length prefix"}
+	}
+	if _, err := packUint16(uint16(lenOtherData), msg, offOtherLen); err != nil {
 		return off, err
 	}
 	return off, nil
