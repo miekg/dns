@@ -62,6 +62,10 @@ $GENERATE 0-1/0 dhcp-${0,4,d} A 10.0.0.$
 		{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
 $GENERATE 0-1 $$INCLUDE ` + tmpdir + string(filepath.Separator) + `${0,4,d}.conf
 `, false},
+{`@ IN SOA ns.test. hostmaster.test. ( 1 8h 2h 7d 1d )
+$GENERATE 0-1 dhcp-${0,4,d} A 10.0.0.$
+$GENERATE 0-2 dhcp-${0,4,d} A 10.1.0.$
+`, false},
 	}
 Outer:
 	for i := range tests {
@@ -214,6 +218,7 @@ func TestCrasherString(t *testing.T) {
 		{"$GENERATE 0-5414137360", "bad range in $GENERATE"},
 		{"$GENERATE       11522-3668518066406258", "bad range in $GENERATE"},
 		{"$GENERATE 0-200\"(;00000000000000\n$$GENERATE 0-0", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:16"},
+		{"$GENERATE 6-2048 $$GENERATE 6-036160 $$$$ORIGIN \\$", `dns: nested $GENERATE directive not allowed: "6-036160" at line: 1:19`},
 	}
 	for _, tc := range tests {
 		t.Run(tc.in, func(t *testing.T) {
