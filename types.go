@@ -1283,7 +1283,7 @@ func (rr *RFC3597) RdataString() string {
 
 func (rr *RFC3597) String() string {
 	// Let's call it a hack
-	return rfc3597Header(rr.Hdr)
+	return rfc3597Header(rr.Hdr) + rr.RdataString()
 }
 
 func rfc3597Header(h RR_Header) string {
