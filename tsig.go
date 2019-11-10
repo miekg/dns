@@ -39,10 +39,8 @@ type TSIG struct {
 
 // TSIG has no official presentation format, but this will suffice.
 
-func (rr *TSIG) String() string {
-	s := "\n;; TSIG PSEUDOSECTION:\n"
-	s += rr.Hdr.String() +
-		" " + rr.Algorithm +
+func (rr *TSIG) RdataString() string {
+	s := rr.Algorithm +
 		" " + tsigTimeToString(rr.TimeSigned) +
 		" " + strconv.Itoa(int(rr.Fudge)) +
 		" " + strconv.Itoa(int(rr.MACSize)) +
@@ -51,6 +49,12 @@ func (rr *TSIG) String() string {
 		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
 		" " + strconv.Itoa(int(rr.OtherLen)) +
 		" " + rr.OtherData
+	return s
+}
+
+func (rr *TSIG) String() string {
+	s := "\n;; TSIG PSEUDOSECTION:\n"
+	s += rr.Hdr.String() + " " + rr.RdataString()
 	return s
 }
 

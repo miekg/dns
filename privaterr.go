@@ -31,9 +31,17 @@ type PrivateRR struct {
 }
 
 // Header return the RR header of r.
-func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
+func (r *PrivateRR) Header() *RR_Header {
+	return &r.Hdr
+}
 
-func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
+func (r *PrivateRR) RdataString() string {
+	return r.Data.String()
+}
+
+func (r *PrivateRR) String() string {
+	return r.Hdr.String() + r.RdataString()
+}
 
 // Private len and copy parts to satisfy RR interface.
 func (r *PrivateRR) len(off int, compression map[string]struct{}) int {

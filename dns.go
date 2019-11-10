@@ -29,6 +29,8 @@ type RR interface {
 	// Header returns the header of an resource record. The header contains
 	// everything up to the rdata.
 	Header() *RR_Header
+	// RdataString returns the string format of the rdata of a resource record.
+	RdataString() string
 	// String returns the text representation of the resource record.
 	String() string
 
@@ -69,8 +71,11 @@ type RR_Header struct {
 	Rdlength uint16 // Length of data after header.
 }
 
-// Header returns itself. This is here to make RR_Header implements the RR interface.
+// Header returns itself, to implement RR interface.
 func (h *RR_Header) Header() *RR_Header { return h }
+
+// RdataString returns itself, to implement the RR interface.
+func (h *RR_Header) RdataString() string { return "" }
 
 // Just to implement the RR interface.
 func (h *RR_Header) copy() RR { return nil }
@@ -78,6 +83,7 @@ func (h *RR_Header) copy() RR { return nil }
 func (h *RR_Header) String() string {
 	var s string
 
+	// todo: switch against types which have ";" already added in RR.String()
 	if h.Rrtype == TypeOPT {
 		s = ";"
 		// and maybe other things
