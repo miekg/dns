@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -197,11 +198,14 @@ type Server struct {
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on go1.11+ and when using ListenAndServe.
 	ReusePort bool
-	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
-	// By default DefaultMsgAcceptFunc will be used.
+	// AcceptMsgFunc will check the incoming message and will reject it early in the process, but after
+	// spawning a new go-routine. By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
+	// PacketFunc will either allow the incoming packet, deny it, or have some in-between action, like sleeping a
+	// bit. DefaultPacketFunc can be used or serve as an example. This function is called for every 100th packet received.
+	Accepter
 
-	// Shutdown handling
+	// Shutdown handling.
 	lock     sync.RWMutex
 	started  bool
 	shutdown chan struct{}
@@ -458,8 +462,18 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 
 	rtimeout := srv.getReadTimeout()
 	// deadline is not used here
+	last := time.Now()
+	pkts := uint64(0)
+	const max = 1500 // 1500 is a random number
 	for srv.isStarted() {
 		m, s, err := reader.ReadUDP(l, rtimeout)
+		pkts++
+		numgo := runtime.NumGoroutine()
+		if srv.Accepter != nil && pkts%100 == 0 {
+			srv.Accepter.Accept(numgo, last)
+			last = time.Now()
+		}
+
 		if err != nil {
 			if !srv.isStarted() {
 				return nil
@@ -477,6 +491,7 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 		}
 		wg.Add(1)
 		go srv.serveUDPPacket(&wg, m, l, s)
+		last = time.Now()
 	}
 
 	return nil
