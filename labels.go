@@ -126,18 +126,8 @@ func Split(s string) []int {
 // The bool end is true when the end of the string has been reached.
 // Also see PrevLabel.
 func NextLabel(s string, offset int) (i int, end bool) {
-	quote := false
 	for i = offset; i < len(s)-1; i++ {
-		switch s[i] {
-		case '\\':
-			quote = !quote
-		default:
-			quote = false
-		case '.':
-			if quote {
-				quote = !quote
-				continue
-			}
+		if s[i] == '.' && (i == 0 || s[i-1] != '\\' || (i>1 && s[i-2]=='\\')) {
 			return i + 1, false
 		}
 	}
@@ -152,14 +142,22 @@ func PrevLabel(s string, n int) (i int, start bool) {
 	if n == 0 {
 		return len(s), false
 	}
-	lab := Split(s)
-	if lab == nil {
-		return 0, true
+
+	l := len(s) - 1
+	if s[l] == '.' {
+		l--
 	}
-	if n > len(lab) {
-		return 0, true
+
+	for ; l >= 0 && n > 0; l-- {
+		if s[l] == '.' && (l==0 || s[l-1] != '\\' || (l>1 && s[i-2]=='\\')) {
+			n--
+			if n == 0 {
+				return l + 1, false
+			}
+		}
 	}
-	return lab[len(lab)-n], false
+
+	return 0, n > 1
 }
 
 // equal compares a and b while ignoring case. It returns true when equal otherwise false.
