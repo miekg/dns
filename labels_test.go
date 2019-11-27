@@ -238,3 +238,63 @@ func BenchmarkIsSubDomain(b *testing.B) {
 		IsSubDomain("miek.nl.", "aa.example.com.")
 	}
 }
+
+func BenchmarkNextLabelSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel("www.example.com", 0)
+		NextLabel("www.example.com", 5)
+		NextLabel("www.example.com", 12)
+	}
+}
+
+func BenchmarkPrevLabelSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel("www.example.com", 0)
+		PrevLabel("www.example.com", 5)
+		PrevLabel("www.example.com", 12)
+	}
+}
+
+func BenchmarkNextLabelComplex(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel(`www\.example.com`, 0)
+		NextLabel(`www\\.example.com`, 0)
+		NextLabel(`www\\\.example.com`, 0)
+	}
+}
+
+func BenchmarkPrevLabelComplex(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel(`www\.example.com`, 10)
+		PrevLabel(`www\\.example.com`, 10)
+		PrevLabel(`www\\\.example.com`, 10)
+	}
+}
+
+func BenchmarkNextLabelMixed(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel("www.example.com", 0)
+		NextLabel(`www\.example.com`, 0)
+		NextLabel("www.example.com", 5)
+		NextLabel(`www\\.example.com`, 0)
+		NextLabel("www.example.com", 12)
+		NextLabel(`www\\\.example.com`, 0)
+	}
+}
+
+func BenchmarkPrevLabelMixed(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel("www.example.com", 0)
+		PrevLabel(`www\.example.com`, 10)
+		PrevLabel("www.example.com", 5)
+		PrevLabel(`www\\.example.com`, 10)
+		PrevLabel("www.example.com", 12)
+		PrevLabel(`www\\\.example.com`, 10)
+	}
+}
