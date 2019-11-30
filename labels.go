@@ -128,12 +128,12 @@ func Split(s string) []int {
 func NextLabel(s string, offset int) (i int, end bool) {
 	for i = offset; i < len(s)-1; i++ {
 		if s[i] == '.' {
-			ii := i - 1
-			for ii >= 0 && s[ii] == '\\' {
-				ii--
+			j := i - 1
+			for j >= 0 && s[j] == '\\' {
+				j--
 			}
 
-			if (ii-i)%2 == 0 {
+			if (j-i)%2 == 0 {
 				continue
 			}
 
@@ -159,12 +159,12 @@ func PrevLabel(s string, n int) (i int, start bool) {
 
 	for ; l >= 0 && n > 0; l-- {
 		if s[l] == '.' {
-			ii := l - 1
-			for ii >= 0 && s[ii] == '\\' {
-				ii--
+			j := l - 1
+			for j >= 0 && s[j] == '\\' {
+				j--
 			}
 
-			if (ii-l)%2 == 0 {
+			if (j-l)%2 == 0 {
 				continue
 			}
 
