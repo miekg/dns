@@ -126,6 +126,9 @@ func Split(s string) []int {
 // The bool end is true when the end of the string has been reached.
 // Also see PrevLabel.
 func NextLabel(s string, offset int) (i int, end bool) {
+	if s == "" {
+		return 0, true
+	}
 	for i = offset; i < len(s)-1; i++ {
 		if s[i] != '.' {
 			continue
