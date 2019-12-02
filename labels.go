@@ -149,6 +149,9 @@ func NextLabel(s string, offset int) (i int, end bool) {
 // The bool start is true when the start of the string has been overshot.
 // Also see NextLabel.
 func PrevLabel(s string, n int) (i int, start bool) {
+	if s == "" {
+		return 0, true
+	}
 	if n == 0 {
 		return len(s), false
 	}

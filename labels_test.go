@@ -86,6 +86,7 @@ func TestPrevLabel(t *testing.T) {
 		int
 	}
 	prever := map[prev]int{
+		{"", 1}:             0,
 		{"www.miek.nl.", 0}: 12,
 		{"www.miek.nl.", 1}: 9,
 		{"www.miek.nl.", 2}: 4,
