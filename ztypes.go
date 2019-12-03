@@ -805,7 +805,7 @@ func (rr *OPENPGPKEY) copy() RR {
 func (rr *OPT) copy() RR {
 	Option := make([]EDNS0, len(rr.Option))
 	for i, e := range rr.Option {
-		Option[i] = e.copy()
+		Option[i] = e.Copy()
 	}
 	return &OPT{rr.Hdr, Option}
 }
