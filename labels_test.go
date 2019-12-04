@@ -40,16 +40,17 @@ func TestCompareDomainName(t *testing.T) {
 
 func TestSplit(t *testing.T) {
 	splitter := map[string]int{
-		"www.miek.nl.":   3,
-		"www.miek.nl":    3,
-		"www..miek.nl":   4,
-		`www\.miek.nl.`:  2,
-		`www\\.miek.nl.`: 3,
-		".":              0,
-		"nl.":            1,
-		"nl":             1,
-		"com.":           1,
-		".com.":          2,
+		"www.miek.nl.":    3,
+		"www.miek.nl":     3,
+		"www..miek.nl":    4,
+		`www\.miek.nl.`:   2,
+		`www\\.miek.nl.`:  3,
+		`www\\\.miek.nl.`: 2,
+		".":               0,
+		"nl.":             1,
+		"nl":              1,
+		"com.":            1,
+		".com.":           2,
 	}
 	for s, i := range splitter {
 		if x := len(Split(s)); x != i {
@@ -79,12 +80,32 @@ func TestSplit2(t *testing.T) {
 	}
 }
 
+func TestNextLabel(t *testing.T) {
+	type next struct {
+		string
+		int
+	}
+	nexts := map[next]int{
+		{"", 1}:             0,
+		{"www.miek.nl.", 0}: 4,
+		{"www.miek.nl.", 4}: 9,
+		{"www.miek.nl.", 9}: 12,
+	}
+	for s, i := range nexts {
+		x, ok := NextLabel(s.string, s.int)
+		if i != x {
+			t.Errorf("label should be %d, got %d, %t: nexting %d, %s", i, x, ok, s.int, s.string)
+		}
+	}
+}
+
 func TestPrevLabel(t *testing.T) {
 	type prev struct {
 		string
 		int
 	}
 	prever := map[prev]int{
+		{"", 1}:             0,
 		{"www.miek.nl.", 0}: 12,
 		{"www.miek.nl.", 1}: 9,
 		{"www.miek.nl.", 2}: 4,
@@ -235,5 +256,65 @@ func BenchmarkIsSubDomain(b *testing.B) {
 		IsSubDomain("www.example.com.", "aa.example.com.")
 		IsSubDomain("example.com.", "aa.example.com.")
 		IsSubDomain("miek.nl.", "aa.example.com.")
+	}
+}
+
+func BenchmarkNextLabelSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel("www.example.com", 0)
+		NextLabel("www.example.com", 5)
+		NextLabel("www.example.com", 12)
+	}
+}
+
+func BenchmarkPrevLabelSimple(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel("www.example.com", 0)
+		PrevLabel("www.example.com", 5)
+		PrevLabel("www.example.com", 12)
+	}
+}
+
+func BenchmarkNextLabelComplex(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel(`www\.example.com`, 0)
+		NextLabel(`www\\.example.com`, 0)
+		NextLabel(`www\\\.example.com`, 0)
+	}
+}
+
+func BenchmarkPrevLabelComplex(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel(`www\.example.com`, 10)
+		PrevLabel(`www\\.example.com`, 10)
+		PrevLabel(`www\\\.example.com`, 10)
+	}
+}
+
+func BenchmarkNextLabelMixed(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		NextLabel("www.example.com", 0)
+		NextLabel(`www\.example.com`, 0)
+		NextLabel("www.example.com", 5)
+		NextLabel(`www\\.example.com`, 0)
+		NextLabel("www.example.com", 12)
+		NextLabel(`www\\\.example.com`, 0)
+	}
+}
+
+func BenchmarkPrevLabelMixed(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		PrevLabel("www.example.com", 0)
+		PrevLabel(`www\.example.com`, 10)
+		PrevLabel("www.example.com", 5)
+		PrevLabel(`www\\.example.com`, 10)
+		PrevLabel("www.example.com", 12)
+		PrevLabel(`www\\\.example.com`, 10)
 	}
 }
