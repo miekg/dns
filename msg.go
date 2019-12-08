@@ -15,7 +15,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	mrand "math/rand"
 	"strconv"
 	"strings"
 )
@@ -72,16 +71,12 @@ var (
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
 
-// Id by default, returns a 16 bits random number to be used as a
-// message id. This being a variable the function can be reassigned
-// to a custom function. For instance, to make it return a static value:
+// Id by default, returns a 16 bit random number (from crypto/rand) to
+// be used as a message id. This being a variable the function can be
+// reassigned to a custom function. For instance, to make it return a
+// static value:
 //
 //	dns.Id = func() uint16 { return 3 }
-//
-// Randomness comes from crypto/rand. In the rare case that there is an error
-// getting bytes from that source, this function will silently fall back to
-// the predictable math/rand. If your program has more stringent requirements,
-// you should override Id to do something different (e.g., terminate).
 var Id = id
 
 // id returns a 16 bits random number to be used as a
@@ -90,7 +85,7 @@ func id() uint16 {
 	var v uint16
 	err := binary.Read(crand.Reader, binary.BigEndian, &v)
 	if err != nil {
-		v = uint16(mrand.Uint32())
+		panic(fmt.Sprintf("failed to get randomness: %s", err))
 	}
 	return v
 }
