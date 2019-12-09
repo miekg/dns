@@ -11,7 +11,7 @@ package dns
 //go:generate go run msg_generate.go
 
 import (
-	crand "crypto/rand"
+	"crypto/rand"
 	"encoding/binary"
 	"fmt"
 	"math/big"
@@ -71,10 +71,10 @@ var (
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
 
-// Id by default, returns a 16 bit random number (from crypto/rand) to
-// be used as a message id. This being a variable the function can be
-// reassigned to a custom function. For instance, to make it return a
-// static value:
+// Id by default returns a 16-bit random number to be used as a message id. The
+// number is drawn from a cryptographically secure random number generator.
+// This being a variable the function can be reassigned to a custom function.
+// For instance, to make it return a static value for testing:
 //
 //	dns.Id = func() uint16 { return 3 }
 var Id = id
@@ -82,12 +82,12 @@ var Id = id
 // id returns a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
 func id() uint16 {
-	var v uint16
-	err := binary.Read(crand.Reader, binary.BigEndian, &v)
+	var output uint16
+	err := binary.Read(rand.Reader, binary.BigEndian, &output)
 	if err != nil {
-		panic(fmt.Sprintf("failed to get randomness: %s", err))
+		panic("dns: reading random id failed: " + err.Error())
 	}
-	return v
+	return output
 }
 
 // MsgHdr is a a manually-unpacked version of (id, bits).
