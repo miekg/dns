@@ -61,6 +61,7 @@ const (
 	TypeCERT       uint16 = 37
 	TypeDNAME      uint16 = 39
 	TypeOPT        uint16 = 41 // EDNS
+	TypeAPL        uint16 = 42
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
 	TypeRRSIG      uint16 = 46
@@ -1351,6 +1352,18 @@ func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
 	l += 4 + 2
 	l += typeBitMapLen(rr.TypeBitMap)
 	return l
+}
+
+// APL RR. See RFC 3123.
+type APL struct {
+	Hdr      RR_Header
+	Prefixes []APLPrefix `dns:"apl"`
+}
+
+// APLPrefix is an address prefix hold by an APL record.
+type APLPrefix struct {
+	Negation bool
+	Network  net.IPNet
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the
