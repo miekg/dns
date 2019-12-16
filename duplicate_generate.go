@@ -11,10 +11,11 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"go/importer"
 	"go/types"
 	"log"
 	"os"
+
+	"golang.org/x/tools/go/packages"
 )
 
 var packageHdr = `
@@ -39,9 +40,19 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	return nil, false
 }
 
+// loadModule retrieves package description for a given module.
+func loadModule(name string) (*types.Package, error) {
+	conf := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo}
+	pkgs, err := packages.Load(&conf, name)
+	if err != nil {
+		return nil, err
+	}
+	return pkgs[0].Types, nil
+}
+
 func main() {
 	// Import and type-check the package
-	pkg, err := importer.Default().Import("github.com/miekg/dns")
+	pkg, err := loadModule("github.com/miekg/dns")
 	fatalIfErr(err)
 	scope := pkg.Scope()
 
