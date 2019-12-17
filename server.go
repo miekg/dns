@@ -9,7 +9,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -203,7 +202,7 @@ type Server struct {
 	MsgAcceptFunc MsgAcceptFunc
 	// PacketFunc will either allow the incoming packet, deny it, or have some in-between action, like sleeping a
 	// bit. DefaultPacketFunc can be used or serve as an example. This function is called for every 100th packet received.
-	Accepter
+	PacketAccepter
 
 	// Shutdown handling.
 	lock     sync.RWMutex
@@ -464,13 +463,13 @@ func (srv *Server) serveUDP(l *net.UDPConn) error {
 	// deadline is not used here
 	last := time.Now()
 	pkts := uint64(0)
-	const max = 1500 // 1500 is a random number
+	opt := &AcceptOption{}
 	for srv.isStarted() {
 		m, s, err := reader.ReadUDP(l, rtimeout)
 		pkts++
-		numgo := runtime.NumGoroutine()
-		if srv.Accepter != nil && pkts%100 == 0 {
-			srv.Accepter.Accept(numgo, last)
+		if srv.PacketAccepter != nil && pkts%100 == 0 {
+			opt.Last = last
+			srv.PacketAccepter.Accept(opt)
 			last = time.Now()
 		}
 

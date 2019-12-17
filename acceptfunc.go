@@ -1,6 +1,9 @@
 package dns
 
-import "time"
+import (
+	"runtime"
+	"time"
+)
 
 // MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError.
 // It returns a MsgAcceptAction to indicate what should happen with the message.
@@ -55,28 +58,42 @@ func defaultMsgAcceptFunc(dh Header) MsgAcceptAction {
 	return MsgAccept
 }
 
-type Accepter interface {
-	Accept(numgo int, last time.Time)
+type PacketAction int
+
+const (
+	Accept PacketAction = iota
+	Reject
+)
+
+type AcceptOption struct {
+	Last time.Time
 }
+
+type PacketAccepter interface {
+	Accept(*AcceptOption) PacketAction
+}
+
+// our default implementation
 
 type PacketAccept struct {
 	Max int // Max is the maximum number of goroutines to allow.
 }
 
-func (p PacketAccept) Accept(numgo int, last time.Time) {
+func (p PacketAccept) Accept(opt *AcceptOption) PacketAction {
+	numgo := runtime.NumGoroutine()
 	if numgo < p.Max/2 {
-		return
+		return Accept
 	}
-	rate := 100.0 / time.Since(last).Seconds()
+	rate := 100.0 / time.Since(opt.Last).Seconds()
 	left := float64(p.Max-numgo) / rate
 	switch {
 	case left < 0.0:
 		// 50 is a random number.
 		time.Sleep(50 * time.Microsecond)
-		return
+		return Accept
 	default:
-		sleep := time.Since(last).Nanoseconds() / 100
+		sleep := time.Since(opt.Last).Nanoseconds() / 100
 		time.Sleep(time.Duration(sleep))
-		return
+		return Accept
 	}
 }
