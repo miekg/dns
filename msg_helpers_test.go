@@ -197,12 +197,12 @@ func TestPackDataAplPrefix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ap := APLPrefix{
+			ap := &APLPrefix{
 				Negation: tt.negation,
 				Network:  net.IPNet{IP: tt.ip, Mask: tt.mask},
 			}
 			out := make([]byte, 16)
-			off, err := packDataAplPrefix(&ap, out, 0)
+			off, err := packDataAplPrefix(ap, out, 0)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
 			}
@@ -232,9 +232,9 @@ func TestPackDataAplPrefix_Failures(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ap := APLPrefix{Network: net.IPNet{IP: tt.ip, Mask: tt.mask}}
+			ap := &APLPrefix{Network: net.IPNet{IP: tt.ip, Mask: tt.mask}}
 			msg := make([]byte, 16)
-			off, err := packDataAplPrefix(&ap, msg, 0)
+			off, err := packDataAplPrefix(ap, msg, 0)
 			if err == nil {
 				t.Fatal("expected error, got none")
 			}
@@ -246,7 +246,7 @@ func TestPackDataAplPrefix_Failures(t *testing.T) {
 }
 
 func TestPackDataAplPrefix_BufferBounds(t *testing.T) {
-	ap := APLPrefix{
+	ap := &APLPrefix{
 		Negation: false,
 		Network: net.IPNet{
 			IP:   net.ParseIP("2001:db8::"),
@@ -257,7 +257,7 @@ func TestPackDataAplPrefix_BufferBounds(t *testing.T) {
 
 	t.Run("small", func(t *testing.T) {
 		msg := make([]byte, len(wire))
-		_, err := packDataAplPrefix(&ap, msg, 1) // offset
+		_, err := packDataAplPrefix(ap, msg, 1) // offset
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -265,7 +265,7 @@ func TestPackDataAplPrefix_BufferBounds(t *testing.T) {
 
 	t.Run("exact fit", func(t *testing.T) {
 		msg := make([]byte, len(wire))
-		off, err := packDataAplPrefix(&ap, msg, 0)
+		off, err := packDataAplPrefix(ap, msg, 0)
 		if err != nil {
 			t.Fatalf("expected no error, got %q", err)
 		}

@@ -783,7 +783,7 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 	if err != nil {
 		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
-	neg := (nlen & 0x80) > 0
+	neg := (nlen & 0x80) != 0
 	afdlen := int(nlen & 0x7f)
 	if (int(prefix)+7)/8 != afdlen {
 		return nil, len(msg), &Error{err: "invalid APL address length"}
@@ -793,8 +793,7 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 		return nil, len(msg), &Error{err: "overflow unpacking APL address"}
 	}
 	ip := make([]byte, ipLen)
-	copy(ip, msg[off:off+afdlen])
-	off += afdlen
+	off += copy(ip, msg[off:off+afdlen])
 	if prefix%8 > 0 {
 		last := ip[afdlen-1]
 		zero := uint8(0xff) >> (prefix % 8)

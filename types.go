@@ -1369,20 +1369,20 @@ type APLPrefix struct {
 
 // String returns presentation form of the APL record.
 func (rr *APL) String() string {
-	sb := strings.Builder{}
+	var sb strings.Builder
 	sb.WriteString(rr.Hdr.String())
 	for i, p := range rr.Prefixes {
-		if i != 0 {
+		if i > 0 {
 			sb.WriteByte(' ')
 		}
-		sb.WriteString(p.String())
+		sb.WriteString(p.str())
 	}
 	return sb.String()
 }
 
 // String returns presentation form of the APL prefix.
-func (p *APLPrefix) String() string {
-	sb := strings.Builder{}
+func (p *APLPrefix) str() string {
+	var sb strings.Builder
 	if p.Negation {
 		sb.WriteByte('!')
 	}
@@ -1489,23 +1489,21 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
-// copyBytes returns a copy of a byte slice.
-func copyBytes(b []byte) []byte {
-	c := make([]byte, len(b))
-	copy(c, b)
-	return c
-}
-
 // copyIP returns a copy of ip.
 func copyIP(ip net.IP) net.IP {
-	return copyBytes(ip)
+	p := make(net.IP, len(ip))
+	copy(p, ip)
+	return p
 }
 
 // copyNet returns a copy of a subnet.
 func copyNet(n net.IPNet) net.IPNet {
+	m := make(net.IPMask, len(n.Mask))
+	copy(m, n.Mask)
+
 	return net.IPNet{
-		IP:   copyBytes(n.IP),
-		Mask: copyBytes(n.Mask),
+		IP:   copyIP(n.IP),
+		Mask: m,
 	}
 }
 

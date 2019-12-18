@@ -685,7 +685,7 @@ func (rr *ANY) copy() RR {
 }
 func (rr *APL) copy() RR {
 	Prefixes := make([]APLPrefix, len(rr.Prefixes))
-	for i, _ := range rr.Prefixes {
+	for i := range rr.Prefixes {
 		Prefixes[i] = rr.Prefixes[i].Copy()
 	}
 	return &APL{rr.Hdr, Prefixes}
