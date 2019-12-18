@@ -62,7 +62,7 @@ func (r1 *APL) isDuplicate(_r2 RR) bool {
 		return false
 	}
 	for i := 0; i < len(r1.Prefixes); i++ {
-		if r1.Prefixes[i].Equals(&r2.Prefixes[i]) {
+		if !r1.Prefixes[i].Equals(&r2.Prefixes[i]) {
 			return false
 		}
 	}
