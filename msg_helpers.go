@@ -447,7 +447,6 @@ Option:
 		off += int(optlen)
 	case EDNS0EXPIRE:
 		e := new(EDNS0_EXPIRE)
-		e.Code = code
 		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
 			return nil, len(msg), err
 		}
