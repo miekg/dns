@@ -684,7 +684,7 @@ func packDataDomainNames(names []string, msg []byte, off int, compression compre
 
 func packDataApl(data []APLPrefix, msg []byte, off int) (int, error) {
 	var err error
-	for i, _ := range data {
+	for i := range data {
 		off, err = packDataAplPrefix(&data[i], msg, off)
 		if err != nil {
 			return len(msg), err
@@ -716,10 +716,8 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), &Error{err: "overflow packing APL prefix"}
 	}
 
-	var err error
-
 	// Write ADDRESSFAMILY
-	off, err = packUint16(family, msg, off)
+	off, err := packUint16(family, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
@@ -739,8 +737,7 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	// Write AFDPART
-	copy(msg[off:], addr)
-	off += len(addr)
+	off += copy(msg[off:], addr)
 
 	return off, nil
 }
@@ -759,14 +756,11 @@ func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
 }
 
 func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
-	// Always has 4-byte header.
-	if off+4 > len(msg) {
+	// Read ADDRESSFAMILY
+	family, off, err := unpackUint16(msg, off)
+	if err != nil {
 		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
-
-	// Read ADDRESSFAMILY
-	var family uint16
-	family, off, _ = unpackUint16(msg, off)
 	var ipLen int
 	switch family {
 	case 1:
@@ -777,14 +771,18 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 		return nil, len(msg), &Error{err: "unrecognized APL address family"}
 	}
 	// Read PREFIX
-	var prefix uint8
-	prefix, off, _ = unpackUint8(msg, off)
+	prefix, off, err := unpackUint8(msg, off)
+	if err != nil {
+		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+	}
 	if int(prefix) > 8*ipLen {
 		return nil, len(msg), &Error{err: "APL prefix too long"}
 	}
 	// Read N and AFDLENGTH
-	var nlen uint8
-	nlen, off, _ = unpackUint8(msg, off)
+	nlen, off, err := unpackUint8(msg, off)
+	if err != nil {
+		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+	}
 	neg := (nlen & 0x80) > 0
 	afdlen := int(nlen & 0x7f)
 	if (int(prefix)+7)/8 != afdlen {
