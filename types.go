@@ -1427,6 +1427,13 @@ func (p *APLPrefix) Copy() APLPrefix {
 	}
 }
 
+// Len returns size of the prefix in wire format.
+func (p *APLPrefix) Len() int {
+	// 4-byte header and the network address prefix (see https://tools.ietf.org/html/rfc3123#section-4)
+	prefix, _ := p.Network.Mask.Size()
+	return 4 + (prefix+7)/8
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.

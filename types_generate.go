@@ -168,6 +168,8 @@ func main() {
 					o("for _, x := range rr.%s { l += domainNameLen(x, off+l, compression, false) }\n")
 				case `dns:"txt"`:
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
+				case `dns:"apl"`:
+					o("for _, x := range rr.%s { l += x.Len() }\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
