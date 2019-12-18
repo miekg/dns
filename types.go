@@ -1366,6 +1366,51 @@ type APLPrefix struct {
 	Network  net.IPNet
 }
 
+// String returns presentation form of the APL record.
+func (rr *APL) String() string {
+	sb := strings.Builder{}
+	sb.WriteString(rr.Hdr.String())
+	for i, p := range rr.Prefixes {
+		if i != 0 {
+			sb.WriteByte(' ')
+		}
+		sb.WriteString(p.String())
+	}
+	return sb.String()
+}
+
+// String returns presentation form of the APL prefix.
+func (p *APLPrefix) String() string {
+	sb := strings.Builder{}
+	if p.Negation {
+		sb.WriteByte('!')
+	}
+
+	afi := aplAddrLenToFamily[len(p.Network.IP)]
+	sb.WriteString(strconv.Itoa(int(afi)))
+
+	sb.WriteByte(':')
+
+	switch len(p.Network.IP) {
+	case net.IPv4len:
+		sb.WriteString(p.Network.IP.String())
+	case net.IPv6len:
+		// add prefix for IPv4-mapped IPv6
+		if v4 := p.Network.IP.To4(); v4 != nil {
+			sb.WriteString("::ffff:")
+		}
+		sb.WriteString(p.Network.IP.String())
+	default:
+	}
+
+	sb.WriteByte('/')
+
+	prefix, _ := p.Network.Mask.Size()
+	sb.WriteString(strconv.Itoa(prefix))
+
+	return sb.String()
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
