@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"strconv"
@@ -1409,6 +1410,13 @@ func (p *APLPrefix) String() string {
 	sb.WriteString(strconv.Itoa(prefix))
 
 	return sb.String()
+}
+
+// Equals reports whether two APL prefixes are identical.
+func (a *APLPrefix) Equals(b *APLPrefix) bool {
+	return a.Negation == b.Negation &&
+		bytes.Equal(a.Network.IP, b.Network.IP) &&
+		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the
