@@ -1380,7 +1380,7 @@ func (rr *APL) String() string {
 	return sb.String()
 }
 
-// String returns presentation form of the APL prefix.
+// str returns presentation form of the APL prefix.
 func (p *APLPrefix) str() string {
 	var sb strings.Builder
 	if p.Negation {
@@ -1418,23 +1418,23 @@ func (p *APLPrefix) str() string {
 	return sb.String()
 }
 
-// Equals reports whether two APL prefixes are identical.
-func (a *APLPrefix) Equals(b *APLPrefix) bool {
+// equals reports whether two APL prefixes are identical.
+func (a *APLPrefix) equals(b *APLPrefix) bool {
 	return a.Negation == b.Negation &&
 		bytes.Equal(a.Network.IP, b.Network.IP) &&
 		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 
-// Copy returns a copy of the APL prefix.
-func (p *APLPrefix) Copy() APLPrefix {
+// copy returns a copy of the APL prefix.
+func (p *APLPrefix) copy() APLPrefix {
 	return APLPrefix{
 		Negation: p.Negation,
 		Network:  copyNet(p.Network),
 	}
 }
 
-// Len returns size of the prefix in wire format.
-func (p *APLPrefix) Len() int {
+// len returns size of the prefix in wire format.
+func (p *APLPrefix) len() int {
 	// 4-byte header and the network address prefix (see https://tools.ietf.org/html/rfc3123#section-4)
 	prefix, _ := p.Network.Mask.Size()
 	return 4 + (prefix+7)/8

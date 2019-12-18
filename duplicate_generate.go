@@ -102,7 +102,7 @@ func main() {
 
 				if st.Tag(i) == `dns:"apl"` {
 					o3(`for i := 0; i < len(r1.%s); i++ {
-						if !r1.%s[i].Equals(&r2.%s[i]) {
+						if !r1.%s[i].equals(&r2.%s[i]) {
 							return false
 						}
 					}`)

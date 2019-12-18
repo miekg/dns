@@ -169,7 +169,7 @@ func main() {
 				case `dns:"txt"`:
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
 				case `dns:"apl"`:
-					o("for _, x := range rr.%s { l += x.Len() }\n")
+					o("for _, x := range rr.%s { l += x.len() }\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
@@ -252,7 +252,7 @@ func main() {
 					continue
 				}
 				if t == "APLPrefix" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i := range rr.%s {\n %s[i] = rr.%s[i].Copy()\n}\n",
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i := range rr.%s {\n %s[i] = rr.%s[i].copy()\n}\n",
 						f, t, f, f, f, f)
 					fields = append(fields, f)
 					continue

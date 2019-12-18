@@ -268,7 +268,7 @@ func (rr *ANY) len(off int, compression map[string]struct{}) int {
 func (rr *APL) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
 	for _, x := range rr.Prefixes {
-		l += x.Len()
+		l += x.len()
 	}
 	return l
 }
@@ -686,7 +686,7 @@ func (rr *ANY) copy() RR {
 func (rr *APL) copy() RR {
 	Prefixes := make([]APLPrefix, len(rr.Prefixes))
 	for i := range rr.Prefixes {
-		Prefixes[i] = rr.Prefixes[i].Copy()
+		Prefixes[i] = rr.Prefixes[i].copy()
 	}
 	return &APL{rr.Hdr, Prefixes}
 }
