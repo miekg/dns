@@ -1419,6 +1419,14 @@ func (a *APLPrefix) Equals(b *APLPrefix) bool {
 		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 
+// Copy returns a copy of the APL prefix.
+func (p *APLPrefix) Copy() APLPrefix {
+	return APLPrefix{
+		Negation: p.Negation,
+		Network:  copyNet(p.Network),
+	}
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
@@ -1468,11 +1476,24 @@ func euiToString(eui uint64, bits int) (hex string) {
 	return
 }
 
+// copyBytes returns a copy of a byte slice.
+func copyBytes(b []byte) []byte {
+	c := make([]byte, len(b))
+	copy(c, b)
+	return c
+}
+
 // copyIP returns a copy of ip.
 func copyIP(ip net.IP) net.IP {
-	p := make(net.IP, len(ip))
-	copy(p, ip)
-	return p
+	return copyBytes(ip)
+}
+
+// copyNet returns a copy of a subnet.
+func copyNet(n net.IPNet) net.IPNet {
+	return net.IPNet{
+		IP:   copyBytes(n.IP),
+		Mask: copyBytes(n.Mask),
+	}
 }
 
 // SplitN splits a string into N sized string chunks.

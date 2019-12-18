@@ -249,6 +249,12 @@ func main() {
 					fields = append(fields, f)
 					continue
 				}
+				if t == "APLPrefix" {
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i, _ := range rr.%s {\n %s[i] = rr.%s[i].Copy()\n}\n",
+						f, t, f, f, f, f)
+					fields = append(fields, f)
+					continue
+				}
 				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
 					f, t, f, f, f)
 				fields = append(fields, f)
