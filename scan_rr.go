@@ -1731,8 +1731,13 @@ func (rr *APL) parse(c *zlexer, o string) *ParseError {
 		if err != nil {
 			return &ParseError{"", "failed to parse APL family: " + err.Error(), l}
 		}
-		addrLen, ok := aplFamilyToAddrLen[uint16(afi)]
-		if !ok {
+		var addrLen int
+		switch afi {
+		case 1:
+			addrLen = net.IPv4len
+		case 2:
+			addrLen = net.IPv6len
+		default:
 			return &ParseError{"", "unrecognized APL family", l}
 		}
 

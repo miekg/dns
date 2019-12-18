@@ -682,16 +682,6 @@ func packDataDomainNames(names []string, msg []byte, off int, compression compre
 	return off, nil
 }
 
-var aplAddrLenToFamily = map[int]uint16{
-	net.IPv4len: 1,
-	net.IPv6len: 2,
-}
-
-var aplFamilyToAddrLen = map[uint16]int{
-	1: net.IPv4len,
-	2: net.IPv6len,
-}
-
 func packDataApl(data []APLPrefix, msg []byte, off int) (int, error) {
 	var err error
 	for i, _ := range data {
@@ -708,8 +698,13 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), &Error{err: "address and mask lengths don't match"}
 	}
 
-	family, ok := aplAddrLenToFamily[len(p.Network.IP)]
-	if !ok {
+	var family uint16
+	switch len(p.Network.IP) {
+	case net.IPv4len:
+		family = 1
+	case net.IPv6len:
+		family = 2
+	default:
 		return len(msg), &Error{err: "unrecognized address family"}
 	}
 
@@ -772,8 +767,13 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 	// Read ADDRESSFAMILY
 	var family uint16
 	family, off, _ = unpackUint16(msg, off)
-	ipLen, ok := aplFamilyToAddrLen[family]
-	if !ok {
+	var ipLen int
+	switch family {
+	case 1:
+		ipLen = net.IPv4len
+	case 2:
+		ipLen = net.IPv6len
+	default:
 		return nil, len(msg), &Error{err: "unrecognized APL address family"}
 	}
 	// Read PREFIX

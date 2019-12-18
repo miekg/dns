@@ -1387,7 +1387,13 @@ func (p *APLPrefix) String() string {
 		sb.WriteByte('!')
 	}
 
-	afi := aplAddrLenToFamily[len(p.Network.IP)]
+	var afi int
+	switch len(p.Network.IP) {
+	case net.IPv4len:
+		afi = 1
+	case net.IPv6len:
+		afi = 2
+	}
 	sb.WriteString(strconv.Itoa(int(afi)))
 
 	sb.WriteByte(':')
