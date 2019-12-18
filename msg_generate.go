@@ -101,6 +101,8 @@ return off, err
 					o("off, err = packDataNsec(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, false)\n")
+				case `dns:"apl"`:
+					o("off, err = packDataApl(rr.%s, msg, off)\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
@@ -225,6 +227,8 @@ return off, err
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
 				case `dns:"domain-name"`:
 					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+				case `dns:"apl"`:
+					o("rr.%s, off, err = unpackDataApl(msg, off)\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}

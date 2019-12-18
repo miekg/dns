@@ -681,3 +681,135 @@ func packDataDomainNames(names []string, msg []byte, off int, compression compre
 	}
 	return off, nil
 }
+
+var aplAddrLenToFamily = map[int]uint16{
+	net.IPv4len: 1,
+	net.IPv6len: 2,
+}
+
+var aplFamilyToAddrLen = map[uint16]int{
+	1: net.IPv4len,
+	2: net.IPv6len,
+}
+
+func packDataApl(data []APLPrefix, msg []byte, off int) (int, error) {
+	var err error
+	for i, _ := range data {
+		off, err = packDataAplPrefix(&data[i], msg, off)
+		if err != nil {
+			return len(msg), err
+		}
+	}
+	return off, nil
+}
+
+func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
+	if len(p.Network.IP) != len(p.Network.Mask) {
+		return len(msg), &Error{err: "address and mask lengths don't match"}
+	}
+
+	family, ok := aplAddrLenToFamily[len(p.Network.IP)]
+	if !ok {
+		return len(msg), &Error{err: "unrecognized address family"}
+	}
+
+	prefix, _ := p.Network.Mask.Size()
+	addr := p.Network.IP.Mask(p.Network.Mask)[:(prefix+7)/8]
+
+	// Output is 4-byte header + address
+	if off+4+len(addr) > len(msg) {
+		return len(msg), &Error{err: "overflow packing APL prefix"}
+	}
+
+	var err error
+
+	// Write ADDRESSFAMILY
+	off, err = packUint16(family, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	// Write PREFIX
+	off, err = packUint8(uint8(prefix), msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	// Write N and AFDLENGTH
+	var n uint8
+	if p.Negation {
+		n = 0x80
+	}
+	adflen := uint8(len(addr)) & 0x7f
+	off, err = packUint8(n|adflen, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	// Write AFDPART
+	copy(msg[off:], addr)
+	off += len(addr)
+
+	return off, nil
+}
+
+func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
+	var result []APLPrefix
+	for off < len(msg) {
+		prefix, end, err := unpackDataAplPrefix(msg, off)
+		if err != nil {
+			return nil, len(msg), err
+		}
+		off = end
+		result = append(result, *prefix)
+	}
+	return result, off, nil
+}
+
+func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
+	// Always has 4-byte header.
+	if off+4 > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+	}
+
+	// Read ADDRESSFAMILY
+	var family uint16
+	family, off, _ = unpackUint16(msg, off)
+	ipLen, ok := aplFamilyToAddrLen[family]
+	if !ok {
+		return nil, len(msg), &Error{err: "unrecognized APL address family"}
+	}
+	// Read PREFIX
+	var prefix uint8
+	prefix, off, _ = unpackUint8(msg, off)
+	if int(prefix) > 8*ipLen {
+		return nil, len(msg), &Error{err: "APL prefix too long"}
+	}
+	// Read N and AFDLENGTH
+	var nlen uint8
+	nlen, off, _ = unpackUint8(msg, off)
+	neg := (nlen & 0x80) > 0
+	afdlen := int(nlen & 0x7f)
+	if (int(prefix)+7)/8 != afdlen {
+		return nil, len(msg), &Error{err: "invalid APL address length"}
+	}
+	// Read AFDPART
+	if off+afdlen > len(msg) {
+		return nil, len(msg), &Error{err: "overflow unpacking APL address"}
+	}
+	ip := make([]byte, ipLen)
+	copy(ip, msg[off:off+afdlen])
+	off += afdlen
+	if prefix%8 > 0 {
+		last := ip[afdlen-1]
+		zero := uint8(0xff) >> (prefix % 8)
+		if last&zero > 0 {
+			return nil, len(msg), &Error{err: "extra APL address bits"}
+		}
+	}
+
+	return &APLPrefix{
+		Negation: neg,
+		Network: net.IPNet{
+			IP:   ip,
+			Mask: net.CIDRMask(int(prefix), 8*ipLen),
+		},
+	}, off, nil
+}
