@@ -1387,14 +1387,12 @@ func (p *APLPrefix) str() string {
 		sb.WriteByte('!')
 	}
 
-	var afi int
 	switch len(p.Network.IP) {
 	case net.IPv4len:
-		afi = 1
+		sb.WriteByte('1')
 	case net.IPv6len:
-		afi = 2
+		sb.WriteByte('2')
 	}
-	sb.WriteString(strconv.Itoa(int(afi)))
 
 	sb.WriteByte(':')
 
@@ -1407,7 +1405,6 @@ func (p *APLPrefix) str() string {
 			sb.WriteString("::ffff:")
 		}
 		sb.WriteString(p.Network.IP.String())
-	default:
 	}
 
 	sb.WriteByte('/')
@@ -1435,7 +1432,7 @@ func (p *APLPrefix) copy() APLPrefix {
 
 // len returns size of the prefix in wire format.
 func (p *APLPrefix) len() int {
-	// 4-byte header and the network address prefix (see https://tools.ietf.org/html/rfc3123#section-4)
+	// 4-byte header and the network address prefix (see Section 4 of RFC 3123)
 	prefix, _ := p.Network.Mask.Size()
 	return 4 + (prefix+7)/8
 }

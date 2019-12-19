@@ -707,14 +707,8 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	default:
 		return len(msg), &Error{err: "unrecognized address family"}
 	}
-
 	prefix, _ := p.Network.Mask.Size()
 	addr := p.Network.IP.Mask(p.Network.Mask)[:(prefix+7)/8]
-
-	// Output is 4-byte header + address
-	if off+4+len(addr) > len(msg) {
-		return len(msg), &Error{err: "overflow packing APL prefix"}
-	}
 
 	// Write ADDRESSFAMILY
 	off, err := packUint16(family, msg, off)
@@ -737,6 +731,9 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	// Write AFDPART
+	if off+len(addr) > len(msg) {
+		return len(msg), &Error{err: "overflow packing APL prefix"}
+	}
 	off += copy(msg[off:], addr)
 
 	return off, nil

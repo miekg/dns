@@ -1667,7 +1667,7 @@ func TestParseAPL(t *testing.T) {
 	}
 }
 
-func TestParseAPL_Errors(t *testing.T) {
+func TestParseAPLErrors(t *testing.T) {
 	tests := []struct {
 		name string
 		in   string
