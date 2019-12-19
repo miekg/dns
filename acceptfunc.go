@@ -6,7 +6,7 @@ type MsgAcceptFunc func(dh Header) MsgAcceptAction
 
 // DefaultMsgAcceptFunc checks the request and will reject if:
 //
-// * isn't a request (don't respond in that case).
+// * isn't a request (don't respond in that case)
 //
 // * opcode isn't OpcodeQuery or OpcodeNotify
 //

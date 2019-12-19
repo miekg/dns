@@ -94,7 +94,7 @@ DNS Authors 2012-
 
 # Building
 
-This library uses Go module and uses semantic versioning. Building is done with the `go` tool, so
+This library uses Go modules and uses semantic versioning. Building is done with the `go` tool, so
 the following should work:
 
     go get github.com/miekg/dns
