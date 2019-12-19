@@ -698,29 +698,27 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), &Error{err: "address and mask lengths don't match"}
 	}
 
-	var family uint16
-	switch len(p.Network.IP) {
-	case net.IPv4len:
-		family = 1
-	case net.IPv6len:
-		family = 2
-	default:
-		return len(msg), &Error{err: "unrecognized address family"}
-	}
+	var err error
 	prefix, _ := p.Network.Mask.Size()
 	addr := p.Network.IP.Mask(p.Network.Mask)[:(prefix+7)/8]
 
-	// Write ADDRESSFAMILY
-	off, err := packUint16(family, msg, off)
+	switch len(p.Network.IP) {
+	case net.IPv4len:
+		off, err = packUint16(1, msg, off)
+	case net.IPv6len:
+		off, err = packUint16(2, msg, off)
+	default:
+		err = &Error{err: "unrecognized address family"}
+	}
 	if err != nil {
 		return len(msg), err
 	}
-	// Write PREFIX
+
 	off, err = packUint8(uint8(prefix), msg, off)
 	if err != nil {
 		return len(msg), err
 	}
-	// Write N and AFDLENGTH
+
 	var n uint8
 	if p.Negation {
 		n = 0x80
@@ -730,7 +728,7 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	if err != nil {
 		return len(msg), err
 	}
-	// Write AFDPART
+
 	if off+len(addr) > len(msg) {
 		return len(msg), &Error{err: "overflow packing APL prefix"}
 	}
@@ -753,43 +751,39 @@ func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
 }
 
 func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
-	// Read ADDRESSFAMILY
 	family, off, err := unpackUint16(msg, off)
 	if err != nil {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
-	var ipLen int
-	switch family {
-	case 1:
-		ipLen = net.IPv4len
-	case 2:
-		ipLen = net.IPv6len
-	default:
-		return APLPrefix{}, len(msg), &Error{err: "unrecognized APL address family"}
-	}
-	// Read PREFIX
 	prefix, off, err := unpackUint8(msg, off)
 	if err != nil {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
-	if int(prefix) > 8*ipLen {
-		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
-	}
-	// Read N and AFDLENGTH
 	nlen, off, err := unpackUint8(msg, off)
 	if err != nil {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
-	neg := (nlen & 0x80) != 0
+
+	var ip []byte
+	switch family {
+	case 1:
+		ip = make([]byte, net.IPv4len)
+	case 2:
+		ip = make([]byte, net.IPv6len)
+	default:
+		return APLPrefix{}, len(msg), &Error{err: "unrecognized APL address family"}
+	}
+	if int(prefix) > 8*len(ip) {
+		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
+	}
+
 	afdlen := int(nlen & 0x7f)
 	if (int(prefix)+7)/8 != afdlen {
 		return APLPrefix{}, len(msg), &Error{err: "invalid APL address length"}
 	}
-	// Read AFDPART
 	if off+afdlen > len(msg) {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
 	}
-	ip := make([]byte, ipLen)
 	off += copy(ip, msg[off:off+afdlen])
 	if prefix%8 > 0 {
 		last := ip[afdlen-1]
@@ -800,10 +794,10 @@ func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 	}
 
 	return APLPrefix{
-		Negation: neg,
+		Negation: (nlen & 0x80) != 0,
 		Network: net.IPNet{
 			IP:   ip,
-			Mask: net.CIDRMask(int(prefix), 8*ipLen),
+			Mask: net.CIDRMask(int(prefix), 8*len(ip)),
 		},
 	}, off, nil
 }
