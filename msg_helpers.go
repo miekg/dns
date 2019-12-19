@@ -747,16 +747,16 @@ func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
 			return nil, len(msg), err
 		}
 		off = end
-		result = append(result, *prefix)
+		result = append(result, prefix)
 	}
 	return result, off, nil
 }
 
-func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
+func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 	// Read ADDRESSFAMILY
 	family, off, err := unpackUint16(msg, off)
 	if err != nil {
-		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
 	var ipLen int
 	switch family {
@@ -765,29 +765,29 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 	case 2:
 		ipLen = net.IPv6len
 	default:
-		return nil, len(msg), &Error{err: "unrecognized APL address family"}
+		return APLPrefix{}, len(msg), &Error{err: "unrecognized APL address family"}
 	}
 	// Read PREFIX
 	prefix, off, err := unpackUint8(msg, off)
 	if err != nil {
-		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
 	if int(prefix) > 8*ipLen {
-		return nil, len(msg), &Error{err: "APL prefix too long"}
+		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
 	}
 	// Read N and AFDLENGTH
 	nlen, off, err := unpackUint8(msg, off)
 	if err != nil {
-		return nil, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
 	}
 	neg := (nlen & 0x80) != 0
 	afdlen := int(nlen & 0x7f)
 	if (int(prefix)+7)/8 != afdlen {
-		return nil, len(msg), &Error{err: "invalid APL address length"}
+		return APLPrefix{}, len(msg), &Error{err: "invalid APL address length"}
 	}
 	// Read AFDPART
 	if off+afdlen > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking APL address"}
+		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
 	}
 	ip := make([]byte, ipLen)
 	off += copy(ip, msg[off:off+afdlen])
@@ -795,11 +795,11 @@ func unpackDataAplPrefix(msg []byte, off int) (*APLPrefix, int, error) {
 		last := ip[afdlen-1]
 		zero := uint8(0xff) >> (prefix % 8)
 		if last&zero > 0 {
-			return nil, len(msg), &Error{err: "extra APL address bits"}
+			return APLPrefix{}, len(msg), &Error{err: "extra APL address bits"}
 		}
 	}
 
-	return &APLPrefix{
+	return APLPrefix{
 		Negation: neg,
 		Network: net.IPNet{
 			IP:   ip,
