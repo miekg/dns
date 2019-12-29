@@ -543,6 +543,10 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_EXPIRE) unpack(b []byte) error {
+	if len(b) == 0 {
+		// zero-length EXPIRE query, https://tools.ietf.org/html/rfc7314#section-2
+		return nil
+	}
 	if len(b) < 4 {
 		return ErrBuf
 	}
