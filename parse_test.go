@@ -1546,6 +1546,22 @@ func TestParseCSYNC(t *testing.T) {
 	}
 }
 
+func TestParseSVCB(t *testing.T) {
+	syncs := map[string]string{
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. k=a z=b`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. "k=a" "z=b"`,
+	}
+	for s, o := range syncs {
+		rr, err := NewRR(s)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		}
+	}
+}
+
 func TestParseBadNAPTR(t *testing.T) {
 	// Should look like: mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 "S" "SIP+D2U" "" _sip._udp.mplus.ims.vodafone.com.
 	naptr := `mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 S SIP+D2U  _sip._udp.mplus.ims.vodafone.com.`

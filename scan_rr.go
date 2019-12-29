@@ -1741,3 +1741,40 @@ func (rr *APL) parse(c *zlexer, o string) *ParseError {
 	rr.Prefixes = prefixes
 	return nil
 }
+
+func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	i, e := strconv.ParseUint(l.token, 10, 16)
+	if e != nil || l.err {
+		return &ParseError{"", "bad SVCB Priority", l}
+	}
+	rr.Priority = uint16(i)
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	rr.Target = l.token
+
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{"", "bad SVCB Target", l}
+	}
+	rr.Target = name
+
+	// Values (if any)
+	l, _ = c.Next()
+	var xs []string
+	for l.value != zNewline && l.value != zEOF {
+		switch l.value {
+		case zString:
+			xs = append(xs, l.token)
+		case zBlank:
+			// Ok
+		default:
+			return &ParseError{"", "bad SVCB Values", l}
+		}
+		l, _ = c.Next()
+	}
+
+	rr.Value = xs
+	return nil
+}

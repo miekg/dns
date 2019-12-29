@@ -95,6 +95,7 @@ const (
 	TypeURI        uint16 = 256
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
+	TypeSVCB       uint16 = 65439
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -1355,6 +1356,7 @@ func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
+<<<<<<< HEAD
 // APL RR. See RFC 3123.
 type APL struct {
 	Hdr      RR_Header
@@ -1435,6 +1437,22 @@ func (p *APLPrefix) len() int {
 	// 4-byte header and the network address prefix (see Section 4 of RFC 3123)
 	prefix, _ := p.Network.Mask.Size()
 	return 4 + (prefix+7)/8
+}
+
+// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01)
+// Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
+type SVCB struct {
+	Hdr      RR_Header
+	Priority uint16
+	Target   string   `dns:"domain-name"`
+	Value    []string `dns:"txt"` // if priority == 0 this is empty
+}
+
+func (rr *SVCB) String() string {
+	return rr.Hdr.String() +
+		strconv.Itoa(int(rr.Priority)) + " " +
+		sprintName(rr.Target) + " " +
+		sprintTxt(rr.Value)
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the

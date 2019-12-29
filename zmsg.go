@@ -906,6 +906,22 @@ func (rr *SSHFP) pack(msg []byte, off int, compression compressionMap, compress 
 	return off, nil
 }
 
+func (rr *SVCB) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packUint16(rr.Priority, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDomainName(rr.Target, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringTxt(rr.Value, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 func (rr *TA) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.KeyTag, msg, off)
 	if err != nil {
@@ -2455,6 +2471,31 @@ func (rr *SSHFP) unpack(msg []byte, off int) (off1 int, err error) {
 		return off, nil
 	}
 	rr.FingerPrint, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *SVCB) unpack(msg []byte, off int) (off1 int, err error) {
+	rdStart := off
+	_ = rdStart
+
+	rr.Priority, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+	rr.Target, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+	rr.Value, off, err = unpackStringTxt(msg, off)
 	if err != nil {
 		return off, err
 	}
