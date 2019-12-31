@@ -1449,10 +1449,13 @@ type SVCB struct {
 }
 
 func (rr *SVCB) String() string {
-	return rr.Hdr.String() +
+	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
-		sprintName(rr.Target) + " " +
-		sprintTxt(rr.Value)
+		sprintName(rr.Target)
+	for _, element := range rr.Value {
+		s += " " + element
+	}
+	return s
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the

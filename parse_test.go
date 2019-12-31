@@ -1548,7 +1548,8 @@ func TestParseCSYNC(t *testing.T) {
 
 func TestParseSVCB(t *testing.T) {
 	syncs := map[string]string{
-		`example.com. 3600 IN SVCB 65000 cloudflare.com. k=a z=b`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. "k=a" "z=b"`,
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. k=a 3="b" f="d =l"`: `example.com.	3600	IN	SVCB	65000 cloudflare.com.  k=a 3="b" f="d =l"`,
 	}
 	for s, o := range syncs {
 		rr, err := NewRR(s)

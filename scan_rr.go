@@ -1763,18 +1763,28 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	// Values (if any)
 	l, _ = c.Next()
 	var xs []string
+	var cur strings.Builder
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
+		// This consumes at least, including up to the first equality sign
 		case zString:
-			xs = append(xs, l.token)
+			// In key=value pairs, value doesn't have to be quoted
+			// Unless value contains whitespace
+			cur.WriteString(l.token)
+		case zQuote:
+			cur.WriteByte('"')
 		case zBlank:
 			// Ok
+			xs = append(xs, cur.String())
+			cur.Reset()
 		default:
 			return &ParseError{"", "bad SVCB Values", l}
 		}
 		l, _ = c.Next()
 	}
-
+	if cur.Len() != 0 {
+		xs = append(xs, cur.String())
+	}
 	rr.Value = xs
 	return nil
 }
