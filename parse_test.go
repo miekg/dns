@@ -1584,3 +1584,137 @@ func TestNULLRecord(t *testing.T) {
 		t.Fatalf("Expected packet to contain NULL record")
 	}
 }
+
+func TestParseAPL(t *testing.T) {
+	tests := []struct {
+		name   string
+		in     string
+		expect string
+	}{
+		{
+			"v4",
+			". APL 1:192.0.2.0/24",
+			".\t3600\tIN\tAPL\t1:192.0.2.0/24",
+		},
+		{
+			"v6",
+			". APL 2:2001:db8::/32",
+			".\t3600\tIN\tAPL\t2:2001:db8::/32",
+		},
+		{
+			"null v6",
+			". APL 2:::/0",
+			".\t3600\tIN\tAPL\t2:::/0",
+		},
+		{
+			"null v4",
+			". APL 1:0.0.0.0/0",
+			".\t3600\tIN\tAPL\t1:0.0.0.0/0",
+		},
+		{
+			"full v6",
+			". APL 2:::/0",
+			".\t3600\tIN\tAPL\t2:::/0",
+		},
+		{
+			"full v4",
+			". APL 1:192.0.2.1/32",
+			".\t3600\tIN\tAPL\t1:192.0.2.1/32",
+		},
+		{
+			"full v6",
+			". APL 2:2001:0db8:d2b4:b6ba:50db:49cc:a8d1:5bb1/128",
+			".\t3600\tIN\tAPL\t2:2001:db8:d2b4:b6ba:50db:49cc:a8d1:5bb1/128",
+		},
+		{
+			"v4in6",
+			". APL 2:::ffff:192.0.2.0/120",
+			".\t3600\tIN\tAPL\t2:::ffff:192.0.2.0/120",
+		},
+		{
+			"v4in6 v6 syntax",
+			". APL 2:::ffff:c000:0200/120",
+			".\t3600\tIN\tAPL\t2:::ffff:192.0.2.0/120",
+		},
+		{
+			"negate",
+			". APL !1:192.0.2.0/24",
+			".\t3600\tIN\tAPL\t!1:192.0.2.0/24",
+		},
+		{
+			"multiple",
+			". APL 1:192.0.2.0/24 !1:192.0.2.1/32 2:2001:db8::/32 !2:2001:db8:1::0/48",
+			".\t3600\tIN\tAPL\t1:192.0.2.0/24 !1:192.0.2.1/32 2:2001:db8::/32 !2:2001:db8:1::/48",
+		},
+		{
+			"no address",
+			". APL",
+			".\t3600\tIN\tAPL\t",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			rr, err := NewRR(tc.in)
+			if err != nil {
+				t.Fatalf("failed to parse RR: %s", err)
+			}
+
+			got := rr.String()
+			if got != tc.expect {
+				t.Errorf("expected %q, got %q", tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestParseAPLErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+	}{
+		{
+			"unexpected",
+			`. APL ""`,
+		},
+		{
+			"unrecognized family",
+			". APL 3:0.0.0.0/0",
+		},
+		{
+			"malformed family",
+			". APL foo:0.0.0.0/0",
+		},
+		{
+			"malformed address",
+			". APL 1:192.0.2/16",
+		},
+		{
+			"extra bits",
+			". APL 2:2001:db8::/0",
+		},
+		{
+			"address mismatch v2",
+			". APL 1:2001:db8::/64",
+		},
+		{
+			"address mismatch v6",
+			". APL 2:192.0.2.1/32",
+		},
+		{
+			"no prefix",
+			". APL 1:192.0.2.1",
+		},
+		{
+			"no family",
+			". APL 0.0.0.0/0",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := NewRR(tc.in)
+			if err == nil {
+				t.Fatal("expected error, got none")
+			}
+		})
+	}
+}

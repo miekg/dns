@@ -111,6 +111,16 @@ func main() {
 					continue
 				}
 
+				if st.Tag(i) == `dns:"apl"` {
+					o3(`for i := 0; i < len(r1.%s); i++ {
+						if !r1.%s[i].equals(&r2.%s[i]) {
+							return false
+						}
+					}`)
+
+					continue
+				}
+
 				o3(`for i := 0; i < len(r1.%s); i++ {
 					if r1.%s[i] != r2.%s[i] {
 						return false
