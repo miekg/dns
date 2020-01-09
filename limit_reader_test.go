@@ -34,10 +34,8 @@ func TestLimitReader(t *testing.T) {
 	c := new(Client)
 	m := new(Msg).SetQuestion("example.org.", TypeTXT)
 
-	for i := 0; i < thisManyPackets; i++ {
-		r, _, _ := c.Exchange(m, pc.LocalAddr().String())
-		if i == thisManyPackets && r.Rcode != RcodeRefused {
-			t.Errorf("expected rcode %d, got %d", RcodeRefused, r.Rcode)
-		}
+	r, _, _ := c.Exchange(m, pc.LocalAddr().String())
+	if r.Rcode != RcodeRefused {
+		t.Errorf("expected rcode %d, got %d", RcodeRefused, r.Rcode)
 	}
 }

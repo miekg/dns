@@ -19,9 +19,6 @@ type LimitReader struct {
 
 	// MaxGoroutines is the maxium number of goroutines we're willing to tolerate.
 	MaxGoroutines int
-
-	upkts int
-	tpkts int
 }
 
 func tooMany(max int) bool { return runtime.NumGoroutine() > max }
@@ -31,11 +28,6 @@ func (r *LimitReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte,
 	m, s, err := r.Reader.ReadUDP(conn, timeout)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	r.upkts++
-	if r.upkts%thisManyPackets != 0 {
-		return m, s, nil
 	}
 
 	if tooMany(r.MaxGoroutines) {
@@ -50,11 +42,6 @@ func (r *LimitReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, err
 	m, err := r.Reader.ReadTCP(conn, timeout)
 	if err != nil {
 		return nil, err
-	}
-
-	r.tpkts++
-	if r.tpkts%100 != 0 {
-		return m, nil
 	}
 
 	if tooMany(r.MaxGoroutines) {
@@ -111,5 +98,3 @@ func refusePacketTCP(conn net.Conn, m []byte) error {
 	_, err = conn.Write(m)
 	return err
 }
-
-const thisManyPackets = 100
