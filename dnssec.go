@@ -200,7 +200,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, err1 := PackDomainName(strings.ToLower(k.Hdr.Name), owner, 0, nil, false)
+	off, err1 := PackDomainName(Canonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
 	}
@@ -285,7 +285,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
 	// For signing, lowercase this name
-	sigwire.SignerName = strings.ToLower(rr.SignerName)
+	sigwire.SignerName = Canonical(rr.SignerName)
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
@@ -423,7 +423,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	sigwire.Expiration = rr.Expiration
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
-	sigwire.SignerName = strings.ToLower(rr.SignerName)
+	sigwire.SignerName = Canonical(rr.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, err := packSigWire(sigwire, signeddata)
@@ -659,7 +659,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 			h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
 		}
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h.Name = strings.ToLower(h.Name)
+		h.Name = Canonical(h.Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
@@ -672,49 +672,49 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 		//	conversion.
 		switch x := r1.(type) {
 		case *NS:
-			x.Ns = strings.ToLower(x.Ns)
+			x.Ns = Canonical(x.Ns)
 		case *MD:
-			x.Md = strings.ToLower(x.Md)
+			x.Md = Canonical(x.Md)
 		case *MF:
-			x.Mf = strings.ToLower(x.Mf)
+			x.Mf = Canonical(x.Mf)
 		case *CNAME:
-			x.Target = strings.ToLower(x.Target)
+			x.Target = Canonical(x.Target)
 		case *SOA:
-			x.Ns = strings.ToLower(x.Ns)
-			x.Mbox = strings.ToLower(x.Mbox)
+			x.Ns = Canonical(x.Ns)
+			x.Mbox = Canonical(x.Mbox)
 		case *MB:
-			x.Mb = strings.ToLower(x.Mb)
+			x.Mb = Canonical(x.Mb)
 		case *MG:
-			x.Mg = strings.ToLower(x.Mg)
+			x.Mg = Canonical(x.Mg)
 		case *MR:
-			x.Mr = strings.ToLower(x.Mr)
+			x.Mr = Canonical(x.Mr)
 		case *PTR:
-			x.Ptr = strings.ToLower(x.Ptr)
+			x.Ptr = Canonical(x.Ptr)
 		case *MINFO:
-			x.Rmail = strings.ToLower(x.Rmail)
-			x.Email = strings.ToLower(x.Email)
+			x.Rmail = Canonical(x.Rmail)
+			x.Email = Canonical(x.Email)
 		case *MX:
-			x.Mx = strings.ToLower(x.Mx)
+			x.Mx = Canonical(x.Mx)
 		case *RP:
-			x.Mbox = strings.ToLower(x.Mbox)
-			x.Txt = strings.ToLower(x.Txt)
+			x.Mbox = Canonical(x.Mbox)
+			x.Txt = Canonical(x.Txt)
 		case *AFSDB:
-			x.Hostname = strings.ToLower(x.Hostname)
+			x.Hostname = Canonical(x.Hostname)
 		case *RT:
-			x.Host = strings.ToLower(x.Host)
+			x.Host = Canonical(x.Host)
 		case *SIG:
-			x.SignerName = strings.ToLower(x.SignerName)
+			x.SignerName = Canonical(x.SignerName)
 		case *PX:
-			x.Map822 = strings.ToLower(x.Map822)
-			x.Mapx400 = strings.ToLower(x.Mapx400)
+			x.Map822 = Canonical(x.Map822)
+			x.Mapx400 = Canonical(x.Mapx400)
 		case *NAPTR:
-			x.Replacement = strings.ToLower(x.Replacement)
+			x.Replacement = Canonical(x.Replacement)
 		case *KX:
-			x.Exchanger = strings.ToLower(x.Exchanger)
+			x.Exchanger = Canonical(x.Exchanger)
 		case *SRV:
-			x.Target = strings.ToLower(x.Target)
+			x.Target = Canonical(x.Target)
 		case *DNAME:
-			x.Target = strings.ToLower(x.Target)
+			x.Target = Canonical(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		wire := make([]byte, Len(r1)+1) // +1 to be safe(r)
