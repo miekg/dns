@@ -14,10 +14,10 @@ type Envelope struct {
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Conn
-	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
-	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
-	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
-	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
+	DialTimeout    time.Duration      // net.DialTimeout, defaults to 2 seconds
+	ReadTimeout    time.Duration      // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
+	WriteTimeout   time.Duration      // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
+	TsigSecrets    TsigSecretResolver // TsigSecrets will be used to resolve the given secret name in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2) into the corresponding secret bytes.
 	tsigTimersOnly bool
 }
 
@@ -224,12 +224,13 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
-	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+	if ts := m.IsTsig(); ts != nil && t.TsigSecrets != nil {
+		secret := t.TsigSecrets.Resolve(ts.Hdr.Name)
+		if secret == nil {
 			return m, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
+		err = TsigVerify(p, secret, t.tsigRequestMAC, t.tsigTimersOnly)
 		t.tsigRequestMAC = ts.MAC
 	}
 	return m, err
@@ -238,11 +239,12 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 // WriteMsg writes a message through the transfer connection t.
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
-	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+	if ts := m.IsTsig(); ts != nil && t.TsigSecrets != nil {
+		secret := t.TsigSecrets.Resolve(ts.Hdr.Name)
+		if secret == nil {
 			return ErrSecret
 		}
-		out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
+		out, t.tsigRequestMAC, err = TsigGenerate(m, secret, t.tsigRequestMAC, t.tsigTimersOnly)
 	} else {
 		out, err = m.Pack()
 	}

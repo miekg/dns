@@ -966,10 +966,12 @@ func TestServerReuseport(t *testing.T) {
 }
 
 func TestServerRoundtripTsig(t *testing.T) {
-	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
+	secrets := make(TsigSecretMap)
+	secrets.SetBase64Secret("test1.", "so6ZGir4GPAqINNh9U5c3A==")
+	secrets.SetBase64Secret("test2.", "lAst1HpoF4K24iNuWfeiyQ==")
 
 	s, addrstr, _, err := RunLocalUDPServerWithFinChan(":0", func(srv *Server) {
-		srv.TsigSecret = secret
+		srv.TsigSecrets = secrets
 		srv.MsgAcceptFunc = func(dh Header) MsgAcceptAction {
 			// defaultMsgAcceptFunc does reject UPDATE queries
 			return MsgAccept
@@ -990,7 +992,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 			status := w.TsigStatus()
 			if status == nil {
 				// *Msg r has an TSIG record and it was validated
-				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+				m.SetTsig("test2.", HmacMD5, 300, time.Now().Unix())
 			} else {
 				// *Msg r has an TSIG records and it was not valided
 				t.Errorf("invalid TSIG: %v", status)
@@ -1016,8 +1018,8 @@ func TestServerRoundtripTsig(t *testing.T) {
 		},
 		Target: "bar.example.com.",
 	}}
-	c.TsigSecret = secret
-	m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+	c.TsigSecrets = secrets
+	m.SetTsig("test1.", HmacMD5, 300, time.Now().Unix())
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange", err)

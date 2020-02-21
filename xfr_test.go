@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	tsigSecret  = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+	tsigSecret  = TsigSecretMap{"axfr.": newSecret("so6ZGir4GPAqINNh9U5c3A==")}
 	xfrSoa      = testRR(`miek.nl.	0	IN	SOA	linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600`)
 	xfrA        = testRR(`x.miek.nl.	1792	IN	A	10.0.0.1`)
 	xfrMX       = testRR(`miek.nl.	1800	IN	MX	1	x.miek.nl.`)
@@ -100,19 +100,24 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	axfrTestingSuite(addrstr)
 }
 
-func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
+func RunLocalTCPServerWithTsig(laddr string, tsig TsigSecretMap) (*Server, string, error) {
 	server, l, _, err := RunLocalTCPServerWithFinChanWithTsig(laddr, tsig)
 
 	return server, l, err
 }
 
-func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) (*Server, string, chan error, error) {
+func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig TsigSecretMap) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour, TsigSecret: tsig}
+	server := &Server{
+		Listener:     l,
+		ReadTimeout:  time.Hour,
+		WriteTimeout: time.Hour,
+		TsigSecrets:  tsig,
+	}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
