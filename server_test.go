@@ -970,13 +970,20 @@ func TestServerRoundtripTsig(t *testing.T) {
 
 	s, addrstr, _, err := RunLocalUDPServerWithFinChan(":0", func(srv *Server) {
 		srv.TsigSecret = secret
+		srv.MsgAcceptFunc = func(dh Header) MsgAcceptAction {
+			// defaultMsgAcceptFunc does reject UPDATE queries
+			return MsgAccept
+		}
 	})
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
 	defer s.Shutdown()
 
+	handlerFired := make(chan struct{})
 	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
+		close(handlerFired)
+
 		m := new(Msg)
 		m.SetReply(r)
 		if r.IsTsig() != nil {
@@ -991,7 +998,9 @@ func TestServerRoundtripTsig(t *testing.T) {
 		} else {
 			t.Error("missing TSIG")
 		}
-		w.WriteMsg(m)
+		if err := w.WriteMsg(m); err != nil {
+			t.Error("writemsg failed", err)
+		}
 	})
 
 	c := new(Client)
@@ -1012,6 +1021,12 @@ func TestServerRoundtripTsig(t *testing.T) {
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange", err)
+	}
+	select {
+	case <-handlerFired:
+		// ok, handler was actually called
+	default:
+		t.Error("handler was not called")
 	}
 }
 
