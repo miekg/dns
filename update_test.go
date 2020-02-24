@@ -34,7 +34,7 @@ func TestDynamicUpdateUnpack(t *testing.T) {
 
 func TestDynamicUpdateZeroRdataUnpack(t *testing.T) {
 	m := new(Msg)
-	rr := &RR_Header{Name: ".", Rrtype: 0, Class: 1, Ttl: ^uint32(0), Rdlength: 0}
+	rr := &RR_Header{Name: ".", Rrtype: 0, Class: ClassNONE, Ttl: ^uint32(0), Rdlength: 0}
 	m.Answer = []RR{rr, rr, rr, rr, rr}
 	m.Ns = m.Answer
 	for n, s := range TypeToString {

@@ -169,22 +169,39 @@ func TestNoRdataPack(t *testing.T) {
 
 func TestNoRdataUnpack(t *testing.T) {
 	data := make([]byte, 1024)
-	for typ, fn := range TypeToRR {
-		if typ == TypeSOA || typ == TypeTSIG || typ == TypeTKEY {
+	classes := []uint16{ClassINET, ClassNONE, ClassANY}
+	for typ, _ := range TypeToRR {
+		switch typ {
+		case TypeSOA, TypeTSIG, TypeTKEY:
 			// SOA, TSIG will not be seen (like this) in dyn. updates?
 			// TKEY requires length fields to be present for the Key and OtherData fields
 			continue
-		}
-		r := fn()
-		*r.Header() = RR_Header{Name: "miek.nl.", Rrtype: typ, Class: ClassINET, Ttl: 16}
-		off, err := PackRR(r, data, 0, nil, false)
-		if err != nil {
-			// Should always works, TestNoDataPack should have caught this
-			t.Errorf("failed to pack RR: %v", err)
+		case TypeDHCID, TypeSPF, TypeAPL, TypeAVC, TypeTXT, TypeOPENPGPKEY, TypeEID, TypeNIMLOC, TypeNINFO:
+			// UnpackRR leniently allows empty RDATA for these types.
+			// At least some of them (e.g. TXT) should obviously be rejected, so this list may have to be updated in future.
 			continue
 		}
-		if _, _, err := UnpackRR(data[:off], 0); err != nil {
-			t.Errorf("failed to unpack RR with zero rdata: %s: %v", TypeToString[typ], err)
+		for _, class := range classes {
+			// Build wire-format empty RDATA.  We use RFC3597{} as packRR of concrete struct types could append some data.
+			// Root owner name is chosen to make offset calculation easy.
+			r := &RFC3597{}
+			*r.Header() = RR_Header{Name: ".", Rrtype: typ, Class: class, Ttl: 16}
+			off, err := PackRR(r, data, 0, nil, false)
+			if off != 11 { // 1 byte owner name followed by fixed 10-byte RR header
+				t.Errorf("unexpected pack offset for %s: %d", TypeToString[typ], off)
+			}
+			if err != nil {
+				// Should always works, TestNoDataPack should have caught this
+				t.Errorf("failed to pack RR: %v", err)
+				continue
+			}
+			rr, _, err := UnpackRR(data[:off], 0)
+			if err != nil && (class != ClassINET || !canParseAsRR(typ)) {
+				t.Errorf("failed to unpack RR with zero rdata: %s: %v", TypeToString[typ], err)
+			}
+			if err == nil && class == ClassINET && canParseAsRR(typ) {
+				t.Errorf("unexpectedly succeeded to unpack RR with zero rdata: %v", rr)
+			}
 		}
 	}
 }

@@ -171,8 +171,10 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
-// dynamicUpdate returns true if the Rdlength is zero.
-func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
+// noRdata returns true if the Rdlength can be and is indeed zero.
+// It's allowed for dynamic update delete records.
+// This function also returns true for types that lacks a presentation format.
+func noRdata(h RR_Header) bool { return h.Rdlength == 0 && (h.Class == ClassANY || h.Class == ClassNONE || !canParseAsRR(h.Rrtype))}
 
 func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
 	if off+1 > len(msg) {
