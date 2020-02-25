@@ -37,6 +37,31 @@ func (m TsigSecretMap) SetBase64Secret(name, secret string) error {
 	return nil
 }
 
+// The TsigSecretResolverFunc type is an adapter similar
+// to http.HandlerFunc that allows the use of ordinary
+// functions as TSIG secret resolvers. If f is a function
+// with the appropriate signature, TsigSecretResolverFunc(f)
+// is a TSIG secret resolver that calls f.
+type TsigSecretResolverFunc func(name string) (secret []byte)
+
+// Resolve calls f(name)
+func (f TsigSecretResolverFunc) Resolve(name string) (secret []byte) {
+	return f(name)
+}
+
+func extractTsigSecret(secrets map[string]string, name string) (secret []byte) {
+	s, ok := secrets[name]
+	if !ok {
+		return nil
+	}
+
+	secret, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil
+	}
+	return secret
+}
+
 // HMAC hashing codes. These are transmitted as domain names.
 const (
 	HmacMD5    = "hmac-md5.sig-alg.reg.int."

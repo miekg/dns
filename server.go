@@ -186,8 +186,6 @@ type Server struct {
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// TsigSecrets will be used to resolve the given secret name in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2) into the corresponding secret bytes.
-	TsigSecrets TsigSecretResolver
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
 	// DecorateReader is optional, allows customization of the process that reads raw DNS messages.
@@ -202,6 +200,13 @@ type Server struct {
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
+
+	// Secret(s) for Tsig map[<zonename>]<base64 secret>. The zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2).
+	//
+	// Deprecated: Please use TsigSecrets field and the TsigSecretMap container.
+	TsigSecret map[string]string
+	// TsigSecrets will be used to resolve the given secret name in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2) into the corresponding secret bytes.
+	TsigSecrets TsigSecretResolver
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -238,6 +243,14 @@ func (srv *Server) init() {
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
+	}
+	if srv.TsigSecrets == nil {
+		srv.TsigSecrets = TsigSecretResolverFunc(func(name string) (secret []byte) {
+			if srv.TsigSecret != nil {
+				secret = extractTsigSecret(srv.TsigSecret, name)
+			}
+			return
+		})
 	}
 
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)

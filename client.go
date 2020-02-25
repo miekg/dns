@@ -36,12 +36,18 @@ type Client struct {
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see the deprecated ExchangeContext)
 	Timeout        time.Duration
-	DialTimeout    time.Duration      // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
-	ReadTimeout    time.Duration      // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
-	WriteTimeout   time.Duration      // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
-	TsigSecrets    TsigSecretResolver // TsigSecrets will be used to resolve the given secret name in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2) into the corresponding secret bytes.
-	SingleInflight bool               // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
+	DialTimeout    time.Duration // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
+	ReadTimeout    time.Duration // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
+	WriteTimeout   time.Duration // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
+	SingleInflight bool          // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
+
+	// secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
+	//
+	// Deprecated: Please use TsigSecrets field and the TsigSecretMap container.
+	TsigSecret map[string]string
+	// TsigSecrets will be used to resolve the given secret name in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2) into the corresponding secret bytes.
+	TsigSecrets TsigSecretResolver
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -162,6 +168,11 @@ func (c *Client) exchange(m *Msg, a string) (r *Msg, rtt time.Duration, err erro
 	}
 
 	co.TsigSecrets = c.TsigSecrets
+	if co.TsigSecrets == nil && c.TsigSecret != nil {
+		co.TsigSecrets = TsigSecretResolverFunc(func(name string) (secret []byte) {
+			return extractTsigSecret(c.TsigSecret, name)
+		})
+	}
 	t := time.Now()
 	// write with the appropriate write timeout
 	co.SetWriteDeadline(t.Add(c.getTimeoutForRequest(c.writeTimeout())))
