@@ -15,10 +15,12 @@ import (
 	"encoding/asn1"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"sort"
 	"strings"
 	"time"
+	"unsafe"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -450,9 +452,9 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, RSAMD5:
 		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
-		pubkey := k.publicKeyRSA() // Get the key
-		if pubkey == nil {
-			return ErrKey
+		pubkey, err := k.publicKeyRSA() // Get the key
+		if err != nil {
+			return err
 		}
 
 		h := hash.New()
@@ -522,15 +524,15 @@ func (rr *RRSIG) sigBuf() []byte {
 }
 
 // publicKeyRSA returns the RSA public key from a DNSKEY record.
-func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
+func (k *DNSKEY) publicKeyRSA() (*rsa.PublicKey, error) {
 	keybuf, err := fromBase64([]byte(k.PublicKey))
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("base64 decode: %w", err)
 	}
 
 	if len(keybuf) < 1+1+64 {
 		// Exponent must be at least 1 byte and modulus at least 64
-		return nil
+		return nil, fmt.Errorf("public key too small")
 	}
 
 	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
@@ -543,20 +545,21 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 		keyoff = 3
 	}
 
-	if explen > 4 || explen == 0 || keybuf[keyoff] == 0 {
+	pubkey := new(rsa.PublicKey)
+	maxexplen := uint16(unsafe.Sizeof(pubkey.E))
+
+	if explen > maxexplen || explen == 0 || keybuf[keyoff] == 0 {
 		// Exponent larger than supported by the crypto package,
 		// empty, or contains prohibited leading zero.
-		return nil
+		return nil, fmt.Errorf("public key exponent length %d to large (maximum %d)", explen, maxexplen)
 	}
 
 	modoff := keyoff + int(explen)
 	modlen := len(keybuf) - modoff
 	if modlen < 64 || modlen > 512 || keybuf[modoff] == 0 {
 		// Modulus is too small, large, or contains prohibited leading zero.
-		return nil
+		return nil, fmt.Errorf("modulus too small")
 	}
-
-	pubkey := new(rsa.PublicKey)
 
 	var expo uint64
 	// The exponent of length explen is between keyoff and modoff.
@@ -564,14 +567,15 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 		expo <<= 8
 		expo |= uint64(v)
 	}
-	if expo > 1<<31-1 {
+	max := uint64(1<<(maxexplen*8-1) - 1)
+	if expo > max {
 		// Larger exponent than supported by the crypto package.
-		return nil
+		return nil, fmt.Errorf("public key exponent %d to large (maximum %d)", expo, max)
 	}
 
 	pubkey.E = int(expo)
 	pubkey.N = new(big.Int).SetBytes(keybuf[modoff:])
-	return pubkey
+	return pubkey, nil
 }
 
 // publicKeyECDSA returns the Curve public key from the DNSKEY record.

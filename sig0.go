@@ -190,10 +190,11 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 			return ErrSig
 		}
 	case RSASHA1, RSASHA256, RSASHA512:
-		pk := k.publicKeyRSA()
-		if pk != nil {
-			return rsa.VerifyPKCS1v15(pk, hash, hashed, sig)
+		pk, err := k.publicKeyRSA()
+		if err != nil {
+			return err
 		}
+		return rsa.VerifyPKCS1v15(pk, hash, hashed, sig)
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		pk := k.publicKeyECDSA()
 		r := new(big.Int).SetBytes(sig[:len(sig)/2])
