@@ -527,7 +527,7 @@ func (rr *RRSIG) sigBuf() []byte {
 func (k *DNSKEY) publicKeyRSA() (*rsa.PublicKey, error) {
 	keybuf, err := fromBase64([]byte(k.PublicKey))
 	if err != nil {
-		return nil, fmt.Errorf("base64 decode: %w", err)
+		return nil, err
 	}
 
 	if len(keybuf) < 1+1+64 {
