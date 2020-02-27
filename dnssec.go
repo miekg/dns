@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 
 	"golang.org/x/crypto/ed25519"
 )
@@ -546,7 +546,7 @@ func (k *DNSKEY) publicKeyRSA() (*rsa.PublicKey, error) {
 	}
 
 	pubkey := new(rsa.PublicKey)
-	maxexplen := uint16(unsafe.Sizeof(pubkey.E))
+	maxexplen := uint16(strconv.IntSize / 8)
 
 	if explen > maxexplen || explen == 0 || keybuf[keyoff] == 0 {
 		// Exponent larger than supported by the crypto package,
