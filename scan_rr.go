@@ -581,9 +581,9 @@ func (rr *TALINK) parse(c *zlexer, o string) *ParseError {
 
 func (rr *LOC) parse(c *zlexer, o string) *ParseError {
 	// Non zero defaults for LOC record, see RFC 1876, Section 3.
-	rr.HorizPre = 0x16 // 10000
-	rr.VertPre = 0x13  // 10
-	rr.Size = 0x12     // 1
+	rr.Size = 0x12     // 1e2 cm (1m)
+	rr.HorizPre = 0x16 // 1e6 cm (10000m)
+	rr.VertPre = 0x13  // 1e3 cm (10m)
 	ok := false
 
 	// North
