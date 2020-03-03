@@ -454,7 +454,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
 		pubkey, err := k.publicKeyRSA() // Get the key
 		if err != nil {
-			return err
+			return ErrKey
 		}
 
 		h := hash.New()
