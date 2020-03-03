@@ -192,7 +192,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	case RSASHA1, RSASHA256, RSASHA512:
 		pk, err := k.publicKeyRSA()
 		if err != nil {
-			return err
+			return ErrSig
 		}
 		return rsa.VerifyPKCS1v15(pk, hash, hashed, sig)
 	case ECDSAP256SHA256, ECDSAP384SHA384:
