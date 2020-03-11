@@ -231,7 +231,7 @@ func TestIsFqdnEscaped(t *testing.T) {
 	}
 }
 
-func TestCanonical(t *testing.T) {
+func TestCanonicalName(t *testing.T) {
 	for s, expect := range map[string]string{
 		"":                 ".",
 		".":                ".",
@@ -241,8 +241,8 @@ func TestCanonical(t *testing.T) {
 		"Lower.CASE.test.": "lower.case.test.",
 		"*.Test":           "*.test.",
 	} {
-		if got := Canonical(s); got != expect {
-			t.Errorf("Canonical(%q) = %q, expected %q", s, got, expect)
+		if got := CanonicalName(s); got != expect {
+			t.Errorf("CanonicalName(%q) = %q, expected %q", s, got, expect)
 		}
 	}
 }

@@ -317,9 +317,9 @@ func Fqdn(s string) string {
 	return s + "."
 }
 
-// Canonical returns the domain name in canonical form. A name in canonical
+// CanonicalName returns the domain name in canonical form. A name in canonical
 // form is lowercase and fully qualified. See Section 6.2 in RFC 4034.
-func Canonical(s string) string {
+func CanonicalName(s string) string {
 	return strings.ToLower(Fqdn(s))
 }
 

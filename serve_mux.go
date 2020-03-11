@@ -35,7 +35,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		return nil
 	}
 
-	q = Canonical(q)
+	q = CanonicalName(q)
 
 	var handler Handler
 	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
