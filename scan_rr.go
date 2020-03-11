@@ -1063,7 +1063,7 @@ func (rr *NSEC3PARAM) parse(c *zlexer, o string) *ParseError {
 	c.Next()
 	l, _ = c.Next()
 	if l.token != "-" {
-		rr.SaltLength = uint8(len(l.token))
+		rr.SaltLength = uint8(len(l.token) / 2)
 		rr.Salt = l.token
 	}
 	return slurpRemainder(c)

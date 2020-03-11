@@ -358,6 +358,17 @@ func TestNSEC(t *testing.T) {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
 		}
 	}
+	rr, err := NewRR("nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F")
+	if err != nil {
+		t.Fatal("failed to parse RR: ", err)
+	}
+	if nsec3param, ok := rr.(*NSEC3PARAM); ok {
+		if nsec3param.SaltLength != 8 {
+			t.Fatalf("nsec3param saltlen %d != 8", nsec3param.SaltLength)
+		}
+	} else {
+		t.Fatal("not nsec3 param: ", err)
+	}
 }
 
 func TestParseLOC(t *testing.T) {
