@@ -65,7 +65,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if mux.z == nil {
 		mux.z = make(map[string]Handler)
 	}
-	mux.z[Fqdn(pattern)] = handler
+	mux.z[CanonicalName(pattern)] = handler
 	mux.m.Unlock()
 }
 
@@ -80,7 +80,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
-	delete(mux.z, Fqdn(pattern))
+	delete(mux.z, CanonicalName(pattern))
 	mux.m.Unlock()
 }
 
