@@ -1053,8 +1053,9 @@ func (dns *Msg) CopyTo(r1 *Msg) *Msg {
 	r1.Compress = dns.Compress
 
 	if len(dns.Question) > 0 {
-		r1.Question = make([]Question, len(dns.Question))
-		copy(r1.Question, dns.Question) // TODO(miek): Question is an immutable value, ok to do a shallow-copy
+		qs := make([]Question, len(dns.Question))
+		copy(qs, dns.Question) // TODO(miek): Question is an immutable value, ok to do a shallow-copy
+		r1.Question = qs
 	}
 
 	rrArr := make([]RR, len(dns.Answer)+len(dns.Ns)+len(dns.Extra))
