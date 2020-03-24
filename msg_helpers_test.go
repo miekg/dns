@@ -397,6 +397,10 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 			"extra bits set",
 			[]byte{0x00, 0x01, 22, 0x03, 192, 0, 2},
 		},
+		{
+			"afdlen invalid",
+			[]byte{0x00, 0x01, 22, 0x05, 192, 0, 2, 0, 0},
+		},
 	}
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

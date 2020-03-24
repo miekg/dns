@@ -784,14 +784,16 @@ func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
 	}
 	afdlen := int(nlen & 0x7f)
+	if afdlen > len(ip) {
+		return APLPrefix{}, len(msg), &Error{err: "AFDLENGTH too long"}
+	}
 	if off+afdlen > len(msg) {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
 	}
 	off += copy(ip, msg[off:off+afdlen])
-	if prefix%8 > 0 {
+	if afdlen > 0 {
 		last := ip[afdlen-1]
-		zero := uint8(0xff) >> (prefix % 8)
-		if last&zero > 0 {
+		if last == 0 {
 			return APLPrefix{}, len(msg), &Error{err: "extra APL address bits"}
 		}
 	}
