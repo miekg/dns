@@ -209,8 +209,11 @@ var CertTypeToString = map[uint16]string{
 
 //go:generate go run types_generate.go
 
-// Question holds a DNS question. There can be multiple questions in the
-// question section of a message. Usually there is just one.
+// Question holds a DNS question. Usually there is just one. While the
+// original DNS RFCs allow multiple questions in the question section of a
+// message, in practice it never works. Because most DNS servers see multiple
+// questions as an error, it is recommended to only have one question per
+// message.
 type Question struct {
 	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
