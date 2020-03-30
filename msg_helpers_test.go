@@ -406,7 +406,7 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, _, err := unpackDataAplPrefix(tt.wire, 0)
 			if err == nil {
-				t.Fatalf("[%d] sexpected error, got none", i)
+				t.Fatal("expected error, got none")
 			}
 		})
 	}

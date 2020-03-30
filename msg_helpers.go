@@ -785,7 +785,7 @@ func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 	}
 	afdlen := int(nlen & 0x7f)
 	if afdlen > len(ip) {
-		return APLPrefix{}, len(msg), &Error{err: "AFDLENGTH too long"}
+		return APLPrefix{}, len(msg), &Error{err: "APL length too long"}
 	}
 	if off+afdlen > len(msg) {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
