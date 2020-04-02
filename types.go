@@ -179,6 +179,19 @@ const (
 	LOC_ALTITUDEBASE  = 100000
 )
 
+// Various constants used in the SVCB RR, See draft-ietf-dnsop-svcb-httpssvc-01
+// Section 11.1.2
+const (
+	SVC_KEY0       = 0 // RESERVED
+	SVC_ALPN       = 1
+	SVC_PORT       = 2
+	SVC_ESNICONFIG = 3
+	SVC_IPV4HINT   = 4
+	SVC_KEY5       = 5 // RESERVED
+	SVC_IPV6HINT   = 6
+	SVC_KEY65535   = 1 << 16 // RESERVED
+)
+
 // Different Certificate Types, see RFC 4398, Section 2.1
 const (
 	CertPKIX = 1 + iota
@@ -1445,7 +1458,7 @@ type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string   `dns:"domain-name"`
-	Value    []string `dns:"txt"` // if priority == 0 this is empty
+	Value    []string `dns:"svc"` // if priority == 0 this is empty
 }
 
 func (rr *SVCB) String() string {

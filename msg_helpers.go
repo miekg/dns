@@ -612,6 +612,64 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
+	var svc []string
+	for off < len(msg) {
+		if off+4 > len(msg) {
+			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+		}
+		var code uint16
+		var length uint16
+		code = binary.BigEndian.Uint16(msg[off:])
+		off += 2
+		length = binary.BigEndian.Uint16(msg[off:])
+		off += 2
+		if off+int(length) > len(msg) {
+			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+		}
+		switch code {
+		case EDNS0NSID:
+		default:
+		}
+	}
+
+	code = binary.BigEndian.Uint16(msg[off:])
+	off += 2
+	optlen := binary.BigEndian.Uint16(msg[off:])
+	off += 2
+	return svc, off, nil
+}
+
+func packDataSvc(bitmap []uint16, msg []byte, off int) (int, error) {
+	if len(bitmap) == 0 {
+		return off, nil
+	}
+	var lastwindow, lastlength uint16
+	for _, t := range bitmap {
+		window := t / 256
+		length := (t-window*256)/8 + 1
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
+			off += int(lastlength) + 2
+			lastlength = 0
+		}
+		if window < lastwindow || length < lastlength {
+			return len(msg), &Error{err: "nsec bits out of order"}
+		}
+		if off+2+int(length) > len(msg) {
+			return len(msg), &Error{err: "overflow packing nsec"}
+		}
+		// Setting the window #
+		msg[off] = byte(window)
+		// Setting the octets length
+		msg[off+1] = byte(length)
+		// Setting the bit value for the type in the right octet
+		msg[off+1+int(length)] |= byte(1 << (7 - t%8))
+		lastwindow, lastlength = window, length
+	}
+	off += int(lastlength) + 2
+	return off, nil
+}
+
 func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 	var (
 		servers []string
