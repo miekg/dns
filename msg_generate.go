@@ -57,7 +57,7 @@ func loadModule(name string) (*types.Package, error) {
 
 func main() {
 	// Import and type-check the package
-	pkg, err := loadModule("github.com/miekg/dns")
+	pkg, err := loadModule("github.com/DesWurstes/dns")
 	fatalIfErr(err)
 	scope := pkg.Scope()
 
@@ -110,6 +110,8 @@ return off, err
 					o("off, err = packDataOpt(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
 					o("off, err = packDataNsec(rr.%s, msg, off)\n")
+				case `dns:"svc"`:
+					o("off, err = packDataSvc(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, false)\n")
 				case `dns:"apl"`:
@@ -236,6 +238,8 @@ return off, err
 					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
 				case `dns:"nsec"`:
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
+				case `dns:"nsec"`:
+					o("rr.%s, off, err = unpackDataSvc(msg, off)\n")
 				case `dns:"domain-name"`:
 					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 				case `dns:"apl"`:
