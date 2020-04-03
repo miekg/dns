@@ -238,7 +238,7 @@ return off, err
 					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
 				case `dns:"nsec"`:
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
-				case `dns:"nsec"`:
+				case `dns:"svc"`:
 					o("rr.%s, off, err = unpackDataSvc(msg, off)\n")
 				case `dns:"domain-name"`:
 					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")

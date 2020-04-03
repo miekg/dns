@@ -1369,7 +1369,6 @@ func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
-<<<<<<< HEAD
 // APL RR. See RFC 3123.
 type APL struct {
 	Hdr      RR_Header
