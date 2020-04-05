@@ -135,5 +135,3 @@ func (rr *ZONEMD) parseZONEMD(c *zlexer, o, typ string) *ParseError {
         return nil
 }
 
-//dns.TypeToRR[TypeZONEMD] := func() RR { return new(ZONEMD) }
-//TypeToString[TypeZONEMD] := "ZONEMD";
