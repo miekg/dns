@@ -12,8 +12,10 @@ import (
 
 const 
   (
+	RESERVED = 0
 	TypeZONEMD = uint16(63)
 	SchemeSIMPLE = 1
+	HashSHA384 = 1
   )
 
 type ZONEMD struct {
