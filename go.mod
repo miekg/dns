@@ -1,6 +1,6 @@
-module github.com/miekg/dns
+module github.com/niclabs/dns
 
-go 1.12
+go 1.29
 
 require (
 	github.com/google/go-cmp v0.4.0
