@@ -1005,6 +1005,13 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 	return len(s) + 1
 }
 
+func svcFieldLen(s SvcKeyValue) int {
+	// TODO Lenient?
+	return 1 +
+		len(lenientSvcKeyToString(s.SvcParamKey)) +
+		2 + len(s.SvcParamValue) + 1
+}
+
 func escapedNameLen(s string) int {
 	nameLen := len(s)
 	for i := 0; i < len(s); i++ {

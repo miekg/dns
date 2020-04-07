@@ -1482,7 +1482,7 @@ type SVCB struct {
 type SvcKeyValue struct {
 	SvcParamKey   uint16
 	SvcParamValue string // DQUOTE, ";", and "\"  are escaped
-}
+} // Maybe we shouldn't escape them in this string?
 
 // TODO should we de-escape?
 func (rr *SVCB) String() string {
@@ -1577,6 +1577,10 @@ func lenientSvcKeyToString(svcKey uint16) string {
 	}
 	return "key" + strconv.FormatInt(int64(svcKey), 10)
 }
+
+/*func svcStringToKey(str string) uint16 {
+
+}*/
 
 // copyIP returns a copy of ip.
 func copyIP(ip net.IP) net.IP {
