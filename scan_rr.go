@@ -1801,7 +1801,6 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 						lastHasNoValue = true
 					}
 				}
-				xs = append(xs, SvcKeyValue{SvcParamKey: 0, // TODO It's not 0 Decode
 				numericalKey := svcStringToKey(key)
 				if numericalKey == 0 {
 					return &ParseError{"", "reserved key used", l}
