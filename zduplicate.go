@@ -1076,29 +1076,6 @@ func (r1 *SSHFP) isDuplicate(_r2 RR) bool {
 	return true
 }
 
-func (r1 *SVCB) isDuplicate(_r2 RR) bool {
-	r2, ok := _r2.(*SVCB)
-	if !ok {
-		return false
-	}
-	_ = r2
-	if r1.Priority != r2.Priority {
-		return false
-	}
-	if !isDuplicateName(r1.Target, r2.Target) {
-		return false
-	}
-	if len(r1.Value) != len(r2.Value) {
-		return false
-	}
-	for i := 0; i < len(r1.Value); i++ {
-		if r1.Value[i] != r2.Value[i] {
-			return false
-		}
-	}
-	return true
-}
-
 func (r1 *TA) isDuplicate(_r2 RR) bool {
 	r2, ok := _r2.(*TA)
 	if !ok {

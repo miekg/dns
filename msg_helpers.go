@@ -639,12 +639,12 @@ func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
 	optlen := binary.BigEndian.Uint16(msg[off:])
 	off += 2
 	return svc, off, nil*/
-	return svc, 0, nil
+	return svc, off, nil
 }
 
 func packDataSvc(bitmap []uint16, msg []byte, off int) (int, error) {
 	// TODO
-	return 0, nil
+	return off, nil
 }
 
 func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
