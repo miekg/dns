@@ -1482,7 +1482,7 @@ type SVCB struct {
 type SvcKeyValue struct {
 	SvcParamKey   uint16
 	SvcParamValue string // DQUOTE, ";", and "\"  are escaped
-} // Maybe we shouldn't escape them in this string?
+} // TODO IMPORTANT Maybe we shouldn't escape them in this string?
 
 // TODO should we de-escape?
 func (rr *SVCB) String() string {
