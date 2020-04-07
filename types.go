@@ -209,6 +209,15 @@ var SvcKeyToString = map[uint16]string{
 	SVC_IPV6HINT:        "ipv6hint",
 }
 
+var SvcStringToKey = map[string]uint16{
+	"alpn":            SVC_ALPN,
+	"no-default-alpn": SVC_NO_DEFAULT_ALPN,
+	"port":            SVC_PORT,
+	"ipv4hint":        SVC_IPV4HINT,
+	"esniconfig":      SVC_ESNICONFIG,
+	"ipv6hint":        SVC_IPV6HINT,
+}
+
 // Different Certificate Types, see RFC 4398, Section 2.1
 const (
 	CertPKIX = 1 + iota
@@ -1578,9 +1587,18 @@ func lenientSvcKeyToString(svcKey uint16) string {
 	return "key" + strconv.FormatInt(int64(svcKey), 10)
 }
 
-/*func svcStringToKey(str string) uint16 {
-
-}*/
+// svcStringToKey returns SvcValueKey numerically
+// Accepts keyNNN... unless N == 0 or 65535
+func svcStringToKey(str string) uint16 {
+	if strings.HasPrefix(str, "key") {
+		a, err := strconv.ParseUint(str[3:], 10, 16)
+		if err != nil || a == 65536 {
+			return 0
+		}
+		return uint16(a)
+	}
+	return SvcStringToKey[str]
+}
 
 // copyIP returns a copy of ip.
 func copyIP(ip net.IP) net.IP {

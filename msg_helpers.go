@@ -613,8 +613,8 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 }
 
 // BROKEN, TODO
-func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
-	var svc []string
+func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
+	var svc []SvcKeyValue
 	/*for off < len(msg) {
 		if off+4 > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
@@ -642,7 +642,7 @@ func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
 	return svc, off, nil
 }
 
-func packDataSvc(bitmap []uint16, msg []byte, off int) (int, error) {
+func packDataSvc(s []SvcKeyValue, msg []byte, off int) (int, error) {
 	// TODO
 	return off, nil
 }

@@ -1767,7 +1767,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	xi := 0
 	// If possibly the last value is delayed
 	lastHasNoValue := false
-	inQuotes := false
+	quoteCount := 0
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
 		// This consumes at least, including up to the first equality sign
@@ -1778,11 +1778,12 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			// Keys with equality sign after them
 			// don't need values either
 			z := l.token
-			if inQuotes {
+			if quoteCount == 1 {
 				if !lastHasNoValue {
 					return &ParseError{"", "corrupted key=value pairs", l}
 				}
-				xs[xi].SvcParamValue = z
+				xs[xi-1].SvcParamValue = z
+				lastHasNoValue = false
 			} else {
 				idx := strings.IndexByte(z, '=')
 				key := ""
@@ -1801,18 +1802,24 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 				xs = append(xs, SvcKeyValue{SvcParamKey: 0, // TODO It's not 0 Decode
+				numericalKey := svcStringToKey(key)
+				if numericalKey == 0 {
+					return &ParseError{"", "reserved key used", l}
+				}
+				xs = append(xs, SvcKeyValue{SvcParamKey: numericalKey,
 					SvcParamValue: val})
 				xi++
 			}
 		case zQuote:
-			if inQuotes {
+			quoteCount++
+			if quoteCount == 2 {
 				lastHasNoValue = false
-				inQuotes = false
-			} else {
-				inQuotes = true
+			} else if quoteCount == 3 {
+				return &ParseError{"", "bad value quotation", l}
 			}
 		case zBlank:
 			lastHasNoValue = false
+			quoteCount = 0
 		default:
 			return &ParseError{"", "bad SVCB Values", l}
 		}
