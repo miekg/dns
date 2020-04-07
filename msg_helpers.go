@@ -615,7 +615,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 // BROKEN, TODO
 func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
 	var svc []string
-	for off < len(msg) {
+	/*for off < len(msg) {
 		if off+4 > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
 		}
@@ -638,11 +638,13 @@ func unpackDataSvc(msg []byte, off int) ([]string, int, error) {
 	off += 2
 	optlen := binary.BigEndian.Uint16(msg[off:])
 	off += 2
-	return svc, off, nil
+	return svc, off, nil*/
+	return svc, 0, nil
 }
 
 func packDataSvc(bitmap []uint16, msg []byte, off int) (int, error) {
 	// TODO
+	return 0, nil
 }
 
 func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {

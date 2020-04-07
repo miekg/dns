@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -1762,29 +1763,65 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 	// Values (if any)
 	l, _ = c.Next()
-	var xs []string
-	var cur strings.Builder
+	var xs []SvcKeyValue
+	xi := 0
+	// If possibly the last value is delayed
+	lastHasNoValue := false
+	inQuotes := false
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
 		// This consumes at least, including up to the first equality sign
 		case zString:
 			// In key=value pairs, value doesn't have to be quoted
 			// Unless value contains whitespace
-			cur.WriteString(l.token)
+			// And keys don't need include values
+			// Keys with equality sign after them
+			// don't need values either
+			z := l.token
+			if inQuotes {
+				if !lastHasNoValue {
+					return &ParseError{"", "corrupted key=value pairs", l}
+				}
+				xs[xi].SvcParamValue = z
+			} else {
+				idx := strings.IndexByte(z, '=')
+				key := ""
+				val := ""
+				if idx == -1 {
+					lastHasNoValue = false
+					key = z
+				} else {
+					if idx == 0 {
+						return &ParseError{"", "no valid key found", l}
+					}
+					val = z[idx+1:]
+					key = z[0:idx]
+					if len(val) == 0 {
+						lastHasNoValue = true
+					}
+				}
+				xs = append(xs, SvcKeyValue{SvcParamKey: 0, // TODO It's not 0 Decode
+					SvcParamValue: val})
+				xi++
+			}
 		case zQuote:
-			cur.WriteByte('"')
+			if inQuotes {
+				lastHasNoValue = false
+				inQuotes = false
+			} else {
+				inQuotes = true
+			}
 		case zBlank:
-			// Ok
-			xs = append(xs, cur.String())
-			cur.Reset()
+			lastHasNoValue = false
 		default:
 			return &ParseError{"", "bad SVCB Values", l}
 		}
 		l, _ = c.Next()
 	}
-	if cur.Len() != 0 {
-		xs = append(xs, cur.String())
-	}
+	// No keys are repeated so stable sort not needed
+	sort.Slice(xs, func(i, j int) bool {
+		return xs[i].SvcParamKey < xs[j].SvcParamKey
+	})
 	rr.Value = xs
 	return nil
 }
