@@ -81,6 +81,7 @@ const (
 	TypeCDNSKEY    uint16 = 60
 	TypeOPENPGPKEY uint16 = 61
 	TypeCSYNC      uint16 = 62
+	TypeZONEMD     uint16 = 63
 	TypeSPF        uint16 = 99
 	TypeUINFO      uint16 = 100
 	TypeUID        uint16 = 101
@@ -1353,6 +1354,23 @@ func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
 	l += 4 + 2
 	l += typeBitMapLen(rr.TypeBitMap)
 	return l
+}
+
+// ZONEMD RR, from draft-ietf-dnsop-dns-zone-digest
+type ZONEMD struct {
+	Hdr    RR_Header
+	Serial uint32
+	Scheme uint8
+	Hash   uint8
+	Digest string `dns:"hex"`
+}
+
+func (rr *ZONEMD) String() string {
+	return rr.Hdr.String() +
+		strconv.Itoa(int(rr.Serial)) +
+		" " + strconv.Itoa(int(rr.Scheme)) +
+		" " + strconv.Itoa(int(rr.Hash)) +
+		" " + strings.ToUpper(rr.Digest)
 }
 
 // APL RR. See RFC 3123.

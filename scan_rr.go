@@ -845,6 +845,42 @@ func (rr *CSYNC) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
+func (rr *ZONEMD) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	i, e := strconv.ParseUint(l.token, 10, 32)
+	if e != nil || l.err {
+		return &ParseError{"", "bad ZONEMD Serial", l}
+	}
+	rr.Serial = uint32(i)
+
+	c.Next() // zBlank
+	l, _ = c.Next()
+	i, e1 := strconv.ParseUint(l.token, 10, 8)
+	if e1 != nil || l.err {
+		return &ParseError{"", "bad ZONEMD Scheme", l}
+	}
+	rr.Scheme = uint8(i)
+
+	c.Next() // zBlank
+	l, _ = c.Next()
+	if i, err := strconv.ParseUint(l.token, 10, 8); err != nil {
+		tokenUpper := strings.ToUpper(l.token)
+		i, ok := StringToAlgorithm[tokenUpper]
+		if !ok || l.err {
+			return &ParseError{"", "bad ZONEMD Hash Algorithm", l}
+		}
+		rr.Hash = i
+	} else {
+		rr.Hash = uint8(i)
+	}
+	s, e2 := endingToString(c, "bad ZONEMD Digest")
+	if e2 != nil {
+		return e2
+	}
+	rr.Digest = s
+	return nil
+}
+
 func (rr *SIG) parse(c *zlexer, o string) *ParseError { return rr.RRSIG.parse(c, o) }
 
 func (rr *RRSIG) parse(c *zlexer, o string) *ParseError {
