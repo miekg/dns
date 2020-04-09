@@ -1477,7 +1477,7 @@ func (p *APLPrefix) len() int {
 	return 4 + (prefix+7)/8
 }
 
-// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01)
+// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
 // Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
 type SVCB struct {
 	Hdr      RR_Header
@@ -1502,8 +1502,6 @@ func (rr *SVCB) String() string {
 	for _, element := range rr.Value {
 		s += " " + lenientSvcKeyToString(element.SvcParamKey) +
 			"=\"" + element.SvcParamValue + "\""
-		// TODO Remove
-		//+svcSerializeValue(element.SvcParamKey, element.SvcParamValue)
 	}
 	return s
 }

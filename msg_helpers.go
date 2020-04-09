@@ -614,36 +614,42 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 
 // BROKEN, TODO
 func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
-	var svc []SvcKeyValue
-	/*for off < len(msg) {
-		if off+4 > len(msg) {
+	var xs []SvcKeyValue
+	for off < len(msg) {
+		code, off, err := unpackUint16(msg, off)
+		length, off, err := unpackUint16(msg, off)
+		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
 		}
-		var code uint16
-		var length uint16
-		code = binary.BigEndian.Uint16(msg[off:])
-		off += 2
-		length = binary.BigEndian.Uint16(msg[off:])
-		off += 2
-		if off+int(length) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking svc"}
-		}
-		switch code {
-		case EDNS0NSID:
-		default:
-		}
+		val := make([]byte, length)
+		// TODO copy assumes all keys are unrecognized
+		copy(val, msg[off:off+int(length)])
+
+		xs = append(xs, SvcKeyValue{SvcParamKey: code,
+			SvcParamValue: string(val)})
 	}
 
-	code = binary.BigEndian.Uint16(msg[off:])
-	off += 2
-	optlen := binary.BigEndian.Uint16(msg[off:])
-	off += 2
-	return svc, off, nil*/
-	return svc, off, nil
+	return xs, off, nil
 }
 
-func packDataSvc(s []SvcKeyValue, msg []byte, off int) (int, error) {
-	// TODO
+func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
+	for _, el := range options {
+		off, err := packUint16(el.SvcParamKey, msg, off)
+		off, err = packUint16(uint16(len(el.SvcParamValue)), msg, off)
+		// TODO this len assumes all keys are unrecognized
+		if err != nil || off+len(el.SvcParamValue) > len(msg) {
+			return len(msg), &Error{err: "overflow packing svc"}
+		}
+		// TODO copy assumes all keys are unrecognized
+		if off+len(el.SvcParamValue) > len(msg) {
+			copy(msg[off:], el.SvcParamValue)
+			off = len(msg)
+			continue
+		}
+		// Actual data
+		copy(msg[off:off+len(el.SvcParamValue)], el.SvcParamValue)
+		off += len(el.SvcParamValue)
+	}
 	return off, nil
 }
 
