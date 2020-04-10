@@ -397,6 +397,10 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 			"extra bits set",
 			[]byte{0x00, 0x01, 22, 0x03, 192, 0, 2},
 		},
+		{
+			"afdlen invalid",
+			[]byte{0x00, 0x01, 22, 0x05, 192, 0, 2, 0, 0},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -416,6 +420,14 @@ func TestUnpackDataApl(t *testing.T) {
 		0x00, 0x01, 0x18, 0x03, 192, 0, 2,
 		// !1:192.0.2.128/25
 		0x00, 0x01, 0x19, 0x84, 192, 0, 2, 128,
+		// 1:10.0.0.0/24
+		0x00, 0x01, 0x18, 0x01, 0x0a,
+		// !1:10.0.0.1/32
+		0x00, 0x01, 0x20, 0x84, 0x0a, 0, 0, 1,
+		// !1:0.0.0.0/0
+		0x00, 0x01, 0x00, 0x80,
+		// 2::0/0
+		0x00, 0x02, 0x00, 0x00,
 	}
 	expect := []APLPrefix{
 		{
@@ -437,6 +449,34 @@ func TestUnpackDataApl(t *testing.T) {
 			Network: net.IPNet{
 				IP:   net.ParseIP("192.0.2.128").To4(),
 				Mask: net.CIDRMask(25, 32),
+			},
+		},
+		{
+			Negation: false,
+			Network: net.IPNet{
+				IP:   net.ParseIP("10.0.0.0").To4(),
+				Mask: net.CIDRMask(24, 32),
+			},
+		},
+		{
+			Negation: true,
+			Network: net.IPNet{
+				IP:   net.ParseIP("10.0.0.1").To4(),
+				Mask: net.CIDRMask(32, 32),
+			},
+		},
+		{
+			Negation: true,
+			Network: net.IPNet{
+				IP:   net.ParseIP("0.0.0.0").To4(),
+				Mask: net.CIDRMask(0, 32),
+			},
+		},
+		{
+			Negation: false,
+			Network: net.IPNet{
+				IP:   net.ParseIP("::").To16(),
+				Mask: net.CIDRMask(0, 128),
 			},
 		},
 	}

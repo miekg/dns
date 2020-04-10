@@ -783,28 +783,31 @@ func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 	if int(prefix) > 8*len(ip) {
 		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
 	}
-
 	afdlen := int(nlen & 0x7f)
-	if (int(prefix)+7)/8 != afdlen {
-		return APLPrefix{}, len(msg), &Error{err: "invalid APL address length"}
+	if afdlen > len(ip) {
+		return APLPrefix{}, len(msg), &Error{err: "APL length too long"}
 	}
 	if off+afdlen > len(msg) {
 		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
 	}
 	off += copy(ip, msg[off:off+afdlen])
-	if prefix%8 > 0 {
+	if afdlen > 0 {
 		last := ip[afdlen-1]
-		zero := uint8(0xff) >> (prefix % 8)
-		if last&zero > 0 {
+		if last == 0 {
 			return APLPrefix{}, len(msg), &Error{err: "extra APL address bits"}
 		}
+	}
+	ipnet := net.IPNet{
+		IP:   ip,
+		Mask: net.CIDRMask(int(prefix), 8*len(ip)),
+	}
+	network := ipnet.IP.Mask(ipnet.Mask)
+	if !network.Equal(ipnet.IP) {
+		return APLPrefix{}, len(msg), &Error{err: "invalid APL address length"}
 	}
 
 	return APLPrefix{
 		Negation: (nlen & 0x80) != 0,
-		Network: net.IPNet{
-			IP:   ip,
-			Mask: net.CIDRMask(int(prefix), 8*len(ip)),
-		},
+		Network:  ipnet,
 	}, off, nil
 }
