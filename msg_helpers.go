@@ -634,8 +634,9 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 }
 
 func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
+	var err error
 	for _, el := range options {
-		off, err := packUint16(el.SvcParamKey, msg, off)
+		off, err = packUint16(el.SvcParamKey, msg, off)
 		off, err = packUint16(uint16(len(el.SvcParamValue)), msg, off)
 		// TODO this len assumes all keys are unrecognized
 		if err != nil || off+len(el.SvcParamValue) > len(msg) {
