@@ -623,6 +623,7 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 		}
 		val := make([]byte, length)
 		// TODO copy assumes all keys are unrecognized
+		// TODO MUST reject if wrong format
 		copy(val, msg[off:off+int(length)])
 
 		xs = append(xs, SvcKeyValue{SvcParamKey: code,
