@@ -1,26 +1,30 @@
 package dns
 
 import (
+	"net"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-// Various constants used in the SVCB RR, See draft-ietf-dnsop-svcb-httpssvc-02
-// Section 11.1.2
+// Everything valid for SVCB is applicable to HTTPSSVC too
+// except that for HTTPS, HTTPSSVC must be used
+// and HTTPSSVC signifies that connections can be made over HTTPS
+
+// Keys defined in draft-ietf-dnsop-svcb-httpssvc-02 Section 11.1.2
 const (
-	SVC_KEY0            = 0 // RESERVED
-	SVC_ALPN            = 1
-	SVC_NO_DEFAULT_ALPN = 2
-	SVC_PORT            = 3
-	SVC_IPV4HINT        = 4
-	SVC_ESNICONFIG      = 5
-	SVC_IPV6HINT        = 6
-	SVC_KEY65535        = (1 << 16) - 1 // RESERVED
+	SVCKEY0            = 0 // RESERVED
+	SVCALPN            = 1
+	SVCNO_DEFAULT_ALPN = 2
+	SVCPORT            = 3
+	SVCIPV4HINT        = 4
+	SVCESNICONFIG      = 5
+	SVCIPV6HINT        = 6
+	SVCKEY65535        = (1 << 16) - 1 // RESERVED
 )
 
 // Keys in this inclusive range are for private use
-// Their name is keyNNNNN,
+// Their names are in the format of keyNNNNN,
 // for example 65283 is named key65283
 const (
 	SVC_PRIVATE_USE_LOWER_RANGE = 65280
@@ -28,21 +32,21 @@ const (
 )
 
 var SvcKeyToString = map[uint16]string{
-	SVC_ALPN:            "alpn",
-	SVC_NO_DEFAULT_ALPN: "no-default-alpn",
-	SVC_PORT:            "port",
-	SVC_IPV4HINT:        "ipv4hint",
-	SVC_ESNICONFIG:      "esniconfig",
-	SVC_IPV6HINT:        "ipv6hint",
+	SVCALPN:            "alpn",
+	SVCNO_DEFAULT_ALPN: "no-default-alpn",
+	SVCPORT:            "port",
+	SVCIPV4HINT:        "ipv4hint",
+	SVCESNICONFIG:      "esniconfig",
+	SVCIPV6HINT:        "ipv6hint",
 }
 
 var SvcStringToKey = map[string]uint16{
-	"alpn":            SVC_ALPN,
-	"no-default-alpn": SVC_NO_DEFAULT_ALPN,
-	"port":            SVC_PORT,
-	"ipv4hint":        SVC_IPV4HINT,
-	"esniconfig":      SVC_ESNICONFIG,
-	"ipv6hint":        SVC_IPV6HINT,
+	"alpn":            SVCALPN,
+	"no-default-alpn": SVCNO_DEFAULT_ALPN,
+	"port":            SVCPORT,
+	"ipv4hint":        SVCIPV4HINT,
+	"esniconfig":      SVCESNICONFIG,
+	"ipv6hint":        SVCIPV6HINT,
 }
 
 func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
@@ -135,12 +139,144 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 }
 
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
-// Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
+// TODO Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
+// The one with smallest priority SHOULD be given preference
+// Of those with equal priority, a random one SHOULD be preferred for load balancing
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string        `dns:"domain-name"`
 	Value    []SvcKeyValue `dns:"svc"` // if priority == 0 this is empty
+}
+
+// HTTPSSVCB RR. See the beginning of this file
+// TODO Add code
+type HTTPSSVC struct {
+	SVCB
+}
+
+// SvcKeyValue defines a key=value pair for SvcFieldValue.
+// A SVCB RR can have multiple SvcKeyValues appended to it,
+// but they must be in increasing key order in the wireformat.
+// TODO Should we assume or check when decoding wire?
+type SvcKeyValue interface {
+	// Key returns the key code of the pair.
+	Key() uint16
+	// pack returns the bytes of the value data.
+	pack() ([]byte, error)
+	// unpack sets the data as found in the value. Is also sets
+	// the length of the slice as the length of the value.
+	unpack([]byte) error
+	// String returns the string representation of the pair.
+	String() string
+	// copy returns a deep-copy of the pair.
+	copy() SvcKeyValue
+}
+
+// SVC_ALPN pair is used to list supported connection protocols.
+// Basic use pattern for creating an alpn option:
+//
+//	o := new(dns.HTTPSSVC)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeHTTPSSVC
+//	e := new(dns.SVC_ALPN)
+//	e.Code = dns.SVCALPN
+//	e.Nsid = "AA" TODO
+//	o.Value = append(o.Value, e)
+type SVC_ALPN struct {
+	Code uint16 // Always SVCALPN
+	Alpn string // TODO
+} // TODO ALPN format
+
+// TODO BIG ALPN format needs
+// https://www.iana.org/assignments/tls-extensiontype-values/
+// tls-extensiontype-values.xhtml#alpn-protocol-ids
+
+// SVC_NO_DEFAULT_ALPN pair signifies no support
+// for default connection protocols.
+// Basic use pattern for creating a no_default_alpn option:
+//
+//	o := new(dns.SVCB)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.SVCB
+//	e := new(dns.SVC_NO_DEFAULT_ALPN)
+//	e.Code = dns.SVCNO_DEFAULT_ALPN
+//	o.Value = append(o.Value, e)
+type SVC_NO_DEFAULT_ALPN struct {
+	Code uint16 // Always SVCNO_DEFAULT_ALPN
+	Alpn string // Always empty
+}
+
+// SVC_PORT pair defines the port for connection.
+// Basic use pattern for creating a port option:
+//
+//	o := new(dns.SVCB)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.SVCB
+//	e := new(dns.SVC_PORT)
+//	e.Code = dns.SVCPORT
+//	e.Port = 80
+//	o.Value = append(o.Value, e)
+type SVC_PORT struct {
+	Code uint16 // Always SVCPORT
+	Port uint16
+}
+
+// SVC_IPV4HINT pair suggests an IPv4 address
+// which may be used to open connections if A and AAAA record
+// responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made,
+// after which the connection to the hinted IP address may be
+// terminated and a new connection may be opened.
+// Basic use pattern for creating an ipv4hint option:
+//
+//	o := new(dns.HTTPSSVC)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	e := new(dns.SVC_IPV4HINT)
+//	e.Code = dns.SVCIPV4HINT
+//	e.Hint = net.IPv4(1.1.1.1)
+//	o.Value = append(o.Value, e)
+type SVC_IPV4HINT struct {
+	Code uint16    // Always SVCIPV4HINT
+	Hint net.IPNet // Always IPv4
+}
+
+// SVC_ESNICONFIG pair contains the ESNIConfig structure
+// defined in draft-ietf-tls-esni [RFC TODO] to encrypt
+// the SNI during the client handshake.
+// Basic use pattern for creating an esniconfig option:
+//
+//	o := new(dns.HTTPSSVC)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	e := new(dns.SVC_ESNICONFIG)
+//	e.Code = dns.SVCESNICONFIG
+//	e.ESNI = "/wH...="
+//	o.Value = append(o.Value, e)
+type SVC_ESNICONFIG struct {
+	Code uint16 // Always SVCESNICONFIG
+	ESNI string // This string needs to be hex encoded
+}
+
+// SVC_IPV6HINT pair suggests an IPv6 address
+// which may be used to open connections if A and AAAA record
+// responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made,
+// after which the connection to the hinted IP address may be
+// terminated and a new connection may be opened.
+// Basic use pattern for creating an ipv6hint option:
+//
+//	o := new(dns.HTTPSSVC)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.SVCB
+//	e := new(dns.SVC_IPV6HINT)
+//	e.Code = dns.SVCIPV6HINT
+//	e.Hint = net.ParseIP("2001:db8::1")
+//	o.Value = append(o.Value, e)
+type SVC_IPV6HINT struct {
+	Code uint16    // Always SVCIPV6HINT
+	Hint net.IPNet // Always IPv6
 }
 
 // Those must be ordered by increasing key
