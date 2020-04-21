@@ -150,9 +150,16 @@ type SVCB struct {
 }
 
 // HTTPSSVCB RR. See the beginning of this file
-// TODO Add code
 type HTTPSSVC struct {
 	SVCB
+}
+
+func (rr *HTTPSSVC) String() string {
+	return rr.SVCB.String()
+}
+
+func (rr *HTTPSSVC) parse(c *zlexer, o string) *ParseError {
+	return rr.SVCB.parse(c, o)
 }
 
 // SvcKeyValue defines a key=value pair for SvcFieldValue.
