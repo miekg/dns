@@ -162,6 +162,10 @@ func (rr *HTTPSSVC) parse(c *zlexer, o string) *ParseError {
 	return rr.SVCB.parse(c, o)
 }
 
+func (r1 *HTTPSSVC) isDuplicate(r2 RR) bool {
+	return (*r1).SVCB.isDuplicate(r2)
+}
+
 // SvcKeyValue defines a key=value pair for SvcFieldValue.
 // A SVCB RR can have multiple SvcKeyValues appended to it,
 // but they must be in increasing key order in the wireformat.

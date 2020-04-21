@@ -33,6 +33,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeGPOS:       func() RR { return new(GPOS) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeHIP:        func() RR { return new(HIP) },
+	TypeHTTPSSVC:   func() RR { return new(HTTPSSVC) },
 	TypeKEY:        func() RR { return new(KEY) },
 	TypeKX:         func() RR { return new(KX) },
 	TypeL32:        func() RR { return new(L32) },
@@ -111,6 +112,7 @@ var TypeToString = map[uint16]string{
 	TypeGPOS:       "GPOS",
 	TypeHINFO:      "HINFO",
 	TypeHIP:        "HIP",
+	TypeHTTPSSVC:   "HTTPSSVC",
 	TypeISDN:       "ISDN",
 	TypeIXFR:       "IXFR",
 	TypeKEY:        "KEY",
@@ -193,6 +195,7 @@ func (rr *GID) Header() *RR_Header        { return &rr.Hdr }
 func (rr *GPOS) Header() *RR_Header       { return &rr.Hdr }
 func (rr *HINFO) Header() *RR_Header      { return &rr.Hdr }
 func (rr *HIP) Header() *RR_Header        { return &rr.Hdr }
+func (rr *HTTPSSVC) Header() *RR_Header   { return &rr.Hdr }
 func (rr *KEY) Header() *RR_Header        { return &rr.Hdr }
 func (rr *KX) Header() *RR_Header         { return &rr.Hdr }
 func (rr *L32) Header() *RR_Header        { return &rr.Hdr }
