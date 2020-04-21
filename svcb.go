@@ -107,7 +107,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 						lastHasNoValue = true
 					}
 				}
-				numericalKey := svcStringToKey(key)
+				numericalKey := SvcStringToKey[key]
 				if numericalKey == 0 {
 					return &ParseError{"", "reserved key used", l}
 				}
@@ -178,7 +178,8 @@ type SvcKeyValue interface {
 	// unpack sets the data as found in the value. Is also sets
 	// the length of the slice as the length of the value.
 	unpack([]byte) error
-	// String returns the string representation of the pair.
+	// String returns the string representation of the value.
+	// " and ; and and \ are escaped TODO MAYBE REMOVE
 	String() string
 	// copy returns a deep-copy of the pair.
 	copy() SvcKeyValue
@@ -290,13 +291,6 @@ type SVC_IPV6HINT struct {
 	Hint net.IPNet // Always IPv6
 }
 
-// Those must be ordered by increasing key
-// but only in wire format
-type SvcKeyValue struct {
-	SvcParamKey   uint16
-	SvcParamValue string // DQUOTE, ";", and "\"  are escaped
-} // TODO IMPORTANT Maybe we shouldn't escape them in this string?
-
 // TODO should we de-escape?
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
@@ -304,50 +298,8 @@ func (rr *SVCB) String() string {
 		sprintName(rr.Target)
 		// TODO SvcParamKeys SHALL appear in increasing numeric order.
 	for _, element := range rr.Value {
-		s += " " + lenientSvcKeyToString(element.SvcParamKey) +
-			"=\"" + element.SvcParamValue + "\""
+		s += " " + SvcKeyToString[element.Key()] +
+			"=\"" + element.String() + "\""
 	}
 	return s
-}
-
-// svcKeyToString serializes SVCB key values
-// return empty string if reserved/undefined
-func svcKeyToString(svcKey uint16) string {
-	if svcKey >= SVC_PRIVATE_USE_LOWER_RANGE && svcKey <= SVC_PRIVATE_USE_UPPER_RANGE {
-		return "key" + strconv.FormatInt(int64(svcKey), 10)
-	}
-	// Numbers currently not defined cause the same
-	// empty string return as reserved ones
-
-	/* TODO:
-	  ???
-		In presentation format, values of unrecognized keys
-		   SHALL be represented in wire format, using decimal escape codes (e.g.
-		   \255) when necessary.
-	*/
-
-	return SvcKeyToString[svcKey]
-}
-
-// Non-conformant: attempts to serialize what can't be
-// serialized as keyNNN...
-func lenientSvcKeyToString(svcKey uint16) string {
-	x := svcKeyToString(svcKey)
-	if len(x) != 0 {
-		return x
-	}
-	return "key" + strconv.FormatInt(int64(svcKey), 10)
-}
-
-// svcStringToKey returns SvcValueKey numerically
-// Accepts keyNNN... unless N == 0 or 65535
-func svcStringToKey(str string) uint16 {
-	if strings.HasPrefix(str, "key") {
-		a, err := strconv.ParseUint(str[3:], 10, 16)
-		if err != nil || a == 65536 {
-			return 0
-		}
-		return uint16(a)
-	}
-	return SvcStringToKey[str]
 }
