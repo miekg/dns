@@ -612,7 +612,6 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-// BROKEN, TODO
 func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	var xs []SvcKeyValue
 	var code uint16
@@ -634,42 +633,36 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		case SVCNO_DEFAULT_ALPN:
 			e := new(SVC_NO_DEFAULT_ALPN)
 			if err := e.unpack(msg[off : off+int(length)]); err != nil {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		case SVCPORT:
 			e := new(SVC_PORT)
 			if err := e.unpack(msg[off : off+int(length)]); err != nil {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		case SVCIPV4HINT:
 			e := new(SVC_IPV4HINT)
 			if err := e.unpack(msg[off : off+int(length)]); err != nil {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		case SVCESNICONFIG:
 			e := new(SVC_ESNICONFIG)
 			if err := e.unpack(msg[off : off+int(length)]); err != nil {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		case SVCIPV6HINT:
 			e := new(SVC_IPV6HINT)
 			if err := e.unpack(msg[off : off+int(length)]); err != nil {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		default:
 			e := new(SVC_LOCAL)
 			e.Code = code
@@ -677,8 +670,9 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 				return nil, len(msg), err
 			}
 			xs = append(xs, e)
-			off += int(length)
 		}
+		off += int(length)
+
 		// TODO MUST reject if wrong format
 	}
 

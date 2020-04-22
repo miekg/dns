@@ -132,12 +132,55 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 						lastHasNoValue = true
 					}
 				}
-				numericalKey := SvcStringToKey(key)
-				if numericalKey == 0 {
-					return &ParseError{"", "reserved key used", l}
+				code := SvcStringToKey(key)
+				switch code {
+				case SVCALPN:
+					e := new(SVC_ALPN)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				case SVCNO_DEFAULT_ALPN:
+					e := new(SVC_NO_DEFAULT_ALPN)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				case SVCPORT:
+					e := new(SVC_PORT)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				case SVCIPV4HINT:
+					e := new(SVC_IPV4HINT)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				case SVCESNICONFIG:
+					e := new(SVC_ESNICONFIG)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				case SVCIPV6HINT:
+					e := new(SVC_IPV6HINT)
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
+				default:
+					if code == 0 {
+						return &ParseError{"", "reserved or unrecognized key used", l}
+					}
+					e := new(SVC_LOCAL)
+					e.Code = code
+					if err := e.Read(val); err != nil {
+						return nil, len(msg), err
+					}
+					xs = append(xs, e)
 				}
-				xs = append(xs, SvcKeyValue{SvcParamKey: numericalKey,
-					SvcParamValue: val})
 				xi++
 			}
 		case zQuote:
@@ -161,8 +204,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
 // TODO Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
-// The one with smallest priority SHOULD be given preference
-// Of those with equal priority, a random one SHOULD be preferred for load balancing
+// The one with smallest priority SHOULD be given preference.
+// Of those with equal priority, a random one SHOULD be preferred for load balancing.
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
@@ -189,8 +232,6 @@ func (r1 *HTTPSSVC) isDuplicate(r2 RR) bool {
 
 // SvcKeyValue defines a key=value pair for SvcFieldValue.
 // A SVCB RR can have multiple SvcKeyValues appended to it.
-// In wireformat they must be in increasing key order,
-// which is handled by this library.
 type SvcKeyValue interface {
 	// Key returns the key code of the pair.
 	Key() uint16
@@ -202,6 +243,8 @@ type SvcKeyValue interface {
 	// String returns the string representation of the value.
 	// " and ; and and \ are escaped TODO MAYBE REMOVE
 	String() string
+	// Read sets the data the string representation of the value.
+	Read(string) error
 	// copy returns a deep-copy of the pair.
 	copy() SvcKeyValue
 }
@@ -336,7 +379,6 @@ func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
-		// TODO SvcParamKeys SHALL appear in increasing numeric order.
 	for _, element := range rr.Value {
 		s += " " + SvcKeyToString[element.Key()] +
 			"=\"" + element.String() + "\""
