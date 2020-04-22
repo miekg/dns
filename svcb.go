@@ -55,7 +55,7 @@ func SvcKeyToString(svcKey uint16) string {
 	if len(x) != 0 {
 		return x
 	}
-	if svcKey == 0 || svcKey == 65536 {
+	if svcKey == 0 || svcKey == 65535 {
 		return ""
 	}
 	return "key" + strconv.FormatInt(int64(svcKey), 10)
@@ -113,7 +113,10 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				if !lastHasNoValue {
 					return &ParseError{"", "corrupted key=value pairs", l}
 				}
-				xs[xi-1].SvcParamValue = z
+				err := xs[xi-1].Read(z)
+				if err != nil {
+					return &ParseError{"", err.Error(), l}
+				}
 				lastHasNoValue = false
 			} else {
 				idx := strings.IndexByte(z, '=')
@@ -133,54 +136,11 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 				code := SvcStringToKey(key)
-				switch code {
-				case SVCALPN:
-					e := new(SVC_ALPN)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				case SVCNO_DEFAULT_ALPN:
-					e := new(SVC_NO_DEFAULT_ALPN)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				case SVCPORT:
-					e := new(SVC_PORT)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				case SVCIPV4HINT:
-					e := new(SVC_IPV4HINT)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				case SVCESNICONFIG:
-					e := new(SVC_ESNICONFIG)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				case SVCIPV6HINT:
-					e := new(SVC_IPV6HINT)
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
-				default:
-					if code == 0 {
-						return &ParseError{"", "reserved or unrecognized key used", l}
-					}
-					e := new(SVC_LOCAL)
-					e.Code = code
-					if err := e.Read(val); err != nil {
-						return nil, len(msg), err
-					}
-					xs = append(xs, e)
+				decoded_value, err := readValue(code, val)
+				if err != nil {
+					return &ParseError{"", err.err, l}
 				}
+				xs = append(xs, decoded_value)
 				xi++
 			}
 		case zQuote:
@@ -200,6 +160,57 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	}
 	rr.Value = xs
 	return nil
+}
+
+func readValue(code uint16, val string) (SvcKeyValue, *ParseError) {
+	switch code {
+	case SVCALPN:
+		e := new(SVC_ALPN)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	case SVCNO_DEFAULT_ALPN:
+		e := new(SVC_NO_DEFAULT_ALPN)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	case SVCPORT:
+		e := new(SVC_PORT)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	case SVCIPV4HINT:
+		e := new(SVC_IPV4HINT)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	case SVCESNICONFIG:
+		e := new(SVC_ESNICONFIG)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	case SVCIPV6HINT:
+		e := new(SVC_IPV6HINT)
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	default:
+		if code == 0 {
+			return nil, &ParseError{"", "reserved or unrecognized key used", nil}
+		}
+		e := new(SVC_LOCAL)
+		e.Code = code
+		if err := e.Read(val); err != nil {
+			return nil, err
+		}
+		return e, nil
+	}
 }
 
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
@@ -298,6 +309,26 @@ type SVC_PORT struct {
 	Port uint16
 }
 
+func (s *SVC_PORT) Key() uint16           { return SVCPORT }
+func (s *SVC_PORT) unpack(b []byte) error { s.Port = binary.BigEndian.Uint16(b[0:]); return nil }
+func (s *SVC_PORT) String() string        { return strconv.FormatUint(uint64(s.Port), 10) }
+func (s *SVC_PORT) copy() SvcKeyValue     { return &SVC_PORT{s.Code, s.Port} }
+
+func (s *SVC_PORT) pack() ([]byte, error) {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint16(b[0:], s.Port)
+	return b, nil
+}
+
+func (s *SVC_PORT) Read(b string) error {
+	port, err := strconv.ParseUint(b, 10, 16)
+	if err != nil {
+		return errors.New("dns: bad port")
+	}
+	s.Port = port
+	return nil
+}
+
 // SVC_IPV4HINT pair suggests an IPv4 address
 // which may be used to open connections if A and AAAA record
 // responses for SVCB's Target domain haven't been received.
@@ -311,11 +342,58 @@ type SVC_PORT struct {
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_IPV4HINT)
 //	e.Code = dns.SVCIPV4HINT
-//	e.Hint = net.IPv4(1.1.1.1)
+//	e.Hint = net.IPv4(1,1,1,1)
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
 	Code uint16    // Always SVCIPV4HINT
 	Hint net.IPNet // Always IPv4
+}
+
+// TODO Do we allow IPv4 in v6 format?
+// msg_helpers.go does for packDataA
+
+func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
+func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
+
+func (s *SVC_IPV4HINT) unpack(b []byte) error {
+	if len(b) != net.IPv4len {
+		return errors.New("dns: not IPv4")
+	}
+	s.Hint = append(make(net.IP, 0, net.IPv4len), b...)
+	return nil
+}
+
+func (s *SVC_IPV4HINT) String() string {
+	ip := s.Hint.String()
+	if i == nil {
+		return errors.New("dns: bad IP")
+	}
+	if len(ip) != net.IPv4len {
+		return errors.New("dns: not IPv4")
+	}
+	s.Hint = ip
+	return nil
+}
+
+func (s *SVC_IPV4HINT) pack() ([]byte, error) {
+	if len(s.Hint) != net.IPv4len {
+		return errors.New("dns: not IPv4")
+	}
+	b := make([]byte, 4)
+	copy(b[:], s.Hint)
+	return b, nil
+}
+
+func (s *SVC_IPV4HINT) Read(b string) error {
+	ip := net.ParseIP(b)
+	if ip == nil {
+		return errors.New("dns: bad IP")
+	}
+	if len(ip) != net.IPv4len {
+		return errors.New("dns: not IPv4")
+	}
+	s.Hint = ip
+	return nil
 }
 
 // SVC_ESNICONFIG pair contains the ESNIConfig structure
@@ -333,7 +411,8 @@ type SVC_IPV4HINT struct {
 type SVC_ESNICONFIG struct {
 	Code uint16 // Always SVCESNICONFIG
 	ESNI string // This string needs to be hex encoded
-}
+} // TODO actually []byte would be more useful?
+// See esniconfig in draft-ietf-tls-esni
 
 // SVC_IPV6HINT pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
@@ -353,6 +432,50 @@ type SVC_ESNICONFIG struct {
 type SVC_IPV6HINT struct {
 	Code uint16    // Always SVCIPV6HINT
 	Hint net.IPNet // Always IPv6
+}
+
+func (s *SVC_IPV6HINT) Key() uint16       { return SVCIPV6HINT }
+func (s *SVC_IPV6HINT) copy() SvcKeyValue { return &SVC_IPV6HINT{s.Code, s.Hint} }
+
+func (s *SVC_IPV6HINT) unpack(b []byte) error {
+	if len(b) != net.IPv6len {
+		return errors.New("dns: not IPv6")
+	}
+	s.Hint = append(make(net.IP, 0, net.IPv6len), b...)
+	return nil
+}
+
+func (s *SVC_IPV6HINT) String() string {
+	ip := s.Hint.String()
+	if i == nil {
+		return errors.New("dns: bad IP")
+	}
+	if len(ip) != net.IPv6len {
+		return errors.New("dns: not IPv6")
+	}
+	s.Hint = ip
+	return nil
+}
+
+func (s *SVC_IPV6HINT) pack() ([]byte, error) {
+	if len(s.Hint) != net.IPv6len {
+		return errors.New("dns: not IPv6")
+	}
+	b := make([]byte, net.IPv6len)
+	copy(b[:], s.Hint)
+	return b, nil
+}
+
+func (s *SVC_IPV6HINT) Read(b string) error {
+	ip := net.ParseIP(b)
+	if ip == nil {
+		return errors.New("dns: bad IP")
+	}
+	if len(ip) != net.IPv6len {
+		return errors.New("dns: not IPv6")
+	}
+	s.Hint = ip
+	return nil
 }
 
 // SVC_LOCAL pair is intended for experimental/private use.
