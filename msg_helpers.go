@@ -615,42 +615,89 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 // BROKEN, TODO
 func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	var xs []SvcKeyValue
+	var code uint16
+	var length uint16
+	var err error
 	for off < len(msg) {
-		code, off, err := unpackUint16(msg, off)
-		length, off, err := unpackUint16(msg, off)
+		if off+4 > len(msg) {
+			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+		}
+		code, off, err = unpackUint16(msg, off)
+		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
 		}
-		val := make([]byte, length)
-		// TODO copy assumes all keys are unrecognized
+		switch code {
+		case SVCALPN:
+			e := new(SVC_ALPN)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		case SVCNO_DEFAULT_ALPN:
+			e := new(SVC_NO_DEFAULT_ALPN)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		case SVCPORT:
+			e := new(SVC_PORT)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		case SVCIPV4HINT:
+			e := new(SVC_IPV4HINT)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		case SVCESNICONFIG:
+			e := new(SVC_ESNICONFIG)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		case SVCIPV6HINT:
+			e := new(SVC_IPV6HINT)
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		default:
+			e := new(SVC_LOCAL)
+			e.Code = code
+			if err := e.unpack(msg[off : off+int(length)]); err != nil {
+				return nil, len(msg), err
+			}
+			xs = append(xs, e)
+			off += int(length)
+		}
 		// TODO MUST reject if wrong format
-		copy(val, msg[off:off+int(length)])
-
-		xs = append(xs, SvcKeyValue{SvcParamKey: code,
-			SvcParamValue: string(val)})
 	}
 
 	return xs, off, nil
 }
 
 func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
-	var err error
 	for _, el := range options {
-		off, err = packUint16(el.SvcParamKey, msg, off)
-		off, err = packUint16(uint16(len(el.SvcParamValue)), msg, off)
-		// TODO this len assumes all keys are unrecognized
-		if err != nil || off+len(el.SvcParamValue) > len(msg) {
+		packed, err := el.pack()
+		if err != nil {
+			return len(msg), err
+		}
+		off, err = packUint16(el.Key(), msg, off)
+		off, err = packUint16(uint16(len(packed)), msg, off)
+		if err != nil || off+len(packed) > len(msg) {
 			return len(msg), &Error{err: "overflow packing svc"}
 		}
-		// TODO copy assumes all keys are unrecognized
-		if off+len(el.SvcParamValue) > len(msg) {
-			copy(msg[off:], el.SvcParamValue)
-			off = len(msg)
-			continue
-		}
-		// Actual data
-		copy(msg[off:off+len(el.SvcParamValue)], el.SvcParamValue)
-		off += len(el.SvcParamValue)
+		copy(msg[off:off+len(packed)], packed)
+		off += len(packed)
 	}
 	return off, nil
 }

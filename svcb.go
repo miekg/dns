@@ -167,9 +167,9 @@ func (r1 *HTTPSSVC) isDuplicate(r2 RR) bool {
 }
 
 // SvcKeyValue defines a key=value pair for SvcFieldValue.
-// A SVCB RR can have multiple SvcKeyValues appended to it,
-// but they must be in increasing key order in the wireformat.
-// TODO Should we assume or check when decoding wire?
+// A SVCB RR can have multiple SvcKeyValues appended to it.
+// In wireformat they must be in increasing key order,
+// which is handled by this library.
 type SvcKeyValue interface {
 	// Key returns the key code of the pair.
 	Key() uint16
