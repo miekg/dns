@@ -140,7 +140,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				code := SvcStringToKey(key)
 				decoded_value, err := readValue(code, val)
 				if err != nil {
-					return &ParseError{"", err.String(), l}
+					return &ParseError{"", err.Error(), l}
 				}
 				xs = append(xs, decoded_value)
 				xi++
@@ -263,6 +263,9 @@ type SvcKeyValue interface {
 }
 
 // SVC_ALPN pair is used to list supported connection protocols.
+// Protocol ids can be found at:
+// https://www.iana.org/assignments/tls-extensiontype-values/
+// tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:
 //
 //	o := new(dns.HTTPSSVC)
@@ -270,16 +273,63 @@ type SvcKeyValue interface {
 //	o.Hdr.Rrtype = dns.TypeHTTPSSVC
 //	e := new(dns.SVC_ALPN)
 //	e.Code = dns.SVCALPN
-//	e.Nsid = "AA" TODO
+//	e.Alpn = []string{"h2", "ftp"}
 //	o.Value = append(o.Value, e)
 type SVC_ALPN struct {
 	Code uint16 // Always SVCALPN
-	Alpn string // TODO
-} // TODO ALPN format
+	Alpn []string
+}
 
-// TODO BIG ALPN format needs
-// https://www.iana.org/assignments/tls-extensiontype-values/
-// tls-extensiontype-values.xhtml#alpn-protocol-ids
+func (s *SVC_ALPN) Key() uint16       { return SVCALPN }
+func (s *SVC_ALPN) copy() SvcKeyValue { return &SVC_ALPN{s.Code, s.Alpn} }
+func (s *SVC_ALPN) String() string    { return strings.Join(s.Alpn[:], ",") }
+
+// TODO The spec requires the alpn keys that include \ and , are separated.
+// In practice, no standard key including those exists.
+// Do we need to handle that case at cost of visible complexity?
+
+func (s *SVC_ALPN) pack() ([]byte, error) {
+	// TODO Estimate
+	b := make([]byte, 0, 10*len(s.Alpn))
+	for _, e := range s.Alpn {
+		//x := []byte(strings.ReplaceAll(strings.ReplaceAll(e, "\\", "\\\\"), ",", "\\,"))
+		x := []byte(e)
+		if len(x) == 0 {
+			return nil, errors.New("dns: empty alpn-id")
+		}
+		if len(x) > 255 {
+			return nil, errors.New("dns: alpn-id too long")
+		}
+		b = append(b, byte(len(x)))
+		b = append(b, x...)
+	}
+	return b[:len(b)-1], nil
+}
+
+func (s *SVC_ALPN) unpack(b []byte) error {
+	i := 0
+	// TODO estimate
+	alpn := make([]string, 0, len(b)/10)
+	for i < len(b) {
+		length := int(b[i])
+		i++
+		if i+length > len(b) {
+			return errors.New("dns: alpn array malformed")
+		}
+		alpn = append(alpn, string(b[i:i+length]))
+		i += length
+	}
+	s.Alpn = alpn
+	return nil
+}
+
+func (s *SVC_ALPN) Read(b string) error {
+	if b[len(b)-1] == ',' {
+		return errors.New("dns: alpn-id list can't end with comma")
+	}
+	s.Alpn = strings.Split(b, ",")
+	return nil
+}
 
 // SVC_NO_DEFAULT_ALPN pair signifies no support
 // for default connection protocols.
@@ -427,9 +477,18 @@ func (s *SVC_IPV4HINT) Read(b string) error {
 //	o.Value = append(o.Value, e)
 type SVC_ESNICONFIG struct {
 	Code uint16 // Always SVCESNICONFIG
-	ESNI string // This string needs to be hex encoded
-} // TODO actually []byte would be more useful?
-// See esniconfig in draft-ietf-tls-esni
+	ESNI string // This string needs to be base64 encoded
+}
+
+// TODO actually []byte would be more useful?
+// because to interpret it one has to decode it
+
+func (s *SVC_ESNICONFIG) Key() uint16           { return SVCESNICONFIG }
+func (s *SVC_ESNICONFIG) copy() SvcKeyValue     { return &SVC_ESNICONFIG{s.Code, s.ESNI} }
+func (s *SVC_ESNICONFIG) pack() ([]byte, error) { return []byte(s.ESNI), nil }
+func (s *SVC_ESNICONFIG) unpack(b []byte) error { s.ESNI = string(b); return nil }
+func (s *SVC_ESNICONFIG) String() string        { return s.ESNI }
+func (s *SVC_ESNICONFIG) Read(b string) error   { s.ESNI = b; return nil }
 
 // SVC_IPV6HINT pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
@@ -519,21 +578,31 @@ func (s *SVC_LOCAL) copy() SvcKeyValue     { return &SVC_LOCAL{s.Code, s.Data} }
 func (s *SVC_LOCAL) pack() ([]byte, error) { return s.Data, nil }
 func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
 
-// Assumes the resulting string, in DNS presentation format,
-// will be enclosed in double quotes ". Therefore doesn't
-// expect whitespace to be escaped
+// Assumes that the resultant string, in DNS presentation format,
+// will be enclosed in double quotes ". Therefore it doesn't
+// expect whitespace to be escaped.
 func (s *SVC_LOCAL) String() string {
 	return ""
+	// TODO No idea how it'd work
 }
 
+// Assumes that the input string was enclosed in double quotes.
 func (s *SVC_LOCAL) Read(b string) error {
 	// Allocation for the worst case
-	bytes := make([]byte, 0, len(b))
-	str := []byte(b)
-	for i, e := range str {
-
-	}
-
+	/*	bytes := make([]byte, 0, len(b))
+			str := []byte(b)
+			backslash := false
+			for _, e := range str {
+				if e > 0x20 && e < 0x7f {
+		      if e == "\"" || e == "\\" || e =
+					bytes = append(bytes, e)
+				}
+				if e == 0x20 || e == 0x09 {
+		      bytes = append(bytes, e)
+				}
+		  }
+			return nil*/
+	// No idea how it'd work
 	return nil
 }
 
