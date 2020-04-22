@@ -1549,7 +1549,7 @@ func TestParseCSYNC(t *testing.T) {
 func TestParseSVCB(t *testing.T) {
 	syncs := map[string]string{
 		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
-		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499"`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="a=" port="499" esniconfig="b"`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499"`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2,h2c" esniconfig="b" port="499"`,
 	}
 	for s, o := range syncs {
 		rr, err := NewRR(s)
