@@ -365,8 +365,8 @@ func (s *SVC_PORT) Read(b string) error {
 //	e.Hint = net.IPv4(1,1,1,1)
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
-	Code uint16    // Always SVCIPV4HINT
-	Hint net.IPNet // Always IPv4
+	Code uint16 // Always SVCIPV4HINT
+	Hint net.IP // Always IPv4
 }
 
 // TODO Do we allow IPv4 in v6 format?
@@ -376,11 +376,11 @@ func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
 func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
 
 func (s *SVC_IPV4HINT) pack() ([]byte, error) {
-	if len(s.Hint.IP) != net.IPv4len {
+	if len(s.Hint) != net.IPv4len {
 		return nil, errors.New("dns: not IPv4")
 	}
 	b := make([]byte, 4)
-	copy(b[:], s.Hint.IP)
+	copy(b[:], s.Hint)
 	return b, nil
 }
 
@@ -394,13 +394,10 @@ func (s *SVC_IPV4HINT) unpack(b []byte) error {
 
 func (s *SVC_IPV4HINT) String() string {
 	ip := s.Hint.String()
-	if i == nil {
-		return errors.New("dns: bad IP")
-	}
 	if len(ip) != net.IPv4len {
-		return errors.New("dns: not IPv4")
+		ip = "<nil>"
 	}
-	return ip.String()
+	return ip
 }
 
 func (s *SVC_IPV4HINT) Read(b string) error {
@@ -450,8 +447,8 @@ type SVC_ESNICONFIG struct {
 //	e.Hint = net.ParseIP("2001:db8::1")
 //	o.Value = append(o.Value, e)
 type SVC_IPV6HINT struct {
-	Code uint16    // Always SVCIPV6HINT
-	Hint net.IPNet // Always IPv6
+	Code uint16 // Always SVCIPV6HINT
+	Hint net.IP // Always IPv6
 }
 
 func (s *SVC_IPV6HINT) Key() uint16       { return SVCIPV6HINT }
@@ -459,7 +456,7 @@ func (s *SVC_IPV6HINT) copy() SvcKeyValue { return &SVC_IPV6HINT{s.Code, s.Hint}
 
 func (s *SVC_IPV6HINT) pack() ([]byte, error) {
 	if len(s.Hint) != net.IPv6len {
-		return errors.New("dns: not IPv6")
+		return nil, errors.New("dns: not IPv6")
 	}
 	b := make([]byte, net.IPv6len)
 	copy(b[:], s.Hint)
@@ -476,13 +473,10 @@ func (s *SVC_IPV6HINT) unpack(b []byte) error {
 
 func (s *SVC_IPV6HINT) String() string {
 	ip := s.Hint.String()
-	if i == nil {
-		return errors.New("dns: bad IP")
-	}
 	if len(ip) != net.IPv6len {
-		return errors.New("dns: not IPv6")
+		ip = "<nil>"
 	}
-	return ip.String()
+	return ip
 }
 
 func (s *SVC_IPV6HINT) Read(b string) error {
@@ -520,7 +514,7 @@ type SVC_LOCAL struct {
 	// e.g. \000 for NUL and \127 for DEL are used.
 }
 
-func (s *SVC_LOCAL) Key() uint16           { return SVCLOCAL }
+func (s *SVC_LOCAL) Key() uint16           { return s.Code }
 func (s *SVC_LOCAL) copy() SvcKeyValue     { return &SVC_LOCAL{s.Code, s.Data} }
 func (s *SVC_LOCAL) pack() ([]byte, error) { return s.Data, nil }
 func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
@@ -529,7 +523,7 @@ func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
 // will be enclosed in double quotes ". Therefore doesn't
 // expect whitespace to be escaped
 func (s *SVC_LOCAL) String() string {
-
+	return ""
 }
 
 func (s *SVC_LOCAL) Read(b string) error {
@@ -548,7 +542,7 @@ func (rr *SVCB) String() string {
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
 	for _, element := range rr.Value {
-		s += " " + SvcKeyToString[element.Key()] +
+		s += " " + SvcKeyToString(element.Key()) +
 			"=\"" + element.String() + "\""
 	}
 	return s
