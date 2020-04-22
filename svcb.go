@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"encoding/binary"
+	"errors"
 	"net"
 	"strconv"
 	"strings"
@@ -138,7 +140,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				code := SvcStringToKey(key)
 				decoded_value, err := readValue(code, val)
 				if err != nil {
-					return &ParseError{"", err.err, l}
+					return &ParseError{"", err.String(), l}
 				}
 				xs = append(xs, decoded_value)
 				xi++
@@ -162,7 +164,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-func readValue(code uint16, val string) (SvcKeyValue, *ParseError) {
+func readValue(code uint16, val string) (SvcKeyValue, error) {
 	switch code {
 	case SVCALPN:
 		e := new(SVC_ALPN)
@@ -202,7 +204,7 @@ func readValue(code uint16, val string) (SvcKeyValue, *ParseError) {
 		return e, nil
 	default:
 		if code == 0 {
-			return nil, &ParseError{"", "reserved or unrecognized key used", nil}
+			return nil, errors.New("reserved or unrecognized key used")
 		}
 		e := new(SVC_LOCAL)
 		e.Code = code
@@ -291,7 +293,25 @@ type SVC_ALPN struct {
 //	o.Value = append(o.Value, e)
 type SVC_NO_DEFAULT_ALPN struct {
 	Code uint16 // Always SVCNO_DEFAULT_ALPN
-	Alpn string // Always empty
+}
+
+func (s *SVC_NO_DEFAULT_ALPN) Key() uint16           { return SVCNO_DEFAULT_ALPN }
+func (s *SVC_NO_DEFAULT_ALPN) copy() SvcKeyValue     { return &SVC_NO_DEFAULT_ALPN{s.Code} }
+func (s *SVC_NO_DEFAULT_ALPN) pack() ([]byte, error) { return []byte{}, nil }
+func (s *SVC_NO_DEFAULT_ALPN) String() string        { return "" }
+
+func (s *SVC_NO_DEFAULT_ALPN) unpack(b []byte) error {
+	if len(b) != 0 {
+		return errors.New("dns: no_default_alpn should have no value")
+	}
+	return nil
+}
+
+func (s *SVC_NO_DEFAULT_ALPN) Read(b string) error {
+	if len(b) != 0 {
+		return errors.New("dns: no_default_alpn should have no value")
+	}
+	return nil
 }
 
 // SVC_PORT pair defines the port for connection.
@@ -325,7 +345,7 @@ func (s *SVC_PORT) Read(b string) error {
 	if err != nil {
 		return errors.New("dns: bad port")
 	}
-	s.Port = port
+	s.Port = uint16(port)
 	return nil
 }
 
@@ -355,6 +375,15 @@ type SVC_IPV4HINT struct {
 func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
 func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
 
+func (s *SVC_IPV4HINT) pack() ([]byte, error) {
+	if len(s.Hint.IP) != net.IPv4len {
+		return nil, errors.New("dns: not IPv4")
+	}
+	b := make([]byte, 4)
+	copy(b[:], s.Hint.IP)
+	return b, nil
+}
+
 func (s *SVC_IPV4HINT) unpack(b []byte) error {
 	if len(b) != net.IPv4len {
 		return errors.New("dns: not IPv4")
@@ -371,17 +400,7 @@ func (s *SVC_IPV4HINT) String() string {
 	if len(ip) != net.IPv4len {
 		return errors.New("dns: not IPv4")
 	}
-	s.Hint = ip
-	return nil
-}
-
-func (s *SVC_IPV4HINT) pack() ([]byte, error) {
-	if len(s.Hint) != net.IPv4len {
-		return errors.New("dns: not IPv4")
-	}
-	b := make([]byte, 4)
-	copy(b[:], s.Hint)
-	return b, nil
+	return ip.String()
 }
 
 func (s *SVC_IPV4HINT) Read(b string) error {
@@ -396,6 +415,7 @@ func (s *SVC_IPV4HINT) Read(b string) error {
 	return nil
 }
 
+// TODO ECHOConfig
 // SVC_ESNICONFIG pair contains the ESNIConfig structure
 // defined in draft-ietf-tls-esni [RFC TODO] to encrypt
 // the SNI during the client handshake.
@@ -437,6 +457,15 @@ type SVC_IPV6HINT struct {
 func (s *SVC_IPV6HINT) Key() uint16       { return SVCIPV6HINT }
 func (s *SVC_IPV6HINT) copy() SvcKeyValue { return &SVC_IPV6HINT{s.Code, s.Hint} }
 
+func (s *SVC_IPV6HINT) pack() ([]byte, error) {
+	if len(s.Hint) != net.IPv6len {
+		return errors.New("dns: not IPv6")
+	}
+	b := make([]byte, net.IPv6len)
+	copy(b[:], s.Hint)
+	return b, nil
+}
+
 func (s *SVC_IPV6HINT) unpack(b []byte) error {
 	if len(b) != net.IPv6len {
 		return errors.New("dns: not IPv6")
@@ -453,17 +482,7 @@ func (s *SVC_IPV6HINT) String() string {
 	if len(ip) != net.IPv6len {
 		return errors.New("dns: not IPv6")
 	}
-	s.Hint = ip
-	return nil
-}
-
-func (s *SVC_IPV6HINT) pack() ([]byte, error) {
-	if len(s.Hint) != net.IPv6len {
-		return errors.New("dns: not IPv6")
-	}
-	b := make([]byte, net.IPv6len)
-	copy(b[:], s.Hint)
-	return b, nil
+	return ip.String()
 }
 
 func (s *SVC_IPV6HINT) Read(b string) error {
@@ -489,13 +508,39 @@ func (s *SVC_IPV6HINT) Read(b string) error {
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_LOCAL)
 //	e.Code = 65400
-//	e.Data = "abc"
+//	e.Data = []byte("abc")
 //	o.Value = append(o.Value, e)
 type SVC_LOCAL struct {
 	Code uint16 // Never 0, 65535 or any assigned keys
-	Data string // Can contain everything a byte array can
-	// TODO: Or a byte array?
-	// TODO How are ", ;, \ encoded? Are they escaped
+	Data []byte // All byte sequences are allowed
+	// For the string representation, See draft-ietf-dnsop-svcb-httpssvc
+	// (TODO RFC XXXX)
+	// "2.1.1.  Presentation format for SvcFieldValue key=value pairs"
+	// for a full list of allowed characters. Otherwise escape codes
+	// e.g. \000 for NUL and \127 for DEL are used.
+}
+
+func (s *SVC_LOCAL) Key() uint16           { return SVCLOCAL }
+func (s *SVC_LOCAL) copy() SvcKeyValue     { return &SVC_LOCAL{s.Code, s.Data} }
+func (s *SVC_LOCAL) pack() ([]byte, error) { return s.Data, nil }
+func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
+
+// Assumes the resulting string, in DNS presentation format,
+// will be enclosed in double quotes ". Therefore doesn't
+// expect whitespace to be escaped
+func (s *SVC_LOCAL) String() string {
+
+}
+
+func (s *SVC_LOCAL) Read(b string) error {
+	// Allocation for the worst case
+	bytes := make([]byte, 0, len(b))
+	str := []byte(b)
+	for i, e := range str {
+
+	}
+
+	return nil
 }
 
 func (rr *SVCB) String() string {
