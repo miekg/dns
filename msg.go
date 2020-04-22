@@ -1007,7 +1007,7 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 
 func svcFieldLen(s SvcKeyValue) int {
 	return 1 +
-		len(SvcKeyToString[s.Key()]) +
+		len(SvcKeyToString(s.Key())) +
 		2 + len(s.String()) + 1
 }
 

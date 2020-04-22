@@ -2,7 +2,6 @@ package dns
 
 import (
 	"net"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -23,15 +22,15 @@ const (
 	SVCKEY65535        = (1 << 16) - 1 // RESERVED
 )
 
-// Keys in this inclusive range are for private use
-// Their names are in the format of keyNNNNN,
-// for example 65283 is named key65283
+// Keys in this inclusive range are recommended
+// for private use. Their names are in the format
+// of keyNNNNN, for example 65283 is named key65283
 const (
-	SVC_PRIVATE_USE_LOWER_RANGE = 65280
-	SVC_PRIVATE_USE_UPPER_RANGE = 65534
+	SVC_PRIVATE_LOWER = 65280
+	SVC_PRIVATE_UPPER = 65534
 )
 
-var SvcKeyToString = map[uint16]string{
+var svcKeyToString = map[uint16]string{
 	SVCALPN:            "alpn",
 	SVCNO_DEFAULT_ALPN: "no-default-alpn",
 	SVCPORT:            "port",
@@ -40,13 +39,39 @@ var SvcKeyToString = map[uint16]string{
 	SVCIPV6HINT:        "ipv6hint",
 }
 
-var SvcStringToKey = map[string]uint16{
+var svcStringToKey = map[string]uint16{
 	"alpn":            SVCALPN,
 	"no-default-alpn": SVCNO_DEFAULT_ALPN,
 	"port":            SVCPORT,
 	"ipv4hint":        SVCIPV4HINT,
 	"esniconfig":      SVCESNICONFIG,
 	"ipv6hint":        SVCIPV6HINT,
+}
+
+// SvcKeyToString serializes keys in presentation format.
+// Returns empty string for reserved keys.
+func SvcKeyToString(svcKey uint16) string {
+	x := svcKeyToString[svcKey]
+	if len(x) != 0 {
+		return x
+	}
+	if svcKey == 0 || svcKey == 65536 {
+		return ""
+	}
+	return "key" + strconv.FormatInt(int64(svcKey), 10)
+}
+
+// svcStringToKey returns SvcValueKey numerically.
+// Accepts keyNNN... unless N == 0 or 65535.
+func SvcStringToKey(str string) uint16 {
+	if strings.HasPrefix(str, "key") {
+		a, err := strconv.ParseUint(str[3:], 10, 16)
+		if err != nil || a == 65536 {
+			return 0
+		}
+		return uint16(a)
+	}
+	return svcStringToKey[str]
 }
 
 func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
@@ -107,7 +132,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 						lastHasNoValue = true
 					}
 				}
-				numericalKey := SvcStringToKey[key]
+				numericalKey := SvcStringToKey(key)
 				if numericalKey == 0 {
 					return &ParseError{"", "reserved key used", l}
 				}
@@ -130,10 +155,6 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		}
 		l, _ = c.Next()
 	}
-	// No keys are repeated so stable sort not needed
-	sort.Slice(xs, func(i, j int) bool {
-		return xs[i].SvcParamKey < xs[j].SvcParamKey
-	})
 	rr.Value = xs
 	return nil
 }
@@ -281,7 +302,7 @@ type SVC_ESNICONFIG struct {
 //
 //	o := new(dns.HTTPSSVC)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.SVCB
+//	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_IPV6HINT)
 //	e.Code = dns.SVCIPV6HINT
 //	e.Hint = net.ParseIP("2001:db8::1")
@@ -291,7 +312,26 @@ type SVC_IPV6HINT struct {
 	Hint net.IPNet // Always IPv6
 }
 
-// TODO should we de-escape?
+// SVC_LOCAL pair is intended for experimental/private use.
+// The key is recommended to be in the range
+// [SVC_PRIVATE_LOWER, SVC_PRIVATE_UPPER].
+// Its value in presentation format
+// Basic use pattern for creating an keyNNNNN option:
+//
+//	o := new(dns.HTTPSSVC)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	e := new(dns.SVC_LOCAL)
+//	e.Code = 65400
+//	e.Data = "abc"
+//	o.Value = append(o.Value, e)
+type SVC_LOCAL struct {
+	Code uint16 // Never 0, 65535 or any assigned keys
+	Data string // Can contain everything a byte array can
+	// TODO: Or a byte array?
+	// TODO How are ", ;, \ encoded? Are they escaped
+}
+
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +

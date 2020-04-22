@@ -686,6 +686,10 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 }
 
 func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
+	// No keys are repeated so stable sort not needed
+	sort.Slice(options, func(i, j int) bool {
+		return options[i].Key() < options[j].Key()
+	})
 	for _, el := range options {
 		packed, err := el.pack()
 		if err != nil {
