@@ -97,64 +97,55 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	// Values (if any)
 	l, _ = c.Next()
 	var xs []SvcKeyValue
-	xi := 0
-	// If possibly the last value is delayed
-	lastHasNoValue := false
-	quoteCount := 0
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
 		// This consumes at least, including up to the first equality sign
 		case zString:
 			// In key=value pairs, value doesn't have to be quoted
-			// Unless value contains whitespace
-			// And keys don't need include values
+			// unless value contains whitespace.
+			// And keys don't need include values.
 			// Keys with equality sign after them
-			// don't need values either
+			// don't need values either.
 			z := l.token
-			if quoteCount == 1 {
-				if !lastHasNoValue {
-					return &ParseError{"", "corrupted key=value pairs", l}
-				}
-				err := xs[xi-1].Read(z)
-				if err != nil {
-					return &ParseError{"", err.Error(), l}
-				}
-				lastHasNoValue = false
+
+			idx := strings.IndexByte(z, '=')
+			key := ""
+			val := ""
+			if idx == -1 {
+				key = z
 			} else {
-				idx := strings.IndexByte(z, '=')
-				key := ""
-				val := ""
-				if idx == -1 {
-					lastHasNoValue = false
-					key = z
-				} else {
-					if idx == 0 {
-						return &ParseError{"", "no valid key found", l}
-					}
-					val = z[idx+1:]
-					key = z[0:idx]
-					if len(val) == 0 {
-						lastHasNoValue = true
+				if idx == 0 {
+					return &ParseError{"", "no valid SVCB key found", l}
+				}
+				val = z[idx+1:]
+				key = z[0:idx]
+				if len(val) == 0 {
+					l, _ = c.Next()
+					if l.value == zQuote {
+						l, _ = c.Next()
+						switch l.value {
+						case zString:
+							val = l.token
+							l, _ = c.Next()
+							if l.value != zQuote {
+								return &ParseError{"", "SVCB unterminated value", l}
+							}
+						case zQuote:
+						default:
+							return &ParseError{"", "SVCB invalid value", l}
+						}
 					}
 				}
-				code := SvcStringToKey(key)
-				decoded_value, err := readValue(code, val)
-				if err != nil {
-					return &ParseError{"", err.Error(), l}
-				}
-				xs = append(xs, decoded_value)
-				xi++
 			}
+			code := SvcStringToKey(key)
+			decoded_value, err := readValue(code, val)
+			if err != nil {
+				return &ParseError{"", err.Error(), l}
+			}
+			xs = append(xs, decoded_value)
 		case zQuote:
-			quoteCount++
-			if quoteCount == 2 {
-				lastHasNoValue = false
-			} else if quoteCount == 3 {
-				return &ParseError{"", "bad value quotation", l}
-			}
+			return &ParseError{"", "SVCB key can't contain double quotes", l}
 		case zBlank:
-			lastHasNoValue = false
-			quoteCount = 0
 		default:
 			return &ParseError{"", "bad SVCB Values", l}
 		}
@@ -582,8 +573,8 @@ func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
 // will be enclosed in double quotes ". Therefore it doesn't
 // expect whitespace to be escaped.
 func (s *SVC_LOCAL) String() string {
-	return ""
-	// TODO No idea how it'd work
+	return string(s.Data)
+	// TODO No idea how to escape escape
 }
 
 // Assumes that the input string was enclosed in double quotes.
@@ -602,7 +593,8 @@ func (s *SVC_LOCAL) Read(b string) error {
 				}
 		  }
 			return nil*/
-	// No idea how it'd work
+	// No idea how it'd escape
+	s.Data = []byte(b)
 	return nil
 }
 
