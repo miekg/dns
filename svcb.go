@@ -398,24 +398,24 @@ func (s *SVC_PORT) Read(b string) error {
 //	e := new(dns.SVC_IPV4HINT)
 //	e.Code = dns.SVCIPV4HINT
 //	e.Hint = net.IPv4(1,1,1,1).To4()
+//  // or
+//	e.Hint = net.ParseIP("1.1.1.1").To4()
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
 	Code uint16 // Always SVCIPV4HINT
 	Hint net.IP // Always IPv4
 }
 
-// TODO Do we allow IPv4 in v6 format?
-// msg_helpers.go does for packDataA
-
 func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
 func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
 
 func (s *SVC_IPV4HINT) pack() ([]byte, error) {
-	if len(s.Hint) != net.IPv4len {
+	x := s.Hint.To4()
+	if x == nil {
 		return nil, errors.New("dns: not IPv4")
 	}
 	b := make([]byte, 4)
-	copy(b[:], s.Hint)
+	copy(b[:], x)
 	return b, nil
 }
 
@@ -428,11 +428,10 @@ func (s *SVC_IPV4HINT) unpack(b []byte) error {
 }
 
 func (s *SVC_IPV4HINT) String() string {
-	ip := s.Hint.String()
-	if len(ip) != net.IPv4len {
-		ip = "<nil>"
+	if ip := s.Hint.To4(); ip != nil {
+		return ip.String()
 	}
-	return ip
+	return "<nil>"
 }
 
 func (s *SVC_IPV4HINT) Read(b string) error {
@@ -440,10 +439,10 @@ func (s *SVC_IPV4HINT) Read(b string) error {
 	if ip == nil {
 		return errors.New("dns: bad IP")
 	}
-	if len(ip) != net.IPv4len {
+	if ip.To4() == nil {
 		return errors.New("dns: not IPv4")
 	}
-	s.Hint = ip
+	s.Hint = ip.To4()
 	return nil
 }
 
@@ -516,11 +515,10 @@ func (s *SVC_IPV6HINT) unpack(b []byte) error {
 }
 
 func (s *SVC_IPV6HINT) String() string {
-	ip := s.Hint.String()
-	if len(ip) != net.IPv6len {
-		ip = "<nil>"
+	if ip := s.Hint; len(ip) == net.IPv6len {
+		return ip.String()
 	}
-	return ip
+	return "<nil>"
 }
 
 func (s *SVC_IPV6HINT) Read(b string) error {
