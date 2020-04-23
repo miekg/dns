@@ -111,38 +111,53 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			idx := strings.IndexByte(z, '=')
 			key := ""
 			val := ""
+			var key_value SvcKeyValue
+			// Key with no value and no equality sign
 			if idx == -1 {
 				key = z
+				key_value = makeSvcKeyValue(SvcStringToKey(key))
+				if key_value == nil {
+					return &ParseError{"", "SVCB invalid key", l}
+				}
 			} else {
 				if idx == 0 {
 					return &ParseError{"", "no valid SVCB key found", l}
 				}
 				val = z[idx+1:]
 				key = z[0:idx]
+
+				key_value = makeSvcKeyValue(SvcStringToKey(key))
+				if key_value == nil {
+					return &ParseError{"", "SVCB invalid key", l}
+				}
+
 				if len(val) == 0 {
+					// We have a key and an equality sign
+					// Maybe we have nothing after "="
+					// or we have a double quote
 					l, _ = c.Next()
 					if l.value == zQuote {
 						l, _ = c.Next()
 						switch l.value {
 						case zString:
+							// We have a value in double quotes
 							val = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
 								return &ParseError{"", "SVCB unterminated value", l}
 							}
 						case zQuote:
+							// There's nothing in double quotes
 						default:
 							return &ParseError{"", "SVCB invalid value", l}
 						}
 					}
 				}
 			}
-			code := SvcStringToKey(key)
-			decoded_value, err := readValue(code, val)
-			if err != nil {
+			if err := key_value.Read(val); err != nil {
 				return &ParseError{"", err.Error(), l}
 			}
-			xs = append(xs, decoded_value)
+			xs = append(xs, key_value)
 		case zQuote:
 			return &ParseError{"", "SVCB key can't contain double quotes", l}
 		case zBlank:
@@ -155,54 +170,27 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-func readValue(code uint16, val string) (SvcKeyValue, error) {
+func makeSvcKeyValue(code uint16) SvcKeyValue {
 	switch code {
 	case SVCALPN:
-		e := new(SVC_ALPN)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_ALPN)
 	case SVCNO_DEFAULT_ALPN:
-		e := new(SVC_NO_DEFAULT_ALPN)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_NO_DEFAULT_ALPN)
 	case SVCPORT:
-		e := new(SVC_PORT)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_PORT)
 	case SVCIPV4HINT:
-		e := new(SVC_IPV4HINT)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_IPV4HINT)
 	case SVCESNICONFIG:
-		e := new(SVC_ESNICONFIG)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_ESNICONFIG)
 	case SVCIPV6HINT:
-		e := new(SVC_IPV6HINT)
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return new(SVC_IPV6HINT)
 	default:
 		if code == 0 {
-			return nil, errors.New("reserved or unrecognized key used")
+			return nil
 		}
 		e := new(SVC_LOCAL)
 		e.Code = code
-		if err := e.Read(val); err != nil {
-			return nil, err
-		}
-		return e, nil
+		return e
 	}
 }
 
