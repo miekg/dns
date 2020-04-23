@@ -194,8 +194,7 @@ func makeSvcKeyValue(code uint16) SvcKeyValue {
 	}
 }
 
-// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
-// TODO Named ESNI and numbered 0xff9f = 65439 according to draft-ietf-tls-esni-05
+// SVCB RR. TODO See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
 // The one with smallest priority SHOULD be given preference.
 // Of those with equal priority, a random one SHOULD be preferred for load balancing.
 type SVCB struct {
@@ -371,7 +370,7 @@ func (s *SVC_PORT) unpack(b []byte) error {
 }
 
 func (s *SVC_PORT) pack() ([]byte, error) {
-	b := make([]byte, 4)
+	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b[0:], s.Port)
 	return b, nil
 }
@@ -398,7 +397,7 @@ func (s *SVC_PORT) Read(b string) error {
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_IPV4HINT)
 //	e.Code = dns.SVCIPV4HINT
-//	e.Hint = net.IPv4(1,1,1,1)
+//	e.Hint = net.IPv4(1,1,1,1).To4()
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
 	Code uint16 // Always SVCIPV4HINT
