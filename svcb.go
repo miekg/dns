@@ -536,7 +536,6 @@ func (s *SVC_IPV6HINT) Read(b string) error {
 // SVC_LOCAL pair is intended for experimental/private use.
 // The key is recommended to be in the range
 // [SVC_PRIVATE_LOWER, SVC_PRIVATE_UPPER].
-// Its value in presentation format
 // Basic use pattern for creating an keyNNNNN option:
 //
 //	o := new(dns.HTTPSSVC)
@@ -590,6 +589,8 @@ func (s *SVC_LOCAL) Read(b string) error {
 	return nil
 }
 
+// TODO standard seems to allow duplicate keys
+// in the presentation format.
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +

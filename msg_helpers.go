@@ -627,64 +627,37 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
 		}
-		switch code {
-		case SVCALPN:
-			e := new(SVC_ALPN)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		case SVCNO_DEFAULT_ALPN:
-			e := new(SVC_NO_DEFAULT_ALPN)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		case SVCPORT:
-			e := new(SVC_PORT)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		case SVCIPV4HINT:
-			e := new(SVC_IPV4HINT)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		case SVCESNICONFIG:
-			e := new(SVC_ESNICONFIG)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		case SVCIPV6HINT:
-			e := new(SVC_IPV6HINT)
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
-		default:
-			e := new(SVC_LOCAL)
-			e.Code = code
-			if err := e.unpack(msg[off : off+int(length)]); err != nil {
-				return nil, len(msg), err
-			}
-			xs = append(xs, e)
+		e := makeSvcKeyValue(code)
+		if err := e.unpack(msg[off : off+int(length)]); err != nil {
+			return nil, len(msg), err
 		}
+		xs = append(xs, e)
 		off += int(length)
-
-		// TODO MUST reject if wrong format
 	}
 
+	prev := uint16(0)
+	for _, e := range xs {
+		if e.Key() <= prev {
+			return nil, len(msg), &Error{err: "svc keys not in strictly increasing order"}
+		}
+		prev = e.Key()
+	}
 	return xs, off, nil
 }
 
+// TODO examine if input is modified
+// and if this is bad.
 func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
-	// No keys are repeated so stable sort not needed
 	sort.Slice(options, func(i, j int) bool {
 		return options[i].Key() < options[j].Key()
 	})
+	prev := uint16(0)
+	for _, e := range options {
+		if e.Key() <= prev {
+			return len(msg), &Error{err: "repeated svc pairs are not allowed"}
+		}
+		prev = e.Key()
+	}
 	for _, el := range options {
 		packed, err := el.pack()
 		if err != nil {
