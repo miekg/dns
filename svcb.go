@@ -282,7 +282,7 @@ func (s *SVC_ALPN) pack() ([]byte, error) {
 		b = append(b, byte(len(x)))
 		b = append(b, x...)
 	}
-	return b[:len(b)-1], nil
+	return b[:], nil
 }
 
 func (s *SVC_ALPN) unpack(b []byte) error {
@@ -358,10 +358,17 @@ type SVC_PORT struct {
 	Port uint16
 }
 
-func (s *SVC_PORT) Key() uint16           { return SVCPORT }
-func (s *SVC_PORT) unpack(b []byte) error { s.Port = binary.BigEndian.Uint16(b[0:]); return nil }
-func (s *SVC_PORT) String() string        { return strconv.FormatUint(uint64(s.Port), 10) }
-func (s *SVC_PORT) copy() SvcKeyValue     { return &SVC_PORT{s.Code, s.Port} }
+func (s *SVC_PORT) Key() uint16       { return SVCPORT }
+func (s *SVC_PORT) String() string    { return strconv.FormatUint(uint64(s.Port), 10) }
+func (s *SVC_PORT) copy() SvcKeyValue { return &SVC_PORT{s.Code, s.Port} }
+
+func (s *SVC_PORT) unpack(b []byte) error {
+	if len(b) != 2 {
+		return errors.New("dns: bad port")
+	}
+	s.Port = binary.BigEndian.Uint16(b[0:])
+	return nil
+}
 
 func (s *SVC_PORT) pack() ([]byte, error) {
 	b := make([]byte, 4)
