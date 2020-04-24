@@ -80,7 +80,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
-		return &ParseError{"", "bad SVCB Priority", l}
+		return &ParseError{"", "bad svc Priority", l}
 	}
 	rr.Priority = uint16(i)
 
@@ -90,7 +90,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 	name, nameOk := toAbsoluteName(l.token, o)
 	if l.err || !nameOk {
-		return &ParseError{"", "bad SVCB Target", l}
+		return &ParseError{"", "bad svc Target", l}
 	}
 	rr.Target = name
 
@@ -117,18 +117,18 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				key = z
 				key_value = makeSvcKeyValue(SvcStringToKey(key))
 				if key_value == nil {
-					return &ParseError{"", "SVCB invalid key", l}
+					return &ParseError{"", "svc invalid key", l}
 				}
 			} else {
 				if idx == 0 {
-					return &ParseError{"", "no valid SVCB key found", l}
+					return &ParseError{"", "no valid svc key found", l}
 				}
 				val = z[idx+1:]
 				key = z[0:idx]
 
 				key_value = makeSvcKeyValue(SvcStringToKey(key))
 				if key_value == nil {
-					return &ParseError{"", "SVCB invalid key", l}
+					return &ParseError{"", "svc invalid key", l}
 				}
 
 				if len(val) == 0 {
@@ -144,12 +144,12 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 							val = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
-								return &ParseError{"", "SVCB unterminated value", l}
+								return &ParseError{"", "svc unterminated value", l}
 							}
 						case zQuote:
 							// There's nothing in double quotes
 						default:
-							return &ParseError{"", "SVCB invalid value", l}
+							return &ParseError{"", "svc invalid value", l}
 						}
 					}
 				}
@@ -159,10 +159,10 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			}
 			xs = append(xs, key_value)
 		case zQuote:
-			return &ParseError{"", "SVCB key can't contain double quotes", l}
+			return &ParseError{"", "svc key can't contain double quotes", l}
 		case zBlank:
 		default:
-			return &ParseError{"", "bad SVCB Values", l}
+			return &ParseError{"", "bad svc Values", l}
 		}
 		l, _ = c.Next()
 	}
@@ -237,6 +237,8 @@ type SvcKeyValue interface {
 	Read(string) error
 	// copy returns a deep-copy of the pair.
 	copy() SvcKeyValue
+	// len returns the length of value in the wire format.
+	len() uint16
 }
 
 // SVC_ALPN pair is used to list supported connection protocols.
@@ -308,6 +310,14 @@ func (s *SVC_ALPN) Read(b string) error {
 	return nil
 }
 
+func (s *SVC_ALPN) len() uint16 {
+	l := len(s.Alpn)
+	for _, e := range s.Alpn {
+		l += len(e)
+	}
+	return uint16(l)
+}
+
 // SVC_NO_DEFAULT_ALPN pair signifies no support
 // for default connection protocols.
 // Basic use pattern for creating a no_default_alpn option:
@@ -326,6 +336,7 @@ func (s *SVC_NO_DEFAULT_ALPN) Key() uint16           { return SVCNO_DEFAULT_ALPN
 func (s *SVC_NO_DEFAULT_ALPN) copy() SvcKeyValue     { return &SVC_NO_DEFAULT_ALPN{s.Code} }
 func (s *SVC_NO_DEFAULT_ALPN) pack() ([]byte, error) { return []byte{}, nil }
 func (s *SVC_NO_DEFAULT_ALPN) String() string        { return "" }
+func (s *SVC_NO_DEFAULT_ALPN) len() uint16           { return 0 }
 
 func (s *SVC_NO_DEFAULT_ALPN) unpack(b []byte) error {
 	if len(b) != 0 {
@@ -359,6 +370,7 @@ type SVC_PORT struct {
 func (s *SVC_PORT) Key() uint16       { return SVCPORT }
 func (s *SVC_PORT) String() string    { return strconv.FormatUint(uint64(s.Port), 10) }
 func (s *SVC_PORT) copy() SvcKeyValue { return &SVC_PORT{s.Code, s.Port} }
+func (s *SVC_PORT) len() uint16       { return 2 }
 
 func (s *SVC_PORT) unpack(b []byte) error {
 	if len(b) != 2 {
@@ -407,6 +419,7 @@ type SVC_IPV4HINT struct {
 
 func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
 func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
+func (s *SVC_IPV4HINT) len() uint16       { return 4 }
 
 func (s *SVC_IPV4HINT) pack() ([]byte, error) {
 	x := s.Hint.To4()
@@ -472,6 +485,7 @@ func (s *SVC_ESNICONFIG) pack() ([]byte, error) { return []byte(s.ESNI), nil }
 func (s *SVC_ESNICONFIG) unpack(b []byte) error { s.ESNI = string(b); return nil }
 func (s *SVC_ESNICONFIG) String() string        { return s.ESNI }
 func (s *SVC_ESNICONFIG) Read(b string) error   { s.ESNI = b; return nil }
+func (s *SVC_ESNICONFIG) len() uint16           { return uint16(len(s.ESNI)) }
 
 // SVC_IPV6HINT pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
@@ -495,6 +509,7 @@ type SVC_IPV6HINT struct {
 
 func (s *SVC_IPV6HINT) Key() uint16       { return SVCIPV6HINT }
 func (s *SVC_IPV6HINT) copy() SvcKeyValue { return &SVC_IPV6HINT{s.Code, s.Hint} }
+func (s *SVC_IPV6HINT) len() uint16       { return 16 }
 
 func (s *SVC_IPV6HINT) pack() ([]byte, error) {
 	if len(s.Hint) != net.IPv6len {
@@ -558,6 +573,7 @@ func (s *SVC_LOCAL) Key() uint16           { return s.Code }
 func (s *SVC_LOCAL) copy() SvcKeyValue     { return &SVC_LOCAL{s.Code, s.Data} }
 func (s *SVC_LOCAL) pack() ([]byte, error) { return s.Data, nil }
 func (s *SVC_LOCAL) unpack(b []byte) error { s.Data = b; return nil }
+func (s *SVC_LOCAL) len() uint16           { return uint16(len(s.Data)) }
 
 // Assumes that the resultant string, in DNS presentation format,
 // will be enclosed in double quotes ". Therefore it doesn't

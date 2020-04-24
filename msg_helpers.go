@@ -642,8 +642,6 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	return xs, off, nil
 }
 
-// TODO examine if input is modified
-// and if this is bad.
 func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) {
 	pairs := make([]SvcKeyValue, len(originalPairs))
 	copy(pairs, originalPairs)
