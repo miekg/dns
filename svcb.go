@@ -232,7 +232,6 @@ type SvcKeyValue interface {
 	// the length of the slice as the length of the value.
 	unpack([]byte) error
 	// String returns the string representation of the value.
-	// " and ; and and \ are escaped TODO MAYBE REMOVE
 	String() string
 	// Read sets the data the string representation of the value.
 	Read(string) error
@@ -251,11 +250,11 @@ type SvcKeyValue interface {
 //	o.Hdr.Rrtype = dns.TypeHTTPSSVC
 //	e := new(dns.SVC_ALPN)
 //	e.Code = dns.SVCALPN
-//	e.Alpn = []string{"h2", "ftp"}
+//	e.Alpn = []string{"h2", "http/1.1"}
 //	o.Value = append(o.Value, e)
 type SVC_ALPN struct {
-	Code uint16 // Always SVCALPN
-	Alpn []string
+	Code uint16   // Always SVCALPN
+	Alpn []string // Must not be of zero length
 }
 
 func (s *SVC_ALPN) Key() uint16       { return SVCALPN }
@@ -302,9 +301,9 @@ func (s *SVC_ALPN) unpack(b []byte) error {
 }
 
 func (s *SVC_ALPN) Read(b string) error {
-	if b[len(b)-1] == ',' {
-		return errors.New("dns: alpn-id list can't end with comma")
-	}
+	// TODO Standard requires len > 0 only for presentation format?
+	// TODO maybe check if length = 0 or length = 255 for all of them
+	// or if they contain disallowed characters?
 	s.Alpn = strings.Split(b, ",")
 	return nil
 }
