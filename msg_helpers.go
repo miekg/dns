@@ -619,9 +619,6 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	var length uint16
 	var err error
 	for off < len(msg) {
-		if off+4 > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking svc"}
-		}
 		code, off, err = unpackUint16(msg, off)
 		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
@@ -647,25 +644,27 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 
 // TODO examine if input is modified
 // and if this is bad.
-func packDataSvc(options []SvcKeyValue, msg []byte, off int) (int, error) {
-	sort.Slice(options, func(i, j int) bool {
-		return options[i].Key() < options[j].Key()
+func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) {
+	pairs := make([]SvcKeyValue, len(originalPairs))
+	copy(pairs, originalPairs)
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].Key() < pairs[j].Key()
 	})
 	prev := uint16(0)
-	for _, e := range options {
+	for _, e := range pairs {
 		if e.Key() <= prev {
 			return len(msg), &Error{err: "repeated svc pairs are not allowed"}
 		}
 		prev = e.Key()
 	}
-	for _, el := range options {
+	for _, el := range pairs {
 		packed, err := el.pack()
 		if err != nil {
 			return len(msg), err
 		}
 		off, err = packUint16(el.Key(), msg, off)
 		off, err = packUint16(uint16(len(packed)), msg, off)
-		if err != nil || off+len(packed) > len(msg) {
+		if err != nil || off+len(packed) > len(msg) || len(packed) > (1<<16-1) {
 			return len(msg), &Error{err: "overflow packing svc"}
 		}
 		copy(msg[off:off+len(packed)], packed)
