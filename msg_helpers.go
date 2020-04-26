@@ -620,11 +620,17 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	var err error
 	for off < len(msg) {
 		code, off, err = unpackUint16(msg, off)
+		if err != nil {
+			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+		}
 		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking svc"}
 		}
 		e := makeSvcKeyValue(code)
+		if e == nil {
+			return nil, len(msg), &Error{err: "reserved svc key used"}
+		}
 		if err := e.unpack(msg[off : off+int(length)]); err != nil {
 			return nil, len(msg), err
 		}
