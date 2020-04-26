@@ -170,6 +170,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
+// makeSvcKeyValue returns a SvcKeyValue with the key
+// or nil if a reserved key is used.
 func makeSvcKeyValue(code uint16) SvcKeyValue {
 	switch code {
 	case SVCALPN:
@@ -185,7 +187,7 @@ func makeSvcKeyValue(code uint16) SvcKeyValue {
 	case SVCIPV6HINT:
 		return new(SVC_IPV6HINT)
 	default:
-		if code == 0 {
+		if code == 0 || code == 65535 {
 			return nil
 		}
 		e := new(SVC_LOCAL)
