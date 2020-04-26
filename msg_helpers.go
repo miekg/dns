@@ -423,92 +423,47 @@ Option:
 	if off+int(optlen) > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking opt"}
 	}
-	switch code {
-	case EDNS0NSID:
-		e := new(EDNS0_NSID)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0SUBNET:
-		e := new(EDNS0_SUBNET)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0COOKIE:
-		e := new(EDNS0_COOKIE)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0EXPIRE:
-		e := new(EDNS0_EXPIRE)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0UL:
-		e := new(EDNS0_UL)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0LLQ:
-		e := new(EDNS0_LLQ)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0DAU:
-		e := new(EDNS0_DAU)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0DHU:
-		e := new(EDNS0_DHU)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0N3U:
-		e := new(EDNS0_N3U)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	case EDNS0PADDING:
-		e := new(EDNS0_PADDING)
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
-	default:
-		e := new(EDNS0_LOCAL)
-		e.Code = code
-		if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
-		}
-		edns = append(edns, e)
-		off += int(optlen)
+	e := makeDataOpt(code)
+	if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
+		return nil, len(msg), err
 	}
+	edns = append(edns, e)
+	off += int(optlen)
 
 	if off < len(msg) {
 		goto Option
 	}
 
 	return edns, off, nil
+}
+
+func makeDataOpt(code uint16) EDNS0 {
+	switch code {
+	case EDNS0NSID:
+		return new(EDNS0_NSID)
+	case EDNS0SUBNET:
+		return new(EDNS0_SUBNET)
+	case EDNS0COOKIE:
+		return new(EDNS0_COOKIE)
+	case EDNS0EXPIRE:
+		return new(EDNS0_EXPIRE)
+	case EDNS0UL:
+		return new(EDNS0_UL)
+	case EDNS0LLQ:
+		return new(EDNS0_LLQ)
+	case EDNS0DAU:
+		return new(EDNS0_DAU)
+	case EDNS0DHU:
+		return new(EDNS0_DHU)
+	case EDNS0N3U:
+		return new(EDNS0_N3U)
+	case EDNS0PADDING:
+		return new(EDNS0_PADDING)
+	default:
+		e := new(EDNS0_LOCAL)
+		e.Code = code
+		return e
+	}
 }
 
 func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
@@ -521,9 +476,7 @@ func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
 		binary.BigEndian.PutUint16(msg[off+2:], uint16(len(b))) // Length
 		off += 4
 		if off+len(b) > len(msg) {
-			copy(msg[off:], b)
-			off = len(msg)
-			continue
+			return len(msg), &Error{err: "overflow packing opt"}
 		}
 		// Actual data
 		copy(msg[off:off+len(b)], b)
