@@ -158,9 +158,11 @@ func TestPrivateZoneParser(t *testing.T) {
 	defer dns.PrivateHandleRemove(TypeVERSION)
 
 	r := strings.NewReader(smallzone)
-	for x := range dns.ParseZone(r, ".", "") {
-		if err := x.Error; err != nil {
-			t.Fatal(err)
-		}
+	z := dns.NewZoneParser(r, ".", "")
+
+	for _, ok := z.Next(); ok; _, ok = z.Next() {
+	}
+	if err := z.Err(); err != nil {
+		t.Fatal(err)
 	}
 }

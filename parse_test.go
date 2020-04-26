@@ -546,24 +546,24 @@ $TTL 314
 example.com.   DNAME 10 ; TTL=314 after second $TTL
 `
 	reCaseFromComment := regexp.MustCompile(`TTL=(\d+)\s+(.*)`)
-	records := ParseZone(strings.NewReader(zone), "", "")
+	z := NewZoneParser(strings.NewReader(zone), "", "")
 	var i int
-	for record := range records {
+
+	for rr, ok := z.Next(); ok; rr, ok = z.Next() {
 		i++
-		if record.Error != nil {
-			t.Error(record.Error)
-			continue
-		}
-		expected := reCaseFromComment.FindStringSubmatch(record.Comment)
+		expected := reCaseFromComment.FindStringSubmatch(z.Comment())
 		if len(expected) != 3 {
 			t.Errorf("regexp didn't match for record %d", i)
 			continue
 		}
 		expectedTTL, _ := strconv.ParseUint(expected[1], 10, 32)
-		ttl := record.RR.Header().Ttl
+		ttl := rr.Header().Ttl
 		if ttl != uint32(expectedTTL) {
 			t.Errorf("%s: expected TTL %d, got %d", expected[2], expectedTTL, ttl)
 		}
+	}
+	if err := z.Err(); err != nil {
+		t.Error(err)
 	}
 	if i != 10 {
 		t.Errorf("expected %d records, got %d", 5, i)
@@ -603,16 +603,12 @@ func TestRelativeNameErrors(t *testing.T) {
 		},
 	}
 	for _, errorCase := range badZones {
-		entries := ParseZone(strings.NewReader(errorCase.zoneContents), "", "")
-		for entry := range entries {
-			if entry.Error == nil {
-				t.Errorf("%s: expected error, got nil", errorCase.label)
-				continue
-			}
-			err := entry.Error.err
-			if err != errorCase.expectedErr {
-				t.Errorf("%s: expected error `%s`, got `%s`", errorCase.label, errorCase.expectedErr, err)
-			}
+		z := NewZoneParser(strings.NewReader(errorCase.zoneContents), "", "")
+		z.Next()
+		if err := z.Err(); err == nil {
+			t.Errorf("%s: expected error, got nil", errorCase.label)
+		} else if !strings.Contains(err.Error(), errorCase.expectedErr) {
+			t.Errorf("%s: expected error `%s`, got `%s`", errorCase.label, errorCase.expectedErr, err)
 		}
 	}
 }
@@ -719,8 +715,12 @@ func TestRfc1982(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	for range ParseZone(strings.NewReader(""), "", "") {
+	z := NewZoneParser(strings.NewReader(""), "", "")
+	for _, ok := z.Next(); ok; _, ok = z.Next() {
 		t.Errorf("should be empty")
+	}
+	if err := z.Err(); err != nil {
+		t.Error("got an error when it shouldn't")
 	}
 }
 
@@ -889,18 +889,20 @@ foo. IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
 foo. IN NSEC miek.nl. TXT RRSIG NSEC; this is comment 7
 foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
 `
-	for x := range ParseZone(strings.NewReader(zone), ".", "") {
-		if x.Error == nil {
-			if x.Comment != "" {
-				if _, ok := comments[x.Comment]; !ok {
-					t.Errorf("wrong comment %q", x.Comment)
-				}
+	z := NewZoneParser(strings.NewReader(zone), ".", "")
+	for _, ok := z.Next(); ok; _, ok = z.Next() {
+		if z.Comment() != "" {
+			if _, okC := comments[z.Comment()]; !okC {
+				t.Errorf("wrong comment %q", z.Comment())
 			}
 		}
 	}
+	if err := z.Err(); err != nil {
+		t.Error("got an error when it shouldn't")
+	}
 }
 
-func TestParseZoneComments(t *testing.T) {
+func TestZoneParserComments(t *testing.T) {
 	for i, test := range []struct {
 		zone     string
 		comments []string
@@ -975,22 +977,23 @@ func TestParseZoneComments(t *testing.T) {
 		r := strings.NewReader(test.zone)
 
 		var j int
-		for r := range ParseZone(r, "", "") {
-			if r.Error != nil {
-				t.Fatal(r.Error)
-			}
-
+		z := NewZoneParser(r, "", "")
+		for rr, ok := z.Next(); ok; rr, ok = z.Next() {
 			if j >= len(test.comments) {
 				t.Fatalf("too many records for zone %d at %d record, expected %d", i, j+1, len(test.comments))
 			}
 
-			if r.Comment != test.comments[j] {
-				t.Errorf("invalid comment for record %d:%d %v / %v", i, j, r.RR, r.Error)
+			if z.Comment() != test.comments[j] {
+				t.Errorf("invalid comment for record %d:%d %v", i, j, rr)
 				t.Logf("expected %q", test.comments[j])
-				t.Logf("got      %q", r.Comment)
+				t.Logf("got      %q", z.Comment())
 			}
 
 			j++
+		}
+
+		if err := z.Err(); err != nil {
+			t.Fatal(err)
 		}
 
 		if j != len(test.comments) {
