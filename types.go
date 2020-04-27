@@ -509,12 +509,8 @@ func sprintTxtOctet(s string) string {
 		switch {
 		case n == 0:
 			i++ // dangling back slash
-		case b == '.':
-			dst.WriteByte('.')
-		case b < ' ' || b > '~':
-			dst.WriteString(escapeByte(b))
 		default:
-			dst.WriteByte(b)
+			writeTXTStringByte(&dst, b)
 		}
 		i += n
 	}
