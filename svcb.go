@@ -68,7 +68,8 @@ func SvcKeyToString(svcKey uint16) string {
 func SvcStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
-		if err != nil || a == 65536 {
+		// no leading zeros
+		if err != nil || a == 65535 || str[4] == '0' {
 			return 0
 		}
 		return uint16(a)
@@ -167,6 +168,9 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		l, _ = c.Next()
 	}
 	rr.Value = xs
+	if rr.Priority == 0 && len(xs) > 0 {
+		return &ParseError{"", "svc aliasform can't have values", l}
+	}
 	return nil
 }
 
