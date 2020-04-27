@@ -419,48 +419,67 @@ func (s *SVC_PORT) Read(b string) error {
 //	e.Hint = net.ParseIP("1.1.1.1").To4()
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
-	Code uint16 // Always SVCIPV4HINT
-	Hint net.IP // Always IPv4
+	Code uint16   // Always SVCIPV4HINT
+	Hint []net.IP // Always IPv4
 }
 
 func (s *SVC_IPV4HINT) Key() uint16       { return SVCIPV4HINT }
 func (s *SVC_IPV4HINT) copy() SvcKeyValue { return &SVC_IPV4HINT{s.Code, s.Hint} }
-func (s *SVC_IPV4HINT) len() uint16       { return 4 }
+func (s *SVC_IPV4HINT) len() uint16       { return 4 * uint16(len(s.Hint)) }
 
 func (s *SVC_IPV4HINT) pack() ([]byte, error) {
-	x := s.Hint.To4()
-	if x == nil {
-		return nil, errors.New("dns: not IPv4")
+	b := make([]byte, 4*len(s.Hint))
+	for i, e := range s.Hint {
+		x := e.To4()
+		if x == nil {
+			return nil, errors.New("dns: not IPv4")
+		}
+		copy(b[4*i:], x)
 	}
-	b := make([]byte, 4)
-	copy(b[:], x)
 	return b, nil
 }
 
 func (s *SVC_IPV4HINT) unpack(b []byte) error {
-	if len(b) != net.IPv4len {
-		return errors.New("dns: not IPv4")
+	if len(b) == 0 || len(b)%4 != 0 {
+		return errors.New("dns: invalid IPv4 array")
 	}
-	s.Hint = append(make(net.IP, 0, net.IPv4len), b...)
+	i := 0
+	x := make([]net.IP, len(b)/4)
+	for i < len(b) {
+		x = append(x, append(make(net.IP, 0, net.IPv4len), b[i:i+4]...))
+		i += 4
+	}
+	s.Hint = x
 	return nil
 }
 
 func (s *SVC_IPV4HINT) String() string {
-	if ip := s.Hint.To4(); ip != nil {
-		return ip.String()
+	var str strings.Builder
+	for _, e := range s.Hint {
+		x := e.To4()
+		if x == nil {
+			return "<nil>"
+		}
+		str.WriteString(e.String())
+		str.WriteRune(',')
 	}
-	return "<nil>"
+	return str.String()
 }
 
 func (s *SVC_IPV4HINT) Read(b string) error {
-	ip := net.ParseIP(b)
-	if ip == nil {
-		return errors.New("dns: bad IP")
+	str := strings.Split(b, ",")
+	dst := make([]net.IP, len(str)+1)
+	for _, e := range str {
+		ip := net.ParseIP(e)
+		if ip == nil {
+			return errors.New("dns: bad IP")
+		}
+		if ip.To4() == nil {
+			return errors.New("dns: not IPv4")
+		}
+		dst = append(dst, ip.To4())
 	}
-	if ip.To4() == nil {
-		return errors.New("dns: not IPv4")
-	}
-	s.Hint = ip.To4()
+	s.Hint = dst
 	return nil
 }
 
@@ -509,47 +528,65 @@ func (s *SVC_ESNICONFIG) len() uint16           { return uint16(len(s.ESNI)) }
 //	e.Hint = net.ParseIP("2001:db8::1")
 //	o.Value = append(o.Value, e)
 type SVC_IPV6HINT struct {
-	Code uint16 // Always SVCIPV6HINT
-	Hint net.IP // Always IPv6
+	Code uint16   // Always SVCIPV6HINT
+	Hint []net.IP // Always IPv6
 }
 
 func (s *SVC_IPV6HINT) Key() uint16       { return SVCIPV6HINT }
 func (s *SVC_IPV6HINT) copy() SvcKeyValue { return &SVC_IPV6HINT{s.Code, s.Hint} }
-func (s *SVC_IPV6HINT) len() uint16       { return 16 }
+func (s *SVC_IPV6HINT) len() uint16       { return 16 * uint16(len(s.Hint)) }
 
 func (s *SVC_IPV6HINT) pack() ([]byte, error) {
-	if len(s.Hint) != net.IPv6len {
-		return nil, errors.New("dns: not IPv6")
+	b := make([]byte, 16*len(s.Hint))
+	for i, e := range s.Hint {
+		if len(e) != net.IPv6len {
+			return nil, errors.New("dns: not IPv4")
+		}
+		copy(b[16*i:], e)
 	}
-	b := make([]byte, net.IPv6len)
-	copy(b[:], s.Hint)
 	return b, nil
 }
 
 func (s *SVC_IPV6HINT) unpack(b []byte) error {
-	if len(b) != net.IPv6len {
-		return errors.New("dns: not IPv6")
+	if len(b) == 0 || len(b)%16 != 0 {
+		return errors.New("dns: invalid IPv6 array")
 	}
-	s.Hint = append(make(net.IP, 0, net.IPv6len), b...)
+	i := 0
+	x := make([]net.IP, len(b)/16)
+	for i < len(b) {
+		x = append(x, append(make(net.IP, 0, net.IPv6len), b[i:i+16]...))
+		i += 16
+	}
+	s.Hint = x
 	return nil
 }
 
 func (s *SVC_IPV6HINT) String() string {
-	if ip := s.Hint; len(ip) == net.IPv6len {
-		return ip.String()
+	var str strings.Builder
+	for _, e := range s.Hint {
+		if len(e) != net.IPv6len {
+			return "<nil>"
+		}
+		str.WriteString(e.String())
+		str.WriteRune(',')
 	}
-	return "<nil>"
+	return str.String()
 }
 
 func (s *SVC_IPV6HINT) Read(b string) error {
-	ip := net.ParseIP(b)
-	if ip == nil {
-		return errors.New("dns: bad IP")
+	str := strings.Split(b, ",")
+	dst := make([]net.IP, len(str)+1)
+	for _, e := range str {
+		ip := net.ParseIP(e)
+		if ip == nil {
+			return errors.New("dns: bad IP")
+		}
+		if len(ip) != net.IPv6len {
+			return errors.New("dns: not IPv6")
+		}
+		dst = append(dst, ip)
 	}
-	if len(ip) != net.IPv6len {
-		return errors.New("dns: not IPv6")
-	}
-	s.Hint = ip
+	s.Hint = dst
 	return nil
 }
 
@@ -597,7 +634,7 @@ func (s *SVC_LOCAL) Read(b string) error {
 			backslash := false
 			for _, e := range str {
 				if e > 0x20 && e < 0x7f {
-		      if e == "\"" || e == "\\" || e =
+		      if e == "\"" || e == "\\" || e =
 					bytes = append(bytes, e)
 				}
 				if e == 0x20 || e == 0x09 {
