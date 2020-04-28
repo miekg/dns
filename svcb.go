@@ -414,9 +414,9 @@ func (s *SVC_PORT) Read(b string) error {
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_IPV4HINT)
 //	e.Code = dns.SVCIPV4HINT
-//	e.Hint = net.IPv4(1,1,1,1).To4()
+//	e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
 //  // or
-//	e.Hint = net.ParseIP("1.1.1.1").To4()
+//	e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
 //	o.Value = append(o.Value, e)
 type SVC_IPV4HINT struct {
 	Code uint16   // Always SVCIPV4HINT
@@ -444,7 +444,7 @@ func (s *SVC_IPV4HINT) unpack(b []byte) error {
 		return errors.New("dns: invalid IPv4 array")
 	}
 	i := 0
-	x := make([]net.IP, len(b)/4)
+	x := make([]net.IP, 0, len(b)/4)
 	for i < len(b) {
 		x = append(x, append(make(net.IP, 0, net.IPv4len), b[i:i+4]...))
 		i += 4
@@ -460,15 +460,15 @@ func (s *SVC_IPV4HINT) String() string {
 		if x == nil {
 			return "<nil>"
 		}
-		str.WriteString(e.String())
 		str.WriteRune(',')
+		str.WriteString(e.String())
 	}
-	return str.String()
+	return str.String()[1:]
 }
 
 func (s *SVC_IPV4HINT) Read(b string) error {
 	str := strings.Split(b, ",")
-	dst := make([]net.IP, len(str)+1)
+	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
@@ -525,7 +525,7 @@ func (s *SVC_ESNICONFIG) len() uint16           { return uint16(len(s.ESNI)) }
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SVC_IPV6HINT)
 //	e.Code = dns.SVCIPV6HINT
-//	e.Hint = net.ParseIP("2001:db8::1")
+//	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
 //	o.Value = append(o.Value, e)
 type SVC_IPV6HINT struct {
 	Code uint16   // Always SVCIPV6HINT
@@ -540,7 +540,7 @@ func (s *SVC_IPV6HINT) pack() ([]byte, error) {
 	b := make([]byte, 16*len(s.Hint))
 	for i, e := range s.Hint {
 		if len(e) != net.IPv6len {
-			return nil, errors.New("dns: not IPv4")
+			return nil, errors.New("dns: not IPv6")
 		}
 		copy(b[16*i:], e)
 	}
@@ -552,7 +552,7 @@ func (s *SVC_IPV6HINT) unpack(b []byte) error {
 		return errors.New("dns: invalid IPv6 array")
 	}
 	i := 0
-	x := make([]net.IP, len(b)/16)
+	x := make([]net.IP, 0, len(b)/16)
 	for i < len(b) {
 		x = append(x, append(make(net.IP, 0, net.IPv6len), b[i:i+16]...))
 		i += 16
@@ -567,15 +567,15 @@ func (s *SVC_IPV6HINT) String() string {
 		if len(e) != net.IPv6len {
 			return "<nil>"
 		}
-		str.WriteString(e.String())
 		str.WriteRune(',')
+		str.WriteString(e.String())
 	}
-	return str.String()
+	return str.String()[1:]
 }
 
 func (s *SVC_IPV6HINT) Read(b string) error {
 	str := strings.Split(b, ",")
-	dst := make([]net.IP, len(str)+1)
+	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {

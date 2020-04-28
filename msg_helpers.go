@@ -629,7 +629,7 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 		}
 		e := makeSvcKeyValue(code)
 		if e == nil {
-			return nil, len(msg), &Error{err: "reserved svc key used"}
+			return nil, len(msg), &Error{err: "svc invalid key"}
 		}
 		if err := e.unpack(msg[off : off+int(length)]); err != nil {
 			return nil, len(msg), err
