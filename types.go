@@ -723,7 +723,11 @@ func (rr *AAAA) String() string {
 	if rr.AAAA == nil {
 		return rr.Hdr.String()
 	}
-	return rr.Hdr.String() + rr.AAAA.String()
+	ipStr := rr.AAAA.String()
+	if rr.AAAA.To4() != nil {
+		ipStr = fmt.Sprintf("::ffff:%s", ipStr)
+	}
+	return rr.Hdr.String() + ipStr
 }
 
 // PX RR. See RFC 2163.
