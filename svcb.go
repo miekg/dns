@@ -65,7 +65,7 @@ func SvcStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
 		// no leading zeros
-		if err != nil || a == 65535 || str[4] == '0' {
+		if err != nil || a == 65535 || str[3] == '0' {
 			return 0
 		}
 		return uint16(a)
