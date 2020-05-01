@@ -206,7 +206,7 @@ type SVCB struct {
 	Value    []SvcKeyValue `dns:"svc"` // if priority == 0 this is empty
 }
 
-// HTTPSSVCB RR. Everything valid for SVCB applies to HTTPSSVC as well
+// HTTPSSVC RR. Everything valid for SVCB applies to HTTPSSVC as well
 // except that for HTTPS, HTTPSSVC must be used
 // and HTTPSSVC signifies that connections can be made over HTTPS.
 type HTTPSSVC struct {
