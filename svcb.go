@@ -605,32 +605,79 @@ func (s *SvcLocal) pack() ([]byte, error) { return s.Data, nil }
 func (s *SvcLocal) unpack(b []byte) error { s.Data = b; return nil }
 func (s *SvcLocal) len() uint16           { return uint16(len(s.Data)) }
 
-// Assumes that the resultant string, in DNS presentation format,
-// will be enclosed in double quotes ". Therefore it doesn't
-// expect whitespace to be escaped.
+// TODO do we really need to escape space??
+// Escapes whitespaces too, which is only optional when
+// the result would be enclosed in double quotes.
 func (s *SvcLocal) String() string {
-	return string(s.Data)
-	// TODO No idea how to escape escape
+	var str strings.Builder
+	str.Grow(4 * len(s.Data))
+	for _, e := range s.Data {
+		if (0x19 < e && e < 0x7f) || e == 0x09 {
+			switch e {
+			case '"':
+				fallthrough
+			case ';':
+				fallthrough
+			// As promised, optionally handle space
+			case ' ':
+				fallthrough
+			// Tab
+			case 0x09:
+				fallthrough
+			case '\\':
+				str.WriteByte('\\')
+				fallthrough
+			default:
+				str.WriteByte(e)
+			}
+		} else {
+			str.WriteByte('\\')
+			a := strconv.FormatInt(int64(e), 10)
+			switch len(a) {
+			case 1:
+				str.WriteByte('0')
+				fallthrough
+			case 2:
+				str.WriteByte('0')
+				fallthrough
+			default:
+				str.WriteString(a)
+			}
+		}
+	}
+	return str.String()
 }
 
-// Assumes that the input string was enclosed in double quotes.
 func (s *SvcLocal) read(b string) error {
-	// Allocation for the worst case
-	/*	bytes := make([]byte, 0, len(b))
-			str := []byte(b)
-			backslash := false
-			for _, e := range str {
-				if e > 0x20 && e < 0x7f {
-		      if e == "\"" || e == "\\" || e =
-					bytes = append(bytes, e)
+	bytes := make([]byte, 0, len(b))
+	i := 0
+	for i < len(b) {
+		if b[i] == '\\' {
+			if i+1 == len(b) {
+				return errors.New("dns: svc private/experimental key" +
+					" escape unterminated")
+			}
+			if isDigit(b[i+1]) {
+				if i+3 < len(b) && isDigit(b[i+2]) && isDigit(b[i+3]) {
+					a, err := strconv.ParseUint(b[i+1:i+4], 10, 8)
+					if err == nil {
+						i += 4
+						bytes = append(bytes, byte(a))
+						continue
+					}
 				}
-				if e == 0x20 || e == 0x09 {
-		      bytes = append(bytes, e)
-				}
-		  }
-			return nil*/
-	// No idea how it'd escape
-	s.Data = []byte(b)
+				return errors.New("dns: svc private/experimental key" +
+					" invalid escaped octet")
+			} else {
+				bytes = append(bytes, b[i+1])
+				i += 2
+			}
+		} else {
+			bytes = append(bytes, b[i])
+			i++
+		}
+	}
+	s.Data = bytes
 	return nil
 }
 
