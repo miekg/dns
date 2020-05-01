@@ -1547,11 +1547,11 @@ func TestParseCSYNC(t *testing.T) {
 }
 
 func TestParseSVCB(t *testing.T) {
-	syncs := map[string]string{
+	svcbs := map[string]string{
 		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499" ipv4hint=3.4.3.2,1.1.1.1 key65000=4\ 3 key65001="\" " key65002 key65003= key65004=\254\009\008`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2,h2c" esniconfig="b" port="499" ipv4hint="3.4.3.2,1.1.1.1" key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="\254\	\008"`,
 	}
-	for s, o := range syncs {
+	for s, o := range svcbs {
 		rr, err := NewRR(s)
 		if err != nil {
 			t.Error("failed to parse RR: ", err)

@@ -265,9 +265,9 @@ func (s *SvcAlpn) Key() uint16       { return SVC_ALPN }
 func (s *SvcAlpn) copy() SvcKeyValue { return &SvcAlpn{s.Alpn} }
 func (s *SvcAlpn) String() string    { return strings.Join(s.Alpn[:], ",") }
 
-// TODO The spec requires the alpn keys that include \ and , are separated.
+// The spec requires the alpn keys that include \ and , are separated.
 // In practice, no standard key including those exists.
-// Do we need to handle that case at cost of visible complexity?
+// Therefore those characters are not escaped.
 
 func (s *SvcAlpn) pack() ([]byte, error) {
 	// TODO Estimate
@@ -305,9 +305,6 @@ func (s *SvcAlpn) unpack(b []byte) error {
 }
 
 func (s *SvcAlpn) read(b string) error {
-	// TODO Standard requires len > 0 only for presentation format?
-	// TODO maybe check if length = 0 or length = 255 for all of them
-	// or if they contain disallowed characters?
 	s.Alpn = strings.Split(b, ",")
 	return nil
 }
@@ -580,13 +577,13 @@ func (s *SvcIPv6Hint) read(b string) error {
 // SvcLocal pair is intended for experimental/private use.
 // The key is recommended to be in the range
 // [SVC_PRIVATE_LOWER, SVC_PRIVATE_UPPER].
-// Basic use pattern for creating an keyNNNNN option:
+// Basic use pattern for creating a keyNNNNN option:
 //
 //	o := new(dns.HTTPSSVC)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.HTTPSSVC
 //	e := new(dns.SvcLocal)
-//	e.Key = 65400
+//	e.KeyCode = 65400
 //	e.Data = []byte("abc")
 //	o.Value = append(o.Value, e)
 type SvcLocal struct {
@@ -681,8 +678,7 @@ func (s *SvcLocal) read(b string) error {
 	return nil
 }
 
-// TODO standard seems to allow duplicate keys
-// in the presentation format.
+// Not checked, but duplicates aren't allowed.
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
