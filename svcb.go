@@ -462,7 +462,7 @@ func (s *SvcIPv4Hint) read(b string) error {
 		if ip == nil {
 			return errors.New("dns: bad IP")
 		}
-		if ip.To4() == nil {
+		if ip.To4() == nil || strings.ContainsRune(e, ':') {
 			return errors.New("dns: not IPv4")
 		}
 		dst = append(dst, ip.To4())
@@ -561,12 +561,12 @@ func (s *SvcIPv6Hint) read(b string) error {
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
+    if strings.ContainsRune(e, '.') {
+      return errors.New("dns: not IPv6")
+    }
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
-		}
-		if len(ip) != net.IPv6len {
-			return errors.New("dns: not IPv6")
 		}
 		dst = append(dst, ip)
 	}

@@ -1563,6 +1563,33 @@ func TestParseSVCB(t *testing.T) {
 	}
 }
 
+func TestParseBadSVCB(t *testing.T) {
+	header := `example.com. 3600 IN SVCB `
+	evils := []string{
+		`0 . no-default-alpn`,   // aliasform
+		`1 . no-default-alpn=1`, // value illegal
+		`1 . key65535`,          // key reserved
+		`1 . key`,               // invalid key
+		`1 . key0`,              // key reserved
+		`1 . key065534`,         // key can't be padded
+		`1 . key65534="f`,       // unterminated value
+		`1 . key65534="`,        // unterminated value
+		`1 . key65534=\2`,       // invalid numberic escape
+		`1 . key65534=\24`,      // invalid numberic escape
+		`1 . key65534=\256`,     // invalid numberic escape
+		`1 . ipv6hint=1.1.1.1`,  // not ipv6
+		`1 . ipv4hint=::fc`,     // not ipv4
+		`1 . port=`,             // empty port
+	}
+	for _, o := range evils {
+		_, err := NewRR(header + o)
+		if err == nil {
+			t.Error("failed to reject invalid RR: ", header+o)
+			continue
+		}
+	}
+}
+
 func TestParseBadNAPTR(t *testing.T) {
 	// Should look like: mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 "S" "SIP+D2U" "" _sip._udp.mplus.ims.vodafone.com.
 	naptr := `mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 S SIP+D2U  _sip._udp.mplus.ims.vodafone.com.`
