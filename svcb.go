@@ -48,6 +48,7 @@ var svcStringToKey = map[string]uint16{
 
 // SvcKeyToString serializes keys in presentation format.
 // Returns empty string for reserved keys.
+// Accepts unassigned keys as well as experimental/private keys.
 func SvcKeyToString(svcKey uint16) string {
 	x := svcKeyToString[svcKey]
 	if len(x) != 0 {
@@ -59,13 +60,15 @@ func SvcKeyToString(svcKey uint16) string {
 	return "key" + strconv.FormatInt(int64(svcKey), 10)
 }
 
-// svcStringToKey returns SvcValueKey numerically.
+// SvcStringToKey returns SvcValueKey numerically.
 // Accepts keyNNN... unless N == 0 or 65535.
+// NNN... must not be padded with zeros.
 func SvcStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
 		// no leading zeros
-		if err != nil || a == 65535 || str[3] == '0' {
+    // such key shouldn't be already registered
+		if err != nil || a == 65535 || str[3] == '0' || svcKeyToString[uint16(a)] != "" {
 			return 0
 		}
 		return uint16(a)
@@ -561,9 +564,9 @@ func (s *SvcIPv6Hint) read(b string) error {
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
-    if strings.ContainsRune(e, '.') {
-      return errors.New("dns: not IPv6")
-    }
+		if strings.ContainsRune(e, '.') {
+				return errors.New("dns: not IPv6")
+		}
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
