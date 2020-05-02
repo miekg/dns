@@ -1567,33 +1567,35 @@ func TestParseSVCB(t *testing.T) {
 func TestParseBadSVCB(t *testing.T) {
 	header := `example.com. 3600 IN SVCB `
 	evils := []string{
-		`0 . no-default-alpn`,   // aliasform
-		`1 . no-default-alpn=1`, // value illegal
-		`1 . key`,               // invalid key
-		`1 . key=`,              // invalid key
-		`1 . =`,                 // invalid key
-		`1 . ==`,                // invalid key
-		`1 . =a`,                // invalid key
-		`1 . ""`,                // invalid key
-		`1 . ""=`,               // invalid key
-		`1 . "a"`,               // invalid key
-		`1 . "a"=`,              // invalid key
-		`1 . key1=`,             // we know that key
-		`1 . key0`,              // key reserved
-		`1 . key65535`,          // key reserved
-		`1 . key065534`,         // key can't be padded
-		`1 . key65534="f`,       // unterminated value
-		`1 . key65534="`,        // unterminated value
-		`1 . key65534=\2`,       // invalid numberic escape
-		`1 . key65534=\24`,      // invalid numberic escape
-		`1 . key65534=\256`,     // invalid numberic escape
-		`1 . ipv6hint=1.1.1.1`,  // not ipv6
-		`1 . ipv6hint=1:1:1:1`,  // not ipv6
-		`1 . ipv6hint=a`,        // not ipv6
-		`1 . ipv4hint=::fc`,     // not ipv4
-		`1 . ipv4hint=..11`,     // not ipv4
-		`1 . ipv4hint=a`,        // not ipv4
-		`1 . port=`,             // empty port
+		`0 . no-default-alpn`,     // aliasform
+		`65536 . no-default-alpn`, // bad priority
+		`1 ..`,                    // bad domain
+		`1 . no-default-alpn=1`,   // value illegal
+		`1 . key`,                 // invalid key
+		`1 . key=`,                // invalid key
+		`1 . =`,                   // invalid key
+		`1 . ==`,                  // invalid key
+		`1 . =a`,                  // invalid key
+		`1 . ""`,                  // invalid key
+		`1 . ""=`,                 // invalid key
+		`1 . "a"`,                 // invalid key
+		`1 . "a"=`,                // invalid key
+		`1 . key1=`,               // we know that key
+		`1 . key0`,                // key reserved
+		`1 . key65535`,            // key reserved
+		`1 . key065534`,           // key can't be padded
+		`1 . key65534="f`,         // unterminated value
+		`1 . key65534="`,          // unterminated value
+		`1 . key65534=\2`,         // invalid numberic escape
+		`1 . key65534=\24`,        // invalid numberic escape
+		`1 . key65534=\256`,       // invalid numberic escape
+		`1 . ipv6hint=1.1.1.1`,    // not ipv6
+		`1 . ipv6hint=1:1:1:1`,    // not ipv6
+		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv4hint=::fc`,       // not ipv4
+		`1 . ipv4hint=..11`,       // not ipv4
+		`1 . ipv4hint=a`,          // not ipv4
+		`1 . port=`,               // empty port
 	}
 	for _, o := range evils {
 		_, err := NewRR(header + o)

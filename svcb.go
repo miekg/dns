@@ -551,7 +551,7 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 func (s *SvcIPv6Hint) String() string {
 	var str strings.Builder
 	for _, e := range s.Hint {
-		if len(e) != net.IPv6len {
+		if e.To4() != nil {
 			return "<nil>"
 		}
 		str.WriteRune(',')
