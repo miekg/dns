@@ -565,3 +565,34 @@ func TestConcurrentExchanges(t *testing.T) {
 		}
 	}
 }
+
+func TestExchangeWithConn(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+	conn, err := c.Dial(addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+
+	r, _, err := c.ExchangeWithConn(m, conn)
+	if err != nil {
+		t.Fatalf("failed to exchange: %v", err)
+	}
+	if r == nil {
+		t.Fatal("response is nil")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Errorf("failed to get an valid answer\n%v", r)
+	}
+}
