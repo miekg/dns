@@ -51,7 +51,7 @@ var svcStringToKey = map[string]uint16{
 // Accepts unassigned keys as well as experimental/private keys.
 func SvcKeyToString(svcKey uint16) string {
 	x := svcKeyToString[svcKey]
-	if len(x) != 0 {
+	if x != "" {
 		return x
 	}
 	if svcKey == 0 || svcKey == 65535 {
@@ -67,7 +67,7 @@ func SvcStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
 		// no leading zeros
-    // such key shouldn't be already registered
+		// key shouldn't be registered
 		if err != nil || a == 65535 || str[3] == '0' || svcKeyToString[uint16(a)] != "" {
 			return 0
 		}
@@ -268,12 +268,12 @@ func (s *SvcAlpn) Key() uint16       { return SVC_ALPN }
 func (s *SvcAlpn) copy() SvcKeyValue { return &SvcAlpn{s.Alpn} }
 func (s *SvcAlpn) String() string    { return strings.Join(s.Alpn[:], ",") }
 
-// The spec requires the alpn keys that include \ and , are separated.
+// The spec requires the alpn keys including \ or , to be escaped.
 // In practice, no standard key including those exists.
 // Therefore those characters are not escaped.
 
 func (s *SvcAlpn) pack() ([]byte, error) {
-	// TODO Estimate
+	// Estimate
 	b := make([]byte, 0, 10*len(s.Alpn))
 	for _, e := range s.Alpn {
 		//x := []byte(strings.ReplaceAll(strings.ReplaceAll(e, "\\", "\\\\"), ",", "\\,"))
@@ -292,8 +292,8 @@ func (s *SvcAlpn) pack() ([]byte, error) {
 
 func (s *SvcAlpn) unpack(b []byte) error {
 	i := 0
-	// TODO estimate
-	alpn := make([]string, 0, len(b)/10)
+	// Estimate
+	alpn := make([]string, 0, len(b)/4)
 	for i < len(b) {
 		length := int(b[i])
 		i++
@@ -451,7 +451,7 @@ func (s *SvcIPv4Hint) String() string {
 		if x == nil {
 			return "<nil>"
 		}
-		str.WriteRune(',')
+		str.WriteByte(',')
 		str.WriteString(e.String())
 	}
 	return str.String()[1:]
@@ -554,7 +554,7 @@ func (s *SvcIPv6Hint) String() string {
 		if e.To4() != nil {
 			return "<nil>"
 		}
-		str.WriteRune(',')
+		str.WriteByte(',')
 		str.WriteString(e.String())
 	}
 	return str.String()[1:]
@@ -565,7 +565,7 @@ func (s *SvcIPv6Hint) read(b string) error {
 	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
 		if strings.ContainsRune(e, '.') {
-				return errors.New("dns: not IPv6")
+			return errors.New("dns: not IPv6")
 		}
 		ip := net.ParseIP(e)
 		if ip == nil {
