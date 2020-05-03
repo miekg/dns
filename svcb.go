@@ -264,9 +264,8 @@ type SvcAlpn struct {
 	Alpn []string // Must not be of zero length
 }
 
-func (s *SvcAlpn) Key() uint16       { return SVC_ALPN }
-func (s *SvcAlpn) copy() SvcKeyValue { return &SvcAlpn{s.Alpn} }
-func (s *SvcAlpn) String() string    { return strings.Join(s.Alpn[:], ",") }
+func (s *SvcAlpn) Key() uint16    { return SVC_ALPN }
+func (s *SvcAlpn) String() string { return strings.Join(s.Alpn[:], ",") }
 
 // The spec requires the alpn keys including \ or , to be escaped.
 // In practice, no standard key including those exists.
@@ -318,6 +317,12 @@ func (s *SvcAlpn) len() uint16 {
 		l += len(e)
 	}
 	return uint16(l)
+}
+
+func (s *SvcAlpn) copy() SvcKeyValue {
+	return &SvcAlpn{
+		append(make([]string, 0, len(s.Alpn)), s.Alpn...),
+	}
 }
 
 // SvcNoDefaultAlpn pair signifies no support
@@ -414,9 +419,8 @@ type SvcIPv4Hint struct {
 	Hint []net.IP // Always IPv4
 }
 
-func (s *SvcIPv4Hint) Key() uint16       { return SVC_IPV4HINT }
-func (s *SvcIPv4Hint) copy() SvcKeyValue { return &SvcIPv4Hint{s.Hint} }
-func (s *SvcIPv4Hint) len() uint16       { return 4 * uint16(len(s.Hint)) }
+func (s *SvcIPv4Hint) Key() uint16 { return SVC_IPV4HINT }
+func (s *SvcIPv4Hint) len() uint16 { return 4 * uint16(len(s.Hint)) }
 
 func (s *SvcIPv4Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 4*len(s.Hint))
@@ -474,6 +478,12 @@ func (s *SvcIPv4Hint) read(b string) error {
 	return nil
 }
 
+func (s *SvcIPv4Hint) copy() SvcKeyValue {
+	return &SvcIPv4Hint{
+		append(make([]net.IP, 0, len(s.Hint)), s.Hint...),
+	}
+}
+
 // TODO ECHOConfig
 // SvcESNIConfig pair contains the ESNIConfig structure
 // defined in draft-ietf-tls-esni [RFC TODO] to encrypt
@@ -519,9 +529,8 @@ type SvcIPv6Hint struct {
 	Hint []net.IP // Always IPv6
 }
 
-func (s *SvcIPv6Hint) Key() uint16       { return SVC_IPV6HINT }
-func (s *SvcIPv6Hint) copy() SvcKeyValue { return &SvcIPv6Hint{s.Hint} }
-func (s *SvcIPv6Hint) len() uint16       { return 16 * uint16(len(s.Hint)) }
+func (s *SvcIPv6Hint) Key() uint16 { return SVC_IPV6HINT }
+func (s *SvcIPv6Hint) len() uint16 { return 16 * uint16(len(s.Hint)) }
 
 func (s *SvcIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 16*len(s.Hint))
@@ -577,6 +586,12 @@ func (s *SvcIPv6Hint) read(b string) error {
 	return nil
 }
 
+func (s *SvcIPv6Hint) copy() SvcKeyValue {
+	return &SvcIPv6Hint{
+		append(make([]net.IP, 0, len(s.Hint)), s.Hint...),
+	}
+}
+
 // SvcLocal pair is intended for experimental/private use.
 // The key is recommended to be in the range
 // [SVC_PRIVATE_LOWER, SVC_PRIVATE_UPPER].
@@ -600,7 +615,6 @@ type SvcLocal struct {
 }
 
 func (s *SvcLocal) Key() uint16           { return s.KeyCode }
-func (s *SvcLocal) copy() SvcKeyValue     { return &SvcLocal{s.KeyCode, s.Data} }
 func (s *SvcLocal) pack() ([]byte, error) { return s.Data, nil }
 func (s *SvcLocal) unpack(b []byte) error { s.Data = b; return nil }
 func (s *SvcLocal) len() uint16           { return uint16(len(s.Data)) }
@@ -692,4 +706,10 @@ func (rr *SVCB) String() string {
 			"=\"" + element.String() + "\""
 	}
 	return s
+}
+
+func (s *SvcLocal) copy() SvcKeyValue {
+	return &SvcLocal{s.KeyCode,
+		append(make([]byte, 0, len(s.Data)), s.Data...),
+	}
 }
