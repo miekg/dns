@@ -1547,19 +1547,34 @@ func TestParseCSYNC(t *testing.T) {
 }
 
 func TestParseSVCB(t *testing.T) {
+	header := `example.com. 3600 IN SVCB `
 	svcbs := map[string]string{
-		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
-		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499" ipv4hint=3.4.3.2,1.1.1.1 no-default-alpn ipv6hint=1::4:4:4:4,1::3:3:3:3 esniconfig=Mw==`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2,h2c" esniconfig="b" port="499" ipv4hint="3.4.3.2,1.1.1.1" no-default-alpn="" ipv6hint="1::4:4:4:4,1::3:3:3:3" esniconfig="Mw=="`,
-		`example.com. 3600 IN SVCB 65000 cloudflare.com.  key65000=4\ 3 key65001="\" " key65002 key65003= key65004=\254\009\008 key65005="" key65006== key65007==\"\"`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="\254\	\008" key65005="" key65006="=" key65007="=\"\""`,
+		`0 cloudflare.com.`:                  `0 cloudflare.com.`,
+		`1 . alpn=h2,h2c`:                    `alpn="h2,h2c"`,
+		`1 . esniconfig=b`:                   `esniconfig="b"`,
+		`1 . port="499"`:                     `port="499"`,
+		`1 . ipv4hint=3.4.3.2,1.1.1.1`:       `ipv4hint="3.4.3.2,1.1.1.1"`,
+		`1 . no-default-alpn=`:               `no-default-alpn=""`,
+		`1 . ipv6hint=1::4:4:4:4,1::3:3:3:3`: `ipv6hint="1::4:4:4:4,1::3:3:3:3"`,
+		`1 . esniconfig=Mw==`:                `esniconfig="Mw=="`,
+		`1 . key65000=4\ 3`:                  `key65000="4\ 3"`,
+		`1 . key65001="\" "`:                 `key65001="\"\ "`,
+		`1 . key65002`:                       `key65002=""`,
+		`1 . key65003=`:                      `key65003=""`,
+		`1 . key65004=""`:                    `key65004=""`,
+		`1 . key65005==`:                     `key65005="="`,
+		`1 . key65006==\"\"`:                 `key65006="=\"\""`,
+		`1 . key65007=\254`:                  `key65007="\254"`,
+		`1 . key65007=\032`:                  `key65007="\ "`,
 	}
 	for s, o := range svcbs {
-		rr, err := NewRR(s)
+		rr, err := NewRR(header + s)
 		if err != nil {
 			t.Error("failed to parse RR: ", err)
 			continue
 		}
-		if rr.String() != o {
-			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		if !strings.HasSuffix(rr.String(), o) {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, header+o, header+rr.String())
 		}
 	}
 }
