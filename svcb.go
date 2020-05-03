@@ -419,13 +419,13 @@ func (s *SvcIPv4Hint) copy() SvcKeyValue { return &SvcIPv4Hint{s.Hint} }
 func (s *SvcIPv4Hint) len() uint16       { return 4 * uint16(len(s.Hint)) }
 
 func (s *SvcIPv4Hint) pack() ([]byte, error) {
-	b := make([]byte, 4*len(s.Hint))
-	for i, e := range s.Hint {
+	b := make([]byte, 0, 4*len(s.Hint))
+	for _, e := range s.Hint {
 		x := e.To4()
 		if x == nil {
 			return nil, errors.New("dns: not IPv4")
 		}
-		copy(b[4*i:], x)
+		b = append(b, x...)
 	}
 	return b, nil
 }
@@ -525,11 +525,11 @@ func (s *SvcIPv6Hint) len() uint16       { return 16 * uint16(len(s.Hint)) }
 
 func (s *SvcIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 16*len(s.Hint))
-	for i, e := range s.Hint {
+	for _, e := range s.Hint {
 		if len(e) != net.IPv6len {
 			return nil, errors.New("dns: not IPv6")
 		}
-		copy(b[16*i:], e)
+		b = append(b, e...)
 	}
 	return b, nil
 }
@@ -682,6 +682,7 @@ func (s *SvcLocal) read(b string) error {
 }
 
 // Not checked, but duplicates aren't allowed.
+// Also assumes that all keys are valid.
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +

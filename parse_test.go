@@ -1549,7 +1549,7 @@ func TestParseCSYNC(t *testing.T) {
 func TestParseSVCB(t *testing.T) {
 	svcbs := map[string]string{
 		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
-		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499" ipv4hint=3.4.3.2,1.1.1.1`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2,h2c" esniconfig="b" port="499" ipv4hint="3.4.3.2,1.1.1.1"`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2,h2c esniconfig="b" port="499" ipv4hint=3.4.3.2,1.1.1.1 no-default-alpn ipv6hint=1::4:4:4:4,1::3:3:3:3 esniconfig=Mw==`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2,h2c" esniconfig="b" port="499" ipv4hint="3.4.3.2,1.1.1.1" no-default-alpn="" ipv6hint="1::4:4:4:4,1::3:3:3:3" esniconfig="Mw=="`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com.  key65000=4\ 3 key65001="\" " key65002 key65003= key65004=\254\009\008 key65005="" key65006== key65007==\"\"`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="\254\	\008" key65005="" key65006="=" key65007="=\"\""`,
 	}
 	for s, o := range svcbs {
@@ -1589,6 +1589,7 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . key65534=\2`,         // invalid numberic escape
 		`1 . key65534=\24`,        // invalid numberic escape
 		`1 . key65534=\256`,       // invalid numberic escape
+		`1 . key65534=\`,          // invalid numberic escape
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
 		`1 . ipv6hint=1:1:1:1`,    // not ipv6
 		`1 . ipv6hint=a`,          // not ipv6

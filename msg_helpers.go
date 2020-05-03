@@ -657,7 +657,7 @@ func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) 
 	prev := uint16(0)
 	for _, e := range pairs {
 		if e.Key() == prev {
-			return len(msg), &Error{err: "repeated svc pairs are not allowed"}
+			return len(msg), &Error{err: "repeated svc keys are not allowed"}
 		}
 		prev = e.Key()
 	}
