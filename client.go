@@ -141,7 +141,7 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 //	c := new(dns.Client)
 //	// connection management logic goes here
 //
-//  conn := c.Dial(address)
+//	conn := c.Dial(address)
 //	in, rtt, err := c.ExchangeWithConn(message, conn)
 //
 //  This allows users of the library to implement their own connection management,
