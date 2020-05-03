@@ -139,7 +139,7 @@ func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, er
 // that will be used instead of creating a new one.
 // Usage pattern with a *dns.Client:
 //	c := new(dns.Client)
-//  // connection management logic goes here
+//	// connection management logic goes here
 //
 //  conn := c.Dial(address)
 //	in, rtt, err := c.ExchangeWithConn(message, conn)
