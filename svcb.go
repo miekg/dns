@@ -450,6 +450,7 @@ func (s *SvcIPv4Hint) unpack(b []byte) error {
 
 func (s *SvcIPv4Hint) String() string {
 	var str strings.Builder
+	str.Grow(16 * len(s.Hint))
 	for _, e := range s.Hint {
 		x := e.To4()
 		if x == nil {
@@ -559,6 +560,7 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 
 func (s *SvcIPv6Hint) String() string {
 	var str strings.Builder
+	str.Grow(41 * len(s.Hint))
 	for _, e := range s.Hint {
 		if e.To4() != nil {
 			return "<nil>"
@@ -626,7 +628,7 @@ func (s *SvcLocal) String() string {
 	var str strings.Builder
 	str.Grow(4 * len(s.Data))
 	for _, e := range s.Data {
-		if (0x19 < e && e < 0x7f) || e == 0x09 {
+		if (0x1f < e && e < 0x7f) || e == 0x09 {
 			switch e {
 			case '"':
 				fallthrough
