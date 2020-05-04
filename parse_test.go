@@ -1546,6 +1546,24 @@ func TestParseCSYNC(t *testing.T) {
 	}
 }
 
+func TestParseSVCB(t *testing.T) {
+	svcbs := map[string]string{
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
+	}
+	for s, o := range svcbs {
+		rr, err := NewRR(s)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		}
+	}
+}
+
 func TestParseBadSVCB(t *testing.T) {
 	header := `example.com. 3600 IN SVCB `
 	evils := []string{

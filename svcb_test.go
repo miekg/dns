@@ -5,41 +5,65 @@ import (
 	"testing"
 )
 
+// This tests everything about SVCB but the parser.
+// Parser tests belong to parse_test.go.
 func TestSVCB(t *testing.T) {
-	header := `example.com. 3600 IN SVCB `
 	svcbs := map[string]string{
-		`0 cloudflare.com.`:                  `0 cloudflare.com.`,
-		`1 . alpn=h2,h2c`:                    `alpn="h2,h2c"`,
-		`1 . esniconfig=b`:                   `esniconfig="b"`,
-		`1 . port="499"`:                     `port="499"`,
-		`1 . ipv4hint=3.4.3.2,1.1.1.1`:       `ipv4hint="3.4.3.2,1.1.1.1"`,
-		`1 . no-default-alpn=`:               `no-default-alpn=""`,
-		`1 . ipv6hint=1::4:4:4:4,1::3:3:3:3`: `ipv6hint="1::4:4:4:4,1::3:3:3:3"`,
-		`1 . esniconfig=Mw==`:                `esniconfig="Mw=="`,
-		`1 . key65000=4\ 3`:                  `key65000="4\ 3"`,
-		`1 . key65001="\" "`:                 `key65001="\"\ "`,
-		`1 . key65002`:                       `key65002=""`,
-		`1 . key65003=`:                      `key65003=""`,
-		`1 . key65004=""`:                    `key65004=""`,
-		`1 . key65005==`:                     `key65005="="`,
-		`1 . key65006==\"\"`:                 `key65006="=\"\""`,
-		`1 . key65007=\254`:                  `key65007="\254"`,
-		`1 . key65007=\032`:                  `key65007="\ "`,
+		`alpn=h2,h2c`:                    `h2,h2c`,
+		`port="499"`:                     `499`,
+		`ipv4hint=3.4.3.2,1.1.1.1`:       `3.4.3.2,1.1.1.1`,
+		`no-default-alpn=`:               ``,
+		`ipv6hint=1::4:4:4:4,1::3:3:3:3`: `1::4:4:4:4,1::3:3:3:3`,
+		`esniconfig=Mw==`:                `Mw==`,
+		`key65000=4\ 3`:                  `4\ 3`,
+		`key65001="\" "`:                 `\"\ `,
+		`key65002`:                       ``,
+		`key65003=`:                      ``,
+		`key65004=""`:                    ``,
+		`key65005==`:                     `=`,
+		`key65006==\"\"`:                 `=\"\"`,
+		`key65007=\254`:                  `\254`,
+		`key65008=\032`:                  `\ `,
 	}
+
 	for s, o := range svcbs {
-		rr, err := NewRR(header + s)
-		if err != nil {
-			t.Error("failed to parse RR: ", err)
+		key := ""
+		val := ""
+		idx := strings.IndexByte(s, '=')
+		if idx == -1 {
+			key = s
+		} else {
+			val = s[idx+1:]
+			if len(val) > 1 && val[0] == '"' {
+				val = val[1 : len(val)-1]
+			}
+			key = s[0:idx]
+		}
+		key_value := makeSvcKeyValue(SvcStringToKey(key))
+		if key_value == nil {
+			t.Error("failed to parse svc key: ", key)
 			continue
 		}
-		if !strings.HasSuffix(rr.String(), o) {
-			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, header+o, header+rr.String())
+		err := key_value.read(val)
+		if err != nil {
+			t.Error("failed to parse svc pair: ", s)
+			continue
 		}
-		//e, err := rr.SVCB.Value[0].pack()
-		/*	o := new(SVCB)
-			o.parse(c, o)
-			if err != nil {
-				t.Errorf("failed to pack valid RR: `%s' with error `%s'", rr.String, err)
-			}*/
+		b, err := key_value.pack()
+		if err != nil {
+			t.Error("failed to pack value of svc pair: ", s, err)
+			continue
+		}
+		if len(b) != int(key_value.len()) {
+			t.Errorf("expected packed svc value %s to be of length %d but got %d", s, int(key_value.len()), len(b))
+		}
+		err = key_value.unpack(b)
+		if err != nil {
+			t.Error("failed to unpack value of svc pair: ", s, err)
+			continue
+		}
+		if str := key_value.String(); str != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, str)
+		}
 	}
 }
