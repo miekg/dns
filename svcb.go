@@ -533,7 +533,7 @@ func (s *SvcIPv6Hint) Key() uint16 { return SVC_IPV6HINT }
 func (s *SvcIPv6Hint) len() uint16 { return 16 * uint16(len(s.Hint)) }
 
 func (s *SvcIPv6Hint) pack() ([]byte, error) {
-	b := make([]byte, 16*len(s.Hint))
+	b := make([]byte, 0, 16*len(s.Hint))
 	for _, e := range s.Hint {
 		if len(e) != net.IPv6len {
 			return nil, errors.New("dns: not IPv6")
