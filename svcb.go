@@ -46,8 +46,8 @@ var svcStringToKey = map[string]uint16{
 	"ipv6hint":        SVC_IPV6HINT,
 }
 
-// SvcKeyToString serializes keys in presentation format.
-// Returns empty string for reserved keys.
+// SvcKeyToString takes the numerical code of an SVC key and returns its name.
+// Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
 func SvcKeyToString(svcKey uint16) string {
 	x := svcKeyToString[svcKey]
@@ -60,9 +60,9 @@ func SvcKeyToString(svcKey uint16) string {
 	return "key" + strconv.FormatInt(int64(svcKey), 10)
 }
 
-// SvcStringToKey returns SvcValueKey numerically.
-// Accepts keyNNN... unless N == 0 or 65535.
-// NNN... must not be padded with zeros.
+// SvcStringToKey returns the numerical code of an SVC key.
+// Returns zero for reserved/invalid keys.
+// Accepts unassigned keys as well as experimental/private keys.
 func SvcStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
@@ -103,8 +103,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		case zString:
 			// In key=value pairs, value doesn't have to be quoted
 			// unless value contains whitespace.
-			// And keys don't need include values.
-			// Keys with equality sign after them
+			// And keys don't need to include values.
+			// Keys with an equality sign after them
 			// don't need values either.
 			z := l.token
 
@@ -112,8 +112,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			key := ""
 			val := ""
 			var key_value SvcKeyValue
-			// Key with no value and no equality sign
 			if idx == -1 {
+				// Key with no value and no equality sign
 				key = z
 				key_value = makeSvcKeyValue(SvcStringToKey(key))
 				if key_value == nil {
@@ -173,8 +173,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-// makeSvcKeyValue returns a SvcKeyValue with the key
-// or nil if a reserved key is used.
+// makeSvcKeyValue returns an SvcKeyValue struct with the key
+// or nil for reserved keys.
 func makeSvcKeyValue(key uint16) SvcKeyValue {
 	switch key {
 	case SVC_ALPN:
@@ -200,8 +200,8 @@ func makeSvcKeyValue(key uint16) SvcKeyValue {
 }
 
 // SVCB RR. TODO See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
-// The one with smallest priority SHOULD be given preference.
-// Of those with equal priority, a random one SHOULD be preferred for load balancing.
+// The one with smallest priority should be given preference.
+// Of those with equal priority, a random one should be preferred for load balancing.
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
@@ -228,19 +228,18 @@ func (r1 *HTTPSSVC) isDuplicate(r2 RR) bool {
 	return (*r1).SVCB.isDuplicate(r2)
 }
 
-// SvcKeyValue defines a key=value pair for SvcFieldValue.
-// A SVCB RR can have multiple SvcKeyValues appended to it.
+// SvcKeyValue defines a key=value pair for the SVCB RR type.
+// An SVCB RR can have multiple SvcKeyValues appended to it.
 type SvcKeyValue interface {
-	// Key returns the key code of the pair.
+	// Key returns the numerical key code.
 	Key() uint16
-	// pack returns the bytes of the value data.
+	// pack returns the encoded value.
 	pack() ([]byte, error)
-	// unpack sets the data as found in the value. Is also sets
-	// the length of the slice as the length of the value.
+	// unpack sets the value.
 	unpack([]byte) error
 	// String returns the string representation of the value.
 	String() string
-	// read sets the data the string representation of the value.
+	// read sets the value to the given string representation of the value.
 	read(string) error
 	// copy returns a deep-copy of the pair.
 	copy() SvcKeyValue
@@ -250,8 +249,7 @@ type SvcKeyValue interface {
 
 // SvcAlpn pair is used to list supported connection protocols.
 // Protocol ids can be found at:
-// https://www.iana.org/assignments/tls-extensiontype-values/
-// tls-extensiontype-values.xhtml#alpn-protocol-ids
+// https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:
 //
 //	o := new(dns.HTTPSSVC)
@@ -327,7 +325,7 @@ func (s *SvcAlpn) copy() SvcKeyValue {
 
 // SvcNoDefaultAlpn pair signifies no support
 // for default connection protocols.
-// Basic use pattern for creating a no_default_alpn option:
+// Basic use pattern for creating a no-default-alpn option:
 //
 //	o := new(dns.SVCB)
 //	o.Hdr.Name = "."
@@ -448,6 +446,8 @@ func (s *SvcIPv4Hint) unpack(b []byte) error {
 	return nil
 }
 
+// String returns "<nil>" if an invalid IPv4 address was encountered.
+// TODO DOC Do I need full definition for doc?
 func (s *SvcIPv4Hint) String() string {
 	var str strings.Builder
 	str.Grow(16 * len(s.Hint))
@@ -487,7 +487,7 @@ func (s *SvcIPv4Hint) copy() SvcKeyValue {
 
 // TODO ECHOConfig
 // SvcESNIConfig pair contains the ESNIConfig structure
-// defined in draft-ietf-tls-esni [RFC TODO] to encrypt
+// defined in draft-ietf-tls-esni [RFC TODO] to encrypt TODO
 // the SNI during the client handshake.
 // Basic use pattern for creating an esniconfig option:
 //
@@ -500,9 +500,6 @@ func (s *SvcIPv4Hint) copy() SvcKeyValue {
 type SvcESNIConfig struct {
 	ESNI string // This string needs to be base64 encoded
 }
-
-// TODO actually []byte would be more useful?
-// because to interpret it one has to decode it
 
 func (s *SvcESNIConfig) Key() uint16           { return SVC_ESNICONFIG }
 func (s *SvcESNIConfig) copy() SvcKeyValue     { return &SvcESNIConfig{s.ESNI} }
@@ -558,6 +555,8 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 	return nil
 }
 
+// String returns "<nil>" if an invalid IPv6 address was encountered.
+// TODO DOC Do I need full definition for doc?
 func (s *SvcIPv6Hint) String() string {
 	var str strings.Builder
 	str.Grow(41 * len(s.Hint))
@@ -621,9 +620,9 @@ func (s *SvcLocal) pack() ([]byte, error) { return s.Data, nil }
 func (s *SvcLocal) unpack(b []byte) error { s.Data = b; return nil }
 func (s *SvcLocal) len() uint16           { return uint16(len(s.Data)) }
 
-// TODO do we really need to escape space??
-// Escapes whitespaces too, which is only optional when
-// the result would be enclosed in double quotes.
+// String escapes whitespaces too, which is not required when
+// the result would be enclosed in double quotes. TODO Is this doc fine?
+// do i need definition
 func (s *SvcLocal) String() string {
 	var str strings.Builder
 	str.Grow(4 * len(s.Data))
@@ -697,8 +696,6 @@ func (s *SvcLocal) read(b string) error {
 	return nil
 }
 
-// Not checked, but duplicates aren't allowed.
-// Also assumes that all keys are valid.
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
