@@ -1565,7 +1565,7 @@ func TestParseSVCB(t *testing.T) {
 }
 
 func TestParseBadSVCB(t *testing.T) {
-	header := `example.com. 3600 IN SVCB `
+	header := `example.com. 3600 IN HTTPSSVC `
 	evils := []string{
 		`0 . no-default-alpn`,     // aliasform
 		`65536 . no-default-alpn`, // bad priority

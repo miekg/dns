@@ -457,7 +457,7 @@ func (s *SvcIPv4Hint) String() string {
 			return "<nil>"
 		}
 		str.WriteByte(',')
-		str.WriteString(e.String())
+		str.WriteString(x.String())
 	}
 	return str.String()[1:]
 }
