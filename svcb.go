@@ -450,6 +450,7 @@ func (s *SvcIPv4Hint) unpack(b []byte) error {
 // TODO DOC Do I need full definition for doc?
 func (s *SvcIPv4Hint) String() string {
 	var str strings.Builder
+	// Worst case allocation
 	str.Grow(16 * len(s.Hint))
 	for _, e := range s.Hint {
 		x := e.To4()
@@ -559,7 +560,8 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 // TODO DOC Do I need full definition for doc?
 func (s *SvcIPv6Hint) String() string {
 	var str strings.Builder
-	str.Grow(41 * len(s.Hint))
+	// Worst case allocation
+	str.Grow(40 * len(s.Hint))
 	for _, e := range s.Hint {
 		if e.To4() != nil {
 			return "<nil>"
