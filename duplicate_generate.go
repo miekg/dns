@@ -83,10 +83,7 @@ func main() {
 	for _, name := range namedTypes {
 
 		o := scope.Lookup(name)
-		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
+		st, _ := getTypeStruct(o.Type(), scope)
 		fmt.Fprintf(b, "func (r1 *%s) isDuplicate(_r2 RR) bool {\n", name)
 		fmt.Fprintf(b, "r2, ok := _r2.(*%s)\n", name)
 		fmt.Fprint(b, "if !ok { return false }\n")
