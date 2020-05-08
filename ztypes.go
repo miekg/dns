@@ -896,7 +896,9 @@ func (rr *SSHFP) copy() RR {
 }
 func (rr *SVCB) copy() RR {
 	Value := make([]SvcKeyValue, len(rr.Value))
-	copy(Value, rr.Value)
+	for i, e := range rr.Value {
+		Value[i] = e.copy()
+	}
 	return &SVCB{rr.Hdr, rr.Priority, rr.Target, Value}
 }
 func (rr *TA) copy() RR {

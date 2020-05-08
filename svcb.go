@@ -439,7 +439,7 @@ func (s *SvcIPv4Hint) unpack(b []byte) error {
 	i := 0
 	x := make([]net.IP, 0, len(b)/4)
 	for i < len(b) {
-		x = append(x, append(make(net.IP, 0, net.IPv4len), b[i:i+4]...))
+		x = append(x, net.IP(b[i:i+4]))
 		i += 4
 	}
 	s.Hint = x
@@ -450,7 +450,6 @@ func (s *SvcIPv4Hint) unpack(b []byte) error {
 // TODO DOC Do I need full definition for doc?
 func (s *SvcIPv4Hint) String() string {
 	var str strings.Builder
-	// Worst case allocation
 	str.Grow(16 * len(s.Hint))
 	for _, e := range s.Hint {
 		x := e.To4()
@@ -534,7 +533,7 @@ func (s *SvcIPv6Hint) len() uint16 { return 16 * uint16(len(s.Hint)) }
 func (s *SvcIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 16*len(s.Hint))
 	for _, e := range s.Hint {
-		if len(e) != net.IPv6len {
+		if len(e) != net.IPv6len || e.To4() != nil {
 			return nil, errors.New("dns: not IPv6")
 		}
 		b = append(b, e...)
@@ -549,7 +548,7 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 	i := 0
 	x := make([]net.IP, 0, len(b)/16)
 	for i < len(b) {
-		x = append(x, append(make(net.IP, 0, net.IPv6len), b[i:i+16]...))
+		x = append(x, net.IP(b[i:i+16]))
 		i += 16
 	}
 	s.Hint = x
@@ -560,7 +559,6 @@ func (s *SvcIPv6Hint) unpack(b []byte) error {
 // TODO DOC Do I need full definition for doc?
 func (s *SvcIPv6Hint) String() string {
 	var str strings.Builder
-	// Worst case allocation
 	str.Grow(40 * len(s.Hint))
 	for _, e := range s.Hint {
 		if e.To4() != nil {
