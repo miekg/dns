@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -222,10 +223,6 @@ func (rr *HTTPSSVC) String() string {
 
 func (rr *HTTPSSVC) parse(c *zlexer, o string) *ParseError {
 	return rr.SVCB.parse(c, o)
-}
-
-func (r1 *HTTPSSVC) isDuplicate(r2 RR) bool {
-	return (*r1).SVCB.isDuplicate(r2)
 }
 
 // SvcKeyValue defines a key=value pair for the SVCB RR type.
@@ -696,6 +693,12 @@ func (s *SvcLocal) read(b string) error {
 	return nil
 }
 
+func (s *SvcLocal) copy() SvcKeyValue {
+	return &SvcLocal{s.KeyCode,
+		append(make([]byte, 0, len(s.Data)), s.Data...),
+	}
+}
+
 func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
@@ -707,8 +710,32 @@ func (rr *SVCB) String() string {
 	return s
 }
 
-func (s *SvcLocal) copy() SvcKeyValue {
-	return &SvcLocal{s.KeyCode,
-		append(make([]byte, 0, len(s.Data)), s.Data...),
+// areSvcPairArraysEqual checks if SvcKeyValue arrays are equal
+// after sorting them. arrA and arrB have equal lengths,
+// otherwise zduplicate.go wouldn't call this function.
+func areSvcPairArraysEqual(arrA []SvcKeyValue, arrB []SvcKeyValue) bool {
+	a := append(make([]SvcKeyValue, 0, len(arrA)), arrA...)
+	b := append(make([]SvcKeyValue, 0, len(arrB)), arrB...)
+	sort.Slice(a, func(i, j int) bool {
+		return a[i].Key() < a[j].Key()
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Key() < b[j].Key()
+	})
+	for i, e := range a {
+		if e.Key() != b[i].Key() {
+			return false
+		}
+		b1, err1 := e.pack()
+		b2, err2 := b[i].pack()
+		if err1 != nil || err2 != nil || len(b1) != len(b2) {
+			return false
+		}
+		for bi, x := range b1 {
+			if x != b2[bi] {
+				return false
+			}
+		}
 	}
+	return true
 }

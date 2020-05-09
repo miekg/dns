@@ -121,6 +121,14 @@ func main() {
 					continue
 				}
 
+				if st.Tag(i) == `dns:"svc"` {
+					o2(`if !areSvcPairArraysEqual(r1.%s, r2.%s) {
+							return false
+					}`)
+
+					continue
+				}
+
 				o3(`for i := 0; i < len(r1.%s); i++ {
 					if r1.%s[i] != r2.%s[i] {
 						return false

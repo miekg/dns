@@ -1091,10 +1091,8 @@ func (r1 *SVCB) isDuplicate(_r2 RR) bool {
 	if len(r1.Value) != len(r2.Value) {
 		return false
 	}
-	for i := 0; i < len(r1.Value); i++ {
-		if r1.Value[i] != r2.Value[i] {
-			return false
-		}
+	if !areSvcPairArraysEqual(r1.Value, r2.Value) {
+		return false
 	}
 	return true
 }
