@@ -58,7 +58,7 @@ func SvcKeyToString(svcKey uint16) string {
 	if svcKey == 0 || svcKey == 65535 {
 		return ""
 	}
-	return "key" + strconv.FormatInt(int64(svcKey), 10)
+	return "key" + strconv.FormatUint(uint64(svcKey), 10)
 }
 
 // SvcStringToKey returns the numerical code of an SVC key.
@@ -460,15 +460,15 @@ func (s *SvcIPv4Hint) String() string {
 }
 
 func (s *SvcIPv4Hint) read(b string) error {
+	if strings.ContainsRune(b, ':') {
+		return errors.New("dns: not IPv4")
+	}
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
-		}
-		if ip.To4() == nil || strings.ContainsRune(e, ':') {
-			return errors.New("dns: not IPv4")
 		}
 		dst = append(dst, ip.To4())
 	}
@@ -568,12 +568,12 @@ func (s *SvcIPv6Hint) String() string {
 }
 
 func (s *SvcIPv6Hint) read(b string) error {
+	if strings.ContainsRune(b, '.') {
+		return errors.New("dns: not IPv6")
+	}
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, 0, len(str))
 	for _, e := range str {
-		if strings.ContainsRune(e, '.') {
-			return errors.New("dns: not IPv6")
-		}
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
@@ -644,7 +644,7 @@ func (s *SvcLocal) String() string {
 			}
 		} else {
 			str.WriteByte('\\')
-			a := strconv.FormatInt(int64(e), 10)
+			a := strconv.FormatUint(uint64(e), 10)
 			switch len(a) {
 			case 1:
 				str.WriteByte('0')
