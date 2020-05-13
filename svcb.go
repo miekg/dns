@@ -16,7 +16,7 @@ const (
 	SVC_NO_DEFAULT_ALPN = 2
 	SVC_PORT            = 3
 	SVC_IPV4HINT        = 4
-	SVC_ESNICONFIG      = 5
+	SVC_ECHOCONFIG      = 5
 	SVC_IPV6HINT        = 6
 	SVC_KEY65535        = 65535 // RESERVED
 )
@@ -34,7 +34,7 @@ var svcKeyToString = map[uint16]string{
 	SVC_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVC_PORT:            "port",
 	SVC_IPV4HINT:        "ipv4hint",
-	SVC_ESNICONFIG:      "esniconfig",
+	SVC_ECHOCONFIG:      "echoconfig",
 	SVC_IPV6HINT:        "ipv6hint",
 }
 
@@ -43,7 +43,7 @@ var svcStringToKey = map[string]uint16{
 	"no-default-alpn": SVC_NO_DEFAULT_ALPN,
 	"port":            SVC_PORT,
 	"ipv4hint":        SVC_IPV4HINT,
-	"esniconfig":      SVC_ESNICONFIG,
+	"echoconfig":      SVC_ECHOCONFIG,
 	"ipv6hint":        SVC_IPV6HINT,
 }
 
@@ -186,8 +186,8 @@ func makeSvcKeyValue(key uint16) SvcKeyValue {
 		return new(SvcPort)
 	case SVC_IPV4HINT:
 		return new(SvcIPv4Hint)
-	case SVC_ESNICONFIG:
-		return new(SvcESNIConfig)
+	case SVC_ECHOCONFIG:
+		return new(SvcECHOConfig)
 	case SVC_IPV6HINT:
 		return new(SvcIPv6Hint)
 	default:
@@ -482,29 +482,28 @@ func (s *SvcIPv4Hint) copy() SvcKeyValue {
 	}
 }
 
-// TODO ECHOConfig
-// SvcESNIConfig pair contains the ESNIConfig structure
+// SvcECHOConfig pair contains the ECHOConfig structure
 // defined in draft-ietf-tls-esni [RFC TODO] to encrypt TODO
 // the SNI during the client handshake.
-// Basic use pattern for creating an esniconfig option:
+// Basic use pattern for creating an echoconfig option:
 //
 //	o := new(dns.HTTPSSVC)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.HTTPSSVC
-//	e := new(dns.SvcESNIConfig)
-//	e.ESNI = "/wH...="
+//	e := new(dns.SvcECHOConfig)
+//	e.ECHO = "/wH...="
 //	o.Value = append(o.Value, e)
-type SvcESNIConfig struct {
-	ESNI string // This string needs to be base64 encoded
+type SvcECHOConfig struct {
+	ECHO string // This string needs to be base64 encoded
 }
 
-func (s *SvcESNIConfig) Key() uint16           { return SVC_ESNICONFIG }
-func (s *SvcESNIConfig) copy() SvcKeyValue     { return &SvcESNIConfig{s.ESNI} }
-func (s *SvcESNIConfig) pack() ([]byte, error) { return []byte(s.ESNI), nil }
-func (s *SvcESNIConfig) unpack(b []byte) error { s.ESNI = string(b); return nil }
-func (s *SvcESNIConfig) String() string        { return s.ESNI }
-func (s *SvcESNIConfig) read(b string) error   { s.ESNI = b; return nil }
-func (s *SvcESNIConfig) len() uint16           { return uint16(len(s.ESNI)) }
+func (s *SvcECHOConfig) Key() uint16           { return SVC_ECHOCONFIG }
+func (s *SvcECHOConfig) copy() SvcKeyValue     { return &SvcECHOConfig{s.ECHO} }
+func (s *SvcECHOConfig) pack() ([]byte, error) { return []byte(s.ECHO), nil }
+func (s *SvcECHOConfig) unpack(b []byte) error { s.ECHO = string(b); return nil }
+func (s *SvcECHOConfig) String() string        { return s.ECHO }
+func (s *SvcECHOConfig) read(b string) error   { s.ECHO = b; return nil }
+func (s *SvcECHOConfig) len() uint16           { return uint16(len(s.ECHO)) }
 
 // SvcIPv6Hint pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
