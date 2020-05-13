@@ -77,15 +77,15 @@ func TestSprintName(t *testing.T) {
 	got := sprintName("abc\\.def\007\"\127@\255\x05\xef\\")
 
 	if want := "abc\\.def\\007\\\"W\\@\\173\\005\\239"; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+		t.Errorf("expected %q, got %q", want, got)
 	}
 }
 
 func TestSprintTxtOctet(t *testing.T) {
 	got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
 
-	if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+	if want := "\"abc\\.def\\007\\\"W@\\173\\005\\239\""; got != want {
+		t.Errorf("expected %q, got %q", want, got)
 	}
 }
 
@@ -96,7 +96,7 @@ func TestSprintTxt(t *testing.T) {
 	})
 
 	if want := "\"abc.def\\007\\\"W@\\173\\005\\239\" \"example.com\""; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+		t.Errorf("expected %q, got %q", want, got)
 	}
 }
 
@@ -128,7 +128,7 @@ func BenchmarkSprintName(b *testing.B) {
 		got := sprintName("abc\\.def\007\"\127@\255\x05\xef\\")
 
 		if want := "abc\\.def\\007\\\"W\\@\\173\\005\\239"; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }
@@ -138,7 +138,7 @@ func BenchmarkSprintName_NoEscape(b *testing.B) {
 		got := sprintName("large.example.com")
 
 		if want := "large.example.com"; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }
@@ -147,8 +147,8 @@ func BenchmarkSprintTxtOctet(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
 
-		if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+		if want := "\"abc\\.def\\007\\\"W@\\173\\005\\239\""; got != want {
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }
