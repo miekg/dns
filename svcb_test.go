@@ -14,7 +14,7 @@ func TestSVCB(t *testing.T) {
 		`ipv4hint=3.4.3.2,1.1.1.1`:       `3.4.3.2,1.1.1.1`,
 		`no-default-alpn=`:               ``,
 		`ipv6hint=1::4:4:4:4,1::3:3:3:3`: `1::4:4:4:4,1::3:3:3:3`,
-		`esniconfig=Mw==`:                `Mw==`,
+		`echoconfig=Mw==`:                `Mw==`,
 		`key65000=4\ 3`:                  `4\ 3`,
 		`key65001="\" "`:                 `\"\ `,
 		`key65002=""`:                    ``,
@@ -35,8 +35,8 @@ func TestSVCB(t *testing.T) {
 			}
 			key = s[0:idx]
 		}
-		keyCode := SvcStringToKey(key)
-		keyValue := makeSvcKeyValue(keyCode)
+		keyCode := SVCBStringToKey(key)
+		keyValue := makeSVCBKeyValue(keyCode)
 		if keyValue == nil {
 			t.Error("failed to parse svc key: ", key)
 			continue
@@ -71,28 +71,28 @@ func TestSVCB(t *testing.T) {
 
 func TestDecodeBadSVCB(t *testing.T) {
 	svcbs := map[int][][]byte{
-		SVC_ALPN: {
+		SVCB_ALPN: {
 			{3, 0, 0}, // There aren't three octets after 3
 		},
-		SVC_NO_DEFAULT_ALPN: {
+		SVCB_NO_DEFAULT_ALPN: {
 			{0},
 		},
-		SVC_PORT: {
+		SVCB_PORT: {
 			{},
 		},
-		SVC_IPV4HINT: {
+		SVCB_IPV4HINT: {
 			{0, 0, 0},
 		},
-		SVC_IPV6HINT: {
+		SVCB_IPV6HINT: {
 			{0, 0, 0},
 		},
 	}
 	for s, o := range svcbs {
-		key_value := makeSvcKeyValue(uint16(s))
+		key_value := makeSVCBKeyValue(uint16(s))
 		for _, e := range o {
 			err := key_value.unpack(e)
 			if err == nil {
-				t.Error("accepted invalid svc value with key ", SvcKeyToString(uint16(s)))
+				t.Error("accepted invalid svc value with key ", SVCBKeyToString(uint16(s)))
 			}
 		}
 	}

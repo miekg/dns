@@ -613,23 +613,23 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
-	var xs []SvcKeyValue
+func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
+	var xs []SVCBKeyValue
 	var code uint16
 	var length uint16
 	var err error
 	for off < len(msg) {
 		code, off, err = unpackUint16(msg, off)
 		if err != nil {
-			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+			return nil, len(msg), &Error{err: "overflow unpacking svcb"}
 		}
 		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking svc"}
+			return nil, len(msg), &Error{err: "overflow unpacking svcb"}
 		}
-		e := makeSvcKeyValue(code)
+		e := makeSVCBKeyValue(code)
 		if e == nil {
-			return nil, len(msg), &Error{err: "svc invalid key"}
+			return nil, len(msg), &Error{err: "svcb invalid key"}
 		}
 		if err := e.unpack(msg[off : off+int(length)]); err != nil {
 			return nil, len(msg), err
@@ -641,15 +641,15 @@ func unpackDataSvc(msg []byte, off int) ([]SvcKeyValue, int, error) {
 	prev := uint16(0)
 	for _, e := range xs {
 		if e.Key() <= prev {
-			return nil, len(msg), &Error{err: "svc keys not in strictly increasing order"}
+			return nil, len(msg), &Error{err: "svcb keys not in strictly increasing order"}
 		}
 		prev = e.Key()
 	}
 	return xs, off, nil
 }
 
-func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) {
-	pairs := make([]SvcKeyValue, len(originalPairs))
+func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error) {
+	pairs := make([]SVCBKeyValue, len(originalPairs))
 	copy(pairs, originalPairs)
 	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
@@ -657,7 +657,7 @@ func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) 
 	prev := uint16(0)
 	for _, e := range pairs {
 		if e.Key() == prev {
-			return len(msg), &Error{err: "repeated svc keys are not allowed"}
+			return len(msg), &Error{err: "repeated svcb keys are not allowed"}
 		}
 		prev = e.Key()
 	}
@@ -667,15 +667,15 @@ func packDataSvc(originalPairs []SvcKeyValue, msg []byte, off int) (int, error) 
 			return len(msg), err
 		}
 		if len(packed) > 65535 {
-			return len(msg), &Error{err: "overflow packing svc"}
+			return len(msg), &Error{err: "overflow packing svcb"}
 		}
 		off, err = packUint16(el.Key(), msg, off)
 		if err != nil {
-			return len(msg), &Error{err: "overflow packing svc"}
+			return len(msg), &Error{err: "overflow packing svcb"}
 		}
 		off, err = packUint16(uint16(len(packed)), msg, off)
 		if err != nil || off+len(packed) > len(msg) {
-			return len(msg), &Error{err: "overflow packing svc"}
+			return len(msg), &Error{err: "overflow packing svcb"}
 		}
 		copy(msg[off:off+len(packed)], packed)
 		off += len(packed)

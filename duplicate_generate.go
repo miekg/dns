@@ -122,7 +122,7 @@ func main() {
 				}
 
 				if st.Tag(i) == `dns:"svc"` {
-					o2(`if !areSvcPairArraysEqual(r1.%s, r2.%s) {
+					o2(`if !areSVCBPairArraysEqual(r1.%s, r2.%s) {
 							return false
 					}`)
 

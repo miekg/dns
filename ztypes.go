@@ -603,7 +603,7 @@ func (rr *SVCB) len(off int, compression map[string]struct{}) int {
 	l += 2 // Priority
 	l += domainNameLen(rr.Target, off+l, compression, false)
 	for _, x := range rr.Value {
-		l += svcFieldLen(x)
+		l += svcbFieldLen(x)
 	}
 	return l
 }
@@ -895,7 +895,7 @@ func (rr *SSHFP) copy() RR {
 	return &SSHFP{rr.Hdr, rr.Algorithm, rr.Type, rr.FingerPrint}
 }
 func (rr *SVCB) copy() RR {
-	Value := make([]SvcKeyValue, len(rr.Value))
+	Value := make([]SVCBKeyValue, len(rr.Value))
 	for i, e := range rr.Value {
 		Value[i] = e.copy()
 	}

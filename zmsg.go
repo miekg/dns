@@ -325,7 +325,7 @@ func (rr *HTTPSSVC) pack(msg []byte, off int, compression compressionMap, compre
 	if err != nil {
 		return off, err
 	}
-	off, err = packDataSvc(rr.Value, msg, off)
+	off, err = packDataSVCB(rr.Value, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -931,7 +931,7 @@ func (rr *SVCB) pack(msg []byte, off int, compression compressionMap, compress b
 	if err != nil {
 		return off, err
 	}
-	off, err = packDataSvc(rr.Value, msg, off)
+	off, err = packDataSVCB(rr.Value, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1609,7 +1609,7 @@ func (rr *HTTPSSVC) unpack(msg []byte, off int) (off1 int, err error) {
 	if off == len(msg) {
 		return off, nil
 	}
-	rr.Value, off, err = unpackDataSvc(msg, off)
+	rr.Value, off, err = unpackDataSVCB(msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2536,7 +2536,7 @@ func (rr *SVCB) unpack(msg []byte, off int) (off1 int, err error) {
 	if off == len(msg) {
 		return off, nil
 	}
-	rr.Value, off, err = unpackDataSvc(msg, off)
+	rr.Value, off, err = unpackDataSVCB(msg, off)
 	if err != nil {
 		return off, err
 	}
