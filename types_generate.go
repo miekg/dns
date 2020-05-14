@@ -277,7 +277,7 @@ func main() {
 					fields = append(fields, f)
 					continue
 				}
-				if t == "SvcKeyValue" {
+				if t == "SVCBKeyValue" {
 					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
 						f, t, f, f, f)
 					fields = append(fields, f)
