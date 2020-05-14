@@ -133,19 +133,19 @@ func TestUnpackDomainName(t *testing.T) {
 			".",
 			""},
 		{"long label",
-			string(63) + maxPrintableLabel + "\x00",
+			"?" + maxPrintableLabel + "\x00",
 			maxPrintableLabel + ".",
 			""},
 		{"unprintable label",
-			string(63) + regexp.MustCompile(`\\[0-9]+`).ReplaceAllStringFunc(maxUnprintableLabel,
+			"?" + regexp.MustCompile(`\\[0-9]+`).ReplaceAllStringFunc(maxUnprintableLabel,
 				func(escape string) string {
 					n, _ := strconv.ParseInt(escape[1:], 10, 8)
-					return string(n)
+					return string(rune(n))
 				}) + "\x00",
 			maxUnprintableLabel + ".",
 			""},
 		{"long domain",
-			string(53) + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
+			"5" + strings.Replace(longDomain, ".", "1", -1) + "\x00",
 			longDomain + ".",
 			""},
 		{"compression pointer",
@@ -154,7 +154,7 @@ func TestUnpackDomainName(t *testing.T) {
 			"foo.\\003com\\000.example.com.",
 			""},
 		{"too long domain",
-			string(54) + "x" + strings.Replace(longDomain, ".", string(49), -1) + "\x00",
+			"6" + "x" + strings.Replace(longDomain, ".", "1", -1) + "\x00",
 			"",
 			ErrLongDomain.Error()},
 		{"too long by pointer",
