@@ -241,11 +241,15 @@ func main() {
 	for _, name := range namedTypes {
 		o := scope.Lookup(name)
 		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
 		fmt.Fprintf(b, "func (rr *%s) copy() RR {\n", name)
-		fields := []string{"rr.Hdr"}
+		fields := make([]string, 0, st.NumFields())
+		if isEmbedded {
+			a, _ := o.Type().Underlying().(*types.Struct)
+			parent := a.Field(0).Name()
+			fields = append(fields, "*rr."+parent+".copy().(*"+parent+")")
+			goto WriteCopy
+		}
+		fields = append(fields, "rr.Hdr")
 		for i := 1; i < st.NumFields(); i++ {
 			f := st.Field(i).Name()
 			if sl, ok := st.Field(i).Type().(*types.Slice); ok {
@@ -263,8 +267,8 @@ func main() {
 					continue
 				}
 				if t == "APLPrefix" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i := range rr.%s {\n %s[i] = rr.%s[i].copy()\n}\n",
-						f, t, f, f, f, f)
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
+						f, t, f, f, f)
 					fields = append(fields, f)
 					continue
 				}
@@ -279,6 +283,7 @@ func main() {
 			}
 			fields = append(fields, "rr."+f)
 		}
+	WriteCopy:
 		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
 		fmt.Fprintf(b, "}\n")
 	}
