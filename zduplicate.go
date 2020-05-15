@@ -402,6 +402,27 @@ func (r1 *HIP) isDuplicate(_r2 RR) bool {
 	return true
 }
 
+func (r1 *HTTPSSVC) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*HTTPSSVC)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if r1.Priority != r2.Priority {
+		return false
+	}
+	if !isDuplicateName(r1.Target, r2.Target) {
+		return false
+	}
+	if len(r1.Value) != len(r2.Value) {
+		return false
+	}
+	if !areSVCBPairArraysEqual(r1.Value, r2.Value) {
+		return false
+	}
+	return true
+}
+
 func (r1 *KEY) isDuplicate(_r2 RR) bool {
 	r2, ok := _r2.(*KEY)
 	if !ok {

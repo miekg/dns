@@ -768,6 +768,9 @@ func (rr *HIP) copy() RR {
 	copy(RendezvousServers, rr.RendezvousServers)
 	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, RendezvousServers}
 }
+func (rr *HTTPSSVC) copy() RR {
+	return &HTTPSSVC{*rr.SVCB.copy().(*SVCB)}
+}
 func (rr *KEY) copy() RR {
 	return &KEY{*rr.DNSKEY.copy().(*DNSKEY)}
 }
