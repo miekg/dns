@@ -103,8 +103,7 @@ the following should work:
 
 ## Examples
 
-A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc
-github.com/miekg/dns`).
+A short "how to use the API" is at the beginning of doc.go, you can also find it on [go.dev](https://pkg.go.dev/github.com/miekg/dns).
 
 Example programs can be found in the `github.com/miekg/exdns` repository.
 
