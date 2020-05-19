@@ -461,25 +461,22 @@ func sprintName(s string) string {
 			}
 			break
 		}
-		switch b {
-		case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
+		if strings.IndexByte(domainNameLabelEscapedBytes, b) != -1 {
 			if dst.Len() == 0 {
 				dst.Grow(len(s) * 2)
 				dst.WriteString(s[:i])
 			}
 			dst.WriteByte('\\')
 			dst.WriteByte(b)
-		default:
-			if ' ' <= b && b <= '~' {
-				if dst.Len() != 0 {
-					dst.WriteByte(b)
-				}
-			} else {
-				if dst.Len() == 0 {
-					dst.Grow(len(s) * 2)
-					dst.WriteString(s[:i])
-				}
-				dst.WriteString(escapeByte(b))
+		} else if b < ' ' || b > '~' { // unprintable, use \DDD
+			if dst.Len() == 0 {
+				dst.Grow(len(s) * 2)
+				dst.WriteString(s[:i])
+			}
+			dst.WriteString(escapeByte(b))
+		} else {
+			if dst.Len() != 0 {
+				dst.WriteByte(b)
 			}
 		}
 		i += n
@@ -548,7 +545,8 @@ func writeTXTStringByte(s *strings.Builder, b byte) {
 }
 
 const (
-	escapedByteSmall = "" +
+	domainNameLabelEscapedBytes = `. '@;()"\`
+	escapedByteSmall            = "" +
 		`\000\001\002\003\004\005\006\007\008\009` +
 		`\010\011\012\013\014\015\016\017\018\019` +
 		`\020\021\022\023\024\025\026\027\028\029` +

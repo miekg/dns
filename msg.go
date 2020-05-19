@@ -398,17 +398,12 @@ Loop:
 				return "", lenmsg, ErrLongDomain
 			}
 			for _, b := range msg[off : off+c] {
-				switch b {
-				case '.', '(', ')', ';', ' ', '@':
-					fallthrough
-				case '"', '\\':
+				if strings.IndexByte(domainNameLabelEscapedBytes, b) != -1 {
 					s = append(s, '\\', b)
-				default:
-					if b < ' ' || b > '~' { // unprintable, use \DDD
-						s = append(s, escapeByte(b)...)
-					} else {
-						s = append(s, b)
-					}
+				} else if b < ' ' || b > '~' { // unprintable, use \DDD
+					s = append(s, escapeByte(b)...)
+				} else {
+					s = append(s, b)
 				}
 			}
 			s = append(s, '.')
