@@ -445,11 +445,11 @@ func sprintName(s string) string {
 	var dst strings.Builder
 
 	for i := 0; i < len(s); {
-		if i+1 < len(s) && s[i] == '\\' && s[i+1] == '.' {
+		if s[i] == '.' {
 			if dst.Len() != 0 {
-				dst.WriteString(s[i : i+2])
+				dst.WriteByte('.')
 			}
-			i += 2
+			i++
 			continue
 		}
 
@@ -458,15 +458,8 @@ func sprintName(s string) string {
 			i++
 			continue
 		}
-		if b == '.' {
-			if dst.Len() != 0 {
-				dst.WriteByte('.')
-			}
-			i += n
-			continue
-		}
 		switch b {
-		case ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
+		case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
 			if dst.Len() == 0 {
 				dst.Grow(len(s) * 2)
 				dst.WriteString(s[:i])
