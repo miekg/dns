@@ -455,8 +455,11 @@ func sprintName(s string) string {
 
 		b, n := nextByte(s, i)
 		if n == 0 {
-			i++
-			continue
+			// Drop "dangling" incomplete escapes.
+			if dst.Len() == 0 {
+				return s[:i]
+			}
+			break
 		}
 		switch b {
 		case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
