@@ -202,6 +202,7 @@ func TestUnpackDomainName(t *testing.T) {
 			"\x03foo" + "\x03bar" + "\x07example" + "\xC0\x04",
 			"",
 			ErrLongDomain.Error()},
+		{"forward compression pointer", "\x02\xC0\xFF\xC0\x01", "", ErrBuf.Error()},
 		{"reserved compression pointer 0b10", "\x07example\x80", "", "dns: bad rdata"},
 		{"reserved compression pointer 0b01", "\x07example\x40", "", "dns: bad rdata"},
 	}
