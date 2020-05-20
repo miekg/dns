@@ -398,9 +398,9 @@ Loop:
 				return "", lenmsg, ErrLongDomain
 			}
 			for _, b := range msg[off : off+c] {
-				if strings.IndexByte(domainNameLabelEscapedBytes, b) != -1 {
+				if isDomainNameLabelSpecial(b) {
 					s = append(s, '\\', b)
-				} else if b < ' ' || b > '~' { // unprintable, use \DDD
+				} else if b < ' ' || b > '~' {
 					s = append(s, escapeByte(b)...)
 				} else {
 					s = append(s, b)

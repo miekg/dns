@@ -461,7 +461,7 @@ func sprintName(s string) string {
 			}
 			break
 		}
-		if strings.IndexByte(domainNameLabelEscapedBytes, b) != -1 {
+		if isDomainNameLabelSpecial(b) {
 			if dst.Len() == 0 {
 				dst.Grow(len(s) * 2)
 				dst.WriteString(s[:i])
@@ -545,8 +545,7 @@ func writeTXTStringByte(s *strings.Builder, b byte) {
 }
 
 const (
-	domainNameLabelEscapedBytes = `. '@;()"\`
-	escapedByteSmall            = "" +
+	escapedByteSmall = "" +
 		`\000\001\002\003\004\005\006\007\008\009` +
 		`\010\011\012\013\014\015\016\017\018\019` +
 		`\020\021\022\023\024\025\026\027\028\029` +
@@ -577,6 +576,17 @@ func escapeByte(b byte) string {
 	b -= '~' + 1
 	// The cast here is needed as b*4 may overflow byte.
 	return escapedByteLarge[int(b)*4 : int(b)*4+4]
+}
+
+// isDomainNameLabelSpecial returns true if
+// a domain name label byte should be prefixed
+// with an escaping backslash.
+func isDomainNameLabelSpecial(b byte) bool {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
+		return true
+	}
+	return false
 }
 
 func nextByte(s string, offset int) (byte, int) {
