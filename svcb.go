@@ -207,7 +207,7 @@ type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string         `dns:"domain-name"`
-	Value    []SVCBKeyValue `dns:"svc"` // if priority == 0 this is empty
+	Value    []SVCBKeyValue `dns:"svcb-pairs"` // if priority == 0 this is empty
 }
 
 // HTTPSSVC RR. Everything valid for SVCB applies to HTTPSSVC as well
@@ -642,18 +642,7 @@ func (s *SVCBLocal) String() string {
 				str.WriteByte(e)
 			}
 		} else {
-			str.WriteByte('\\')
-			a := strconv.FormatUint(uint64(e), 10)
-			switch len(a) {
-			case 1:
-				str.WriteByte('0')
-				fallthrough
-			case 2:
-				str.WriteByte('0')
-				fallthrough
-			default:
-				str.WriteString(a)
-			}
+			str.WriteString(escapeByte(e))
 		}
 	}
 	return str.String()
@@ -710,7 +699,7 @@ func (rr *SVCB) String() string {
 }
 
 // areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal
-// after sorting them. arrA and arrB have equal lengths,
+// after sorting their copies. arrA and arrB have equal lengths,
 // otherwise zduplicate.go wouldn't call this function.
 func areSVCBPairArraysEqual(arrA []SVCBKeyValue, arrB []SVCBKeyValue) bool {
 	a := append(make([]SVCBKeyValue, 0, len(arrA)), arrA...)
