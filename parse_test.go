@@ -1590,6 +1590,8 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . key65534=\24`,        // invalid numberic escape
 		`1 . key65534=\256`,       // invalid numberic escape
 		`1 . key65534=\`,          // invalid numberic escape
+		`1 . key65534=""alpn`,     // zQuote ending needs whitespace
+		`1 . key65534="a"alpn`,    // zQuote ending needs whitespace
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
 		`1 . ipv6hint=1:1:1:1`,    // not ipv6
 		`1 . ipv6hint=a`,          // not ipv6

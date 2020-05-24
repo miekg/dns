@@ -16,7 +16,7 @@ const (
 	SVCB_NO_DEFAULT_ALPN = 2
 	SVCB_PORT            = 3
 	SVCB_IPV4HINT        = 4
-	SVCB_ECHOCONFIG      = 5
+	SVCB_ECHCONFIG       = 5
 	SVCB_IPV6HINT        = 6
 	SVCB_KEY65535        = 65535 // RESERVED
 )
@@ -34,7 +34,7 @@ var svcbKeyToString = map[uint16]string{
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVCB_PORT:            "port",
 	SVCB_IPV4HINT:        "ipv4hint",
-	SVCB_ECHOCONFIG:      "echoconfig",
+	SVCB_ECHCONFIG:       "echconfig",
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
@@ -43,7 +43,7 @@ var svcbStringToKey = map[string]uint16{
 	"no-default-alpn": SVCB_NO_DEFAULT_ALPN,
 	"port":            SVCB_PORT,
 	"ipv4hint":        SVCB_IPV4HINT,
-	"echoconfig":      SVCB_ECHOCONFIG,
+	"echconfig":       SVCB_ECHCONFIG,
 	"ipv6hint":        SVCB_IPV6HINT,
 }
 
@@ -98,17 +98,26 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	// Values (if any)
 	l, _ = c.Next()
 	var xs []SVCBKeyValue
+	// Helps require whitespace between pairs.
+	// Prevents key1000="a"key1001=...
+	canHaveNextKey := true
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
-		// This consumes at least, including up to the first equality sign
 		case zString:
+			if !canHaveNextKey {
+				// The key we can now read was probably meant to be
+				// a part of the last value.
+				return &ParseError{"", "svcb invalid value quotation", l}
+			}
+
 			// In key=value pairs, value doesn't have to be quoted
 			// unless value contains whitespace.
 			// And keys don't need to include values.
-			// Keys with an equality sign after them
-			// don't need values either.
+			// Similarly, keys with an equality signs
+			// after them don't need values.
 			z := l.token
 
+			// z includes at least up to the first equality sign
 			idx := strings.IndexByte(z, '=')
 			key := ""
 			val := ""
@@ -116,21 +125,11 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			if idx == -1 {
 				// Key with no value and no equality sign
 				key = z
-				key_value = makeSVCBKeyValue(SVCBStringToKey(key))
-				if key_value == nil {
-					return &ParseError{"", "svcb invalid key", l}
-				}
+			} else if idx == 0 {
+				return &ParseError{"", "no valid svcb key found", l}
 			} else {
-				if idx == 0 {
-					return &ParseError{"", "no valid svcb key found", l}
-				}
-				val = z[idx+1:]
 				key = z[0:idx]
-
-				key_value = makeSVCBKeyValue(SVCBStringToKey(key))
-				if key_value == nil {
-					return &ParseError{"", "svcb invalid key", l}
-				}
+				val = z[idx+1:]
 
 				if len(val) == 0 {
 					// We have a key and an equality sign
@@ -138,6 +137,10 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					// or we have a double quote
 					l, _ = c.Next()
 					if l.value == zQuote {
+						// Only needed when value ends with double quotes
+						// Any value starting with zQuote ends with it
+						canHaveNextKey = false
+
 						l, _ = c.Next()
 						switch l.value {
 						case zString:
@@ -155,6 +158,10 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
+			key_value = makeSVCBKeyValue(SVCBStringToKey(key))
+			if key_value == nil {
+				return &ParseError{"", "svcb invalid key", l}
+			}
 			if err := key_value.read(val); err != nil {
 				return &ParseError{"", err.Error(), l}
 			}
@@ -162,6 +169,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		case zQuote:
 			return &ParseError{"", "svcb key can't contain double quotes", l}
 		case zBlank:
+			canHaveNextKey = true
 		default:
 			return &ParseError{"", "bad svcb Values", l}
 		}
@@ -186,8 +194,8 @@ func makeSVCBKeyValue(key uint16) SVCBKeyValue {
 		return new(SVCBPort)
 	case SVCB_IPV4HINT:
 		return new(SVCBIPv4Hint)
-	case SVCB_ECHOCONFIG:
-		return new(SVCBECHOConfig)
+	case SVCB_ECHCONFIG:
+		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
 	default:
@@ -482,28 +490,28 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBECHOConfig pair contains the ECHOConfig structure
+// SVCBECHConfig pair contains the ECHConfig structure
 // defined in draft-ietf-tls-esni [RFC TODO] to encrypt TODO
 // the SNI during the client handshake.
-// Basic use pattern for creating an echoconfig option:
+// Basic use pattern for creating an echconfig option:
 //
 //	o := new(dns.HTTPSSVC)
 //	o.Hdr.Name = "."
 //	o.Hdr.Rrtype = dns.HTTPSSVC
-//	e := new(dns.SVCBECHOConfig)
-//	e.ECHO = "/wH...="
+//	e := new(dns.SVCBECHConfig)
+//	e.ECH = "/wH...="
 //	o.Value = append(o.Value, e)
-type SVCBECHOConfig struct {
-	ECHO string // This string needs to be base64 encoded
+type SVCBECHConfig struct {
+	ECH string // This string needs to be base64 encoded
 }
 
-func (s *SVCBECHOConfig) Key() uint16           { return SVCB_ECHOCONFIG }
-func (s *SVCBECHOConfig) copy() SVCBKeyValue    { return &SVCBECHOConfig{s.ECHO} }
-func (s *SVCBECHOConfig) pack() ([]byte, error) { return []byte(s.ECHO), nil }
-func (s *SVCBECHOConfig) unpack(b []byte) error { s.ECHO = string(b); return nil }
-func (s *SVCBECHOConfig) String() string        { return s.ECHO }
-func (s *SVCBECHOConfig) read(b string) error   { s.ECHO = b; return nil }
-func (s *SVCBECHOConfig) len() uint16           { return uint16(len(s.ECHO)) }
+func (s *SVCBECHConfig) Key() uint16           { return SVCB_ECHCONFIG }
+func (s *SVCBECHConfig) copy() SVCBKeyValue    { return &SVCBECHConfig{s.ECH} }
+func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
+func (s *SVCBECHConfig) unpack(b []byte) error { s.ECH = string(b); return nil }
+func (s *SVCBECHConfig) String() string        { return s.ECH }
+func (s *SVCBECHConfig) read(b string) error   { s.ECH = b; return nil }
+func (s *SVCBECHConfig) len() uint16           { return uint16(len(s.ECH)) }
 
 // SVCBIPv6Hint pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
