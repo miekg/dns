@@ -160,11 +160,9 @@ func (r *generateReader) ReadByte() (byte, error) {
 			return '$', nil
 		}
 
-		mod := "%d"
-
 		if si >= len(r.s)-1 {
 			// End of the string
-			fmt.Fprintf(&r.mod, mod, r.cur)
+			fmt.Fprintf(&r.mod, "%d", r.cur)
 			return r.mod.ReadByte()
 		}
 
@@ -173,10 +171,10 @@ func (r *generateReader) ReadByte() (byte, error) {
 			return '$', nil
 		}
 
-		var offset int
-
 		// Search for { and }
 		if r.s[si+1] == '{' {
+			var offset int
+			mod := "%d"
 			// Modifier block
 			sep := strings.Index(r.s[si+2:], "}")
 			if sep < 0 {
@@ -193,9 +191,11 @@ func (r *generateReader) ReadByte() (byte, error) {
 			}
 
 			r.si += 2 + sep // Jump to it
+			fmt.Fprintf(&r.mod, mod, r.cur+offset)
+		} else {
+			r.mod.WriteString(strconv.Itoa(r.cur))
 		}
 
-		fmt.Fprintf(&r.mod, mod, r.cur+offset)
 		return r.mod.ReadByte()
 	default:
 		if r.escape { // Pretty useless here
