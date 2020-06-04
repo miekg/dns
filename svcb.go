@@ -154,7 +154,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			if keyValue == nil {
 				return &ParseError{"", "bad SVCB key", l}
 			}
-			if err := keyValue.read(val); err != nil {
+			if err := keyValue.parse(val); err != nil {
 				return &ParseError{"", err.Error(), l}
 			}
 			xs = append(xs, keyValue)
@@ -236,8 +236,8 @@ type SVCBKeyValue interface {
 	unpack([]byte) error
 	// String returns the string representation of the value.
 	String() string
-	// read sets the value to the given string representation of the value.
-	read(string) error
+	// parse sets the value to the given string representation of the value.
+	parse(string) error
 	// copy returns a deep-copy of the pair.
 	copy() SVCBKeyValue
 	// len returns the length of value in the wire format.
@@ -300,7 +300,7 @@ func (s *SVCBAlpn) unpack(b []byte) error {
 	return nil
 }
 
-func (s *SVCBAlpn) read(b string) error {
+func (s *SVCBAlpn) parse(b string) error {
 	s.Alpn = strings.Split(b, ",")
 	return nil
 }
@@ -345,7 +345,7 @@ func (s *SVCBNoDefaultAlpn) unpack(b []byte) error {
 	return nil
 }
 
-func (s *SVCBNoDefaultAlpn) read(b string) error {
+func (s *SVCBNoDefaultAlpn) parse(b string) error {
 	if len(b) != 0 {
 		return errors.New("dns: no_default_alpn should have no value")
 	}
@@ -384,7 +384,7 @@ func (s *SVCBPort) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (s *SVCBPort) read(b string) error {
+func (s *SVCBPort) parse(b string) error {
 	port, err := strconv.ParseUint(b, 10, 16)
 	if err != nil {
 		return errors.New("dns: bad port")
@@ -430,7 +430,7 @@ func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 
 func (s *SVCBIPv4Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%4 != 0 {
-		return errors.New("dns: invalid IPv4 array")
+		return errors.New("dns: bad array of IPv4 addresses")
 	}
 	i := 0
 	x := make([]net.IP, 0, len(b)/4)
@@ -458,7 +458,7 @@ func (s *SVCBIPv4Hint) String() string {
 	return str.String()[1:]
 }
 
-func (s *SVCBIPv4Hint) read(b string) error {
+func (s *SVCBIPv4Hint) parse(b string) error {
 	if strings.ContainsRune(b, ':') {
 		return errors.New("dns: not IPv4")
 	}
@@ -501,7 +501,7 @@ func (s *SVCBECHConfig) copy() SVCBKeyValue    { return &SVCBECHConfig{s.ECH} }
 func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
 func (s *SVCBECHConfig) unpack(b []byte) error { s.ECH = string(b); return nil }
 func (s *SVCBECHConfig) String() string        { return s.ECH }
-func (s *SVCBECHConfig) read(b string) error   { s.ECH = b; return nil }
+func (s *SVCBECHConfig) parse(b string) error  { s.ECH = b; return nil }
 func (s *SVCBECHConfig) len() uint16           { return uint16(len(s.ECH)) }
 
 // SVCBIPv6Hint pair suggests an IPv6 address
@@ -538,7 +538,7 @@ func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 
 func (s *SVCBIPv6Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%16 != 0 {
-		return errors.New("dns: invalid IPv6 array")
+		return errors.New("dns: bad array of IPv6 addresses")
 	}
 	i := 0
 	x := make([]net.IP, 0, len(b)/16)
@@ -565,7 +565,7 @@ func (s *SVCBIPv6Hint) String() string {
 	return str.String()[1:]
 }
 
-func (s *SVCBIPv6Hint) read(b string) error {
+func (s *SVCBIPv6Hint) parse(b string) error {
 	if strings.ContainsRune(b, '.') {
 		return errors.New("dns: not IPv6")
 	}
@@ -647,7 +647,7 @@ func (s *SVCBLocal) String() string {
 	return str.String()
 }
 
-func (s *SVCBLocal) read(b string) error {
+func (s *SVCBLocal) parse(b string) error {
 	bytes := make([]byte, 0, len(b))
 	i := 0
 	for i < len(b) {
