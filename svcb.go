@@ -38,14 +38,7 @@ var svcbKeyToString = map[uint16]string{
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
-var svcbStringToKey = map[string]uint16{
-	"alpn":            SVCB_ALPN,
-	"no-default-alpn": SVCB_NO_DEFAULT_ALPN,
-	"port":            SVCB_PORT,
-	"ipv4hint":        SVCB_IPV4HINT,
-	"echconfig":       SVCB_ECHCONFIG,
-	"ipv6hint":        SVCB_IPV6HINT,
-}
+var svcbStringToKey = reverseInt16(svcbKeyToString)
 
 // SVCBKeyToString takes the numerical code of an SVCB key and returns its name.
 // Returns an empty string for reserved keys.
@@ -81,7 +74,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
-		return &ParseError{"", "bad svb Priority", l}
+		return &ParseError{"", "bad SVCB priority", l}
 	}
 	rr.Priority = uint16(i)
 
@@ -91,7 +84,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 	name, nameOk := toAbsoluteName(l.token, o)
 	if l.err || !nameOk {
-		return &ParseError{"", "bad svcb Target", l}
+		return &ParseError{"", "bad SVCB Target", l}
 	}
 	rr.Target = name
 
@@ -107,7 +100,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			if !canHaveNextKey {
 				// The key we can now read was probably meant to be
 				// a part of the last value.
-				return &ParseError{"", "svcb invalid value quotation", l}
+				return &ParseError{"", "bad SVCB value quotation", l}
 			}
 
 			// In key=value pairs, value doesn't have to be quoted
@@ -121,12 +114,11 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			idx := strings.IndexByte(z, '=')
 			key := ""
 			val := ""
-			var key_value SVCBKeyValue
 			if idx == -1 {
 				// Key with no value and no equality sign
 				key = z
 			} else if idx == 0 {
-				return &ParseError{"", "no valid svcb key found", l}
+				return &ParseError{"", "bad SVCB key", l}
 			} else {
 				key = z[0:idx]
 				val = z[idx+1:]
@@ -148,36 +140,36 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 							val = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
-								return &ParseError{"", "svcb unterminated value", l}
+								return &ParseError{"", "SVCB unterminated value", l}
 							}
 						case zQuote:
 							// There's nothing in double quotes
 						default:
-							return &ParseError{"", "svcb invalid value", l}
+							return &ParseError{"", "bad SVCB value", l}
 						}
 					}
 				}
 			}
-			key_value = makeSVCBKeyValue(SVCBStringToKey(key))
-			if key_value == nil {
-				return &ParseError{"", "svcb invalid key", l}
+			keyValue := makeSVCBKeyValue(SVCBStringToKey(key))
+			if keyValue == nil {
+				return &ParseError{"", "bad SVCB key", l}
 			}
-			if err := key_value.read(val); err != nil {
+			if err := keyValue.read(val); err != nil {
 				return &ParseError{"", err.Error(), l}
 			}
-			xs = append(xs, key_value)
+			xs = append(xs, keyValue)
 		case zQuote:
-			return &ParseError{"", "svcb key can't contain double quotes", l}
+			return &ParseError{"", "SVCB key can't contain double quotes", l}
 		case zBlank:
 			canHaveNextKey = true
 		default:
-			return &ParseError{"", "bad svcb Values", l}
+			return &ParseError{"", "bad SVCB values", l}
 		}
 		l, _ = c.Next()
 	}
 	rr.Value = xs
 	if rr.Priority == 0 && len(xs) > 0 {
-		return &ParseError{"", "svcb aliasform can't have values", l}
+		return &ParseError{"", "SVCB aliasform can't have values", l}
 	}
 	return nil
 }
@@ -264,11 +256,11 @@ type SVCBKeyValue interface {
 //	e.Alpn = []string{"h2", "http/1.1"}
 //	o.Value = append(o.Value, e)
 type SVCBAlpn struct {
-	Alpn []string // Must not be of zero length
+	Alpn []string
 }
 
 func (s *SVCBAlpn) Key() uint16    { return SVCB_ALPN }
-func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn[:], ",") }
+func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn, ",") }
 
 // The spec requires the alpn keys including \ or , to be escaped.
 // In practice, no standard key including those exists.
@@ -278,7 +270,6 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 	// Estimate
 	b := make([]byte, 0, 10*len(s.Alpn))
 	for _, e := range s.Alpn {
-		//x := []byte(strings.ReplaceAll(strings.ReplaceAll(e, "\\", "\\\\"), ",", "\\,"))
 		x := []byte(e)
 		if len(x) == 0 {
 			return nil, errors.New("dns: empty alpn-id")
@@ -289,7 +280,7 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 		b = append(b, byte(len(x)))
 		b = append(b, x...)
 	}
-	return b[:], nil
+	return b, nil
 }
 
 func (s *SVCBAlpn) unpack(b []byte) error {
@@ -383,13 +374,13 @@ func (s *SVCBPort) unpack(b []byte) error {
 	if len(b) != 2 {
 		return errors.New("dns: bad port")
 	}
-	s.Port = binary.BigEndian.Uint16(b[0:])
+	s.Port = binary.BigEndian.Uint16(b)
 	return nil
 }
 
 func (s *SVCBPort) pack() ([]byte, error) {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b[0:], s.Port)
+	binary.BigEndian.PutUint16(b, s.Port)
 	return b, nil
 }
 
@@ -662,7 +653,7 @@ func (s *SVCBLocal) read(b string) error {
 	for i < len(b) {
 		if b[i] == '\\' {
 			if i+1 == len(b) {
-				return errors.New("dns: svcb private/experimental key" +
+				return errors.New("dns: SVCB private/experimental key" +
 					" escape unterminated")
 			}
 			if isDigit(b[i+1]) {
@@ -674,7 +665,7 @@ func (s *SVCBLocal) read(b string) error {
 						continue
 					}
 				}
-				return errors.New("dns: svcb private/experimental key" +
+				return errors.New("dns: SVCB private/experimental key" +
 					" invalid escaped octet")
 			} else {
 				bytes = append(bytes, b[i+1])

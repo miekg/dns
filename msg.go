@@ -1005,10 +1005,6 @@ func domainNameLen(s string, off int, compression map[string]struct{}, compress 
 	return len(s) + 1
 }
 
-func svcbFieldLen(s SVCBKeyValue) int {
-	return 4 + int(s.len())
-}
-
 func escapedNameLen(s string) int {
 	nameLen := len(s)
 	for i := 0; i < len(s); i++ {

@@ -603,7 +603,7 @@ func (rr *SVCB) len(off int, compression map[string]struct{}) int {
 	l += 2 // Priority
 	l += domainNameLen(rr.Target, off+l, compression, false)
 	for _, x := range rr.Value {
-		l += svcbFieldLen(x)
+		l += 4 + int(x.len())
 	}
 	return l
 }

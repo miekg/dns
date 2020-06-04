@@ -621,15 +621,15 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 	for off < len(msg) {
 		code, off, err = unpackUint16(msg, off)
 		if err != nil {
-			return nil, len(msg), &Error{err: "overflow unpacking svcb"}
+			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
 		}
 		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking svcb"}
+			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
 		}
 		e := makeSVCBKeyValue(code)
 		if e == nil {
-			return nil, len(msg), &Error{err: "svcb invalid key"}
+			return nil, len(msg), &Error{err: "bad SVCB key"}
 		}
 		if err := e.unpack(msg[off : off+int(length)]); err != nil {
 			return nil, len(msg), err
@@ -641,7 +641,7 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 	prev := uint16(0)
 	for _, e := range xs {
 		if e.Key() <= prev {
-			return nil, len(msg), &Error{err: "svcb keys not in strictly increasing order"}
+			return nil, len(msg), &Error{err: "SVCB keys not in strictly increasing order"}
 		}
 		prev = e.Key()
 	}
@@ -657,7 +657,7 @@ func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error
 	prev := uint16(0)
 	for _, e := range pairs {
 		if e.Key() == prev {
-			return len(msg), &Error{err: "repeated svcb keys are not allowed"}
+			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}
 		}
 		prev = e.Key()
 	}
@@ -666,16 +666,13 @@ func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error
 		if err != nil {
 			return len(msg), err
 		}
-		if len(packed) > 65535 {
-			return len(msg), &Error{err: "overflow packing svcb"}
-		}
 		off, err = packUint16(el.Key(), msg, off)
 		if err != nil {
-			return len(msg), &Error{err: "overflow packing svcb"}
+			return len(msg), &Error{err: "overflow packing SVCB"}
 		}
 		off, err = packUint16(uint16(len(packed)), msg, off)
 		if err != nil || off+len(packed) > len(msg) {
-			return len(msg), &Error{err: "overflow packing svcb"}
+			return len(msg), &Error{err: "overflow packing SVCB"}
 		}
 		copy(msg[off:off+len(packed)], packed)
 		off += len(packed)
