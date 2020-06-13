@@ -33,7 +33,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeGPOS:       func() RR { return new(GPOS) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeHIP:        func() RR { return new(HIP) },
-	TypeHTTPSSVC:   func() RR { return new(HTTPSSVC) },
+	TypeHTTPS:      func() RR { return new(HTTPS) },
 	TypeKEY:        func() RR { return new(KEY) },
 	TypeKX:         func() RR { return new(KX) },
 	TypeL32:        func() RR { return new(L32) },
@@ -112,7 +112,7 @@ var TypeToString = map[uint16]string{
 	TypeGPOS:       "GPOS",
 	TypeHINFO:      "HINFO",
 	TypeHIP:        "HIP",
-	TypeHTTPSSVC:   "HTTPSSVC",
+	TypeHTTPS:      "HTTPS",
 	TypeISDN:       "ISDN",
 	TypeIXFR:       "IXFR",
 	TypeKEY:        "KEY",
@@ -195,7 +195,7 @@ func (rr *GID) Header() *RR_Header        { return &rr.Hdr }
 func (rr *GPOS) Header() *RR_Header       { return &rr.Hdr }
 func (rr *HINFO) Header() *RR_Header      { return &rr.Hdr }
 func (rr *HIP) Header() *RR_Header        { return &rr.Hdr }
-func (rr *HTTPSSVC) Header() *RR_Header   { return &rr.Hdr }
+func (rr *HTTPS) Header() *RR_Header      { return &rr.Hdr }
 func (rr *KEY) Header() *RR_Header        { return &rr.Hdr }
 func (rr *KX) Header() *RR_Header         { return &rr.Hdr }
 func (rr *L32) Header() *RR_Header        { return &rr.Hdr }
@@ -768,8 +768,8 @@ func (rr *HIP) copy() RR {
 	copy(RendezvousServers, rr.RendezvousServers)
 	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, RendezvousServers}
 }
-func (rr *HTTPSSVC) copy() RR {
-	return &HTTPSSVC{*rr.SVCB.copy().(*SVCB)}
+func (rr *HTTPS) copy() RR {
+	return &HTTPS{*rr.SVCB.copy().(*SVCB)}
 }
 func (rr *KEY) copy() RR {
 	return &KEY{*rr.DNSKEY.copy().(*DNSKEY)}

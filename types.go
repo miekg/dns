@@ -96,7 +96,7 @@ const (
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
 	TypeSVCB       uint16 = 65481
-	TypeHTTPSSVC   uint16 = 65482
+	TypeHTTPS      uint16 = 65482
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250

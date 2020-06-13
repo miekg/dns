@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Keys defined in draft-ietf-dnsop-svcb-httpssvc-02 Section 11.1.2
+// Keys defined in draft-ietf-dnsop-svcb-https-02 Section 11.1.2
 const (
 	SVCB_KEY0            = 0 // RESERVED
 	SVCB_ALPN            = 1
@@ -200,7 +200,7 @@ func makeSVCBKeyValue(key uint16) SVCBKeyValue {
 	}
 }
 
-// SVCB RR. TODO See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-02)
+// SVCB RR. TODO See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-02)
 // The one with smallest priority should be given preference.
 // Of those with equal priority, a random one should be preferred for load balancing.
 type SVCB struct {
@@ -210,18 +210,18 @@ type SVCB struct {
 	Value    []SVCBKeyValue `dns:"svcb-pairs"` // if priority == 0 this is empty
 }
 
-// HTTPSSVC RR. Everything valid for SVCB applies to HTTPSSVC as well
-// except that for HTTPS, HTTPSSVC must be used
-// and HTTPSSVC signifies that connections can be made over HTTPS.
-type HTTPSSVC struct {
+// HTTPS RR. Everything valid for SVCB applies to HTTPS as well
+// except that for HTTPS, HTTPS must be used
+// and HTTPS signifies that connections can be made over HTTPS.
+type HTTPS struct {
 	SVCB
 }
 
-func (rr *HTTPSSVC) String() string {
+func (rr *HTTPS) String() string {
 	return rr.SVCB.String()
 }
 
-func (rr *HTTPSSVC) parse(c *zlexer, o string) *ParseError {
+func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 	return rr.SVCB.parse(c, o)
 }
 
@@ -249,9 +249,9 @@ type SVCBKeyValue interface {
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:
 //
-//	o := new(dns.HTTPSSVC)
+//	o := new(dns.HTTPS)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.TypeHTTPSSVC
+//	o.Hdr.Rrtype = dns.TypeHTTPS
 //	e := new(dns.SVCBAlpn)
 //	e.Alpn = []string{"h2", "http/1.1"}
 //	o.Value = append(o.Value, e)
@@ -401,9 +401,9 @@ func (s *SVCBPort) parse(b string) error {
 // terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv4hint option:
 //
-//	o := new(dns.HTTPSSVC)
+//	o := new(dns.HTTPS)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	o.Hdr.Rrtype = dns.HTTPS
 //	e := new(dns.SVCBIPv4Hint)
 //	e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
 //  // or
@@ -486,9 +486,9 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 // the SNI during the client handshake.
 // Basic use pattern for creating an echconfig option:
 //
-//	o := new(dns.HTTPSSVC)
+//	o := new(dns.HTTPS)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	o.Hdr.Rrtype = dns.HTTPS
 //	e := new(dns.SVCBECHConfig)
 //	e.ECH = "/wH...="
 //	o.Value = append(o.Value, e)
@@ -512,9 +512,9 @@ func (s *SVCBECHConfig) len() uint16           { return uint16(len(s.ECH)) }
 // terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv6hint option:
 //
-//	o := new(dns.HTTPSSVC)
+//	o := new(dns.HTTPS)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	o.Hdr.Rrtype = dns.HTTPS
 //	e := new(dns.SVCBIPv6Hint)
 //	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
 //	o.Value = append(o.Value, e)
@@ -593,9 +593,9 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 // [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
 // Basic use pattern for creating a keyNNNNN option:
 //
-//	o := new(dns.HTTPSSVC)
+//	o := new(dns.HTTPS)
 //	o.Hdr.Name = "."
-//	o.Hdr.Rrtype = dns.HTTPSSVC
+//	o.Hdr.Rrtype = dns.HTTPS
 //	e := new(dns.SVCBLocal)
 //	e.KeyCode = 65400
 //	e.Data = []byte("abc")
@@ -603,7 +603,7 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 type SVCBLocal struct {
 	KeyCode uint16 // Never 0, 65535 or any assigned keys
 	Data    []byte // All byte sequences are allowed
-	// For the string representation, See draft-ietf-dnsop-svcb-httpssvc
+	// For the string representation, See draft-ietf-dnsop-svcb-https
 	// (TODO RFC XXXX)
 	// "2.1.1.  Presentation format for SVCBFieldValue key=value pairs"
 	// for a full list of allowed characters. Otherwise escape codes

@@ -402,8 +402,8 @@ func (r1 *HIP) isDuplicate(_r2 RR) bool {
 	return true
 }
 
-func (r1 *HTTPSSVC) isDuplicate(_r2 RR) bool {
-	r2, ok := _r2.(*HTTPSSVC)
+func (r1 *HTTPS) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*HTTPS)
 	if !ok {
 		return false
 	}

@@ -316,7 +316,7 @@ func (rr *HIP) pack(msg []byte, off int, compression compressionMap, compress bo
 	return off, nil
 }
 
-func (rr *HTTPSSVC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+func (rr *HTTPS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
@@ -1591,7 +1591,7 @@ func (rr *HIP) unpack(msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func (rr *HTTPSSVC) unpack(msg []byte, off int) (off1 int, err error) {
+func (rr *HTTPS) unpack(msg []byte, off int) (off1 int, err error) {
 	rdStart := off
 	_ = rdStart
 
