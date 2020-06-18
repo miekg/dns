@@ -22,7 +22,10 @@ func FuzzNewRR(data []byte) int {
 	// Do not fuzz lines that include the $INCLUDE keyword and hint the fuzzer
 	// at avoiding them.
 	// See GH#1025 for context.
-	if strings.Contains(strings.ToUpper(str), "$INCLUDE") {
+	//Do not fuzz lines with $GENERATE keyword to avoid timeouts
+	// See GH#1127 for context
+	if strings.Contains(strings.ToUpper(str), "$INCLUDE") ||
+		strings.Contains(strings.ToUpper(str), "$GENERATE") {
 		return -1
 	}
 	if _, err := NewRR(str); err != nil {
