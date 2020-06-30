@@ -81,6 +81,8 @@ const (
 	TypeCDNSKEY    uint16 = 60
 	TypeOPENPGPKEY uint16 = 61
 	TypeCSYNC      uint16 = 62
+	TypeSVCB       uint16 = 64
+	TypeHTTPS      uint16 = 65
 	TypeSPF        uint16 = 99
 	TypeUINFO      uint16 = 100
 	TypeUID        uint16 = 101
@@ -95,8 +97,6 @@ const (
 	TypeURI        uint16 = 256
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
-	TypeSVCB       uint16 = 65481
-	TypeHTTPS      uint16 = 65482
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
