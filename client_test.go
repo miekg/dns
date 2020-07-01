@@ -596,3 +596,32 @@ func TestExchangeWithConn(t *testing.T) {
 		t.Errorf("failed to get an valid answer\n%v", r)
 	}
 }
+
+func TestStringToCm(t *testing.T) {
+	m := map[string]byte{
+		"0.01M":     0x10,
+		"0.1m":      0x11,
+		"1m":        0x12,
+		"10m":       0x13,
+		"0.03m":     0x30,
+		"0.3m":      0x31,
+		"90000000m": 0x99,
+		"16m":       0x13,
+		"0.16m":     0x11,
+	}
+
+	for token, expected := range m {
+		exp, mantissa, ok := stringToCm(token)
+		if !ok {
+			t.Errorf("Failed to parse '%s'", token)
+		}
+		got := exp&0x0f | mantissa<<4&0xf0
+		if got != expected {
+			t.Errorf("Got %02X, but expected %02X for '%s'", got, expected, token)
+		}
+	}
+
+	if _, _, ok := stringToCm("100000000m"); ok {
+		t.Errorf("Expected a 'not ok' return value")
+	}
+}
