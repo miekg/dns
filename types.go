@@ -445,45 +445,38 @@ func sprintName(s string) string {
 	var dst strings.Builder
 
 	for i := 0; i < len(s); {
-		if i+1 < len(s) && s[i] == '\\' && s[i+1] == '.' {
+		if s[i] == '.' {
 			if dst.Len() != 0 {
-				dst.WriteString(s[i : i+2])
+				dst.WriteByte('.')
 			}
-			i += 2
+			i++
 			continue
 		}
 
 		b, n := nextByte(s, i)
 		if n == 0 {
-			i++
-			continue
-		}
-		if b == '.' {
-			if dst.Len() != 0 {
-				dst.WriteByte('.')
+			// Drop "dangling" incomplete escapes.
+			if dst.Len() == 0 {
+				return s[:i]
 			}
-			i += n
-			continue
+			break
 		}
-		switch b {
-		case ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
+		if isDomainNameLabelSpecial(b) {
 			if dst.Len() == 0 {
 				dst.Grow(len(s) * 2)
 				dst.WriteString(s[:i])
 			}
 			dst.WriteByte('\\')
 			dst.WriteByte(b)
-		default:
-			if ' ' <= b && b <= '~' {
-				if dst.Len() != 0 {
-					dst.WriteByte(b)
-				}
-			} else {
-				if dst.Len() == 0 {
-					dst.Grow(len(s) * 2)
-					dst.WriteString(s[:i])
-				}
-				dst.WriteString(escapeByte(b))
+		} else if b < ' ' || b > '~' { // unprintable, use \DDD
+			if dst.Len() == 0 {
+				dst.Grow(len(s) * 2)
+				dst.WriteString(s[:i])
+			}
+			dst.WriteString(escapeByte(b))
+		} else {
+			if dst.Len() != 0 {
+				dst.WriteByte(b)
 			}
 		}
 		i += n
@@ -583,6 +576,17 @@ func escapeByte(b byte) string {
 	b -= '~' + 1
 	// The cast here is needed as b*4 may overflow byte.
 	return escapedByteLarge[int(b)*4 : int(b)*4+4]
+}
+
+// isDomainNameLabelSpecial returns true if
+// a domain name label byte should be prefixed
+// with an escaping backslash.
+func isDomainNameLabelSpecial(b byte) bool {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
+		return true
+	}
+	return false
 }
 
 func nextByte(s string, offset int) (byte, int) {
