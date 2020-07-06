@@ -638,12 +638,12 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 		off += int(length)
 	}
 
-	prev := uint16(0)
+	prev := -1
 	for _, e := range xs {
-		if e.Key() <= prev {
+		if int(e.Key()) <= prev {
 			return nil, len(msg), &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		prev = e.Key()
+		prev = int(e.Key())
 	}
 	return xs, off, nil
 }
@@ -654,7 +654,7 @@ func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error
 	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
 	})
-	prev := uint16(0)
+	prev := uint16(65535)
 	for _, e := range pairs {
 		if e.Key() == prev {
 			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}

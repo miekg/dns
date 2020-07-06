@@ -9,6 +9,7 @@ import (
 // Parsing tests belong to parse_test.go.
 func TestSVCB(t *testing.T) {
 	svcbs := map[string]string{
+		`mandatory=key65000,alpn`:        `key65000,alpn`,
 		`alpn=h2,h2c`:                    `h2,h2c`,
 		`port="499"`:                     `499`,
 		`ipv4hint=3.4.3.2,1.1.1.1`:       `3.4.3.2,1.1.1.1`,

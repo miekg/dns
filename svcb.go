@@ -11,7 +11,7 @@ import (
 
 // Keys defined in draft-ietf-dnsop-svcb-https-02 Section 11.1.2
 const (
-	SVCB_KEY0            = 0 // RESERVED
+	SVCB_MANDATORY       = 0
 	SVCB_ALPN            = 1
 	SVCB_NO_DEFAULT_ALPN = 2
 	SVCB_PORT            = 3
@@ -48,14 +48,14 @@ func SVCBKeyToString(svcbKey uint16) string {
 	if x != "" {
 		return x
 	}
-	if svcbKey == 0 || svcbKey == 65535 {
+	if svcbKey == 65535 {
 		return ""
 	}
 	return "key" + strconv.FormatUint(uint64(svcbKey), 10)
 }
 
 // SVCBStringToKey returns the numerical code of an SVCB key.
-// Returns zero for reserved/invalid keys.
+// Returns 65535 for reserved/invalid keys.
 // Accepts unassigned keys as well as experimental/private keys.
 func SVCBStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
@@ -63,7 +63,7 @@ func SVCBStringToKey(str string) uint16 {
 		// no leading zeros
 		// key shouldn't be registered
 		if err != nil || a == 65535 || str[3] == '0' || svcbKeyToString[uint16(a)] != "" {
-			return 0
+			return 65535
 		}
 		return uint16(a)
 	}
@@ -178,6 +178,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 // or nil for reserved keys.
 func makeSVCBKeyValue(key uint16) SVCBKeyValue {
 	switch key {
+	case SVCB_MANDATORY:
+		return new(SVCBMandatory)
 	case SVCB_ALPN:
 		return new(SVCBAlpn)
 	case SVCB_NO_DEFAULT_ALPN:
@@ -191,7 +193,7 @@ func makeSVCBKeyValue(key uint16) SVCBKeyValue {
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
 	default:
-		if key == 0 || key == 65535 {
+		if key == 65535 {
 			return nil
 		}
 		e := new(SVCBLocal)
@@ -242,6 +244,78 @@ type SVCBKeyValue interface {
 	copy() SVCBKeyValue
 	// len returns the length of value in the wire format.
 	len() uint16
+}
+
+// SVCBMandatory pair adds to required keys that must be
+// interpreted for the RR to be functional.
+// Basic use pattern for creating a mandatory option:
+//
+//	o := new(dns.SVCB)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.TypeSVCB
+//	e := new(dns.SVCBMandatory)
+//	e.Code = []uint16{65403}
+//	o.Value = append(o.Value, e)
+//  // Then add key-value pair for key65403
+type SVCBMandatory struct {
+	Code []uint16 // Must not include mandatory
+}
+
+func (s *SVCBMandatory) Key() uint16 { return SVCB_MANDATORY }
+func (s *SVCBMandatory) String() string {
+	str := make([]string, 0, len(s.Code))
+	for _, e := range s.Code {
+		str = append(str, SVCBKeyToString(e))
+	}
+	return strings.Join(str, ",")
+}
+
+func (s *SVCBMandatory) pack() ([]byte, error) {
+	codes := make([]uint16, len(s.Code))
+	copy(codes, s.Code)
+	sort.Slice(codes, func(i, j int) bool {
+		return codes[i] < codes[j]
+	})
+	b := make([]byte, 2*len(s.Code))
+	for i, e := range s.Code {
+		binary.BigEndian.PutUint16(b[2*i:], e)
+	}
+	return b, nil
+}
+
+func (s *SVCBMandatory) unpack(b []byte) error {
+	if len(b)%2 != 0 {
+		return errors.New("dns: bad mandatory value")
+	}
+	codes := make([]uint16, 0, len(b)/2)
+	i := 0
+	for i < len(b) {
+		// We assume strictly increasing order
+		codes = append(codes, binary.BigEndian.Uint16(b[i:]))
+		i += 2
+	}
+	s.Code = codes
+	return nil
+}
+
+func (s *SVCBMandatory) parse(b string) error {
+	str := strings.Split(b, ",")
+	codes := make([]uint16, 0, len(str))
+	for _, e := range str {
+		codes = append(codes, SVCBStringToKey(e))
+	}
+	s.Code = codes
+	return nil
+}
+
+func (s *SVCBMandatory) len() uint16 {
+	return uint16(2 * len(s.Code))
+}
+
+func (s *SVCBMandatory) copy() SVCBKeyValue {
+	return &SVCBMandatory{
+		append(make([]uint16, 0, len(s.Code)), s.Code...),
+	}
 }
 
 // SVCBAlpn pair is used to list supported connection protocols.
@@ -414,7 +488,7 @@ type SVCBIPv4Hint struct {
 }
 
 func (s *SVCBIPv4Hint) Key() uint16 { return SVCB_IPV4HINT }
-func (s *SVCBIPv4Hint) len() uint16 { return 4 * uint16(len(s.Hint)) }
+func (s *SVCBIPv4Hint) len() uint16 { return uint16(4 * len(s.Hint)) }
 
 func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 4*len(s.Hint))
@@ -523,7 +597,7 @@ type SVCBIPv6Hint struct {
 }
 
 func (s *SVCBIPv6Hint) Key() uint16 { return SVCB_IPV6HINT }
-func (s *SVCBIPv6Hint) len() uint16 { return 16 * uint16(len(s.Hint)) }
+func (s *SVCBIPv6Hint) len() uint16 { return uint16(16 * len(s.Hint)) }
 
 func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 16*len(s.Hint))
@@ -601,7 +675,7 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 //	e.Data = []byte("abc")
 //	o.Value = append(o.Value, e)
 type SVCBLocal struct {
-	KeyCode uint16 // Never 0, 65535 or any assigned keys
+	KeyCode uint16 // Never 65535 or any assigned keys
 	Data    []byte // All byte sequences are allowed
 	// For the string representation, See draft-ietf-dnsop-svcb-https
 	// (TODO RFC XXXX)
@@ -666,7 +740,7 @@ func (s *SVCBLocal) parse(b string) error {
 					}
 				}
 				return errors.New("dns: SVCB private/experimental key" +
-					" invalid escaped octet")
+					" bad escaped octet")
 			} else {
 				bytes = append(bytes, b[i+1])
 				i += 2

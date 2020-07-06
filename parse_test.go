@@ -1581,7 +1581,6 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . "a"`,                 // invalid key
 		`1 . "a"=`,                // invalid key
 		`1 . key1=`,               // we know that key
-		`1 . key0`,                // key reserved
 		`1 . key65535`,            // key reserved
 		`1 . key065534`,           // key can't be padded
 		`1 . key65534="f`,         // unterminated value
