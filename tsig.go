@@ -153,6 +153,11 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
+	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()))
+}
+
+// actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
+func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64) error {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err
@@ -169,17 +174,6 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	}
 
 	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
-
-	// Fudge factor works both ways. A message can arrive before it was signed because
-	// of clock skew.
-	now := uint64(time.Now().Unix())
-	ti := now - tsig.TimeSigned
-	if now < tsig.TimeSigned {
-		ti = tsig.TimeSigned - now
-	}
-	if uint64(tsig.Fudge) < ti {
-		return ErrTime
-	}
 
 	var h hash.Hash
 	switch CanonicalName(tsig.Algorithm) {
@@ -198,6 +192,19 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	if !hmac.Equal(h.Sum(nil), msgMAC) {
 		return ErrSig
 	}
+
+	// Fudge factor works both ways. A message can arrive before it was signed because
+	// of clock skew.
+	// We check this after verifying the signature, following draft-ietf-dnsop-rfc2845bis
+	// instead of RFC2845, in order to prevent a security vulnerability as reported in CVE-2017-3142/3143.
+	ti := now - tsig.TimeSigned
+	if now < tsig.TimeSigned {
+		ti = tsig.TimeSigned - now
+	}
+	if uint64(tsig.Fudge) < ti {
+		return ErrTime
+	}
+
 	return nil
 }
 
