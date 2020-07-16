@@ -96,8 +96,7 @@ func TestTsigErrors(t *testing.T) {
 
 	// tweak the algorithm name in the wire data, resulting in the "unknown algorithm" error.
 	msgData := buildMsgData(timeSigned)
-	garbage := []byte("bogus")
-	copy(msgData[67:67+len(garbage)], garbage)
+	copy(msgData[67:], "bogus")
 	checkError(ErrKeyAlg, tsigVerify(msgData, testSecret, "", false, timeSigned))
 
 	// call TsigVerify with a message that doesn't contain a TSIG
