@@ -77,32 +77,33 @@ func TestTsigErrors(t *testing.T) {
 		return msgData
 	}
 
-	checkError := func(expected, actual error) {
-		if actual == nil {
-			t.Fatal("expected an error, but got nil")
-		}
-		if actual != expected {
-			t.Fatalf("expected an error '%v' but got '%v'", expected, actual)
-		}
-	}
-
 	// the signature is valid but 'time signed' is too far from the "current time".
-	checkError(ErrTime, tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned+301))
-	checkError(ErrTime, tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned-301))
+	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned+301); err != ErrTime {
+		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
+	}
+	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned-301); err != ErrTime {
+		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
+	}
 
 	// the signature is invalid and 'time signed' is too far.
 	// the signature should be checked first, so we should see ErrSig.
-	checkError(ErrSig, tsigVerify(buildMsgData(timeSigned+301), testSecret, "", false, timeSigned))
+	if err := tsigVerify(buildMsgData(timeSigned+301), testSecret, "", false, timeSigned); err != ErrSig {
+		t.Fatalf("expected an error '%v' but got '%v'", ErrSig, err)
+	}
 
 	// tweak the algorithm name in the wire data, resulting in the "unknown algorithm" error.
 	msgData := buildMsgData(timeSigned)
 	copy(msgData[67:], "bogus")
-	checkError(ErrKeyAlg, tsigVerify(msgData, testSecret, "", false, timeSigned))
+	if err := tsigVerify(msgData, testSecret, "", false, timeSigned); err != ErrKeyAlg {
+		t.Fatalf("expected an error '%v' but got '%v'", ErrKeyAlg, err)
+	}
 
 	// call TsigVerify with a message that doesn't contain a TSIG
 	msgData, _, err := stripTsig(buildMsgData(timeSigned))
 	if err != nil {
 		t.Fatal(err)
 	}
-	checkError(ErrNoSig, tsigVerify(msgData, testSecret, "", false, timeSigned))
+	if err := tsigVerify(msgData, testSecret, "", false, timeSigned); err != ErrNoSig {
+		t.Fatalf("expected an error '%v' but got '%v'", ErrNoSig, err)
+	}
 }
