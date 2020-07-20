@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -99,11 +100,29 @@ func TestTsigErrors(t *testing.T) {
 	}
 
 	// call TsigVerify with a message that doesn't contain a TSIG
-	msgData, _, err := stripTsig(buildMsgData(timeSigned))
+	msgData, tsig, err := stripTsig(buildMsgData(timeSigned))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := tsigVerify(msgData, testSecret, "", false, timeSigned); err != ErrNoSig {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrNoSig, err)
+	}
+
+	// replace the test TSIG with a bogus one with large "other data", which would cause overflow in TsigVerify.
+	// The overflow should be caught without disruption.
+	tsig.OtherData = strings.Repeat("00", 4096)
+	tsig.OtherLen = uint16(len(tsig.OtherData) / 2)
+	msg := new(Msg)
+	if err = msg.Unpack(msgData); err != nil {
+		t.Fatal(err)
+	}
+	msg.Extra = append(msg.Extra, tsig)
+	if msgData, err = msg.Pack(); err != nil {
+		t.Fatal(err)
+	}
+	err = tsigVerify(msgData, testSecret, "", false, timeSigned)
+	const expectedErrMsgPiece = "overflow"
+	if err == nil || !strings.Contains(err.Error(), expectedErrMsgPiece) {
+		t.Errorf("expected error to contain %q, but got %v", expectedErrMsgPiece, err)
 	}
 }
