@@ -121,8 +121,7 @@ func TestTsigErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = tsigVerify(msgData, testSecret, "", false, timeSigned)
-	const expectedErrMsgPiece = "overflow"
-	if err == nil || !strings.Contains(err.Error(), expectedErrMsgPiece) {
-		t.Errorf("expected error to contain %q, but got %v", expectedErrMsgPiece, err)
+	if err == nil || !strings.Contains(err.Error(), "overflow") {
+		t.Errorf("expected error to contain %q, but got %v", "overflow", err)
 	}
 }
