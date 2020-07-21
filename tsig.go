@@ -131,7 +131,7 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		return nil, "", ErrKeyAlg
 	}
 	h.Write(buf)
-	// Copy all TSIG fields expect MAC and its size, which are filled using the computed digest.
+	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
 	*t = *rr
 	t.MAC = hex.EncodeToString(h.Sum(nil))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
