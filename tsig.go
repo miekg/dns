@@ -18,7 +18,9 @@ import (
 const (
 	HmacMD5    = "hmac-md5.sig-alg.reg.int."
 	HmacSHA1   = "hmac-sha1."
+	HmacSHA224 = "hmac-sha224."
 	HmacSHA256 = "hmac-sha256."
+	HmacSHA384 = "hmac-sha384."
 	HmacSHA512 = "hmac-sha512."
 )
 
@@ -123,8 +125,12 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		h = hmac.New(md5.New, rawsecret)
 	case HmacSHA1:
 		h = hmac.New(sha1.New, rawsecret)
+	case HmacSHA224:
+		h = hmac.New(sha256.New224, rawsecret)
 	case HmacSHA256:
 		h = hmac.New(sha256.New, rawsecret)
+	case HmacSHA384:
+		h = hmac.New(sha512.New384, rawsecret)
 	case HmacSHA512:
 		h = hmac.New(sha512.New, rawsecret)
 	default:
@@ -183,8 +189,12 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 		h = hmac.New(md5.New, rawsecret)
 	case HmacSHA1:
 		h = hmac.New(sha1.New, rawsecret)
+	case HmacSHA224:
+		h = hmac.New(sha256.New224, rawsecret)
 	case HmacSHA256:
 		h = hmac.New(sha256.New, rawsecret)
+	case HmacSHA384:
+		h = hmac.New(sha512.New384, rawsecret)
 	case HmacSHA512:
 		h = hmac.New(sha512.New, rawsecret)
 	default:
