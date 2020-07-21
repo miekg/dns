@@ -125,3 +125,70 @@ func TestTsigErrors(t *testing.T) {
 		t.Errorf("expected error to contain %q, but got %v", "overflow", err)
 	}
 }
+
+// This test exercises some more corner cases for TsigGenerate.
+func TestTsigGenerate(t *testing.T) {
+	// This is a template TSIG to be used for signing.
+	tsig := TSIG{
+		Hdr:        RR_Header{Name: "testkey.", Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0},
+		Algorithm:  HmacSHA256,
+		TimeSigned: timeSigned,
+		Fudge:      300,
+		OrigId:     42,
+		Error:      RcodeBadTime, // use a non-0 value to make sure it's indeed used
+	}
+
+	tests := []struct {
+		desc        string // test description
+		requestMAC  string // request MAC to be passed to TsigGenerate (arbitrary choice)
+		otherData   string // other data specified in the TSIG (arbitrary choice)
+		expectedMAC string // pre-computed expected (correct) MAC in hex form
+	}{
+		{"with request MAC", "3684c225", "",
+			"c110e3f62694755c10761dc8717462431ee34340b7c9d1eee09449150757c5b1"},
+		{"no request MAC", "", "",
+			"385449a425c6d52b9bf2c65c0726eefa0ad8084cdaf488f24547e686605b9610"},
+		{"with other data", "3684c225", "666f6f",
+			"15b91571ca80b3b410a77e2b44f8cc4f35ace22b26020138439dd94803e23b5d"},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			// Build TSIG for signing from the template
+			testTSIG := tsig
+			testTSIG.OtherLen = uint16(len(tc.otherData) / 2)
+			testTSIG.OtherData = tc.otherData
+			req := &Msg{
+				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
+				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Extra:    []RR{&testTSIG},
+			}
+
+			// Call generate, and check the returned MAC against the expected value
+			msgData, mac, err := TsigGenerate(req, testSecret, tc.requestMAC, false)
+			if err != nil {
+				t.Error(err)
+			}
+			if mac != tc.expectedMAC {
+				t.Fatalf("MAC doesn't match: expected '%s', but got '%s'", tc.expectedMAC, mac)
+			}
+
+			// Retrieve the TSIG to be sent out, confirm the MAC in it
+			_, outTSIG, err := stripTsig(msgData)
+			if err != nil {
+				t.Error(err)
+			}
+			if outTSIG.MAC != tc.expectedMAC {
+				t.Fatalf("MAC doesn't match: expected '%s', but got '%s'", tc.expectedMAC, outTSIG.MAC)
+			}
+			// Confirm other fields of MAC.
+			// RDLENGTH should be valid as stripTsig succeeded, so we exclude it from comparison
+			outTSIG.MACSize = 0
+			outTSIG.MAC = ""
+			testTSIG.Hdr.Rdlength = outTSIG.Hdr.Rdlength
+			if *outTSIG != testTSIG {
+				t.Fatalf("TSIG RR doesn't match: expected '%v', but got '%v'", *outTSIG, testTSIG)
+			}
+		})
+	}
+}
