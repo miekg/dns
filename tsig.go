@@ -111,7 +111,10 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 	if err != nil {
 		return nil, "", err
 	}
-	buf := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
+	buf, err := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
+	if err != nil {
+		return nil, "", err
+	}
 
 	t := new(TSIG)
 	var h hash.Hash
@@ -173,7 +176,10 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 		return err
 	}
 
-	buf := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
+	buf, err := tsigBuffer(stripped, tsig, requestMAC, timersOnly)
+	if err != nil {
+		return err
+	}
 
 	var h hash.Hash
 	switch CanonicalName(tsig.Algorithm) {
@@ -209,7 +215,7 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 }
 
 // Create a wiredata buffer for the MAC calculation.
-func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) []byte {
+func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) ([]byte, error) {
 	var buf []byte
 	if rr.TimeSigned == 0 {
 		rr.TimeSigned = uint64(time.Now().Unix())
@@ -226,7 +232,10 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) []b
 		m.MACSize = uint16(len(requestMAC) / 2)
 		m.MAC = requestMAC
 		buf = make([]byte, len(requestMAC)) // long enough
-		n, _ := packMacWire(m, buf)
+		n, err := packMacWire(m, buf)
+		if err != nil {
+			return nil, err
+		}
 		buf = buf[:n]
 	}
 
@@ -235,7 +244,10 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) []b
 		tsig := new(timerWireFmt)
 		tsig.TimeSigned = rr.TimeSigned
 		tsig.Fudge = rr.Fudge
-		n, _ := packTimerWire(tsig, tsigvar)
+		n, err := packTimerWire(tsig, tsigvar)
+		if err != nil {
+			return nil, err
+		}
 		tsigvar = tsigvar[:n]
 	} else {
 		tsig := new(tsigWireFmt)
@@ -248,7 +260,10 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) []b
 		tsig.Error = rr.Error
 		tsig.OtherLen = rr.OtherLen
 		tsig.OtherData = rr.OtherData
-		n, _ := packTsigWire(tsig, tsigvar)
+		n, err := packTsigWire(tsig, tsigvar)
+		if err != nil {
+			return nil, err
+		}
 		tsigvar = tsigvar[:n]
 	}
 
@@ -258,7 +273,7 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) []b
 	} else {
 		buf = append(msgbuf, tsigvar...)
 	}
-	return buf
+	return buf, nil
 }
 
 // Strip the TSIG from the raw message.
