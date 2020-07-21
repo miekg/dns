@@ -131,14 +131,10 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		return nil, "", ErrKeyAlg
 	}
 	h.Write(buf)
+	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
+	*t = *rr
 	t.MAC = hex.EncodeToString(h.Sum(nil))
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
-
-	t.Hdr = RR_Header{Name: rr.Hdr.Name, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0}
-	t.Fudge = rr.Fudge
-	t.TimeSigned = rr.TimeSigned
-	t.Algorithm = rr.Algorithm
-	t.OrigId = m.Id
 
 	tbuf := make([]byte, Len(t))
 	off, err := PackRR(t, tbuf, 0, nil, false)
