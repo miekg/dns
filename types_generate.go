@@ -184,7 +184,7 @@ func main() {
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
 				case `dns:"apl"`:
 					o("for _, x := range rr.%s { l += x.len() }\n")
-				case `dns:"svcb-pairs"`:
+				case `dns:"pairs"`:
 					o("for _, x := range rr.%s { l += 4 + int(x.len()) }\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))

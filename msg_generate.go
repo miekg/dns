@@ -113,7 +113,7 @@ return off, err
 					o("off, err = packDataOpt(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
 					o("off, err = packDataNsec(rr.%s, msg, off)\n")
-				case `dns:"svcb-pairs"`:
+				case `dns:"pairs"`:
 					o("off, err = packDataSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, false)\n")
@@ -241,7 +241,7 @@ return off, err
 					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
 				case `dns:"nsec"`:
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
-				case `dns:"svcb-pairs"`:
+				case `dns:"pairs"`:
 					o("rr.%s, off, err = unpackDataSVCB(msg, off)\n")
 				case `dns:"domain-name"`:
 					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")

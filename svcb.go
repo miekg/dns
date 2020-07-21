@@ -18,18 +18,11 @@ const (
 	SVCB_IPV4HINT        = 4
 	SVCB_ECHCONFIG       = 5
 	SVCB_IPV6HINT        = 6
-	SVCB_KEY65535        = 65535 // RESERVED
+	// Reserved, internally used to mark invalid keys
+	SVCB_KEY65535 = 65535
 )
 
-// Keys in this inclusive range are recommended
-// for private use. Their names are in the format
-// of keyNNNNN, for example 65283 is named key65283
-const (
-	SVCB_PRIVATE_LOWER = 65280
-	SVCB_PRIVATE_UPPER = 65534
-)
-
-var svcbKeyToString = map[uint16]string{
+var svcbKeyToStringMap = map[uint16]string{
 	SVCB_ALPN:            "alpn",
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVCB_PORT:            "port",
@@ -38,13 +31,13 @@ var svcbKeyToString = map[uint16]string{
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
-var svcbStringToKey = reverseInt16(svcbKeyToString)
+var svcbStringToKeyMap = reverseInt16(svcbKeyToStringMap)
 
-// SVCBKeyToString takes the numerical code of an SVCB key and returns its name.
+// svcbKeyToString takes the numerical code of an SVCB key and returns its name.
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
-func SVCBKeyToString(svcbKey uint16) string {
-	x := svcbKeyToString[svcbKey]
+func svcbKeyToString(svcbKey uint16) string {
+	x := svcbKeyToStringMap[svcbKey]
 	if x != "" {
 		return x
 	}
@@ -54,27 +47,27 @@ func SVCBKeyToString(svcbKey uint16) string {
 	return "key" + strconv.FormatUint(uint64(svcbKey), 10)
 }
 
-// SVCBStringToKey returns the numerical code of an SVCB key.
+// svcbStringToKey returns the numerical code of an SVCB key.
 // Returns 65535 for reserved/invalid keys.
 // Accepts unassigned keys as well as experimental/private keys.
-func SVCBStringToKey(str string) uint16 {
+func svcbStringToKey(str string) uint16 {
 	if strings.HasPrefix(str, "key") {
 		a, err := strconv.ParseUint(str[3:], 10, 16)
 		// no leading zeros
 		// key shouldn't be registered
-		if err != nil || a == 65535 || str[3] == '0' || svcbKeyToString[uint16(a)] != "" {
-			return 65535
+		if err != nil || a == 65535 || str[3] == '0' || svcbKeyToStringMap[uint16(a)] != "" {
+			return SVCB_KEY65535
 		}
 		return uint16(a)
 	}
-	return svcbStringToKey[str]
+	return svcbStringToKeyMap[str]
 }
 
 func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
-		return &ParseError{"", "bad SVCB priority", l}
+		return &ParseError{l.token, "bad SVCB priority", l}
 	}
 	rr.Priority = uint16(i)
 
@@ -84,7 +77,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 	name, nameOk := toAbsoluteName(l.token, o)
 	if l.err || !nameOk {
-		return &ParseError{"", "bad SVCB Target", l}
+		return &ParseError{l.token, "bad SVCB Target", l}
 	}
 	rr.Target = name
 
@@ -100,7 +93,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			if !canHaveNextKey {
 				// The key we can now read was probably meant to be
 				// a part of the last value.
-				return &ParseError{"", "bad SVCB value quotation", l}
+				return &ParseError{l.token, "bad SVCB value quotation", l}
 			}
 
 			// In key=value pairs, value doesn't have to be quoted
@@ -118,7 +111,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				// Key with no value and no equality sign
 				key = z
 			} else if idx == 0 {
-				return &ParseError{"", "bad SVCB key", l}
+				return &ParseError{l.token, "bad SVCB key", l}
 			} else {
 				key = z[0:idx]
 				val = z[idx+1:]
@@ -140,36 +133,36 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 							val = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
-								return &ParseError{"", "SVCB unterminated value", l}
+								return &ParseError{l.token, "SVCB unterminated value", l}
 							}
 						case zQuote:
 							// There's nothing in double quotes
 						default:
-							return &ParseError{"", "bad SVCB value", l}
+							return &ParseError{l.token, "bad SVCB value", l}
 						}
 					}
 				}
 			}
-			keyValue := makeSVCBKeyValue(SVCBStringToKey(key))
+			keyValue := makeSVCBKeyValue(svcbStringToKey(key))
 			if keyValue == nil {
-				return &ParseError{"", "bad SVCB key", l}
+				return &ParseError{l.token, "bad SVCB key", l}
 			}
 			if err := keyValue.parse(val); err != nil {
-				return &ParseError{"", err.Error(), l}
+				return &ParseError{l.token, err.Error(), l}
 			}
 			xs = append(xs, keyValue)
 		case zQuote:
-			return &ParseError{"", "SVCB key can't contain double quotes", l}
+			return &ParseError{l.token, "SVCB key can't contain double quotes", l}
 		case zBlank:
 			canHaveNextKey = true
 		default:
-			return &ParseError{"", "bad SVCB values", l}
+			return &ParseError{l.token, "bad SVCB values", l}
 		}
 		l, _ = c.Next()
 	}
 	rr.Value = xs
 	if rr.Priority == 0 && len(xs) > 0 {
-		return &ParseError{"", "SVCB aliasform can't have values", l}
+		return &ParseError{l.token, "SVCB aliasform can't have values", l}
 	}
 	return nil
 }
@@ -209,7 +202,7 @@ type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string         `dns:"domain-name"`
-	Value    []SVCBKeyValue `dns:"svcb-pairs"` // if priority == 0 this is empty
+	Value    []SVCBKeyValue `dns:"pairs"` // if priority == 0 this is empty
 }
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well
@@ -265,7 +258,7 @@ func (s *SVCBMandatory) Key() uint16 { return SVCB_MANDATORY }
 func (s *SVCBMandatory) String() string {
 	str := make([]string, 0, len(s.Code))
 	for _, e := range s.Code {
-		str = append(str, SVCBKeyToString(e))
+		str = append(str, svcbKeyToString(e))
 	}
 	return strings.Join(str, ",")
 }
@@ -302,7 +295,7 @@ func (s *SVCBMandatory) parse(b string) error {
 	str := strings.Split(b, ",")
 	codes := make([]uint16, 0, len(str))
 	for _, e := range str {
-		codes = append(codes, SVCBStringToKey(e))
+		codes = append(codes, svcbStringToKey(e))
 	}
 	s.Code = codes
 	return nil
@@ -765,7 +758,7 @@ func (rr *SVCB) String() string {
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
 	for _, element := range rr.Value {
-		s += " " + SVCBKeyToString(element.Key()) +
+		s += " " + svcbKeyToString(element.Key()) +
 			"=\"" + element.String() + "\""
 	}
 	return s
