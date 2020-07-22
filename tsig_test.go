@@ -192,3 +192,48 @@ func TestTsigGenerate(t *testing.T) {
 		})
 	}
 }
+
+func TestTSIGHMAC224And384(t *testing.T) {
+	tests := []struct {
+		algorithm   string // TSIG algorithm, also used as test description
+		secret      string // (arbitrarily chosen) secret suitable for the algorithm in base64 format
+		expectedMAC string // pre-computed expected (correct) MAC in hex form
+	}{
+		{HmacSHA224, "hVEkQuAqnTmBuRrT9KF1Udr91gOMGWPw9LaTtw==",
+			"d6daf9ea189e48bc38f9aed63d6cc4140cdfa38a7a333ee2eefdbd31",
+		},
+		{HmacSHA384, "Qjer2TL2lAdpq9w6Gjs98/ClCQx/L3vtgVHCmrZ8l/oKEPjqUUMFO18gMCRwd5H4",
+			"89a48936d29187870c325cbdba5ad71609bd038d0459d6010c844d659c570e881d3650e4fe7310be53ebe5178d0d1001",
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.algorithm, func(t *testing.T) {
+			// Build a DNS message with TSIG for the test scenario
+			tsig := TSIG{
+				Hdr:        RR_Header{Name: "testkey.", Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0},
+				Algorithm:  tc.algorithm,
+				TimeSigned: timeSigned,
+				Fudge:      300,
+				OrigId:     42,
+			}
+			req := &Msg{
+				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
+				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Extra:    []RR{&tsig},
+			}
+
+			// Confirm both Generate and Verify recognize the algorithm and handle it correctly
+			msgData, mac, err := TsigGenerate(req, tc.secret, "", false)
+			if err != nil {
+				t.Error(err)
+			}
+			if mac != tc.expectedMAC {
+				t.Fatalf("MAC doesn't match: expected '%s' but got '%s'", tc.expectedMAC, mac)
+			}
+			if err = tsigVerify(msgData, tc.secret, "", false, timeSigned); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+}
