@@ -272,7 +272,7 @@ func (s *SVCBMandatory) String() string {
 }
 
 func (s *SVCBMandatory) pack() ([]byte, error) {
-	codes := append(make([]SVCBKey, 0, len(s.Code)), s.Code...)
+	codes := append([]SVCBKey(nil), s.Code...)
 	sort.Slice(codes, func(i, j int) bool {
 		return codes[i] < codes[j]
 	})
@@ -312,7 +312,7 @@ func (s *SVCBMandatory) len() int {
 
 func (s *SVCBMandatory) copy() SVCBKeyValue {
 	return &SVCBMandatory{
-		append(make([]SVCBKey, 0, len(s.Code)), s.Code...),
+		append([]SVCBKey(nil), s.Code...),
 	}
 }
 
@@ -385,7 +385,7 @@ func (s *SVCBAlpn) len() int {
 
 func (s *SVCBAlpn) copy() SVCBKeyValue {
 	return &SVCBAlpn{
-		append(make([]string, 0, len(s.Alpn)), s.Alpn...),
+		append([]string(nil), s.Alpn...),
 	}
 }
 
@@ -539,7 +539,7 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 
 func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 	return &SVCBIPv4Hint{
-		append(make([]net.IP, 0, len(s.Hint)), s.Hint...),
+		append([]net.IP(nil), s.Hint...),
 	}
 }
 
@@ -644,7 +644,7 @@ func (s *SVCBIPv6Hint) parse(b string) error {
 
 func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 	return &SVCBIPv6Hint{
-		append(make([]net.IP, 0, len(s.Hint)), s.Hint...),
+		append([]net.IP(nil), s.Hint...),
 	}
 }
 
@@ -721,7 +721,7 @@ func (s *SVCBLocal) parse(b string) error {
 
 func (s *SVCBLocal) copy() SVCBKeyValue {
 	return &SVCBLocal{s.KeyCode,
-		append(make([]byte, 0, len(s.Data)), s.Data...),
+		append([]byte(nil), s.Data...),
 	}
 }
 
@@ -738,8 +738,8 @@ func (rr *SVCB) String() string {
 // areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal after sorting their
 // copies. arrA and arrB have equal lengths, otherwise zduplicate.go wouldn't call this function.
 func areSVCBPairArraysEqual(arrA []SVCBKeyValue, arrB []SVCBKeyValue) bool {
-	a := append(make([]SVCBKeyValue, 0, len(arrA)), arrA...)
-	b := append(make([]SVCBKeyValue, 0, len(arrB)), arrB...)
+	a := append([]SVCBKeyValue(nil), arrA...)
+	b := append([]SVCBKeyValue(nil), arrB...)
 	sort.Slice(a, func(i, j int) bool {
 		return a[i].Key() < a[j].Key()
 	})

@@ -70,30 +70,35 @@ func TestSVCB(t *testing.T) {
 }
 
 func TestDecodeBadSVCB(t *testing.T) {
-	svcbs := map[SVCBKey][][]byte{
-		SVCB_ALPN: {
-			{3, 0, 0}, // There aren't three octets after 3
+	svcbs := []struct {
+		key  SVCBKey
+		data []byte
+	}{
+		{
+			key:  SVCB_ALPN,
+			data: []byte{3, 0, 0}, // There aren't three octets after 3
 		},
-		SVCB_NO_DEFAULT_ALPN: {
-			{0},
+		{
+			key:  SVCB_NO_DEFAULT_ALPN,
+			data: []byte{0},
 		},
-		SVCB_PORT: {
-			{},
+		{
+			key:  SVCB_PORT,
+			data: []byte{},
 		},
-		SVCB_IPV4HINT: {
-			{0, 0, 0},
+		{
+			key:  SVCB_IPV4HINT,
+			data: []byte{0, 0, 0},
 		},
-		SVCB_IPV6HINT: {
-			{0, 0, 0},
+		{
+			key:  SVCB_IPV6HINT,
+			data: []byte{0, 0, 0},
 		},
 	}
-	for s, o := range svcbs {
-		key_value := makeSVCBKeyValue(SVCBKey(s))
-		for _, e := range o {
-			err := key_value.unpack(e)
-			if err == nil {
-				t.Error("accepted invalid svc value with key ", SVCBKey(s).string())
-			}
+	for _, o := range svcbs {
+		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
+		if err == nil {
+			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).string())
 		}
 	}
 }
