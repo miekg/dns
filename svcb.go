@@ -200,14 +200,15 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 	}
 }
 
-// SVCB RR. TODO See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-02)
-// The one with smallest priority should be given preference.
-// Of those with equal priority, a random one should be preferred for load balancing.
+// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-00)
+
+// The one with the smallest priority should be given preference. Of those with
+// equal priority, a random one should be preferred for load balancing.
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string         `dns:"domain-name"`
-	Value    []SVCBKeyValue `dns:"pairs"` // if priority == 0 this is empty
+	Value    []SVCBKeyValue `dns:"pairs"` // This must be empty if Priority is non-zero
 }
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well
@@ -244,8 +245,8 @@ type SVCBKeyValue interface {
 	len() uint16
 }
 
-// SVCBMandatory pair adds to required keys that must be
-// interpreted for the RR to be functional.
+// SVCBMandatory pair adds to required keys that must be interpreted for the RR
+// to be functional.
 // Basic use pattern for creating a mandatory option:
 //
 //	o := new(dns.SVCB)
@@ -259,11 +260,12 @@ type SVCBMandatory struct {
 	Code []SVCBKey // Must not include mandatory
 }
 
-func (s *SVCBMandatory) Key() SVCBKey { return SVCB_MANDATORY }
+func (*SVCBMandatory) Key() SVCBKey { return SVCB_MANDATORY }
+
 func (s *SVCBMandatory) String() string {
-	str := make([]string, 0, len(s.Code))
-	for _, e := range s.Code {
-		str = append(str, e.string())
+	str := make([]string, len(s.Code))
+	for i, e := range s.Code {
+		str[i] = e.string()
 	}
 	return strings.Join(str, ",")
 }
@@ -285,11 +287,9 @@ func (s *SVCBMandatory) unpack(b []byte) error {
 		return errors.New("dns: bad mandatory value")
 	}
 	codes := make([]SVCBKey, 0, len(b)/2)
-	i := 0
-	for i < len(b) {
-		// We assume strictly increasing order
+	for i := 0; i < len(b); i += 2 {
+		// We assume strictly increasing order.
 		codes = append(codes, SVCBKey(binary.BigEndian.Uint16(b[i:])))
-		i += 2
 	}
 	s.Code = codes
 	return nil
@@ -297,9 +297,9 @@ func (s *SVCBMandatory) unpack(b []byte) error {
 
 func (s *SVCBMandatory) parse(b string) error {
 	str := strings.Split(b, ",")
-	codes := make([]SVCBKey, 0, len(str))
-	for _, e := range str {
-		codes = append(codes, svcbStringToKey(e))
+	codes := make([]SVCBKey, len(str))
+	for i, e := range str {
+		codes[i] = svcbStringToKey(e)
 	}
 	s.Code = codes
 	return nil
@@ -330,7 +330,7 @@ type SVCBAlpn struct {
 	Alpn []string
 }
 
-func (s *SVCBAlpn) Key() SVCBKey   { return SVCB_ALPN }
+func (*SVCBAlpn) Key() SVCBKey     { return SVCB_ALPN }
 func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn, ",") }
 
 // The spec requires the alpn keys including \ or , to be escaped.
@@ -403,20 +403,20 @@ type SVCBNoDefaultAlpn struct {
 	// Empty
 }
 
-func (s *SVCBNoDefaultAlpn) Key() SVCBKey          { return SVCB_NO_DEFAULT_ALPN }
-func (s *SVCBNoDefaultAlpn) copy() SVCBKeyValue    { return &SVCBNoDefaultAlpn{} }
-func (s *SVCBNoDefaultAlpn) pack() ([]byte, error) { return []byte{}, nil }
-func (s *SVCBNoDefaultAlpn) String() string        { return "" }
-func (s *SVCBNoDefaultAlpn) len() uint16           { return 0 }
+func (*SVCBNoDefaultAlpn) Key() SVCBKey          { return SVCB_NO_DEFAULT_ALPN }
+func (*SVCBNoDefaultAlpn) copy() SVCBKeyValue    { return &SVCBNoDefaultAlpn{} }
+func (*SVCBNoDefaultAlpn) pack() ([]byte, error) { return []byte{}, nil }
+func (*SVCBNoDefaultAlpn) String() string        { return "" }
+func (*SVCBNoDefaultAlpn) len() uint16           { return 0 }
 
-func (s *SVCBNoDefaultAlpn) unpack(b []byte) error {
+func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
 	if len(b) != 0 {
 		return errors.New("dns: no_default_alpn should have no value")
 	}
 	return nil
 }
 
-func (s *SVCBNoDefaultAlpn) parse(b string) error {
+func (*SVCBNoDefaultAlpn) parse(b string) error {
 	if len(b) != 0 {
 		return errors.New("dns: no_default_alpn should have no value")
 	}
@@ -436,10 +436,10 @@ type SVCBPort struct {
 	Port uint16
 }
 
-func (s *SVCBPort) Key() SVCBKey       { return SVCB_PORT }
+func (*SVCBPort) Key() SVCBKey         { return SVCB_PORT }
+func (*SVCBPort) len() uint16          { return 2 }
 func (s *SVCBPort) String() string     { return strconv.FormatUint(uint64(s.Port), 10) }
 func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
-func (s *SVCBPort) len() uint16        { return 2 }
 
 func (s *SVCBPort) unpack(b []byte) error {
 	if len(b) != 2 {
@@ -484,8 +484,8 @@ type SVCBIPv4Hint struct {
 	Hint []net.IP // Always IPv4
 }
 
-func (s *SVCBIPv4Hint) Key() SVCBKey { return SVCB_IPV4HINT }
-func (s *SVCBIPv4Hint) len() uint16  { return uint16(4 * len(s.Hint)) }
+func (*SVCBIPv4Hint) Key() SVCBKey  { return SVCB_IPV4HINT }
+func (s *SVCBIPv4Hint) len() uint16 { return uint16(4 * len(s.Hint)) }
 
 func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 4*len(s.Hint))
@@ -567,7 +567,7 @@ type SVCBECHConfig struct {
 	ECH string // This string needs to be base64 encoded
 }
 
-func (s *SVCBECHConfig) Key() SVCBKey          { return SVCB_ECHCONFIG }
+func (*SVCBECHConfig) Key() SVCBKey            { return SVCB_ECHCONFIG }
 func (s *SVCBECHConfig) copy() SVCBKeyValue    { return &SVCBECHConfig{s.ECH} }
 func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
 func (s *SVCBECHConfig) unpack(b []byte) error { s.ECH = string(b); return nil }
@@ -593,8 +593,8 @@ type SVCBIPv6Hint struct {
 	Hint []net.IP // Always IPv6
 }
 
-func (s *SVCBIPv6Hint) Key() SVCBKey { return SVCB_IPV6HINT }
-func (s *SVCBIPv6Hint) len() uint16  { return uint16(16 * len(s.Hint)) }
+func (*SVCBIPv6Hint) Key() SVCBKey  { return SVCB_IPV6HINT }
+func (s *SVCBIPv6Hint) len() uint16 { return uint16(16 * len(s.Hint)) }
 
 func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 16*len(s.Hint))
