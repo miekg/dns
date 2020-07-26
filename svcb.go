@@ -108,61 +108,54 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				return &ParseError{l.token, "bad SVCB value quotation", l}
 			}
 
-			// In key=value pairs, value doesn't have to be quoted
-			// unless value contains whitespace.
-			// And keys don't need to include values.
-			// Similarly, keys with an equality signs
-			// after them don't need values.
-			z := l.token
-
-			// z includes at least up to the first equality sign
-			idx := strings.IndexByte(z, '=')
-			key := ""
-			val := ""
+			// In key=value pairs, value does not have to be quoted unless value
+			// contains whitespace. And keys don't need to have values.
+			// Similarly, keys with an equality signs after them don't need values.
+			// l.token includes at least up to the first equality sign.
+			idx := strings.IndexByte(l.token, '=')
+			var key, value string
 			if idx < 0 {
 				// Key with no value and no equality sign
-				key = z
+				key = l.token
 			} else if idx == 0 {
 				return &ParseError{l.token, "bad SVCB key", l}
 			} else {
-				key = z[0:idx]
-				val = z[idx+1:]
+				key, value = l.token[:idx], l.token[idx+1:]
 
-				if len(val) == 0 {
-					// We have a key and an equality sign
-					// Maybe we have nothing after "="
-					// or we have a double quote
+				if value == "" {
+					// We have a key and an equality sign. Maybe we have nothing
+					// after "=" or we have a double quote.
 					l, _ = c.Next()
 					if l.value == zQuote {
-						// Only needed when value ends with double quotes
-						// Any value starting with zQuote ends with it
+						// Only needed when value ends with double quotes.
+						// Any value starting with zQuote ends with it.
 						canHaveNextKey = false
 
 						l, _ = c.Next()
 						switch l.value {
 						case zString:
-							// We have a value in double quotes
-							val = l.token
+							// We have a value in double quotes.
+							value = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
 								return &ParseError{l.token, "SVCB unterminated value", l}
 							}
 						case zQuote:
-							// There's nothing in double quotes
+							// There's nothing in double quotes.
 						default:
 							return &ParseError{l.token, "bad SVCB value", l}
 						}
 					}
 				}
 			}
-			keyValue := makeSVCBKeyValue(svcbStringToKey(key))
-			if keyValue == nil {
+			kv := makeSVCBKeyValue(svcbStringToKey(key))
+			if kv == nil {
 				return &ParseError{l.token, "bad SVCB key", l}
 			}
-			if err := keyValue.parse(val); err != nil {
+			if err := kv.parse(value); err != nil {
 				return &ParseError{l.token, err.Error(), l}
 			}
-			xs = append(xs, keyValue)
+			xs = append(xs, kv)
 		case zQuote:
 			return &ParseError{l.token, "SVCB key can't contain double quotes", l}
 		case zBlank:
