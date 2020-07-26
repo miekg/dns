@@ -237,7 +237,8 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		if co.UDPSize >= MinMsgSize && co.UDPSize <= MaxMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
-			p = make([]byte, DefaultMsgSize)
+			// The connection message size is invalid so use a conservative value.
+			p = make([]byte, MinMsgSize)
 		}
 		n, err = co.Read(p)
 	} else {
