@@ -10,7 +10,7 @@ const (
 	// RFC6891 6.2.3 recommends 1280-1410 bytes for IP (v4 or v6) over ethernet.
 	// to maximize UDP response size while avoiding truncated UDP responses,
 	// which in turn cause retry over TCP.
-	DefaultMsgSize = 1410
+	DefaultMsgSize = 4096
 	// MinMsgSize is the minimal size of a DNS packet.
 	MinMsgSize = 512
 	// MaxMsgSize is the largest possible DNS packet.
