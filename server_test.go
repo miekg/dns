@@ -602,7 +602,7 @@ func TestServingLargeResponses(t *testing.T) {
 	}
 	// This must fail
 	M.Lock()
-	M.max = 20
+	M.max = 20  // 20 records should exceed the default MinMsgSize
 	M.Unlock()
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {

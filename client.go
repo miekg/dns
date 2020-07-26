@@ -167,13 +167,15 @@ func (c *Client) ExchangeWithConn(m *Msg, conn *Conn) (r *Msg, rtt time.Duration
 func (c *Client) exchange(m *Msg, co *Conn) (r *Msg, rtt time.Duration, err error) {
 
 	opt := m.IsEdns0()
-	// If EDNS0 is used use that for size.
-	if opt != nil && opt.UDPSize() >= MinMsgSize {
+	// Prefer the EDNS0 UDPSize if it is valid, falling back to the client UDPSize.
+	// If the client did not specify a size, use the UDP default (MinMsgSize).
+	switch {
+	case opt != nil && opt.UDPSize() >= MinMsgSize && opt.UDPSize() <= MaxMsgSize:
 		co.UDPSize = opt.UDPSize()
-	}
-	// Otherwise use the client's configured UDP size.
-	if opt == nil && c.UDPSize >= MinMsgSize {
+	case c.UDPSize >= MinMsgSize && c.UDPSize <= MaxMsgSize:
 		co.UDPSize = c.UDPSize
+	default:
+		co.UDPSize = MinMsgSize
 	}
 
 	co.TsigSecret = c.TsigSecret
@@ -232,10 +234,10 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 	)
 
 	if _, ok := co.Conn.(net.PacketConn); ok {
-		if co.UDPSize > MinMsgSize {
+		if co.UDPSize >= MinMsgSize && co.UDPSize <= MaxMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
-			p = make([]byte, MinMsgSize)
+			p = make([]byte, DefaultMsgSize)
 		}
 		n, err = co.Read(p)
 	} else {
