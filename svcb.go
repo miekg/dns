@@ -24,6 +24,7 @@ const (
 )
 
 var svcbKeyToStringMap = map[SVCBKey]string{
+	SVCB_MANDATORY:       "mandatory",
 	SVCB_ALPN:            "alpn",
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVCB_PORT:            "port",
@@ -42,12 +43,11 @@ func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
 	return n
 }
 
-// svcbKeyToString takes the numerical code of an SVCB key and returns its name.
+// string takes the numerical code of an SVCB key and returns its name.
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
-func svcbKeyToString(svcbKey SVCBKey) string {
-	x := svcbKeyToStringMap[svcbKey]
-	if x != "" {
+func (svcbKey SVCBKey) string() string {
+	if x := svcbKeyToStringMap[svcbKey]; x != "" {
 		return x
 	}
 	if svcbKey == svcb_RESERVED {
@@ -59,17 +59,20 @@ func svcbKeyToString(svcbKey SVCBKey) string {
 // svcbStringToKey returns the numerical code of an SVCB key.
 // Returns svcb_RESERVED for reserved/invalid keys.
 // Accepts unassigned keys as well as experimental/private keys.
-func svcbStringToKey(str string) SVCBKey {
-	if strings.HasPrefix(str, "key") {
-		a, err := strconv.ParseUint(str[3:], 10, 16)
+func svcbStringToKey(s string) SVCBKey {
+	if strings.HasPrefix(s, "key") {
+		a, err := strconv.ParseUint(s[3:], 10, 16)
 		// no leading zeros
 		// key shouldn't be registered
-		if err != nil || a == 65535 || str[3] == '0' || svcbKeyToStringMap[SVCBKey(a)] != "" {
+		if err != nil || a == 65535 || s[3] == '0' || svcbKeyToStringMap[SVCBKey(a)] != "" {
 			return svcb_RESERVED
 		}
 		return SVCBKey(a)
 	}
-	return svcbStringToKeyMap[str]
+	if key, ok := svcbStringToKeyMap[s]; ok {
+		return key
+	}
+	return svcb_RESERVED
 }
 
 func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
@@ -116,7 +119,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			idx := strings.IndexByte(z, '=')
 			key := ""
 			val := ""
-			if idx == -1 {
+			if idx < 0 {
 				// Key with no value and no equality sign
 				key = z
 			} else if idx == 0 {
@@ -267,7 +270,7 @@ func (s *SVCBMandatory) Key() SVCBKey { return SVCB_MANDATORY }
 func (s *SVCBMandatory) String() string {
 	str := make([]string, 0, len(s.Code))
 	for _, e := range s.Code {
-		str = append(str, svcbKeyToString(e))
+		str = append(str, e.string())
 	}
 	return strings.Join(str, ",")
 }
@@ -766,7 +769,7 @@ func (rr *SVCB) String() string {
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
 	for _, element := range rr.Value {
-		s += " " + svcbKeyToString(element.Key()) +
+		s += " " + element.Key().string() +
 			"=\"" + element.String() + "\""
 	}
 	return s
