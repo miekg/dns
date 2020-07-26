@@ -627,7 +627,7 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
 		}
-		e := makeSVCBKeyValue(code)
+		e := makeSVCBKeyValue(SVCBKey(code))
 		if e == nil {
 			return nil, len(msg), &Error{err: "bad SVCB key"}
 		}
@@ -648,13 +648,12 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 	return xs, off, nil
 }
 
-func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	pairs := make([]SVCBKeyValue, len(originalPairs))
-	copy(pairs, originalPairs)
-	sort.Slice(pairs, func(i, j int) bool {
+func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
+	sorted := append(make([]SVCBKeyValue, 0, len(pairs)), pairs...)
+	sort.Slice(sorted, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
 	})
-	prev := uint16(65535)
+	prev := svcb_RESERVED
 	for _, e := range pairs {
 		if e.Key() == prev {
 			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}
@@ -666,7 +665,7 @@ func packDataSVCB(originalPairs []SVCBKeyValue, msg []byte, off int) (int, error
 		if err != nil {
 			return len(msg), err
 		}
-		off, err = packUint16(el.Key(), msg, off)
+		off, err = packUint16(uint16(el.Key()), msg, off)
 		if err != nil {
 			return len(msg), &Error{err: "overflow packing SVCB"}
 		}

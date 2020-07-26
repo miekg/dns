@@ -71,7 +71,7 @@ func TestSVCB(t *testing.T) {
 }
 
 func TestDecodeBadSVCB(t *testing.T) {
-	svcbs := map[int][][]byte{
+	svcbs := map[SVCBKey][][]byte{
 		SVCB_ALPN: {
 			{3, 0, 0}, // There aren't three octets after 3
 		},
@@ -89,11 +89,11 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for s, o := range svcbs {
-		key_value := makeSVCBKeyValue(uint16(s))
+		key_value := makeSVCBKeyValue(SVCBKey(s))
 		for _, e := range o {
 			err := key_value.unpack(e)
 			if err == nil {
-				t.Error("accepted invalid svc value with key ", svcbKeyToString(uint16(s)))
+				t.Error("accepted invalid svc value with key ", svcbKeyToString(SVCBKey(s)))
 			}
 		}
 	}
