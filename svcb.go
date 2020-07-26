@@ -242,7 +242,7 @@ type SVCBKeyValue interface {
 	// copy returns a deep-copy of the pair.
 	copy() SVCBKeyValue
 	// len returns the length of value in the wire format.
-	len() uint16
+	len() int
 }
 
 // SVCBMandatory pair adds to required keys that must be interpreted for the RR
@@ -305,8 +305,8 @@ func (s *SVCBMandatory) parse(b string) error {
 	return nil
 }
 
-func (s *SVCBMandatory) len() uint16 {
-	return uint16(2 * len(s.Code))
+func (s *SVCBMandatory) len() int {
+	return 2 * len(s.Code)
 }
 
 func (s *SVCBMandatory) copy() SVCBKeyValue {
@@ -338,27 +338,25 @@ func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn, ",") }
 // Therefore those characters are not escaped.
 
 func (s *SVCBAlpn) pack() ([]byte, error) {
-	// Estimate
+	// Estimate the size
 	b := make([]byte, 0, 10*len(s.Alpn))
 	for _, e := range s.Alpn {
-		x := []byte(e)
-		if len(x) == 0 {
+		if len(e) == 0 {
 			return nil, errors.New("dns: empty alpn-id")
 		}
-		if len(x) > 255 {
+		if len(e) > 255 {
 			return nil, errors.New("dns: alpn-id too long")
 		}
-		b = append(b, byte(len(x)))
-		b = append(b, x...)
+		b = append(b, byte(len(e)))
+		b = append(b, e...)
 	}
 	return b, nil
 }
 
 func (s *SVCBAlpn) unpack(b []byte) error {
-	i := 0
-	// Estimate
+	// Estimate the size
 	alpn := make([]string, 0, len(b)/4)
-	for i < len(b) {
+	for i := 0; i < len(b); {
 		length := int(b[i])
 		i++
 		if i+length > len(b) {
@@ -376,12 +374,12 @@ func (s *SVCBAlpn) parse(b string) error {
 	return nil
 }
 
-func (s *SVCBAlpn) len() uint16 {
-	l := len(s.Alpn)
+func (s *SVCBAlpn) len() int {
+	var l int
 	for _, e := range s.Alpn {
-		l += len(e)
+		l += 1 + len(e)
 	}
-	return uint16(l)
+	return l
 }
 
 func (s *SVCBAlpn) copy() SVCBKeyValue {
@@ -390,8 +388,7 @@ func (s *SVCBAlpn) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBNoDefaultAlpn pair signifies no support
-// for default connection protocols.
+// SVCBNoDefaultAlpn pair signifies no support for default connection protocols.
 // Basic use pattern for creating a no-default-alpn option:
 //
 //	o := new(dns.SVCB)
@@ -407,7 +404,7 @@ func (*SVCBNoDefaultAlpn) Key() SVCBKey          { return SVCB_NO_DEFAULT_ALPN }
 func (*SVCBNoDefaultAlpn) copy() SVCBKeyValue    { return &SVCBNoDefaultAlpn{} }
 func (*SVCBNoDefaultAlpn) pack() ([]byte, error) { return []byte{}, nil }
 func (*SVCBNoDefaultAlpn) String() string        { return "" }
-func (*SVCBNoDefaultAlpn) len() uint16           { return 0 }
+func (*SVCBNoDefaultAlpn) len() int              { return 0 }
 
 func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
 	if len(b) != 0 {
@@ -437,13 +434,13 @@ type SVCBPort struct {
 }
 
 func (*SVCBPort) Key() SVCBKey         { return SVCB_PORT }
-func (*SVCBPort) len() uint16          { return 2 }
+func (*SVCBPort) len() int             { return 2 }
 func (s *SVCBPort) String() string     { return strconv.FormatUint(uint64(s.Port), 10) }
 func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
 
 func (s *SVCBPort) unpack(b []byte) error {
 	if len(b) != 2 {
-		return errors.New("dns: bad port")
+		return errors.New("dns: bad port length")
 	}
 	s.Port = binary.BigEndian.Uint16(b)
 	return nil
@@ -464,12 +461,10 @@ func (s *SVCBPort) parse(b string) error {
 	return nil
 }
 
-// SVCBIPv4Hint pair suggests an IPv4 address
-// which may be used to open connections if A and AAAA record
-// responses for SVCB's Target domain haven't been received.
-// In that case, optionally, A and AAAA requests can be made,
-// after which the connection to the hinted IP address may be
-// terminated and a new connection may be opened.
+// SVCBIPv4Hint pair suggests an IPv4 address which may be used to open connections
+// if A and AAAA record responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made, after which the connection
+// to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv4hint option:
 //
 //	o := new(dns.HTTPS)
@@ -484,8 +479,8 @@ type SVCBIPv4Hint struct {
 	Hint []net.IP // Always IPv4
 }
 
-func (*SVCBIPv4Hint) Key() SVCBKey  { return SVCB_IPV4HINT }
-func (s *SVCBIPv4Hint) len() uint16 { return uint16(4 * len(s.Hint)) }
+func (*SVCBIPv4Hint) Key() SVCBKey { return SVCB_IPV4HINT }
+func (s *SVCBIPv4Hint) len() int   { return 4 * len(s.Hint) }
 
 func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 4*len(s.Hint))
@@ -503,30 +498,25 @@ func (s *SVCBIPv4Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%4 != 0 {
 		return errors.New("dns: bad array of IPv4 addresses")
 	}
-	i := 0
 	x := make([]net.IP, 0, len(b)/4)
-	for i < len(b) {
+	for i := 0; i < len(b); i += 4 {
 		x = append(x, net.IP(b[i:i+4]))
-		i += 4
 	}
 	s.Hint = x
 	return nil
 }
 
-// String returns "<nil>" if an invalid IPv4 address was encountered.
-// TODO DOC Do I need full definition for doc?
+// String returns the string form of s, it returns "<nil>" if s is invalid.
 func (s *SVCBIPv4Hint) String() string {
-	var str strings.Builder
-	str.Grow(16 * len(s.Hint))
-	for _, e := range s.Hint {
+	str := make([]string, len(s.Hint))
+	for i, e := range s.Hint {
 		x := e.To4()
 		if x == nil {
 			return "<nil>"
 		}
-		str.WriteByte(',')
-		str.WriteString(x.String())
+		str[i] = x.String()
 	}
-	return str.String()[1:]
+	return strings.Join(str, ",")
 }
 
 func (s *SVCBIPv4Hint) parse(b string) error {
@@ -534,13 +524,13 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 		return errors.New("dns: not IPv4")
 	}
 	str := strings.Split(b, ",")
-	dst := make([]net.IP, 0, len(str))
-	for _, e := range str {
+	dst := make([]net.IP, len(str))
+	for i, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
 		}
-		dst = append(dst, ip.To4())
+		dst[i] = ip.To4()
 	}
 	s.Hint = dst
 	return nil
@@ -573,7 +563,7 @@ func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
 func (s *SVCBECHConfig) unpack(b []byte) error { s.ECH = string(b); return nil }
 func (s *SVCBECHConfig) String() string        { return s.ECH }
 func (s *SVCBECHConfig) parse(b string) error  { s.ECH = b; return nil }
-func (s *SVCBECHConfig) len() uint16           { return uint16(len(s.ECH)) }
+func (s *SVCBECHConfig) len() int              { return len(s.ECH) }
 
 // SVCBIPv6Hint pair suggests an IPv6 address
 // which may be used to open connections if A and AAAA record
@@ -593,8 +583,8 @@ type SVCBIPv6Hint struct {
 	Hint []net.IP // Always IPv6
 }
 
-func (*SVCBIPv6Hint) Key() SVCBKey  { return SVCB_IPV6HINT }
-func (s *SVCBIPv6Hint) len() uint16 { return uint16(16 * len(s.Hint)) }
+func (*SVCBIPv6Hint) Key() SVCBKey { return SVCB_IPV6HINT }
+func (s *SVCBIPv6Hint) len() int   { return 16 * len(s.Hint) }
 
 func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 16*len(s.Hint))
@@ -611,29 +601,24 @@ func (s *SVCBIPv6Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%16 != 0 {
 		return errors.New("dns: bad array of IPv6 addresses")
 	}
-	i := 0
 	x := make([]net.IP, 0, len(b)/16)
-	for i < len(b) {
+	for i := 0; i < len(b); i += 16 {
 		x = append(x, net.IP(b[i:i+16]))
-		i += 16
 	}
 	s.Hint = x
 	return nil
 }
 
-// String returns "<nil>" if an invalid IPv6 address was encountered.
-// TODO DOC Do I need full definition for doc?
+// String returns the string form of s, it returns "<nil>" if s is invalid.
 func (s *SVCBIPv6Hint) String() string {
-	var str strings.Builder
-	str.Grow(40 * len(s.Hint))
-	for _, e := range s.Hint {
-		if e.To4() != nil {
+	str := make([]string, len(s.Hint))
+	for i, e := range s.Hint {
+		if x := e.To4(); x != nil {
 			return "<nil>"
 		}
-		str.WriteByte(',')
-		str.WriteString(e.String())
+		str[i] = e.String()
 	}
-	return str.String()[1:]
+	return strings.Join(str, ",")
 }
 
 func (s *SVCBIPv6Hint) parse(b string) error {
@@ -641,13 +626,13 @@ func (s *SVCBIPv6Hint) parse(b string) error {
 		return errors.New("dns: not IPv6")
 	}
 	str := strings.Split(b, ",")
-	dst := make([]net.IP, 0, len(str))
-	for _, e := range str {
+	dst := make([]net.IP, len(str))
+	for i, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: bad IP")
 		}
-		dst = append(dst, ip)
+		dst[i] = ip
 	}
 	s.Hint = dst
 	return nil
@@ -684,7 +669,7 @@ type SVCBLocal struct {
 func (s *SVCBLocal) Key() SVCBKey          { return s.KeyCode }
 func (s *SVCBLocal) pack() ([]byte, error) { return s.Data, nil }
 func (s *SVCBLocal) unpack(b []byte) error { s.Data = b; return nil }
-func (s *SVCBLocal) len() uint16           { return uint16(len(s.Data)) }
+func (s *SVCBLocal) len() int              { return len(s.Data) }
 
 // String escapes whitespaces too, which is not required when
 // the result would be enclosed in double quotes. TODO Is this doc fine?
