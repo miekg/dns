@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"net"
@@ -542,9 +543,7 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBECHConfig pair contains the ECHConfig structure
-// defined in draft-ietf-tls-esni [RFC TODO] to encrypt TODO
-// the SNI during the client handshake.
+// SVCBECHConfig pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
 // Basic use pattern for creating an echconfig option:
 //
 //	o := new(dns.HTTPS)
@@ -554,23 +553,28 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 //	e.ECH = "/wH...="
 //	o.Value = append(o.Value, e)
 type SVCBECHConfig struct {
-	ECH string // This string needs to be base64 encoded
+	ECH string // Base64 encoded ECHConfig
 }
 
 func (*SVCBECHConfig) Key() SVCBKey            { return SVCB_ECHCONFIG }
 func (s *SVCBECHConfig) copy() SVCBKeyValue    { return &SVCBECHConfig{s.ECH} }
 func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
-func (s *SVCBECHConfig) unpack(b []byte) error { s.ECH = string(b); return nil }
 func (s *SVCBECHConfig) String() string        { return s.ECH }
-func (s *SVCBECHConfig) parse(b string) error  { s.ECH = b; return nil }
 func (s *SVCBECHConfig) len() int              { return len(s.ECH) }
 
-// SVCBIPv6Hint pair suggests an IPv6 address
-// which may be used to open connections if A and AAAA record
-// responses for SVCB's Target domain haven't been received.
-// In that case, optionally, A and AAAA requests can be made,
-// after which the connection to the hinted IP address may be
-// terminated and a new connection may be opened.
+func (s *SVCBECHConfig) unpack(b []byte) error {
+	s.ECH = string(b)
+	return nil
+}
+func (s *SVCBECHConfig) parse(b string) error {
+	s.ECH = b
+	return nil
+}
+
+// SVCBIPv6Hint pair suggests an IPv6 address which may be used to open connections
+// if A and AAAA record responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made, after which the
+// connection to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv6hint option:
 //
 //	o := new(dns.HTTPS)
@@ -644,9 +648,8 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBLocal pair is intended for experimental/private use.
-// The key is recommended to be in the range
-// [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
+// SVCBLocal pair is intended for experimental/private use. The key is recommended
+// to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
 // Basic use pattern for creating a keyNNNNN option:
 //
 //	o := new(dns.HTTPS)
@@ -659,11 +662,6 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 type SVCBLocal struct {
 	KeyCode SVCBKey // Never 65535 or any assigned keys
 	Data    []byte  // All byte sequences are allowed
-	// For the string representation, See draft-ietf-dnsop-svcb-https
-	// (TODO RFC XXXX)
-	// "2.1.1.  Presentation format for SVCBFieldValue key=value pairs"
-	// for a full list of allowed characters. Otherwise escape codes
-	// e.g. \000 for NUL and \127 for DEL are used.
 }
 
 func (s *SVCBLocal) Key() SVCBKey          { return s.KeyCode }
@@ -671,26 +669,13 @@ func (s *SVCBLocal) pack() ([]byte, error) { return s.Data, nil }
 func (s *SVCBLocal) unpack(b []byte) error { s.Data = b; return nil }
 func (s *SVCBLocal) len() int              { return len(s.Data) }
 
-// String escapes whitespaces too, which is not required when
-// the result would be enclosed in double quotes. TODO Is this doc fine?
-// do i need definition
 func (s *SVCBLocal) String() string {
 	var str strings.Builder
 	str.Grow(4 * len(s.Data))
 	for _, e := range s.Data {
 		if (0x1f < e && e < 0x7f) || e == 0x09 {
 			switch e {
-			case '"':
-				fallthrough
-			case ';':
-				fallthrough
-			// As promised, optionally handle space
-			case ' ':
-				fallthrough
-			// Tab
-			case 0x09:
-				fallthrough
-			case '\\':
+			case '"', ';', ' ', '\\', 0x09:
 				str.WriteByte('\\')
 				fallthrough
 			default:
@@ -704,35 +689,33 @@ func (s *SVCBLocal) String() string {
 }
 
 func (s *SVCBLocal) parse(b string) error {
-	bytes := make([]byte, 0, len(b))
+	data := make([]byte, 0, len(b))
 	i := 0
 	for i < len(b) {
-		if b[i] == '\\' {
-			if i+1 == len(b) {
-				return errors.New("dns: SVCB private/experimental key" +
-					" escape unterminated")
-			}
-			if isDigit(b[i+1]) {
-				if i+3 < len(b) && isDigit(b[i+2]) && isDigit(b[i+3]) {
-					a, err := strconv.ParseUint(b[i+1:i+4], 10, 8)
-					if err == nil {
-						i += 4
-						bytes = append(bytes, byte(a))
-						continue
-					}
-				}
-				return errors.New("dns: SVCB private/experimental key" +
-					" bad escaped octet")
-			} else {
-				bytes = append(bytes, b[i+1])
-				i += 2
-			}
-		} else {
-			bytes = append(bytes, b[i])
+		if b[i] != '\\' {
+			data = append(data, b[i])
 			i++
+			continue
+		}
+		if i+1 == len(b) {
+			return errors.New("dns: SVCB private/experimental key escape unterminated")
+		}
+		if isDigit(b[i+1]) {
+			if i+3 < len(b) && isDigit(b[i+2]) && isDigit(b[i+3]) {
+				a, err := strconv.ParseUint(b[i+1:i+4], 10, 8)
+				if err == nil {
+					i += 4
+					data = append(data, byte(a))
+					continue
+				}
+			}
+			return errors.New("dns: SVCB private/experimental key bad escaped octet")
+		} else {
+			data = append(data, b[i+1])
+			i += 2
 		}
 	}
-	s.Data = bytes
+	s.Data = data
 	return nil
 }
 
@@ -746,16 +729,14 @@ func (rr *SVCB) String() string {
 	s := rr.Hdr.String() +
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
-	for _, element := range rr.Value {
-		s += " " + element.Key().string() +
-			"=\"" + element.String() + "\""
+	for _, e := range rr.Value {
+		s += " " + e.Key().string() + "=\"" + e.String() + "\""
 	}
 	return s
 }
 
-// areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal
-// after sorting their copies. arrA and arrB have equal lengths,
-// otherwise zduplicate.go wouldn't call this function.
+// areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal after sorting their
+// copies. arrA and arrB have equal lengths, otherwise zduplicate.go wouldn't call this function.
 func areSVCBPairArraysEqual(arrA []SVCBKeyValue, arrB []SVCBKeyValue) bool {
 	a := append(make([]SVCBKeyValue, 0, len(arrA)), arrA...)
 	b := append(make([]SVCBKeyValue, 0, len(arrB)), arrB...)
@@ -771,13 +752,8 @@ func areSVCBPairArraysEqual(arrA []SVCBKeyValue, arrB []SVCBKeyValue) bool {
 		}
 		b1, err1 := e.pack()
 		b2, err2 := b[i].pack()
-		if err1 != nil || err2 != nil || len(b1) != len(b2) {
+		if err1 != nil || err2 != nil || !bytes.Equal(b1, b2) {
 			return false
-		}
-		for bi, x := range b1 {
-			if x != b2[bi] {
-				return false
-			}
 		}
 	}
 	return true

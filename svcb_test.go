@@ -24,47 +24,46 @@ func TestSVCB(t *testing.T) {
 	}
 
 	for s, o := range svcbs {
-		key := ""
-		val := ""
+		var key, value string
 		idx := strings.IndexByte(s, '=')
-		if idx == -1 {
+		if idx < 0 {
 			key = s
 		} else {
-			val = s[idx+1:]
-			if len(val) > 1 && val[0] == '"' {
-				val = val[1 : len(val)-1]
+			value = s[idx+1:]
+			if len(value) > 1 && value[0] == '"' {
+				value = value[1 : len(value)-1]
 			}
 			key = s[0:idx]
 		}
 		keyCode := svcbStringToKey(key)
-		keyValue := makeSVCBKeyValue(keyCode)
-		if keyValue == nil {
+		kv := makeSVCBKeyValue(keyCode)
+		if kv == nil {
 			t.Error("failed to parse svc key: ", key)
 			continue
 		}
-		if keyValue.Key() != keyCode {
+		if kv.Key() != keyCode {
 			t.Error("key constant is not in sync: ", keyCode)
 			continue
 		}
-		err := keyValue.parse(val)
+		err := kv.parse(value)
 		if err != nil {
 			t.Error("failed to parse svc pair: ", s)
 			continue
 		}
-		b, err := keyValue.pack()
+		b, err := kv.pack()
 		if err != nil {
 			t.Error("failed to pack value of svc pair: ", s, err)
 			continue
 		}
-		if len(b) != int(keyValue.len()) {
-			t.Errorf("expected packed svc value %s to be of length %d but got %d", s, int(keyValue.len()), len(b))
+		if len(b) != int(kv.len()) {
+			t.Errorf("expected packed svc value %s to be of length %d but got %d", s, int(kv.len()), len(b))
 		}
-		err = keyValue.unpack(b)
+		err = kv.unpack(b)
 		if err != nil {
 			t.Error("failed to unpack value of svc pair: ", s, err)
 			continue
 		}
-		if str := keyValue.String(); str != o {
+		if str := kv.String(); str != o {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, str)
 		}
 	}
