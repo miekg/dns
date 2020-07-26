@@ -285,7 +285,7 @@ func (s *SVCBMandatory) pack() ([]byte, error) {
 
 func (s *SVCBMandatory) unpack(b []byte) error {
 	if len(b)%2 != 0 {
-		return errors.New("dns: bad mandatory value")
+		return errors.New("dns: svcbmandatory: value length is not a multiple of 2")
 	}
 	codes := make([]SVCBKey, 0, len(b)/2)
 	for i := 0; i < len(b); i += 2 {
@@ -343,10 +343,10 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 	b := make([]byte, 0, 10*len(s.Alpn))
 	for _, e := range s.Alpn {
 		if len(e) == 0 {
-			return nil, errors.New("dns: empty alpn-id")
+			return nil, errors.New("dns: svcbalpn: empty alpn-id")
 		}
 		if len(e) > 255 {
-			return nil, errors.New("dns: alpn-id too long")
+			return nil, errors.New("dns: svcbalpn: alpn-id too long")
 		}
 		b = append(b, byte(len(e)))
 		b = append(b, e...)
@@ -361,7 +361,7 @@ func (s *SVCBAlpn) unpack(b []byte) error {
 		length := int(b[i])
 		i++
 		if i+length > len(b) {
-			return errors.New("dns: alpn array malformed")
+			return errors.New("dns: svcbalpn: alpn array overflowing")
 		}
 		alpn = append(alpn, string(b[i:i+length]))
 		i += length
@@ -409,14 +409,14 @@ func (*SVCBNoDefaultAlpn) len() int              { return 0 }
 
 func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
 	if len(b) != 0 {
-		return errors.New("dns: no_default_alpn should have no value")
+		return errors.New("dns: svcbnodefaultalpn: no_default_alpn must have no value")
 	}
 	return nil
 }
 
 func (*SVCBNoDefaultAlpn) parse(b string) error {
 	if len(b) != 0 {
-		return errors.New("dns: no_default_alpn should have no value")
+		return errors.New("dns: svcbnodefaultalpn: no_default_alpn must have no value")
 	}
 	return nil
 }
@@ -441,7 +441,7 @@ func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
 
 func (s *SVCBPort) unpack(b []byte) error {
 	if len(b) != 2 {
-		return errors.New("dns: bad port length")
+		return errors.New("dns: svcbport: port length is not exactly 2 octets")
 	}
 	s.Port = binary.BigEndian.Uint16(b)
 	return nil
@@ -456,7 +456,7 @@ func (s *SVCBPort) pack() ([]byte, error) {
 func (s *SVCBPort) parse(b string) error {
 	port, err := strconv.ParseUint(b, 10, 16)
 	if err != nil {
-		return errors.New("dns: bad port")
+		return errors.New("dns: svcbport: port out of range")
 	}
 	s.Port = uint16(port)
 	return nil
@@ -488,7 +488,7 @@ func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 	for _, e := range s.Hint {
 		x := e.To4()
 		if x == nil {
-			return nil, errors.New("dns: not IPv4")
+			return nil, errors.New("dns: svcbipv4hint: expected ipv4, hint is ipv6")
 		}
 		b = append(b, x...)
 	}
@@ -497,7 +497,7 @@ func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 
 func (s *SVCBIPv4Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%4 != 0 {
-		return errors.New("dns: bad array of IPv4 addresses")
+		return errors.New("dns: svcbipv4hint: ipv4 address byte array length is not a multiple of 4")
 	}
 	x := make([]net.IP, 0, len(b)/4)
 	for i := 0; i < len(b); i += 4 {
@@ -522,14 +522,14 @@ func (s *SVCBIPv4Hint) String() string {
 
 func (s *SVCBIPv4Hint) parse(b string) error {
 	if strings.ContainsRune(b, ':') {
-		return errors.New("dns: not IPv4")
+		return errors.New("dns: svcbipv4hint: expected ipv4, got ipv6")
 	}
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, len(str))
 	for i, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
-			return errors.New("dns: bad IP")
+			return errors.New("dns: svcbipv4hint: bad ip")
 		}
 		dst[i] = ip.To4()
 	}
@@ -594,7 +594,7 @@ func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 	b := make([]byte, 0, 16*len(s.Hint))
 	for _, e := range s.Hint {
 		if len(e) != net.IPv6len || e.To4() != nil {
-			return nil, errors.New("dns: not IPv6")
+			return nil, errors.New("dns: svcbipv6hint: expected ipv6, hint is ipv4")
 		}
 		b = append(b, e...)
 	}
@@ -603,7 +603,7 @@ func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 
 func (s *SVCBIPv6Hint) unpack(b []byte) error {
 	if len(b) == 0 || len(b)%16 != 0 {
-		return errors.New("dns: bad array of IPv6 addresses")
+		return errors.New("dns: svcbipv6hint: ipv6 address byte array length not a multiple of 16")
 	}
 	x := make([]net.IP, 0, len(b)/16)
 	for i := 0; i < len(b); i += 16 {
@@ -627,14 +627,14 @@ func (s *SVCBIPv6Hint) String() string {
 
 func (s *SVCBIPv6Hint) parse(b string) error {
 	if strings.ContainsRune(b, '.') {
-		return errors.New("dns: not IPv6")
+		return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
 	}
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, len(str))
 	for i, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
-			return errors.New("dns: bad IP")
+			return errors.New("dns: svcbipv6hint: bad ip")
 		}
 		dst[i] = ip
 	}
@@ -698,7 +698,7 @@ func (s *SVCBLocal) parse(b string) error {
 			continue
 		}
 		if i+1 == len(b) {
-			return errors.New("dns: SVCB private/experimental key escape unterminated")
+			return errors.New("dns: svcblocal: svcb private/experimental key escape unterminated")
 		}
 		if isDigit(b[i+1]) {
 			if i+3 < len(b) && isDigit(b[i+2]) && isDigit(b[i+3]) {
@@ -709,7 +709,7 @@ func (s *SVCBLocal) parse(b string) error {
 					continue
 				}
 			}
-			return errors.New("dns: SVCB private/experimental key bad escaped octet")
+			return errors.New("dns: svcblocal: svcb private/experimental key bad escaped octet")
 		} else {
 			data = append(data, b[i+1])
 			i += 2
