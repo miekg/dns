@@ -339,7 +339,7 @@ func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn, ",") }
 // Therefore those characters are not escaped.
 
 func (s *SVCBAlpn) pack() ([]byte, error) {
-	// Estimate the size
+	// Liberally estimate the size of an alpn as 10 octets
 	b := make([]byte, 0, 10*len(s.Alpn))
 	for _, e := range s.Alpn {
 		if len(e) == 0 {
@@ -355,7 +355,7 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 }
 
 func (s *SVCBAlpn) unpack(b []byte) error {
-	// Estimate the size
+	// Estimate the size of the smallest alpn as 4 bytes
 	alpn := make([]string, 0, len(b)/4)
 	for i := 0; i < len(b); {
 		length := int(b[i])
