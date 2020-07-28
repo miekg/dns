@@ -665,9 +665,13 @@ type SVCBLocal struct {
 }
 
 func (s *SVCBLocal) Key() SVCBKey          { return s.KeyCode }
-func (s *SVCBLocal) pack() ([]byte, error) { return s.Data, nil }
-func (s *SVCBLocal) unpack(b []byte) error { s.Data = b; return nil }
+func (s *SVCBLocal) pack() ([]byte, error) { return append([]byte(nil), s.Data...), nil }
 func (s *SVCBLocal) len() int              { return len(s.Data) }
+
+func (s *SVCBLocal) unpack(b []byte) error {
+	s.Data = append([]byte(nil), b...)
+	return nil
+}
 
 func (s *SVCBLocal) String() string {
 	var str strings.Builder
