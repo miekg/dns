@@ -125,11 +125,7 @@ func (rr *OPT) UDPSize() uint16 {
 
 // SetUDPSize sets the UDP buffer size.
 func (rr *OPT) SetUDPSize(size uint16) {
-	switch {
-	case size < MinMsgSize: rr.Hdr.Class = MinMsgSize
-	case size > MaxMsgSize: rr.Hdr.Class = MaxMsgSize
-	default:                rr.Hdr.Class = size
-	}
+	rr.Hdr.Class = size
 }
 
 // Do returns the value of the DO (DNSSEC OK) bit.

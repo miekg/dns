@@ -6,10 +6,9 @@ const (
 	year68     = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
 	defaultTtl = 3600    // Default internal TTL.
 
-	// DefaultMsgSize is the standard default for messages larger than 512 bytes.
-	// RFC6891 6.2.3 recommends 1280-1410 bytes for IP (v4 or v6) over ethernet.
-	// to maximize UDP response size while avoiding truncated UDP responses,
-	// which in turn cause retry over TCP.
+	// DefaultMsgSize is the default for messages larger than 512 bytes.
+	// RFC6891 6.2 recommends 1280-1410 bytes for IP (v4 or v6) over ethernet and
+	// 4096 where fragmentation and memory usage are less of a concern.
 	DefaultMsgSize = 4096
 	// MinMsgSize is the minimal size of a DNS packet.
 	MinMsgSize = 512
