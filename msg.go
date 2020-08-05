@@ -13,6 +13,7 @@ package dns
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -869,6 +870,12 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 		// use PackOpt to let people tell how detailed the error reporting should be?
 		// println("dns: extra bytes in dns packet", off, "<", len(msg))
 	}
+
+	if errors.Is(err, overflowError) {
+		dns.Truncated = true
+		return nil
+	}
+
 	return err
 
 }

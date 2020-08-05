@@ -15,6 +15,8 @@ import (
 // of the type they pack/unpack (string, int, etc). We prefix all with unpackData or packData, so packDataA or
 // packDataDomainName.
 
+var overflowError = &Error{err: "overflowing header size"}
+
 func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv4len > len(msg) {
 		return nil, len(msg), &Error{err: "overflow unpacking a"}
@@ -137,7 +139,7 @@ func (hdr RR_Header) packHeader(msg []byte, off int, compression compressionMap,
 func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
 	lenrd := off + int(rdlength)
 	if lenrd > len(msg) {
-		return msg, &Error{err: "overflowing header size"}
+		return msg, overflowError
 	}
 	return msg[:lenrd], nil
 }

@@ -2,6 +2,7 @@ package dns
 
 import (
 	"bytes"
+	"encoding/hex"
 	"net"
 	"testing"
 )
@@ -501,5 +502,24 @@ func TestUnpackDataApl(t *testing.T) {
 		if !bytes.Equal(got[i].Network.Mask, exp.Network.Mask) {
 			t.Errorf("[%d] expected mask %02x, got %02x", i, exp.Network.Mask, got[i].Network.Mask)
 		}
+	}
+}
+
+func TestOverflowRRHeader(t *testing.T) {
+	// original hex: 9e3085000001000100000000076578616d706c6503636f6d0000010001076578616d706c6503636f6d00000100010001518000045db8d822
+	// 1-byte removed
+	m, err := hex.DecodeString("d3f285000001000100000000076578616d706c6503636f6d0000010001076578616d706c6503636f6d00000100010001518000045db8d8")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	msg := new(Msg)
+	err = msg.Unpack(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !msg.Truncated {
+		t.Fatalf("message should be truncated")
 	}
 }
