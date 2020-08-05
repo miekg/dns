@@ -477,7 +477,7 @@ func (s *SVCBPort) parse(b string) error {
 //	e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
 //	o.Value = append(o.Value, e)
 type SVCBIPv4Hint struct {
-	Hint []net.IP // Always IPv4
+	Hint []net.IP
 }
 
 func (*SVCBIPv4Hint) Key() SVCBKey { return SVCB_IPV4HINT }
@@ -584,7 +584,7 @@ func (s *SVCBECHConfig) parse(b string) error {
 //	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
 //	o.Value = append(o.Value, e)
 type SVCBIPv6Hint struct {
-	Hint []net.IP // Always IPv6
+	Hint []net.IP
 }
 
 func (*SVCBIPv6Hint) Key() SVCBKey { return SVCB_IPV6HINT }
