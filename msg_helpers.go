@@ -638,12 +638,12 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 		off += int(length)
 	}
 
-	prev := -1
-	for _, e := range xs {
-		if int(e.Key()) <= prev {
+	var prev SVCBKey
+	for i, e := range xs {
+		if i > 0 && e.Key() <= prev {
 			return nil, len(msg), &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		prev = int(e.Key())
+		prev = e.Key()
 	}
 	return xs, off, nil
 }

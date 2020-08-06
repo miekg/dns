@@ -44,17 +44,17 @@ func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
 	return n
 }
 
-// string takes the numerical code of an SVCB key and returns its name.
+// String takes the numerical code of an SVCB key and returns its name.
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
-func (svcbKey SVCBKey) string() string {
-	if x := svcbKeyToStringMap[svcbKey]; x != "" {
+func (key SVCBKey) String() string {
+	if x := svcbKeyToStringMap[key]; x != "" {
 		return x
 	}
-	if svcbKey == svcb_RESERVED {
+	if key == svcb_RESERVED {
 		return ""
 	}
-	return "key" + strconv.FormatUint(uint64(svcbKey), 10)
+	return "key" + strconv.FormatUint(uint64(key), 10)
 }
 
 // svcbStringToKey returns the numerical code of an SVCB key.
@@ -191,10 +191,9 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
+	case svcb_RESERVED:
+		return nil
 	default:
-		if key == svcb_RESERVED {
-			return nil
-		}
 		e := new(SVCBLocal)
 		e.KeyCode = key
 		return e
@@ -266,7 +265,7 @@ func (*SVCBMandatory) Key() SVCBKey { return SVCB_MANDATORY }
 func (s *SVCBMandatory) String() string {
 	str := make([]string, len(s.Code))
 	for i, e := range s.Code {
-		str[i] = e.string()
+		str[i] = e.String()
 	}
 	return strings.Join(str, ",")
 }
@@ -521,7 +520,7 @@ func (s *SVCBIPv4Hint) String() string {
 }
 
 func (s *SVCBIPv4Hint) parse(b string) error {
-	if strings.ContainsRune(b, ':') {
+	if strings.Contains(b, ":") {
 		return errors.New("dns: svcbipv4hint: expected ipv4, got ipv6")
 	}
 	str := strings.Split(b, ",")
@@ -626,7 +625,7 @@ func (s *SVCBIPv6Hint) String() string {
 }
 
 func (s *SVCBIPv6Hint) parse(b string) error {
-	if strings.ContainsRune(b, '.') {
+	if strings.Contains(b, ".") {
 		return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
 	}
 	str := strings.Split(b, ",")
@@ -681,7 +680,7 @@ func (s *SVCBLocal) String() string {
 			switch e {
 			case '"', ';', ' ', '\\', 0x09:
 				str.WriteByte('\\')
-				fallthrough
+				str.WriteByte(e)
 			default:
 				str.WriteByte(e)
 			}
@@ -734,7 +733,7 @@ func (rr *SVCB) String() string {
 		strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
 	for _, e := range rr.Value {
-		s += " " + e.Key().string() + "=\"" + e.String() + "\""
+		s += " " + e.Key().String() + "=\"" + e.String() + "\""
 	}
 	return s
 }

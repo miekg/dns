@@ -89,7 +89,7 @@ func TestDecodeBadSVCB(t *testing.T) {
 	for _, o := range svcbs {
 		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
 		if err == nil {
-			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).string())
+			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).String())
 		}
 	}
 }
