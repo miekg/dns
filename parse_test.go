@@ -397,9 +397,11 @@ func TestParseLOC(t *testing.T) {
 		"91 0 0.0 N 00 07 39.611 W 0m":   "Latitude",
 		"89 60 0.0 N 00 07 39.611 W 0m":  "Latitude",
 		"89 00 60.0 N 00 07 39.611 W 0m": "Latitude",
+		"1 00 -1 N 00 07 39.611 W 0m":    "Latitude",
 		"0 0 0.0 N 181 00 0.0 W 0m":      "Longitude",
 		"0 0 0.0 N 179 60 0.0 W 0m":      "Longitude",
 		"0 0 0.0 N 179 00 60.0 W 0m":     "Longitude",
+		"0 0 0.0 N 1 00 -1 W 0m":         "Longitude",
 
 		// Each subfield is valid, but resulting latitude would be out of range.
 		"90 01 00.0 N 00 07 39.611 W 0m": "Latitude",

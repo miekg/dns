@@ -609,7 +609,7 @@ func (rr *LOC) parse(c *zlexer, o string) *ParseError {
 
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if i, err := strconv.ParseFloat(l.token, 32); err != nil || l.err || i >= 60 {
+	if i, err := strconv.ParseFloat(l.token, 32); err != nil || l.err || i < 0 || i >= 60 {
 		return &ParseError{"", "bad LOC Latitude seconds", l}
 	} else {
 		rr.Latitude += uint32(1000 * i)
@@ -645,7 +645,7 @@ East:
 	}
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if i, err := strconv.ParseFloat(l.token, 32); err != nil || l.err || i >= 60 {
+	if i, err := strconv.ParseFloat(l.token, 32); err != nil || l.err || i < 0 || i >= 60 {
 		return &ParseError{"", "bad LOC Longitude seconds", l}
 	} else {
 		rr.Longitude += uint32(1000 * i)
