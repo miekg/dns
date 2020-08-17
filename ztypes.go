@@ -20,6 +20,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeCDS:        func() RR { return new(CDS) },
 	TypeCERT:       func() RR { return new(CERT) },
 	TypeCNAME:      func() RR { return new(CNAME) },
+	TypeALIAS:      func() RR { return new(ALIAS) },
 	TypeCSYNC:      func() RR { return new(CSYNC) },
 	TypeDHCID:      func() RR { return new(DHCID) },
 	TypeDLV:        func() RR { return new(DLV) },
@@ -97,6 +98,7 @@ var TypeToString = map[uint16]string{
 	TypeCDS:        "CDS",
 	TypeCERT:       "CERT",
 	TypeCNAME:      "CNAME",
+	TypeALIAS:      "ALIAS",
 	TypeCSYNC:      "CSYNC",
 	TypeDHCID:      "DHCID",
 	TypeDLV:        "DLV",
@@ -178,6 +180,7 @@ func (rr *CDNSKEY) Header() *RR_Header    { return &rr.Hdr }
 func (rr *CDS) Header() *RR_Header        { return &rr.Hdr }
 func (rr *CERT) Header() *RR_Header       { return &rr.Hdr }
 func (rr *CNAME) Header() *RR_Header      { return &rr.Hdr }
+func (rr *ALIAS) Header() *RR_Header      { return &rr.Hdr }
 func (rr *CSYNC) Header() *RR_Header      { return &rr.Hdr }
 func (rr *DHCID) Header() *RR_Header      { return &rr.Hdr }
 func (rr *DLV) Header() *RR_Header        { return &rr.Hdr }
@@ -299,6 +302,13 @@ func (rr *CNAME) len(off int, compression map[string]struct{}) int {
 	l += domainNameLen(rr.Target, off+l, compression, true)
 	return l
 }
+
+func (rr *ALIAS) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += domainNameLen(rr.Target, off+l, compression, true)
+	return l
+}
+
 func (rr *DHCID) len(off int, compression map[string]struct{}) int {
 	l := rr.Hdr.len(off, compression)
 	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
@@ -710,6 +720,10 @@ func (rr *CERT) copy() RR {
 func (rr *CNAME) copy() RR {
 	return &CNAME{rr.Hdr, rr.Target}
 }
+func (rr *ALIAS) copy() RR {
+	return &ALIAS{rr.Hdr, rr.Target}
+}
+
 func (rr *CSYNC) copy() RR {
 	TypeBitMap := make([]uint16, len(rr.TypeBitMap))
 	copy(TypeBitMap, rr.TypeBitMap)

@@ -179,6 +179,18 @@ func (r1 *CNAME) isDuplicate(_r2 RR) bool {
 	return true
 }
 
+func (r1 *ALIAS) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*ALIAS)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if !isDuplicateName(r1.Target, r2.Target) {
+		return false
+	}
+	return true
+}
+
 func (r1 *CSYNC) isDuplicate(_r2 RR) bool {
 	r2, ok := _r2.(*CSYNC)
 	if !ok {

@@ -95,6 +95,7 @@ const (
 	TypeURI        uint16 = 256
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
+	TypeALIAS      uint16 = 259
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -269,6 +270,15 @@ type CNAME struct {
 }
 
 func (rr *CNAME) String() string { return rr.Hdr.String() + sprintName(rr.Target) }
+
+type ALIAS struct {
+	Hdr    RR_Header
+	Target string `dns:"cdomain-name"`
+}
+
+func (rr *ALIAS) String() string {
+	return rr.Hdr.String() + sprintName(rr.Target)
+}
 
 // HINFO RR. See RFC 1034.
 type HINFO struct {

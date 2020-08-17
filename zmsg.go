@@ -136,6 +136,14 @@ func (rr *CNAME) pack(msg []byte, off int, compression compressionMap, compress 
 	return off, nil
 }
 
+func (rr *ALIAS) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packDomainName(rr.Target, msg, off, compression, compress)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 func (rr *CSYNC) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint32(rr.Serial, msg, off)
 	if err != nil {
@@ -1279,6 +1287,17 @@ func (rr *CERT) unpack(msg []byte, off int) (off1 int, err error) {
 }
 
 func (rr *CNAME) unpack(msg []byte, off int) (off1 int, err error) {
+	rdStart := off
+	_ = rdStart
+
+	rr.Target, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *ALIAS) unpack(msg []byte, off int) (off1 int, err error) {
 	rdStart := off
 	_ = rdStart
 

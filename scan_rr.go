@@ -365,6 +365,16 @@ func (rr *CNAME) parse(c *zlexer, o string) *ParseError {
 	return slurpRemainder(c)
 }
 
+func (rr *ALIAS) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{"", "bad ALIAS Target", l}
+	}
+	rr.Target = name
+	return slurpRemainder(c)
+}
+
 func (rr *DNAME) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	name, nameOk := toAbsoluteName(l.token, o)

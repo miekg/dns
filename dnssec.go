@@ -679,6 +679,8 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 			x.Mf = CanonicalName(x.Mf)
 		case *CNAME:
 			x.Target = CanonicalName(x.Target)
+		case *ALIAS:
+			x.Target = CanonicalName(x.Target)
 		case *SOA:
 			x.Ns = CanonicalName(x.Ns)
 			x.Mbox = CanonicalName(x.Mbox)
