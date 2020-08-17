@@ -102,7 +102,9 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 	if h != nil {
 		h.ServeDNS(w, req)
 	} else {
-		HandleFailed(w, req)
+		m := new(Msg)
+		m.SetRcode(req, RcodeRefused)
+		w.WriteMsg(m)
 	}
 }
 
