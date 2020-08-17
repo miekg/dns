@@ -376,6 +376,9 @@ func TestParseLOC(t *testing.T) {
 		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
 		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
 		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
+		// Exercise boundary cases
+		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
+		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
 	}
 	for i, o := range lt {
 		rr, err := NewRR(i)
@@ -385,6 +388,29 @@ func TestParseLOC(t *testing.T) {
 		}
 		if rr.String() != o {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
+	}
+
+	// Invalid cases (out of range values)
+	lt = map[string]string{ // Pair of (invalid) RDATA and the bad field name
+		// One of the subfields is out of range.
+		"91 0 0.0 N 00 07 39.611 W 0m":   "Latitude",
+		"89 60 0.0 N 00 07 39.611 W 0m":  "Latitude",
+		"89 00 60.0 N 00 07 39.611 W 0m": "Latitude",
+		"1 00 -1 N 00 07 39.611 W 0m":    "Latitude",
+		"0 0 0.0 N 181 00 0.0 W 0m":      "Longitude",
+		"0 0 0.0 N 179 60 0.0 W 0m":      "Longitude",
+		"0 0 0.0 N 179 00 60.0 W 0m":     "Longitude",
+		"0 0 0.0 N 1 00 -1 W 0m":         "Longitude",
+
+		// Each subfield is valid, but resulting latitude would be out of range.
+		"90 01 00.0 N 00 07 39.611 W 0m": "Latitude",
+		"0 0 0.0 N 180 01 0.0 W 0m":      "Longitude",
+	}
+	for rdata, field := range lt {
+		_, err := NewRR(fmt.Sprintf("example.com. LOC %s", rdata))
+		if err == nil || !strings.Contains(err.Error(), field) {
+			t.Errorf("expected error to contain %q, but got %v", field, err)
 		}
 	}
 }
