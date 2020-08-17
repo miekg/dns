@@ -7,7 +7,7 @@
 
 > Less is more.
 
-Complete and usable DNS library. All Resource Records are supported, including the DNSSEC types.
+Complete and usable DNS library . All Resource Records are supported, including the DNSSEC types.
 It follows a lean and mean philosophy. If there is stuff you should know as a DNS programmer there
 isn't a convenience function for it. Server side and client side programming is supported, i.e. you
 can build servers and resolvers with it.
