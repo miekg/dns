@@ -181,6 +181,20 @@ func TestPackDataAplPrefix(t *testing.T) {
 			[]byte{0x00, 0x02, 0x30, 0x06, 0x20, 0x01, 0x0d, 0xb8, 0xca, 0xfe},
 		},
 		{
+			"with trailing zero bytes 2:2001:db8:cafe::0/64",
+			false,
+			net.ParseIP("2001:db8:cafe::"),
+			net.CIDRMask(64, 128),
+			[]byte{0x00, 0x02, 0x40, 0x06, 0x20, 0x01, 0x0d, 0xb8, 0xca, 0xfe},
+		},
+		{
+			"no non-zero bytes 2::/16",
+			false,
+			net.ParseIP("::"),
+			net.CIDRMask(16, 128),
+			[]byte{0x00, 0x02, 0x10, 0x00},
+		},
+		{
 			"!2:2001:db8::/32",
 			true,
 			net.ParseIP("2001:db8::"),
@@ -208,6 +222,11 @@ func TestPackDataAplPrefix(t *testing.T) {
 			}
 			if !bytes.Equal(tt.expect, out[:off]) {
 				t.Fatalf("expected output %02x, got %02x", tt.expect, out[:off])
+			}
+			// Make sure the packed bytes would be accepted by its own unpack
+			_, _, err = unpackDataAplPrefix(out, 0)
+			if err != nil {
+				t.Fatalf("expected no error, got %q", err)
 			}
 		})
 	}
