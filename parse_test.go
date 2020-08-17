@@ -415,6 +415,67 @@ func TestParseLOC(t *testing.T) {
 	}
 }
 
+// this tests a subroutine for the LOC RR parser.  It's complicated enough to test separately.
+func TestStringToCm(t *testing.T) {
+	tests := []struct {
+		// Test description: the input token and the expected return values from stringToCm.
+		token string
+		e     uint8
+		m     uint8
+		ok    bool
+	}{
+		{"100", 4, 1, true},
+		{"0100", 4, 1, true}, // leading 0 (allowed)
+		{"100.99", 4, 1, true},
+		{"90000000", 9, 9, true},
+		{"90000000.00", 9, 9, true},
+		{"0", 0, 0, true},
+		{"0.00", 0, 0, true},
+		{"0.01", 0, 1, true},
+		{".01", 0, 1, true}, // empty 'meter' part (allowed)
+		{"0.1", 1, 1, true},
+
+		// out of range (too large)
+		{"90000001", 0, 0, false},
+		{"90000000.01", 0, 0, false},
+
+		// more than 2 digits in 'cmeter' part
+		{"0.000", 0, 0, false},
+		{"0.001", 0, 0, false},
+		{"0.999", 0, 0, false},
+		// with plus or minus sign (disallowed)
+		{"-100", 0, 0, false},
+		{"+100", 0, 0, false},
+		{"0.-10", 0, 0, false},
+		{"0.+10", 0, 0, false},
+		{"0a.00", 0, 0, false}, // invalid string for 'meter' part
+		{".1x", 0, 0, false},   // invalid string for 'cmeter' part
+		{".", 0, 0, false},     // empty 'cmeter' part (disallowed)
+		{"1.", 0, 0, false},    // ditto
+		{"m", 0, 0, false},     // only the "m" suffix
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.token, func(t *testing.T) {
+			// In all cases the expected result is the same with or without the 'm' suffix.
+			// So we test both cases using the same test code.
+			for _, sfx := range []string{"", "m"} {
+				token := tc.token + sfx
+				e, m, ok := stringToCm(token)
+				if ok != tc.ok {
+					t.Fatal("unexpected validation result")
+				}
+				if m != tc.m {
+					t.Fatalf("Expected %d, got %d", tc.m, m)
+				}
+				if e != tc.e {
+					t.Fatalf("Expected %d, got %d", tc.e, e)
+				}
+			}
+		})
+	}
+}
+
 func TestParseDS(t *testing.T) {
 	dt := map[string]string{
 		"example.net. 3600 IN DS 40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B 2071398F": "example.net.\t3600\tIN\tDS\t40692 12 3 22261A8B0E0D799183E35E24E2AD6BB58533CBA7E3B14D659E9CA09B2071398F",

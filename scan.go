@@ -1210,9 +1210,27 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 		if cmeters, err = strconv.Atoi(s[1]); err != nil {
 			return
 		}
+		// There's no point in having more than 2 digits in this part, and would rather make the implementation complicated ('123' should be treated as '12').
+		// So we simply reject it.
+		// We also make sure the first character is a digit to reject '+-' signs.
+		if len(s[1]) > 2 || s[1][0] < '0' || s[1][0] > '9' {
+			return
+		}
+		if len(s[1]) == 1 {
+			// 'nn.1' must be treated as 'nn-meters and 10cm, not 1cm.
+			cmeters *= 10
+		}
+		if len(s[0]) == 0 {
+			// This will allow omitting the 'meter' part, like .01 (meaning 0.01m = 1cm).
+			break
+		}
 		fallthrough
 	case 1:
 		if meters, err = strconv.Atoi(s[0]); err != nil {
+			return
+		}
+		// RFC1876 states the max value is 90000000.00.  The latter two conditions enforce it.
+		if s[0][0] < '0' || s[0][0] > '9' || meters > 90000000 || (meters == 90000000 && cmeters != 0) {
 			return
 		}
 	case 0:
@@ -1227,12 +1245,9 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 		e = 0
 		val = cmeters
 	}
-	for val > 10 {
+	for val >= 10 {
 		e++
 		val /= 10
-	}
-	if e > 9 {
-		ok = false
 	}
 	m = uint8(val)
 	return
