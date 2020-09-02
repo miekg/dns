@@ -176,12 +176,20 @@ func TestClientSyncBadID(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := new(Client)
-	if _, _, err := c.Exchange(m, addrstr); err != ErrId {
-		t.Errorf("did not find a bad Id")
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r.Id != m.Id {
+		t.Errorf("failed to get response with expected Id")
 	}
 	// And now with plain Exchange().
-	if _, err := Exchange(m, addrstr); err != ErrId {
-		t.Errorf("did not find a bad Id")
+	r, err = Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r.Id != m.Id {
+		t.Errorf("failed to get response with expected Id")
 	}
 }
 
