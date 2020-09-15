@@ -73,6 +73,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/folbricht/routedns
 * https://domainr.com/
 * https://zonedb.org/
+* https://router7.org/
 
 Send pull request if you want to be listed here.
 
