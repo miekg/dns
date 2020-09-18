@@ -93,3 +93,28 @@ func TestDecodeBadSVCB(t *testing.T) {
 		}
 	}
 }
+
+func TestCompareSVCB(t *testing.T) {
+	val1 := []SVCBKeyValue{
+		&SVCBPort{
+			Port: 117,
+		},
+		&SVCBAlpn{
+			Alpn: []string{"h2", "h3"},
+		},
+	}
+	val2 := []SVCBKeyValue{
+		&SVCBAlpn{
+			Alpn: []string{"h2", "h3"},
+		},
+		&SVCBPort{
+			Port: 117,
+		},
+	}
+	if !areSVCBPairArraysEqual(val1, val2) {
+		t.Error("svcb pairs were compared without sorting")
+	}
+	if val1[0].Key() != SVCB_PORT || val2[0].Key() != SVCB_ALPN {
+		t.Error("original svcb pairs were reordered during comparison")
+	}
+}

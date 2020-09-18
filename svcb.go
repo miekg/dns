@@ -740,15 +740,11 @@ func (rr *SVCB) String() string {
 
 // areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal after sorting their
 // copies. arrA and arrB have equal lengths, otherwise zduplicate.go wouldn't call this function.
-func areSVCBPairArraysEqual(arrA []SVCBKeyValue, arrB []SVCBKeyValue) bool {
-	a := append([]SVCBKeyValue(nil), arrA...)
-	b := append([]SVCBKeyValue(nil), arrB...)
-	sort.Slice(a, func(i, j int) bool {
-		return a[i].Key() < a[j].Key()
-	})
-	sort.Slice(b, func(i, j int) bool {
-		return b[i].Key() < b[j].Key()
-	})
+func areSVCBPairArraysEqual(a []SVCBKeyValue, b []SVCBKeyValue) bool {
+	a = append([]SVCBKeyValue(nil), a...)
+	b = append([]SVCBKeyValue(nil), b...)
+	sort.Slice(a, func(i, j int) bool { return a[i].Key() < a[j].Key() })
+	sort.Slice(b, func(i, j int) bool { return b[i].Key() < b[j].Key() })
 	for i, e := range a {
 		if e.Key() != b[i].Key() {
 			return false
