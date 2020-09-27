@@ -615,7 +615,11 @@ func (s *SVCBIPv6Hint) unpack(b []byte) error {
 	}
 	x := make([]net.IP, 0, len(b)/16)
 	for i := 0; i < len(b); i += 16 {
-		x = append(x, net.IP(b[i:i+16]))
+		ip := net.IP(b[i : i+16])
+		if ip.To4() != nil {
+			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
+		}
+		x = append(x, ip)
 	}
 	s.Hint = x
 	return nil
