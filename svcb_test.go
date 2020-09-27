@@ -17,7 +17,7 @@ func TestSVCB(t *testing.T) {
 		{`ipv4hint`, `3.4.3.2,1.1.1.1`},
 		{`no-default-alpn`, ``},
 		{`ipv6hint`, `1::4:4:4:4,1::3:3:3:3`},
-		{`echconfig`, `Mw==`},
+		{`echconfig`, `YUdWc2JHOD0=`},
 		{`key65000`, `4\ 3`},
 		{`key65001`, `\"\ `},
 		{`key65002`, ``},

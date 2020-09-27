@@ -1565,7 +1565,7 @@ func TestParseSVCB(t *testing.T) {
 }
 
 func TestParseBadSVCB(t *testing.T) {
-	header := `example.com. 3600 IN HTTPSSVC `
+	header := `example.com. 3600 IN HTTPS `
 	evils := []string{
 		`0 . no-default-alpn`,     // aliasform
 		`65536 . no-default-alpn`, // bad priority
@@ -1594,10 +1594,12 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
 		`1 . ipv6hint=1:1:1:1`,    // not ipv6
 		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv4hint=1.1.1.1.1`,  // not ipv4
 		`1 . ipv4hint=::fc`,       // not ipv4
 		`1 . ipv4hint=..11`,       // not ipv4
 		`1 . ipv4hint=a`,          // not ipv4
 		`1 . port=`,               // empty port
+		`1 . echconfig=YUd`,       // bad base64
 	}
 	for _, o := range evils {
 		_, err := NewRR(header + o)

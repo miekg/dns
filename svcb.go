@@ -526,11 +526,11 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, len(str))
 	for i, e := range str {
-		ip := net.ParseIP(e)
+		ip := net.ParseIP(e).To4()
 		if ip == nil {
 			return errors.New("dns: svcbipv4hint: bad ip")
 		}
-		dst[i] = ip.To4()
+		dst[i] = ip
 	}
 	s.Hint = dst
 	return nil
@@ -552,21 +552,30 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 //	e.ECH = "/wH...="
 //	o.Value = append(o.Value, e)
 type SVCBECHConfig struct {
-	ECH string // Base64 encoded ECHConfig
+	ECH []byte
 }
 
 func (*SVCBECHConfig) Key() SVCBKey            { return SVCB_ECHCONFIG }
-func (s *SVCBECHConfig) copy() SVCBKeyValue    { return &SVCBECHConfig{s.ECH} }
 func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
-func (s *SVCBECHConfig) String() string        { return s.ECH }
+func (s *SVCBECHConfig) String() string        { return toBase64(s.ECH) }
 func (s *SVCBECHConfig) len() int              { return len(s.ECH) }
 
+func (s *SVCBECHConfig) copy() SVCBKeyValue {
+	return &SVCBECHConfig{
+		append([]byte(nil), s.ECH...),
+	}
+}
+
 func (s *SVCBECHConfig) unpack(b []byte) error {
-	s.ECH = string(b)
+	s.ECH = append([]byte(nil), b...)
 	return nil
 }
 func (s *SVCBECHConfig) parse(b string) error {
-	s.ECH = b
+	x, err := fromBase64([]byte(b))
+	if err != nil {
+		return errors.New("dns: svcbechconfig: bad base64 echconfig")
+	}
+	s.ECH = x
 	return nil
 }
 
@@ -693,8 +702,7 @@ func (s *SVCBLocal) String() string {
 
 func (s *SVCBLocal) parse(b string) error {
 	data := make([]byte, 0, len(b))
-	i := 0
-	for i < len(b) {
+	for i := 0; i < len(b); {
 		if b[i] != '\\' {
 			data = append(data, b[i])
 			i++

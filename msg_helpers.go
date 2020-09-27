@@ -634,33 +634,26 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 		if err := e.unpack(msg[off : off+int(length)]); err != nil {
 			return nil, len(msg), err
 		}
-		xs = append(xs, e)
-		off += int(length)
-	}
-
-	var prev SVCBKey
-	for i, e := range xs {
-		if i > 0 && e.Key() <= prev {
+		if len(xs) > 0 && e.Key() <= xs[len(xs)-1].Key() {
 			return nil, len(msg), &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		prev = e.Key()
+		xs = append(xs, e)
+		off += int(length)
 	}
 	return xs, off, nil
 }
 
 func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	sorted := append([]SVCBKeyValue(nil), pairs...)
-	sort.Slice(sorted, func(i, j int) bool {
+	pairs = append([]SVCBKeyValue(nil), pairs...)
+	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
 	})
 	prev := svcb_RESERVED
-	for _, e := range pairs {
-		if e.Key() == prev {
+	for _, el := range pairs {
+		if el.Key() == prev {
 			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}
 		}
-		prev = e.Key()
-	}
-	for _, el := range pairs {
+		prev = el.Key()
 		packed, err := el.pack()
 		if err != nil {
 			return len(msg), err
