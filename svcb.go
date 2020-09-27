@@ -685,9 +685,9 @@ func (s *SVCBLocal) String() string {
 	var str strings.Builder
 	str.Grow(4 * len(s.Data))
 	for _, e := range s.Data {
-		if (0x1f < e && e < 0x7f) || e == 0x09 {
+		if ' ' <= e && e <= '~' {
 			switch e {
-			case '"', ';', ' ', '\\', 0x09:
+			case '"', ';', ' ', '\\':
 				str.WriteByte('\\')
 				str.WriteByte(e)
 			default:
