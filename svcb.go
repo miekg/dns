@@ -212,8 +212,7 @@ type SVCB struct {
 }
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well
-// except that for HTTPS, HTTPS must be used
-// and HTTPS signifies that connections can be made over HTTPS.
+// except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
 type HTTPS struct {
 	SVCB
 }
@@ -275,8 +274,8 @@ func (s *SVCBMandatory) pack() ([]byte, error) {
 	sort.Slice(codes, func(i, j int) bool {
 		return codes[i] < codes[j]
 	})
-	b := make([]byte, 2*len(s.Code))
-	for i, e := range s.Code {
+	b := make([]byte, 2*len(codes))
+	for i, e := range codes {
 		binary.BigEndian.PutUint16(b[2*i:], uint16(e))
 	}
 	return b, nil
@@ -297,9 +296,9 @@ func (s *SVCBMandatory) unpack(b []byte) error {
 
 func (s *SVCBMandatory) parse(b string) error {
 	str := strings.Split(b, ",")
-	codes := make([]SVCBKey, len(str))
-	for i, e := range str {
-		codes[i] = svcbStringToKey(e)
+	codes := make([]SVCBKey, 0, len(str))
+	for _, e := range str {
+		codes = append(codes, svcbStringToKey(e))
 	}
 	s.Code = codes
 	return nil
@@ -555,10 +554,13 @@ type SVCBECHConfig struct {
 	ECH []byte
 }
 
-func (*SVCBECHConfig) Key() SVCBKey            { return SVCB_ECHCONFIG }
-func (s *SVCBECHConfig) pack() ([]byte, error) { return []byte(s.ECH), nil }
-func (s *SVCBECHConfig) String() string        { return toBase64(s.ECH) }
-func (s *SVCBECHConfig) len() int              { return len(s.ECH) }
+func (*SVCBECHConfig) Key() SVCBKey     { return SVCB_ECHCONFIG }
+func (s *SVCBECHConfig) String() string { return toBase64(s.ECH) }
+func (s *SVCBECHConfig) len() int       { return len(s.ECH) }
+
+func (s *SVCBECHConfig) pack() ([]byte, error) {
+	return append([]byte(nil), s.ECH...), nil
+}
 
 func (s *SVCBECHConfig) copy() SVCBKeyValue {
 	return &SVCBECHConfig{

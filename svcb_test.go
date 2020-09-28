@@ -11,7 +11,7 @@ func TestSVCB(t *testing.T) {
 		key  string
 		data string
 	}{
-		{`mandatory`, `key65000,alpn`},
+		{`mandatory`, `alpn,key65000`},
 		{`alpn`, `h2,h2c`},
 		{`port`, `499`},
 		{`ipv4hint`, `3.4.3.2,1.1.1.1`},
