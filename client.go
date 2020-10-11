@@ -106,7 +106,7 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 	if err != nil {
 		return nil, err
 	}
-
+	conn.UDPSize = c.UDPSize
 	return conn, nil
 }
 
