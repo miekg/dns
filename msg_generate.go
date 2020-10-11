@@ -35,6 +35,9 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	if !ok {
 		return nil, false
 	}
+	if st.NumFields() == 0 {
+		return nil, false
+	}
 	if st.Field(0).Type() == scope.Lookup("RR_Header").Type() {
 		return st, false
 	}
@@ -110,6 +113,8 @@ return off, err
 					o("off, err = packDataOpt(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
 					o("off, err = packDataNsec(rr.%s, msg, off)\n")
+				case `dns:"pairs"`:
+					o("off, err = packDataSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = packDataDomainNames(rr.%s, msg, off, compression, false)\n")
 				case `dns:"apl"`:
@@ -236,6 +241,8 @@ return off, err
 					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
 				case `dns:"nsec"`:
 					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
+				case `dns:"pairs"`:
+					o("rr.%s, off, err = unpackDataSVCB(msg, off)\n")
 				case `dns:"domain-name"`:
 					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
 				case `dns:"apl"`:

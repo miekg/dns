@@ -1633,6 +1633,70 @@ func TestParseCSYNC(t *testing.T) {
 	}
 }
 
+func TestParseSVCB(t *testing.T) {
+	svcbs := map[string]string{
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
+	}
+	for s, o := range svcbs {
+		rr, err := NewRR(s)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		}
+	}
+}
+
+func TestParseBadSVCB(t *testing.T) {
+	header := `example.com. 3600 IN HTTPS `
+	evils := []string{
+		`0 . no-default-alpn`,     // aliasform
+		`65536 . no-default-alpn`, // bad priority
+		`1 ..`,                    // bad domain
+		`1 . no-default-alpn=1`,   // value illegal
+		`1 . key`,                 // invalid key
+		`1 . key=`,                // invalid key
+		`1 . =`,                   // invalid key
+		`1 . ==`,                  // invalid key
+		`1 . =a`,                  // invalid key
+		`1 . ""`,                  // invalid key
+		`1 . ""=`,                 // invalid key
+		`1 . "a"`,                 // invalid key
+		`1 . "a"=`,                // invalid key
+		`1 . key1=`,               // we know that key
+		`1 . key65535`,            // key reserved
+		`1 . key065534`,           // key can't be padded
+		`1 . key65534="f`,         // unterminated value
+		`1 . key65534="`,          // unterminated value
+		`1 . key65534=\2`,         // invalid numberic escape
+		`1 . key65534=\24`,        // invalid numberic escape
+		`1 . key65534=\256`,       // invalid numberic escape
+		`1 . key65534=\`,          // invalid numberic escape
+		`1 . key65534=""alpn`,     // zQuote ending needs whitespace
+		`1 . key65534="a"alpn`,    // zQuote ending needs whitespace
+		`1 . ipv6hint=1.1.1.1`,    // not ipv6
+		`1 . ipv6hint=1:1:1:1`,    // not ipv6
+		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv4hint=1.1.1.1.1`,  // not ipv4
+		`1 . ipv4hint=::fc`,       // not ipv4
+		`1 . ipv4hint=..11`,       // not ipv4
+		`1 . ipv4hint=a`,          // not ipv4
+		`1 . port=`,               // empty port
+		`1 . echconfig=YUd`,       // bad base64
+	}
+	for _, o := range evils {
+		_, err := NewRR(header + o)
+		if err == nil {
+			t.Error("failed to reject invalid RR: ", header+o)
+			continue
+		}
+	}
+}
+
 func TestParseBadNAPTR(t *testing.T) {
 	// Should look like: mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 "S" "SIP+D2U" "" _sip._udp.mplus.ims.vodafone.com.
 	naptr := `mplus.ims.vodafone.com.	3600	IN	NAPTR	10 100 S SIP+D2U  _sip._udp.mplus.ims.vodafone.com.`

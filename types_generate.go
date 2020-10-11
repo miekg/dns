@@ -72,6 +72,9 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	if !ok {
 		return nil, false
 	}
+	if st.NumFields() == 0 {
+		return nil, false
+	}
 	if st.Field(0).Type() == scope.Lookup("RR_Header").Type() {
 		return st, false
 	}
@@ -181,6 +184,8 @@ func main() {
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
 				case `dns:"apl"`:
 					o("for _, x := range rr.%s { l += x.len() }\n")
+				case `dns:"pairs"`:
+					o("for _, x := range rr.%s { l += 4 + int(x.len()) }\n")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
@@ -267,6 +272,12 @@ func main() {
 					continue
 				}
 				if t == "APLPrefix" {
+					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
+						f, t, f, f, f)
+					fields = append(fields, f)
+					continue
+				}
+				if t == "SVCBKeyValue" {
 					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
 						f, t, f, f, f)
 					fields = append(fields, f)
