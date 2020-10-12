@@ -175,6 +175,31 @@ func TestClientSyncBadID(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
+	c := &Client{
+		Timeout: 1 * time.Second,
+	}
+	if _, _, err := c.Exchange(m, addrstr); err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("query did not time out")
+	}
+	// And now with plain Exchange().
+	if _, err = Exchange(m, addrstr); err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("query did not time out")
+	}
+}
+
+func TestClientSyncBadThenGoodID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadThenGoodID)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
 	c := new(Client)
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
