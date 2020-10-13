@@ -77,7 +77,7 @@ func (dns *Msg) Truncate(size int) {
 	}
 
 	// See the function documentation for when we set this.
-	dns.Truncated = len(dns.Answer) > numAnswer ||
+	dns.Truncated = dns.Truncated || len(dns.Answer) > numAnswer ||
 		len(dns.Ns) > numNS || len(dns.Extra) > numExtra
 
 	dns.Answer = dns.Answer[:numAnswer]
