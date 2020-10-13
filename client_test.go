@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -162,6 +163,12 @@ func TestClientTLSSyncV4(t *testing.T) {
 	}
 }
 
+func isNetworkTimeout(err error) bool {
+	// TODO: when Go 1.14 support is dropped, do this: https://golang.org/doc/go1.15#net
+	var netError net.Error
+	return errors.As(err, &netError) && netError.Timeout()
+}
+
 func TestClientSyncBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
@@ -178,11 +185,11 @@ func TestClientSyncBadID(t *testing.T) {
 	c := &Client{
 		Timeout: 1 * time.Second,
 	}
-	if _, _, err := c.Exchange(m, addrstr); err == nil || !strings.Contains(err.Error(), "timeout") {
+	if _, _, err := c.Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
 		t.Errorf("query did not time out")
 	}
 	// And now with plain Exchange().
-	if _, err = Exchange(m, addrstr); err == nil || !strings.Contains(err.Error(), "timeout") {
+	if _, err = Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
 		t.Errorf("query did not time out")
 	}
 }
