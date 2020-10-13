@@ -225,6 +225,27 @@ func TestClientSyncBadThenGoodID(t *testing.T) {
 	}
 }
 
+func TestClientSyncTCPBadID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadID)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := &Client{
+		Net: "tcp",
+	}
+	if _, _, err := c.Exchange(m, addrstr); err != ErrId {
+		t.Errorf("did not find a bad Id")
+	}
+}
+
 func TestClientEDNS0(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")

@@ -185,12 +185,19 @@ func (c *Client) exchange(m *Msg, co *Conn) (r *Msg, rtt time.Duration, err erro
 	}
 
 	co.SetReadDeadline(time.Now().Add(c.getTimeoutForRequest(c.readTimeout())))
-	for {
+	if _, ok := co.Conn.(net.PacketConn); ok {
+		for {
+			r, err = co.ReadMsg()
+			// Ignore replies with mismatched IDs because they might be
+			// responses to earlier queries that timed out.
+			if err != nil || r.Id == m.Id {
+				break
+			}
+		}
+	} else {
 		r, err = co.ReadMsg()
-		// Ignore replies with mismatched IDs because they might be
-		// responses to earlier queries that timed out.
-		if err != nil || r.Id == m.Id {
-			break
+		if err == nil && r.Id != m.Id {
+			err = ErrId
 		}
 	}
 	rtt = time.Since(t)
