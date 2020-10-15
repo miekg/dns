@@ -168,7 +168,7 @@ func Test65534(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	privkey, _ := key.Generate(1024)
+	privkey, _ := key.Generate(512)
 
 	sig := new(RRSIG)
 	sig.Hdr = RR_Header{"miek.nl.", TypeRRSIG, ClassINET, 14400, 0}
@@ -251,7 +251,7 @@ func TestKeyRSA(t *testing.T) {
 	key.Flags = 256
 	key.Protocol = 3
 	key.Algorithm = RSASHA256
-	priv, _ := key.Generate(2048)
+	priv, _ := key.Generate(512)
 
 	soa := new(SOA)
 	soa.Hdr = RR_Header{"miek.nl.", TypeSOA, ClassINET, 14400, 0}

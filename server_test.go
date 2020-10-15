@@ -635,7 +635,8 @@ func TestServingResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to exchange", err)
 	}
-	m.Response = true
+	m.Response = true // this holds up the reply, set short read time out to avoid waiting too long
+	c.ReadTimeout = 100 * time.Millisecond
 	_, _, err = c.Exchange(m, addrstr)
 	if err == nil {
 		t.Fatal("exchanged response message")
@@ -668,7 +669,7 @@ func init() {
 }
 
 func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr string, client *Client) {
-	const requests = 100
+	const requests = 15 // enough to make this interesting? TODO: find a proper value
 
 	var errOnce sync.Once
 	// t.Fail will panic if it's called after the test function has
@@ -698,7 +699,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	})
 	defer HandleRemove("example.com.")
 
-	client.Timeout = 10 * time.Second
+	client.Timeout = 1 * time.Second
 
 	conns := make([]*Conn, requests)
 	eg := new(errgroup.Group)
