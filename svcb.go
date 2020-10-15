@@ -12,7 +12,8 @@ import (
 
 type SVCBKey uint16
 
-// Keys defined in draft-ietf-dnsop-svcb-https-02 Section 11.1.2.
+// Keys defined in draft-ietf-dnsop-svcb-httpssvc-03, Section 12.1
+// Keys in the range 32768-65280 are the First Come First Served range
 const (
 	SVCB_MANDATORY       SVCBKey = 0
 	SVCB_ALPN            SVCBKey = 1
@@ -21,6 +22,7 @@ const (
 	SVCB_IPV4HINT        SVCBKey = 4
 	SVCB_ECHCONFIG       SVCBKey = 5
 	SVCB_IPV6HINT        SVCBKey = 6
+	SVCB_ODOHCONFIG      SVCBKey = 32769 // draft-pauly-dprive-oblivious-doh-02
 	svcb_RESERVED        SVCBKey = 65535
 )
 
@@ -31,6 +33,7 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_PORT:            "port",
 	SVCB_IPV4HINT:        "ipv4hint",
 	SVCB_ECHCONFIG:       "echconfig",
+	SVCB_ODOHCONFIG:      "odohconfig",
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
@@ -190,6 +193,8 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
+	case SVCB_ODOHCONFIG:
+		return new(SVCBODoHConfig)
 	case svcb_RESERVED:
 		return nil
 	default:
@@ -549,6 +554,49 @@ func (s *SVCBECHConfig) parse(b string) error {
 		return errors.New("dns: svcbechconfig: bad base64 echconfig")
 	}
 	s.ECH = x
+	return nil
+}
+
+// SVCBODoHConfig pair contains the ObliviousDoHConfig structure
+// defined in draft-pauly-dprive-oblivious-doh-02 [RFC TODO] for
+// DNS query public key encryption.
+//
+// Basic use pattern for creating an odohconfig option:
+//
+//	o := new(dns.HTTPS)
+//	o.Hdr.Name = "."
+//	o.Hdr.Rrtype = dns.HTTPS
+//	e := new(dns.SVCBODoHConfig)
+//	e.ODoH = "/wH...="
+//	o.Value = append(o.Value, e)
+type SVCBODoHConfig struct {
+	ODoH []byte
+}
+
+func (*SVCBODoHConfig) Key() SVCBKey     { return SVCB_ODOHCONFIG }
+func (s *SVCBODoHConfig) String() string { return toBase64(s.ODoH) }
+func (s *SVCBODoHConfig) len() int       { return len(s.ODoH) }
+
+func (s *SVCBODoHConfig) pack() ([]byte, error) {
+	return append([]byte(nil), s.ODoH...), nil
+}
+
+func (s *SVCBODoHConfig) copy() SVCBKeyValue {
+	return &SVCBODoHConfig{
+		append([]byte(nil), s.ODoH...),
+	}
+}
+
+func (s *SVCBODoHConfig) unpack(b []byte) error {
+	s.ODoH = append([]byte(nil), b...)
+	return nil
+}
+func (s *SVCBODoHConfig) parse(b string) error {
+	x, err := fromBase64([]byte(b))
+	if err != nil {
+		return errors.New("dns: svcbodohconfig: bad base64 odohconfig")
+	}
+	s.ODoH = x
 	return nil
 }
 
