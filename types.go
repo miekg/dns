@@ -82,6 +82,8 @@ const (
 	TypeOPENPGPKEY uint16 = 61
 	TypeCSYNC      uint16 = 62
 	TypeZONEMD     uint16 = 63
+	TypeSVCB       uint16 = 64
+	TypeHTTPS      uint16 = 65
 	TypeSPF        uint16 = 99
 	TypeUINFO      uint16 = 100
 	TypeUID        uint16 = 101
@@ -210,8 +212,11 @@ var CertTypeToString = map[uint16]string{
 
 //go:generate go run types_generate.go
 
-// Question holds a DNS question. There can be multiple questions in the
-// question section of a message. Usually there is just one.
+// Question holds a DNS question. Usually there is just one. While the
+// original DNS RFCs allow multiple questions in the question section of a
+// message, in practice it never works. Because most DNS servers see multiple
+// questions as an error, it is recommended to only have one question per
+// message.
 type Question struct {
 	Name   string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
 	Qtype  uint16
@@ -443,45 +448,38 @@ func sprintName(s string) string {
 	var dst strings.Builder
 
 	for i := 0; i < len(s); {
-		if i+1 < len(s) && s[i] == '\\' && s[i+1] == '.' {
+		if s[i] == '.' {
 			if dst.Len() != 0 {
-				dst.WriteString(s[i : i+2])
+				dst.WriteByte('.')
 			}
-			i += 2
+			i++
 			continue
 		}
 
 		b, n := nextByte(s, i)
 		if n == 0 {
-			i++
-			continue
-		}
-		if b == '.' {
-			if dst.Len() != 0 {
-				dst.WriteByte('.')
+			// Drop "dangling" incomplete escapes.
+			if dst.Len() == 0 {
+				return s[:i]
 			}
-			i += n
-			continue
+			break
 		}
-		switch b {
-		case ' ', '\'', '@', ';', '(', ')', '"', '\\': // additional chars to escape
+		if isDomainNameLabelSpecial(b) {
 			if dst.Len() == 0 {
 				dst.Grow(len(s) * 2)
 				dst.WriteString(s[:i])
 			}
 			dst.WriteByte('\\')
 			dst.WriteByte(b)
-		default:
-			if ' ' <= b && b <= '~' {
-				if dst.Len() != 0 {
-					dst.WriteByte(b)
-				}
-			} else {
-				if dst.Len() == 0 {
-					dst.Grow(len(s) * 2)
-					dst.WriteString(s[:i])
-				}
-				dst.WriteString(escapeByte(b))
+		} else if b < ' ' || b > '~' { // unprintable, use \DDD
+			if dst.Len() == 0 {
+				dst.Grow(len(s) * 2)
+				dst.WriteString(s[:i])
+			}
+			dst.WriteString(escapeByte(b))
+		} else {
+			if dst.Len() != 0 {
+				dst.WriteByte(b)
 			}
 		}
 		i += n
@@ -504,15 +502,10 @@ func sprintTxtOctet(s string) string {
 		}
 
 		b, n := nextByte(s, i)
-		switch {
-		case n == 0:
+		if n == 0 {
 			i++ // dangling back slash
-		case b == '.':
-			dst.WriteByte('.')
-		case b < ' ' || b > '~':
-			dst.WriteString(escapeByte(b))
-		default:
-			dst.WriteByte(b)
+		} else {
+			writeTXTStringByte(&dst, b)
 		}
 		i += n
 	}
@@ -586,6 +579,17 @@ func escapeByte(b byte) string {
 	b -= '~' + 1
 	// The cast here is needed as b*4 may overflow byte.
 	return escapedByteLarge[int(b)*4 : int(b)*4+4]
+}
+
+// isDomainNameLabelSpecial returns true if
+// a domain name label byte should be prefixed
+// with an escaping backslash.
+func isDomainNameLabelSpecial(b byte) bool {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
+		return true
+	}
+	return false
 }
 
 func nextByte(s string, offset int) (byte, int) {
@@ -1119,6 +1123,7 @@ type URI struct {
 	Target   string `dns:"octet"`
 }
 
+// rr.Target to be parsed as a sequence of character encoded octets according to RFC 3986
 func (rr *URI) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
 		" " + strconv.Itoa(int(rr.Weight)) + " " + sprintTxtOctet(rr.Target)
@@ -1280,6 +1285,7 @@ type CAA struct {
 	Value string `dns:"octet"`
 }
 
+// rr.Value Is the character-string encoding of the value field as specified in RFC 1035, Section 5.1.
 func (rr *CAA) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintTxtOctet(rr.Value)
 }

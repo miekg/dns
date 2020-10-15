@@ -34,6 +34,39 @@ func TestDuplicateTXT(t *testing.T) {
 	}
 }
 
+func TestDuplicateSVCB(t *testing.T) {
+	a1, _ := NewRR(`example.com. 3600 IN SVCB 1 . ipv6hint=1::3:3:3:3 key65300=\254\032\030\000\ \043,\;`)
+	a2, _ := NewRR(`example.com. 3600 IN SVCB 1 . ipv6hint=1:0::3:3:3:3 key65300="\254\ \030\000 +\,;"`)
+
+	if !IsDuplicate(a1, a2) {
+		t.Errorf("expected %s/%s to be duplicates, but got false", a1.String(), a2.String())
+	}
+
+	a2, _ = NewRR(`example.com. 3600 IN SVCB 1 . ipv6hint=1::3:3:3:3 key65300="\255\ \030\000 +\,;"`)
+
+	if IsDuplicate(a1, a2) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", a1.String(), a2.String())
+	}
+
+	a1, _ = NewRR(`example.com. 3600 IN SVCB 1 . ipv6hint=1::3:3:3:3`)
+
+	if IsDuplicate(a1, a2) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", a1.String(), a2.String())
+	}
+
+	a2, _ = NewRR(`example.com. 3600 IN SVCB 1 . ipv4hint=1.1.1.1`)
+
+	if IsDuplicate(a1, a2) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", a1.String(), a2.String())
+	}
+
+	a1, _ = NewRR(`example.com. 3600 IN SVCB 1 . ipv4hint=1.1.1.1,1.0.2.1`)
+
+	if IsDuplicate(a1, a2) {
+		t.Errorf("expected %s/%s not to be duplicates, but got true", a1.String(), a2.String())
+	}
+}
+
 func TestDuplicateOwner(t *testing.T) {
 	a1, _ := NewRR("www.example.org. IN A 127.0.0.1")
 	a2, _ := NewRR("www.example.org. IN A 127.0.0.1")

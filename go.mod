@@ -3,8 +3,8 @@ module github.com/miekg/dns
 go 1.12
 
 require (
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190924154521-2837fb4f24fe
+	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee
+	golang.org/x/net v0.0.0-20201010224723-4f7140c49acb
+	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520
+	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
 )
