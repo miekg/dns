@@ -19,12 +19,14 @@ func TestSIG0(t *testing.T) {
 		keyrr.Hdr.Rrtype = TypeKEY
 		keyrr.Hdr.Class = ClassINET
 		keyrr.Algorithm = alg
-		keysize := 1024
+		keysize := 512
 		switch alg {
 		case ECDSAP256SHA256:
 			keysize = 256
 		case ECDSAP384SHA384:
 			keysize = 384
+		case RSASHA512:
+			keysize = 1024
 		}
 		pk, err := keyrr.Generate(keysize)
 		if err != nil {
