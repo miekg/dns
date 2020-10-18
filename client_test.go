@@ -183,7 +183,7 @@ func TestClientSyncBadID(t *testing.T) {
 	m.SetQuestion("miek.nl.", TypeSOA)
 
 	c := &Client{
-		Timeout: 1 * time.Second,
+		Timeout: 50 * time.Millisecond,
 	}
 	if _, _, err := c.Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
 		t.Errorf("query did not time out")
