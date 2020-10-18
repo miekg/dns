@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -162,6 +163,12 @@ func TestClientTLSSyncV4(t *testing.T) {
 	}
 }
 
+func isNetworkTimeout(err error) bool {
+	// TODO: when Go 1.14 support is dropped, do this: https://golang.org/doc/go1.15#net
+	var netError net.Error
+	return errors.As(err, &netError) && netError.Timeout()
+}
+
 func TestClientSyncBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
@@ -175,12 +182,66 @@ func TestClientSyncBadID(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
-	c := new(Client)
-	if _, _, err := c.Exchange(m, addrstr); err != ErrId {
-		t.Errorf("did not find a bad Id")
+	c := &Client{
+		Timeout: 50 * time.Millisecond,
+	}
+	if _, _, err := c.Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
+		t.Errorf("query did not time out")
 	}
 	// And now with plain Exchange().
-	if _, err := Exchange(m, addrstr); err != ErrId {
+	if _, err = Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
+		t.Errorf("query did not time out")
+	}
+}
+
+func TestClientSyncBadThenGoodID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadThenGoodID)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := new(Client)
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r.Id != m.Id {
+		t.Errorf("failed to get response with expected Id")
+	}
+	// And now with plain Exchange().
+	r, err = Exchange(m, addrstr)
+	if err != nil {
+		t.Errorf("failed to exchange: %v", err)
+	}
+	if r.Id != m.Id {
+		t.Errorf("failed to get response with expected Id")
+	}
+}
+
+func TestClientSyncTCPBadID(t *testing.T) {
+	HandleFunc("miek.nl.", HelloServerBadID)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	c := &Client{
+		Net: "tcp",
+	}
+	if _, _, err := c.Exchange(m, addrstr); err != ErrId {
 		t.Errorf("did not find a bad Id")
 	}
 }
