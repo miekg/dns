@@ -96,6 +96,13 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 	return server, pc.LocalAddr().String(), fin, nil
 }
 
+func RunLocalPacketConnServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	return RunLocalUDPServer(laddr, append(opts, func(srv *Server) {
+		// Make srv.PacketConn opaque to trigger the generic code paths.
+		srv.PacketConn = struct{ net.PacketConn }{srv.PacketConn}
+	})...)
+}
+
 func RunLocalTCPServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
@@ -131,48 +138,62 @@ func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, chan 
 }
 
 func TestServing(t *testing.T) {
-	HandleFunc("miek.nl.", HelloServer)
-	HandleFunc("example.com.", AnotherHelloServer)
-	defer HandleRemove("miek.nl.")
-	defer HandleRemove("example.com.")
+	for _, tc := range []struct {
+		name      string
+		network   string
+		runServer func(laddr string, opts ...func(*Server)) (*Server, string, chan error, error)
+	}{
+		{"udp", "udp", RunLocalUDPServer},
+		{"tcp", "tcp", RunLocalTCPServer},
+		{"PacketConn", "udp", RunLocalPacketConnServer},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			HandleFunc("miek.nl.", HelloServer)
+			HandleFunc("example.com.", AnotherHelloServer)
+			defer HandleRemove("miek.nl.")
+			defer HandleRemove("example.com.")
 
-	s, addrstr, _, err := RunLocalUDPServer(":0")
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
+			s, addrstr, _, err := tc.runServer(":0")
+			if err != nil {
+				t.Fatalf("unable to run test server: %v", err)
+			}
+			defer s.Shutdown()
 
-	c := new(Client)
-	m := new(Msg)
-	m.SetQuestion("miek.nl.", TypeTXT)
-	r, _, err := c.Exchange(m, addrstr)
-	if err != nil || len(r.Extra) == 0 {
-		t.Fatal("failed to exchange miek.nl", err)
-	}
-	txt := r.Extra[0].(*TXT).Txt[0]
-	if txt != "Hello world" {
-		t.Error("unexpected result for miek.nl", txt, "!= Hello world")
-	}
+			c := &Client{
+				Net: tc.network,
+			}
+			m := new(Msg)
+			m.SetQuestion("miek.nl.", TypeTXT)
+			r, _, err := c.Exchange(m, addrstr)
+			if err != nil || len(r.Extra) == 0 {
+				t.Fatal("failed to exchange miek.nl", err)
+			}
+			txt := r.Extra[0].(*TXT).Txt[0]
+			if txt != "Hello world" {
+				t.Error("unexpected result for miek.nl", txt, "!= Hello world")
+			}
 
-	m.SetQuestion("example.com.", TypeTXT)
-	r, _, err = c.Exchange(m, addrstr)
-	if err != nil {
-		t.Fatal("failed to exchange example.com", err)
-	}
-	txt = r.Extra[0].(*TXT).Txt[0]
-	if txt != "Hello example" {
-		t.Error("unexpected result for example.com", txt, "!= Hello example")
-	}
+			m.SetQuestion("example.com.", TypeTXT)
+			r, _, err = c.Exchange(m, addrstr)
+			if err != nil {
+				t.Fatal("failed to exchange example.com", err)
+			}
+			txt = r.Extra[0].(*TXT).Txt[0]
+			if txt != "Hello example" {
+				t.Error("unexpected result for example.com", txt, "!= Hello example")
+			}
 
-	// Test Mixes cased as noticed by Ask.
-	m.SetQuestion("eXaMplE.cOm.", TypeTXT)
-	r, _, err = c.Exchange(m, addrstr)
-	if err != nil {
-		t.Error("failed to exchange eXaMplE.cOm", err)
-	}
-	txt = r.Extra[0].(*TXT).Txt[0]
-	if txt != "Hello example" {
-		t.Error("unexpected result for example.com", txt, "!= Hello example")
+			// Test Mixes cased as noticed by Ask.
+			m.SetQuestion("eXaMplE.cOm.", TypeTXT)
+			r, _, err = c.Exchange(m, addrstr)
+			if err != nil {
+				t.Error("failed to exchange eXaMplE.cOm", err)
+			}
+			txt = r.Extra[0].(*TXT).Txt[0]
+			if txt != "Hello example" {
+				t.Error("unexpected result for example.com", txt, "!= Hello example")
+			}
+		})
 	}
 }
 
@@ -818,7 +839,6 @@ func TestInProgressQueriesAtShutdownTLS(t *testing.T) {
 }
 
 func TestHandlerCloseTCP(t *testing.T) {
-
 	ln, err := net.Listen("tcp", ":0")
 	if err != nil {
 		panic(err)
@@ -881,8 +901,37 @@ func TestShutdownUDP(t *testing.T) {
 	}
 }
 
+func TestShutdownPacketConn(t *testing.T) {
+	s, _, fin, err := RunLocalPacketConnServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	err = s.Shutdown()
+	if err != nil {
+		t.Errorf("could not shutdown test UDP server, %v", err)
+	}
+	select {
+	case err := <-fin:
+		if err != nil {
+			t.Errorf("error returned from ActivateAndServe, %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Error("could not shutdown test UDP server. Gave up waiting")
+	}
+}
+
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
 	s, addr, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	c := &Client{Net: "udp"}
+	checkInProgressQueriesAtShutdownServer(t, s, addr, c)
+}
+
+func TestInProgressQueriesAtShutdownPacketConn(t *testing.T) {
+	s, addr, _, err := RunLocalPacketConnServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
