@@ -84,7 +84,7 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr, t)
+	axfrTestingSuite(t, addrstr)
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
@@ -97,7 +97,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr, t)
+	axfrTestingSuite(t, addrstr)
 }
 
 func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
@@ -131,7 +131,7 @@ func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) 
 	return server, l.Addr().String(), fin, nil
 }
 
-func axfrTestingSuite(addrstr string, t *testing.T) {
+func axfrTestingSuite(t *testing.T, addrstr string) {
 	tr := new(Transfer)
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
