@@ -198,7 +198,7 @@ func TestClientSyncBadThenGoodID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadThenGoodID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestClientSyncTCPBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
