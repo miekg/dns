@@ -78,14 +78,14 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
+	for _, opt := range opts {
+		opt(server)
+	}
+
 	// fin must be buffered so the goroutine below won't block
 	// forever if fin is never read from. This always happens
 	// if the channel is discarded and can happen in TestShutdownUDP.
 	fin := make(chan error, 1)
-
-	for _, opt := range opts {
-		opt(server)
-	}
 
 	go func() {
 		fin <- server.ActivateAndServe()
@@ -96,7 +96,7 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 	return server, pc.LocalAddr().String(), fin, nil
 }
 
-func RunLocalTCPServer(laddr string) (*Server, string, chan error, error) {
+func RunLocalTCPServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -107,6 +107,10 @@ func RunLocalTCPServer(laddr string) (*Server, string, chan error, error) {
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
+
+	for _, opt := range opts {
+		opt(server)
+	}
 
 	// See the comment in RunLocalUDPServer as to why fin must be buffered.
 	fin := make(chan error, 1)
