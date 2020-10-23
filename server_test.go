@@ -67,13 +67,7 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func RunLocalUDPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalUDPServerWithFinChan(laddr)
-
-	return server, l, err
-}
-
-func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	pc, err := net.ListenPacket("udp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -86,7 +80,7 @@ func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server,
 
 	// fin must be buffered so the goroutine below won't block
 	// forever if fin is never read from. This always happens
-	// in RunLocalUDPServer and can happen in TestShutdownUDP.
+	// if the channel is discarded and can happen in TestShutdownUDP.
 	fin := make(chan error, 1)
 
 	for _, opt := range opts {
@@ -102,13 +96,7 @@ func RunLocalUDPServerWithFinChan(laddr string, opts ...func(*Server)) (*Server,
 	return server, pc.LocalAddr().String(), fin, nil
 }
 
-func RunLocalTCPServer(laddr string) (*Server, string, error) {
-	server, l, _, err := RunLocalTCPServerWithFinChan(laddr)
-
-	return server, l, err
-}
-
-func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, error) {
+func RunLocalTCPServer(laddr string) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -120,8 +108,7 @@ func RunLocalTCPServerWithFinChan(laddr string) (*Server, string, chan error, er
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
-	// See the comment in RunLocalUDPServerWithFinChan as to
-	// why fin must be buffered.
+	// See the comment in RunLocalUDPServer as to why fin must be buffered.
 	fin := make(chan error, 1)
 
 	go func() {
@@ -160,7 +147,7 @@ func TestServing(t *testing.T) {
 	defer HandleRemove("miek.nl.")
 	defer HandleRemove("example.com.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -204,7 +191,7 @@ func TestServing(t *testing.T) {
 func TestServeIgnoresZFlag(t *testing.T) {
 	HandleFunc("example.com.", AnotherHelloServer)
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -233,7 +220,7 @@ func TestServeNotImplemented(t *testing.T) {
 	HandleFunc("example.com.", AnotherHelloServer)
 	opcode := 15
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -381,7 +368,7 @@ func TestServingTLSConnectionState(t *testing.T) {
 	// UDP DNS Server
 	HandleFunc(".", tlsHandlerTLS(false))
 	defer HandleRemove(".")
-	s, addrstr, err = RunLocalUDPServer(":0")
+	s, addrstr, _, err = RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -395,7 +382,7 @@ func TestServingTLSConnectionState(t *testing.T) {
 	}
 
 	// TCP DNS Server
-	s, addrstr, err = RunLocalTCPServer(":0")
+	s, addrstr, _, err = RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -479,7 +466,7 @@ func BenchmarkServe(b *testing.B) {
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		b.Fatalf("unable to run test server: %v", err)
 	}
@@ -504,7 +491,7 @@ func BenchmarkServe6(b *testing.B) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
-	s, addrstr, err := RunLocalUDPServer("[::1]:0")
+	s, addrstr, _, err := RunLocalUDPServer("[::1]:0")
 	if err != nil {
 		if strings.Contains(err.Error(), "bind: cannot assign requested address") {
 			b.Skip("missing IPv6 support")
@@ -541,7 +528,7 @@ func BenchmarkServeCompress(b *testing.B) {
 	HandleFunc("miek.nl.", HelloServerCompress)
 	defer HandleRemove("miek.nl.")
 	a := runtime.GOMAXPROCS(4)
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		b.Fatalf("unable to run test server: %v", err)
 	}
@@ -594,7 +581,7 @@ func TestServingLargeResponses(t *testing.T) {
 	HandleFunc("example.", HelloServerLargeResponse)
 	defer HandleRemove("example.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -634,7 +621,7 @@ func TestServingResponse(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 	HandleFunc("miek.nl.", HelloServer)
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -657,7 +644,7 @@ func TestServingResponse(t *testing.T) {
 }
 
 func TestShutdownTCP(t *testing.T) {
-	s, _, fin, err := RunLocalTCPServerWithFinChan(":0")
+	s, _, fin, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -788,7 +775,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 }
 
 func TestInProgressQueriesAtShutdownTCP(t *testing.T) {
-	s, addr, _, err := RunLocalTCPServerWithFinChan(":0")
+	s, addr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -887,7 +874,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 }
 
 func TestShutdownUDP(t *testing.T) {
-	s, _, fin, err := RunLocalUDPServerWithFinChan(":0")
+	s, _, fin, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -906,7 +893,7 @@ func TestShutdownUDP(t *testing.T) {
 }
 
 func TestInProgressQueriesAtShutdownUDP(t *testing.T) {
-	s, addr, _, err := RunLocalUDPServerWithFinChan(":0")
+	s, addr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -919,7 +906,7 @@ func TestServerStartStopRace(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		s, _, _, err := RunLocalUDPServerWithFinChan(":0")
+		s, _, _, err := RunLocalUDPServer(":0")
 		if err != nil {
 			t.Fatalf("could not start server: %s", err)
 		}
@@ -982,7 +969,7 @@ func TestServerReuseport(t *testing.T) {
 func TestServerRoundtripTsig(t *testing.T) {
 	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
 
-	s, addrstr, _, err := RunLocalUDPServerWithFinChan(":0", func(srv *Server) {
+	s, addrstr, _, err := RunLocalUDPServer(":0", func(srv *Server) {
 		srv.TsigSecret = secret
 		srv.MsgAcceptFunc = func(dh Header) MsgAcceptAction {
 			// defaultMsgAcceptFunc does reject UPDATE queries

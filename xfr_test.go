@@ -52,7 +52,7 @@ func TestInvalidXfr(t *testing.T) {
 	HandleFunc("miek.nl.", InvalidXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -78,7 +78,7 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
+	s, addrstr, _, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -91,7 +91,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
+	s, addrstr, _, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -100,13 +100,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	axfrTestingSuite(t, addrstr)
 }
 
-func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
-	server, l, _, err := RunLocalTCPServerWithFinChanWithTsig(laddr, tsig)
-
-	return server, l, err
-}
-
-func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) (*Server, string, chan error, error) {
+func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
@@ -118,8 +112,7 @@ func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) 
 	waitLock.Lock()
 	server.NotifyStartedFunc = waitLock.Unlock
 
-	// See the comment in RunLocalUDPServerWithFinChan as to
-	// why fin must be buffered.
+	// See the comment in RunLocalUDPServer as to why fin must be buffered.
 	fin := make(chan error, 1)
 
 	go func() {
