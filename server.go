@@ -180,8 +180,8 @@ func (dr defaultReader) ReadPacketConn(conn net.PacketConn, timeout time.Duratio
 
 // DecorateReader is a decorator hook for extending or supplanting the functionality of a Reader.
 // Implementations should never return a nil Reader.
-// Readers should also implement the optional ReaderPacketConn interface.
-// ReaderPacketConn is required to use a generic net.PacketConn.
+// Readers should also implement the optional PacketConnReader interface.
+// PacketConnReader is required to use a generic net.PacketConn.
 type DecorateReader func(Reader) Reader
 
 // DecorateWriter is a decorator hook for extending or supplanting the functionality of a Writer.
