@@ -1004,7 +1004,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 			status := w.TsigStatus()
 			if status == nil {
 				// *Msg r has an TSIG record and it was validated
-				m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+				m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
 			} else {
 				// *Msg r has an TSIG records and it was not valided
 				t.Errorf("invalid TSIG: %v", status)
@@ -1031,7 +1031,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 		Target: "bar.example.com.",
 	}}
 	c.TsigSecret = secret
-	m.SetTsig("test.", HmacMD5, 300, time.Now().Unix())
+	m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
 	_, _, err = c.Exchange(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange", err)

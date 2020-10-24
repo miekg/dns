@@ -17,7 +17,7 @@ func newTsig(algo string) *Msg {
 }
 
 func TestTsig(t *testing.T) {
-	m := newTsig(HmacMD5)
+	m := newTsig(HmacSHA256)
 	buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +29,7 @@ func TestTsig(t *testing.T) {
 
 	// TSIG accounts for ID substitution. This means if the message ID is
 	// changed by a forwarder, we should still be able to verify the TSIG.
-	m = newTsig(HmacMD5)
+	m = newTsig(HmacSHA256)
 	buf, _, err = TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +43,7 @@ func TestTsig(t *testing.T) {
 }
 
 func TestTsigCase(t *testing.T) {
-	m := newTsig("HmAc-mD5.sig-ALg.rEg.int.") // HmacMD5
+	m := newTsig(strings.ToUpper(HmacSHA256))
 	buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +62,7 @@ const (
 		"%012x" + // placeholder for the "time signed" field
 		"012c00208cf23e0081d915478a182edcea7ff48ad102948e6c7ef8e887536957d1fa5616c60000000000"
 	// A secret (in base64 format) with which the TSIG in wireMsg will be validated
-	testSecret        = "NoTCJU+DMqFWywaPyxSijrDEA/eC3nK0xi3AMEZuPVk="
+	testSecret = "NoTCJU+DMqFWywaPyxSijrDEA/eC3nK0xi3AMEZuPVk="
 	// the 'time signed' field value that would make the TSIG RR valid with testSecret
 	timeSigned uint64 = 1594855491
 )
