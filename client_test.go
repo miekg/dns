@@ -16,7 +16,7 @@ func TestDialUDP(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestClientSync(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestClientLocalAddress(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerEchoAddrPort)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -117,7 +117,7 @@ func TestClientTLSSyncV4(t *testing.T) {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	s, addrstr, err := RunLocalTLSServer(":0", &config)
+	s, addrstr, _, err := RunLocalTLSServer(":0", &config)
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestClientSyncBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestClientSyncBadThenGoodID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadThenGoodID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestClientSyncTCPBadID(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServerBadID)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -250,7 +250,7 @@ func TestClientEDNS0(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -297,7 +297,7 @@ func TestClientEDNS0Local(t *testing.T) {
 	HandleFunc("miek.nl.", handler)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -347,7 +347,7 @@ func TestClientConn(t *testing.T) {
 	defer HandleRemove("miek.nl.")
 
 	// This uses TCP just to make it slightly different than TestClientSync
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
@@ -594,7 +594,7 @@ func TestConcurrentExchanges(t *testing.T) {
 		HandleFunc("miek.nl.", handler)
 		defer HandleRemove("miek.nl.")
 
-		s, addrstr, err := RunLocalUDPServer(":0")
+		s, addrstr, _, err := RunLocalUDPServer(":0")
 		if err != nil {
 			t.Fatalf("unable to run test server: %s", err)
 		}
@@ -631,7 +631,7 @@ func TestExchangeWithConn(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
