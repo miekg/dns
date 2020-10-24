@@ -84,7 +84,7 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr)
+	axfrTestingSuite(t, addrstr)
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
@@ -97,7 +97,7 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr)
+	axfrTestingSuite(t, addrstr)
 }
 
 func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
@@ -131,33 +131,31 @@ func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) 
 	return server, l.Addr().String(), fin, nil
 }
 
-func axfrTestingSuite(addrstr string) func(*testing.T) {
-	return func(t *testing.T) {
-		tr := new(Transfer)
-		m := new(Msg)
-		m.SetAxfr("miek.nl.")
+func axfrTestingSuite(t *testing.T, addrstr string) {
+	tr := new(Transfer)
+	m := new(Msg)
+	m.SetAxfr("miek.nl.")
 
-		c, err := tr.In(m, addrstr)
-		if err != nil {
-			t.Fatal("failed to zone transfer in", err)
+	c, err := tr.In(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	var records []RR
+	for msg := range c {
+		if msg.Error != nil {
+			t.Fatal(msg.Error)
 		}
+		records = append(records, msg.RR...)
+	}
 
-		var records []RR
-		for msg := range c {
-			if msg.Error != nil {
-				t.Fatal(msg.Error)
-			}
-			records = append(records, msg.RR...)
-		}
+	if len(records) != len(xfrTestData) {
+		t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
+	}
 
-		if len(records) != len(xfrTestData) {
+	for i, rr := range records {
+		if !IsDuplicate(rr, xfrTestData[i]) {
 			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
-		}
-
-		for i := range records {
-			if !IsDuplicate(records[i], xfrTestData[i]) {
-				t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
-			}
 		}
 	}
 }
