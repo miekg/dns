@@ -124,7 +124,6 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 // of 512 bytes
 // To specify a local address or a timeout, the caller has to set the `Client.Dialer`
 // attribute appropriately
-
 func (c *Client) Exchange(m *Msg, address string) (r *Msg, rtt time.Duration, err error) {
 	co, err := c.Dial(address)
 
