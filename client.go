@@ -330,11 +330,11 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return co.Conn.Write(p)
 	}
 
-	l := make([]byte, 2)
-	binary.BigEndian.PutUint16(l, uint16(len(p)))
+	msg_with_length := make([]byte, 2+len(p))
+	binary.BigEndian.PutUint16(msg_with_length, uint16(len(p)))
+	copy(msg_with_length[2:], p[:])
 
-	n, err := (&net.Buffers{l, p}).WriteTo(co.Conn)
-	return int(n), err
+	return co.Conn.Write(msg_with_length)
 }
 
 // Return the appropriate timeout for a specific request

@@ -752,11 +752,11 @@ func (w *response) Write(m []byte) (int, error) {
 			return 0, &Error{err: "message too large"}
 		}
 
-		l := make([]byte, 2)
-		binary.BigEndian.PutUint16(l, uint16(len(m)))
+		msg_with_length := make([]byte, 2+len(m))
+		binary.BigEndian.PutUint16(msg_with_length, uint16(len(m)))
+		copy(msg_with_length[2:], m[:])
 
-		n, err := (&net.Buffers{l, m}).WriteTo(w.tcp)
-		return int(n), err
+		return w.tcp.Write(msg_with_length)
 	default:
 		panic("dns: internal error: udp and tcp both nil")
 	}
