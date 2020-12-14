@@ -181,6 +181,20 @@ func TestPackDataAplPrefix(t *testing.T) {
 			[]byte{0x00, 0x02, 0x30, 0x06, 0x20, 0x01, 0x0d, 0xb8, 0xca, 0xfe},
 		},
 		{
+			"with trailing zero bytes 2:2001:db8:cafe::0/64",
+			false,
+			net.ParseIP("2001:db8:cafe::"),
+			net.CIDRMask(64, 128),
+			[]byte{0x00, 0x02, 0x40, 0x06, 0x20, 0x01, 0x0d, 0xb8, 0xca, 0xfe},
+		},
+		{
+			"no non-zero bytes 2::/16",
+			false,
+			net.ParseIP("::"),
+			net.CIDRMask(16, 128),
+			[]byte{0x00, 0x02, 0x10, 0x00},
+		},
+		{
 			"!2:2001:db8::/32",
 			true,
 			net.ParseIP("2001:db8::"),
@@ -208,6 +222,11 @@ func TestPackDataAplPrefix(t *testing.T) {
 			}
 			if !bytes.Equal(tt.expect, out[:off]) {
 				t.Fatalf("expected output %02x, got %02x", tt.expect, out[:off])
+			}
+			// Make sure the packed bytes would be accepted by its own unpack
+			_, _, err = unpackDataAplPrefix(out, 0)
+			if err != nil {
+				t.Fatalf("expected no error, got %q", err)
 			}
 		})
 	}
@@ -397,6 +416,10 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 			"extra bits set",
 			[]byte{0x00, 0x01, 22, 0x03, 192, 0, 2},
 		},
+		{
+			"afdlen invalid",
+			[]byte{0x00, 0x01, 22, 0x05, 192, 0, 2, 0, 0},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -416,6 +439,14 @@ func TestUnpackDataApl(t *testing.T) {
 		0x00, 0x01, 0x18, 0x03, 192, 0, 2,
 		// !1:192.0.2.128/25
 		0x00, 0x01, 0x19, 0x84, 192, 0, 2, 128,
+		// 1:10.0.0.0/24
+		0x00, 0x01, 0x18, 0x01, 0x0a,
+		// !1:10.0.0.1/32
+		0x00, 0x01, 0x20, 0x84, 0x0a, 0, 0, 1,
+		// !1:0.0.0.0/0
+		0x00, 0x01, 0x00, 0x80,
+		// 2::0/0
+		0x00, 0x02, 0x00, 0x00,
 	}
 	expect := []APLPrefix{
 		{
@@ -437,6 +468,34 @@ func TestUnpackDataApl(t *testing.T) {
 			Network: net.IPNet{
 				IP:   net.ParseIP("192.0.2.128").To4(),
 				Mask: net.CIDRMask(25, 32),
+			},
+		},
+		{
+			Negation: false,
+			Network: net.IPNet{
+				IP:   net.ParseIP("10.0.0.0").To4(),
+				Mask: net.CIDRMask(24, 32),
+			},
+		},
+		{
+			Negation: true,
+			Network: net.IPNet{
+				IP:   net.ParseIP("10.0.0.1").To4(),
+				Mask: net.CIDRMask(32, 32),
+			},
+		},
+		{
+			Negation: true,
+			Network: net.IPNet{
+				IP:   net.ParseIP("0.0.0.0").To4(),
+				Mask: net.CIDRMask(0, 32),
+			},
+		},
+		{
+			Negation: false,
+			Network: net.IPNet{
+				IP:   net.ParseIP("::").To16(),
+				Mask: net.CIDRMask(0, 128),
 			},
 		},
 	}

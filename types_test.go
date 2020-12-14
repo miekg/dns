@@ -74,18 +74,41 @@ func TestSplitN(t *testing.T) {
 }
 
 func TestSprintName(t *testing.T) {
-	got := sprintName("abc\\.def\007\"\127@\255\x05\xef\\")
+	tests := map[string]string{
+		// Non-numeric escaping of special printable characters.
+		" '@;()\"\\..example": `\ \'\@\;\(\)\"\..example`,
+		"\\032\\039\\064\\059\\040\\041\\034\\046\\092.example": `\ \'\@\;\(\)\"\.\\.example`,
 
-	if want := "abc\\.def\\007\\\"W\\@\\173\\005\\239"; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+		// Numeric escaping of nonprintable characters.
+		"\x00\x07\x09\x0a\x1f.\x7f\x80\xad\xef\xff":           `\000\007\009\010\031.\127\128\173\239\255`,
+		"\\000\\007\\009\\010\\031.\\127\\128\\173\\239\\255": `\000\007\009\010\031.\127\128\173\239\255`,
+
+		// No escaping of other printable characters, at least after a prior escape.
+		";[a-zA-Z0-9_]+/*.~": `\;[a-zA-Z0-9_]+/*.~`,
+		";\\091\\097\\045\\122\\065\\045\\090\\048\\045\\057\\095\\093\\043\\047\\042.\\126": `\;[a-zA-Z0-9_]+/*.~`,
+		// "\\091\\097\\045\\122\\065\\045\\090\\048\\045\\057\\095\\093\\043\\047\\042.\\126": `[a-zA-Z0-9_]+/*.~`,
+
+		// Incomplete "dangling" escapes are dropped regardless of prior escaping.
+		"a\\": `a`,
+		";\\": `\;`,
+
+		// Escaped dots stay escaped regardless of prior escaping.
+		"a\\.\\046.\\.\\046": `a\.\..\.\.`,
+		"a\\046\\..\\046\\.": `a\.\..\.\.`,
+	}
+	for input, want := range tests {
+		got := sprintName(input)
+		if got != want {
+			t.Errorf("input %q: expected %q, got %q", input, want, got)
+		}
 	}
 }
 
 func TestSprintTxtOctet(t *testing.T) {
 	got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
 
-	if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+	if want := "\"abc\\.def\\007\\\"W@\\173\\005\\239\""; got != want {
+		t.Errorf("expected %q, got %q", want, got)
 	}
 }
 
@@ -96,7 +119,7 @@ func TestSprintTxt(t *testing.T) {
 	})
 
 	if want := "\"abc.def\\007\\\"W@\\173\\005\\239\" \"example.com\""; got != want {
-		t.Errorf("expected %q, got %q", got, want)
+		t.Errorf("expected %q, got %q", want, got)
 	}
 }
 
@@ -128,7 +151,7 @@ func BenchmarkSprintName(b *testing.B) {
 		got := sprintName("abc\\.def\007\"\127@\255\x05\xef\\")
 
 		if want := "abc\\.def\\007\\\"W\\@\\173\\005\\239"; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }
@@ -138,7 +161,7 @@ func BenchmarkSprintName_NoEscape(b *testing.B) {
 		got := sprintName("large.example.com")
 
 		if want := "large.example.com"; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }
@@ -147,8 +170,8 @@ func BenchmarkSprintTxtOctet(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		got := sprintTxtOctet("abc\\.def\007\"\127@\255\x05\xef\\")
 
-		if want := "\"abc\\.def\\007\"W@\\173\\005\\239\""; got != want {
-			b.Fatalf("expected %q, got %q", got, want)
+		if want := "\"abc\\.def\\007\\\"W@\\173\\005\\239\""; got != want {
+			b.Fatalf("expected %q, got %q", want, got)
 		}
 	}
 }

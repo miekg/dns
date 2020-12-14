@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestParseZoneGenerate(t *testing.T) {
+func TestZoneParserGenerate(t *testing.T) {
 	zone := "$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$"
 
 	wantRRs := []RR{
@@ -17,22 +17,21 @@ func TestParseZoneGenerate(t *testing.T) {
 		&A{Hdr: RR_Header{Name: "foo013.example.org."}, A: net.ParseIP("127.0.0.11")},
 		&A{Hdr: RR_Header{Name: "foo014.example.org."}, A: net.ParseIP("127.0.0.12")},
 	}
+
 	wantIdx := 0
 
-	tok := ParseZone(strings.NewReader(zone), "", "")
-	for x := range tok {
+	z := NewZoneParser(strings.NewReader(zone), "", "")
+
+	for rr, ok := z.Next(); ok; rr, ok = z.Next() {
 		if wantIdx >= len(wantRRs) {
 			t.Fatalf("expected %d RRs, but got more", len(wantRRs))
 		}
-		if x.Error != nil {
-			t.Fatalf("expected no error, but got %s", x.Error)
-		}
-		if got, want := x.RR.Header().Name, wantRRs[wantIdx].Header().Name; got != want {
+		if got, want := rr.Header().Name, wantRRs[wantIdx].Header().Name; got != want {
 			t.Fatalf("expected name %s, but got %s", want, got)
 		}
-		a, ok := x.RR.(*A)
-		if !ok {
-			t.Fatalf("expected *A RR, but got %T", x.RR)
+		a, okA := rr.(*A)
+		if !okA {
+			t.Fatalf("expected *A RR, but got %T", rr)
 		}
 		if got, want := a.A, wantRRs[wantIdx].(*A).A; !got.Equal(want) {
 			t.Fatalf("expected A with IP %v, but got %v", got, want)
@@ -40,12 +39,16 @@ func TestParseZoneGenerate(t *testing.T) {
 		wantIdx++
 	}
 
+	if err := z.Err(); err != nil {
+		t.Fatalf("expected no error, but got %s", err)
+	}
+
 	if wantIdx != len(wantRRs) {
 		t.Errorf("too few records, expected %d, got %d", len(wantRRs), wantIdx)
 	}
 }
 
-func TestParseZoneInclude(t *testing.T) {
+func TestZoneParserInclude(t *testing.T) {
 
 	tmpfile, err := ioutil.TempFile("", "dns")
 	if err != nil {
@@ -63,17 +66,18 @@ func TestParseZoneInclude(t *testing.T) {
 	zone := "$ORIGIN example.org.\n$INCLUDE " + tmpfile.Name() + "\nbar\tIN\tA\t127.0.0.2"
 
 	var got int
-	tok := ParseZone(strings.NewReader(zone), "", "")
-	for x := range tok {
-		if x.Error != nil {
-			t.Fatalf("expected no error, but got %s", x.Error)
-		}
-		switch x.RR.Header().Name {
+	z := NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+		switch rr.Header().Name {
 		case "foo.example.org.", "bar.example.org.":
 		default:
-			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", x.RR.Header().Name)
+			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", rr.Header().Name)
 		}
 		got++
+	}
+	if err := z.Err(); err != nil {
+		t.Fatalf("expected no error, but got %s", err)
 	}
 
 	if expected := 2; got != expected {
@@ -82,17 +86,15 @@ func TestParseZoneInclude(t *testing.T) {
 
 	os.Remove(tmpfile.Name())
 
-	tok = ParseZone(strings.NewReader(zone), "", "")
-	for x := range tok {
-		if x.Error == nil {
-			t.Fatalf("expected first token to contain an error but it didn't")
-		}
-		if !strings.Contains(x.Error.Error(), "failed to open") ||
-			!strings.Contains(x.Error.Error(), tmpfile.Name()) ||
-			!strings.Contains(x.Error.Error(), "no such file or directory") {
-			t.Fatalf(`expected error to contain: "failed to open", %q and "no such file or directory" but got: %s`,
-				tmpfile.Name(), x.Error)
-		}
+	z = NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	z.Next()
+	if err := z.Err(); err == nil ||
+		!strings.Contains(err.Error(), "failed to open") ||
+		!strings.Contains(err.Error(), tmpfile.Name()) ||
+		!strings.Contains(err.Error(), "no such file or directory") {
+		t.Fatalf(`expected error to contain: "failed to open", %q and "no such file or directory" but got: %s`,
+			tmpfile.Name(), err)
 	}
 }
 
@@ -273,16 +275,6 @@ foo. IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
 foo. IN NSEC miek.nl. TXT RRSIG NSEC; this is comment 7
 foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
 `
-
-func BenchmarkParseZone(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		for tok := range ParseZone(strings.NewReader(benchZone), "example.org.", "") {
-			if tok.Error != nil {
-				b.Fatal(tok.Error)
-			}
-		}
-	}
-}
 
 func BenchmarkZoneParser(b *testing.B) {
 	for n := 0; n < b.N; n++ {

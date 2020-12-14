@@ -358,12 +358,27 @@ func TestNSEC(t *testing.T) {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
 		}
 	}
+	rr, err := NewRR("nl. IN NSEC3PARAM 1 0 5 30923C44C6CBBB8F")
+	if err != nil {
+		t.Fatal("failed to parse RR: ", err)
+	}
+	if nsec3param, ok := rr.(*NSEC3PARAM); ok {
+		if nsec3param.SaltLength != 8 {
+			t.Fatalf("nsec3param saltlen %d != 8", nsec3param.SaltLength)
+		}
+	} else {
+		t.Fatal("not nsec3 param: ", err)
+	}
 }
 
 func TestParseLOC(t *testing.T) {
 	lt := map[string]string{
 		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
 		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
+		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
+		// Exercise boundary cases
+		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
+		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
 	}
 	for i, o := range lt {
 		rr, err := NewRR(i)
@@ -374,6 +389,90 @@ func TestParseLOC(t *testing.T) {
 		if rr.String() != o {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
 		}
+	}
+
+	// Invalid cases (out of range values)
+	lt = map[string]string{ // Pair of (invalid) RDATA and the bad field name
+		// One of the subfields is out of range.
+		"91 0 0.0 N 00 07 39.611 W 0m":   "Latitude",
+		"89 60 0.0 N 00 07 39.611 W 0m":  "Latitude",
+		"89 00 60.0 N 00 07 39.611 W 0m": "Latitude",
+		"1 00 -1 N 00 07 39.611 W 0m":    "Latitude",
+		"0 0 0.0 N 181 00 0.0 W 0m":      "Longitude",
+		"0 0 0.0 N 179 60 0.0 W 0m":      "Longitude",
+		"0 0 0.0 N 179 00 60.0 W 0m":     "Longitude",
+		"0 0 0.0 N 1 00 -1 W 0m":         "Longitude",
+
+		// Each subfield is valid, but resulting latitude would be out of range.
+		"90 01 00.0 N 00 07 39.611 W 0m": "Latitude",
+		"0 0 0.0 N 180 01 0.0 W 0m":      "Longitude",
+	}
+	for rdata, field := range lt {
+		_, err := NewRR(fmt.Sprintf("example.com. LOC %s", rdata))
+		if err == nil || !strings.Contains(err.Error(), field) {
+			t.Errorf("expected error to contain %q, but got %v", field, err)
+		}
+	}
+}
+
+// this tests a subroutine for the LOC RR parser.  It's complicated enough to test separately.
+func TestStringToCm(t *testing.T) {
+	tests := []struct {
+		// Test description: the input token and the expected return values from stringToCm.
+		token string
+		e     uint8
+		m     uint8
+		ok    bool
+	}{
+		{"100", 4, 1, true},
+		{"0100", 4, 1, true}, // leading 0 (allowed)
+		{"100.99", 4, 1, true},
+		{"90000000", 9, 9, true},
+		{"90000000.00", 9, 9, true},
+		{"0", 0, 0, true},
+		{"0.00", 0, 0, true},
+		{"0.01", 0, 1, true},
+		{".01", 0, 1, true}, // empty 'meter' part (allowed)
+		{"0.1", 1, 1, true},
+
+		// out of range (too large)
+		{"90000001", 0, 0, false},
+		{"90000000.01", 0, 0, false},
+
+		// more than 2 digits in 'cmeter' part
+		{"0.000", 0, 0, false},
+		{"0.001", 0, 0, false},
+		{"0.999", 0, 0, false},
+		// with plus or minus sign (disallowed)
+		{"-100", 0, 0, false},
+		{"+100", 0, 0, false},
+		{"0.-10", 0, 0, false},
+		{"0.+10", 0, 0, false},
+		{"0a.00", 0, 0, false}, // invalid string for 'meter' part
+		{".1x", 0, 0, false},   // invalid string for 'cmeter' part
+		{".", 0, 0, false},     // empty 'cmeter' part (disallowed)
+		{"1.", 0, 0, false},    // ditto
+		{"m", 0, 0, false},     // only the "m" suffix
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.token, func(t *testing.T) {
+			// In all cases the expected result is the same with or without the 'm' suffix.
+			// So we test both cases using the same test code.
+			for _, sfx := range []string{"", "m"} {
+				token := tc.token + sfx
+				e, m, ok := stringToCm(token)
+				if ok != tc.ok {
+					t.Fatal("unexpected validation result")
+				}
+				if m != tc.m {
+					t.Fatalf("Expected %d, got %d", tc.m, m)
+				}
+				if e != tc.e {
+					t.Fatalf("Expected %d, got %d", tc.e, e)
+				}
+			}
+		})
 	}
 }
 
@@ -534,24 +633,24 @@ $TTL 314
 example.com.   DNAME 10 ; TTL=314 after second $TTL
 `
 	reCaseFromComment := regexp.MustCompile(`TTL=(\d+)\s+(.*)`)
-	records := ParseZone(strings.NewReader(zone), "", "")
+	z := NewZoneParser(strings.NewReader(zone), "", "")
 	var i int
-	for record := range records {
+
+	for rr, ok := z.Next(); ok; rr, ok = z.Next() {
 		i++
-		if record.Error != nil {
-			t.Error(record.Error)
-			continue
-		}
-		expected := reCaseFromComment.FindStringSubmatch(record.Comment)
+		expected := reCaseFromComment.FindStringSubmatch(z.Comment())
 		if len(expected) != 3 {
 			t.Errorf("regexp didn't match for record %d", i)
 			continue
 		}
 		expectedTTL, _ := strconv.ParseUint(expected[1], 10, 32)
-		ttl := record.RR.Header().Ttl
+		ttl := rr.Header().Ttl
 		if ttl != uint32(expectedTTL) {
 			t.Errorf("%s: expected TTL %d, got %d", expected[2], expectedTTL, ttl)
 		}
+	}
+	if err := z.Err(); err != nil {
+		t.Error(err)
 	}
 	if i != 10 {
 		t.Errorf("expected %d records, got %d", 5, i)
@@ -591,16 +690,12 @@ func TestRelativeNameErrors(t *testing.T) {
 		},
 	}
 	for _, errorCase := range badZones {
-		entries := ParseZone(strings.NewReader(errorCase.zoneContents), "", "")
-		for entry := range entries {
-			if entry.Error == nil {
-				t.Errorf("%s: expected error, got nil", errorCase.label)
-				continue
-			}
-			err := entry.Error.err
-			if err != errorCase.expectedErr {
-				t.Errorf("%s: expected error `%s`, got `%s`", errorCase.label, errorCase.expectedErr, err)
-			}
+		z := NewZoneParser(strings.NewReader(errorCase.zoneContents), "", "")
+		z.Next()
+		if err := z.Err(); err == nil {
+			t.Errorf("%s: expected error, got nil", errorCase.label)
+		} else if !strings.Contains(err.Error(), errorCase.expectedErr) {
+			t.Errorf("%s: expected error `%s`, got `%s`", errorCase.label, errorCase.expectedErr, err)
 		}
 	}
 }
@@ -707,8 +802,12 @@ func TestRfc1982(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	for range ParseZone(strings.NewReader(""), "", "") {
+	z := NewZoneParser(strings.NewReader(""), "", "")
+	for _, ok := z.Next(); ok; _, ok = z.Next() {
 		t.Errorf("should be empty")
+	}
+	if err := z.Err(); err != nil {
+		t.Error("got an error when it shouldn't")
 	}
 }
 
@@ -877,18 +976,20 @@ foo. IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
 foo. IN NSEC miek.nl. TXT RRSIG NSEC; this is comment 7
 foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
 `
-	for x := range ParseZone(strings.NewReader(zone), ".", "") {
-		if x.Error == nil {
-			if x.Comment != "" {
-				if _, ok := comments[x.Comment]; !ok {
-					t.Errorf("wrong comment %q", x.Comment)
-				}
+	z := NewZoneParser(strings.NewReader(zone), ".", "")
+	for _, ok := z.Next(); ok; _, ok = z.Next() {
+		if z.Comment() != "" {
+			if _, okC := comments[z.Comment()]; !okC {
+				t.Errorf("wrong comment %q", z.Comment())
 			}
 		}
 	}
+	if err := z.Err(); err != nil {
+		t.Error("got an error when it shouldn't")
+	}
 }
 
-func TestParseZoneComments(t *testing.T) {
+func TestZoneParserComments(t *testing.T) {
 	for i, test := range []struct {
 		zone     string
 		comments []string
@@ -963,22 +1064,23 @@ func TestParseZoneComments(t *testing.T) {
 		r := strings.NewReader(test.zone)
 
 		var j int
-		for r := range ParseZone(r, "", "") {
-			if r.Error != nil {
-				t.Fatal(r.Error)
-			}
-
+		z := NewZoneParser(r, "", "")
+		for rr, ok := z.Next(); ok; rr, ok = z.Next() {
 			if j >= len(test.comments) {
 				t.Fatalf("too many records for zone %d at %d record, expected %d", i, j+1, len(test.comments))
 			}
 
-			if r.Comment != test.comments[j] {
-				t.Errorf("invalid comment for record %d:%d %v / %v", i, j, r.RR, r.Error)
+			if z.Comment() != test.comments[j] {
+				t.Errorf("invalid comment for record %d:%d %v", i, j, rr)
 				t.Logf("expected %q", test.comments[j])
-				t.Logf("got      %q", r.Comment)
+				t.Logf("got      %q", z.Comment())
 			}
 
 			j++
+		}
+
+		if err := z.Err(); err != nil {
+			t.Fatal(err)
 		}
 
 		if j != len(test.comments) {
@@ -1210,8 +1312,8 @@ func TestNewPrivateKey(t *testing.T) {
 	algorithms := []algorithm{
 		{ECDSAP256SHA256, 256},
 		{ECDSAP384SHA384, 384},
-		{RSASHA1, 1024},
-		{RSASHA256, 2048},
+		{RSASHA1, 512},
+		{RSASHA256, 512},
 		{ED25519, 256},
 	}
 
@@ -1527,6 +1629,70 @@ func TestParseCSYNC(t *testing.T) {
 		}
 		if rr.String() != o {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		}
+	}
+}
+
+func TestParseSVCB(t *testing.T) {
+	svcbs := map[string]string{
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
+		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
+	}
+	for s, o := range svcbs {
+		rr, err := NewRR(s)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", s, o, rr.String())
+		}
+	}
+}
+
+func TestParseBadSVCB(t *testing.T) {
+	header := `example.com. 3600 IN HTTPS `
+	evils := []string{
+		`0 . no-default-alpn`,     // aliasform
+		`65536 . no-default-alpn`, // bad priority
+		`1 ..`,                    // bad domain
+		`1 . no-default-alpn=1`,   // value illegal
+		`1 . key`,                 // invalid key
+		`1 . key=`,                // invalid key
+		`1 . =`,                   // invalid key
+		`1 . ==`,                  // invalid key
+		`1 . =a`,                  // invalid key
+		`1 . ""`,                  // invalid key
+		`1 . ""=`,                 // invalid key
+		`1 . "a"`,                 // invalid key
+		`1 . "a"=`,                // invalid key
+		`1 . key1=`,               // we know that key
+		`1 . key65535`,            // key reserved
+		`1 . key065534`,           // key can't be padded
+		`1 . key65534="f`,         // unterminated value
+		`1 . key65534="`,          // unterminated value
+		`1 . key65534=\2`,         // invalid numberic escape
+		`1 . key65534=\24`,        // invalid numberic escape
+		`1 . key65534=\256`,       // invalid numberic escape
+		`1 . key65534=\`,          // invalid numberic escape
+		`1 . key65534=""alpn`,     // zQuote ending needs whitespace
+		`1 . key65534="a"alpn`,    // zQuote ending needs whitespace
+		`1 . ipv6hint=1.1.1.1`,    // not ipv6
+		`1 . ipv6hint=1:1:1:1`,    // not ipv6
+		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv4hint=1.1.1.1.1`,  // not ipv4
+		`1 . ipv4hint=::fc`,       // not ipv4
+		`1 . ipv4hint=..11`,       // not ipv4
+		`1 . ipv4hint=a`,          // not ipv4
+		`1 . port=`,               // empty port
+		`1 . echconfig=YUd`,       // bad base64
+	}
+	for _, o := range evils {
+		_, err := NewRR(header + o)
+		if err == nil {
+			t.Error("failed to reject invalid RR: ", header+o)
+			continue
 		}
 	}
 }

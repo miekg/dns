@@ -30,6 +30,9 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 	if !ok {
 		return nil, false
 	}
+	if st.NumFields() == 0 {
+		return nil, false
+	}
 	if st.Field(0).Type() == scope.Lookup("RR_Header").Type() {
 		return st, false
 	}
@@ -83,10 +86,7 @@ func main() {
 	for _, name := range namedTypes {
 
 		o := scope.Lookup(name)
-		st, isEmbedded := getTypeStruct(o.Type(), scope)
-		if isEmbedded {
-			continue
-		}
+		st, _ := getTypeStruct(o.Type(), scope)
 		fmt.Fprintf(b, "func (r1 *%s) isDuplicate(_r2 RR) bool {\n", name)
 		fmt.Fprintf(b, "r2, ok := _r2.(*%s)\n", name)
 		fmt.Fprint(b, "if !ok { return false }\n")
@@ -116,6 +116,14 @@ func main() {
 						if !r1.%s[i].equals(&r2.%s[i]) {
 							return false
 						}
+					}`)
+
+					continue
+				}
+
+				if st.Tag(i) == `dns:"pairs"` {
+					o2(`if !areSVCBPairArraysEqual(r1.%s, r2.%s) {
+						return false
 					}`)
 
 					continue

@@ -6,7 +6,7 @@ import (
 
 func TestAcceptNotify(t *testing.T) {
 	HandleFunc("example.org.", handleNotify)
-	s, addrstr, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := RunLocalUDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}

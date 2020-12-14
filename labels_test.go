@@ -231,6 +231,22 @@ func TestIsFqdnEscaped(t *testing.T) {
 	}
 }
 
+func TestCanonicalName(t *testing.T) {
+	for s, expect := range map[string]string{
+		"":                 ".",
+		".":                ".",
+		"tld":              "tld.",
+		"tld.":             "tld.",
+		"example.test":     "example.test.",
+		"Lower.CASE.test.": "lower.case.test.",
+		"*.Test":           "*.test.",
+	} {
+		if got := CanonicalName(s); got != expect {
+			t.Errorf("CanonicalName(%q) = %q, expected %q", s, got, expect)
+		}
+	}
+}
+
 func BenchmarkSplitLabels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Split("www.example.com.")
