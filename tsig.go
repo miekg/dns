@@ -20,6 +20,7 @@ const (
 	HmacSHA256 = "hmac-sha256."
 	HmacSHA384 = "hmac-sha384."
 	HmacSHA512 = "hmac-sha512."
+	GSS        = "gss-tsig."
 
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
@@ -37,6 +38,14 @@ type TSIG struct {
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string `dns:"size-hex:OtherLen"`
+}
+
+// GSSAPI provides the API to plug-in RFC 3645 GSS-TSIG signed messages
+type GSSAPI interface {
+	// Generate is passed the DNS message to be signed and partial TSIG RR and returns the MAC bytes and any error.
+	Generate([]byte, *TSIG) ([]byte, error)
+	// Verify is passed the DNS message to be verified and TSIG RR and returns any error.
+	Verify([]byte, *TSIG) error
 }
 
 // TSIG has no official presentation format, but this will suffice.
@@ -98,6 +107,10 @@ type timerWireFmt struct {
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
+	return tsigGenerateGSSAPI(m, secret, requestMAC, timersOnly, nil)
+}
+
+func tsigGenerateGSSAPI(m *Msg, secret, requestMAC string, timersOnly bool, gss GSSAPI) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -131,13 +144,25 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 		h = hmac.New(sha512.New384, rawsecret)
 	case HmacSHA512:
 		h = hmac.New(sha512.New, rawsecret)
+	case GSS:
+		if gss == nil {
+			return nil, "", ErrKeyAlg
+		}
 	default:
 		return nil, "", ErrKeyAlg
 	}
-	h.Write(buf)
 	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
 	*t = *rr
-	t.MAC = hex.EncodeToString(h.Sum(nil))
+	if h != nil {
+		h.Write(buf)
+		t.MAC = hex.EncodeToString(h.Sum(nil))
+	} else {
+		mac, err := gss.Generate(buf, rr)
+		if err != nil {
+			return nil, "", err
+		}
+		t.MAC = hex.EncodeToString(mac)
+	}
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	tbuf := make([]byte, Len(t))
@@ -156,11 +181,15 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
-	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()))
+	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), nil)
+}
+
+func tsigVerifyGSSAPI(msg []byte, secret, requestMAC string, timersOnly bool, gss GSSAPI) error {
+	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), gss)
 }
 
 // actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
-func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64) error {
+func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, gss GSSAPI) error {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err
@@ -193,12 +222,20 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 		h = hmac.New(sha512.New384, rawsecret)
 	case HmacSHA512:
 		h = hmac.New(sha512.New, rawsecret)
+	case GSS:
+		if gss == nil {
+			return ErrKeyAlg
+		}
 	default:
 		return ErrKeyAlg
 	}
-	h.Write(buf)
-	if !hmac.Equal(h.Sum(nil), msgMAC) {
-		return ErrSig
+	if h != nil {
+		h.Write(buf)
+		if !hmac.Equal(h.Sum(nil), msgMAC) {
+			return ErrSig
+		}
+	} else if err := gss.Verify(buf, tsig); err != nil {
+		return err
 	}
 
 	// Fudge factor works both ways. A message can arrive before it was signed because

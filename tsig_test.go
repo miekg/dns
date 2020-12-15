@@ -79,23 +79,23 @@ func TestTsigErrors(t *testing.T) {
 	}
 
 	// the signature is valid but 'time signed' is too far from the "current time".
-	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned+301); err != ErrTime {
+	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned+301, nil); err != ErrTime {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
 	}
-	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned-301); err != ErrTime {
+	if err := tsigVerify(buildMsgData(timeSigned), testSecret, "", false, timeSigned-301, nil); err != ErrTime {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
 	}
 
 	// the signature is invalid and 'time signed' is too far.
 	// the signature should be checked first, so we should see ErrSig.
-	if err := tsigVerify(buildMsgData(timeSigned+301), testSecret, "", false, timeSigned); err != ErrSig {
+	if err := tsigVerify(buildMsgData(timeSigned+301), testSecret, "", false, timeSigned, nil); err != ErrSig {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrSig, err)
 	}
 
 	// tweak the algorithm name in the wire data, resulting in the "unknown algorithm" error.
 	msgData := buildMsgData(timeSigned)
 	copy(msgData[67:], "bogus")
-	if err := tsigVerify(msgData, testSecret, "", false, timeSigned); err != ErrKeyAlg {
+	if err := tsigVerify(msgData, testSecret, "", false, timeSigned, nil); err != ErrKeyAlg {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrKeyAlg, err)
 	}
 
@@ -104,7 +104,7 @@ func TestTsigErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := tsigVerify(msgData, testSecret, "", false, timeSigned); err != ErrNoSig {
+	if err := tsigVerify(msgData, testSecret, "", false, timeSigned, nil); err != ErrNoSig {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrNoSig, err)
 	}
 
@@ -120,7 +120,7 @@ func TestTsigErrors(t *testing.T) {
 	if msgData, err = msg.Pack(); err != nil {
 		t.Fatal(err)
 	}
-	err = tsigVerify(msgData, testSecret, "", false, timeSigned)
+	err = tsigVerify(msgData, testSecret, "", false, timeSigned, nil)
 	if err == nil || !strings.Contains(err.Error(), "overflow") {
 		t.Errorf("expected error to contain %q, but got %v", "overflow", err)
 	}
@@ -231,7 +231,7 @@ func TestTSIGHMAC224And384(t *testing.T) {
 			if mac != tc.expectedMAC {
 				t.Fatalf("MAC doesn't match: expected '%s' but got '%s'", tc.expectedMAC, mac)
 			}
-			if err = tsigVerify(msgData, tc.secret, "", false, timeSigned); err != nil {
+			if err = tsigVerify(msgData, tc.secret, "", false, timeSigned, nil); err != nil {
 				t.Error(err)
 			}
 		})
