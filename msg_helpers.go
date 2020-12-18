@@ -627,7 +627,7 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 		if err != nil || off+int(length) > len(msg) {
 			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
 		}
-		e := makeSVCBKeyValue(SVCBKey(code))
+		e := MakeSVCBKeyValue(SVCBKey(code))
 		if e == nil {
 			return nil, len(msg), &Error{err: "bad SVCB key"}
 		}

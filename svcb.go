@@ -149,7 +149,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
-			kv := makeSVCBKeyValue(svcbStringToKey(key))
+			kv := MakeSVCBKeyValue(svcbStringToKey(key))
 			if kv == nil {
 				return &ParseError{l.token, "bad SVCB key", l}
 			}
@@ -173,8 +173,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-// makeSVCBKeyValue returns an SVCBKeyValue struct with the key or nil for reserved keys.
-func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
+// MakeSVCBKeyValue returns an SVCBKeyValue struct with the key or nil for reserved keys.
+func MakeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 	switch key {
 	case SVCB_MANDATORY:
 		return new(SVCBMandatory)

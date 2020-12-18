@@ -27,7 +27,7 @@ func TestSVCB(t *testing.T) {
 
 	for _, o := range svcbs {
 		keyCode := svcbStringToKey(o.key)
-		kv := makeSVCBKeyValue(keyCode)
+		kv := MakeSVCBKeyValue(keyCode)
 		if kv == nil {
 			t.Error("failed to parse svc key: ", o.key)
 			continue
@@ -87,7 +87,7 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for _, o := range svcbs {
-		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
+		err := MakeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
 		if err == nil {
 			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).String())
 		}
