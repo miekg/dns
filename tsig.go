@@ -40,8 +40,8 @@ type TSIG struct {
 	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
-// GSSAPI provides the API to plug-in RFC 3645 GSS-TSIG signed messages
-type GSSAPI interface {
+// TsigGSS provides the API to plug-in RFC 3645 GSS-TSIG signed messages.
+type TsigGSS interface {
 	// Generate is passed the DNS message to be signed and partial TSIG RR and returns the MAC bytes and any error.
 	Generate([]byte, *TSIG) ([]byte, error)
 	// Verify is passed the DNS message to be verified and TSIG RR and returns any error.
@@ -107,10 +107,10 @@ type timerWireFmt struct {
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return tsigGenerateGSSAPI(m, secret, requestMAC, timersOnly, nil)
+	return tsigGenerateGSS(m, secret, requestMAC, timersOnly, nil)
 }
 
-func tsigGenerateGSSAPI(m *Msg, secret, requestMAC string, timersOnly bool, gss GSSAPI) ([]byte, string, error) {
+func tsigGenerateGSS(m *Msg, secret, requestMAC string, timersOnly bool, gss TsigGSS) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -184,12 +184,12 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), nil)
 }
 
-func tsigVerifyGSSAPI(msg []byte, secret, requestMAC string, timersOnly bool, gss GSSAPI) error {
+func tsigVerifyGSS(msg []byte, secret, requestMAC string, timersOnly bool, gss TsigGSS) error {
 	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), gss)
 }
 
 // actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
-func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, gss GSSAPI) error {
+func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, gss TsigGSS) error {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err

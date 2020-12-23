@@ -23,7 +23,7 @@ type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
 	UDPSize        uint16            // minimum receive buffer for UDP messages
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	GSSAPI         GSSAPI            // an implementation of the GSSAPI interface
+	TsigGSS                          // An implementation of the TsigGSS interface.
 	tsigRequestMAC string
 }
 
@@ -41,7 +41,7 @@ type Client struct {
 	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
 	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	GSSAPI         GSSAPI            // an implementation of the GSSAPI interface
+	TsigGSS                          // An implementation of the TsigGSS interface.
 	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
 	group          singleflight
 }
@@ -177,7 +177,7 @@ func (c *Client) exchange(m *Msg, co *Conn) (r *Msg, rtt time.Duration, err erro
 		co.UDPSize = c.UDPSize
 	}
 
-	co.TsigSecret, co.GSSAPI = c.TsigSecret, c.GSSAPI
+	co.TsigSecret, co.TsigGSS = c.TsigSecret, c.TsigGSS
 	t := time.Now()
 	// write with the appropriate write timeout
 	co.SetWriteDeadline(t.Add(c.getTimeoutForRequest(c.writeTimeout())))
@@ -228,7 +228,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 			return m, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = tsigVerifyGSSAPI(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.GSSAPI)
+		err = tsigVerifyGSS(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.TsigGSS)
 	}
 	return m, err
 }
@@ -309,7 +309,7 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 			return ErrSecret
 		}
-		out, mac, err = tsigGenerateGSSAPI(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.GSSAPI)
+		out, mac, err = tsigGenerateGSS(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.TsigGSS)
 		// Set for the next read, although only used in zone transfers
 		co.tsigRequestMAC = mac
 	} else {
