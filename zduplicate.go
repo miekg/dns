@@ -807,7 +807,7 @@ func (r1 *NULL) isDuplicate(_r2 RR) bool {
 		return false
 	}
 	_ = r2
-	if r1.Data != r2.Data {
+	if r1.RrData != r2.RrData {
 		return false
 	}
 	return true

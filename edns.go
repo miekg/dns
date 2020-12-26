@@ -34,7 +34,7 @@ type OPT struct {
 	Option []EDNS0 `dns:"opt"`
 }
 
-func (rr *OPT) String() string {
+func (rr *OPT) Data() string {
 	s := "\n;; OPT PSEUDOSECTION:\n; EDNS: version " + strconv.Itoa(int(rr.Version())) + "; "
 	if rr.Do() {
 		s += "flags: do; "
@@ -76,6 +76,10 @@ func (rr *OPT) String() string {
 		}
 	}
 	return s
+}
+
+func (rr *OPT) String() string {
+	return rr.Data()
 }
 
 func (rr *OPT) len(off int, compression map[string]struct{}) int {

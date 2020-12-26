@@ -217,6 +217,10 @@ func (rr *HTTPS) String() string {
 	return rr.SVCB.String()
 }
 
+func (rr *HTTPS) Data() string {
+	return rr.SVCB.Data()
+}
+
 func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 	return rr.SVCB.parse(c, o)
 }
@@ -713,14 +717,17 @@ func (s *SVCBLocal) copy() SVCBKeyValue {
 	}
 }
 
-func (rr *SVCB) String() string {
-	s := rr.Hdr.String() +
-		strconv.Itoa(int(rr.Priority)) + " " +
+func (rr *SVCB) Data() string {
+	s := strconv.Itoa(int(rr.Priority)) + " " +
 		sprintName(rr.Target)
 	for _, e := range rr.Value {
 		s += " " + e.Key().String() + "=\"" + e.String() + "\""
 	}
 	return s
+}
+
+func (rr *SVCB) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // areSVCBPairArraysEqual checks if SVCBKeyValue arrays are equal after sorting their

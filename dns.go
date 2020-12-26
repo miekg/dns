@@ -32,6 +32,9 @@ type RR interface {
 	// String returns the text representation of the resource record.
 	String() string
 
+	// Data returns the text representation of the resource data (without header).
+	Data() string
+
 	// copy returns a copy of the RR
 	copy() RR
 
@@ -88,6 +91,10 @@ func (h *RR_Header) String() string {
 	s += Class(h.Class).String() + "\t"
 	s += Type(h.Rrtype).String() + "\t"
 	return s
+}
+
+func (h *RR_Header) Data() string {
+	return ""
 }
 
 func (h *RR_Header) len(off int, compression map[string]struct{}) int {

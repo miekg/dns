@@ -24,7 +24,7 @@ type PrivateRdata interface {
 // It mocks normal RRs and implements dns.RR interface.
 type PrivateRR struct {
 	Hdr  RR_Header
-	Data PrivateRdata
+	RrData PrivateRdata
 
 	generator func() PrivateRdata // for copy
 }
@@ -32,12 +32,14 @@ type PrivateRR struct {
 // Header return the RR header of r.
 func (r *PrivateRR) Header() *RR_Header { return &r.Hdr }
 
-func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data.String() }
+func (r *PrivateRR) Data() string { return r.RrData.String() }
+
+func (r *PrivateRR) String() string { return r.Hdr.String() + r.Data()}
 
 // Private len and copy parts to satisfy RR interface.
 func (r *PrivateRR) len(off int, compression map[string]struct{}) int {
 	l := r.Hdr.len(off, compression)
-	l += r.Data.Len()
+	l += r.RrData.Len()
 	return l
 }
 
@@ -45,7 +47,7 @@ func (r *PrivateRR) copy() RR {
 	// make new RR like this:
 	rr := &PrivateRR{r.Hdr, r.generator(), r.generator}
 
-	if err := r.Data.Copy(rr.Data); err != nil {
+	if err := r.RrData.Copy(rr.RrData); err != nil {
 		panic("dns: got value that could not be used to copy Private rdata: " + err.Error())
 	}
 
@@ -53,7 +55,7 @@ func (r *PrivateRR) copy() RR {
 }
 
 func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
-	n, err := r.Data.Pack(msg[off:])
+	n, err := r.RrData.Pack(msg[off:])
 	if err != nil {
 		return len(msg), err
 	}
@@ -62,7 +64,7 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 }
 
 func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
-	off1, err := r.Data.Unpack(msg[off:])
+	off1, err := r.RrData.Unpack(msg[off:])
 	off += off1
 	return off, err
 }
@@ -82,7 +84,7 @@ Fetch:
 		}
 	}
 
-	err := r.Data.Parse(text)
+	err := r.RrData.Parse(text)
 	if err != nil {
 		return &ParseError{"", err.Error(), l}
 	}

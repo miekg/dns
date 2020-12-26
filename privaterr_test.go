@@ -78,7 +78,7 @@ func TestPrivateByteSlice(t *testing.T) {
 	}
 
 	custrr := rr.(*dns.PrivateRR)
-	if ln := custrr.Data.Len() + len(custrr.Header().Name) + 11; ln != off {
+	if ln := custrr.RrData.Len() + len(custrr.Header().Name) + 11; ln != off {
 		t.Errorf("offset is not matching to length of Private RR: %d!=%d", off, ln)
 	}
 

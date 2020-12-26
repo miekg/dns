@@ -245,6 +245,8 @@ type ANY struct {
 
 func (rr *ANY) String() string { return rr.Hdr.String() }
 
+func (rr *ANY) Data() string { return "" }
+
 func (rr *ANY) parse(c *zlexer, origin string) *ParseError {
 	panic("dns: internal error: parse should never be called on ANY")
 }
@@ -252,12 +254,16 @@ func (rr *ANY) parse(c *zlexer, origin string) *ParseError {
 // NULL RR. See RFC 1035.
 type NULL struct {
 	Hdr  RR_Header
-	Data string `dns:"any"`
+	RrData string `dns:"any"`
+}
+
+func (rr *NULL) Data() string {
+	return rr.RrData
 }
 
 func (rr *NULL) String() string {
 	// There is no presentation format; prefix string with a comment.
-	return ";" + rr.Hdr.String() + rr.Data
+	return ";" + rr.Hdr.String() + rr.Data()
 }
 
 func (rr *NULL) parse(c *zlexer, origin string) *ParseError {
@@ -270,7 +276,9 @@ type CNAME struct {
 	Target string `dns:"cdomain-name"`
 }
 
-func (rr *CNAME) String() string { return rr.Hdr.String() + sprintName(rr.Target) }
+func (rr *CNAME) Data() string { return sprintName(rr.Target) }
+
+func (rr *CNAME) String() string { return rr.Hdr.String() + rr.Data() }
 
 // HINFO RR. See RFC 1034.
 type HINFO struct {
@@ -279,8 +287,12 @@ type HINFO struct {
 	Os  string
 }
 
+func (rr *HINFO) Data() string {
+	return sprintTxt([]string{rr.Cpu, rr.Os})
+}
+
 func (rr *HINFO) String() string {
-	return rr.Hdr.String() + sprintTxt([]string{rr.Cpu, rr.Os})
+	return rr.Hdr.String() + rr.Data()
 }
 
 // MB RR. See RFC 1035.
@@ -289,7 +301,9 @@ type MB struct {
 	Mb  string `dns:"cdomain-name"`
 }
 
-func (rr *MB) String() string { return rr.Hdr.String() + sprintName(rr.Mb) }
+func (rr *MB) Data() string { return sprintName(rr.Mb) }
+
+func (rr *MB) String() string { return rr.Hdr.String() + rr.Data() }
 
 // MG RR. See RFC 1035.
 type MG struct {
@@ -297,7 +311,9 @@ type MG struct {
 	Mg  string `dns:"cdomain-name"`
 }
 
-func (rr *MG) String() string { return rr.Hdr.String() + sprintName(rr.Mg) }
+func (rr *MG) Data() string { return sprintName(rr.Mg) }
+
+func (rr *MG) String() string { return rr.Hdr.String() + rr.Data() }
 
 // MINFO RR. See RFC 1035.
 type MINFO struct {
@@ -306,9 +322,11 @@ type MINFO struct {
 	Email string `dns:"cdomain-name"`
 }
 
-func (rr *MINFO) String() string {
-	return rr.Hdr.String() + sprintName(rr.Rmail) + " " + sprintName(rr.Email)
+func (rr *MINFO) Data() string {
+	return sprintName(rr.Rmail) + " " + sprintName(rr.Email)
 }
+
+func (rr *MINFO) String() string { return rr.Hdr.String() + rr.Data() }
 
 // MR RR. See RFC 1035.
 type MR struct {
@@ -316,8 +334,10 @@ type MR struct {
 	Mr  string `dns:"cdomain-name"`
 }
 
+func (rr *MR) Data() string { return sprintName(rr.Mr) }
+
 func (rr *MR) String() string {
-	return rr.Hdr.String() + sprintName(rr.Mr)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // MF RR. See RFC 1035.
@@ -326,8 +346,12 @@ type MF struct {
 	Mf  string `dns:"cdomain-name"`
 }
 
+func (rr *MF) Data() string {
+	return sprintName(rr.Mf)
+}
+
 func (rr *MF) String() string {
-	return rr.Hdr.String() + sprintName(rr.Mf)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // MD RR. See RFC 1035.
@@ -336,8 +360,10 @@ type MD struct {
 	Md  string `dns:"cdomain-name"`
 }
 
+func (rr *MD) Data() string { return sprintName(rr.Md) }
+
 func (rr *MD) String() string {
-	return rr.Hdr.String() + sprintName(rr.Md)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // MX RR. See RFC 1035.
@@ -347,8 +373,12 @@ type MX struct {
 	Mx         string `dns:"cdomain-name"`
 }
 
+func (rr *MX) Data() string {
+	return strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Mx)
+}
+
 func (rr *MX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Mx)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // AFSDB RR. See RFC 1183.
@@ -358,8 +388,12 @@ type AFSDB struct {
 	Hostname string `dns:"domain-name"`
 }
 
+func (rr *AFSDB) Data() string {
+	return strconv.Itoa(int(rr.Subtype)) + " " + sprintName(rr.Hostname)
+}
+
 func (rr *AFSDB) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Subtype)) + " " + sprintName(rr.Hostname)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // X25 RR. See RFC 1183, Section 3.1.
@@ -368,8 +402,12 @@ type X25 struct {
 	PSDNAddress string
 }
 
+func (rr *X25) Data() string {
+	return rr.PSDNAddress
+}
+
 func (rr *X25) String() string {
-	return rr.Hdr.String() + rr.PSDNAddress
+	return rr.Hdr.String() + rr.Data()
 }
 
 // RT RR. See RFC 1183, Section 3.3.
@@ -379,8 +417,12 @@ type RT struct {
 	Host       string `dns:"domain-name"` // RFC 3597 prohibits compressing records not defined in RFC 1035.
 }
 
+func (rr *RT) Data() string {
+	return strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Host)
+}
+
 func (rr *RT) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Host)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // NS RR. See RFC 1035.
@@ -389,8 +431,12 @@ type NS struct {
 	Ns  string `dns:"cdomain-name"`
 }
 
+func (rr *NS) Data() string {
+	return sprintName(rr.Ns)
+}
+
 func (rr *NS) String() string {
-	return rr.Hdr.String() + sprintName(rr.Ns)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // PTR RR. See RFC 1035.
@@ -399,8 +445,12 @@ type PTR struct {
 	Ptr string `dns:"cdomain-name"`
 }
 
+func (rr *PTR) Data() string {
+	return sprintName(rr.Ptr)
+}
+
 func (rr *PTR) String() string {
-	return rr.Hdr.String() + sprintName(rr.Ptr)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // RP RR. See RFC 1138, Section 2.2.
@@ -410,8 +460,12 @@ type RP struct {
 	Txt  string `dns:"domain-name"`
 }
 
+func (rr *RP) Data() string {
+	return sprintName(rr.Mbox) + " " + sprintName(rr.Txt)
+}
+
 func (rr *RP) String() string {
-	return rr.Hdr.String() + sprintName(rr.Mbox) + " " + sprintName(rr.Txt)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // SOA RR. See RFC 1035.
@@ -426,13 +480,17 @@ type SOA struct {
 	Minttl  uint32
 }
 
-func (rr *SOA) String() string {
-	return rr.Hdr.String() + sprintName(rr.Ns) + " " + sprintName(rr.Mbox) +
+func (rr *SOA) Data() string {
+	return sprintName(rr.Ns) + " " + sprintName(rr.Mbox) +
 		" " + strconv.FormatInt(int64(rr.Serial), 10) +
 		" " + strconv.FormatInt(int64(rr.Refresh), 10) +
 		" " + strconv.FormatInt(int64(rr.Retry), 10) +
 		" " + strconv.FormatInt(int64(rr.Expire), 10) +
 		" " + strconv.FormatInt(int64(rr.Minttl), 10)
+}
+
+func (rr *SOA) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // TXT RR. See RFC 1035.
@@ -441,7 +499,9 @@ type TXT struct {
 	Txt []string `dns:"txt"`
 }
 
-func (rr *TXT) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
+func (rr *TXT) Data() string { return sprintTxt(rr.Txt) }
+
+func (rr *TXT) String() string { return rr.Hdr.String() + rr.Data() }
 
 func sprintName(s string) string {
 	var dst strings.Builder
@@ -618,7 +678,11 @@ type SPF struct {
 	Txt []string `dns:"txt"`
 }
 
-func (rr *SPF) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
+func (rr *SPF) Data() string {
+	return sprintTxt(rr.Txt)
+}
+
+func (rr *SPF) String() string { return rr.Hdr.String() + rr.Data() }
 
 // AVC RR. See https://www.iana.org/assignments/dns-parameters/AVC/avc-completed-template.
 type AVC struct {
@@ -626,7 +690,9 @@ type AVC struct {
 	Txt []string `dns:"txt"`
 }
 
-func (rr *AVC) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
+func (rr *AVC) Data() string { return sprintTxt(rr.Txt) }
+
+func (rr *AVC) String() string { return rr.Hdr.String() + rr.Data() }
 
 // SRV RR. See RFC 2782.
 type SRV struct {
@@ -637,11 +703,14 @@ type SRV struct {
 	Target   string `dns:"domain-name"`
 }
 
-func (rr *SRV) String() string {
-	return rr.Hdr.String() +
-		strconv.Itoa(int(rr.Priority)) + " " +
+func (rr *SRV) Data() string {
+	return strconv.Itoa(int(rr.Priority)) + " " +
 		strconv.Itoa(int(rr.Weight)) + " " +
 		strconv.Itoa(int(rr.Port)) + " " + sprintName(rr.Target)
+}
+
+func (rr *SRV) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // NAPTR RR. See RFC 2915.
@@ -655,14 +724,18 @@ type NAPTR struct {
 	Replacement string `dns:"domain-name"`
 }
 
-func (rr *NAPTR) String() string {
-	return rr.Hdr.String() +
-		strconv.Itoa(int(rr.Order)) + " " +
+func (rr *NAPTR) Data() string {
+	return strconv.Itoa(int(rr.Order)) + " " +
 		strconv.Itoa(int(rr.Preference)) + " " +
 		"\"" + rr.Flags + "\" " +
 		"\"" + rr.Service + "\" " +
 		"\"" + rr.Regexp + "\" " +
 		rr.Replacement
+}
+
+func (rr *NAPTR) String() string {
+	return rr.Hdr.String() + rr.Data()
+
 }
 
 // CERT RR. See RFC 4398.
@@ -674,7 +747,7 @@ type CERT struct {
 	Certificate string `dns:"base64"`
 }
 
-func (rr *CERT) String() string {
+func (rr *CERT) Data() string {
 	var (
 		ok                  bool
 		certtype, algorithm string
@@ -685,10 +758,14 @@ func (rr *CERT) String() string {
 	if algorithm, ok = AlgorithmToString[rr.Algorithm]; !ok {
 		algorithm = strconv.Itoa(int(rr.Algorithm))
 	}
-	return rr.Hdr.String() + certtype +
+	return certtype +
 		" " + strconv.Itoa(int(rr.KeyTag)) +
 		" " + algorithm +
 		" " + rr.Certificate
+}
+
+func (rr *CERT) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // DNAME RR. See RFC 2672.
@@ -697,21 +774,29 @@ type DNAME struct {
 	Target string `dns:"domain-name"`
 }
 
-func (rr *DNAME) String() string {
-	return rr.Hdr.String() + sprintName(rr.Target)
+func (rr *DNAME) Data() string {
+	return sprintName(rr.Target)
 }
 
-// A RR. See RFC 1035.
+func (rr *DNAME) String() string {
+    return rr.Hdr.String() + rr.Data()
+}
+
+//u RR. See RFC 1035.
 type A struct {
 	Hdr RR_Header
 	A   net.IP `dns:"a"`
 }
 
-func (rr *A) String() string {
+func (rr *A) Data() string {
 	if rr.A == nil {
-		return rr.Hdr.String()
+		return ""
 	}
-	return rr.Hdr.String() + rr.A.String()
+	return rr.A.String()
+}
+
+func (rr *A) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // AAAA RR. See RFC 3596.
@@ -720,11 +805,15 @@ type AAAA struct {
 	AAAA net.IP `dns:"aaaa"`
 }
 
-func (rr *AAAA) String() string {
+func (rr *AAAA) Data() string {
 	if rr.AAAA == nil {
-		return rr.Hdr.String()
+		return ""
 	}
-	return rr.Hdr.String() + rr.AAAA.String()
+	return rr.AAAA.String()
+}
+
+func (rr *AAAA) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // PX RR. See RFC 2163.
@@ -735,8 +824,12 @@ type PX struct {
 	Mapx400    string `dns:"domain-name"`
 }
 
+func (rr *PX) Data() string {
+	return strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Map822) + " " + sprintName(rr.Mapx400)
+}
+
 func (rr *PX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Map822) + " " + sprintName(rr.Mapx400)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // GPOS RR. See RFC 1712.
@@ -747,8 +840,12 @@ type GPOS struct {
 	Altitude  string
 }
 
+func (rr *GPOS) Data() string {
+	return rr.Longitude + " " + rr.Latitude + " " + rr.Altitude
+}
+
 func (rr *GPOS) String() string {
-	return rr.Hdr.String() + rr.Longitude + " " + rr.Latitude + " " + rr.Altitude
+	return rr.Hdr.String() + rr.Data()
 }
 
 // LOC RR. See RFC RFC 1876.
@@ -782,8 +879,7 @@ func cmToM(m, e uint8) string {
 	return s
 }
 
-func (rr *LOC) String() string {
-	s := rr.Hdr.String()
+func (rr *LOC) Data() string {
 
 	lat := rr.Latitude
 	ns := "N"
@@ -797,7 +893,7 @@ func (rr *LOC) String() string {
 	lat = lat % LOC_DEGREES
 	m := lat / LOC_HOURS
 	lat = lat % LOC_HOURS
-	s += fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lat)/1000, ns)
+	s := fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lat)/1000, ns)
 
 	lon := rr.Longitude
 	ew := "E"
@@ -828,6 +924,10 @@ func (rr *LOC) String() string {
 	return s
 }
 
+func (rr *LOC) String() string {
+	return rr.Hdr.String() + rr.Data()
+}
+
 // SIG RR. See RFC 2535. The SIG RR is identical to RRSIG and nowadays only used for SIG(0), See RFC 2931.
 type SIG struct {
 	RRSIG
@@ -847,9 +947,8 @@ type RRSIG struct {
 	Signature   string `dns:"base64"`
 }
 
-func (rr *RRSIG) String() string {
-	s := rr.Hdr.String()
-	s += Type(rr.TypeCovered).String()
+func (rr *RRSIG) Data() string {
+	s := Type(rr.TypeCovered).String()
 	s += " " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Labels)) +
 		" " + strconv.FormatInt(int64(rr.OrigTtl), 10) +
@@ -861,6 +960,10 @@ func (rr *RRSIG) String() string {
 	return s
 }
 
+func (rr *RRSIG) String() string {
+	return rr.Hdr.String() + rr.Data()
+}
+
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
 	Hdr        RR_Header
@@ -868,12 +971,17 @@ type NSEC struct {
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
-func (rr *NSEC) String() string {
-	s := rr.Hdr.String() + sprintName(rr.NextDomain)
+
+func (rr *NSEC) Data() string {
+	s := sprintName(rr.NextDomain)
 	for _, t := range rr.TypeBitMap {
 		s += " " + Type(t).String()
 	}
 	return s
+}
+
+func (rr *NSEC) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 func (rr *NSEC) len(off int, compression map[string]struct{}) int {
@@ -898,11 +1006,15 @@ type DS struct {
 	Digest     string `dns:"hex"`
 }
 
-func (rr *DS) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
+func (rr *DS) Data() string {
+	return strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + strings.ToUpper(rr.Digest)
+}
+
+func (rr *DS) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // KX RR. See RFC 2230.
@@ -912,9 +1024,13 @@ type KX struct {
 	Exchanger  string `dns:"domain-name"`
 }
 
-func (rr *KX) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+func (rr *KX) Data() string {
+	return strconv.Itoa(int(rr.Preference)) +
 		" " + sprintName(rr.Exchanger)
+}
+
+func (rr *KX) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // TA RR. See http://www.watson.org/~weiler/INI1999-19.pdf.
@@ -926,11 +1042,15 @@ type TA struct {
 	Digest     string `dns:"hex"`
 }
 
-func (rr *TA) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.KeyTag)) +
+func (rr *TA) Data() string {
+	return strconv.Itoa(int(rr.KeyTag)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.DigestType)) +
 		" " + strings.ToUpper(rr.Digest)
+}
+
+func (rr *TA) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // TALINK RR. See https://www.iana.org/assignments/dns-parameters/TALINK/talink-completed-template.
@@ -940,9 +1060,13 @@ type TALINK struct {
 	NextName     string `dns:"domain-name"`
 }
 
+func (rr *TALINK) Data() string {
+	return sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
+}
+
 func (rr *TALINK) String() string {
-	return rr.Hdr.String() +
-		sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
+	return rr.Hdr.String() + rr.Data()
+
 }
 
 // SSHFP RR. See RFC RFC 4255.
@@ -953,10 +1077,14 @@ type SSHFP struct {
 	FingerPrint string `dns:"hex"`
 }
 
-func (rr *SSHFP) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Algorithm)) +
+func (rr *SSHFP) Data() string {
+	return strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Type)) +
 		" " + strings.ToUpper(rr.FingerPrint)
+}
+
+func (rr *SSHFP) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // KEY RR. See RFC RFC 2535.
@@ -978,11 +1106,15 @@ type DNSKEY struct {
 	PublicKey string `dns:"base64"`
 }
 
-func (rr *DNSKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+func (rr *DNSKEY) Data() string {
+	return strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
+}
+
+func (rr *DNSKEY) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // RKEY RR. See https://www.iana.org/assignments/dns-parameters/RKEY/rkey-completed-template.
@@ -994,11 +1126,15 @@ type RKEY struct {
 	PublicKey string `dns:"base64"`
 }
 
-func (rr *RKEY) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flags)) +
+func (rr *RKEY) Data() string {
+	return strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
+}
+
+func (rr *RKEY) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // NSAPPTR RR. See RFC 1348.
@@ -1007,7 +1143,9 @@ type NSAPPTR struct {
 	Ptr string `dns:"domain-name"`
 }
 
-func (rr *NSAPPTR) String() string { return rr.Hdr.String() + sprintName(rr.Ptr) }
+func (rr *NSAPPTR) Data() string { return sprintName(rr.Ptr) }
+
+func (rr *NSAPPTR) String() string { return rr.Hdr.String() + rr.Data() }
 
 // NSEC3 RR. See RFC 5155.
 type NSEC3 struct {
@@ -1022,9 +1160,8 @@ type NSEC3 struct {
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
-func (rr *NSEC3) String() string {
-	s := rr.Hdr.String()
-	s += strconv.Itoa(int(rr.Hash)) +
+func (rr *NSEC3) Data() string {
+	s := strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
 		" " + saltToString(rr.Salt) +
@@ -1033,6 +1170,10 @@ func (rr *NSEC3) String() string {
 		s += " " + Type(t).String()
 	}
 	return s
+}
+
+func (rr *NSEC3) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 func (rr *NSEC3) len(off int, compression map[string]struct{}) int {
@@ -1052,13 +1193,16 @@ type NSEC3PARAM struct {
 	Salt       string `dns:"size-hex:SaltLength"`
 }
 
-func (rr *NSEC3PARAM) String() string {
-	s := rr.Hdr.String()
-	s += strconv.Itoa(int(rr.Hash)) +
+func (rr *NSEC3PARAM) Data() string {
+	s := strconv.Itoa(int(rr.Hash)) +
 		" " + strconv.Itoa(int(rr.Flags)) +
 		" " + strconv.Itoa(int(rr.Iterations)) +
 		" " + saltToString(rr.Salt)
 	return s
+}
+
+func (rr *NSEC3PARAM) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // TKEY RR. See RFC 2930.
@@ -1076,9 +1220,8 @@ type TKEY struct {
 }
 
 // TKEY has no official presentation format, but this will suffice.
-func (rr *TKEY) String() string {
-	s := ";" + rr.Hdr.String() +
-		" " + rr.Algorithm +
+func (rr *TKEY) Data() string {
+	s := rr.Algorithm +
 		" " + TimeToString(rr.Inception) +
 		" " + TimeToString(rr.Expiration) +
 		" " + strconv.Itoa(int(rr.Mode)) +
@@ -1090,17 +1233,25 @@ func (rr *TKEY) String() string {
 	return s
 }
 
+func (rr *TKEY) String() string {
+	return ";" + rr.Hdr.String() + " " + rr.Data()
+}
+
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
 type RFC3597 struct {
 	Hdr   RR_Header
 	Rdata string `dns:"hex"`
 }
 
+func (rr *RFC3597) Data() string {
+	return "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+}
+
 func (rr *RFC3597) String() string {
 	// Let's call it a hack
 	s := rfc3597Header(rr.Hdr)
 
-	s += "\\# " + strconv.Itoa(len(rr.Rdata)/2) + " " + rr.Rdata
+	s += rr.Data()
 	return s
 }
 
@@ -1122,10 +1273,14 @@ type URI struct {
 	Target   string `dns:"octet"`
 }
 
+func (rr *URI) Data() string {
+	return strconv.Itoa(int(rr.Priority)) +
+		" " + strconv.Itoa(int(rr.Weight)) + " " + sprintTxtOctet(rr.Target)
+}
+
 // rr.Target to be parsed as a sequence of character encoded octets according to RFC 3986
 func (rr *URI) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Priority)) +
-		" " + strconv.Itoa(int(rr.Weight)) + " " + sprintTxtOctet(rr.Target)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // DHCID RR. See RFC 4701.
@@ -1134,7 +1289,11 @@ type DHCID struct {
 	Digest string `dns:"base64"`
 }
 
-func (rr *DHCID) String() string { return rr.Hdr.String() + rr.Digest }
+func (rr *DHCID) Data() string {
+	return rr.Digest
+}
+
+func (rr *DHCID) String() string { return rr.Hdr.String() + rr.Data() }
 
 // TLSA RR. See RFC 6698.
 type TLSA struct {
@@ -1145,12 +1304,16 @@ type TLSA struct {
 	Certificate  string `dns:"hex"`
 }
 
-func (rr *TLSA) String() string {
-	return rr.Hdr.String() +
-		strconv.Itoa(int(rr.Usage)) +
+func (rr *TLSA) Data() string {
+	return strconv.Itoa(int(rr.Usage)) +
 		" " + strconv.Itoa(int(rr.Selector)) +
 		" " + strconv.Itoa(int(rr.MatchingType)) +
 		" " + rr.Certificate
+}
+
+func (rr *TLSA) String() string {
+	return rr.Hdr.String() + rr.Data()
+
 }
 
 // SMIMEA RR. See RFC 8162.
@@ -1162,9 +1325,8 @@ type SMIMEA struct {
 	Certificate  string `dns:"hex"`
 }
 
-func (rr *SMIMEA) String() string {
-	s := rr.Hdr.String() +
-		strconv.Itoa(int(rr.Usage)) +
+func (rr *SMIMEA) Data() string {
+	s := strconv.Itoa(int(rr.Usage)) +
 		" " + strconv.Itoa(int(rr.Selector)) +
 		" " + strconv.Itoa(int(rr.MatchingType))
 
@@ -1174,6 +1336,10 @@ func (rr *SMIMEA) String() string {
 	sx := splitN(rr.Certificate, 1024) // conservative value here
 	s += " " + strings.Join(sx, " ")
 	return s
+}
+
+func (rr *SMIMEA) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // HIP RR. See RFC 8005.
@@ -1187,9 +1353,8 @@ type HIP struct {
 	RendezvousServers  []string `dns:"domain-name"`
 }
 
-func (rr *HIP) String() string {
-	s := rr.Hdr.String() +
-		strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
+func (rr *HIP) Data() string {
+	s := strconv.Itoa(int(rr.PublicKeyAlgorithm)) +
 		" " + rr.Hit +
 		" " + rr.PublicKey
 	for _, d := range rr.RendezvousServers {
@@ -1198,13 +1363,21 @@ func (rr *HIP) String() string {
 	return s
 }
 
+func (rr *HIP) String() string {
+	return rr.Hdr.String() + rr.Data()
+}
+
 // NINFO RR. See https://www.iana.org/assignments/dns-parameters/NINFO/ninfo-completed-template.
 type NINFO struct {
 	Hdr    RR_Header
 	ZSData []string `dns:"txt"`
 }
 
-func (rr *NINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.ZSData) }
+func (rr *NINFO) Data() string {
+	return sprintTxt(rr.ZSData)
+}
+
+func (rr *NINFO) String() string { return rr.Hdr.String() + rr.Data() }
 
 // NID RR. See RFC RFC 6742.
 type NID struct {
@@ -1213,11 +1386,15 @@ type NID struct {
 	NodeID     uint64
 }
 
-func (rr *NID) String() string {
-	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+func (rr *NID) Data() string {
+	s := strconv.Itoa(int(rr.Preference))
 	node := fmt.Sprintf("%0.16x", rr.NodeID)
 	s += " " + node[0:4] + ":" + node[4:8] + ":" + node[8:12] + ":" + node[12:16]
 	return s
+}
+
+func (rr *NID) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // L32 RR, See RFC 6742.
@@ -1227,12 +1404,16 @@ type L32 struct {
 	Locator32  net.IP `dns:"a"`
 }
 
-func (rr *L32) String() string {
+func (rr *L32) Data() string {
 	if rr.Locator32 == nil {
-		return rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+		return strconv.Itoa(int(rr.Preference))
 	}
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) +
+	return strconv.Itoa(int(rr.Preference)) +
 		" " + rr.Locator32.String()
+}
+
+func (rr *L32) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // L64 RR, See RFC 6742.
@@ -1242,11 +1423,15 @@ type L64 struct {
 	Locator64  uint64
 }
 
-func (rr *L64) String() string {
-	s := rr.Hdr.String() + strconv.Itoa(int(rr.Preference))
+func (rr *L64) Data() string {
+	s := strconv.Itoa(int(rr.Preference))
 	node := fmt.Sprintf("%0.16X", rr.Locator64)
 	s += " " + node[0:4] + ":" + node[4:8] + ":" + node[8:12] + ":" + node[12:16]
 	return s
+}
+
+func (rr *L64) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // LP RR. See RFC 6742.
@@ -1256,8 +1441,12 @@ type LP struct {
 	Fqdn       string `dns:"domain-name"`
 }
 
+func (rr *LP) Data() string {
+	return strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Fqdn)
+}
+
 func (rr *LP) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Preference)) + " " + sprintName(rr.Fqdn)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // EUI48 RR. See RFC 7043.
@@ -1266,7 +1455,9 @@ type EUI48 struct {
 	Address uint64 `dns:"uint48"`
 }
 
-func (rr *EUI48) String() string { return rr.Hdr.String() + euiToString(rr.Address, 48) }
+func (rr *EUI48) Data() string { return euiToString(rr.Address, 48) }
+
+func (rr *EUI48) String() string { return rr.Hdr.String() + rr.Data() }
 
 // EUI64 RR. See RFC 7043.
 type EUI64 struct {
@@ -1274,7 +1465,9 @@ type EUI64 struct {
 	Address uint64
 }
 
-func (rr *EUI64) String() string { return rr.Hdr.String() + euiToString(rr.Address, 64) }
+func (rr *EUI64) Data() string { return euiToString(rr.Address, 64) }
+
+func (rr *EUI64) String() string { return rr.Hdr.String() + rr.Data() }
 
 // CAA RR. See RFC 6844.
 type CAA struct {
@@ -1284,9 +1477,13 @@ type CAA struct {
 	Value string `dns:"octet"`
 }
 
+func (rr *CAA) Data() string {
+	return strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintTxtOctet(rr.Value)
+}
+
 // rr.Value Is the character-string encoding of the value field as specified in RFC 1035, Section 5.1.
 func (rr *CAA) String() string {
-	return rr.Hdr.String() + strconv.Itoa(int(rr.Flag)) + " " + rr.Tag + " " + sprintTxtOctet(rr.Value)
+	return rr.Hdr.String() + rr.Data()
 }
 
 // UID RR. Deprecated, IANA-Reserved.
@@ -1295,7 +1492,9 @@ type UID struct {
 	Uid uint32
 }
 
-func (rr *UID) String() string { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Uid), 10) }
+func (rr *UID) Data() string { return strconv.FormatInt(int64(rr.Uid), 10) }
+
+func (rr *UID) String() string { return rr.Hdr.String() + rr.Data() }
 
 // GID RR. Deprecated, IANA-Reserved.
 type GID struct {
@@ -1303,7 +1502,9 @@ type GID struct {
 	Gid uint32
 }
 
-func (rr *GID) String() string { return rr.Hdr.String() + strconv.FormatInt(int64(rr.Gid), 10) }
+func (rr *GID) Data() string { return strconv.FormatInt(int64(rr.Gid), 10) }
+
+func (rr *GID) String() string { return rr.Hdr.String() + rr.Data() }
 
 // UINFO RR. Deprecated, IANA-Reserved.
 type UINFO struct {
@@ -1311,7 +1512,11 @@ type UINFO struct {
 	Uinfo string
 }
 
-func (rr *UINFO) String() string { return rr.Hdr.String() + sprintTxt([]string{rr.Uinfo}) }
+func (rr *UINFO) Data() string {
+	return sprintTxt([]string{rr.Uinfo})
+}
+
+func (rr *UINFO) String() string { return rr.Hdr.String() + rr.Data() }
 
 // EID RR. See http://ana-3.lcs.mit.edu/~jnc/nimrod/dns.txt.
 type EID struct {
@@ -1319,7 +1524,9 @@ type EID struct {
 	Endpoint string `dns:"hex"`
 }
 
-func (rr *EID) String() string { return rr.Hdr.String() + strings.ToUpper(rr.Endpoint) }
+func (rr *EID) Data() string { return strings.ToUpper(rr.Endpoint) }
+
+func (rr *EID) String() string { return rr.Hdr.String() + rr.Data() }
 
 // NIMLOC RR. See http://ana-3.lcs.mit.edu/~jnc/nimrod/dns.txt.
 type NIMLOC struct {
@@ -1327,7 +1534,9 @@ type NIMLOC struct {
 	Locator string `dns:"hex"`
 }
 
-func (rr *NIMLOC) String() string { return rr.Hdr.String() + strings.ToUpper(rr.Locator) }
+func (rr *NIMLOC) Data() string { return strings.ToUpper(rr.Locator) }
+
+func (rr *NIMLOC) String() string { return rr.Hdr.String() + rr.Data() }
 
 // OPENPGPKEY RR. See RFC 7929.
 type OPENPGPKEY struct {
@@ -1335,7 +1544,9 @@ type OPENPGPKEY struct {
 	PublicKey string `dns:"base64"`
 }
 
-func (rr *OPENPGPKEY) String() string { return rr.Hdr.String() + rr.PublicKey }
+func (rr *OPENPGPKEY) Data() string { return rr.PublicKey }
+
+func (rr *OPENPGPKEY) String() string { return rr.Hdr.String() + rr.Data() }
 
 // CSYNC RR. See RFC 7477.
 type CSYNC struct {
@@ -1345,13 +1556,17 @@ type CSYNC struct {
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
-func (rr *CSYNC) String() string {
-	s := rr.Hdr.String() + strconv.FormatInt(int64(rr.Serial), 10) + " " + strconv.Itoa(int(rr.Flags))
+func (rr *CSYNC) Data() string {
+	s := strconv.FormatInt(int64(rr.Serial), 10) + " " + strconv.Itoa(int(rr.Flags))
 
 	for _, t := range rr.TypeBitMap {
 		s += " " + Type(t).String()
 	}
 	return s
+}
+
+func (rr *CSYNC) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
@@ -1374,9 +1589,8 @@ type APLPrefix struct {
 }
 
 // String returns presentation form of the APL record.
-func (rr *APL) String() string {
+func (rr *APL) Data() string {
 	var sb strings.Builder
-	sb.WriteString(rr.Hdr.String())
 	for i, p := range rr.Prefixes {
 		if i > 0 {
 			sb.WriteByte(' ')
@@ -1384,6 +1598,10 @@ func (rr *APL) String() string {
 		sb.WriteString(p.str())
 	}
 	return sb.String()
+}
+
+func (rr *APL) String() string {
+	return rr.Hdr.String() + rr.Data()
 }
 
 // str returns presentation form of the APL prefix.
