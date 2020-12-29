@@ -132,7 +132,6 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 340{1,2,3} - NAPTR record
 * 3445 - Limiting the scope of (DNS)KEY
 * 3597 - Unknown RRs
-* 3645 - GSS-TSIG
 * 403{3,4,5} - DNSSEC + validation functions
 * 4255 - SSHFP record
 * 4343 - Case insensitivity

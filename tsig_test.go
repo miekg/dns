@@ -248,21 +248,21 @@ var (
 	testGoodMAC   = []byte{0, 1, 2, 3}
 )
 
-// testGSS always generates the same MAC and only accepts the one signature
-type testGSS struct {
+// testProvider always generates the same MAC and only accepts the one signature
+type testProvider struct {
 	GenerateAllKeys bool
 }
 
-func (gss *testGSS) Generate(_ []byte, t *TSIG) ([]byte, error) {
+func (provider *testProvider) Generate(_ []byte, t *TSIG) ([]byte, error) {
 	switch {
-	case t.Hdr.Name == testGoodKeyName || gss.GenerateAllKeys:
+	case t.Hdr.Name == testGoodKeyName || provider.GenerateAllKeys:
 		return testGoodMAC, nil
 	default:
 		return nil, testErrBadKey
 	}
 }
 
-func (*testGSS) Verify(_ []byte, t *TSIG) error {
+func (*testProvider) Verify(_ []byte, t *TSIG) error {
 	switch t.Hdr.Name {
 	case testGoodKeyName:
 		return nil
@@ -271,7 +271,7 @@ func (*testGSS) Verify(_ []byte, t *TSIG) error {
 	}
 }
 
-func TestTsigGenerateGSS(t *testing.T) {
+func TestTsigGenerateProvider(t *testing.T) {
 	tables := map[string]struct {
 		keyname string
 		mac     []byte
@@ -293,7 +293,7 @@ func TestTsigGenerateGSS(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tsig := TSIG{
 				Hdr:        RR_Header{Name: table.keyname, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0},
-				Algorithm:  GSS,
+				Algorithm:  HmacSHA1,
 				TimeSigned: timeSigned,
 				Fudge:      300,
 				OrigId:     42,
@@ -304,7 +304,7 @@ func TestTsigGenerateGSS(t *testing.T) {
 				Extra:    []RR{&tsig},
 			}
 
-			_, mac, err := tsigGenerateGSS(req, "", "", false, new(testGSS))
+			_, mac, err := tsigGenerateProvider(req, "", "", false, new(testProvider))
 			if err != table.err {
 				t.Fatalf("error doesn't match: expected '%s' but got '%s'", table.err, err)
 			}
@@ -316,7 +316,7 @@ func TestTsigGenerateGSS(t *testing.T) {
 	}
 }
 
-func TestTsigVerifyGSS(t *testing.T) {
+func TestTsigVerifyProvider(t *testing.T) {
 	tables := map[string]struct {
 		keyname string
 		err     error
@@ -335,7 +335,7 @@ func TestTsigVerifyGSS(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tsig := TSIG{
 				Hdr:        RR_Header{Name: table.keyname, Rrtype: TypeTSIG, Class: ClassANY, Ttl: 0},
-				Algorithm:  GSS,
+				Algorithm:  HmacSHA1,
 				TimeSigned: timeSigned,
 				Fudge:      300,
 				OrigId:     42,
@@ -346,12 +346,12 @@ func TestTsigVerifyGSS(t *testing.T) {
 				Extra:    []RR{&tsig},
 			}
 
-			gss := &testGSS{true}
-			msgData, _, err := tsigGenerateGSS(req, "", "", false, gss)
+			provider := &testProvider{true}
+			msgData, _, err := tsigGenerateProvider(req, "", "", false, provider)
 			if err != nil {
 				t.Error(err)
 			}
-			if err = tsigVerify(msgData, "", "", false, timeSigned, gss); err != table.err {
+			if err = tsigVerify(msgData, "", "", false, timeSigned, provider); err != table.err {
 				t.Fatalf("error doesn't match: expected '%s' but got '%s'", table.err, err)
 			}
 		})

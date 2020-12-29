@@ -20,7 +20,6 @@ const (
 	HmacSHA256 = "hmac-sha256."
 	HmacSHA384 = "hmac-sha384."
 	HmacSHA512 = "hmac-sha512."
-	GSS        = "gss-tsig."
 
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
@@ -40,8 +39,8 @@ type TSIG struct {
 	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
-// TsigGSS provides the API to plug-in RFC 3645 GSS-TSIG signed messages.
-type TsigGSS interface {
+// TsigProvider provides the API to plug-in a custom TSIG implementation.
+type TsigProvider interface {
 	// Generate is passed the DNS message to be signed and partial TSIG RR and returns the MAC bytes and any error.
 	Generate([]byte, *TSIG) ([]byte, error)
 	// Verify is passed the DNS message to be verified and TSIG RR and returns any error.
@@ -107,10 +106,10 @@ type timerWireFmt struct {
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return tsigGenerateGSS(m, secret, requestMAC, timersOnly, nil)
+	return tsigGenerateProvider(m, secret, requestMAC, timersOnly, nil)
 }
 
-func tsigGenerateGSS(m *Msg, secret, requestMAC string, timersOnly bool, gss TsigGSS) ([]byte, string, error) {
+func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, provider TsigProvider) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -132,32 +131,28 @@ func tsigGenerateGSS(m *Msg, secret, requestMAC string, timersOnly bool, gss Tsi
 	}
 
 	t := new(TSIG)
-	var h hash.Hash
-	switch CanonicalName(rr.Algorithm) {
-	case HmacSHA1:
-		h = hmac.New(sha1.New, rawsecret)
-	case HmacSHA224:
-		h = hmac.New(sha256.New224, rawsecret)
-	case HmacSHA256:
-		h = hmac.New(sha256.New, rawsecret)
-	case HmacSHA384:
-		h = hmac.New(sha512.New384, rawsecret)
-	case HmacSHA512:
-		h = hmac.New(sha512.New, rawsecret)
-	case GSS:
-		if gss == nil {
-			return nil, "", ErrKeyAlg
-		}
-	default:
-		return nil, "", ErrKeyAlg
-	}
 	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
 	*t = *rr
-	if h != nil {
+	if provider == nil {
+		var h hash.Hash
+		switch CanonicalName(rr.Algorithm) {
+		case HmacSHA1:
+			h = hmac.New(sha1.New, rawsecret)
+		case HmacSHA224:
+			h = hmac.New(sha256.New224, rawsecret)
+		case HmacSHA256:
+			h = hmac.New(sha256.New, rawsecret)
+		case HmacSHA384:
+			h = hmac.New(sha512.New384, rawsecret)
+		case HmacSHA512:
+			h = hmac.New(sha512.New, rawsecret)
+		default:
+			return nil, "", ErrKeyAlg
+		}
 		h.Write(buf)
 		t.MAC = hex.EncodeToString(h.Sum(nil))
 	} else {
-		mac, err := gss.Generate(buf, rr)
+		mac, err := provider.Generate(buf, rr)
 		if err != nil {
 			return nil, "", err
 		}
@@ -184,12 +179,12 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), nil)
 }
 
-func tsigVerifyGSS(msg []byte, secret, requestMAC string, timersOnly bool, gss TsigGSS) error {
-	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), gss)
+func tsigVerifyProvider(msg []byte, secret, requestMAC string, timersOnly bool, provider TsigProvider) error {
+	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), provider)
 }
 
 // actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
-func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, gss TsigGSS) error {
+func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, provider TsigProvider) error {
 	rawsecret, err := fromBase64([]byte(secret))
 	if err != nil {
 		return err
@@ -210,31 +205,27 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 		return err
 	}
 
-	var h hash.Hash
-	switch CanonicalName(tsig.Algorithm) {
-	case HmacSHA1:
-		h = hmac.New(sha1.New, rawsecret)
-	case HmacSHA224:
-		h = hmac.New(sha256.New224, rawsecret)
-	case HmacSHA256:
-		h = hmac.New(sha256.New, rawsecret)
-	case HmacSHA384:
-		h = hmac.New(sha512.New384, rawsecret)
-	case HmacSHA512:
-		h = hmac.New(sha512.New, rawsecret)
-	case GSS:
-		if gss == nil {
+	if provider == nil {
+		var h hash.Hash
+		switch CanonicalName(tsig.Algorithm) {
+		case HmacSHA1:
+			h = hmac.New(sha1.New, rawsecret)
+		case HmacSHA224:
+			h = hmac.New(sha256.New224, rawsecret)
+		case HmacSHA256:
+			h = hmac.New(sha256.New, rawsecret)
+		case HmacSHA384:
+			h = hmac.New(sha512.New384, rawsecret)
+		case HmacSHA512:
+			h = hmac.New(sha512.New, rawsecret)
+		default:
 			return ErrKeyAlg
 		}
-	default:
-		return ErrKeyAlg
-	}
-	if h != nil {
 		h.Write(buf)
 		if !hmac.Equal(h.Sum(nil), msgMAC) {
 			return ErrSig
 		}
-	} else if err := gss.Verify(buf, tsig); err != nil {
+	} else if err := provider.Verify(buf, tsig); err != nil {
 		return err
 	}
 

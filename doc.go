@@ -194,33 +194,24 @@ request an AXFR for miek.nl. with TSIG key named "axfr." and secret
 You can now read the records from the transfer as they come in. Each envelope
 is checked with TSIG. If something is not correct an error is returned.
 
-RFC 3645 GSS-TSIG can also be used in Kerberos environments. This requires
-additional code to perform the security context establishment and signature
-generation/verification. The client must be configured with an implementation
-of the TsigGSS interface:
+A custom TSIG implementation can be used. This requires additional code to
+perform any session establishment and signature generation/verification. The
+client must be configured with an implementation of the TsigProvider interface:
 
-	type GSS struct{}
+	type Provider struct{}
 
-	func (*GSS) Generate(msg []byte, tsig *dns.TSIG) ([]byte, error) {
-		// Use tsig.Hdr.Name to locate your security context and then
-		// use it to generate a MIC token using msg as the payload.
-		// Serialize the token and return the bytes.
+	func (*Provider) Generate(msg []byte, tsig *dns.TSIG) ([]byte, error) {
+		// Use tsig.Hdr.Name and tsig.Algorithm in your code to
+		// generate the MAC using msg as the payload.
 	}
 
-	func (*GSS) Verify(msg []byte, tsig *dns.TSIG) error {
-		// Use tsig.Hdr.Name to locate your security context and then
-		// use it to deserialize the MIC token stored in tsig.MAC and
-		// verify that msg matches.
+	func (*Provider) Verify(msg []byte, tsig *dns.TSIG) error {
+		// Use tsig.Hdr.Name and tsig.Algorithm in your code to verify
+		// that msg matches the value in tsig.MAC.
 	}
-
-	gss := new(GSS)
-
-	// Use gss to establish a security context by exchanging TKEY records
-	keyname := gss.NegotiateContext("176.58.119.54")
 
 	c := new(dns.Client)
-	c.TsigSecret = map[string]string{keyname: ""} // secret isn't used
-	c.TsigGSS = gss
+	c.TsigProvider = new(Provider)
 	m := new(dns.Msg)
 	m.SetQuestion("miek.nl.", dns.TypeMX)
 	m.SetTsig(keyname, dns.GSS, 300, time.Now().Unix())
