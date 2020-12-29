@@ -214,7 +214,7 @@ client must be configured with an implementation of the TsigProvider interface:
 	c.TsigProvider = new(Provider)
 	m := new(dns.Msg)
 	m.SetQuestion("miek.nl.", dns.TypeMX)
-	m.SetTsig(keyname, dns.GSS, 300, time.Now().Unix())
+	m.SetTsig(keyname, dns.HmacSHA1, 300, time.Now().Unix())
 	...
 	// TSIG RR is calculated by calling your Generate method
 
