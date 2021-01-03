@@ -224,11 +224,15 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		return m, err
 	}
 	if t := m.IsTsig(); t != nil {
-		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok && co.TsigProvider == nil {
-			return m, ErrSecret
+		if co.TsigProvider != nil {
+			err = tsigVerifyProvider(p, co.tsigRequestMAC, false, co.TsigProvider)
+		} else {
+			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
+				return m, ErrSecret
+			}
+			// Need to work on the original message p, as that was used to calculate the tsig.
+			err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 		}
-		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = tsigVerifyProvider(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.TsigProvider)
 	}
 	return m, err
 }
@@ -306,10 +310,14 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if t := m.IsTsig(); t != nil {
 		mac := ""
-		if _, ok := co.TsigSecret[t.Hdr.Name]; !ok && co.TsigProvider == nil {
-			return ErrSecret
+		if co.TsigProvider != nil {
+			out, mac, err = tsigGenerateProvider(m, co.tsigRequestMAC, false, co.TsigProvider)
+		} else {
+			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
+				return ErrSecret
+			}
+			out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
 		}
-		out, mac, err = tsigGenerateProvider(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false, co.TsigProvider)
 		// Set for the next read, although only used in zone transfers
 		co.tsigRequestMAC = mac
 	} else {

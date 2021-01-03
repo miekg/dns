@@ -148,10 +148,10 @@ func (key tsigHMACProvider) Verify(msg []byte, t *TSIG) error {
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return tsigGenerateProvider(m, secret, requestMAC, timersOnly, nil)
+	return tsigGenerateProvider(m, requestMAC, timersOnly, tsigHMACProvider(secret))
 }
 
-func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, provider TsigProvider) ([]byte, string, error) {
+func tsigGenerateProvider(m *Msg, requestMAC string, timersOnly bool, provider TsigProvider) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -170,9 +170,6 @@ func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, pr
 	t := new(TSIG)
 	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
 	*t = *rr
-	if provider == nil {
-		provider = tsigHMACProvider(secret)
-	}
 	mac, err := provider.Generate(buf, rr)
 	if err != nil {
 		return nil, "", err
@@ -196,15 +193,15 @@ func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, pr
 // If the signature does not validate err contains the
 // error, otherwise it is nil.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
-	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), nil)
+	return tsigVerify(msg, requestMAC, timersOnly, uint64(time.Now().Unix()), tsigHMACProvider(secret))
 }
 
-func tsigVerifyProvider(msg []byte, secret, requestMAC string, timersOnly bool, provider TsigProvider) error {
-	return tsigVerify(msg, secret, requestMAC, timersOnly, uint64(time.Now().Unix()), provider)
+func tsigVerifyProvider(msg []byte, requestMAC string, timersOnly bool, provider TsigProvider) error {
+	return tsigVerify(msg, requestMAC, timersOnly, uint64(time.Now().Unix()), provider)
 }
 
 // actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
-func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, provider TsigProvider) error {
+func tsigVerify(msg []byte, requestMAC string, timersOnly bool, now uint64, provider TsigProvider) error {
 	// Strip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
 	if err != nil {
@@ -216,9 +213,6 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 		return err
 	}
 
-	if provider == nil {
-		provider = tsigHMACProvider(secret)
-	}
 	if err := provider.Verify(buf, tsig); err != nil {
 		return err
 	}
