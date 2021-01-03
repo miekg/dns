@@ -41,9 +41,9 @@ type TSIG struct {
 
 // TsigProvider provides the API to plug-in a custom TSIG implementation.
 type TsigProvider interface {
-	// Generate is passed the DNS message to be signed and partial TSIG RR and returns the MAC bytes and any error.
+	// Generate is passed the DNS message to be signed and the partial TSIG RR. It returns the signature and nil, otherwise an error.
 	Generate([]byte, *TSIG) ([]byte, error)
-	// Verify is passed the DNS message to be verified and TSIG RR and returns any error.
+	// Verify is passed the DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 	Verify([]byte, *TSIG) error
 }
 
@@ -97,6 +97,48 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
+type tsigHMACProvider string
+
+func (key tsigHMACProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {
+	// If we barf here, the caller is to blame
+	rawsecret, err := fromBase64([]byte(key))
+	if err != nil {
+		return nil, err
+	}
+	var h hash.Hash
+	switch CanonicalName(t.Algorithm) {
+	case HmacSHA1:
+		h = hmac.New(sha1.New, rawsecret)
+	case HmacSHA224:
+		h = hmac.New(sha256.New224, rawsecret)
+	case HmacSHA256:
+		h = hmac.New(sha256.New, rawsecret)
+	case HmacSHA384:
+		h = hmac.New(sha512.New384, rawsecret)
+	case HmacSHA512:
+		h = hmac.New(sha512.New, rawsecret)
+	default:
+		return nil, ErrKeyAlg
+	}
+	h.Write(msg)
+	return h.Sum(nil), nil
+}
+
+func (key tsigHMACProvider) Verify(msg []byte, t *TSIG) error {
+	b, err := key.Generate(msg, t)
+	if err != nil {
+		return err
+	}
+	mac, err := hex.DecodeString(t.MAC)
+	if err != nil {
+		return err
+	}
+	if !hmac.Equal(b, mac) {
+		return ErrSig
+	}
+	return nil
+}
+
 // TsigGenerate fills out the TSIG record attached to the message.
 // The message should contain
 // a "stub" TSIG RR with the algorithm, key name (owner name of the RR),
@@ -112,11 +154,6 @@ func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, s
 func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, provider TsigProvider) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
-	}
-	// If we barf here, the caller is to blame
-	rawsecret, err := fromBase64([]byte(secret))
-	if err != nil {
-		return nil, "", err
 	}
 
 	rr := m.Extra[len(m.Extra)-1].(*TSIG)
@@ -134,30 +171,13 @@ func tsigGenerateProvider(m *Msg, secret, requestMAC string, timersOnly bool, pr
 	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
 	*t = *rr
 	if provider == nil {
-		var h hash.Hash
-		switch CanonicalName(rr.Algorithm) {
-		case HmacSHA1:
-			h = hmac.New(sha1.New, rawsecret)
-		case HmacSHA224:
-			h = hmac.New(sha256.New224, rawsecret)
-		case HmacSHA256:
-			h = hmac.New(sha256.New, rawsecret)
-		case HmacSHA384:
-			h = hmac.New(sha512.New384, rawsecret)
-		case HmacSHA512:
-			h = hmac.New(sha512.New, rawsecret)
-		default:
-			return nil, "", ErrKeyAlg
-		}
-		h.Write(buf)
-		t.MAC = hex.EncodeToString(h.Sum(nil))
-	} else {
-		mac, err := provider.Generate(buf, rr)
-		if err != nil {
-			return nil, "", err
-		}
-		t.MAC = hex.EncodeToString(mac)
+		provider = tsigHMACProvider(secret)
 	}
+	mac, err := provider.Generate(buf, rr)
+	if err != nil {
+		return nil, "", err
+	}
+	t.MAC = hex.EncodeToString(mac)
 	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	tbuf := make([]byte, Len(t))
@@ -185,17 +205,8 @@ func tsigVerifyProvider(msg []byte, secret, requestMAC string, timersOnly bool, 
 
 // actual implementation of TsigVerify, taking the current time ('now') as a parameter for the convenience of tests.
 func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint64, provider TsigProvider) error {
-	rawsecret, err := fromBase64([]byte(secret))
-	if err != nil {
-		return err
-	}
 	// Strip the TSIG from the incoming msg
 	stripped, tsig, err := stripTsig(msg)
-	if err != nil {
-		return err
-	}
-
-	msgMAC, err := hex.DecodeString(tsig.MAC)
 	if err != nil {
 		return err
 	}
@@ -206,26 +217,9 @@ func tsigVerify(msg []byte, secret, requestMAC string, timersOnly bool, now uint
 	}
 
 	if provider == nil {
-		var h hash.Hash
-		switch CanonicalName(tsig.Algorithm) {
-		case HmacSHA1:
-			h = hmac.New(sha1.New, rawsecret)
-		case HmacSHA224:
-			h = hmac.New(sha256.New224, rawsecret)
-		case HmacSHA256:
-			h = hmac.New(sha256.New, rawsecret)
-		case HmacSHA384:
-			h = hmac.New(sha512.New384, rawsecret)
-		case HmacSHA512:
-			h = hmac.New(sha512.New, rawsecret)
-		default:
-			return ErrKeyAlg
-		}
-		h.Write(buf)
-		if !hmac.Equal(h.Sum(nil), msgMAC) {
-			return ErrSig
-		}
-	} else if err := provider.Verify(buf, tsig); err != nil {
+		provider = tsigHMACProvider(secret)
+	}
+	if err := provider.Verify(buf, tsig); err != nil {
 		return err
 	}
 
