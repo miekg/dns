@@ -225,7 +225,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	}
 	if t := m.IsTsig(); t != nil {
 		if co.TsigProvider != nil {
-			err = tsigVerifyProvider(p, co.tsigRequestMAC, false, co.TsigProvider)
+			err = tsigVerifyProvider(p, co.TsigProvider, co.tsigRequestMAC, false)
 		} else {
 			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 				return m, ErrSecret
@@ -311,7 +311,7 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 	if t := m.IsTsig(); t != nil {
 		mac := ""
 		if co.TsigProvider != nil {
-			out, mac, err = tsigGenerateProvider(m, co.tsigRequestMAC, false, co.TsigProvider)
+			out, mac, err = tsigGenerateProvider(m, co.TsigProvider, co.tsigRequestMAC, false)
 		} else {
 			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
 				return ErrSecret
