@@ -1312,8 +1312,8 @@ func TestNewPrivateKey(t *testing.T) {
 	algorithms := []algorithm{
 		{ECDSAP256SHA256, 256},
 		{ECDSAP384SHA384, 384},
-		{RSASHA1, 1024},
-		{RSASHA256, 2048},
+		{RSASHA1, 512},
+		{RSASHA256, 512},
 		{ED25519, 256},
 	}
 

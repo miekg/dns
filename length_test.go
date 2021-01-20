@@ -396,10 +396,19 @@ func TestMsgCompressLengthLargeRecordsWithPaddingPermutation(t *testing.T) {
 }
 
 func TestMsgCompressLengthLargeRecordsAllValues(t *testing.T) {
+	// we want to cross the 14 (16384) bit boundary here, so we build it up to just below and go slightly over.
 	msg := new(Msg)
 	msg.Compress = true
 	msg.SetQuestion("redis.service.consul.", TypeSRV)
-	for i := 0; i < 900; i++ {
+	for i := 0; i < 170; i++ {
+		target := fmt.Sprintf("host-redis-%d-%d.test.acme.com.node.dc1.consul.", i/256, i%256)
+		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
+		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: ClassINET, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", i/256, i%256)})
+	}
+	// msg.Len() == 15458
+	// msg.Len() == 16470 at 180
+
+	for i := 170; i < 181; i++ {
 		target := fmt.Sprintf("host-redis-%d-%d.test.acme.com.node.dc1.consul.", i/256, i%256)
 		msg.Answer = append(msg.Answer, &SRV{Hdr: RR_Header{Name: "redis.service.consul.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Port: 0x4c57, Target: target})
 		msg.Extra = append(msg.Extra, &CNAME{Hdr: RR_Header{Name: target, Class: ClassINET, Rrtype: TypeCNAME, Ttl: 0x3c}, Target: fmt.Sprintf("fx.168.%d.%d.", i/256, i%256)})

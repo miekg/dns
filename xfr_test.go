@@ -1,11 +1,6 @@
 package dns
 
-import (
-	"net"
-	"sync"
-	"testing"
-	"time"
-)
+import "testing"
 
 var (
 	tsigSecret  = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
@@ -52,7 +47,7 @@ func TestInvalidXfr(t *testing.T) {
 	HandleFunc("miek.nl.", InvalidXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServer(":0")
+	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
@@ -78,86 +73,57 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.TsigSecret = tsigSecret
+	})
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr)
+	axfrTestingSuite(t, addrstr)
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
 	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
 	defer HandleRemove("miek.nl.")
 
-	s, addrstr, err := RunLocalTCPServerWithTsig(":0", tsigSecret)
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.TsigSecret = tsigSecret
+	})
 	if err != nil {
 		t.Fatalf("unable to run test server: %s", err)
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(addrstr)
+	axfrTestingSuite(t, addrstr)
 }
 
-func RunLocalTCPServerWithTsig(laddr string, tsig map[string]string) (*Server, string, error) {
-	server, l, _, err := RunLocalTCPServerWithFinChanWithTsig(laddr, tsig)
+func axfrTestingSuite(t *testing.T, addrstr string) {
+	tr := new(Transfer)
+	m := new(Msg)
+	m.SetAxfr("miek.nl.")
 
-	return server, l, err
-}
-
-func RunLocalTCPServerWithFinChanWithTsig(laddr string, tsig map[string]string) (*Server, string, chan error, error) {
-	l, err := net.Listen("tcp", laddr)
+	c, err := tr.In(m, addrstr)
 	if err != nil {
-		return nil, "", nil, err
+		t.Fatal("failed to zone transfer in", err)
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour, TsigSecret: tsig}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	// See the comment in RunLocalUDPServerWithFinChan as to
-	// why fin must be buffered.
-	fin := make(chan error, 1)
-
-	go func() {
-		fin <- server.ActivateAndServe()
-		l.Close()
-	}()
-
-	waitLock.Lock()
-	return server, l.Addr().String(), fin, nil
-}
-
-func axfrTestingSuite(addrstr string) func(*testing.T) {
-	return func(t *testing.T) {
-		tr := new(Transfer)
-		m := new(Msg)
-		m.SetAxfr("miek.nl.")
-
-		c, err := tr.In(m, addrstr)
-		if err != nil {
-			t.Fatal("failed to zone transfer in", err)
+	var records []RR
+	for msg := range c {
+		if msg.Error != nil {
+			t.Fatal(msg.Error)
 		}
+		records = append(records, msg.RR...)
+	}
 
-		var records []RR
-		for msg := range c {
-			if msg.Error != nil {
-				t.Fatal(msg.Error)
-			}
-			records = append(records, msg.RR...)
-		}
+	if len(records) != len(xfrTestData) {
+		t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
+	}
 
-		if len(records) != len(xfrTestData) {
+	for i, rr := range records {
+		if !IsDuplicate(rr, xfrTestData[i]) {
 			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
-		}
-
-		for i := range records {
-			if !IsDuplicate(records[i], xfrTestData[i]) {
-				t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
-			}
 		}
 	}
 }
