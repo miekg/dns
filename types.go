@@ -1376,7 +1376,7 @@ func (rr *ZONEMD) String() string {
 		strconv.Itoa(int(rr.Serial)) +
 		" " + strconv.Itoa(int(rr.Scheme)) +
 		" " + strconv.Itoa(int(rr.Hash)) +
-		" " + strings.ToUpper(rr.Digest)
+		" " + rr.Digest
 }
 
 // APL RR. See RFC 3123.
