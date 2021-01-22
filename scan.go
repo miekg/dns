@@ -304,7 +304,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		if l.err {
 			return zp.setParseError(l.token, l)
 		}
-
 		switch st {
 		case zExpectOwnerDir:
 			// We can also expect a directive, like $TTL or $ORIGIN
@@ -313,7 +312,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			h.Class = ClassINET
-
+			
 			switch l.value {
 			case zNewline:
 				st = zExpectOwnerDir
@@ -578,7 +577,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			st = zExpectRdata
 		case zExpectRdata:
 			var rr RR
-			if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype) {
+			if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype)  {
 				rr = newFn()
 				*rr.Header() = *h
 			} else {
@@ -598,8 +597,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return rr, true
 			} else if l.value == zNewline {
 				return zp.setParseError("unexpected newline", l)
+			} 
+			if zp.c.rfc3597 {
+				rr = &RFC3597{Hdr: *h}
 			}
-
 			if err := rr.parse(zp.c, zp.origin); err != nil {
 				// err is a concrete *ParseError without the file field set.
 				// The setParseError call below will construct a new
@@ -655,7 +656,7 @@ type zlexer struct {
 	commt  bool
 	rrtype bool
 	owner  bool
-
+	rfc3597 bool
 	nextL bool
 
 	eol bool // end-of-line
@@ -673,6 +674,7 @@ func newZLexer(r io.Reader) *zlexer {
 		line: 1,
 
 		owner: true,
+		rfc3597: false,
 	}
 }
 
@@ -781,7 +783,7 @@ func (zl *zlexer) Next() (lex, bool) {
 
 		switch x {
 		case ' ', '\t':
-			if escape || zl.quote {
+			if escape || zl.quote  {
 				// Inside quotes or escaped this is legal.
 				str[stri] = x
 				stri++
@@ -932,7 +934,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				stri++
 				break
 			}
-
 			if zl.commt {
 				// Reset a comment
 				zl.commt = false
@@ -958,7 +959,6 @@ func (zl *zlexer) Next() (lex, bool) {
 				if stri != 0 {
 					l.value = zString
 					l.token = string(str[:stri])
-
 					if !zl.rrtype {
 						tokenUpper := strings.ToUpper(l.token)
 						if t, ok := StringToType[tokenUpper]; ok {
@@ -984,9 +984,18 @@ func (zl *zlexer) Next() (lex, bool) {
 					zl.nextL = true
 					return retL, true
 				}
-
 				return *l, true
 			}
+		case '#':
+			// rfc 3597
+			if str[0] == '\\' {
+				zl.rfc3597 = true
+				escape = false
+				str[stri] = x
+				stri++
+				break
+			}
+
 		case '\\':
 			// comments do not get escaped chars, everything is copied
 			if zl.commt {
