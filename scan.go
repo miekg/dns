@@ -312,7 +312,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			h.Class = ClassINET
-			
+
 			switch l.value {
 			case zNewline:
 				st = zExpectOwnerDir
@@ -577,7 +577,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			st = zExpectRdata
 		case zExpectRdata:
 			var rr RR
-			if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype)  {
+			if newFn, ok := TypeToRR[h.Rrtype]; ok && canParseAsRR(h.Rrtype) {
 				rr = newFn()
 				*rr.Header() = *h
 			} else {
@@ -597,7 +597,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return rr, true
 			} else if l.value == zNewline {
 				return zp.setParseError("unexpected newline", l)
-			} 
+			}
 			if zp.c.rfc3597 {
 				rr = &RFC3597{Hdr: *h}
 			}
@@ -650,14 +650,14 @@ type zlexer struct {
 	l       lex
 	cachedL *lex
 
-	brace  int
-	quote  bool
-	space  bool
-	commt  bool
-	rrtype bool
-	owner  bool
+	brace   int
+	quote   bool
+	space   bool
+	commt   bool
+	rrtype  bool
+	owner   bool
 	rfc3597 bool
-	nextL bool
+	nextL   bool
 
 	eol bool // end-of-line
 }
@@ -673,7 +673,7 @@ func newZLexer(r io.Reader) *zlexer {
 
 		line: 1,
 
-		owner: true,
+		owner:   true,
 		rfc3597: false,
 	}
 }
@@ -783,7 +783,7 @@ func (zl *zlexer) Next() (lex, bool) {
 
 		switch x {
 		case ' ', '\t':
-			if escape || zl.quote  {
+			if escape || zl.quote {
 				// Inside quotes or escaped this is legal.
 				str[stri] = x
 				stri++
@@ -1299,7 +1299,7 @@ func appendOrigin(name, origin string) string {
 
 // LOC record helper function
 func locCheckNorth(token string, latitude uint32) (uint32, bool) {
-	if latitude > 90 * 1000 * 60 * 60 {
+	if latitude > 90*1000*60*60 {
 		return latitude, false
 	}
 	switch token {
@@ -1313,7 +1313,7 @@ func locCheckNorth(token string, latitude uint32) (uint32, bool) {
 
 // LOC record helper function
 func locCheckEast(token string, longitude uint32) (uint32, bool) {
-	if longitude > 180 * 1000 * 60 * 60 {
+	if longitude > 180*1000*60*60 {
 		return longitude, false
 	}
 	switch token {
