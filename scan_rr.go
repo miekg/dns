@@ -1418,21 +1418,22 @@ func (rr *SMIMEA) parse(c *zlexer, o string) *ParseError {
 func (rr *RFC3597) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	if l.token != "\\#" {
-		return &ParseError{"", "bad RFC3597 Rdata 1", l}
+		return &ParseError{"", "bad RFC3597 Rdata", l}
 	}
 
+	c.Next() // zBlank
 	l, _ = c.Next()
 	rdlength, e := strconv.Atoi(l.token)
 	if e != nil || l.err {
-		return &ParseError{"", "bad RFC3597 Rdata 2", l}
+		return &ParseError{"", "bad RFC3597 Rdata ", l}
 	}
 
-	s, e1 := endingToString(c, "bad RFC3597 Rdata 3 ")
+	s, e1 := endingToString(c, "bad RFC3597 Rdata")
 	if e1 != nil {
 		return e1
 	}
 	if rdlength*2 != len(s) {
-		return &ParseError{"", "bad RFC3597 Rdata 4", l}
+		return &ParseError{"", "bad RFC3597 Rdata", l}
 	}
 	rr.Rdata = s
 	return nil
