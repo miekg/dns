@@ -149,6 +149,22 @@ const (
 	OpcodeStatus = 2
 	OpcodeNotify = 4
 	OpcodeUpdate = 5
+
+)
+
+// Used in ZONEMD https://tools.ietf.org/html/draft-ietf-dnsop-dns-zone-digest-14
+
+const (
+	// ZoneMD Accepted Schemes
+	ZoneMDSchemeReserved = 0
+	ZoneMDSchemeSimple = 1
+	ZoneMDSchemeReservedHigh = 255
+
+	// ZoneMD Hash Algorithms
+	ZoneMDHashAlgReserved = 0
+	ZoneMDHashAlgSHA384 = 1
+	ZoneMDHashAlgSHA512 = 2
+	ZoneMDHashAlgReservedHigh = 255
 )
 
 // Header is the wire format for the DNS packet header.
