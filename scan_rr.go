@@ -848,6 +848,38 @@ func (rr *CSYNC) parse(c *zlexer, o string) *ParseError {
 
 func (rr *ZONEMD) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
+	if (l.token == "\\#") {
+		c.Next() // spaces
+		l, _ = c.Next()
+		i, e := strconv.ParseUint(l.token, 10, 32)
+		if e != nil || l.err {
+			return &ParseError{"", "error Parsing RFC 3597 RR...",l}
+		}
+		hexlen := int(i) 
+		c.Next() // spaces
+		l, _ = c.Next()
+		if len(l.token)/2 != hexlen {
+			return &ParseError{"","Error hexadecimal wrong size",l}
+		}
+		// Start parsing
+		i, e = strconv.ParseUint(l.token[0:8], 16, 32)
+       		 if e != nil || l.err {
+                	return &ParseError{"", "bad ZONEMD Serial", l}
+        	}
+        	rr.Serial = uint32(i)
+		i, e1 := strconv.ParseUint(l.token[8:10], 16, 8)
+	        if e1 != nil {
+        	        return &ParseError{"", "bad ZONEMD Scheme", l}
+        	}
+        	rr.Scheme = uint8(i)
+		i, err := strconv.ParseUint(l.token[10:12], 16, 8)
+		if  err != nil {
+                        return &ParseError{"", "bad ZONEMD Hash Algorithm", l}
+                }
+                rr.Hash = uint8(i)
+		rr.Digest = l.token[12:]
+		return nil
+	}
 	i, e := strconv.ParseUint(l.token, 10, 32)
 	if e != nil || l.err {
 		return &ParseError{"", "bad ZONEMD Serial", l}
