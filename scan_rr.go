@@ -896,16 +896,12 @@ func (rr *ZONEMD) parse(c *zlexer, o string) *ParseError {
 
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if i, err := strconv.ParseUint(l.token, 10, 8); err != nil {
-		tokenUpper := strings.ToUpper(l.token)
-		i, ok := StringToAlgorithm[tokenUpper]
-		if !ok || l.err {
-			return &ParseError{"", "bad ZONEMD Hash Algorithm", l}
-		}
-		rr.Hash = i
-	} else {
-		rr.Hash = uint8(i)
+	i, err := strconv.ParseUint(l.token, 10, 8); 
+	if err != nil || l.err {
+		return &ParseError{"", "bad ZONEMD Hash Algorithm", l}
 	}
+	rr.Hash = uint8(i)
+
 	s, e2 := endingToString(c, "bad ZONEMD Digest")
 	if e2 != nil {
 		return e2
