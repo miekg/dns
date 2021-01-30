@@ -145,10 +145,10 @@ func TestZoneParserAddressAAAA(t *testing.T) {
 		}
 		aaaa, ok := got.(*AAAA)
 		if !ok {
-			t.Fatalf("expected *AAAA RR, but got %T", aaaa)
+			t.Fatalf("expected *AAAA RR, but got %T", got)
 		}
-		if g, w := aaaa.AAAA, tc.want.AAAA; !g.Equal(w) {
-			t.Fatalf("expected AAAA with IP %v, but got %v", g, w)
+		if !aaaa.AAAA.Equal(tc.want.AAAA) {
+			t.Fatalf("expected AAAA with IP %v, but got %v", tc.want.AAAA, aaaa.AAAA)
 		}
 	}
 }
