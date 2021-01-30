@@ -1208,8 +1208,8 @@ func TestTypeXXXX(t *testing.T) {
 		t.Errorf("this should not work, for TYPE655341")
 	}
 	_, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
-	if err == nil {
-		t.Errorf("this should not work")
+	if err != nil {
+		t.Errorf("failed to parse TYPE1 RR: %v", err)
 	}
 }
 

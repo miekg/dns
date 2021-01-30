@@ -229,6 +229,48 @@ example.com. 60 PX (
 	}
 }
 
+func TestParseKnownRRAsRFC3597(t *testing.T) {
+	t.Run("with RDATA", func(t *testing.T) {
+		rr, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 4 7f000001")
+		if err != nil {
+			t.Fatalf("failed to parse RFC3579 format: %v", err)
+		}
+
+		if rr.Header().Rrtype != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		}
+
+		a, ok := rr.(*A)
+		if !ok {
+			t.Fatalf("expected *A RR, but got %T", rr)
+		}
+
+		localhost := net.IPv4(127, 0, 0, 1)
+		if !a.A.Equal(localhost) {
+			t.Fatalf("expected A with IP %v, but got %v", localhost, a.A)
+		}
+	})
+	t.Run("without RDATA", func(t *testing.T) {
+		rr, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 0")
+		if err != nil {
+			t.Fatalf("failed to parse RFC3579 format: %v", err)
+		}
+
+		if rr.Header().Rrtype != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		}
+
+		a, ok := rr.(*A)
+		if !ok {
+			t.Fatalf("expected *A RR, but got %T", rr)
+		}
+
+		if len(a.A) != 0 {
+			t.Fatalf("expected A with empty IP, but got %v", a.A)
+		}
+	})
+}
+
 func BenchmarkNewRR(b *testing.B) {
 	const name1 = "12345678901234567890123456789012345.12345678.123."
 	const s = name1 + " 3600 IN MX 10 " + name1
