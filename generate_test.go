@@ -162,7 +162,7 @@ func TestGenerateModToPrintf(t *testing.T) {
 	tests := []struct {
 		mod        string
 		wantFmt    string
-		wantOffset int64
+		wantOffset int
 		wantErr    bool
 	}{
 		{"0,0,d", "%d", 0, false},
