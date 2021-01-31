@@ -231,6 +231,12 @@ example.com. 60 PX (
 
 func TestParseKnownRRAsRFC3597(t *testing.T) {
 	t.Run("with RDATA", func(t *testing.T) {
+		// This was found by oss-fuzz.
+		_, err := NewRR("example. 3600 tYpe44 \\# 03 75  0100")
+		if err != nil {
+			t.Errorf("failed to parse RFC3579 format: %v", err)
+		}
+
 		rr, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 4 7f000001")
 		if err != nil {
 			t.Fatalf("failed to parse RFC3579 format: %v", err)
@@ -247,7 +253,7 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 
 		localhost := net.IPv4(127, 0, 0, 1)
 		if !a.A.Equal(localhost) {
-			t.Fatalf("expected A with IP %v, but got %v", localhost, a.A)
+			t.Errorf("expected A with IP %v, but got %v", localhost, a.A)
 		}
 	})
 	t.Run("without RDATA", func(t *testing.T) {
@@ -266,7 +272,7 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 		}
 
 		if len(a.A) != 0 {
-			t.Fatalf("expected A with empty IP, but got %v", a.A)
+			t.Errorf("expected A with empty IP, but got %v", a.A)
 		}
 	})
 }

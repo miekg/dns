@@ -134,9 +134,11 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 
 // fromRFC3597 converts an unknown RR representation from RFC 3597 to the known RR type.
 func (rr *RFC3597) fromRFC3597(r RR) error {
-	*r.Header() = rr.Hdr
+	hdr := r.Header()
+	*hdr = rr.Hdr
+	hdr.Rdlength = uint16(len(rr.Rdata) / 2)
 
-	if len(rr.Rdata) == 0 {
+	if noRdata(*hdr) {
 		// Dynamic update.
 		return nil
 	}
