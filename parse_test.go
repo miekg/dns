@@ -1884,3 +1884,41 @@ func TestParseAPLErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestUnpackRRWithHeaderInvalidLengths(t *testing.T) {
+	rr, err := NewRR("test.example.org. 300 IN SSHFP 1 2 BC6533CDC95A79078A39A56EA7635984ED655318ADA9B6159E30723665DA95BB")
+	if err != nil {
+		t.Fatalf("failed to parse SSHFP record: %v", err)
+	}
+
+	buf := make([]byte, Len(rr))
+	headerEnd, end, err := packRR(rr, buf, 0, compressionMap{}, false)
+	if err != nil {
+		t.Fatalf("failed to pack A record: %v", err)
+	}
+
+	rr.Header().Rdlength = uint16(end - headerEnd)
+	for _, off := range []int{
+		-1,
+		end + 1,
+		1<<16 - 1,
+	} {
+		_, _, err := UnpackRRWithHeader(*rr.Header(), buf, off)
+		if de, ok := err.(*Error); !ok || de.err != "bad off" {
+			t.Errorf("UnpackRRWithHeader with bad offset (%d) returned wrong or no error: %v", off, err)
+		}
+	}
+
+	for _, rdlength := range []uint16{
+		uint16(end - headerEnd + 1),
+		uint16(end),
+		1<<16 - 1,
+	} {
+		rr.Header().Rdlength = rdlength
+
+		_, _, err := UnpackRRWithHeader(*rr.Header(), buf, headerEnd)
+		if de, ok := err.(*Error); !ok || de.err != "bad rdlength" {
+			t.Errorf("UnpackRRWithHeader with bad rdlength (%d) returned wrong or no error: %v", rdlength, err)
+		}
+	}
+}
