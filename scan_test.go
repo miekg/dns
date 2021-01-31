@@ -229,6 +229,15 @@ example.com. 60 PX (
 	}
 }
 
+func TestParseRFC3597InvalidLength(t *testing.T) {
+	// We need to space separate the 00s otherwise it will exceed the maximum token size
+	// of the zone lexer.
+	_, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 65536 " + strings.Repeat("00 ", 65536))
+	if err == nil {
+		t.Error("should not have parsed excessively long RFC3579 record")
+	}
+}
+
 func TestParseKnownRRAsRFC3597(t *testing.T) {
 	t.Run("with RDATA", func(t *testing.T) {
 		// This was found by oss-fuzz.
