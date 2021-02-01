@@ -136,7 +136,10 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 func (rr *RFC3597) fromRFC3597(r RR) error {
 	hdr := r.Header()
 	*hdr = rr.Hdr
-	hdr.Rdlength = uint16(len(rr.Rdata) / 2)
+
+	// Can't overflow uint16 as the length of Rdata is validated in (*RFC3597).parse.
+	// We can only get here when rr was constructed with that method.
+	hdr.Rdlength = uint16(hex.DecodedLen(len(rr.Rdata)))
 
 	if noRdata(*hdr) {
 		// Dynamic update.
