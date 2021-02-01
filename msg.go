@@ -624,25 +624,18 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 		rr = &RFC3597{Hdr: h}
 	}
 
-	if off < 0 {
-		return nil, off, &Error{err: "off must be positive"}
-	}
-
-	end := off + int(h.Rdlength)
-	if end < off || end > len(msg) {
-		return nil, end, &Error{err: "bad rdlength"}
-	}
-
 	if noRdata(h) {
 		return rr, off, nil
 	}
+
+	end := off + int(h.Rdlength)
 
 	off, err = rr.unpack(msg, off)
 	if err != nil {
 		return nil, end, err
 	}
 	if off != end {
-		return nil, end, &Error{err: "bad rdlength"}
+		return &h, end, &Error{err: "bad rdlength"}
 	}
 
 	return rr, off, nil
