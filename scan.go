@@ -612,9 +612,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			} else if l.value == zNewline {
 				return zp.setParseError("unexpected newline", l)
 			}
-			if zp.c.rfc3597 {
-				rr = &RFC3597{Hdr: *h}
-			}
 
 			parseAsRR := rr
 			if parseAsRFC3597 {
@@ -665,14 +662,14 @@ type zlexer struct {
 	l       lex
 	cachedL *lex
 
-	brace   int
-	quote   bool
-	space   bool
-	commt   bool
-	rrtype  bool
-	owner   bool
-	rfc3597 bool
-	nextL   bool
+	brace  int
+	quote  bool
+	space  bool
+	commt  bool
+	rrtype bool
+	owner  bool
+
+	nextL bool
 
 	eol bool // end-of-line
 }
@@ -688,8 +685,7 @@ func newZLexer(r io.Reader) *zlexer {
 
 		line: 1,
 
-		owner:   true,
-		rfc3597: false,
+		owner: true,
 	}
 }
 
