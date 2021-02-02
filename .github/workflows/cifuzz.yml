@@ -1,5 +1,10 @@
 name: CIFuzz
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.go'
 jobs:
  Fuzzing:
    runs-on: ubuntu-latest
@@ -13,7 +18,7 @@ jobs:
      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
      with:
        oss-fuzz-project-name: 'go-dns'
-       fuzz-seconds: 600
+       fuzz-seconds: 300
        dry-run: false
    - name: Upload Crash
      uses: actions/upload-artifact@v1
