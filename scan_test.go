@@ -145,10 +145,10 @@ func TestZoneParserAddressAAAA(t *testing.T) {
 		}
 		aaaa, ok := got.(*AAAA)
 		if !ok {
-			t.Fatalf("expected *AAAA RR, but got %T", aaaa)
+			t.Fatalf("expected *AAAA RR, but got %T", got)
 		}
-		if g, w := aaaa.AAAA, tc.want.AAAA; !g.Equal(w) {
-			t.Fatalf("expected AAAA with IP %v, but got %v", g, w)
+		if !aaaa.AAAA.Equal(tc.want.AAAA) {
+			t.Fatalf("expected AAAA with IP %v, but got %v", tc.want.AAAA, aaaa.AAAA)
 		}
 	}
 }
@@ -227,6 +227,63 @@ example.com. 60 PX (
 	if err := zp.Err(); err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
+}
+
+func TestParseRFC3597InvalidLength(t *testing.T) {
+	// We need to space separate the 00s otherwise it will exceed the maximum token size
+	// of the zone lexer.
+	_, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 65536 " + strings.Repeat("00 ", 65536))
+	if err == nil {
+		t.Error("should not have parsed excessively long RFC3579 record")
+	}
+}
+
+func TestParseKnownRRAsRFC3597(t *testing.T) {
+	t.Run("with RDATA", func(t *testing.T) {
+		// This was found by oss-fuzz.
+		_, err := NewRR("example. 3600 tYpe44 \\# 03 75  0100")
+		if err != nil {
+			t.Errorf("failed to parse RFC3579 format: %v", err)
+		}
+
+		rr, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 4 7f000001")
+		if err != nil {
+			t.Fatalf("failed to parse RFC3579 format: %v", err)
+		}
+
+		if rr.Header().Rrtype != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		}
+
+		a, ok := rr.(*A)
+		if !ok {
+			t.Fatalf("expected *A RR, but got %T", rr)
+		}
+
+		localhost := net.IPv4(127, 0, 0, 1)
+		if !a.A.Equal(localhost) {
+			t.Errorf("expected A with IP %v, but got %v", localhost, a.A)
+		}
+	})
+	t.Run("without RDATA", func(t *testing.T) {
+		rr, err := NewRR("example. 3600 CLASS1 TYPE1 \\# 0")
+		if err != nil {
+			t.Fatalf("failed to parse RFC3579 format: %v", err)
+		}
+
+		if rr.Header().Rrtype != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		}
+
+		a, ok := rr.(*A)
+		if !ok {
+			t.Fatalf("expected *A RR, but got %T", rr)
+		}
+
+		if len(a.A) != 0 {
+			t.Errorf("expected A with empty IP, but got %v", a.A)
+		}
+	})
 }
 
 func BenchmarkNewRR(b *testing.B) {
