@@ -8,10 +8,10 @@ package dns
 // record adding as many records as possible without exceeding the
 // requested buffer size.
 //
-// Note that if the message fits within the requested size without compression,
-// Truncate will reset the message's `Compress` attribute to `false`. It is
-// the caller responsibility to set it back to `true` if they wish to compress
-// the payload regardless.
+// If the message fits within the requested size without compression,
+// Truncate will set the message's Compress attribute to false. It is
+// the caller's responsibility to set it back to true if they wish to
+// compress the payload regardless.
 //
 // The TC bit will be set if any records were excluded from the message.
 // If the TC bit is already set on the message it will be retained.
