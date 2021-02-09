@@ -15,7 +15,8 @@ import (
 )
 
 // Default maximum number of TCP queries before we close the socket.
-const maxTCPQueries = 128
+// By default, it is unlimited.
+const maxTCPQueries = -1
 
 // aLongTimeAgo is a non-zero time, far in the past, used for
 // immediate cancelation of network operations.
@@ -205,6 +206,9 @@ type Server struct {
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
+	// Default buffer size to use to read incoming TCP messages. If not set
+	// it defaults to MinMsgSize (512 B).
+	TCPSize int
 	// The net.Conn.SetReadTimeout value for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
 	// The net.Conn.SetWriteTimeout value for new connections, defaults to 2 * time.Second.
@@ -236,6 +240,9 @@ type Server struct {
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
+
+	// A pool for TCP message buffers.
+	tcpPool sync.Pool
 }
 
 func (srv *Server) isStarted() bool {
@@ -245,7 +252,7 @@ func (srv *Server) isStarted() bool {
 	return started
 }
 
-func makeUDPBuffer(size int) func() interface{} {
+func makePacketBuffer(size int) func() interface{} {
 	return func() interface{} {
 		return make([]byte, size)
 	}
@@ -258,6 +265,9 @@ func (srv *Server) init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
+	if srv.TCPSize == 0 {
+		srv.TCPSize = MinMsgSize
+	}
 	if srv.MsgAcceptFunc == nil {
 		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
@@ -265,7 +275,8 @@ func (srv *Server) init() {
 		srv.Handler = DefaultServeMux
 	}
 
-	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
+	srv.udpPool.New = makePacketBuffer(srv.UDPSize)
+	srv.tcpPool.New = makePacketBuffer(srv.TCPSize)
 }
 
 func unlockOnce(l sync.Locker) func() {
@@ -549,13 +560,18 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		limit = maxTCPQueries
 	}
 
+	var wgCo sync.WaitGroup
+
 	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
 		m, err := reader.ReadTCP(w.tcp, timeout)
+
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(m, w)
+
+		wgCo.Add(1)
+		go srv.serveTCPPacket(&wgCo, m, w)
 		if w.closed {
 			break // Close() was called
 		}
@@ -567,6 +583,9 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		timeout = idleTimeout
 	}
 
+	// Wait until all queries are processed
+	wgCo.Wait()
+
 	if !w.hijacked {
 		w.Close()
 	}
@@ -575,6 +594,13 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 	delete(srv.conns, w.tcp)
 	srv.lock.Unlock()
 
+	wg.Done()
+}
+
+// Serve a new TCP request.
+func (srv *Server) serveTCPPacket(wg *sync.WaitGroup, m []byte, w *response) {
+	srv.serveDNS(m, w)
+	srv.tcpPool.Put(m[:srv.TCPSize])
 	wg.Done()
 }
 
@@ -666,8 +692,15 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 		return nil, err
 	}
 
-	m := make([]byte, length)
+	m := srv.tcpPool.Get().([]byte)
+	if int(length) > len(m) {
+		srv.tcpPool.Put(m)
+		return nil, ErrBuf
+	}
+
+	m = m[:length]
 	if _, err := io.ReadFull(conn, m); err != nil {
+		srv.tcpPool.Put(m[:srv.TCPSize])
 		return nil, err
 	}
 
