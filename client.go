@@ -340,11 +340,22 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return co.Conn.Write(p)
 	}
 
-	l := make([]byte, 2)
-	binary.BigEndian.PutUint16(l, uint16(len(p)))
+	if _, ok := co.Conn.(*net.TCPConn); ok {
+		// Limit usage of net.Buffers to net.TCPConn only
+		// In the case of TLS using it results in splitting it
+		// into two packets
 
-	n, err := (&net.Buffers{l, p}).WriteTo(co.Conn)
-	return int(n), err
+		l := make([]byte, 2)
+		binary.BigEndian.PutUint16(l, uint16(len(p)))
+
+		n, err := (&net.Buffers{l, p}).WriteTo(co.Conn)
+		return int(n), err
+	}
+
+	msg := make([]byte, 2+len(p))
+	binary.BigEndian.PutUint16(msg, uint16(len(p)))
+	copy(msg[2:], p[:])
+	return co.Conn.Write(msg)
 }
 
 // Return the appropriate timeout for a specific request

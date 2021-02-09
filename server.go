@@ -752,11 +752,22 @@ func (w *response) Write(m []byte) (int, error) {
 			return 0, &Error{err: "message too large"}
 		}
 
-		l := make([]byte, 2)
-		binary.BigEndian.PutUint16(l, uint16(len(m)))
+		if _, ok := w.tcp.(*net.TCPConn); ok {
+			// Limit usage of net.Buffers to net.TCPConn only
+			// In the case of TLS using it results in splitting it
+			// into two packets
 
-		n, err := (&net.Buffers{l, m}).WriteTo(w.tcp)
-		return int(n), err
+			l := make([]byte, 2)
+			binary.BigEndian.PutUint16(l, uint16(len(m)))
+
+			n, err := (&net.Buffers{l, m}).WriteTo(w.tcp)
+			return int(n), err
+		}
+
+		msg := make([]byte, 2+len(m))
+		binary.BigEndian.PutUint16(msg, uint16(len(m)))
+		copy(msg[2:], m[:])
+		return w.tcp.Write(msg)
 	default:
 		panic("dns: internal error: udp and tcp both nil")
 	}
