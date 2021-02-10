@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -752,8 +753,8 @@ func (w *response) Write(m []byte) (int, error) {
 			return 0, &Error{err: "message too large"}
 		}
 
-		if _, ok := w.tcp.(*net.TCPConn); ok {
-			// Limit usage of net.Buffers to net.TCPConn only
+		if _, ok := w.tcp.(*net.TCPConn); ok && runtime.GOOS == "linux" {
+			// Limit usage of net.Buffers to net.TCPConn on Linux only
 			// In the case of TLS using it results in splitting it
 			// into two packets
 
@@ -766,7 +767,7 @@ func (w *response) Write(m []byte) (int, error) {
 
 		msg := make([]byte, 2+len(m))
 		binary.BigEndian.PutUint16(msg, uint16(len(m)))
-		copy(msg[2:], m[:])
+		copy(msg[2:], m)
 		return w.tcp.Write(msg)
 	default:
 		panic("dns: internal error: udp and tcp both nil")
