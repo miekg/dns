@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -339,18 +338,6 @@ func (co *Conn) Write(p []byte) (int, error) {
 
 	if _, ok := co.Conn.(net.PacketConn); ok {
 		return co.Conn.Write(p)
-	}
-
-	if _, ok := co.Conn.(*net.TCPConn); ok && runtime.GOOS == "linux" {
-		// Limit usage of net.Buffers to net.TCPConn on Linux only
-		// In the case of TLS using it results in splitting it
-		// into two packets
-
-		l := make([]byte, 2)
-		binary.BigEndian.PutUint16(l, uint16(len(p)))
-
-		n, err := (&net.Buffers{l, p}).WriteTo(co.Conn)
-		return int(n), err
 	}
 
 	msg := make([]byte, 2+len(p))

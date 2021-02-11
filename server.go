@@ -9,7 +9,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -751,18 +750,6 @@ func (w *response) Write(m []byte) (int, error) {
 	case w.tcp != nil:
 		if len(m) > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
-		}
-
-		if _, ok := w.tcp.(*net.TCPConn); ok && runtime.GOOS == "linux" {
-			// Limit usage of net.Buffers to net.TCPConn on Linux only
-			// In the case of TLS using it results in splitting it
-			// into two packets
-
-			l := make([]byte, 2)
-			binary.BigEndian.PutUint16(l, uint16(len(m)))
-
-			n, err := (&net.Buffers{l, m}).WriteTo(w.tcp)
-			return int(n), err
 		}
 
 		msg := make([]byte, 2+len(m))
