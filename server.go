@@ -205,6 +205,10 @@ type Server struct {
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
+	// Default buffer size to use to read incoming TCP messages. If not set
+	// it defaults to MinMsgSize (512 B). DNS messages that don't fit the TCPSize
+	// will be read, but will cause extra allocations.
+	TCPSize int
 	// The net.Conn.SetReadTimeout value for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
 	// The net.Conn.SetWriteTimeout value for new connections, defaults to 2 * time.Second.
@@ -236,6 +240,8 @@ type Server struct {
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
+	// A pool for TCP message buffers.
+	tcpPool sync.Pool
 }
 
 func (srv *Server) isStarted() bool {
@@ -245,7 +251,7 @@ func (srv *Server) isStarted() bool {
 	return started
 }
 
-func makeUDPBuffer(size int) func() interface{} {
+func makePacketBuffer(size int) func() interface{} {
 	return func() interface{} {
 		return make([]byte, size)
 	}
@@ -258,6 +264,9 @@ func (srv *Server) init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
+	if srv.TCPSize == 0 {
+		srv.TCPSize = MinMsgSize
+	}
 	if srv.MsgAcceptFunc == nil {
 		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
@@ -265,7 +274,8 @@ func (srv *Server) init() {
 		srv.Handler = DefaultServeMux
 	}
 
-	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
+	srv.udpPool.New = makePacketBuffer(srv.UDPSize)
+	srv.tcpPool.New = makePacketBuffer(srv.TCPSize)
 }
 
 func unlockOnce(l sync.Locker) func() {
@@ -556,6 +566,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 			break
 		}
 		srv.serveDNS(m, w)
+		srv.putTCPBuffer(m)
 		if w.closed {
 			break // Close() was called
 		}
@@ -666,8 +677,9 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 		return nil, err
 	}
 
-	m := make([]byte, length)
+	m := srv.getTCPBuffer(int(length))
 	if _, err := io.ReadFull(conn, m); err != nil {
+		srv.putTCPBuffer(m)
 		return nil, err
 	}
 
@@ -708,6 +720,26 @@ func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([
 	}
 	m = m[:n]
 	return m, addr, nil
+}
+
+// getTCPBuffer gets a TCP buffer to be used to read the incoming DNS query
+// length - the TCP buffer length
+func (srv *Server) getTCPBuffer(length int) []byte {
+	if length > srv.TCPSize {
+		// If the query is larger than the buffer size
+		// don't use sync.Pool at all, just allocate a new array
+		return make([]byte, length)
+	}
+
+	m := srv.tcpPool.Get().([]byte)
+	return m[:length]
+}
+
+// putTCPBuffer returns the TCP buffer to the buffers pool
+func (srv *Server) putTCPBuffer(buf []byte) {
+	if cap(buf) == srv.TCPSize {
+		srv.tcpPool.Put(buf[:srv.TCPSize])
+	}
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.

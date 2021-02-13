@@ -524,6 +524,40 @@ func BenchmarkServe6(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
+func BenchmarkServeTCP(b *testing.B) {
+	b.StopTimer()
+	HandleFunc("miek.nl.", HelloServer)
+	defer HandleRemove("miek.nl.")
+	a := runtime.GOMAXPROCS(4)
+
+	s, addrstr, _, err := RunLocalTCPServer(":0")
+	if err != nil {
+		b.Fatalf("unable to run test server: %v", err)
+	}
+	s.MaxTCPQueries = -1
+	defer s.Shutdown()
+
+	c := new(Client)
+	c.Net = "tcp"
+	conn, err := c.Dial(addrstr)
+	if err != nil {
+		b.Fatalf("unable to connect to the test server: %v", err)
+	}
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeSOA)
+
+	b.ReportAllocs()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err := c.ExchangeWithConn(m, conn)
+		if err != nil {
+			b.Fatalf("Exchange failed: %v", err)
+		}
+	}
+	runtime.GOMAXPROCS(a)
+}
+
 func HelloServerCompress(w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
