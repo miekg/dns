@@ -1100,6 +1100,37 @@ func TestResponseDoubleClose(t *testing.T) {
 	}
 }
 
+type countingConn struct {
+	net.Conn
+	writes int
+}
+
+func (c *countingConn) Write(p []byte) (int, error) {
+	c.writes++
+	return len(p), nil
+}
+
+func TestResponseWriteSinglePacket(t *testing.T) {
+	c := &countingConn{}
+	rw := &response{
+		tcp: c,
+	}
+	rw.writer = rw
+
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+	m.Response = true
+	err := rw.WriteMsg(m)
+
+	if err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+
+	if c.writes != 1 {
+		t.Fatalf("incorrect number of Write calls")
+	}
+}
+
 type ExampleFrameLengthWriter struct {
 	Writer
 }

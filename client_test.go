@@ -396,6 +396,24 @@ func TestClientConn(t *testing.T) {
 	}
 }
 
+func TestClientConnWriteSinglePacket(t *testing.T) {
+	c := &countingConn{}
+	conn := Conn{
+		Conn: c,
+	}
+	m := new(Msg)
+	m.SetQuestion("miek.nl.", TypeTXT)
+	err := conn.WriteMsg(m)
+
+	if err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+
+	if c.writes != 1 {
+		t.Fatalf("incorrect number of Write calls")
+	}
+}
+
 func TestTruncatedMsg(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSRV)
