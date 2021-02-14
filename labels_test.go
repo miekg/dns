@@ -123,7 +123,7 @@ func TestPrevLabel(t *testing.T) {
 	for s, i := range prever {
 		x, ok := PrevLabel(s.string, s.int)
 		if i != x {
-			t.Errorf("label should be %d, got %d, %t: preving %d, %s", i, x, ok, s.int, s.string)
+			t.Errorf("label should be %d, got %d, %t: previous %d, %s", i, x, ok, s.int, s.string)
 		}
 	}
 }
