@@ -1031,7 +1031,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 				// *Msg r has an TSIG record and it was validated
 				m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
 			} else {
-				// *Msg r has an TSIG records and it was not valided
+				// *Msg r has an TSIG records and it was not validated
 				t.Errorf("invalid TSIG: %v", status)
 			}
 		} else {
