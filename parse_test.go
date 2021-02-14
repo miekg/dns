@@ -267,7 +267,7 @@ func testTXTRRQuick(t *testing.T) {
 			return false
 		}
 		if len(rdata) == 0 {
-			// string'ing won't produce any data to parse
+			// stringifying won't produce any data to parse
 			return true
 		}
 		rrString := rr.String()
