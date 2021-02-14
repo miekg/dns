@@ -239,7 +239,7 @@ func TestServeNotImplemented(t *testing.T) {
 	c := new(Client)
 	m := new(Msg)
 
-	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemnented
+	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
 	m.SetQuestion("example.com.", TypeTXT)
 	m.Opcode = opcode
 	r, _, err := c.Exchange(m, addrstr)
