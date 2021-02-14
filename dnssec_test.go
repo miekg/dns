@@ -326,7 +326,7 @@ Activate: 20110302104537`
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
 		if 65537 != priv.PublicKey.E {
-			t.Error("exponenent should be 65537")
+			t.Error("exponent should be 65537")
 		}
 	default:
 		t.Errorf("we should have read an RSA key: %v", priv)
