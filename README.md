@@ -169,6 +169,8 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 7873 - Domain Name System (DNS) Cookies
 * 8080 - EdDSA for DNSSEC
 * 8499 - DNS Terminology
+* 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+* 8976 - Message Digest for DNS Zones (ZONEMD RR)
 
 ## Loosely Based Upon
 
