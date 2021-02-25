@@ -245,8 +245,7 @@ func testTXTRRQuick(t *testing.T) {
 		rrbytes := make([]byte, 0, len(owner)+2+2+4+2+len(rdata))
 		rrbytes = append(rrbytes, owner...)
 		rrbytes = append(rrbytes, typeAndClass...)
-		rrbytes = append(rrbytes, byte(len(rdata)>>8))
-		rrbytes = append(rrbytes, byte(len(rdata)))
+		rrbytes = append(rrbytes, byte(len(rdata)>>8), byte(len(rdata)))
 		rrbytes = append(rrbytes, rdata...)
 		rr, _, err := UnpackRR(rrbytes, 0)
 		if err != nil {

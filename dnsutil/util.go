@@ -30,10 +30,10 @@ func AddOrigin(s, origin string) string {
 	if dns.IsFqdn(s) {
 		return s // s is already a FQDN, no need to mess with it.
 	}
-	if len(origin) == 0 {
+	if origin == "" {
 		return s // Nothing to append.
 	}
-	if s == "@" || len(s) == 0 {
+	if s == "@" || s == "" {
 		return origin // Expand apex.
 	}
 	if origin == "." {
@@ -50,7 +50,7 @@ func TrimDomainName(s, origin string) string {
 	// If the return value ends in a ".", the domain was not the suffix.
 	// origin can end in "." or not. Either way the results should be the same.
 
-	if len(s) == 0 {
+	if s == "" {
 		return "@"
 	}
 	// Someone is using TrimDomainName(s, ".") to remove a dot if it exists.
