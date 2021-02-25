@@ -1501,7 +1501,7 @@ func StringToTime(s string) (uint32, error) {
 
 // saltToString converts a NSECX salt to uppercase and returns "-" when it is empty.
 func saltToString(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return "-"
 	}
 	return strings.ToUpper(s)

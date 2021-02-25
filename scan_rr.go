@@ -662,7 +662,7 @@ East:
 Altitude:
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if len(l.token) == 0 || l.err {
+	if l.token == "" || l.err {
 		return &ParseError{"", "bad LOC Altitude", l}
 	}
 	if l.token[len(l.token)-1] == 'M' || l.token[len(l.token)-1] == 'm' {
@@ -722,7 +722,7 @@ func (rr *HIP) parse(c *zlexer, o string) *ParseError {
 
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
-	if len(l.token) == 0 || l.err {
+	if l.token == "" || l.err {
 		return &ParseError{"", "bad HIP Hit", l}
 	}
 	rr.Hit = l.token // This can not contain spaces, see RFC 5205 Section 6.
@@ -730,7 +730,7 @@ func (rr *HIP) parse(c *zlexer, o string) *ParseError {
 
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
-	if len(l.token) == 0 || l.err {
+	if l.token == "" || l.err {
 		return &ParseError{"", "bad HIP PublicKey", l}
 	}
 	rr.PublicKey = l.token // This cannot contain spaces
@@ -1029,7 +1029,7 @@ func (rr *NSEC3) parse(c *zlexer, o string) *ParseError {
 	rr.Iterations = uint16(i)
 	c.Next()
 	l, _ = c.Next()
-	if len(l.token) == 0 || l.err {
+	if l.token == "" || l.err {
 		return &ParseError{"", "bad NSEC3 Salt", l}
 	}
 	if l.token != "-" {
@@ -1039,7 +1039,7 @@ func (rr *NSEC3) parse(c *zlexer, o string) *ParseError {
 
 	c.Next()
 	l, _ = c.Next()
-	if len(l.token) == 0 || l.err {
+	if l.token == "" || l.err {
 		return &ParseError{"", "bad NSEC3 NextDomain", l}
 	}
 	rr.HashLength = 20 // Fix for NSEC3 (sha1 160 bits)
