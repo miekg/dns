@@ -151,7 +151,7 @@ const (
 	OpcodeUpdate = 5
 )
 
-// Used in ZONEMD https://tools.ietf.org/html/draft-ietf-dnsop-dns-zone-digest-14
+// Used in ZONEMD https://tools.ietf.org/html/rfc8976
 
 const (
 	// ZoneMD Accepted Schemes
