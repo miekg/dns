@@ -313,8 +313,7 @@ func TestCompareCompressionMapsForANY(t *testing.T) {
 	// Be sure to have more than 14bits
 	for i := 0; i < 2000; i++ {
 		target := fmt.Sprintf("host.app-%d.x%d.test.acme.", i%250, i)
-		msg.Answer = append(msg.Answer, &AAAA{Hdr: RR_Header{Name: target, Rrtype: TypeAAAA, Class: ClassINET, Ttl: 0x3c}, AAAA: net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte(i / 255), byte(i % 255)}})
-		msg.Answer = append(msg.Answer, &A{Hdr: RR_Header{Name: target, Rrtype: TypeA, Class: ClassINET, Ttl: 0x3c}, A: net.IP{127, 0, byte(i / 255), byte(i % 255)}})
+		msg.Answer = append(msg.Answer, &AAAA{Hdr: RR_Header{Name: target, Rrtype: TypeAAAA, Class: ClassINET, Ttl: 0x3c}, AAAA: net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte(i / 255), byte(i % 255)}}, &A{Hdr: RR_Header{Name: target, Rrtype: TypeA, Class: ClassINET, Ttl: 0x3c}, A: net.IP{127, 0, byte(i / 255), byte(i % 255)}})
 		if msg.Len() > 16384 {
 			break
 		}
@@ -443,16 +442,7 @@ func TestMsgCompressMultipleCompressedNames(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
 	msg.SetQuestion("www.example.com.", TypeSRV)
-	msg.Answer = append(msg.Answer, &MINFO{
-		Hdr:   RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c},
-		Rmail: "mail.example.org.",
-		Email: "mail.example.org.",
-	})
-	msg.Answer = append(msg.Answer, &SOA{
-		Hdr:  RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c},
-		Ns:   "ns.example.net.",
-		Mbox: "mail.example.net.",
-	})
+	msg.Answer = append(msg.Answer, &MINFO{Hdr: RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Rmail: "mail.example.org.", Email: "mail.example.org."}, &SOA{Hdr: RR_Header{Name: "www.example.com.", Class: 1, Rrtype: TypeSRV, Ttl: 0x3c}, Ns: "ns.example.net.", Mbox: "mail.example.net."})
 
 	predicted := msg.Len()
 	buf, err := msg.Pack()
@@ -503,8 +493,7 @@ func TestMsgCompressLengthEscaped(t *testing.T) {
 	msg := new(Msg)
 	msg.Compress = true
 	msg.SetQuestion("www.example.org.", TypeA)
-	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `\000\001\002.example.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: `ns.\e\x\a\m\p\l\e.org.`})
-	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `www.\e\x\a\m\p\l\e.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
+	msg.Answer = append(msg.Answer, &NS{Hdr: RR_Header{Name: `\000\001\002.example.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: `ns.\e\x\a\m\p\l\e.org.`}, &NS{Hdr: RR_Header{Name: `www.\e\x\a\m\p\l\e.org.`, Rrtype: TypeNS, Class: ClassINET}, Ns: "ns.example.org."})
 
 	predicted := msg.Len()
 	buf, err := msg.Pack()
