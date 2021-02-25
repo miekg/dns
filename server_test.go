@@ -239,7 +239,7 @@ func TestServeNotImplemented(t *testing.T) {
 	c := new(Client)
 	m := new(Msg)
 
-	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemnented
+	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
 	m.SetQuestion("example.com.", TypeTXT)
 	m.Opcode = opcode
 	r, _, err := c.Exchange(m, addrstr)
@@ -1031,7 +1031,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 				// *Msg r has an TSIG record and it was validated
 				m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
 			} else {
-				// *Msg r has an TSIG records and it was not valided
+				// *Msg r has an TSIG records and it was not validated
 				t.Errorf("invalid TSIG: %v", status)
 			}
 		} else {

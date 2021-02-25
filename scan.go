@@ -1352,7 +1352,7 @@ func stringToNodeID(l lex) (uint64, *ParseError) {
 	if len(l.token) < 19 {
 		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
 	}
-	// There must be three colons at fixes postitions, if not its a parse error
+	// There must be three colons at fixes positions, if not its a parse error
 	if l.token[4] != ':' && l.token[9] != ':' && l.token[14] != ':' {
 		return 0, &ParseError{l.token, "bad NID/L64 NodeID/Locator64", l}
 	}

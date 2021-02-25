@@ -266,7 +266,7 @@ func testTXTRRQuick(t *testing.T) {
 			return false
 		}
 		if len(rdata) == 0 {
-			// string'ing won't produce any data to parse
+			// stringifying won't produce any data to parse
 			return true
 		}
 		rrString := rr.String()
@@ -1671,10 +1671,10 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . key065534`,           // key can't be padded
 		`1 . key65534="f`,         // unterminated value
 		`1 . key65534="`,          // unterminated value
-		`1 . key65534=\2`,         // invalid numberic escape
-		`1 . key65534=\24`,        // invalid numberic escape
-		`1 . key65534=\256`,       // invalid numberic escape
-		`1 . key65534=\`,          // invalid numberic escape
+		`1 . key65534=\2`,         // invalid numeric escape
+		`1 . key65534=\24`,        // invalid numeric escape
+		`1 . key65534=\256`,       // invalid numeric escape
+		`1 . key65534=\`,          // invalid numeric escape
 		`1 . key65534=""alpn`,     // zQuote ending needs whitespace
 		`1 . key65534="a"alpn`,    // zQuote ending needs whitespace
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6

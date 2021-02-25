@@ -500,7 +500,7 @@ func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
 	return ti <= utc && utc <= te
 }
 
-// Return the signatures base64 encodedig sigdata as a byte slice.
+// Return the signatures base64 encoding sigdata as a byte slice.
 func (rr *RRSIG) sigBuf() []byte {
 	sigbuf, err := fromBase64([]byte(rr.Signature))
 	if err != nil {
