@@ -1921,3 +1921,74 @@ func TestUnpackRRWithHeaderInvalidLengths(t *testing.T) {
 		}
 	}
 }
+
+func TestParseZONEMD(t *testing.T) {
+	// Uses examples from https://tools.ietf.org/html/rfc8976
+	dt := map[string]string{
+		// Simple Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										c68090d90a7aed71
+										6bc459f9340e3d7c
+										1370d4d24b7e2fc3
+										a1ddc0b9a87153b9
+										a9713b3c9ae5cc27
+										777f98b8e730044c )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c",
+		// Complex Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										a3b69bad980a3504
+										e1cffcb0fd6397f9
+										3848071c93151f55
+										2ae2f6b1711d4bd2
+										d8b39808226d7b9d
+										b71e34b72077f8fe )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 a3b69bad980a3504e1cffcb0fd6397f93848071c93151f552ae2f6b1711d4bd2d8b39808226d7b9db71e34b72077f8fe",
+		// Multiple Digests Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										62e6cf51b02e54b9
+										b5f967d547ce4313
+										6792901f9f88e637
+										493daaf401c92c27
+										9dd10f0edb1c56f8
+										080211f8480ee306 )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 62e6cf51b02e54b9b5f967d547ce43136792901f9f88e637493daaf401c92c279dd10f0edb1c56f8080211f8480ee306",
+		`example.	86400	IN	ZONEMD	2018031900 1 2 (
+										08cfa1115c7b948c
+										4163a901270395ea
+										226a930cd2cbcf2f
+										a9a5e6eb85f37c8a
+										4e114d884e66f176
+										eab121cb02db7d65
+										2e0cc4827e7a3204
+										f166b47e5613fd27 )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 2 08cfa1115c7b948c4163a901270395ea226a930cd2cbcf2fa9a5e6eb85f37c8a4e114d884e66f176eab121cb02db7d652e0cc4827e7a3204f166b47e5613fd27",
+		`example.	86400	IN	ZONEMD	2018031900 1 240 (
+										e2d523f654b9422a
+										96c5a8f44607bbee )
+		`: "example.	86400	IN	ZONEMD	2018031900 1 240 e2d523f654b9422a96c5a8f44607bbee",
+		`example.	86400	IN	ZONEMD	2018031900 241 1 (
+										e1846540e33a9e41
+										89792d18d5d131f6
+										05fc283e )
+		`: "example.	86400	IN	ZONEMD	2018031900 241 1 e1846540e33a9e4189792d18d5d131f605fc283e",
+		// URI.ARPA zone
+		`uri.arpa.		3600	IN		ZONEMD	2018100702 1 1 (
+			0dbc3c4dbfd75777c12ca19c337854b1577799901307c482e9d91d5d15
+			cd934d16319d98e30c4201cf25a1d5a0254960 )`: "uri.arpa.\t3600\tIN\tZONEMD\t2018100702 1 1 0dbc3c4dbfd75777c12ca19c337854b1577799901307c482e9d91d5d15cd934d16319d98e30c4201cf25a1d5a0254960",
+		// ROOT-SERVERS.NET Zone
+		`root-servers.net.     3600000 IN  ZONEMD  2018091100 1 1 (
+			f1ca0ccd91bd5573d9f431c00ee0101b2545c97602be0a97
+			8a3b11dbfc1c776d5b3e86ae3d973d6b5349ba7f04340f79 )
+		`: "root-servers.net.\t3600000\tIN\tZONEMD\t2018091100 1 1 f1ca0ccd91bd5573d9f431c00ee0101b2545c97602be0a978a3b11dbfc1c776d5b3e86ae3d973d6b5349ba7f04340f79",
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
+	}
+}
