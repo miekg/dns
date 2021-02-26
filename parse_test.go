@@ -1991,5 +1991,4 @@ func TestParseZONEMD(t *testing.T) {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
 		}
 	}
-
 }
