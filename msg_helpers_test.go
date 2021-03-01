@@ -296,14 +296,14 @@ func TestPackDataAplPrefix_BufferBounds(t *testing.T) {
 
 func TestPackDataApl(t *testing.T) {
 	in := []APLPrefix{
-		APLPrefix{
+		{
 			Negation: true,
 			Network: net.IPNet{
 				IP:   net.ParseIP("198.51.0.0").To4(),
 				Mask: net.CIDRMask(16, 32),
 			},
 		},
-		APLPrefix{
+		{
 			Negation: false,
 			Network: net.IPNet{
 				IP:   net.ParseIP("2001:db8:beef::"),

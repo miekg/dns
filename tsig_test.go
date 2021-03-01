@@ -161,7 +161,7 @@ func TestTsigGenerate(t *testing.T) {
 			testTSIG.OtherData = tc.otherData
 			req := &Msg{
 				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
-				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Question: []Question{{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
 				Extra:    []RR{&testTSIG},
 			}
 
@@ -220,7 +220,7 @@ func TestTSIGHMAC224And384(t *testing.T) {
 			}
 			req := &Msg{
 				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
-				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Question: []Question{{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
 				Extra:    []RR{&tsig},
 			}
 
@@ -294,7 +294,7 @@ func TestTsigGenerateProvider(t *testing.T) {
 			}
 			req := &Msg{
 				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
-				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Question: []Question{{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
 				Extra:    []RR{&tsig},
 			}
 
@@ -336,7 +336,7 @@ func TestTsigVerifyProvider(t *testing.T) {
 			}
 			req := &Msg{
 				MsgHdr:   MsgHdr{Opcode: OpcodeUpdate},
-				Question: []Question{Question{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
+				Question: []Question{{Name: "example.com.", Qtype: TypeSOA, Qclass: ClassINET}},
 				Extra:    []RR{&tsig},
 			}
 
