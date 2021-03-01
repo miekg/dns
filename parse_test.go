@@ -378,6 +378,8 @@ func TestParseLOC(t *testing.T) {
 		// Exercise boundary cases
 		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
 		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
+		// use float64 to have enough precision.
+		"example.com. LOC 42 21 43.952 N 71 5 6.344 W -24m 1m 200m 10m": "example.com.\t3600\tIN\tLOC\t42 21 43.952 N 71 05 6.344 W -24m 1m 200m 10m",
 	}
 	for i, o := range lt {
 		rr, err := NewRR(i)
