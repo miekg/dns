@@ -39,6 +39,5 @@ jobs:
 
     - name: Fuzz
       run: |
-        export GOPATH=$GOROOT
         make -f Makefile.fuzz get
         make -f Makefile.fuzz
