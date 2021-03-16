@@ -3,13 +3,12 @@ package dns
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-
-	"golang.org/x/crypto/ed25519"
 )
 
 func getSoa() *SOA {
