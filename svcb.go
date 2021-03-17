@@ -283,7 +283,7 @@ func (s *SVCBMandatory) unpack(b []byte) error {
 func (s *SVCBMandatory) parse(b string) error {
 	codes := make([]SVCBKey, strings.Count(b, ",") + 1)
 	for i, k, e := 0, 0, ""; i >= 0; k += 1 {
-		i = strings.IndexByte(b, '.')
+		i = strings.IndexByte(b, ',')
 		if i < 0 {
 			e, b = b, ""
 		} else {
@@ -504,7 +504,7 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 	}
 	dst := make([]net.IP, strings.Count(b, ",") + 1)
 	for i, k, e := 0, 0, ""; i >= 0; k += 1 {
-		i = strings.IndexByte(b, '.')
+		i = strings.IndexByte(b, ',')
 		if i < 0 {
 			e, b = b, ""
 		} else {
@@ -627,7 +627,7 @@ func (s *SVCBIPv6Hint) parse(b string) error {
 	}
 	dst := make([]net.IP, strings.Count(b, ",") + 1)
 	for i, k, e := 0, 0, ""; i >= 0; k += 1 {
-		i = strings.IndexByte(b, '.')
+		i = strings.IndexByte(b, ',')
 		if i < 0 {
 			e, b = b, ""
 		} else {
