@@ -510,9 +510,9 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 		} else {
 			e, b = b[:i], b[i+1:]
 		}
-		ip := net.ParseIP(e)
+		ip := net.ParseIP(e).To4()
 		if ip == nil {
-			return errors.New("dns: svcbipv6hint: bad ip")
+			return errors.New("dns: svcbipv4hint: bad ip")
 		}
 		dst[k] = ip
 	}
