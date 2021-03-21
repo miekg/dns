@@ -150,6 +150,10 @@ func ReadRR(r io.Reader, file string) (RR, error) {
 // The text "; this is comment" is returned from Comment. Comments inside
 // the RR are returned concatenated along with the RR. Comments on a line
 // by themselves are discarded.
+//
+// The parser will not syntax check anything, e.g. illegal base64 in RRSIGs will
+// be returned as-is. If you have the requirement to validate the data you have
+// to this on the returned data from ZoneParser.
 type ZoneParser struct {
 	c *zlexer
 
