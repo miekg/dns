@@ -148,6 +148,16 @@ func (rr *OPT) SetDo(do ...bool) {
 	}
 }
 
+// Z returns the Z part of the OPT RR as a uint16 with only the 15 least significant bits used.
+func (rr *OPT) Z() uint16 {
+	return uint16(rr.Hdr.Ttl & 0x007FFF)
+}
+
+// SetZ sets the Z part of the OPT RR, note only the 15 least significant bits of z are used.
+func (rr *OPT) SetZ(z uint16) {
+	rr.Hdr.Ttl = rr.Hdr.Ttl&0xFFFF7FFF | uint32(z)
+}
+
 // EDNS0 defines an EDNS0 Option. An OPT RR can have multiple options appended to it.
 type EDNS0 interface {
 	// Option returns the option code for the option.
