@@ -384,7 +384,7 @@ func (c *Client) getTimeoutForRequest(timeout time.Duration) time.Duration {
 	}
 	// net.Dialer.Timeout has priority if smaller than the timeouts computed so
 	// far
-	if netDialer, ok := c.Dialer.(*net.Dialer); ok {
+	if netDialer, ok := c.Dialer.(*net.Dialer); ok && netDialer.Timeout != 0 {
 		if netDialer.Timeout < requestTimeout {
 			requestTimeout = netDialer.Timeout
 		}
