@@ -677,7 +677,7 @@ func (e *EDNS0_PADDING) copy() EDNS0 {
 	return &EDNS0_PADDING{b}
 }
 
-// Extended DNS Error Info Codes (RFC 8914).
+// Extended DNS Error Codes (RFC 8914).
 const (
 	ExtendedErrorCodeOther uint16 = iota
 	ExtendedErrorCodeUnsupportedDNSKEYAlgorithm
