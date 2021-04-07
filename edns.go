@@ -736,6 +736,10 @@ var ExtendedErrorCodeToString = map[uint16]string{
 	ExtendedErrorCodeInvalidData:                "Invalid Data",
 }
 
+// StringToExtendedErrorCode is a map from human readable descriptions to
+// extended error info codes.
+var StringToExtendedErrorCode = reverseInt16(ExtendedErrorCodeToString)
+
 // EDNS0_EDE option is used to return additional information about the cause of
 // DNS errors.
 type EDNS0_EDE struct {
