@@ -677,6 +677,7 @@ func (e *EDNS0_PADDING) copy() EDNS0 {
 	return &EDNS0_PADDING{b}
 }
 
+// Extended DNS Error Info Codes (RFC 8914).
 const (
 	ExtendedErrorCodeOther uint16 = iota
 	ExtendedErrorCodeUnsupportedDNSKEYAlgorithm
@@ -705,6 +706,8 @@ const (
 	ExtendedErrorCodeInvalidData
 )
 
+// ExtendedErrorCodeToString maps extended error info codes to a human readable
+// description.
 var ExtendedErrorCodeToString = map[uint16]string{
 	ExtendedErrorCodeOther:                      "Other",
 	ExtendedErrorCodeUnsupportedDNSKEYAlgorithm: "Unsupported DNSKEY Algorithm",
