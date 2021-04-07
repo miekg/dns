@@ -22,6 +22,7 @@ const (
 	EDNS0COOKIE       = 0xa     // EDNS0 Cookie
 	EDNS0TCPKEEPALIVE = 0xb     // EDNS0 tcp keep alive (See RFC 7828)
 	EDNS0PADDING      = 0xc     // EDNS0 padding (See RFC 7830)
+	EDNS0EDE          = 0xf     // EDNS0 extended DNS errors (See RFC 8914)
 	EDNS0LOCALSTART   = 0xFDE9  // Beginning of range reserved for local/experimental use (See RFC 6891)
 	EDNS0LOCALEND     = 0xFFFE  // End of range reserved for local/experimental use (See RFC 6891)
 	_DO               = 1 << 15 // DNSSEC OK
@@ -73,6 +74,8 @@ func (rr *OPT) String() string {
 			s += "\n; LOCAL OPT: " + o.String()
 		case *EDNS0_PADDING:
 			s += "\n; PADDING: " + o.String()
+		case *EDNS0_EDE:
+			s += "\n; EDE: " + o.String()
 		}
 	}
 	return s
@@ -672,4 +675,95 @@ func (e *EDNS0_PADDING) copy() EDNS0 {
 	b := make([]byte, len(e.Padding))
 	copy(b, e.Padding)
 	return &EDNS0_PADDING{b}
+}
+
+const (
+	EDECodeOther uint16 = iota
+	EDECodeUnsupportedDNSKEYAlgorithm
+	EDECodeUnsupportedDSDigestType
+	EDECodeStaleAnswer
+	EDECodeForgedAnswer
+	EDECodeDNSSECIndeterminate
+	EDECodeDNSBogus
+	EDECodeSignatureExpired
+	EDECodeSignatureNotYetValid
+	EDECodeDNSKEYMissing
+	EDECodeRRSIGsMissing
+	EDECodeNoZoneKeyBitSet
+	EDECodeNSECMissing
+	EDECodeCachedError
+	EDECodeNotReady
+	EDECodeBlocked
+	EDECodeCensored
+	EDECodeFiltered
+	EDECodeProhibited
+	EDECodeStaleNXDOMAINAnswer
+	EDECodeNotAuthoritative
+	EDECodeNotSupported
+	EDECodeNoReachableAuthority
+	EDECodeNetworkError
+	EDECodeInvalidData
+)
+
+var EDECodeToString = map[uint16]string{
+	EDECodeOther:                      "Other",
+	EDECodeUnsupportedDNSKEYAlgorithm: "Unsupported DNSKEY Algorithm",
+	EDECodeUnsupportedDSDigestType:    "Unsupported DS Digest Type",
+	EDECodeStaleAnswer:                "Stale Answer",
+	EDECodeForgedAnswer:               "Forged Answer",
+	EDECodeDNSSECIndeterminate:        "DNSSEC Indeterminate",
+	EDECodeDNSBogus:                   "DNSSEC Bogus",
+	EDECodeSignatureExpired:           "Signature Expired",
+	EDECodeSignatureNotYetValid:       "Signature Not Yet Valid",
+	EDECodeDNSKEYMissing:              "DNSKEY Missing",
+	EDECodeRRSIGsMissing:              "RRSIGs Missing",
+	EDECodeNoZoneKeyBitSet:            "No Zone Key Bit Set",
+	EDECodeNSECMissing:                "NSEC Missing",
+	EDECodeCachedError:                "Cached Error",
+	EDECodeNotReady:                   "Not Ready",
+	EDECodeBlocked:                    "Blocked",
+	EDECodeCensored:                   "Censored",
+	EDECodeFiltered:                   "Filtered",
+	EDECodeProhibited:                 "Prohibited",
+	EDECodeStaleNXDOMAINAnswer:        "Stale NXDOMAIN Answer",
+	EDECodeNotAuthoritative:           "Not Authoritative",
+	EDECodeNotSupported:               "Not Supported",
+	EDECodeNoReachableAuthority:       "No Reachable Authority",
+	EDECodeNetworkError:               "Network Error",
+	EDECodeInvalidData:                "Invalid Data",
+}
+
+// EDNS0_EDE option is used to return additional information about the cause of
+// DNS errors.
+type EDNS0_EDE struct {
+	InfoCode  uint16
+	ExtraText string
+}
+
+// Option implements the EDNS0 interface.
+func (e *EDNS0_EDE) Option() uint16 { return EDNS0EDE }
+func (e *EDNS0_EDE) copy() EDNS0    { return &EDNS0_EDE{e.InfoCode, e.ExtraText} }
+
+func (e *EDNS0_EDE) String() string {
+	info := strconv.FormatUint(uint64(e.InfoCode), 10)
+	if s, ok := EDECodeToString[e.InfoCode]; ok {
+		info += fmt.Sprintf(" (%s)", s)
+	}
+	return fmt.Sprintf("%s: (%s)", info, e.ExtraText)
+}
+
+func (e *EDNS0_EDE) pack() ([]byte, error) {
+	b := make([]byte, 2+len(e.ExtraText))
+	binary.BigEndian.PutUint16(b[0:], e.InfoCode)
+	copy(b[2:], []byte(e.ExtraText))
+	return b, nil
+}
+
+func (e *EDNS0_EDE) unpack(b []byte) error {
+	if len(b) < 2 {
+		return ErrBuf
+	}
+	e.InfoCode = binary.BigEndian.Uint16(b[0:])
+	e.ExtraText = string(b[2:])
+	return nil
 }
