@@ -678,59 +678,59 @@ func (e *EDNS0_PADDING) copy() EDNS0 {
 }
 
 const (
-	EDECodeOther uint16 = iota
-	EDECodeUnsupportedDNSKEYAlgorithm
-	EDECodeUnsupportedDSDigestType
-	EDECodeStaleAnswer
-	EDECodeForgedAnswer
-	EDECodeDNSSECIndeterminate
-	EDECodeDNSBogus
-	EDECodeSignatureExpired
-	EDECodeSignatureNotYetValid
-	EDECodeDNSKEYMissing
-	EDECodeRRSIGsMissing
-	EDECodeNoZoneKeyBitSet
-	EDECodeNSECMissing
-	EDECodeCachedError
-	EDECodeNotReady
-	EDECodeBlocked
-	EDECodeCensored
-	EDECodeFiltered
-	EDECodeProhibited
-	EDECodeStaleNXDOMAINAnswer
-	EDECodeNotAuthoritative
-	EDECodeNotSupported
-	EDECodeNoReachableAuthority
-	EDECodeNetworkError
-	EDECodeInvalidData
+	ExtendedErrorCodeOther uint16 = iota
+	ExtendedErrorCodeUnsupportedDNSKEYAlgorithm
+	ExtendedErrorCodeUnsupportedDSDigestType
+	ExtendedErrorCodeStaleAnswer
+	ExtendedErrorCodeForgedAnswer
+	ExtendedErrorCodeDNSSECIndeterminate
+	ExtendedErrorCodeDNSBogus
+	ExtendedErrorCodeSignatureExpired
+	ExtendedErrorCodeSignatureNotYetValid
+	ExtendedErrorCodeDNSKEYMissing
+	ExtendedErrorCodeRRSIGsMissing
+	ExtendedErrorCodeNoZoneKeyBitSet
+	ExtendedErrorCodeNSECMissing
+	ExtendedErrorCodeCachedError
+	ExtendedErrorCodeNotReady
+	ExtendedErrorCodeBlocked
+	ExtendedErrorCodeCensored
+	ExtendedErrorCodeFiltered
+	ExtendedErrorCodeProhibited
+	ExtendedErrorCodeStaleNXDOMAINAnswer
+	ExtendedErrorCodeNotAuthoritative
+	ExtendedErrorCodeNotSupported
+	ExtendedErrorCodeNoReachableAuthority
+	ExtendedErrorCodeNetworkError
+	ExtendedErrorCodeInvalidData
 )
 
-var EDECodeToString = map[uint16]string{
-	EDECodeOther:                      "Other",
-	EDECodeUnsupportedDNSKEYAlgorithm: "Unsupported DNSKEY Algorithm",
-	EDECodeUnsupportedDSDigestType:    "Unsupported DS Digest Type",
-	EDECodeStaleAnswer:                "Stale Answer",
-	EDECodeForgedAnswer:               "Forged Answer",
-	EDECodeDNSSECIndeterminate:        "DNSSEC Indeterminate",
-	EDECodeDNSBogus:                   "DNSSEC Bogus",
-	EDECodeSignatureExpired:           "Signature Expired",
-	EDECodeSignatureNotYetValid:       "Signature Not Yet Valid",
-	EDECodeDNSKEYMissing:              "DNSKEY Missing",
-	EDECodeRRSIGsMissing:              "RRSIGs Missing",
-	EDECodeNoZoneKeyBitSet:            "No Zone Key Bit Set",
-	EDECodeNSECMissing:                "NSEC Missing",
-	EDECodeCachedError:                "Cached Error",
-	EDECodeNotReady:                   "Not Ready",
-	EDECodeBlocked:                    "Blocked",
-	EDECodeCensored:                   "Censored",
-	EDECodeFiltered:                   "Filtered",
-	EDECodeProhibited:                 "Prohibited",
-	EDECodeStaleNXDOMAINAnswer:        "Stale NXDOMAIN Answer",
-	EDECodeNotAuthoritative:           "Not Authoritative",
-	EDECodeNotSupported:               "Not Supported",
-	EDECodeNoReachableAuthority:       "No Reachable Authority",
-	EDECodeNetworkError:               "Network Error",
-	EDECodeInvalidData:                "Invalid Data",
+var ExtendedErrorCodeToString = map[uint16]string{
+	ExtendedErrorCodeOther:                      "Other",
+	ExtendedErrorCodeUnsupportedDNSKEYAlgorithm: "Unsupported DNSKEY Algorithm",
+	ExtendedErrorCodeUnsupportedDSDigestType:    "Unsupported DS Digest Type",
+	ExtendedErrorCodeStaleAnswer:                "Stale Answer",
+	ExtendedErrorCodeForgedAnswer:               "Forged Answer",
+	ExtendedErrorCodeDNSSECIndeterminate:        "DNSSEC Indeterminate",
+	ExtendedErrorCodeDNSBogus:                   "DNSSEC Bogus",
+	ExtendedErrorCodeSignatureExpired:           "Signature Expired",
+	ExtendedErrorCodeSignatureNotYetValid:       "Signature Not Yet Valid",
+	ExtendedErrorCodeDNSKEYMissing:              "DNSKEY Missing",
+	ExtendedErrorCodeRRSIGsMissing:              "RRSIGs Missing",
+	ExtendedErrorCodeNoZoneKeyBitSet:            "No Zone Key Bit Set",
+	ExtendedErrorCodeNSECMissing:                "NSEC Missing",
+	ExtendedErrorCodeCachedError:                "Cached Error",
+	ExtendedErrorCodeNotReady:                   "Not Ready",
+	ExtendedErrorCodeBlocked:                    "Blocked",
+	ExtendedErrorCodeCensored:                   "Censored",
+	ExtendedErrorCodeFiltered:                   "Filtered",
+	ExtendedErrorCodeProhibited:                 "Prohibited",
+	ExtendedErrorCodeStaleNXDOMAINAnswer:        "Stale NXDOMAIN Answer",
+	ExtendedErrorCodeNotAuthoritative:           "Not Authoritative",
+	ExtendedErrorCodeNotSupported:               "Not Supported",
+	ExtendedErrorCodeNoReachableAuthority:       "No Reachable Authority",
+	ExtendedErrorCodeNetworkError:               "Network Error",
+	ExtendedErrorCodeInvalidData:                "Invalid Data",
 }
 
 // EDNS0_EDE option is used to return additional information about the cause of
@@ -746,7 +746,7 @@ func (e *EDNS0_EDE) copy() EDNS0    { return &EDNS0_EDE{e.InfoCode, e.ExtraText}
 
 func (e *EDNS0_EDE) String() string {
 	info := strconv.FormatUint(uint64(e.InfoCode), 10)
-	if s, ok := EDECodeToString[e.InfoCode]; ok {
+	if s, ok := ExtendedErrorCodeToString[e.InfoCode]; ok {
 		info += fmt.Sprintf(" (%s)", s)
 	}
 	return fmt.Sprintf("%s: (%s)", info, e.ExtraText)
