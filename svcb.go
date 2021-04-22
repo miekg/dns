@@ -511,9 +511,9 @@ func (s *SVCBIPv4Hint) parse(b string) error {
 }
 
 func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
-	hint := []net.IP(nil)
-	for _, ip := range s.Hint {
-		hint = append(hint, copyIP(ip))
+	hint := make([]net.IP, len(s.Hint))
+	for i, ip := range s.Hint {
+		hint[i] = copyIP(ip)
 	}
 
 	return &SVCBIPv4Hint{
@@ -634,9 +634,9 @@ func (s *SVCBIPv6Hint) parse(b string) error {
 }
 
 func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
-	hint := []net.IP(nil)
-	for _, ip := range s.Hint {
-		hint = append(hint, copyIP(ip))
+	hint := make([]net.IP, len(s.Hint))
+	for i, ip := range s.Hint {
+		hint[i] = copyIP(ip)
 	}
 
 	return &SVCBIPv6Hint{
