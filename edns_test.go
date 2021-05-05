@@ -133,3 +133,28 @@ func TestEDNS0_UL(t *testing.T) {
 		}
 	}
 }
+
+func TestZ(t *testing.T) {
+	e := &OPT{}
+	e.Hdr.Name = "."
+	e.Hdr.Rrtype = TypeOPT
+	e.SetVersion(8)
+	e.SetDo()
+	if e.Z() != 0 {
+		t.Errorf("expected Z of 0, got %d", e.Z())
+	}
+	e.SetZ(5)
+	if e.Z() != 5 {
+		t.Errorf("expected Z of 5, got %d", e.Z())
+	}
+	e.SetZ(0xFFFF)
+	if e.Z() != 0x7FFF {
+		t.Errorf("expected Z of 0x7FFFF, got %d", e.Z())
+	}
+	if e.Version() != 8 {
+		t.Errorf("expected version to still be 8, got %d", e.Version())
+	}
+	if !e.Do() {
+		t.Error("expected DO to be set")
+	}
+}
