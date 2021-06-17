@@ -242,8 +242,8 @@ func TestTSIGHMAC224And384(t *testing.T) {
 const testGoodKeyName = "goodkey."
 
 var (
-	testErrBadKey = errors.New("this is an intentional error")
-	testGoodMAC   = []byte{0, 1, 2, 3}
+	errBadKey   = errors.New("this is an intentional error")
+	testGoodMAC = []byte{0, 1, 2, 3}
 )
 
 // testProvider always generates the same MAC and only accepts the one signature
@@ -255,14 +255,14 @@ func (provider *testProvider) Generate(_ []byte, t *TSIG) ([]byte, error) {
 	if t.Hdr.Name == testGoodKeyName || provider.GenerateAllKeys {
 		return testGoodMAC, nil
 	}
-	return nil, testErrBadKey
+	return nil, errBadKey
 }
 
 func (*testProvider) Verify(_ []byte, t *TSIG) error {
 	if t.Hdr.Name == testGoodKeyName {
 		return nil
 	}
-	return testErrBadKey
+	return errBadKey
 }
 
 func TestTsigGenerateProvider(t *testing.T) {
@@ -279,7 +279,7 @@ func TestTsigGenerateProvider(t *testing.T) {
 		{
 			"badkey.",
 			nil,
-			testErrBadKey,
+			errBadKey,
 		},
 	}
 
@@ -321,7 +321,7 @@ func TestTsigVerifyProvider(t *testing.T) {
 		},
 		{
 			"badkey.",
-			testErrBadKey,
+			errBadKey,
 		},
 	}
 
