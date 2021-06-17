@@ -95,7 +95,7 @@ func (*OPT) parse(c *zlexer, origin string) *ParseError {
 	return &ParseError{err: "OPT records do not have a presentation format"}
 }
 
-func (r1 *OPT) isDuplicate(r2 RR) bool { return false }
+func (rr *OPT) isDuplicate(r2 RR) bool { return false }
 
 // return the old value -> delete SetVersion?
 
@@ -465,7 +465,7 @@ func (e *EDNS0_LLQ) copy() EDNS0 {
 	return &EDNS0_LLQ{e.Code, e.Version, e.Opcode, e.Error, e.Id, e.LeaseLife}
 }
 
-// EDNS0_DUA implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
+// EDNS0_DAU implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
 type EDNS0_DAU struct {
 	Code    uint16 // Always EDNS0DAU
 	AlgCode []uint8
