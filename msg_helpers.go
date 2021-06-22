@@ -462,6 +462,8 @@ func makeDataOpt(code uint16) EDNS0 {
 		return new(EDNS0_PADDING)
 	case EDNS0EDE:
 		return new(EDNS0_EDE)
+	case EDNS0TCPKEEPALIVE:
+		return new(EDNS0_TCP_KEEPALIVE)
 	default:
 		e := new(EDNS0_LOCAL)
 		e.Code = code
