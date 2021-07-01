@@ -237,6 +237,24 @@ func (q *Question) len(off int, compression map[string]struct{}) int {
 	return l
 }
 
+// MDNSClass will return an unpacked query class as defined in RFC6762. The
+// lower 15 bits of the Qclass field is returned along with if the
+// unicast-response bit has been set or not.
+func (q *Question) MDNSClass() (uint16, bool) {
+	return q.Qclass ^ 1<<15, (q.Qclass & 1 << 15) != 0
+}
+
+// SetMDNSClass will pack a query class and a unicast-response bit into the
+// Qclass field as defined in RFC6762.  The lower 15 bits of the class are
+// used to represent the class with the unicast-reponse bit packed into the
+// top bit.
+func (q *Question) SetMDNSClass(class uint16, unicastResponse bool) {
+	if unicastResponse {
+		q.Qclass = class | 1<<15
+	}
+	q.Qclass = class ^ 1<<15
+}
+
 func (q *Question) String() (s string) {
 	// prefix with ; (as in dig)
 	s = ";" + sprintName(q.Name) + "\t"
