@@ -17,6 +17,18 @@ import (
 // Default maximum number of TCP queries before we close the socket.
 const maxTCPQueries = 128
 
+// The socket option variable.
+// It is only supported on go1.11+ and when using ListenAndServe.
+type SocketOption uint8
+
+const (
+	SocketNone SocketOption = iota
+	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
+	SocketReusePort = 1 << iota
+	// Whether to set the IP_TRANSPARENT socket option.
+	SocketIpTransparent
+)
+
 // aLongTimeAgo is a non-zero time, far in the past, used for
 // immediate cancelation of network operations.
 var aLongTimeAgo = time.Unix(1, 0)
@@ -223,7 +235,10 @@ type Server struct {
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on go1.11+ and when using ListenAndServe.
+	// It is deprecated. please use SocketOptions.
 	ReusePort bool
+	// Socket options.
+	SocketOptions SocketOption
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
@@ -289,10 +304,13 @@ func (srv *Server) ListenAndServe() error {
 	}
 
 	srv.init()
+	if srv.ReusePort {
+		srv.SocketOptions |= SocketReusePort
+	}
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		l, err := listenTCP(srv.Net, addr, srv.ReusePort)
+		l, err := listenTCP(srv.Net, addr, srv.SocketOptions)
 		if err != nil {
 			return err
 		}
@@ -305,7 +323,7 @@ func (srv *Server) ListenAndServe() error {
 			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
 		}
 		network := strings.TrimSuffix(srv.Net, "-tls")
-		l, err := listenTCP(network, addr, srv.ReusePort)
+		l, err := listenTCP(network, addr, srv.SocketOptions)
 		if err != nil {
 			return err
 		}
@@ -315,7 +333,7 @@ func (srv *Server) ListenAndServe() error {
 		unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
-		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
+		l, err := listenUDP(srv.Net, addr, srv.SocketOptions)
 		if err != nil {
 			return err
 		}

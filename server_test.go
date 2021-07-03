@@ -963,13 +963,14 @@ func TestServerReuseport(t *testing.T) {
 		t.Skip("reuseport is not supported")
 	}
 
-	startServer := func(addr string) (*Server, chan error) {
+	startServer := func(addr string, reusePort bool, option SocketOption) (*Server, chan error) {
 		wait := make(chan struct{})
 		srv := &Server{
 			Net:               "udp",
 			Addr:              addr,
 			NotifyStartedFunc: func() { close(wait) },
-			ReusePort:         true,
+			ReusePort:         reusePort,
+			SocketOptions:     option,
 		}
 
 		fin := make(chan error, 1)
@@ -986,22 +987,28 @@ func TestServerReuseport(t *testing.T) {
 		return srv, fin
 	}
 
-	srv1, fin1 := startServer(":0") // :0 is resolved to a random free port by the kernel
-	srv2, fin2 := startServer(srv1.PacketConn.LocalAddr().String())
+	operateServer := func(reusePort bool, option SocketOption) {
+		srv1, fin1 := startServer(":0", reusePort, option) // :0 is resolved to a random free port by the kernel
+		srv2, fin2 := startServer(srv1.PacketConn.LocalAddr().String(), reusePort, option)
 
-	if err := srv1.Shutdown(); err != nil {
-		t.Fatalf("failed to shutdown first server: %v", err)
-	}
-	if err := srv2.Shutdown(); err != nil {
-		t.Fatalf("failed to shutdown second server: %v", err)
+		if err := srv1.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown first server: %v", err)
+		}
+		if err := srv2.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown second server: %v", err)
+		}
+
+		if err := <-fin1; err != nil {
+			t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
+		}
+		if err := <-fin2; err != nil {
+			t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
+		}
 	}
 
-	if err := <-fin1; err != nil {
-		t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
-	}
-	if err := <-fin2; err != nil {
-		t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
-	}
+	operateServer(true, SocketNone)
+	operateServer(false, SocketReusePort|SocketIpTransparent)
+	operateServer(false, SocketReusePort)
 }
 
 func TestServerRoundtripTsig(t *testing.T) {
