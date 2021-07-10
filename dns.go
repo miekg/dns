@@ -75,6 +75,24 @@ type RR_Header struct {
 // Header returns itself. This is here to make RR_Header implements the RR interface.
 func (h *RR_Header) Header() *RR_Header { return h }
 
+// MDNSClass will return an unpacked record class as defined in RFC6762. The
+// lower 15 bits of the Class field is returned along with if the cache-flush
+// bit has been set or not.
+func (h *RR_Header) MDNSClass() (uint16, bool) {
+	return h.Class ^ 1<<15, (h.Class & 1 << 15) != 0
+}
+
+// SetMDNSClass will pack a query class and a cache-flush bit into the
+// Class field as defined in RFC6762.  The lower 15 bits of the class are
+// used to represent the class with the cache-flush bit packed into the
+// top bit.
+func (h *RR_Header) SetMDNSClass(class uint16, unicastResponse bool) {
+	if unicastResponse {
+		h.Class = class | 1<<15
+	}
+	h.Class = class ^ 1<<15
+}
+
 // Just to implement the RR interface.
 func (h *RR_Header) copy() RR { return nil }
 
