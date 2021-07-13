@@ -33,6 +33,7 @@ func (u *Msg) Used(rr []RR) {
 	}
 	for _, r := range rr {
 		r.Header().Class = u.Question[0].Qclass
+		r.Header().Ttl = 0
 		u.Answer = append(u.Answer, r)
 	}
 }
