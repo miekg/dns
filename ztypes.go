@@ -90,6 +90,7 @@ var TypeToString = map[uint16]string{
 	TypeA:          "A",
 	TypeAAAA:       "AAAA",
 	TypeAFSDB:      "AFSDB",
+	TypeAMTRELAY:   "AMTRELAY",
 	TypeANY:        "ANY",
 	TypeAPL:        "APL",
 	TypeATMA:       "ATMA",

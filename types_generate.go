@@ -87,7 +87,7 @@ func getTypeStruct(t types.Type, scope *types.Scope) (*types.Struct, bool) {
 
 // loadModule retrieves package description for a given module.
 func loadModule(name string) (*types.Package, error) {
-	conf := packages.Config{Mode: packages.NeedTypes | packages.NeedTypesInfo}
+	conf := packages.Config{Mode: packages.LoadAllSyntax}
 	pkgs, err := packages.Load(&conf, name)
 	if err != nil {
 		return nil, err
@@ -297,6 +297,10 @@ func main() {
 	WriteCopy:
 		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
 		fmt.Fprintf(b, "}\n")
+	}
+
+	if len(b.Bytes()) < 512 {
+		log.Fatalf("Generated less than 512 bytes of source, something is off: %d", len(b.Bytes()))
 	}
 
 	// gofmt

@@ -23,3 +23,6 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Generate
+      run: for i in *_generate.go; do go run $i; done
