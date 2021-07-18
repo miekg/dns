@@ -135,7 +135,7 @@ func TestPreReqAndRemovals(t *testing.T) {
 name_used.	0	CLASS255	ANY	
 name_not_used.	0	NONE	ANY	
 rrset_used1.	0	CLASS255	A	
-rrset_used2.	3600	IN	A	127.0.0.1
+rrset_used2.	0	IN	A	127.0.0.1
 rrset_not_used.	0	NONE	A	
 
 ;; AUTHORITY SECTION:
