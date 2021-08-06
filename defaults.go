@@ -2,6 +2,7 @@ package dns
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -326,13 +327,23 @@ func CanonicalName(s string) string {
 // Copied from the official Go code.
 
 // ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
-// address suitable for reverse DNS (PTR) record lookups or an error if it fails
-// to parse the IP address.
-func ReverseAddr(addr string) (arpa string, err error) {
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return "", &Error{err: "unrecognized address: " + addr}
+// address suitable for reverse DNS (PTR) record lookups. It accepts string or net.IP
+// as addr parameter. Error is returned if it's unable to parse IP address from string,
+// neither IPv4 nor IPv6 is used, or other but string of net.IP object is used
+func ReverseAddr(addr interface{}) (arpa string, err error) {
+	var ip net.IP
+	switch v := addr.(type) {
+	case net.IP:
+		ip = v
+	case string:
+		ip = net.ParseIP(v)
+		if ip == nil {
+			return "", &Error{err: "unrecognized address: " + v}
+		}
+	default:
+		return "", &Error{err: fmt.Sprintf("the addr type is not string or net.IP: %T", v)}
 	}
+
 	if v4 := ip.To4(); v4 != nil {
 		buf := make([]byte, 0, net.IPv4len*4+len("in-addr.arpa."))
 		// Add it, in reverse, to the buffer
@@ -343,6 +354,9 @@ func ReverseAddr(addr string) (arpa string, err error) {
 		// Append "in-addr.arpa." and return (buf already has the final .)
 		buf = append(buf, "in-addr.arpa."...)
 		return string(buf), nil
+	}
+	if v6 := ip.To16(); v6 == nil {
+		return "", &Error{err: "ip address neither IPv4 nor IPv6: " + ip.String()}
 	}
 	// Must be IPv6
 	buf := make([]byte, 0, net.IPv6len*4+len("ip6.arpa."))
