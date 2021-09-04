@@ -599,7 +599,6 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	binary.BigEndian.PutUint32(b, e.Expire)
 	return b, nil
 }
-
 func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	if len(b) == 0 {
 		// zero-length EXPIRE query, see RFC 7314 Section 2
