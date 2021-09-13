@@ -139,19 +139,20 @@ type timerWireFmt struct {
 	Fudge      uint16
 }
 
-// TsigGenerate fills out the TSIG record attached to the message.
+// TsigGenerate calls TsigGenerateProvider with the default TsigProvider tsigHMACProvider.
+func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
+	return TsigGenerateProvider(m, tsigHMACProvider(secret), requestMAC, timersOnly)
+}
+
+// TsigGenerateProvider fills out the TSIG record attached to the message using the provided TsigProvider.
 // The message should contain
 // a "stub" TSIG RR with the algorithm, key name (owner name of the RR),
 // time fudge (defaults to 300 seconds) and the current time
 // The TSIG MAC is saved in that Tsig RR.
-// When TsigGenerate is called for the first time requestMAC is set to the empty string and
+// When TsigGenerateProvider is called for the first time requestMAC is set to the empty string and
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
-func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return tsigGenerateProvider(m, tsigHMACProvider(secret), requestMAC, timersOnly)
-}
-
-func tsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, timersOnly bool) ([]byte, string, error) {
+func TsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -189,14 +190,15 @@ func tsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, time
 	return mbuf, t.MAC, nil
 }
 
-// TsigVerify verifies the TSIG on a message.
-// If the signature does not validate err contains the
-// error, otherwise it is nil.
+// TsigVerify calls TsigVerifyProvider with the default TsigProvider tsigHMACProvider.
 func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, tsigHMACProvider(secret), requestMAC, timersOnly, uint64(time.Now().Unix()))
 }
 
-func tsigVerifyProvider(msg []byte, provider TsigProvider, requestMAC string, timersOnly bool) error {
+// TsigVerifyProvider verifies the TSIG on a message using the provided TsigProvider.
+// If the signature does not validate err contains the
+// error, otherwise it is nil.
+func TsigVerifyProvider(msg []byte, provider TsigProvider, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, provider, requestMAC, timersOnly, uint64(time.Now().Unix()))
 }
 
