@@ -576,7 +576,7 @@ func (e *EDNS0_N3U) copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
 // EDNS0_EXPIRE implements the EDNS0 option as described in RFC 7314.
 type EDNS0_EXPIRE struct {
 	Code   uint16  // Always EDNS0EXPIRE
-	Expire []uint8 // can be zero or 4 length
+	Expire []uint8 // either zero or 4 octets
 }
 
 // Option implements the EDNS0 interface.
@@ -590,7 +590,7 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 }
 func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	if len(b) != 0 && len(b) != 4 {
-		return errors.New("dns: expire length mismatch, want 0/4 but got " + strconv.Itoa(len(b)))
+		return ErrBuf
 	}
 	e.Expire = b
 	return nil
@@ -598,11 +598,9 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 
 func (e *EDNS0_EXPIRE) String() (s string) {
 	if len(e.Expire) == 0 {
-		s = "<omitted>"
-	} else {
-		s = fmt.Sprintf("<%d>", binary.BigEndian.Uint32(e.Expire))
+		return "<MISSING>"
 	}
-	return s
+	return fmt.Sprintf("%d", binary.BigEndian.Uint32(e.Expire))
 }
 
 // The EDNS0_LOCAL option is used for local/experimental purposes. The option
