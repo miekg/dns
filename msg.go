@@ -14,6 +14,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"math/big"
 	"strconv"
 	"strings"
@@ -83,11 +84,11 @@ var Id = id
 // message id. The random provided should be good enough.
 func id() uint16 {
 	b := make([]byte, 2)
-	n, err := rand.Reader.Read(b)
+	_, err := io.ReadFull(rand.Reader, b)
 	if err != nil {
 		panic("dns: reading random id failed: " + err.Error())
 	}
-	return binary.BigEndian.Uint16(b[:n])
+	return binary.BigEndian.Uint16(b)
 }
 
 // MsgHdr is a a manually-unpacked version of (id, bits).
