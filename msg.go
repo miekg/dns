@@ -82,12 +82,12 @@ var Id = id
 // id returns a 16 bits random number to be used as a
 // message id. The random provided should be good enough.
 func id() uint16 {
-	var output uint16
-	err := binary.Read(rand.Reader, binary.BigEndian, &output)
+	b := make([]byte, 2)
+	n, err := rand.Reader.Read(b)
 	if err != nil {
 		panic("dns: reading random id failed: " + err.Error())
 	}
-	return output
+	return binary.BigEndian.Uint16(b[:n])
 }
 
 // MsgHdr is a a manually-unpacked version of (id, bits).
