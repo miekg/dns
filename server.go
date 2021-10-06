@@ -37,6 +37,19 @@ func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
 	f(w, r)
 }
 
+// HandlerContext is a context-aware version of Handler.
+type HandlerContext interface {
+	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
+}
+
+// The HandlerFuncContext is a context-aware version of HandlerFunc.
+type HandlerFuncContext func(context.Context, ResponseWriter, *Msg)
+
+// ServeDNS calls f(ctx, w, r).
+func (f HandlerFuncContext) ServeDNS(ctx context.Context, w ResponseWriter, r *Msg) {
+	f(ctx, w, r)
+}
+
 // A ResponseWriter interface is used by an DNS handler to
 // construct an DNS response.
 type ResponseWriter interface {
@@ -202,6 +215,8 @@ type Server struct {
 	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
+	// HandlerContext is invoked instead of Handler if this field is set.
+	HandlerContext HandlerContext
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
@@ -263,6 +278,9 @@ func (srv *Server) init() {
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
+	}
+	if srv.HandlerContext == nil {
+		srv.HandlerContext = handlerContextFromHandler(srv.Handler)
 	}
 
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
@@ -648,7 +666,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		srv.udpPool.Put(m[:srv.UDPSize])
 	}
 
-	srv.Handler.ServeDNS(w, req) // Writes back to the client
+	srv.HandlerContext.ServeDNS(context.Background(), w, req) // Writes back to the client
 }
 
 func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {

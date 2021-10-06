@@ -1,11 +1,13 @@
 package dns
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDotAsCatchAllWildcard(t *testing.T) {
-	mux := NewServeMux()
-	mux.Handle(".", HandlerFunc(HelloServer))
-	mux.Handle("example.com.", HandlerFunc(AnotherHelloServer))
+	mux := NewServeMuxContext()
+	mux.Handle(".", handlerContextFromHandler(HandlerFunc(HelloServer)))
+	mux.Handle("example.com.", handlerContextFromHandler(HandlerFunc(AnotherHelloServer)))
 
 	handler := mux.match("www.miek.nl.", TypeTXT)
 	if handler == nil {
@@ -29,8 +31,8 @@ func TestDotAsCatchAllWildcard(t *testing.T) {
 }
 
 func TestCaseFolding(t *testing.T) {
-	mux := NewServeMux()
-	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
+	mux := NewServeMuxContext()
+	mux.Handle("_udp.example.com.", handlerContextFromHandler(HandlerFunc(HelloServer)))
 
 	handler := mux.match("_dns._udp.example.com.", TypeSRV)
 	if handler == nil {
@@ -44,8 +46,8 @@ func TestCaseFolding(t *testing.T) {
 }
 
 func TestRootServer(t *testing.T) {
-	mux := NewServeMux()
-	mux.Handle(".", HandlerFunc(HelloServer))
+	mux := NewServeMuxContext()
+	mux.Handle(".", handlerContextFromHandler(HandlerFunc(HelloServer)))
 
 	handler := mux.match(".", TypeNS)
 	if handler == nil {
@@ -54,8 +56,8 @@ func TestRootServer(t *testing.T) {
 }
 
 func BenchmarkMuxMatch(b *testing.B) {
-	mux := NewServeMux()
-	mux.Handle("_udp.example.com.", HandlerFunc(HelloServer))
+	mux := NewServeMuxContext()
+	mux.Handle("_udp.example.com.", handlerContextFromHandler(HandlerFunc(HelloServer)))
 
 	bench := func(q string) func(*testing.B) {
 		return func(b *testing.B) {
