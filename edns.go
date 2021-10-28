@@ -598,9 +598,9 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 
 func (e *EDNS0_EXPIRE) String() (s string) {
 	if len(e.Expire) == 0 {
-		return "<MISSING>"
+		return ""
 	}
-	return fmt.Sprintf("%d", binary.BigEndian.Uint32(e.Expire))
+	return strconv.FormatUint(binary.BigEndian.Uint64(e.Expire), 10)
 }
 
 // The EDNS0_LOCAL option is used for local/experimental purposes. The option
