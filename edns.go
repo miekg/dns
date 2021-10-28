@@ -29,41 +29,33 @@ const (
 	_DO               = 1 << 15 // DNSSEC OK
 )
 
+// OptionCodeToEDNS0 is a map of constructors for each EDNS0 type.
+var OptionCodeToEDNS0 = map[uint16]func() EDNS0{
+	// All the EDNS0.* constants above need to be in this map.
+	EDNS0LLQ:          func() EDNS0 { return new(EDNS0_LLQ) },
+	EDNS0UL:           func() EDNS0 { return new(EDNS0_UL) },
+	EDNS0NSID:         func() EDNS0 { return new(EDNS0_NSID) },
+	EDNS0DAU:          func() EDNS0 { return new(EDNS0_DAU) },
+	EDNS0DHU:          func() EDNS0 { return new(EDNS0_DHU) },
+	EDNS0N3U:          func() EDNS0 { return new(EDNS0_N3U) },
+	EDNS0SUBNET:       func() EDNS0 { return new(EDNS0_SUBNET) },
+	EDNS0EXPIRE:       func() EDNS0 { return new(EDNS0_EXPIRE) },
+	EDNS0COOKIE:       func() EDNS0 { return new(EDNS0_COOKIE) },
+	EDNS0TCPKEEPALIVE: func() EDNS0 { return new(EDNS0_TCP_KEEPALIVE) },
+	EDNS0PADDING:      func() EDNS0 { return new(EDNS0_PADDING) },
+	EDNS0EDE:          func() EDNS0 { return new(EDNS0_EDE) },
+	EDNS0ESU:          func() EDNS0 { return &EDNS0_ESU{Code: EDNS0ESU} },
+}
+
 // makeDataOpt is used to unpack the EDNS0 option(s) from a message.
 func makeDataOpt(code uint16) EDNS0 {
-	// All the EDNS0.* constants above need to be in this switch.
-	switch code {
-	case EDNS0LLQ:
-		return new(EDNS0_LLQ)
-	case EDNS0UL:
-		return new(EDNS0_UL)
-	case EDNS0NSID:
-		return new(EDNS0_NSID)
-	case EDNS0DAU:
-		return new(EDNS0_DAU)
-	case EDNS0DHU:
-		return new(EDNS0_DHU)
-	case EDNS0N3U:
-		return new(EDNS0_N3U)
-	case EDNS0SUBNET:
-		return new(EDNS0_SUBNET)
-	case EDNS0EXPIRE:
-		return new(EDNS0_EXPIRE)
-	case EDNS0COOKIE:
-		return new(EDNS0_COOKIE)
-	case EDNS0TCPKEEPALIVE:
-		return new(EDNS0_TCP_KEEPALIVE)
-	case EDNS0PADDING:
-		return new(EDNS0_PADDING)
-	case EDNS0EDE:
-		return new(EDNS0_EDE)
-	case EDNS0ESU:
-		return &EDNS0_ESU{Code: EDNS0ESU}
-	default:
-		e := new(EDNS0_LOCAL)
-		e.Code = code
-		return e
+	if newFn, ok := OptionCodeToEDNS0[code]; ok {
+		return newFn()
 	}
+
+	e := new(EDNS0_LOCAL)
+	e.Code = code
+	return e
 }
 
 // OPT is the EDNS0 RR appended to messages to convey extra (meta) information.
