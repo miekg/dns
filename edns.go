@@ -29,8 +29,8 @@ const (
 	_DO               = 1 << 15 // DNSSEC OK
 )
 
-// OptionCodeToEDNS0 is a map of constructors for each EDNS0 type.
-var OptionCodeToEDNS0 = map[uint16]func() EDNS0{
+// optionCodeToEDNS0 is a map of constructors for each EDNS0 type.
+var optionCodeToEDNS0 = map[uint16]func() EDNS0{
 	// All the EDNS0.* constants above need to be in this map.
 	EDNS0LLQ:          func() EDNS0 { return new(EDNS0_LLQ) },
 	EDNS0UL:           func() EDNS0 { return new(EDNS0_UL) },
@@ -49,7 +49,7 @@ var OptionCodeToEDNS0 = map[uint16]func() EDNS0{
 
 // makeDataOpt is used to unpack the EDNS0 option(s) from a message.
 func makeDataOpt(code uint16) EDNS0 {
-	if newFn, ok := OptionCodeToEDNS0[code]; ok {
+	if newFn, ok := optionCodeToEDNS0[code]; ok {
 		return newFn()
 	}
 
@@ -644,6 +644,17 @@ func (e *EDNS0_LOCAL) unpack(b []byte) error {
 		return ErrBuf
 	}
 	return nil
+}
+
+// PrivateEDNS0Handle registers a private EDNS0 option type. It requires
+// the option code of the private EDNS0 type and generator function as argument.
+func PrivateEDNS0Handle(code uint16, generator func() EDNS0) {
+	optionCodeToEDNS0[code] = generator
+}
+
+// PrivateEDNS0HandleRemove removes definitions required to support private EDNS0 option type.
+func PrivateEDNS0HandleRemove(code uint16) {
+	delete(optionCodeToEDNS0, code)
 }
 
 // EDNS0_TCP_KEEPALIVE is an EDNS0 option that instructs the server to keep
