@@ -575,32 +575,43 @@ func (e *EDNS0_N3U) copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
 
 // EDNS0_EXPIRE implements the EDNS0 option as described in RFC 7314.
 type EDNS0_EXPIRE struct {
-	Code   uint16  // Always EDNS0EXPIRE
-	Expire []uint8 // either zero or 4 octets
+	Code   uint16 // Always EDNS0EXPIRE
+	Expire uint32
+	Empty  bool
 }
 
 // Option implements the EDNS0 interface.
 func (e *EDNS0_EXPIRE) Option() uint16 { return EDNS0EXPIRE }
-func (e *EDNS0_EXPIRE) copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire} }
+func (e *EDNS0_EXPIRE) copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire, e.Empty} }
+
 func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
-	if len(e.Expire) != 0 && len(e.Expire) != 4 {
-		return nil, errors.New("dns: expire length is not 0/4")
+	if e.Empty {
+		return []byte{}, nil
 	}
-	return e.Expire, nil
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, e.Expire)
+	return b, nil
 }
+
 func (e *EDNS0_EXPIRE) unpack(b []byte) error {
-	if len(b) != 0 && len(b) != 4 {
+	if len(b) == 0 {
+		// zero-length EXPIRE query, see RFC 7314 Section 2
+		e.Empty = true
+		return nil
+	}
+	if len(b) < 4 {
 		return ErrBuf
 	}
-	e.Expire = b
+	e.Expire = binary.BigEndian.Uint32(b)
+	e.Empty = false
 	return nil
 }
 
 func (e *EDNS0_EXPIRE) String() (s string) {
-	if len(e.Expire) == 0 {
+	if e.Empty {
 		return ""
 	}
-	return strconv.FormatUint(binary.BigEndian.Uint64(e.Expire), 10)
+	return strconv.FormatUint(uint64(e.Expire), 10)
 }
 
 // The EDNS0_LOCAL option is used for local/experimental purposes. The option
