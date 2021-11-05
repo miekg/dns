@@ -698,10 +698,10 @@ func (rr *ZONEMD) len(off int, compression map[string]struct{}) int {
 
 // copy() functions
 func (rr *A) copy() RR {
-	return &A{rr.Hdr, copyIP(rr.A)}
+	return &A{rr.Hdr, copyIP(rr.A), nil}
 }
 func (rr *AAAA) copy() RR {
-	return &AAAA{rr.Hdr, copyIP(rr.AAAA)}
+	return &AAAA{rr.Hdr, copyIP(rr.AAAA), nil}
 }
 func (rr *AFSDB) copy() RR {
 	return &AFSDB{rr.Hdr, rr.Subtype, rr.Hostname}
@@ -734,7 +734,7 @@ func (rr *CERT) copy() RR {
 	return &CERT{rr.Hdr, rr.Type, rr.KeyTag, rr.Algorithm, rr.Certificate}
 }
 func (rr *CNAME) copy() RR {
-	return &CNAME{rr.Hdr, rr.Target}
+	return &CNAME{rr.Hdr, rr.Target, nil}
 }
 func (rr *CSYNC) copy() RR {
 	TypeBitMap := make([]uint16, len(rr.TypeBitMap))

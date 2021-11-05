@@ -277,6 +277,7 @@ func (*NULL) parse(c *zlexer, origin string) *ParseError {
 type CNAME struct {
 	Hdr    RR_Header
 	Target string `dns:"cdomain-name"`
+	opt    interface{}
 }
 
 func (rr *CNAME) String() string { return rr.Hdr.String() + sprintName(rr.Target) }
@@ -714,6 +715,7 @@ func (rr *DNAME) String() string {
 type A struct {
 	Hdr RR_Header
 	A   net.IP `dns:"a"`
+	opt interface{}
 }
 
 func (rr *A) String() string {
@@ -727,6 +729,7 @@ func (rr *A) String() string {
 type AAAA struct {
 	Hdr  RR_Header
 	AAAA net.IP `dns:"aaaa"`
+	opt  interface{}
 }
 
 func (rr *AAAA) String() string {
