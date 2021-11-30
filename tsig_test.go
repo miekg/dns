@@ -55,6 +55,62 @@ func TestTsigCase(t *testing.T) {
 	}
 }
 
+func TestTsigErrorResponse(t *testing.T) {
+	for _, rcode := range []uint16{RcodeBadSig, RcodeBadKey} {
+		m := newTsig(strings.ToUpper(HmacSHA256))
+		m.IsTsig().Error = rcode
+		buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = m.Unpack(buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		mTsig := m.IsTsig()
+		if mTsig.MAC != "" {
+			t.Error("Expected empty MAC")
+		}
+		if mTsig.MACSize != 0 {
+			t.Error("Expected 0 MACSize")
+		}
+		if mTsig.TimeSigned != 0 {
+			t.Errorf("Expected TimeSigned to be 0, got %v", mTsig.TimeSigned)
+		}
+	}
+}
+
+func TestTsigBadTimeResponse(t *testing.T) {
+	clientTime := uint64(time.Now().Unix()) - 3600
+	m := newTsig(strings.ToUpper(HmacSHA256))
+	m.IsTsig().Error = RcodeBadTime
+	m.IsTsig().TimeSigned = clientTime
+
+	buf, _, err := TsigGenerate(m, "pRZgBrBvI4NAHZYhxmhs/Q==", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = m.Unpack(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mTsig := m.IsTsig()
+	if mTsig.MAC == "" {
+		t.Error("Expected non-empty MAC")
+	}
+	if int(mTsig.MACSize) != len(mTsig.MAC)/2 {
+		t.Errorf("Expected MACSize %v, got %v", len(mTsig.MAC)/2, mTsig.MACSize)
+	}
+
+	if mTsig.TimeSigned != clientTime {
+		t.Errorf("Expected TimeSigned %v to be retained, got %v", clientTime, mTsig.TimeSigned)
+	}
+}
+
 const (
 	// A template wire-format DNS message (in hex form) containing a TSIG RR.
 	// Its time signed field will be filled by tests.

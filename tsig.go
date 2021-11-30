@@ -162,20 +162,31 @@ func tsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, time
 	if err != nil {
 		return nil, "", err
 	}
-	buf, err := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
-	if err != nil {
-		return nil, "", err
-	}
 
 	t := new(TSIG)
-	// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
-	*t = *rr
-	mac, err := provider.Generate(buf, rr)
-	if err != nil {
-		return nil, "", err
+
+	if rr.Error == RcodeSuccess || rr.Error == RcodeBadTime {
+		// Only compute response MAC for non-errors and bad time errors (RFC 8945 5.3.2)
+		buf, err := tsigBuffer(mbuf, rr, requestMAC, timersOnly)
+		if err != nil {
+			return nil, "", err
+		}
+		// Copy all TSIG fields except MAC and its size, which are filled using the computed digest.
+		*t = *rr
+		mac, err := provider.Generate(buf, rr)
+		if err != nil {
+			return nil, "", err
+		}
+		t.TimeSigned = rr.TimeSigned
+		t.MAC = hex.EncodeToString(mac)
+		t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
+	} else {
+		// Copy all TSIG fields except MAC, its size and time signed, since we aren't signing.
+		*t = *rr
+		t.TimeSigned = 0
+		t.MAC = ""
+		t.MACSize = 0
 	}
-	t.MAC = hex.EncodeToString(mac)
-	t.MACSize = uint16(len(t.MAC) / 2) // Size is half!
 
 	tbuf := make([]byte, Len(t))
 	off, err := PackRR(t, tbuf, 0, nil, false)
