@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"net"
 	"testing"
 )
@@ -156,5 +157,89 @@ func TestZ(t *testing.T) {
 	}
 	if !e.Do() {
 		t.Error("expected DO to be set")
+	}
+}
+
+func TestEDNS0_TCP_KEEPALIVE_unpack(t *testing.T) {
+	cases := []struct {
+		name        string
+		b           []byte
+		expected    uint16
+		expectedErr bool
+	}{
+		{
+			name:     "empty",
+			b:        []byte{},
+			expected: 0,
+		},
+		{
+			name:     "timeout 1",
+			b:        []byte{0, 1},
+			expected: 1,
+		},
+		{
+			name:        "invalid",
+			b:           []byte{0, 1, 3},
+			expectedErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := &EDNS0_TCP_KEEPALIVE{}
+			err := e.unpack(tc.b)
+			if err != nil && !tc.expectedErr {
+				t.Error("failed to unpack, expected no error")
+			}
+			if err == nil && tc.expectedErr {
+				t.Error("unpacked, but expected an error")
+			}
+			if e.Timeout != tc.expected {
+				t.Errorf("invalid timeout, actual: %d, expected: %d", e.Timeout, tc.expected)
+			}
+		})
+	}
+}
+
+func TestEDNS0_TCP_KEEPALIVE_pack(t *testing.T) {
+	cases := []struct {
+		name     string
+		edns     *EDNS0_TCP_KEEPALIVE
+		expected []byte
+	}{
+		{
+			name: "empty",
+			edns: &EDNS0_TCP_KEEPALIVE{
+				Code:    EDNS0TCPKEEPALIVE,
+				Timeout: 0,
+			},
+			expected: nil,
+		},
+		{
+			name: "timeout 1",
+			edns: &EDNS0_TCP_KEEPALIVE{
+				Code:    EDNS0TCPKEEPALIVE,
+				Timeout: 1,
+			},
+			expected: []byte{0, 1},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, err := tc.edns.pack()
+			if err != nil {
+				t.Error("expected no error")
+			}
+
+			if tc.expected == nil && b != nil {
+				t.Errorf("invalid result, expected nil")
+			}
+
+			res := bytes.Compare(b, tc.expected)
+			if res != 0 {
+				t.Errorf("invalid result, expected: %v, actual: %v", tc.expected, b)
+			}
+		})
 	}
 }

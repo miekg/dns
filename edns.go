@@ -663,7 +663,7 @@ func (e *EDNS0_TCP_KEEPALIVE) Option() uint16 { return EDNS0TCPKEEPALIVE }
 
 func (e *EDNS0_TCP_KEEPALIVE) pack() (b []byte, err error) {
 	if e.Timeout > 0 {
-		b := make([]byte, 2)
+		b = make([]byte, 2)
 		binary.BigEndian.PutUint16(b, e.Timeout)
 	}
 	return b, err
