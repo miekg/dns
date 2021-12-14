@@ -391,34 +391,42 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 	tests := []struct {
 		name string
 		wire []byte
+		want string
 	}{
 		{
 			"incomplete header",
 			[]byte{0x00, 0x01, 0x18},
+			"dns: overflow unpacking APL prefix",
 		},
 		{
 			"unrecognized family",
 			[]byte{0x00, 0x03, 0x00, 0x00},
+			"dns: unrecognized APL address family",
 		},
 		{
-			"prefix length exceeded",
+			"prefix too large for family IPv4",
 			[]byte{0x00, 0x01, 0x21, 0x04, 192, 0, 2, 0},
+			"dns: APL prefix too long",
 		},
 		{
-			"address with extra byte",
-			[]byte{0x00, 0x01, 0x10, 0x03, 192, 0, 2},
+			"prefix too large for family IPv6",
+			[]byte{0x00, 0x02, 0x81, 0x85, 0x20, 0x01, 0x0d, 0xb8, 0x80},
+			"dns: APL prefix too long",
 		},
 		{
-			"incomplete buffer",
-			[]byte{0x00, 0x01, 0x10, 0x02, 192},
-		},
-		{
-			"extra bits set",
-			[]byte{0x00, 0x01, 22, 0x03, 192, 0, 2},
-		},
-		{
-			"afdlen invalid",
+			"afdlen too long for address family IPv4",
 			[]byte{0x00, 0x01, 22, 0x05, 192, 0, 2, 0, 0},
+			"dns: APL length too long",
+		},
+		{
+			"overflow unpacking APL address",
+			[]byte{0x00, 0x01, 0x10, 0x02, 192},
+			"dns: overflow unpacking APL address",
+		},
+		{
+			"address included trailing zeros",
+			[]byte{0x00, 0x01, 0x10, 0x04, 192, 0, 2, 0},
+			"dns: extra APL address bits",
 		},
 	}
 	for _, tt := range tests {
@@ -426,6 +434,10 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 			_, _, err := unpackDataAplPrefix(tt.wire, 0)
 			if err == nil {
 				t.Fatal("expected error, got none")
+			}
+
+			if err.Error() != tt.want {
+				t.Errorf("expected %s, got %s", tt.want, err.Error())
 			}
 		})
 	}
