@@ -175,8 +175,8 @@ func tsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, time
 	t.MAC = ""
 	t.MACSize = 0
 
-	if rr.Error == RcodeSuccess || rr.Error == RcodeBadTime {
-		// Only sign TSIGs for non-errors and bad time errors (RFC 8945 5.3.2)
+	// Sign unless there is a key or MAC validation error (RFC 8945 5.3.2)
+	if rr.Error != RcodeBadKey && rr.Error != RcodeBadSig {
 		mac, err := provider.Generate(buf, rr)
 		if err != nil {
 			return nil, "", err
