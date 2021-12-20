@@ -674,12 +674,13 @@ type EDNS0_TCP_KEEPALIVE struct {
 // Option implements the EDNS0 interface.
 func (e *EDNS0_TCP_KEEPALIVE) Option() uint16 { return EDNS0TCPKEEPALIVE }
 
-func (e *EDNS0_TCP_KEEPALIVE) pack() (b []byte, err error) {
+func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 	if e.Timeout > 0 {
-		b = make([]byte, 2)
+		b := make([]byte, 2)
 		binary.BigEndian.PutUint16(b, e.Timeout)
+		return b, nil
 	}
-	return b, err
+	return nil, nil
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
@@ -693,14 +694,14 @@ func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
 	return nil
 }
 
-func (e *EDNS0_TCP_KEEPALIVE) String() (s string) {
+func (e *EDNS0_TCP_KEEPALIVE) String() string {
 	if e.Timeout == 0 {
-		s += "use tcp keep-alive"
-	} else {
-		s += fmt.Sprintf("%dms", e.Timeout*100)
+		return "use tcp keep-alive"
 	}
-	return
+
+	return fmt.Sprintf("%dms", e.Timeout*100)
 }
+
 func (e *EDNS0_TCP_KEEPALIVE) copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Timeout, e.Length} }
 
 // EDNS0_PADDING option is used to add padding to a request/response. The default
