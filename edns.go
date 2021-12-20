@@ -659,8 +659,16 @@ func (e *EDNS0_LOCAL) unpack(b []byte) error {
 // EDNS0_TCP_KEEPALIVE is an EDNS0 option that instructs the server to keep
 // the TCP connection alive. See RFC 7828.
 type EDNS0_TCP_KEEPALIVE struct {
-	Code    uint16 // Always EDNSTCPKEEPALIVE
-	Timeout uint16 // an idle timeout value for the TCP connection, specified in units of 100 milliseconds, encoded in network byte order.
+	Code uint16 // Always EDNSTCPKEEPALIVE
+
+	// Timeout is an idle timeout value for the TCP connection, specified in
+	// units of 100 milliseconds, encoded in network byte order. If set to 0,
+	// pack will return a nil slice.
+	Timeout uint16
+
+	// Length is the option's length.
+	// Deprecated: this field is deprecated and is always equal to 0.
+	Length uint16
 }
 
 // Option implements the EDNS0 interface.
@@ -693,7 +701,7 @@ func (e *EDNS0_TCP_KEEPALIVE) String() (s string) {
 	}
 	return
 }
-func (e *EDNS0_TCP_KEEPALIVE) copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Timeout} }
+func (e *EDNS0_TCP_KEEPALIVE) copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Timeout, e.Length} }
 
 // EDNS0_PADDING option is used to add padding to a request/response. The default
 // value of padding SHOULD be 0x0 but other values MAY be used, for instance if
