@@ -695,11 +695,13 @@ func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) String() string {
+	s := "use tcp keep-alive"
 	if e.Timeout == 0 {
-		return "use tcp keep-alive"
+		s += ", timeout omitted"
+	} else {
+		s += fmt.Sprintf(", timeout %dms", e.Timeout*100)
 	}
-
-	return fmt.Sprintf("%dms", e.Timeout*100)
+	return s
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) copy() EDNS0 { return &EDNS0_TCP_KEEPALIVE{e.Code, e.Timeout, e.Length} }
