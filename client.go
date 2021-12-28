@@ -18,6 +18,11 @@ const (
 	tcpIdleTimeout time.Duration = 8 * time.Second
 )
 
+func isPacketConn(c net.Conn) bool {
+	_, ok := c.(net.PacketConn)
+	return ok
+}
+
 // A Conn represents a connection to a DNS server.
 type Conn struct {
 	net.Conn                         // a net.Conn holding the connection
@@ -221,7 +226,7 @@ func (c *Client) exchangeContext(ctx context.Context, m *Msg, co *Conn) (r *Msg,
 		return nil, 0, err
 	}
 
-	if _, ok := co.Conn.(net.PacketConn); ok {
+	if isPacketConn(co.Conn) {
 		for {
 			r, err = co.ReadMsg()
 			// Ignore replies with mismatched IDs because they might be
@@ -282,7 +287,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		err error
 	)
 
-	if _, ok := co.Conn.(net.PacketConn); ok {
+	if isPacketConn(co.Conn) {
 		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
 		} else {
@@ -322,7 +327,7 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 		return 0, ErrConnEmpty
 	}
 
-	if _, ok := co.Conn.(net.PacketConn); ok {
+	if isPacketConn(co.Conn) {
 		// UDP connection
 		return co.Conn.Read(p)
 	}
@@ -371,7 +376,7 @@ func (co *Conn) Write(p []byte) (int, error) {
 		return 0, &Error{err: "message too large"}
 	}
 
-	if _, ok := co.Conn.(net.PacketConn); ok {
+	if isPacketConn(co.Conn) {
 		return co.Conn.Write(p)
 	}
 
