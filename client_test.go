@@ -6,11 +6,86 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestIsPacketConn(t *testing.T) {
+	// UDP
+	s, addrstr, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	c, err := net.Dial("udp", addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer c.Close()
+	if !isPacketConn(c) {
+		t.Error("UDP connection should be a packet conn")
+	}
+	if !isPacketConn(struct{ *net.UDPConn }{c.(*net.UDPConn)}) {
+		t.Error("UDP connection (wrapped type) should be a packet conn")
+	}
+
+	// TCP
+	s, addrstr, _, err = RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	c, err = net.Dial("tcp", addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer c.Close()
+	if isPacketConn(c) {
+		t.Error("TCP connection should not be a packet conn")
+	}
+	if isPacketConn(struct{ *net.TCPConn }{c.(*net.TCPConn)}) {
+		t.Error("TCP connection (wrapped type) should not be a packet conn")
+	}
+
+	// Unix datagram
+	s, addrstr, _, err = RunLocalUnixGramServer(filepath.Join(t.TempDir(), "unixgram.sock"))
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	c, err = net.Dial("unixgram", addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer c.Close()
+	if !isPacketConn(c) {
+		t.Error("Unix datagram connection should be a packet conn")
+	}
+	if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+		t.Error("Unix datagram connection (wrapped type) should be a packet conn")
+	}
+
+	// Unix stream
+	s, addrstr, _, err = RunLocalUnixServer(filepath.Join(t.TempDir(), "unixstream.sock"))
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+	c, err = net.Dial("unix", addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer c.Close()
+	if isPacketConn(c) {
+		t.Error("Unix stream connection should not be a packet conn")
+	}
+	if isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+		t.Error("Unix stream connection (wrapped type) should not be a packet conn")
+	}
+}
 
 func TestDialUDP(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)

@@ -67,12 +67,14 @@ func AnotherHelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
-	pc, err := net.ListenPacket("udp", laddr)
-	if err != nil {
-		return nil, "", nil, err
+func RunLocalServer(pc net.PacketConn, l net.Listener, opts ...func(*Server)) (*Server, string, chan error, error) {
+	server := &Server{
+		PacketConn: pc,
+		Listener:   l,
+
+		ReadTimeout:  time.Hour,
+		WriteTimeout: time.Hour,
 	}
-	server := &Server{PacketConn: pc, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
@@ -82,6 +84,18 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 		opt(server)
 	}
 
+	var (
+		addr   string
+		closer io.Closer
+	)
+	if l != nil {
+		addr = l.Addr().String()
+		closer = l
+	} else {
+		addr = pc.LocalAddr().String()
+		closer = pc
+	}
+
 	// fin must be buffered so the goroutine below won't block
 	// forever if fin is never read from. This always happens
 	// if the channel is discarded and can happen in TestShutdownUDP.
@@ -89,11 +103,20 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 
 	go func() {
 		fin <- server.ActivateAndServe()
-		pc.Close()
+		closer.Close()
 	}()
 
 	waitLock.Lock()
-	return server, pc.LocalAddr().String(), fin, nil
+	return server, addr, fin, nil
+}
+
+func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	pc, err := net.ListenPacket("udp", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return RunLocalServer(pc, nil, opts...)
 }
 
 func RunLocalPacketConnServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
@@ -109,32 +132,31 @@ func RunLocalTCPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 		return nil, "", nil, err
 	}
 
-	server := &Server{Listener: l, ReadTimeout: time.Hour, WriteTimeout: time.Hour}
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
-
-	for _, opt := range opts {
-		opt(server)
-	}
-
-	// See the comment in RunLocalUDPServer as to why fin must be buffered.
-	fin := make(chan error, 1)
-
-	go func() {
-		fin <- server.ActivateAndServe()
-		l.Close()
-	}()
-
-	waitLock.Lock()
-	return server, l.Addr().String(), fin, nil
+	return RunLocalServer(nil, l, opts...)
 }
 
 func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, chan error, error) {
 	return RunLocalTCPServer(laddr, func(srv *Server) {
 		srv.Listener = tls.NewListener(srv.Listener, config)
 	})
+}
+
+func RunLocalUnixServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	l, err := net.Listen("unix", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return RunLocalServer(nil, l, opts...)
+}
+
+func RunLocalUnixGramServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	pc, err := net.ListenPacket("unixgram", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return RunLocalServer(pc, nil, opts...)
 }
 
 func TestServing(t *testing.T) {
