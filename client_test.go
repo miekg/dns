@@ -28,6 +28,9 @@ func TestIsPacketConn(t *testing.T) {
 	if !isPacketConn(c) {
 		t.Fatal("UDP connection should be a packet conn")
 	}
+	if !isPacketConn(struct{ *net.UDPConn }{c.(*net.UDPConn)}) {
+		t.Fatal("UDP connection (wrapped type) should be a packet conn")
+	}
 
 	// TCP
 	s, addrstr, _, err = RunLocalTCPServer(":0")
@@ -42,6 +45,9 @@ func TestIsPacketConn(t *testing.T) {
 	defer c.Close()
 	if isPacketConn(c) {
 		t.Fatal("TCP connection should not be a packet conn")
+	}
+	if isPacketConn(struct{ *net.TCPConn }{c.(*net.TCPConn)}) {
+		t.Fatal("TCP connection (wrapped type) should not be a packet conn")
 	}
 
 	// Unix datagram
@@ -58,6 +64,9 @@ func TestIsPacketConn(t *testing.T) {
 	if !isPacketConn(c) {
 		t.Fatal("Unix datagram connection should be a packet conn")
 	}
+	if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+		t.Fatal("Unix datagram connection (wrapped type) should be a packet conn")
+	}
 
 	// Unix stream
 	s, addrstr, _, err = RunLocalUnixServer(filepath.Join(t.TempDir(), "unixstream.sock"))
@@ -72,6 +81,9 @@ func TestIsPacketConn(t *testing.T) {
 	defer c.Close()
 	if isPacketConn(c) {
 		t.Fatal("Unix stream connection should not be a packet conn")
+	}
+	if isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+		t.Fatal("Unix stream connection (wrapped type) should not be a packet conn")
 	}
 }
 

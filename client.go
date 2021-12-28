@@ -19,12 +19,15 @@ const (
 )
 
 func isPacketConn(c net.Conn) bool {
-	if uc, ok := c.(*net.UnixConn); ok {
-		return uc.LocalAddr().Network() == "unixgram"
+	if _, ok := c.(net.PacketConn); !ok {
+		return false
 	}
 
-	_, ok := c.(net.PacketConn)
-	return ok
+	if ua, ok := c.LocalAddr().(*net.UnixAddr); ok {
+		return ua.Net == "unixgram"
+	}
+
+	return true
 }
 
 // A Conn represents a connection to a DNS server.
