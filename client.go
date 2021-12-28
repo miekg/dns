@@ -19,6 +19,10 @@ const (
 )
 
 func isPacketConn(c net.Conn) bool {
+	if uc, ok := c.(*net.UnixConn); ok {
+		return uc.LocalAddr().Network() == "unixgram"
+	}
+
 	_, ok := c.(net.PacketConn)
 	return ok
 }
