@@ -32,11 +32,12 @@ func isPacketConn(c net.Conn) bool {
 
 // A Conn represents a connection to a DNS server.
 type Conn struct {
-	net.Conn                         // a net.Conn holding the connection
-	UDPSize        uint16            // minimum receive buffer for UDP messages
-	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
-	tsigRequestMAC string
+	net.Conn                              // a net.Conn holding the connection
+	UDPSize            uint16             // minimum receive buffer for UDP messages
+	TsigSecret         map[string]string  // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
+	TsigProvider       TsigProvider       // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
+	TsigKeyNameBuilder TsigKeyNameBuilder // If defined replaces searches in conn.TsigSecret[<zonename>] with conn.TsigSecret[TsigKeyNameBuilder(*TSIG, *MSG)]
+	tsigRequestMAC     string
 }
 
 // A Client defines parameters for a DNS client.
@@ -48,14 +49,15 @@ type Client struct {
 	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see ExchangeContext)
-	Timeout        time.Duration
-	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
-	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
-	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
-	TsigSecret     map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
-	SingleInflight bool              // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
-	group          singleflight
+	Timeout            time.Duration
+	DialTimeout        time.Duration      // net.DialTimeout, defaults to 2 seconds, or net.Dialer.Timeout if expiring earlier - overridden by Timeout when that value is non-zero
+	ReadTimeout        time.Duration      // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
+	WriteTimeout       time.Duration      // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds - overridden by Timeout when that value is non-zero
+	TsigSecret         map[string]string  // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
+	TsigProvider       TsigProvider       // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
+	SingleInflight     bool               // if true suppress multiple outstanding queries for the same Qname, Qtype and Qclass
+	TsigKeyNameBuilder TsigKeyNameBuilder // If defined replaces searches in conn.TsigSecret[<zonename>] with conn.TsigSecret[TsigKeyNameBuilder(*TSIG, *MSG)]
+	group              singleflight
 }
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
@@ -226,6 +228,7 @@ func (c *Client) exchangeContext(ctx context.Context, m *Msg, co *Conn) (r *Msg,
 	}
 	co.SetWriteDeadline(writeDeadline)
 	co.SetReadDeadline(readDeadline)
+	co.TsigKeyNameBuilder = c.TsigKeyNameBuilder
 
 	co.TsigSecret, co.TsigProvider = c.TsigSecret, c.TsigProvider
 
@@ -274,11 +277,16 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		if co.TsigProvider != nil {
 			err = tsigVerifyProvider(p, co.TsigProvider, co.tsigRequestMAC, false)
 		} else {
-			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
+			searchKey := t.Hdr.Name
+			if co.TsigKeyNameBuilder != nil {
+				searchKey = co.TsigKeyNameBuilder(t, m)
+			}
+			if _, ok := co.TsigSecret[searchKey]; !ok {
 				return m, ErrSecret
 			}
+
 			// Need to work on the original message p, as that was used to calculate the tsig.
-			err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
+			err = TsigVerify(p, co.TsigSecret[searchKey], co.tsigRequestMAC, false)
 		}
 	}
 	return m, err
@@ -360,10 +368,14 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 		if co.TsigProvider != nil {
 			out, mac, err = tsigGenerateProvider(m, co.TsigProvider, co.tsigRequestMAC, false)
 		} else {
-			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
+			searchKey := t.Hdr.Name
+			if co.TsigKeyNameBuilder != nil {
+				searchKey = co.TsigKeyNameBuilder(t, m)
+			}
+			if _, ok := co.TsigSecret[searchKey]; !ok {
 				return ErrSecret
 			}
-			out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
+			out, mac, err = TsigGenerate(m, co.TsigSecret[searchKey], co.tsigRequestMAC, false)
 		}
 		// Set for the next read, although only used in zone transfers
 		co.tsigRequestMAC = mac

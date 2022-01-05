@@ -1091,6 +1091,76 @@ func TestServerRoundtripTsig(t *testing.T) {
 	}
 }
 
+func TestServerRoundtripDuplicateTsigNames(t *testing.T) {
+	secret := map[string]string{"test.example.com.": "so6ZGir4GPAqINNh9U5c3A==", "test.otherzone.com.": "bo6ZGir4GPAqINNh9U5c3A=="}
+	tsigBuilderFunc := func(t *TSIG, m *Msg) string {
+		return fmt.Sprintf("%s%s", t.Hdr.Name, m.Question[0].Name)
+	}
+
+	s, addrstr, _, err := RunLocalUDPServer(":0", func(srv *Server) {
+		srv.TsigSecret = secret
+		srv.TsigKeyNameBuilder = tsigBuilderFunc
+		srv.MsgAcceptFunc = func(dh Header) MsgAcceptAction {
+			// defaultMsgAcceptFunc does reject UPDATE queries
+			return MsgAccept
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	handlerFired := make(chan struct{})
+	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
+		close(handlerFired)
+
+		m := new(Msg)
+		m.SetReply(r)
+		if r.IsTsig() != nil {
+			status := w.TsigStatus()
+			if status == nil {
+				// *Msg r has an TSIG record and it was validated
+				m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
+			} else {
+				// *Msg r has an TSIG records and it was not validated
+				t.Errorf("invalid TSIG: %v", status)
+			}
+		} else {
+			t.Error("missing TSIG")
+		}
+		if err := w.WriteMsg(m); err != nil {
+			t.Error("writemsg failed", err)
+		}
+	})
+
+	c := new(Client)
+	c.TsigKeyNameBuilder = tsigBuilderFunc
+	m := new(Msg)
+	m.Opcode = OpcodeUpdate
+	m.SetQuestion("example.com.", TypeSOA)
+	m.Ns = []RR{&CNAME{
+		Hdr: RR_Header{
+			Name:   "foo.example.com.",
+			Rrtype: TypeCNAME,
+			Class:  ClassINET,
+			Ttl:    300,
+		},
+		Target: "bar.example.com.",
+	}}
+	c.TsigSecret = secret
+	m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange", err)
+	}
+	select {
+	case <-handlerFired:
+		// ok, handler was actually called
+	default:
+		t.Error("handler was not called")
+	}
+}
+
 func TestResponseAfterClose(t *testing.T) {
 	testError := func(name string, err error) {
 		t.Helper()

@@ -239,6 +239,19 @@ Basic use pattern validating and replying to a message that has TSIG set.
 		w.WriteMsg(m)
 	}
 
+Within objects that use the tsigSecret map[zoneName]secret you can specify custom
+TSIG key names that will replace <zoneName> as the keyname. This means you can re-use
+TSIG names across multiple different zones.
+
+	func myKeyNameBuilder(t *TSIG, m *MSG) string{
+		return fmt.Sprintf("%s%s", t.Hdr.Name, m.question[0].Name) // This will format keys with tsigName+zoneName on xfr queries
+	}
+
+	server := &dns.Server{Addr: ":53", Net: "udp"}
+	// You must ensure that the key names within TsigSecret are following the same format as specified in myKeyNameBuilder. i.e tsigName+zoneName here.
+	server.TsigSecret = map[string]string{"axfr.miek.nl.": "so6ZGir4GPAqINNh9U5c3A==", "axfr.other.zone.": "ao6ZGir4GPAqINNh9U5c3A=="}
+	server.TsigKeyNameBuilder = myKeyNameBuilder
+
 PRIVATE RRS
 
 RFC 6895 sets aside a range of type codes for private use. This range is 65,280

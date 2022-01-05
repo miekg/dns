@@ -32,6 +32,10 @@ type TsigProvider interface {
 	Verify(msg []byte, t *TSIG) error
 }
 
+// TsigKeyNameBuilder is used to support any tsig key within the tsigSecret map
+// Use this if you  want to use the same tsig name across multiple different zones.
+type TsigKeyNameBuilder func(*TSIG, *Msg) string
+
 type tsigHMACProvider string
 
 func (key tsigHMACProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {

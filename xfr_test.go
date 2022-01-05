@@ -1,6 +1,10 @@
 package dns
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+	"time"
+)
 
 var (
 	tsigSecret  = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
@@ -81,7 +85,7 @@ func TestSingleEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(t, addrstr)
+	axfrTestingSuite(t, addrstr, nil, nil)
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
@@ -96,13 +100,41 @@ func TestMultiEnvelopeXfr(t *testing.T) {
 	}
 	defer s.Shutdown()
 
-	axfrTestingSuite(t, addrstr)
+	axfrTestingSuite(t, addrstr, nil, nil)
 }
 
-func axfrTestingSuite(t *testing.T, addrstr string) {
+func TestMultiEnvelopeXfrDuplicateTsigNames(t *testing.T) {
+	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.TsigKeyNameBuilder = func(t *TSIG, m *Msg) string {
+			return fmt.Sprintf("%s%s", t.Hdr.Name, m.Question[0].Name)
+		}
+		srv.TsigSecret = map[string]string{"axfr.miek.nl.": "so6ZGir4GPAqINNh9U5c3A==", "axfr.example.com.": "bo6ZGir4GPAqINNh9U5c3A=="}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	// The client shouldn't have to alter the tsig name
+	clientTsigSecret := map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
+	tsig := &TSIG{Hdr: RR_Header{Name: "axfr."}, Algorithm: "hmac-sha256.", Fudge: 300}
+
+	axfrTestingSuite(t, addrstr, clientTsigSecret, tsig)
+}
+
+func axfrTestingSuite(t *testing.T, addrstr string, tsigSecret map[string]string, tsig *TSIG) {
 	tr := new(Transfer)
+	if tsigSecret != nil {
+		tr.TsigSecret = tsigSecret
+	}
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
+	if tsig != nil {
+		m.SetTsig(tsig.Hdr.Name, tsig.Algorithm, tsig.Fudge, time.Now().Unix())
+	}
 
 	c, err := tr.In(m, addrstr)
 	if err != nil {

@@ -66,17 +66,18 @@ type ConnectionStater interface {
 }
 
 type response struct {
-	closed         bool // connection has been closed
-	hijacked       bool // connection has been hijacked by handler
-	tsigTimersOnly bool
-	tsigStatus     error
-	tsigRequestMAC string
-	tsigSecret     map[string]string // the tsig secrets
-	udp            net.PacketConn    // i/o connection if UDP was used
-	tcp            net.Conn          // i/o connection if TCP was used
-	udpSession     *SessionUDP       // oob data to get egress interface right
-	pcSession      net.Addr          // address to use when writing to a generic net.PacketConn
-	writer         Writer            // writer to output the raw DNS bits
+	closed             bool // connection has been closed
+	hijacked           bool // connection has been hijacked by handler
+	tsigTimersOnly     bool
+	tsigStatus         error
+	tsigRequestMAC     string
+	tsigSecret         map[string]string  // the tsig secrets
+	tsigKeyNameBuilder TsigKeyNameBuilder // If defined replaces searches in r.TsigSecret[<zonename>] with r.TsigSecret[TsigKeyNameBuilder(*TSIG, *MSG)]
+	udp                net.PacketConn     // i/o connection if UDP was used
+	tcp                net.Conn           // i/o connection if TCP was used
+	udpSession         *SessionUDP        // oob data to get egress interface right
+	pcSession          net.Addr           // address to use when writing to a generic net.PacketConn
+	writer             Writer             // writer to output the raw DNS bits
 }
 
 // handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
@@ -227,6 +228,8 @@ type Server struct {
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
+	// // If defined replaces searches in server.TsigSecret[<zonename>] with server.TsigSecret[TsigKeyNameBuilder(*TSIG, *MSG)]
+	TsigKeyNameBuilder
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -526,7 +529,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
-	w := &response{tsigSecret: srv.TsigSecret, tcp: rw}
+	w := &response{tsigSecret: srv.TsigSecret, tcp: rw, tsigKeyNameBuilder: srv.TsigKeyNameBuilder}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -581,7 +584,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
-	w := &response{tsigSecret: srv.TsigSecret, udp: u, udpSession: udpSession, pcSession: pcSession}
+	w := &response{tsigSecret: srv.TsigSecret, udp: u, udpSession: udpSession, pcSession: pcSession, tsigKeyNameBuilder: srv.TsigKeyNameBuilder}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
 	} else {
@@ -634,7 +637,11 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 	w.tsigStatus = nil
 	if w.tsigSecret != nil {
 		if t := req.IsTsig(); t != nil {
-			if secret, ok := w.tsigSecret[t.Hdr.Name]; ok {
+			searchKey := t.Hdr.Name
+			if srv.TsigKeyNameBuilder != nil {
+				searchKey = srv.TsigKeyNameBuilder(t, req)
+			}
+			if secret, ok := w.tsigSecret[searchKey]; ok {
 				w.tsigStatus = TsigVerify(m, secret, "", false)
 			} else {
 				w.tsigStatus = ErrSecret
@@ -720,7 +727,11 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	var data []byte
 	if w.tsigSecret != nil { // if no secrets, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
-			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[t.Hdr.Name], w.tsigRequestMAC, w.tsigTimersOnly)
+			searchKey := t.Hdr.Name
+			if w.tsigKeyNameBuilder != nil {
+				searchKey = w.tsigKeyNameBuilder(t, m)
+			}
+			data, w.tsigRequestMAC, err = TsigGenerate(m, w.tsigSecret[searchKey], w.tsigRequestMAC, w.tsigTimersOnly)
 			if err != nil {
 				return err
 			}

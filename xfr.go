@@ -225,11 +225,15 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 		return nil, err
 	}
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+		searchKey := ts.Hdr.Name
+		if t.Conn.TsigKeyNameBuilder != nil {
+			searchKey = t.Conn.TsigKeyNameBuilder(ts, m)
+		}
+		if _, ok := t.TsigSecret[searchKey]; !ok {
 			return m, ErrSecret
 		}
 		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
+		err = TsigVerify(p, t.TsigSecret[searchKey], t.tsigRequestMAC, t.tsigTimersOnly)
 		t.tsigRequestMAC = ts.MAC
 	}
 	return m, err
@@ -239,10 +243,14 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+		searchKey := ts.Hdr.Name
+		if t.Conn.TsigKeyNameBuilder != nil {
+			searchKey = t.Conn.TsigKeyNameBuilder(ts, m)
+		}
+		if _, ok := t.TsigSecret[searchKey]; !ok {
 			return ErrSecret
 		}
-		out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
+		out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[searchKey], t.tsigRequestMAC, t.tsigTimersOnly)
 	} else {
 		out, err = m.Pack()
 	}
