@@ -225,12 +225,16 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 		return nil, err
 	}
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
-			return m, ErrSecret
+		if t.Conn.TsigProvider != nil {
+			err = tsigVerifyProvider(p, t.Conn.TsigProvider, t.tsigRequestMAC, false)
+		} else {
+			if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+				return m, ErrSecret
+			}
+			// Need to work on the original message p, as that was used to calculate the tsig.
+			err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
+			t.tsigRequestMAC = ts.MAC
 		}
-		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerify(p, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
-		t.tsigRequestMAC = ts.MAC
 	}
 	return m, err
 }
@@ -239,10 +243,14 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if ts := m.IsTsig(); ts != nil && t.TsigSecret != nil {
-		if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
-			return ErrSecret
+		if t.Conn.TsigProvider != nil {
+			out, t.tsigRequestMAC, err = tsigGenerateProvider(m, t.Conn.TsigProvider, t.tsigRequestMAC, false)
+		} else {
+			if _, ok := t.TsigSecret[ts.Hdr.Name]; !ok {
+				return ErrSecret
+			}
+			out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
 		}
-		out, t.tsigRequestMAC, err = TsigGenerate(m, t.TsigSecret[ts.Hdr.Name], t.tsigRequestMAC, t.tsigTimersOnly)
 	} else {
 		out, err = m.Pack()
 	}
