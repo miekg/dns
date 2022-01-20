@@ -6,15 +6,28 @@ import (
 )
 
 func TestDynamicUpdateParsing(t *testing.T) {
-	prefix := "example.com. IN "
-	for _, typ := range TypeToString {
-		if typ == "OPT" || typ == "AXFR" || typ == "IXFR" || typ == "ANY" || typ == "TKEY" ||
-			typ == "TSIG" || typ == "ISDN" || typ == "UNSPEC" || typ == "NULL" || typ == "ATMA" ||
-			typ == "Reserved" || typ == "None" || typ == "NXT" || typ == "MAILB" || typ == "MAILA" {
+	const prefix = "example.com. IN "
+
+	for typ, name := range TypeToString {
+		switch typ {
+		case TypeNone, TypeReserved:
+			continue
+		case TypeANY:
+			// ANY is ambiguous here and ends up parsed as a CLASS.
+			//
+			// TODO(tmthrgd): Using TYPE255 here doesn't seem to work and also
+			//   seems to fail for some other record types. Investigate.
 			continue
 		}
-		if _, err := NewRR(prefix + typ); err != nil {
-			t.Errorf("failure to parse: %s %s: %v", prefix, typ, err)
+
+		s := prefix + name
+		if _, err := NewRR(s); err != nil {
+			t.Errorf("failure to parse: %s: %v", s, err)
+		}
+
+		s += " \\# 0"
+		if _, err := NewRR(s); err != nil {
+			t.Errorf("failure to parse: %s: %v", s, err)
 		}
 	}
 }
@@ -122,7 +135,7 @@ func TestPreReqAndRemovals(t *testing.T) {
 name_used.	0	CLASS255	ANY	
 name_not_used.	0	NONE	ANY	
 rrset_used1.	0	CLASS255	A	
-rrset_used2.	3600	IN	A	127.0.0.1
+rrset_used2.	0	IN	A	127.0.0.1
 rrset_not_used.	0	NONE	A	
 
 ;; AUTHORITY SECTION:

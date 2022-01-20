@@ -245,8 +245,7 @@ func testTXTRRQuick(t *testing.T) {
 		rrbytes := make([]byte, 0, len(owner)+2+2+4+2+len(rdata))
 		rrbytes = append(rrbytes, owner...)
 		rrbytes = append(rrbytes, typeAndClass...)
-		rrbytes = append(rrbytes, byte(len(rdata)>>8))
-		rrbytes = append(rrbytes, byte(len(rdata)))
+		rrbytes = append(rrbytes, byte(len(rdata)>>8), byte(len(rdata)))
 		rrbytes = append(rrbytes, rdata...)
 		rr, _, err := UnpackRR(rrbytes, 0)
 		if err != nil {
@@ -267,7 +266,7 @@ func testTXTRRQuick(t *testing.T) {
 			return false
 		}
 		if len(rdata) == 0 {
-			// string'ing won't produce any data to parse
+			// stringifying won't produce any data to parse
 			return true
 		}
 		rrString := rr.String()
@@ -379,6 +378,8 @@ func TestParseLOC(t *testing.T) {
 		// Exercise boundary cases
 		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
 		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
+		// use float64 to have enough precision.
+		"example.com. LOC 42 21 43.952 N 71 5 6.344 W -24m 1m 200m 10m": "example.com.\t3600\tIN\tLOC\t42 21 43.952 N 71 05 6.344 W -24m 1m 200m 10m",
 	}
 	for i, o := range lt {
 		rr, err := NewRR(i)
@@ -1208,8 +1209,8 @@ func TestTypeXXXX(t *testing.T) {
 		t.Errorf("this should not work, for TYPE655341")
 	}
 	_, err = NewRR("example.com IN TYPE1 \\# 4 0a000001")
-	if err == nil {
-		t.Errorf("this should not work")
+	if err != nil {
+		t.Errorf("failed to parse TYPE1 RR: %v", err)
 	}
 }
 
@@ -1672,10 +1673,10 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . key065534`,           // key can't be padded
 		`1 . key65534="f`,         // unterminated value
 		`1 . key65534="`,          // unterminated value
-		`1 . key65534=\2`,         // invalid numberic escape
-		`1 . key65534=\24`,        // invalid numberic escape
-		`1 . key65534=\256`,       // invalid numberic escape
-		`1 . key65534=\`,          // invalid numberic escape
+		`1 . key65534=\2`,         // invalid numeric escape
+		`1 . key65534=\24`,        // invalid numeric escape
+		`1 . key65534=\256`,       // invalid numeric escape
+		`1 . key65534=\`,          // invalid numeric escape
 		`1 . key65534=""alpn`,     // zQuote ending needs whitespace
 		`1 . key65534="a"alpn`,    // zQuote ending needs whitespace
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
@@ -1882,5 +1883,114 @@ func TestParseAPLErrors(t *testing.T) {
 				t.Fatal("expected error, got none")
 			}
 		})
+	}
+}
+
+func TestUnpackRRWithHeaderInvalidLengths(t *testing.T) {
+	rr, err := NewRR("test.example.org. 300 IN SSHFP 1 2 BC6533CDC95A79078A39A56EA7635984ED655318ADA9B6159E30723665DA95BB")
+	if err != nil {
+		t.Fatalf("failed to parse SSHFP record: %v", err)
+	}
+
+	buf := make([]byte, Len(rr))
+	headerEnd, end, err := packRR(rr, buf, 0, compressionMap{}, false)
+	if err != nil {
+		t.Fatalf("failed to pack A record: %v", err)
+	}
+
+	rr.Header().Rdlength = uint16(end - headerEnd)
+	for _, off := range []int{
+		-1,
+		end + 1,
+		1<<16 - 1,
+	} {
+		_, _, err := UnpackRRWithHeader(*rr.Header(), buf, off)
+		if de, ok := err.(*Error); !ok || de.err != "bad off" {
+			t.Errorf("UnpackRRWithHeader with bad offset (%d) returned wrong or no error: %v", off, err)
+		}
+	}
+
+	for _, rdlength := range []uint16{
+		uint16(end - headerEnd + 1),
+		uint16(end),
+		1<<16 - 1,
+	} {
+		rr.Header().Rdlength = rdlength
+
+		_, _, err := UnpackRRWithHeader(*rr.Header(), buf, headerEnd)
+		if de, ok := err.(*Error); !ok || de.err != "bad rdlength" {
+			t.Errorf("UnpackRRWithHeader with bad rdlength (%d) returned wrong or no error: %v", rdlength, err)
+		}
+	}
+}
+
+func TestParseZONEMD(t *testing.T) {
+	// Uses examples from https://tools.ietf.org/html/rfc8976
+	dt := map[string]string{
+		// Simple Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										c68090d90a7aed71
+										6bc459f9340e3d7c
+										1370d4d24b7e2fc3
+										a1ddc0b9a87153b9
+										a9713b3c9ae5cc27
+										777f98b8e730044c )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c",
+		// Complex Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										a3b69bad980a3504
+										e1cffcb0fd6397f9
+										3848071c93151f55
+										2ae2f6b1711d4bd2
+										d8b39808226d7b9d
+										b71e34b72077f8fe )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 a3b69bad980a3504e1cffcb0fd6397f93848071c93151f552ae2f6b1711d4bd2d8b39808226d7b9db71e34b72077f8fe",
+		// Multiple Digests Zone
+		`example.	86400	IN	ZONEMD	2018031900 1 1 (
+										62e6cf51b02e54b9
+										b5f967d547ce4313
+										6792901f9f88e637
+										493daaf401c92c27
+										9dd10f0edb1c56f8
+										080211f8480ee306 )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 1 62e6cf51b02e54b9b5f967d547ce43136792901f9f88e637493daaf401c92c279dd10f0edb1c56f8080211f8480ee306",
+		`example.	86400	IN	ZONEMD	2018031900 1 2 (
+										08cfa1115c7b948c
+										4163a901270395ea
+										226a930cd2cbcf2f
+										a9a5e6eb85f37c8a
+										4e114d884e66f176
+										eab121cb02db7d65
+										2e0cc4827e7a3204
+										f166b47e5613fd27 )
+		`: "example.\t86400\tIN\tZONEMD\t2018031900 1 2 08cfa1115c7b948c4163a901270395ea226a930cd2cbcf2fa9a5e6eb85f37c8a4e114d884e66f176eab121cb02db7d652e0cc4827e7a3204f166b47e5613fd27",
+		`example.	86400	IN	ZONEMD	2018031900 1 240 (
+										e2d523f654b9422a
+										96c5a8f44607bbee )
+		`: "example.	86400	IN	ZONEMD	2018031900 1 240 e2d523f654b9422a96c5a8f44607bbee",
+		`example.	86400	IN	ZONEMD	2018031900 241 1 (
+										e1846540e33a9e41
+										89792d18d5d131f6
+										05fc283e )
+		`: "example.	86400	IN	ZONEMD	2018031900 241 1 e1846540e33a9e4189792d18d5d131f605fc283e",
+		// URI.ARPA zone
+		`uri.arpa.		3600	IN		ZONEMD	2018100702 1 1 (
+			0dbc3c4dbfd75777c12ca19c337854b1577799901307c482e9d91d5d15
+			cd934d16319d98e30c4201cf25a1d5a0254960 )`: "uri.arpa.\t3600\tIN\tZONEMD\t2018100702 1 1 0dbc3c4dbfd75777c12ca19c337854b1577799901307c482e9d91d5d15cd934d16319d98e30c4201cf25a1d5a0254960",
+		// ROOT-SERVERS.NET Zone
+		`root-servers.net.     3600000 IN  ZONEMD  2018091100 1 1 (
+			f1ca0ccd91bd5573d9f431c00ee0101b2545c97602be0a97
+			8a3b11dbfc1c776d5b3e86ae3d973d6b5349ba7f04340f79 )
+		`: "root-servers.net.\t3600000\tIN\tZONEMD\t2018091100 1 1 f1ca0ccd91bd5573d9f431c00ee0101b2545c97602be0a978a3b11dbfc1c776d5b3e86ae3d973d6b5349ba7f04340f79",
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
 	}
 }
