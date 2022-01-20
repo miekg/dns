@@ -3,13 +3,12 @@ package dns
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-
-	"golang.org/x/crypto/ed25519"
 )
 
 func getSoa() *SOA {
@@ -325,7 +324,7 @@ Activate: 20110302104537`
 	}
 	switch priv := p.(type) {
 	case *rsa.PrivateKey:
-		if 65537 != priv.PublicKey.E {
+		if priv.PublicKey.E != 65537 {
 			t.Error("exponenent should be 65537")
 		}
 	default:

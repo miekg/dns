@@ -78,7 +78,7 @@ func TestPackDataOpt(t *testing.T) {
 // "0\x00\v\x00#\b00000\x00\x00\x00\x00\x00\x1a000" +
 // "000\x00\x00\x00\x00\x1a000000\x00\x00\x00\x00\x1a0" +
 // "00000\x00\v00\a0000000\x00"
-// That byte sequence, when Unpack() and subsequential Pack() created a
+// That byte sequence, when Unpack() and subsequent Pack() created a
 // panic: runtime error: slice bounds out of range
 // which was attributed to the fact that NSEC RR length computation was different (and smaller)
 // then when within packDataNsec.
@@ -111,7 +111,7 @@ func TestCrashNSEC(t *testing.T) {
 // "0000\x00\x00000000\x00\x00200000" +
 // "0\x00\v0000\x00\x00#\x0300\x00\x00\x00\x1a000" +
 // "000\x00\v00\x0200\x00\x03000\x00"
-// That byte sequence, when Unpack() and subsequential Pack() created a
+// That byte sequence, when Unpack() and subsequent Pack() created a
 // panic: runtime error: slice bounds out of range
 // which was attributed to the fact that NSEC3 RR length computation was
 // different (and smaller) then within NSEC3.pack (which relies on
