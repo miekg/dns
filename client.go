@@ -206,6 +206,11 @@ func (c *Client) exchangeContext(ctx context.Context, m *Msg, co *Conn) (r *Msg,
 	// If EDNS0 is used use that for size.
 	if opt != nil && opt.UDPSize() >= MinMsgSize {
 		co.UDPSize = opt.UDPSize()
+		// Do not use a size lower than DefaultMsgSize (needed in case peer
+		// doesn't honor the edns0 bufsize)
+		if co.UDPSize < DefaultMsgSize {
+			co.UDPSize = DefaultMsgSize
+		}
 	}
 	// Otherwise use the client's configured UDP size.
 	if opt == nil && c.UDPSize >= MinMsgSize {
