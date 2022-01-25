@@ -39,6 +39,14 @@ type Conn struct {
 	tsigRequestMAC string
 }
 
+func (co *Conn) tsigProvider() TsigProvider {
+	if co.TsigProvider != nil {
+		return co.TsigProvider
+	}
+	// tsigSecretProvider will return ErrSecret if co.TsigSecret is nil.
+	return tsigSecretProvider(co.TsigSecret)
+}
+
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
@@ -271,15 +279,8 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 		return m, err
 	}
 	if t := m.IsTsig(); t != nil {
-		if co.TsigProvider != nil {
-			err = tsigVerifyProvider(p, co.TsigProvider, co.tsigRequestMAC, false)
-		} else {
-			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
-				return m, ErrSecret
-			}
-			// Need to work on the original message p, as that was used to calculate the tsig.
-			err = TsigVerify(p, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
-		}
+		// Need to work on the original message p, as that was used to calculate the tsig.
+		err = tsigVerifyProvider(p, co.tsigProvider(), co.tsigRequestMAC, false)
 	}
 	return m, err
 }
@@ -356,17 +357,8 @@ func (co *Conn) Read(p []byte) (n int, err error) {
 func (co *Conn) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if t := m.IsTsig(); t != nil {
-		mac := ""
-		if co.TsigProvider != nil {
-			out, mac, err = tsigGenerateProvider(m, co.TsigProvider, co.tsigRequestMAC, false)
-		} else {
-			if _, ok := co.TsigSecret[t.Hdr.Name]; !ok {
-				return ErrSecret
-			}
-			out, mac, err = TsigGenerate(m, co.TsigSecret[t.Hdr.Name], co.tsigRequestMAC, false)
-		}
-		// Set for the next read, although only used in zone transfers
-		co.tsigRequestMAC = mac
+		// Set tsigRequestMAC for the next read, although only used in zone transfers.
+		out, co.tsigRequestMAC, err = tsigGenerateProvider(m, co.tsigProvider(), co.tsigRequestMAC, false)
 	} else {
 		out, err = m.Pack()
 	}
