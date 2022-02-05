@@ -1,6 +1,9 @@
 package dns
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 var (
 	tsigSecret  = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
@@ -126,4 +129,55 @@ func axfrTestingSuite(t *testing.T, addrstr string) {
 			t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
 		}
 	}
+}
+
+func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigProvider) {
+	tr := new(Transfer)
+	m := new(Msg)
+	var err error
+	tr.Conn, err = Dial("tcp", addrstr)
+	if err != nil {
+		t.Fatal("failed to dial", err)
+	}
+	tr.TsigProvider = provider
+	m.SetAxfr("miek.nl.")
+	m.SetTsig("axfr.", HmacSHA256, 300, time.Now().Unix())
+
+	c, err := tr.In(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	var records []RR
+	for msg := range c {
+		if msg.Error != nil {
+			t.Fatal(msg.Error)
+		}
+		records = append(records, msg.RR...)
+	}
+
+	if len(records) != len(xfrTestData) {
+		t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
+	}
+
+	for i, rr := range records {
+		if !IsDuplicate(rr, xfrTestData[i]) {
+			t.Errorf("bad axfr: expected %v, got %v", records, xfrTestData)
+		}
+	}
+}
+
+func TestCustomTsigProvider(t *testing.T) {
+	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
+	defer HandleRemove("miek.nl.")
+
+	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
+		srv.TsigProvider = tsigSecretProvider(tsigSecret)
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	axfrTestingSuiteWithCustomTsig(t, addrstr, tsigSecretProvider(tsigSecret))
 }
