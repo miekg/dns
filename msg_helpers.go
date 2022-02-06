@@ -558,29 +558,43 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	if len(bitmap) == 0 {
 		return off, nil
 	}
-	var lastwindow, lastlength uint16
-	for _, t := range bitmap {
-		window := t / 256
-		length := (t-window*256)/8 + 1
-		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
-			off += int(lastlength) + 2
-			lastlength = 0
+
+	bi := 0
+	for window := 0; window < 256; window++ {
+		if bi == len(bitmap) {
+			break
 		}
-		if window < lastwindow || length < lastlength {
-			return len(msg), &Error{err: "nsec bits out of order"}
+		if int(bitmap[bi]>>8) != window {
+			continue
 		}
-		if off+2+int(length) > len(msg) {
-			return len(msg), &Error{err: "overflow packing nsec"}
+		length := 0
+		for i := 0; i < 32; i++ {
+			if bi == len(bitmap) {
+				break
+			}
+			_off := off + 2 + i
+			if int(bitmap[bi]>>8) == window && int(byte(bitmap[bi])/8) == i {
+				if _off >= len(msg) {
+					return off, &Error{err: "overflow packing nsec"}
+				}
+				msg[_off] = byte(0x80 >> (byte(bitmap[bi]) % 8))
+				for j := length + 1; j < i; j++ {
+					msg[off+2+j] = 0
+				}
+				length = i
+				bi++
+			}
+			for ; bi < len(bitmap) && int(bitmap[bi]>>8) == window && int(byte(bitmap[bi])/8) == i; bi++ {
+				msg[_off] |= byte(0x80 >> (byte(bitmap[bi]) % 8))
+			}
 		}
-		// Setting the window #
 		msg[off] = byte(window)
-		// Setting the octets length
-		msg[off+1] = byte(length)
-		// Setting the bit value for the type in the right octet
-		msg[off+1+int(length)] |= byte(1 << (7 - t%8))
-		lastwindow, lastlength = window, length
+		msg[off+1] = byte(length + 1)
+		off += length + 3
 	}
-	off += int(lastlength) + 2
+	if bi != len(bitmap) {
+		return off, &Error{err: "nsec bits out of order"}
+	}
 	return off, nil
 }
 
