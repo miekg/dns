@@ -554,45 +554,52 @@ func typeBitMapLen(bitmap []uint16) int {
 	return l
 }
 
-func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
-	if len(bitmap) == 0 {
+func packDataNsec(types []uint16, msg []byte, off int) (int, error) {
+	if len(types) == 0 {
 		return off, nil
 	}
 
-	bi := 0
+	ti := 0 // current type index
 	for window := 0; window < 256; window++ {
-		if bi == len(bitmap) {
+		if ti == len(types) {
+			// All types are encoded
 			break
 		}
-		if int(bitmap[bi]>>8) != window {
+		if int(types[ti]>>8) != window {
+			// Next types high-order 0 bit does not fit in this window, skipping.
 			continue
 		}
 		length := 0
 		for i := 0; i < 32; i++ {
-			if bi == len(bitmap) {
+			if ti == len(types) {
+				// No more types to encode
 				break
 			}
-			_off := off + 2 + i
-			if int(bitmap[bi]>>8) == window && int(byte(bitmap[bi])/8) == i {
-				if _off >= len(msg) {
+			bo := off + 2 + i // current bitmap offset
+			if int(types[ti]>>8) == window && int(byte(types[ti])/8) == i {
+				if bo >= len(msg) {
 					return off, &Error{err: "overflow packing nsec"}
 				}
-				msg[_off] = byte(0x80 >> (byte(bitmap[bi]) % 8))
+				// Set current bitmap
+				msg[bo] = byte(0x80 >> (byte(types[ti]) % 8))
+				// Zero previous empty bitmap blocks if any
 				for j := length + 1; j < i; j++ {
 					msg[off+2+j] = 0
 				}
+				// Push length of the bitmap to the highest lower-order 8bit block
 				length = i
-				bi++
+				ti++
 			}
-			for ; bi < len(bitmap) && int(bitmap[bi]>>8) == window && int(byte(bitmap[bi])/8) == i; bi++ {
-				msg[_off] |= byte(0x80 >> (byte(bitmap[bi]) % 8))
+			for ; ti < len(types) && int(types[ti]>>8) == window && int(byte(types[ti])/8) == i; ti++ {
+				// Add additional types fitting in the same bitmap block if any
+				msg[bo] |= byte(0x80 >> (byte(types[ti]) % 8))
 			}
 		}
 		msg[off] = byte(window)
 		msg[off+1] = byte(length + 1)
 		off += length + 3
 	}
-	if bi != len(bitmap) {
+	if ti != len(types) {
 		return off, &Error{err: "nsec bits out of order"}
 	}
 	return off, nil
