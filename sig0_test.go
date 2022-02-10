@@ -12,7 +12,7 @@ func TestSIG0(t *testing.T) {
 	}
 	m := new(Msg)
 	m.SetQuestion("example.org.", TypeSOA)
-	for _, alg := range []uint8{ECDSAP256SHA256, ECDSAP384SHA384, RSASHA1, RSASHA256, RSASHA512} {
+	for _, alg := range []uint8{ECDSAP256SHA256, ECDSAP384SHA384, RSASHA1, RSASHA256, RSASHA512, ED25519} {
 		algstr := AlgorithmToString[alg]
 		keyrr := new(KEY)
 		keyrr.Hdr.Name = algstr + "."
@@ -21,7 +21,7 @@ func TestSIG0(t *testing.T) {
 		keyrr.Algorithm = alg
 		keysize := 512
 		switch alg {
-		case ECDSAP256SHA256:
+		case ECDSAP256SHA256, ED25519:
 			keysize = 256
 		case ECDSAP384SHA384:
 			keysize = 384
@@ -30,7 +30,7 @@ func TestSIG0(t *testing.T) {
 		}
 		pk, err := keyrr.Generate(keysize)
 		if err != nil {
-			t.Errorf("failed to generate key for “%s”: %v", algstr, err)
+			t.Errorf("failed to generate key for %q: %v", algstr, err)
 			continue
 		}
 		now := uint32(time.Now().Unix())
@@ -45,16 +45,16 @@ func TestSIG0(t *testing.T) {
 		sigrr.SignerName = keyrr.Hdr.Name
 		mb, err := sigrr.Sign(pk.(crypto.Signer), m)
 		if err != nil {
-			t.Errorf("failed to sign message using “%s”: %v", algstr, err)
+			t.Errorf("failed to sign message using %q: %v", algstr, err)
 			continue
 		}
 		m := new(Msg)
 		if err := m.Unpack(mb); err != nil {
-			t.Errorf("failed to unpack message signed using “%s”: %v", algstr, err)
+			t.Errorf("failed to unpack message signed using %q: %v", algstr, err)
 			continue
 		}
 		if len(m.Extra) != 1 {
-			t.Errorf("missing SIG for message signed using “%s”", algstr)
+			t.Errorf("missing SIG for message signed using %q", algstr)
 			continue
 		}
 		var sigrrwire *SIG
@@ -71,20 +71,20 @@ func TestSIG0(t *testing.T) {
 				id = "sigrrwire"
 			}
 			if err := rr.Verify(keyrr, mb); err != nil {
-				t.Errorf("failed to verify “%s” signed SIG(%s): %v", algstr, id, err)
+				t.Errorf("failed to verify %q signed SIG(%s): %v", algstr, id, err)
 				continue
 			}
 		}
 		mb[13]++
 		if err := sigrr.Verify(keyrr, mb); err == nil {
-			t.Errorf("verify succeeded on an altered message using “%s”", algstr)
+			t.Errorf("verify succeeded on an altered message using %q", algstr)
 			continue
 		}
 		sigrr.Expiration = 2
 		sigrr.Inception = 1
 		mb, _ = sigrr.Sign(pk.(crypto.Signer), m)
 		if err := sigrr.Verify(keyrr, mb); err == nil {
-			t.Errorf("verify succeeded on an expired message using “%s”", algstr)
+			t.Errorf("verify succeeded on an expired message using %q", algstr)
 			continue
 		}
 	}
