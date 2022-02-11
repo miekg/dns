@@ -45,7 +45,7 @@ func TestPackDataNsec(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: "dns: overflow packing nsec",
-			wantOff:    48,
+			wantOff:    31,
 		},
 		{
 			name: "disordered nsec bits",
@@ -73,7 +73,7 @@ func TestPackDataNsec(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: "dns: nsec bits out of order",
-			wantOff:    3,
+			wantOff:    155,
 		},
 		{
 			name: "simple message with only one window",
@@ -151,10 +151,21 @@ func TestPackDataNsecDirtyBuffer(t *testing.T) {
 }
 
 func BenchmarkPackDataNsec(b *testing.B) {
-	types := []uint16{TypeNS, TypeSOA, TypeRRSIG, TypeDNSKEY, TypeNSEC3PARAM}
-	buf := make([]byte, 100)
-	for n := 0; n < b.N; n++ {
-		packDataNsec(types, buf, 0)
+	benches := []struct {
+		name  string
+		types []uint16
+	}{
+		{"empty", nil},
+		{"typical", []uint16{TypeNS, TypeSOA, TypeRRSIG, TypeDNSKEY, TypeNSEC3PARAM}},
+		{"multiple_windows", []uint16{1, 300, 350, 10000, 20000}},
+	}
+	for _, bb := range benches {
+		b.Run(bb.name, func(b *testing.B) {
+			buf := make([]byte, 100)
+			for n := 0; n < b.N; n++ {
+				packDataNsec(bb.types, buf, 0)
+			}
+		})
 	}
 }
 func TestUnpackString(t *testing.T) {

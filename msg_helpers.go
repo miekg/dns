@@ -554,54 +554,51 @@ func typeBitMapLen(bitmap []uint16) int {
 	return l
 }
 
-func packDataNsec(types []uint16, msg []byte, off int) (int, error) {
-	if len(types) == 0 {
+func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
+	if len(bitmap) == 0 {
 		return off, nil
 	}
+	var lastwindow, lastlength uint16
+	for i, t := range bitmap {
+		window := t / 256
+		length := (t-window*256)/8 + 1
+		if (window > lastwindow && lastlength != 0) || i == 0 {
+			if i > 0 {
+				// New window, jump to the new offset
+				off += int(lastlength) + 2
+				lastlength = 0
+			}
 
-	ti := 0 // current type index
-	for window := 0; window < 256; window++ {
-		if ti == len(types) {
-			// All types are encoded
-			break
-		}
-		if int(types[ti]>>8) != window {
-			// Next types high-order 0 bit does not fit in this window, skipping.
-			continue
-		}
-		length := 0
-		for i := 0; i < 32; i++ {
-			if ti == len(types) {
-				// No more types to encode
-				break
-			}
-			bo := off + 2 + i // current bitmap offset
-			if int(types[ti]>>8) == window && int(byte(types[ti])/8) == i {
-				if bo >= len(msg) {
-					return off, &Error{err: "overflow packing nsec"}
+			// Zero out window bitmap
+			windowLength := length
+			for j := i + 1; j < len(bitmap); j++ {
+				if bitmap[j]>>8 == window {
+					windowLength = bitmap[j]&0xff/8 + 1
 				}
-				// Set current bitmap
-				msg[bo] = byte(0x80 >> (byte(types[ti]) % 8))
-				// Zero previous empty bitmap blocks if any
-				for j := length + 1; j < i; j++ {
-					msg[off+2+j] = 0
-				}
-				// Push length of the bitmap to the highest lower-order 8bit block
-				length = i
-				ti++
 			}
-			for ; ti < len(types) && int(types[ti]>>8) == window && int(byte(types[ti])/8) == i; ti++ {
-				// Add additional types fitting in the same bitmap block if any
-				msg[bo] |= byte(0x80 >> (byte(types[ti]) % 8))
+			lastOff := off + 1 + int(windowLength)
+			if lastOff > len(msg) {
+				return len(msg), &Error{err: "overflow packing nsec"}
+			}
+			for zoff := off + 1; zoff <= lastOff; zoff++ {
+				msg[zoff] = 0
 			}
 		}
+		if window < lastwindow || length < lastlength {
+			return len(msg), &Error{err: "nsec bits out of order"}
+		}
+		if off+2+int(length) > len(msg) {
+			return len(msg), &Error{err: "overflow packing nsec"}
+		}
+		// Setting the window #
 		msg[off] = byte(window)
-		msg[off+1] = byte(length + 1)
-		off += length + 3
+		// Setting the octets length
+		msg[off+1] = byte(length)
+		// Setting the bit value for the type in the right octet
+		msg[off+1+int(length)] |= byte(1 << (7 - t%8))
+		lastwindow, lastlength = window, length
 	}
-	if ti != len(types) {
-		return off, &Error{err: "nsec bits out of order"}
-	}
+	off += int(lastlength) + 2
 	return off, nil
 }
 
