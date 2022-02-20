@@ -13,14 +13,14 @@ import (
 // SVCBKey is the type of the keys used in the SVCB RR.
 type SVCBKey uint16
 
-// Keys defined in draft-ietf-dnsop-svcb-https-01 Section 12.3.2.
+// Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2.
 const (
 	SVCB_MANDATORY       SVCBKey = 0
 	SVCB_ALPN            SVCBKey = 1
 	SVCB_NO_DEFAULT_ALPN SVCBKey = 2
 	SVCB_PORT            SVCBKey = 3
 	SVCB_IPV4HINT        SVCBKey = 4
-	SVCB_ECHCONFIG       SVCBKey = 5
+	SVCB_ECH             SVCBKey = 5
 	SVCB_IPV6HINT        SVCBKey = 6
 	svcb_RESERVED        SVCBKey = 65535
 )
@@ -31,7 +31,7 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVCB_PORT:            "port",
 	SVCB_IPV4HINT:        "ipv4hint",
-	SVCB_ECHCONFIG:       "echconfig",
+	SVCB_ECH:             "ech",
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
@@ -187,8 +187,8 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBPort)
 	case SVCB_IPV4HINT:
 		return new(SVCBIPv4Hint)
-	case SVCB_ECHCONFIG:
-		return new(SVCBECHConfig)
+	case SVCB_ECH:
+		return new(SVCBECH)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
 	case svcb_RESERVED:
@@ -200,7 +200,7 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 	}
 }
 
-// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-01).
+// SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-08).
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
@@ -522,42 +522,42 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBECHConfig pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
-// Basic use pattern for creating an echconfig option:
+// SVCBECH pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
+// Basic use pattern for creating an ech option:
 //
 //	h := new(dns.HTTPS)
 //	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
-//	e := new(dns.SVCBECHConfig)
+//	e := new(dns.SVCBECH)
 //	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
-type SVCBECHConfig struct {
-	ECH []byte
+type SVCBECH struct {
+	ECHConfigList []byte // includes the redundant length prefix
 }
 
-func (*SVCBECHConfig) Key() SVCBKey     { return SVCB_ECHCONFIG }
-func (s *SVCBECHConfig) String() string { return toBase64(s.ECH) }
-func (s *SVCBECHConfig) len() int       { return len(s.ECH) }
+func (*SVCBECH) Key() SVCBKey     { return SVCB_ECH }
+func (s *SVCBECH) String() string { return toBase64(s.ECHConfigList) }
+func (s *SVCBECH) len() int       { return len(s.ECHConfigList) }
 
-func (s *SVCBECHConfig) pack() ([]byte, error) {
-	return append([]byte(nil), s.ECH...), nil
+func (s *SVCBECH) pack() ([]byte, error) {
+	return append([]byte(nil), s.ECHConfigList...), nil
 }
 
-func (s *SVCBECHConfig) copy() SVCBKeyValue {
-	return &SVCBECHConfig{
-		append([]byte(nil), s.ECH...),
+func (s *SVCBECH) copy() SVCBKeyValue {
+	return &SVCBECH{
+		append([]byte(nil), s.ECHConfigList...),
 	}
 }
 
-func (s *SVCBECHConfig) unpack(b []byte) error {
-	s.ECH = append([]byte(nil), b...)
+func (s *SVCBECH) unpack(b []byte) error {
+	s.ECHConfigList = append([]byte(nil), b...)
 	return nil
 }
-func (s *SVCBECHConfig) parse(b string) error {
+func (s *SVCBECH) parse(b string) error {
 	x, err := fromBase64([]byte(b))
 	if err != nil {
-		return errors.New("dns: svcbechconfig: bad base64 echconfig")
+		return errors.New("dns: svcbech: bad base64 ech")
 	}
-	s.ECH = x
+	s.ECHConfigList = x
 	return nil
 }
 
