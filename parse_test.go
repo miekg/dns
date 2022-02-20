@@ -1644,6 +1644,11 @@ func TestParseSVCB(t *testing.T) {
 		// and what we do is to pass it on, which is the correct behavior to encourage
 		// fixing its cause
 		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
+		// From the specification
+		`example.com.   HTTPS   0 foo.example.com.`: `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
+		`example.com.   SVCB   1 .`: `example.com.	3600	IN	SVCB	1 .`,
+		`example.com.   SVCB   16 foo.example.com. port=53`: `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
+		`example.com.   SVCB   1 foo.example.com. key667=hello`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
 	}
 	for s, o := range svcbs {
 		rr, err := NewRR(s)
