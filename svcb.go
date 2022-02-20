@@ -167,10 +167,10 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		}
 		l, _ = c.Next()
 	}
+
+	// Don't check rr.Priority == 0 && len(xs) > 0
+	// as explained in parse_test.go
 	rr.Value = xs
-	if rr.Priority == 0 && len(xs) > 0 {
-		return &ParseError{l.token, "SVCB aliasform can't have values", l}
-	}
 	return nil
 }
 
@@ -205,7 +205,9 @@ type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16
 	Target   string         `dns:"domain-name"`
-	Value    []SVCBKeyValue `dns:"pairs"` // Value must be empty if Priority is zero.
+	Value    []SVCBKeyValue `dns:"pairs"`
+	// If Priority is zero, Value should be empty.
+	// If it is not, when receiving, Value must be considered empty.
 }
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well.
