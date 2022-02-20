@@ -237,7 +237,16 @@ type SVCBKeyValue interface {
 }
 
 // SVCBMandatory pair adds to required keys that must be interpreted for the RR
-// to be functional.
+// to be functional. If ignored, the whole RRSet must be ignored.
+// "port" and "no-default-alpn" are mandatory by default if present,
+// so they shouldn't be included here.
+//
+// It is incumbent upon the user of this library to reject the RRSet if:
+// - "mandatory" is included as one of the keys of mandatory
+// - no key is listed multiple times in mandatory
+// - all keys listed in mandatory are present
+// - escape sequences are not used in mandatory
+//
 // Basic use pattern for creating a mandatory option:
 //
 //	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
@@ -245,7 +254,7 @@ type SVCBKeyValue interface {
 //	e.Code = []uint16{65403}
 //	s.Value = append(s.Value, e)
 type SVCBMandatory struct {
-	Code []SVCBKey // Must not include mandatory
+	Code []SVCBKey
 }
 
 func (*SVCBMandatory) Key() SVCBKey { return SVCB_MANDATORY }
@@ -372,6 +381,7 @@ func (s *SVCBAlpn) copy() SVCBKeyValue {
 }
 
 // SVCBNoDefaultAlpn pair signifies no support for default connection protocols.
+// Should be used in conjunction with alpn.
 // Basic use pattern for creating a no-default-alpn option:
 //
 //	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
@@ -387,14 +397,14 @@ func (*SVCBNoDefaultAlpn) len() int              { return 0 }
 
 func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
 	if len(b) != 0 {
-		return errors.New("dns: svcbnodefaultalpn: no_default_alpn must have no value")
+		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil
 }
 
 func (*SVCBNoDefaultAlpn) parse(b string) error {
 	if b != "" {
-		return errors.New("dns: svcbnodefaultalpn: no_default_alpn must have no value")
+		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil
 }
