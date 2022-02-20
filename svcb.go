@@ -241,11 +241,13 @@ type SVCBKeyValue interface {
 // "port" and "no-default-alpn" are mandatory by default if present,
 // so they shouldn't be included here.
 //
-// It is incumbent upon the user of this library to reject the RRSet if:
+// It is incumbent upon the user of this library to reject the RRSet if
+// or avoid constructing such an RRSet that:
 // - "mandatory" is included as one of the keys of mandatory
 // - no key is listed multiple times in mandatory
 // - all keys listed in mandatory are present
 // - escape sequences are not used in mandatory
+// - mandatory, when present, lists at least one key
 //
 // Basic use pattern for creating a mandatory option:
 //
@@ -313,6 +315,7 @@ func (s *SVCBMandatory) copy() SVCBKeyValue {
 }
 
 // SVCBAlpn pair is used to list supported connection protocols.
+// The user of this library must ensure that at least one protocol is listed when alpn is present.
 // Protocol ids can be found at:
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:

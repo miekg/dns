@@ -1642,7 +1642,7 @@ func TestParseSVCB(t *testing.T) {
 		// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
 		// ignore any SvcParams that are present."
 		// and what we do is to pass it on, which is the correct behavior to encourage
-		// fixing the source of this
+		// fixing its cause
 		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
 	}
 	for s, o := range svcbs {
@@ -1686,10 +1686,12 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
 		`1 . ipv6hint=1:1:1:1`,    // not ipv6
 		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv6hint=`,           // empty ipv6
 		`1 . ipv4hint=1.1.1.1.1`,  // not ipv4
 		`1 . ipv4hint=::fc`,       // not ipv4
 		`1 . ipv4hint=..11`,       // not ipv4
 		`1 . ipv4hint=a`,          // not ipv4
+		`1 . ipv4hint=`,           // empty ipv4
 		`1 . port=`,               // empty port
 		`1 . echconfig=YUd`,       // bad base64
 	}
