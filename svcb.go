@@ -633,15 +633,15 @@ func (s *SVCBIPv6Hint) String() string {
 }
 
 func (s *SVCBIPv6Hint) parse(b string) error {
-	if strings.Contains(b, ".") {
-		return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
-	}
 	str := strings.Split(b, ",")
 	dst := make([]net.IP, len(str))
 	for i, e := range str {
 		ip := net.ParseIP(e)
 		if ip == nil {
 			return errors.New("dns: svcbipv6hint: bad ip")
+		}
+		if ip.To4() != nil {
+			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		dst[i] = ip
 	}
