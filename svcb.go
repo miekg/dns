@@ -15,14 +15,15 @@ type SVCBKey uint16
 
 // Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2.
 const (
-	SVCB_MANDATORY       SVCBKey = 0
-	SVCB_ALPN            SVCBKey = 1
-	SVCB_NO_DEFAULT_ALPN SVCBKey = 2
-	SVCB_PORT            SVCBKey = 3
-	SVCB_IPV4HINT        SVCBKey = 4
-	SVCB_ECH             SVCBKey = 5
-	SVCB_IPV6HINT        SVCBKey = 6
-	svcb_RESERVED        SVCBKey = 65535
+	SVCB_MANDATORY SVCBKey = iota
+	SVCB_ALPN
+	SVCB_NO_DEFAULT_ALPN
+	SVCB_PORT
+	SVCB_IPV4HINT
+	SVCB_ECH
+	SVCB_IPV6HINT
+
+	svcb_RESERVED SVCBKey = 65535
 )
 
 var svcbKeyToStringMap = map[SVCBKey]string{
@@ -203,11 +204,9 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-08).
 type SVCB struct {
 	Hdr      RR_Header
-	Priority uint16
+	Priority uint16         // If zero, Value must be empty / discarded
 	Target   string         `dns:"domain-name"`
 	Value    []SVCBKeyValue `dns:"pairs"`
-	// If Priority is zero, Value should be empty.
-	// If it is not, when receiving, Value must be considered empty.
 }
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well.
@@ -253,8 +252,11 @@ type SVCBKeyValue interface {
 //
 //	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
 //	e := new(dns.SVCBMandatory)
-//	e.Code = []uint16{65403}
+//	e.Code = []uint16{dns.SVCB_ALPN}
 //	s.Value = append(s.Value, e)
+//	t := new(dns.SVCBAlpn)
+//	t.Alpn = []string{"xmpp-client"}
+//	s.Value = append(s.Value, t)
 type SVCBMandatory struct {
 	Code []SVCBKey
 }
@@ -316,7 +318,7 @@ func (s *SVCBMandatory) copy() SVCBKeyValue {
 
 // SVCBAlpn pair is used to list supported connection protocols.
 // The user of this library must ensure that at least one protocol is listed when alpn is present.
-// Protocol ids can be found at:
+// Protocol IDs can be found at:
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:
 //
@@ -388,6 +390,9 @@ func (s *SVCBAlpn) copy() SVCBKeyValue {
 // Basic use pattern for creating a no-default-alpn option:
 //
 //	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
+//	t := new(dns.SVCBAlpn)
+//	t.Alpn = []string{"xmpp-client"}
+//	s.Value = append(s.Value, t)
 //	e := new(dns.SVCBNoDefaultAlpn)
 //	s.Value = append(s.Value, e)
 type SVCBNoDefaultAlpn struct{}
@@ -543,7 +548,7 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 //	h := new(dns.HTTPS)
 //	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
 //	e := new(dns.SVCBECH)
-//	e.ECH = []byte{0xfe, 0x08, ...}
+//	e.ECHConfigList = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
 type SVCBECH struct {
 	ECHConfigList []byte // includes the redundant length prefix
