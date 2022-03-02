@@ -257,14 +257,12 @@ func TestClientSyncBadID(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSOA)
 
+	// Test with client.Exchange, the plain Exchange function is just a wrapper, so
+	// we don't need to test that separately.
 	c := &Client{
-		Timeout: 50 * time.Millisecond,
+		Timeout: 10 * time.Millisecond,
 	}
 	if _, _, err := c.Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
-		t.Errorf("query did not time out")
-	}
-	// And now with plain Exchange().
-	if _, err = Exchange(m, addrstr); err == nil || !isNetworkTimeout(err) {
 		t.Errorf("query did not time out")
 	}
 }
@@ -284,14 +282,6 @@ func TestClientSyncBadThenGoodID(t *testing.T) {
 
 	c := new(Client)
 	r, _, err := c.Exchange(m, addrstr)
-	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
-	}
-	if r.Id != m.Id {
-		t.Errorf("failed to get response with expected Id")
-	}
-	// And now with plain Exchange().
-	r, err = Exchange(m, addrstr)
 	if err != nil {
 		t.Errorf("failed to exchange: %v", err)
 	}
