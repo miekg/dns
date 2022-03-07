@@ -342,7 +342,7 @@ func TestClientEDNS0Local(t *testing.T) {
 	optStr1 := "1979:0x0707"
 	optStr2 := strconv.Itoa(EDNS0LOCALSTART) + ":0x0601"
 
-	handler := func(w ResponseWriter, req *Msg) {
+	handler := func(ctx context.Context, w ResponseWriter, req *Msg) {
 		m := new(Msg)
 		m.SetReply(req)
 
@@ -667,7 +667,7 @@ func TestConcurrentExchanges(t *testing.T) {
 
 	for _, m := range cases {
 		mm := m // redeclare m so as not to trip the race detector
-		handler := func(w ResponseWriter, req *Msg) {
+		handler := func(ctx context.Context, w ResponseWriter, req *Msg) {
 			r := mm.Copy()
 			r.SetReply(req)
 

@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -13,7 +14,7 @@ var (
 	xfrTestData = []RR{xfrSoa, xfrA, xfrMX, xfrSoa}
 )
 
-func InvalidXfrServer(w ResponseWriter, req *Msg) {
+func InvalidXfrServer(ctx context.Context, w ResponseWriter, req *Msg) {
 	ch := make(chan *Envelope)
 	tr := new(Transfer)
 
@@ -23,7 +24,7 @@ func InvalidXfrServer(w ResponseWriter, req *Msg) {
 	w.Hijack()
 }
 
-func SingleEnvelopeXfrServer(w ResponseWriter, req *Msg) {
+func SingleEnvelopeXfrServer(ctx context.Context, w ResponseWriter, req *Msg) {
 	ch := make(chan *Envelope)
 	tr := new(Transfer)
 
@@ -33,7 +34,7 @@ func SingleEnvelopeXfrServer(w ResponseWriter, req *Msg) {
 	w.Hijack()
 }
 
-func MultipleEnvelopeXfrServer(w ResponseWriter, req *Msg) {
+func MultipleEnvelopeXfrServer(ctx context.Context, w ResponseWriter, req *Msg) {
 	ch := make(chan *Envelope)
 	tr := new(Transfer)
 

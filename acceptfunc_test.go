@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"testing"
 )
 
@@ -28,7 +29,7 @@ func TestAcceptNotify(t *testing.T) {
 	}
 }
 
-func handleNotify(w ResponseWriter, req *Msg) {
+func handleNotify(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	w.WriteMsg(m)
