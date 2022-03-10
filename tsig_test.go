@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -136,23 +137,23 @@ func TestTsigErrors(t *testing.T) {
 	}
 
 	// the signature is valid but 'time signed' is too far from the "current time".
-	if err := tsigVerify(buildMsgData(timeSigned), tsigHMACProvider(testSecret), "", false, timeSigned+301); err != ErrTime {
+	if err := tsigVerify(context.Background(), buildMsgData(timeSigned), tsigHMACProvider(testSecret), "", false, timeSigned+301); err != ErrTime {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
 	}
-	if err := tsigVerify(buildMsgData(timeSigned), tsigHMACProvider(testSecret), "", false, timeSigned-301); err != ErrTime {
+	if err := tsigVerify(context.Background(), buildMsgData(timeSigned), tsigHMACProvider(testSecret), "", false, timeSigned-301); err != ErrTime {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrTime, err)
 	}
 
 	// the signature is invalid and 'time signed' is too far.
 	// the signature should be checked first, so we should see ErrSig.
-	if err := tsigVerify(buildMsgData(timeSigned+301), tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrSig {
+	if err := tsigVerify(context.Background(), buildMsgData(timeSigned+301), tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrSig {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrSig, err)
 	}
 
 	// tweak the algorithm name in the wire data, resulting in the "unknown algorithm" error.
 	msgData := buildMsgData(timeSigned)
 	copy(msgData[67:], "bogus")
-	if err := tsigVerify(msgData, tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrKeyAlg {
+	if err := tsigVerify(context.Background(), msgData, tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrKeyAlg {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrKeyAlg, err)
 	}
 
@@ -161,7 +162,7 @@ func TestTsigErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := tsigVerify(msgData, tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrNoSig {
+	if err := tsigVerify(context.Background(), msgData, tsigHMACProvider(testSecret), "", false, timeSigned); err != ErrNoSig {
 		t.Fatalf("expected an error '%v' but got '%v'", ErrNoSig, err)
 	}
 
@@ -177,7 +178,7 @@ func TestTsigErrors(t *testing.T) {
 	if msgData, err = msg.Pack(); err != nil {
 		t.Fatal(err)
 	}
-	err = tsigVerify(msgData, tsigHMACProvider(testSecret), "", false, timeSigned)
+	err = tsigVerify(context.Background(), msgData, tsigHMACProvider(testSecret), "", false, timeSigned)
 	if err == nil || !strings.Contains(err.Error(), "overflow") {
 		t.Errorf("expected error to contain %q, but got %v", "overflow", err)
 	}
@@ -288,7 +289,7 @@ func TestTSIGHMAC224And384(t *testing.T) {
 			if mac != tc.expectedMAC {
 				t.Fatalf("MAC doesn't match: expected '%s' but got '%s'", tc.expectedMAC, mac)
 			}
-			if err = tsigVerify(msgData, tsigHMACProvider(tc.secret), "", false, timeSigned); err != nil {
+			if err = tsigVerify(context.Background(), msgData, tsigHMACProvider(tc.secret), "", false, timeSigned); err != nil {
 				t.Error(err)
 			}
 		})
@@ -307,14 +308,14 @@ type testProvider struct {
 	GenerateAllKeys bool
 }
 
-func (provider *testProvider) Generate(_ []byte, t *TSIG) ([]byte, error) {
+func (provider *testProvider) Generate(ctx context.Context, _ []byte, t *TSIG) ([]byte, error) {
 	if t.Hdr.Name == testGoodKeyName || provider.GenerateAllKeys {
 		return testGoodMAC, nil
 	}
 	return nil, errBadKey
 }
 
-func (*testProvider) Verify(_ []byte, t *TSIG) error {
+func (*testProvider) Verify(ctx context.Context, _ []byte, t *TSIG) error {
 	if t.Hdr.Name == testGoodKeyName {
 		return nil
 	}
@@ -354,7 +355,7 @@ func TestTsigGenerateProvider(t *testing.T) {
 				Extra:    []RR{&tsig},
 			}
 
-			_, mac, err := tsigGenerateProvider(req, new(testProvider), "", false)
+			_, mac, err := tsigGenerateProvider(context.Background(), req, new(testProvider), "", false)
 			if err != table.err {
 				t.Fatalf("error doesn't match: expected '%s' but got '%s'", table.err, err)
 			}
@@ -397,11 +398,11 @@ func TestTsigVerifyProvider(t *testing.T) {
 			}
 
 			provider := &testProvider{true}
-			msgData, _, err := tsigGenerateProvider(req, provider, "", false)
+			msgData, _, err := tsigGenerateProvider(context.Background(), req, provider, "", false)
 			if err != nil {
 				t.Error(err)
 			}
-			if err = tsigVerify(msgData, provider, "", false, timeSigned); err != table.err {
+			if err = tsigVerify(context.Background(), msgData, provider, "", false, timeSigned); err != table.err {
 				t.Fatalf("error doesn't match: expected '%s' but got '%s'", table.err, err)
 			}
 		})

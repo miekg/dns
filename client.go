@@ -358,7 +358,7 @@ func (co *Conn) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if t := m.IsTsig(); t != nil {
 		// Set tsigRequestMAC for the next read, although only used in zone transfers.
-		out, co.tsigRequestMAC, err = tsigGenerateProvider(m, co.tsigProvider(), co.tsigRequestMAC, false)
+		out, co.tsigRequestMAC, err = tsigGenerateProvider(context.Background(), m, co.tsigProvider(), co.tsigRequestMAC, false)
 	} else {
 		out, err = m.Pack()
 	}

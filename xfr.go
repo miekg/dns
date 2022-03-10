@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -247,7 +248,7 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	var out []byte
 	if ts, tp := m.IsTsig(), t.tsigProvider(); ts != nil && tp != nil {
-		out, t.tsigRequestMAC, err = tsigGenerateProvider(m, tp, t.tsigRequestMAC, t.tsigTimersOnly)
+		out, t.tsigRequestMAC, err = tsigGenerateProvider(context.Background(), m, tp, t.tsigRequestMAC, t.tsigTimersOnly)
 	} else {
 		out, err = m.Pack()
 	}

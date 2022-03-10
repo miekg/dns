@@ -2,8 +2,15 @@ package dns
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/md5"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"net"
 	"runtime"
@@ -1256,3 +1263,150 @@ zDCJkckCgYEAndqM5KXGk5xYo+MAA1paZcbTUXwaWwjLU+XSRSSoyBEi5xMtfvUb
 kFsxKCqxAnBVGEWAvVZAiiTOxleQFjz5RnL0BQp9Lg2cQe+dvuUmIAA=
 -----END RSA PRIVATE KEY-----`)
 )
+
+type customTsigProvider struct {
+	secrets map[string]map[string]string
+	lock    sync.RWMutex
+}
+
+func TestServerRoundtripTsigProvider(t *testing.T) {
+	// Let's use a read write lock so that we can show how to properly reload secrets async/
+	// We will also make the map value be another map so that we can properly
+	// separate tsigs based on zone ID
+	// map[tsigName]map[zoneName]tsigSecret
+	secrets := map[string]map[string]string{}
+	secrets["test."] = make(map[string]string)
+	secrets["test."]["example.com."] = "so6ZGir4GPAqINNh9U5c3A=="
+	secrets["test."]["otherexample.com."] = "blahblah"
+
+	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
+
+	s, addrstr, _, err := RunLocalUDPServer(":0", func(srv *Server) {
+		srv.TsigProvider = customTsigProvider{secrets: secrets}
+		srv.MsgAcceptFunc = func(dh Header) MsgAcceptAction {
+			// defaultMsgAcceptFunc does reject UPDATE queries
+			return MsgAccept
+		}
+	})
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	handlerFired := make(chan struct{})
+	HandleFunc("example.com.", func(ctx context.Context, w ResponseWriter, r *Msg) {
+		close(handlerFired)
+
+		m := new(Msg)
+		m.SetReply(r)
+		if r.IsTsig() != nil {
+			status := w.TsigStatus()
+			if status == nil {
+				// *Msg r has an TSIG record and it was validated
+				m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
+			} else {
+				// *Msg r has an TSIG records and it was not validated
+				t.Errorf("invalid TSIG: %v", status)
+			}
+		} else {
+			t.Error("missing TSIG")
+		}
+		if err := w.WriteMsg(m); err != nil {
+			t.Error("writemsg failed", err)
+		}
+	})
+
+	c := new(Client)
+	m := new(Msg)
+	m.Opcode = OpcodeUpdate
+	m.SetQuestion("example.com.", TypeSOA)
+	m.Ns = []RR{&CNAME{
+		Hdr: RR_Header{
+			Name:   "foo.example.com.",
+			Rrtype: TypeCNAME,
+			Class:  ClassINET,
+			Ttl:    300,
+		},
+		Target: "bar.example.com.",
+	}}
+	c.TsigSecret = secret
+	m.SetTsig("test.", HmacSHA256, 300, time.Now().Unix())
+	_, _, err = c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange", err)
+	}
+	select {
+	case <-handlerFired:
+		// ok, handler was actually called
+	default:
+		t.Error("handler was not called")
+	}
+}
+
+func (ctp customTsigProvider) Generate(ctx context.Context, msg []byte, t *TSIG) ([]byte, error) {
+	// Readlock
+	ctp.lock.RLock()
+	defer ctp.lock.RUnlock()
+
+	// We can put anything in here, but for this example we will put the dnsMsg in the context so that we can get any information we need
+	dnsMsg, ok := ctx.Value(DNSMsgKey).(*Msg)
+	if !ok {
+		return nil, fmt.Errorf("Failed to find dnsMsg in context for tsig %s", t.Hdr.Name)
+	}
+	if len(dnsMsg.Question) == 0 {
+		return nil, fmt.Errorf("Failed to grab zoneName from dnsMsg question for %s", t.Hdr.Name)
+	}
+	zoneName := dnsMsg.Question[0].Name
+
+	// Check if we have a secret with this name
+	secretsWithTsigName, ok := ctp.secrets[t.Hdr.Name]
+	if !ok {
+		return nil, fmt.Errorf("Failed to find tsig with this name %s", t.Hdr.Name)
+	}
+	// Make sure this tsig is actually for the specific zone in question
+	secret, ok := secretsWithTsigName[zoneName]
+	if !ok {
+		return nil, fmt.Errorf("Failed to find tsig with this name %s and zone %s", t.Hdr.Name, zoneName)
+	}
+
+	rawsecret, err := fromBase64([]byte(secret))
+	if err != nil {
+		return nil, err
+	}
+
+	var h hash.Hash
+	switch CanonicalName(t.Algorithm) {
+	case HmacSHA1:
+		h = hmac.New(sha1.New, rawsecret)
+	case HmacSHA224:
+		h = hmac.New(sha256.New224, rawsecret)
+		// Deprecated
+	case HmacMD5:
+		h = hmac.New(md5.New, rawsecret)
+	case HmacSHA256:
+		h = hmac.New(sha256.New, rawsecret)
+	case HmacSHA384:
+		h = hmac.New(sha512.New384, rawsecret)
+	case HmacSHA512:
+		h = hmac.New(sha512.New, rawsecret)
+	default:
+		return nil, ErrKeyAlg
+	}
+	h.Write(msg)
+	return h.Sum(nil), nil
+}
+
+func (key customTsigProvider) Verify(ctx context.Context, msg []byte, t *TSIG) error {
+	b, err := key.Generate(ctx, msg, t)
+	if err != nil {
+		return err
+	}
+	mac, err := hex.DecodeString(t.MAC)
+	if err != nil {
+		return err
+	}
+	if !hmac.Equal(b, mac) {
+		return ErrSig
+	}
+	return nil
+}

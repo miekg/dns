@@ -729,7 +729,7 @@ func (w *response) WriteMsg(m *Msg) (err error) {
 	var data []byte
 	if w.tsigProvider != nil { // if no provider, dont check for the tsig (which is a longer check)
 		if t := m.IsTsig(); t != nil {
-			data, w.tsigRequestMAC, err = tsigGenerateProvider(m, w.tsigProvider, w.tsigRequestMAC, w.tsigTimersOnly)
+			data, w.tsigRequestMAC, err = tsigGenerateProvider(context.Background(), m, w.tsigProvider, w.tsigRequestMAC, w.tsigTimersOnly)
 			if err != nil {
 				return err
 			}
