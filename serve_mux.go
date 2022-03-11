@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"sync"
 )
 
@@ -70,7 +71,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
@@ -93,16 +94,16 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 //
 // If no handler is found, or there is no question, a standard REFUSED
 // message is returned
-func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
+func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
 	var h Handler
 	if len(req.Question) >= 1 { // allow more than one question
 		h = mux.match(req.Question[0].Name, req.Question[0].Qtype)
 	}
 
 	if h != nil {
-		h.ServeDNS(w, req)
+		h.ServeDNS(ctx, w, req)
 	} else {
-		handleRefused(w, req)
+		handleRefused(ctx, w, req)
 	}
 }
 
@@ -117,6 +118,6 @@ func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
 // HandleFunc registers the handler function with the given pattern
 // in the DefaultServeMux.
-func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }

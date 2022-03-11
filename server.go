@@ -23,18 +23,18 @@ var aLongTimeAgo = time.Unix(1, 0)
 
 // Handler is implemented by any value that implements ServeDNS.
 type Handler interface {
-	ServeDNS(w ResponseWriter, r *Msg)
+	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
 }
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
 // Handler object that calls f.
-type HandlerFunc func(ResponseWriter, *Msg)
+type HandlerFunc func(context.Context, ResponseWriter, *Msg)
 
 // ServeDNS calls f(w, r).
-func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
-	f(w, r)
+func (f HandlerFunc) ServeDNS(ctx context.Context, w ResponseWriter, r *Msg) {
+	f(ctx, w, r)
 }
 
 // A ResponseWriter interface is used by an DNS handler to
@@ -80,7 +80,7 @@ type response struct {
 }
 
 // handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
-func handleRefused(w ResponseWriter, r *Msg) {
+func handleRefused(ctx context.Context, w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeRefused)
 	w.WriteMsg(m)
@@ -88,7 +88,7 @@ func handleRefused(w ResponseWriter, r *Msg) {
 
 // HandleFailed returns a HandlerFunc that returns SERVFAIL for every request it gets.
 // Deprecated: This function is going away.
-func HandleFailed(w ResponseWriter, r *Msg) {
+func HandleFailed(ctx context.Context, w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.SetRcode(r, RcodeServerFailure)
 	// does not matter if this write fails
@@ -142,10 +142,10 @@ type Writer interface {
 type Reader interface {
 	// ReadTCP reads a raw message from a TCP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
-	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
+	ReadTCP(ctx context.Context, conn net.Conn, timeout time.Duration) ([]byte, context.Context, error)
 	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
-	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
+	ReadUDP(ctx context.Context, conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, context.Context, error)
 }
 
 // PacketConnReader is an optional interface that Readers can implement to support using generic net.PacketConns.
@@ -154,7 +154,7 @@ type PacketConnReader interface {
 
 	// ReadPacketConn reads a raw message from a generic net.PacketConn UDP connection. Implementations may
 	// alter connection properties, for example the read-deadline.
-	ReadPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error)
+	ReadPacketConn(ctx context.Context, conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, context.Context, error)
 }
 
 // defaultReader is an adapter for the Server struct that implements the Reader and
@@ -166,16 +166,16 @@ type defaultReader struct {
 
 var _ PacketConnReader = defaultReader{}
 
-func (dr defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
-	return dr.readTCP(conn, timeout)
+func (dr defaultReader) ReadTCP(ctx context.Context, conn net.Conn, timeout time.Duration) ([]byte, context.Context, error) {
+	return dr.readTCP(ctx, conn, timeout)
 }
 
-func (dr defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	return dr.readUDP(conn, timeout)
+func (dr defaultReader) ReadUDP(ctx context.Context, conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, context.Context, error) {
+	return dr.readUDP(ctx, conn, timeout)
 }
 
-func (dr defaultReader) ReadPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error) {
-	return dr.readPacketConn(conn, timeout)
+func (dr defaultReader) ReadPacketConn(ctx context.Context, conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, context.Context, error) {
+	return dr.readPacketConn(ctx, conn, timeout)
 }
 
 // DecorateReader is a decorator hook for extending or supplanting the functionality of a Reader.
@@ -509,10 +509,11 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			sUDP *SessionUDP
 			err  error
 		)
+		ctx := context.Background()
 		if isUDP {
-			m, sUDP, err = reader.ReadUDP(lUDP, rtimeout)
+			m, sUDP, ctx, err = reader.ReadUDP(ctx, lUDP, rtimeout)
 		} else {
-			m, sPC, err = readerPC.ReadPacketConn(l, rtimeout)
+			m, sPC, ctx, err = readerPC.ReadPacketConn(ctx, l, rtimeout)
 		}
 		if err != nil {
 			if !srv.isStarted() {
@@ -530,7 +531,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			continue
 		}
 		wg.Add(1)
-		go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
+		go srv.serveUDPPacket(ctx, &wg, m, l, sUDP, sPC)
 	}
 
 	return nil
@@ -563,12 +564,12 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 	}
 
 	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
-		m, err := reader.ReadTCP(w.tcp, timeout)
+		m, ctx, err := reader.ReadTCP(context.Background(), w.tcp, timeout)
 		if err != nil {
 			// TODO(tmthrgd): handle error
 			break
 		}
-		srv.serveDNS(m, w)
+		srv.serveDNS(ctx, m, w)
 		if w.closed {
 			break // Close() was called
 		}
@@ -592,7 +593,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 }
 
 // Serve a new UDP request.
-func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
+func (srv *Server) serveUDPPacket(ctx context.Context, wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
 	w := &response{tsigProvider: srv.tsigProvider(), udp: u, udpSession: udpSession, pcSession: pcSession}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -600,11 +601,11 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 		w.writer = w
 	}
 
-	srv.serveDNS(m, w)
+	srv.serveDNS(ctx, m, w)
 	wg.Done()
 }
 
-func (srv *Server) serveDNS(m []byte, w *response) {
+func (srv *Server) serveDNS(ctx context.Context, m []byte, w *response) {
 	dh, off, err := unpackMsgHdr(m, 0)
 	if err != nil {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
@@ -656,10 +657,10 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		srv.udpPool.Put(m[:srv.UDPSize])
 	}
 
-	srv.Handler.ServeDNS(w, req) // Writes back to the client
+	srv.Handler.ServeDNS(ctx, w, req) // Writes back to the client
 }
 
-func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
+func (srv *Server) readTCP(ctx context.Context, conn net.Conn, timeout time.Duration) ([]byte, context.Context, error) {
 	// If we race with ShutdownContext, the read deadline may
 	// have been set in the distant past to unblock the read
 	// below. We must not override it, otherwise we may block
@@ -672,18 +673,18 @@ func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
 
 	var length uint16
 	if err := binary.Read(conn, binary.BigEndian, &length); err != nil {
-		return nil, err
+		return nil, ctx, err
 	}
 
 	m := make([]byte, length)
 	if _, err := io.ReadFull(conn, m); err != nil {
-		return nil, err
+		return nil, ctx, err
 	}
 
-	return m, nil
+	return m, ctx, nil
 }
 
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
+func (srv *Server) readUDP(ctx context.Context, conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, context.Context, error) {
 	srv.lock.RLock()
 	if srv.started {
 		// See the comment in readTCP above.
@@ -695,13 +696,13 @@ func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *S
 	n, s, err := ReadFromSessionUDP(conn, m)
 	if err != nil {
 		srv.udpPool.Put(m)
-		return nil, nil, err
+		return nil, nil, ctx, err
 	}
 	m = m[:n]
-	return m, s, nil
+	return m, s, ctx, nil
 }
 
-func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error) {
+func (srv *Server) readPacketConn(ctx context.Context, conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, context.Context, error) {
 	srv.lock.RLock()
 	if srv.started {
 		// See the comment in readTCP above.
@@ -713,10 +714,10 @@ func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([
 	n, addr, err := conn.ReadFrom(m)
 	if err != nil {
 		srv.udpPool.Put(m)
-		return nil, nil, err
+		return nil, nil, ctx, err
 	}
 	m = m[:n]
-	return m, addr, nil
+	return m, addr, ctx, nil
 }
 
 // WriteMsg implements the ResponseWriter.WriteMsg method.

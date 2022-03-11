@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func HelloServer(w ResponseWriter, req *Msg) {
+func HelloServer(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 
@@ -25,7 +25,7 @@ func HelloServer(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func HelloServerBadID(w ResponseWriter, req *Msg) {
+func HelloServerBadID(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Id++
@@ -35,7 +35,7 @@ func HelloServerBadID(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func HelloServerBadThenGoodID(w ResponseWriter, req *Msg) {
+func HelloServerBadThenGoodID(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Id++
@@ -48,7 +48,7 @@ func HelloServerBadThenGoodID(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func HelloServerEchoAddrPort(w ResponseWriter, req *Msg) {
+func HelloServerEchoAddrPort(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 
@@ -58,7 +58,7 @@ func HelloServerEchoAddrPort(w ResponseWriter, req *Msg) {
 	w.WriteMsg(m)
 }
 
-func AnotherHelloServer(w ResponseWriter, req *Msg) {
+func AnotherHelloServer(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 
@@ -345,8 +345,8 @@ func TestServingTLSConnectionState(t *testing.T) {
 	handlerResponse := "Hello example"
 	// tlsHandlerTLS is a HandlerFunc that can be set to expect or not TLS
 	// connection state.
-	tlsHandlerTLS := func(tlsExpected bool) func(ResponseWriter, *Msg) {
-		return func(w ResponseWriter, req *Msg) {
+	tlsHandlerTLS := func(tlsExpected bool) func(context.Context, ResponseWriter, *Msg) {
+		return func(ctx context.Context, w ResponseWriter, req *Msg) {
 			m := new(Msg)
 			m.SetReply(req)
 			tlsFound := true
@@ -546,7 +546,7 @@ func BenchmarkServe6(b *testing.B) {
 	runtime.GOMAXPROCS(a)
 }
 
-func HelloServerCompress(w ResponseWriter, req *Msg) {
+func HelloServerCompress(ctx context.Context, w ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Extra = make([]RR, 1)
@@ -586,7 +586,7 @@ type maxRec struct {
 
 var M = new(maxRec)
 
-func HelloServerLargeResponse(resp ResponseWriter, req *Msg) {
+func HelloServerLargeResponse(ctx context.Context, resp ResponseWriter, req *Msg) {
 	m := new(Msg)
 	m.SetReply(req)
 	m.Authoritative = true
@@ -710,7 +710,7 @@ func checkInProgressQueriesAtShutdownServer(t *testing.T, srv *Server, addr stri
 	defer errOnce.Do(func() {})
 
 	toHandle := int32(requests)
-	HandleFunc("example.com.", func(w ResponseWriter, req *Msg) {
+	HandleFunc("example.com.", func(ctx context.Context, w ResponseWriter, req *Msg) {
 		defer atomic.AddInt32(&toHandle, -1)
 
 		// Wait until ShutdownContext is called before replying.
@@ -871,7 +871,7 @@ func TestHandlerCloseTCP(t *testing.T) {
 
 	hname := "testhandlerclosetcp."
 	triggered := make(chan struct{})
-	HandleFunc(hname, func(w ResponseWriter, r *Msg) {
+	HandleFunc(hname, func(ctx context.Context, w ResponseWriter, r *Msg) {
 		close(triggered)
 		w.Close()
 	})
@@ -1042,7 +1042,7 @@ func TestServerRoundtripTsig(t *testing.T) {
 	defer s.Shutdown()
 
 	handlerFired := make(chan struct{})
-	HandleFunc("example.com.", func(w ResponseWriter, r *Msg) {
+	HandleFunc("example.com.", func(ctx context.Context, w ResponseWriter, r *Msg) {
 		close(handlerFired)
 
 		m := new(Msg)
