@@ -20,7 +20,7 @@ const (
 	SVCB_NO_DEFAULT_ALPN
 	SVCB_PORT
 	SVCB_IPV4HINT
-	SVCB_ECH
+	SVCB_ECHCONFIG
 	SVCB_IPV6HINT
 
 	svcb_RESERVED SVCBKey = 65535
@@ -32,7 +32,7 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
 	SVCB_PORT:            "port",
 	SVCB_IPV4HINT:        "ipv4hint",
-	SVCB_ECH:             "ech",
+	SVCB_ECHCONFIG:       "ech",
 	SVCB_IPV6HINT:        "ipv6hint",
 }
 
@@ -188,8 +188,8 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBPort)
 	case SVCB_IPV4HINT:
 		return new(SVCBIPv4Hint)
-	case SVCB_ECH:
-		return new(SVCBECH)
+	case SVCB_ECHCONFIG:
+		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
 	case svcb_RESERVED:
@@ -542,42 +542,42 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 	}
 }
 
-// SVCBECH pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
+// SVCBECHConfig pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
 // Basic use pattern for creating an ech option:
 //
 //	h := new(dns.HTTPS)
 //	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
-//	e := new(dns.SVCBECH)
-//	e.ECHConfigList = []byte{0xfe, 0x08, ...}
+//	e := new(dns.SVCBECHConfig)
+//	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
-type SVCBECH struct {
-	ECHConfigList []byte // includes the redundant length prefix
+type SVCBECHConfig struct {
+	ECH []byte // Specifically ECHConfigList including the redundant length prefix
 }
 
-func (*SVCBECH) Key() SVCBKey     { return SVCB_ECH }
-func (s *SVCBECH) String() string { return toBase64(s.ECHConfigList) }
-func (s *SVCBECH) len() int       { return len(s.ECHConfigList) }
+func (*SVCBECHConfig) Key() SVCBKey     { return SVCB_ECHCONFIG }
+func (s *SVCBECHConfig) String() string { return toBase64(s.ECH) }
+func (s *SVCBECHConfig) len() int       { return len(s.ECH) }
 
-func (s *SVCBECH) pack() ([]byte, error) {
-	return append([]byte(nil), s.ECHConfigList...), nil
+func (s *SVCBECHConfig) pack() ([]byte, error) {
+	return append([]byte(nil), s.ECH...), nil
 }
 
-func (s *SVCBECH) copy() SVCBKeyValue {
-	return &SVCBECH{
-		append([]byte(nil), s.ECHConfigList...),
+func (s *SVCBECHConfig) copy() SVCBKeyValue {
+	return &SVCBECHConfig{
+		append([]byte(nil), s.ECH...),
 	}
 }
 
-func (s *SVCBECH) unpack(b []byte) error {
-	s.ECHConfigList = append([]byte(nil), b...)
+func (s *SVCBECHConfig) unpack(b []byte) error {
+	s.ECH = append([]byte(nil), b...)
 	return nil
 }
-func (s *SVCBECH) parse(b string) error {
+func (s *SVCBECHConfig) parse(b string) error {
 	x, err := fromBase64([]byte(b))
 	if err != nil {
 		return errors.New("dns: svcbech: bad base64 ech")
 	}
-	s.ECHConfigList = x
+	s.ECH = x
 	return nil
 }
 
