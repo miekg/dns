@@ -1639,10 +1639,7 @@ func TestParseSVCB(t *testing.T) {
 		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
-		// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
-		// ignore any SvcParams that are present."
-		// and what we do is to pass it on, which is the correct behavior to encourage
-		// fixing its cause
+		// Explained in svcb.go "In AliasMode, records SHOULD NOT include any SvcParams,"
 		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
 		// From the specification
 		`example.com.   HTTPS   0 foo.example.com.`: `example.com.	3600	IN	HTTPS	0 foo.example.com.`,

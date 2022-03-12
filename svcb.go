@@ -169,8 +169,12 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 		l, _ = c.Next()
 	}
 
-	// Don't check rr.Priority == 0 && len(xs) > 0
-	// as explained in parse_test.go
+	// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
+	// ignore any SvcParams that are present."
+	// However, we don't check rr.Priority == 0 && len(xs) > 0 here
+	// It is the responsibility of the user of the library to check this.
+	// This is to encourage the fixing of the source of this error.
+
 	rr.Value = xs
 	return nil
 }
@@ -204,7 +208,7 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-08).
 type SVCB struct {
 	Hdr      RR_Header
-	Priority uint16         // If zero, Value must be empty / discarded
+	Priority uint16         // If zero, Value must be empty or discarded by the user of this library
 	Target   string         `dns:"domain-name"`
 	Value    []SVCBKeyValue `dns:"pairs"`
 }
