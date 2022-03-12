@@ -558,31 +558,23 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	if len(bitmap) == 0 {
 		return off, nil
 	}
+	if off > len(msg) {
+		return off, &Error{err: "overflow packing nsec"}
+	}
+	toZero := msg[off:]
+	if maxLen := typeBitMapLen(bitmap); maxLen < len(toZero) {
+		toZero = toZero[:maxLen]
+	}
+	for i := range toZero {
+		toZero[i] = 0
+	}
 	var lastwindow, lastlength uint16
-	for i, t := range bitmap {
+	for _, t := range bitmap {
 		window := t / 256
 		length := (t-window*256)/8 + 1
-		if (window > lastwindow && lastlength != 0) || i == 0 {
-			if i > 0 {
-				// New window, jump to the new offset
-				off += int(lastlength) + 2
-				lastlength = 0
-			}
-
-			// Zero out window bitmap
-			windowLength := length
-			for j := i + 1; j < len(bitmap); j++ {
-				if bitmap[j]>>8 == window {
-					windowLength = bitmap[j]&0xff/8 + 1
-				}
-			}
-			lastOff := off + 1 + int(windowLength)
-			if lastOff > len(msg) {
-				return len(msg), &Error{err: "overflow packing nsec"}
-			}
-			for zoff := off + 1; zoff <= lastOff; zoff++ {
-				msg[zoff] = 0
-			}
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
+			off += int(lastlength) + 2
+			lastlength = 0
 		}
 		if window < lastwindow || length < lastlength {
 			return len(msg), &Error{err: "nsec bits out of order"}

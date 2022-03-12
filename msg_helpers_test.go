@@ -45,7 +45,7 @@ func TestPackDataNsec(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: "dns: overflow packing nsec",
-			wantOff:    31,
+			wantOff:    48,
 		},
 		{
 			name: "disordered nsec bits",
