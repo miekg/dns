@@ -855,3 +855,16 @@ func TestParseKeyReadError(t *testing.T) {
 		t.Errorf("expected a nil map, but got %v", m)
 	}
 }
+
+func TestRSAMD5KeyTag(t *testing.T) {
+	rr1, _ := NewRR("test.  IN DNSKEY  257 3 1 AwEAAcntNdoMnY8pvyPcpDTAaiqHyAhf53XUBANq166won/fjBFvmuzhTuP5r4el/pV0tzEBL73zpoU48BqF66uiL+qRijXCySJiaBUvLNll5rpwuduAOoVpmwOmkC4fV6izHOAx/Uy8c+pYP0YR8+1P7GuTFxgnMmt9sUGtoe+la0X/ ;{id = 27461 (ksk), size = 1024b}")
+	rr2, _ := NewRR("test.  IN DNSKEY  257 3 1 AwEAAf0bKO/m45ylk5BlSLmQHQRBLx1m/ZUXvyPFB387bJXxnTk6so3ub97L1RQ+8bOoiRh3Qm5EaYihjco7J8b/W5WbS3tVsE79nY584RfTKT2zcZ9AoFP2XLChXxPIf/6l0H9n6sH0aBjsG8vabEIp8e06INM3CXVPiMRPPeGNa0Ub ;{id = 27461 (ksk), size = 1024b}")
+
+	exp := uint16(27461)
+	if x := rr1.(*DNSKEY).KeyTag(); x != exp {
+		t.Errorf("expected %d, got %d, as keytag for rr1", exp, x)
+	}
+	if x := rr2.(*DNSKEY).KeyTag(); x != exp { // yes, same key tag
+		t.Errorf("expected %d, got %d, as keytag for rr2", exp, x)
+	}
+}
