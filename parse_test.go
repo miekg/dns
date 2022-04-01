@@ -1639,6 +1639,19 @@ func TestParseSVCB(t *testing.T) {
 		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
+		// Explained in svcb.go "In AliasMode, records SHOULD NOT include any SvcParams,"
+		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
+		// From the specification
+		`example.com.   HTTPS   0 foo.example.com.`: `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
+		`example.com.   SVCB   1 .`: `example.com.	3600	IN	SVCB	1 .`,
+		`example.com.   SVCB   16 foo.example.com. port=53`: `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
+		`example.com.   SVCB   1 foo.example.com. key667=hello`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
+		`example.com.   SVCB   1 foo.example.com. key667="hello\210qoo"`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello\210qoo"`,
+		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`: `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
+		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`: `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
+		`example.com.   SVCB   16 foo.example.org. alpn=h2,h3-19 mandatory=ipv4hint,alpn ipv4hint=192.0.2.1`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="h2,h3-19" mandatory="ipv4hint,alpn" ipv4hint="192.0.2.1"`,
+		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\092,bar,h2"`,
 	}
 	for s, o := range svcbs {
 		rr, err := NewRR(s)
@@ -1655,7 +1668,6 @@ func TestParseSVCB(t *testing.T) {
 func TestParseBadSVCB(t *testing.T) {
 	header := `example.com. 3600 IN HTTPS `
 	evils := []string{
-		`0 . no-default-alpn`,     // aliasform
 		`65536 . no-default-alpn`, // bad priority
 		`1 ..`,                    // bad domain
 		`1 . no-default-alpn=1`,   // value illegal
@@ -1682,10 +1694,12 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . ipv6hint=1.1.1.1`,    // not ipv6
 		`1 . ipv6hint=1:1:1:1`,    // not ipv6
 		`1 . ipv6hint=a`,          // not ipv6
+		`1 . ipv6hint=`,           // empty ipv6
 		`1 . ipv4hint=1.1.1.1.1`,  // not ipv4
 		`1 . ipv4hint=::fc`,       // not ipv4
 		`1 . ipv4hint=..11`,       // not ipv4
 		`1 . ipv4hint=a`,          // not ipv4
+		`1 . ipv4hint=`,           // empty ipv4
 		`1 . port=`,               // empty port
 		`1 . echconfig=YUd`,       // bad base64
 	}
