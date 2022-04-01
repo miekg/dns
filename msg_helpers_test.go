@@ -19,7 +19,8 @@ func TestPackDataNsec(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		want       int
+		wantOff    int
+		wantBytes  []byte
 		wantErr    bool
 		wantErrMsg string
 	}{
@@ -44,14 +45,14 @@ func TestPackDataNsec(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: "dns: overflow packing nsec",
-			want:       31,
+			wantOff:    48,
 		},
 		{
 			name: "disordered nsec bits",
 			args: args{
 				bitmap: []uint16{
 					8962,
-					0,
+					1,
 				},
 				msg: []byte{
 					48, 48, 48, 48, 0, 0, 0, 1, 0, 0, 0, 0,
@@ -72,13 +73,13 @@ func TestPackDataNsec(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrMsg: "dns: nsec bits out of order",
-			want:       155,
+			wantOff:    155,
 		},
 		{
 			name: "simple message with only one window",
 			args: args{
 				bitmap: []uint16{
-					0,
+					1,
 				},
 				msg: []byte{
 					48, 48, 48, 48, 0, 0,
@@ -89,13 +90,33 @@ func TestPackDataNsec(t *testing.T) {
 				},
 				off: 0,
 			},
-			wantErr: false,
-			want:    3,
+			wantErr:   false,
+			wantOff:   3,
+			wantBytes: []byte{0, 1, 64},
+		},
+		{
+			name: "multiple types",
+			args: args{
+				bitmap: []uint16{
+					TypeNS, TypeSOA, TypeRRSIG, TypeDNSKEY, TypeNSEC3PARAM,
+				},
+				msg: []byte{
+					48, 48, 48, 48, 0, 0,
+					0, 1, 0, 0, 0, 0,
+					0, 0, 50, 48, 48, 48,
+					48, 48, 48, 0, 54, 48,
+					48, 48, 48, 0, 19, 48, 48,
+				},
+				off: 0,
+			},
+			wantErr:   false,
+			wantOff:   9,
+			wantBytes: []byte{0, 7, 34, 0, 0, 0, 0, 2, 144},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := packDataNsec(tt.args.bitmap, tt.args.msg, tt.args.off)
+			gotOff, err := packDataNsec(tt.args.bitmap, tt.args.msg, tt.args.off)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("packDataNsec() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -104,13 +125,49 @@ func TestPackDataNsec(t *testing.T) {
 				t.Errorf("packDataNsec() error msg = %v, wantErrMsg %v", err.Error(), tt.wantErrMsg)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("packDataNsec() = %v, want %v", got, tt.want)
+			if gotOff != tt.wantOff {
+				t.Errorf("packDataNsec() = %v, want off %v", gotOff, tt.wantOff)
+			}
+			if err == nil && tt.args.off < len(tt.args.msg) && gotOff < len(tt.args.msg) {
+				if want, got := tt.wantBytes, tt.args.msg[tt.args.off:gotOff]; !bytes.Equal(got, want) {
+					t.Errorf("packDataNsec() = %v, want bytes %v", got, want)
+				}
 			}
 		})
 	}
 }
 
+func TestPackDataNsecDirtyBuffer(t *testing.T) {
+	zeroBuf := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0}
+	dirtyBuf := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	off1, _ := packDataNsec([]uint16{TypeNS, TypeSOA, TypeRRSIG}, zeroBuf, 0)
+	off2, _ := packDataNsec([]uint16{TypeNS, TypeSOA, TypeRRSIG}, dirtyBuf, 0)
+	if off1 != off2 {
+		t.Errorf("off1 %v != off2 %v", off1, off2)
+	}
+	if !bytes.Equal(zeroBuf[:off1], dirtyBuf[:off2]) {
+		t.Errorf("dirty buffer differs from zero buffer: %v, %v", zeroBuf[:off1], dirtyBuf[:off2])
+	}
+}
+
+func BenchmarkPackDataNsec(b *testing.B) {
+	benches := []struct {
+		name  string
+		types []uint16
+	}{
+		{"empty", nil},
+		{"typical", []uint16{TypeNS, TypeSOA, TypeRRSIG, TypeDNSKEY, TypeNSEC3PARAM}},
+		{"multiple_windows", []uint16{1, 300, 350, 10000, 20000}},
+	}
+	for _, bb := range benches {
+		b.Run(bb.name, func(b *testing.B) {
+			buf := make([]byte, 100)
+			for n := 0; n < b.N; n++ {
+				packDataNsec(bb.types, buf, 0)
+			}
+		})
+	}
+}
 func TestUnpackString(t *testing.T) {
 	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm\x7f")
 	msg[0] = byte(len(msg) - 1)
