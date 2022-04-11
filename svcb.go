@@ -13,7 +13,8 @@ import (
 // SVCBKey is the type of the keys used in the SVCB RR.
 type SVCBKey uint16
 
-// Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2.
+// Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2
+// and draft-ietf-add-svcb-dns-02 Section 9.
 const (
 	SVCB_MANDATORY SVCBKey = iota
 	SVCB_ALPN
@@ -22,11 +23,13 @@ const (
 	SVCB_IPV4HINT
 	SVCB_ECHCONFIG
 	SVCB_IPV6HINT
+	SVCB_DOHPATH
 
 	svcb_RESERVED SVCBKey = 65535
 )
 
-var svcbKeyToStringMap = map[SVCBKey]string{
+// SVCBKeyToString is a map of strings for each SVCB key.
+var SVCBKeyToString = map[SVCBKey]string{
 	SVCB_MANDATORY:       "mandatory",
 	SVCB_ALPN:            "alpn",
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
@@ -34,11 +37,14 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_IPV4HINT:        "ipv4hint",
 	SVCB_ECHCONFIG:       "ech",
 	SVCB_IPV6HINT:        "ipv6hint",
+	SVCB_DOHPATH:         "dohpath",
 }
 
-var svcbStringToKeyMap = reverseSVCBKeyMap(svcbKeyToStringMap)
+// StringToSVCBKey is the reverse of SVCBKeyToString, needed for string
+// parsing.
+var StringToSVCBKey = reverseSVCBKey(SVCBKeyToString)
 
-func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
+func reverseSVCBKey(m map[SVCBKey]string) map[string]SVCBKey {
 	n := make(map[string]SVCBKey, len(m))
 	for u, s := range m {
 		n[s] = u
@@ -50,7 +56,7 @@ func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
 func (key SVCBKey) String() string {
-	if x := svcbKeyToStringMap[key]; x != "" {
+	if x := SVCBKeyToString[key]; x != "" {
 		return x
 	}
 	if key == svcb_RESERVED {
@@ -67,12 +73,12 @@ func svcbStringToKey(s string) SVCBKey {
 		a, err := strconv.ParseUint(s[3:], 10, 16)
 		// no leading zeros
 		// key shouldn't be registered
-		if err != nil || a == 65535 || s[3] == '0' || svcbKeyToStringMap[SVCBKey(a)] != "" {
+		if err != nil || a == 65535 || s[3] == '0' || SVCBKeyToString[SVCBKey(a)] != "" {
 			return svcb_RESERVED
 		}
 		return SVCBKey(a)
 	}
-	if key, ok := svcbStringToKeyMap[s]; ok {
+	if key, ok := StringToSVCBKey[s]; ok {
 		return key
 	}
 	return svcb_RESERVED
@@ -196,6 +202,8 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
+	case SVCB_DOHPATH:
+		return new(SVCBDoHPath)
 	case svcb_RESERVED:
 		return nil
 	default:
@@ -666,6 +674,62 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 
 	return &SVCBIPv6Hint{
 		Hint: hint,
+	}
+}
+
+// SVCBDoHPath pair is used to indicate the URI template that the
+// clients may use to construct a DNS over HTTPS URI.
+//
+// See RFC xxxx (https://datatracker.ietf.org/doc/html/draft-ietf-add-svcb-dns-02)
+// and RFC yyyy (https://datatracker.ietf.org/doc/html/draft-ietf-add-ddr-06).
+//
+// Basic use pattern for using the dohpath option together with an alpn
+// option:
+//
+//	s := new(dns.SVCB)
+//	s.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}
+//	e := new(dns.SVCBAlpn)
+//	e.Alpn = []string{"h2", "h3"}
+//	p := new(dns.SVCBDoHPath)
+//	p.Template = "/dns-query{?dns}"
+//	s.Value = append(s.Value, e, p)
+//
+// The parsing currently only validates the length of Template.
+// It doesn't validate that Template is a valid RFC 6570 URI template.
+type SVCBDoHPath struct {
+	Template string
+}
+
+func (*SVCBDoHPath) Key() SVCBKey { return SVCB_DOHPATH }
+func (s *SVCBDoHPath) len() int   { return len(s.Template) }
+
+func (s *SVCBDoHPath) pack() ([]byte, error) {
+	if len(s.Template) > 255 {
+		return nil, errors.New("dns: svcbdohpath: template too long")
+	}
+	return []byte(s.Template), nil
+}
+
+func (s *SVCBDoHPath) unpack(b []byte) error {
+	s.Template = string(b)
+	return nil
+}
+
+func (s *SVCBDoHPath) String() string {
+	return s.Template
+}
+
+func (s *SVCBDoHPath) parse(b string) error {
+	if len(b) > 255 {
+		return errors.New("dns: svcbdohpath: template too long")
+	}
+	s.Template = b
+	return nil
+}
+
+func (s *SVCBDoHPath) copy() SVCBKeyValue {
+	return &SVCBDoHPath{
+		Template: s.Template,
 	}
 }
 
