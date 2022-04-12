@@ -27,7 +27,8 @@ const (
 	svcb_RESERVED SVCBKey = 65535
 )
 
-var svcbKeyToStringMap = map[SVCBKey]string{
+// SVCBKeyToString is a map of strings for each SVCB key.
+var SVCBKeyToString = map[SVCBKey]string{
 	SVCB_MANDATORY:       "mandatory",
 	SVCB_ALPN:            "alpn",
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
@@ -38,9 +39,11 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_DOHPATH:         "dohpath",
 }
 
-var svcbStringToKeyMap = reverseSVCBKeyMap(svcbKeyToStringMap)
+// StringToSVCBKey is the reverse of SVCBKeyToString, needed for string
+// parsing.
+var StringToSVCBKey = reverseSVCBKey(SVCBKeyToString)
 
-func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
+func reverseSVCBKey(m map[SVCBKey]string) map[string]SVCBKey {
 	n := make(map[string]SVCBKey, len(m))
 	for u, s := range m {
 		n[s] = u
@@ -52,7 +55,7 @@ func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
 func (key SVCBKey) String() string {
-	if x := svcbKeyToStringMap[key]; x != "" {
+	if x := SVCBKeyToString[key]; x != "" {
 		return x
 	}
 	if key == svcb_RESERVED {
@@ -69,12 +72,12 @@ func svcbStringToKey(s string) SVCBKey {
 		a, err := strconv.ParseUint(s[3:], 10, 16)
 		// no leading zeros
 		// key shouldn't be registered
-		if err != nil || a == 65535 || s[3] == '0' || svcbKeyToStringMap[SVCBKey(a)] != "" {
+		if err != nil || a == 65535 || s[3] == '0' || SVCBKeyToString[SVCBKey(a)] != "" {
 			return svcb_RESERVED
 		}
 		return SVCBKey(a)
 	}
-	if key, ok := svcbStringToKeyMap[s]; ok {
+	if key, ok := StringToSVCBKey[s]; ok {
 		return key
 	}
 	return svcb_RESERVED
