@@ -679,8 +679,8 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 // See RFC xxxx (https://datatracker.ietf.org/doc/html/draft-ietf-add-svcb-dns-02)
 // and RFC yyyy (https://datatracker.ietf.org/doc/html/draft-ietf-add-ddr-06).
 //
-// Basic use pattern for using the dohpath option together with an alpn
-// option:
+// A basic example of using the dohpath option together with the alpn
+// option to indicate support for DNS over HTTPS on a certain path:
 //
 //	s := new(dns.SVCB)
 //	s.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}
@@ -690,35 +690,23 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 //	p.Template = "/dns-query{?dns}"
 //	s.Value = append(s.Value, e, p)
 //
-// The parsing currently only validates the length of Template.
-// It doesn't validate that Template is a valid RFC 6570 URI template.
+// The parsing currently doesn't validate that Template is a valid
+// RFC 6570 URI template.
 type SVCBDoHPath struct {
 	Template string
 }
 
-func (*SVCBDoHPath) Key() SVCBKey { return SVCB_DOHPATH }
-func (s *SVCBDoHPath) len() int   { return len(s.Template) }
-
-func (s *SVCBDoHPath) pack() ([]byte, error) {
-	if len(s.Template) > 65535 {
-		return nil, errors.New("dns: svcbdohpath: template too long")
-	}
-	return []byte(s.Template), nil
-}
+func (*SVCBDoHPath) Key() SVCBKey            { return SVCB_DOHPATH }
+func (s *SVCBDoHPath) String() string        { return s.Template }
+func (s *SVCBDoHPath) len() int              { return len(s.Template) }
+func (s *SVCBDoHPath) pack() ([]byte, error) { return []byte(s.Template), nil }
 
 func (s *SVCBDoHPath) unpack(b []byte) error {
 	s.Template = string(b)
 	return nil
 }
 
-func (s *SVCBDoHPath) String() string {
-	return s.Template
-}
-
 func (s *SVCBDoHPath) parse(b string) error {
-	if len(b) > 65535 {
-		return errors.New("dns: svcbdohpath: template too long")
-	}
 	s.Template = b
 	return nil
 }
