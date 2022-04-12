@@ -22,6 +22,7 @@ const (
 	SVCB_IPV4HINT
 	SVCB_ECHCONFIG
 	SVCB_IPV6HINT
+	SVCB_DOHPATH // draft-ietf-add-svcb-dns-02 Section 9
 
 	svcb_RESERVED SVCBKey = 65535
 )
@@ -34,6 +35,7 @@ var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_IPV4HINT:        "ipv4hint",
 	SVCB_ECHCONFIG:       "ech",
 	SVCB_IPV6HINT:        "ipv6hint",
+	SVCB_DOHPATH:         "dohpath",
 }
 
 var svcbStringToKeyMap = reverseSVCBKeyMap(svcbKeyToStringMap)
@@ -196,6 +198,8 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 		return new(SVCBECHConfig)
 	case SVCB_IPV6HINT:
 		return new(SVCBIPv6Hint)
+	case SVCB_DOHPATH:
+		return new(SVCBDoHPath)
 	case svcb_RESERVED:
 		return nil
 	default:
@@ -666,6 +670,50 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 
 	return &SVCBIPv6Hint{
 		Hint: hint,
+	}
+}
+
+// SVCBDoHPath pair is used to indicate the URI template that the
+// clients may use to construct a DNS over HTTPS URI.
+//
+// See RFC xxxx (https://datatracker.ietf.org/doc/html/draft-ietf-add-svcb-dns-02)
+// and RFC yyyy (https://datatracker.ietf.org/doc/html/draft-ietf-add-ddr-06).
+//
+// A basic example of using the dohpath option together with the alpn
+// option to indicate support for DNS over HTTPS on a certain path:
+//
+//	s := new(dns.SVCB)
+//	s.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}
+//	e := new(dns.SVCBAlpn)
+//	e.Alpn = []string{"h2", "h3"}
+//	p := new(dns.SVCBDoHPath)
+//	p.Template = "/dns-query{?dns}"
+//	s.Value = append(s.Value, e, p)
+//
+// The parsing currently doesn't validate that Template is a valid
+// RFC 6570 URI template.
+type SVCBDoHPath struct {
+	Template string
+}
+
+func (*SVCBDoHPath) Key() SVCBKey            { return SVCB_DOHPATH }
+func (s *SVCBDoHPath) String() string        { return s.Template }
+func (s *SVCBDoHPath) len() int              { return len(s.Template) }
+func (s *SVCBDoHPath) pack() ([]byte, error) { return []byte(s.Template), nil }
+
+func (s *SVCBDoHPath) unpack(b []byte) error {
+	s.Template = string(b)
+	return nil
+}
+
+func (s *SVCBDoHPath) parse(b string) error {
+	s.Template = b
+	return nil
+}
+
+func (s *SVCBDoHPath) copy() SVCBKeyValue {
+	return &SVCBDoHPath{
+		Template: s.Template,
 	}
 }
 
