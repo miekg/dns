@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 	"sort"
 	"strconv"
@@ -460,7 +459,6 @@ func (s *SVCBAlpn) parse(b string) error {
 		return errors.New("dns: svcbalpn: last protocol identifier empty")
 	}
 	s.Alpn = append(alpn, string(a))
-	fmt.Println(s.Alpn)
 	return nil
 }
 
