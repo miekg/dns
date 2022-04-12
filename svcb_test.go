@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -91,6 +92,42 @@ func TestDecodeBadSVCB(t *testing.T) {
 		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
 		if err == nil {
 			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).String())
+		}
+	}
+}
+
+func TestPresentationSVCBAlpn(t *testing.T) {
+	tests := map[string]string{
+		"h2":                "h2",
+		"http":              "http",
+		"\xfa":              `\250`,
+		"some\"other,chars": `some\"other\\\044chars`,
+	}
+	for input, want := range tests {
+		e := new(SVCBAlpn)
+		e.Alpn = []string{input}
+		if e.String() != want {
+			t.Errorf("improper conversion with String(), wanted %v got %v", want, e.String())
+		}
+	}
+}
+
+func TestSVCBAlpn(t *testing.T) {
+	tests := map[string][]string{
+		`. 1 IN SVCB 10 one.test. alpn=h2`:                                         {"h2"},
+		`. 2 IN SVCB 20 two.test. alpn=h2,h3-19`:                                   {"h2", "h3-19"},
+		`. 3 IN SVCB 30 three.test. alpn="f\\\\oo\\,bar,h2"`:                       {`f\oo,bar`, "h2"},
+		`. 4 IN SVCB 40 four.test. alpn="part1,part2,part3\\,part4\\\\"`:           {"part1", "part2", `part3,part4\`},
+		`. 5 IN SVCB 50 five.test. alpn=part1\,\p\a\r\t2\044part3\092,part4\092\\`: {"part1", "part2", `part3,part4\`},
+	}
+	for s, v := range tests {
+		rr, err := NewRR(s)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if !reflect.DeepEqual(v, rr.(*SVCB).Value[0].(*SVCBAlpn).Alpn) {
+			t.Errorf("parsing alpn failed, wanted %v got %v", v, rr.(*SVCB).Value[0].(*SVCBAlpn).Alpn)
 		}
 	}
 }
