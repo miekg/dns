@@ -13,8 +13,7 @@ import (
 // SVCBKey is the type of the keys used in the SVCB RR.
 type SVCBKey uint16
 
-// Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2
-// and draft-ietf-add-svcb-dns-02 Section 9.
+// Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2.
 const (
 	SVCB_MANDATORY SVCBKey = iota
 	SVCB_ALPN
@@ -23,13 +22,12 @@ const (
 	SVCB_IPV4HINT
 	SVCB_ECHCONFIG
 	SVCB_IPV6HINT
-	SVCB_DOHPATH
+	SVCB_DOHPATH // draft-ietf-add-svcb-dns-02 Section 9
 
 	svcb_RESERVED SVCBKey = 65535
 )
 
-// SVCBKeyToString is a map of strings for each SVCB key.
-var SVCBKeyToString = map[SVCBKey]string{
+var svcbKeyToStringMap = map[SVCBKey]string{
 	SVCB_MANDATORY:       "mandatory",
 	SVCB_ALPN:            "alpn",
 	SVCB_NO_DEFAULT_ALPN: "no-default-alpn",
@@ -40,11 +38,9 @@ var SVCBKeyToString = map[SVCBKey]string{
 	SVCB_DOHPATH:         "dohpath",
 }
 
-// StringToSVCBKey is the reverse of SVCBKeyToString, needed for string
-// parsing.
-var StringToSVCBKey = reverseSVCBKey(SVCBKeyToString)
+var svcbStringToKeyMap = reverseSVCBKeyMap(svcbKeyToStringMap)
 
-func reverseSVCBKey(m map[SVCBKey]string) map[string]SVCBKey {
+func reverseSVCBKeyMap(m map[SVCBKey]string) map[string]SVCBKey {
 	n := make(map[string]SVCBKey, len(m))
 	for u, s := range m {
 		n[s] = u
@@ -56,7 +52,7 @@ func reverseSVCBKey(m map[SVCBKey]string) map[string]SVCBKey {
 // Returns an empty string for reserved keys.
 // Accepts unassigned keys as well as experimental/private keys.
 func (key SVCBKey) String() string {
-	if x := SVCBKeyToString[key]; x != "" {
+	if x := svcbKeyToStringMap[key]; x != "" {
 		return x
 	}
 	if key == svcb_RESERVED {
@@ -73,12 +69,12 @@ func svcbStringToKey(s string) SVCBKey {
 		a, err := strconv.ParseUint(s[3:], 10, 16)
 		// no leading zeros
 		// key shouldn't be registered
-		if err != nil || a == 65535 || s[3] == '0' || SVCBKeyToString[SVCBKey(a)] != "" {
+		if err != nil || a == 65535 || s[3] == '0' || svcbKeyToStringMap[SVCBKey(a)] != "" {
 			return svcb_RESERVED
 		}
 		return SVCBKey(a)
 	}
-	if key, ok := StringToSVCBKey[s]; ok {
+	if key, ok := svcbStringToKeyMap[s]; ok {
 		return key
 	}
 	return svcb_RESERVED
@@ -704,7 +700,7 @@ func (*SVCBDoHPath) Key() SVCBKey { return SVCB_DOHPATH }
 func (s *SVCBDoHPath) len() int   { return len(s.Template) }
 
 func (s *SVCBDoHPath) pack() ([]byte, error) {
-	if len(s.Template) > 255 {
+	if len(s.Template) > 65535 {
 		return nil, errors.New("dns: svcbdohpath: template too long")
 	}
 	return []byte(s.Template), nil
@@ -720,7 +716,7 @@ func (s *SVCBDoHPath) String() string {
 }
 
 func (s *SVCBDoHPath) parse(b string) error {
-	if len(b) > 255 {
+	if len(b) > 65535 {
 		return errors.New("dns: svcbdohpath: template too long")
 	}
 	s.Template = b
