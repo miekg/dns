@@ -210,6 +210,10 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 }
 
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-08).
+//
+// NOTE: The HTTPS/SVCB RFCs are in the draft stage.
+// The API, including constants and types related to SVCBKeyValues, may
+// change in future versions in accordance with the latest drafts.
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16         // If zero, Value must be empty or discarded by the user of this library
@@ -219,6 +223,10 @@ type SVCB struct {
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well.
 // Except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
+//
+// NOTE: The HTTPS/SVCB RFCs are in the draft stage.
+// The API, including constants and types related to SVCBKeyValues, may
+// change in future versions in accordance with the latest drafts.
 type HTTPS struct {
 	SVCB
 }
