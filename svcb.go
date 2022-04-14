@@ -358,26 +358,26 @@ func (s *SVCBAlpn) String() string {
 		str.Grow(4 * len(alpn))
 		for j := 0; j < len(alpn); j++ {
 			e := alpn[j]
-			if ' ' <= e && e <= '~' {
-				switch e {
-				// We escape a few characters which may confuse humans or
-				// parsers.
-				case '"', ';', ' ':
-					str.WriteByte('\\')
-					str.WriteByte(e)
-				// The comma and backslash characters themselves must be
-				// doubly-escaped. We use `\\` for the first backslash and
-				// the escaped numeric value for the other value. We especially
-				// don't want a comma in the output.
-				case ',':
-					str.WriteString(`\\\044`)
-				case '\\':
-					str.WriteString(`\\\092`)
-				default:
-					str.WriteByte(e)
-				}
-			} else {
+			if ' ' > e || e > '~' {
 				str.WriteString(escapeByte(e))
+				continue
+			}
+			switch e {
+			// We escape a few characters which may confuse humans or
+			// parsers.
+			case '"', ';', ' ':
+				str.WriteByte('\\')
+				str.WriteByte(e)
+			// The comma and backslash characters themselves must be
+			// doubly-escaped. We use `\\` for the first backslash and
+			// the escaped numeric value for the other value. We especially
+			// don't want a comma in the output.
+			case ',':
+				str.WriteString(`\\\044`)
+			case '\\':
+				str.WriteString(`\\\092`)
+			default:
+				str.WriteByte(e)
 			}
 		}
 		esc[i] = str.String()
