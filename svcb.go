@@ -11,15 +11,9 @@ import (
 )
 
 // SVCBKey is the type of the keys used in the SVCB RR.
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBKey uint16
 
 // Keys defined in draft-ietf-dnsop-svcb-https-08 Section 14.3.2.
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 const (
 	SVCB_MANDATORY SVCBKey = iota
 	SVCB_ALPN
@@ -217,8 +211,9 @@ func makeSVCBKeyValue(key SVCBKey) SVCBKeyValue {
 
 // SVCB RR. See RFC xxxx (https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-08).
 //
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
+// NOTE: The HTTPS/SVCB RFCs are in the draft stage.
+// The API, including constants and types related to SVCBKeyValues, may
+// change in future versions in accordance with the latest drafts.
 type SVCB struct {
 	Hdr      RR_Header
 	Priority uint16         // If zero, Value must be empty or discarded by the user of this library
@@ -228,6 +223,10 @@ type SVCB struct {
 
 // HTTPS RR. Everything valid for SVCB applies to HTTPS as well.
 // Except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
+//
+// NOTE: The HTTPS/SVCB RFCs are in the draft stage.
+// The API, including constants and types related to SVCBKeyValues, may
+// change in future versions in accordance with the latest drafts.
 type HTTPS struct {
 	SVCB
 }
@@ -242,9 +241,6 @@ func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 
 // SVCBKeyValue defines a key=value pair for the SVCB RR type.
 // An SVCB RR can have multiple SVCBKeyValues appended to it.
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBKeyValue interface {
 	Key() SVCBKey          // Key returns the numerical key code.
 	pack() ([]byte, error) // pack returns the encoded value.
@@ -277,9 +273,6 @@ type SVCBKeyValue interface {
 //	t := new(dns.SVCBAlpn)
 //	t.Alpn = []string{"xmpp-client"}
 //	s.Value = append(s.Value, t)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBMandatory struct {
 	Code []SVCBKey
 }
@@ -350,9 +343,6 @@ func (s *SVCBMandatory) copy() SVCBKeyValue {
 //	e := new(dns.SVCBAlpn)
 //	e.Alpn = []string{"h2", "http/1.1"}
 //	h.Value = append(o.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBAlpn struct {
 	Alpn []string
 }
@@ -421,9 +411,6 @@ func (s *SVCBAlpn) copy() SVCBKeyValue {
 //	s.Value = append(s.Value, t)
 //	e := new(dns.SVCBNoDefaultAlpn)
 //	s.Value = append(s.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBNoDefaultAlpn struct{}
 
 func (*SVCBNoDefaultAlpn) Key() SVCBKey          { return SVCB_NO_DEFAULT_ALPN }
@@ -453,9 +440,6 @@ func (*SVCBNoDefaultAlpn) parse(b string) error {
 //	e := new(dns.SVCBPort)
 //	e.Port = 80
 //	s.Value = append(s.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBPort struct {
 	Port uint16
 }
@@ -503,9 +487,6 @@ func (s *SVCBPort) parse(b string) error {
 //
 //	e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
 //	h.Value = append(h.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBIPv4Hint struct {
 	Hint []net.IP
 }
@@ -585,9 +566,6 @@ func (s *SVCBIPv4Hint) copy() SVCBKeyValue {
 //	e := new(dns.SVCBECHConfig)
 //	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBECHConfig struct {
 	ECH []byte // Specifically ECHConfigList including the redundant length prefix
 }
@@ -630,9 +608,6 @@ func (s *SVCBECHConfig) parse(b string) error {
 //	e := new(dns.SVCBIPv6Hint)
 //	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
 //	h.Value = append(h.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBIPv6Hint struct {
 	Hint []net.IP
 }
@@ -725,9 +700,6 @@ func (s *SVCBIPv6Hint) copy() SVCBKeyValue {
 //
 // The parsing currently doesn't validate that Template is a valid
 // RFC 6570 URI template.
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBDoHPath struct {
 	Template string
 }
@@ -763,9 +735,6 @@ func (s *SVCBDoHPath) copy() SVCBKeyValue {
 //	e.KeyCode = 65400
 //	e.Data = []byte("abc")
 //	h.Value = append(h.Value, e)
-//
-// NOTE: The SVCB RFCs are in the draft stage; the API may change in
-// future versions in accordance with the latest drafts.
 type SVCBLocal struct {
 	KeyCode SVCBKey // Never 65535 or any assigned keys.
 	Data    []byte  // All byte sequences are allowed.
