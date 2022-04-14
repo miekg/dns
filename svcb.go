@@ -710,7 +710,7 @@ func (s *SVCBDoHPath) unpack(b []byte) error {
 func (s *SVCBDoHPath) parse(b string) error {
 	template, err := svcbParseParam(b)
 	if err != nil {
-		return fmt.Errorf("dns: svcblocal: svcb private/experimental key %w", err)
+		return fmt.Errorf("dns: svcbdohpath: %w", err)
 	}
 	s.Template = string(template)
 	return nil
