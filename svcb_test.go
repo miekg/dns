@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -126,8 +125,14 @@ func TestSVCBAlpn(t *testing.T) {
 			t.Error("failed to parse RR: ", err)
 			continue
 		}
-		if !reflect.DeepEqual(v, rr.(*SVCB).Value[0].(*SVCBAlpn).Alpn) {
-			t.Errorf("parsing alpn failed, wanted %v got %v", v, rr.(*SVCB).Value[0].(*SVCBAlpn).Alpn)
+		alpn := rr.(*SVCB).Value[0].(*SVCBAlpn).Alpn
+		if len(v) != len(alpn) {
+			t.Fatalf("parsing alpn failed, wanted %v got %v", v, alpn)
+		}
+		for i := range v {
+			if v[i] != alpn[i] {
+				t.Fatalf("parsing alpn failed, wanted %v got %v", v, alpn)
+			}
 		}
 	}
 }
