@@ -352,10 +352,12 @@ func (s *SVCBAlpn) String() string {
 	// sequence of backslash in a zone file this may be why.
 	//
 	// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-svcb-https-08#appendix-A.1
-	esc := make([]string, len(s.Alpn))
+	var str strings.Builder
 	for i, alpn := range s.Alpn {
-		var str strings.Builder
-		str.Grow(4 * len(alpn))
+		str.Grow(4*len(alpn) + 1)
+		if i > 0 {
+			str.WriteByte(',')
+		}
 		for j := 0; j < len(alpn); j++ {
 			e := alpn[j]
 			if ' ' > e || e > '~' {
@@ -380,9 +382,8 @@ func (s *SVCBAlpn) String() string {
 				str.WriteByte(e)
 			}
 		}
-		esc[i] = str.String()
 	}
-	return strings.Join(esc, ",")
+	return str.String()
 }
 
 func (s *SVCBAlpn) pack() ([]byte, error) {
