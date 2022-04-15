@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	""
 
 	"github.com/miekg/dns"
 )
@@ -16,6 +17,10 @@ func ExampleMX() {
 	m := new(dns.Msg)
 	m.SetQuestion("miek.nl.", dns.TypeMX)
 	m.RecursionDesired = true
+	// Sanitize IPv6 address
+	if strings.Contains(DNSconfig.Servers[0], ":") && !strings.Contains(DNSconfig.Servers[0], "[") {
+		DNSconfig.Servers[0] = "[" + DNSconfig.Servers[0] + "]"
+	}
 	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
 	if err != nil {
 		return
