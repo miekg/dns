@@ -16,7 +16,7 @@ func ExampleMX() {
 	m := new(dns.Msg)
 	m.SetQuestion("miek.nl.", dns.TypeMX)
 	m.RecursionDesired = true
-	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	r, _, err := c.Exchange(m, net.JoinHostPort(config.Servers[0], config.Port))
 	if err != nil {
 		return
 	}
@@ -39,7 +39,7 @@ func ExampleDS() {
 	zone := "miek.nl"
 	m.SetQuestion(dns.Fqdn(zone), dns.TypeDNSKEY)
 	m.SetEdns0(4096, true)
-	r, _, err := c.Exchange(m, config.Servers[0]+":"+config.Port)
+	r, _, err := c.Exchange(m, net.JoinHostPort(config.Servers[0], config.Port))
 	if err != nil {
 		return
 	}
@@ -64,6 +64,7 @@ type APAIR struct {
 func NewAPAIR() dns.PrivateRdata { return new(APAIR) }
 
 func (rd *APAIR) String() string { return rd.addr[0].String() + " " + rd.addr[1].String() }
+
 func (rd *APAIR) Parse(txt []string) error {
 	if len(txt) != 2 {
 		return errors.New("two addresses required for APAIR")
