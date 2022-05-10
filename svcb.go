@@ -365,8 +365,7 @@ func (s *SVCBAlpn) String() string {
 				continue
 			}
 			switch e {
-			// We escape a few characters which may confuse humans or
-			// parsers.
+			// We escape a few characters which may confuse humans or parsers.
 			case '"', ';', ' ':
 				str.WriteByte('\\')
 				str.WriteByte(e)
