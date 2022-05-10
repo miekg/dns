@@ -1650,8 +1650,8 @@ func TestParseSVCB(t *testing.T) {
 		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`: `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
 		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`: `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
 		`example.com.   SVCB   16 foo.example.org. alpn=h2,h3-19 mandatory=ipv4hint,alpn ipv4hint=192.0.2.1`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="h2,h3-19" mandatory="ipv4hint,alpn" ipv4hint="192.0.2.1"`,
-		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`,
-		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\092,bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
 		// From draft-ietf-add-ddr-06
 		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 	}
@@ -1704,6 +1704,10 @@ func TestParseBadSVCB(t *testing.T) {
 		`1 . ipv4hint=`,           // empty ipv4
 		`1 . port=`,               // empty port
 		`1 . echconfig=YUd`,       // bad base64
+		`1 . alpn=h\`,             // unterminated escape
+		`1 . alpn=h2\\.h3`,        // comma-separated list with bad character
+		`1 . alpn=h2,,h3`,         // empty protocol identifier
+		`1 . alpn=h3,`,            // final protocol identifier empty
 	}
 	for _, o := range evils {
 		_, err := NewRR(header + o)

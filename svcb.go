@@ -342,13 +342,57 @@ func (s *SVCBMandatory) copy() SVCBKeyValue {
 //	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
 //	e := new(dns.SVCBAlpn)
 //	e.Alpn = []string{"h2", "http/1.1"}
-//	h.Value = append(o.Value, e)
+//	h.Value = append(h.Value, e)
 type SVCBAlpn struct {
 	Alpn []string
 }
 
-func (*SVCBAlpn) Key() SVCBKey     { return SVCB_ALPN }
-func (s *SVCBAlpn) String() string { return strings.Join(s.Alpn, ",") }
+func (*SVCBAlpn) Key() SVCBKey { return SVCB_ALPN }
+
+func (s *SVCBAlpn) String() string {
+	// An ALPN value is a comma-separated list of values, each of which can be
+	// an arbitrary binary value. In order to allow parsing, the comma and
+	// backslash characters are themselves excaped.
+	//
+	// However, this escaping is done in addition to the normal escaping which
+	// happens in zone files, meaning that these values must be
+	// double-escaped. This looks terrible, so if you see a never-ending
+	// sequence of backslash in a zone file this may be why.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-svcb-https-08#appendix-A.1
+	var str strings.Builder
+	for i, alpn := range s.Alpn {
+		// 4*len(alpn) is the worst case where we escape every character in the alpn as \123, plus 1 byte for the ',' separating the alpn from others
+		str.Grow(4*len(alpn) + 1)
+		if i > 0 {
+			str.WriteByte(',')
+		}
+		for j := 0; j < len(alpn); j++ {
+			e := alpn[j]
+			if ' ' > e || e > '~' {
+				str.WriteString(escapeByte(e))
+				continue
+			}
+			switch e {
+			// We escape a few characters which may confuse humans or parsers.
+			case '"', ';', ' ':
+				str.WriteByte('\\')
+				str.WriteByte(e)
+			// The comma and backslash characters themselves must be
+			// doubly-escaped. We use `\\` for the first backslash and
+			// the escaped numeric value for the other value. We especially
+			// don't want a comma in the output.
+			case ',':
+				str.WriteString(`\\\044`)
+			case '\\':
+				str.WriteString(`\\\092`)
+			default:
+				str.WriteByte(e)
+			}
+		}
+	}
+	return str.String()
+}
 
 func (s *SVCBAlpn) pack() ([]byte, error) {
 	// Liberally estimate the size of an alpn as 10 octets
@@ -383,7 +427,47 @@ func (s *SVCBAlpn) unpack(b []byte) error {
 }
 
 func (s *SVCBAlpn) parse(b string) error {
-	s.Alpn = strings.Split(b, ",")
+	if len(b) == 0 {
+		s.Alpn = []string{}
+		return nil
+	}
+
+	alpn := []string{}
+	a := []byte{}
+	for p := 0; p < len(b); {
+		c, q := nextByte(b, p)
+		if q == 0 {
+			return errors.New("dns: svcbalpn: unterminated escape")
+		}
+		p += q
+		// If we find a comma, we have finished reading an alpn.
+		if c == ',' {
+			if len(a) == 0 {
+				return errors.New("dns: svcbalpn: empty protocol identifier")
+			}
+			alpn = append(alpn, string(a))
+			a = []byte{}
+			continue
+		}
+		// If it's a backslash, we need to handle a comma-separated list.
+		if c == '\\' {
+			dc, dq := nextByte(b, p)
+			if dq == 0 {
+				return errors.New("dns: svcbalpn: unterminated escape decoding comma-separated list")
+			}
+			if dc != '\\' && dc != ',' {
+				return errors.New("dns: svcbalpn: bad escaped character decoding comma-separated list")
+			}
+			p += dq
+			c = dc
+		}
+		a = append(a, c)
+	}
+	// Add the final alpn.
+	if len(a) == 0 {
+		return errors.New("dns: svcbalpn: last protocol identifier empty")
+	}
+	s.Alpn = append(alpn, string(a))
 	return nil
 }
 
