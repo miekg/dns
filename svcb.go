@@ -354,6 +354,7 @@ func (s *SVCBAlpn) String() string {
 	// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-svcb-https-08#appendix-A.1
 	var str strings.Builder
 	for i, alpn := range s.Alpn {
+		// 4*len(alpn) is the worst case where we escape every character in the alpn as \123, plus 1 byte for the ',' separating the alpn from others
 		str.Grow(4*len(alpn) + 1)
 		if i > 0 {
 			str.WriteByte(',')
