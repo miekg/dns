@@ -334,3 +334,40 @@ func BenchmarkPrevLabelMixed(b *testing.B) {
 		PrevLabel(`www\\\.example.com`, 10)
 	}
 }
+
+func TestCompare(t *testing.T) {
+	domains := []string{ // based on an exanple from RFC 4034
+		"example.",
+		"a.example.",
+		"yljkjljk.a.example.",
+		"Z.a.example.",
+		"zABC.a.EXAMPLE.",
+		"a-.example.",
+		"z.example.",
+		"\001.z.example.",
+		"*.z.example.",
+		"\200.z.example.",
+	}
+
+	len_domains := len(domains)
+
+	for i, domain := range domains {
+		if i != 0 {
+			prev_domain := domains[i-1]
+			if !(Compare(prev_domain, domain) == -1 && Compare(domain, prev_domain) == 1) {
+				t.Fatalf("prev comparison failure between %s and %s", prev_domain, domain)
+			}
+		}
+
+		if Compare(domain, domain) != 0 {
+			t.Fatalf("self comparison failure for %s", domain)
+		}
+
+		if i != len_domains-1 {
+			next_domain := domains[i+1]
+			if !(Compare(domain, next_domain) == -1 && Compare(next_domain, domain) == 1) {
+				t.Fatalf("next comparison failure between %s and %s, %d and %d", domain, next_domain, Compare(domain, next_domain), Compare(next_domain, domain))
+			}
+		}
+	}
+}
