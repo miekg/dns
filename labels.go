@@ -61,20 +61,18 @@ func CompareDomainName(s1, s2 string) (n int) {
 	i2 := len(l2) - 2
 	// the second check can be done here: last/only label
 	// before we fall through into the for-loop below
-	if equal(s1[l1[j1]:], s2[l2[j2]:]) {
-		n++
-	} else {
+	if !equal(s1[l1[j1]:], s2[l2[j2]:]) {
 		return
 	}
+	n++
 	for {
 		if i1 < 0 || i2 < 0 {
 			break
 		}
-		if equal(s1[l1[i1]:l1[j1]], s2[l2[i2]:l2[j2]]) {
-			n++
-		} else {
+		if !equal(s1[l1[i1]:l1[j1]], s2[l2[i2]:l2[j2]]) {
 			break
 		}
+		n++
 		j1--
 		i1--
 		j2--
@@ -262,26 +260,11 @@ func labelCompare(a, b string) int {
 // equal compares a and b while ignoring case. It returns true when equal otherwise false.
 func equal(a, b string) bool {
 	// might be lifted into API function.
-	la := len(a)
-	lb := len(b)
-	if la != lb {
+	if len(a) != len(b) {
 		return false
 	}
 
-	for i := la - 1; i >= 0; i-- {
-		ai := a[i]
-		bi := b[i]
-		if ai >= 'A' && ai <= 'Z' {
-			ai |= 'a' - 'A'
-		}
-		if bi >= 'A' && bi <= 'Z' {
-			bi |= 'a' - 'A'
-		}
-		if ai != bi {
-			return false
-		}
-	}
-	return true
+	return labelCompare(a, b) == 0
 }
 
 func doDDD(b []byte) {
