@@ -12,6 +12,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	// Dependencies for QUIC:
+	"github.com/lucas-clemente/quic-go"
+	// For enabling QUIC connection tracing:
+	// "github.com/lucas-clemente/quic-go/logging"
+	// "github.com/lucas-clemente/quic-go/qlog"
+	// "os"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -74,6 +81,7 @@ type response struct {
 	tsigProvider   TsigProvider
 	udp            net.PacketConn // i/o connection if UDP was used
 	tcp            net.Conn       // i/o connection if TCP was used
+	doq            quic.Stream    // i/o connection if QUIC was used
 	udpSession     *SessionUDP    // oob data to get egress interface right
 	pcSession      net.Addr       // address to use when writing to a generic net.PacketConn
 	writer         Writer         // writer to output the raw DNS bits
@@ -143,6 +151,9 @@ type Reader interface {
 	// ReadTCP reads a raw message from a TCP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
 	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
+	// ReadQUIC reads a raw message from a QUIC stream. Implementations may alter
+	// connection properties, for example the read-deadline.
+	ReadQUIC(stream quic.Stream, timeout time.Duration) ([]byte, error)
 	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
 	// connection properties, for example the read-deadline.
 	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
@@ -168,6 +179,10 @@ var _ PacketConnReader = defaultReader{}
 
 func (dr defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
 	return dr.readTCP(conn, timeout)
+}
+
+func (dr defaultReader) ReadQUIC(stream quic.Stream, timeout time.Duration) ([]byte, error) {
+	return dr.readQUIC(stream, timeout)
 }
 
 func (dr defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
@@ -238,6 +253,8 @@ type Server struct {
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
+
+	quicListener quic.Listener
 }
 
 func (srv *Server) tsigProvider() TsigProvider {
@@ -340,6 +357,46 @@ func (srv *Server) ListenAndServe() error {
 		srv.started = true
 		unlock()
 		return srv.serveUDP(u)
+	case "doq", "doq4", "doq6":
+		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
+			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
+		}
+		// TODO: Should ALPN be forced?
+		srv.TLSConfig.NextProtos = []string{"doq", "doq-i03"}
+		var n string
+		switch srv.Net {
+		case "doq":
+			n = "udp"
+		case "doq4":
+			n = "udp4"
+		case "doq6":
+			n = "udp6"
+		}
+		l, err := listenUDP(n, addr, srv.ReusePort)
+		if err != nil {
+			return err
+		}
+		u := l.(*net.UDPConn)
+		if e := setUDPSocketOptions(u); e != nil {
+			u.Close()
+			return e
+		}
+		ql, err := quic.Listen(l, srv.TLSConfig, nil)
+		// For enabling QUIC connection tracing:
+		// &quic.Config{
+		// 	Tracer: qlog.NewTracer(func(_ logging.Perspective, connID []byte) io.WriteCloser {
+		// 		return io.WriteCloser(os.Stdout)
+		// 	}),
+		// })
+		if err != nil {
+			l.Close()
+			return err
+		}
+		srv.quicListener = ql
+		srv.PacketConn = l
+		srv.started = true
+		unlock()
+		return srv.serveQUIC(ql)
 	}
 	return &Error{err: "bad network"}
 }
@@ -405,8 +462,16 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 		srv.Listener.Close()
 	}
 
+	if srv.quicListener != nil {
+		srv.quicListener.Close()
+	}
+
 	for rw := range srv.conns {
 		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
+		if srv.quicListener != nil {
+			// Close QUIC connections because above deadline only affects streams within the connection
+			rw.Close()
+		}
 	}
 
 	srv.lock.Unlock()
@@ -756,6 +821,16 @@ func (w *response) Write(m []byte) (int, error) {
 			return WriteToSessionUDP(u, m, w.udpSession)
 		}
 		return w.udp.WriteTo(m, w.pcSession)
+	// Check w.doq before w.tcp because both are used in QUIC
+	case w.doq != nil:
+		if len(m) > MaxMsgSize {
+			return 0, &Error{err: "message too large"}
+		}
+
+		msg := make([]byte, 2+len(m))
+		binary.BigEndian.PutUint16(msg, uint16(len(m)))
+		copy(msg[2:], m)
+		return w.doq.Write(msg)
 	case w.tcp != nil:
 		if len(m) > MaxMsgSize {
 			return 0, &Error{err: "message too large"}
@@ -766,7 +841,7 @@ func (w *response) Write(m []byte) (int, error) {
 		copy(msg[2:], m)
 		return w.tcp.Write(msg)
 	default:
-		panic("dns: internal error: udp and tcp both nil")
+		panic("dns: internal error: udp, tcp and doq are all nil")
 	}
 }
 
@@ -775,10 +850,12 @@ func (w *response) LocalAddr() net.Addr {
 	switch {
 	case w.udp != nil:
 		return w.udp.LocalAddr()
+	case w.doq != nil:
+		fallthrough
 	case w.tcp != nil:
 		return w.tcp.LocalAddr()
 	default:
-		panic("dns: internal error: udp and tcp both nil")
+		panic("dns: internal error: udp, tcp and doq are all nil")
 	}
 }
 
@@ -789,10 +866,12 @@ func (w *response) RemoteAddr() net.Addr {
 		return w.udpSession.RemoteAddr()
 	case w.pcSession != nil:
 		return w.pcSession
+	case w.doq != nil:
+		fallthrough
 	case w.tcp != nil:
 		return w.tcp.RemoteAddr()
 	default:
-		panic("dns: internal error: udpSession, pcSession and tcp are all nil")
+		panic("dns: internal error: udpSession, pcSession, tcp and doq are all nil")
 	}
 }
 
@@ -816,10 +895,13 @@ func (w *response) Close() error {
 	case w.udp != nil:
 		// Can't close the udp conn, as that is actually the listener.
 		return nil
+	// Check w.doq before w.tcp because both are used in QUIC
+	case w.doq != nil:
+		return w.doq.Close()
 	case w.tcp != nil:
 		return w.tcp.Close()
 	default:
-		panic("dns: internal error: udp and tcp both nil")
+		panic("dns: internal error: udp, tcp and doq are all nil")
 	}
 }
 
@@ -833,4 +915,170 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 		return &t
 	}
 	return nil
+}
+
+type quicConn struct {
+	lock    sync.RWMutex
+	conn    quic.Connection
+	streams map[quic.Stream]struct{}
+	wg      sync.WaitGroup
+}
+
+func (c *quicConn) Read(b []byte) (int, error) {
+	panic("not supported")
+}
+func (c *quicConn) Write(b []byte) (int, error) {
+	panic("not supported")
+}
+func (c *quicConn) Close() error {
+	return c.conn.CloseWithError(0, "")
+}
+func (c *quicConn) LocalAddr() net.Addr {
+	return c.conn.LocalAddr()
+}
+func (c *quicConn) RemoteAddr() net.Addr {
+	return c.conn.RemoteAddr()
+}
+func (c *quicConn) SetDeadline(t time.Time) error {
+	c.lock.Lock()
+	for s := range c.streams {
+		s.SetDeadline(t)
+	}
+	c.lock.Unlock()
+	return nil
+}
+func (c *quicConn) SetReadDeadline(t time.Time) error {
+	c.lock.Lock()
+	for s := range c.streams {
+		s.SetReadDeadline(t)
+	}
+	c.lock.Unlock()
+	return nil
+}
+func (c *quicConn) SetWriteDeadline(t time.Time) error {
+	c.lock.Lock()
+	for s := range c.streams {
+		s.SetWriteDeadline(t)
+	}
+	c.lock.Unlock()
+	return nil
+}
+
+// serveQUIC
+func (srv *Server) serveQUIC(l quic.Listener) error {
+	defer l.Close()
+
+	if srv.NotifyStartedFunc != nil {
+		srv.NotifyStartedFunc()
+	}
+
+	var wg sync.WaitGroup
+	defer func() {
+		wg.Wait()
+		close(srv.shutdown)
+	}()
+
+	for srv.isStarted() {
+		conn, err := l.Accept(context.Background())
+		if err != nil {
+			if !srv.isStarted() {
+				return nil
+			}
+			// TODO: Use?
+			// if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+			// 	continue
+			// }
+			return err
+		}
+		srv.lock.Lock()
+		// Track the connection to allow unblocking reads on shutdown.
+		qc := &quicConn{conn: conn, streams: make(map[quic.Stream]struct{})}
+		srv.conns[qc] = struct{}{}
+		srv.lock.Unlock()
+		wg.Add(1)
+		go srv.serveQUICConn(&wg, qc)
+	}
+	return nil
+}
+
+// Serve a new QUIC connection.
+func (srv *Server) serveQUICConn(wg *sync.WaitGroup, qc *quicConn) {
+	for {
+		stream, err := qc.conn.AcceptStream(context.Background())
+		if err != nil {
+			// TODO: What to do with err here? Close conn?
+			break
+		}
+		qc.lock.Lock()
+		// Track the stream to allow unblocking reads on shutdown.
+		qc.streams[stream] = struct{}{}
+		qc.lock.Unlock()
+		qc.wg.Add(1)
+		go srv.serveQUICStream(qc, stream)
+	}
+
+	qc.wg.Wait()
+
+	srv.lock.Lock()
+	delete(srv.conns, qc)
+	srv.lock.Unlock()
+
+	wg.Done()
+}
+
+// Serve a new QUIC stream.
+func (srv *Server) serveQUICStream(qc *quicConn, stream quic.Stream) {
+	defer func() {
+		qc.lock.Lock()
+		delete(qc.streams, stream)
+		qc.lock.Unlock()
+		qc.wg.Done()
+	}()
+
+	w := &response{tsigProvider: srv.tsigProvider(), doq: stream, tcp: qc}
+	if srv.DecorateWriter != nil {
+		w.writer = srv.DecorateWriter(w)
+	} else {
+		w.writer = w
+	}
+
+	reader := Reader(defaultReader{srv})
+	if srv.DecorateReader != nil {
+		reader = srv.DecorateReader(reader)
+	}
+
+	m, err := reader.ReadQUIC(stream, srv.getReadTimeout())
+	if err != nil {
+		// TODO: what to do here?
+		return
+	}
+	srv.serveDNS(m, w)
+	if !w.hijacked {
+		w.Close()
+	}
+}
+
+func (srv *Server) readQUIC(stream quic.Stream, timeout time.Duration) ([]byte, error) {
+	// Copied from readTCP():
+	// If we race with ShutdownContext, the read deadline may
+	// have been set in the distant past to unblock the read
+	// below. We must not override it, otherwise we may block
+	// ShutdownContext.
+	srv.lock.RLock()
+	if srv.started {
+		stream.SetReadDeadline(time.Now().Add(timeout))
+	}
+	srv.lock.RUnlock()
+
+	var length uint16
+	if err := binary.Read(stream, binary.BigEndian, &length); err != nil {
+		return nil, err
+	}
+
+	m := make([]byte, length)
+	if _, err := io.ReadFull(stream, m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
