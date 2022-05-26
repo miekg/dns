@@ -176,7 +176,10 @@ func TestIsDomainName(t *testing.T) {
 		lab int
 	}
 	names := map[string]*ret{
-		"..":                     {false, 1},
+		".":                      {true, 1},
+		"..":                     {false, 0},
+		"double-dot..test":       {false, 1},
+		".leading-dot.test":      {false, 0},
 		"@.":                     {true, 1},
 		"www.example.com":        {true, 3},
 		"www.e%ample.com":        {true, 3},
