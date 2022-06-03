@@ -188,11 +188,11 @@ func PrevLabel(s string, n int) (i int, start bool) {
 // returns an integer value similar to strcmp
 // (0 for equal values, -1 if s1 < s2, 1 if s1 > s2)
 func Compare(s1, s2 string) int {
-	s1b := []byte(s1)
-	s2b := []byte(s2)
+	s1b := doDDD([]byte(s1))
+	s2b := doDDD([]byte(s2))
 
-	doDDD(s1b)
-	doDDD(s2b)
+	s1 = string(s1b)
+	s2 = string(s2b)
 
 	s1lend := len(s1)
 	s2lend := len(s2)
@@ -267,7 +267,7 @@ func equal(a, b string) bool {
 	return labelCompare(a, b) == 0
 }
 
-func doDDD(b []byte) {
+func doDDD(b []byte) []byte {
 	lb := len(b)
 	for i := 0; i < lb; i++ {
 		if i+3 < lb && b[i] == '\\' && isDigit(b[i+1]) && isDigit(b[i+2]) && isDigit(b[i+3]) {
@@ -278,4 +278,5 @@ func doDDD(b []byte) {
 			lb -= 3
 		}
 	}
+	return b[:lb]
 }

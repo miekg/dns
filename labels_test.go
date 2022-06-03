@@ -335,6 +335,13 @@ func BenchmarkPrevLabelMixed(b *testing.B) {
 	}
 }
 
+func BenchmarkCompare(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Compare("\\097.", "A.")
+	}
+}
+
 func TestCompare(t *testing.T) {
 	domains := []string{ // based on an exanple from RFC 4034
 		"example.",
@@ -369,5 +376,9 @@ func TestCompare(t *testing.T) {
 				t.Fatalf("next comparison failure between %s and %s, %d and %d", domain, next_domain, Compare(domain, next_domain), Compare(next_domain, domain))
 			}
 		}
+	}
+
+	if Compare("\\097.", "A.") != 0 {
+		t.Fatal("failure to normalize DDD escape sequence")
 	}
 }
