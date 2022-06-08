@@ -159,6 +159,21 @@ func RunLocalUnixGramServer(laddr string, opts ...func(*Server)) (*Server, strin
 	return RunLocalServer(pc, nil, opts...)
 }
 
+func RunLocalUnixSeqPacketServer(laddr string) (chan interface{}, string, error) {
+	pc, err := net.Listen("unixpacket", laddr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	shutdownChan := make(chan interface{})
+	go func() {
+		pc.Accept()
+		<-shutdownChan
+	}()
+
+	return shutdownChan, pc.Addr().String(), nil
+}
+
 func TestServing(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
