@@ -24,7 +24,7 @@ func isPacketConn(c net.Conn) bool {
 	}
 
 	if ua, ok := c.LocalAddr().(*net.UnixAddr); ok {
-		return ua.Net == "unixgram"
+		return ua.Net == "unixgram" || ua.Net == "unixpacket"
 	}
 
 	return true

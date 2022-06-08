@@ -68,6 +68,27 @@ func TestIsPacketConn(t *testing.T) {
 		t.Error("Unix datagram connection (wrapped type) should be a packet conn")
 	}
 
+	// Unix Seqpacket
+	shutChan, addrstr, err := RunLocalUnixSeqPacketServer(filepath.Join(t.TempDir(), "unixpacket.sock"))
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+
+	defer func() {
+		shutChan <- &struct{}{}
+	}()
+	c, err = net.Dial("unixpacket", addrstr)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer c.Close()
+	if !isPacketConn(c) {
+		t.Error("Unix datagram connection should be a packet conn")
+	}
+	if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+		t.Error("Unix datagram connection (wrapped type) should be a packet conn")
+	}
+
 	// Unix stream
 	s, addrstr, _, err = RunLocalUnixServer(filepath.Join(t.TempDir(), "unixstream.sock"))
 	if err != nil {
