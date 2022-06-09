@@ -166,10 +166,12 @@ type timerWireFmt struct {
 // timersOnly is false.
 // If something goes wrong an error is returned, otherwise it is nil.
 func TsigGenerate(m *Msg, secret, requestMAC string, timersOnly bool) ([]byte, string, error) {
-	return tsigGenerateProvider(m, tsigHMACProvider(secret), requestMAC, timersOnly)
+	return TsigGenerateProvider(m, tsigHMACProvider(secret), requestMAC, timersOnly)
 }
 
-func tsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, timersOnly bool) ([]byte, string, error) {
+// TsigGenerate fills out the TSIG record attached to the message using
+// a TsigProvider, for more details and return see TsigGenerate.
+func TsigGenerateProvider(m *Msg, provider TsigProvider, requestMAC string, timersOnly bool) ([]byte, string, error) {
 	if m.IsTsig() == nil {
 		panic("dns: TSIG not last RR in additional")
 	}
@@ -223,7 +225,9 @@ func TsigVerify(msg []byte, secret, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, tsigHMACProvider(secret), requestMAC, timersOnly, uint64(time.Now().Unix()))
 }
 
-func tsigVerifyProvider(msg []byte, provider TsigProvider, requestMAC string, timersOnly bool) error {
+// TsigVerify verifies the TSIG on a message using a TsigProvider, for
+// more details and return see TsigVerify.
+func TsigVerifyProvider(msg []byte, provider TsigProvider, requestMAC string, timersOnly bool) error {
 	return tsigVerify(msg, provider, requestMAC, timersOnly, uint64(time.Now().Unix()))
 }
 
