@@ -144,6 +144,27 @@ func TestTXTEscapeParsing(t *testing.T) {
 	}
 }
 
+func TestTXTEscapeJustParse(t *testing.T) {
+	test := [][]string{
+		{`unquoted`, `unquoted`},
+		{`"quoted"`, `quoted`},
+		{`"escaped\"quote"`, `escaped\"quote`}, // This passes. It shouldn't?
+		//{`"escaped\"quote"`, `escaped"quote`}, // This fails. It shouldn't?
+	}
+	for _, s := range test {
+		rr, err := NewRR(fmt.Sprintf("example.com. IN TXT %v", s[0]))
+		if err != nil {
+			t.Errorf("could not parse %v TXT: %s", s[0], err)
+			continue
+		}
+
+		parsed := rr.(*TXT).Txt[0]
+		if parsed != s[1] {
+			t.Errorf("mismatch after parsing `%v` TXT record: `%v` != `%v`", s[0], parsed, s[1])
+		}
+	}
+}
+
 func GenerateDomain(r *rand.Rand, size int) []byte {
 	dnLen := size % 70 // artificially limit size so there's less to interpret if a failure occurs
 	var dn []byte
