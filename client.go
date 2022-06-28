@@ -319,7 +319,6 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		return nil, ErrShortRead
 	}
 
-	p = p[:n]
 	if hdr != nil {
 		dh, _, err := unpackMsgHdr(p, 0)
 		if err != nil {
