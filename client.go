@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -260,6 +261,13 @@ func (c *Client) exchangeContext(ctx context.Context, m *Msg, co *Conn) (r *Msg,
 	return r, rtt, err
 }
 
+// use sync.Pool to avoid gc overhead.
+var udpPool sync.Pool
+
+func init() {
+	udpPool.New = makeUDPBuffer(DefaultMsgSize)
+}
+
 // ReadMsg reads a message from the connection co.
 // If the received message contains a TSIG record the transaction signature
 // is verified. This method always tries to return the message, however if an
@@ -270,6 +278,7 @@ func (co *Conn) ReadMsg() (*Msg, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer udpPool.Put(p)
 
 	m := new(Msg)
 	if err := m.Unpack(p); err != nil {
@@ -295,26 +304,18 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		err error
 	)
 
+	p = udpPool.Get().([]byte)
 	if isPacketConn(co.Conn) {
-		if co.UDPSize > MinMsgSize {
-			p = make([]byte, co.UDPSize)
-		} else {
-			p = make([]byte, MinMsgSize)
-		}
 		n, err = co.Read(p)
 	} else {
-		var length uint16
-		if err := binary.Read(co.Conn, binary.BigEndian, &length); err != nil {
-			return nil, err
-		}
-
-		p = make([]byte, length)
 		n, err = io.ReadFull(co.Conn, p)
 	}
 
 	if err != nil {
+		udpPool.Put(p)
 		return nil, err
 	} else if n < headerSize {
+		udpPool.Put(p)
 		return nil, ErrShortRead
 	}
 
@@ -322,6 +323,7 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 	if hdr != nil {
 		dh, _, err := unpackMsgHdr(p, 0)
 		if err != nil {
+			udpPool.Put(p)
 			return nil, err
 		}
 		*hdr = dh
