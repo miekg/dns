@@ -17,6 +17,10 @@ type SessionUDPFactory interface {
 	// Returns the message buffer and the SessionUDP instance
 	// that is used to send the response.
 	ReadRequest(conn *net.UDPConn) ([]byte, SessionUDP, error)
+
+	// ReadRequestConn reads a single request from 'conn'.
+	// Returns the message buffer and the source address
+	ReadRequestConn(conn net.PacketConn) ([]byte, net.Addr, error)
 }
 
 type sessionUDPFactory struct{}
@@ -34,6 +38,10 @@ func (f *sessionUDPFactory) InitPool(msgSize int) {}
 // ReadRequest reads a single request from 'conn' and returns the request context
 func (f *sessionUDPFactory) ReadRequest(conn *net.UDPConn) ([]byte, SessionUDP, error) {
 	return nil, SessionUDP{}, nil
+}
+
+func (f *sessionUDPFactory) ReadRequestConn(conn net.PacketConn) ([]byte, net.Addr, error) {
+	return nil, nil, nil
 }
 
 // SessionUDP holds the remote address
