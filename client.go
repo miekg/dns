@@ -195,8 +195,19 @@ func (c *Client) exchangeWithConnContext(ctx context.Context, m *Msg, conn *Conn
 		return c.exchangeContext(ctx, m, conn)
 	}
 
+	ecs := "0.0.0.0/0"
+	for _, o := range m.Extra {
+		if _, ok := o.(*OPT); ok {
+			for _, e := range o.(*OPT).Option {
+				if re, lok := e.(*EDNS0_SUBNET); lok {
+					ecs = fmt.Sprintf("%s/%d", re.Address.String(), re.SourceNetmask)
+					break
+				}
+			}
+		}
+	}
 	q := m.Question[0]
-	key := fmt.Sprintf("%s:%d:%d", q.Name, q.Qtype, q.Qclass)
+	key := fmt.Sprintf("%s:%d:%d:%s", q.Name, q.Qtype, q.Qclass, ecs)
 	r, rtt, err, shared := c.group.Do(key, func() (*Msg, time.Duration, error) {
 		// When we're doing singleflight we don't want one context cancelation, cancel _all_ outstanding queries.
 		// Hence we ignore the context and use Background().
