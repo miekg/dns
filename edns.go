@@ -81,7 +81,7 @@ func (rr *OPT) String() string {
 		s += "flags:; "
 	}
 	if rr.Hdr.Ttl&0x7FFF != 0 {
-		s += "MBZ: " + fmt.Sprintf("0x%04x", rr.Hdr.Ttl&0x7FFF) + ", "
+		s += fmt.Sprintf("MBZ: 0x%04x, ", rr.Hdr.Ttl&0x7FFF)
 	}
 	s += "udp: " + strconv.Itoa(int(rr.UDPSize()))
 
