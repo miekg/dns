@@ -79,7 +79,7 @@ func (key tsigHMACProvider) Verify(msg []byte, t *TSIG) error {
 type tsigSecretProvider map[string]string
 
 func (ts tsigSecretProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {
-	key, ok := ts[t.Hdr.Name]
+	key, ok := ts[CanonicalName(t.Hdr.Name)]
 	if !ok {
 		return nil, ErrSecret
 	}
@@ -87,7 +87,7 @@ func (ts tsigSecretProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {
 }
 
 func (ts tsigSecretProvider) Verify(msg []byte, t *TSIG) error {
-	key, ok := ts[t.Hdr.Name]
+	key, ok := ts[CanonicalName(t.Hdr.Name)]
 	if !ok {
 		return ErrSecret
 	}
