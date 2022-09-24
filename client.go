@@ -47,12 +47,16 @@ func (co *Conn) tsigProvider() TsigProvider {
 	return tsigSecretProvider(co.TsigSecret)
 }
 
+type Dialer interface {
+	DialContext(ctx context.Context, network, address string) (net.Conn, error)
+}
+
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
 	UDPSize   uint16      // minimum receive buffer for UDP messages
 	TLSConfig *tls.Config // TLS connection configuration
-	Dialer    *net.Dialer // a net.Dialer used to set local address, timeouts and more
+	Dialer    Dialer      // Dialer used to set local address, timeouts and more
 	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see ExchangeContext)
@@ -109,11 +113,11 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 // For TLS over TCP (DoT) the context isn't used yet. This will be enabled when Go 1.18 is released.
 func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
-	var d net.Dialer
-	if c.Dialer == nil {
-		d = net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
+	var d Dialer
+	if dialer, ok := c.Dialer.(*net.Dialer); ok && dialer == nil || c.Dialer == nil {
+		d = &net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
-		d = *c.Dialer
+		d = c.Dialer
 	}
 
 	network := c.Net
@@ -126,16 +130,7 @@ func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, e
 	conn = new(Conn)
 	if useTLS {
 		network = strings.TrimSuffix(network, "-tls")
-
-		// TODO(miekg): Enable after Go 1.18 is released, to be able to support two prev. releases.
-		/*
-			tlsDialer := tls.Dialer{
-				NetDialer: &d,
-				Config:    c.TLSConfig,
-			}
-			conn.Conn, err = tlsDialer.DialContext(ctx, network, address)
-		*/
-		conn.Conn, err = tls.DialWithDialer(&d, network, address, c.TLSConfig)
+		conn.Conn, err = dialTLS(ctx, d, network, address, c.TLSConfig)
 	} else {
 		conn.Conn, err = d.DialContext(ctx, network, address)
 	}
@@ -395,9 +390,9 @@ func (c *Client) getTimeoutForRequest(timeout time.Duration) time.Duration {
 	}
 	// net.Dialer.Timeout has priority if smaller than the timeouts computed so
 	// far
-	if c.Dialer != nil && c.Dialer.Timeout != 0 {
-		if c.Dialer.Timeout < requestTimeout {
-			requestTimeout = c.Dialer.Timeout
+	if d, ok := c.Dialer.(*net.Dialer); ok && d != nil && d.Timeout != 0 {
+		if d.Timeout < requestTimeout {
+			requestTimeout = d.Timeout
 		}
 	}
 	return requestTimeout
@@ -481,4 +476,34 @@ func (c *Client) ExchangeContext(ctx context.Context, m *Msg, a string) (r *Msg,
 	defer conn.Close()
 
 	return c.exchangeWithConnContext(ctx, m, conn)
+}
+
+func dialTLS(ctx context.Context, dialer Dialer, network, address string, tlsConfig *tls.Config) (net.Conn, error) {
+	rawConn, err := dialer.DialContext(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
+
+	colonPos := strings.LastIndex(address, ":")
+	if colonPos == -1 {
+		colonPos = len(address)
+	}
+	hostname := address[:colonPos]
+
+	if tlsConfig == nil {
+		tlsConfig = &tls.Config{}
+	}
+
+	if tlsConfig.ServerName == "" {
+		clone := tlsConfig.Clone()
+		clone.ServerName = hostname
+		tlsConfig = clone
+	}
+
+	conn := tls.Client(rawConn, tlsConfig)
+	if err := conn.HandshakeContext(ctx); err != nil {
+		rawConn.Close()
+		return nil, err
+	}
+	return conn, nil
 }
