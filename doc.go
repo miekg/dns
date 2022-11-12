@@ -72,7 +72,7 @@ and port to use for the connection:
 		Port: 12345,
 		Zone: "",
 	}
-	c.Dialer := &net.Dialer{
+	c.Dialer = &net.Dialer{
 		Timeout: 200 * time.Millisecond,
 		LocalAddr: &laddr,
 	}
