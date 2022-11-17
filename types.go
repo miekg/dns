@@ -65,6 +65,7 @@ const (
 	TypeAPL        uint16 = 42
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
+	TypeIPSECKEY   uint16 = 45
 	TypeRRSIG      uint16 = 46
 	TypeNSEC       uint16 = 47
 	TypeDNSKEY     uint16 = 48
@@ -98,6 +99,7 @@ const (
 	TypeURI        uint16 = 256
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
+	TypeAMTRELAY   uint16 = 260
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -157,6 +159,22 @@ const (
 
 	ZoneMDHashAlgSHA384 = 1
 	ZoneMDHashAlgSHA512 = 2
+)
+
+// Used in IPSEC https://datatracker.ietf.org/doc/html/rfc4025#section-2.3
+const (
+	IPSECGatewayNone uint8 = 0
+	IPSECGatewayIPv4 uint8 = 1
+	IPSECGatewayIPv6 uint8 = 2
+	IPSECGatewayHost uint8 = 3
+)
+
+// Used in AMTRELAY https://datatracker.ietf.org/doc/html/rfc8777#section-4.2.3
+const (
+	AMTRELAYNone uint8 = IPSECGatewayNone
+	AMTRELAYIPv4 uint8 = IPSECGatewayIPv4
+	AMTRELAYIPv6 uint8 = IPSECGatewayIPv6
+	AMTRELAYHost uint8 = IPSECGatewayHost
 )
 
 // Header is the wire format for the DNS packet header.
@@ -992,6 +1010,72 @@ func (rr *DNSKEY) String() string {
 		" " + strconv.Itoa(int(rr.Protocol)) +
 		" " + strconv.Itoa(int(rr.Algorithm)) +
 		" " + rr.PublicKey
+}
+
+// IPSECKEY RR. See RFC 4025.
+type IPSECKEY struct {
+	Hdr         RR_Header
+	Precedence  uint8
+	GatewayType uint8
+	Algorithm   uint8
+	GatewayAddr net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
+	GatewayHost string `dns:"ipsechost"`
+	PublicKey   string `dns:"base64"`
+}
+
+func (rr *IPSECKEY) String() string {
+	var gateway string
+	switch rr.GatewayType {
+	case IPSECGatewayIPv4, IPSECGatewayIPv6:
+		gateway = rr.GatewayAddr.String()
+	case IPSECGatewayHost:
+		gateway = rr.GatewayHost
+	case IPSECGatewayNone:
+		fallthrough
+	default:
+		gateway = "."
+	}
+
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
+		" " + strconv.Itoa(int(rr.GatewayType)) +
+		" " + strconv.Itoa(int(rr.Algorithm)) +
+		" " + gateway +
+		" " + rr.PublicKey
+}
+
+// AMTRELAY RR. See RFC 8777.
+type AMTRELAY struct {
+	Hdr               RR_Header
+	Precedence        uint8
+	DiscoveryOptional bool   `dns:"-"` // in the GatewayType byte
+	GatewayType       uint8  `dns:"amtrelaytype"`
+	GatewayAddr       net.IP `dns:"-"`
+	GatewayHost       string `dns:"amtrelayhost"`
+}
+
+func (rr *AMTRELAY) String() string {
+	var gateway string
+	switch rr.GatewayType {
+	case AMTRELAYIPv4, AMTRELAYIPv6:
+		gateway = rr.GatewayAddr.String()
+	case AMTRELAYHost:
+		gateway = rr.GatewayHost
+	case AMTRELAYNone:
+		fallthrough
+	default:
+		gateway = "."
+	}
+	var boolS string
+	if rr.DiscoveryOptional {
+		boolS = "1"
+	} else {
+		boolS = "0"
+	}
+
+	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
+		" " + boolS +
+		" " + strconv.Itoa(int(rr.GatewayType)) +
+		" " + gateway
 }
 
 // RKEY RR. See https://www.iana.org/assignments/dns-parameters/RKEY/rkey-completed-template.
