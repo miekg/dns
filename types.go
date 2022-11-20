@@ -163,10 +163,10 @@ const (
 
 // Used in IPSEC https://datatracker.ietf.org/doc/html/rfc4025#section-2.3
 const (
-	IPSECGatewayNone uint8 = 0
-	IPSECGatewayIPv4 uint8 = 1
-	IPSECGatewayIPv6 uint8 = 2
-	IPSECGatewayHost uint8 = 3
+	IPSECGatewayNone uint8 = iota
+	IPSECGatewayIPv4
+	IPSECGatewayIPv6
+	IPSECGatewayHost
 )
 
 // Used in AMTRELAY https://datatracker.ietf.org/doc/html/rfc8777#section-4.2.3
@@ -1049,7 +1049,7 @@ type AMTRELAY struct {
 	Precedence        uint8
 	DiscoveryOptional bool   `dns:"-"` // in the GatewayType byte
 	GatewayType       uint8  `dns:"amtrelaytype"`
-	GatewayAddr       net.IP `dns:"-"`
+	GatewayAddr       net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
 	GatewayHost       string `dns:"amtrelayhost"`
 }
 
@@ -1534,7 +1534,7 @@ func (a *APLPrefix) str() string {
 // equals reports whether two APL prefixes are identical.
 func (a *APLPrefix) equals(b *APLPrefix) bool {
 	return a.Negation == b.Negation &&
-		bytes.Equal(a.Network.IP, b.Network.IP) &&
+		a.Network.IP.Equal(b.Network.IP) &&
 		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 

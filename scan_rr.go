@@ -3,6 +3,7 @@ package dns
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"net"
 	"strconv"
 	"strings"
@@ -1242,17 +1243,17 @@ func (rr *IPSECKEY) parse(c *zlexer, o string) *ParseError {
 		return &ParseError{"", "bad IPSECKEY gateway", l}
 	}
 
-	var err *ParseError
-	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l, o, rr.GatewayType, "IPSECKEY")
+	var err error
+	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType)
 	if err != nil {
-		return err
+		return &ParseError{"", "AMTRELAY " + err.Error(), l}
 	}
 
 	c.Next() // zBlank
 
-	s, err := endingToString(c, "bad IPSECKEY PublicKey")
-	if err != nil {
-		return err
+	s, pErr := endingToString(c, "bad IPSECKEY PublicKey")
+	if pErr != nil {
+		return pErr
 	}
 	rr.PublicKey = s
 	return slurpRemainder(c)
@@ -1290,35 +1291,35 @@ func (rr *AMTRELAY) parse(c *zlexer, o string) *ParseError {
 		return &ParseError{"", "bad AMTRELAY gateway", l}
 	}
 
-	var err *ParseError
-	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l, o, rr.GatewayType, "AMTRELAY")
+	var err error
+	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType)
 	if err != nil {
-		return err
+		return &ParseError{"", "AMTRELAY " + err.Error(), l}
 	}
 
 	return slurpRemainder(c)
 }
 
 // same constants and parsing between IPSECKEY and AMTRELAY
-func parseAddrHostUnion(l lex, o string, gatewayType uint8, errType string) (addr net.IP, host string, err *ParseError) {
+func parseAddrHostUnion(token, o string, gatewayType uint8) (addr net.IP, host string, err error) {
 	switch gatewayType {
 	case IPSECGatewayNone:
-		if l.token != "." {
-			return addr, host, &ParseError{"", errType + " gateway type none with gateway set", l}
+		if token != "." {
+			return addr, host, errors.New("gateway type none with gateway set")
 		}
 	case IPSECGatewayIPv4, IPSECGatewayIPv6:
 
-		if addr = net.ParseIP(l.token); addr == nil {
-			return addr, host, &ParseError{"", errType + " gateway IP invalid", l}
+		if addr = net.ParseIP(token); addr == nil {
+			return addr, host, errors.New("gateway IP invalid")
 		}
 		if !((gatewayType == IPSECGatewayIPv4 && addr.To4() != nil) || (gatewayType == IPSECGatewayIPv6 && addr.To16() != nil)) {
-			return addr, host, &ParseError{"", errType + " gateway IP family mismatch", l}
+			return addr, host, errors.New("gateway IP family mismatch")
 		}
 	case IPSECGatewayHost:
 		var ok bool
-		host, ok = toAbsoluteName(l.token, o)
+		host, ok = toAbsoluteName(token, o)
 		if !ok {
-			return addr, host, &ParseError{"", errType + " invalid gateway host", l}
+			return addr, host, errors.New("invalid gateway host")
 		}
 	}
 
