@@ -77,6 +77,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://ping.sx/dig
 * https://fleetdeck.io/
 * https://github.com/markdingo/autoreverse
+* https://github.com/slackhq/nebula
 
 
 Send pull request if you want to be listed here.
