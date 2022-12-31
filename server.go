@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -495,45 +496,60 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 	}
 
 	var wg sync.WaitGroup
-	defer func() {
-		wg.Wait()
-		close(srv.shutdown)
-	}()
 
 	rtimeout := srv.getReadTimeout()
-	// deadline is not used here
-	for srv.isStarted() {
-		var (
-			m    []byte
-			sPC  net.Addr
-			sUDP *SessionUDP
-			err  error
-		)
-		if isUDP {
-			m, sUDP, err = reader.ReadUDP(lUDP, rtimeout)
-		} else {
-			m, sPC, err = readerPC.ReadPacketConn(l, rtimeout)
-		}
-		if err != nil {
-			if !srv.isStarted() {
-				return nil
+
+	errCh := make(chan error, runtime.NumCPU())
+	poolWg := sync.WaitGroup{}
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		poolWg.Add(1)
+
+		go func() {
+			defer poolWg.Done()
+			// deadline is not used here
+			for srv.isStarted() {
+				var (
+					m    []byte
+					sPC  net.Addr
+					sUDP *SessionUDP
+					err  error
+				)
+
+				if isUDP {
+					m, sUDP, err = reader.ReadUDP(lUDP, rtimeout)
+				} else {
+					m, sPC, err = readerPC.ReadPacketConn(l, rtimeout)
+				}
+				if err != nil {
+					if !srv.isStarted() {
+						return
+					}
+					if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
+						continue
+					}
+					errCh <- err
+					return
+				}
+				if len(m) < headerSize {
+					if cap(m) == srv.UDPSize {
+						srv.udpPool.Put(m[:srv.UDPSize])
+					}
+					continue
+				}
+				wg.Add(1)
+				go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
 			}
-			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
-				continue
-			}
-			return err
-		}
-		if len(m) < headerSize {
-			if cap(m) == srv.UDPSize {
-				srv.udpPool.Put(m[:srv.UDPSize])
-			}
-			continue
-		}
-		wg.Add(1)
-		go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
+		}()
 	}
 
-	return nil
+	poolWg.Wait()
+	wg.Wait()
+	close(errCh)
+	close(srv.shutdown)
+
+	// TODO
+	return <-errCh
 }
 
 // Serve a new TCP connection.
