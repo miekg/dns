@@ -125,7 +125,6 @@ func Split(s string) []int {
 // string s starting at offset. A negative offset will cause a panic.
 // The bool end is true when the end of the string has been reached.
 // Also see PrevLabel.
-
 func NextLabel(s string, offset int) (i int, end bool) {
 	if s == "" {
 		return 0, true
