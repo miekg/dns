@@ -1218,32 +1218,35 @@ func (rr *DLV) parse(c *zlexer, o string) *ParseError     { return rr.parseDS(c,
 func (rr *CDS) parse(c *zlexer, o string) *ParseError     { return rr.parseDS(c, o, "CDS") }
 
 func (rr *IPSECKEY) parse(c *zlexer, o string) *ParseError {
-	for i := 0; i < 3; i++ {
-		l, _ := c.Next()
-		num, err := strconv.ParseUint(l.token, 10, 8)
-		if err != nil || l.err {
-			return &ParseError{"", "bad IPSECKEY value", l}
-		}
-
-		num8 := uint8(num)
-		switch i {
-		case 0:
-			rr.Precedence = num8
-		case 1:
-			rr.GatewayType = num8
-		case 2:
-			rr.Algorithm = num8
-		}
-
-		c.Next() // zBlank
-	}
-
 	l, _ := c.Next()
+	num, err := strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad IPSECKEY value", l}
+	}
+	rr.Precedence = uint8(num)
+	c.Next() // zBlank
+
+	l, _ = c.Next()
+	num, err = strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad IPSECKEY value", l}
+	}
+	rr.GatewayType = uint8(num)
+	c.Next() // zBlank
+
+	l, _ = c.Next()
+	num, err = strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad IPSECKEY value", l}
+	}
+	rr.Algorithm = uint8(num)
+	c.Next() // zBlank
+
+	l, _ = c.Next()
 	if l.err {
 		return &ParseError{"", "bad IPSECKEY gateway", l}
 	}
 
-	var err error
 	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType)
 	if err != nil {
 		return &ParseError{"", "AMTRELAY " + err.Error(), l}
@@ -1260,38 +1263,41 @@ func (rr *IPSECKEY) parse(c *zlexer, o string) *ParseError {
 }
 
 func (rr *AMTRELAY) parse(c *zlexer, o string) *ParseError {
-	for i := 0; i < 3; i++ {
-		l, _ := c.Next()
-		num, err := strconv.ParseUint(l.token, 10, 8)
-		if err != nil || l.err {
-			return &ParseError{"", "bad AMTRELAY value", l}
-		}
-
-		num8 := uint8(num)
-		switch i {
-		case 0:
-			rr.Precedence = num8
-		case 1:
-			if num8 > 1 {
-				return &ParseError{"", "bad discovery value", l}
-			}
-			rr.DiscoveryOptional = num8 == 1
-		case 2:
-			if num > 0x7f {
-				return &ParseError{"", "bad gateway type value", l}
-			}
-			rr.GatewayType = num8
-		}
-
-		c.Next() // zBlank
-	}
-
 	l, _ := c.Next()
+	num, err := strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad AMTRELAY value", l}
+	}
+	rr.Precedence = uint8(num)
+	c.Next() // zBlank
+
+	l, _ = c.Next()
+	num, err = strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad AMTRELAY value", l}
+	}
+	if num > 1 {
+		return &ParseError{"", "bad discovery value", l}
+	}
+	rr.DiscoveryOptional = num == 1
+	c.Next() // zBlank
+
+	l, _ = c.Next()
+	num, err = strconv.ParseUint(l.token, 10, 8)
+	if err != nil || l.err {
+		return &ParseError{"", "bad AMTRELAY value", l}
+	}
+	if num > 0x7f {
+		return &ParseError{"", "bad gateway type value", l}
+	}
+	rr.GatewayType = uint8(num)
+	c.Next() // zBlank
+
+	l, _ = c.Next()
 	if l.err {
 		return &ParseError{"", "bad AMTRELAY gateway", l}
 	}
 
-	var err error
 	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType)
 	if err != nil {
 		return &ParseError{"", "AMTRELAY " + err.Error(), l}
@@ -1308,11 +1314,11 @@ func parseAddrHostUnion(token, o string, gatewayType uint8) (addr net.IP, host s
 			return addr, host, errors.New("gateway type none with gateway set")
 		}
 	case IPSECGatewayIPv4, IPSECGatewayIPv6:
-
-		if addr = net.ParseIP(token); addr == nil {
+		addr = net.ParseIP(token)
+		if addr == nil {
 			return addr, host, errors.New("gateway IP invalid")
 		}
-		if !((gatewayType == IPSECGatewayIPv4 && addr.To4() != nil) || (gatewayType == IPSECGatewayIPv6 && addr.To16() != nil)) {
+		if (addr.To4() == nil) == (gatewayType == IPSECGatewayIPv4) {
 			return addr, host, errors.New("gateway IP family mismatch")
 		}
 	case IPSECGatewayHost:

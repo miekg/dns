@@ -171,10 +171,10 @@ const (
 
 // Used in AMTRELAY https://datatracker.ietf.org/doc/html/rfc8777#section-4.2.3
 const (
-	AMTRELAYNone uint8 = IPSECGatewayNone
-	AMTRELAYIPv4 uint8 = IPSECGatewayIPv4
-	AMTRELAYIPv6 uint8 = IPSECGatewayIPv6
-	AMTRELAYHost uint8 = IPSECGatewayHost
+	AMTRELAYNone = IPSECGatewayNone
+	AMTRELAYIPv4 = IPSECGatewayIPv4
+	AMTRELAYIPv6 = IPSECGatewayIPv6
+	AMTRELAYHost = IPSECGatewayHost
 )
 
 // Header is the wire format for the DNS packet header.
@@ -1065,11 +1065,9 @@ func (rr *AMTRELAY) String() string {
 	default:
 		gateway = "."
 	}
-	var boolS string
+	boolS := "0"
 	if rr.DiscoveryOptional {
 		boolS = "1"
-	} else {
-		boolS = "0"
 	}
 
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
@@ -1534,7 +1532,7 @@ func (a *APLPrefix) str() string {
 // equals reports whether two APL prefixes are identical.
 func (a *APLPrefix) equals(b *APLPrefix) bool {
 	return a.Negation == b.Negation &&
-		a.Network.IP.Equal(b.Network.IP) &&
+		bytes.Equal(a.Network.IP, b.Network.IP) &&
 		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 
