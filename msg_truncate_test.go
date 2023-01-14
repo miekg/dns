@@ -18,7 +18,7 @@ func TestRequestTruncateAnswer(t *testing.T) {
 
 	reply.Truncate(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
-		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 	}
 	if !reply.Truncated {
 		t.Errorf("truncated bit should be set")
@@ -38,7 +38,7 @@ func TestRequestTruncateExtra(t *testing.T) {
 
 	reply.Truncate(MinMsgSize)
 	if want, got := MinMsgSize, reply.Len(); want < got {
-		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 	}
 	if !reply.Truncated {
 		t.Errorf("truncated bit should be set")
@@ -62,7 +62,7 @@ func TestRequestTruncateExtraEdns0(t *testing.T) {
 
 	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 	}
 	if !reply.Truncated {
 		t.Errorf("truncated bit should be set")
@@ -94,7 +94,7 @@ func TestRequestTruncateExtraRegression(t *testing.T) {
 
 	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 	}
 	if !reply.Truncated {
 		t.Errorf("truncated bit should be set")
@@ -130,7 +130,7 @@ func TestTruncation(t *testing.T) {
 
 		copy.Truncate(bufsize)
 		if want, got := bufsize, copy.Len(); want < got {
-			t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+			t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 		}
 	}
 }
@@ -150,7 +150,7 @@ func TestRequestTruncateAnswerExact(t *testing.T) {
 
 	reply.Truncate(size)
 	if want, got := size, reply.Len(); want < got {
-		t.Errorf("message length should be bellow %d bytes, got %d bytes", want, got)
+		t.Errorf("message length should be below %d bytes, got %d bytes", want, got)
 	}
 	if expected := 52; len(reply.Answer) != expected {
 		t.Errorf("wrong number of answers; expected %d, got %d", expected, len(reply.Answer))

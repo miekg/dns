@@ -92,7 +92,7 @@ func TestRemoveRRset(t *testing.T) {
 }
 
 func TestPreReqAndRemovals(t *testing.T) {
-	// Build a list of multiple prereqs and then somes removes followed by an insert.
+	// Build a list of multiple prereqs and then some removes followed by an insert.
 	// We should be able to add multiple prereqs and updates.
 	m := new(Msg)
 	m.SetUpdate("example.org.")
