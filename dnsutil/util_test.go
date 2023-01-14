@@ -63,7 +63,7 @@ func TestTrimDomainName(t *testing.T) {
 	// Paranoid tests.
 	// These test shouldn't be needed but I was weary of off-by-one errors.
 	// In theory, these can't happen because there are no single-letter TLDs,
-	// but it is good to exercize the code this way.
+	// but it is good to exercise the code this way.
 	tests := []struct{ experiment, expected string }{
 		{"", "@"},
 		{".", "."},

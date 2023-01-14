@@ -353,7 +353,7 @@ func (*SVCBAlpn) Key() SVCBKey { return SVCB_ALPN }
 func (s *SVCBAlpn) String() string {
 	// An ALPN value is a comma-separated list of values, each of which can be
 	// an arbitrary binary value. In order to allow parsing, the comma and
-	// backslash characters are themselves excaped.
+	// backslash characters are themselves escaped.
 	//
 	// However, this escaping is done in addition to the normal escaping which
 	// happens in zone files, meaning that these values must be
