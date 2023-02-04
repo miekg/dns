@@ -3,7 +3,6 @@ module github.com/miekg/dns
 go 1.14
 
 require (
-	github.com/alitto/pond v1.8.2 // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
