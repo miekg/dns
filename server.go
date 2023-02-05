@@ -12,6 +12,9 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"golang.org/x/sync/errgroup"
+
 	"time"
 )
 
@@ -499,14 +502,10 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 
 	rtimeout := srv.getReadTimeout()
 
-	errCh := make(chan error, runtime.NumCPU())
-	poolWg := sync.WaitGroup{}
+	g := new(errgroup.Group)
 
 	for i := 0; i < runtime.NumCPU(); i++ {
-		poolWg.Add(1)
-
-		go func() {
-			defer poolWg.Done()
+		g.Go(func() error {
 			// deadline is not used here
 			for srv.isStarted() {
 				var (
@@ -523,13 +522,13 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 				}
 				if err != nil {
 					if !srv.isStarted() {
-						return
+						return nil
 					}
 					if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
 						continue
 					}
-					errCh <- err
-					return
+
+					return err
 				}
 				if len(m) < headerSize {
 					if cap(m) == srv.UDPSize {
@@ -540,16 +539,16 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 				wg.Add(1)
 				go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
 			}
-		}()
+
+			return nil
+		})
 	}
 
-	poolWg.Wait()
+	err := g.Wait()
 	wg.Wait()
-	close(errCh)
 	close(srv.shutdown)
 
-	// TODO
-	return <-errCh
+	return err
 }
 
 // Serve a new TCP connection.
