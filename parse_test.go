@@ -373,10 +373,10 @@ func TestNSEC(t *testing.T) {
 func TestParseLOC(t *testing.T) {
 	lt := map[string]string{
 		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
-		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
-		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
+		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m":     "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
+		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m":                   "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
 		// Exercise boundary cases
-		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
+		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m":  "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
 		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
 		// use float64 to have enough precision.
 		"example.com. LOC 42 21 43.952 N 71 5 6.344 W -24m 1m 200m 10m": "example.com.\t3600\tIN\tLOC\t42 21 43.952 N 71 05 6.344 W -24m 1m 200m 10m",
@@ -532,7 +532,7 @@ func TestParseClass(t *testing.T) {
 		"t.example.com. CH A 127.0.0.1": "t.example.com.	3600	CH	A	127.0.0.1",
 		// ClassANY can not occur in zone files
 		// "t.example.com. ANY A 127.0.0.1": "t.example.com.	3600	ANY	A	127.0.0.1",
-		"t.example.com. NONE A 127.0.0.1": "t.example.com.	3600	NONE	A	127.0.0.1",
+		"t.example.com. NONE A 127.0.0.1":     "t.example.com.	3600	NONE	A	127.0.0.1",
 		"t.example.com. CLASS255 A 127.0.0.1": "t.example.com.	3600	CLASS255	A	127.0.0.1",
 	}
 	for i, o := range tests {
@@ -1515,10 +1515,10 @@ func TestParseSSHFP(t *testing.T) {
 
 func TestParseHINFO(t *testing.T) {
 	dt := map[string]string{
-		"example.net. HINFO A B": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO A B":         "example.net.	3600	IN	HINFO	\"A\" \"B\"",
 		"example.net. HINFO \"A\" \"B\"": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
 		"example.net. HINFO A B C D E F": "example.net.	3600	IN	HINFO	\"A\" \"B C D E F\"",
-		"example.net. HINFO AB": "example.net.	3600	IN	HINFO	\"AB\" \"\"",
+		"example.net. HINFO AB":          "example.net.	3600	IN	HINFO	\"AB\" \"\"",
 		// "example.net. HINFO PC-Intel-700mhz \"Redhat Linux 7.1\"": "example.net.	3600	IN	HINFO	\"PC-Intel-700mhz\" \"Redhat Linux 7.1\"",
 		// This one is recommended in Pro Bind book http://www.zytrax.com/books/dns/ch8/hinfo.html
 		// but effectively, even Bind would replace it to correctly formed text when you AXFR
@@ -1538,9 +1538,9 @@ func TestParseHINFO(t *testing.T) {
 
 func TestParseCAA(t *testing.T) {
 	lt := map[string]string{
-		"example.net.	CAA	0 issue \"symantec.com\"": "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
+		"example.net.	CAA	0 issue \"symantec.com\"":            "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
 		"example.net.	CAA	0 issuewild \"symantec.com; stuff\"": "example.net.\t3600\tIN\tCAA\t0 issuewild \"symantec.com; stuff\"",
-		"example.net.	CAA	128 tbs \"critical\"": "example.net.\t3600\tIN\tCAA\t128 tbs \"critical\"",
+		"example.net.	CAA	128 tbs \"critical\"":                "example.net.\t3600\tIN\tCAA\t128 tbs \"critical\"",
 		"example.net.	CAA	2 auth \"0>09\\006\\010+\\006\\001\\004\\001\\214y\\002\\003\\001\\006\\009`\\134H\\001e\\003\\004\\002\\001\\004 y\\209\\012\\221r\\220\\156Q\\218\\150\\150{\\166\\245:\\231\\182%\\157:\\133\\179}\\1923r\\238\\151\\255\\128q\\145\\002\\001\\000\"": "example.net.\t3600\tIN\tCAA\t2 auth \"0>09\\006\\010+\\006\\001\\004\\001\\214y\\002\\003\\001\\006\\009`\\134H\\001e\\003\\004\\002\\001\\004 y\\209\\012\\221r\\220\\156Q\\218\\150\\150{\\166\\245:\\231\\182%\\157:\\133\\179}\\1923r\\238\\151\\255\\128q\\145\\002\\001\\000\"",
 		"example.net.   TYPE257	0 issue \"symantec.com\"": "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
 	}
@@ -1636,24 +1636,24 @@ func TestParseCSYNC(t *testing.T) {
 
 func TestParseSVCB(t *testing.T) {
 	svcbs := map[string]string{
-		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`:                              `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
 		// Explained in svcb.go "In AliasMode, records SHOULD NOT include any SvcParams,"
 		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
 		// From the specification
-		`example.com.   HTTPS   0 foo.example.com.`: `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
-		`example.com.   SVCB   1 .`: `example.com.	3600	IN	SVCB	1 .`,
-		`example.com.   SVCB   16 foo.example.com. port=53`: `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
-		`example.com.   SVCB   1 foo.example.com. key667=hello`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
-		`example.com.   SVCB   1 foo.example.com. key667="hello\210qoo"`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello\210qoo"`,
-		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`: `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
-		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`: `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
+		`example.com.   HTTPS   0 foo.example.com.`:                                                          `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
+		`example.com.   SVCB   1 .`:                                                                          `example.com.	3600	IN	SVCB	1 .`,
+		`example.com.   SVCB   16 foo.example.com. port=53`:                                                  `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
+		`example.com.   SVCB   1 foo.example.com. key667=hello`:                                              `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
+		`example.com.   SVCB   1 foo.example.com. key667="hello\210qoo"`:                                     `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello\210qoo"`,
+		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`:                     `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
+		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`:                           `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
 		`example.com.   SVCB   16 foo.example.org. alpn=h2,h3-19 mandatory=ipv4hint,alpn ipv4hint=192.0.2.1`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="h2,h3-19" mandatory="ipv4hint,alpn" ipv4hint="192.0.2.1"`,
-		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
-		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`:                                  `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`:                                `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
 		// From draft-ietf-add-ddr-06
-		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
+		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`:     `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns\045query{\?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 	}
 	for s, o := range svcbs {
@@ -2032,6 +2032,7 @@ func TestParseIPSECKEY(t *testing.T) {
 func TestParseAMTRELAY(t *testing.T) {
 	dt := map[string]string{
 		"amtrelay. 3600 IN AMTRELAY 10 0 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 2 2001:470:30:84:e276:63ff:fe72:3900",
+		"amtrelay. 3600 IN AMTRELAY 10 1 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 2 2001:470:30:84:e276:63ff:fe72:3900",
 	}
 
 	for i, o := range dt {

@@ -743,7 +743,7 @@ func (rr *AFSDB) copy() RR {
 	return &AFSDB{rr.Hdr, rr.Subtype, rr.Hostname}
 }
 func (rr *AMTRELAY) copy() RR {
-	return &AMTRELAY{rr.Hdr, rr.Precedence, rr.DiscoveryOptional, rr.GatewayType, copyIP(rr.GatewayAddr), rr.GatewayHost}
+	return &AMTRELAY{rr.Hdr, rr.Precedence, rr.GatewayType, copyIP(rr.GatewayAddr), rr.GatewayHost}
 }
 func (rr *ANY) copy() RR {
 	return &ANY{rr.Hdr}

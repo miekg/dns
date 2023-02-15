@@ -1045,17 +1045,16 @@ func (rr *IPSECKEY) String() string {
 
 // AMTRELAY RR. See RFC 8777.
 type AMTRELAY struct {
-	Hdr               RR_Header
-	Precedence        uint8
-	DiscoveryOptional bool   `dns:"-"` // in the GatewayType byte
-	GatewayType       uint8  `dns:"amtrelaytype"`
-	GatewayAddr       net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
-	GatewayHost       string `dns:"amtrelayhost"`
+	Hdr         RR_Header
+	Precedence  uint8
+	GatewayType uint8  // discovery is packed in here at bit 0x80
+	GatewayAddr net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
+	GatewayHost string `dns:"amtrelayhost"`
 }
 
 func (rr *AMTRELAY) String() string {
 	var gateway string
-	switch rr.GatewayType {
+	switch rr.GatewayType & 0x7f {
 	case AMTRELAYIPv4, AMTRELAYIPv6:
 		gateway = rr.GatewayAddr.String()
 	case AMTRELAYHost:
@@ -1066,13 +1065,13 @@ func (rr *AMTRELAY) String() string {
 		gateway = "."
 	}
 	boolS := "0"
-	if rr.DiscoveryOptional {
+	if rr.GatewayType&0x80 == 0x80 {
 		boolS = "1"
 	}
 
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Precedence)) +
 		" " + boolS +
-		" " + strconv.Itoa(int(rr.GatewayType)) +
+		" " + strconv.Itoa(int(rr.GatewayType&0x7f)) +
 		" " + gateway
 }
 

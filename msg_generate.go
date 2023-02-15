@@ -173,15 +173,6 @@ if rr.%s != "-" {
 				o("off, err = packStringOctet(rr.%s, msg, off)\n")
 			case st.Tag(i) == `dns:"ipsechost"` || st.Tag(i) == `dns:"amtrelayhost"`:
 				o("off, err = packIPSECGateway(rr.GatewayAddr, rr.%s, msg, off, rr.GatewayType, compression, false)\n")
-			case st.Tag(i) == `dns:"amtrelaytype"`:
-				o(`{
-					gatewayType := rr.%s
-					if rr.DiscoveryOptional {
-						gatewayType |= 0x80
-					}
-					off, err = packUint8(gatewayType, msg, off)
-				}
-				`)
 			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -291,14 +282,6 @@ return off, err
 				o("rr.%s, off, err = unpackStringOctet(msg, off)\n")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
 				o("rr.GatewayAddr, rr.%s, off, err = unpackIPSECGateway(msg, off, rr.GatewayType)\n")
-			case `dns:"amtrelaytype"`:
-				o(`{
-					var gatewayType uint8
-					gatewayType, off, err = unpackUint8(msg, off)
-					rr.DiscoveryOptional = (gatewayType & 0x80) != 0
-					rr.%s = gatewayType & 0x7f
-				}
-				`)
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:

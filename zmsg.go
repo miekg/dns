@@ -37,13 +37,7 @@ func (rr *AMTRELAY) pack(msg []byte, off int, compression compressionMap, compre
 	if err != nil {
 		return off, err
 	}
-	{
-		gatewayType := rr.GatewayType
-		if rr.DiscoveryOptional {
-			gatewayType |= 0x80
-		}
-		off, err = packUint8(gatewayType, msg, off)
-	}
+	off, err = packUint8(rr.GatewayType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1237,15 +1231,7 @@ func (rr *AMTRELAY) unpack(msg []byte, off int) (off1 int, err error) {
 	if off == len(msg) {
 		return off, nil
 	}
-	if off == len(msg) {
-		return off, nil
-	}
-	{
-		var gatewayType uint8
-		gatewayType, off, err = unpackUint8(msg, off)
-		rr.DiscoveryOptional = (gatewayType & 0x80) != 0
-		rr.GatewayType = gatewayType & 0x7f
-	}
+	rr.GatewayType, off, err = unpackUint8(msg, off)
 	if err != nil {
 		return off, err
 	}

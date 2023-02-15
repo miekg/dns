@@ -1272,14 +1272,13 @@ func (rr *AMTRELAY) parse(c *zlexer, o string) *ParseError {
 	c.Next() // zBlank
 
 	l, _ = c.Next()
-	num, err = strconv.ParseUint(l.token, 10, 8)
-	if err != nil || l.err {
-		return &ParseError{"", "bad AMTRELAY value", l}
-	}
-	if num > 1 {
+	if l.err || !(l.token == "0" || l.token == "1") {
 		return &ParseError{"", "bad discovery value", l}
 	}
-	rr.DiscoveryOptional = num == 1
+	if l.token == "1" {
+		rr.GatewayType = 0x80
+	}
+
 	c.Next() // zBlank
 
 	l, _ = c.Next()
@@ -1287,10 +1286,7 @@ func (rr *AMTRELAY) parse(c *zlexer, o string) *ParseError {
 	if err != nil || l.err {
 		return &ParseError{"", "bad AMTRELAY value", l}
 	}
-	if num > 0x7f {
-		return &ParseError{"", "bad gateway type value", l}
-	}
-	rr.GatewayType = uint8(num)
+	rr.GatewayType |= uint8(num)
 	c.Next() // zBlank
 
 	l, _ = c.Next()
@@ -1298,7 +1294,7 @@ func (rr *AMTRELAY) parse(c *zlexer, o string) *ParseError {
 		return &ParseError{"", "bad AMTRELAY gateway", l}
 	}
 
-	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType)
+	rr.GatewayAddr, rr.GatewayHost, err = parseAddrHostUnion(l.token, o, rr.GatewayType&0x7f)
 	if err != nil {
 		return &ParseError{"", "AMTRELAY " + err.Error(), l}
 	}
