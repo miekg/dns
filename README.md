@@ -80,6 +80,7 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 * https://github.com/slackhq/nebula
 * https://github.com/dnschecktool/dow-proxy
 * https://dnscheck.tools/
+* https://github.com/egbakou/domainverifier
 
 
 Send pull request if you want to be listed here.
