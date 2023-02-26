@@ -302,7 +302,7 @@ return off, err
 			}
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
-				fmt.Fprintf(b, `if off == len(msg) {
+				fmt.Fprint(b, `if off == len(msg) {
 return off, nil
 	}
 `)

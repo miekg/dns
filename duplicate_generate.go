@@ -162,7 +162,7 @@ func main() {
 				o2("if r1.%s != r2.%s {\nreturn false\n}")
 			}
 		}
-		fmt.Fprintf(b, "return true\n}\n\n")
+		fmt.Fprint(b, "return true\n}\n\n")
 	}
 
 	// gofmt
