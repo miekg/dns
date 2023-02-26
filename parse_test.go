@@ -2018,7 +2018,10 @@ func TestParseZONEMD(t *testing.T) {
 
 func TestParseIPSECKEY(t *testing.T) {
 	dt := map[string]string{
-		"ipseckey. 3600 IN IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==": "ipseckey.\t3600\tIN\tIPSECKEY\t10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                                  "ipseckey.\t3600\tIN\tIPSECKEY\t10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 1 2 1.2.3.4 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                            "ipseckey.\t3600\tIN\tIPSECKEY\t10 1 2 1.2.3.4 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 2 2 2001:470:30:84:e276:63ff:fe72:3900 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==": "ipseckey.\t3600\tIN\tIPSECKEY\t10 2 2 2001:470:30:84:e276:63ff:fe72:3900 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 3 2 ipseckey2. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                         "ipseckey.\t3600\tIN\tIPSECKEY\t10 3 2 ipseckey2. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
 	}
 
 	for i, o := range dt {
@@ -2031,8 +2034,10 @@ func TestParseIPSECKEY(t *testing.T) {
 
 func TestParseAMTRELAY(t *testing.T) {
 	dt := map[string]string{
-		"amtrelay. 3600 IN AMTRELAY 10 0 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 2 2001:470:30:84:e276:63ff:fe72:3900",
+		"amtrelay. 3600 IN AMTRELAY 10 0 0 .":                                  "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 0 .",
+		"amtrelay. 3600 IN AMTRELAY 10 0 1 1.2.3.4":                            "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 1 1.2.3.4",
 		"amtrelay. 3600 IN AMTRELAY 10 1 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 2 2001:470:30:84:e276:63ff:fe72:3900",
+		"amtrelay. 3600 IN AMTRELAY 10 1 3 amtrelay2.":                         "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 3 amtrelay2.",
 	}
 
 	for i, o := range dt {
