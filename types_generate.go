@@ -220,6 +220,28 @@ func main() {
 				o("for _, t := range rr.%s { l += len(t) + 1 }\n")
 			case st.Tag(i) == `dns:"uint48"`:
 				o("l += 6 // %s\n")
+			case st.Tag(i) == `dns:"ipsechost"`:
+				o(`switch rr.GatewayType {
+				case IPSECGatewayIPv4:
+					l += net.IPv4len
+				case IPSECGatewayIPv6:
+					l += net.IPv6len
+				case IPSECGatewayHost:
+					l += len(rr.%s) + 1
+				}
+				`)
+			case st.Tag(i) == `dns:"amtrelayhost"`:
+				o(`switch rr.GatewayType {
+				case AMTRELAYIPv4:
+					l += net.IPv4len
+				case AMTRELAYIPv6:
+					l += net.IPv6len
+				case AMTRELAYHost:
+					l += len(rr.%s) + 1
+				}
+				`)
+			case st.Tag(i) == `dns:"amtrelaytype"`:
+				o("l++ // %s\n")
 			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:

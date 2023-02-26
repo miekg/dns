@@ -2015,3 +2015,30 @@ func TestParseZONEMD(t *testing.T) {
 		}
 	}
 }
+
+func TestParseIPSECKEY(t *testing.T) {
+	dt := map[string]string{
+		"ipseckey. 3600 IN IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==": "ipseckey.\t3600\tIN\tIPSECKEY\t10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+	}
+
+	for i, o := range dt {
+		rr := testRR(i).(*IPSECKEY)
+		if s := rr.String(); s != o {
+			t.Errorf("input %#v does not match expected output %#v", s, o)
+		}
+	}
+}
+
+func TestParseAMTRELAY(t *testing.T) {
+	dt := map[string]string{
+		"amtrelay. 3600 IN AMTRELAY 10 0 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 2 2001:470:30:84:e276:63ff:fe72:3900",
+		"amtrelay. 3600 IN AMTRELAY 10 1 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 2 2001:470:30:84:e276:63ff:fe72:3900",
+	}
+
+	for i, o := range dt {
+		rr := testRR(i).(*AMTRELAY)
+		if s := rr.String(); s != o {
+			t.Errorf("input %#v does not match expected output %#v", s, o)
+		}
+	}
+}
