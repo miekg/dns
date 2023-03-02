@@ -445,28 +445,57 @@ func ExchangeConn(c net.Conn, m *Msg) (r *Msg, err error) {
 	return r, err
 }
 
-// DialTimeout acts like Dial but takes a timeout.
-func DialTimeout(network, address string, timeout time.Duration) (conn *Conn, err error) {
-	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}}
+type dialOption func(*Client)
+
+// WithTimeout returns a function that mutates the dialer timeout of a Client.
+func WithTimeout(timeout time.Duration) dialOption {
+	return func(client *Client) {
+		client.Dialer.Timeout = timeout
+	}
+}
+
+// WithTimeout returns a function that mutates the TLS config of a Client.
+func WithTLSConfig(tlsConfig *tls.Config) dialOption {
+	return func(client *Client) {
+		client.TLSConfig = tlsConfig
+	}
+}
+
+// WithLocalAddr returns a function that mutates the dialer local address of a Client.
+func WithLocalAddr(addr net.Addr) dialOption {
+	return func(client *Client) {
+		client.Dialer.LocalAddr = addr
+	}
+}
+
+// ClientDial is like (*Client).Dial but it constructs the client for you.
+func ClientDial(network, address string, opts ...dialOption) (conn *Conn, err error) {
+	client := Client{Net: network}
+	for _, f := range opts {
+		f(&client)
+	}
 	return client.Dial(address)
+}
+
+// DialTimeout acts like Dial but takes a timeout.
+func DialTimeout(network, address string, timeout time.Duration, opts ...dialOption) (conn *Conn, err error) {
+	opts = append(opts, WithTimeout(timeout))
+	return ClientDial(network, address, opts...)
 }
 
 // DialWithTLS connects to the address on the named network with TLS.
-func DialWithTLS(network, address string, tlsConfig *tls.Config) (conn *Conn, err error) {
+func DialWithTLS(network, address string, tlsConfig *tls.Config, opts ...dialOption) (conn *Conn, err error) {
 	if !strings.HasSuffix(network, "-tls") {
 		network += "-tls"
 	}
-	client := Client{Net: network, TLSConfig: tlsConfig}
-	return client.Dial(address)
+	opts = append(opts, WithTLSConfig(tlsConfig))
+	return ClientDial(network, address, opts...)
 }
 
 // DialTimeoutWithTLS acts like DialWithTLS but takes a timeout.
-func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration) (conn *Conn, err error) {
-	if !strings.HasSuffix(network, "-tls") {
-		network += "-tls"
-	}
-	client := Client{Net: network, Dialer: &net.Dialer{Timeout: timeout}, TLSConfig: tlsConfig}
-	return client.Dial(address)
+func DialTimeoutWithTLS(network, address string, tlsConfig *tls.Config, timeout time.Duration, opts ...dialOption) (conn *Conn, err error) {
+	opts = append(opts, WithTimeout(timeout))
+	return DialWithTLS(network, address, tlsConfig, opts...)
 }
 
 // ExchangeContext acts like Exchange, but honors the deadline on the provided
