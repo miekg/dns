@@ -261,7 +261,7 @@ func main() {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintf(b, "return l }\n")
+		fmt.Fprint(b, "return l }\n\n")
 	}
 
 	// Generate copy()
@@ -319,7 +319,7 @@ func main() {
 		}
 	WriteCopy:
 		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
-		fmt.Fprintf(b, "}\n")
+		fmt.Fprint(b, "}\n\n")
 	}
 
 	// gofmt
