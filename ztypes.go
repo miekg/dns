@@ -800,11 +800,11 @@ func (rr *ZONEMD) len(off int, compression map[string]struct{}) int {
 
 // copy() functions
 func (rr *A) copy() RR {
-	return &A{rr.Hdr, copyIP(rr.A)}
+	return &A{rr.Hdr, cloneSlice(rr.A)}
 }
 
 func (rr *AAAA) copy() RR {
-	return &AAAA{rr.Hdr, copyIP(rr.AAAA)}
+	return &AAAA{rr.Hdr, cloneSlice(rr.AAAA)}
 }
 
 func (rr *AFSDB) copy() RR {
@@ -812,7 +812,7 @@ func (rr *AFSDB) copy() RR {
 }
 
 func (rr *AMTRELAY) copy() RR {
-	return &AMTRELAY{rr.Hdr, rr.Precedence, rr.GatewayType, copyIP(rr.GatewayAddr), rr.GatewayHost}
+	return &AMTRELAY{rr.Hdr, rr.Precedence, rr.GatewayType, cloneSlice(rr.GatewayAddr), rr.GatewayHost}
 }
 
 func (rr *ANY) copy() RR {
@@ -828,8 +828,7 @@ func (rr *APL) copy() RR {
 }
 
 func (rr *AVC) copy() RR {
-	Txt := make([]string, len(rr.Txt))
-	copy(Txt, rr.Txt)
+	Txt := cloneSlice(rr.Txt)
 	return &AVC{rr.Hdr, Txt}
 }
 
@@ -854,8 +853,7 @@ func (rr *CNAME) copy() RR {
 }
 
 func (rr *CSYNC) copy() RR {
-	TypeBitMap := make([]uint16, len(rr.TypeBitMap))
-	copy(TypeBitMap, rr.TypeBitMap)
+	TypeBitMap := cloneSlice(rr.TypeBitMap)
 	return &CSYNC{rr.Hdr, rr.Serial, rr.Flags, TypeBitMap}
 }
 
@@ -904,8 +902,7 @@ func (rr *HINFO) copy() RR {
 }
 
 func (rr *HIP) copy() RR {
-	RendezvousServers := make([]string, len(rr.RendezvousServers))
-	copy(RendezvousServers, rr.RendezvousServers)
+	RendezvousServers := cloneSlice(rr.RendezvousServers)
 	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, RendezvousServers}
 }
 
@@ -914,7 +911,7 @@ func (rr *HTTPS) copy() RR {
 }
 
 func (rr *IPSECKEY) copy() RR {
-	return &IPSECKEY{rr.Hdr, rr.Precedence, rr.GatewayType, rr.Algorithm, copyIP(rr.GatewayAddr), rr.GatewayHost, rr.PublicKey}
+	return &IPSECKEY{rr.Hdr, rr.Precedence, rr.GatewayType, rr.Algorithm, cloneSlice(rr.GatewayAddr), rr.GatewayHost, rr.PublicKey}
 }
 
 func (rr *KEY) copy() RR {
@@ -926,7 +923,7 @@ func (rr *KX) copy() RR {
 }
 
 func (rr *L32) copy() RR {
-	return &L32{rr.Hdr, rr.Preference, copyIP(rr.Locator32)}
+	return &L32{rr.Hdr, rr.Preference, cloneSlice(rr.Locator32)}
 }
 
 func (rr *L64) copy() RR {
@@ -982,8 +979,7 @@ func (rr *NIMLOC) copy() RR {
 }
 
 func (rr *NINFO) copy() RR {
-	ZSData := make([]string, len(rr.ZSData))
-	copy(ZSData, rr.ZSData)
+	ZSData := cloneSlice(rr.ZSData)
 	return &NINFO{rr.Hdr, ZSData}
 }
 
@@ -996,14 +992,12 @@ func (rr *NSAPPTR) copy() RR {
 }
 
 func (rr *NSEC) copy() RR {
-	TypeBitMap := make([]uint16, len(rr.TypeBitMap))
-	copy(TypeBitMap, rr.TypeBitMap)
+	TypeBitMap := cloneSlice(rr.TypeBitMap)
 	return &NSEC{rr.Hdr, rr.NextDomain, TypeBitMap}
 }
 
 func (rr *NSEC3) copy() RR {
-	TypeBitMap := make([]uint16, len(rr.TypeBitMap))
-	copy(TypeBitMap, rr.TypeBitMap)
+	TypeBitMap := cloneSlice(rr.TypeBitMap)
 	return &NSEC3{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, TypeBitMap}
 }
 
@@ -1068,8 +1062,7 @@ func (rr *SOA) copy() RR {
 }
 
 func (rr *SPF) copy() RR {
-	Txt := make([]string, len(rr.Txt))
-	copy(Txt, rr.Txt)
+	Txt := cloneSlice(rr.Txt)
 	return &SPF{rr.Hdr, Txt}
 }
 
@@ -1110,8 +1103,7 @@ func (rr *TSIG) copy() RR {
 }
 
 func (rr *TXT) copy() RR {
-	Txt := make([]string, len(rr.Txt))
-	copy(Txt, rr.Txt)
+	Txt := cloneSlice(rr.Txt)
 	return &TXT{rr.Hdr, Txt}
 }
 

@@ -306,13 +306,12 @@ func main() {
 					fields = append(fields, f)
 					continue
 				}
-				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
-					f, t, f, f, f)
+				fmt.Fprintf(b, "%s := cloneSlice(rr.%s)\n", f, f)
 				fields = append(fields, f)
 				continue
 			}
 			if st.Field(i).Type().String() == "net.IP" {
-				fields = append(fields, "copyIP(rr."+f+")")
+				fields = append(fields, "cloneSlice(rr."+f+")")
 				continue
 			}
 			fields = append(fields, "rr."+f)
