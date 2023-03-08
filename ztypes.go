@@ -812,7 +812,13 @@ func (rr *AFSDB) copy() RR {
 }
 
 func (rr *AMTRELAY) copy() RR {
-	return &AMTRELAY{rr.Hdr, rr.Precedence, rr.GatewayType, cloneSlice(rr.GatewayAddr), rr.GatewayHost}
+	return &AMTRELAY{
+		rr.Hdr,
+		rr.Precedence,
+		rr.GatewayType,
+		cloneSlice(rr.GatewayAddr),
+		rr.GatewayHost,
+	}
 }
 
 func (rr *ANY) copy() RR {
@@ -832,7 +838,12 @@ func (rr *AVC) copy() RR {
 }
 
 func (rr *CAA) copy() RR {
-	return &CAA{rr.Hdr, rr.Flag, rr.Tag, rr.Value}
+	return &CAA{
+		rr.Hdr,
+		rr.Flag,
+		rr.Tag,
+		rr.Value,
+	}
 }
 
 func (rr *CDNSKEY) copy() RR {
@@ -844,7 +855,13 @@ func (rr *CDS) copy() RR {
 }
 
 func (rr *CERT) copy() RR {
-	return &CERT{rr.Hdr, rr.Type, rr.KeyTag, rr.Algorithm, rr.Certificate}
+	return &CERT{
+		rr.Hdr,
+		rr.Type,
+		rr.KeyTag,
+		rr.Algorithm,
+		rr.Certificate,
+	}
 }
 
 func (rr *CNAME) copy() RR {
@@ -852,7 +869,12 @@ func (rr *CNAME) copy() RR {
 }
 
 func (rr *CSYNC) copy() RR {
-	return &CSYNC{rr.Hdr, rr.Serial, rr.Flags, cloneSlice(rr.TypeBitMap)}
+	return &CSYNC{
+		rr.Hdr,
+		rr.Serial,
+		rr.Flags,
+		cloneSlice(rr.TypeBitMap),
+	}
 }
 
 func (rr *DHCID) copy() RR {
@@ -868,11 +890,23 @@ func (rr *DNAME) copy() RR {
 }
 
 func (rr *DNSKEY) copy() RR {
-	return &DNSKEY{rr.Hdr, rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+	return &DNSKEY{
+		rr.Hdr,
+		rr.Flags,
+		rr.Protocol,
+		rr.Algorithm,
+		rr.PublicKey,
+	}
 }
 
 func (rr *DS) copy() RR {
-	return &DS{rr.Hdr, rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+	return &DS{
+		rr.Hdr,
+		rr.KeyTag,
+		rr.Algorithm,
+		rr.DigestType,
+		rr.Digest,
+	}
 }
 
 func (rr *EID) copy() RR {
@@ -892,7 +926,12 @@ func (rr *GID) copy() RR {
 }
 
 func (rr *GPOS) copy() RR {
-	return &GPOS{rr.Hdr, rr.Longitude, rr.Latitude, rr.Altitude}
+	return &GPOS{
+		rr.Hdr,
+		rr.Longitude,
+		rr.Latitude,
+		rr.Altitude,
+	}
 }
 
 func (rr *HINFO) copy() RR {
@@ -900,7 +939,15 @@ func (rr *HINFO) copy() RR {
 }
 
 func (rr *HIP) copy() RR {
-	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, cloneSlice(rr.RendezvousServers)}
+	return &HIP{
+		rr.Hdr,
+		rr.HitLength,
+		rr.PublicKeyAlgorithm,
+		rr.PublicKeyLength,
+		rr.Hit,
+		rr.PublicKey,
+		cloneSlice(rr.RendezvousServers),
+	}
 }
 
 func (rr *HTTPS) copy() RR {
@@ -908,7 +955,15 @@ func (rr *HTTPS) copy() RR {
 }
 
 func (rr *IPSECKEY) copy() RR {
-	return &IPSECKEY{rr.Hdr, rr.Precedence, rr.GatewayType, rr.Algorithm, cloneSlice(rr.GatewayAddr), rr.GatewayHost, rr.PublicKey}
+	return &IPSECKEY{
+		rr.Hdr,
+		rr.Precedence,
+		rr.GatewayType,
+		rr.Algorithm,
+		cloneSlice(rr.GatewayAddr),
+		rr.GatewayHost,
+		rr.PublicKey,
+	}
 }
 
 func (rr *KEY) copy() RR {
@@ -928,7 +983,16 @@ func (rr *L64) copy() RR {
 }
 
 func (rr *LOC) copy() RR {
-	return &LOC{rr.Hdr, rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
+	return &LOC{
+		rr.Hdr,
+		rr.Version,
+		rr.Size,
+		rr.HorizPre,
+		rr.VertPre,
+		rr.Latitude,
+		rr.Longitude,
+		rr.Altitude,
+	}
 }
 
 func (rr *LP) copy() RR {
@@ -964,7 +1028,15 @@ func (rr *MX) copy() RR {
 }
 
 func (rr *NAPTR) copy() RR {
-	return &NAPTR{rr.Hdr, rr.Order, rr.Preference, rr.Flags, rr.Service, rr.Regexp, rr.Replacement}
+	return &NAPTR{
+		rr.Hdr,
+		rr.Order,
+		rr.Preference,
+		rr.Flags,
+		rr.Service,
+		rr.Regexp,
+		rr.Replacement,
+	}
 }
 
 func (rr *NID) copy() RR {
@@ -992,11 +1064,28 @@ func (rr *NSEC) copy() RR {
 }
 
 func (rr *NSEC3) copy() RR {
-	return &NSEC3{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, cloneSlice(rr.TypeBitMap)}
+	return &NSEC3{
+		rr.Hdr,
+		rr.Hash,
+		rr.Flags,
+		rr.Iterations,
+		rr.SaltLength,
+		rr.Salt,
+		rr.HashLength,
+		rr.NextDomain,
+		cloneSlice(rr.TypeBitMap),
+	}
 }
 
 func (rr *NSEC3PARAM) copy() RR {
-	return &NSEC3PARAM{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
+	return &NSEC3PARAM{
+		rr.Hdr,
+		rr.Hash,
+		rr.Flags,
+		rr.Iterations,
+		rr.SaltLength,
+		rr.Salt,
+	}
 }
 
 func (rr *NULL) copy() RR {
@@ -1020,7 +1109,12 @@ func (rr *PTR) copy() RR {
 }
 
 func (rr *PX) copy() RR {
-	return &PX{rr.Hdr, rr.Preference, rr.Map822, rr.Mapx400}
+	return &PX{
+		rr.Hdr,
+		rr.Preference,
+		rr.Map822,
+		rr.Mapx400,
+	}
 }
 
 func (rr *RFC3597) copy() RR {
@@ -1028,7 +1122,13 @@ func (rr *RFC3597) copy() RR {
 }
 
 func (rr *RKEY) copy() RR {
-	return &RKEY{rr.Hdr, rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey}
+	return &RKEY{
+		rr.Hdr,
+		rr.Flags,
+		rr.Protocol,
+		rr.Algorithm,
+		rr.PublicKey,
+	}
 }
 
 func (rr *RP) copy() RR {
@@ -1036,7 +1136,18 @@ func (rr *RP) copy() RR {
 }
 
 func (rr *RRSIG) copy() RR {
-	return &RRSIG{rr.Hdr, rr.TypeCovered, rr.Algorithm, rr.Labels, rr.OrigTtl, rr.Expiration, rr.Inception, rr.KeyTag, rr.SignerName, rr.Signature}
+	return &RRSIG{
+		rr.Hdr,
+		rr.TypeCovered,
+		rr.Algorithm,
+		rr.Labels,
+		rr.OrigTtl,
+		rr.Expiration,
+		rr.Inception,
+		rr.KeyTag,
+		rr.SignerName,
+		rr.Signature,
+	}
 }
 
 func (rr *RT) copy() RR {
@@ -1048,11 +1159,26 @@ func (rr *SIG) copy() RR {
 }
 
 func (rr *SMIMEA) copy() RR {
-	return &SMIMEA{rr.Hdr, rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
+	return &SMIMEA{
+		rr.Hdr,
+		rr.Usage,
+		rr.Selector,
+		rr.MatchingType,
+		rr.Certificate,
+	}
 }
 
 func (rr *SOA) copy() RR {
-	return &SOA{rr.Hdr, rr.Ns, rr.Mbox, rr.Serial, rr.Refresh, rr.Retry, rr.Expire, rr.Minttl}
+	return &SOA{
+		rr.Hdr,
+		rr.Ns,
+		rr.Mbox,
+		rr.Serial,
+		rr.Refresh,
+		rr.Retry,
+		rr.Expire,
+		rr.Minttl,
+	}
 }
 
 func (rr *SPF) copy() RR {
@@ -1060,11 +1186,22 @@ func (rr *SPF) copy() RR {
 }
 
 func (rr *SRV) copy() RR {
-	return &SRV{rr.Hdr, rr.Priority, rr.Weight, rr.Port, rr.Target}
+	return &SRV{
+		rr.Hdr,
+		rr.Priority,
+		rr.Weight,
+		rr.Port,
+		rr.Target,
+	}
 }
 
 func (rr *SSHFP) copy() RR {
-	return &SSHFP{rr.Hdr, rr.Algorithm, rr.Type, rr.FingerPrint}
+	return &SSHFP{
+		rr.Hdr,
+		rr.Algorithm,
+		rr.Type,
+		rr.FingerPrint,
+	}
 }
 
 func (rr *SVCB) copy() RR {
@@ -1072,11 +1209,22 @@ func (rr *SVCB) copy() RR {
 	for i, e := range rr.Value {
 		Value[i] = e.copy()
 	}
-	return &SVCB{rr.Hdr, rr.Priority, rr.Target, Value}
+	return &SVCB{
+		rr.Hdr,
+		rr.Priority,
+		rr.Target,
+		Value,
+	}
 }
 
 func (rr *TA) copy() RR {
-	return &TA{rr.Hdr, rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest}
+	return &TA{
+		rr.Hdr,
+		rr.KeyTag,
+		rr.Algorithm,
+		rr.DigestType,
+		rr.Digest,
+	}
 }
 
 func (rr *TALINK) copy() RR {
@@ -1084,15 +1232,43 @@ func (rr *TALINK) copy() RR {
 }
 
 func (rr *TKEY) copy() RR {
-	return &TKEY{rr.Hdr, rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
+	return &TKEY{
+		rr.Hdr,
+		rr.Algorithm,
+		rr.Inception,
+		rr.Expiration,
+		rr.Mode,
+		rr.Error,
+		rr.KeySize,
+		rr.Key,
+		rr.OtherLen,
+		rr.OtherData,
+	}
 }
 
 func (rr *TLSA) copy() RR {
-	return &TLSA{rr.Hdr, rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
+	return &TLSA{
+		rr.Hdr,
+		rr.Usage,
+		rr.Selector,
+		rr.MatchingType,
+		rr.Certificate,
+	}
 }
 
 func (rr *TSIG) copy() RR {
-	return &TSIG{rr.Hdr, rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+	return &TSIG{
+		rr.Hdr,
+		rr.Algorithm,
+		rr.TimeSigned,
+		rr.Fudge,
+		rr.MACSize,
+		rr.MAC,
+		rr.OrigId,
+		rr.Error,
+		rr.OtherLen,
+		rr.OtherData,
+	}
 }
 
 func (rr *TXT) copy() RR {
@@ -1108,7 +1284,12 @@ func (rr *UINFO) copy() RR {
 }
 
 func (rr *URI) copy() RR {
-	return &URI{rr.Hdr, rr.Priority, rr.Weight, rr.Target}
+	return &URI{
+		rr.Hdr,
+		rr.Priority,
+		rr.Weight,
+		rr.Target,
+	}
 }
 
 func (rr *X25) copy() RR {
@@ -1116,5 +1297,11 @@ func (rr *X25) copy() RR {
 }
 
 func (rr *ZONEMD) copy() RR {
-	return &ZONEMD{rr.Hdr, rr.Serial, rr.Scheme, rr.Hash, rr.Digest}
+	return &ZONEMD{
+		rr.Hdr,
+		rr.Serial,
+		rr.Scheme,
+		rr.Hash,
+		rr.Digest,
+	}
 }

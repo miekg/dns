@@ -304,7 +304,11 @@ func main() {
 			fields = append(fields, "rr."+f)
 		}
 	WriteCopy:
-		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		if len(fields) > 3 {
+			fmt.Fprintf(b, "return &%s{\n%s,\n}\n", name, strings.Join(fields, ",\n"))
+		} else {
+			fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		}
 		fmt.Fprint(b, "}\n\n")
 	}
 
