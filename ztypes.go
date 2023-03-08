@@ -828,8 +828,7 @@ func (rr *APL) copy() RR {
 }
 
 func (rr *AVC) copy() RR {
-	Txt := cloneSlice(rr.Txt)
-	return &AVC{rr.Hdr, Txt}
+	return &AVC{rr.Hdr, cloneSlice(rr.Txt)}
 }
 
 func (rr *CAA) copy() RR {
@@ -853,8 +852,7 @@ func (rr *CNAME) copy() RR {
 }
 
 func (rr *CSYNC) copy() RR {
-	TypeBitMap := cloneSlice(rr.TypeBitMap)
-	return &CSYNC{rr.Hdr, rr.Serial, rr.Flags, TypeBitMap}
+	return &CSYNC{rr.Hdr, rr.Serial, rr.Flags, cloneSlice(rr.TypeBitMap)}
 }
 
 func (rr *DHCID) copy() RR {
@@ -902,8 +900,7 @@ func (rr *HINFO) copy() RR {
 }
 
 func (rr *HIP) copy() RR {
-	RendezvousServers := cloneSlice(rr.RendezvousServers)
-	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, RendezvousServers}
+	return &HIP{rr.Hdr, rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, cloneSlice(rr.RendezvousServers)}
 }
 
 func (rr *HTTPS) copy() RR {
@@ -979,8 +976,7 @@ func (rr *NIMLOC) copy() RR {
 }
 
 func (rr *NINFO) copy() RR {
-	ZSData := cloneSlice(rr.ZSData)
-	return &NINFO{rr.Hdr, ZSData}
+	return &NINFO{rr.Hdr, cloneSlice(rr.ZSData)}
 }
 
 func (rr *NS) copy() RR {
@@ -992,13 +988,11 @@ func (rr *NSAPPTR) copy() RR {
 }
 
 func (rr *NSEC) copy() RR {
-	TypeBitMap := cloneSlice(rr.TypeBitMap)
-	return &NSEC{rr.Hdr, rr.NextDomain, TypeBitMap}
+	return &NSEC{rr.Hdr, rr.NextDomain, cloneSlice(rr.TypeBitMap)}
 }
 
 func (rr *NSEC3) copy() RR {
-	TypeBitMap := cloneSlice(rr.TypeBitMap)
-	return &NSEC3{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, TypeBitMap}
+	return &NSEC3{rr.Hdr, rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, cloneSlice(rr.TypeBitMap)}
 }
 
 func (rr *NSEC3PARAM) copy() RR {
@@ -1062,8 +1056,7 @@ func (rr *SOA) copy() RR {
 }
 
 func (rr *SPF) copy() RR {
-	Txt := cloneSlice(rr.Txt)
-	return &SPF{rr.Hdr, Txt}
+	return &SPF{rr.Hdr, cloneSlice(rr.Txt)}
 }
 
 func (rr *SRV) copy() RR {
@@ -1103,8 +1096,7 @@ func (rr *TSIG) copy() RR {
 }
 
 func (rr *TXT) copy() RR {
-	Txt := cloneSlice(rr.Txt)
-	return &TXT{rr.Hdr, Txt}
+	return &TXT{rr.Hdr, cloneSlice(rr.Txt)}
 }
 
 func (rr *UID) copy() RR {
