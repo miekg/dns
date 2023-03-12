@@ -623,7 +623,7 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 }
 
 func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	pairs = append([]SVCBKeyValue(nil), pairs...)
+	pairs = cloneSlice(pairs)
 	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
 	})

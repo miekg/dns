@@ -287,38 +287,28 @@ func main() {
 					splits := strings.Split(t, ".")
 					t = splits[len(splits)-1]
 				}
-				// For the EDNS0 interface (used in the OPT RR), we need to call the copy method on each element.
-				if t == "EDNS0" {
+				// For the EDNS0 interface (and others), we need to call the copy method on each element.
+				if t == "EDNS0" || t == "APLPrefix" || t == "SVCBKeyValue" {
 					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
 						f, t, f, f, f)
 					fields = append(fields, f)
 					continue
 				}
-				if t == "APLPrefix" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
-						f, t, f, f, f)
-					fields = append(fields, f)
-					continue
-				}
-				if t == "SVCBKeyValue" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
-						f, t, f, f, f)
-					fields = append(fields, f)
-					continue
-				}
-				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
-					f, t, f, f, f)
-				fields = append(fields, f)
+				fields = append(fields, "cloneSlice(rr."+f+")")
 				continue
 			}
 			if st.Field(i).Type().String() == "net.IP" {
-				fields = append(fields, "copyIP(rr."+f+")")
+				fields = append(fields, "cloneSlice(rr."+f+")")
 				continue
 			}
 			fields = append(fields, "rr."+f)
 		}
 	WriteCopy:
-		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		if len(fields) > 3 {
+			fmt.Fprintf(b, "return &%s{\n%s,\n}\n", name, strings.Join(fields, ",\n"))
+		} else {
+			fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		}
 		fmt.Fprint(b, "}\n\n")
 	}
 
