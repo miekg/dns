@@ -43,7 +43,7 @@ const (
 	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
 	// length, then the final label can only be 61 octets long to not exceed the
 	// maximum allowed wire length.
-	maxDomainNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
+	maxDomainNamePresentationLength = 1004 // (61*4) + 1 + (63*4) + 1 + (63*4) + 1 + (63*4) + 1
 )
 
 // Errors defined in this package.
