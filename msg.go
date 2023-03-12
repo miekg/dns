@@ -448,7 +448,7 @@ Loop:
 	return string(s), off1, nil
 }
 
-func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
+func packTxt(txt []string, msg []byte, offset int) (int, error) {
 	if len(txt) == 0 {
 		if offset >= len(msg) {
 			return offset, ErrBuf
@@ -458,10 +458,7 @@ func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 	}
 	var err error
 	for _, s := range txt {
-		if len(s) > len(tmp) {
-			return offset, ErrBuf
-		}
-		offset, err = packTxtString(s, msg, offset, tmp)
+		offset, err = packTxtString(s, msg, offset)
 		if err != nil {
 			return offset, err
 		}
@@ -469,32 +466,30 @@ func packTxt(txt []string, msg []byte, offset int, tmp []byte) (int, error) {
 	return offset, nil
 }
 
-func packTxtString(s string, msg []byte, offset int, tmp []byte) (int, error) {
+func packTxtString(s string, msg []byte, offset int) (int, error) {
 	lenByteOffset := offset
-	if offset >= len(msg) || len(s) > len(tmp) {
+	if offset >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
 		return offset, ErrBuf
 	}
 	offset++
-	bs := tmp[:len(s)]
-	copy(bs, s)
-	for i := 0; i < len(bs); i++ {
+	for i := 0; i < len(s); i++ {
 		if len(msg) <= offset {
 			return offset, ErrBuf
 		}
-		if bs[i] == '\\' {
+		if s[i] == '\\' {
 			i++
-			if i == len(bs) {
+			if i == len(s) {
 				break
 			}
 			// check for \DDD
-			if i+2 < len(bs) && isDigit(bs[i]) && isDigit(bs[i+1]) && isDigit(bs[i+2]) {
-				msg[offset] = dddToByte(bs[i:])
+			if i+2 < len(s) && isDigit(s[i]) && isDigit(s[i+1]) && isDigit(s[i+2]) {
+				msg[offset] = dddStringToByte(s[i:])
 				i += 2
 			} else {
-				msg[offset] = bs[i]
+				msg[offset] = s[i]
 			}
 		} else {
-			msg[offset] = bs[i]
+			msg[offset] = s[i]
 		}
 		offset++
 	}
