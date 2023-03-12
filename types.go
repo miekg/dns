@@ -632,7 +632,7 @@ func nextByte(s string, offset int) (byte, int) {
 	case 2, 3: // too short to be \ddd
 	default: // maybe \ddd
 		if isDigit(s[offset+1]) && isDigit(s[offset+2]) && isDigit(s[offset+3]) {
-			return dddStringToByte(s[offset+1:]), 4
+			return dddToByte(s[offset+1:]), 4
 		}
 	}
 	// not \ddd, just an RFC 1035 "quoted" character

@@ -483,7 +483,7 @@ func packTxtString(s string, msg []byte, offset int) (int, error) {
 			}
 			// check for \DDD
 			if i+2 < len(s) && isDigit(s[i]) && isDigit(s[i+1]) && isDigit(s[i+2]) {
-				msg[offset] = dddStringToByte(s[i:])
+				msg[offset] = dddToByte(s[i:])
 				i += 2
 			} else {
 				msg[offset] = s[i]
@@ -546,12 +546,7 @@ func unpackTxt(msg []byte, off0 int) (ss []string, off int, err error) {
 // Helpers for dealing with escaped bytes
 func isDigit(b byte) bool { return b >= '0' && b <= '9' }
 
-func dddToByte(s []byte) byte {
-	_ = s[2] // bounds check hint to compiler; see golang.org/issue/14808
-	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
-}
-
-func dddStringToByte(s string) byte {
+func dddToByte[T ~[]byte | ~string](s T) byte {
 	_ = s[2] // bounds check hint to compiler; see golang.org/issue/14808
 	return byte((s[0]-'0')*100 + (s[1]-'0')*10 + (s[2] - '0'))
 }
