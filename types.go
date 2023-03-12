@@ -631,7 +631,7 @@ func nextByte(s string, offset int) (byte, int) {
 		return 0, 0
 	case 2, 3: // too short to be \ddd
 	default: // maybe \ddd
-		if isDigit(s[offset+1]) && isDigit(s[offset+2]) && isDigit(s[offset+3]) {
+		if isDDD(s[offset+1:]) {
 			return dddToByte(s[offset+1:]), 4
 		}
 	}

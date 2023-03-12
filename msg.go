@@ -252,7 +252,7 @@ loop:
 			}
 
 			// check for \DDD
-			if i+3 < ls && isDigit(bs[i+1]) && isDigit(bs[i+2]) && isDigit(bs[i+3]) {
+			if isDDD(bs[i+1:]) {
 				bs[i] = dddToByte(bs[i+1:])
 				copy(bs[i+1:ls-3], bs[i+4:])
 				ls -= 3
@@ -482,7 +482,7 @@ func packTxtString(s string, msg []byte, offset int) (int, error) {
 				break
 			}
 			// check for \DDD
-			if i+2 < len(s) && isDigit(s[i]) && isDigit(s[i+1]) && isDigit(s[i+2]) {
+			if isDDD(s[i:]) {
 				msg[offset] = dddToByte(s[i:])
 				i += 2
 			} else {
@@ -517,7 +517,7 @@ func packOctetString(s string, msg []byte, offset int, tmp []byte) (int, error) 
 				break
 			}
 			// check for \DDD
-			if i+2 < len(bs) && isDigit(bs[i]) && isDigit(bs[i+1]) && isDigit(bs[i+2]) {
+			if isDDD(bs[i:]) {
 				msg[offset] = dddToByte(bs[i:])
 				i += 2
 			} else {
@@ -545,6 +545,10 @@ func unpackTxt(msg []byte, off0 int) (ss []string, off int, err error) {
 
 // Helpers for dealing with escaped bytes
 func isDigit(b byte) bool { return b >= '0' && b <= '9' }
+
+func isDDD[T ~[]byte | ~string](s T) bool {
+	return len(s) >= 3 && isDigit(s[0]) && isDigit(s[1]) && isDigit(s[2])
+}
 
 func dddToByte[T ~[]byte | ~string](s T) byte {
 	_ = s[2] // bounds check hint to compiler; see golang.org/issue/14808
@@ -1014,7 +1018,7 @@ func escapedNameLen(s string) int {
 			continue
 		}
 
-		if i+3 < len(s) && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
+		if isDDD(s[i+1:]) {
 			nameLen -= 3
 			i += 3
 		} else {
