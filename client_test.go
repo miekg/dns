@@ -6,106 +6,135 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
 
+// tempDir creates a temporary directory for tests and automatically removes it
+// using t.Cleanup(). The reason for this is to work around some limitations
+// in socket file name lengths.
+//
+// Ref:
+// - https://github.com/golang/go/blob/go1.20.2/src/syscall/ztypes_darwin_arm64.go#L178
+// - https://github.com/golang/go/blob/go1.20.2/src/syscall/ztypes_linux_arm64.go#L175
+func tempDir(t *testing.T) string {
+	dir, err := os.MkdirTemp("", strings.ReplaceAll(t.Name(), string(filepath.Separator), "-"))
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+
+	t.Cleanup(func() {
+		os.RemoveAll(dir)
+	})
+	return dir
+}
+
 func TestIsPacketConn(t *testing.T) {
-	// UDP
-	s, addrstr, _, err := RunLocalUDPServer(":0")
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-	c, err := net.Dial("udp", addrstr)
-	if err != nil {
-		t.Fatalf("failed to dial: %v", err)
-	}
-	defer c.Close()
-	if !isPacketConn(c) {
-		t.Error("UDP connection should be a packet conn")
-	}
-	if !isPacketConn(struct{ *net.UDPConn }{c.(*net.UDPConn)}) {
-		t.Error("UDP connection (wrapped type) should be a packet conn")
-	}
+	t.Run("UDP", func(t *testing.T) {
+		s, addrstr, _, err := RunLocalUDPServer(":0")
+		if err != nil {
+			t.Fatalf("unable to run test server: %v", err)
+		}
+		defer s.Shutdown()
+		c, err := net.Dial("udp", addrstr)
+		if err != nil {
+			t.Fatalf("failed to dial: %v", err)
+		}
+		defer c.Close()
+		if !isPacketConn(c) {
+			t.Error("UDP connection should be a packet conn")
+		}
+		if !isPacketConn(struct{ *net.UDPConn }{c.(*net.UDPConn)}) {
+			t.Error("UDP connection (wrapped type) should be a packet conn")
+		}
+	})
 
-	// TCP
-	s, addrstr, _, err = RunLocalTCPServer(":0")
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-	c, err = net.Dial("tcp", addrstr)
-	if err != nil {
-		t.Fatalf("failed to dial: %v", err)
-	}
-	defer c.Close()
-	if isPacketConn(c) {
-		t.Error("TCP connection should not be a packet conn")
-	}
-	if isPacketConn(struct{ *net.TCPConn }{c.(*net.TCPConn)}) {
-		t.Error("TCP connection (wrapped type) should not be a packet conn")
-	}
+	t.Run("TCP", func(t *testing.T) {
+		s, addrstr, _, err := RunLocalTCPServer(":0")
+		if err != nil {
+			t.Fatalf("unable to run test server: %v", err)
+		}
+		defer s.Shutdown()
+		c, err := net.Dial("tcp", addrstr)
+		if err != nil {
+			t.Fatalf("failed to dial: %v", err)
+		}
+		defer c.Close()
+		if isPacketConn(c) {
+			t.Error("TCP connection should not be a packet conn")
+		}
+		if isPacketConn(struct{ *net.TCPConn }{c.(*net.TCPConn)}) {
+			t.Error("TCP connection (wrapped type) should not be a packet conn")
+		}
+	})
 
-	// Unix datagram
-	s, addrstr, _, err = RunLocalUnixGramServer(filepath.Join(t.TempDir(), "unixgram.sock"))
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-	c, err = net.Dial("unixgram", addrstr)
-	if err != nil {
-		t.Fatalf("failed to dial: %v", err)
-	}
-	defer c.Close()
-	if !isPacketConn(c) {
-		t.Error("Unix datagram connection should be a packet conn")
-	}
-	if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
-		t.Error("Unix datagram connection (wrapped type) should be a packet conn")
-	}
+	t.Run("Unix datagram", func(t *testing.T) {
+		s, addrstr, _, err := RunLocalUnixGramServer(filepath.Join(tempDir(t), "unixgram.sock"))
+		if err != nil {
+			t.Fatalf("unable to run test server: %v", err)
+		}
+		defer s.Shutdown()
+		c, err := net.Dial("unixgram", addrstr)
+		if err != nil {
+			t.Fatalf("failed to dial: %v", err)
+		}
+		defer c.Close()
+		if !isPacketConn(c) {
+			t.Error("Unix datagram connection should be a packet conn")
+		}
+		if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+			t.Error("Unix datagram connection (wrapped type) should be a packet conn")
+		}
+	})
 
-	// Unix Seqpacket
-	shutChan, addrstr, err := RunLocalUnixSeqPacketServer(filepath.Join(t.TempDir(), "unixpacket.sock"))
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
+	t.Run("Unix Seqpacket", func(t *testing.T) {
+		shutChan, addrstr, err := RunLocalUnixSeqPacketServer(filepath.Join(tempDir(t), "unixpacket.sock"))
+		if err != nil {
+			if errors.Is(err, syscall.EPROTONOSUPPORT) {
+				t.Skip("unix seqpacket not supported on this OS")
+			}
+			t.Fatalf("unable to run test server: %v", err)
+		}
 
-	defer func() {
-		shutChan <- &struct{}{}
-	}()
-	c, err = net.Dial("unixpacket", addrstr)
-	if err != nil {
-		t.Fatalf("failed to dial: %v", err)
-	}
-	defer c.Close()
-	if !isPacketConn(c) {
-		t.Error("Unix datagram connection should be a packet conn")
-	}
-	if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
-		t.Error("Unix datagram connection (wrapped type) should be a packet conn")
-	}
+		defer func() {
+			shutChan <- &struct{}{}
+		}()
+		c, err := net.Dial("unixpacket", addrstr)
+		if err != nil {
+			t.Fatalf("failed to dial: %v", err)
+		}
+		defer c.Close()
+		if !isPacketConn(c) {
+			t.Error("Unix datagram connection should be a packet conn")
+		}
+		if !isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+			t.Error("Unix datagram connection (wrapped type) should be a packet conn")
+		}
+	})
 
-	// Unix stream
-	s, addrstr, _, err = RunLocalUnixServer(filepath.Join(t.TempDir(), "unixstream.sock"))
-	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer s.Shutdown()
-	c, err = net.Dial("unix", addrstr)
-	if err != nil {
-		t.Fatalf("failed to dial: %v", err)
-	}
-	defer c.Close()
-	if isPacketConn(c) {
-		t.Error("Unix stream connection should not be a packet conn")
-	}
-	if isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
-		t.Error("Unix stream connection (wrapped type) should not be a packet conn")
-	}
+	t.Run("Unix stream", func(t *testing.T) {
+		s, addrstr, _, err := RunLocalUnixServer(filepath.Join(tempDir(t), "unixstream.sock"))
+		if err != nil {
+			t.Fatalf("unable to run test server: %v", err)
+		}
+		defer s.Shutdown()
+		c, err := net.Dial("unix", addrstr)
+		if err != nil {
+			t.Fatalf("failed to dial: %v", err)
+		}
+		defer c.Close()
+		if isPacketConn(c) {
+			t.Error("Unix stream connection should not be a packet conn")
+		}
+		if isPacketConn(struct{ *net.UnixConn }{c.(*net.UnixConn)}) {
+			t.Error("Unix stream connection (wrapped type) should not be a packet conn")
+		}
+	})
 }
 
 func TestDialUDP(t *testing.T) {
@@ -490,7 +519,6 @@ func TestClientConnWriteSinglePacket(t *testing.T) {
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeTXT)
 	err := conn.WriteMsg(m)
-
 	if err != nil {
 		t.Fatalf("failed to write: %v", err)
 	}
