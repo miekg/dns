@@ -2,7 +2,6 @@ package dns
 
 import (
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -49,8 +48,7 @@ func TestZoneParserGenerate(t *testing.T) {
 }
 
 func TestZoneParserInclude(t *testing.T) {
-
-	tmpfile, err := ioutil.TempFile("", "dns")
+	tmpfile, err := os.CreateTemp("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
 	}
@@ -99,7 +97,7 @@ func TestZoneParserInclude(t *testing.T) {
 }
 
 func TestZoneParserIncludeDisallowed(t *testing.T) {
-	tmpfile, err := ioutil.TempFile("", "dns")
+	tmpfile, err := os.CreateTemp("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %s", err)
 	}

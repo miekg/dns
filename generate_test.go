@@ -2,7 +2,6 @@ package dns
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,22 +9,18 @@ import (
 )
 
 func TestGenerateRangeGuard(t *testing.T) {
-	tmpdir, err := ioutil.TempDir("", "dns")
-	if err != nil {
-		t.Fatalf("could not create tmpdir for test: %v", err)
-	}
-	defer os.RemoveAll(tmpdir)
+	tmpdir := t.TempDir()
 
 	for i := 0; i <= 1; i++ {
 		path := filepath.Join(tmpdir, fmt.Sprintf("%04d.conf", i))
 		data := []byte(fmt.Sprintf("dhcp-%04d A 10.0.0.%d", i, i))
 
-		if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		if err := os.WriteFile(path, data, 0o644); err != nil {
 			t.Fatalf("could not create tmpfile for test: %v", err)
 		}
 	}
 
-	var tests = [...]struct {
+	tests := [...]struct {
 		zone string
 		fail bool
 	}{
@@ -85,7 +80,7 @@ $GENERATE 0-2 dhcp-${0,4,d} A 10.1.0.$
 }
 
 func TestGenerateIncludeDepth(t *testing.T) {
-	tmpfile, err := ioutil.TempFile("", "dns")
+	tmpfile, err := os.CreateTemp("", "dns")
 	if err != nil {
 		t.Fatalf("could not create tmpfile for test: %v", err)
 	}
