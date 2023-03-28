@@ -434,7 +434,7 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 			if got.Negation != tt.negation {
 				t.Errorf("expected negation %v, got %v", tt.negation, got.Negation)
 			}
-			if !bytes.Equal(got.Network.IP, tt.ip) {
+			if !tt.ip.Equal(got.Network.IP) {
 				t.Errorf("expected IP %02x, got %02x", tt.ip, got.Network.IP)
 			}
 			if !bytes.Equal(got.Network.Mask, tt.mask) {
@@ -583,7 +583,7 @@ func TestUnpackDataApl(t *testing.T) {
 		if got[i].Negation != exp.Negation {
 			t.Errorf("[%d] expected negation %v, got %v", i, exp.Negation, got[i].Negation)
 		}
-		if !bytes.Equal(got[i].Network.IP, exp.Network.IP) {
+		if !exp.Network.IP.Equal(got[i].Network.IP) {
 			t.Errorf("[%d] expected IP %02x, got %02x", i, exp.Network.IP, got[i].Network.IP)
 		}
 		if !bytes.Equal(got[i].Network.Mask, exp.Network.Mask) {

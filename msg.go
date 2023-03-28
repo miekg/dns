@@ -860,7 +860,7 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	// The header counts might have been wrong so we need to update it
 	dh.Nscount = uint16(len(dns.Ns))
 	if err == nil {
-		dns.Extra, off, err = unpackRRslice(int(dh.Arcount), msg, off)
+		dns.Extra, _, err = unpackRRslice(int(dh.Arcount), msg, off)
 	}
 	// The header counts might have been wrong so we need to update it
 	dh.Arcount = uint16(len(dns.Extra))
@@ -870,11 +870,11 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 		dns.Rcode |= opt.ExtendedRcode()
 	}
 
-	if off != len(msg) {
-		// TODO(miek) make this an error?
-		// use PackOpt to let people tell how detailed the error reporting should be?
-		// println("dns: extra bytes in dns packet", off, "<", len(msg))
-	}
+	// TODO(miek) make this an error?
+	// use PackOpt to let people tell how detailed the error reporting should be?
+	// if off != len(msg) {
+	// 	// println("dns: extra bytes in dns packet", off, "<", len(msg))
+	// }
 	return err
 
 }
