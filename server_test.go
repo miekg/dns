@@ -119,6 +119,12 @@ func RunLocalUDPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 	return RunLocalServer(pc, nil, opts...)
 }
 
+func RunLocalUDPServerLimited(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	return RunLocalUDPServer(laddr, append(opts, func(srv *Server) {
+		srv.MaxGoroutines = 1
+	})...)
+}
+
 func RunLocalPacketConnServer(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
 	return RunLocalUDPServer(laddr, append(opts, func(srv *Server) {
 		// Make srv.PacketConn opaque to trigger the generic code paths.
@@ -133,6 +139,12 @@ func RunLocalTCPServer(laddr string, opts ...func(*Server)) (*Server, string, ch
 	}
 
 	return RunLocalServer(nil, l, opts...)
+}
+
+func RunLocalTCPServerLimited(laddr string, opts ...func(*Server)) (*Server, string, chan error, error) {
+	return RunLocalTCPServer(laddr, append(opts, func(srv *Server) {
+		srv.MaxGoroutines = 1
+	})...)
 }
 
 func RunLocalTLSServer(laddr string, config *tls.Config) (*Server, string, chan error, error) {
@@ -182,6 +194,8 @@ func TestServing(t *testing.T) {
 	}{
 		{"udp", "udp", RunLocalUDPServer},
 		{"tcp", "tcp", RunLocalTCPServer},
+		{"udp-limited", "udp", RunLocalUDPServerLimited},
+		{"tcp-limited", "tcp", RunLocalTCPServerLimited},
 		{"PacketConn", "udp", RunLocalPacketConnServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

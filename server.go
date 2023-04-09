@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/semaphore"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -77,6 +79,11 @@ type response struct {
 	udpSession     *SessionUDP    // oob data to get egress interface right
 	pcSession      net.Addr       // address to use when writing to a generic net.PacketConn
 	writer         Writer         // writer to output the raw DNS bits
+}
+
+type limiter struct {
+	ctx context.Context
+	sem *semaphore.Weighted
 }
 
 // handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
@@ -229,6 +236,9 @@ type Server struct {
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
 	// By default DefaultMsgAcceptFunc will be used.
 	MsgAcceptFunc MsgAcceptFunc
+	// MaxGoroutines limits the number goroutines created by the server.
+	// A negative or zero value means unlimited.
+	MaxGoroutines int64
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -238,6 +248,7 @@ type Server struct {
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
+	limiter *limiter
 }
 
 func (srv *Server) tsigProvider() TsigProvider {
@@ -443,6 +454,8 @@ func (srv *Server) getReadTimeout() time.Duration {
 func (srv *Server) serveTCP(l net.Listener) error {
 	defer l.Close()
 
+	srv.limiter = newLimiter(srv.MaxGoroutines)
+
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -469,6 +482,7 @@ func (srv *Server) serveTCP(l net.Listener) error {
 		srv.conns[rw] = struct{}{}
 		srv.lock.Unlock()
 		wg.Add(1)
+		srv.limiter.Acquire()
 		go srv.serveTCPConn(&wg, rw)
 	}
 
@@ -478,6 +492,8 @@ func (srv *Server) serveTCP(l net.Listener) error {
 // serveUDP starts a UDP listener for the server.
 func (srv *Server) serveUDP(l net.PacketConn) error {
 	defer l.Close()
+
+	srv.limiter = newLimiter(srv.MaxGoroutines)
 
 	reader := Reader(defaultReader{srv})
 	if srv.DecorateReader != nil {
@@ -530,6 +546,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			continue
 		}
 		wg.Add(1)
+		srv.limiter.Acquire()
 		go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
 	}
 
@@ -538,6 +555,8 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
+	defer srv.limiter.Release()
+
 	w := &response{tsigProvider: srv.tsigProvider(), tcp: rw}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -593,6 +612,8 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
+	defer srv.limiter.Release()
+
 	w := &response{tsigProvider: srv.tsigProvider(), udp: u, udpSession: udpSession, pcSession: pcSession}
 	if srv.DecorateWriter != nil {
 		w.writer = srv.DecorateWriter(w)
@@ -833,4 +854,29 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 		return &t
 	}
 	return nil
+}
+
+func newLimiter(max int64) *limiter {
+	var sem *semaphore.Weighted
+	if max > 0 {
+		sem = semaphore.NewWeighted(max)
+	}
+	return &limiter{
+		ctx: context.Background(),
+		sem: sem,
+	}
+}
+
+func (l *limiter) Acquire() {
+	if l.sem == nil {
+		return
+	}
+	l.sem.Acquire(l.ctx, 1)
+}
+
+func (l *limiter) Release() {
+	if l.sem == nil {
+		return
+	}
+	l.sem.Release(1)
 }
