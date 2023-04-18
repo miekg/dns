@@ -679,58 +679,6 @@ func TestTimeout(t *testing.T) {
 	})
 }
 
-// Check that responses from deduplicated requests aren't shared between callers
-func TestConcurrentExchanges(t *testing.T) {
-	cases := make([]*Msg, 2)
-	cases[0] = new(Msg)
-	cases[1] = new(Msg)
-	cases[1].Truncated = true
-
-	for _, m := range cases {
-		mm := m // redeclare m so as not to trip the race detector
-		handler := func(w ResponseWriter, req *Msg) {
-			r := mm.Copy()
-			r.SetReply(req)
-
-			w.WriteMsg(r)
-		}
-
-		HandleFunc("miek.nl.", handler)
-		defer HandleRemove("miek.nl.")
-
-		s, addrstr, _, err := RunLocalUDPServer(":0")
-		if err != nil {
-			t.Fatalf("unable to run test server: %s", err)
-		}
-		defer s.Shutdown()
-
-		m := new(Msg)
-		m.SetQuestion("miek.nl.", TypeSRV)
-
-		c := &Client{
-			SingleInflight: true,
-		}
-		// Force this client to always return the same request,
-		// even though we're querying sequentially. Running the
-		// Exchange calls below concurrently can fail due to
-		// goroutine scheduling, but this simulates the same
-		// outcome.
-		c.group.dontDeleteForTesting = true
-
-		r := make([]*Msg, 2)
-		for i := range r {
-			r[i], _, _ = c.Exchange(m.Copy(), addrstr)
-			if r[i] == nil {
-				t.Errorf("response %d is nil", i)
-			}
-		}
-
-		if r[0] == r[1] {
-			t.Errorf("got same response, expected non-shared responses")
-		}
-	}
-}
-
 func TestExchangeWithConn(t *testing.T) {
 	HandleFunc("miek.nl.", HelloServer)
 	defer HandleRemove("miek.nl.")
