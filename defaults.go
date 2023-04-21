@@ -285,7 +285,7 @@ func IsFqdn(s string) bool {
 	}
 
 	// Otherwise we have to check if the dot is escaped or not by checking if
-	// the escape sequences before the dot is odd or even.
+	// there are an odd or even number of escape sequences before the dot.
 	i := strings.LastIndexFunc(s, func(r rune) bool {
 		return r != '\\'
 	})
