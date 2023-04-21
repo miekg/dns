@@ -67,7 +67,7 @@ type Client struct {
 	// time.
 	//
 	// Deprecated: This is a no-op. Callers should implement their own in flight
-	// query caching.
+	// query caching if needed. See github.com/miekg/dns/issues/1449.
 	SingleInflight bool
 }
 
