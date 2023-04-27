@@ -1975,3 +1975,22 @@ func TestParseOPENPGPKEY(t *testing.T) {
 		}
 	}
 }
+
+func TestParseRRSIGAlgNames(t *testing.T) {
+	tests := map[string]bool{
+		`miek.nl.  IN RRSIG SOA RSASHA1 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:         true,
+		`miek.nl.  IN RRSIG SOA RSAMD5 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:          true,
+		`miek.nl.  IN RRSIG SOA ECC-GOST 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:        true,
+		`miek.nl.  IN RRSIG SOA ED448 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:           true,
+		`miek.nl.  IN RRSIG SOA ECDSAP256SHA256 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`: true,
+		`miek.nl.  IN RRSIG SOA INDIRECT 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:        true,
+		`miek.nl.  IN RRSIG SOA BLA 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:             false,
+		`miek.nl.  IN RRSIG SOA - 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:               false,
+	}
+	for r, ok := range tests {
+		_, err := NewRR(r)
+		if err != nil && ok {
+			t.Error(err)
+		}
+	}
+}
