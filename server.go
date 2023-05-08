@@ -429,6 +429,11 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 	return ctxErr
 }
 
+// ActiveConns returns the number for active TCP connections
+func (srv Server) ActiveConns() int {
+	return len(srv.conns)
+}
+
 var testShutdownNotify *sync.Cond
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
