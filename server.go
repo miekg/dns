@@ -430,8 +430,11 @@ func (srv *Server) ShutdownContext(ctx context.Context) error {
 }
 
 // ActiveConns returns the number for active TCP connections
-func (srv Server) ActiveConns() int {
-	return len(srv.conns)
+func (srv *Server) ActiveConns() int {
+	srv.lock.RLock()
+	n := len(srv.conns)
+	srv.lock.RUnlock()
+	return n
 }
 
 var testShutdownNotify *sync.Cond
