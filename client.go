@@ -51,6 +51,8 @@ type ContextDialer interface {
 	DialContext(ctx context.Context, network, address string) (net.Conn, error)
 }
 
+var _ ContextDialer = (*net.Dialer)(nil)
+
 // A Client defines parameters for a DNS client.
 type Client struct {
 	Net       string        // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
