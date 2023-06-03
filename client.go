@@ -46,12 +46,17 @@ func (co *Conn) tsigProvider() TsigProvider {
 	return tsigSecretProvider(co.TsigSecret)
 }
 
+// ContextDialer is any type that implements DialContext, like net.Dialer.
+type ContextDialer interface {
+	DialContext(ctx context.Context, network, address string) (net.Conn, error)
+}
+
 // A Client defines parameters for a DNS client.
 type Client struct {
-	Net       string      // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
-	UDPSize   uint16      // minimum receive buffer for UDP messages
-	TLSConfig *tls.Config // TLS connection configuration
-	Dialer    *net.Dialer // a net.Dialer used to set local address, timeouts and more
+	Net       string        // if "tcp" or "tcp-tls" (DNS over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP)
+	UDPSize   uint16        // minimum receive buffer for UDP messages
+	TLSConfig *tls.Config   // TLS connection configuration
+	Dialer    ContextDialer // a ContextDialer used to set local address, timeouts and more
 	// Timeout is a cumulative timeout for dial, write and read, defaults to 0 (disabled) - overrides DialTimeout, ReadTimeout,
 	// WriteTimeout when non-zero. Can be overridden with net.Dialer.Timeout (see Client.ExchangeWithDialer and
 	// Client.Dialer) or context.Context.Deadline (see ExchangeContext)
@@ -113,11 +118,11 @@ func (c *Client) Dial(address string) (conn *Conn, err error) {
 // DialContext connects to the address on the named network, with a context.Context.
 func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, err error) {
 	// create a new dialer with the appropriate timeout
-	var d net.Dialer
+	var d ContextDialer
 	if c.Dialer == nil {
-		d = net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
+		d = &net.Dialer{Timeout: c.getTimeoutForRequest(c.dialTimeout())}
 	} else {
-		d = *c.Dialer
+		d = c.Dialer
 	}
 
 	network := c.Net
@@ -131,8 +136,9 @@ func (c *Client) DialContext(ctx context.Context, address string) (conn *Conn, e
 	if useTLS {
 		network = strings.TrimSuffix(network, "-tls")
 
+		nd, _ := d.(*net.Dialer)
 		tlsDialer := tls.Dialer{
-			NetDialer: &d,
+			NetDialer: nd,
 			Config:    c.TLSConfig,
 		}
 		conn.Conn, err = tlsDialer.DialContext(ctx, network, address)
@@ -376,9 +382,9 @@ func (c *Client) getTimeoutForRequest(timeout time.Duration) time.Duration {
 	}
 	// net.Dialer.Timeout has priority if smaller than the timeouts computed so
 	// far
-	if c.Dialer != nil && c.Dialer.Timeout != 0 {
-		if c.Dialer.Timeout < requestTimeout {
-			requestTimeout = c.Dialer.Timeout
+	if d, ok := c.Dialer.(*net.Dialer); ok && d != nil && d.Timeout != 0 {
+		if d.Timeout < requestTimeout {
+			requestTimeout = d.Timeout
 		}
 	}
 	return requestTimeout

@@ -180,7 +180,10 @@ func TestClientLocalAddress(t *testing.T) {
 
 	c := new(Client)
 	laddr := net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 12345, Zone: ""}
-	c.Dialer = &net.Dialer{LocalAddr: &laddr}
+	type Dialer struct {
+		*net.Dialer
+	}
+	c.Dialer = Dialer{&net.Dialer{LocalAddr: &laddr}} // Wrapping net.Dialer should continue to work
 	r, _, err := c.Exchange(m, addrstr)
 	if err != nil {
 		t.Fatalf("failed to exchange: %v", err)
