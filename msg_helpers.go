@@ -18,7 +18,7 @@ import (
 
 func unpackDataA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv4len > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking a"}
+		return nil, len(msg), ErrOverflowUnpackingA
 	}
 	a := append(make(net.IP, 0, net.IPv4len), msg[off:off+net.IPv4len]...)
 	off += net.IPv4len
@@ -30,7 +30,7 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 	case net.IPv4len, net.IPv6len:
 		// It must be a slice of 4, even if it is 16, we encode only the first 4
 		if off+net.IPv4len > len(msg) {
-			return len(msg), &Error{err: "overflow packing a"}
+			return len(msg), ErrOverflowPackingA
 		}
 
 		copy(msg[off:], a.To4())
@@ -38,14 +38,14 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 	case 0:
 		// Allowed, for dynamic updates.
 	default:
-		return len(msg), &Error{err: "overflow packing a"}
+		return len(msg), ErrOverflowPackingA
 	}
 	return off, nil
 }
 
 func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
 	if off+net.IPv6len > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking aaaa"}
+		return nil, len(msg), ErrOverflowUnpackingAAAA
 	}
 	aaaa := append(make(net.IP, 0, net.IPv6len), msg[off:off+net.IPv6len]...)
 	off += net.IPv6len
@@ -56,7 +56,7 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	switch len(aaaa) {
 	case net.IPv6len:
 		if off+net.IPv6len > len(msg) {
-			return len(msg), &Error{err: "overflow packing aaaa"}
+			return len(msg), ErrOverflowPackingAAAA
 		}
 
 		copy(msg[off:], aaaa)
@@ -64,7 +64,7 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	case 0:
 		// Allowed, dynamic updates.
 	default:
-		return len(msg), &Error{err: "overflow packing aaaa"}
+		return len(msg), ErrOverflowPackingAAAA
 	}
 	return off, nil
 }
@@ -138,7 +138,7 @@ func (hdr RR_Header) packHeader(msg []byte, off int, compression compressionMap,
 func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
 	lenrd := off + int(rdlength)
 	if lenrd > len(msg) {
-		return msg, &Error{err: "overflowing header size"}
+		return msg, ErrOverflowHeaderSize
 	}
 	return msg[:lenrd], nil
 }
@@ -177,14 +177,14 @@ func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
 
 func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
 	if off+1 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint8"}
+		return 0, len(msg), ErrOverflowUnpackingUint8
 	}
 	return msg[off], off + 1, nil
 }
 
 func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	if off+1 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint8"}
+		return len(msg), ErrOverflowPackingUint8
 	}
 	msg[off] = i
 	return off + 1, nil
@@ -192,14 +192,14 @@ func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 
 func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
 	if off+2 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
+		return 0, len(msg), ErrOverflowUnpackingUint16
 	}
 	return binary.BigEndian.Uint16(msg[off:]), off + 2, nil
 }
 
 func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint16"}
+		return len(msg), ErrOverflowPackingUint16
 	}
 	binary.BigEndian.PutUint16(msg[off:], i)
 	return off + 2, nil
@@ -207,14 +207,14 @@ func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 
 func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
 	if off+4 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
+		return 0, len(msg), ErrOverflowUnpackingUint32
 	}
 	return binary.BigEndian.Uint32(msg[off:]), off + 4, nil
 }
 
 func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint32"}
+		return len(msg), ErrOverflowPackingUint32
 	}
 	binary.BigEndian.PutUint32(msg[off:], i)
 	return off + 4, nil
@@ -222,7 +222,7 @@ func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 
 func unpackUint48(msg []byte, off int) (i uint64, off1 int, err error) {
 	if off+6 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint64 as uint48"}
+		return 0, len(msg), ErrOverflowUnpackingUint64As48
 	}
 	// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
 	i = uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
@@ -233,7 +233,7 @@ func unpackUint48(msg []byte, off int) (i uint64, off1 int, err error) {
 
 func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+6 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
+		return len(msg), ErrOverflowPackingUint64As48
 	}
 	msg[off] = byte(i >> 40)
 	msg[off+1] = byte(i >> 32)
@@ -247,14 +247,14 @@ func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 
 func unpackUint64(msg []byte, off int) (i uint64, off1 int, err error) {
 	if off+8 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
+		return 0, len(msg), ErrOverflowUnpackingUint64
 	}
 	return binary.BigEndian.Uint64(msg[off:]), off + 8, nil
 }
 
 func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint64"}
+		return len(msg), ErrOverflowPackingUint64
 	}
 	binary.BigEndian.PutUint64(msg[off:], i)
 	off += 8
@@ -263,12 +263,12 @@ func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 
 func unpackString(msg []byte, off int) (string, int, error) {
 	if off+1 > len(msg) {
-		return "", off, &Error{err: "overflow unpacking txt"}
+		return "", off, ErrOverflowUnpackingTxt
 	}
 	l := int(msg[off])
 	off++
 	if off+l > len(msg) {
-		return "", off, &Error{err: "overflow unpacking txt"}
+		return "", off, ErrOverflowUnpackingTxt
 	}
 	var s strings.Builder
 	consumed := 0
@@ -308,7 +308,7 @@ func packString(s string, msg []byte, off int) (int, error) {
 
 func unpackStringBase32(msg []byte, off, end int) (string, int, error) {
 	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking base32"}
+		return "", len(msg), ErrOverflowUnpackingBase32
 	}
 	s := toBase32(msg[off:end])
 	return s, end, nil
@@ -320,7 +320,7 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(b32) > len(msg) {
-		return len(msg), &Error{err: "overflow packing base32"}
+		return len(msg), ErrOverflowPackingBase32
 	}
 	copy(msg[off:off+len(b32)], b32)
 	off += len(b32)
@@ -332,7 +332,7 @@ func unpackStringBase64(msg []byte, off, end int) (string, int, error) {
 	// to be set. Thus far all RR's that have base64 encoded fields have those as their
 	// last one. What we do need is the end of the RR!
 	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking base64"}
+		return "", len(msg), ErrOverflowUnpackingBase64
 	}
 	s := toBase64(msg[off:end])
 	return s, end, nil
@@ -344,7 +344,7 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(b64) > len(msg) {
-		return len(msg), &Error{err: "overflow packing base64"}
+		return len(msg), ErrOverflowPackingBase64
 	}
 	copy(msg[off:off+len(b64)], b64)
 	off += len(b64)
@@ -356,7 +356,7 @@ func unpackStringHex(msg []byte, off, end int) (string, int, error) {
 	// to be set. NSEC and TSIG have hex fields with a length field.
 	// What we do need is the end of the RR!
 	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking hex"}
+		return "", len(msg), ErrOverflowUnpackingHex
 	}
 
 	s := hex.EncodeToString(msg[off:end])
@@ -369,7 +369,7 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(h) > len(msg) {
-		return len(msg), &Error{err: "overflow packing hex"}
+		return len(msg), ErrOverflowPackingHex
 	}
 	copy(msg[off:off+len(h)], h)
 	off += len(h)
@@ -378,14 +378,14 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 
 func unpackStringAny(msg []byte, off, end int) (string, int, error) {
 	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking anything"}
+		return "", len(msg), ErrOverflowUnpackingAnything
 	}
 	return string(msg[off:end]), end, nil
 }
 
 func packStringAny(s string, msg []byte, off int) (int, error) {
 	if off+len(s) > len(msg) {
-		return len(msg), &Error{err: "overflow packing anything"}
+		return len(msg), ErrOverflowPackingAnything
 	}
 	copy(msg[off:off+len(s)], s)
 	off += len(s)
@@ -413,14 +413,14 @@ func unpackDataOpt(msg []byte, off int) ([]EDNS0, int, error) {
 Option:
 	var code uint16
 	if off+4 > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking opt"}
+		return nil, len(msg), ErrOverflowUnpackingOpt
 	}
 	code = binary.BigEndian.Uint16(msg[off:])
 	off += 2
 	optlen := binary.BigEndian.Uint16(msg[off:])
 	off += 2
 	if off+int(optlen) > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking opt"}
+		return nil, len(msg), ErrOverflowUnpackingOpt
 	}
 	e := makeDataOpt(code)
 	if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
@@ -440,13 +440,13 @@ func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	for _, el := range options {
 		b, err := el.pack()
 		if err != nil || off+4 > len(msg) {
-			return len(msg), &Error{err: "overflow packing opt"}
+			return len(msg), ErrOverflowPackingOpt
 		}
 		binary.BigEndian.PutUint16(msg[off:], el.Option())      // Option code
 		binary.BigEndian.PutUint16(msg[off+2:], uint16(len(b))) // Length
 		off += 4
 		if off+len(b) > len(msg) {
-			return len(msg), &Error{err: "overflow packing opt"}
+			return len(msg), ErrOverflowPackingOpt
 		}
 		// Actual data
 		copy(msg[off:off+len(b)], b)
@@ -474,7 +474,7 @@ func unpackDataNsec(msg []byte, off int) ([]uint16, int, error) {
 	length, window, lastwindow := 0, 0, -1
 	for off < len(msg) {
 		if off+2 > len(msg) {
-			return nsec, len(msg), &Error{err: "overflow unpacking NSEC(3)"}
+			return nsec, len(msg), ErrOverflowUnpackingNSEC3
 		}
 		window = int(msg[off])
 		length = int(msg[off+1])
@@ -492,7 +492,7 @@ func unpackDataNsec(msg []byte, off int) ([]uint16, int, error) {
 			return nsec, len(msg), &Error{err: "NSEC(3) block too long in type bitmap"}
 		}
 		if off+length > len(msg) {
-			return nsec, len(msg), &Error{err: "overflowing NSEC(3) block in type bitmap"}
+			return nsec, len(msg), ErrOverflowNSEC3BlockInTypeBitmap
 		}
 
 		// Walk the bytes in the window and extract the type bits
@@ -557,7 +557,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 		return off, nil
 	}
 	if off > len(msg) {
-		return off, &Error{err: "overflow packing nsec"}
+		return off, ErrOverflowPackingNsec
 	}
 	toZero := msg[off:]
 	if maxLen := typeBitMapLen(bitmap); maxLen < len(toZero) {
@@ -578,7 +578,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 			return len(msg), &Error{err: "nsec bits out of order"}
 		}
 		if off+2+int(length) > len(msg) {
-			return len(msg), &Error{err: "overflow packing nsec"}
+			return len(msg), ErrOverflowPackingNsec
 		}
 		// Setting the window #
 		msg[off] = byte(window)
@@ -600,11 +600,11 @@ func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
 	for off < len(msg) {
 		code, off, err = unpackUint16(msg, off)
 		if err != nil {
-			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
+			return nil, len(msg), ErrOverflowUnpackingSVCB
 		}
 		length, off, err = unpackUint16(msg, off)
 		if err != nil || off+int(length) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
+			return nil, len(msg), ErrOverflowUnpackingSVCB
 		}
 		e := makeSVCBKeyValue(SVCBKey(code))
 		if e == nil {
@@ -639,11 +639,11 @@ func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
 		}
 		off, err = packUint16(uint16(el.Key()), msg, off)
 		if err != nil {
-			return len(msg), &Error{err: "overflow packing SVCB"}
+			return len(msg), ErrOverflowPackingSVCB
 		}
 		off, err = packUint16(uint16(len(packed)), msg, off)
 		if err != nil || off+len(packed) > len(msg) {
-			return len(msg), &Error{err: "overflow packing SVCB"}
+			return len(msg), ErrOverflowPackingSVCB
 		}
 		copy(msg[off:off+len(packed)], packed)
 		off += len(packed)
@@ -658,7 +658,7 @@ func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
 		err     error
 	)
 	if end > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking domain names"}
+		return nil, len(msg), ErrOverflowUnpackingDomainNames
 	}
 	for off < end {
 		s, off, err = UnpackDomainName(msg, off)
@@ -736,7 +736,7 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	}
 
 	if off+len(addr) > len(msg) {
-		return len(msg), &Error{err: "overflow packing APL prefix"}
+		return len(msg), ErrOverflowPackingAPLPrefix
 	}
 	off += copy(msg[off:], addr)
 
@@ -759,15 +759,15 @@ func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
 func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 	family, off, err := unpackUint16(msg, off)
 	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), ErrOverflowUnpackingAPLPrefix
 	}
 	prefix, off, err := unpackUint8(msg, off)
 	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), ErrOverflowUnpackingAPLPrefix
 	}
 	nlen, off, err := unpackUint8(msg, off)
 	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
+		return APLPrefix{}, len(msg), ErrOverflowUnpackingAPLPrefix
 	}
 
 	var ip []byte
@@ -787,7 +787,7 @@ func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
 		return APLPrefix{}, len(msg), &Error{err: "APL length too long"}
 	}
 	if off+afdlen > len(msg) {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
+		return APLPrefix{}, len(msg), ErrOverflowUnpackingAPLAddress
 	}
 
 	// Address MUST NOT contain trailing zero bytes per RFC3123 Sections 4.1 and 4.2.
