@@ -6,33 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 )
-
-// tempDir creates a temporary directory for tests and automatically removes it
-// using t.Cleanup(). The reason for this is to work around some limitations
-// in socket file name lengths.
-//
-// Ref:
-// - https://github.com/golang/go/blob/go1.20.2/src/syscall/ztypes_darwin_arm64.go#L178
-// - https://github.com/golang/go/blob/go1.20.2/src/syscall/ztypes_linux_arm64.go#L175
-func tempDir(t *testing.T) string {
-	dir, err := os.MkdirTemp("", strings.ReplaceAll(t.Name(), string(filepath.Separator), "-"))
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-
-	t.Cleanup(func() {
-		os.RemoveAll(dir)
-	})
-	return dir
-}
 
 func TestIsPacketConn(t *testing.T) {
 	t.Run("UDP", func(t *testing.T) {
@@ -74,7 +53,7 @@ func TestIsPacketConn(t *testing.T) {
 	})
 
 	t.Run("Unix datagram", func(t *testing.T) {
-		s, addrstr, _, err := RunLocalUnixGramServer(filepath.Join(tempDir(t), "unixgram.sock"))
+		s, addrstr, _, err := RunLocalUnixGramServer(tempFile(t, "unixgram.sock"))
 		if err != nil {
 			t.Fatalf("unable to run test server: %v", err)
 		}
@@ -93,7 +72,7 @@ func TestIsPacketConn(t *testing.T) {
 	})
 
 	t.Run("Unix Seqpacket", func(t *testing.T) {
-		shutChan, addrstr, err := RunLocalUnixSeqPacketServer(filepath.Join(tempDir(t), "unixpacket.sock"))
+		shutChan, addrstr, err := RunLocalUnixSeqPacketServer(tempFile(t, "unixpacket.sock"))
 		if err != nil {
 			if errors.Is(err, syscall.EPROTONOSUPPORT) {
 				t.Skip("unix seqpacket not supported on this OS")
@@ -118,7 +97,7 @@ func TestIsPacketConn(t *testing.T) {
 	})
 
 	t.Run("Unix stream", func(t *testing.T) {
-		s, addrstr, _, err := RunLocalUnixServer(filepath.Join(tempDir(t), "unixstream.sock"))
+		s, addrstr, _, err := RunLocalUnixServer(tempFile(t, "unixstream.sock"))
 		if err != nil {
 			t.Fatalf("unable to run test server: %v", err)
 		}
