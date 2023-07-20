@@ -71,6 +71,17 @@ var (
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
 
+type OverflowError struct {
+	err string
+}
+
+func (e *OverflowError) Error() string {
+	if e == nil {
+		return "dns: <nil>"
+	}
+	return "dns: " + e.err
+}
+
 // Id by default returns a 16-bit random number to be used as a message id. The
 // number is drawn from a cryptographically secure random number generator.
 // This being a variable the function can be reassigned to a custom function.
