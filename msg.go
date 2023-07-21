@@ -72,14 +72,15 @@ var (
 )
 
 type OverflowError struct {
-	err string
+	err *Error
+}
+
+func (e *OverflowError) Unwrap() error {
+	return e.err
 }
 
 func (e *OverflowError) Error() string {
-	if e == nil {
-		return "dns: <nil>"
-	}
-	return "dns: " + e.err
+	return e.err.Error()
 }
 
 // Id by default returns a 16-bit random number to be used as a message id. The
