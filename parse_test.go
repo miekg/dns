@@ -1414,7 +1414,7 @@ func TestParseSSHFP(t *testing.T) {
 			"\t\t\t\t\tB6159E30723665DA95BB )",
 		"test.example.org.\t300\tSSHFP\t1 2 ( BC6533CDC  95A79078A39A56EA7635984ED655318AD  A9B6159E3072366 5DA95BB )",
 	}
-	result := "test.example.org.\t300\tIN\tSSHFP\t1 2 BC6533CDC95A79078A39A56EA7635984ED655318ADA9B6159E30723665DA95BB"
+	result := "test.example.org.\t300\tIN\tSSHFP\t1 2 bc6533cdc95a79078a39a56ea7635984ed655318ada9b6159e30723665da95bb"
 	for _, o := range lt {
 		rr, err := NewRR(o)
 		if err != nil {

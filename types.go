@@ -985,7 +985,7 @@ type SSHFP struct {
 func (rr *SSHFP) String() string {
 	return rr.Hdr.String() + strconv.Itoa(int(rr.Algorithm)) +
 		" " + strconv.Itoa(int(rr.Type)) +
-		" " + strings.ToUpper(rr.FingerPrint)
+		" " + strings.ToLower(rr.FingerPrint)
 }
 
 // KEY RR. See RFC RFC 2535.
