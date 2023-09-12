@@ -1686,6 +1686,33 @@ func TestNULLRecord(t *testing.T) {
 		t.Fatalf("Expected packet to contain NULL record")
 	}
 }
+func TestAAAAParsing(t *testing.T) {
+	tests := []string{
+		"2001:db8::1",
+		"1::1",
+		"2001:db81:d2b4:b6ba:50db:49cc:a8d1:5bb1",
+		"::ffff:192.0.2.0",
+	}
+
+	rrPrefix := ".\t1\tIN\tAAAA\t"
+
+	for num, tc := range tests {
+		t.Run(fmt.Sprintf("Test %d", num), func(t *testing.T) {
+			rr, err := NewRR(rrPrefix + tc)
+			if err != nil {
+				t.Fatalf("failed to parse RR: %s", err)
+			}
+			// Output presentation format and try to parse again
+			reparseRR, err := NewRR(rr.String())
+			if err != nil {
+				t.Fatalf("failed to reparse RR: %s", err)
+			}
+			if reparseRR.String() != rrPrefix+tc {
+				t.Errorf("expected %s,got %s", rrPrefix+tc, reparseRR.String())
+			}
+		})
+	}
+}
 
 func TestParseAPL(t *testing.T) {
 	tests := []struct {
