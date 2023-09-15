@@ -184,6 +184,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 * 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 * 8914 - Extended DNS Errors
 * 8976 - Message Digest for DNS Zones (ZONEMD RR)
+* 8914 - Extended DNS Errors (EDE)
 
 ## Loosely Based Upon
 
