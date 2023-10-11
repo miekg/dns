@@ -651,13 +651,12 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	return nil, false
 }
 
-// SvcParamsParser is a parser for SVCB Service Params  that reads
-// from r.
+// SvcParamsParser is a parser for SVCB Service Params
 //
-// Basic usage pattern when reading from a string (z) containing the
+// Basic usage pattern when reading from a string (s) containing the
 // service params
 //
-//		spp := NewServiceParamsParser(strings.NewReader(z), "", "")
+//		spp := NewSvcParamsParser(strings.NewReader(s), "")
 //
 //		sp, ok := spp.Next()
 //	    if ok {
@@ -675,7 +674,7 @@ type SvcParamsParser struct {
 	file string
 }
 
-// NewZoneParser returns SVCB Service Params parser that reads
+// NewSvcParamsParser returns SVCB Service Params parser that reads
 // from r.
 func NewSvcParamsParser(r io.Reader, file string) *SvcParamsParser {
 	var pe *ParseError
