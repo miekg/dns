@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"bytes"
+	"encoding/hex"
 	"io"
 	"net"
 	"os"
@@ -341,5 +343,49 @@ func BenchmarkZoneParser(b *testing.B) {
 		if err := zp.Err(); err != nil {
 			b.Fatal(err)
 		}
+	}
+}
+
+func TestSvcParamsParserGenerate(t *testing.T) {
+	params := "alpn=h2 dohpath=/dns\\045query{?dns}\nkey65444=foo port=8443 alpn=h3,h2\nalpn=h2 dohpath=/dns\\045query{?dns}"
+	expectedStr := [...]string{
+		"alpn=h2 dohpath=/dns-query{?dns}",
+		"alpn=h3,h2 port=8443 key65444=foo",
+	}
+	// Note this example is taken from the Appendix of RFC 9463
+	expectedWire, _ := hex.DecodeString("00010003026832000700102F646E732D71756572797B3F646E737D")
+
+	spp := NewSvcParamsParser(strings.NewReader(params), "")
+
+	for _, e := range expectedStr {
+		sp, ok := spp.Next()
+		if !ok {
+			if err := spp.Err(); err != nil {
+				t.Fatalf("Expected no error but got: %s", err)
+			}
+		}
+
+		spStr := sp.String()
+
+		if spStr != e {
+			t.Fatalf("Output of ServiceParams.String() did not match expected. Actual output was: %s", spStr)
+		}
+	}
+
+	sp, ok := spp.Next()
+	if !ok {
+		if err := spp.Err(); err != nil {
+			t.Fatalf("Expected no error but got: %s", err)
+		}
+	}
+
+	wireStr, err := sp.Pack()
+
+	if err != nil {
+		t.Fatalf("ServiceParams.Pack() error: %s", err)
+	}
+
+	if !bytes.Equal(wireStr, expectedWire) {
+		t.Fatalf("Output of ServiceParams.Pack() did not match expected. Actual output was: %X", wireStr)
 	}
 }
