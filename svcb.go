@@ -258,7 +258,7 @@ type SvcParams interface {
 	Copy() SvcParams       // copy returns a deep-copy of the Service Params
 }
 
-// This is a concrete implementation of the SvcParams interface
+// SVCBKeyValues is a concrete implementation of the SvcParams interface
 type SVCBKeyValues []SVCBKeyValue
 
 func (s SVCBKeyValues) Pack() ([]byte, error) {
