@@ -651,6 +651,74 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	return nil, false
 }
 
+// SvcParamsParser is a parser for SVCB Service Params  that reads
+// from r.
+//
+// Basic usage pattern when reading from a string (z) containing the
+// service params
+//
+//		spp := NewServiceParamsParser(strings.NewReader(z), "", "")
+//
+//		sp, ok := spp.Next()
+//	    if ok {
+//			// Do something with sp - see SvcParams type
+//		}
+//
+//		if err := sp.Err(); err != nil {
+//			// log.Println(err)
+//		}
+type SvcParamsParser struct {
+	c *zlexer
+
+	parseErr *ParseError
+
+	file string
+}
+
+// NewZoneParser returns SVCB Service Params parser that reads
+// from r.
+func NewSvcParamsParser(r io.Reader, file string) *SvcParamsParser {
+	var pe *ParseError
+
+	return &SvcParamsParser{
+		c: newZLexer(r),
+
+		parseErr: pe,
+
+		file: file,
+	}
+}
+
+// Err returns the first non-EOF error that was encountered by the
+// SvcParamsParser.
+func (spp *SvcParamsParser) Err() error {
+	if spp.parseErr != nil {
+		return spp.parseErr
+	}
+
+	return spp.c.Err()
+}
+
+func (spp *SvcParamsParser) setParseError(err string, l lex) {
+	spp.parseErr = &ParseError{spp.file, err, l}
+	return
+}
+
+// Next advances the parser to the next Service Params, returning
+// as (SvcParams, true).
+// If parsing error occurs, returns (nil, false), and you can call the
+// Err method to get the error.
+func (spp *SvcParamsParser) Next() (sp SvcParams, ok bool) {
+	ok = true
+	spp.c.owner = false
+	xs, err := parseSVCBKeys(spp.c)
+	if err != nil {
+		spp.setParseError(err.err, err.lex)
+		ok = false
+	}
+	return SVCBKeyValues(xs), ok
+}
+
 type zlexer struct {
 	br io.ByteReader
 
