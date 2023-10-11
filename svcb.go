@@ -81,26 +81,9 @@ func svcbStringToKey(s string) SVCBKey {
 	return svcb_RESERVED
 }
 
-func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
-	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.token, 10, 16)
-	if e != nil || l.err {
-		return &ParseError{l.token, "bad SVCB priority", l}
-	}
-	rr.Priority = uint16(i)
-
-	c.Next()        // zBlank
-	l, _ = c.Next() // zString
-	rr.Target = l.token
-
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
-		return &ParseError{l.token, "bad SVCB Target", l}
-	}
-	rr.Target = name
-
+func parseSVCBKeys(c *zlexer) ([]SVCBKeyValue, *ParseError) {
 	// Values (if any)
-	l, _ = c.Next()
+	l, _ := c.Next()
 	var xs []SVCBKeyValue
 	// Helps require whitespace between pairs.
 	// Prevents key1000="a"key1001=...
@@ -111,7 +94,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			if !canHaveNextKey {
 				// The key we can now read was probably meant to be
 				// a part of the last value.
-				return &ParseError{l.token, "bad SVCB value quotation", l}
+				return nil, &ParseError{l.token, "bad SVCB value quotation", l}
 			}
 
 			// In key=value pairs, value does not have to be quoted unless value
@@ -124,7 +107,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				// Key with no value and no equality sign
 				key = l.token
 			} else if idx == 0 {
-				return &ParseError{l.token, "bad SVCB key", l}
+				return nil, &ParseError{l.token, "bad SVCB key", l}
 			} else {
 				key, value = l.token[:idx], l.token[idx+1:]
 
@@ -144,33 +127,55 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 							value = l.token
 							l, _ = c.Next()
 							if l.value != zQuote {
-								return &ParseError{l.token, "SVCB unterminated value", l}
+								return nil, &ParseError{l.token, "SVCB unterminated value", l}
 							}
 						case zQuote:
 							// There's nothing in double quotes.
 						default:
-							return &ParseError{l.token, "bad SVCB value", l}
+							return xs, &ParseError{l.token, "bad SVCB value", l}
 						}
 					}
 				}
 			}
 			kv := makeSVCBKeyValue(svcbStringToKey(key))
 			if kv == nil {
-				return &ParseError{l.token, "bad SVCB key", l}
+				return nil, &ParseError{l.token, "bad SVCB key", l}
 			}
 			if err := kv.parse(value); err != nil {
-				return &ParseError{l.token, err.Error(), l}
+				return nil, &ParseError{l.token, err.Error(), l}
 			}
 			xs = append(xs, kv)
 		case zQuote:
-			return &ParseError{l.token, "SVCB key can't contain double quotes", l}
+			return nil, &ParseError{l.token, "SVCB key can't contain double quotes", l}
 		case zBlank:
 			canHaveNextKey = true
 		default:
-			return &ParseError{l.token, "bad SVCB values", l}
+			return nil, &ParseError{l.token, "bad SVCB values", l}
 		}
 		l, _ = c.Next()
 	}
+	return xs, nil
+}
+
+func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	i, e := strconv.ParseUint(l.token, 10, 16)
+	if e != nil || l.err {
+		return &ParseError{l.token, "bad SVCB priority", l}
+	}
+	rr.Priority = uint16(i)
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	rr.Target = l.token
+
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{l.token, "bad SVCB Target", l}
+	}
+	rr.Target = name
+
+	xs, err := parseSVCBKeys(c)
 
 	// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
 	// ignore any SvcParams that are present."
@@ -178,6 +183,9 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	// It is the responsibility of the user of the library to check this.
 	// This is to encourage the fixing of the source of this error.
 
+	if err != nil {
+		return err
+	}
 	rr.Value = xs
 	return nil
 }
@@ -238,6 +246,67 @@ func (rr *HTTPS) String() string {
 
 func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 	return rr.SVCB.parse(c, o)
+}
+
+// SvcParams defines a public interface for encoding and stringifying Service Params. It is
+// for use by applications such as DHCP servers that use Service Params outside the SVCB type,
+// e.g. as defined in RFC 9463. For these purposes, being able to manipulate Service Params is not
+// necessary.
+type SvcParams interface {
+	Pack() ([]byte, error) // pack returns the wire encoding of all the Service Params
+	String() string        // String returns the presentation format of all the Service Params
+	Copy() SvcParams       // copy returns a deep-copy of the Service Params
+}
+
+// This is a concrete implementation of the SvcParams interface
+type SVCBKeyValues []SVCBKeyValue
+
+func (s SVCBKeyValues) Pack() ([]byte, error) {
+	xs := s
+	// Sort so that the slice is in lowest key order first
+	sort.Slice(xs, func(i, j int) bool {
+		return xs[i].Key() < xs[j].Key()
+	})
+	var wireBuf []byte
+	for i, _ := range xs {
+		wireBuf = append(wireBuf, HostToNetShort(uint16(xs[i].Key()))...)
+		wireVal, err := xs[i].pack()
+		if err != nil {
+			return nil, err
+		}
+		wireBuf = append(wireBuf, HostToNetShort(uint16(len(wireVal)))...)
+		wireBuf = append(wireBuf, wireVal...)
+	}
+	return wireBuf, nil
+}
+
+func (s SVCBKeyValues) String() string {
+	var outStr strings.Builder
+	xs := s
+	// It's good for the output string for a given SvcParams
+	// to be consistent, i.e. keys always in the same order like
+	// wire format
+	sort.Slice(xs, func(i, j int) bool {
+		return xs[i].Key() < xs[j].Key()
+	})
+	for i, _ := range s {
+		outStr.WriteString(xs[i].Key().String())
+		outStr.WriteString("=")
+		outStr.WriteString(xs[i].String())
+		if i+1 < len(s) {
+			outStr.WriteString(" ")
+		}
+	}
+	return outStr.String()
+}
+
+func (s SVCBKeyValues) Copy() SvcParams {
+	xs := make(SVCBKeyValues, len(s))
+
+	for i, _ := range s {
+		xs[i] = s[i].copy()
+	}
+	return xs
 }
 
 // SVCBKeyValue defines a key=value pair for the SVCB RR type.
