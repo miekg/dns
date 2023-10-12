@@ -253,9 +253,9 @@ func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 // e.g. as defined in RFC 9463. For these purposes, being able to manipulate Service Params is not
 // necessary.
 type SvcParams interface {
-	Pack() ([]byte, error) // pack returns the wire encoding of all the Service Params
+	Pack() ([]byte, error) // Pack returns the wire encoding of all the Service Params
 	String() string        // String returns the presentation format of all the Service Params
-	Copy() SvcParams       // copy returns a deep-copy of the Service Params
+	Copy() SvcParams       // Copy returns a deep-copy of the Service Params
 }
 
 // SVCBKeyValues implements the SvcParams interface plus the Unpack method
