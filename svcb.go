@@ -258,7 +258,8 @@ type SvcParams interface {
 	Copy() SvcParams       // copy returns a deep-copy of the Service Params
 }
 
-// SVCBKeyValues is a concrete implementation of the SvcParams interface
+// SVCBKeyValues implements the SvcParams interface plus the Unpack method
+// for creating Service Params from wire encoding
 type SVCBKeyValues []SVCBKeyValue
 
 func (s SVCBKeyValues) Pack() ([]byte, error) {
@@ -278,6 +279,25 @@ func (s SVCBKeyValues) Pack() ([]byte, error) {
 		wireBuf = append(wireBuf, wireVal...)
 	}
 	return wireBuf, nil
+}
+
+// Unpack creates SVCBKeyValues from the wire encoded bytes
+func (s *SVCBKeyValues) Unpack(b []byte) error {
+	for i := 0; i < len(b); {
+		if len(b[i:]) < 4 {
+			return errors.New("dns: svcbkeyvalues: unpack: kv length must be at least 4 bytes")
+		}
+		key := SVCBKey(binary.BigEndian.Uint16(b[i : i+2]))
+		len := binary.BigEndian.Uint16(b[i+2 : i+4])
+		kv := makeSVCBKeyValue(key)
+		err := kv.unpack(b[i+4 : i+4+int(len)])
+		if err != nil {
+			return fmt.Errorf("dns: svcbkeyvalues: %s", err)
+		}
+		*s = append(*s, kv)
+		i = i + int(len) + 4
+	}
+	return nil
 }
 
 func (s SVCBKeyValues) String() string {

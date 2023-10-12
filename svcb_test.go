@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/hex"
 	"testing"
 )
 
@@ -159,5 +160,25 @@ func TestCompareSVCB(t *testing.T) {
 	}
 	if val1[0].Key() != SVCB_PORT || val2[0].Key() != SVCB_ALPN {
 		t.Error("original svcb pairs were reordered during comparison")
+	}
+}
+
+func TestUnpackSVCBKeyValues(t *testing.T) {
+	// Note this example is taken from the Appendix of RFC 9463
+	wireBytes, _ := hex.DecodeString("00010003026832000700102F646E732D71756572797B3F646E737D")
+	expectedStr := "alpn=h2 dohpath=/dns-query{?dns}"
+
+	var s SVCBKeyValues
+
+	err := s.Unpack(wireBytes)
+
+	if err != nil {
+		t.Fatalf("Error unpacking SVCBKeyValues: %s", err)
+	}
+
+	outStr := s.String()
+
+	if outStr != expectedStr {
+		t.Fatalf("SVCBKeyValues did not output expected string, actual value was: %s", outStr)
 	}
 }
