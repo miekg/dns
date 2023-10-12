@@ -269,7 +269,7 @@ func (s SVCBKeyValues) Pack() ([]byte, error) {
 		return xs[i].Key() < xs[j].Key()
 	})
 	var wireBuf []byte
-	for i, _ := range xs {
+	for i := range xs {
 		wireBuf = append(wireBuf, HostToNetShort(uint16(xs[i].Key()))...)
 		wireVal, err := xs[i].pack()
 		if err != nil {
@@ -309,7 +309,7 @@ func (s SVCBKeyValues) String() string {
 	sort.Slice(xs, func(i, j int) bool {
 		return xs[i].Key() < xs[j].Key()
 	})
-	for i, _ := range s {
+	for i := range s {
 		outStr.WriteString(xs[i].Key().String())
 		outStr.WriteString("=")
 		outStr.WriteString(xs[i].String())
@@ -323,7 +323,7 @@ func (s SVCBKeyValues) String() string {
 func (s SVCBKeyValues) Copy() SvcParams {
 	xs := make(SVCBKeyValues, len(s))
 
-	for i, _ := range s {
+	for i := range s {
 		xs[i] = s[i].copy()
 	}
 	return xs
