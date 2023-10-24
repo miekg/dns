@@ -1041,6 +1041,75 @@ func TestServerReuseport(t *testing.T) {
 	}
 }
 
+func TestServerReuseaddr(t *testing.T) {
+	startServer := func(t *testing.T, addr string, expectSuccess bool) (*Server, chan error) {
+		wait := make(chan struct{})
+		srv := &Server{
+			Net:               "udp",
+			Addr:              addr,
+			NotifyStartedFunc: func() { close(wait) },
+			ReuseAddr:         true,
+		}
+
+		fin := make(chan error, 1)
+		go func() {
+			fin <- srv.ListenAndServe()
+		}()
+
+		select {
+		case <-wait:
+		case err := <-fin:
+			switch {
+			case expectSuccess:
+				t.Fatalf("%s: failed to start server: %v", t.Name(), err)
+			default:
+				fin <- err
+				return srv, fin
+			}
+		}
+		return srv, fin
+	}
+	t.Run("should-fail", func(t *testing.T) {
+		// ReuseAddr should fail if you try to bind to exactly the same
+		// combination of source address and port.
+		// This should fail whether or not ReuseAddr is supported on a
+		// particular OS
+		srv1, fin1 := startServer(t, ":0", true) // :0 is resolved to a random free port by the kernel
+		_, fin2 := startServer(t, srv1.PacketConn.LocalAddr().String(), false)
+		if err := <-fin2; err == nil {
+			t.Fatalf("second ListenAndServe should have returned a startup error: %v", err)
+		}
+
+		if err := srv1.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown first server: %v", err)
+		}
+		if err := <-fin1; err != nil {
+			t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
+		}
+	})
+	t.Run("should-succeed", func(t *testing.T) {
+		if !supportsReuseAddr {
+			t.Skip("reuseaddr is not supported")
+		}
+		// ReuseAddr should succeed if you try to bind to the same port but a different source address
+		srv1, fin1 := startServer(t, ":0", true) // :0 is resolved to a random free port by the kernel
+		srv2, fin2 := startServer(t, fmt.Sprintf("localhost:%d", srv1.PacketConn.LocalAddr().(*net.UDPAddr).Port), true)
+
+		if err := srv1.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown first server: %v", err)
+		}
+		if err := srv2.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown second server: %v", err)
+		}
+		if err := <-fin1; err != nil {
+			t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
+		}
+		if err := <-fin2; err != nil {
+			t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
+		}
+	})
+}
+
 func TestServerRoundtripTsig(t *testing.T) {
 	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
 
