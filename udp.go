@@ -36,6 +36,9 @@ type SessionUDP struct {
 // RemoteAddr returns the remote network address.
 func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
 
+// DestinationAddr returns the destination network address.
+func (s *SessionUDP) DestinationIP() net.IP { return parseDstFromOOB(s.context) }
+
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
 func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {

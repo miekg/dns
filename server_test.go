@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -55,6 +56,16 @@ func HelloServerEchoAddrPort(w ResponseWriter, req *Msg) {
 	remoteAddr := w.RemoteAddr().String()
 	m.Extra = make([]RR, 1)
 	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{remoteAddr}}
+	w.WriteMsg(m)
+}
+
+func HelloServerEchoDestinationIP(w ResponseWriter, req *Msg) {
+	m := new(Msg)
+	m.SetReply(req)
+
+	destinationIP := w.DestinationIP().String()
+	m.Extra = make([]RR, 1)
+	m.Extra[0] = &TXT{Hdr: RR_Header{Name: m.Question[0].Name, Rrtype: TypeTXT, Class: ClassINET, Ttl: 0}, Txt: []string{destinationIP}}
 	w.WriteMsg(m)
 }
 
@@ -1041,6 +1052,96 @@ func TestServerReuseport(t *testing.T) {
 	}
 }
 
+func TestUDPDestinationIP(t *testing.T) {
+	HandleFunc("iptest.ir.", HelloServerEchoDestinationIP)
+	defer HandleRemove("iptest.ir.")
+
+	s, _, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	serverPort, err := GetAddrPort(s.PacketConn.LocalAddr())
+	if err != nil {
+		t.Fatalf("unable to get server port: %v", err)
+	}
+
+	m := new(Msg)
+	m.SetQuestion("iptest.ir.", TypeSOA)
+
+	testAddress := func(serverAddr string) {
+		c := new(Client)
+		laddr := net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 12345, Zone: ""}
+		c.Dialer = &net.Dialer{LocalAddr: &laddr}
+		r, _, err := c.Exchange(m, serverAddr+":"+serverPort)
+		if err != nil {
+			t.Fatalf("failed to exchange: %v", err)
+		}
+		if r != nil && r.Rcode != RcodeSuccess {
+			t.Errorf("failed to get an valid answer\n%v", r)
+		}
+		if len(r.Extra) != 1 {
+			t.Fatalf("failed to get additional answers\n%v", r)
+		}
+		txt := r.Extra[0].(*TXT)
+		if txt == nil {
+			t.Errorf("invalid TXT response\n%v", txt)
+		}
+		if len(txt.Txt) != 1 || txt.Txt[0] != serverAddr {
+			t.Errorf("invalid TXT response\n%v", txt.Txt)
+		}
+	}
+
+	testAddress("127.0.0.1")
+	testAddress("127.0.0.100")
+	testAddress("127.0.0.200")
+}
+
+func TestTCPDestinationIP(t *testing.T) {
+	HandleFunc("iptest.ir.", HelloServerEchoDestinationIP)
+	defer HandleRemove("iptest.ir.")
+
+	s, _, _, err := RunLocalTCPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	serverPort, err := GetAddrPort(s.Listener.Addr())
+	if err != nil {
+		t.Fatalf("unable to get server port: %v", err)
+	}
+
+	m := new(Msg)
+	m.SetQuestion("iptest.ir.", TypeSOA)
+
+	testAddress := func(serverAddr string) {
+		c := &Client{Net: "tcp"}
+		r, _, err := c.Exchange(m, serverAddr+":"+serverPort)
+		if err != nil {
+			t.Fatalf("failed to exchange: %v", err)
+		}
+		if r != nil && r.Rcode != RcodeSuccess {
+			t.Errorf("failed to get an valid answer\n%v", r)
+		}
+		if len(r.Extra) != 1 {
+			t.Fatalf("failed to get additional answers\n%v", r)
+		}
+		txt := r.Extra[0].(*TXT)
+		if txt == nil {
+			t.Errorf("invalid TXT response\n%v", txt)
+		}
+		if len(txt.Txt) != 1 || txt.Txt[0] != serverAddr {
+			t.Errorf("invalid TXT response\n%v", txt.Txt)
+		}
+	}
+
+	testAddress("127.0.0.1")
+	testAddress("127.0.0.100")
+	testAddress("127.0.0.200")
+}
+
 func TestServerRoundtripTsig(t *testing.T) {
 	secret := map[string]string{"test.": "so6ZGir4GPAqINNh9U5c3A=="}
 
@@ -1218,6 +1319,16 @@ func ExampleDecorateWriter() {
 		return
 	}
 	// Output: writing raw DNS message of length 56
+}
+
+func GetAddrPort(addr net.Addr) (string, error) {
+	switch addr := addr.(type) {
+	case *net.UDPAddr:
+		return fmt.Sprintf("%d", addr.Port), nil
+	case *net.TCPAddr:
+		return fmt.Sprintf("%d", addr.Port), nil
+	}
+	return "", errors.New("Port not found")
 }
 
 var (

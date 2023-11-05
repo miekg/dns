@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"net/netip"
 	"strings"
 	"sync"
 	"time"
@@ -44,6 +45,8 @@ type ResponseWriter interface {
 	LocalAddr() net.Addr
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
+	// DestinationIP returns the net.IP that client is connected to.
+	DestinationIP() net.IP
 	// WriteMsg writes a reply back to the client.
 	WriteMsg(*Msg) error
 	// Write writes a raw buffer back to the client.
@@ -779,6 +782,24 @@ func (w *response) LocalAddr() net.Addr {
 		return w.tcp.LocalAddr()
 	default:
 		panic("dns: internal error: udp and tcp both nil")
+	}
+}
+
+// DestinationIP
+func (w *response) DestinationIP() net.IP {
+	switch {
+	case w.udpSession != nil:
+		return w.udpSession.DestinationIP()
+	case w.pcSession != nil:
+		// This parsing should not be failed
+		addrport, _ := netip.ParseAddrPort(w.pcSession.String())
+		return net.ParseIP(addrport.Addr().String())
+	case w.tcp != nil:
+		// This parsing should not be failed
+		addrport, _ := netip.ParseAddrPort(w.tcp.LocalAddr().String())
+		return net.ParseIP(addrport.Addr().String())
+	default:
+		panic("dns: internal error: udpSession, pcSession and tcp are all nil")
 	}
 }
 
