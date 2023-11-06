@@ -333,9 +333,9 @@ func structMember(s string) string {
 
 // structTag will take a tag like dns:"size-base32:SaltLength" and return base32.
 func structTag(s string) string {
-	s = strings.TrimPrefix(s, "dns:")
+	s = strings.TrimPrefix(s, `dns:"size-`)
 	s, _, _ = strings.Cut(s, ":")
-	return strings.TrimPrefix(s, `"size-`)
+	return s
 }
 
 func fatalIfErr(err error) {
