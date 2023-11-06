@@ -291,26 +291,19 @@ func IsFqdn(s string) bool {
 	return (len(s)-i)%2 != 0
 }
 
-// IsRRset checks if a set of RRs is a valid RRset as defined by RFC 2181.
-// This means the RRs need to have the same type, name, and class. Returns true
-// if the RR set is valid, otherwise false.
+// IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
+// This means the RRs need to have the same type, name, and class.
 func IsRRset(rrset []RR) bool {
 	if len(rrset) == 0 {
 		return false
 	}
-	if len(rrset) == 1 {
-		return true
-	}
-	rrHeader := rrset[0].Header()
-	rrType := rrHeader.Rrtype
-	rrClass := rrHeader.Class
-	rrName := rrHeader.Name
 
+	baseH := rrset[0].Header()
 	for _, rr := range rrset[1:] {
-		curRRHeader := rr.Header()
-		if curRRHeader.Rrtype != rrType || curRRHeader.Class != rrClass || curRRHeader.Name != rrName {
+		curH := rr.Header()
+		if curH.Rrtype != baseH.Rrtype || curH.Class != baseH.Class || curH.Name != baseH.Name {
 			// Mismatch between the records, so this is not a valid rrset for
-			//signing/verifying
+			// signing/verifying
 			return false
 		}
 	}
