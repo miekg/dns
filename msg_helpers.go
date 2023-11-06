@@ -410,29 +410,24 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 
 func unpackDataOpt(msg []byte, off int) ([]EDNS0, int, error) {
 	var edns []EDNS0
-Option:
-	var code uint16
-	if off+4 > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking opt"}
+	for off < len(msg) {
+		if off+4 > len(msg) {
+			return nil, len(msg), &Error{err: "overflow unpacking opt"}
+		}
+		code := binary.BigEndian.Uint16(msg[off:])
+		off += 2
+		optlen := binary.BigEndian.Uint16(msg[off:])
+		off += 2
+		if off+int(optlen) > len(msg) {
+			return nil, len(msg), &Error{err: "overflow unpacking opt"}
+		}
+		opt := makeDataOpt(code)
+		if err := opt.unpack(msg[off : off+int(optlen)]); err != nil {
+			return nil, len(msg), err
+		}
+		edns = append(edns, opt)
+		off += int(optlen)
 	}
-	code = binary.BigEndian.Uint16(msg[off:])
-	off += 2
-	optlen := binary.BigEndian.Uint16(msg[off:])
-	off += 2
-	if off+int(optlen) > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking opt"}
-	}
-	e := makeDataOpt(code)
-	if err := e.unpack(msg[off : off+int(optlen)]); err != nil {
-		return nil, len(msg), err
-	}
-	edns = append(edns, e)
-	off += int(optlen)
-
-	if off < len(msg) {
-		goto Option
-	}
-
 	return edns, off, nil
 }
 
