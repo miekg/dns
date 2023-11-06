@@ -461,8 +461,7 @@ func unpackStringOctet(msg []byte, off int) (string, int, error) {
 }
 
 func packStringOctet(s string, msg []byte, off int) (int, error) {
-	txtTmp := make([]byte, 256*4+1)
-	off, err := packOctetString(s, msg, off, txtTmp)
+	off, err := packOctetString(s, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
