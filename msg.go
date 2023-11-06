@@ -48,27 +48,29 @@ const (
 
 // Errors defined in this package.
 var (
-	ErrAlg           error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrAuth          error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
-	ErrBuf           error = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used is too small for the message.
-	ErrConnEmpty     error = &Error{err: "conn has no connection"}         // ErrConnEmpty indicates a connection is being used before it is initialized.
-	ErrExtendedRcode error = &Error{err: "bad extended rcode"}             // ErrExtendedRcode ...
-	ErrFqdn          error = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
-	ErrId            error = &Error{err: "id mismatch"}                    // ErrId indicates there is a mismatch with the message's ID.
-	ErrKeyAlg        error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
-	ErrKey           error = &Error{err: "bad key"}
-	ErrKeySize       error = &Error{err: "bad key size"}
-	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
-	ErrNoSig         error = &Error{err: "no signature found"}
-	ErrPrivKey       error = &Error{err: "bad private key"}
-	ErrRcode         error = &Error{err: "bad rcode"}
-	ErrRdata         error = &Error{err: "bad rdata"}
-	ErrRRset         error = &Error{err: "bad rrset"}
-	ErrSecret        error = &Error{err: "no secrets defined"}
-	ErrShortRead     error = &Error{err: "short read"}
-	ErrSig           error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
-	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
-	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
+	ErrAlg                  error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrAuth                 error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
+	ErrBuf                  error = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used is too small for the message.
+	ErrConnEmpty            error = &Error{err: "conn has no connection"}         // ErrConnEmpty indicates a connection is being used before it is initialized.
+	ErrExtendedRcode        error = &Error{err: "bad extended rcode"}             // ErrExtendedRcode ...
+	ErrFqdn                 error = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
+	ErrId                   error = &Error{err: "id mismatch"}                    // ErrId indicates there is a mismatch with the message's ID.
+	ErrKeyAlg               error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
+	ErrKey                  error = &Error{err: "bad key"}
+	ErrKeySize              error = &Error{err: "bad key size"}
+	ErrLongDomain           error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
+	ErrNoSig                error = &Error{err: "no signature found"}
+	ErrPrivKey              error = &Error{err: "bad private key"}
+	ErrRcode                error = &Error{err: "bad rcode"}
+	ErrRdata                error = &Error{err: "bad rdata"}
+	ErrRRset                error = &Error{err: "bad rrset"}
+	ErrSecret               error = &Error{err: "no secrets defined"}
+	ErrShortRead            error = &Error{err: "short read"}
+	ErrSig                  error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
+	ErrSoa                  error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
+	ErrTime                 error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
+	errUnpackOverflow             = &Error{err: "overflow unpacking integer"}
+	errUnpackSignedOverflow       = &Error{err: "overflowing unpacking signed message"}
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The
@@ -181,14 +183,14 @@ func (m compressionMap) insert(s string, pos int) {
 	}
 }
 
-func (m compressionMap) find(s string) (int, bool) {
+func (m compressionMap) find(s string) (uint16, bool) {
 	if m.ext != nil {
 		pos, ok := m.ext[s]
-		return pos, ok
+		return uint16(pos), ok
 	}
 
 	pos, ok := m.int[s]
-	return int(pos), ok
+	return pos, ok
 }
 
 // Domain names are a sequence of counted strings
@@ -222,7 +224,7 @@ func packDomainName(s string, msg []byte, off int, compression compressionMap, c
 	// There is also a trailing zero.
 
 	// Compression
-	pointer := -1
+	pointer := ^uint16(0)
 
 	// Emit sequence of counted strings, chopping at dots.
 	var (
@@ -331,9 +333,9 @@ loop:
 	}
 
 	// If we did compression and we find something add the pointer here
-	if pointer != -1 {
+	if pointer != ^uint16(0) {
 		// We have two bytes (14 bits) to put the pointer in
-		binary.BigEndian.PutUint16(msg[off:], uint16(pointer^0xC000))
+		binary.BigEndian.PutUint16(msg[off:], 0xC000|pointer)
 		return off + 2, nil
 	}
 
@@ -360,15 +362,14 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // In addition to the simple sequences of counted strings above,
 // domain names are allowed to refer to strings elsewhere in the
 // packet, to avoid repeating common suffixes when returning
-// many entries in a single domain.  The pointers are marked
-// by a length byte with the top two bits set.  Ignoring those
-// two bits, that byte and the next give a 14 bit offset from msg[0]
+// many entries in a single domain. The pointers are marked
+// by a length byte with the top two bits set. Ignoring those
+// two bits, that byte and the next give a 14 bit offset from into msg
 // where we should pick up the trail.
 // Note that if we jump elsewhere in the packet,
-// we return off1 == the offset after the first pointer we found,
-// which is where the next record will start.
-// In theory, the pointers are only allowed to jump backward.
-// We let them jump anywhere and stop jumping after a while.
+// we record the last offset we read from when we found the first pointer,
+// which is where the next record or record field will start.
+// We enforce that pointers always point backwards into the message.
 
 // UnpackDomainName unpacks a domain name into a string. It returns
 // the name, the new offset into msg and any error that occurred.
@@ -376,33 +377,52 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
+	s := newDNSString(msg, off)
+	name, err := unpackDomainName(s)
+	if err != nil {
+		// Keep documented behaviour of returning len(msg) here.
+		return "", len(msg), err
+	}
+	return name, s.offset(), nil
+}
+
+func unpackDomainName(msg *dnsString) (string, error) {
 	s := make([]byte, 0, maxDomainNamePresentationLength)
-	off1 := 0
-	lenmsg := len(msg)
 	budget := maxDomainNameWireOctets
-	ptr := 0 // number of pointers followed
-Loop:
-	for {
-		if off >= lenmsg {
-			return "", lenmsg, ErrBuf
+	var ptrs int // number of pointers followed
+
+	// We use the cryptobyte.String directly and update msg when appropriate as
+	// we need to backtrack through the message to unpack the name. The entire
+	// dnsString machinery exists entirely to allow this.
+	cs := msg.String
+	defer func() {
+		// If we never saw a pointer, update msg with our final position.
+		if ptrs == 0 {
+			msg.String = cs
 		}
-		c := int(msg[off])
-		off++
+	}()
+
+	for {
+		var c byte
+		if !cs.ReadUint8(&c) {
+			return "", ErrBuf
+		}
+		if c == 0x00 { // end of name
+			if len(s) == 0 {
+				return ".", nil
+			}
+			return string(s), nil
+		}
 		switch c & 0xC0 {
-		case 0x00:
-			if c == 0x00 {
-				// end of name
-				break Loop
+		case 0x00: // literal string
+			var part []byte
+			if !cs.ReadBytes(&part, int(c)) {
+				return "", ErrBuf
 			}
-			// literal string
-			if off+c > lenmsg {
-				return "", lenmsg, ErrBuf
+			if budget -= len(part) + 1; budget <= 0 { // +1 for the label separator
+				return "", ErrLongDomain
 			}
-			budget -= c + 1 // +1 for the label separator
-			if budget <= 0 {
-				return "", lenmsg, ErrLongDomain
-			}
-			for _, b := range msg[off : off+c] {
+			for _, b := range part {
 				if isDomainNameLabelSpecial(b) {
 					s = append(s, '\\', b)
 				} else if b < ' ' || b > '~' {
@@ -412,40 +432,34 @@ Loop:
 				}
 			}
 			s = append(s, '.')
-			off += c
-		case 0xC0:
-			// pointer to somewhere else in msg.
-			// remember location after first ptr,
-			// since that's how many bytes we consumed.
-			// also, don't follow too many pointers --
-			// maybe there's a loop.
-			if off >= lenmsg {
-				return "", lenmsg, ErrBuf
+		case 0xC0: // pointer
+			var c1 byte
+			if !cs.ReadUint8(&c1) {
+				return "", ErrBuf
 			}
-			c1 := msg[off]
-			off++
-			if ptr == 0 {
-				off1 = off
+			// If this is the first pointer we see, update msg with our
+			// current position.
+			if ptrs == 0 {
+				msg.String = cs
 			}
-			if ptr++; ptr > maxCompressionPointers {
-				return "", lenmsg, &Error{err: "too many compression pointers"}
+			// Don't follow too many pointers in case there is a loop.
+			if ptrs++; ptrs > maxCompressionPointers {
+				return "", &Error{err: "too many compression pointers"}
 			}
-			// pointer should guarantee that it advances and points forwards at least
-			// but the condition on previous three lines guarantees that it's
-			// at least loop-free
-			off = (c^0xC0)<<8 | int(c1)
+			// The pointer should always point backwards to an earlier
+			// part of the message. Technically it could work pointing
+			// forwards, but we can't support that consistently so error
+			// out.
+			off := uint16(c&^0xC0)<<8 | uint16(c1)
+			if int(off) > len(msg.raw)-len(cs) {
+				return "", &Error{err: "pointer went past current offset"}
+			}
+			cs = msg.raw[off:]
 		default:
 			// 0x80 and 0x40 are reserved
-			return "", lenmsg, ErrRdata
+			return "", ErrRdata
 		}
 	}
-	if ptr == 0 {
-		off1 = off
-	}
-	if len(s) == 0 {
-		return ".", off1, nil
-	}
-	return string(s), off1, nil
 }
 
 func packTxt(txt []string, msg []byte, offset int) (int, error) {
@@ -529,16 +543,16 @@ func packOctetString(s string, msg []byte, offset int) (int, error) {
 	return offset, nil
 }
 
-func unpackTxt(msg []byte, off0 int) (ss []string, off int, err error) {
-	off = off0
-	var s string
-	for off < len(msg) && err == nil {
-		s, off, err = unpackString(msg, off)
-		if err == nil {
-			ss = append(ss, s)
+func unpackTxt(msg *dnsString) ([]string, error) {
+	var ss []string
+	for !msg.Empty() {
+		s, err := unpackString(msg)
+		if err != nil {
+			return ss, err
 		}
+		ss = append(ss, s)
 	}
-	return
+	return ss, nil
 }
 
 // Helpers for dealing with escaped bytes
@@ -603,17 +617,63 @@ func packRR(rr RR, msg []byte, off int, compression compressionMap, compress boo
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	h, off, msg, err := unpackHeader(msg, off)
-	if err != nil {
-		return nil, len(msg), err
+	if off < 0 || off > len(msg) {
+		return nil, off, &Error{err: "bad off"}
 	}
 
-	return UnpackRRWithHeader(h, msg, off)
+	s := newDNSString(msg, off)
+	rr, err = unpackRR(s)
+	if err != nil {
+		// Keep existing behaviour of returning len(msg) here on error.
+		return rr, len(msg), err
+	}
+	return rr, s.offset(), nil
+}
+
+func unpackRR(s *dnsString) (RR, error) {
+	h, err := unpackHeader(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if int(h.Rdlength) > len(s.String) {
+		return &h, &Error{err: "bad rdlength"}
+	}
+
+	// Create a new *dnsString that is restricted to only this RR.
+	s2 := newDNSString(s.raw[:s.offset()+int(h.Rdlength)], s.offset())
+
+	rr, err := unpackRRWithHeader(h, s2)
+
+	// Advance s the number of bytes we read from s2.
+	if !s.Skip(s2.offset() - s.offset()) {
+		panic("dns: internal error: unable to skip read bytes")
+	}
+
+	return rr, err
 }
 
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
 // RR_Header.
 func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
+	if off < 0 || off > len(msg) {
+		return &h, off, &Error{err: "bad off"}
+	}
+	if int(h.Rdlength) > len(msg)-off {
+		return &h, off, &Error{err: "bad rdlength"}
+	}
+
+	s := newDNSString(msg[:off+int(h.Rdlength)], off)
+	rr, err = unpackRRWithHeader(h, s)
+	if err != nil {
+		// Keep existing behaviour of returning len(msg) here on error.
+		return rr, len(msg), err
+	}
+	return rr, s.offset(), nil
+}
+
+func unpackRRWithHeader(h RR_Header, msg *dnsString) (RR, error) {
+	var rr RR
 	if newFn, ok := TypeToRR[h.Rrtype]; ok {
 		rr = newFn()
 		*rr.Header() = h
@@ -621,53 +681,39 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 		rr = &RFC3597{Hdr: h}
 	}
 
-	if off < 0 || off > len(msg) {
-		return &h, off, &Error{err: "bad off"}
-	}
-
-	end := off + int(h.Rdlength)
-	if end < off || end > len(msg) {
-		return &h, end, &Error{err: "bad rdlength"}
-	}
-
 	if noRdata(h) {
-		return rr, off, nil
+		return rr, nil
 	}
 
-	off, err = rr.unpack(msg, off)
-	if err != nil {
-		return nil, end, err
+	if err := rr.unpack(msg); err != nil {
+		return nil, err
 	}
-	if off != end {
-		return &h, end, &Error{err: "bad rdlength"}
+	if !msg.Empty() {
+		return &h, &Error{err: "bad rdlength"}
 	}
 
-	return rr, off, nil
+	return rr, nil
 }
 
-// unpackRRslice unpacks msg[off:] into an []RR.
+// unpackRRslice unpacks msg into an []RR.
 // If we cannot unpack the whole array, then it will return nil
-func unpackRRslice(l int, msg []byte, off int) (dst1 []RR, off1 int, err error) {
-	var r RR
+func unpackRRslice(l uint16, msg *dnsString) ([]RR, error) {
 	// Don't pre-allocate, l may be under attacker control
 	var dst []RR
-	for i := 0; i < l; i++ {
-		off1 := off
-		r, off, err = UnpackRR(msg, off)
-		if err != nil {
-			off = len(msg)
+	for i := 0; i < int(l); i++ {
+		if msg.Empty() { // Already empty, l is a lie.
 			break
 		}
-		// If offset does not increase anymore, l is a lie
-		if off1 == off {
-			break
+		r, err := unpackRR(msg)
+		if err != nil {
+			if msg.Empty() {
+				return nil, err
+			}
+			return dst, err
 		}
 		dst = append(dst, r)
 	}
-	if err != nil && off == len(msg) {
-		dst = nil
-	}
-	return dst, off, err
+	return dst, nil
 }
 
 // Convert a MsgHdr to a string, with dig-like headers:
@@ -821,11 +867,11 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 	return msg[:off], nil
 }
 
-func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
+func (dns *Msg) unpack(dh Header, msg *dnsString) error {
 	// If we are at the end of the message we should return *just* the
 	// header. This can still be useful to the caller. 9.9.9.9 sends these
 	// when responding with REFUSED for instance.
-	if off == len(msg) {
+	if msg.Empty() {
 		// reset sections before returning
 		dns.Question, dns.Answer, dns.Ns, dns.Extra = nil, nil, nil, nil
 		return nil
@@ -836,31 +882,30 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	// slices.
 	dns.Question = nil
 	for i := 0; i < int(dh.Qdcount); i++ {
-		off1 := off
-		var q Question
-		q, off, err = unpackQuestion(msg, off)
-		if err != nil {
-			return err
-		}
-		if off1 == off { // Offset does not increase anymore, dh.Qdcount is a lie!
+		if msg.Empty() { // Already at the end, dh.Qdcount is a lie!
 			dh.Qdcount = uint16(i)
 			break
+		}
+		q, err := unpackQuestion(msg)
+		if err != nil {
+			return err
 		}
 		dns.Question = append(dns.Question, q)
 	}
 
-	dns.Answer, off, err = unpackRRslice(int(dh.Ancount), msg, off)
-	// The header counts might have been wrong so we need to update it
+	// Unpack the RRs and update the header counts, as they might be wrong.
+	var err error
+	dns.Answer, err = unpackRRslice(dh.Ancount, msg)
 	dh.Ancount = uint16(len(dns.Answer))
+
 	if err == nil {
-		dns.Ns, off, err = unpackRRslice(int(dh.Nscount), msg, off)
+		dns.Ns, err = unpackRRslice(dh.Nscount, msg)
 	}
-	// The header counts might have been wrong so we need to update it
 	dh.Nscount = uint16(len(dns.Ns))
+
 	if err == nil {
-		dns.Extra, _, err = unpackRRslice(int(dh.Arcount), msg, off)
+		dns.Extra, err = unpackRRslice(dh.Arcount, msg)
 	}
-	// The header counts might have been wrong so we need to update it
 	dh.Arcount = uint16(len(dns.Extra))
 
 	// Set extended Rcode
@@ -870,8 +915,8 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 
 	// TODO(miek) make this an error?
 	// use PackOpt to let people tell how detailed the error reporting should be?
-	// if off != len(msg) {
-	// 	// println("dns: extra bytes in dns packet", off, "<", len(msg))
+	// if !msg.Empty() {
+	// 	println("dns: extra bytes in dns packet", msg.offset(), "<", len(msg.raw))
 	// }
 	return err
 
@@ -879,13 +924,14 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 
 // Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) (err error) {
-	dh, off, err := unpackMsgHdr(msg, 0)
+	s := newDNSString(msg, 0)
+	dh, err := unpackMsgHdr(s)
 	if err != nil {
 		return err
 	}
 
 	dns.setHdr(dh)
-	return dns.unpack(dh, msg, off)
+	return dns.unpack(dh, s)
 }
 
 // Convert a complete message to a string with dig-like output.
@@ -1116,30 +1162,22 @@ func (q *Question) pack(msg []byte, off int, compression compressionMap, compres
 	return off, nil
 }
 
-func unpackQuestion(msg []byte, off int) (Question, int, error) {
+func unpackQuestion(msg *dnsString) (Question, error) {
 	var (
 		q   Question
 		err error
 	)
-	q.Name, off, err = UnpackDomainName(msg, off)
+	q.Name, err = unpackDomainName(msg)
 	if err != nil {
-		return q, off, err
+		return q, err
 	}
-	if off == len(msg) {
-		return q, off, nil
+	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
+		return q, errUnpackOverflow
 	}
-	q.Qtype, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return q, off, err
+	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
+		return q, errUnpackOverflow
 	}
-	if off == len(msg) {
-		return q, off, nil
-	}
-	q.Qclass, off, err = unpackUint16(msg, off)
-	if off == len(msg) {
-		return q, off, nil
-	}
-	return q, off, err
+	return q, nil
 }
 
 func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
@@ -1170,36 +1208,17 @@ func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress
 	return off, nil
 }
 
-func unpackMsgHdr(msg []byte, off int) (Header, int, error) {
-	var (
-		dh  Header
-		err error
-	)
-	dh.Id, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
+func unpackMsgHdr(msg *dnsString) (Header, error) {
+	var dh Header
+	if !msg.ReadUint16(&dh.Id) ||
+		!msg.ReadUint16(&dh.Bits) ||
+		!msg.ReadUint16(&dh.Qdcount) ||
+		!msg.ReadUint16(&dh.Ancount) ||
+		!msg.ReadUint16(&dh.Nscount) ||
+		!msg.ReadUint16(&dh.Arcount) {
+		return dh, errUnpackOverflow
 	}
-	dh.Bits, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
-	}
-	dh.Qdcount, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
-	}
-	dh.Ancount, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
-	}
-	dh.Nscount, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
-	}
-	dh.Arcount, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return dh, off, err
-	}
-	return dh, off, nil
+	return dh, nil
 }
 
 // setHdr set the header in the dns using the binary data in dh.

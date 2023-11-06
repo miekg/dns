@@ -254,8 +254,7 @@ func TestMsgPackBuffer(t *testing.T) {
 		input, _ := hex.DecodeString(hexData)
 		m := new(Msg)
 		if err := m.Unpack(input); err != nil {
-			t.Errorf("packet %d failed to unpack", i)
-			continue
+			t.Errorf("packet %d failed to unpack: %v", i, err)
 		}
 	}
 }

@@ -324,13 +324,9 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) ([]
 // Strip the TSIG from the raw message.
 func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	// Copied from msg.go's Unpack() Header, but modified.
-	var (
-		dh  Header
-		err error
-	)
-	off, tsigoff := 0, 0
-
-	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
+	s := newDNSString(msg, 0)
+	dh, err := unpackMsgHdr(s)
+	if err != nil {
 		return nil, nil, err
 	}
 	if dh.Arcount == 0 {
@@ -343,26 +339,29 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	}
 
 	for i := 0; i < int(dh.Qdcount); i++ {
-		_, off, err = unpackQuestion(msg, off)
+		_, err = unpackQuestion(s)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	_, off, err = unpackRRslice(int(dh.Ancount), msg, off)
-	if err != nil {
-		return nil, nil, err
-	}
-	_, off, err = unpackRRslice(int(dh.Nscount), msg, off)
+	_, err = unpackRRslice(dh.Ancount, s)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rr := new(TSIG)
-	var extra RR
+	_, err = unpackRRslice(dh.Nscount, s)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var (
+		rr      *TSIG
+		tsigOff int
+	)
 	for i := 0; i < int(dh.Arcount); i++ {
-		tsigoff = off
-		extra, off, err = UnpackRR(msg, off)
+		tsigOff = s.offset()
+		extra, err := unpackRR(s)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -377,7 +376,7 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	if rr == nil {
 		return nil, nil, ErrNoSig
 	}
-	return msg[:tsigoff], rr, nil
+	return msg[:tsigOff], rr, nil
 }
 
 // Translate the TSIG time signed into a date. There is no

@@ -605,7 +605,8 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 }
 
 func (srv *Server) serveDNS(m []byte, w *response) {
-	dh, off, err := unpackMsgHdr(m, 0)
+	s := newDNSString(m, 0)
+	dh, err := unpackMsgHdr(s)
 	if err != nil {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
@@ -616,7 +617,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 	switch action := srv.MsgAcceptFunc(dh); action {
 	case MsgAccept:
-		if req.unpack(dh, m, off) == nil {
+		if req.unpack(dh, s) == nil {
 			break
 		}
 

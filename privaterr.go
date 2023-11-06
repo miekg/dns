@@ -61,10 +61,12 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
-func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
-	off1, err := r.Data.Unpack(msg[off:])
-	off += off1
-	return off, err
+func (r *PrivateRR) unpack(msg *dnsString) error {
+	off, err := r.Data.Unpack(msg.String)
+	if !msg.Skip(off) {
+		panic("dns: Unpack reported invalid offset")
+	}
+	return err
 }
 
 func (r *PrivateRR) parse(c *zlexer, origin string) *ParseError {

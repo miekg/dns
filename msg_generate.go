@@ -200,18 +200,26 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(msg []byte, off int) (off1 int, err error) {\n", name)
-		fmt.Fprint(b, `rdStart := off
-_ = rdStart
-
-`)
+		fmt.Fprintf(b, "func (rr *%s) unpack(msg *dnsString) (err error) {\n", name)
+	fieldLoop:
 		for i := 1; i < st.NumFields(); i++ {
-			o := func(s string) {
-				fmt.Fprintf(b, s, st.Field(i).Name())
-				fmt.Fprint(b, `if err != nil {
-return off, err
-}
-`)
+			errCheck := func() {
+				fmt.Fprintln(b, "if err != nil { return err }")
+			}
+			unpackField := func(unpacker string) {
+				fmt.Fprintf(b, "rr.%s, err = %s(msg)\n", st.Field(i).Name(), unpacker)
+				errCheck()
+			}
+			unpackFieldRest := func(unpacker string) {
+				fmt.Fprintf(b, "rr.%s, err = %s(msg, len(msg.String))\n", st.Field(i).Name(), unpacker)
+				errCheck()
+			}
+			unpackFieldLength := func(unpacker, len string) {
+				fmt.Fprintf(b, "rr.%s, err = %s(msg, int(rr.%s))\n", st.Field(i).Name(), unpacker, len)
+				errCheck()
+			}
+			readInt := func(type_ string) {
+				fmt.Fprintf(b, "if !msg.Read%s(&rr.%s) { return errUnpackOverflow }\n", type_, st.Field(i).Name())
 			}
 
 			// size-* are special, because they reference a struct member we should use for the length.
@@ -220,36 +228,33 @@ return off, err
 				structTag := structTag(st.Tag(i))
 				switch structTag {
 				case "hex":
-					fmt.Fprintf(b, "rr.%s, off, err = unpackStringHex(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+					unpackFieldLength("unpackStringHex", structMember)
 				case "base32":
-					fmt.Fprintf(b, "rr.%s, off, err = unpackStringBase32(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+					unpackFieldLength("unpackStringBase32", structMember)
 				case "base64":
-					fmt.Fprintf(b, "rr.%s, off, err = unpackStringBase64(msg, off, off + int(rr.%s))\n", st.Field(i).Name(), structMember)
+					unpackFieldLength("unpackStringBase64", structMember)
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
-				fmt.Fprint(b, `if err != nil {
-return off, err
-}
-`)
 				continue
 			}
 
 			if _, ok := st.Field(i).Type().(*types.Slice); ok {
 				switch st.Tag(i) {
 				case `dns:"-"`: // ignored
+					continue fieldLoop
 				case `dns:"txt"`:
-					o("rr.%s, off, err = unpackStringTxt(msg, off)\n")
+					unpackField("unpackStringTxt")
 				case `dns:"opt"`:
-					o("rr.%s, off, err = unpackDataOpt(msg, off)\n")
+					unpackField("unpackDataOpt")
 				case `dns:"nsec"`:
-					o("rr.%s, off, err = unpackDataNsec(msg, off)\n")
+					unpackField("unpackDataNsec")
 				case `dns:"pairs"`:
-					o("rr.%s, off, err = unpackDataSVCB(msg, off)\n")
+					unpackField("unpackDataSVCB")
 				case `dns:"domain-name"`:
-					o("rr.%s, off, err = unpackDataDomainNames(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+					unpackField("unpackDataDomainNames")
 				case `dns:"apl"`:
-					o("rr.%s, off, err = unpackDataApl(msg, off)\n")
+					unpackField("unpackDataApl")
 				default:
 					log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 				}
@@ -258,42 +263,45 @@ return off, err
 
 			switch st.Tag(i) {
 			case `dns:"-"`: // ignored
-			case `dns:"cdomain-name"`:
-				fallthrough
-			case `dns:"domain-name"`:
-				o("rr.%s, off, err = UnpackDomainName(msg, off)\n")
+				continue fieldLoop
+			case `dns:"cdomain-name"`, `dns:"domain-name"`:
+				unpackField("unpackDomainName")
 			case `dns:"a"`:
-				o("rr.%s, off, err = unpackDataA(msg, off)\n")
+				unpackField("unpackDataA")
 			case `dns:"aaaa"`:
-				o("rr.%s, off, err = unpackDataAAAA(msg, off)\n")
+				unpackField("unpackDataAAAA")
 			case `dns:"uint48"`:
-				o("rr.%s, off, err = unpackUint48(msg, off)\n")
+				readInt("Uint48")
 			case `dns:"txt"`:
-				o("rr.%s, off, err = unpackString(msg, off)\n")
+				unpackField("unpackString")
 			case `dns:"base32"`:
-				o("rr.%s, off, err = unpackStringBase32(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+				unpackFieldRest("unpackStringBase32")
 			case `dns:"base64"`:
-				o("rr.%s, off, err = unpackStringBase64(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+				unpackFieldRest("unpackStringBase64")
 			case `dns:"hex"`:
-				o("rr.%s, off, err = unpackStringHex(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+				unpackFieldRest("unpackStringHex")
 			case `dns:"any"`:
-				o("rr.%s, off, err = unpackStringAny(msg, off, rdStart + int(rr.Hdr.Rdlength))\n")
+				unpackFieldRest("unpackStringAny")
 			case `dns:"octet"`:
-				o("rr.%s, off, err = unpackStringOctet(msg, off)\n")
+				unpackField("unpackStringOctet")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
-				o("rr.GatewayAddr, rr.%s, off, err = unpackIPSECGateway(msg, off, rr.GatewayType)\n")
+				// TODO(tmthrgd): This is a particular unpleasant
+				// way of dealing with this. Can we do better?
+				// Probably not with the structs as they are.
+				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, rr.GatewayType)")
+				errCheck()
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
-					o("rr.%s, off, err = unpackUint8(msg, off)\n")
+					readInt("Uint8")
 				case types.Uint16:
-					o("rr.%s, off, err = unpackUint16(msg, off)\n")
+					readInt("Uint16")
 				case types.Uint32:
-					o("rr.%s, off, err = unpackUint32(msg, off)\n")
+					readInt("Uint32")
 				case types.Uint64:
-					o("rr.%s, off, err = unpackUint64(msg, off)\n")
+					readInt("Uint64")
 				case types.String:
-					o("rr.%s, off, err = unpackString(msg, off)\n")
+					unpackField("unpackString")
 				default:
 					log.Fatalln(name, st.Field(i).Name())
 				}
@@ -302,13 +310,13 @@ return off, err
 			}
 			// If we've hit len(msg) we return without error.
 			if i < st.NumFields()-1 {
-				fmt.Fprint(b, `if off == len(msg) {
-return off, nil
+				fmt.Fprint(b, `if msg.Empty() {
+return nil
 	}
 `)
 			}
 		}
-		fmt.Fprintf(b, "return off, nil }\n\n")
+		fmt.Fprintf(b, "return nil }\n\n")
 	}
 
 	// gofmt

@@ -300,7 +300,8 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 
 	p = p[:n]
 	if hdr != nil {
-		dh, _, err := unpackMsgHdr(p, 0)
+		s := newDNSString(p, 0)
+		dh, err := unpackMsgHdr(s)
 		if err != nil {
 			return nil, err
 		}

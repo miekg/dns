@@ -172,7 +172,8 @@ func TestUnpackString(t *testing.T) {
 	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm\x7f")
 	msg[0] = byte(len(msg) - 1)
 
-	got, _, err := unpackString(msg, 0)
+	s := newDNSString(msg, 0)
+	got, err := unpackString(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +189,8 @@ func BenchmarkUnpackString(b *testing.B) {
 		msg[0] = byte(len(msg) - 1)
 
 		for n := 0; n < b.N; n++ {
-			got, _, err := unpackString(msg, 0)
+			s := newDNSString(msg, 0)
+			got, err := unpackString(s)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -203,7 +205,8 @@ func BenchmarkUnpackString(b *testing.B) {
 		msg[0] = byte(len(msg) - 1)
 
 		for n := 0; n < b.N; n++ {
-			got, _, err := unpackString(msg, 0)
+			s := newDNSString(msg, 0)
+			got, err := unpackString(s)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -281,7 +284,8 @@ func TestPackDataAplPrefix(t *testing.T) {
 				t.Fatalf("expected output %02x, got %02x", tt.expect, out[:off])
 			}
 			// Make sure the packed bytes would be accepted by its own unpack
-			_, _, err = unpackDataAplPrefix(out, 0)
+			s := newDNSString(out, 0)
+			_, err = unpackDataAplPrefix(s)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
 			}
@@ -424,12 +428,13 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, off, err := unpackDataAplPrefix(tt.wire, 0)
+			s := newDNSString(tt.wire, 0)
+			got, err := unpackDataAplPrefix(s)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
 			}
-			if off != len(tt.wire) {
-				t.Fatalf("expected offset %d, got %d", len(tt.wire), off)
+			if !s.Empty() {
+				t.Error("expected to read all data")
 			}
 			if got.Negation != tt.negation {
 				t.Errorf("expected negation %v, got %v", tt.negation, got.Negation)
@@ -488,7 +493,8 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := unpackDataAplPrefix(tt.wire, 0)
+			s := newDNSString(tt.wire, 0)
+			_, err := unpackDataAplPrefix(s)
 			if err == nil {
 				t.Fatal("expected error, got none")
 			}
@@ -569,12 +575,13 @@ func TestUnpackDataApl(t *testing.T) {
 		},
 	}
 
-	got, off, err := unpackDataApl(wire, 0)
+	s := newDNSString(wire, 0)
+	got, err := unpackDataApl(s)
 	if err != nil {
 		t.Fatalf("expected no error, got %q", err)
 	}
-	if off != len(wire) {
-		t.Fatalf("expected offset %d, got %d", len(wire), off)
+	if !s.Empty() {
+		t.Error("expected to read all data")
 	}
 	if len(got) != len(expect) {
 		t.Fatalf("expected %d prefixes, got %d", len(expect), len(got))
