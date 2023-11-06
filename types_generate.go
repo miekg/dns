@@ -283,9 +283,8 @@ func main() {
 			if sl, ok := st.Field(i).Type().(*types.Slice); ok {
 				t := sl.Underlying().String()
 				t = strings.TrimPrefix(t, "[]")
-				if strings.Contains(t, ".") {
-					splits := strings.Split(t, ".")
-					t = splits[len(splits)-1]
+				if idx := strings.LastIndex(t, "."); idx >= 0 {
+					t = t[idx+1:]
 				}
 				// For the EDNS0 interface (and others), we need to call the copy method on each element.
 				if t == "EDNS0" || t == "APLPrefix" || t == "SVCBKeyValue" {
