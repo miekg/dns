@@ -327,25 +327,15 @@ return off, nil
 
 // structMember will take a tag like dns:"size-base32:SaltLength" and return the last part of this string.
 func structMember(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) == 0 {
-		return ""
-	}
-	f := fields[len(fields)-1]
-	// f should have a closing "
-	if len(f) > 1 {
-		return f[:len(f)-1]
-	}
-	return f
+	idx := strings.LastIndex(s, ":")
+	return strings.TrimSuffix(s[idx+1:], `"`)
 }
 
 // structTag will take a tag like dns:"size-base32:SaltLength" and return base32.
 func structTag(s string) string {
-	fields := strings.Split(s, ":")
-	if len(fields) < 2 {
-		return ""
-	}
-	return fields[1][len("\"size-"):]
+	s = strings.TrimPrefix(s, `dns:"size-`)
+	s, _, _ = strings.Cut(s, ":")
+	return s
 }
 
 func fatalIfErr(err error) {
