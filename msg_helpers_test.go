@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"net"
 	"testing"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // TestPacketDataNsec tests generated using fuzz.go and with a message pack
@@ -172,8 +174,7 @@ func TestUnpackString(t *testing.T) {
 	msg := []byte("\x00abcdef\x0f\\\"ghi\x04mmm\x7f")
 	msg[0] = byte(len(msg) - 1)
 
-	s := newDNSString(msg, 0)
-	got, err := unpackString(s)
+	got, err := unpackString((*cryptobyte.String)(&msg))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,8 +190,8 @@ func BenchmarkUnpackString(b *testing.B) {
 		msg[0] = byte(len(msg) - 1)
 
 		for n := 0; n < b.N; n++ {
-			s := newDNSString(msg, 0)
-			got, err := unpackString(s)
+			s := cryptobyte.String(msg)
+			got, err := unpackString(&s)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -205,8 +206,8 @@ func BenchmarkUnpackString(b *testing.B) {
 		msg[0] = byte(len(msg) - 1)
 
 		for n := 0; n < b.N; n++ {
-			s := newDNSString(msg, 0)
-			got, err := unpackString(s)
+			s := cryptobyte.String(msg)
+			got, err := unpackString(&s)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -284,8 +285,7 @@ func TestPackDataAplPrefix(t *testing.T) {
 				t.Fatalf("expected output %02x, got %02x", tt.expect, out[:off])
 			}
 			// Make sure the packed bytes would be accepted by its own unpack
-			s := newDNSString(out, 0)
-			_, err = unpackDataAplPrefix(s)
+			_, err = unpackDataAplPrefix((*cryptobyte.String)(&out))
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
 			}
@@ -428,8 +428,8 @@ func TestUnpackDataAplPrefix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newDNSString(tt.wire, 0)
-			got, err := unpackDataAplPrefix(s)
+			s := cryptobyte.String(tt.wire)
+			got, err := unpackDataAplPrefix(&s)
 			if err != nil {
 				t.Fatalf("expected no error, got %q", err)
 			}
@@ -493,8 +493,8 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := newDNSString(tt.wire, 0)
-			_, err := unpackDataAplPrefix(s)
+			s := cryptobyte.String(tt.wire)
+			_, err := unpackDataAplPrefix(&s)
 			if err == nil {
 				t.Fatal("expected error, got none")
 			}
@@ -575,8 +575,8 @@ func TestUnpackDataApl(t *testing.T) {
 		},
 	}
 
-	s := newDNSString(wire, 0)
-	got, err := unpackDataApl(s)
+	s := cryptobyte.String(wire)
+	got, err := unpackDataApl(&s)
 	if err != nil {
 		t.Fatalf("expected no error, got %q", err)
 	}

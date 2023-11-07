@@ -24,6 +24,8 @@ var packageHdr = `
 
 package dns
 
+import "golang.org/x/crypto/cryptobyte"
+
 `
 
 // getTypeStruct will take a type and the package scope, and return the
@@ -200,7 +202,7 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(msg *dnsString) (err error) {\n", name)
+		fmt.Fprintf(b, "func (rr *%s) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {\n", name)
 	fieldLoop:
 		for i := 1; i < st.NumFields(); i++ {
 			errCheck := func() {
@@ -210,8 +212,12 @@ if rr.%s != "-" {
 				fmt.Fprintf(b, "rr.%s, err = %s(msg)\n", st.Field(i).Name(), unpacker)
 				errCheck()
 			}
+			unpackFieldBuf := func(unpacker string) {
+				fmt.Fprintf(b, "rr.%s, err = %s(msg, msgBuf)\n", st.Field(i).Name(), unpacker)
+				errCheck()
+			}
 			unpackFieldRest := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(msg, len(msg.String))\n", st.Field(i).Name(), unpacker)
+				fmt.Fprintf(b, "rr.%s, err = %s(msg, len(*msg))\n", st.Field(i).Name(), unpacker)
 				errCheck()
 			}
 			unpackFieldLength := func(unpacker, len string) {
@@ -252,7 +258,7 @@ if rr.%s != "-" {
 				case `dns:"pairs"`:
 					unpackField("unpackDataSVCB")
 				case `dns:"domain-name"`:
-					unpackField("unpackDataDomainNames")
+					unpackFieldBuf("unpackDataDomainNames")
 				case `dns:"apl"`:
 					unpackField("unpackDataApl")
 				default:
@@ -265,7 +271,7 @@ if rr.%s != "-" {
 			case `dns:"-"`: // ignored
 				continue fieldLoop
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-				unpackField("unpackDomainName")
+				unpackFieldBuf("unpackDomainName")
 			case `dns:"a"`:
 				unpackField("unpackDataA")
 			case `dns:"aaaa"`:
@@ -288,7 +294,7 @@ if rr.%s != "-" {
 				// TODO(tmthrgd): This is a particular unpleasant
 				// way of dealing with this. Can we do better?
 				// Probably not with the structs as they are.
-				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, rr.GatewayType)")
+				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, msgBuf, rr.GatewayType)")
 				errCheck()
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {

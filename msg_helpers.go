@@ -12,26 +12,13 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-type dnsString struct {
-	cryptobyte.String
-	raw []byte
-}
-
-func newDNSString(b []byte, off int) *dnsString {
-	return &dnsString{b[off:], b}
-}
-
-func (s *dnsString) offset() int {
-	return len(s.raw) - len(s.String)
-}
-
 // helper functions called from the generated zmsg.go
 
 // These function are named after the tag to help pack/unpack, if there is no tag it is the name
 // of the type they pack/unpack (string, int, etc). We prefix all with unpackData or packData, so packDataA or
 // packDataDomainName.
 
-func unpackDataA(msg *dnsString) (net.IP, error) {
+func unpackDataA(msg *cryptobyte.String) (net.IP, error) {
 	a := make(net.IP, net.IPv4len)
 	if !msg.CopyBytes(a) {
 		return nil, &Error{err: "overflow unpacking a"}
@@ -57,7 +44,7 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataAAAA(msg *dnsString) (net.IP, error) {
+func unpackDataAAAA(msg *cryptobyte.String) (net.IP, error) {
 	aaaa := make(net.IP, net.IPv6len)
 	if !msg.CopyBytes(aaaa) {
 		return nil, &Error{err: "overflow unpacking aaaa"}
@@ -83,14 +70,14 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 }
 
 // unpackHeader unpacks an RR header advancing msg.
-func unpackHeader(msg *dnsString) (RR_Header, error) {
+func unpackHeader(msg *cryptobyte.String, msgBuf []byte) (RR_Header, error) {
 	var hdr RR_Header
 	if msg.Empty() {
 		return hdr, nil
 	}
 
 	var err error
-	hdr.Name, err = unpackDomainName(msg)
+	hdr.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return hdr, err
 	}
@@ -162,10 +149,9 @@ func fromBase64(s []byte) (buf []byte, err error) {
 	return
 }
 
-func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
-
-// dynamicUpdate returns true if the Rdlength is zero.
-func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
+func toBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
+}
 
 func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	if off+1 > len(msg) {
@@ -214,7 +200,7 @@ func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func unpackString(msg *dnsString) (string, error) {
+func unpackString(msg *cryptobyte.String) (string, error) {
 	var cs cryptobyte.String
 	if !msg.ReadUint8LengthPrefixed(&cs) {
 		return "", &Error{err: "overflow unpacking txt"}
@@ -255,7 +241,7 @@ func packString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase32(msg *dnsString, len int) (string, error) {
+func unpackStringBase32(msg *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !msg.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking base32"}
@@ -276,7 +262,7 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase64(msg *dnsString, len int) (string, error) {
+func unpackStringBase64(msg *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !msg.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking base64"}
@@ -297,7 +283,7 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringHex(msg *dnsString, len int) (string, error) {
+func unpackStringHex(msg *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !msg.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking hex"}
@@ -318,7 +304,7 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringAny(msg *dnsString, len int) (string, error) {
+func unpackStringAny(msg *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !msg.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking anything"}
@@ -335,7 +321,7 @@ func packStringAny(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringTxt(msg *dnsString) ([]string, error) {
+func unpackStringTxt(msg *cryptobyte.String) ([]string, error) {
 	return unpackTxt(msg)
 }
 
@@ -347,7 +333,7 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataOpt(msg *dnsString) ([]EDNS0, error) {
+func unpackDataOpt(msg *cryptobyte.String) ([]EDNS0, error) {
 	var edns []EDNS0
 	for !msg.Empty() {
 		var (
@@ -386,8 +372,8 @@ func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringOctet(msg *dnsString) (string, error) {
-	return unpackStringAny(msg, len(msg.String))
+func unpackStringOctet(msg *cryptobyte.String) (string, error) {
+	return unpackStringAny(msg, len(*msg))
 }
 
 func packStringOctet(s string, msg []byte, off int) (int, error) {
@@ -398,7 +384,7 @@ func packStringOctet(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataNsec(msg *dnsString) ([]uint16, error) {
+func unpackDataNsec(msg *cryptobyte.String) ([]uint16, error) {
 	var nsec []uint16
 	lastwindow := -1
 	for !msg.Empty() {
@@ -502,7 +488,7 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataSVCB(msg *dnsString) ([]SVCBKeyValue, error) {
+func unpackDataSVCB(msg *cryptobyte.String) ([]SVCBKeyValue, error) {
 	var xs []SVCBKeyValue
 	for !msg.Empty() {
 		var (
@@ -557,10 +543,10 @@ func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataDomainNames(msg *dnsString) ([]string, error) {
+func unpackDataDomainNames(msg *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	var servers []string
 	for !msg.Empty() {
-		s, err := unpackDomainName(msg)
+		s, err := unpackDomainName(msg, msgBuf)
 		if err != nil {
 			return servers, err
 		}
@@ -642,7 +628,7 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataApl(msg *dnsString) ([]APLPrefix, error) {
+func unpackDataApl(msg *cryptobyte.String) ([]APLPrefix, error) {
 	var result []APLPrefix
 	for !msg.Empty() {
 		prefix, err := unpackDataAplPrefix(msg)
@@ -654,7 +640,7 @@ func unpackDataApl(msg *dnsString) ([]APLPrefix, error) {
 	return result, nil
 }
 
-func unpackDataAplPrefix(msg *dnsString) (APLPrefix, error) {
+func unpackDataAplPrefix(msg *cryptobyte.String) (APLPrefix, error) {
 	var (
 		family       uint16
 		prefix, nlen byte
@@ -665,12 +651,12 @@ func unpackDataAplPrefix(msg *dnsString) (APLPrefix, error) {
 		return APLPrefix{}, &Error{err: "overflow unpacking APL prefix"}
 	}
 
-	var ip []byte
+	var ip net.IP
 	switch family {
 	case 1:
-		ip = make([]byte, net.IPv4len)
+		ip = make(net.IP, net.IPv4len)
 	case 2:
-		ip = make([]byte, net.IPv6len)
+		ip = make(net.IP, net.IPv6len)
 	default:
 		return APLPrefix{}, &Error{err: "unrecognized APL address family"}
 	}
@@ -699,7 +685,7 @@ func unpackDataAplPrefix(msg *dnsString) (APLPrefix, error) {
 	}, nil
 }
 
-func unpackIPSECGateway(msg *dnsString, gatewayType uint8) (net.IP, string, error) {
+func unpackIPSECGateway(msg *cryptobyte.String, msgBuf []byte, gatewayType uint8) (net.IP, string, error) {
 	var (
 		addr net.IP
 		name string
@@ -712,7 +698,7 @@ func unpackIPSECGateway(msg *dnsString, gatewayType uint8) (net.IP, string, erro
 	case IPSECGatewayIPv6:
 		addr, err = unpackDataAAAA(msg)
 	case IPSECGatewayHost:
-		name, err = unpackDomainName(msg)
+		name, err = unpackDomainName(msg, msgBuf)
 	}
 	return addr, name, err
 }

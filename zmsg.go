@@ -2,6 +2,8 @@
 
 package dns
 
+import "golang.org/x/crypto/cryptobyte"
+
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
@@ -1180,7 +1182,7 @@ func (rr *ZONEMD) pack(msg []byte, off int, compression compressionMap, compress
 
 // unpack*() functions
 
-func (rr *A) unpack(msg *dnsString) (err error) {
+func (rr *A) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.A, err = unpackDataA(msg)
 	if err != nil {
 		return err
@@ -1188,7 +1190,7 @@ func (rr *A) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *AAAA) unpack(msg *dnsString) (err error) {
+func (rr *AAAA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.AAAA, err = unpackDataAAAA(msg)
 	if err != nil {
 		return err
@@ -1196,21 +1198,21 @@ func (rr *AAAA) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *AFSDB) unpack(msg *dnsString) (err error) {
+func (rr *AFSDB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Subtype) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Hostname, err = unpackDomainName(msg)
+	rr.Hostname, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *AMTRELAY) unpack(msg *dnsString) (err error) {
+func (rr *AMTRELAY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Precedence) {
 		return errUnpackOverflow
 	}
@@ -1223,18 +1225,18 @@ func (rr *AMTRELAY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, rr.GatewayType)
+	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, msgBuf, rr.GatewayType)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *ANY) unpack(msg *dnsString) (err error) {
+func (rr *ANY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	return nil
 }
 
-func (rr *APL) unpack(msg *dnsString) (err error) {
+func (rr *APL) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Prefixes, err = unpackDataApl(msg)
 	if err != nil {
 		return err
@@ -1242,7 +1244,7 @@ func (rr *APL) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *AVC) unpack(msg *dnsString) (err error) {
+func (rr *AVC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Txt, err = unpackStringTxt(msg)
 	if err != nil {
 		return err
@@ -1250,7 +1252,7 @@ func (rr *AVC) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *CAA) unpack(msg *dnsString) (err error) {
+func (rr *CAA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Flag) {
 		return errUnpackOverflow
 	}
@@ -1271,7 +1273,7 @@ func (rr *CAA) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *CDNSKEY) unpack(msg *dnsString) (err error) {
+func (rr *CDNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
 		return errUnpackOverflow
 	}
@@ -1290,14 +1292,14 @@ func (rr *CDNSKEY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *CDS) unpack(msg *dnsString) (err error) {
+func (rr *CDS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
 		return errUnpackOverflow
 	}
@@ -1316,14 +1318,14 @@ func (rr *CDS) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Digest, err = unpackStringHex(msg, len(msg.String))
+	rr.Digest, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *CERT) unpack(msg *dnsString) (err error) {
+func (rr *CERT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Type) {
 		return errUnpackOverflow
 	}
@@ -1342,22 +1344,22 @@ func (rr *CERT) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Certificate, err = unpackStringBase64(msg, len(msg.String))
+	rr.Certificate, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *CNAME) unpack(msg *dnsString) (err error) {
-	rr.Target, err = unpackDomainName(msg)
+func (rr *CNAME) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Target, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *CSYNC) unpack(msg *dnsString) (err error) {
+func (rr *CSYNC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Serial) {
 		return errUnpackOverflow
 	}
@@ -1377,15 +1379,15 @@ func (rr *CSYNC) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *DHCID) unpack(msg *dnsString) (err error) {
-	rr.Digest, err = unpackStringBase64(msg, len(msg.String))
+func (rr *DHCID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Digest, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *DLV) unpack(msg *dnsString) (err error) {
+func (rr *DLV) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
 		return errUnpackOverflow
 	}
@@ -1404,22 +1406,22 @@ func (rr *DLV) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Digest, err = unpackStringHex(msg, len(msg.String))
+	rr.Digest, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *DNAME) unpack(msg *dnsString) (err error) {
-	rr.Target, err = unpackDomainName(msg)
+func (rr *DNAME) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Target, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *DNSKEY) unpack(msg *dnsString) (err error) {
+func (rr *DNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
 		return errUnpackOverflow
 	}
@@ -1438,14 +1440,14 @@ func (rr *DNSKEY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *DS) unpack(msg *dnsString) (err error) {
+func (rr *DS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
 		return errUnpackOverflow
 	}
@@ -1464,43 +1466,43 @@ func (rr *DS) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Digest, err = unpackStringHex(msg, len(msg.String))
+	rr.Digest, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *EID) unpack(msg *dnsString) (err error) {
-	rr.Endpoint, err = unpackStringHex(msg, len(msg.String))
+func (rr *EID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Endpoint, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *EUI48) unpack(msg *dnsString) (err error) {
+func (rr *EUI48) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint48(&rr.Address) {
 		return errUnpackOverflow
 	}
 	return nil
 }
 
-func (rr *EUI64) unpack(msg *dnsString) (err error) {
+func (rr *EUI64) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint64(&rr.Address) {
 		return errUnpackOverflow
 	}
 	return nil
 }
 
-func (rr *GID) unpack(msg *dnsString) (err error) {
+func (rr *GID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Gid) {
 		return errUnpackOverflow
 	}
 	return nil
 }
 
-func (rr *GPOS) unpack(msg *dnsString) (err error) {
+func (rr *GPOS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Longitude, err = unpackString(msg)
 	if err != nil {
 		return err
@@ -1522,7 +1524,7 @@ func (rr *GPOS) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *HINFO) unpack(msg *dnsString) (err error) {
+func (rr *HINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Cpu, err = unpackString(msg)
 	if err != nil {
 		return err
@@ -1537,7 +1539,7 @@ func (rr *HINFO) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *HIP) unpack(msg *dnsString) (err error) {
+func (rr *HIP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.HitLength) {
 		return errUnpackOverflow
 	}
@@ -1564,21 +1566,21 @@ func (rr *HIP) unpack(msg *dnsString) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.RendezvousServers, err = unpackDataDomainNames(msg)
+	rr.RendezvousServers, err = unpackDataDomainNames(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *HTTPS) unpack(msg *dnsString) (err error) {
+func (rr *HTTPS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Target, err = unpackDomainName(msg)
+	rr.Target, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1592,7 +1594,7 @@ func (rr *HTTPS) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *IPSECKEY) unpack(msg *dnsString) (err error) {
+func (rr *IPSECKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Precedence) {
 		return errUnpackOverflow
 	}
@@ -1611,21 +1613,21 @@ func (rr *IPSECKEY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, rr.GatewayType)
+	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, msgBuf, rr.GatewayType)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *KEY) unpack(msg *dnsString) (err error) {
+func (rr *KEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
 		return errUnpackOverflow
 	}
@@ -1644,28 +1646,28 @@ func (rr *KEY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *KX) unpack(msg *dnsString) (err error) {
+func (rr *KX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Exchanger, err = unpackDomainName(msg)
+	rr.Exchanger, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *L32) unpack(msg *dnsString) (err error) {
+func (rr *L32) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
@@ -1679,7 +1681,7 @@ func (rr *L32) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *L64) unpack(msg *dnsString) (err error) {
+func (rr *L64) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
@@ -1692,7 +1694,7 @@ func (rr *L64) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *LOC) unpack(msg *dnsString) (err error) {
+func (rr *LOC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Version) {
 		return errUnpackOverflow
 	}
@@ -1735,90 +1737,90 @@ func (rr *LOC) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *LP) unpack(msg *dnsString) (err error) {
+func (rr *LP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Fqdn, err = unpackDomainName(msg)
+	rr.Fqdn, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MB) unpack(msg *dnsString) (err error) {
-	rr.Mb, err = unpackDomainName(msg)
+func (rr *MB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Mb, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MD) unpack(msg *dnsString) (err error) {
-	rr.Md, err = unpackDomainName(msg)
+func (rr *MD) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Md, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MF) unpack(msg *dnsString) (err error) {
-	rr.Mf, err = unpackDomainName(msg)
+func (rr *MF) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Mf, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MG) unpack(msg *dnsString) (err error) {
-	rr.Mg, err = unpackDomainName(msg)
+func (rr *MG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Mg, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MINFO) unpack(msg *dnsString) (err error) {
-	rr.Rmail, err = unpackDomainName(msg)
+func (rr *MINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Rmail, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Email, err = unpackDomainName(msg)
+	rr.Email, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MR) unpack(msg *dnsString) (err error) {
-	rr.Mr, err = unpackDomainName(msg)
+func (rr *MR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Mr, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *MX) unpack(msg *dnsString) (err error) {
+func (rr *MX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Mx, err = unpackDomainName(msg)
+	rr.Mx, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *NAPTR) unpack(msg *dnsString) (err error) {
+func (rr *NAPTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Order) {
 		return errUnpackOverflow
 	}
@@ -1852,14 +1854,14 @@ func (rr *NAPTR) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Replacement, err = unpackDomainName(msg)
+	rr.Replacement, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *NID) unpack(msg *dnsString) (err error) {
+func (rr *NID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
@@ -1872,15 +1874,15 @@ func (rr *NID) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *NIMLOC) unpack(msg *dnsString) (err error) {
-	rr.Locator, err = unpackStringHex(msg, len(msg.String))
+func (rr *NIMLOC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Locator, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *NINFO) unpack(msg *dnsString) (err error) {
+func (rr *NINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.ZSData, err = unpackStringTxt(msg)
 	if err != nil {
 		return err
@@ -1888,24 +1890,24 @@ func (rr *NINFO) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *NS) unpack(msg *dnsString) (err error) {
-	rr.Ns, err = unpackDomainName(msg)
+func (rr *NS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Ns, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *NSAPPTR) unpack(msg *dnsString) (err error) {
-	rr.Ptr, err = unpackDomainName(msg)
+func (rr *NSAPPTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Ptr, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *NSEC) unpack(msg *dnsString) (err error) {
-	rr.NextDomain, err = unpackDomainName(msg)
+func (rr *NSEC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.NextDomain, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1919,7 +1921,7 @@ func (rr *NSEC) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *NSEC3) unpack(msg *dnsString) (err error) {
+func (rr *NSEC3) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Hash) {
 		return errUnpackOverflow
 	}
@@ -1965,7 +1967,7 @@ func (rr *NSEC3) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *NSEC3PARAM) unpack(msg *dnsString) (err error) {
+func (rr *NSEC3PARAM) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Hash) {
 		return errUnpackOverflow
 	}
@@ -1997,23 +1999,23 @@ func (rr *NSEC3PARAM) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *NULL) unpack(msg *dnsString) (err error) {
-	rr.Data, err = unpackStringAny(msg, len(msg.String))
+func (rr *NULL) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Data, err = unpackStringAny(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *OPENPGPKEY) unpack(msg *dnsString) (err error) {
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+func (rr *OPENPGPKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *OPT) unpack(msg *dnsString) (err error) {
+func (rr *OPT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Option, err = unpackDataOpt(msg)
 	if err != nil {
 		return err
@@ -2021,44 +2023,44 @@ func (rr *OPT) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *PTR) unpack(msg *dnsString) (err error) {
-	rr.Ptr, err = unpackDomainName(msg)
+func (rr *PTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Ptr, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *PX) unpack(msg *dnsString) (err error) {
+func (rr *PX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Map822, err = unpackDomainName(msg)
+	rr.Map822, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Mapx400, err = unpackDomainName(msg)
+	rr.Mapx400, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *RFC3597) unpack(msg *dnsString) (err error) {
-	rr.Rdata, err = unpackStringHex(msg, len(msg.String))
+func (rr *RFC3597) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Rdata, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *RKEY) unpack(msg *dnsString) (err error) {
+func (rr *RKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
 		return errUnpackOverflow
 	}
@@ -2077,29 +2079,29 @@ func (rr *RKEY) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.PublicKey, err = unpackStringBase64(msg, len(msg.String))
+	rr.PublicKey, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *RP) unpack(msg *dnsString) (err error) {
-	rr.Mbox, err = unpackDomainName(msg)
+func (rr *RP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Mbox, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Txt, err = unpackDomainName(msg)
+	rr.Txt, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *RRSIG) unpack(msg *dnsString) (err error) {
+func (rr *RRSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.TypeCovered) {
 		return errUnpackOverflow
 	}
@@ -2142,35 +2144,35 @@ func (rr *RRSIG) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.SignerName, err = unpackDomainName(msg)
+	rr.SignerName, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Signature, err = unpackStringBase64(msg, len(msg.String))
+	rr.Signature, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *RT) unpack(msg *dnsString) (err error) {
+func (rr *RT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Host, err = unpackDomainName(msg)
+	rr.Host, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *SIG) unpack(msg *dnsString) (err error) {
+func (rr *SIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.TypeCovered) {
 		return errUnpackOverflow
 	}
@@ -2213,21 +2215,21 @@ func (rr *SIG) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.SignerName, err = unpackDomainName(msg)
+	rr.SignerName, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Signature, err = unpackStringBase64(msg, len(msg.String))
+	rr.Signature, err = unpackStringBase64(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *SMIMEA) unpack(msg *dnsString) (err error) {
+func (rr *SMIMEA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Usage) {
 		return errUnpackOverflow
 	}
@@ -2246,22 +2248,22 @@ func (rr *SMIMEA) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Certificate, err = unpackStringHex(msg, len(msg.String))
+	rr.Certificate, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *SOA) unpack(msg *dnsString) (err error) {
-	rr.Ns, err = unpackDomainName(msg)
+func (rr *SOA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Ns, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Mbox, err = unpackDomainName(msg)
+	rr.Mbox, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2298,7 +2300,7 @@ func (rr *SOA) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *SPF) unpack(msg *dnsString) (err error) {
+func (rr *SPF) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Txt, err = unpackStringTxt(msg)
 	if err != nil {
 		return err
@@ -2306,7 +2308,7 @@ func (rr *SPF) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *SRV) unpack(msg *dnsString) (err error) {
+func (rr *SRV) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
 		return errUnpackOverflow
 	}
@@ -2325,14 +2327,14 @@ func (rr *SRV) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Target, err = unpackDomainName(msg)
+	rr.Target, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *SSHFP) unpack(msg *dnsString) (err error) {
+func (rr *SSHFP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Algorithm) {
 		return errUnpackOverflow
 	}
@@ -2345,21 +2347,21 @@ func (rr *SSHFP) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.FingerPrint, err = unpackStringHex(msg, len(msg.String))
+	rr.FingerPrint, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *SVCB) unpack(msg *dnsString) (err error) {
+func (rr *SVCB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
 		return errUnpackOverflow
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.Target, err = unpackDomainName(msg)
+	rr.Target, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2373,7 +2375,7 @@ func (rr *SVCB) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *TA) unpack(msg *dnsString) (err error) {
+func (rr *TA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
 		return errUnpackOverflow
 	}
@@ -2392,30 +2394,30 @@ func (rr *TA) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Digest, err = unpackStringHex(msg, len(msg.String))
+	rr.Digest, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *TALINK) unpack(msg *dnsString) (err error) {
-	rr.PreviousName, err = unpackDomainName(msg)
+func (rr *TALINK) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.PreviousName, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	if msg.Empty() {
 		return nil
 	}
-	rr.NextName, err = unpackDomainName(msg)
+	rr.NextName, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *TKEY) unpack(msg *dnsString) (err error) {
-	rr.Algorithm, err = unpackDomainName(msg)
+func (rr *TKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Algorithm, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2469,7 +2471,7 @@ func (rr *TKEY) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *TLSA) unpack(msg *dnsString) (err error) {
+func (rr *TLSA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Usage) {
 		return errUnpackOverflow
 	}
@@ -2488,15 +2490,15 @@ func (rr *TLSA) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Certificate, err = unpackStringHex(msg, len(msg.String))
+	rr.Certificate, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rr *TSIG) unpack(msg *dnsString) (err error) {
-	rr.Algorithm, err = unpackDomainName(msg)
+func (rr *TSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
+	rr.Algorithm, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2550,7 +2552,7 @@ func (rr *TSIG) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *TXT) unpack(msg *dnsString) (err error) {
+func (rr *TXT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Txt, err = unpackStringTxt(msg)
 	if err != nil {
 		return err
@@ -2558,14 +2560,14 @@ func (rr *TXT) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *UID) unpack(msg *dnsString) (err error) {
+func (rr *UID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Uid) {
 		return errUnpackOverflow
 	}
 	return nil
 }
 
-func (rr *UINFO) unpack(msg *dnsString) (err error) {
+func (rr *UINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.Uinfo, err = unpackString(msg)
 	if err != nil {
 		return err
@@ -2573,7 +2575,7 @@ func (rr *UINFO) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *URI) unpack(msg *dnsString) (err error) {
+func (rr *URI) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
 		return errUnpackOverflow
 	}
@@ -2593,7 +2595,7 @@ func (rr *URI) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *X25) unpack(msg *dnsString) (err error) {
+func (rr *X25) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	rr.PSDNAddress, err = unpackString(msg)
 	if err != nil {
 		return err
@@ -2601,7 +2603,7 @@ func (rr *X25) unpack(msg *dnsString) (err error) {
 	return nil
 }
 
-func (rr *ZONEMD) unpack(msg *dnsString) (err error) {
+func (rr *ZONEMD) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Serial) {
 		return errUnpackOverflow
 	}
@@ -2620,7 +2622,7 @@ func (rr *ZONEMD) unpack(msg *dnsString) (err error) {
 	if msg.Empty() {
 		return nil
 	}
-	rr.Digest, err = unpackStringHex(msg, len(msg.String))
+	rr.Digest, err = unpackStringHex(msg, len(*msg))
 	if err != nil {
 		return err
 	}

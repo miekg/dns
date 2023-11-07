@@ -10,6 +10,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 const (
@@ -300,8 +302,8 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 
 	p = p[:n]
 	if hdr != nil {
-		s := newDNSString(p, 0)
-		dh, err := unpackMsgHdr(s)
+		s := cryptobyte.String(p)
+		dh, err := unpackMsgHdr(&s)
 		if err != nil {
 			return nil, err
 		}

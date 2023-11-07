@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -324,8 +326,8 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) ([]
 // Strip the TSIG from the raw message.
 func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	// Copied from msg.go's Unpack() Header, but modified.
-	s := newDNSString(msg, 0)
-	dh, err := unpackMsgHdr(s)
+	s := cryptobyte.String(msg)
+	dh, err := unpackMsgHdr(&s)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -339,18 +341,18 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	}
 
 	for i := 0; i < int(dh.Qdcount); i++ {
-		_, err = unpackQuestion(s)
+		_, err = unpackQuestion(&s, msg)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	_, err = unpackRRslice(dh.Ancount, s)
+	_, err = unpackRRslice(dh.Ancount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, err = unpackRRslice(dh.Nscount, s)
+	_, err = unpackRRslice(dh.Nscount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -360,8 +362,8 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		tsigOff int
 	)
 	for i := 0; i < int(dh.Arcount); i++ {
-		tsigOff = s.offset()
-		extra, err := unpackRR(s)
+		tsigOff = len(msg) - len(s)
+		extra, err := unpackRR(&s, msg)
 		if err != nil {
 			return nil, nil, err
 		}

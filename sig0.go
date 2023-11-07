@@ -89,14 +89,14 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 		return err
 	}
 
-	s := newDNSString(buf, 0)
-	dh, err := unpackMsgHdr(s)
+	s := cryptobyte.String(buf)
+	dh, err := unpackMsgHdr(&s)
 	if err != nil {
 		return err
 	}
 
 	for i := 0; i < int(dh.Qdcount) && !s.Empty(); i++ {
-		_, err = unpackDomainName(s)
+		_, err = unpackDomainName(&s, buf)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	for i, tot := 1, int(dh.Ancount)+int(dh.Nscount)+int(dh.Arcount); i < tot && !s.Empty(); i++ {
-		_, err = unpackDomainName(s)
+		_, err = unpackDomainName(&s, buf)
 		if err != nil {
 			return err
 		}
@@ -124,9 +124,9 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	// offset should be just prior to SIG
-	bodyend := s.offset()
+	bodyend := len(buf) - len(s)
 	// owner name SHOULD be root
-	_, err = unpackDomainName(s)
+	_, err = unpackDomainName(&s, buf)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2 + 2 + 4 + 2) {
 		return errUnpackSignedOverflow
 	}
-	sigstart := s.offset()
+	sigstart := len(buf) - len(s)
 	var expire, incept uint32
 	// Skip Type Covered, Algorithm, Labels, Original TTL
 	if !s.Skip(2+1+1+4) ||
@@ -150,7 +150,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2) {
 		return errUnpackSignedOverflow
 	}
-	signername, err := unpackDomainName(s)
+	signername, err := unpackDomainName(&s, buf)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !strings.EqualFold(signername, k.Header().Name) {
 		return &Error{err: "signer name doesn't match key name"}
 	}
-	h.Write(buf[sigstart:s.offset()])
+	h.Write(buf[sigstart : len(buf)-len(s)])
 	h.Write(buf[:10])
 	h.Write([]byte{
 		byte((dh.Arcount - 1) << 8),
@@ -172,12 +172,12 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	case RSASHA1, RSASHA256, RSASHA512:
 		pk := k.publicKeyRSA()
 		if pk != nil {
-			return rsa.VerifyPKCS1v15(pk, cryptohash, hashed, s.String)
+			return rsa.VerifyPKCS1v15(pk, cryptohash, hashed, s)
 		}
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		pk := k.publicKeyECDSA()
-		r := new(big.Int).SetBytes(s.String[:len(s.String)/2])
-		s := new(big.Int).SetBytes(s.String[len(s.String)/2:])
+		r := new(big.Int).SetBytes(s[:len(s)/2])
+		s := new(big.Int).SetBytes(s[len(s)/2:])
 		if pk != nil {
 			if ecdsa.Verify(pk, hashed, r, s) {
 				return nil
@@ -187,7 +187,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	case ED25519:
 		pk := k.publicKeyED25519()
 		if pk != nil {
-			if ed25519.Verify(pk, hashed, s.String) {
+			if ed25519.Verify(pk, hashed, s) {
 				return nil
 			}
 			return ErrSig

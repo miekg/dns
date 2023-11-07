@@ -3,6 +3,8 @@ package dns
 import (
 	"encoding/hex"
 	"strconv"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 const (
@@ -52,7 +54,7 @@ type RR interface {
 	//
 	// This will only be called on a new and empty RR type with only the header populated. It
 	// will only be called if the record's RDATA is non-empty.
-	unpack(msg *dnsString) error
+	unpack(msg *cryptobyte.String, msgBuf []byte) error
 
 	// parse parses an RR from zone file format.
 	//
@@ -104,7 +106,7 @@ func (h *RR_Header) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
-func (h *RR_Header) unpack(msg *dnsString) error {
+func (h *RR_Header) unpack(msg *cryptobyte.String, msgBuf []byte) error {
 	panic("dns: internal error: unpack should never be called on RR_Header")
 }
 
@@ -124,12 +126,12 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 	*rr = RFC3597{Hdr: *r.Header()}
 	rr.Hdr.Rdlength = uint16(off - headerEnd)
 
-	if noRdata(rr.Hdr) {
+	s := cryptobyte.String(buf[headerEnd:])
+	if s.Empty() {
 		return nil
 	}
 
-	s := newDNSString(buf, headerEnd)
-	return rr.unpack(s)
+	return rr.unpack(&s, buf)
 }
 
 // fromRFC3597 converts an unknown RR representation from RFC 3597 to the known RR type.
@@ -141,7 +143,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	// We can only get here when rr was constructed with that method.
 	hdr.Rdlength = uint16(hex.DecodedLen(len(rr.Rdata)))
 
-	if noRdata(*hdr) {
+	if hdr.Rdlength == 0 {
 		// Dynamic update.
 		return nil
 	}
@@ -153,6 +155,6 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 		return err
 	}
 
-	s := newDNSString(msg, 0)
-	return r.unpack(s)
+	s := cryptobyte.String(msg)
+	return r.unpack(&s, msg)
 }

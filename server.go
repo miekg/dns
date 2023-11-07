@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -605,8 +607,8 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 }
 
 func (srv *Server) serveDNS(m []byte, w *response) {
-	s := newDNSString(m, 0)
-	dh, err := unpackMsgHdr(s)
+	s := cryptobyte.String(m)
+	dh, err := unpackMsgHdr(&s)
 	if err != nil {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
@@ -617,7 +619,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 	switch action := srv.MsgAcceptFunc(dh); action {
 	case MsgAccept:
-		if req.unpack(dh, s) == nil {
+		if req.unpack(dh, &s, m) == nil {
 			break
 		}
 

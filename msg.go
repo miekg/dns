@@ -17,6 +17,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 const (
@@ -377,34 +379,22 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 // When an error is encountered, the unpacked name will be discarded
 // and len(msg) will be returned as the offset.
 func UnpackDomainName(msg []byte, off int) (string, int, error) {
-	s := newDNSString(msg, off)
-	name, err := unpackDomainName(s)
+	s := cryptobyte.String(msg[off:])
+	name, err := unpackDomainName(&s, msg)
 	if err != nil {
 		// Keep documented behaviour of returning len(msg) here.
 		return "", len(msg), err
 	}
-	return name, s.offset(), nil
+	return name, len(msg) - len(s), nil
 }
 
-func unpackDomainName(msg *dnsString) (string, error) {
+func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 	s := make([]byte, 0, maxDomainNamePresentationLength)
 	budget := maxDomainNameWireOctets
 	var ptrs int // number of pointers followed
-
-	// We use the cryptobyte.String directly and update msg when appropriate as
-	// we need to backtrack through the message to unpack the name. The entire
-	// dnsString machinery exists entirely to allow this.
-	cs := msg.String
-	defer func() {
-		// If we never saw a pointer, update msg with our final position.
-		if ptrs == 0 {
-			msg.String = cs
-		}
-	}()
-
 	for {
 		var c byte
-		if !cs.ReadUint8(&c) {
+		if !msg.ReadUint8(&c) {
 			return "", ErrBuf
 		}
 		if c == 0x00 { // end of name
@@ -416,7 +406,7 @@ func unpackDomainName(msg *dnsString) (string, error) {
 		switch c & 0xC0 {
 		case 0x00: // literal string
 			var part []byte
-			if !cs.ReadBytes(&part, int(c)) {
+			if !msg.ReadBytes(&part, int(c)) {
 				return "", ErrBuf
 			}
 			if budget -= len(part) + 1; budget <= 0 { // +1 for the label separator
@@ -434,13 +424,8 @@ func unpackDomainName(msg *dnsString) (string, error) {
 			s = append(s, '.')
 		case 0xC0: // pointer
 			var c1 byte
-			if !cs.ReadUint8(&c1) {
+			if !msg.ReadUint8(&c1) {
 				return "", ErrBuf
-			}
-			// If this is the first pointer we see, update msg with our
-			// current position.
-			if ptrs == 0 {
-				msg.String = cs
 			}
 			// Don't follow too many pointers in case there is a loop.
 			if ptrs++; ptrs > maxCompressionPointers {
@@ -448,13 +433,16 @@ func unpackDomainName(msg *dnsString) (string, error) {
 			}
 			// The pointer should always point backwards to an earlier
 			// part of the message. Technically it could work pointing
-			// forwards, but we can't support that consistently so error
-			// out.
+			// forwards, but we choose not to support that as RFC1035
+			// specifically refers to a "prior occurance".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) > len(msg.raw)-len(cs) {
-				return "", &Error{err: "pointer went past current offset"}
+			if int(off) >= len(msgBuf)-len(*msg) {
+				return "", &Error{err: "pointer not to prior occurrence of name"}
 			}
-			cs = msg.raw[off:]
+			// Jump to the offset directly in msgBuf. We carry msgBuf
+			// around with us solely for this line.
+			b := cryptobyte.String(msgBuf[off:])
+			msg = &b
 		default:
 			// 0x80 and 0x40 are reserved
 			return "", ErrRdata
@@ -543,7 +531,7 @@ func packOctetString(s string, msg []byte, offset int) (int, error) {
 	return offset, nil
 }
 
-func unpackTxt(msg *dnsString) ([]string, error) {
+func unpackTxt(msg *cryptobyte.String) ([]string, error) {
 	var ss []string
 	for !msg.Empty() {
 		s, err := unpackString(msg)
@@ -621,36 +609,13 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 		return nil, off, &Error{err: "bad off"}
 	}
 
-	s := newDNSString(msg, off)
-	rr, err = unpackRR(s)
+	s := cryptobyte.String(msg[off:])
+	rr, err = unpackRR(&s, msg)
 	if err != nil {
 		// Keep existing behaviour of returning len(msg) here on error.
 		return rr, len(msg), err
 	}
-	return rr, s.offset(), nil
-}
-
-func unpackRR(s *dnsString) (RR, error) {
-	h, err := unpackHeader(s)
-	if err != nil {
-		return nil, err
-	}
-
-	if int(h.Rdlength) > len(s.String) {
-		return &h, &Error{err: "bad rdlength"}
-	}
-
-	// Create a new *dnsString that is restricted to only this RR.
-	s2 := newDNSString(s.raw[:s.offset()+int(h.Rdlength)], s.offset())
-
-	rr, err := unpackRRWithHeader(h, s2)
-
-	// Advance s the number of bytes we read from s2.
-	if !s.Skip(s2.offset() - s.offset()) {
-		panic("dns: internal error: unable to skip read bytes")
-	}
-
-	return rr, err
+	return rr, len(msg) - len(s), nil
 }
 
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
@@ -659,20 +624,31 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 	if off < 0 || off > len(msg) {
 		return &h, off, &Error{err: "bad off"}
 	}
-	if int(h.Rdlength) > len(msg)-off {
-		return &h, off, &Error{err: "bad rdlength"}
-	}
 
-	s := newDNSString(msg[:off+int(h.Rdlength)], off)
-	rr, err = unpackRRWithHeader(h, s)
+	s := cryptobyte.String(msg[off:])
+	rr, err = unpackRRWithHeader(h, &s, msg)
 	if err != nil {
 		// Keep existing behaviour of returning len(msg) here on error.
 		return rr, len(msg), err
 	}
-	return rr, s.offset(), nil
+	return rr, len(msg) - len(s), nil
 }
 
-func unpackRRWithHeader(h RR_Header, msg *dnsString) (RR, error) {
+func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+	h, err := unpackHeader(msg, msgBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpackRRWithHeader(h, msg, msgBuf)
+}
+
+func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+	var rrData cryptobyte.String
+	if !msg.ReadBytes((*[]byte)(&rrData), int(h.Rdlength)) {
+		return &h, &Error{err: "bad rdlength"}
+	}
+
 	var rr RR
 	if newFn, ok := TypeToRR[h.Rrtype]; ok {
 		rr = newFn()
@@ -681,15 +657,15 @@ func unpackRRWithHeader(h RR_Header, msg *dnsString) (RR, error) {
 		rr = &RFC3597{Hdr: h}
 	}
 
-	if noRdata(h) {
+	if rrData.Empty() {
 		return rr, nil
 	}
 
-	if err := rr.unpack(msg); err != nil {
+	if err := rr.unpack(&rrData, msgBuf); err != nil {
 		return nil, err
 	}
-	if !msg.Empty() {
-		return &h, &Error{err: "bad rdlength"}
+	if !rrData.Empty() {
+		return rr, &Error{err: "bad rdlength"}
 	}
 
 	return rr, nil
@@ -697,14 +673,14 @@ func unpackRRWithHeader(h RR_Header, msg *dnsString) (RR, error) {
 
 // unpackRRslice unpacks msg into an []RR.
 // If we cannot unpack the whole array, then it will return nil
-func unpackRRslice(l uint16, msg *dnsString) ([]RR, error) {
+func unpackRRslice(l uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
 	// Don't pre-allocate, l may be under attacker control
 	var dst []RR
 	for i := 0; i < int(l); i++ {
 		if msg.Empty() { // Already empty, l is a lie.
 			break
 		}
-		r, err := unpackRR(msg)
+		r, err := unpackRR(msg, msgBuf)
 		if err != nil {
 			if msg.Empty() {
 				return nil, err
@@ -867,7 +843,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 	return msg[:off], nil
 }
 
-func (dns *Msg) unpack(dh Header, msg *dnsString) error {
+func (dns *Msg) unpack(dh Header, msg *cryptobyte.String, msgBuf []byte) error {
 	// If we are at the end of the message we should return *just* the
 	// header. This can still be useful to the caller. 9.9.9.9 sends these
 	// when responding with REFUSED for instance.
@@ -886,7 +862,7 @@ func (dns *Msg) unpack(dh Header, msg *dnsString) error {
 			dh.Qdcount = uint16(i)
 			break
 		}
-		q, err := unpackQuestion(msg)
+		q, err := unpackQuestion(msg, msgBuf)
 		if err != nil {
 			return err
 		}
@@ -895,16 +871,16 @@ func (dns *Msg) unpack(dh Header, msg *dnsString) error {
 
 	// Unpack the RRs and update the header counts, as they might be wrong.
 	var err error
-	dns.Answer, err = unpackRRslice(dh.Ancount, msg)
+	dns.Answer, err = unpackRRslice(dh.Ancount, msg, msgBuf)
 	dh.Ancount = uint16(len(dns.Answer))
 
 	if err == nil {
-		dns.Ns, err = unpackRRslice(dh.Nscount, msg)
+		dns.Ns, err = unpackRRslice(dh.Nscount, msg, msgBuf)
 	}
 	dh.Nscount = uint16(len(dns.Ns))
 
 	if err == nil {
-		dns.Extra, err = unpackRRslice(dh.Arcount, msg)
+		dns.Extra, err = unpackRRslice(dh.Arcount, msg, msgBuf)
 	}
 	dh.Arcount = uint16(len(dns.Extra))
 
@@ -924,14 +900,14 @@ func (dns *Msg) unpack(dh Header, msg *dnsString) error {
 
 // Unpack unpacks a binary message to a Msg structure.
 func (dns *Msg) Unpack(msg []byte) (err error) {
-	s := newDNSString(msg, 0)
-	dh, err := unpackMsgHdr(s)
+	s := cryptobyte.String(msg)
+	dh, err := unpackMsgHdr(&s)
 	if err != nil {
 		return err
 	}
 
 	dns.setHdr(dh)
-	return dns.unpack(dh, s)
+	return dns.unpack(dh, &s, msg)
 }
 
 // Convert a complete message to a string with dig-like output.
@@ -1162,12 +1138,12 @@ func (q *Question) pack(msg []byte, off int, compression compressionMap, compres
 	return off, nil
 }
 
-func unpackQuestion(msg *dnsString) (Question, error) {
+func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
 	var (
 		q   Question
 		err error
 	)
-	q.Name, err = unpackDomainName(msg)
+	q.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return q, err
 	}
@@ -1208,7 +1184,7 @@ func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress
 	return off, nil
 }
 
-func unpackMsgHdr(msg *dnsString) (Header, error) {
+func unpackMsgHdr(msg *cryptobyte.String) (Header, error) {
 	var dh Header
 	if !msg.ReadUint16(&dh.Id) ||
 		!msg.ReadUint16(&dh.Bits) ||
