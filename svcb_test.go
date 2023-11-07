@@ -1,10 +1,6 @@
 package dns
 
-import (
-	"testing"
-
-	"golang.org/x/crypto/cryptobyte"
-)
+import "testing"
 
 // This tests everything valid about SVCB but parsing.
 // Parsing tests belong to parse_test.go.
@@ -52,7 +48,7 @@ func TestSVCB(t *testing.T) {
 		if len(b) != int(kv.len()) {
 			t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, int(kv.len()), len(b))
 		}
-		err = kv.unpack((*cryptobyte.String)(&b))
+		err = kv.unpack(b)
 		if err != nil {
 			t.Error("failed to unpack value of svc pair: ", o.key, err)
 			continue
@@ -92,8 +88,7 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for _, o := range svcbs {
-		data := cryptobyte.String(o.data)
-		err := makeSVCBKeyValue(o.key).unpack(&data)
+		err := makeSVCBKeyValue(o.key).unpack(o.data)
 		if err == nil {
 			t.Error("accepted invalid svc value with key ", o.key.String())
 		}

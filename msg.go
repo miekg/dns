@@ -71,6 +71,7 @@ var (
 	ErrSig           error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
 	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
+	errBadRDLength         = &Error{err: "bad rdlength"}
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The
@@ -623,15 +624,14 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 		return nil, off, &Error{err: "bad off"}
 	}
 
-	s := cryptobyte.String(msg[off:])
-	if s.Empty() {
+	if off == len(msg) {
 		// Preserve this somewhat strange existing corner case of not
 		// returning an error when given nothing to unpack.
 		return new(RR_Header), len(msg), nil
 	}
 
-	rr, err = unpackRR(&s, msg)
-	return rr, len(msg) - len(s), err
+	rr, rest, err := unpackRR(msg[off:], msg)
+	return rr, len(msg) - len(rest), err
 }
 
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
@@ -646,19 +646,21 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 	return rr, len(msg) - len(s), err
 }
 
-func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	h, err := unpackRRHeader(msg, msgBuf)
+func unpackRR(msg, msgBuf []byte) (RR, []byte, error) {
+	s := cryptobyte.String(msg)
+	h, err := unpackRRHeader(&s, msgBuf)
 	if err != nil {
-		return nil, err
+		return nil, s, err
 	}
 
-	return unpackRRWithHeader(h, msg, msgBuf)
+	rr, err := unpackRRWithHeader(h, &s, msgBuf)
+	return rr, s, err
 }
 
 func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	var rrData cryptobyte.String
-	if !msg.ReadBytes((*[]byte)(&rrData), int(h.Rdlength)) {
-		return &h, &Error{err: "bad rdlength"}
+	var data []byte
+	if !msg.ReadBytes(&data, int(h.Rdlength)) {
+		return &h, errBadRDLength
 	}
 
 	var rr RR
@@ -669,15 +671,12 @@ func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR,
 		rr = &RFC3597{Hdr: h}
 	}
 
-	if rrData.Empty() {
+	if len(data) == 0 {
 		return rr, nil
 	}
 
-	if err := rr.unpack(&rrData, msgBuf); err != nil {
+	if err := rr.unpack(data, msgBuf); err != nil {
 		return nil, err
-	}
-	if !rrData.Empty() {
-		return rr, &Error{err: "bad rdlength"}
 	}
 
 	return rr, nil
@@ -834,7 +833,7 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 	return msg[:off], nil
 }
 
-func unpackCounted[T any](unpack func(*cryptobyte.String, []byte) (T, error), cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]T, error) {
+func unpackCounted[T any](unpack func([]byte, []byte) (T, []byte, error), cnt uint16, msg, msgBuf []byte) ([]T, []byte, error) {
 	// Qdcount, Ancount, Nscount, Arcount shouldn't be trusted, as they are
 	// attacker controlled. To avoid an attacker being able to force us to
 	// allocate a large amount of memory with little effort, we don't use them
@@ -845,42 +844,46 @@ func unpackCounted[T any](unpack func(*cryptobyte.String, []byte) (T, error), cn
 		// msg is already empty, cnt is a lie.
 		//
 		// TODO(tmthrgd): Remove this to fix #1492.
-		if msg.Empty() {
-			return dst, nil
+		if len(msg) == 0 {
+			return dst, msg, nil
 		}
 
-		r, err := unpack(msg, msgBuf)
+		var (
+			r   T
+			err error
+		)
+		r, msg, err = unpack(msg, msgBuf)
 		if err != nil {
-			return dst, err
+			return dst, msg, err
 		}
 		dst = append(dst, r)
 	}
-	return dst, nil
+	return dst, msg, nil
 }
 
-func (dns *Msg) unpack(dh Header, msg *cryptobyte.String, msgBuf []byte) error {
+func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 	// If we are at the end of the message we should return *just* the
 	// header. This can still be useful to the caller. 9.9.9.9 sends these
 	// when responding with REFUSED for instance.
 	//
 	// TODO(tmthrgd): Remove this. If it's only sending the header, the header
 	// should be specifying that it contains no records.
-	if msg.Empty() {
+	if len(msg) == 0 {
 		// reset sections before returning
 		dns.Question, dns.Answer, dns.Ns, dns.Extra = nil, nil, nil, nil
 		return nil
 	}
 
 	var err error
-	dns.Question, err = unpackCounted(unpackQuestion, dh.Qdcount, msg, msgBuf)
+	dns.Question, msg, err = unpackCounted(unpackQuestion, dh.Qdcount, msg, msgBuf)
 	if err == nil {
-		dns.Answer, err = unpackCounted(unpackRR, dh.Ancount, msg, msgBuf)
+		dns.Answer, msg, err = unpackCounted(unpackRR, dh.Ancount, msg, msgBuf)
 	}
 	if err == nil {
-		dns.Ns, err = unpackCounted(unpackRR, dh.Nscount, msg, msgBuf)
+		dns.Ns, msg, err = unpackCounted(unpackRR, dh.Nscount, msg, msgBuf)
 	}
 	if err == nil {
-		dns.Extra, err = unpackCounted(unpackRR, dh.Arcount, msg, msgBuf)
+		dns.Extra, msg, err = unpackCounted(unpackRR, dh.Arcount, msg, msgBuf)
 	}
 
 	// TODO(tmthrgd): Remove these as part of #1492.
@@ -894,11 +897,14 @@ func (dns *Msg) unpack(dh Header, msg *cryptobyte.String, msgBuf []byte) error {
 		dns.Rcode |= opt.ExtendedRcode()
 	}
 
-	// TODO(miek) make this an error?
+	// TODO(miek): make this an error?
 	// use PackOpt to let people tell how detailed the error reporting should be?
-	// if !msg.Empty() {
-	// 	println("dns: extra bytes in dns packet", msg.offset(), "<", len(msg.raw))
+	//
+	// if len(msg) != 0 {
+	// 	println("dns: extra bytes in dns packet", len(msgBuf) - len(msg), "<", len(msgBuf))
 	// }
+	_ = msg
+
 	return err
 
 }
@@ -912,7 +918,7 @@ func (dns *Msg) Unpack(msg []byte) (err error) {
 	}
 
 	dns.setHdr(dh)
-	return dns.unpack(dh, &s, msg)
+	return dns.unpack(dh, s, msg)
 }
 
 // Convert a complete message to a string with dig-like output.
@@ -1143,23 +1149,24 @@ func (q *Question) pack(msg []byte, off int, compression compressionMap, compres
 	return off, nil
 }
 
-func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
+func unpackQuestion(msg, msgBuf []byte) (Question, []byte, error) {
+	s := cryptobyte.String(msg)
 	var (
 		q   Question
 		err error
 	)
-	q.Name, err = unpackDomainName(msg, msgBuf)
+	q.Name, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return q, err
+		return q, s, err
 	}
 	// TODO(tmthrgd): Should we really accept partial questions?
-	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
-		return q, ErrBuf
+	if !s.Empty() && !s.ReadUint16(&q.Qtype) {
+		return q, s, ErrBuf
 	}
-	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
-		return q, ErrBuf
+	if !s.Empty() && !s.ReadUint16(&q.Qclass) {
+		return q, s, ErrBuf
 	}
-	return q, nil
+	return q, s, nil
 }
 
 func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {

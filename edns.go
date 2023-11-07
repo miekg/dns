@@ -217,7 +217,7 @@ type EDNS0 interface {
 	// pack returns the bytes of the option data.
 	pack() ([]byte, error)
 	// unpack sets the data as found in the buffer.
-	unpack(*cryptobyte.String) error
+	unpack([]byte) error
 	// String returns the string representation of the option.
 	String() string
 	// copy returns a deep-copy of the option.
@@ -249,9 +249,8 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_NSID) unpack(b *cryptobyte.String) error {
-	e.Nsid = hex.EncodeToString(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_NSID) unpack(b []byte) error {
+	e.Nsid = hex.EncodeToString(b)
 	return nil
 }
 
@@ -329,10 +328,11 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_SUBNET) unpack(b *cryptobyte.String) error {
-	if !b.ReadUint16(&e.Family) ||
-		!b.ReadUint8(&e.SourceNetmask) ||
-		!b.ReadUint8(&e.SourceScope) {
+func (e *EDNS0_SUBNET) unpack(b []byte) error {
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.Family) ||
+		!s.ReadUint8(&e.SourceNetmask) ||
+		!s.ReadUint8(&e.SourceScope) {
 		return ErrBuf
 	}
 	switch e.Family {
@@ -348,17 +348,20 @@ func (e *EDNS0_SUBNET) unpack(b *cryptobyte.String) error {
 			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv4len)
-		b.Skip(copy(addr, *b))
+		s.Skip(copy(addr, s))
 		e.Address = addr.To16()
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 || e.SourceScope > net.IPv6len*8 {
 			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv6len)
-		b.Skip(copy(addr, *b))
+		s.Skip(copy(addr, s))
 		e.Address = addr
 	default:
 		return errors.New("dns: bad address family")
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing data after EDNS0 opt")
 	}
 	return nil
 }
@@ -416,9 +419,8 @@ func (e *EDNS0_COOKIE) pack() ([]byte, error) {
 	return h, nil
 }
 
-func (e *EDNS0_COOKIE) unpack(b *cryptobyte.String) error {
-	e.Cookie = hex.EncodeToString(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_COOKIE) unpack(b []byte) error {
+	e.Cookie = hex.EncodeToString(b)
 	return nil
 }
 
@@ -463,12 +465,16 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_UL) unpack(b *cryptobyte.String) error {
-	if !b.ReadUint32(&e.Lease) {
+func (e *EDNS0_UL) unpack(b []byte) error {
+	s := cryptobyte.String(b)
+	if !s.ReadUint32(&e.Lease) {
 		return ErrBuf
 	}
-	if !b.Empty() && !b.ReadUint32(&e.KeyLease) {
+	if !s.Empty() && !s.ReadUint32(&e.KeyLease) {
 		return ErrBuf
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing data after EDNS0 opt")
 	}
 	return nil
 }
@@ -497,13 +503,17 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_LLQ) unpack(b *cryptobyte.String) error {
-	if !b.ReadUint16(&e.Version) ||
-		!b.ReadUint16(&e.Opcode) ||
-		!b.ReadUint16(&e.Error) ||
-		!b.ReadUint64(&e.Id) ||
-		!b.ReadUint32(&e.LeaseLife) {
+func (e *EDNS0_LLQ) unpack(b []byte) error {
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.Version) ||
+		!s.ReadUint16(&e.Opcode) ||
+		!s.ReadUint16(&e.Error) ||
+		!s.ReadUint64(&e.Id) ||
+		!s.ReadUint32(&e.LeaseLife) {
 		return ErrBuf
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing data after EDNS0 opt")
 	}
 	return nil
 }
@@ -529,9 +539,8 @@ type EDNS0_DAU struct {
 func (e *EDNS0_DAU) Option() uint16        { return EDNS0DAU }
 func (e *EDNS0_DAU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
 
-func (e *EDNS0_DAU) unpack(b *cryptobyte.String) error {
-	e.AlgCode = cloneSlice(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_DAU) unpack(b []byte) error {
+	e.AlgCode = cloneSlice(b)
 	return nil
 }
 
@@ -558,9 +567,8 @@ type EDNS0_DHU struct {
 func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
 func (e *EDNS0_DHU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
 
-func (e *EDNS0_DHU) unpack(b *cryptobyte.String) error {
-	e.AlgCode = cloneSlice(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_DHU) unpack(b []byte) error {
+	e.AlgCode = cloneSlice(b)
 	return nil
 }
 
@@ -587,9 +595,8 @@ type EDNS0_N3U struct {
 func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
 func (e *EDNS0_N3U) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
 
-func (e *EDNS0_N3U) unpack(b *cryptobyte.String) error {
-	e.AlgCode = cloneSlice(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_N3U) unpack(b []byte) error {
+	e.AlgCode = cloneSlice(b)
 	return nil
 }
 
@@ -627,11 +634,15 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_EXPIRE) unpack(b *cryptobyte.String) error {
+func (e *EDNS0_EXPIRE) unpack(b []byte) error {
+	s := cryptobyte.String(b)
 	// zero-length EXPIRE query, see RFC 7314 Section 2
-	e.Empty = b.Empty()
-	if !b.Empty() && !b.ReadUint32(&e.Expire) {
+	e.Empty = s.Empty()
+	if !s.Empty() && !s.ReadUint32(&e.Expire) {
 		return ErrBuf
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing data after EDNS0 opt")
 	}
 	return nil
 }
@@ -676,9 +687,8 @@ func (e *EDNS0_LOCAL) pack() ([]byte, error) {
 	return cloneSlice(e.Data), nil
 }
 
-func (e *EDNS0_LOCAL) unpack(b *cryptobyte.String) error {
-	e.Data = cloneSlice(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_LOCAL) unpack(b []byte) error {
+	e.Data = cloneSlice(b)
 	return nil
 }
 
@@ -709,9 +719,13 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 	return nil, nil
 }
 
-func (e *EDNS0_TCP_KEEPALIVE) unpack(b *cryptobyte.String) error {
-	if !b.Empty() && !b.ReadUint16(&e.Timeout) {
+func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
+	s := cryptobyte.String(b)
+	if !s.Empty() && !s.ReadUint16(&e.Timeout) {
 		return ErrBuf
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing data after EDNS0 opt")
 	}
 	return nil
 }
@@ -741,9 +755,8 @@ func (e *EDNS0_PADDING) pack() ([]byte, error) { return cloneSlice(e.Padding), n
 func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
 func (e *EDNS0_PADDING) copy() EDNS0           { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
 
-func (e *EDNS0_PADDING) unpack(b *cryptobyte.String) error {
-	e.Padding = cloneSlice(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_PADDING) unpack(b []byte) error {
+	e.Padding = cloneSlice(b)
 	return nil
 }
 
@@ -836,12 +849,12 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_EDE) unpack(b *cryptobyte.String) error {
-	if !b.ReadUint16(&e.InfoCode) {
+func (e *EDNS0_EDE) unpack(b []byte) error {
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.InfoCode) {
 		return ErrBuf
 	}
-	e.ExtraText = string(*b)
-	b.Skip(len(*b))
+	e.ExtraText = string(s)
 	return nil
 }
 
@@ -857,8 +870,7 @@ func (e *EDNS0_ESU) String() string        { return e.Uri }
 func (e *EDNS0_ESU) copy() EDNS0           { return &EDNS0_ESU{e.Code, e.Uri} }
 func (e *EDNS0_ESU) pack() ([]byte, error) { return []byte(e.Uri), nil }
 
-func (e *EDNS0_ESU) unpack(b *cryptobyte.String) error {
-	e.Uri = string(*b)
-	b.Skip(len(*b))
+func (e *EDNS0_ESU) unpack(b []byte) error {
+	e.Uri = string(b)
 	return nil
 }

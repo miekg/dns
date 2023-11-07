@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"net"
 	"testing"
-
-	"golang.org/x/crypto/cryptobyte"
 )
 
 func TestOPTTtl(t *testing.T) {
@@ -103,7 +101,7 @@ func TestEDNS0_SUBNETUnpack(t *testing.T) {
 		}
 
 		var s2 EDNS0_SUBNET
-		if err := s2.unpack((*cryptobyte.String)(&b)); err != nil {
+		if err := s2.unpack(b); err != nil {
 			t.Fatalf("failed to unpack: %v", err)
 		}
 
@@ -128,7 +126,7 @@ func TestEDNS0_UL(t *testing.T) {
 			t.Fatalf("failed to pack: %v", err)
 		}
 		actual := EDNS0_UL{EDNS0UL, 0, 0}
-		if err := actual.unpack((*cryptobyte.String)(&b)); err != nil {
+		if err := actual.unpack(b); err != nil {
 			t.Fatalf("failed to unpack: %v", err)
 		}
 		if expect != actual {
@@ -222,9 +220,8 @@ func TestEDNS0_TCP_KEEPALIVE_unpack(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			b := tc.b
 			e := &EDNS0_TCP_KEEPALIVE{}
-			err := e.unpack((*cryptobyte.String)(&b))
+			err := e.unpack(tc.b)
 			if err != nil && !tc.expectedErr {
 				t.Error("failed to unpack, expected no error")
 			}

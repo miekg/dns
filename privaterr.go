@@ -1,10 +1,6 @@
 package dns
 
-import (
-	"strings"
-
-	"golang.org/x/crypto/cryptobyte"
-)
+import "strings"
 
 // PrivateRdata is an interface used for implementing "Private Use" RR types, see
 // RFC 6895. This allows one to experiment with new RR types, without requesting an
@@ -65,12 +61,15 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
-func (r *PrivateRR) unpack(msg *cryptobyte.String, msgBuf []byte) error {
-	off, err := r.Data.Unpack(*msg)
-	if !msg.Skip(off) {
-		panic("dns: Unpack reported invalid offset")
+func (r *PrivateRR) unpack(data, msgBuf []byte) error {
+	off, err := r.Data.Unpack(data)
+	if err != nil {
+		return err
 	}
-	return err
+	if off != len(data) {
+		return errBadRDLength
+	}
+	return nil
 }
 
 func (r *PrivateRR) parse(c *zlexer, origin string) *ParseError {

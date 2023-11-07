@@ -619,7 +619,7 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 	switch action := srv.MsgAcceptFunc(dh); action {
 	case MsgAccept:
-		if req.unpack(dh, &s, m) == nil {
+		if req.unpack(dh, s, m) == nil {
 			break
 		}
 

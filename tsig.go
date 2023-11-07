@@ -340,43 +340,37 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		return nil, nil, ErrAuth
 	}
 
-	_, err = unpackCounted(unpackQuestion, dh.Qdcount, &s, msg)
+	_, s, err = unpackCounted(unpackQuestion, dh.Qdcount, s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, err = unpackCounted(unpackRR, dh.Ancount, &s, msg)
+	_, s, err = unpackCounted(unpackRR, dh.Ancount, s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, err = unpackCounted(unpackRR, dh.Nscount, &s, msg)
+	_, s, err = unpackCounted(unpackRR, dh.Nscount, s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var (
-		rr      *TSIG
-		tsigOff int
-	)
 	for i := 0; i < int(dh.Arcount); i++ {
-		tsigOff = len(msg) - len(s)
-		extra, err := unpackRR(&s, msg)
+		rrOff := len(msg) - len(s)
+		var extra RR
+		extra, s, err = unpackRR(s, msg)
 		if err != nil {
 			return nil, nil, err
 		}
 		if extra.Header().Rrtype == TypeTSIG {
-			rr = extra.(*TSIG)
 			// Adjust Arcount.
 			arcount := binary.BigEndian.Uint16(msg[10:])
 			binary.BigEndian.PutUint16(msg[10:], arcount-1)
-			break
+			return msg[:rrOff], extra.(*TSIG), nil
 		}
 	}
-	if rr == nil {
-		return nil, nil, ErrNoSig
-	}
-	return msg[:tsigOff], rr, nil
+
+	return nil, nil, ErrNoSig
 }
 
 // Translate the TSIG time signed into a date. There is no

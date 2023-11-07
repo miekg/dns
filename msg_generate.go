@@ -194,7 +194,7 @@ if rr.%s != "-" {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintln(b, "return off, nil }\n")
+		fmt.Fprint(b, "return off, nil }\n\n")
 	}
 
 	fmt.Fprint(b, "// unpack*() functions\n\n")
@@ -202,30 +202,32 @@ if rr.%s != "-" {
 		o := scope.Lookup(name)
 		st, _ := getTypeStruct(o.Type(), scope)
 
-		fmt.Fprintf(b, "func (rr *%s) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {\n", name)
+		fmt.Fprintf(b, "func (rr *%s) unpack(data, msgBuf []byte) (err error) {\n", name)
+		fmt.Fprintln(b, "s := cryptobyte.String(data)")
+		fmt.Fprintln(b, "_ = s")
 	fieldLoop:
 		for i := 1; i < st.NumFields(); i++ {
 			errCheck := func() {
 				fmt.Fprintln(b, "if err != nil { return err }")
 			}
 			unpackField := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(msg)\n", st.Field(i).Name(), unpacker)
+				fmt.Fprintf(b, "rr.%s, err = %s(&s)\n", st.Field(i).Name(), unpacker)
 				errCheck()
 			}
 			unpackFieldBuf := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(msg, msgBuf)\n", st.Field(i).Name(), unpacker)
+				fmt.Fprintf(b, "rr.%s, err = %s(&s, msgBuf)\n", st.Field(i).Name(), unpacker)
 				errCheck()
 			}
 			unpackFieldRest := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(msg, len(*msg))\n", st.Field(i).Name(), unpacker)
+				fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", st.Field(i).Name(), unpacker)
 				errCheck()
 			}
 			unpackFieldLength := func(unpacker, len string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(msg, int(rr.%s))\n", st.Field(i).Name(), unpacker, len)
+				fmt.Fprintf(b, "rr.%s, err = %s(&s, int(rr.%s))\n", st.Field(i).Name(), unpacker, len)
 				errCheck()
 			}
 			readInt := func(type_ string) {
-				fmt.Fprintf(b, "if !msg.Read%s(&rr.%s) { return ErrBuf }\n", type_, st.Field(i).Name())
+				fmt.Fprintf(b, "if !s.Read%s(&rr.%s) { return ErrBuf }\n", type_, st.Field(i).Name())
 			}
 
 			// size-* are special, because they reference a struct member we should use for the length.
@@ -294,7 +296,7 @@ if rr.%s != "-" {
 				// TODO(tmthrgd): This is a particular unpleasant
 				// way of dealing with this. Can we do better?
 				// Probably not with the structs as they are.
-				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(msg, msgBuf, rr.GatewayType)")
+				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)")
 				errCheck()
 			case "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
@@ -314,15 +316,13 @@ if rr.%s != "-" {
 			default:
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
-			// If we've hit len(msg) we return without error.
+			// If we've hit s.Empty() we return without error.
 			if i < st.NumFields()-1 {
-				fmt.Fprint(b, `if msg.Empty() {
-return nil
-	}
-`)
+				fmt.Fprintln(b, "if s.Empty() { return nil }")
 			}
 		}
-		fmt.Fprintf(b, "return nil }\n\n")
+		fmt.Fprintln(b, "if !s.Empty() { return errBadRDLength }")
+		fmt.Fprint(b, "return nil }\n\n")
 	}
 
 	// gofmt
