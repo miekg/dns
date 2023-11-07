@@ -324,3 +324,89 @@ func TestLenDynamicA(t *testing.T) {
 		}
 	}
 }
+
+func TestUnPackForErrBuf(t *testing.T) {
+	var testCases = []struct {
+		domainName   string
+		noOfARecords int
+		udpSize      uint16
+		expectErrBuf bool
+	}{
+		// Testing with 15 characters in the domain name.
+		// ----------------------------------------------------------------------------------------------------------------------
+		// Length of response for 15 A records will be 482 bytes and UDPSize is 512. Response is not truncated.
+		{domainName: "example123.org.", noOfARecords: 15, udpSize: 512, expectErrBuf: false},
+
+		// Length of response for 16 A records will be 512 bytes and UDPSize is 512. Response is not truncated.
+		{domainName: "example123.org.", noOfARecords: 16, udpSize: 512, expectErrBuf: false},
+
+		// Length of response for 17 A records will be 542 bytes and UDPSize is 512. Response is truncated, so expect ErrBuf.
+		{domainName: "example123.org.", noOfARecords: 17, udpSize: 512, expectErrBuf: true},
+
+		// Length of response for 17 A records will be 542 bytes and UDPSize is 542. Response is not truncated.
+		{domainName: "example123.org.", noOfARecords: 17, udpSize: 542, expectErrBuf: false},
+
+		// Testing with 19 characters in the domain name.
+		// ----------------------------------------------------------------------------------------------------------------------
+		// Length of response for 13 A records will be 478 bytes and UDPSize is 512. Response is not truncated.
+		{domainName: "testingexample.org.", noOfARecords: 13, udpSize: 512, expectErrBuf: false},
+
+		// Length of response for 14 A records will be 512 bytes and UDPSize is 512. Response is not truncated.
+		{domainName: "testingexample.org.", noOfARecords: 14, udpSize: 512, expectErrBuf: false},
+
+		// Length of response for 15 A records will be 546 bytes and UDPSize is 512. Response is truncated, so expect ErrBuf.
+		{domainName: "testingexample.org.", noOfARecords: 15, udpSize: 512, expectErrBuf: true},
+
+		// Length of response for 15 A records will be 546 bytes and UDPSize is 546. Response is not truncated.
+		{domainName: "testingexample.org.", noOfARecords: 15, udpSize: 546, expectErrBuf: false},
+	}
+
+	for _, tc := range testCases {
+		testName := tc.domainName + " with " + strconv.Itoa(tc.noOfARecords) + " A-records"
+		t.Run(testName, func(t *testing.T) {
+			testLongResponseDNSServer(t, tc.domainName, tc.noOfARecords, tc.udpSize, tc.expectErrBuf)
+		})
+	}
+}
+
+func testLongResponseDNSServer(t *testing.T, domainName string, noOfARecords int, UDPSize uint16, expectErrBuf bool) {
+	HandleFunc(domainName, HelloServerLargeResponse)
+	defer HandleRemove(domainName)
+
+	srv, address, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer srv.Shutdown()
+
+	reqm := new(Msg)
+	reqm.SetQuestion(domainName, TypeA)
+
+	c := new(Client)
+	c.Net = "udp"
+	c.UDPSize = UDPSize
+
+	M.Lock()
+	M.max = noOfARecords
+	M.Unlock()
+
+	response := new(Msg)
+	response, _, err = c.Exchange(reqm, address)
+
+	if expectErrBuf {
+		if err != ErrBuf {
+			t.Error("Expected ErrBuf due to truncation")
+		}
+	} else {
+
+		if err != nil {
+			t.Errorf("failed to exchange: %v", err)
+		}
+		if len(response.Answer) != M.max {
+			t.Errorf("Expected no of A records %v, but got %v", len(response.Answer), M.max)
+		}
+		if response.Rcode != RcodeSuccess {
+			t.Errorf("Expected No error, but got %v", response.Rcode)
+		}
+	}
+}
