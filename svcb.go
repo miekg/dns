@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // SVCBKey is the type of the keys used in the SVCB RR.
@@ -243,13 +245,13 @@ func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
 // SVCBKeyValue defines a key=value pair for the SVCB RR type.
 // An SVCB RR can have multiple SVCBKeyValues appended to it.
 type SVCBKeyValue interface {
-	Key() SVCBKey          // Key returns the numerical key code.
-	pack() ([]byte, error) // pack returns the encoded value.
-	unpack([]byte) error   // unpack sets the value.
-	String() string        // String returns the string representation of the value.
-	parse(string) error    // parse sets the value to the given string representation of the value.
-	copy() SVCBKeyValue    // copy returns a deep-copy of the pair.
-	len() int              // len returns the length of value in the wire format.
+	Key() SVCBKey                    // Key returns the numerical key code.
+	pack() ([]byte, error)           // pack returns the encoded value.
+	unpack(*cryptobyte.String) error // unpack sets the value.
+	String() string                  // String returns the string representation of the value.
+	parse(string) error              // parse sets the value to the given string representation of the value.
+	copy() SVCBKeyValue              // copy returns a deep-copy of the pair.
+	len() int                        // len returns the length of value in the wire format.
 }
 
 // SVCBMandatory pair adds to required keys that must be interpreted for the RR
@@ -300,14 +302,15 @@ func (s *SVCBMandatory) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (s *SVCBMandatory) unpack(b []byte) error {
-	if len(b)%2 != 0 {
-		return errors.New("dns: svcbmandatory: value length is not a multiple of 2")
-	}
-	codes := make([]SVCBKey, 0, len(b)/2)
-	for i := 0; i < len(b); i += 2 {
+func (s *SVCBMandatory) unpack(b *cryptobyte.String) error {
+	codes := make([]SVCBKey, 0, len(*b)/2)
+	for !b.Empty() {
 		// We assume strictly increasing order.
-		codes = append(codes, SVCBKey(binary.BigEndian.Uint16(b[i:])))
+		var code SVCBKey
+		if !b.ReadUint16((*uint16)(&code)) {
+			return errUnpackOverflow
+		}
+		codes = append(codes, code)
 	}
 	s.Code = codes
 	return nil
@@ -410,17 +413,14 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (s *SVCBAlpn) unpack(b []byte) error {
-	// Estimate the size of the smallest alpn as 4 bytes
-	alpn := make([]string, 0, len(b)/4)
-	for i := 0; i < len(b); {
-		length := int(b[i])
-		i++
-		if i+length > len(b) {
-			return errors.New("dns: svcbalpn: alpn array overflowing")
+func (s *SVCBAlpn) unpack(b *cryptobyte.String) error {
+	var alpn []string
+	for !b.Empty() {
+		var data cryptobyte.String
+		if !b.ReadUint8LengthPrefixed(&data) {
+			return errUnpackOverflow
 		}
-		alpn = append(alpn, string(b[i:i+length]))
-		i += length
+		alpn = append(alpn, string(data))
 	}
 	s.Alpn = alpn
 	return nil
@@ -495,18 +495,12 @@ func (s *SVCBAlpn) copy() SVCBKeyValue {
 //	s.Value = append(s.Value, e)
 type SVCBNoDefaultAlpn struct{}
 
-func (*SVCBNoDefaultAlpn) Key() SVCBKey          { return SVCB_NO_DEFAULT_ALPN }
-func (*SVCBNoDefaultAlpn) copy() SVCBKeyValue    { return &SVCBNoDefaultAlpn{} }
-func (*SVCBNoDefaultAlpn) pack() ([]byte, error) { return []byte{}, nil }
-func (*SVCBNoDefaultAlpn) String() string        { return "" }
-func (*SVCBNoDefaultAlpn) len() int              { return 0 }
-
-func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
-	if len(b) != 0 {
-		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
-	}
-	return nil
-}
+func (*SVCBNoDefaultAlpn) Key() SVCBKey                    { return SVCB_NO_DEFAULT_ALPN }
+func (*SVCBNoDefaultAlpn) copy() SVCBKeyValue              { return &SVCBNoDefaultAlpn{} }
+func (*SVCBNoDefaultAlpn) pack() ([]byte, error)           { return []byte{}, nil }
+func (*SVCBNoDefaultAlpn) unpack(*cryptobyte.String) error { return nil }
+func (*SVCBNoDefaultAlpn) String() string                  { return "" }
+func (*SVCBNoDefaultAlpn) len() int                        { return 0 }
 
 func (*SVCBNoDefaultAlpn) parse(b string) error {
 	if b != "" {
@@ -531,11 +525,10 @@ func (*SVCBPort) len() int             { return 2 }
 func (s *SVCBPort) String() string     { return strconv.FormatUint(uint64(s.Port), 10) }
 func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
 
-func (s *SVCBPort) unpack(b []byte) error {
-	if len(b) != 2 {
-		return errors.New("dns: svcbport: port length is not exactly 2 octets")
+func (s *SVCBPort) unpack(b *cryptobyte.String) error {
+	if !b.ReadUint16(&s.Port) {
+		return errUnpackOverflow
 	}
-	s.Port = binary.BigEndian.Uint16(b)
 	return nil
 }
 
@@ -588,16 +581,17 @@ func (s *SVCBIPv4Hint) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (s *SVCBIPv4Hint) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%4 != 0 {
+func (s *SVCBIPv4Hint) unpack(b *cryptobyte.String) error {
+	if b.Empty() || len(*b)%4 != 0 {
 		return errors.New("dns: svcbipv4hint: ipv4 address byte array length is not a multiple of 4")
 	}
-	b = cloneSlice(b)
-	x := make([]net.IP, 0, len(b)/4)
-	for i := 0; i < len(b); i += 4 {
-		x = append(x, net.IP(b[i:i+4]))
+	bb := cloneSlice(*b)
+	b.Skip(len(*b))
+	hints := make([]net.IP, 0, len(bb)/4)
+	for i := 0; i < len(bb); i += 4 {
+		hints = append(hints, net.IP(bb[i:i+4]))
 	}
-	s.Hint = x
+	s.Hint = hints
 	return nil
 }
 
@@ -667,8 +661,9 @@ func (s *SVCBECHConfig) copy() SVCBKeyValue {
 	return &SVCBECHConfig{cloneSlice(s.ECH)}
 }
 
-func (s *SVCBECHConfig) unpack(b []byte) error {
-	s.ECH = cloneSlice(b)
+func (s *SVCBECHConfig) unpack(b *cryptobyte.String) error {
+	s.ECH = cloneSlice(*b)
+	b.Skip(len(*b))
 	return nil
 }
 
@@ -710,20 +705,21 @@ func (s *SVCBIPv6Hint) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (s *SVCBIPv6Hint) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%16 != 0 {
+func (s *SVCBIPv6Hint) unpack(b *cryptobyte.String) error {
+	if b.Empty() || len(*b)%16 != 0 {
 		return errors.New("dns: svcbipv6hint: ipv6 address byte array length not a multiple of 16")
 	}
-	b = cloneSlice(b)
-	x := make([]net.IP, 0, len(b)/16)
-	for i := 0; i < len(b); i += 16 {
-		ip := net.IP(b[i : i+16])
+	bb := cloneSlice(*b)
+	b.Skip(len(*b))
+	hints := make([]net.IP, 0, len(bb)/16)
+	for i := 0; i < len(bb); i += 16 {
+		ip := net.IP(bb[i : i+16])
 		if ip.To4() != nil {
 			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
 		}
-		x = append(x, ip)
+		hints = append(hints, ip)
 	}
-	s.Hint = x
+	s.Hint = hints
 	return nil
 }
 
@@ -796,8 +792,9 @@ func (s *SVCBDoHPath) String() string        { return svcbParamToStr([]byte(s.Te
 func (s *SVCBDoHPath) len() int              { return len(s.Template) }
 func (s *SVCBDoHPath) pack() ([]byte, error) { return []byte(s.Template), nil }
 
-func (s *SVCBDoHPath) unpack(b []byte) error {
-	s.Template = string(b)
+func (s *SVCBDoHPath) unpack(b *cryptobyte.String) error {
+	s.Template = string(*b)
+	b.Skip(len(*b))
 	return nil
 }
 
@@ -836,8 +833,9 @@ func (s *SVCBLocal) String() string        { return svcbParamToStr(s.Data) }
 func (s *SVCBLocal) pack() ([]byte, error) { return cloneSlice(s.Data), nil }
 func (s *SVCBLocal) len() int              { return len(s.Data) }
 
-func (s *SVCBLocal) unpack(b []byte) error {
-	s.Data = cloneSlice(b)
+func (s *SVCBLocal) unpack(b *cryptobyte.String) error {
+	s.Data = cloneSlice(*b)
+	b.Skip(len(*b))
 	return nil
 }
 

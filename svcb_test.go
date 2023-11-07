@@ -2,6 +2,8 @@ package dns
 
 import (
 	"testing"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // This tests everything valid about SVCB but parsing.
@@ -50,7 +52,7 @@ func TestSVCB(t *testing.T) {
 		if len(b) != int(kv.len()) {
 			t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, int(kv.len()), len(b))
 		}
-		err = kv.unpack(b)
+		err = kv.unpack((*cryptobyte.String)(&b))
 		if err != nil {
 			t.Error("failed to unpack value of svc pair: ", o.key, err)
 			continue
@@ -70,10 +72,12 @@ func TestDecodeBadSVCB(t *testing.T) {
 			key:  SVCB_ALPN,
 			data: []byte{3, 0, 0}, // There aren't three octets after 3
 		},
-		{
+		// The caller is responsible for ensuring the buffer is empty after
+		// unpacking, see unpackDataSVCB.
+		/*{
 			key:  SVCB_NO_DEFAULT_ALPN,
 			data: []byte{0},
-		},
+		},*/
 		{
 			key:  SVCB_PORT,
 			data: []byte{},
@@ -88,7 +92,8 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for _, o := range svcbs {
-		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
+		data := o.data
+		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack((*cryptobyte.String)(&data))
 		if err == nil {
 			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).String())
 		}

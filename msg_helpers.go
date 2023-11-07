@@ -334,19 +334,22 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 }
 
 func unpackDataOpt(msg *cryptobyte.String) ([]EDNS0, error) {
-	var edns []EDNS0
+	var (
+		edns []EDNS0
+		data cryptobyte.String // Move this out of the loop as it escapes into unpack.
+	)
 	for !msg.Empty() {
-		var (
-			code    uint16
-			optData cryptobyte.String
-		)
+		var code uint16
 		if !msg.ReadUint16(&code) ||
-			!msg.ReadUint16LengthPrefixed(&optData) {
+			!msg.ReadUint16LengthPrefixed(&data) {
 			return nil, &Error{err: "overflow unpacking opt"}
 		}
 		opt := makeDataOpt(code)
-		if err := opt.unpack(optData); err != nil {
+		if err := opt.unpack(&data); err != nil {
 			return nil, err
+		}
+		if !data.Empty() {
+			return nil, &Error{err: "trailing data after opt"}
 		}
 		edns = append(edns, opt)
 	}
@@ -489,29 +492,32 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 }
 
 func unpackDataSVCB(msg *cryptobyte.String) ([]SVCBKeyValue, error) {
-	var xs []SVCBKeyValue
+	var (
+		svcb []SVCBKeyValue
+		data cryptobyte.String // Move this out of the loop as it escapes into unpack.
+	)
 	for !msg.Empty() {
-		var (
-			code   uint16
-			kvData cryptobyte.String
-		)
+		var code uint16
 		if !msg.ReadUint16(&code) ||
-			!msg.ReadUint16LengthPrefixed(&kvData) {
+			!msg.ReadUint16LengthPrefixed(&data) {
 			return nil, &Error{err: "overflow unpacking SVCB"}
 		}
 		kv := makeSVCBKeyValue(SVCBKey(code))
 		if kv == nil {
 			return nil, &Error{err: "bad SVCB key"}
 		}
-		if err := kv.unpack(kvData); err != nil {
+		if err := kv.unpack(&data); err != nil {
 			return nil, err
 		}
-		if len(xs) > 0 && kv.Key() <= xs[len(xs)-1].Key() {
+		if !data.Empty() {
+			return nil, &Error{err: "trailing data after SVCB key-value"}
+		}
+		if len(svcb) > 0 && kv.Key() <= svcb[len(svcb)-1].Key() {
 			return nil, &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		xs = append(xs, kv)
+		svcb = append(svcb, kv)
 	}
-	return xs, nil
+	return svcb, nil
 }
 
 func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
