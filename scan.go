@@ -605,8 +605,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			if !isPrivate && zp.c.Peek().token == "" {
 				// This is a dynamic update rr.
 
-				// TODO(tmthrgd): Previously slurpRemainder was only called
-				// for certain RR types, which may have been important.
 				if err := slurpRemainder(zp.c); err != nil {
 					return zp.setParseError(err.err, err.lex)
 				}
