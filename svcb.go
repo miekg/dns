@@ -308,7 +308,7 @@ func (s *SVCBMandatory) unpack(b *cryptobyte.String) error {
 		// We assume strictly increasing order.
 		var code SVCBKey
 		if !b.ReadUint16((*uint16)(&code)) {
-			return errUnpackOverflow
+			return ErrBuf
 		}
 		codes = append(codes, code)
 	}
@@ -418,7 +418,7 @@ func (s *SVCBAlpn) unpack(b *cryptobyte.String) error {
 	for !b.Empty() {
 		var data cryptobyte.String
 		if !b.ReadUint8LengthPrefixed(&data) {
-			return errUnpackOverflow
+			return ErrBuf
 		}
 		alpn = append(alpn, string(data))
 	}
@@ -527,7 +527,7 @@ func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
 
 func (s *SVCBPort) unpack(b *cryptobyte.String) error {
 	if !b.ReadUint16(&s.Port) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }

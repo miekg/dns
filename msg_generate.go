@@ -225,7 +225,7 @@ if rr.%s != "-" {
 				errCheck()
 			}
 			readInt := func(type_ string) {
-				fmt.Fprintf(b, "if !msg.Read%s(&rr.%s) { return errUnpackOverflow }\n", type_, st.Field(i).Name())
+				fmt.Fprintf(b, "if !msg.Read%s(&rr.%s) { return ErrBuf }\n", type_, st.Field(i).Name())
 			}
 
 			// size-* are special, because they reference a struct member we should use for the length.

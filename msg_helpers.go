@@ -83,7 +83,7 @@ func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (RR_Header, error) {
 		!msg.ReadUint16(&hdr.Class) ||
 		!msg.ReadUint32(&hdr.Ttl) ||
 		!msg.ReadUint16(&hdr.Rdlength) {
-		return hdr, errUnpackOverflow
+		return hdr, ErrBuf
 	}
 	return hdr, nil
 }

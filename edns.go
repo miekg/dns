@@ -333,7 +333,7 @@ func (e *EDNS0_SUBNET) unpack(b *cryptobyte.String) error {
 	if !b.ReadUint16(&e.Family) ||
 		!b.ReadUint8(&e.SourceNetmask) ||
 		!b.ReadUint8(&e.SourceScope) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	switch e.Family {
 	case 0:
@@ -465,10 +465,10 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 
 func (e *EDNS0_UL) unpack(b *cryptobyte.String) error {
 	if !b.ReadUint32(&e.Lease) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if !b.Empty() && !b.ReadUint32(&e.KeyLease) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -503,7 +503,7 @@ func (e *EDNS0_LLQ) unpack(b *cryptobyte.String) error {
 		!b.ReadUint16(&e.Error) ||
 		!b.ReadUint64(&e.Id) ||
 		!b.ReadUint32(&e.LeaseLife) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -631,7 +631,7 @@ func (e *EDNS0_EXPIRE) unpack(b *cryptobyte.String) error {
 	// zero-length EXPIRE query, see RFC 7314 Section 2
 	e.Empty = b.Empty()
 	if !b.Empty() && !b.ReadUint32(&e.Expire) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -711,7 +711,7 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 
 func (e *EDNS0_TCP_KEEPALIVE) unpack(b *cryptobyte.String) error {
 	if !b.Empty() && !b.ReadUint16(&e.Timeout) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -838,7 +838,7 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 
 func (e *EDNS0_EDE) unpack(b *cryptobyte.String) error {
 	if !b.ReadUint16(&e.InfoCode) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	e.ExtraText = string(*b)
 	b.Skip(len(*b))

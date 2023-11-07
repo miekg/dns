@@ -102,7 +102,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 		}
 		// Skip past Type and Class
 		if !s.Skip(2 + 2) {
-			return errUnpackSignedOverflow
+			return ErrBuf
 		}
 	}
 
@@ -115,12 +115,12 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 		var rdata cryptobyte.String
 		if !s.Skip(2+2+4) ||
 			!s.ReadUint16LengthPrefixed(&rdata) {
-			return errUnpackSignedOverflow
+			return ErrBuf
 		}
 	}
 
 	if s.Empty() {
-		return errUnpackSignedOverflow
+		return ErrBuf
 	}
 
 	// offset should be just prior to SIG
@@ -132,7 +132,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 	// Skip Type, Class, TTL, RDLen
 	if !s.Skip(2 + 2 + 4 + 2) {
-		return errUnpackSignedOverflow
+		return ErrBuf
 	}
 	sigstart := len(buf) - len(s)
 	var expire, incept uint32
@@ -140,7 +140,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2+1+1+4) ||
 		!s.ReadUint32(&expire) ||
 		!s.ReadUint32(&incept) {
-		return errUnpackSignedOverflow
+		return ErrBuf
 	}
 	now := uint32(time.Now().Unix())
 	if now < incept || now > expire {
@@ -148,7 +148,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 	// Skip key tag
 	if !s.Skip(2) {
-		return errUnpackSignedOverflow
+		return ErrBuf
 	}
 	signername, err := unpackDomainName(&s, buf)
 	if err != nil {

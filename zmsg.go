@@ -1200,7 +1200,7 @@ func (rr *AAAA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *AFSDB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Subtype) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1214,13 +1214,13 @@ func (rr *AFSDB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *AMTRELAY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Precedence) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.GatewayType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1254,7 +1254,7 @@ func (rr *AVC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *CAA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Flag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1275,19 +1275,19 @@ func (rr *CAA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *CDNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Protocol) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1301,19 +1301,19 @@ func (rr *CDNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *CDS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.DigestType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1327,19 +1327,19 @@ func (rr *CDS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *CERT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Type) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1361,13 +1361,13 @@ func (rr *CNAME) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *CSYNC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Serial) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1389,19 +1389,19 @@ func (rr *DHCID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *DLV) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.DigestType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1423,19 +1423,19 @@ func (rr *DNAME) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *DNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Protocol) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1449,19 +1449,19 @@ func (rr *DNSKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *DS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.DigestType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1483,21 +1483,21 @@ func (rr *EID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *EUI48) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint48(&rr.Address) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
 
 func (rr *EUI64) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint64(&rr.Address) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
 
 func (rr *GID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Gid) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -1541,19 +1541,19 @@ func (rr *HINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *HIP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.HitLength) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.PublicKeyAlgorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.PublicKeyLength) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1575,7 +1575,7 @@ func (rr *HIP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *HTTPS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1596,19 +1596,19 @@ func (rr *HTTPS) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *IPSECKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Precedence) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.GatewayType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1629,19 +1629,19 @@ func (rr *IPSECKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *KEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Protocol) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1655,7 +1655,7 @@ func (rr *KEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *KX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1669,7 +1669,7 @@ func (rr *KX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *L32) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1683,63 +1683,63 @@ func (rr *L32) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *L64) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint64(&rr.Locator64) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
 
 func (rr *LOC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Version) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Size) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.HorizPre) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.VertPre) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Latitude) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Longitude) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Altitude) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
 
 func (rr *LP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1808,7 +1808,7 @@ func (rr *MR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *MX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1822,13 +1822,13 @@ func (rr *MX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *NAPTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Order) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1863,13 +1863,13 @@ func (rr *NAPTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *NID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint64(&rr.NodeID) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -1923,25 +1923,25 @@ func (rr *NSEC) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *NSEC3) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Hash) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Iterations) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.SaltLength) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1951,7 +1951,7 @@ func (rr *NSEC3) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return err
 	}
 	if !msg.ReadUint8(&rr.HashLength) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -1969,25 +1969,25 @@ func (rr *NSEC3) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *NSEC3PARAM) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Hash) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Iterations) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.SaltLength) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2033,7 +2033,7 @@ func (rr *PTR) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *PX) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2062,19 +2062,19 @@ func (rr *RFC3597) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *RKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Flags) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Protocol) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2103,43 +2103,43 @@ func (rr *RP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *RRSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.TypeCovered) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Labels) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.OrigTtl) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Expiration) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Inception) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2160,7 +2160,7 @@ func (rr *RRSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *RT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Preference) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2174,43 +2174,43 @@ func (rr *RT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *SIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.TypeCovered) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Labels) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.OrigTtl) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Expiration) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Inception) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2231,19 +2231,19 @@ func (rr *SIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *SMIMEA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Usage) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Selector) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.MatchingType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2271,31 +2271,31 @@ func (rr *SOA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Serial) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Refresh) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Retry) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Expire) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Minttl) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -2310,19 +2310,19 @@ func (rr *SPF) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *SRV) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Weight) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Port) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2336,13 +2336,13 @@ func (rr *SRV) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *SSHFP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Type) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2356,7 +2356,7 @@ func (rr *SSHFP) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *SVCB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2377,19 +2377,19 @@ func (rr *SVCB) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *TA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.KeyTag) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Algorithm) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.DigestType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2425,31 +2425,31 @@ func (rr *TKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Inception) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint32(&rr.Expiration) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Mode) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Error) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.KeySize) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2459,7 +2459,7 @@ func (rr *TKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return err
 	}
 	if !msg.ReadUint16(&rr.OtherLen) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2473,19 +2473,19 @@ func (rr *TKEY) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *TLSA) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint8(&rr.Usage) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Selector) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.MatchingType) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2506,19 +2506,19 @@ func (rr *TSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !msg.ReadUint48(&rr.TimeSigned) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Fudge) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.MACSize) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2528,19 +2528,19 @@ func (rr *TSIG) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 		return err
 	}
 	if !msg.ReadUint16(&rr.OrigId) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Error) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.OtherLen) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2562,7 +2562,7 @@ func (rr *TXT) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *UID) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Uid) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	return nil
 }
@@ -2577,13 +2577,13 @@ func (rr *UINFO) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *URI) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint16(&rr.Priority) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint16(&rr.Weight) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
@@ -2605,19 +2605,19 @@ func (rr *X25) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 
 func (rr *ZONEMD) unpack(msg *cryptobyte.String, msgBuf []byte) (err error) {
 	if !msg.ReadUint32(&rr.Serial) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Scheme) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil
 	}
 	if !msg.ReadUint8(&rr.Hash) {
-		return errUnpackOverflow
+		return ErrBuf
 	}
 	if msg.Empty() {
 		return nil

@@ -50,29 +50,27 @@ const (
 
 // Errors defined in this package.
 var (
-	ErrAlg                  error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrAuth                 error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
-	ErrBuf                  error = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used is too small for the message.
-	ErrConnEmpty            error = &Error{err: "conn has no connection"}         // ErrConnEmpty indicates a connection is being used before it is initialized.
-	ErrExtendedRcode        error = &Error{err: "bad extended rcode"}             // ErrExtendedRcode ...
-	ErrFqdn                 error = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
-	ErrId                   error = &Error{err: "id mismatch"}                    // ErrId indicates there is a mismatch with the message's ID.
-	ErrKeyAlg               error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
-	ErrKey                  error = &Error{err: "bad key"}
-	ErrKeySize              error = &Error{err: "bad key size"}
-	ErrLongDomain           error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
-	ErrNoSig                error = &Error{err: "no signature found"}
-	ErrPrivKey              error = &Error{err: "bad private key"}
-	ErrRcode                error = &Error{err: "bad rcode"}
-	ErrRdata                error = &Error{err: "bad rdata"}
-	ErrRRset                error = &Error{err: "bad rrset"}
-	ErrSecret               error = &Error{err: "no secrets defined"}
-	ErrShortRead            error = &Error{err: "short read"}
-	ErrSig                  error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
-	ErrSoa                  error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
-	ErrTime                 error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
-	errUnpackOverflow             = &Error{err: "overflow unpacking integer"}
-	errUnpackSignedOverflow       = &Error{err: "overflowing unpacking signed message"}
+	ErrAlg           error = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrAuth          error = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
+	ErrBuf           error = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used is too small for the message.
+	ErrConnEmpty     error = &Error{err: "conn has no connection"}         // ErrConnEmpty indicates a connection is being used before it is initialized.
+	ErrExtendedRcode error = &Error{err: "bad extended rcode"}             // ErrExtendedRcode ...
+	ErrFqdn          error = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
+	ErrId            error = &Error{err: "id mismatch"}                    // ErrId indicates there is a mismatch with the message's ID.
+	ErrKeyAlg        error = &Error{err: "bad key algorithm"}              // ErrKeyAlg indicates that the algorithm in the key is not valid.
+	ErrKey           error = &Error{err: "bad key"}
+	ErrKeySize       error = &Error{err: "bad key size"}
+	ErrLongDomain    error = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
+	ErrNoSig         error = &Error{err: "no signature found"}
+	ErrPrivKey       error = &Error{err: "bad private key"}
+	ErrRcode         error = &Error{err: "bad rcode"}
+	ErrRdata         error = &Error{err: "bad rdata"}
+	ErrRRset         error = &Error{err: "bad rrset"}
+	ErrSecret        error = &Error{err: "no secrets defined"}
+	ErrShortRead     error = &Error{err: "short read"}
+	ErrSig           error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
+	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
+	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The
@@ -1160,10 +1158,10 @@ func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
 	}
 	// TODO(tmthrgd): Should we really accept partial questions?
 	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
-		return q, errUnpackOverflow
+		return q, ErrBuf
 	}
 	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
-		return q, errUnpackOverflow
+		return q, ErrBuf
 	}
 	return q, nil
 }
@@ -1204,7 +1202,7 @@ func unpackMsgHdr(msg *cryptobyte.String) (Header, error) {
 		!msg.ReadUint16(&dh.Ancount) ||
 		!msg.ReadUint16(&dh.Nscount) ||
 		!msg.ReadUint16(&dh.Arcount) {
-		return dh, errUnpackOverflow
+		return dh, ErrBuf
 	}
 	return dh, nil
 }
