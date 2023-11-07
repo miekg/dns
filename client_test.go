@@ -508,6 +508,13 @@ func TestClientConnWriteSinglePacket(t *testing.T) {
 }
 
 func TestTruncatedMsg(t *testing.T) {
+	// TODO(tmthrgd): This is a really weird test. It seems to conflate the
+	// meaning of DNS messages with the TC bit set (the server knowingly
+	// couldn't fit all the records in) with truncated DNS messages (some part
+	// of the message went missing before we unpacked it). It locks us into
+	// specific parsing behaviour of otherwise very broken DNS messages. We
+	// should consider removing it.
+
 	m := new(Msg)
 	m.SetQuestion("miek.nl.", TypeSRV)
 	cnt := 10
@@ -595,17 +602,16 @@ func TestTruncatedMsg(t *testing.T) {
 	// Now we want to remove almost all of the answer records too
 	buf1 = make([]byte, m.Len())
 	as := 0
-	for i := 0; i < len(m.Extra); i++ {
+	for i := 0; i < len(m.Answer); i++ {
 		off1 := off
-		off, err = PackRR(m.Extra[i], buf1, off, nil, m.Compress)
+		off, err = PackRR(m.Answer[i], buf1, off, nil, m.Compress)
 		as = off - off1
 		if err != nil {
-			t.Errorf("failed to pack extra: %v", err)
+			t.Errorf("failed to pack answer: %v", err)
 		}
 	}
 
 	// Keep exactly one answer left
-	// This should still cause Answer to be nil
 	off -= as
 	buf1 = buf[:len(buf)-off]
 
@@ -616,8 +622,8 @@ func TestTruncatedMsg(t *testing.T) {
 	if !r.Truncated {
 		t.Error("truncated cutoff message wasn't unpacked as truncated")
 	}
-	if len(r.Answer) != 0 {
-		t.Errorf("answer count after second cutoff unpack is not zero: %d", len(r.Answer))
+	if len(r.Answer) != 1 {
+		t.Errorf("answer count after second cutoff unpack is not 1: %d", len(r.Answer))
 	}
 
 	// Now leave only 1 byte of the question
