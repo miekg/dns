@@ -167,6 +167,20 @@ func BenchmarkUnpackDomainNameLongestUnprintable(b *testing.B) {
 	}
 }
 
+func BenchmarkUnpackDomainNamePointers(b *testing.B) {
+	msg := []byte("\x07example\x03com\x00" + "\x04test\xC0\x00" + "\x09benchmark\xC0\x0D" + "\x10UnpackDomainName\xC0\x14")
+	expect := "UnpackDomainName.benchmark.test.example.com."
+
+	for n := 0; n < b.N; n++ {
+		name, _, err := UnpackDomainName(msg, 32)
+		if err != nil {
+			b.Fatalf("UnpackDomainName failed: %v", err)
+		} else if name != expect {
+			b.Fatalf("UnpackDomainName produced wrong value; wanted %s, got %s", expect, name)
+		}
+	}
+}
+
 func BenchmarkCopy(b *testing.B) {
 	b.ReportAllocs()
 	m := new(Msg)

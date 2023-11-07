@@ -392,27 +392,39 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 	s := make([]byte, 0, maxDomainNamePresentationLength)
 	budget := maxDomainNameWireOctets
 	var ptrs int // number of pointers followed
+
+	// If we never see a pointer, we need to ensure that we advance msg to our
+	// final position.
+	cs := *msg
+	defer func() {
+		if ptrs == 0 {
+			*msg = cs
+		}
+	}()
+
 	for {
 		var c byte
-		if !msg.ReadUint8(&c) {
+		if !cs.ReadUint8(&c) {
 			return "", ErrBuf
-		}
-		if c == 0x00 { // end of name
-			if len(s) == 0 {
-				return ".", nil
-			}
-			return string(s), nil
 		}
 		switch c & 0xC0 {
 		case 0x00: // literal string
-			var part []byte
-			if !msg.ReadBytes(&part, int(c)) {
+			var label []byte
+			if !cs.ReadBytes(&label, int(c)) {
 				return "", ErrBuf
 			}
-			if budget -= len(part) + 1; budget <= 0 { // +1 for the label separator
+			// If we see a zero-length label (root label), this is the
+			// end of the name.
+			if len(label) == 0 {
+				if len(s) == 0 {
+					return ".", nil
+				}
+				return string(s), nil
+			}
+			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
 				return "", ErrLongDomain
 			}
-			for _, b := range part {
+			for _, b := range label {
 				if isDomainNameLabelSpecial(b) {
 					s = append(s, '\\', b)
 				} else if b < ' ' || b > '~' {
@@ -424,8 +436,13 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 			s = append(s, '.')
 		case 0xC0: // pointer
 			var c1 byte
-			if !msg.ReadUint8(&c1) {
+			if !cs.ReadUint8(&c1) {
 				return "", ErrBuf
+			}
+			// If this is the first pointer we've seen, we need to
+			// advance msg to our current position.
+			if ptrs == 0 {
+				*msg = cs
 			}
 			// Don't follow too many pointers in case there is a loop.
 			if ptrs++; ptrs > maxCompressionPointers {
@@ -436,13 +453,12 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC1035
 			// specifically refers to a "prior occurance".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= len(msgBuf)-len(*msg) {
+			if int(off) >= len(msgBuf)-len(cs) {
 				return "", &Error{err: "pointer not to prior occurrence of name"}
 			}
-			// Jump to the offset directly in msgBuf. We carry msgBuf
-			// around with us solely for this line.
-			b := cryptobyte.String(msgBuf[off:])
-			msg = &b
+			// Jump to the offset in msgBuf. We carry msgBuf around with
+			// us solely for this line.
+			cs = msgBuf[off:]
 		default:
 			// 0x80 and 0x40 are reserved
 			return "", ErrRdata
