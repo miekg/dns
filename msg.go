@@ -886,12 +886,6 @@ func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 		dns.Extra, msg, err = unpackCounted(unpackRR, dh.Arcount, msg, msgBuf)
 	}
 
-	// TODO(tmthrgd): Remove these as part of #1492.
-	dh.Qdcount = uint16(len(dns.Question))
-	dh.Ancount = uint16(len(dns.Answer))
-	dh.Nscount = uint16(len(dns.Ns))
-	dh.Arcount = uint16(len(dns.Extra))
-
 	// Set extended Rcode
 	if opt := dns.IsEdns0(); opt != nil {
 		dns.Rcode |= opt.ExtendedRcode()
