@@ -340,19 +340,17 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		return nil, nil, ErrAuth
 	}
 
-	for i := 0; i < int(dh.Qdcount); i++ {
-		_, err = unpackQuestion(&s, msg)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	_, err = unpackRRslice(dh.Ancount, &s, msg)
+	_, err = unpackCounted(unpackQuestion, dh.Qdcount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	_, err = unpackRRslice(dh.Nscount, &s, msg)
+	_, err = unpackCounted(unpackRR, dh.Ancount, &s, msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	_, err = unpackCounted(unpackRR, dh.Nscount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}

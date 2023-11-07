@@ -69,14 +69,12 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-// unpackHeader unpacks an RR header advancing msg.
-func unpackHeader(msg *cryptobyte.String, msgBuf []byte) (RR_Header, error) {
-	var hdr RR_Header
-	if msg.Empty() {
-		return hdr, nil
-	}
-
-	var err error
+// unpackRRHeader unpacks an RR header advancing msg.
+func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (RR_Header, error) {
+	var (
+		hdr RR_Header
+		err error
+	)
 	hdr.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
 		return hdr, err
