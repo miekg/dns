@@ -851,10 +851,6 @@ func unpackCounted[T any](unpack func(*cryptobyte.String, []byte) (T, error), cn
 
 		r, err := unpack(msg, msgBuf)
 		if err != nil {
-			// TODO(tmthrgd): Remove this.
-			if msg.Empty() {
-				return nil, err
-			}
 			return dst, err
 		}
 		dst = append(dst, r)
