@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/binary"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -122,41 +123,39 @@ func TestUnPackExtendedRcode(t *testing.T) {
 }
 
 func TestUnpackDomainName(t *testing.T) {
+	// manyPointers unpacks perfectly validly to "example.com." after following
+	// 200 pointers. This trips our maxCompressionPointers check as we refuse
+	// to follow that many pointers.
+	manyPointers := []byte("\x07example\x03com\x00\xC0\x00")
+	for i := 1; i < 200; i++ {
+		manyPointers = binary.BigEndian.AppendUint16(manyPointers,
+			uint16(0xC000|(len(manyPointers)-2)))
+	}
+
 	var cases = []struct {
 		label          string
 		input          string
+		offset         int
 		expectedOutput string
 		expectedError  string
 	}{
-		{"empty domain",
-			"\x00",
-			".",
-			""},
-		{"long label",
-			"?" + maxPrintableLabel + "\x00",
-			maxPrintableLabel + ".",
-			""},
+		{"empty domain", "\x00", 0, ".", ""},
+		{"long label", "?" + maxPrintableLabel + "\x00", 0, maxPrintableLabel + ".", ""},
 		{"unprintable label",
 			"?" + regexp.MustCompile(`\\[0-9]+`).ReplaceAllStringFunc(maxUnprintableLabel,
 				func(escape string) string {
 					n, _ := strconv.ParseInt(escape[1:], 10, 8)
 					return string(rune(n))
 				}) + "\x00",
+			0,
 			maxUnprintableLabel + ".",
 			""},
-		{"long domain",
-			"5" + strings.Replace(longDomain, ".", "1", -1) + "\x00",
-			longDomain + ".",
-			""},
-		{"compression pointer",
-			// an unrealistic but functional test referencing an offset _inside_ a label
-			"\x03foo" + "\x05\x03com\x00" + "\x07example" + "\xC0\x05",
-			"foo.\\003com\\000.example.com.",
-			""},
-		{"too long domain",
-			"6" + "x" + strings.Replace(longDomain, ".", "1", -1) + "\x00",
-			"",
-			ErrLongDomain.Error()},
+		{"long domain", "5" + strings.Replace(longDomain, ".", "1", -1) + "\x00", 0, longDomain + ".", ""},
+		{"compression pointer at offset to before offset", "\x07example\x03com\x00\xC0\x00", 13, "example.com.", ""},
+		{"compression pointer after label to before offset", "\x07example\x03com\x00\x03www\xC0\x00", 13, "www.example.com.", ""},
+		// an unrealistic but functional test referencing an offset _inside_ a label
+		{"compression pointer inside label", "\x03foo\x05\x03com\x00\x07example\xC0\x05", 0, "foo.\\003com\\000.example.com.", ""},
+		{"too long domain", "6x" + strings.Replace(longDomain, ".", "1", -1) + "\x00", 0, "", ErrLongDomain.Error()},
 		{"too long by pointer",
 			// a matryoshka doll name to get over 255 octets after expansion via internal pointers
 			string([]byte{
@@ -167,6 +166,7 @@ func TestUnpackDomainName(t *testing.T) {
 				// 10 pointers, last to first
 				192, 10, 192, 9, 192, 8, 192, 7, 192, 6, 192, 5, 192, 4, 192, 3, 192, 2, 192, 1,
 			}),
+			0,
 			"",
 			ErrLongDomain.Error()},
 		{"long by pointer",
@@ -179,6 +179,7 @@ func TestUnpackDomainName(t *testing.T) {
 				// 10 pointers, last to first
 				192, 10, 192, 9, 192, 8, 192, 7, 192, 6, 192, 5, 192, 4, 192, 3, 192, 2, 192, 1,
 			}),
+			0,
 			"" +
 				(`\"\031\028\025\022\019\016\013\010\000xxxxxxxxx` +
 					`\192\010\192\009\192\008\192\007\192\006\192\005\192\004\192\003\192\002.`) +
@@ -195,19 +196,19 @@ func TestUnpackDomainName(t *testing.T) {
 				`\010\000xxxxxxxxx\192\010.` +
 				`\000xxxxxxxxx.`,
 			""},
-		{"truncated name", "\x07example\x03", "", "dns: buffer size too small"},
-		{"non-absolute name", "\x07example\x03com", "", "dns: buffer size too small"},
-		{"compression pointer cycle (too many)", "\xC0\x00", "", "dns: too many compression pointers"},
-		{"compression pointer cycle (too long)",
-			"\x03foo" + "\x03bar" + "\x07example" + "\xC0\x04",
-			"",
-			ErrLongDomain.Error()},
-		{"forward compression pointer", "\x02\xC0\xFF\xC0\x01", "", "dns: pointer not to prior occurrence of name"},
-		{"reserved compression pointer 0b10", "\x07example\x80", "", "dns: bad rdata"},
-		{"reserved compression pointer 0b01", "\x07example\x40", "", "dns: bad rdata"},
+		{"truncated name", "\x07example\x03", 0, "", "dns: buffer size too small"},
+		{"non-absolute name", "\x07example\x03com", 0, "", "dns: buffer size too small"},
+		{"compression pointer cycle (multiple labels)", "\x03foo\x03bar\x07example\xC0\x04", 0, "", ErrLongDomain.Error()},
+		{"compression pointer cycle (one label)", "\x07example\xC0\x00", 0, "", ErrLongDomain.Error()},
+		{"compression pointer not advancing (start of pointer)", "\xC0\x00", 0, "", "dns: pointer not to prior occurrence of name"},
+		{"compression pointer not advancing (inside pointer)", "\xC0\x01a\xC0\x00", 0, "", "dns: pointer not to prior occurrence of name"},
+		{"forward compression pointer", "\x02\xC0\xFF\xC0\x01", 0, "", "dns: pointer not to prior occurrence of name"},
+		{"reserved label type 0b10", "\x07example\x80", 0, "", "dns: reserved domain name label type"},
+		{"reserved label type 0b01", "\x07example\x40", 0, "", "dns: reserved domain name label type"},
+		{"lots of compression pointers", string(manyPointers), len(manyPointers) - 2, "", "dns: too many compression pointers"},
 	}
 	for _, test := range cases {
-		output, idx, err := UnpackDomainName([]byte(test.input), 0)
+		output, idx, err := UnpackDomainName([]byte(test.input), test.offset)
 		if test.expectedOutput != "" && output != test.expectedOutput {
 			t.Errorf("%s: expected %s, got %s", test.label, test.expectedOutput, output)
 		}

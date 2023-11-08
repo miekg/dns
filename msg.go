@@ -444,6 +444,9 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 				*msg = cs
 			}
 			// Don't follow too many pointers in case there is a loop.
+			//
+			// TODO(tmthrgd): This check is no longer required to ensure
+			// loop free behaviour. Should we remove it?
 			if ptrs++; ptrs > maxCompressionPointers {
 				return "", &Error{err: "too many compression pointers"}
 			}
@@ -452,15 +455,14 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC1035
 			// specifically refers to a "prior occurance".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= offset(cs, msgBuf) {
+			if int(off) >= offset(cs, msgBuf)-2 {
 				return "", &Error{err: "pointer not to prior occurrence of name"}
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with
 			// us solely for this line.
 			cs = msgBuf[off:]
-		default:
-			// 0x80 and 0x40 are reserved
-			return "", ErrRdata
+		default: // 0x80 and 0x40 are reserved
+			return "", &Error{err: "reserved domain name label type"}
 		}
 	}
 }
