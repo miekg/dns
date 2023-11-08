@@ -222,6 +222,8 @@ func packDomainName(s string, msg []byte, off int, compression compressionMap, c
 
 	ls := len(s)
 	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
+		// TODO(tmthrgd): This can produce corrupt messages and records. See
+		// the comment in unpackQuestion.
 		return off, nil
 	}
 
@@ -1195,6 +1197,13 @@ func (q *Question) pack(msg []byte, off int, compression compressionMap, compres
 }
 
 func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
+	// TODO(tmthrgd): Stop accepting partial questions. These are here
+	// ostensibly for dynamic updates (see RFC 2136), but that standard doesn't
+	// actually permit partial question records and this seems to be a hold over
+	// of earlier unpacking code that was more generic. Instead we should
+	// enforce that we've properly received an entire question by removing the
+	// msg.Empty() checks.
+
 	var (
 		q   Question
 		err error
@@ -1206,10 +1215,26 @@ func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
 		}
 		return q, err
 	}
-	// TODO(tmthrgd): Should we really accept partial questions?
 	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
 		return q, errTruncatedMessage
 	}
+
+	// There was a bug in the previous unpacking code that meant the effective
+	// behaviour when exactly one byte remained here instead of two or more
+	// required for the class was to skip over it rather than return an error as
+	// expected. While that may seem unremarkable on its own, there is a bug, or
+	// perhaps an interesting design choice, in packDomainName means that we can
+	// accidentally generate corrupt messages that would trip this very check.
+	// This can happen when packing a message that contains exactly one question
+	// with an empty domain name. For messages that contain either multiple
+	// questions or also contain records, this is likely to lead to corrupt
+	// messages that wouldn't trip this check.
+	//
+	// if len(*msg) == 1 {
+	// 	msg.Skip(1)
+	// 	return q, nil
+	// }
+
 	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
 		return q, errTruncatedMessage
 	}

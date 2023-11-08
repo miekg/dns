@@ -316,6 +316,13 @@ if rr.%s != "-" {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 			// If we've hit s.Empty() we return without error.
+			//
+			// TODO(tmthrgd): Remove this. See the comment in
+			// unpackQuestion for part of the rationale as to why this
+			// is incorrect. RFC 2136 allows for entirely empty records
+			// (i.e. ones with RDLENGTH being zero) but not ones that
+			// end abruptly part way through. We don't always correctly
+			// pack such messages which is why we have this check.
 			if i < st.NumFields()-1 {
 				fmt.Fprintln(b, "if s.Empty() { return nil }")
 			}

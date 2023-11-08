@@ -48,6 +48,8 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 		off += net.IPv4len
 	case 0:
 		// Allowed, for dynamic updates.
+		//
+		// TODO(tmthrgd): This is wrong and can result in corrupt records.
 	default:
 		return len(msg), &Error{err: "overflow packing a"}
 	}
@@ -73,6 +75,8 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 		off += net.IPv6len
 	case 0:
 		// Allowed, dynamic updates.
+		//
+		// TODO(tmthrgd): This is wrong and can result in corrupt records.
 	default:
 		return len(msg), &Error{err: "overflow packing aaaa"}
 	}
