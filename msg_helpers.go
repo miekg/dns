@@ -12,6 +12,15 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
+// offset reports the offset of data into buf, that is reports off such that
+// &data[0] == &buf[off]. It panics if data is not buf[off:].
+func offset(data, buf []byte) int {
+	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
+		panic("dns: internal error: cannot compute offset")
+	}
+	return len(buf) - len(data)
+}
+
 // helper functions called from the generated zmsg.go
 
 // These function are named after the tag to help pack/unpack, if there is no tag it is the name

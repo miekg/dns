@@ -124,7 +124,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	// offset should be just prior to SIG
-	bodyend := len(buf) - len(s)
+	bodyend := offset(s, buf)
 	// owner name SHOULD be root
 	_, err = unpackDomainName(&s, buf)
 	if err != nil {
@@ -134,7 +134,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2 + 2 + 4 + 2) {
 		return ErrBuf
 	}
-	sigstart := len(buf) - len(s)
+	sigstart := offset(s, buf)
 	var expire, incept uint32
 	// Skip Type Covered, Algorithm, Labels, Original TTL
 	if !s.Skip(2+1+1+4) ||
@@ -159,7 +159,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !strings.EqualFold(signername, k.Header().Name) {
 		return &Error{err: "signer name doesn't match key name"}
 	}
-	h.Write(buf[sigstart : len(buf)-len(s)])
+	h.Write(buf[sigstart:offset(s, buf)])
 	h.Write(buf[:10])
 	h.Write([]byte{
 		byte((dh.Arcount - 1) << 8),

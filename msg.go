@@ -384,7 +384,7 @@ func UnpackDomainName(msg []byte, off int) (string, int, error) {
 		// Keep documented behaviour of returning len(msg) here.
 		return "", len(msg), err
 	}
-	return name, len(msg) - len(s), nil
+	return name, offset(s, msg), nil
 }
 
 func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
@@ -452,7 +452,7 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC1035
 			// specifically refers to a "prior occurance".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= len(msgBuf)-len(cs) {
+			if int(off) >= offset(cs, msgBuf) {
 				return "", &Error{err: "pointer not to prior occurrence of name"}
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with
@@ -632,7 +632,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 
 	s := cryptobyte.String(msg[off:])
 	rr, err = unpackRR(&s, msg)
-	return rr, len(msg) - len(s), err
+	return rr, offset(s, msg), err
 }
 
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
@@ -644,7 +644,7 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 
 	s := cryptobyte.String(msg[off:])
 	rr, err = unpackRRWithHeader(h, &s, msg)
-	return rr, len(msg) - len(s), err
+	return rr, offset(s, msg), err
 }
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
@@ -661,6 +661,10 @@ func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR,
 	if !msg.ReadBytes(&data, int(h.Rdlength)) {
 		return &h, errBadRDLength
 	}
+
+	// Restrict msgBuf to the end of the RR (the current position of msg) so
+	// that we compute the correct offset in unpackDomainName.
+	msgBuf = msgBuf[:offset(*msg, msgBuf)]
 
 	var rr RR
 	if newFn, ok := TypeToRR[h.Rrtype]; ok {
@@ -911,7 +915,7 @@ func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 	// use PackOpt to let people tell how detailed the error reporting should be?
 	//
 	// if !s.Empty() {
-	// 	println("dns: extra bytes in dns packet", len(msgBuf) - len(s), "<", len(msgBuf))
+	// 	println("dns: extra bytes in dns packet", offset(s, msgBuf), "<", len(msgBuf))
 	// }
 
 	return err

@@ -356,7 +356,7 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	}
 
 	for i := 0; i < int(dh.Arcount); i++ {
-		rrOff := len(msg) - len(s)
+		rrOff := offset(s, msg)
 		extra, err := unpackRR(&s, msg)
 		if err != nil {
 			return nil, nil, err
