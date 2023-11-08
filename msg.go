@@ -852,7 +852,7 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	}
 
 	dns.Answer, off, err = unpackRRslice(int(dh.Ancount), msg, off)
-	if err == nil && int(dh.Ancount) > int(len(dns.Answer)) {
+	if err == nil && int(dh.Ancount) > len(dns.Answer) {
 		return ErrBuf
 	}
 	// The header counts might have been wrong so we need to update it
@@ -860,7 +860,7 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	if err == nil {
 		dns.Ns, off, err = unpackRRslice(int(dh.Nscount), msg, off)
 	}
-	if err == nil && int(dh.Nscount) > int(len(dns.Ns)) {
+	if err == nil && int(dh.Nscount) > (len(dns.Ns)) {
 		return ErrBuf
 	}
 	// The header counts might have been wrong so we need to update it
@@ -868,7 +868,7 @@ func (dns *Msg) unpack(dh Header, msg []byte, off int) (err error) {
 	if err == nil {
 		dns.Extra, _, err = unpackRRslice(int(dh.Arcount), msg, off)
 	}
-	if err == nil && int(dh.Arcount) > int(len(dns.Extra)) {
+	if err == nil && int(dh.Arcount) > (len(dns.Extra)) {
 		return ErrBuf
 	}
 	// The header counts might have been wrong so we need to update it

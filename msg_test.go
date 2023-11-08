@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -326,40 +327,67 @@ func TestLenDynamicA(t *testing.T) {
 }
 
 func TestUnPackForErrBuf(t *testing.T) {
-	HandleFunc("example123.org.", HelloServerLargeResponse)
-	defer HandleRemove("example123.org.")
+	var testCases = []struct {
+		domainName   string
+		noOfARecords int
+		expectErrBuf bool
+	}{
+		// Length of response for 15 A records will be 482 bytes and UDPSize is 512. Response is not truncated, so expect no error.
+		{domainName: "example123.org.", noOfARecords: 15, expectErrBuf: false},
 
-	srv, address, _, err := RunLocalUDPServer(":0")
+		// Length of response for 17 A records will be 542 bytes and UDPSize is 512. Response is truncated, so expect ErrBuf.
+		{domainName: "example123.org.", noOfARecords: 17, expectErrBuf: true},
+
+		// Length of response for 16 A records will be 512 bytes and UDPSize is 512. Response is not truncated, so expect no error.
+		{domainName: "example123.org.", noOfARecords: 16, expectErrBuf: false},
+	}
+	for _, tc := range testCases {
+		testName := tc.domainName + " with " + strconv.Itoa(tc.noOfARecords) + " A-records"
+		t.Run(testName, func(t *testing.T) {
+			testpackUnpack(t, tc.domainName, tc.noOfARecords, tc.expectErrBuf)
+		})
+	}
+}
+
+func testpackUnpack(t *testing.T, domainName string, noOfARecords int, expectErrBuf bool) {
+	m := new(Msg)
+	m.SetQuestion(domainName, TypeA)
+	m.Authoritative = true
+	rrHeader := RR_Header{
+		Name:   domainName,
+		Rrtype: TypeA,
+		Class:  ClassINET,
+		Ttl:    0,
+	}
+
+	m.Answer = make([]RR, noOfARecords)
+	for i := 0; i < noOfARecords; i++ {
+		ip := net.IPv4(127, 0, 0, byte(i+1))
+		aRec := &A{
+			Hdr: rrHeader,
+			A:   ip.To4(),
+		}
+		m.Answer[i] = aRec
+	}
+
+	packedmsg, err := m.Pack()
 	if err != nil {
-		t.Fatalf("unable to run test server: %v", err)
-	}
-	defer srv.Shutdown()
-
-	reqm := new(Msg)
-	reqm.SetQuestion("example123.org.", TypeA)
-	c := new(Client)
-	c.Net = "udp"
-
-	M.Lock()
-	M.max = 17 // Response is truncated, so expect ErrBuf.
-	M.Unlock()
-	response := new(Msg)
-	_, _, err = c.Exchange(reqm, address)
-	if err != ErrBuf {
-		t.Error("Expected ErrBuf due to truncation")
+		t.Fatalf("Pack failed for %v", err)
 	}
 
-	M.Lock()
-	M.max = 16 // Response is not truncated. so expect no error.
-	M.Unlock()
-	response, _, err = c.Exchange(reqm, address)
-	if err != nil {
-		t.Errorf("failed to exchange: %v", err)
+	// Default buffer size is 512 bytes for UDP.
+	if len(packedmsg) > MinMsgSize {
+		packedmsg = packedmsg[:MinMsgSize]
 	}
-	if len(response.Answer) != M.max {
-		t.Errorf("Expected no of A records %v, but got %v", M.max, len(response.Answer))
-	}
-	if response.Rcode != RcodeSuccess {
-		t.Errorf("Expected No error, but got %v", response.Rcode)
+
+	err = m.Unpack(packedmsg)
+	if expectErrBuf {
+		if err != ErrBuf {
+			t.Error("Expected ErrBuf due to truncation")
+		}
+	} else {
+		if err != nil {
+			t.Errorf("Expected no error, but got: %v", err)
+		}
 	}
 }
