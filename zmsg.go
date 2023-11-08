@@ -1184,7 +1184,6 @@ func (rr *ZONEMD) pack(msg []byte, off int, compression compressionMap, compress
 
 func (rr *A) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.A, err = unpackDataA(&s)
 	if err != nil {
 		return err
@@ -1197,7 +1196,6 @@ func (rr *A) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.AAAA, err = unpackDataAAAA(&s)
 	if err != nil {
 		return err
@@ -1210,7 +1208,6 @@ func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Subtype) {
 		return ErrBuf
 	}
@@ -1229,7 +1226,6 @@ func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Precedence) {
 		return ErrBuf
 	}
@@ -1254,7 +1250,6 @@ func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.Empty() {
 		return errBadRDLength
 	}
@@ -1263,7 +1258,6 @@ func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Prefixes, err = unpackDataApl(&s)
 	if err != nil {
 		return err
@@ -1276,7 +1270,6 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
 		return err
@@ -1289,7 +1282,6 @@ func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Flag) {
 		return ErrBuf
 	}
@@ -1315,7 +1307,6 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Flags) {
 		return ErrBuf
 	}
@@ -1346,7 +1337,6 @@ func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.KeyTag) {
 		return ErrBuf
 	}
@@ -1377,7 +1367,6 @@ func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Type) {
 		return ErrBuf
 	}
@@ -1408,7 +1397,6 @@ func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1421,7 +1409,6 @@ func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint32(&rr.Serial) {
 		return ErrBuf
 	}
@@ -1446,7 +1433,6 @@ func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Digest, err = unpackStringBase64(&s, len(s))
 	if err != nil {
 		return err
@@ -1459,7 +1445,6 @@ func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.KeyTag) {
 		return ErrBuf
 	}
@@ -1490,7 +1475,6 @@ func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1503,7 +1487,6 @@ func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Flags) {
 		return ErrBuf
 	}
@@ -1534,7 +1517,6 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.KeyTag) {
 		return ErrBuf
 	}
@@ -1565,7 +1547,6 @@ func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Endpoint, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
@@ -1578,7 +1559,6 @@ func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint48(&rr.Address) {
 		return ErrBuf
 	}
@@ -1590,7 +1570,6 @@ func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint64(&rr.Address) {
 		return ErrBuf
 	}
@@ -1602,7 +1581,6 @@ func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *GID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint32(&rr.Gid) {
 		return ErrBuf
 	}
@@ -1614,7 +1592,6 @@ func (rr *GID) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Longitude, err = unpackString(&s)
 	if err != nil {
 		return err
@@ -1641,7 +1618,6 @@ func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Cpu, err = unpackString(&s)
 	if err != nil {
 		return err
@@ -1661,7 +1637,6 @@ func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.HitLength) {
 		return ErrBuf
 	}
@@ -1700,7 +1675,6 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Priority) {
 		return ErrBuf
 	}
@@ -1726,7 +1700,6 @@ func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Precedence) {
 		return ErrBuf
 	}
@@ -1764,7 +1737,6 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Flags) {
 		return ErrBuf
 	}
@@ -1795,7 +1767,6 @@ func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -1814,7 +1785,6 @@ func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -1833,7 +1803,6 @@ func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -1851,7 +1820,6 @@ func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Version) {
 		return ErrBuf
 	}
@@ -1899,7 +1867,6 @@ func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -1918,7 +1885,6 @@ func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Mb, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1931,7 +1897,6 @@ func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Md, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1944,7 +1909,6 @@ func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Mf, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1957,7 +1921,6 @@ func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Mg, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1970,7 +1933,6 @@ func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Rmail, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -1990,7 +1952,6 @@ func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Mr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2003,7 +1964,6 @@ func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -2022,7 +1982,6 @@ func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Order) {
 		return ErrBuf
 	}
@@ -2068,7 +2027,6 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -2086,7 +2044,6 @@ func (rr *NID) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Locator, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
@@ -2099,7 +2056,6 @@ func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.ZSData, err = unpackStringTxt(&s)
 	if err != nil {
 		return err
@@ -2112,7 +2068,6 @@ func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Ns, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2125,7 +2080,6 @@ func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Ptr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2138,7 +2092,6 @@ func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.NextDomain, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2158,7 +2111,6 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Hash) {
 		return ErrBuf
 	}
@@ -2209,7 +2161,6 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Hash) {
 		return ErrBuf
 	}
@@ -2246,7 +2197,6 @@ func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Data, err = unpackStringAny(&s, len(s))
 	if err != nil {
 		return err
@@ -2259,7 +2209,6 @@ func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
 		return err
@@ -2272,7 +2221,6 @@ func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Option, err = unpackDataOpt(&s)
 	if err != nil {
 		return err
@@ -2285,7 +2233,6 @@ func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Ptr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2298,7 +2245,6 @@ func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -2324,7 +2270,6 @@ func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Rdata, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
@@ -2337,7 +2282,6 @@ func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Flags) {
 		return ErrBuf
 	}
@@ -2368,7 +2312,6 @@ func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Mbox, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2388,7 +2331,6 @@ func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.TypeCovered) {
 		return ErrBuf
 	}
@@ -2450,7 +2392,6 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrBuf
 	}
@@ -2469,7 +2410,6 @@ func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.TypeCovered) {
 		return ErrBuf
 	}
@@ -2531,7 +2471,6 @@ func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Usage) {
 		return ErrBuf
 	}
@@ -2562,7 +2501,6 @@ func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Ns, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2612,7 +2550,6 @@ func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
 		return err
@@ -2625,7 +2562,6 @@ func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Priority) {
 		return ErrBuf
 	}
@@ -2656,7 +2592,6 @@ func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Algorithm) {
 		return ErrBuf
 	}
@@ -2681,7 +2616,6 @@ func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Priority) {
 		return ErrBuf
 	}
@@ -2707,7 +2641,6 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.KeyTag) {
 		return ErrBuf
 	}
@@ -2738,7 +2671,6 @@ func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.PreviousName, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2758,7 +2690,6 @@ func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Algorithm, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2818,7 +2749,6 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint8(&rr.Usage) {
 		return ErrBuf
 	}
@@ -2849,7 +2779,6 @@ func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Algorithm, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
 		return err
@@ -2909,7 +2838,6 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
 		return err
@@ -2922,7 +2850,6 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *UID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint32(&rr.Uid) {
 		return ErrBuf
 	}
@@ -2934,7 +2861,6 @@ func (rr *UID) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.Uinfo, err = unpackString(&s)
 	if err != nil {
 		return err
@@ -2947,7 +2873,6 @@ func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint16(&rr.Priority) {
 		return ErrBuf
 	}
@@ -2972,7 +2897,6 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	rr.PSDNAddress, err = unpackString(&s)
 	if err != nil {
 		return err
@@ -2985,7 +2909,6 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 
 func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	_ = s
 	if !s.ReadUint32(&rr.Serial) {
 		return ErrBuf
 	}

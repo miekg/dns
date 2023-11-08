@@ -204,7 +204,6 @@ if rr.%s != "-" {
 
 		fmt.Fprintf(b, "func (rr *%s) unpack(data, msgBuf []byte) (err error) {\n", name)
 		fmt.Fprintln(b, "s := cryptobyte.String(data)")
-		fmt.Fprintln(b, "_ = s")
 	fieldLoop:
 		for i := 1; i < st.NumFields(); i++ {
 			errCheck := func() {
