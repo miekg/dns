@@ -242,11 +242,7 @@ type EDNS0_NSID struct {
 }
 
 func (e *EDNS0_NSID) pack() ([]byte, error) {
-	h, err := hex.DecodeString(e.Nsid)
-	if err != nil {
-		return nil, err
-	}
-	return h, nil
+	return hex.DecodeString(e.Nsid)
 }
 
 func (e *EDNS0_NSID) unpack(b []byte) error {
@@ -412,11 +408,7 @@ type EDNS0_COOKIE struct {
 }
 
 func (e *EDNS0_COOKIE) pack() ([]byte, error) {
-	h, err := hex.DecodeString(e.Cookie)
-	if err != nil {
-		return nil, err
-	}
-	return h, nil
+	return hex.DecodeString(e.Cookie)
 }
 
 func (e *EDNS0_COOKIE) unpack(b []byte) error {
@@ -536,8 +528,11 @@ type EDNS0_DAU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_DAU) Option() uint16        { return EDNS0DAU }
-func (e *EDNS0_DAU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_DAU) Option() uint16 { return EDNS0DAU }
+
+func (e *EDNS0_DAU) pack() ([]byte, error) {
+	return cloneSlice(e.AlgCode), nil
+}
 
 func (e *EDNS0_DAU) unpack(b []byte) error {
 	e.AlgCode = cloneSlice(b)
@@ -564,8 +559,11 @@ type EDNS0_DHU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
-func (e *EDNS0_DHU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_DHU) Option() uint16 { return EDNS0DHU }
+
+func (e *EDNS0_DHU) pack() ([]byte, error) {
+	return cloneSlice(e.AlgCode), nil
+}
 
 func (e *EDNS0_DHU) unpack(b []byte) error {
 	e.AlgCode = cloneSlice(b)
@@ -592,8 +590,11 @@ type EDNS0_N3U struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
-func (e *EDNS0_N3U) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_N3U) Option() uint16 { return EDNS0N3U }
+
+func (e *EDNS0_N3U) pack() ([]byte, error) {
+	return cloneSlice(e.AlgCode), nil
+}
 
 func (e *EDNS0_N3U) unpack(b []byte) error {
 	e.AlgCode = cloneSlice(b)
@@ -612,6 +613,7 @@ func (e *EDNS0_N3U) String() string {
 	}
 	return s
 }
+
 func (e *EDNS0_N3U) copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
 
 // EDNS0_EXPIRE implements the EDNS0 option as described in RFC 7314.
@@ -627,7 +629,7 @@ func (e *EDNS0_EXPIRE) copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire, 
 
 func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	if e.Empty {
-		return []byte{}, nil
+		return nil, nil
 	}
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, e.Expire)
@@ -750,10 +752,13 @@ type EDNS0_PADDING struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_PADDING) Option() uint16        { return EDNS0PADDING }
-func (e *EDNS0_PADDING) pack() ([]byte, error) { return cloneSlice(e.Padding), nil }
-func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
-func (e *EDNS0_PADDING) copy() EDNS0           { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
+func (e *EDNS0_PADDING) Option() uint16 { return EDNS0PADDING }
+func (e *EDNS0_PADDING) String() string { return fmt.Sprintf("%0X", e.Padding) }
+func (e *EDNS0_PADDING) copy() EDNS0    { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
+
+func (e *EDNS0_PADDING) pack() ([]byte, error) {
+	return cloneSlice(e.Padding), nil
+}
 
 func (e *EDNS0_PADDING) unpack(b []byte) error {
 	e.Padding = cloneSlice(b)
@@ -865,10 +870,13 @@ type EDNS0_ESU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_ESU) Option() uint16        { return EDNS0ESU }
-func (e *EDNS0_ESU) String() string        { return e.Uri }
-func (e *EDNS0_ESU) copy() EDNS0           { return &EDNS0_ESU{e.Code, e.Uri} }
-func (e *EDNS0_ESU) pack() ([]byte, error) { return []byte(e.Uri), nil }
+func (e *EDNS0_ESU) Option() uint16 { return EDNS0ESU }
+func (e *EDNS0_ESU) String() string { return e.Uri }
+func (e *EDNS0_ESU) copy() EDNS0    { return &EDNS0_ESU{e.Code, e.Uri} }
+
+func (e *EDNS0_ESU) pack() ([]byte, error) {
+	return []byte(e.Uri), nil
+}
 
 func (e *EDNS0_ESU) unpack(b []byte) error {
 	e.Uri = string(b)
