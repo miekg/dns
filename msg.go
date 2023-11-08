@@ -80,11 +80,9 @@ var (
 	// errors.Is(_, ErrBuf) or contains the substring "overflow".
 	//
 	// TODO(tmthrgd): Update CoreDNS and use "truncated message".
-	errTruncatedMessage  = &Error{err: "overflow unpacking truncated message"}
-	errUnpackOverflow    = &Error{err: "overflow unpacking data"}
-	errTrailingRData     = &Error{err: "trailing record data"}
-	errTrailingEDNS0Data = &Error{err: "trailing EDNS0 data"}
-	errTrailingSVCBData  = &Error{err: "trailing SVCB data"}
+	errTruncatedMessage = &Error{err: "overflow unpacking truncated message"}
+	errUnpackOverflow   = &Error{err: "overflow unpacking data"}
+	errTrailingRData    = &Error{err: "trailing record data"}
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The

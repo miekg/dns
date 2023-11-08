@@ -101,8 +101,8 @@ func TestEDNS0_SUBNETUnpack(t *testing.T) {
 		}
 
 		var s2 EDNS0_SUBNET
-		if err := s2.unpack(b); err != nil {
-			t.Fatalf("failed to unpack: %v", err)
+		if !s2.unpack(b) {
+			t.Fatal("failed to unpack")
 		}
 
 		if !ip.Equal(s2.Address) {
@@ -126,8 +126,8 @@ func TestEDNS0_UL(t *testing.T) {
 			t.Fatalf("failed to pack: %v", err)
 		}
 		actual := EDNS0_UL{EDNS0UL, 0, 0}
-		if err := actual.unpack(b); err != nil {
-			t.Fatalf("failed to unpack: %v", err)
+		if !actual.unpack(b) {
+			t.Fatal("failed to unpack")
 		}
 		if expect != actual {
 			t.Errorf("unpacked option is different; expected %v, got %v", expect, actual)
@@ -196,10 +196,10 @@ func TestEDNS0_ESU(t *testing.T) {
 
 func TestEDNS0_TCP_KEEPALIVE_unpack(t *testing.T) {
 	cases := []struct {
-		name        string
-		b           []byte
-		expected    uint16
-		expectedErr bool
+		name       string
+		b          []byte
+		expected   uint16
+		shouldFail bool
 	}{
 		{
 			name:     "empty",
@@ -212,21 +212,20 @@ func TestEDNS0_TCP_KEEPALIVE_unpack(t *testing.T) {
 			expected: 1,
 		},
 		{
-			name:        "invalid",
-			b:           []byte{1},
-			expectedErr: true,
+			name:       "invalid",
+			b:          []byte{1},
+			shouldFail: true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			e := &EDNS0_TCP_KEEPALIVE{}
-			err := e.unpack(tc.b)
-			if err != nil && !tc.expectedErr {
-				t.Error("failed to unpack, expected no error")
-			}
-			if err == nil && tc.expectedErr {
-				t.Error("unpacked, but expected an error")
+			ok := e.unpack(tc.b)
+			if !ok && !tc.shouldFail {
+				t.Error("failed to unpack, expected success")
+			} else if ok && tc.shouldFail {
+				t.Error("unpacked, but expected failure")
 			}
 			if e.Timeout != tc.expected {
 				t.Errorf("invalid timeout, actual: %d, expected: %d", e.Timeout, tc.expected)

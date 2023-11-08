@@ -356,8 +356,8 @@ func unpackDataOpt(s *cryptobyte.String) ([]EDNS0, error) {
 			return nil, errUnpackOverflow
 		}
 		opt := makeDataOpt(code)
-		if err := opt.unpack(data); err != nil {
-			return nil, err
+		if !opt.unpack(data) {
+			return nil, &Error{err: "bad EDNS0 data"}
 		}
 		opts = append(opts, opt)
 	}
@@ -512,8 +512,8 @@ func unpackDataSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
 		if kv == nil {
 			return nil, &Error{err: "bad SVCB key"}
 		}
-		if err := kv.unpack(data); err != nil {
-			return nil, err
+		if !kv.unpack(data) {
+			return nil, &Error{err: "bad SVCB data"}
 		}
 		if len(kvs) > 0 && kv.Key() <= kvs[len(kvs)-1].Key() {
 			return nil, &Error{err: "SVCB keys not in strictly increasing order"}

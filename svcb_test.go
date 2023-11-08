@@ -48,9 +48,8 @@ func TestSVCB(t *testing.T) {
 		if len(b) != int(kv.len()) {
 			t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, int(kv.len()), len(b))
 		}
-		err = kv.unpack(b)
-		if err != nil {
-			t.Error("failed to unpack value of svc pair: ", o.key, err)
+		if !kv.unpack(b) {
+			t.Error("failed to unpack value of svc pair: ", o.key)
 			continue
 		}
 		if str := kv.String(); str != o.data {
@@ -86,8 +85,8 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for _, o := range svcbs {
-		err := makeSVCBKeyValue(o.key).unpack(o.data)
-		if err == nil {
+		kv := makeSVCBKeyValue(o.key)
+		if kv.unpack(o.data) {
 			t.Error("accepted invalid svc value with key ", o.key.String())
 		}
 	}

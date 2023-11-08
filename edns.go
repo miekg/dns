@@ -217,7 +217,7 @@ type EDNS0 interface {
 	// pack returns the bytes of the option data.
 	pack() ([]byte, error)
 	// unpack sets the data as found in the buffer.
-	unpack([]byte) error
+	unpack([]byte) bool
 	// String returns the string representation of the option.
 	String() string
 	// copy returns a deep-copy of the option.
@@ -245,9 +245,9 @@ func (e *EDNS0_NSID) pack() ([]byte, error) {
 	return hex.DecodeString(e.Nsid)
 }
 
-func (e *EDNS0_NSID) unpack(b []byte) error {
+func (e *EDNS0_NSID) unpack(b []byte) bool {
 	e.Nsid = hex.EncodeToString(b)
-	return nil
+	return true
 }
 
 // Option implements the EDNS0 interface.
@@ -324,42 +324,39 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_SUBNET) unpack(b []byte) error {
+func (e *EDNS0_SUBNET) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
 	if !s.ReadUint16(&e.Family) ||
 		!s.ReadUint8(&e.SourceNetmask) ||
 		!s.ReadUint8(&e.SourceScope) {
-		return errUnpackOverflow
+		return false
 	}
 	switch e.Family {
 	case 0:
 		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
 		// It's okay to accept such a packet
 		if e.SourceNetmask != 0 {
-			return errors.New("dns: bad address family")
+			return false
 		}
 		e.Address = net.IPv4(0, 0, 0, 0)
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 || e.SourceScope > net.IPv4len*8 {
-			return errors.New("dns: bad netmask")
+			return false
 		}
 		addr := make(net.IP, net.IPv4len)
 		s.Skip(copy(addr, s))
 		e.Address = addr.To16()
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 || e.SourceScope > net.IPv6len*8 {
-			return errors.New("dns: bad netmask")
+			return false
 		}
 		addr := make(net.IP, net.IPv6len)
 		s.Skip(copy(addr, s))
 		e.Address = addr
 	default:
-		return errors.New("dns: bad address family")
+		return false
 	}
-	if !s.Empty() {
-		return errTrailingEDNS0Data
-	}
-	return nil
+	return s.Empty()
 }
 
 func (e *EDNS0_SUBNET) String() (s string) {
@@ -411,9 +408,9 @@ func (e *EDNS0_COOKIE) pack() ([]byte, error) {
 	return hex.DecodeString(e.Cookie)
 }
 
-func (e *EDNS0_COOKIE) unpack(b []byte) error {
+func (e *EDNS0_COOKIE) unpack(b []byte) bool {
 	e.Cookie = hex.EncodeToString(b)
-	return nil
+	return true
 }
 
 // Option implements the EDNS0 interface.
@@ -457,18 +454,16 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_UL) unpack(b []byte) error {
+func (e *EDNS0_UL) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
 	if !s.ReadUint32(&e.Lease) {
-		return errUnpackOverflow
+		return false
 	}
-	if !s.Empty() && !s.ReadUint32(&e.KeyLease) {
-		return errUnpackOverflow
+	// Optionally only contains Lease field.
+	if s.Empty() {
+		return true
 	}
-	if !s.Empty() {
-		return errTrailingEDNS0Data
-	}
-	return nil
+	return s.ReadUint32(&e.KeyLease) && s.Empty()
 }
 
 // EDNS0_LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
@@ -495,19 +490,14 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_LLQ) unpack(b []byte) error {
+func (e *EDNS0_LLQ) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
-	if !s.ReadUint16(&e.Version) ||
-		!s.ReadUint16(&e.Opcode) ||
-		!s.ReadUint16(&e.Error) ||
-		!s.ReadUint64(&e.Id) ||
-		!s.ReadUint32(&e.LeaseLife) {
-		return errUnpackOverflow
-	}
-	if !s.Empty() {
-		return errTrailingEDNS0Data
-	}
-	return nil
+	return s.ReadUint16(&e.Version) &&
+		s.ReadUint16(&e.Opcode) &&
+		s.ReadUint16(&e.Error) &&
+		s.ReadUint64(&e.Id) &&
+		s.ReadUint32(&e.LeaseLife) &&
+		s.Empty()
 }
 
 func (e *EDNS0_LLQ) String() string {
@@ -534,9 +524,9 @@ func (e *EDNS0_DAU) pack() ([]byte, error) {
 	return cloneSlice(e.AlgCode), nil
 }
 
-func (e *EDNS0_DAU) unpack(b []byte) error {
+func (e *EDNS0_DAU) unpack(b []byte) bool {
 	e.AlgCode = cloneSlice(b)
-	return nil
+	return true
 }
 
 func (e *EDNS0_DAU) String() string {
@@ -565,9 +555,9 @@ func (e *EDNS0_DHU) pack() ([]byte, error) {
 	return cloneSlice(e.AlgCode), nil
 }
 
-func (e *EDNS0_DHU) unpack(b []byte) error {
+func (e *EDNS0_DHU) unpack(b []byte) bool {
 	e.AlgCode = cloneSlice(b)
-	return nil
+	return true
 }
 
 func (e *EDNS0_DHU) String() string {
@@ -596,9 +586,9 @@ func (e *EDNS0_N3U) pack() ([]byte, error) {
 	return cloneSlice(e.AlgCode), nil
 }
 
-func (e *EDNS0_N3U) unpack(b []byte) error {
+func (e *EDNS0_N3U) unpack(b []byte) bool {
 	e.AlgCode = cloneSlice(b)
-	return nil
+	return true
 }
 
 func (e *EDNS0_N3U) String() string {
@@ -636,17 +626,14 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_EXPIRE) unpack(b []byte) error {
+func (e *EDNS0_EXPIRE) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
-	// zero-length EXPIRE query, see RFC 7314 Section 2
-	e.Empty = s.Empty()
-	if !s.Empty() && !s.ReadUint32(&e.Expire) {
-		return errUnpackOverflow
+	// Zero-length EXPIRE query, see RFC 7314 Section 2.
+	if s.Empty() {
+		e.Empty = true
+		return true
 	}
-	if !s.Empty() {
-		return errTrailingEDNS0Data
-	}
-	return nil
+	return s.ReadUint32(&e.Expire) && s.Empty()
 }
 
 func (e *EDNS0_EXPIRE) String() (s string) {
@@ -689,9 +676,9 @@ func (e *EDNS0_LOCAL) pack() ([]byte, error) {
 	return cloneSlice(e.Data), nil
 }
 
-func (e *EDNS0_LOCAL) unpack(b []byte) error {
+func (e *EDNS0_LOCAL) unpack(b []byte) bool {
 	e.Data = cloneSlice(b)
-	return nil
+	return true
 }
 
 // EDNS0_TCP_KEEPALIVE is an EDNS0 option that instructs the server to keep
@@ -721,15 +708,13 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 	return nil, nil
 }
 
-func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
+func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
-	if !s.Empty() && !s.ReadUint16(&e.Timeout) {
-		return errUnpackOverflow
+	// Optionally empty.
+	if s.Empty() {
+		return true
 	}
-	if !s.Empty() {
-		return errTrailingEDNS0Data
-	}
-	return nil
+	return s.ReadUint16(&e.Timeout) && s.Empty()
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) String() string {
@@ -760,9 +745,9 @@ func (e *EDNS0_PADDING) pack() ([]byte, error) {
 	return cloneSlice(e.Padding), nil
 }
 
-func (e *EDNS0_PADDING) unpack(b []byte) error {
+func (e *EDNS0_PADDING) unpack(b []byte) bool {
 	e.Padding = cloneSlice(b)
-	return nil
+	return true
 }
 
 // Extended DNS Error Codes (RFC 8914).
@@ -854,13 +839,13 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_EDE) unpack(b []byte) error {
+func (e *EDNS0_EDE) unpack(b []byte) bool {
 	s := cryptobyte.String(b)
 	if !s.ReadUint16(&e.InfoCode) {
-		return errUnpackOverflow
+		return false
 	}
 	e.ExtraText = string(s)
-	return nil
+	return true
 }
 
 // The EDNS0_ESU option for ENUM Source-URI Extension
@@ -878,7 +863,7 @@ func (e *EDNS0_ESU) pack() ([]byte, error) {
 	return []byte(e.Uri), nil
 }
 
-func (e *EDNS0_ESU) unpack(b []byte) error {
+func (e *EDNS0_ESU) unpack(b []byte) bool {
 	e.Uri = string(b)
-	return nil
+	return true
 }
