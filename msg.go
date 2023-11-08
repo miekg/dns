@@ -954,14 +954,15 @@ func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 }
 
 // Unpack unpacks a binary message to a Msg structure.
-func (dns *Msg) Unpack(msg []byte) (err error) {
+func (dns *Msg) Unpack(msg []byte) error {
 	s := cryptobyte.String(msg)
-	dh, err := unpackMsgHdr(&s)
-	if err != nil {
-		return err
-	}
 
+	var dh Header
+	if !dh.unpack(&s) {
+		return errTruncatedMessage
+	}
 	dns.setHdr(dh)
+
 	return dns.unpack(dh, s, msg)
 }
 
@@ -1243,17 +1244,13 @@ func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress
 	return off, nil
 }
 
-func unpackMsgHdr(msg *cryptobyte.String) (Header, error) {
-	var dh Header
-	if !msg.ReadUint16(&dh.Id) ||
-		!msg.ReadUint16(&dh.Bits) ||
-		!msg.ReadUint16(&dh.Qdcount) ||
-		!msg.ReadUint16(&dh.Ancount) ||
-		!msg.ReadUint16(&dh.Nscount) ||
-		!msg.ReadUint16(&dh.Arcount) {
-		return dh, errTruncatedMessage
-	}
-	return dh, nil
+func (dh *Header) unpack(msg *cryptobyte.String) bool {
+	return msg.ReadUint16(&dh.Id) &&
+		msg.ReadUint16(&dh.Bits) &&
+		msg.ReadUint16(&dh.Qdcount) &&
+		msg.ReadUint16(&dh.Ancount) &&
+		msg.ReadUint16(&dh.Nscount) &&
+		msg.ReadUint16(&dh.Arcount)
 }
 
 // setHdr set the header in the dns using the binary data in dh.

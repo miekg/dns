@@ -276,7 +276,6 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		n   int
 		err error
 	)
-
 	if isPacketConn(co.Conn) {
 		if co.UDPSize > MinMsgSize {
 			p = make([]byte, co.UDPSize)
@@ -293,23 +292,20 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 		p = make([]byte, length)
 		n, err = io.ReadFull(co.Conn, p)
 	}
+	p = p[:n]
 
 	if err != nil {
 		return nil, err
-	} else if n < headerSize {
+	} else if len(p) < headerSize {
 		return nil, ErrShortRead
 	}
 
-	p = p[:n]
-	if hdr != nil {
-		s := cryptobyte.String(p)
-		dh, err := unpackMsgHdr(&s)
-		if err != nil {
-			return nil, err
-		}
-		*hdr = dh
+	s := cryptobyte.String(p)
+	if hdr != nil && !hdr.unpack(&s) {
+		panic("dns: internal error: failed to unpack message header")
 	}
-	return p, err
+
+	return p, nil
 }
 
 // Read implements the net.Conn read method.

@@ -608,8 +608,9 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 
 func (srv *Server) serveDNS(m []byte, w *response) {
 	s := cryptobyte.String(m)
-	dh, err := unpackMsgHdr(&s)
-	if err != nil {
+
+	var dh Header
+	if !dh.unpack(&s) {
 		// Let client hang, they are sending crap; any reply can be used to amplify.
 		return
 	}

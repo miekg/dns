@@ -327,9 +327,10 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) ([]
 func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	// Copied from msg.go's Unpack() Header, but modified.
 	s := cryptobyte.String(msg)
-	dh, err := unpackMsgHdr(&s)
-	if err != nil {
-		return nil, nil, err
+
+	var dh Header
+	if !dh.unpack(&s) {
+		return nil, nil, errTruncatedMessage
 	}
 	if dh.Arcount == 0 {
 		return nil, nil, ErrNoSig
@@ -340,7 +341,7 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		return nil, nil, ErrAuth
 	}
 
-	_, err = unpackQuestions(dh.Qdcount, &s, msg)
+	_, err := unpackQuestions(dh.Qdcount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}

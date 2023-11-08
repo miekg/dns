@@ -91,9 +91,10 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	s := cryptobyte.String(buf)
-	dh, err := unpackMsgHdr(&s)
-	if err != nil {
-		return err
+
+	var dh Header
+	if !dh.unpack(&s) {
+		return errTruncatedMessage
 	}
 
 	for i := 0; i < int(dh.Qdcount) && !s.Empty(); i++ {
