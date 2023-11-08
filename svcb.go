@@ -309,7 +309,7 @@ func (s *SVCBMandatory) unpack(b []byte) error {
 		// We assume strictly increasing order.
 		var code SVCBKey
 		if !cs.ReadUint16((*uint16)(&code)) {
-			return ErrBuf
+			return errUnpackOverflow
 		}
 		codes = append(codes, code)
 	}
@@ -420,7 +420,7 @@ func (s *SVCBAlpn) unpack(b []byte) error {
 	for !sc.Empty() {
 		var data cryptobyte.String
 		if !sc.ReadUint8LengthPrefixed(&data) {
-			return ErrBuf
+			return errUnpackOverflow
 		}
 		alpn = append(alpn, string(data))
 	}
@@ -505,7 +505,7 @@ func (*SVCBNoDefaultAlpn) len() int              { return 0 }
 
 func (*SVCBNoDefaultAlpn) unpack(b []byte) error {
 	if len(b) != 0 {
-		return errors.New("dns: trailing data after SVCB key-value")
+		return errTrailingSVCBData
 	}
 	return nil
 }
@@ -536,10 +536,10 @@ func (s *SVCBPort) copy() SVCBKeyValue { return &SVCBPort{s.Port} }
 func (s *SVCBPort) unpack(b []byte) error {
 	cs := cryptobyte.String(b)
 	if !cs.ReadUint16(&s.Port) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !cs.Empty() {
-		return errors.New("dns: trailing data after SVCB key-value")
+		return errTrailingSVCBData
 	}
 	return nil
 }

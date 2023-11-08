@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"encoding/binary"
+	"errors"
 	"math/big"
 	"strings"
 	"time"
@@ -33,7 +34,7 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 		return nil, err
 	}
 	if &buf[0] != &mbuf[0] {
-		return nil, ErrBuf
+		panic("dns: internal error: PackBuffer re-allocated despite sufficient buffer size")
 	}
 	off, err := PackRR(rr, buf, len(mbuf), nil, false)
 	if err != nil {
@@ -98,29 +99,35 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	for i := 0; i < int(dh.Qdcount) && !s.Empty(); i++ {
 		_, err = unpackDomainName(&s, buf)
 		if err != nil {
+			if errors.Is(err, errUnpackOverflow) {
+				return errTruncatedMessage
+			}
 			return err
 		}
 		// Skip past Type and Class
 		if !s.Skip(2 + 2) {
-			return ErrBuf
+			return errTruncatedMessage
 		}
 	}
 
 	for i, tot := 1, int(dh.Ancount)+int(dh.Nscount)+int(dh.Arcount); i < tot && !s.Empty(); i++ {
 		_, err = unpackDomainName(&s, buf)
 		if err != nil {
+			if errors.Is(err, errUnpackOverflow) {
+				return errTruncatedMessage
+			}
 			return err
 		}
 		// Skip past Type, Class, TTL, and the data
 		var rdata cryptobyte.String
 		if !s.Skip(2+2+4) ||
 			!s.ReadUint16LengthPrefixed(&rdata) {
-			return ErrBuf
+			return errTruncatedMessage
 		}
 	}
 
 	if s.Empty() {
-		return ErrBuf
+		return errTruncatedMessage
 	}
 
 	// offset should be just prior to SIG
@@ -128,11 +135,14 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	// owner name SHOULD be root
 	_, err = unpackDomainName(&s, buf)
 	if err != nil {
+		if errors.Is(err, errUnpackOverflow) {
+			return errTruncatedMessage
+		}
 		return err
 	}
 	// Skip Type, Class, TTL, RDLen
 	if !s.Skip(2 + 2 + 4 + 2) {
-		return ErrBuf
+		return errTruncatedMessage
 	}
 	sigstart := offset(s, buf)
 	var expire, incept uint32
@@ -140,7 +150,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2+1+1+4) ||
 		!s.ReadUint32(&expire) ||
 		!s.ReadUint32(&incept) {
-		return ErrBuf
+		return errTruncatedMessage
 	}
 	now := uint32(time.Now().Unix())
 	if now < incept || now > expire {
@@ -148,7 +158,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 	// Skip key tag
 	if !s.Skip(2) {
-		return ErrBuf
+		return errTruncatedMessage
 	}
 	signername, err := unpackDomainName(&s, buf)
 	if err != nil {

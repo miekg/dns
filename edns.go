@@ -329,7 +329,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	if !s.ReadUint16(&e.Family) ||
 		!s.ReadUint8(&e.SourceNetmask) ||
 		!s.ReadUint8(&e.SourceScope) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	switch e.Family {
 	case 0:
@@ -357,7 +357,7 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 		return errors.New("dns: bad address family")
 	}
 	if !s.Empty() {
-		return errors.New("dns: trailing data after EDNS0 opt")
+		return errTrailingEDNS0Data
 	}
 	return nil
 }
@@ -460,13 +460,13 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 func (e *EDNS0_UL) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.ReadUint32(&e.Lease) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() && !s.ReadUint32(&e.KeyLease) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errors.New("dns: trailing data after EDNS0 opt")
+		return errTrailingEDNS0Data
 	}
 	return nil
 }
@@ -502,10 +502,10 @@ func (e *EDNS0_LLQ) unpack(b []byte) error {
 		!s.ReadUint16(&e.Error) ||
 		!s.ReadUint64(&e.Id) ||
 		!s.ReadUint32(&e.LeaseLife) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errors.New("dns: trailing data after EDNS0 opt")
+		return errTrailingEDNS0Data
 	}
 	return nil
 }
@@ -641,10 +641,10 @@ func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	// zero-length EXPIRE query, see RFC 7314 Section 2
 	e.Empty = s.Empty()
 	if !s.Empty() && !s.ReadUint32(&e.Expire) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errors.New("dns: trailing data after EDNS0 opt")
+		return errTrailingEDNS0Data
 	}
 	return nil
 }
@@ -724,10 +724,10 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.Empty() && !s.ReadUint16(&e.Timeout) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errors.New("dns: trailing data after EDNS0 opt")
+		return errTrailingEDNS0Data
 	}
 	return nil
 }
@@ -857,7 +857,7 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 func (e *EDNS0_EDE) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.ReadUint16(&e.InfoCode) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	e.ExtraText = string(s)
 	return nil

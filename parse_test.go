@@ -1880,8 +1880,8 @@ func TestUnpackRRWithHeaderInvalidLengths(t *testing.T) {
 		rr.Header().Rdlength = rdlength
 
 		_, _, err := UnpackRRWithHeader(*rr.Header(), buf, headerEnd)
-		if de, ok := err.(*Error); !ok || de.err != "bad rdlength" {
-			t.Errorf("UnpackRRWithHeader with bad rdlength (%d) returned wrong or no error: %v", rdlength, err)
+		if err != errTruncatedMessage {
+			t.Errorf("UnpackRRWithHeader with excessive rdlength (%d) returned wrong or no error: %v", rdlength, err)
 		}
 	}
 }

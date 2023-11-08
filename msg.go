@@ -13,6 +13,7 @@ package dns
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -64,14 +65,26 @@ var (
 	ErrNoSig         error = &Error{err: "no signature found"}
 	ErrPrivKey       error = &Error{err: "bad private key"}
 	ErrRcode         error = &Error{err: "bad rcode"}
-	ErrRdata         error = &Error{err: "bad rdata"}
 	ErrRRset         error = &Error{err: "bad rrset"}
 	ErrSecret        error = &Error{err: "no secrets defined"}
 	ErrShortRead     error = &Error{err: "short read"}
 	ErrSig           error = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
 	ErrSoa           error = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
 	ErrTime          error = &Error{err: "bad time"}      // ErrTime indicates a timing error in TSIG authentication.
-	errBadRDLength         = &Error{err: "bad rdlength"}
+
+	// TODO(tmthrgd): Stop returning and deprecate ErrRdata. It's not well
+	// defined.
+	ErrRdata error = &Error{err: "bad rdata"}
+
+	// For CoreDNS, we need to use an error that either matches
+	// errors.Is(_, ErrBuf) or contains the substring "overflow".
+	//
+	// TODO(tmthrgd): Update CoreDNS and use "truncated message".
+	errTruncatedMessage  = &Error{err: "overflow unpacking truncated message"}
+	errUnpackOverflow    = &Error{err: "overflow unpacking data"}
+	errTrailingRData     = &Error{err: "trailing record data"}
+	errTrailingEDNS0Data = &Error{err: "trailing EDNS0 data"}
+	errTrailingSVCBData  = &Error{err: "trailing SVCB data"}
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The
@@ -381,6 +394,10 @@ func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	s := cryptobyte.String(msg[off:])
 	name, err := unpackDomainName(&s, msg)
 	if err != nil {
+		if errors.Is(err, errUnpackOverflow) {
+			// Keep existing behaviour of returning ErrBuf here.
+			return "", len(msg), ErrBuf
+		}
 		// Keep documented behaviour of returning len(msg) here.
 		return "", len(msg), err
 	}
@@ -404,13 +421,13 @@ func unpackDomainName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	for {
 		var c byte
 		if !cs.ReadUint8(&c) {
-			return "", ErrBuf
+			return "", errUnpackOverflow
 		}
 		switch c & 0xC0 {
 		case 0x00: // literal string
 			var label []byte
 			if !cs.ReadBytes(&label, int(c)) {
-				return "", ErrBuf
+				return "", errUnpackOverflow
 			}
 			// If we see a zero-length label (root label), this is the
 			// end of the name.
@@ -436,7 +453,7 @@ func unpackDomainName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 		case 0xC0: // pointer
 			var c1 byte
 			if !cs.ReadUint8(&c1) {
-				return "", ErrBuf
+				return "", errUnpackOverflow
 			}
 			// If this is the first pointer we've seen, we need to
 			// advance s to our current position.
@@ -665,7 +682,7 @@ func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR,
 	var data []byte
 	if !msg.ReadBytes(&data, int(h.Rdlength)) {
 		h := h // Avoid spilling h to the heap in the happy path.
-		return &h, errBadRDLength
+		return &h, errTruncatedMessage
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
@@ -685,6 +702,8 @@ func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR,
 	}
 
 	if err := rr.unpack(data, msgBuf); err != nil {
+		// TODO(tmthrgd): Do we want to return a partially filled in RR here
+		// or even the RR_Header we were given like above?
 		return nil, err
 	}
 
@@ -902,29 +921,37 @@ func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 
 	var err error
 	dns.Question, err = unpackQuestions(dh.Qdcount, &s, msgBuf)
-	if err == nil {
-		dns.Answer, err = unpackRRs(dh.Ancount, &s, msgBuf)
-	}
-	if err == nil {
-		dns.Ns, err = unpackRRs(dh.Nscount, &s, msgBuf)
-	}
-	if err == nil {
-		dns.Extra, err = unpackRRs(dh.Arcount, &s, msgBuf)
+	if err != nil {
+		return err
 	}
 
-	// Set extended Rcode
+	dns.Answer, err = unpackRRs(dh.Ancount, &s, msgBuf)
+	if err != nil {
+		return err
+	}
+
+	dns.Ns, err = unpackRRs(dh.Nscount, &s, msgBuf)
+	if err != nil {
+		return err
+	}
+
+	dns.Extra, err = unpackRRs(dh.Arcount, &s, msgBuf)
+	// Set extended Rcode. We do this even if unpacking the Extra records may
+	// have failed as we may still have successfully unpacked an EDNS0 record.
 	if opt := dns.IsEdns0(); opt != nil {
 		dns.Rcode |= opt.ExtendedRcode()
 	}
+	if err != nil {
+		return err
+	}
 
-	// TODO(miek): make this an error?
-	// use PackOpt to let people tell how detailed the error reporting should be?
+	// TODO(miek,tmthrgd): Return an error for trailing data:
 	//
-	// if !s.Empty() {
-	// 	println("dns: extra bytes in dns packet", offset(s, msgBuf), "<", len(msgBuf))
-	// }
+	//  if !s.Empty() {
+	// 	return &Error{err: "trailing message data"}
+	//  }
 
-	return err
+	return nil
 
 }
 
@@ -1175,14 +1202,17 @@ func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
 	)
 	q.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
+		if errors.Is(err, errUnpackOverflow) {
+			return q, errTruncatedMessage
+		}
 		return q, err
 	}
 	// TODO(tmthrgd): Should we really accept partial questions?
 	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
-		return q, ErrBuf
+		return q, errTruncatedMessage
 	}
 	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
-		return q, ErrBuf
+		return q, errTruncatedMessage
 	}
 	return q, nil
 }
@@ -1223,7 +1253,7 @@ func unpackMsgHdr(msg *cryptobyte.String) (Header, error) {
 		!msg.ReadUint16(&dh.Ancount) ||
 		!msg.ReadUint16(&dh.Nscount) ||
 		!msg.ReadUint16(&dh.Arcount) {
-		return dh, ErrBuf
+		return dh, errTruncatedMessage
 	}
 	return dh, nil
 }

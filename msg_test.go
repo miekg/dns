@@ -196,8 +196,8 @@ func TestUnpackDomainName(t *testing.T) {
 				`\010\000xxxxxxxxx\192\010.` +
 				`\000xxxxxxxxx.`,
 			""},
-		{"truncated name", "\x07example\x03", 0, "", "dns: buffer size too small"},
-		{"non-absolute name", "\x07example\x03com", 0, "", "dns: buffer size too small"},
+		{"truncated name", "\x07example\x03", 0, "", ErrBuf.Error()},
+		{"non-absolute name", "\x07example\x03com", 0, "", ErrBuf.Error()},
 		{"compression pointer cycle (multiple labels)", "\x03foo\x03bar\x07example\xC0\x04", 0, "", ErrLongDomain.Error()},
 		{"compression pointer cycle (one label)", "\x07example\xC0\x00", 0, "", ErrLongDomain.Error()},
 		{"compression pointer not advancing (start of pointer)", "\xC0\x00", 0, "", "dns: pointer not to prior occurrence of name"},

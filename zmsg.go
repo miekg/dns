@@ -1189,7 +1189,7 @@ func (rr *A) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1201,7 +1201,7 @@ func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1209,7 +1209,7 @@ func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Subtype) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1219,7 +1219,7 @@ func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1227,13 +1227,13 @@ func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Precedence) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.GatewayType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1243,7 +1243,7 @@ func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1251,7 +1251,7 @@ func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1263,7 +1263,7 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1275,7 +1275,7 @@ func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1283,7 +1283,7 @@ func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Flag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1300,7 +1300,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1308,19 +1308,19 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1330,7 +1330,7 @@ func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1338,19 +1338,19 @@ func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1360,7 +1360,7 @@ func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1368,19 +1368,19 @@ func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Type) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1390,7 +1390,7 @@ func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1402,7 +1402,7 @@ func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1410,13 +1410,13 @@ func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1426,7 +1426,7 @@ func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1438,7 +1438,7 @@ func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1446,19 +1446,19 @@ func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1468,7 +1468,7 @@ func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1480,7 +1480,7 @@ func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1488,19 +1488,19 @@ func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1510,7 +1510,7 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1518,19 +1518,19 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1540,7 +1540,7 @@ func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1552,7 +1552,7 @@ func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1560,10 +1560,10 @@ func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint48(&rr.Address) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1571,10 +1571,10 @@ func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint64(&rr.Address) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1582,10 +1582,10 @@ func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 func (rr *GID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Gid) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1611,7 +1611,7 @@ func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1630,7 +1630,7 @@ func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1638,19 +1638,19 @@ func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.HitLength) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.PublicKeyAlgorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.PublicKeyLength) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1668,7 +1668,7 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1676,7 +1676,7 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1693,7 +1693,7 @@ func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1701,19 +1701,19 @@ func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Precedence) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.GatewayType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1730,7 +1730,7 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1738,19 +1738,19 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1760,7 +1760,7 @@ func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1768,7 +1768,7 @@ func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1778,7 +1778,7 @@ func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1786,7 +1786,7 @@ func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1796,7 +1796,7 @@ func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1804,16 +1804,16 @@ func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint64(&rr.Locator64) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1821,46 +1821,46 @@ func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Version) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Size) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.HorizPre) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.VertPre) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Latitude) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Longitude) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Altitude) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1868,7 +1868,7 @@ func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1878,7 +1878,7 @@ func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1890,7 +1890,7 @@ func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1902,7 +1902,7 @@ func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1914,7 +1914,7 @@ func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1926,7 +1926,7 @@ func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1945,7 +1945,7 @@ func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1957,7 +1957,7 @@ func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1965,7 +1965,7 @@ func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -1975,7 +1975,7 @@ func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -1983,13 +1983,13 @@ func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Order) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2020,7 +2020,7 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2028,16 +2028,16 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 func (rr *NID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint64(&rr.NodeID) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2049,7 +2049,7 @@ func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2061,7 +2061,7 @@ func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2073,7 +2073,7 @@ func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2085,7 +2085,7 @@ func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2104,7 +2104,7 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2112,25 +2112,25 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Iterations) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.SaltLength) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2140,7 +2140,7 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint8(&rr.HashLength) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2154,7 +2154,7 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2162,25 +2162,25 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Iterations) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.SaltLength) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2190,7 +2190,7 @@ func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2202,7 +2202,7 @@ func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2214,7 +2214,7 @@ func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2226,7 +2226,7 @@ func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2238,7 +2238,7 @@ func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2246,7 +2246,7 @@ func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2263,7 +2263,7 @@ func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2275,7 +2275,7 @@ func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2283,19 +2283,19 @@ func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2305,7 +2305,7 @@ func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2324,7 +2324,7 @@ func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2332,43 +2332,43 @@ func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.TypeCovered) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Labels) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.OrigTtl) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Expiration) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Inception) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2385,7 +2385,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2393,7 +2393,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2403,7 +2403,7 @@ func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2411,43 +2411,43 @@ func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.TypeCovered) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Labels) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.OrigTtl) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Expiration) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Inception) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2464,7 +2464,7 @@ func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2472,19 +2472,19 @@ func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Usage) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Selector) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.MatchingType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2494,7 +2494,7 @@ func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2516,34 +2516,34 @@ func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Refresh) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Retry) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Expire) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Minttl) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2555,7 +2555,7 @@ func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2563,19 +2563,19 @@ func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Weight) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Port) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2585,7 +2585,7 @@ func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2593,13 +2593,13 @@ func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Type) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2609,7 +2609,7 @@ func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2617,7 +2617,7 @@ func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2634,7 +2634,7 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2642,19 +2642,19 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2664,7 +2664,7 @@ func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2683,7 +2683,7 @@ func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2698,31 +2698,31 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Inception) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint32(&rr.Expiration) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Mode) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Error) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.KeySize) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2732,7 +2732,7 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint16(&rr.OtherLen) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2742,7 +2742,7 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2750,19 +2750,19 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Usage) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Selector) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.MatchingType) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2772,7 +2772,7 @@ func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2787,19 +2787,19 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 		return nil
 	}
 	if !s.ReadUint48(&rr.TimeSigned) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Fudge) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.MACSize) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2809,19 +2809,19 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint16(&rr.OrigId) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Error) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.OtherLen) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2831,7 +2831,7 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2843,7 +2843,7 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2851,10 +2851,10 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 func (rr *UID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Uid) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2866,7 +2866,7 @@ func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2874,13 +2874,13 @@ func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint16(&rr.Weight) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2890,7 +2890,7 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2902,7 +2902,7 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }
@@ -2910,19 +2910,19 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Scheme) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
 	}
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrBuf
+		return errUnpackOverflow
 	}
 	if s.Empty() {
 		return nil
@@ -2932,7 +2932,7 @@ func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }

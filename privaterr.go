@@ -67,7 +67,7 @@ func (r *PrivateRR) unpack(data, msgBuf []byte) error {
 		return err
 	}
 	if off != len(data) {
-		return errBadRDLength
+		return errTrailingRData
 	}
 	return nil
 }

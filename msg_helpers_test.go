@@ -458,7 +458,7 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 		{
 			"incomplete header",
 			[]byte{0x00, 0x01, 0x18},
-			"dns: overflow unpacking APL prefix",
+			errUnpackOverflow.Error(),
 		},
 		{
 			"unrecognized family",
@@ -483,7 +483,7 @@ func TestUnpackDataAplPrefix_Errors(t *testing.T) {
 		{
 			"overflow unpacking APL address",
 			[]byte{0x00, 0x01, 0x10, 0x02, 192},
-			"dns: overflow unpacking APL address",
+			errUnpackOverflow.Error(),
 		},
 		{
 			"address included trailing zeros",
