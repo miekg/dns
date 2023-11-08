@@ -68,12 +68,10 @@ func TestDecodeBadSVCB(t *testing.T) {
 			key:  SVCB_ALPN,
 			data: []byte{3, 0, 0}, // There aren't three octets after 3
 		},
-		// The caller is responsible for ensuring the buffer is empty after
-		// unpacking, see unpackDataSVCB.
-		/*{
+		{
 			key:  SVCB_NO_DEFAULT_ALPN,
 			data: []byte{0},
-		},*/
+		},
 		{
 			key:  SVCB_PORT,
 			data: []byte{},
