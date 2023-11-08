@@ -387,17 +387,17 @@ func UnpackDomainName(msg []byte, off int) (string, int, error) {
 	return name, offset(s, msg), nil
 }
 
-func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
-	s := make([]byte, 0, maxDomainNamePresentationLength)
+func unpackDomainName(s *cryptobyte.String, msgBuf []byte) (string, error) {
+	name := make([]byte, 0, maxDomainNamePresentationLength)
 	budget := maxDomainNameWireOctets
 	var ptrs int // number of pointers followed
 
-	// If we never see a pointer, we need to ensure that we advance msg to our
+	// If we never see a pointer, we need to ensure that we advance s to our
 	// final position.
-	cs := *msg
+	cs := *s
 	defer func() {
 		if ptrs == 0 {
-			*msg = cs
+			*s = cs
 		}
 	}()
 
@@ -415,33 +415,33 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 			// If we see a zero-length label (root label), this is the
 			// end of the name.
 			if len(label) == 0 {
-				if len(s) == 0 {
+				if len(name) == 0 {
 					return ".", nil
 				}
-				return string(s), nil
+				return string(name), nil
 			}
 			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
 				return "", ErrLongDomain
 			}
 			for _, b := range label {
 				if isDomainNameLabelSpecial(b) {
-					s = append(s, '\\', b)
+					name = append(name, '\\', b)
 				} else if b < ' ' || b > '~' {
-					s = append(s, escapeByte(b)...)
+					name = append(name, escapeByte(b)...)
 				} else {
-					s = append(s, b)
+					name = append(name, b)
 				}
 			}
-			s = append(s, '.')
+			name = append(name, '.')
 		case 0xC0: // pointer
 			var c1 byte
 			if !cs.ReadUint8(&c1) {
 				return "", ErrBuf
 			}
 			// If this is the first pointer we've seen, we need to
-			// advance msg to our current position.
+			// advance s to our current position.
 			if ptrs == 0 {
-				*msg = cs
+				*s = cs
 			}
 			// Don't follow too many pointers in case there is a loop.
 			//
@@ -466,6 +466,8 @@ func unpackDomainName(msg *cryptobyte.String, msgBuf []byte) (string, error) {
 		}
 	}
 }
+
+// TODO(tmthrgd): Move these helper functions to msg_helpers.go.
 
 func packTxt(txt []string, msg []byte, offset int) (int, error) {
 	if len(txt) == 0 {
@@ -548,16 +550,16 @@ func packOctetString(s string, msg []byte, offset int) (int, error) {
 	return offset, nil
 }
 
-func unpackTxt(msg *cryptobyte.String) ([]string, error) {
-	var ss []string
-	for !msg.Empty() {
-		s, err := unpackString(msg)
+func unpackTxt(s *cryptobyte.String) ([]string, error) {
+	var strs []string
+	for !s.Empty() {
+		str, err := unpackString(s)
 		if err != nil {
-			return ss, err
+			return strs, err
 		}
-		ss = append(ss, s)
+		strs = append(strs, str)
 	}
-	return ss, nil
+	return strs, nil
 }
 
 // Helpers for dealing with escaped bytes
@@ -574,6 +576,7 @@ func dddToByte[T ~[]byte | ~string](s T) byte {
 
 // Helper function for packing and unpacking
 func intToBytes(i *big.Int, length int) []byte {
+	// TODO(tmthrgd): Move this to dnssec.go.
 	buf := i.Bytes()
 	if len(buf) < length {
 		b := make([]byte, length)

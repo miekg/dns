@@ -27,12 +27,12 @@ func offset(data, buf []byte) int {
 // of the type they pack/unpack (string, int, etc). We prefix all with unpackData or packData, so packDataA or
 // packDataDomainName.
 
-func unpackDataA(msg *cryptobyte.String) (net.IP, error) {
-	a := make(net.IP, net.IPv4len)
-	if !msg.CopyBytes(a) {
+func unpackDataA(s *cryptobyte.String) (net.IP, error) {
+	ip := make(net.IP, net.IPv4len)
+	if !s.CopyBytes(ip) {
 		return nil, &Error{err: "overflow unpacking a"}
 	}
-	return a, nil
+	return ip, nil
 }
 
 func packDataA(a net.IP, msg []byte, off int) (int, error) {
@@ -53,12 +53,12 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataAAAA(msg *cryptobyte.String) (net.IP, error) {
-	aaaa := make(net.IP, net.IPv6len)
-	if !msg.CopyBytes(aaaa) {
+func unpackDataAAAA(s *cryptobyte.String) (net.IP, error) {
+	ip := make(net.IP, net.IPv6len)
+	if !s.CopyBytes(ip) {
 		return nil, &Error{err: "overflow unpacking aaaa"}
 	}
-	return aaaa, nil
+	return ip, nil
 }
 
 func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
@@ -207,37 +207,37 @@ func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func unpackString(msg *cryptobyte.String) (string, error) {
-	var cs cryptobyte.String
-	if !msg.ReadUint8LengthPrefixed(&cs) {
+func unpackString(s *cryptobyte.String) (string, error) {
+	var txt cryptobyte.String
+	if !s.ReadUint8LengthPrefixed(&txt) {
 		return "", &Error{err: "overflow unpacking txt"}
 	}
-	var s strings.Builder
+	var sb strings.Builder
 	consumed := 0
-	for i, b := range cs {
+	for i, b := range txt {
 		switch {
 		case b == '"' || b == '\\':
 			if consumed == 0 {
-				s.Grow(len(cs) * 2)
+				sb.Grow(len(txt) * 2)
 			}
-			s.Write(cs[consumed:i])
-			s.WriteByte('\\')
-			s.WriteByte(b)
+			sb.Write(txt[consumed:i])
+			sb.WriteByte('\\')
+			sb.WriteByte(b)
 			consumed = i + 1
 		case b < ' ' || b > '~': // unprintable
 			if consumed == 0 {
-				s.Grow(len(cs) * 2)
+				sb.Grow(len(txt) * 2)
 			}
-			s.Write(cs[consumed:i])
-			s.WriteString(escapeByte(b))
+			sb.Write(txt[consumed:i])
+			sb.WriteString(escapeByte(b))
 			consumed = i + 1
 		}
 	}
 	if consumed == 0 { // no escaping needed
-		return string(cs), nil
+		return string(txt), nil
 	}
-	s.Write(cs[consumed:])
-	return s.String(), nil
+	sb.Write(txt[consumed:])
+	return sb.String(), nil
 }
 
 func packString(s string, msg []byte, off int) (int, error) {
@@ -248,9 +248,9 @@ func packString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase32(msg *cryptobyte.String, len int) (string, error) {
+func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
-	if !msg.ReadBytes(&b, len) {
+	if !s.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking base32"}
 	}
 	return toBase32(b), nil
@@ -269,9 +269,9 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase64(msg *cryptobyte.String, len int) (string, error) {
+func unpackStringBase64(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
-	if !msg.ReadBytes(&b, len) {
+	if !s.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking base64"}
 	}
 	return toBase64(b), nil
@@ -290,9 +290,9 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringHex(msg *cryptobyte.String, len int) (string, error) {
+func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
-	if !msg.ReadBytes(&b, len) {
+	if !s.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking hex"}
 	}
 	return hex.EncodeToString(b), nil
@@ -311,9 +311,9 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringAny(msg *cryptobyte.String, len int) (string, error) {
+func unpackStringAny(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
-	if !msg.ReadBytes(&b, len) {
+	if !s.ReadBytes(&b, len) {
 		return "", &Error{err: "overflow unpacking anything"}
 	}
 	return string(b), nil
@@ -328,8 +328,8 @@ func packStringAny(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringTxt(msg *cryptobyte.String) ([]string, error) {
-	return unpackTxt(msg)
+func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
+	return unpackTxt(s)
 }
 
 func packStringTxt(s []string, msg []byte, off int) (int, error) {
@@ -340,24 +340,24 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataOpt(msg *cryptobyte.String) ([]EDNS0, error) {
-	var edns []EDNS0
-	for !msg.Empty() {
+func unpackDataOpt(s *cryptobyte.String) ([]EDNS0, error) {
+	var opts []EDNS0
+	for !s.Empty() {
 		var (
 			code uint16
 			data cryptobyte.String
 		)
-		if !msg.ReadUint16(&code) ||
-			!msg.ReadUint16LengthPrefixed(&data) {
+		if !s.ReadUint16(&code) ||
+			!s.ReadUint16LengthPrefixed(&data) {
 			return nil, &Error{err: "overflow unpacking opt"}
 		}
 		opt := makeDataOpt(code)
 		if err := opt.unpack(data); err != nil {
 			return nil, err
 		}
-		edns = append(edns, opt)
+		opts = append(opts, opt)
 	}
-	return edns, nil
+	return opts, nil
 }
 
 func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
@@ -379,8 +379,8 @@ func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringOctet(msg *cryptobyte.String) (string, error) {
-	return unpackStringAny(msg, len(*msg))
+func unpackStringOctet(s *cryptobyte.String) (string, error) {
+	return unpackStringAny(s, len(*s))
 }
 
 func packStringOctet(s string, msg []byte, off int) (int, error) {
@@ -391,13 +391,13 @@ func packStringOctet(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataNsec(msg *cryptobyte.String) ([]uint16, error) {
+func unpackDataNsec(s *cryptobyte.String) ([]uint16, error) {
 	var nsec []uint16
 	lastwindow := -1
-	for !msg.Empty() {
+	for !s.Empty() {
 		var window, length byte
-		if !msg.ReadUint8(&window) ||
-			!msg.ReadUint8(&length) {
+		if !s.ReadUint8(&window) ||
+			!s.ReadUint8(&length) {
 			return nsec, &Error{err: "overflow unpacking NSEC(3)"}
 		}
 		if int(window) <= lastwindow {
@@ -413,16 +413,16 @@ func unpackDataNsec(msg *cryptobyte.String) ([]uint16, error) {
 			return nsec, &Error{err: "NSEC(3) block too long in type bitmap"}
 		}
 
-		var bm []byte
-		if !msg.ReadBytes(&bm, int(length)) {
+		var bits []byte
+		if !s.ReadBytes(&bits, int(length)) {
 			return nsec, &Error{err: "overflowing NSEC(3) block in type bitmap"}
 		}
 
 		// Walk the bytes in the window and extract the type bits
-		for j, b := range bm {
+		for i, b := range bits {
 			for n := uint(0); n < 8; n++ {
 				if b&(1<<(7-n)) != 0 {
-					nsec = append(nsec, uint16(int(window)*256+j*8+int(n)))
+					nsec = append(nsec, uint16(int(window)*256+i*8+int(n)))
 				}
 			}
 		}
@@ -495,15 +495,15 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataSVCB(msg *cryptobyte.String) ([]SVCBKeyValue, error) {
-	var svcb []SVCBKeyValue
-	for !msg.Empty() {
+func unpackDataSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
+	var kvs []SVCBKeyValue
+	for !s.Empty() {
 		var (
 			code uint16
 			data cryptobyte.String
 		)
-		if !msg.ReadUint16(&code) ||
-			!msg.ReadUint16LengthPrefixed(&data) {
+		if !s.ReadUint16(&code) ||
+			!s.ReadUint16LengthPrefixed(&data) {
 			return nil, &Error{err: "overflow unpacking SVCB"}
 		}
 		kv := makeSVCBKeyValue(SVCBKey(code))
@@ -513,12 +513,12 @@ func unpackDataSVCB(msg *cryptobyte.String) ([]SVCBKeyValue, error) {
 		if err := kv.unpack(data); err != nil {
 			return nil, err
 		}
-		if len(svcb) > 0 && kv.Key() <= svcb[len(svcb)-1].Key() {
+		if len(kvs) > 0 && kv.Key() <= kvs[len(kvs)-1].Key() {
 			return nil, &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		svcb = append(svcb, kv)
+		kvs = append(kvs, kv)
 	}
-	return svcb, nil
+	return kvs, nil
 }
 
 func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
@@ -550,16 +550,16 @@ func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataDomainNames(msg *cryptobyte.String, msgBuf []byte) ([]string, error) {
-	var servers []string
-	for !msg.Empty() {
-		s, err := unpackDomainName(msg, msgBuf)
+func unpackDataDomainNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
+	var names []string
+	for !s.Empty() {
+		name, err := unpackDomainName(s, msgBuf)
 		if err != nil {
-			return servers, err
+			return names, err
 		}
-		servers = append(servers, s)
+		names = append(names, name)
 	}
-	return servers, nil
+	return names, nil
 }
 
 func packDataDomainNames(names []string, msg []byte, off int, compression compressionMap, compress bool) (int, error) {
@@ -635,26 +635,26 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataApl(msg *cryptobyte.String) ([]APLPrefix, error) {
-	var result []APLPrefix
-	for !msg.Empty() {
-		prefix, err := unpackDataAplPrefix(msg)
+func unpackDataApl(s *cryptobyte.String) ([]APLPrefix, error) {
+	var prefixes []APLPrefix
+	for !s.Empty() {
+		prefix, err := unpackDataAplPrefix(s)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, prefix)
+		prefixes = append(prefixes, prefix)
 	}
-	return result, nil
+	return prefixes, nil
 }
 
-func unpackDataAplPrefix(msg *cryptobyte.String) (APLPrefix, error) {
+func unpackDataAplPrefix(s *cryptobyte.String) (APLPrefix, error) {
 	var (
 		family       uint16
 		prefix, nlen byte
 	)
-	if !msg.ReadUint16(&family) ||
-		!msg.ReadUint8(&prefix) ||
-		!msg.ReadUint8(&nlen) {
+	if !s.ReadUint16(&family) ||
+		!s.ReadUint8(&prefix) ||
+		!s.ReadUint8(&nlen) {
 		return APLPrefix{}, &Error{err: "overflow unpacking APL prefix"}
 	}
 
@@ -674,7 +674,7 @@ func unpackDataAplPrefix(msg *cryptobyte.String) (APLPrefix, error) {
 	if afdlen > len(ip) {
 		return APLPrefix{}, &Error{err: "APL length too long"}
 	}
-	if !msg.CopyBytes(ip[:afdlen]) {
+	if !s.CopyBytes(ip[:afdlen]) {
 		return APLPrefix{}, &Error{err: "overflow unpacking APL address"}
 	}
 
@@ -692,7 +692,7 @@ func unpackDataAplPrefix(msg *cryptobyte.String) (APLPrefix, error) {
 	}, nil
 }
 
-func unpackIPSECGateway(msg *cryptobyte.String, msgBuf []byte, gatewayType uint8) (net.IP, string, error) {
+func unpackIPSECGateway(s *cryptobyte.String, msgBuf []byte, gatewayType uint8) (net.IP, string, error) {
 	var (
 		addr net.IP
 		name string
@@ -701,11 +701,11 @@ func unpackIPSECGateway(msg *cryptobyte.String, msgBuf []byte, gatewayType uint8
 	switch gatewayType {
 	case IPSECGatewayNone: // do nothing
 	case IPSECGatewayIPv4:
-		addr, err = unpackDataA(msg)
+		addr, err = unpackDataA(s)
 	case IPSECGatewayIPv6:
-		addr, err = unpackDataAAAA(msg)
+		addr, err = unpackDataAAAA(s)
 	case IPSECGatewayHost:
-		name, err = unpackDomainName(msg, msgBuf)
+		name, err = unpackDomainName(s, msgBuf)
 	}
 	return addr, name, err
 }
