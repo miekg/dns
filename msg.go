@@ -630,8 +630,9 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 		return new(RR_Header), len(msg), nil
 	}
 
-	rr, rest, err := unpackRR(msg[off:], msg)
-	return rr, len(msg) - len(rest), err
+	s := cryptobyte.String(msg[off:])
+	rr, err = unpackRR(&s, msg)
+	return rr, len(msg) - len(s), err
 }
 
 // UnpackRRWithHeader unpacks the record type specific payload given an existing
@@ -646,15 +647,13 @@ func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err 
 	return rr, len(msg) - len(s), err
 }
 
-func unpackRR(msg, msgBuf []byte) (RR, []byte, error) {
-	s := cryptobyte.String(msg)
-	h, err := unpackRRHeader(&s, msgBuf)
+func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+	h, err := unpackRRHeader(msg, msgBuf)
 	if err != nil {
-		return nil, s, err
+		return nil, err
 	}
 
-	rr, err := unpackRRWithHeader(h, &s, msgBuf)
-	return rr, s, err
+	return unpackRRWithHeader(h, msg, msgBuf)
 }
 
 func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
@@ -833,57 +832,74 @@ func (dns *Msg) packBufferWithCompressionMap(buf []byte, compression compression
 	return msg[:off], nil
 }
 
-func unpackCounted[T any](unpack func([]byte, []byte) (T, []byte, error), cnt uint16, msg, msgBuf []byte) ([]T, []byte, error) {
-	// Qdcount, Ancount, Nscount, Arcount shouldn't be trusted, as they are
-	// attacker controlled. To avoid an attacker being able to force us to
-	// allocate a large amount of memory with little effort, we don't use them
-	// to pre-allocate this slice.
-
-	var dst []T
+func unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]Question, error) {
+	// We don't preallocate dst according to cnt as that value may be attacker
+	// controlled. A malicious adversary could send us as 12-byte packet
+	// containing only the header that claims to contain 65535 questions. As
+	// Question takes 24-bytes, we'd end up allocating more than 1.5MiB from a
+	// mere 12-byte packet.
+	var dst []Question
 	for i := 0; i < int(cnt); i++ {
 		// msg is already empty, cnt is a lie.
 		//
 		// TODO(tmthrgd): Remove this to fix #1492.
-		if len(msg) == 0 {
-			return dst, msg, nil
+		if msg.Empty() {
+			return dst, nil
 		}
 
-		var (
-			r   T
-			err error
-		)
-		r, msg, err = unpack(msg, msgBuf)
+		r, err := unpackQuestion(msg, msgBuf)
 		if err != nil {
-			return dst, msg, err
+			return dst, err
 		}
 		dst = append(dst, r)
 	}
-	return dst, msg, nil
+	return dst, nil
+}
+
+func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
+	// See unpackQuestions for why we don't pre-allocate here.
+	var dst []RR
+	for i := 0; i < int(cnt); i++ {
+		// msg is already empty, cnt is a lie.
+		//
+		// TODO(tmthrgd): Remove this to fix #1492.
+		if msg.Empty() {
+			return dst, nil
+		}
+
+		r, err := unpackRR(msg, msgBuf)
+		if err != nil {
+			return dst, err
+		}
+		dst = append(dst, r)
+	}
+	return dst, nil
 }
 
 func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
+	s := cryptobyte.String(msg)
 	// If we are at the end of the message we should return *just* the
 	// header. This can still be useful to the caller. 9.9.9.9 sends these
 	// when responding with REFUSED for instance.
 	//
 	// TODO(tmthrgd): Remove this. If it's only sending the header, the header
 	// should be specifying that it contains no records.
-	if len(msg) == 0 {
+	if s.Empty() {
 		// reset sections before returning
 		dns.Question, dns.Answer, dns.Ns, dns.Extra = nil, nil, nil, nil
 		return nil
 	}
 
 	var err error
-	dns.Question, msg, err = unpackCounted(unpackQuestion, dh.Qdcount, msg, msgBuf)
+	dns.Question, err = unpackQuestions(dh.Qdcount, &s, msgBuf)
 	if err == nil {
-		dns.Answer, msg, err = unpackCounted(unpackRR, dh.Ancount, msg, msgBuf)
+		dns.Answer, err = unpackRRs(dh.Ancount, &s, msgBuf)
 	}
 	if err == nil {
-		dns.Ns, msg, err = unpackCounted(unpackRR, dh.Nscount, msg, msgBuf)
+		dns.Ns, err = unpackRRs(dh.Nscount, &s, msgBuf)
 	}
 	if err == nil {
-		dns.Extra, msg, err = unpackCounted(unpackRR, dh.Arcount, msg, msgBuf)
+		dns.Extra, err = unpackRRs(dh.Arcount, &s, msgBuf)
 	}
 
 	// Set extended Rcode
@@ -894,10 +910,9 @@ func (dns *Msg) unpack(dh Header, msg, msgBuf []byte) error {
 	// TODO(miek): make this an error?
 	// use PackOpt to let people tell how detailed the error reporting should be?
 	//
-	// if len(msg) != 0 {
-	// 	println("dns: extra bytes in dns packet", len(msgBuf) - len(msg), "<", len(msgBuf))
+	// if !s.Empty() {
+	// 	println("dns: extra bytes in dns packet", len(msgBuf) - len(s), "<", len(msgBuf))
 	// }
-	_ = msg
 
 	return err
 
@@ -1143,24 +1158,23 @@ func (q *Question) pack(msg []byte, off int, compression compressionMap, compres
 	return off, nil
 }
 
-func unpackQuestion(msg, msgBuf []byte) (Question, []byte, error) {
-	s := cryptobyte.String(msg)
+func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (Question, error) {
 	var (
 		q   Question
 		err error
 	)
-	q.Name, err = unpackDomainName(&s, msgBuf)
+	q.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
-		return q, s, err
+		return q, err
 	}
 	// TODO(tmthrgd): Should we really accept partial questions?
-	if !s.Empty() && !s.ReadUint16(&q.Qtype) {
-		return q, s, ErrBuf
+	if !msg.Empty() && !msg.ReadUint16(&q.Qtype) {
+		return q, ErrBuf
 	}
-	if !s.Empty() && !s.ReadUint16(&q.Qclass) {
-		return q, s, ErrBuf
+	if !msg.Empty() && !msg.ReadUint16(&q.Qclass) {
+		return q, ErrBuf
 	}
-	return q, s, nil
+	return q, nil
 }
 
 func (dh *Header) pack(msg []byte, off int, compression compressionMap, compress bool) (int, error) {
