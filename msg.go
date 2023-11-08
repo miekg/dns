@@ -625,11 +625,10 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	if off < 0 || off > len(msg) {
 		return nil, off, &Error{err: "bad off"}
 	}
-
 	if off == len(msg) {
 		// Preserve this somewhat strange existing corner case of not
 		// returning an error when given nothing to unpack.
-		return new(RR_Header), len(msg), nil
+		return nil, len(msg), nil
 	}
 
 	s := cryptobyte.String(msg[off:])
@@ -641,6 +640,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 // RR_Header.
 func UnpackRRWithHeader(h RR_Header, msg []byte, off int) (rr RR, off1 int, err error) {
 	if off < 0 || off > len(msg) {
+		h := h // Avoid spilling h to the heap in the happy path.
 		return &h, off, &Error{err: "bad off"}
 	}
 
@@ -661,6 +661,7 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 func unpackRRWithHeader(h RR_Header, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	var data []byte
 	if !msg.ReadBytes(&data, int(h.Rdlength)) {
+		h := h // Avoid spilling h to the heap in the happy path.
 		return &h, errBadRDLength
 	}
 
