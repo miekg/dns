@@ -39,7 +39,7 @@ func reuseaddrControl(network, address string, c syscall.RawConn) error {
 	return opErr
 }
 
-func listenTCP(network, addr string, reuseport bool, reuseaddr bool) (net.Listener, error) {
+func listenTCP(network, addr string, reuseport, reuseaddr bool) (net.Listener, error) {
 	var lc net.ListenConfig
 	switch {
 	case reuseaddr && reuseport:
