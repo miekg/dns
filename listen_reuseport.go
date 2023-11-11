@@ -52,7 +52,7 @@ func listenTCP(network, addr string, reuseport bool, reuseaddr bool) (net.Listen
 	return lc.Listen(context.Background(), network, addr)
 }
 
-func listenUDP(network, addr string, reuseport bool, reuseaddr bool) (net.PacketConn, error) {
+func listenUDP(network, addr string, reuseport, reuseaddr bool) (net.PacketConn, error) {
 	var lc net.ListenConfig
 	switch {
 	case reuseaddr && reuseport:
