@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -1042,10 +1043,11 @@ func TestServerReuseport(t *testing.T) {
 }
 
 func TestServerReuseaddr(t *testing.T) {
-	startServer := func(t *testing.T, addr string, expectSuccess bool) (*Server, chan error) {
+	startServerFn := func(t *testing.T, network, addr string, expectSuccess bool) (*Server, chan error) {
+		t.Helper()
 		wait := make(chan struct{})
 		srv := &Server{
-			Net:               "udp",
+			Net:               network,
 			Addr:              addr,
 			NotifyStartedFunc: func() { close(wait) },
 			ReuseAddr:         true,
@@ -1064,20 +1066,85 @@ func TestServerReuseaddr(t *testing.T) {
 				t.Fatalf("%s: failed to start server: %v", t.Name(), err)
 			default:
 				fin <- err
-				return srv, fin
+				return nil, fin
 			}
 		}
 		return srv, fin
 	}
-	t.Run("should-fail", func(t *testing.T) {
+
+	externalIPFn := func(t *testing.T) (string, error) {
+		t.Helper()
+		ifaces, err := net.Interfaces()
+		if err != nil {
+			return "", err
+		}
+		for _, iface := range ifaces {
+			if iface.Flags&net.FlagUp == 0 {
+				continue // interface down
+			}
+			if iface.Flags&net.FlagLoopback != 0 {
+				continue // loopback interface
+			}
+			addrs, err := iface.Addrs()
+			if err != nil {
+				return "", err
+			}
+			for _, addr := range addrs {
+				var ip net.IP
+				switch v := addr.(type) {
+				case *net.IPNet:
+					ip = v.IP
+				case *net.IPAddr:
+					ip = v.IP
+				}
+				if ip == nil || ip.IsLoopback() {
+					continue
+				}
+				ip = ip.To4()
+				if ip == nil {
+					continue // not an ipv4 address
+				}
+				return ip.String(), nil
+			}
+		}
+		return "", errors.New("are you connected to the network?")
+	}
+
+	freePortFn := func(t *testing.T) int {
+		t.Helper()
+		addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+		if err != nil {
+			t.Fatalf("unable resolve tcp addr: %s", err)
+		}
+
+		l, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			t.Fatalf("unable listen tcp: %s", err)
+		}
+		defer l.Close()
+		return l.Addr().(*net.TCPAddr).Port
+	}
+
+	t.Run("should-fail-tcp", func(t *testing.T) {
 		// ReuseAddr should fail if you try to bind to exactly the same
 		// combination of source address and port.
 		// This should fail whether or not ReuseAddr is supported on a
 		// particular OS
-		srv1, fin1 := startServer(t, ":0", true) // :0 is resolved to a random free port by the kernel
-		_, fin2 := startServer(t, srv1.PacketConn.LocalAddr().String(), false)
-		if err := <-fin2; err == nil {
-			t.Fatalf("second ListenAndServe should have returned a startup error: %v", err)
+		ip, err := externalIPFn(t)
+		if err != nil {
+			t.Skip("no external IPs found")
+			return
+		}
+		port := freePortFn(t)
+		srv1, fin1 := startServerFn(t, "tcp", fmt.Sprintf("%s:%d", ip, port), true)
+		srv2, fin2 := startServerFn(t, "tcp", fmt.Sprintf("%s:%d", ip, port), false)
+		switch {
+		case srv2 != nil && srv2.started:
+			t.Fatalf("second ListenAndServe should not have started")
+		default:
+			if err := <-fin2; err == nil {
+				t.Fatalf("second ListenAndServe should have returned a startup error: %v", err)
+			}
 		}
 
 		if err := srv1.Shutdown(); err != nil {
@@ -1087,13 +1154,48 @@ func TestServerReuseaddr(t *testing.T) {
 			t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
 		}
 	})
-	t.Run("should-succeed", func(t *testing.T) {
+	t.Run("should-succeed-tcp", func(t *testing.T) {
 		if !supportsReuseAddr {
 			t.Skip("reuseaddr is not supported")
 		}
+		ip, err := externalIPFn(t)
+		if err != nil {
+			t.Skip("no external IPs found")
+			return
+		}
+		port := freePortFn(t)
+
 		// ReuseAddr should succeed if you try to bind to the same port but a different source address
-		srv1, fin1 := startServer(t, ":0", true) // :0 is resolved to a random free port by the kernel
-		srv2, fin2 := startServer(t, fmt.Sprintf("localhost:%d", srv1.PacketConn.LocalAddr().(*net.UDPAddr).Port), true)
+		srv1, fin1 := startServerFn(t, "tcp", fmt.Sprintf("localhost:%d", port), true)
+		srv2, fin2 := startServerFn(t, "tcp", fmt.Sprintf("%s:%d", ip, port), true)
+
+		if err := srv1.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown first server: %v", err)
+		}
+		if err := srv2.Shutdown(); err != nil {
+			t.Fatalf("failed to shutdown second server: %v", err)
+		}
+		if err := <-fin1; err != nil {
+			t.Fatalf("first ListenAndServe returned error after Shutdown: %v", err)
+		}
+		if err := <-fin2; err != nil {
+			t.Fatalf("second ListenAndServe returned error after Shutdown: %v", err)
+		}
+	})
+	t.Run("should-succeed-udp", func(t *testing.T) {
+		if !supportsReuseAddr {
+			t.Skip("reuseaddr is not supported")
+		}
+		ip, err := externalIPFn(t)
+		if err != nil {
+			t.Skip("no external IPs found")
+			return
+		}
+		port := freePortFn(t)
+
+		// ReuseAddr should succeed if you try to bind to the same port but a different source address
+		srv1, fin1 := startServerFn(t, "udp", fmt.Sprintf("localhost:%d", port), true)
+		srv2, fin2 := startServerFn(t, "udp", fmt.Sprintf("%s:%d", ip, port), true)
 
 		if err := srv1.Shutdown(); err != nil {
 			t.Fatalf("failed to shutdown first server: %v", err)
