@@ -80,8 +80,10 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 
 func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 	first := true
-	defer t.Close()
-	defer close(c)
+	defer func() {
+		t.Close()
+		close(c)
+	}()
 	timeout := dnsTimeout
 	if t.ReadTimeout != 0 {
 		timeout = t.ReadTimeout
@@ -131,8 +133,10 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	axfr := true
 	n := 0
 	qser := q.Ns[0].(*SOA).Serial
-	defer t.Close()
-	defer close(c)
+	defer func() {
+		t.Close()
+		close(c)
+	}()
 	timeout := dnsTimeout
 	if t.ReadTimeout != 0 {
 		timeout = t.ReadTimeout
