@@ -81,6 +81,9 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 	first := true
 	defer func() {
+		// First close the connection, then the channel. This allows functions blocked on
+		// the channel to assume that the connection is closed and no further operations are
+		// pending when they resume.
 		t.Close()
 		close(c)
 	}()
@@ -134,6 +137,9 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	n := 0
 	qser := q.Ns[0].(*SOA).Serial
 	defer func() {
+		// First close the connection, then the channel. This allows functions blocked on
+		// the channel to assume that the connection is closed and no further operations are
+		// pending when they resume.
 		t.Close()
 		close(c)
 	}()
