@@ -302,6 +302,9 @@ func (co *Conn) ReadMsgHeader(hdr *Header) ([]byte, error) {
 
 	s := cryptobyte.String(p)
 	if hdr != nil && !hdr.unpack(&s) {
+		// unpack only ever reports false if the String is too short, we
+		// check exactly that by comparing against headerSize above. This
+		// panic can never happen.
 		panic("dns: internal error: failed to unpack message header")
 	}
 

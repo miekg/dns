@@ -82,7 +82,7 @@ var (
 	// TODO(tmthrgd): Update CoreDNS and use "truncated message".
 	errTruncatedMessage = &Error{err: "overflow unpacking truncated message"}
 	errUnpackOverflow   = &Error{err: "overflow unpacking data"}
-	errTrailingRData    = &Error{err: "trailing record data"}
+	errTrailingRData    = &Error{err: "trailing record rdata"}
 )
 
 // Id by default returns a 16-bit random number to be used as a message id. The

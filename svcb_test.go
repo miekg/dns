@@ -1,6 +1,8 @@
 package dns
 
-import "testing"
+import (
+	"testing"
+)
 
 // This tests everything valid about SVCB but parsing.
 // Parsing tests belong to parse_test.go.
@@ -48,8 +50,9 @@ func TestSVCB(t *testing.T) {
 		if len(b) != int(kv.len()) {
 			t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, int(kv.len()), len(b))
 		}
-		if !kv.unpack(b) {
-			t.Error("failed to unpack value of svc pair: ", o.key)
+		err = kv.unpack(b)
+		if err != nil {
+			t.Error("failed to unpack value of svc pair: ", o.key, err)
 			continue
 		}
 		if str := kv.String(); str != o.data {
@@ -85,9 +88,9 @@ func TestDecodeBadSVCB(t *testing.T) {
 		},
 	}
 	for _, o := range svcbs {
-		kv := makeSVCBKeyValue(o.key)
-		if kv.unpack(o.data) {
-			t.Error("accepted invalid svc value with key ", o.key.String())
+		err := makeSVCBKeyValue(SVCBKey(o.key)).unpack(o.data)
+		if err == nil {
+			t.Error("accepted invalid svc value with key ", SVCBKey(o.key).String())
 		}
 	}
 }

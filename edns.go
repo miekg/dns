@@ -217,7 +217,7 @@ type EDNS0 interface {
 	// pack returns the bytes of the option data.
 	pack() ([]byte, error)
 	// unpack sets the data as found in the buffer.
-	unpack([]byte) bool
+	unpack([]byte) error
 	// String returns the string representation of the option.
 	String() string
 	// copy returns a deep-copy of the option.
@@ -242,18 +242,18 @@ type EDNS0_NSID struct {
 }
 
 func (e *EDNS0_NSID) pack() ([]byte, error) {
-	return hex.DecodeString(e.Nsid)
-}
-
-func (e *EDNS0_NSID) unpack(b []byte) bool {
-	e.Nsid = hex.EncodeToString(b)
-	return true
+	h, err := hex.DecodeString(e.Nsid)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_NSID) Option() uint16 { return EDNS0NSID } // Option returns the option code.
-func (e *EDNS0_NSID) String() string { return e.Nsid }
-func (e *EDNS0_NSID) copy() EDNS0    { return &EDNS0_NSID{e.Code, e.Nsid} }
+func (e *EDNS0_NSID) Option() uint16        { return EDNS0NSID } // Option returns the option code.
+func (e *EDNS0_NSID) unpack(b []byte) error { e.Nsid = hex.EncodeToString(b); return nil }
+func (e *EDNS0_NSID) String() string        { return e.Nsid }
+func (e *EDNS0_NSID) copy() EDNS0           { return &EDNS0_NSID{e.Code, e.Nsid} }
 
 // EDNS0_SUBNET is the subnet option that is used to give the remote nameserver
 // an idea of where the client lives. See RFC 7871. It can then give back a different
@@ -324,39 +324,42 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_SUBNET) unpack(b []byte) bool {
+func (e *EDNS0_SUBNET) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.ReadUint16(&e.Family) ||
 		!s.ReadUint8(&e.SourceNetmask) ||
 		!s.ReadUint8(&e.SourceScope) {
-		return false
+		return errUnpackOverflow
 	}
 	switch e.Family {
 	case 0:
 		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
 		// It's okay to accept such a packet
 		if e.SourceNetmask != 0 {
-			return false
+			return errors.New("dns: bad address family")
 		}
 		e.Address = net.IPv4(0, 0, 0, 0)
 	case 1:
 		if e.SourceNetmask > net.IPv4len*8 || e.SourceScope > net.IPv4len*8 {
-			return false
+			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv4len)
 		s.Skip(copy(addr, s))
 		e.Address = addr.To16()
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 || e.SourceScope > net.IPv6len*8 {
-			return false
+			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv6len)
 		s.Skip(copy(addr, s))
 		e.Address = addr
 	default:
-		return false
+		return errors.New("dns: bad address family")
 	}
-	return s.Empty()
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
+	return nil
 }
 
 func (e *EDNS0_SUBNET) String() (s string) {
@@ -405,18 +408,18 @@ type EDNS0_COOKIE struct {
 }
 
 func (e *EDNS0_COOKIE) pack() ([]byte, error) {
-	return hex.DecodeString(e.Cookie)
-}
-
-func (e *EDNS0_COOKIE) unpack(b []byte) bool {
-	e.Cookie = hex.EncodeToString(b)
-	return true
+	h, err := hex.DecodeString(e.Cookie)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_COOKIE) Option() uint16 { return EDNS0COOKIE }
-func (e *EDNS0_COOKIE) String() string { return e.Cookie }
-func (e *EDNS0_COOKIE) copy() EDNS0    { return &EDNS0_COOKIE{e.Code, e.Cookie} }
+func (e *EDNS0_COOKIE) Option() uint16        { return EDNS0COOKIE }
+func (e *EDNS0_COOKIE) unpack(b []byte) error { e.Cookie = hex.EncodeToString(b); return nil }
+func (e *EDNS0_COOKIE) String() string        { return e.Cookie }
+func (e *EDNS0_COOKIE) copy() EDNS0           { return &EDNS0_COOKIE{e.Code, e.Cookie} }
 
 // The EDNS0_UL (Update Lease) (draft RFC) option is used to tell the server to set
 // an expiration on an update RR. This is helpful for clients that cannot clean
@@ -454,16 +457,22 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_UL) unpack(b []byte) bool {
+func (e *EDNS0_UL) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.ReadUint32(&e.Lease) {
-		return false
+		return errUnpackOverflow
 	}
 	// Optionally only contains Lease field.
 	if s.Empty() {
-		return true
+		return nil
 	}
-	return s.ReadUint32(&e.KeyLease) && s.Empty()
+	if !s.ReadUint32(&e.KeyLease) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
+	return nil
 }
 
 // EDNS0_LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
@@ -490,14 +499,19 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_LLQ) unpack(b []byte) bool {
+func (e *EDNS0_LLQ) unpack(b []byte) error {
 	s := cryptobyte.String(b)
-	return s.ReadUint16(&e.Version) &&
-		s.ReadUint16(&e.Opcode) &&
-		s.ReadUint16(&e.Error) &&
-		s.ReadUint64(&e.Id) &&
-		s.ReadUint32(&e.LeaseLife) &&
-		s.Empty()
+	if !s.ReadUint16(&e.Version) ||
+		!s.ReadUint16(&e.Opcode) ||
+		!s.ReadUint16(&e.Error) ||
+		!s.ReadUint64(&e.Id) ||
+		!s.ReadUint32(&e.LeaseLife) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
+	return nil
 }
 
 func (e *EDNS0_LLQ) String() string {
@@ -518,16 +532,9 @@ type EDNS0_DAU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_DAU) Option() uint16 { return EDNS0DAU }
-
-func (e *EDNS0_DAU) pack() ([]byte, error) {
-	return cloneSlice(e.AlgCode), nil
-}
-
-func (e *EDNS0_DAU) unpack(b []byte) bool {
-	e.AlgCode = cloneSlice(b)
-	return true
-}
+func (e *EDNS0_DAU) Option() uint16        { return EDNS0DAU }
+func (e *EDNS0_DAU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_DAU) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
 
 func (e *EDNS0_DAU) String() string {
 	s := ""
@@ -549,16 +556,9 @@ type EDNS0_DHU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_DHU) Option() uint16 { return EDNS0DHU }
-
-func (e *EDNS0_DHU) pack() ([]byte, error) {
-	return cloneSlice(e.AlgCode), nil
-}
-
-func (e *EDNS0_DHU) unpack(b []byte) bool {
-	e.AlgCode = cloneSlice(b)
-	return true
-}
+func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
+func (e *EDNS0_DHU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_DHU) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
 
 func (e *EDNS0_DHU) String() string {
 	s := ""
@@ -580,16 +580,9 @@ type EDNS0_N3U struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_N3U) Option() uint16 { return EDNS0N3U }
-
-func (e *EDNS0_N3U) pack() ([]byte, error) {
-	return cloneSlice(e.AlgCode), nil
-}
-
-func (e *EDNS0_N3U) unpack(b []byte) bool {
-	e.AlgCode = cloneSlice(b)
-	return true
-}
+func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
+func (e *EDNS0_N3U) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
+func (e *EDNS0_N3U) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
 
 func (e *EDNS0_N3U) String() string {
 	// Re-use the hash map
@@ -603,7 +596,6 @@ func (e *EDNS0_N3U) String() string {
 	}
 	return s
 }
-
 func (e *EDNS0_N3U) copy() EDNS0 { return &EDNS0_N3U{e.Code, e.AlgCode} }
 
 // EDNS0_EXPIRE implements the EDNS0 option as described in RFC 7314.
@@ -619,21 +611,27 @@ func (e *EDNS0_EXPIRE) copy() EDNS0    { return &EDNS0_EXPIRE{e.Code, e.Expire, 
 
 func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 	if e.Empty {
-		return nil, nil
+		return []byte{}, nil
 	}
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, e.Expire)
 	return b, nil
 }
 
-func (e *EDNS0_EXPIRE) unpack(b []byte) bool {
+func (e *EDNS0_EXPIRE) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	// Zero-length EXPIRE query, see RFC 7314 Section 2.
 	if s.Empty() {
 		e.Empty = true
-		return true
+		return nil
 	}
-	return s.ReadUint32(&e.Expire) && s.Empty()
+	if !s.ReadUint32(&e.Expire) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
+	return nil
 }
 
 func (e *EDNS0_EXPIRE) String() (s string) {
@@ -676,9 +674,9 @@ func (e *EDNS0_LOCAL) pack() ([]byte, error) {
 	return cloneSlice(e.Data), nil
 }
 
-func (e *EDNS0_LOCAL) unpack(b []byte) bool {
+func (e *EDNS0_LOCAL) unpack(b []byte) error {
 	e.Data = cloneSlice(b)
-	return true
+	return nil
 }
 
 // EDNS0_TCP_KEEPALIVE is an EDNS0 option that instructs the server to keep
@@ -708,13 +706,19 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 	return nil, nil
 }
 
-func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) bool {
+func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	// Optionally empty.
 	if s.Empty() {
-		return true
+		return nil
 	}
-	return s.ReadUint16(&e.Timeout) && s.Empty()
+	if !s.ReadUint16(&e.Timeout) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
+	return nil
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) String() string {
@@ -737,18 +741,11 @@ type EDNS0_PADDING struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_PADDING) Option() uint16 { return EDNS0PADDING }
-func (e *EDNS0_PADDING) String() string { return fmt.Sprintf("%0X", e.Padding) }
-func (e *EDNS0_PADDING) copy() EDNS0    { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
-
-func (e *EDNS0_PADDING) pack() ([]byte, error) {
-	return cloneSlice(e.Padding), nil
-}
-
-func (e *EDNS0_PADDING) unpack(b []byte) bool {
-	e.Padding = cloneSlice(b)
-	return true
-}
+func (e *EDNS0_PADDING) Option() uint16        { return EDNS0PADDING }
+func (e *EDNS0_PADDING) pack() ([]byte, error) { return cloneSlice(e.Padding), nil }
+func (e *EDNS0_PADDING) unpack(b []byte) error { e.Padding = cloneSlice(b); return nil }
+func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
+func (e *EDNS0_PADDING) copy() EDNS0           { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
 
 // Extended DNS Error Codes (RFC 8914).
 const (
@@ -839,13 +836,13 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 	return b, nil
 }
 
-func (e *EDNS0_EDE) unpack(b []byte) bool {
+func (e *EDNS0_EDE) unpack(b []byte) error {
 	s := cryptobyte.String(b)
 	if !s.ReadUint16(&e.InfoCode) {
-		return false
+		return errUnpackOverflow
 	}
 	e.ExtraText = string(s)
-	return true
+	return nil
 }
 
 // The EDNS0_ESU option for ENUM Source-URI Extension
@@ -855,15 +852,11 @@ type EDNS0_ESU struct {
 }
 
 // Option implements the EDNS0 interface.
-func (e *EDNS0_ESU) Option() uint16 { return EDNS0ESU }
-func (e *EDNS0_ESU) String() string { return e.Uri }
-func (e *EDNS0_ESU) copy() EDNS0    { return &EDNS0_ESU{e.Code, e.Uri} }
-
-func (e *EDNS0_ESU) pack() ([]byte, error) {
-	return []byte(e.Uri), nil
-}
-
-func (e *EDNS0_ESU) unpack(b []byte) bool {
+func (e *EDNS0_ESU) Option() uint16        { return EDNS0ESU }
+func (e *EDNS0_ESU) String() string        { return e.Uri }
+func (e *EDNS0_ESU) copy() EDNS0           { return &EDNS0_ESU{e.Code, e.Uri} }
+func (e *EDNS0_ESU) pack() ([]byte, error) { return []byte(e.Uri), nil }
+func (e *EDNS0_ESU) unpack(b []byte) error {
 	e.Uri = string(b)
-	return true
+	return nil
 }
