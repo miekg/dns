@@ -219,6 +219,29 @@ func (rr *HINFO) parse(c *zlexer, o string) *ParseError {
 
 	rr.Cpu = chunks[0]
 	rr.Os = strings.Join(chunks[1:], " ")
+	return nil
+}
+
+// according to RFC 1183 the parsing is identical to HINFO, so just use that code.
+func (rr *ISDN) parse(c *zlexer, o string) *ParseError {
+	chunks, e := endingToTxtSlice(c, "bad ISDN Fields")
+	if e != nil {
+		return e
+	}
+
+	if ln := len(chunks); ln == 0 {
+		return nil
+	} else if ln == 1 {
+		// Can we split it?
+		if out := strings.Fields(chunks[0]); len(out) > 1 {
+			chunks = out
+		} else {
+			chunks = append(chunks, "")
+		}
+	}
+
+	rr.Address = chunks[0]
+	rr.SubAddress = strings.Join(chunks[1:], " ")
 
 	return nil
 }

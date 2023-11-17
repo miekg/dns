@@ -481,6 +481,21 @@ func (r1 *IPSECKEY) isDuplicate(_r2 RR) bool {
 	return true
 }
 
+func (r1 *ISDN) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*ISDN)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if r1.Address != r2.Address {
+		return false
+	}
+	if r1.SubAddress != r2.SubAddress {
+		return false
+	}
+	return true
+}
+
 func (r1 *KEY) isDuplicate(_r2 RR) bool {
 	r2, ok := _r2.(*KEY)
 	if !ok {

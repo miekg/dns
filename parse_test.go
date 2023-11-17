@@ -1450,6 +1450,23 @@ func TestParseHINFO(t *testing.T) {
 	}
 }
 
+func TestParseISDN(t *testing.T) {
+	dt := map[string]string{
+		"example.net. ISDN A B":         "example.net.	3600	IN	ISDN	\"A\" \"B\"",
+		"example.net. ISDN \"A\" \"B\"": "example.net.	3600	IN	ISDN	\"A\" \"B\"",
+	}
+	for i, o := range dt {
+		rr, err := NewRR(i)
+		if err != nil {
+			t.Error("failed to parse RR: ", err)
+			continue
+		}
+		if rr.String() != o {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
+	}
+}
+
 func TestParseCAA(t *testing.T) {
 	lt := map[string]string{
 		"example.net.	CAA	0 issue \"symantec.com\"":            "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
