@@ -694,6 +694,18 @@ func (rr *NULL) pack(msg []byte, off int, compression compressionMap, compress b
 	return off, nil
 }
 
+func (rr *NXT) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packDomainName(rr.NextDomain, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDataNsec(rr.TypeBitMap, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 func (rr *OPENPGPKEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packStringBase64(rr.PublicKey, msg, off)
 	if err != nil {
@@ -2218,6 +2230,24 @@ func (rr *NULL) unpack(msg []byte, off int) (off1 int, err error) {
 	_ = rdStart
 
 	rr.Data, off, err = unpackStringAny(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *NXT) unpack(msg []byte, off int) (off1 int, err error) {
+	rdStart := off
+	_ = rdStart
+
+	rr.NextDomain, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
 	if err != nil {
 		return off, err
 	}
