@@ -243,6 +243,8 @@ func TestCanonicalName(t *testing.T) {
 		"example.test":     "example.test.",
 		"Lower.CASE.test.": "lower.case.test.",
 		"*.Test":           "*.test.",
+		"ÉxamplE.com":      "Éxample.com.",
+		"É.com":            "É.com.",
 	} {
 		if got := CanonicalName(s); got != expect {
 			t.Errorf("CanonicalName(%q) = %q, expected %q", s, got, expect)

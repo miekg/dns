@@ -1,4 +1,5 @@
-//+build ignore
+//go:build ignore
+// +build ignore
 
 // types_generate.go is meant to run with go generate. It will use
 // go/{importer,types} to track down all the RR struct types. Then for each type
@@ -219,6 +220,28 @@ func main() {
 				o("for _, t := range rr.%s { l += len(t) + 1 }\n")
 			case st.Tag(i) == `dns:"uint48"`:
 				o("l += 6 // %s\n")
+			case st.Tag(i) == `dns:"ipsechost"`:
+				o(`switch rr.GatewayType {
+				case IPSECGatewayIPv4:
+					l += net.IPv4len
+				case IPSECGatewayIPv6:
+					l += net.IPv6len
+				case IPSECGatewayHost:
+					l += len(rr.%s) + 1
+				}
+				`)
+			case st.Tag(i) == `dns:"amtrelayhost"`:
+				o(`switch rr.GatewayType {
+				case AMTRELAYIPv4:
+					l += net.IPv4len
+				case AMTRELAYIPv6:
+					l += net.IPv6len
+				case AMTRELAYHost:
+					l += len(rr.%s) + 1
+				}
+				`)
+			case st.Tag(i) == `dns:"amtrelaytype"`:
+				o("l++ // %s\n")
 			case st.Tag(i) == "":
 				switch st.Field(i).Type().(*types.Basic).Kind() {
 				case types.Uint8:
@@ -238,7 +261,7 @@ func main() {
 				log.Fatalln(name, st.Field(i).Name(), st.Tag(i))
 			}
 		}
-		fmt.Fprintf(b, "return l }\n")
+		fmt.Fprint(b, "return l }\n\n")
 	}
 
 	// Generate copy()
@@ -260,43 +283,32 @@ func main() {
 			if sl, ok := st.Field(i).Type().(*types.Slice); ok {
 				t := sl.Underlying().String()
 				t = strings.TrimPrefix(t, "[]")
-				if strings.Contains(t, ".") {
-					splits := strings.Split(t, ".")
-					t = splits[len(splits)-1]
+				if idx := strings.LastIndex(t, "."); idx >= 0 {
+					t = t[idx+1:]
 				}
-				// For the EDNS0 interface (used in the OPT RR), we need to call the copy method on each element.
-				if t == "EDNS0" {
+				// For the EDNS0 interface (and others), we need to call the copy method on each element.
+				if t == "EDNS0" || t == "APLPrefix" || t == "SVCBKeyValue" {
 					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
 						f, t, f, f, f)
 					fields = append(fields, f)
 					continue
 				}
-				if t == "APLPrefix" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
-						f, t, f, f, f)
-					fields = append(fields, f)
-					continue
-				}
-				if t == "SVCBKeyValue" {
-					fmt.Fprintf(b, "%s := make([]%s, len(rr.%s));\nfor i,e := range rr.%s {\n %s[i] = e.copy()\n}\n",
-						f, t, f, f, f)
-					fields = append(fields, f)
-					continue
-				}
-				fmt.Fprintf(b, "%s := make([]%s, len(rr.%s)); copy(%s, rr.%s)\n",
-					f, t, f, f, f)
-				fields = append(fields, f)
+				fields = append(fields, "cloneSlice(rr."+f+")")
 				continue
 			}
 			if st.Field(i).Type().String() == "net.IP" {
-				fields = append(fields, "copyIP(rr."+f+")")
+				fields = append(fields, "cloneSlice(rr."+f+")")
 				continue
 			}
 			fields = append(fields, "rr."+f)
 		}
 	WriteCopy:
-		fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
-		fmt.Fprintf(b, "}\n")
+		if len(fields) > 3 {
+			fmt.Fprintf(b, "return &%s{\n%s,\n}\n", name, strings.Join(fields, ",\n"))
+		} else {
+			fmt.Fprintf(b, "return &%s{%s}\n", name, strings.Join(fields, ","))
+		}
+		fmt.Fprint(b, "}\n\n")
 	}
 
 	// gofmt

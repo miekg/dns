@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,14 +90,10 @@ func TestClientConfigFromReaderAttempts(t *testing.T) {
 }
 
 func TestReadFromFile(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf("tempDir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	path := filepath.Join(tempDir, "resolv.conf")
-	if err := ioutil.WriteFile(path, []byte(normal), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(normal), 0o644); err != nil {
 		t.Fatalf("writeFile: %v", err)
 	}
 	cc, err := ClientConfigFromFile(path)
@@ -142,6 +137,7 @@ func TestNameListNdots1(t *testing.T) {
 		t.Errorf("NameList didn't return search last: %v", names[1])
 	}
 }
+
 func TestNameListNdots2(t *testing.T) {
 	cfg := ClientConfig{
 		Ndots: 2,

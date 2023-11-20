@@ -1,4 +1,5 @@
-//+build ignore
+//go:build ignore
+// +build ignore
 
 // types_generate.go is meant to run with go generate. It will use
 // go/{importer,types} to track down all the RR struct types. Then for each type
@@ -145,11 +146,23 @@ func main() {
 				o2("if !r1.%s.Equal(r2.%s) {\nreturn false\n}")
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
 				o2("if !isDuplicateName(r1.%s, r2.%s) {\nreturn false\n}")
+			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
+				o2(`switch r1.GatewayType {
+				case IPSECGatewayIPv4, IPSECGatewayIPv6:
+					if !r1.GatewayAddr.Equal(r2.GatewayAddr) {
+						return false
+					}
+				case IPSECGatewayHost:
+					if !isDuplicateName(r1.%s, r2.%s) {
+						return false
+					}
+				}
+				`)
 			default:
 				o2("if r1.%s != r2.%s {\nreturn false\n}")
 			}
 		}
-		fmt.Fprintf(b, "return true\n}\n\n")
+		fmt.Fprint(b, "return true\n}\n\n")
 	}
 
 	// gofmt
