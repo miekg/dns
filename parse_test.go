@@ -225,92 +225,6 @@ func GenerateTXT(r *rand.Rand, size int) []byte {
 	return rd
 }
 
-// Ok, 2 things. 1) this test breaks with the new functionality of splitting up larger txt
-// chunks into 255 byte pieces. 2) I don't like the random nature of this thing, because I can't
-// place the quotes where they need to be.
-// So either add some code the places the quotes in just the right spots, make this non random
-// or do something else.
-// Disabled for now. (miek)
-func testTXTRRQuick(t *testing.T) {
-	s := rand.NewSource(0)
-	r := rand.New(s)
-	typeAndClass := []byte{
-		byte(TypeTXT >> 8), byte(TypeTXT),
-		byte(ClassINET >> 8), byte(ClassINET),
-		0, 0, 0, 1, // TTL
-	}
-	f := func(l int) bool {
-		owner := GenerateDomain(r, l)
-		rdata := GenerateTXT(r, l)
-		rrbytes := make([]byte, 0, len(owner)+2+2+4+2+len(rdata))
-		rrbytes = append(rrbytes, owner...)
-		rrbytes = append(rrbytes, typeAndClass...)
-		rrbytes = append(rrbytes, byte(len(rdata)>>8), byte(len(rdata)))
-		rrbytes = append(rrbytes, rdata...)
-		rr, _, err := UnpackRR(rrbytes, 0)
-		if err != nil {
-			panic(err)
-		}
-		buf := make([]byte, len(rrbytes)*3)
-		off, err := PackRR(rr, buf, 0, nil, false)
-		if err != nil {
-			t.Errorf("pack Error: %v\nRR: %v", err, rr)
-			return false
-		}
-		buf = buf[:off]
-		if !bytes.Equal(buf, rrbytes) {
-			t.Errorf("packed bytes don't match original bytes")
-			t.Errorf("src bytes: %v", rrbytes)
-			t.Errorf("   struct: %v", rr)
-			t.Errorf("out bytes: %v", buf)
-			return false
-		}
-		if len(rdata) == 0 {
-			// stringifying won't produce any data to parse
-			return true
-		}
-		rrString := rr.String()
-		rr2, err := NewRR(rrString)
-		if err != nil {
-			t.Errorf("error parsing own output: %v", err)
-			t.Errorf("struct: %v", rr)
-			t.Errorf("string: %v", rrString)
-			return false
-		}
-		if rr2.String() != rrString {
-			t.Errorf("parsed rr.String() doesn't match original string")
-			t.Errorf("original: %v", rrString)
-			t.Errorf("  parsed: %v", rr2.String())
-			return false
-		}
-
-		buf = make([]byte, len(rrbytes)*3)
-		off, err = PackRR(rr2, buf, 0, nil, false)
-		if err != nil {
-			t.Errorf("error packing parsed rr: %v", err)
-			t.Errorf("unpacked Struct: %v", rr)
-			t.Errorf("         string: %v", rrString)
-			t.Errorf("  parsed Struct: %v", rr2)
-			return false
-		}
-		buf = buf[:off]
-		if !bytes.Equal(buf, rrbytes) {
-			t.Errorf("parsed packed bytes don't match original bytes")
-			t.Errorf("   source bytes: %v", rrbytes)
-			t.Errorf("unpacked struct: %v", rr)
-			t.Errorf("         string: %v", rrString)
-			t.Errorf("  parsed struct: %v", rr2)
-			t.Errorf(" repacked bytes: %v", buf)
-			return false
-		}
-		return true
-	}
-	c := &quick.Config{MaxCountScale: 10}
-	if err := quick.Check(f, c); err != nil {
-		t.Error(err)
-	}
-}
-
 func TestParseDirectiveMisc(t *testing.T) {
 	tests := map[string]string{
 		"$ORIGIN miek.nl.\na IN NS b": "a.miek.nl.\t3600\tIN\tNS\tb.miek.nl.",
@@ -373,10 +287,10 @@ func TestNSEC(t *testing.T) {
 func TestParseLOC(t *testing.T) {
 	lt := map[string]string{
 		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
-		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
-		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
+		"SW1A2AA.find.me.uk.	LOC	51 0 0.0 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m":     "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 00 0.000 N 00 07 39.611 W 0m 0.00m 0.00m 0.00m",
+		"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m":                   "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t51 30 12.748 N 00 07 39.611 W 0m 1m 10000m 10m",
 		// Exercise boundary cases
-		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
+		"SW1A2AA.find.me.uk.	LOC	90 0 0.0 N 180 0 0.0 W 42849672.95 90000000.00m 90000000.00m 90000000.00m":  "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t90 00 0.000 N 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m",
 		"SW1A2AA.find.me.uk.	LOC	89 59 59.999 N 179 59 59.999 W -100000 90000000.00m 90000000.00m 90000000m": "SW1A2AA.find.me.uk.\t3600\tIN\tLOC\t89 59 59.999 N 179 59 59.999 W -100000m 90000000m 90000000m 90000000m",
 		// use float64 to have enough precision.
 		"example.com. LOC 42 21 43.952 N 71 5 6.344 W -24m 1m 200m 10m": "example.com.\t3600\tIN\tLOC\t42 21 43.952 N 71 05 6.344 W -24m 1m 200m 10m",
@@ -532,7 +446,7 @@ func TestParseClass(t *testing.T) {
 		"t.example.com. CH A 127.0.0.1": "t.example.com.	3600	CH	A	127.0.0.1",
 		// ClassANY can not occur in zone files
 		// "t.example.com. ANY A 127.0.0.1": "t.example.com.	3600	ANY	A	127.0.0.1",
-		"t.example.com. NONE A 127.0.0.1": "t.example.com.	3600	NONE	A	127.0.0.1",
+		"t.example.com. NONE A 127.0.0.1":     "t.example.com.	3600	NONE	A	127.0.0.1",
 		"t.example.com. CLASS255 A 127.0.0.1": "t.example.com.	3600	CLASS255	A	127.0.0.1",
 	}
 	for i, o := range tests {
@@ -1451,8 +1365,8 @@ func TestPrintfVerbsRdata(t *testing.T) {
 
 func TestParseTokenOverflow(t *testing.T) {
 	_, err := NewRR("_443._tcp.example.org. IN TLSA 0 0 0 308205e8308204d0a00302010202100411de8f53b462f6a5a861b712ec6b59300d06092a864886f70d01010b05003070310b300906035504061302555331153013060355040a130c446967694365727420496e6331193017060355040b13107777772e64696769636572742e636f6d312f302d06035504031326446967694365727420534841322048696768204173737572616e636520536572766572204341301e170d3134313130363030303030305a170d3135313131333132303030305a3081a5310b3009060355040613025553311330110603550408130a43616c69666f726e6961311430120603550407130b4c6f7320416e67656c6573313c303a060355040a1333496e7465726e657420436f72706f726174696f6e20666f722041737369676e6564204e616d657320616e64204e756d6265727331133011060355040b130a546563686e6f6c6f6779311830160603550403130f7777772e6578616d706c652e6f726730820122300d06092a864886f70d01010105000382010f003082010a02820101009e663f52a3d18cb67cdfed547408a4e47e4036538988da2798da3b6655f7240d693ed1cb3fe6d6ad3a9e657ff6efa86b83b0cad24e5d31ff2bf70ec3b78b213f1b4bf61bdc669cbbc07d67154128ca92a9b3cbb4213a836fb823ddd4d7cc04918314d25f06086fa9970ba17e357cca9b458c27eb71760ab95e3f9bc898ae89050ae4d09ba2f7e4259d9ff1e072a6971b18355a8b9e53670c3d5dbdbd283f93a764e71b3a4140ca0746090c08510e2e21078d7d07844bf9c03865b531a0bf2ee766bc401f6451c5a1e6f6fb5d5c1d6a97a0abe91ae8b02e89241e07353909ccd5b41c46de207c06801e08f20713603827f2ae3e68cf15ef881d7e0608f70742e30203010001a382024630820242301f0603551d230418301680145168ff90af0207753cccd9656462a212b859723b301d0603551d0e04160414b000a7f422e9b1ce216117c4c46e7164c8e60c553081810603551d11047a3078820f7777772e6578616d706c652e6f7267820b6578616d706c652e636f6d820b6578616d706c652e656475820b6578616d706c652e6e6574820b6578616d706c652e6f7267820f7777772e6578616d706c652e636f6d820f7777772e6578616d706c652e656475820f7777772e6578616d706c652e6e6574300e0603551d0f0101ff0404030205a0301d0603551d250416301406082b0601050507030106082b0601050507030230750603551d1f046e306c3034a032a030862e687474703a2f2f63726c332e64696769636572742e636f6d2f736861322d68612d7365727665722d67332e63726c3034a032a030862e687474703a2f2f63726c342e64696769636572742e636f6d2f736861322d68612d7365727665722d67332e63726c30420603551d20043b3039303706096086480186fd6c0101302a302806082b06010505070201161c68747470733a2f2f7777772e64696769636572742e636f6d2f43505330818306082b0601050507010104773075302406082b060105050730018618687474703a2f2f6f6373702e64696769636572742e636f6d304d06082b060105050730028641687474703a2f2f636163657274732e64696769636572742e636f6d2f446967694365727453484132486967684173737572616e636553657276657243412e637274300c0603551d130101ff04023000300d06092a864886f70d01010b050003820101005eac2124dedb3978a86ff3608406acb542d3cb54cb83facd63aec88144d6a1bf15dbf1f215c4a73e241e582365cba9ea50dd306541653b3513af1a0756c1b2720e8d112b34fb67181efad9c4609bdc670fb025fa6e6d42188161b026cf3089a08369c2f3609fc84bcc3479140c1922ede430ca8dbac2b2a3cdacb305ba15dc7361c4c3a5e6daa99cb446cb221b28078a7a944efba70d96f31ac143d959bccd2fd50e30c325ea2624fb6b6dbe9344dbcf133bfbd5b4e892d635dbf31596451672c6b65ba5ac9b3cddea92b35dab1065cae3c8cb6bb450a62ea2f72ea7c6bdc7b65fa09b012392543734083c7687d243f8d0375304d99ccd2e148966a8637a6797")
-	if err == nil {
-		t.Fatalf("token overflow should return an error")
+	if err != nil {
+		t.Fatalf("long token should not return an error")
 	}
 }
 
@@ -1515,10 +1429,10 @@ func TestParseSSHFP(t *testing.T) {
 
 func TestParseHINFO(t *testing.T) {
 	dt := map[string]string{
-		"example.net. HINFO A B": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
+		"example.net. HINFO A B":         "example.net.	3600	IN	HINFO	\"A\" \"B\"",
 		"example.net. HINFO \"A\" \"B\"": "example.net.	3600	IN	HINFO	\"A\" \"B\"",
 		"example.net. HINFO A B C D E F": "example.net.	3600	IN	HINFO	\"A\" \"B C D E F\"",
-		"example.net. HINFO AB": "example.net.	3600	IN	HINFO	\"AB\" \"\"",
+		"example.net. HINFO AB":          "example.net.	3600	IN	HINFO	\"AB\" \"\"",
 		// "example.net. HINFO PC-Intel-700mhz \"Redhat Linux 7.1\"": "example.net.	3600	IN	HINFO	\"PC-Intel-700mhz\" \"Redhat Linux 7.1\"",
 		// This one is recommended in Pro Bind book http://www.zytrax.com/books/dns/ch8/hinfo.html
 		// but effectively, even Bind would replace it to correctly formed text when you AXFR
@@ -1538,9 +1452,9 @@ func TestParseHINFO(t *testing.T) {
 
 func TestParseCAA(t *testing.T) {
 	lt := map[string]string{
-		"example.net.	CAA	0 issue \"symantec.com\"": "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
+		"example.net.	CAA	0 issue \"symantec.com\"":            "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
 		"example.net.	CAA	0 issuewild \"symantec.com; stuff\"": "example.net.\t3600\tIN\tCAA\t0 issuewild \"symantec.com; stuff\"",
-		"example.net.	CAA	128 tbs \"critical\"": "example.net.\t3600\tIN\tCAA\t128 tbs \"critical\"",
+		"example.net.	CAA	128 tbs \"critical\"":                "example.net.\t3600\tIN\tCAA\t128 tbs \"critical\"",
 		"example.net.	CAA	2 auth \"0>09\\006\\010+\\006\\001\\004\\001\\214y\\002\\003\\001\\006\\009`\\134H\\001e\\003\\004\\002\\001\\004 y\\209\\012\\221r\\220\\156Q\\218\\150\\150{\\166\\245:\\231\\182%\\157:\\133\\179}\\1923r\\238\\151\\255\\128q\\145\\002\\001\\000\"": "example.net.\t3600\tIN\tCAA\t2 auth \"0>09\\006\\010+\\006\\001\\004\\001\\214y\\002\\003\\001\\006\\009`\\134H\\001e\\003\\004\\002\\001\\004 y\\209\\012\\221r\\220\\156Q\\218\\150\\150{\\166\\245:\\231\\182%\\157:\\133\\179}\\1923r\\238\\151\\255\\128q\\145\\002\\001\\000\"",
 		"example.net.   TYPE257	0 issue \"symantec.com\"": "example.net.\t3600\tIN\tCAA\t0 issue \"symantec.com\"",
 	}
@@ -1636,24 +1550,24 @@ func TestParseCSYNC(t *testing.T) {
 
 func TestParseSVCB(t *testing.T) {
 	svcbs := map[string]string{
-		`example.com. 3600 IN SVCB 0 cloudflare.com.`: `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
+		`example.com. 3600 IN SVCB 0 cloudflare.com.`:                              `example.com.	3600	IN	SVCB	0 cloudflare.com.`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. alpn=h2 ipv4hint=3.4.3.2`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. alpn="h2" ipv4hint="3.4.3.2"`,
 		`example.com. 3600 IN SVCB 65000 cloudflare.com. key65000=4\ 3 key65001="\" " key65002 key65003= key65004="" key65005== key65006==\"\" key65007=\254 key65008=\032`: `example.com.	3600	IN	SVCB	65000 cloudflare.com. key65000="4\ 3" key65001="\"\ " key65002="" key65003="" key65004="" key65005="=" key65006="=\"\"" key65007="\254" key65008="\ "`,
 		// Explained in svcb.go "In AliasMode, records SHOULD NOT include any SvcParams,"
 		`example.com. 3600 IN SVCB 0 no-default-alpn`: `example.com.	3600	IN	SVCB	0 no-default-alpn.`,
 		// From the specification
-		`example.com.   HTTPS   0 foo.example.com.`: `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
-		`example.com.   SVCB   1 .`: `example.com.	3600	IN	SVCB	1 .`,
-		`example.com.   SVCB   16 foo.example.com. port=53`: `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
-		`example.com.   SVCB   1 foo.example.com. key667=hello`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
-		`example.com.   SVCB   1 foo.example.com. key667="hello\210qoo"`: `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello\210qoo"`,
-		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`: `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
-		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`: `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
+		`example.com.   HTTPS   0 foo.example.com.`:                                                          `example.com.	3600	IN	HTTPS	0 foo.example.com.`,
+		`example.com.   SVCB   1 .`:                                                                          `example.com.	3600	IN	SVCB	1 .`,
+		`example.com.   SVCB   16 foo.example.com. port=53`:                                                  `example.com.	3600	IN	SVCB	16 foo.example.com. port="53"`,
+		`example.com.   SVCB   1 foo.example.com. key667=hello`:                                              `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello"`,
+		`example.com.   SVCB   1 foo.example.com. key667="hello\210qoo"`:                                     `example.com.	3600	IN	SVCB	1 foo.example.com. key667="hello\210qoo"`,
+		`example.com.   SVCB   1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`:                     `example.com.	3600	IN	SVCB	1 foo.example.com. ipv6hint="2001:db8::1,2001:db8::53:1"`,
+		`example.com.   SVCB   1 example.com. ipv6hint="2001:db8::198.51.100.100"`:                           `example.com.	3600	IN	SVCB	1 example.com. ipv6hint="2001:db8::c633:6464"`,
 		`example.com.   SVCB   16 foo.example.org. alpn=h2,h3-19 mandatory=ipv4hint,alpn ipv4hint=192.0.2.1`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="h2,h3-19" mandatory="ipv4hint,alpn" ipv4hint="192.0.2.1"`,
-		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
-		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`: `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn="f\\\\oo\\,bar,h2"`:                                  `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
+		`example.com.   SVCB   16 foo.example.org. alpn=f\\\092oo\092,bar,h2`:                                `example.com.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\092oo\\\044bar,h2"`,
 		// From draft-ietf-add-ddr-06
-		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
+		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns-query{?dns}`:     `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 		`_dns.example.net. SVCB 1 example.net. alpn=h2 dohpath=/dns\045query{\?dns}`: `_dns.example.net.	3600	IN	SVCB	1 example.net. alpn="h2" dohpath="/dns-query{?dns}"`,
 	}
 	for s, o := range svcbs {
@@ -1770,6 +1684,33 @@ func TestNULLRecord(t *testing.T) {
 	}
 	if _, ok := msg.Answer[0].(*NULL); !ok {
 		t.Fatalf("Expected packet to contain NULL record")
+	}
+}
+func TestAAAAParsing(t *testing.T) {
+	tests := []string{
+		"2001:db8::1",
+		"1::1",
+		"2001:db81:d2b4:b6ba:50db:49cc:a8d1:5bb1",
+		"::ffff:192.0.2.0",
+	}
+
+	rrPrefix := ".\t1\tIN\tAAAA\t"
+
+	for num, tc := range tests {
+		t.Run(fmt.Sprintf("Test %d", num), func(t *testing.T) {
+			rr, err := NewRR(rrPrefix + tc)
+			if err != nil {
+				t.Fatalf("failed to parse RR: %s", err)
+			}
+			// Output presentation format and try to parse again
+			reparseRR, err := NewRR(rr.String())
+			if err != nil {
+				t.Fatalf("failed to reparse RR: %s", err)
+			}
+			if reparseRR.String() != rrPrefix+tc {
+				t.Errorf("expected %s,got %s", rrPrefix+tc, reparseRR.String())
+			}
+		})
 	}
 }
 
@@ -2012,6 +1953,75 @@ func TestParseZONEMD(t *testing.T) {
 		}
 		if rr.String() != o {
 			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", i, o, rr.String())
+		}
+	}
+}
+
+func TestParseIPSECKEY(t *testing.T) {
+	dt := map[string]string{
+		"ipseckey. 3600 IN IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                                  "ipseckey.\t3600\tIN\tIPSECKEY\t10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 1 2 1.2.3.4 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                            "ipseckey.\t3600\tIN\tIPSECKEY\t10 1 2 1.2.3.4 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 2 2 2001:470:30:84:e276:63ff:fe72:3900 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==": "ipseckey.\t3600\tIN\tIPSECKEY\t10 2 2 2001:470:30:84:e276:63ff:fe72:3900 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+		"ipseckey. 3600 IN IPSECKEY 10 3 2 ipseckey2. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==":                         "ipseckey.\t3600\tIN\tIPSECKEY\t10 3 2 ipseckey2. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==",
+	}
+
+	for i, o := range dt {
+		rr := testRR(i).(*IPSECKEY)
+		if s := rr.String(); s != o {
+			t.Errorf("input %#v does not match expected output %#v", s, o)
+		}
+	}
+}
+
+func TestParseAMTRELAY(t *testing.T) {
+	dt := map[string]string{
+		"amtrelay. 3600 IN AMTRELAY 10 0 0 .":                                  "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 0 .",
+		"amtrelay. 3600 IN AMTRELAY 10 0 1 1.2.3.4":                            "amtrelay.\t3600\tIN\tAMTRELAY\t10 0 1 1.2.3.4",
+		"amtrelay. 3600 IN AMTRELAY 10 1 2 2001:470:30:84:e276:63ff:fe72:3900": "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 2 2001:470:30:84:e276:63ff:fe72:3900",
+		"amtrelay. 3600 IN AMTRELAY 10 1 3 amtrelay2.":                         "amtrelay.\t3600\tIN\tAMTRELAY\t10 1 3 amtrelay2.",
+	}
+
+	for i, o := range dt {
+		rr := testRR(i).(*AMTRELAY)
+		if s := rr.String(); s != o {
+			t.Errorf("input %#v does not match expected output %#v", s, o)
+		}
+	}
+}
+
+func TestParseOPENPGPKEY(t *testing.T) {
+	dt := map[string]string{
+		"2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db._openpgpkey 3600 IN OPENPGPKEY mDMEZCMu8xYJKwYBBAHaRw8BAQdAH4FTbN/H5SoMBl9Ez2cFQ1NuzymK894fq2ffsYDvRkG0EWFsaWNlQGV4YW1wbGUuY29tiJYEExYKAD4CGwMFCwkIBwMFFQoJCAsFFgIDAQACHgECF4AWIQRjw8oAQytQxDz5Q/Io7xpohfeBngUCZCMv5gUJAAk7ZgAKCRAo7xpohfeBnlmVAP9k0slIpLwddCD1bZ9qVjqzNcS743OIDny7XuH6x02L2wEAwxqAotO7/oUm0L4wyYR6hvGlhuGMSZXc9xMwZ1wVcA8=":     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db._openpgpkey.\t3600\tIN\tOPENPGPKEY\tmDMEZCMu8xYJKwYBBAHaRw8BAQdAH4FTbN/H5SoMBl9Ez2cFQ1NuzymK894fq2ffsYDvRkG0EWFsaWNlQGV4YW1wbGUuY29tiJYEExYKAD4CGwMFCwkIBwMFFQoJCAsFFgIDAQACHgECF4AWIQRjw8oAQytQxDz5Q/Io7xpohfeBngUCZCMv5gUJAAk7ZgAKCRAo7xpohfeBnlmVAP9k0slIpLwddCD1bZ9qVjqzNcS743OIDny7XuH6x02L2wEAwxqAotO7/oUm0L4wyYR6hvGlhuGMSZXc9xMwZ1wVcA8=",
+		"2bb5bc4202aaecd48dcb54967c8e7f1b7574a436f04e0d15534b20e5._openpgpkey 3600 IN OPENPGPKEY mDMEZCMxgRYJKwYBBAHaRw8BAQdA/fgtlQjGflt2MUMWhRZRnH5Hg+BY9sQTeePmqqUs+lK0Fem6u+iho+WtkEBleGFtcGxlLmNvbYiWBBMWCgA+AhsDBQsJCAcDBRUKCQgLBRYCAwEAAh4BAheAFiEEIWsEkWx5wygGCb61+tJ3q3m88E0FAmQjMbMFCQAJOqwACgkQ+tJ3q3m88E0z4gEAtowKJMPefyV5YCW8VubgXK7Fa+hjwXOPSsHnEnJw9pUBAL+VZvNZv/VZvyGGMd31Yivqerzl6q+VIkZ6XffVb2AB": "2bb5bc4202aaecd48dcb54967c8e7f1b7574a436f04e0d15534b20e5._openpgpkey.\t3600\tIN\tOPENPGPKEY\tmDMEZCMxgRYJKwYBBAHaRw8BAQdA/fgtlQjGflt2MUMWhRZRnH5Hg+BY9sQTeePmqqUs+lK0Fem6u+iho+WtkEBleGFtcGxlLmNvbYiWBBMWCgA+AhsDBQsJCAcDBRUKCQgLBRYCAwEAAh4BAheAFiEEIWsEkWx5wygGCb61+tJ3q3m88E0FAmQjMbMFCQAJOqwACgkQ+tJ3q3m88E0z4gEAtowKJMPefyV5YCW8VubgXK7Fa+hjwXOPSsHnEnJw9pUBAL+VZvNZv/VZvyGGMd31Yivqerzl6q+VIkZ6XffVb2AB",
+		"2bb5bc4202aaecd48dcb54967c8e7f1b7574a436f04e0d15534b20e5._openpgpkey 3600 IN OPENPGPKEY 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": "2bb5bc4202aaecd48dcb54967c8e7f1b7574a436f04e0d15534b20e5._openpgpkey.\t3600\tIN\tOPENPGPKEY\t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",
+	}
+	for i, o := range dt {
+		rr := testRR(i).(*OPENPGPKEY)
+		if s := rr.String(); s != o {
+			t.Errorf("input %#v does not match expected output %#v", s, o)
+		}
+	}
+}
+
+func TestParseRRSIGAlgNames(t *testing.T) {
+	tests := map[string]uint8{
+		`miek.nl.  IN RRSIG SOA RSASHA1 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:         RSASHA1,
+		`miek.nl.  IN RRSIG SOA RSAMD5 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:          RSAMD5,
+		`miek.nl.  IN RRSIG SOA ECC-GOST 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:        ECCGOST,
+		`miek.nl.  IN RRSIG SOA ED448 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:           ED448,
+		`miek.nl.  IN RRSIG SOA ECDSAP256SHA256 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`: ECDSAP256SHA256,
+		`miek.nl.  IN RRSIG SOA INDIRECT 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:        INDIRECT,
+		`miek.nl.  IN RRSIG SOA BLA 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:             0,
+		`miek.nl.  IN RRSIG SOA - 2 43200 20140210031301 20140111031301 12051 miek.nl. MVZUyrYwq0iZhMFDDnVXD2Bvu7pcBoc=`:               0,
+	}
+	for r, alg := range tests {
+		rr, err := NewRR(r)
+		if alg != 0 && err != nil {
+			t.Error(err)
+			continue
+		}
+		if alg != 0 && rr.(*RRSIG).Algorithm != alg {
+			t.Errorf("expecting alg %d, got %d", alg, rr.(*RRSIG).Algorithm)
 		}
 	}
 }

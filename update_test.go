@@ -92,7 +92,7 @@ func TestRemoveRRset(t *testing.T) {
 }
 
 func TestPreReqAndRemovals(t *testing.T) {
-	// Build a list of multiple prereqs and then somes removes followed by an insert.
+	// Build a list of multiple prereqs and then some removes followed by an insert.
 	// We should be able to add multiple prereqs and updates.
 	m := new(Msg)
 	m.SetUpdate("example.org.")
@@ -126,19 +126,19 @@ func TestPreReqAndRemovals(t *testing.T) {
 	// end and the Example function trim these, thus they never match.
 	// TODO(miek): don't print these tabs and make this into an Example function.
 	expect := `;; opcode: UPDATE, status: NOERROR, id: 1234
-;; flags:; QUERY: 1, ANSWER: 5, AUTHORITY: 4, ADDITIONAL: 0
+;; flags:; ZONE: 1, PREREQ: 5, UPDATE: 4, ADDITIONAL: 0
 
-;; QUESTION SECTION:
+;; ZONE SECTION:
 ;example.org.	IN	 SOA
 
-;; ANSWER SECTION:
+;; PREREQUISITE SECTION:
 name_used.	0	CLASS255	ANY	
 name_not_used.	0	NONE	ANY	
 rrset_used1.	0	CLASS255	A	
 rrset_used2.	0	IN	A	127.0.0.1
 rrset_not_used.	0	NONE	A	
 
-;; AUTHORITY SECTION:
+;; UPDATE SECTION:
 remove1.	0	CLASS255	ANY	
 remove2.	0	CLASS255	A	
 remove3.	0	NONE	A	127.0.0.1
