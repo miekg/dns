@@ -148,8 +148,19 @@ func TestTXTEscapeJustParse(t *testing.T) {
 	test := [][]string{
 		{`unquoted`, `unquoted`},
 		{`"quoted"`, `quoted`},
-		{`"escaped\"quote"`, `escaped\"quote`}, // This passes. It shouldn't?
-		{`"escaped\"quote"`, `escaped"quote`},  // This fails. It shouldn't?
+		//{`inner"quote`, `inner"quote`},  // Parse error
+		//{`"quoted"quote"`, `quoted"quote`}, // Parse error
+		{`"innerescaped\"quote"`, `innerescaped"quote`},
+		{`1back\slash`, `1back\slash`},
+		{`2back\\slash`, `2back\\slash`},
+		{`3back\\\slash`, `3back\\\slash`},
+		{`4back\\\\slash`, `4back\\\\slash`},
+		{`5back\\\\\slash`, `5back\\\\\slash`},
+		{`"q1back\slash"`, `1backslash`},
+		{`"q2back\\slash"`, `2back\slash`},
+		{`"q3back\\\slash"`, `3back\slash`},
+		{`"q4back\\\\slash"`, `4back\\slash`},
+		{`"q5back\\\\\slash"`, `5back\\slash`},
 	}
 	for _, s := range test {
 		rr, err := NewRR(fmt.Sprintf("example.com. IN TXT %v", s[0]))
