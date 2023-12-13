@@ -135,8 +135,8 @@ const (
 	RcodeNXRrset        = 8  // NXRRSet   - RR Set that should exist does not [DNS Update]
 	RcodeNotAuth        = 9  // NotAuth   - Server Not Authoritative for zone [DNS Update]
 	RcodeNotZone        = 10 // NotZone   - Name not contained in zone        [DNS Update/TSIG]
-	RcodeBadSig         = 16 // BADSIG    - TSIG Signature Failure            [TSIG]
-	RcodeBadVers        = 16 // BADVERS   - Bad OPT Version                   [EDNS0]
+	RcodeBadSig         = 16 // BADSIG    - TSIG Signature Failure            [TSIG]  https://www.rfc-editor.org/rfc/rfc6895.html#section-2.3
+	RcodeBadVers        = 16 // BADVERS   - Bad OPT Version                   [EDNS0] https://www.rfc-editor.org/rfc/rfc6895.html#section-2.3
 	RcodeBadKey         = 17 // BADKEY    - Key not recognized                [TSIG]
 	RcodeBadTime        = 18 // BADTIME   - Signature out of time window      [TSIG]
 	RcodeBadMode        = 19 // BADMODE   - Bad TKEY Mode                     [TKEY]
