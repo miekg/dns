@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -228,10 +229,22 @@ func (zp *ZoneParser) SetIncludeAllowed(v bool) {
 	zp.includeAllowed = v
 }
 
-// SetIncludeAllowedFS controls whether $INCLUDE directives are allowed, and
-// specifies an [fs.FS] from which to open and read files.
-func (zp *ZoneParser) SetIncludeAllowedFS(v bool, fsys fs.FS) {
-	zp.includeAllowed, zp.fsys = v, fsys
+// SetIncludeFS provides an [fs.FS] to use when looking for the target of
+// $INCLUDE directives.  ($INCLUDE must still be enabled separately by calling
+// [ZoneParser.SetIncludeAllowed].)  If fsys is nil, [os.Open] will be used.
+//
+// When fsys is an on-disk FS, the ability of $INCLUDE to reach files from
+// outside its root directory depends upon the FS implementation.  For
+// instance, [os.DirFS] will refuse to open paths like "../../etc/passwd",
+// however it will still follow links which may point anywhere on the system.
+//
+// FS paths are slash-separated on all systems, even Windows.  $INCLUDE paths
+// containing other characters such as backslash and colon may be accepted as
+// valid, but those characters will never be interpreted by an FS
+// implementation as path element separators.  See [fs.ValidPath] for more
+// details.
+func (zp *ZoneParser) SetIncludeFS(fsys fs.FS) {
+	zp.fsys = fsys
 }
 
 // Err returns the first non-EOF error that was encountered by the
@@ -418,20 +431,30 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			// Start with the new file
 			includePath := l.token
-			if !filepath.IsAbs(includePath) {
-				includePath = filepath.Join(filepath.Dir(zp.file), includePath)
-			}
-
 			var r1 io.Reader
 			var e1 error
 			if zp.fsys != nil {
+				// fs.FS always uses / as separator, even on Windows, so use
+				// path instead of filepath here:
+				if !path.IsAbs(includePath) {
+					includePath = path.Join(path.Dir(zp.file), includePath)
+				}
+
+				// os.DirFS, and probably others, expect all paths to be
+				// relative, so clean the path and remove leading / if
+				// present:
+				includePath = strings.TrimLeft(path.Clean(includePath), "/")
+
 				r1, e1 = zp.fsys.Open(includePath)
 			} else {
+				if !filepath.IsAbs(includePath) {
+					includePath = filepath.Join(filepath.Dir(zp.file), includePath)
+				}
 				r1, e1 = os.Open(includePath)
 			}
 			if e1 != nil {
 				var as string
-				if !filepath.IsAbs(l.token) {
+				if includePath != l.token {
 					as = fmt.Sprintf(" as `%s'", includePath)
 				}
 				zp.parseErr = &ParseError{
@@ -444,7 +467,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.r = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.SetIncludeAllowedFS(true, zp.fsys)
+			zp.sub.SetIncludeAllowed(true)
+			zp.sub.SetIncludeFS(zp.fsys)
 			return zp.subNext()
 		case zExpectDirTTLBl:
 			if l.value != zBlank {
