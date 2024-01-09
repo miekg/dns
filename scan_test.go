@@ -1,11 +1,14 @@
 package dns
 
 import (
+	"errors"
 	"io"
+	"io/fs"
 	"net"
 	"os"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 func TestZoneParserGenerate(t *testing.T) {
@@ -93,6 +96,43 @@ func TestZoneParserInclude(t *testing.T) {
 		!strings.Contains(err.Error(), "no such file or directory") {
 		t.Fatalf(`expected error to contain: "failed to open", %q and "no such file or directory" but got: %s`,
 			tmpfile.Name(), err)
+	}
+}
+
+func TestZoneParserIncludeFS(t *testing.T) {
+	fsys := fstest.MapFS{
+		"db.foo": &fstest.MapFile{
+			Data: []byte("foo\tIN\tA\t127.0.0.1"),
+		},
+	}
+	zone := "$ORIGIN example.org.\n$INCLUDE db.foo\nbar\tIN\tA\t127.0.0.2"
+
+	var got int
+	z := NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowedFS(true, fsys)
+	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+		switch rr.Header().Name {
+		case "foo.example.org.", "bar.example.org.":
+		default:
+			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", rr.Header().Name)
+		}
+		got++
+	}
+	if err := z.Err(); err != nil {
+		t.Fatalf("expected no error, but got %s", err)
+	}
+
+	if expected := 2; got != expected {
+		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
+	}
+
+	fsys = fstest.MapFS{}
+
+	z = NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowedFS(true, fsys)
+	z.Next()
+	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf(`expected fs.ErrNotExist but got: %T %v`, err, err)
 	}
 }
 
