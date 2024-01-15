@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -324,14 +326,11 @@ func tsigBuffer(msgbuf []byte, rr *TSIG, requestMAC string, timersOnly bool) ([]
 // Strip the TSIG from the raw message.
 func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	// Copied from msg.go's Unpack() Header, but modified.
-	var (
-		dh  Header
-		err error
-	)
-	off, tsigoff := 0, 0
+	s := cryptobyte.String(msg)
 
-	if dh, off, err = unpackMsgHdr(msg, off); err != nil {
-		return nil, nil, err
+	var dh Header
+	if !dh.unpack(&s) {
+		return nil, nil, errTruncatedMessage
 	}
 	if dh.Arcount == 0 {
 		return nil, nil, ErrNoSig
@@ -342,42 +341,36 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 		return nil, nil, ErrAuth
 	}
 
-	for i := 0; i < int(dh.Qdcount); i++ {
-		_, off, err = unpackQuestion(msg, off)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	_, off, err = unpackRRslice(int(dh.Ancount), msg, off)
-	if err != nil {
-		return nil, nil, err
-	}
-	_, off, err = unpackRRslice(int(dh.Nscount), msg, off)
+	_, err := unpackQuestions(dh.Qdcount, &s, msg)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rr := new(TSIG)
-	var extra RR
+	_, err = unpackRRs(dh.Ancount, &s, msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	_, err = unpackRRs(dh.Nscount, &s, msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	for i := 0; i < int(dh.Arcount); i++ {
-		tsigoff = off
-		extra, off, err = UnpackRR(msg, off)
+		rrOff := offset(s, msg)
+		extra, err := unpackRR(&s, msg)
 		if err != nil {
 			return nil, nil, err
 		}
 		if extra.Header().Rrtype == TypeTSIG {
-			rr = extra.(*TSIG)
 			// Adjust Arcount.
 			arcount := binary.BigEndian.Uint16(msg[10:])
 			binary.BigEndian.PutUint16(msg[10:], arcount-1)
-			break
+			return msg[:rrOff], extra.(*TSIG), nil
 		}
 	}
-	if rr == nil {
-		return nil, nil, ErrNoSig
-	}
-	return msg[:tsigoff], rr, nil
+
+	return nil, nil, ErrNoSig
 }
 
 // Translate the TSIG time signed into a date. There is no

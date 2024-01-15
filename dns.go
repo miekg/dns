@@ -52,7 +52,7 @@ type RR interface {
 	//
 	// This will only be called on a new and empty RR type with only the header populated. It
 	// will only be called if the record's RDATA is non-empty.
-	unpack(msg []byte, off int) (off1 int, err error)
+	unpack(data, msgBuf []byte) error
 
 	// parse parses an RR from zone file format.
 	//
@@ -104,7 +104,7 @@ func (h *RR_Header) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
-func (h *RR_Header) unpack(msg []byte, off int) (int, error) {
+func (h *RR_Header) unpack(data, msgBuf []byte) error {
 	panic("dns: internal error: unpack should never be called on RR_Header")
 }
 
@@ -124,12 +124,11 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 	*rr = RFC3597{Hdr: *r.Header()}
 	rr.Hdr.Rdlength = uint16(off - headerEnd)
 
-	if noRdata(rr.Hdr) {
+	if rr.Hdr.Rdlength == 0 {
 		return nil
 	}
 
-	_, err = rr.unpack(buf, headerEnd)
-	return err
+	return rr.unpack(buf[headerEnd:], buf)
 }
 
 // fromRFC3597 converts an unknown RR representation from RFC 3597 to the known RR type.
@@ -141,7 +140,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	// We can only get here when rr was constructed with that method.
 	hdr.Rdlength = uint16(hex.DecodedLen(len(rr.Rdata)))
 
-	if noRdata(*hdr) {
+	if hdr.Rdlength == 0 {
 		// Dynamic update.
 		return nil
 	}
@@ -153,6 +152,5 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 		return err
 	}
 
-	_, err = r.unpack(msg, 0)
-	return err
+	return r.unpack(msg, msg)
 }

@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // SVCBKey is the type of the keys used in the SVCB RR.
@@ -411,16 +413,14 @@ func (s *SVCBAlpn) pack() ([]byte, error) {
 }
 
 func (s *SVCBAlpn) unpack(b []byte) error {
-	// Estimate the size of the smallest alpn as 4 bytes
-	alpn := make([]string, 0, len(b)/4)
-	for i := 0; i < len(b); {
-		length := int(b[i])
-		i++
-		if i+length > len(b) {
-			return errors.New("dns: svcbalpn: alpn array overflowing")
+	sc := cryptobyte.String(b)
+	var alpn []string
+	for !sc.Empty() {
+		var data cryptobyte.String
+		if !sc.ReadUint8LengthPrefixed(&data) {
+			return errUnpackOverflow
 		}
-		alpn = append(alpn, string(b[i:i+length]))
-		i += length
+		alpn = append(alpn, string(data))
 	}
 	s.Alpn = alpn
 	return nil

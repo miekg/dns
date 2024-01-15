@@ -156,6 +156,8 @@ func TestToRFC3597(t *testing.T) {
 }
 
 func TestNoRdataPack(t *testing.T) {
+	// TODO(tmthrgd): This test isn't correct. See TestNoRdataUnpack.
+
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {
 		r := fn()
@@ -168,6 +170,16 @@ func TestNoRdataPack(t *testing.T) {
 }
 
 func TestNoRdataUnpack(t *testing.T) {
+	// TODO(tmthrgd): This test isn't correct and we sometimes don't correctly
+	// pack the messages. It currently succeeds as we explicitly handle certain
+	// broken records in their unpack method, but we shouldn't be. See the TODO
+	// in msg_generate.go. In fact we don't actually produce RRs with an
+	// RDLENGTH of zero, but rather one that just happens to contain mostly
+	// nothing. Further this isn't even how we ourselves construct dynamic
+	// update messages, in update.go we use ANY for when producing an update
+	// message. This correctly produces an record with a type, class, TTL, etc.
+	// but with an RDLENGTH of zero.
+
 	data := make([]byte, 1024)
 	for typ, fn := range TypeToRR {
 		if typ == TypeSOA || typ == TypeTSIG || typ == TypeTKEY {
@@ -254,8 +266,7 @@ func TestMsgPackBuffer(t *testing.T) {
 		input, _ := hex.DecodeString(hexData)
 		m := new(Msg)
 		if err := m.Unpack(input); err != nil {
-			t.Errorf("packet %d failed to unpack", i)
-			continue
+			t.Errorf("packet %d failed to unpack: %v", i, err)
 		}
 	}
 }

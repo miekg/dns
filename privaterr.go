@@ -61,10 +61,15 @@ func (r *PrivateRR) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
-func (r *PrivateRR) unpack(msg []byte, off int) (int, error) {
-	off1, err := r.Data.Unpack(msg[off:])
-	off += off1
-	return off, err
+func (r *PrivateRR) unpack(data, msgBuf []byte) error {
+	off, err := r.Data.Unpack(data)
+	if err != nil {
+		return err
+	}
+	if off != len(data) {
+		return errTrailingRData
+	}
+	return nil
 }
 
 func (r *PrivateRR) parse(c *zlexer, origin string) *ParseError {

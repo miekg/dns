@@ -2,6 +2,8 @@
 
 package dns
 
+import "golang.org/x/crypto/cryptobyte"
+
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
@@ -1180,1806 +1182,1757 @@ func (rr *ZONEMD) pack(msg []byte, off int, compression compressionMap, compress
 
 // unpack*() functions
 
-func (rr *A) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.A, off, err = unpackDataA(msg, off)
+func (rr *A) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.A, err = unpackDataA(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *AAAA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.AAAA, off, err = unpackDataAAAA(msg, off)
+func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.AAAA, err = unpackDataAAAA(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *AFSDB) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Subtype, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Subtype) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Hostname, off, err = UnpackDomainName(msg, off)
+	rr.Hostname, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *AMTRELAY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Precedence, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
-	}
-	if off == len(msg) {
-		return off, nil
+func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Precedence) {
+		return errUnpackOverflow
 	}
-	rr.GatewayType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if s.Empty() {
+		return nil
 	}
-	if off == len(msg) {
-		return off, nil
+	if !s.ReadUint8(&rr.GatewayType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.GatewayAddr, rr.GatewayHost, off, err = unpackIPSECGateway(msg, off, rr.GatewayType)
+	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *ANY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	return off, nil
+func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *APL) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Prefixes, off, err = unpackDataApl(msg, off)
+func (rr *APL) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Prefixes, err = unpackDataApl(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *AVC) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Txt, off, err = unpackStringTxt(msg, off)
+func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *CAA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Flag, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Flag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Tag, off, err = unpackString(msg, off)
+	rr.Tag, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Value, off, err = unpackStringOctet(msg, off)
+	rr.Value, err = unpackStringOctet(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *CDNSKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Flags, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Protocol, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Protocol) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *CDS) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.DigestType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.DigestType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Digest, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *CERT) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Type, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Type) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Certificate, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Certificate, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *CNAME) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Target, off, err = UnpackDomainName(msg, off)
+func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *CSYNC) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Serial, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint32(&rr.Serial) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Flags, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
+	rr.TypeBitMap, err = unpackDataNsec(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *DHCID) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Digest, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Digest, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *DLV) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.DigestType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.DigestType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Digest, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *DNAME) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Target, off, err = UnpackDomainName(msg, off)
+func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *DNSKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Flags, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Protocol, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Protocol) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *DS) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *DS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.DigestType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.DigestType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Digest, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *EID) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Endpoint, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *EID) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Endpoint, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *EUI48) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Address, off, err = unpackUint48(msg, off)
-	if err != nil {
-		return off, err
+func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint48(&rr.Address) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *EUI64) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Address, off, err = unpackUint64(msg, off)
-	if err != nil {
-		return off, err
+func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint64(&rr.Address) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *GID) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Gid, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+func (rr *GID) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint32(&rr.Gid) {
+		return errUnpackOverflow
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *GPOS) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Longitude, off, err = unpackString(msg, off)
+func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Longitude, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Latitude, off, err = unpackString(msg, off)
+	rr.Latitude, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Altitude, off, err = unpackString(msg, off)
+	rr.Altitude, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *HINFO) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Cpu, off, err = unpackString(msg, off)
+func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Cpu, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Os, off, err = unpackString(msg, off)
+	rr.Os, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *HIP) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.HitLength, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.HitLength) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKeyAlgorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.PublicKeyAlgorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKeyLength, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.PublicKeyLength) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Hit, off, err = unpackStringHex(msg, off, off+int(rr.HitLength))
+	rr.Hit, err = unpackStringHex(&s, int(rr.HitLength))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, off+int(rr.PublicKeyLength))
+	rr.PublicKey, err = unpackStringBase64(&s, int(rr.PublicKeyLength))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.RendezvousServers, off, err = unpackDataDomainNames(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.RendezvousServers, err = unpackDataDomainNames(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *HTTPS) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Priority, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Priority) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Value, off, err = unpackDataSVCB(msg, off)
+	rr.Value, err = unpackDataSVCB(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *IPSECKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Precedence, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Precedence) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.GatewayType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
-	}
-	if off == len(msg) {
-		return off, nil
+	if !s.ReadUint8(&rr.GatewayType) {
+		return errUnpackOverflow
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if s.Empty() {
+		return nil
 	}
-	if off == len(msg) {
-		return off, nil
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.GatewayAddr, rr.GatewayHost, off, err = unpackIPSECGateway(msg, off, rr.GatewayType)
+	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *KEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Flags, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Protocol, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Protocol) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *KX) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *KX) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Exchanger, off, err = UnpackDomainName(msg, off)
+	rr.Exchanger, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *L32) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *L32) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Locator32, off, err = unpackDataA(msg, off)
+	rr.Locator32, err = unpackDataA(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *L64) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *L64) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Locator64, off, err = unpackUint64(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint64(&rr.Locator64) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *LOC) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Version, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Version) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Size, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Size) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.HorizPre, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.HorizPre) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.VertPre, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.VertPre) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Latitude, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Latitude) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Longitude, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Longitude) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Altitude, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Altitude) {
+		return errUnpackOverflow
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *LP) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *LP) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Fqdn, off, err = UnpackDomainName(msg, off)
+	rr.Fqdn, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *MB) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Mb, off, err = UnpackDomainName(msg, off)
+func (rr *MB) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Mb, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *MD) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Md, off, err = UnpackDomainName(msg, off)
+func (rr *MD) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Md, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *MF) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Mf, off, err = UnpackDomainName(msg, off)
+func (rr *MF) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Mf, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *MG) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Mg, off, err = UnpackDomainName(msg, off)
+func (rr *MG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Mg, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *MINFO) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Rmail, off, err = UnpackDomainName(msg, off)
+func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Rmail, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Email, off, err = UnpackDomainName(msg, off)
+	rr.Email, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *MR) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Mr, off, err = UnpackDomainName(msg, off)
+func (rr *MR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Mr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *MX) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *MX) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Mx, off, err = UnpackDomainName(msg, off)
+	rr.Mx, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *NAPTR) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Order, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Order) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Flags, off, err = unpackString(msg, off)
+	rr.Flags, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Service, off, err = unpackString(msg, off)
+	rr.Service, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Regexp, off, err = unpackString(msg, off)
+	rr.Regexp, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Replacement, off, err = UnpackDomainName(msg, off)
+	rr.Replacement, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *NID) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *NID) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.NodeID, off, err = unpackUint64(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint64(&rr.NodeID) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NIMLOC) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Locator, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Locator, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NINFO) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.ZSData, off, err = unpackStringTxt(msg, off)
+func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.ZSData, err = unpackStringTxt(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NS) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Ns, off, err = UnpackDomainName(msg, off)
+func (rr *NS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Ns, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NSAPPTR) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Ptr, off, err = UnpackDomainName(msg, off)
+func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Ptr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NSEC) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.NextDomain, off, err = UnpackDomainName(msg, off)
+func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.NextDomain, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
+	rr.TypeBitMap, err = unpackDataNsec(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NSEC3) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Hash, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Hash) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Flags, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Iterations, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Iterations) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.SaltLength, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.SaltLength) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Salt, off, err = unpackStringHex(msg, off, off+int(rr.SaltLength))
+	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.HashLength, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.HashLength) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.NextDomain, off, err = unpackStringBase32(msg, off, off+int(rr.HashLength))
+	rr.NextDomain, err = unpackStringBase32(&s, int(rr.HashLength))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.TypeBitMap, off, err = unpackDataNsec(msg, off)
+	rr.TypeBitMap, err = unpackDataNsec(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NSEC3PARAM) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Hash, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Hash) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Flags, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Iterations, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Iterations) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.SaltLength, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.SaltLength) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Salt, off, err = unpackStringHex(msg, off, off+int(rr.SaltLength))
+	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *NULL) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Data, off, err = unpackStringAny(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Data, err = unpackStringAny(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *OPENPGPKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *OPT) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Option, off, err = unpackDataOpt(msg, off)
+func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Option, err = unpackDataOpt(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *PTR) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Ptr, off, err = UnpackDomainName(msg, off)
+func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Ptr, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *PX) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *PX) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Map822, off, err = UnpackDomainName(msg, off)
+	rr.Map822, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Mapx400, off, err = UnpackDomainName(msg, off)
+	rr.Mapx400, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *RFC3597) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Rdata, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Rdata, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *RKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Flags, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Flags) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Protocol, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Protocol) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *RP) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Mbox, off, err = UnpackDomainName(msg, off)
+func (rr *RP) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Mbox, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Txt, off, err = UnpackDomainName(msg, off)
+	rr.Txt, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *RRSIG) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.TypeCovered, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.TypeCovered) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Labels, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Labels) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.OrigTtl, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.OrigTtl) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Expiration, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Expiration) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Inception, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Inception) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.SignerName, off, err = UnpackDomainName(msg, off)
+	rr.SignerName, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Signature, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Signature, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *RT) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Preference, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *RT) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Preference) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Host, off, err = UnpackDomainName(msg, off)
+	rr.Host, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *SIG) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.TypeCovered, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.TypeCovered) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Labels, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Labels) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.OrigTtl, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.OrigTtl) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Expiration, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Expiration) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Inception, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Inception) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.SignerName, off, err = UnpackDomainName(msg, off)
+	rr.SignerName, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Signature, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Signature, err = unpackStringBase64(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *SMIMEA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Usage, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Usage) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Selector, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Selector) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.MatchingType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.MatchingType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Certificate, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Certificate, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *SOA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Ns, off, err = UnpackDomainName(msg, off)
+func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Ns, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Mbox, off, err = UnpackDomainName(msg, off)
+	rr.Mbox, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Serial, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Serial) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Refresh, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Refresh) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Retry, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Retry) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Expire, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Expire) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Minttl, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Minttl) {
+		return errUnpackOverflow
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *SPF) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Txt, off, err = unpackStringTxt(msg, off)
+func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *SRV) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Priority, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Priority) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Weight, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Weight) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Port, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Port) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *SSHFP) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Type, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Type) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.FingerPrint, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.FingerPrint, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *SVCB) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Priority, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Priority) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Target, off, err = UnpackDomainName(msg, off)
+	rr.Target, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Value, off, err = unpackDataSVCB(msg, off)
+	rr.Value, err = unpackDataSVCB(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *TA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.KeyTag, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *TA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.KeyTag) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Algorithm, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Algorithm) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.DigestType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.DigestType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Digest, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *TALINK) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.PreviousName, off, err = UnpackDomainName(msg, off)
+func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.PreviousName, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.NextName, off, err = UnpackDomainName(msg, off)
+	rr.NextName, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *TKEY) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Algorithm, off, err = UnpackDomainName(msg, off)
+func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Algorithm, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Inception, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Inception) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Expiration, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint32(&rr.Expiration) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Mode, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Mode) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Error, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Error) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.KeySize, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.KeySize) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Key, off, err = unpackStringHex(msg, off, off+int(rr.KeySize))
+	rr.Key, err = unpackStringHex(&s, int(rr.KeySize))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.OtherLen, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.OtherLen) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.OtherData, off, err = unpackStringHex(msg, off, off+int(rr.OtherLen))
+	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *TLSA) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Usage, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint8(&rr.Usage) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Selector, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Selector) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.MatchingType, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.MatchingType) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Certificate, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Certificate, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *TSIG) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Algorithm, off, err = UnpackDomainName(msg, off)
+func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Algorithm, err = unpackDomainName(&s, msgBuf)
 	if err != nil {
-		return off, err
+		return err
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.TimeSigned, off, err = unpackUint48(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint48(&rr.TimeSigned) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Fudge, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Fudge) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.MACSize, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.MACSize) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.MAC, off, err = unpackStringHex(msg, off, off+int(rr.MACSize))
+	rr.MAC, err = unpackStringHex(&s, int(rr.MACSize))
 	if err != nil {
-		return off, err
+		return err
 	}
-	rr.OrigId, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.OrigId) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Error, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Error) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.OtherLen, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.OtherLen) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.OtherData, off, err = unpackStringHex(msg, off, off+int(rr.OtherLen))
+	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *TXT) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Txt, off, err = unpackStringTxt(msg, off)
+func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Txt, err = unpackStringTxt(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *UID) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Uid, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+func (rr *UID) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint32(&rr.Uid) {
+		return errUnpackOverflow
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
-
-func (rr *UINFO) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
 
-	rr.Uinfo, off, err = unpackString(msg, off)
+func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Uinfo, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
 	}
-	return off, nil
+	if !s.Empty() {
+		return errTrailingRData
+	}
+	return nil
 }
 
-func (rr *URI) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Priority, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+func (rr *URI) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Priority) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Weight, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint16(&rr.Weight) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Target, off, err = unpackStringOctet(msg, off)
+	rr.Target, err = unpackStringOctet(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *X25) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.PSDNAddress, off, err = unpackString(msg, off)
+func (rr *X25) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.PSDNAddress, err = unpackString(&s)
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }
 
-func (rr *ZONEMD) unpack(msg []byte, off int) (off1 int, err error) {
-	rdStart := off
-	_ = rdStart
-
-	rr.Serial, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return off, err
+func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint32(&rr.Serial) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Scheme, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Scheme) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Hash, off, err = unpackUint8(msg, off)
-	if err != nil {
-		return off, err
+	if !s.ReadUint8(&rr.Hash) {
+		return errUnpackOverflow
 	}
-	if off == len(msg) {
-		return off, nil
+	if s.Empty() {
+		return nil
 	}
-	rr.Digest, off, err = unpackStringHex(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
-		return off, err
+		return err
+	}
+	if !s.Empty() {
+		return errTrailingRData
 	}
-	return off, nil
+	return nil
 }

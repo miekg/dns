@@ -6,9 +6,12 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"encoding/binary"
+	"errors"
 	"math/big"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // Sign signs a dns.Msg. It fills the signature with the appropriate data.
@@ -31,7 +34,7 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 		return nil, err
 	}
 	if &buf[0] != &mbuf[0] {
-		return nil, ErrBuf
+		panic("dns: internal error: PackBuffer re-allocated despite sufficient buffer size")
 	}
 	off, err := PackRR(rr, buf, len(mbuf), nil, false)
 	if err != nil {
@@ -87,65 +90,78 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 		return err
 	}
 
-	buflen := len(buf)
-	qdc := binary.BigEndian.Uint16(buf[4:])
-	anc := binary.BigEndian.Uint16(buf[6:])
-	auc := binary.BigEndian.Uint16(buf[8:])
-	adc := binary.BigEndian.Uint16(buf[10:])
-	offset := headerSize
-	for i := uint16(0); i < qdc && offset < buflen; i++ {
-		_, offset, err = UnpackDomainName(buf, offset)
+	s := cryptobyte.String(buf)
+
+	var dh Header
+	if !dh.unpack(&s) {
+		return errTruncatedMessage
+	}
+
+	for i := 0; i < int(dh.Qdcount) && !s.Empty(); i++ {
+		_, err = unpackDomainName(&s, buf)
 		if err != nil {
+			if errors.Is(err, errUnpackOverflow) {
+				return errTruncatedMessage
+			}
 			return err
 		}
 		// Skip past Type and Class
-		offset += 2 + 2
+		if !s.Skip(2 + 2) {
+			return errTruncatedMessage
+		}
 	}
-	for i := uint16(1); i < anc+auc+adc && offset < buflen; i++ {
-		_, offset, err = UnpackDomainName(buf, offset)
+
+	for i, tot := 1, int(dh.Ancount)+int(dh.Nscount)+int(dh.Arcount); i < tot && !s.Empty(); i++ {
+		_, err = unpackDomainName(&s, buf)
 		if err != nil {
+			if errors.Is(err, errUnpackOverflow) {
+				return errTruncatedMessage
+			}
 			return err
 		}
-		// Skip past Type, Class and TTL
-		offset += 2 + 2 + 4
-		if offset+1 >= buflen {
-			continue
+		// Skip past Type, Class, TTL, and the data
+		var rdata cryptobyte.String
+		if !s.Skip(2+2+4) ||
+			!s.ReadUint16LengthPrefixed(&rdata) {
+			return errTruncatedMessage
 		}
-		rdlen := binary.BigEndian.Uint16(buf[offset:])
-		offset += 2
-		offset += int(rdlen)
 	}
-	if offset >= buflen {
-		return &Error{err: "overflowing unpacking signed message"}
+
+	if s.Empty() {
+		return errTruncatedMessage
 	}
 
 	// offset should be just prior to SIG
-	bodyend := offset
+	bodyend := offset(s, buf)
 	// owner name SHOULD be root
-	_, offset, err = UnpackDomainName(buf, offset)
+	_, err = unpackDomainName(&s, buf)
 	if err != nil {
+		if errors.Is(err, errUnpackOverflow) {
+			return errTruncatedMessage
+		}
 		return err
 	}
 	// Skip Type, Class, TTL, RDLen
-	offset += 2 + 2 + 4 + 2
-	sigstart := offset
-	// Skip Type Covered, Algorithm, Labels, Original TTL
-	offset += 2 + 1 + 1 + 4
-	if offset+4+4 >= buflen {
-		return &Error{err: "overflow unpacking signed message"}
+	if !s.Skip(2 + 2 + 4 + 2) {
+		return errTruncatedMessage
 	}
-	expire := binary.BigEndian.Uint32(buf[offset:])
-	offset += 4
-	incept := binary.BigEndian.Uint32(buf[offset:])
-	offset += 4
+	sigstart := offset(s, buf)
+	var expire, incept uint32
+	// Skip Type Covered, Algorithm, Labels, Original TTL
+	if !s.Skip(2+1+1+4) ||
+		!s.ReadUint32(&expire) ||
+		!s.ReadUint32(&incept) {
+		return errTruncatedMessage
+	}
 	now := uint32(time.Now().Unix())
 	if now < incept || now > expire {
 		return ErrTime
 	}
 	// Skip key tag
-	offset += 2
-	var signername string
-	signername, offset, err = UnpackDomainName(buf, offset)
+	if !s.Skip(2) {
+		return errTruncatedMessage
+	}
+	signername, err := unpackDomainName(&s, buf)
 	if err != nil {
 		return err
 	}
@@ -154,27 +170,25 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !strings.EqualFold(signername, k.Header().Name) {
 		return &Error{err: "signer name doesn't match key name"}
 	}
-	sigend := offset
-	h.Write(buf[sigstart:sigend])
+	h.Write(buf[sigstart:offset(s, buf)])
 	h.Write(buf[:10])
 	h.Write([]byte{
-		byte((adc - 1) << 8),
-		byte(adc - 1),
+		byte((dh.Arcount - 1) << 8),
+		byte(dh.Arcount - 1),
 	})
 	h.Write(buf[12:bodyend])
 
 	hashed := h.Sum(nil)
-	sig := buf[sigend:]
 	switch k.Algorithm {
 	case RSASHA1, RSASHA256, RSASHA512:
 		pk := k.publicKeyRSA()
 		if pk != nil {
-			return rsa.VerifyPKCS1v15(pk, cryptohash, hashed, sig)
+			return rsa.VerifyPKCS1v15(pk, cryptohash, hashed, s)
 		}
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		pk := k.publicKeyECDSA()
-		r := new(big.Int).SetBytes(sig[:len(sig)/2])
-		s := new(big.Int).SetBytes(sig[len(sig)/2:])
+		r := new(big.Int).SetBytes(s[:len(s)/2])
+		s := new(big.Int).SetBytes(s[len(s)/2:])
 		if pk != nil {
 			if ecdsa.Verify(pk, hashed, r, s) {
 				return nil
@@ -184,7 +198,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	case ED25519:
 		pk := k.publicKeyED25519()
 		if pk != nil {
-			if ed25519.Verify(pk, hashed, sig) {
+			if ed25519.Verify(pk, hashed, s) {
 				return nil
 			}
 			return ErrSig

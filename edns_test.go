@@ -125,7 +125,7 @@ func TestEDNS0_UL(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to pack: %v", err)
 		}
-		actual := EDNS0_UL{EDNS0UL, ^uint32(0), ^uint32(0)}
+		actual := EDNS0_UL{EDNS0UL, 0, 0}
 		if err := actual.unpack(b); err != nil {
 			t.Fatalf("failed to unpack: %v", err)
 		}
@@ -222,11 +222,14 @@ func TestEDNS0_TCP_KEEPALIVE_unpack(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e := &EDNS0_TCP_KEEPALIVE{}
 			err := e.unpack(tc.b)
-			if err != nil && !tc.expectedErr {
-				t.Error("failed to unpack, expected no error")
+			if tc.expectedErr {
+				if err == nil {
+					t.Fatal("unpacked, but expected an error")
+				}
+				return
 			}
-			if err == nil && tc.expectedErr {
-				t.Error("unpacked, but expected an error")
+			if err != nil {
+				t.Fatal("failed to unpack, expected no error")
 			}
 			if e.Timeout != tc.expected {
 				t.Errorf("invalid timeout, actual: %d, expected: %d", e.Timeout, tc.expected)

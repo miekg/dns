@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // EDNS0 Option codes.
@@ -214,8 +216,7 @@ type EDNS0 interface {
 	Option() uint16
 	// pack returns the bytes of the option data.
 	pack() ([]byte, error)
-	// unpack sets the data as found in the buffer. Is also sets
-	// the length of the slice as the length of the option data.
+	// unpack sets the data as found in the buffer.
 	unpack([]byte) error
 	// String returns the string representation of the option.
 	String() string
@@ -324,12 +325,12 @@ func (e *EDNS0_SUBNET) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_SUBNET) unpack(b []byte) error {
-	if len(b) < 4 {
-		return ErrBuf
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.Family) ||
+		!s.ReadUint8(&e.SourceNetmask) ||
+		!s.ReadUint8(&e.SourceScope) {
+		return errUnpackOverflow
 	}
-	e.Family = binary.BigEndian.Uint16(b)
-	e.SourceNetmask = b[2]
-	e.SourceScope = b[3]
 	switch e.Family {
 	case 0:
 		// "dig" sets AddressFamily to 0 if SourceNetmask is also 0
@@ -343,17 +344,20 @@ func (e *EDNS0_SUBNET) unpack(b []byte) error {
 			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv4len)
-		copy(addr, b[4:])
+		s.Skip(copy(addr, s))
 		e.Address = addr.To16()
 	case 2:
 		if e.SourceNetmask > net.IPv6len*8 || e.SourceScope > net.IPv6len*8 {
 			return errors.New("dns: bad netmask")
 		}
 		addr := make(net.IP, net.IPv6len)
-		copy(addr, b[4:])
+		s.Skip(copy(addr, s))
 		e.Address = addr
 	default:
 		return errors.New("dns: bad address family")
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
 	}
 	return nil
 }
@@ -454,15 +458,20 @@ func (e *EDNS0_UL) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_UL) unpack(b []byte) error {
-	switch len(b) {
-	case 4:
-		e.KeyLease = 0
-	case 8:
-		e.KeyLease = binary.BigEndian.Uint32(b[4:])
-	default:
-		return ErrBuf
+	s := cryptobyte.String(b)
+	if !s.ReadUint32(&e.Lease) {
+		return errUnpackOverflow
 	}
-	e.Lease = binary.BigEndian.Uint32(b)
+	// Optionally only contains Lease field.
+	if s.Empty() {
+		return nil
+	}
+	if !s.ReadUint32(&e.KeyLease) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
 	return nil
 }
 
@@ -491,14 +500,17 @@ func (e *EDNS0_LLQ) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_LLQ) unpack(b []byte) error {
-	if len(b) < 18 {
-		return ErrBuf
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.Version) ||
+		!s.ReadUint16(&e.Opcode) ||
+		!s.ReadUint16(&e.Error) ||
+		!s.ReadUint64(&e.Id) ||
+		!s.ReadUint32(&e.LeaseLife) {
+		return errUnpackOverflow
 	}
-	e.Version = binary.BigEndian.Uint16(b[0:])
-	e.Opcode = binary.BigEndian.Uint16(b[2:])
-	e.Error = binary.BigEndian.Uint16(b[4:])
-	e.Id = binary.BigEndian.Uint64(b[6:])
-	e.LeaseLife = binary.BigEndian.Uint32(b[14:])
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
 	return nil
 }
 
@@ -607,16 +619,18 @@ func (e *EDNS0_EXPIRE) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_EXPIRE) unpack(b []byte) error {
-	if len(b) == 0 {
-		// zero-length EXPIRE query, see RFC 7314 Section 2
+	s := cryptobyte.String(b)
+	// Zero-length EXPIRE query, see RFC 7314 Section 2.
+	if s.Empty() {
 		e.Empty = true
 		return nil
 	}
-	if len(b) < 4 {
-		return ErrBuf
+	if !s.ReadUint32(&e.Expire) {
+		return errUnpackOverflow
 	}
-	e.Expire = binary.BigEndian.Uint32(b)
-	e.Empty = false
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
+	}
 	return nil
 }
 
@@ -693,12 +707,16 @@ func (e *EDNS0_TCP_KEEPALIVE) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_TCP_KEEPALIVE) unpack(b []byte) error {
-	switch len(b) {
-	case 0:
-	case 2:
-		e.Timeout = binary.BigEndian.Uint16(b)
-	default:
-		return fmt.Errorf("dns: length mismatch, want 0/2 but got %d", len(b))
+	s := cryptobyte.String(b)
+	// Optionally empty.
+	if s.Empty() {
+		return nil
+	}
+	if !s.ReadUint16(&e.Timeout) {
+		return errUnpackOverflow
+	}
+	if !s.Empty() {
+		return errors.New("dns: trailing opt data")
 	}
 	return nil
 }
@@ -819,11 +837,11 @@ func (e *EDNS0_EDE) pack() ([]byte, error) {
 }
 
 func (e *EDNS0_EDE) unpack(b []byte) error {
-	if len(b) < 2 {
-		return ErrBuf
+	s := cryptobyte.String(b)
+	if !s.ReadUint16(&e.InfoCode) {
+		return errUnpackOverflow
 	}
-	e.InfoCode = binary.BigEndian.Uint16(b[0:])
-	e.ExtraText = string(b[2:])
+	e.ExtraText = string(s)
 	return nil
 }
 

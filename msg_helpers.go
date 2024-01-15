@@ -5,10 +5,22 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"net"
 	"sort"
 	"strings"
+
+	"golang.org/x/crypto/cryptobyte"
 )
+
+// offset reports the offset of data into buf, that is reports off such that
+// &data[0] == &buf[off]. It panics if data is not buf[off:].
+func offset(data, buf []byte) int {
+	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
+		panic("dns: internal error: cannot compute offset")
+	}
+	return len(buf) - len(data)
+}
 
 // helper functions called from the generated zmsg.go
 
@@ -16,11 +28,12 @@ import (
 // of the type they pack/unpack (string, int, etc). We prefix all with unpackData or packData, so packDataA or
 // packDataDomainName.
 
-func unpackDataA(msg []byte, off int) (net.IP, int, error) {
-	if off+net.IPv4len > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking a"}
+func unpackDataA(s *cryptobyte.String) (net.IP, error) {
+	ip := make(net.IP, net.IPv4len)
+	if !s.CopyBytes(ip) {
+		return nil, errUnpackOverflow
 	}
-	return cloneSlice(msg[off : off+net.IPv4len]), off + net.IPv4len, nil
+	return ip, nil
 }
 
 func packDataA(a net.IP, msg []byte, off int) (int, error) {
@@ -35,17 +48,20 @@ func packDataA(a net.IP, msg []byte, off int) (int, error) {
 		off += net.IPv4len
 	case 0:
 		// Allowed, for dynamic updates.
+		//
+		// TODO(tmthrgd): This is wrong and can result in corrupt records.
 	default:
 		return len(msg), &Error{err: "overflow packing a"}
 	}
 	return off, nil
 }
 
-func unpackDataAAAA(msg []byte, off int) (net.IP, int, error) {
-	if off+net.IPv6len > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking aaaa"}
+func unpackDataAAAA(s *cryptobyte.String) (net.IP, error) {
+	ip := make(net.IP, net.IPv6len)
+	if !s.CopyBytes(ip) {
+		return nil, errUnpackOverflow
 	}
-	return cloneSlice(msg[off : off+net.IPv6len]), off + net.IPv6len, nil
+	return ip, nil
 }
 
 func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
@@ -59,42 +75,34 @@ func packDataAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 		off += net.IPv6len
 	case 0:
 		// Allowed, dynamic updates.
+		//
+		// TODO(tmthrgd): This is wrong and can result in corrupt records.
 	default:
 		return len(msg), &Error{err: "overflow packing aaaa"}
 	}
 	return off, nil
 }
 
-// unpackHeader unpacks an RR header, returning the offset to the end of the header and a
-// re-sliced msg according to the expected length of the RR.
-func unpackHeader(msg []byte, off int) (rr RR_Header, off1 int, truncmsg []byte, err error) {
-	hdr := RR_Header{}
-	if off == len(msg) {
-		return hdr, off, msg, nil
-	}
-
-	hdr.Name, off, err = UnpackDomainName(msg, off)
+// unpackRRHeader unpacks an RR header advancing msg.
+func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (RR_Header, error) {
+	var (
+		hdr RR_Header
+		err error
+	)
+	hdr.Name, err = unpackDomainName(msg, msgBuf)
 	if err != nil {
-		return hdr, len(msg), msg, err
+		if errors.Is(err, errUnpackOverflow) {
+			return hdr, errTruncatedMessage
+		}
+		return hdr, err
 	}
-	hdr.Rrtype, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return hdr, len(msg), msg, err
+	if !msg.ReadUint16(&hdr.Rrtype) ||
+		!msg.ReadUint16(&hdr.Class) ||
+		!msg.ReadUint32(&hdr.Ttl) ||
+		!msg.ReadUint16(&hdr.Rdlength) {
+		return hdr, errTruncatedMessage
 	}
-	hdr.Class, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return hdr, len(msg), msg, err
-	}
-	hdr.Ttl, off, err = unpackUint32(msg, off)
-	if err != nil {
-		return hdr, len(msg), msg, err
-	}
-	hdr.Rdlength, off, err = unpackUint16(msg, off)
-	if err != nil {
-		return hdr, len(msg), msg, err
-	}
-	msg, err = truncateMsgFromRdlength(msg, off, hdr.Rdlength)
-	return hdr, off, msg, err
+	return hdr, nil
 }
 
 // packHeader packs an RR header, returning the offset to the end of the header.
@@ -129,16 +137,6 @@ func (hdr RR_Header) packHeader(msg []byte, off int, compression compressionMap,
 
 // helper helper functions.
 
-// truncateMsgFromRdLength truncates msg to match the expected length of the RR.
-// Returns an error if msg is smaller than the expected size.
-func truncateMsgFromRdlength(msg []byte, off int, rdlength uint16) (truncmsg []byte, err error) {
-	lenrd := off + int(rdlength)
-	if lenrd > len(msg) {
-		return msg, &Error{err: "overflowing header size"}
-	}
-	return msg[:lenrd], nil
-}
-
 var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
 
 func fromBase32(s []byte) (buf []byte, err error) {
@@ -166,16 +164,8 @@ func fromBase64(s []byte) (buf []byte, err error) {
 	return
 }
 
-func toBase64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
-
-// dynamicUpdate returns true if the Rdlength is zero.
-func noRdata(h RR_Header) bool { return h.Rdlength == 0 }
-
-func unpackUint8(msg []byte, off int) (i uint8, off1 int, err error) {
-	if off+1 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint8"}
-	}
-	return msg[off], off + 1, nil
+func toBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
@@ -186,13 +176,6 @@ func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	return off + 1, nil
 }
 
-func unpackUint16(msg []byte, off int) (i uint16, off1 int, err error) {
-	if off+2 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint16"}
-	}
-	return binary.BigEndian.Uint16(msg[off:]), off + 2, nil
-}
-
 func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
@@ -201,30 +184,12 @@ func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	return off + 2, nil
 }
 
-func unpackUint32(msg []byte, off int) (i uint32, off1 int, err error) {
-	if off+4 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint32"}
-	}
-	return binary.BigEndian.Uint32(msg[off:]), off + 4, nil
-}
-
 func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint32"}
 	}
 	binary.BigEndian.PutUint32(msg[off:], i)
 	return off + 4, nil
-}
-
-func unpackUint48(msg []byte, off int) (i uint64, off1 int, err error) {
-	if off+6 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint64 as uint48"}
-	}
-	// Used in TSIG where the last 48 bits are occupied, so for now, assume a uint48 (6 bytes)
-	i = uint64(msg[off])<<40 | uint64(msg[off+1])<<32 | uint64(msg[off+2])<<24 | uint64(msg[off+3])<<16 |
-		uint64(msg[off+4])<<8 | uint64(msg[off+5])
-	off += 6
-	return i, off, nil
 }
 
 func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
@@ -241,13 +206,6 @@ func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func unpackUint64(msg []byte, off int) (i uint64, off1 int, err error) {
-	if off+8 > len(msg) {
-		return 0, len(msg), &Error{err: "overflow unpacking uint64"}
-	}
-	return binary.BigEndian.Uint64(msg[off:]), off + 8, nil
-}
-
 func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64"}
@@ -257,41 +215,37 @@ func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func unpackString(msg []byte, off int) (string, int, error) {
-	if off+1 > len(msg) {
-		return "", off, &Error{err: "overflow unpacking txt"}
+func unpackString(s *cryptobyte.String) (string, error) {
+	var txt cryptobyte.String
+	if !s.ReadUint8LengthPrefixed(&txt) {
+		return "", errUnpackOverflow
 	}
-	l := int(msg[off])
-	off++
-	if off+l > len(msg) {
-		return "", off, &Error{err: "overflow unpacking txt"}
-	}
-	var s strings.Builder
+	var sb strings.Builder
 	consumed := 0
-	for i, b := range msg[off : off+l] {
+	for i, b := range txt {
 		switch {
 		case b == '"' || b == '\\':
 			if consumed == 0 {
-				s.Grow(l * 2)
+				sb.Grow(len(txt) * 2)
 			}
-			s.Write(msg[off+consumed : off+i])
-			s.WriteByte('\\')
-			s.WriteByte(b)
+			sb.Write(txt[consumed:i])
+			sb.WriteByte('\\')
+			sb.WriteByte(b)
 			consumed = i + 1
 		case b < ' ' || b > '~': // unprintable
 			if consumed == 0 {
-				s.Grow(l * 2)
+				sb.Grow(len(txt) * 2)
 			}
-			s.Write(msg[off+consumed : off+i])
-			s.WriteString(escapeByte(b))
+			sb.Write(txt[consumed:i])
+			sb.WriteString(escapeByte(b))
 			consumed = i + 1
 		}
 	}
 	if consumed == 0 { // no escaping needed
-		return string(msg[off : off+l]), off + l, nil
+		return string(txt), nil
 	}
-	s.Write(msg[off+consumed : off+l])
-	return s.String(), off + l, nil
+	sb.Write(txt[consumed:])
+	return sb.String(), nil
 }
 
 func packString(s string, msg []byte, off int) (int, error) {
@@ -302,12 +256,12 @@ func packString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase32(msg []byte, off, end int) (string, int, error) {
-	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking base32"}
+func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", errUnpackOverflow
 	}
-	s := toBase32(msg[off:end])
-	return s, end, nil
+	return toBase32(b), nil
 }
 
 func packStringBase32(s string, msg []byte, off int) (int, error) {
@@ -323,15 +277,12 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase64(msg []byte, off, end int) (string, int, error) {
-	// Rest of the RR is base64 encoded value, so we don't need an explicit length
-	// to be set. Thus far all RR's that have base64 encoded fields have those as their
-	// last one. What we do need is the end of the RR!
-	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking base64"}
+func unpackStringBase64(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", errUnpackOverflow
 	}
-	s := toBase64(msg[off:end])
-	return s, end, nil
+	return toBase64(b), nil
 }
 
 func packStringBase64(s string, msg []byte, off int) (int, error) {
@@ -347,16 +298,12 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringHex(msg []byte, off, end int) (string, int, error) {
-	// Rest of the RR is hex encoded value, so we don't need an explicit length
-	// to be set. NSEC and TSIG have hex fields with a length field.
-	// What we do need is the end of the RR!
-	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking hex"}
+func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", errUnpackOverflow
 	}
-
-	s := hex.EncodeToString(msg[off:end])
-	return s, end, nil
+	return hex.EncodeToString(b), nil
 }
 
 func packStringHex(s string, msg []byte, off int) (int, error) {
@@ -372,11 +319,12 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringAny(msg []byte, off, end int) (string, int, error) {
-	if end > len(msg) {
-		return "", len(msg), &Error{err: "overflow unpacking anything"}
+func unpackStringAny(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", errUnpackOverflow
 	}
-	return string(msg[off:end]), end, nil
+	return string(b), nil
 }
 
 func packStringAny(s string, msg []byte, off int) (int, error) {
@@ -388,12 +336,8 @@ func packStringAny(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringTxt(msg []byte, off int) ([]string, int, error) {
-	txt, off, err := unpackTxt(msg, off)
-	if err != nil {
-		return nil, len(msg), err
-	}
-	return txt, off, nil
+func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
+	return unpackTxt(s)
 }
 
 func packStringTxt(s []string, msg []byte, off int) (int, error) {
@@ -404,27 +348,24 @@ func packStringTxt(s []string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataOpt(msg []byte, off int) ([]EDNS0, int, error) {
-	var edns []EDNS0
-	for off < len(msg) {
-		if off+4 > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking opt"}
-		}
-		code := binary.BigEndian.Uint16(msg[off:])
-		off += 2
-		optlen := binary.BigEndian.Uint16(msg[off:])
-		off += 2
-		if off+int(optlen) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking opt"}
+func unpackDataOpt(s *cryptobyte.String) ([]EDNS0, error) {
+	var opts []EDNS0
+	for !s.Empty() {
+		var (
+			code uint16
+			data cryptobyte.String
+		)
+		if !s.ReadUint16(&code) ||
+			!s.ReadUint16LengthPrefixed(&data) {
+			return nil, errUnpackOverflow
 		}
 		opt := makeDataOpt(code)
-		if err := opt.unpack(msg[off : off+int(optlen)]); err != nil {
-			return nil, len(msg), err
+		if err := opt.unpack(data); err != nil {
+			return nil, err
 		}
-		edns = append(edns, opt)
-		off += int(optlen)
+		opts = append(opts, opt)
 	}
-	return edns, off, nil
+	return opts, nil
 }
 
 func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
@@ -446,9 +387,8 @@ func packDataOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringOctet(msg []byte, off int) (string, int, error) {
-	s := string(msg[off:])
-	return s, len(msg), nil
+func unpackStringOctet(s *cryptobyte.String) (string, error) {
+	return unpackStringAny(s, len(*s))
 }
 
 func packStringOctet(s string, msg []byte, off int) (int, error) {
@@ -459,64 +399,43 @@ func packStringOctet(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataNsec(msg []byte, off int) ([]uint16, int, error) {
+func unpackDataNsec(s *cryptobyte.String) ([]uint16, error) {
 	var nsec []uint16
-	length, window, lastwindow := 0, 0, -1
-	for off < len(msg) {
-		if off+2 > len(msg) {
-			return nsec, len(msg), &Error{err: "overflow unpacking NSEC(3)"}
+	lastwindow := -1
+	for !s.Empty() {
+		var (
+			window byte
+			bits   cryptobyte.String
+		)
+		if !s.ReadUint8(&window) ||
+			!s.ReadUint8LengthPrefixed(&bits) {
+			return nsec, errUnpackOverflow
 		}
-		window = int(msg[off])
-		length = int(msg[off+1])
-		off += 2
-		if window <= lastwindow {
+		if int(window) <= lastwindow {
 			// RFC 4034: Blocks are present in the NSEC RR RDATA in
 			// increasing numerical order.
-			return nsec, len(msg), &Error{err: "out of order NSEC(3) block in type bitmap"}
+			return nsec, &Error{err: "out of order NSEC(3) block in type bitmap"}
 		}
-		if length == 0 {
+		if len(bits) == 0 {
 			// RFC 4034: Blocks with no types present MUST NOT be included.
-			return nsec, len(msg), &Error{err: "empty NSEC(3) block in type bitmap"}
+			return nsec, &Error{err: "empty NSEC(3) block in type bitmap"}
 		}
-		if length > 32 {
-			return nsec, len(msg), &Error{err: "NSEC(3) block too long in type bitmap"}
-		}
-		if off+length > len(msg) {
-			return nsec, len(msg), &Error{err: "overflowing NSEC(3) block in type bitmap"}
+		if len(bits) > 32 {
+			return nsec, &Error{err: "NSEC(3) block too long in type bitmap"}
 		}
 
 		// Walk the bytes in the window and extract the type bits
-		for j, b := range msg[off : off+length] {
-			// Check the bits one by one, and set the type
-			if b&0x80 == 0x80 {
-				nsec = append(nsec, uint16(window*256+j*8+0))
-			}
-			if b&0x40 == 0x40 {
-				nsec = append(nsec, uint16(window*256+j*8+1))
-			}
-			if b&0x20 == 0x20 {
-				nsec = append(nsec, uint16(window*256+j*8+2))
-			}
-			if b&0x10 == 0x10 {
-				nsec = append(nsec, uint16(window*256+j*8+3))
-			}
-			if b&0x8 == 0x8 {
-				nsec = append(nsec, uint16(window*256+j*8+4))
-			}
-			if b&0x4 == 0x4 {
-				nsec = append(nsec, uint16(window*256+j*8+5))
-			}
-			if b&0x2 == 0x2 {
-				nsec = append(nsec, uint16(window*256+j*8+6))
-			}
-			if b&0x1 == 0x1 {
-				nsec = append(nsec, uint16(window*256+j*8+7))
+		for i, b := range bits {
+			for n := uint(0); n < 8; n++ {
+				if b&(1<<(7-n)) != 0 {
+					nsec = append(nsec, uint16(int(window)*256+i*8+int(n)))
+				}
 			}
 		}
-		off += length
-		lastwindow = window
+
+		lastwindow = int(window)
 	}
-	return nsec, off, nil
+	return nsec, nil
 }
 
 // typeBitMapLen is a helper function which computes the "maximum" length of
@@ -582,34 +501,30 @@ func packDataNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataSVCB(msg []byte, off int) ([]SVCBKeyValue, int, error) {
-	var xs []SVCBKeyValue
-	var code uint16
-	var length uint16
-	var err error
-	for off < len(msg) {
-		code, off, err = unpackUint16(msg, off)
-		if err != nil {
-			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
+func unpackDataSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
+	var kvs []SVCBKeyValue
+	for !s.Empty() {
+		var (
+			code uint16
+			data cryptobyte.String
+		)
+		if !s.ReadUint16(&code) ||
+			!s.ReadUint16LengthPrefixed(&data) {
+			return nil, errUnpackOverflow
 		}
-		length, off, err = unpackUint16(msg, off)
-		if err != nil || off+int(length) > len(msg) {
-			return nil, len(msg), &Error{err: "overflow unpacking SVCB"}
+		kv := makeSVCBKeyValue(SVCBKey(code))
+		if kv == nil {
+			return nil, &Error{err: "bad SVCB key"}
 		}
-		e := makeSVCBKeyValue(SVCBKey(code))
-		if e == nil {
-			return nil, len(msg), &Error{err: "bad SVCB key"}
+		if err := kv.unpack(data); err != nil {
+			return nil, err
 		}
-		if err := e.unpack(msg[off : off+int(length)]); err != nil {
-			return nil, len(msg), err
+		if len(kvs) > 0 && kv.Key() <= kvs[len(kvs)-1].Key() {
+			return nil, &Error{err: "SVCB keys not in strictly increasing order"}
 		}
-		if len(xs) > 0 && e.Key() <= xs[len(xs)-1].Key() {
-			return nil, len(msg), &Error{err: "SVCB keys not in strictly increasing order"}
-		}
-		xs = append(xs, e)
-		off += int(length)
+		kvs = append(kvs, kv)
 	}
-	return xs, off, nil
+	return kvs, nil
 }
 
 func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
@@ -641,23 +556,16 @@ func packDataSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataDomainNames(msg []byte, off, end int) ([]string, int, error) {
-	var (
-		servers []string
-		s       string
-		err     error
-	)
-	if end > len(msg) {
-		return nil, len(msg), &Error{err: "overflow unpacking domain names"}
-	}
-	for off < end {
-		s, off, err = UnpackDomainName(msg, off)
+func unpackDataDomainNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
+	var names []string
+	for !s.Empty() {
+		name, err := unpackDomainName(s, msgBuf)
 		if err != nil {
-			return servers, len(msg), err
+			return names, err
 		}
-		servers = append(servers, s)
+		names = append(names, name)
 	}
-	return servers, off, nil
+	return names, nil
 }
 
 func packDataDomainNames(names []string, msg []byte, off int, compression compressionMap, compress bool) (int, error) {
@@ -733,88 +641,79 @@ func packDataAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackDataApl(msg []byte, off int) ([]APLPrefix, int, error) {
-	var result []APLPrefix
-	for off < len(msg) {
-		prefix, end, err := unpackDataAplPrefix(msg, off)
+func unpackDataApl(s *cryptobyte.String) ([]APLPrefix, error) {
+	var prefixes []APLPrefix
+	for !s.Empty() {
+		prefix, err := unpackDataAplPrefix(s)
 		if err != nil {
-			return nil, len(msg), err
+			return nil, err
 		}
-		off = end
-		result = append(result, prefix)
+		prefixes = append(prefixes, prefix)
 	}
-	return result, off, nil
+	return prefixes, nil
 }
 
-func unpackDataAplPrefix(msg []byte, off int) (APLPrefix, int, error) {
-	family, off, err := unpackUint16(msg, off)
-	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
-	}
-	prefix, off, err := unpackUint8(msg, off)
-	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
-	}
-	nlen, off, err := unpackUint8(msg, off)
-	if err != nil {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL prefix"}
+func unpackDataAplPrefix(s *cryptobyte.String) (APLPrefix, error) {
+	var (
+		family       uint16
+		prefix, nlen byte
+	)
+	if !s.ReadUint16(&family) ||
+		!s.ReadUint8(&prefix) ||
+		!s.ReadUint8(&nlen) {
+		return APLPrefix{}, errUnpackOverflow
 	}
 
-	var ip []byte
+	var ip net.IP
 	switch family {
 	case 1:
-		ip = make([]byte, net.IPv4len)
+		ip = make(net.IP, net.IPv4len)
 	case 2:
-		ip = make([]byte, net.IPv6len)
+		ip = make(net.IP, net.IPv6len)
 	default:
-		return APLPrefix{}, len(msg), &Error{err: "unrecognized APL address family"}
+		return APLPrefix{}, &Error{err: "unrecognized APL address family"}
 	}
 	if int(prefix) > 8*len(ip) {
-		return APLPrefix{}, len(msg), &Error{err: "APL prefix too long"}
+		return APLPrefix{}, &Error{err: "APL prefix too long"}
 	}
 	afdlen := int(nlen & 0x7f)
 	if afdlen > len(ip) {
-		return APLPrefix{}, len(msg), &Error{err: "APL length too long"}
+		return APLPrefix{}, &Error{err: "APL length too long"}
 	}
-	if off+afdlen > len(msg) {
-		return APLPrefix{}, len(msg), &Error{err: "overflow unpacking APL address"}
+	if !s.CopyBytes(ip[:afdlen]) {
+		return APLPrefix{}, errUnpackOverflow
 	}
 
 	// Address MUST NOT contain trailing zero bytes per RFC3123 Sections 4.1 and 4.2.
-	off += copy(ip, msg[off:off+afdlen])
-	if afdlen > 0 {
-		last := ip[afdlen-1]
-		if last == 0 {
-			return APLPrefix{}, len(msg), &Error{err: "extra APL address bits"}
-		}
-	}
-	ipnet := net.IPNet{
-		IP:   ip,
-		Mask: net.CIDRMask(int(prefix), 8*len(ip)),
+	if afdlen > 0 && ip[afdlen-1] == 0 {
+		return APLPrefix{}, &Error{err: "extra APL address bits"}
 	}
 
 	return APLPrefix{
-		Negation: (nlen & 0x80) != 0,
-		Network:  ipnet,
-	}, off, nil
+		Negation: nlen&0x80 != 0,
+		Network: net.IPNet{
+			IP:   ip,
+			Mask: net.CIDRMask(int(prefix), 8*len(ip)),
+		},
+	}, nil
 }
 
-func unpackIPSECGateway(msg []byte, off int, gatewayType uint8) (net.IP, string, int, error) {
-	var retAddr net.IP
-	var retString string
-	var err error
-
+func unpackIPSECGateway(s *cryptobyte.String, msgBuf []byte, gatewayType uint8) (net.IP, string, error) {
+	var (
+		addr net.IP
+		name string
+		err  error
+	)
 	switch gatewayType {
 	case IPSECGatewayNone: // do nothing
 	case IPSECGatewayIPv4:
-		retAddr, off, err = unpackDataA(msg, off)
+		addr, err = unpackDataA(s)
 	case IPSECGatewayIPv6:
-		retAddr, off, err = unpackDataAAAA(msg, off)
+		addr, err = unpackDataAAAA(s)
 	case IPSECGatewayHost:
-		retString, off, err = UnpackDomainName(msg, off)
+		name, err = unpackDomainName(s, msgBuf)
 	}
-
-	return retAddr, retString, off, err
+	return addr, name, err
 }
 
 func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off int, gatewayType uint8, compression compressionMap, compress bool) (int, error) {
