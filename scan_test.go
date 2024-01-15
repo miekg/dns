@@ -1,11 +1,14 @@
 package dns
 
 import (
+	"errors"
 	"io"
+	"io/fs"
 	"net"
 	"os"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 func TestZoneParserGenerate(t *testing.T) {
@@ -93,6 +96,78 @@ func TestZoneParserInclude(t *testing.T) {
 		!strings.Contains(err.Error(), "no such file or directory") {
 		t.Fatalf(`expected error to contain: "failed to open", %q and "no such file or directory" but got: %s`,
 			tmpfile.Name(), err)
+	}
+}
+
+func TestZoneParserIncludeFS(t *testing.T) {
+	fsys := fstest.MapFS{
+		"db.foo": &fstest.MapFile{
+			Data: []byte("foo\tIN\tA\t127.0.0.1"),
+		},
+	}
+	zone := "$ORIGIN example.org.\n$INCLUDE db.foo\nbar\tIN\tA\t127.0.0.2"
+
+	var got int
+	z := NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	z.SetIncludeFS(fsys)
+	for rr, ok := z.Next(); ok; _, ok = z.Next() {
+		switch rr.Header().Name {
+		case "foo.example.org.", "bar.example.org.":
+		default:
+			t.Fatalf("expected foo.example.org. or bar.example.org., but got %s", rr.Header().Name)
+		}
+		got++
+	}
+	if err := z.Err(); err != nil {
+		t.Fatalf("expected no error, but got %s", err)
+	}
+
+	if expected := 2; got != expected {
+		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
+	}
+
+	fsys = fstest.MapFS{}
+
+	z = NewZoneParser(strings.NewReader(zone), "", "")
+	z.SetIncludeAllowed(true)
+	z.SetIncludeFS(fsys)
+	z.Next()
+	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf(`expected fs.ErrNotExist but got: %T %v`, err, err)
+	}
+}
+
+func TestZoneParserIncludeFSPaths(t *testing.T) {
+	fsys := fstest.MapFS{
+		"baz/bat/db.foo": &fstest.MapFile{
+			Data: []byte("foo\tIN\tA\t127.0.0.1"),
+		},
+	}
+
+	for _, p := range []string{
+		"../bat/db.foo",
+		"/baz/bat/db.foo",
+	} {
+		zone := "$ORIGIN example.org.\n$INCLUDE " + p + "\nbar\tIN\tA\t127.0.0.2"
+		var got int
+		z := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
+		z.SetIncludeAllowed(true)
+		z.SetIncludeFS(fsys)
+		for rr, ok := z.Next(); ok; _, ok = z.Next() {
+			switch rr.Header().Name {
+			case "foo.example.org.", "bar.example.org.":
+			default:
+				t.Fatalf("$INCLUDE %q: expected foo.example.org. or bar.example.org., but got %s", p, rr.Header().Name)
+			}
+			got++
+		}
+		if err := z.Err(); err != nil {
+			t.Fatalf("$INCLUDE %q: expected no error, but got %s", p, err)
+		}
+		if expected := 2; got != expected {
+			t.Errorf("$INCLUDE %q: failed to parse zone after include, expected %d records, got %d", p, expected, got)
+		}
 	}
 }
 
