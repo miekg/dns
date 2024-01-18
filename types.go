@@ -402,6 +402,17 @@ func (rr *X25) String() string {
 	return rr.Hdr.String() + rr.PSDNAddress
 }
 
+// ISDN RR. See RFC 1183, Section 3.2.
+type ISDN struct {
+	Hdr        RR_Header
+	Address    string
+	SubAddress string
+}
+
+func (rr *ISDN) String() string {
+	return rr.Hdr.String() + sprintTxt([]string{rr.Address, rr.SubAddress})
+}
+
 // RT RR. See RFC 1183, Section 3.3.
 type RT struct {
 	Hdr        RR_Header

@@ -372,6 +372,18 @@ func (rr *IPSECKEY) pack(msg []byte, off int, compression compressionMap, compre
 	return off, nil
 }
 
+func (rr *ISDN) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packString(rr.Address, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packString(rr.SubAddress, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
 func (rr *KEY) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packUint16(rr.Flags, msg, off)
 	if err != nil {
@@ -1752,6 +1764,24 @@ func (rr *IPSECKEY) unpack(msg []byte, off int) (off1 int, err error) {
 		return off, nil
 	}
 	rr.PublicKey, off, err = unpackStringBase64(msg, off, rdStart+int(rr.Hdr.Rdlength))
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *ISDN) unpack(msg []byte, off int) (off1 int, err error) {
+	rdStart := off
+	_ = rdStart
+
+	rr.Address, off, err = unpackString(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+	rr.SubAddress, off, err = unpackString(msg, off)
 	if err != nil {
 		return off, err
 	}

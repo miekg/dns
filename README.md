@@ -126,6 +126,7 @@ Example programs can be found in the `github.com/miekg/exdns` repository.
 *all of them*
 
 * 103{4,5} - DNS standard
+* 1183 - ISDN, X25 and other deprecated records
 * 1348 - NSAP record (removed the record)
 * 1982 - Serial Arithmetic
 * 1876 - LOC record
