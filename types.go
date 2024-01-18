@@ -786,7 +786,7 @@ func (rr *GPOS) String() string {
 	return rr.Hdr.String() + rr.Longitude + " " + rr.Latitude + " " + rr.Altitude
 }
 
-// LOC RR. See RFC RFC 1876.
+// LOC RR. See RFC 1876.
 type LOC struct {
 	Hdr       RR_Header
 	Version   uint8
@@ -898,6 +898,11 @@ func (rr *RRSIG) String() string {
 	return s
 }
 
+// NXT RR. See RFC 2535.
+type NXT struct {
+	NSEC
+}
+
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
 	Hdr        RR_Header
@@ -982,7 +987,7 @@ func (rr *TALINK) String() string {
 		sprintName(rr.PreviousName) + " " + sprintName(rr.NextName)
 }
 
-// SSHFP RR. See RFC RFC 4255.
+// SSHFP RR. See RFC 4255.
 type SSHFP struct {
 	Hdr         RR_Header
 	Algorithm   uint8
@@ -996,7 +1001,7 @@ func (rr *SSHFP) String() string {
 		" " + strings.ToUpper(rr.FingerPrint)
 }
 
-// KEY RR. See RFC RFC 2535.
+// KEY RR. See RFC 2535.
 type KEY struct {
 	DNSKEY
 }
@@ -1306,7 +1311,7 @@ type NINFO struct {
 
 func (rr *NINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.ZSData) }
 
-// NID RR. See RFC RFC 6742.
+// NID RR. See RFC 6742.
 type NID struct {
 	Hdr        RR_Header
 	Preference uint16

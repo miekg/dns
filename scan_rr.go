@@ -984,6 +984,8 @@ func (rr *RRSIG) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
+func (rr *NXT) parse(c *zlexer, o string) *ParseError { return rr.NSEC.parse(c, o) }
+
 func (rr *NSEC) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	name, nameOk := toAbsoluteName(l.token, o)

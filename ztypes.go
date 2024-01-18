@@ -59,6 +59,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeNSEC3:      func() RR { return new(NSEC3) },
 	TypeNSEC3PARAM: func() RR { return new(NSEC3PARAM) },
 	TypeNULL:       func() RR { return new(NULL) },
+	TypeNXT:        func() RR { return new(NXT) },
 	TypeOPENPGPKEY: func() RR { return new(OPENPGPKEY) },
 	TypeOPT:        func() RR { return new(OPT) },
 	TypePTR:        func() RR { return new(PTR) },
@@ -227,6 +228,7 @@ func (rr *NSEC) Header() *RR_Header       { return &rr.Hdr }
 func (rr *NSEC3) Header() *RR_Header      { return &rr.Hdr }
 func (rr *NSEC3PARAM) Header() *RR_Header { return &rr.Hdr }
 func (rr *NULL) Header() *RR_Header       { return &rr.Hdr }
+func (rr *NXT) Header() *RR_Header        { return &rr.Hdr }
 func (rr *OPENPGPKEY) Header() *RR_Header { return &rr.Hdr }
 func (rr *OPT) Header() *RR_Header        { return &rr.Hdr }
 func (rr *PTR) Header() *RR_Header        { return &rr.Hdr }
@@ -1090,6 +1092,10 @@ func (rr *NSEC3PARAM) copy() RR {
 
 func (rr *NULL) copy() RR {
 	return &NULL{rr.Hdr, rr.Data}
+}
+
+func (rr *NXT) copy() RR {
+	return &NXT{*rr.NSEC.copy().(*NSEC)}
 }
 
 func (rr *OPENPGPKEY) copy() RR {

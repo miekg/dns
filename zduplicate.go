@@ -871,6 +871,26 @@ func (r1 *NULL) isDuplicate(_r2 RR) bool {
 	return true
 }
 
+func (r1 *NXT) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*NXT)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if !isDuplicateName(r1.NextDomain, r2.NextDomain) {
+		return false
+	}
+	if len(r1.TypeBitMap) != len(r2.TypeBitMap) {
+		return false
+	}
+	for i := 0; i < len(r1.TypeBitMap); i++ {
+		if r1.TypeBitMap[i] != r2.TypeBitMap[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func (r1 *OPENPGPKEY) isDuplicate(_r2 RR) bool {
 	r2, ok := _r2.(*OPENPGPKEY)
 	if !ok {
