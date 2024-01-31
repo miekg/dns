@@ -21,6 +21,7 @@ type Transfer struct {
 	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	tsigTimersOnly bool
+	TLS            *tls.Config // TLS config. If Xfr over TLS will be attempted
 }
 
 func (t *Transfer) tsigProvider() TsigProvider {
@@ -58,42 +59,11 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	}
 
 	if t.Conn == nil {
-		t.Conn, err = DialTimeout("tcp", a, timeout)
-		if err != nil {
-			return nil, err
+		if t.TLS != nil {
+			t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, t.TLS, timeout)
+		} else {
+			t.Conn, err = DialTimeout("tcp", a, timeout)
 		}
-	}
-
-	if err := t.WriteMsg(q); err != nil {
-		return nil, err
-	}
-
-	env = make(chan *Envelope)
-	switch q.Question[0].Qtype {
-	case TypeAXFR:
-		go t.inAxfr(q, env)
-	case TypeIXFR:
-		go t.inIxfr(q, env)
-	}
-
-	return env, nil
-}
-
-// Analogous to In, but perform a zone transfer via TLS
-func (t *Transfer) InTLS(q *Msg, a string, tlsConfig *tls.Config) (env chan *Envelope, err error) {
-	switch q.Question[0].Qtype {
-	case TypeAXFR, TypeIXFR:
-	default:
-		return nil, &Error{"unsupported question type"}
-	}
-
-	timeout := dnsTimeout
-	if t.DialTimeout != 0 {
-		timeout = t.DialTimeout
-	}
-
-	if t.Conn == nil {
-		t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, tlsConfig, timeout)
 		if err != nil {
 			return nil, err
 		}

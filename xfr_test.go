@@ -158,10 +158,10 @@ func axfrTestingSuiteTLS(t *testing.T, addrstr string) {
 	m := new(Msg)
 	m.SetAxfr("miek.nl.")
 
-	tlsConfig := &tls.Config{
+	tr.TLS = &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	c, err := tr.InTLS(m, addrstr, tlsConfig)
+	c, err := tr.In(m, addrstr)
 	if err != nil {
 		t.Fatal("failed to zone transfer in", err)
 	}
