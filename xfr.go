@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 )
@@ -58,6 +59,41 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 
 	if t.Conn == nil {
 		t.Conn, err = DialTimeout("tcp", a, timeout)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err := t.WriteMsg(q); err != nil {
+		return nil, err
+	}
+
+	env = make(chan *Envelope)
+	switch q.Question[0].Qtype {
+	case TypeAXFR:
+		go t.inAxfr(q, env)
+	case TypeIXFR:
+		go t.inIxfr(q, env)
+	}
+
+	return env, nil
+}
+
+// Analogous to In, but perform a zone transfer via TLS
+func (t *Transfer) InTLS(q *Msg, a string, tlsConfig *tls.Config) (env chan *Envelope, err error) {
+	switch q.Question[0].Qtype {
+	case TypeAXFR, TypeIXFR:
+	default:
+		return nil, &Error{"unsupported question type"}
+	}
+
+	timeout := dnsTimeout
+	if t.DialTimeout != 0 {
+		timeout = t.DialTimeout
+	}
+
+	if t.Conn == nil {
+		t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, tlsConfig, timeout)
 		if err != nil {
 			return nil, err
 		}
